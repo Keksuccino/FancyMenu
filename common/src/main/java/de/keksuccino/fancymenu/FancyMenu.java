@@ -27,6 +27,11 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+
+    //TODO FIXEN: Löschen eines Layouts via context menü scheint das layout als ghost zu behalten, bis Fenster resized wird
+
+
+
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	public static final String VERSION = "3.9.0";

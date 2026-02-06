@@ -45,22 +45,30 @@ final class FancyMenuMcpTools {
             case "fancymenu_get_editor_options" -> structured = FancyMenuMcpOperations.getEditorOptions();
             case "fancymenu_set_editor_options" -> structured = FancyMenuMcpOperations.setEditorOptions(arguments);
             case "fancymenu_capture_screenshot" -> {
-                structured = FancyMenuMcpOperations.captureScreenshot();
-                String imageBase64 = structured.get("base64").getAsString();
-                String mimeType = structured.get("mime_type").getAsString();
-                return new ToolExecution(name, structured, imageBase64, mimeType);
+                structured = FancyMenuMcpOperations.captureScreenshot(arguments);
+                if (structured.has("base64")) {
+                    String imageBase64 = structured.get("base64").getAsString();
+                    String mimeType = structured.get("mime_type").getAsString();
+                    return new ToolExecution(name, structured, imageBase64, mimeType);
+                }
+                return new ToolExecution(name, structured, null, null);
             }
-            case "fancymenu_list_actions" -> structured = FancyMenuMcpOperations.listActions();
-            case "fancymenu_list_placeholders" -> structured = FancyMenuMcpOperations.listPlaceholders();
-            case "fancymenu_list_requirements" -> structured = FancyMenuMcpOperations.listRequirements();
-            case "fancymenu_list_listener_types" -> structured = FancyMenuMcpOperations.listListenerTypes();
-            case "fancymenu_list_elements" -> structured = FancyMenuMcpOperations.listElements();
-            case "fancymenu_list_backgrounds" -> structured = FancyMenuMcpOperations.listBackgrounds();
-            case "fancymenu_list_decoration_overlays" -> structured = FancyMenuMcpOperations.listDecorationOverlays();
-            case "fancymenu_list_panoramas" -> structured = FancyMenuMcpOperations.listPanoramas();
-            case "fancymenu_list_slideshows" -> structured = FancyMenuMcpOperations.listSlideshows();
-            case "fancymenu_list_screen_identifiers" -> structured = FancyMenuMcpOperations.listScreenIdentifiers();
-            case "fancymenu_list_layouts" -> structured = FancyMenuMcpOperations.listLayouts();
+            case "fancymenu_list_actions" -> structured = FancyMenuMcpOperations.listActions(arguments);
+            case "fancymenu_list_placeholders" -> structured = FancyMenuMcpOperations.listPlaceholders(arguments);
+            case "fancymenu_list_requirements" -> structured = FancyMenuMcpOperations.listRequirements(arguments);
+            case "fancymenu_list_listener_types" -> structured = FancyMenuMcpOperations.listListenerTypes(arguments);
+            case "fancymenu_list_elements" -> structured = FancyMenuMcpOperations.listElements(arguments);
+            case "fancymenu_list_backgrounds" -> structured = FancyMenuMcpOperations.listBackgrounds(arguments);
+            case "fancymenu_list_decoration_overlays" -> structured = FancyMenuMcpOperations.listDecorationOverlays(arguments);
+            case "fancymenu_list_panoramas" -> structured = FancyMenuMcpOperations.listPanoramas(arguments);
+            case "fancymenu_list_slideshows" -> structured = FancyMenuMcpOperations.listSlideshows(arguments);
+            case "fancymenu_list_screen_identifiers" -> structured = FancyMenuMcpOperations.listScreenIdentifiers(arguments);
+            case "fancymenu_list_assets" -> structured = FancyMenuMcpOperations.listAssets(arguments);
+            case "fancymenu_get_registry_entry" -> structured = FancyMenuMcpOperations.getRegistryEntry(arguments);
+            case "fancymenu_list_layouts_compact" -> structured = FancyMenuMcpOperations.listLayoutsCompact(arguments);
+            case "fancymenu_list_layouts" -> structured = FancyMenuMcpOperations.listLayouts(arguments);
+            case "fancymenu_get_layout_meta" -> structured = FancyMenuMcpOperations.getLayoutMeta(arguments);
+            case "fancymenu_get_layout_elements" -> structured = FancyMenuMcpOperations.getLayoutElements(arguments);
             case "fancymenu_get_layout" -> structured = FancyMenuMcpOperations.getLayout(arguments);
             case "fancymenu_create_layout" -> structured = FancyMenuMcpOperations.createLayout(arguments);
             case "fancymenu_set_layout" -> structured = FancyMenuMcpOperations.setLayout(arguments);
@@ -69,11 +77,13 @@ final class FancyMenuMcpTools {
             case "fancymenu_save_layout" -> structured = FancyMenuMcpOperations.saveLayout(arguments);
             case "fancymenu_open_layout_editor" -> structured = FancyMenuMcpOperations.openLayoutEditor(arguments);
             case "fancymenu_close_layout_editor" -> structured = FancyMenuMcpOperations.closeLayoutEditor();
-            case "fancymenu_editor_get_state" -> structured = FancyMenuMcpOperations.getEditorState();
+            case "fancymenu_editor_get_state" -> structured = FancyMenuMcpOperations.getEditorState(arguments);
             case "fancymenu_editor_poll" -> structured = FancyMenuMcpOperations.editorPoll(arguments);
+            case "fancymenu_editor_get_element" -> structured = FancyMenuMcpOperations.editorGetElement(arguments);
             case "fancymenu_editor_list_elements" -> structured = FancyMenuMcpOperations.editorListElements(arguments);
             case "fancymenu_editor_select_elements" -> structured = FancyMenuMcpOperations.editorSelectElements(arguments);
             case "fancymenu_editor_get_visual_layers" -> structured = FancyMenuMcpOperations.editorGetVisualLayers(arguments);
+            case "fancymenu_editor_patch_layout" -> structured = FancyMenuMcpOperations.editorPatchLayout(arguments);
             case "fancymenu_editor_add_element" -> structured = FancyMenuMcpOperations.editorAddElement(arguments);
             case "fancymenu_editor_remove_element" -> structured = FancyMenuMcpOperations.editorRemoveElement(arguments);
             case "fancymenu_editor_move_element" -> structured = FancyMenuMcpOperations.editorMoveElement(arguments);
@@ -89,19 +99,22 @@ final class FancyMenuMcpTools {
             case "fancymenu_open_action_editor" -> structured = FancyMenuMcpOperations.openActionEditor(arguments);
             case "fancymenu_get_action_script" -> structured = FancyMenuMcpOperations.getActionScript(arguments);
             case "fancymenu_set_action_script" -> structured = FancyMenuMcpOperations.setActionScript(arguments);
-            case "fancymenu_list_listener_instances" -> structured = FancyMenuMcpOperations.listListenerInstances();
+            case "fancymenu_list_listener_instances" -> structured = FancyMenuMcpOperations.listListenerInstances(arguments);
+            case "fancymenu_get_listener_instance" -> structured = FancyMenuMcpOperations.getListenerInstance(arguments);
             case "fancymenu_create_listener_instance" -> structured = FancyMenuMcpOperations.createListenerInstance(arguments);
             case "fancymenu_update_listener_instance" -> structured = FancyMenuMcpOperations.updateListenerInstance(arguments);
             case "fancymenu_set_listener_instance" -> structured = FancyMenuMcpOperations.setListenerInstance(arguments);
             case "fancymenu_delete_listener_instance" -> structured = FancyMenuMcpOperations.deleteListenerInstance(arguments);
-            case "fancymenu_list_schedulers" -> structured = FancyMenuMcpOperations.listSchedulers();
+            case "fancymenu_list_schedulers" -> structured = FancyMenuMcpOperations.listSchedulers(arguments);
+            case "fancymenu_get_scheduler" -> structured = FancyMenuMcpOperations.getScheduler(arguments);
             case "fancymenu_create_scheduler" -> structured = FancyMenuMcpOperations.createScheduler(arguments);
             case "fancymenu_update_scheduler" -> structured = FancyMenuMcpOperations.updateScheduler(arguments);
             case "fancymenu_set_scheduler" -> structured = FancyMenuMcpOperations.setScheduler(arguments);
             case "fancymenu_delete_scheduler" -> structured = FancyMenuMcpOperations.deleteScheduler(arguments);
             case "fancymenu_start_scheduler" -> structured = FancyMenuMcpOperations.startScheduler(arguments);
             case "fancymenu_stop_scheduler" -> structured = FancyMenuMcpOperations.stopScheduler(arguments);
-            case "fancymenu_list_variables" -> structured = FancyMenuMcpOperations.listVariables();
+            case "fancymenu_list_variables" -> structured = FancyMenuMcpOperations.listVariables(arguments);
+            case "fancymenu_get_variable" -> structured = FancyMenuMcpOperations.getVariable(arguments);
             case "fancymenu_set_variable" -> structured = FancyMenuMcpOperations.setVariable(arguments);
             case "fancymenu_remove_variable" -> structured = FancyMenuMcpOperations.removeVariable(arguments);
             case "fancymenu_clear_variables" -> structured = FancyMenuMcpOperations.clearVariables();
@@ -119,7 +132,7 @@ final class FancyMenuMcpTools {
         Map<String, JsonObject> tools = new LinkedHashMap<>();
 
         tools.put("fancymenu_intro", tool("fancymenu_intro",
-                "MUST be called first in every session before any other tool. Explains FancyMenu, this MCP, and the required workflow.",
+                "MUST be called first in every session before any other tool. Explains FancyMenu, this MCP, efficient workflows, and low-context usage patterns.",
                 schemaObject()));
 
         tools.put("fancymenu_server_status", tool("fancymenu_server_status", "Returns MCP server runtime and option status.", schemaObject()));
@@ -133,21 +146,26 @@ final class FancyMenuMcpTools {
         tools.put("fancymenu_reinit_current_screen", tool("fancymenu_reinit_current_screen", "Re-initializes the currently open Minecraft screen.", schemaObject()));
         tools.put("fancymenu_get_editor_options", tool("fancymenu_get_editor_options", "Returns current FancyMenu layout editor option values.", schemaObject()));
         tools.put("fancymenu_set_editor_options", tool("fancymenu_set_editor_options", "Updates FancyMenu layout editor option values.", editorOptionsSchema()));
-        tools.put("fancymenu_capture_screenshot", tool("fancymenu_capture_screenshot", "Captures current screen as PNG and returns base64 image.", schemaObject()));
+        tools.put("fancymenu_capture_screenshot", tool("fancymenu_capture_screenshot", "Captures current screen as PNG. Set include_base64=false for metadata-only responses.", screenshotSchema()));
 
-        tools.put("fancymenu_list_actions", tool("fancymenu_list_actions", "Lists all registered FancyMenu actions.", schemaObject()));
-        tools.put("fancymenu_list_placeholders", tool("fancymenu_list_placeholders", "Lists all registered FancyMenu placeholders.", schemaObject()));
-        tools.put("fancymenu_list_requirements", tool("fancymenu_list_requirements", "Lists all registered requirement types.", schemaObject()));
-        tools.put("fancymenu_list_listener_types", tool("fancymenu_list_listener_types", "Lists all listener provider types.", schemaObject()));
-        tools.put("fancymenu_list_elements", tool("fancymenu_list_elements", "Lists all element builders available in the layout editor.", schemaObject()));
-        tools.put("fancymenu_list_backgrounds", tool("fancymenu_list_backgrounds", "Lists all background types.", schemaObject()));
-        tools.put("fancymenu_list_decoration_overlays", tool("fancymenu_list_decoration_overlays", "Lists all decoration overlay types.", schemaObject()));
-        tools.put("fancymenu_list_panoramas", tool("fancymenu_list_panoramas", "Lists available FancyMenu panoramas from disk.", schemaObject()));
-        tools.put("fancymenu_list_slideshows", tool("fancymenu_list_slideshows", "Lists available FancyMenu slideshows from disk.", schemaObject()));
-        tools.put("fancymenu_list_screen_identifiers", tool("fancymenu_list_screen_identifiers", "Lists universal screen identifiers.", schemaObject()));
+        tools.put("fancymenu_list_actions", tool("fancymenu_list_actions", "Lists actions. Supports query/limit/offset and compact fields.", registrySearchSchema("include_descriptions", "include_value_fields")));
+        tools.put("fancymenu_list_placeholders", tool("fancymenu_list_placeholders", "Lists placeholders. Supports query/limit/offset and compact fields.", registrySearchSchema("include_descriptions", "include_value_names")));
+        tools.put("fancymenu_list_requirements", tool("fancymenu_list_requirements", "Lists requirement types. Supports query/limit/offset and compact fields.", registrySearchSchema("include_descriptions", "include_value_fields")));
+        tools.put("fancymenu_list_listener_types", tool("fancymenu_list_listener_types", "Lists listener provider types. Supports query/limit/offset and compact fields.", registrySearchSchema("include_descriptions", "include_custom_variables")));
+        tools.put("fancymenu_list_elements", tool("fancymenu_list_elements", "Lists element builders. Optional default serialized element payload.", registrySearchSchema("include_descriptions", "include_default_serialized", "include_deprecated")));
+        tools.put("fancymenu_list_backgrounds", tool("fancymenu_list_backgrounds", "Lists background builders. Optional default serialized container payload.", registrySearchSchema("include_descriptions", "include_default_serialized", "include_deprecated")));
+        tools.put("fancymenu_list_decoration_overlays", tool("fancymenu_list_decoration_overlays", "Lists decoration overlay builders. Optional default serialized container payload.", registrySearchSchema("include_descriptions", "include_default_serialized")));
+        tools.put("fancymenu_list_panoramas", tool("fancymenu_list_panoramas", "Lists panoramas with optional path fields and query/limit/offset.", pagedQuerySchema("include_paths")));
+        tools.put("fancymenu_list_slideshows", tool("fancymenu_list_slideshows", "Lists slideshows with optional path fields and query/limit/offset.", pagedQuerySchema("include_paths")));
+        tools.put("fancymenu_list_screen_identifiers", tool("fancymenu_list_screen_identifiers", "Lists universal screen identifiers with query/limit/offset.", pagedQuerySchema()));
+        tools.put("fancymenu_list_assets", tool("fancymenu_list_assets", "Lists files/directories in FancyMenu assets with filters (path prefix, query, extensions, recursion, pagination).", assetListSchema()));
+        tools.put("fancymenu_get_registry_entry", tool("fancymenu_get_registry_entry", "Gets detailed info + defaults for a single registry entry (action/placeholder/requirement/listener/element/background/overlay).", registryEntrySchema()));
 
-        tools.put("fancymenu_list_layouts", tool("fancymenu_list_layouts", "Lists all loaded layouts.", schemaObject()));
-        tools.put("fancymenu_get_layout", tool("fancymenu_get_layout", "Returns full layout data, including serialized set.", layoutSelectorSchema()));
+        tools.put("fancymenu_list_layouts_compact", tool("fancymenu_list_layouts_compact", "Recommended for discovery: compact layout list with counts and pagination.", layoutListCompactSchema()));
+        tools.put("fancymenu_list_layouts", tool("fancymenu_list_layouts", "Lists layouts with optional filtering and optional serialized payload flags.", layoutListSchema()));
+        tools.put("fancymenu_get_layout_meta", tool("fancymenu_get_layout_meta", "Returns compact metadata + counts for a single layout.", layoutMetaSchema()));
+        tools.put("fancymenu_get_layout_elements", tool("fancymenu_get_layout_elements", "Returns paginated serialized-layout element entries for normal/vanilla/deep sections.", layoutElementsSchema()));
+        tools.put("fancymenu_get_layout", tool("fancymenu_get_layout", "Returns a single layout. Disable include_serialized_set/include_fancy_string for low-context reads.", getLayoutSchema()));
         tools.put("fancymenu_create_layout", tool("fancymenu_create_layout", "Creates and saves a new layout, optionally opening editor.", createLayoutSchema()));
         tools.put("fancymenu_set_layout", tool("fancymenu_set_layout", "Replaces layout content from serialized payload and optionally opens editor.", setLayoutSchema()));
         tools.put("fancymenu_update_layout_meta", tool("fancymenu_update_layout_meta", "Patches metadata/settings of an existing layout and saves it.", updateLayoutMetaSchema()));
@@ -156,11 +174,13 @@ final class FancyMenuMcpTools {
         tools.put("fancymenu_open_layout_editor", tool("fancymenu_open_layout_editor", "Opens the layout editor for a target layout and target screen.", layoutSelectorSchema()));
         tools.put("fancymenu_close_layout_editor", tool("fancymenu_close_layout_editor", "Closes current layout editor.", schemaObject()));
 
-        tools.put("fancymenu_editor_get_state", tool("fancymenu_editor_get_state", "Returns live state of currently open layout editor.", schemaObject()));
+        tools.put("fancymenu_editor_get_state", tool("fancymenu_editor_get_state", "Returns live editor state. Disable include_layout/include_serialized_set for compact polling.", editorStateSchema()));
         tools.put("fancymenu_editor_poll", tool("fancymenu_editor_poll", "Returns compact editor poll data (fingerprint, counts, selection).", editorWithOptionalLayoutSelectorSchema()));
-        tools.put("fancymenu_editor_list_elements", tool("fancymenu_editor_list_elements", "Lists editor elements with lightweight geometry/selection state for polling.", editorWithOptionalLayoutSelectorSchema()));
+        tools.put("fancymenu_editor_get_element", tool("fancymenu_editor_get_element", "Gets one editor element by instance identifier.", editorGetElementSchema()));
+        tools.put("fancymenu_editor_list_elements", tool("fancymenu_editor_list_elements", "Lists editor elements with filtering, pagination, and optional serialized payload.", editorListElementsSchema()));
         tools.put("fancymenu_editor_select_elements", tool("fancymenu_editor_select_elements", "Changes editor selection using modes set/add/remove/clear/all.", editorSelectElementsSchema()));
-        tools.put("fancymenu_editor_get_visual_layers", tool("fancymenu_editor_get_visual_layers", "Lists backgrounds and decoration overlays in current editor order.", editorWithOptionalLayoutSelectorSchema()));
+        tools.put("fancymenu_editor_get_visual_layers", tool("fancymenu_editor_get_visual_layers", "Lists backgrounds and decoration overlays in current editor order. Serialized payload is optional.", editorVisualLayersSchema()));
+        tools.put("fancymenu_editor_patch_layout", tool("fancymenu_editor_patch_layout", "Batch patch tool for live layout editing in one call: meta patch + element/background/overlay operations + optional auto-save.", editorPatchLayoutSchema()));
         tools.put("fancymenu_editor_add_element", tool("fancymenu_editor_add_element", "Adds a new element by builder identifier to current editor.", editorAddElementSchema()));
         tools.put("fancymenu_editor_remove_element", tool("fancymenu_editor_remove_element", "Removes an element from current editor.", editorRemoveElementSchema()));
         tools.put("fancymenu_editor_move_element", tool("fancymenu_editor_move_element", "Moves/repositions an element in current editor.", editorMoveElementSchema()));
@@ -178,13 +198,15 @@ final class FancyMenuMcpTools {
         tools.put("fancymenu_get_action_script", tool("fancymenu_get_action_script", "Gets script payload for target script.", actionTargetSchema()));
         tools.put("fancymenu_set_action_script", tool("fancymenu_set_action_script", "Sets target script and live-updates Action Script Editor.", actionTargetSchemaWithScript()));
 
-        tools.put("fancymenu_list_listener_instances", tool("fancymenu_list_listener_instances", "Lists all listener instances.", schemaObject()));
+        tools.put("fancymenu_list_listener_instances", tool("fancymenu_list_listener_instances", "Lists listener instances with optional filtering and serialized payload.", listenerListSchema()));
+        tools.put("fancymenu_get_listener_instance", tool("fancymenu_get_listener_instance", "Gets one listener instance by identifier.", listenerGetSchema()));
         tools.put("fancymenu_create_listener_instance", tool("fancymenu_create_listener_instance", "Creates listener instance.", schemaWithRequired("listener_identifier")));
         tools.put("fancymenu_update_listener_instance", tool("fancymenu_update_listener_instance", "Updates listener instance.", schemaWithRequired("instance_identifier")));
         tools.put("fancymenu_set_listener_instance", tool("fancymenu_set_listener_instance", "Creates/replaces a listener instance from full serialized payload.", setListenerSchema()));
         tools.put("fancymenu_delete_listener_instance", tool("fancymenu_delete_listener_instance", "Deletes listener instance.", schemaWithRequired("instance_identifier")));
 
-        tools.put("fancymenu_list_schedulers", tool("fancymenu_list_schedulers", "Lists scheduler instances.", schemaObject()));
+        tools.put("fancymenu_list_schedulers", tool("fancymenu_list_schedulers", "Lists scheduler instances with optional filtering and serialized payload.", schedulerListSchema()));
+        tools.put("fancymenu_get_scheduler", tool("fancymenu_get_scheduler", "Gets one scheduler instance by identifier.", schedulerGetSchema()));
         tools.put("fancymenu_create_scheduler", tool("fancymenu_create_scheduler", "Creates scheduler instance.", schemaObject()));
         tools.put("fancymenu_update_scheduler", tool("fancymenu_update_scheduler", "Updates scheduler instance.", schemaWithRequired("identifier")));
         tools.put("fancymenu_set_scheduler", tool("fancymenu_set_scheduler", "Creates/replaces a scheduler instance from full serialized payload.", setSchedulerSchema()));
@@ -192,7 +214,8 @@ final class FancyMenuMcpTools {
         tools.put("fancymenu_start_scheduler", tool("fancymenu_start_scheduler", "Starts a scheduler instance.", schemaWithRequired("identifier")));
         tools.put("fancymenu_stop_scheduler", tool("fancymenu_stop_scheduler", "Stops a scheduler instance.", schemaWithRequired("identifier")));
 
-        tools.put("fancymenu_list_variables", tool("fancymenu_list_variables", "Lists all FancyMenu variables.", schemaObject()));
+        tools.put("fancymenu_list_variables", tool("fancymenu_list_variables", "Lists variables with optional filtering and serialized payload.", variableListSchema()));
+        tools.put("fancymenu_get_variable", tool("fancymenu_get_variable", "Gets one variable by name.", variableGetSchema()));
         tools.put("fancymenu_set_variable", tool("fancymenu_set_variable", "Creates/updates variable.", schemaWithRequired("name")));
         tools.put("fancymenu_remove_variable", tool("fancymenu_remove_variable", "Removes variable by name.", schemaWithRequired("name")));
         tools.put("fancymenu_clear_variables", tool("fancymenu_clear_variables", "Clears all variables.", schemaObject()));
@@ -243,6 +266,199 @@ final class FancyMenuMcpTools {
         }
         schema.add("required", required);
         return schema;
+    }
+
+    private static @NotNull JsonObject screenshotSchema() {
+        JsonObject properties = new JsonObject();
+        properties.add("include_base64", booleanProperty("If false, only screenshot metadata is returned to reduce context usage."));
+        return schemaObject(properties);
+    }
+
+    private static @NotNull JsonObject pagedQuerySchema(@NotNull String... extraFields) {
+        JsonObject properties = new JsonObject();
+        properties.add("query", stringProperty("Optional case-insensitive substring filter."));
+        properties.add("offset", integerProperty("Pagination offset (default 0)."));
+        properties.add("limit", integerProperty("Pagination limit."));
+        for (String extraField : extraFields) {
+            properties.add(extraField, booleanProperty("Optional boolean flag."));
+        }
+        return schemaObject(properties);
+    }
+
+    private static @NotNull JsonObject registrySearchSchema(@NotNull String... optionalFlags) {
+        JsonObject properties = pagedQuerySchema().getAsJsonObject("properties");
+        properties.add("identifiers_only", booleanProperty("Return only identifiers for very compact responses."));
+        properties.add("include_deprecated", booleanProperty("Include deprecated entries when supported."));
+        for (String flag : optionalFlags) {
+            properties.add(flag, booleanProperty("Optional detail flag."));
+        }
+        return schemaObject(properties);
+    }
+
+    private static @NotNull JsonObject assetListSchema() {
+        JsonObject properties = pagedQuerySchema().getAsJsonObject("properties");
+        properties.add("path_prefix", stringProperty("Optional sub-directory path inside FancyMenu assets root."));
+        properties.add("extensions", stringArrayProperty("Optional file extension filters (with or without dot)."));
+        properties.add("recursive", booleanProperty("Scan recursively from path_prefix (default true)."));
+        properties.add("max_depth", integerProperty("Maximum recursion depth when recursive=true."));
+        properties.add("include_files", booleanProperty("Include files in results."));
+        properties.add("include_directories", booleanProperty("Include directories in results."));
+        properties.add("include_hidden", booleanProperty("Include hidden files/directories."));
+        properties.add("include_absolute_path", booleanProperty("Include absolute file path in each result."));
+        properties.add("include_size_bytes", booleanProperty("Include file size for files."));
+        properties.add("include_modified_time", booleanProperty("Include last-modified timestamp."));
+        properties.add("sort_by", enumStringProperty("Sort key.", "path", "name", "size", "modified"));
+        properties.add("sort_order", enumStringProperty("Sort direction.", "asc", "desc"));
+        return schemaObject(properties);
+    }
+
+    private static @NotNull JsonObject registryEntrySchema() {
+        JsonObject properties = new JsonObject();
+        properties.add("registry", enumStringProperty("Registry namespace.", "action", "placeholder", "requirement", "listener", "element", "background", "overlay"));
+        properties.add("identifier", stringProperty("Entry identifier."));
+        return schemaObject(properties, "registry", "identifier");
+    }
+
+    private static @NotNull JsonObject layoutListCompactSchema() {
+        JsonObject properties = pagedQuerySchema().getAsJsonObject("properties");
+        properties.add("screen_identifier", stringProperty("Optional screen identifier filter."));
+        properties.add("is_universal", booleanProperty("Optional filter for universal layouts."));
+        properties.add("enabled", booleanProperty("Optional filter for enabled layouts."));
+        properties.add("include_layout_file", booleanProperty("Include absolute layout file path in each item."));
+        return schemaObject(properties);
+    }
+
+    private static @NotNull JsonObject layoutListSchema() {
+        JsonObject properties = pagedQuerySchema().getAsJsonObject("properties");
+        properties.add("screen_identifier", stringProperty("Optional screen identifier filter."));
+        properties.add("is_universal", booleanProperty("Optional filter for universal layouts."));
+        properties.add("enabled", booleanProperty("Optional filter for enabled layouts."));
+        properties.add("include_serialized_set", booleanProperty("Include full serialized_set in each returned layout."));
+        properties.add("include_fancy_string", booleanProperty("Include fancy_string payload for each returned layout."));
+        return schemaObject(properties);
+    }
+
+    private static @NotNull JsonObject getLayoutSchema() {
+        JsonObject properties = withLayoutSelectorProperties(new JsonObject());
+        properties.add("include_serialized_set", booleanProperty("Include serialized_set payload (default false for context efficiency)."));
+        properties.add("include_fancy_string", booleanProperty("Include fancy_string payload (default false)."));
+        return schemaObject(properties);
+    }
+
+    private static @NotNull JsonObject layoutMetaSchema() {
+        JsonObject properties = withLayoutSelectorProperties(new JsonObject());
+        properties.add("include_requirements", booleanProperty("Include layout-wide requirement container."));
+        properties.add("include_universal_lists", booleanProperty("Include universal whitelist/blacklist."));
+        properties.add("include_layout_file", booleanProperty("Include layout file path."));
+        return schemaObject(properties);
+    }
+
+    private static @NotNull JsonObject layoutElementsSchema() {
+        JsonObject properties = withLayoutSelectorProperties(new JsonObject());
+        properties.add("section", enumStringProperty("Element section to query.", "normal", "vanilla", "deep", "all"));
+        properties.add("builder_identifier", stringProperty("Optional element builder filter."));
+        properties.add("query", stringProperty("Optional case-insensitive match for instance/builder id."));
+        properties.add("include_properties", booleanProperty("Include flattened properties object."));
+        properties.add("include_serialized", booleanProperty("Include full serialized element container."));
+        properties.add("offset", integerProperty("Pagination offset."));
+        properties.add("limit", integerProperty("Pagination limit."));
+        return schemaObject(properties);
+    }
+
+    private static @NotNull JsonObject editorStateSchema() {
+        JsonObject properties = withLayoutSelectorProperties(new JsonObject());
+        properties.add("sync_layout", booleanProperty("Sync editor element state back to layout before returning data."));
+        properties.add("include_layout", booleanProperty("Include layout payload (default false)."));
+        properties.add("include_serialized_set", booleanProperty("Include serialized_set when include_layout=true (default false)."));
+        properties.add("include_fancy_string", booleanProperty("Include fancy_string when include_layout=true (default false)."));
+        properties.add("include_counts", booleanProperty("Include selected/total element counters."));
+        return schemaObject(properties);
+    }
+
+    private static @NotNull JsonObject editorGetElementSchema() {
+        JsonObject properties = withLayoutSelectorProperties(new JsonObject());
+        properties.add("element_identifier", stringProperty("Instance identifier of target element."));
+        properties.add("include_serialized_element", booleanProperty("Include serialized element payload."));
+        return schemaObject(properties, "element_identifier");
+    }
+
+    private static @NotNull JsonObject editorListElementsSchema() {
+        JsonObject properties = withLayoutSelectorProperties(new JsonObject());
+        properties.add("query", stringProperty("Optional case-insensitive instance/builder/display-name filter."));
+        properties.add("builder_identifier", stringProperty("Optional builder identifier filter."));
+        properties.add("selected_only", booleanProperty("If true, return only selected elements."));
+        properties.add("include_vanilla_widgets", booleanProperty("Include vanilla widget elements list."));
+        properties.add("include_serialized_element", booleanProperty("Include serialized element payload per item (default false)."));
+        properties.add("offset", integerProperty("Pagination offset."));
+        properties.add("limit", integerProperty("Pagination limit."));
+        return schemaObject(properties);
+    }
+
+    private static @NotNull JsonObject editorVisualLayersSchema() {
+        JsonObject properties = withLayoutSelectorProperties(new JsonObject());
+        properties.add("include_serialized_container", booleanProperty("Include serialized background/overlay containers (default false)."));
+        return schemaObject(properties);
+    }
+
+    private static @NotNull JsonObject editorPatchLayoutSchema() {
+        JsonObject properties = withLayoutSelectorProperties(new JsonObject());
+        properties.add("meta_patch", objectProperty("Optional layout metadata patch object (same fields as update_layout_meta, except selector/open_editor)."));
+        properties.add("element_additions", objectArrayProperty("Array of element additions: builder_identifier/x/y/select/serialized_element."));
+        properties.add("element_updates", objectArrayProperty("Array of element update objects (element_identifier + serialized_element)."));
+        properties.add("element_moves", objectArrayProperty("Array of move objects (element_identifier + target_index/x/y)."));
+        properties.add("element_removals", stringOrObjectArrayProperty("Array of element identifiers or remove objects."));
+        properties.add("ordered_element_identifiers", stringArrayProperty("Optional full order list for normal elements."));
+        properties.add("background_set", objectArrayProperty("Array of background set objects (background_identifier + background_container)."));
+        properties.add("background_remove", stringOrObjectArrayProperty("Array of background identifiers or remove objects."));
+        properties.add("background_reorder", objectArrayProperty("Array of background reorder objects (background_identifier + target_index)."));
+        properties.add("overlay_set", objectArrayProperty("Array of overlay set objects (overlay_identifier + overlay_container)."));
+        properties.add("overlay_remove", stringOrObjectArrayProperty("Array of overlay identifiers or remove objects."));
+        properties.add("overlay_reorder", objectArrayProperty("Array of overlay reorder objects (overlay_identifier + target_index)."));
+        properties.add("auto_save", booleanProperty("Save layout immediately after applying patch operations."));
+        properties.add("include_editor_poll", booleanProperty("Include compact editor poll result in response."));
+        return schemaObject(properties);
+    }
+
+    private static @NotNull JsonObject listenerListSchema() {
+        JsonObject properties = pagedQuerySchema().getAsJsonObject("properties");
+        properties.add("listener_identifier", stringProperty("Optional filter by listener type identifier."));
+        properties.add("include_serialized", booleanProperty("Include serialized listener instance payload (default false)."));
+        return schemaObject(properties);
+    }
+
+    private static @NotNull JsonObject listenerGetSchema() {
+        JsonObject properties = new JsonObject();
+        properties.add("instance_identifier", stringProperty("Listener instance identifier."));
+        properties.add("include_serialized", booleanProperty("Include serialized listener instance payload."));
+        return schemaObject(properties, "instance_identifier");
+    }
+
+    private static @NotNull JsonObject schedulerListSchema() {
+        JsonObject properties = pagedQuerySchema().getAsJsonObject("properties");
+        properties.add("include_serialized", booleanProperty("Include serialized scheduler payload (default false)."));
+        properties.add("include_runtime_status", booleanProperty("Include running state."));
+        return schemaObject(properties);
+    }
+
+    private static @NotNull JsonObject schedulerGetSchema() {
+        JsonObject properties = new JsonObject();
+        properties.add("identifier", stringProperty("Scheduler identifier."));
+        properties.add("include_serialized", booleanProperty("Include serialized scheduler payload."));
+        return schemaObject(properties, "identifier");
+    }
+
+    private static @NotNull JsonObject variableListSchema() {
+        JsonObject properties = pagedQuerySchema().getAsJsonObject("properties");
+        properties.add("include_serialized", booleanProperty("Include serialized variable payload (default false)."));
+        properties.add("include_values", booleanProperty("Include variable values."));
+        return schemaObject(properties);
+    }
+
+    private static @NotNull JsonObject variableGetSchema() {
+        JsonObject properties = new JsonObject();
+        properties.add("name", stringProperty("Variable name."));
+        properties.add("include_serialized", booleanProperty("Include serialized variable payload."));
+        return schemaObject(properties, "name");
     }
 
     private static @NotNull JsonObject layoutSelectorSchema() {
@@ -483,7 +699,7 @@ final class FancyMenuMcpTools {
     }
 
     private static @NotNull JsonObject withLayoutSelectorProperties(@NotNull JsonObject properties) {
-        properties.add("runtime_layout_identifier", stringProperty("Optional runtime layout id. If provided, editor auto-opens/switches to this layout."));
+        properties.add("runtime_layout_identifier", stringProperty("Optional runtime layout id."));
         properties.add("layout_file", stringProperty("Optional absolute layout file path."));
         properties.add("layout_name", stringProperty("Optional layout name."));
         properties.add("screen_identifier", stringProperty("Optional selector by screen identifier."));
@@ -543,6 +759,33 @@ final class FancyMenuMcpTools {
         JsonObject property = new JsonObject();
         property.addProperty("type", "object");
         property.addProperty("description", description);
+        return property;
+    }
+
+    private static @NotNull JsonObject objectArrayProperty(@NotNull String description) {
+        JsonObject items = new JsonObject();
+        items.addProperty("type", "object");
+        JsonObject property = new JsonObject();
+        property.addProperty("type", "array");
+        property.addProperty("description", description);
+        property.add("items", items);
+        return property;
+    }
+
+    private static @NotNull JsonObject stringOrObjectArrayProperty(@NotNull String description) {
+        JsonObject primitiveItems = new JsonObject();
+        primitiveItems.addProperty("type", "string");
+        JsonObject objectItems = new JsonObject();
+        objectItems.addProperty("type", "object");
+        JsonObject items = new JsonObject();
+        JsonArray anyOf = new JsonArray();
+        anyOf.add(primitiveItems);
+        anyOf.add(objectItems);
+        items.add("anyOf", anyOf);
+        JsonObject property = new JsonObject();
+        property.addProperty("type", "array");
+        property.addProperty("description", description);
+        property.add("items", items);
         return property;
     }
 

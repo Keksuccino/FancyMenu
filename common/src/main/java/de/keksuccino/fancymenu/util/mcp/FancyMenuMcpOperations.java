@@ -59,8 +59,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
@@ -81,21 +85,28 @@ final class FancyMenuMcpOperations {
         out.addProperty("name", "FancyMenu MCP Server");
         out.addProperty("mandatory_first_tool", "fancymenu_intro");
         out.addProperty("summary", "FancyMenu is like Figma for real Minecraft menus: you design live, functional menus that directly run in-game.");
+        out.addProperty("workflow_hint", "Use compact discovery tools first, then switch to precise patch/edit tools. Avoid full exports unless needed.");
         JsonArray instructions = new JsonArray();
         instructions.add("Always call this intro tool first in every new MCP session.");
         instructions.add("Prefer direct Streamable HTTP MCP transport via the configured MCP port (for example: http://127.0.0.1:<port>/mcp).");
+        instructions.add("When exploring data, prefer compact tools with filtering/pagination (limit/offset/query/include_* flags) to save context.");
+        instructions.add("Suggested discovery sequence: fancymenu_list_layouts_compact -> fancymenu_get_layout_meta -> fancymenu_get_layout_elements.");
         instructions.add("When editing layouts, open the Layout Editor for the target layout/screen and keep updates live so the user can watch changes.");
+        instructions.add("For multi-step layout edits, prefer fancymenu_editor_patch_layout to reduce roundtrips.");
         instructions.add("When editing action scripts for layouts/listeners/schedulers, open the Action Script Editor and keep it live-updated.");
         instructions.add("Use screenshot capture to visually validate current UI state before and after changes.");
-        instructions.add("Prefer full serialization tools for complete control: layouts, scripts, requirements, listeners, schedulers, variables, and fancy-properties.");
+        instructions.add("Use full serialization tools only when required for exact cloning or low-level patching.");
         out.add("instructions", instructions);
         JsonArray capabilities = new JsonArray();
         capabilities.add("Layout editor automation: add/move/edit/delete elements, backgrounds, decoration overlays.");
+        capabilities.add("Batch layout patch automation for low-roundtrip editing sessions.");
         capabilities.add("Action scripting automation with live Action Editor updates.");
         capabilities.add("Full CRUD for listeners, schedulers, variables.");
         capabilities.add("Registry introspection for actions/placeholders/requirements/elements/backgrounds/overlays/listeners.");
+        capabilities.add("Compact/paginated lookups for layouts, editor elements, registries, and asset files.");
         capabilities.add("Screen customization controls and layout-editor option controls.");
         capabilities.add("Panorama/slideshow discovery for resource-aware background design.");
+        capabilities.add("Direct FancyMenu assets browser with filtering (name/path/extensions/type).");
         capabilities.add("Screenshot capture as PNG base64.");
         capabilities.add("FancyMenu property format parse/stringify for full-state editing.");
         out.add("capabilities", capabilities);
@@ -306,206 +317,441 @@ final class FancyMenuMcpOperations {
         return out;
     }
 
-    static @NotNull JsonObject captureScreenshot() throws Exception {
+    static @NotNull JsonObject captureScreenshot(@NotNull JsonObject args) throws Exception {
         NativeImage image = Screenshot.takeScreenshot(Minecraft.getInstance().getMainRenderTarget());
         try {
             byte[] bytes = image.asByteArray();
+            boolean includeBase64 = getBoolean(args, "include_base64", true);
             JsonObject out = new JsonObject();
             out.addProperty("format", "png");
             out.addProperty("mime_type", "image/png");
             out.addProperty("width", image.getWidth());
             out.addProperty("height", image.getHeight());
             out.addProperty("byte_size", bytes.length);
-            out.addProperty("base64", Base64.getEncoder().encodeToString(bytes));
+            if (includeBase64) {
+                out.addProperty("base64", Base64.getEncoder().encodeToString(bytes));
+            }
+            out.addProperty("base64_included", includeBase64);
             return out;
         } finally {
             image.close();
         }
     }
 
-    static @NotNull JsonObject listActions() {
+    static @NotNull JsonObject listActions(@NotNull JsonObject args) {
+        String query = normalizedQuery(args);
+        boolean includeDescriptions = getBoolean(args, "include_descriptions", true);
+        boolean includeValueFields = getBoolean(args, "include_value_fields", true);
+        boolean identifiersOnly = getBoolean(args, "identifiers_only", false);
+        boolean includeDeprecated = getBoolean(args, "include_deprecated", true);
+        int offset = getOffset(args);
+        int limit = getLimit(args, 200, 5000);
         JsonArray array = new JsonArray();
         List<Action> actions = ActionRegistry.getActions();
         actions.sort(Comparator.comparing(Action::getIdentifier, String.CASE_INSENSITIVE_ORDER));
+        int totalMatches = 0;
         for (Action action : actions) {
+            String identifier = action.getIdentifier();
+            String displayName = action.getDisplayName().getString();
+            if (!includeDeprecated && action.isDeprecated()) {
+                continue;
+            }
+            if (!matchesQuery(query, identifier, displayName)) {
+                continue;
+            }
+            totalMatches++;
+            if (totalMatches <= offset || array.size() >= limit) {
+                continue;
+            }
             JsonObject item = new JsonObject();
-            item.addProperty("identifier", action.getIdentifier());
-            item.addProperty("display_name", action.getDisplayName().getString());
-            item.addProperty("description", action.getDescription().getString());
-            item.addProperty("has_value", action.hasValue());
-            item.addProperty("deprecated", action.isDeprecated());
-            item.addProperty("value_display_name", action.getValueDisplayName() != null ? action.getValueDisplayName().getString() : "");
-            item.addProperty("value_preset", Objects.requireNonNullElse(action.getValuePreset(), ""));
+            item.addProperty("identifier", identifier);
+            if (!identifiersOnly) {
+                item.addProperty("display_name", displayName);
+                item.addProperty("has_value", action.hasValue());
+                item.addProperty("deprecated", action.isDeprecated());
+                if (includeDescriptions) {
+                    item.addProperty("description", action.getDescription().getString());
+                }
+                if (includeValueFields) {
+                    item.addProperty("value_display_name", action.getValueDisplayName() != null ? action.getValueDisplayName().getString() : "");
+                    item.addProperty("value_preset", Objects.requireNonNullElse(action.getValuePreset(), ""));
+                }
+            }
             array.add(item);
         }
         JsonObject out = new JsonObject();
         out.add("actions", array);
         out.addProperty("count", array.size());
+        out.addProperty("total_matches", totalMatches);
+        out.addProperty("offset", offset);
+        out.addProperty("limit", limit == Integer.MAX_VALUE ? -1 : limit);
         return out;
     }
 
-    static @NotNull JsonObject listPlaceholders() {
+    static @NotNull JsonObject listPlaceholders(@NotNull JsonObject args) {
+        String query = normalizedQuery(args);
+        boolean includeDescriptions = getBoolean(args, "include_descriptions", true);
+        boolean includeValueNames = getBoolean(args, "include_value_names", true);
+        boolean identifiersOnly = getBoolean(args, "identifiers_only", false);
+        int offset = getOffset(args);
+        int limit = getLimit(args, 200, 5000);
         JsonArray array = new JsonArray();
         List<Placeholder> placeholders = PlaceholderRegistry.getPlaceholders();
         placeholders.sort(Comparator.comparing(Placeholder::getIdentifier, String.CASE_INSENSITIVE_ORDER));
+        int totalMatches = 0;
         for (Placeholder placeholder : placeholders) {
+            String identifier = placeholder.getIdentifier();
+            String displayName = placeholder.getDisplayName();
+            String category = Objects.requireNonNullElse(placeholder.getCategory(), "");
+            if (!matchesQuery(query, identifier, displayName, category)) {
+                continue;
+            }
+            totalMatches++;
+            if (totalMatches <= offset || array.size() >= limit) {
+                continue;
+            }
             JsonObject item = new JsonObject();
-            item.addProperty("identifier", placeholder.getIdentifier());
-            item.addProperty("display_name", placeholder.getDisplayName());
-            item.addProperty("category", Objects.requireNonNullElse(placeholder.getCategory(), ""));
-            JsonArray values = new JsonArray();
-            List<String> valueNames = placeholder.getValueNames();
-            if (valueNames != null) {
-                valueNames.forEach(values::add);
+            item.addProperty("identifier", identifier);
+            if (!identifiersOnly) {
+                item.addProperty("display_name", displayName);
+                item.addProperty("category", category);
+                if (includeValueNames) {
+                    JsonArray values = new JsonArray();
+                    List<String> valueNames = placeholder.getValueNames();
+                    if (valueNames != null) {
+                        valueNames.forEach(values::add);
+                    }
+                    item.add("value_names", values);
+                }
+                if (includeDescriptions) {
+                    JsonArray descriptions = new JsonArray();
+                    List<String> descriptionLines = placeholder.getDescription();
+                    if (descriptionLines != null) {
+                        descriptionLines.forEach(descriptions::add);
+                    }
+                    item.add("description_lines", descriptions);
+                }
             }
-            item.add("value_names", values);
-            JsonArray descriptions = new JsonArray();
-            List<String> desc = placeholder.getDescription();
-            if (desc != null) {
-                desc.forEach(descriptions::add);
-            }
-            item.add("description_lines", descriptions);
             array.add(item);
         }
         JsonObject out = new JsonObject();
         out.add("placeholders", array);
         out.addProperty("count", array.size());
+        out.addProperty("total_matches", totalMatches);
+        out.addProperty("offset", offset);
+        out.addProperty("limit", limit == Integer.MAX_VALUE ? -1 : limit);
         return out;
     }
 
-    static @NotNull JsonObject listRequirements() {
+    static @NotNull JsonObject listRequirements(@NotNull JsonObject args) {
+        String query = normalizedQuery(args);
+        boolean includeDescriptions = getBoolean(args, "include_descriptions", true);
+        boolean includeValueFields = getBoolean(args, "include_value_fields", true);
+        boolean identifiersOnly = getBoolean(args, "identifiers_only", false);
+        int offset = getOffset(args);
+        int limit = getLimit(args, 200, 5000);
         JsonArray array = new JsonArray();
         List<Requirement> requirements = RequirementRegistry.getRequirements();
         requirements.sort(Comparator.comparing(Requirement::getIdentifier, String.CASE_INSENSITIVE_ORDER));
+        int totalMatches = 0;
         for (Requirement requirement : requirements) {
+            String identifier = requirement.getIdentifier();
+            String displayName = requirement.getDisplayName().getString();
+            String category = Objects.requireNonNullElse(requirement.getCategory(), "");
+            if (!matchesQuery(query, identifier, displayName, category)) {
+                continue;
+            }
+            totalMatches++;
+            if (totalMatches <= offset || array.size() >= limit) {
+                continue;
+            }
             JsonObject item = new JsonObject();
-            item.addProperty("identifier", requirement.getIdentifier());
-            item.addProperty("display_name", requirement.getDisplayName().getString());
-            item.addProperty("description", requirement.getDescription() != null ? requirement.getDescription().getString() : "");
-            item.addProperty("category", Objects.requireNonNullElse(requirement.getCategory(), ""));
-            item.addProperty("has_value", requirement.hasValue());
-            item.addProperty("value_display_name", requirement.getValueDisplayName() != null ? requirement.getValueDisplayName().getString() : "");
-            item.addProperty("value_preset", Objects.requireNonNullElse(requirement.getValuePreset(), ""));
+            item.addProperty("identifier", identifier);
+            if (!identifiersOnly) {
+                item.addProperty("display_name", displayName);
+                item.addProperty("category", category);
+                item.addProperty("has_value", requirement.hasValue());
+                if (includeDescriptions) {
+                    item.addProperty("description", requirement.getDescription() != null ? requirement.getDescription().getString() : "");
+                }
+                if (includeValueFields) {
+                    item.addProperty("value_display_name", requirement.getValueDisplayName() != null ? requirement.getValueDisplayName().getString() : "");
+                    item.addProperty("value_preset", Objects.requireNonNullElse(requirement.getValuePreset(), ""));
+                }
+            }
             array.add(item);
         }
         JsonObject out = new JsonObject();
         out.add("requirements", array);
         out.addProperty("count", array.size());
+        out.addProperty("total_matches", totalMatches);
+        out.addProperty("offset", offset);
+        out.addProperty("limit", limit == Integer.MAX_VALUE ? -1 : limit);
         return out;
     }
 
-    static @NotNull JsonObject listListenerTypes() {
+    static @NotNull JsonObject listListenerTypes(@NotNull JsonObject args) {
+        String query = normalizedQuery(args);
+        boolean includeDescriptions = getBoolean(args, "include_descriptions", true);
+        boolean includeCustomVariables = getBoolean(args, "include_custom_variables", true);
+        boolean identifiersOnly = getBoolean(args, "identifiers_only", false);
+        int offset = getOffset(args);
+        int limit = getLimit(args, 200, 5000);
         JsonArray array = new JsonArray();
         List<AbstractListener> listeners = ListenerRegistry.getListeners();
         listeners.sort(Comparator.comparing(AbstractListener::getIdentifier, String.CASE_INSENSITIVE_ORDER));
+        int totalMatches = 0;
         for (AbstractListener listener : listeners) {
+            String identifier = listener.getIdentifier();
+            String displayName = listener.getDisplayName().getString();
+            if (!matchesQuery(query, identifier, displayName)) {
+                continue;
+            }
+            totalMatches++;
+            if (totalMatches <= offset || array.size() >= limit) {
+                continue;
+            }
             JsonObject item = new JsonObject();
-            item.addProperty("identifier", listener.getIdentifier());
-            item.addProperty("display_name", listener.getDisplayName().getString());
-            JsonArray desc = new JsonArray();
-            listener.getDescription().forEach(component -> desc.add(component.getString()));
-            item.add("description_lines", desc);
-            JsonArray variables = new JsonArray();
-            listener.getCustomVariables().forEach(variable -> {
-                JsonObject variableJson = new JsonObject();
-                variableJson.addProperty("name", variable.name());
-                variables.add(variableJson);
-            });
-            item.add("custom_variables", variables);
+            item.addProperty("identifier", identifier);
+            if (!identifiersOnly) {
+                item.addProperty("display_name", displayName);
+                if (includeDescriptions) {
+                    JsonArray descriptionLines = new JsonArray();
+                    listener.getDescription().forEach(component -> descriptionLines.add(component.getString()));
+                    item.add("description_lines", descriptionLines);
+                }
+                if (includeCustomVariables) {
+                    JsonArray variables = new JsonArray();
+                    listener.getCustomVariables().forEach(variable -> {
+                        JsonObject variableJson = new JsonObject();
+                        variableJson.addProperty("name", variable.name());
+                        variables.add(variableJson);
+                    });
+                    item.add("custom_variables", variables);
+                }
+            }
             array.add(item);
         }
         JsonObject out = new JsonObject();
         out.add("listener_types", array);
         out.addProperty("count", array.size());
+        out.addProperty("total_matches", totalMatches);
+        out.addProperty("offset", offset);
+        out.addProperty("limit", limit == Integer.MAX_VALUE ? -1 : limit);
         return out;
     }
 
-    static @NotNull JsonObject listElements() {
+    static @NotNull JsonObject listElements(@NotNull JsonObject args) {
+        String query = normalizedQuery(args);
+        boolean includeDescriptions = getBoolean(args, "include_descriptions", true);
+        boolean includeDefaultSerialized = getBoolean(args, "include_default_serialized", false);
+        boolean includeDeprecated = getBoolean(args, "include_deprecated", true);
+        boolean identifiersOnly = getBoolean(args, "identifiers_only", false);
+        int offset = getOffset(args);
+        int limit = getLimit(args, 200, 5000);
         JsonArray array = new JsonArray();
         List<ElementBuilder<?, ?>> builders = ElementRegistry.getBuilders();
         builders.sort(Comparator.comparing(ElementBuilder::getIdentifier, String.CASE_INSENSITIVE_ORDER));
+        int totalMatches = 0;
         for (ElementBuilder<?, ?> builder : builders) {
+            String identifier = builder.getIdentifier();
+            String displayName = builder.getDisplayName(null).getString();
+            if (!includeDeprecated && builder.isDeprecated()) {
+                continue;
+            }
+            if (!matchesQuery(query, identifier, displayName)) {
+                continue;
+            }
+            totalMatches++;
+            if (totalMatches <= offset || array.size() >= limit) {
+                continue;
+            }
             JsonObject item = new JsonObject();
-            item.addProperty("identifier", builder.getIdentifier());
-            item.addProperty("display_name", builder.getDisplayName(null).getString());
-            Component[] description = builder.getDescription(null);
-            JsonArray lines = new JsonArray();
-            if (description != null) {
-                for (Component component : description) {
-                    lines.add(component.getString());
+            item.addProperty("identifier", identifier);
+            if (!identifiersOnly) {
+                item.addProperty("display_name", displayName);
+                item.addProperty("deprecated", builder.isDeprecated());
+                if (includeDescriptions) {
+                    Component[] description = builder.getDescription(null);
+                    JsonArray lines = new JsonArray();
+                    if (description != null) {
+                        for (Component component : description) {
+                            lines.add(component.getString());
+                        }
+                    }
+                    item.add("description_lines", lines);
+                }
+                if (includeDefaultSerialized) {
+                    var defaultElement = builder.buildDefaultInstance();
+                    SerializedElement serialized = builder.serializeElementInternal(defaultElement);
+                    item.add("default_serialized_element", serialized != null ? FancyMenuMcpSerialization.toJson(serialized) : new JsonObject());
                 }
             }
-            item.add("description_lines", lines);
-            item.addProperty("deprecated", builder.isDeprecated());
             array.add(item);
         }
         JsonObject out = new JsonObject();
         out.add("elements", array);
         out.addProperty("count", array.size());
+        out.addProperty("total_matches", totalMatches);
+        out.addProperty("offset", offset);
+        out.addProperty("limit", limit == Integer.MAX_VALUE ? -1 : limit);
         return out;
     }
 
-    static @NotNull JsonObject listBackgrounds() {
+    static @NotNull JsonObject listBackgrounds(@NotNull JsonObject args) {
+        String query = normalizedQuery(args);
+        boolean includeDescriptions = getBoolean(args, "include_descriptions", true);
+        boolean includeDefaultSerialized = getBoolean(args, "include_default_serialized", false);
+        boolean includeDeprecated = getBoolean(args, "include_deprecated", true);
+        boolean identifiersOnly = getBoolean(args, "identifiers_only", false);
+        int offset = getOffset(args);
+        int limit = getLimit(args, 200, 5000);
         JsonArray array = new JsonArray();
         List<MenuBackgroundBuilder<?>> builders = MenuBackgroundRegistry.getBuilders();
         builders.sort(Comparator.comparing(MenuBackgroundBuilder::getIdentifier, String.CASE_INSENSITIVE_ORDER));
+        int totalMatches = 0;
         for (MenuBackgroundBuilder<?> builder : builders) {
+            String identifier = builder.getIdentifier();
+            String displayName = builder.getDisplayName().getString();
+            if (!includeDeprecated && builder.isDeprecated()) {
+                continue;
+            }
+            if (!matchesQuery(query, identifier, displayName)) {
+                continue;
+            }
+            totalMatches++;
+            if (totalMatches <= offset || array.size() >= limit) {
+                continue;
+            }
             JsonObject item = new JsonObject();
-            item.addProperty("identifier", builder.getIdentifier());
-            item.addProperty("display_name", builder.getDisplayName().getString());
-            item.addProperty("description", builder.getDescription() != null ? builder.getDescription().getString() : "");
-            item.addProperty("deprecated", builder.isDeprecated());
+            item.addProperty("identifier", identifier);
+            if (!identifiersOnly) {
+                item.addProperty("display_name", displayName);
+                item.addProperty("deprecated", builder.isDeprecated());
+                if (includeDescriptions) {
+                    item.addProperty("description", builder.getDescription() != null ? builder.getDescription().getString() : "");
+                }
+                if (includeDefaultSerialized) {
+                    MenuBackground<?> defaultBackground = builder.buildDefaultInstance();
+                    item.add("default_serialized_container", FancyMenuMcpSerialization.toJson(builder._serializeBackground(defaultBackground)));
+                }
+            }
             array.add(item);
         }
         JsonObject out = new JsonObject();
         out.add("backgrounds", array);
         out.addProperty("count", array.size());
+        out.addProperty("total_matches", totalMatches);
+        out.addProperty("offset", offset);
+        out.addProperty("limit", limit == Integer.MAX_VALUE ? -1 : limit);
         return out;
     }
 
-    static @NotNull JsonObject listDecorationOverlays() {
+    static @NotNull JsonObject listDecorationOverlays(@NotNull JsonObject args) {
+        String query = normalizedQuery(args);
+        boolean includeDescriptions = getBoolean(args, "include_descriptions", true);
+        boolean includeDefaultSerialized = getBoolean(args, "include_default_serialized", false);
+        boolean identifiersOnly = getBoolean(args, "identifiers_only", false);
+        int offset = getOffset(args);
+        int limit = getLimit(args, 200, 5000);
         JsonArray array = new JsonArray();
         List<AbstractDecorationOverlayBuilder<?>> builders = DecorationOverlayRegistry.getAll();
         builders.sort(Comparator.comparing(AbstractDecorationOverlayBuilder::getIdentifier, String.CASE_INSENSITIVE_ORDER));
+        int totalMatches = 0;
         for (AbstractDecorationOverlayBuilder<?> builder : builders) {
+            String identifier = builder.getIdentifier();
+            String displayName = builder.getDisplayName().getString();
+            if (!matchesQuery(query, identifier, displayName)) {
+                continue;
+            }
+            totalMatches++;
+            if (totalMatches <= offset || array.size() >= limit) {
+                continue;
+            }
             JsonObject item = new JsonObject();
-            item.addProperty("identifier", builder.getIdentifier());
-            item.addProperty("display_name", builder.getDisplayName().getString());
-            item.addProperty("description", builder.getDescription() != null ? builder.getDescription().getString() : "");
+            item.addProperty("identifier", identifier);
+            if (!identifiersOnly) {
+                item.addProperty("display_name", displayName);
+                if (includeDescriptions) {
+                    item.addProperty("description", builder.getDescription() != null ? builder.getDescription().getString() : "");
+                }
+                if (includeDefaultSerialized) {
+                    item.add("default_serialized_container", FancyMenuMcpSerialization.toJson(builder._serialize(builder.buildDefaultInstance())));
+                }
+            }
             array.add(item);
         }
         JsonObject out = new JsonObject();
         out.add("decoration_overlays", array);
         out.addProperty("count", array.size());
+        out.addProperty("total_matches", totalMatches);
+        out.addProperty("offset", offset);
+        out.addProperty("limit", limit == Integer.MAX_VALUE ? -1 : limit);
         return out;
     }
 
-    static @NotNull JsonObject listPanoramas() {
+    static @NotNull JsonObject listPanoramas(@NotNull JsonObject args) {
+        String query = normalizedQuery(args);
+        boolean includePaths = getBoolean(args, "include_paths", true);
+        int offset = getOffset(args);
+        int limit = getLimit(args, 200, 5000);
         JsonArray panoramas = new JsonArray();
         List<LocalTexturePanoramaRenderer> renderers = PanoramaHandler.getPanoramas();
         renderers.sort(Comparator.comparing(renderer -> Objects.requireNonNullElse(renderer.getName(), ""), String.CASE_INSENSITIVE_ORDER));
+        int totalMatches = 0;
         for (LocalTexturePanoramaRenderer renderer : renderers) {
+            String name = Objects.requireNonNullElse(renderer.getName(), "");
+            String propertiesPath = renderer.propertiesFile != null ? renderer.propertiesFile.getAbsolutePath() : "";
+            String imageDirPath = renderer.panoramaImageDir != null ? renderer.panoramaImageDir.getAbsolutePath() : "";
+            if (!matchesQuery(query, name, propertiesPath, imageDirPath)) {
+                continue;
+            }
+            totalMatches++;
+            if (totalMatches <= offset || panoramas.size() >= limit) {
+                continue;
+            }
             JsonObject item = new JsonObject();
-            item.addProperty("name", Objects.requireNonNullElse(renderer.getName(), ""));
-            item.addProperty("properties_file", renderer.propertiesFile != null ? renderer.propertiesFile.getAbsolutePath() : "");
-            item.addProperty("panorama_image_dir", renderer.panoramaImageDir != null ? renderer.panoramaImageDir.getAbsolutePath() : "");
+            item.addProperty("name", name);
+            if (includePaths) {
+                item.addProperty("properties_file", propertiesPath);
+                item.addProperty("panorama_image_dir", imageDirPath);
+            }
             item.addProperty("has_overlay_texture", renderer.overlayTextureSupplier != null);
             panoramas.add(item);
         }
         JsonObject out = new JsonObject();
         out.add("panoramas", panoramas);
         out.addProperty("count", panoramas.size());
+        out.addProperty("total_matches", totalMatches);
+        out.addProperty("offset", offset);
+        out.addProperty("limit", limit == Integer.MAX_VALUE ? -1 : limit);
         return out;
     }
 
-    static @NotNull JsonObject listSlideshows() {
+    static @NotNull JsonObject listSlideshows(@NotNull JsonObject args) {
+        String query = normalizedQuery(args);
+        boolean includePaths = getBoolean(args, "include_paths", true);
+        int offset = getOffset(args);
+        int limit = getLimit(args, 200, 5000);
         JsonArray slideshows = new JsonArray();
         List<ExternalTextureSlideshowRenderer> renderers = SlideshowHandler.getSlideshows();
         renderers.sort(Comparator.comparing(renderer -> Objects.requireNonNullElse(renderer.getName(), ""), String.CASE_INSENSITIVE_ORDER));
+        int totalMatches = 0;
         for (ExternalTextureSlideshowRenderer renderer : renderers) {
+            String name = Objects.requireNonNullElse(renderer.getName(), "");
+            String directory = Objects.requireNonNullElse(renderer.dir, "");
+            if (!matchesQuery(query, name, directory)) {
+                continue;
+            }
+            totalMatches++;
+            if (totalMatches <= offset || slideshows.size() >= limit) {
+                continue;
+            }
             JsonObject item = new JsonObject();
-            item.addProperty("name", Objects.requireNonNullElse(renderer.getName(), ""));
-            item.addProperty("directory", Objects.requireNonNullElse(renderer.dir, ""));
+            item.addProperty("name", name);
+            if (includePaths) {
+                item.addProperty("directory", directory);
+            }
             item.addProperty("ready", renderer.isReady());
             item.addProperty("image_count", renderer.getImageCount());
             item.addProperty("image_width", renderer.getImageWidth());
@@ -516,35 +762,533 @@ final class FancyMenuMcpOperations {
         JsonObject out = new JsonObject();
         out.add("slideshows", slideshows);
         out.addProperty("count", slideshows.size());
+        out.addProperty("total_matches", totalMatches);
+        out.addProperty("offset", offset);
+        out.addProperty("limit", limit == Integer.MAX_VALUE ? -1 : limit);
         return out;
     }
 
-    static @NotNull JsonObject listScreenIdentifiers() {
+    static @NotNull JsonObject listScreenIdentifiers(@NotNull JsonObject args) {
+        String query = normalizedQuery(args);
+        int offset = getOffset(args);
+        int limit = getLimit(args, 200, 5000);
         JsonArray identifiers = new JsonArray();
-        UniversalScreenIdentifierRegistry.getUniversalIdentifiers().stream()
-                .sorted(String.CASE_INSENSITIVE_ORDER)
-                .forEach(identifiers::add);
+        int totalMatches = 0;
+        for (String identifier : UniversalScreenIdentifierRegistry.getUniversalIdentifiers().stream().sorted(String.CASE_INSENSITIVE_ORDER).toList()) {
+            if (!matchesQuery(query, identifier)) {
+                continue;
+            }
+            totalMatches++;
+            if (totalMatches <= offset || identifiers.size() >= limit) {
+                continue;
+            }
+            identifiers.add(identifier);
+        }
         JsonObject out = new JsonObject();
         out.add("universal_identifiers", identifiers);
         out.addProperty("count", identifiers.size());
+        out.addProperty("total_matches", totalMatches);
+        out.addProperty("offset", offset);
+        out.addProperty("limit", limit == Integer.MAX_VALUE ? -1 : limit);
         return out;
     }
 
-    static @NotNull JsonObject listLayouts() {
+    static @NotNull JsonObject listAssets(@NotNull JsonObject args) throws Exception {
+        Path rootPath = LayoutHandler.ASSETS_DIR.toPath().toAbsolutePath().normalize();
+        String pathPrefix = getString(args, "path_prefix", "");
+        Path startPath = rootPath;
+        if (pathPrefix != null && !pathPrefix.isBlank()) {
+            Path resolved = rootPath.resolve(pathPrefix.replace("\\", "/")).normalize();
+            if (!resolved.startsWith(rootPath)) {
+                throw new IllegalArgumentException("path_prefix escapes the FancyMenu assets directory.");
+            }
+            startPath = resolved;
+        }
+        boolean recursive = getBoolean(args, "recursive", true);
+        int maxDepth = recursive ? Math.max(1, getInt(args, "max_depth", 64)) : 1;
+        boolean includeFiles = getBoolean(args, "include_files", true);
+        boolean includeDirectories = getBoolean(args, "include_directories", true);
+        boolean includeHidden = getBoolean(args, "include_hidden", false);
+        boolean includeAbsolutePath = getBoolean(args, "include_absolute_path", false);
+        boolean includeSizeBytes = getBoolean(args, "include_size_bytes", true);
+        boolean includeModifiedTime = getBoolean(args, "include_modified_time", false);
+        String query = normalizedQuery(args);
+        Set<String> extensionFilters = new HashSet<>();
+        getStringArray(args, "extensions").forEach(value -> {
+            String normalized = value.toLowerCase(Locale.ROOT);
+            if (normalized.startsWith(".")) {
+                normalized = normalized.substring(1);
+            }
+            if (!normalized.isBlank()) {
+                extensionFilters.add(normalized);
+            }
+        });
+        String sortBy = getString(args, "sort_by", "path");
+        if (sortBy == null || sortBy.isBlank()) {
+            sortBy = "path";
+        }
+        sortBy = sortBy.toLowerCase(Locale.ROOT);
+        String sortOrder = getString(args, "sort_order", "asc");
+        if (sortOrder == null || sortOrder.isBlank()) {
+            sortOrder = "asc";
+        }
+        sortOrder = sortOrder.toLowerCase(Locale.ROOT);
+        int offset = getOffset(args);
+        int limit = getLimit(args, 200, 5000);
+
+        List<JsonObject> matches = new ArrayList<>();
+        if (Files.exists(startPath)) {
+            try (var stream = Files.walk(startPath, maxDepth)) {
+                stream.forEach(path -> {
+                    if (path.equals(startPath)) {
+                        return;
+                    }
+                    String relativePath = rootPath.relativize(path).toString().replace("\\", "/");
+                    String fileName = path.getFileName() != null ? path.getFileName().toString() : relativePath;
+                    boolean isDirectory = Files.isDirectory(path);
+                    if ((!includeDirectories && isDirectory) || (!includeFiles && !isDirectory)) {
+                        return;
+                    }
+                    if (!includeHidden && isHiddenPath(path, fileName)) {
+                        return;
+                    }
+                    String extension = "";
+                    if (!isDirectory) {
+                        int dotIndex = fileName.lastIndexOf('.');
+                        if (dotIndex >= 0 && dotIndex < fileName.length() - 1) {
+                            extension = fileName.substring(dotIndex + 1).toLowerCase(Locale.ROOT);
+                        }
+                    }
+                    if (!extensionFilters.isEmpty() && !isDirectory && !extensionFilters.contains(extension)) {
+                        return;
+                    }
+                    if (!matchesQuery(query, relativePath, fileName, extension)) {
+                        return;
+                    }
+                    JsonObject item = new JsonObject();
+                    item.addProperty("path", relativePath);
+                    item.addProperty("name", fileName);
+                    item.addProperty("directory", isDirectory);
+                    item.addProperty("extension", extension);
+                    if (includeAbsolutePath) {
+                        item.addProperty("absolute_path", path.toAbsolutePath().toString());
+                    }
+                    if (includeSizeBytes && !isDirectory) {
+                        try {
+                            item.addProperty("size_bytes", Files.size(path));
+                        } catch (IOException ignored) {
+                            item.addProperty("size_bytes", -1);
+                        }
+                    }
+                    if (includeModifiedTime) {
+                        try {
+                            FileTime lastModifiedTime = Files.getLastModifiedTime(path);
+                            item.addProperty("last_modified_epoch_ms", lastModifiedTime.toMillis());
+                        } catch (IOException ignored) {
+                            item.addProperty("last_modified_epoch_ms", -1);
+                        }
+                    }
+                    matches.add(item);
+                });
+            }
+        }
+        Comparator<JsonObject> comparator = switch (sortBy) {
+            case "name" -> Comparator.comparing(item -> FancyMenuMcpSerialization.getString(item, "name", ""), String.CASE_INSENSITIVE_ORDER);
+            case "size" -> Comparator.comparingLong(item -> getLong(item, "size_bytes", -1));
+            case "modified" -> Comparator.comparingLong(item -> getLong(item, "last_modified_epoch_ms", -1));
+            default -> Comparator.comparing(item -> FancyMenuMcpSerialization.getString(item, "path", ""), String.CASE_INSENSITIVE_ORDER);
+        };
+        if ("desc".equals(sortOrder)) {
+            comparator = comparator.reversed();
+        }
+        matches.sort(comparator);
+        JsonArray files = new JsonArray();
+        for (int i = offset; i < matches.size() && files.size() < limit; i++) {
+            files.add(matches.get(i));
+        }
+        JsonObject out = new JsonObject();
+        out.addProperty("assets_root", rootPath.toString());
+        out.addProperty("scan_root", startPath.toString());
+        out.add("assets", files);
+        out.addProperty("count", files.size());
+        out.addProperty("total_matches", matches.size());
+        out.addProperty("offset", offset);
+        out.addProperty("limit", limit);
+        out.addProperty("sort_by", sortBy);
+        out.addProperty("sort_order", sortOrder);
+        return out;
+    }
+
+    static @NotNull JsonObject getRegistryEntry(@NotNull JsonObject args) {
+        String registry = requireString(args, "registry").toLowerCase(Locale.ROOT);
+        String identifier = requireString(args, "identifier");
+        JsonObject out = new JsonObject();
+        out.addProperty("registry", registry);
+        switch (registry) {
+            case "actions", "action" -> {
+                Action action = ActionRegistry.getAction(identifier);
+                if (action == null) {
+                    throw new IllegalArgumentException("Action not found: " + identifier);
+                }
+                JsonObject item = new JsonObject();
+                item.addProperty("identifier", action.getIdentifier());
+                item.addProperty("display_name", action.getDisplayName().getString());
+                item.addProperty("description", action.getDescription().getString());
+                item.addProperty("has_value", action.hasValue());
+                item.addProperty("deprecated", action.isDeprecated());
+                item.addProperty("value_display_name", action.getValueDisplayName() != null ? action.getValueDisplayName().getString() : "");
+                item.addProperty("value_preset", Objects.requireNonNullElse(action.getValuePreset(), ""));
+                out.add("entry", item);
+            }
+            case "placeholders", "placeholder" -> {
+                Placeholder placeholder = PlaceholderRegistry.getPlaceholder(identifier);
+                if (placeholder == null) {
+                    throw new IllegalArgumentException("Placeholder not found: " + identifier);
+                }
+                JsonObject item = new JsonObject();
+                item.addProperty("identifier", placeholder.getIdentifier());
+                item.addProperty("display_name", placeholder.getDisplayName());
+                item.addProperty("category", Objects.requireNonNullElse(placeholder.getCategory(), ""));
+                JsonArray valueNames = new JsonArray();
+                List<String> valueEntries = placeholder.getValueNames();
+                if (valueEntries != null) {
+                    valueEntries.forEach(valueNames::add);
+                }
+                item.add("value_names", valueNames);
+                JsonArray descriptionLines = new JsonArray();
+                List<String> descriptionEntries = placeholder.getDescription();
+                if (descriptionEntries != null) {
+                    descriptionEntries.forEach(descriptionLines::add);
+                }
+                item.add("description_lines", descriptionLines);
+                out.add("entry", item);
+            }
+            case "requirements", "requirement" -> {
+                Requirement requirement = RequirementRegistry.getRequirement(identifier);
+                if (requirement == null) {
+                    throw new IllegalArgumentException("Requirement not found: " + identifier);
+                }
+                JsonObject item = new JsonObject();
+                item.addProperty("identifier", requirement.getIdentifier());
+                item.addProperty("display_name", requirement.getDisplayName().getString());
+                item.addProperty("description", requirement.getDescription() != null ? requirement.getDescription().getString() : "");
+                item.addProperty("category", Objects.requireNonNullElse(requirement.getCategory(), ""));
+                item.addProperty("has_value", requirement.hasValue());
+                item.addProperty("value_display_name", requirement.getValueDisplayName() != null ? requirement.getValueDisplayName().getString() : "");
+                item.addProperty("value_preset", Objects.requireNonNullElse(requirement.getValuePreset(), ""));
+                out.add("entry", item);
+            }
+            case "listeners", "listener", "listener_types" -> {
+                AbstractListener listener = ListenerRegistry.getListener(identifier);
+                if (listener == null) {
+                    throw new IllegalArgumentException("Listener type not found: " + identifier);
+                }
+                JsonObject item = new JsonObject();
+                item.addProperty("identifier", listener.getIdentifier());
+                item.addProperty("display_name", listener.getDisplayName().getString());
+                JsonArray descriptionLines = new JsonArray();
+                listener.getDescription().forEach(component -> descriptionLines.add(component.getString()));
+                item.add("description_lines", descriptionLines);
+                JsonArray customVariables = new JsonArray();
+                listener.getCustomVariables().forEach(variable -> {
+                    JsonObject variableJson = new JsonObject();
+                    variableJson.addProperty("name", variable.name());
+                    customVariables.add(variableJson);
+                });
+                item.add("custom_variables", customVariables);
+                out.add("entry", item);
+            }
+            case "elements", "element" -> {
+                ElementBuilder<?, ?> builder = ElementRegistry.getBuilder(identifier);
+                if (builder == null) {
+                    throw new IllegalArgumentException("Element builder not found: " + identifier);
+                }
+                JsonObject item = new JsonObject();
+                item.addProperty("identifier", builder.getIdentifier());
+                item.addProperty("display_name", builder.getDisplayName(null).getString());
+                item.addProperty("deprecated", builder.isDeprecated());
+                Component[] description = builder.getDescription(null);
+                JsonArray lines = new JsonArray();
+                if (description != null) {
+                    for (Component component : description) {
+                        lines.add(component.getString());
+                    }
+                }
+                item.add("description_lines", lines);
+                var defaultElement = builder.buildDefaultInstance();
+                SerializedElement serialized = builder.serializeElementInternal(defaultElement);
+                item.add("default_serialized_element", serialized != null ? FancyMenuMcpSerialization.toJson(serialized) : new JsonObject());
+                out.add("entry", item);
+            }
+            case "backgrounds", "background" -> {
+                MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder(identifier);
+                if (builder == null) {
+                    throw new IllegalArgumentException("Background builder not found: " + identifier);
+                }
+                JsonObject item = new JsonObject();
+                item.addProperty("identifier", builder.getIdentifier());
+                item.addProperty("display_name", builder.getDisplayName().getString());
+                item.addProperty("description", builder.getDescription() != null ? builder.getDescription().getString() : "");
+                item.addProperty("deprecated", builder.isDeprecated());
+                item.add("default_serialized_container", FancyMenuMcpSerialization.toJson(builder._serializeBackground(builder.buildDefaultInstance())));
+                out.add("entry", item);
+            }
+            case "overlays", "overlay", "decoration_overlays", "decoration_overlay" -> {
+                AbstractDecorationOverlayBuilder<?> builder = DecorationOverlayRegistry.getByIdentifier(identifier);
+                if (builder == null) {
+                    throw new IllegalArgumentException("Decoration overlay builder not found: " + identifier);
+                }
+                JsonObject item = new JsonObject();
+                item.addProperty("identifier", builder.getIdentifier());
+                item.addProperty("display_name", builder.getDisplayName().getString());
+                item.addProperty("description", builder.getDescription() != null ? builder.getDescription().getString() : "");
+                item.add("default_serialized_container", FancyMenuMcpSerialization.toJson(builder._serialize(builder.buildDefaultInstance())));
+                out.add("entry", item);
+            }
+            default -> throw new IllegalArgumentException("Unknown registry type: " + registry + ". Expected action/placeholder/requirement/listener/element/background/overlay.");
+        }
+        return out;
+    }
+
+    static @NotNull JsonObject listLayouts(@NotNull JsonObject args) {
+        String query = normalizedQuery(args);
+        String screenIdentifier = getString(args, "screen_identifier", null);
+        boolean filterUniversal = args.has("is_universal");
+        boolean universal = getBoolean(args, "is_universal", false);
+        boolean filterEnabled = args.has("enabled");
+        boolean enabled = getBoolean(args, "enabled", true);
+        boolean includeSerializedSet = getBoolean(args, "include_serialized_set", false);
+        boolean includeFancyString = getBoolean(args, "include_fancy_string", false);
+        int offset = getOffset(args);
+        int limit = getLimit(args, 100, 5000);
         JsonArray layouts = new JsonArray();
-        for (Layout layout : LayoutHandler.getAllLayouts()) {
-            layouts.add(layoutToJson(layout, false));
+        int totalMatches = 0;
+        List<Layout> sortedLayouts = new ArrayList<>(LayoutHandler.getAllLayouts());
+        sortedLayouts.sort(Comparator.comparing(Layout::getLayoutName, String.CASE_INSENSITIVE_ORDER));
+        for (Layout layout : sortedLayouts) {
+            if (screenIdentifier != null && !screenIdentifier.isBlank()
+                    && !ScreenIdentifierHandler.equalIdentifiers(screenIdentifier, Objects.requireNonNullElse(layout.screenIdentifier, ""))) {
+                continue;
+            }
+            if (filterUniversal && layout.isUniversalLayout() != universal) {
+                continue;
+            }
+            if (filterEnabled && layout.isEnabled() != enabled) {
+                continue;
+            }
+            String layoutFile = layout.layoutFile != null ? layout.layoutFile.getAbsolutePath() : "";
+            if (!matchesQuery(query, layout.getLayoutName(), layout.runtimeLayoutIdentifier, layoutFile, layout.screenIdentifier)) {
+                continue;
+            }
+            totalMatches++;
+            if (totalMatches <= offset || layouts.size() >= limit) {
+                continue;
+            }
+            layouts.add(layoutToJson(layout, includeSerializedSet, includeFancyString));
         }
         JsonObject out = new JsonObject();
         out.add("layouts", layouts);
         out.addProperty("count", layouts.size());
+        out.addProperty("total_matches", totalMatches);
+        out.addProperty("offset", offset);
+        out.addProperty("limit", limit == Integer.MAX_VALUE ? -1 : limit);
+        return out;
+    }
+
+    static @NotNull JsonObject listLayoutsCompact(@NotNull JsonObject args) {
+        String query = normalizedQuery(args);
+        String screenIdentifier = getString(args, "screen_identifier", null);
+        boolean filterUniversal = args.has("is_universal");
+        boolean universal = getBoolean(args, "is_universal", false);
+        boolean filterEnabled = args.has("enabled");
+        boolean enabled = getBoolean(args, "enabled", true);
+        boolean includeLayoutFile = getBoolean(args, "include_layout_file", false);
+        int offset = getOffset(args);
+        int limit = getLimit(args, 50, 5000);
+        JsonArray layouts = new JsonArray();
+        int totalMatches = 0;
+        List<Layout> sortedLayouts = new ArrayList<>(LayoutHandler.getAllLayouts());
+        sortedLayouts.sort(Comparator.comparing(Layout::getLayoutName, String.CASE_INSENSITIVE_ORDER));
+        for (Layout layout : sortedLayouts) {
+            if (screenIdentifier != null && !screenIdentifier.isBlank()
+                    && !ScreenIdentifierHandler.equalIdentifiers(screenIdentifier, Objects.requireNonNullElse(layout.screenIdentifier, ""))) {
+                continue;
+            }
+            if (filterUniversal && layout.isUniversalLayout() != universal) {
+                continue;
+            }
+            if (filterEnabled && layout.isEnabled() != enabled) {
+                continue;
+            }
+            String layoutFile = layout.layoutFile != null ? layout.layoutFile.getAbsolutePath() : "";
+            if (!matchesQuery(query, layout.getLayoutName(), layout.runtimeLayoutIdentifier, layoutFile, layout.screenIdentifier)) {
+                continue;
+            }
+            totalMatches++;
+            if (totalMatches <= offset || layouts.size() >= limit) {
+                continue;
+            }
+            JsonObject item = new JsonObject();
+            item.addProperty("runtime_layout_identifier", layout.runtimeLayoutIdentifier);
+            item.addProperty("layout_name", layout.getLayoutName());
+            item.addProperty("screen_identifier", Objects.requireNonNullElse(layout.screenIdentifier, ""));
+            item.addProperty("is_universal", layout.isUniversalLayout());
+            item.addProperty("enabled", layout.isEnabled());
+            item.addProperty("layout_index", layout.layoutIndex);
+            item.addProperty("last_edited_time", layout.lastEditedTime);
+            item.addProperty("normal_element_count", layout.serializedElements.size());
+            item.addProperty("vanilla_element_count", layout.serializedVanillaButtonElements.size());
+            item.addProperty("deep_element_count", layout.serializedDeepElements.size());
+            item.addProperty("background_count", layout.menuBackgrounds.size());
+            item.addProperty("overlay_count", layout.decorationOverlays.size());
+            if (includeLayoutFile) {
+                item.addProperty("layout_file", layoutFile);
+            }
+            layouts.add(item);
+        }
+        JsonObject out = new JsonObject();
+        out.add("layouts", layouts);
+        out.addProperty("count", layouts.size());
+        out.addProperty("total_matches", totalMatches);
+        out.addProperty("offset", offset);
+        out.addProperty("limit", limit);
         return out;
     }
 
     static @NotNull JsonObject getLayout(@NotNull JsonObject args) {
         Layout layout = requireLayout(args);
+        boolean includeSerializedSet = getBoolean(args, "include_serialized_set", false);
+        boolean includeFancyString = getBoolean(args, "include_fancy_string", false);
         JsonObject out = new JsonObject();
-        out.add("layout", layoutToJson(layout, true));
+        out.add("layout", layoutToJson(layout, includeSerializedSet, includeFancyString));
+        return out;
+    }
+
+    static @NotNull JsonObject getLayoutMeta(@NotNull JsonObject args) {
+        Layout layout = requireLayout(args);
+        boolean includeRequirements = getBoolean(args, "include_requirements", true);
+        boolean includeUniversalLists = getBoolean(args, "include_universal_lists", true);
+        boolean includeLayoutFile = getBoolean(args, "include_layout_file", true);
+        JsonObject meta = new JsonObject();
+        meta.addProperty("runtime_layout_identifier", layout.runtimeLayoutIdentifier);
+        meta.addProperty("layout_name", layout.getLayoutName());
+        meta.addProperty("screen_identifier", Objects.requireNonNullElse(layout.screenIdentifier, ""));
+        meta.addProperty("is_universal", layout.isUniversalLayout());
+        meta.addProperty("enabled", layout.isEnabled());
+        meta.addProperty("layout_index", layout.layoutIndex);
+        meta.addProperty("render_elements_behind_vanilla", layout.renderElementsBehindVanilla);
+        meta.addProperty("random_mode", layout.randomMode);
+        meta.addProperty("random_group", layout.randomGroup);
+        meta.addProperty("random_only_first_time", layout.randomOnlyFirstTime);
+        meta.addProperty("custom_menu_title", Objects.requireNonNullElse(layout.customMenuTitle, ""));
+        meta.addProperty("forced_scale", layout.forcedScale);
+        meta.addProperty("auto_scaling_width", layout.autoScalingWidth);
+        meta.addProperty("auto_scaling_height", layout.autoScalingHeight);
+        meta.addProperty("preserve_background_aspect_ratio", layout.preserveBackgroundAspectRatio);
+        meta.addProperty("last_edited_time", layout.lastEditedTime);
+        if (includeLayoutFile) {
+            meta.addProperty("layout_file", layout.layoutFile != null ? layout.layoutFile.getAbsolutePath() : "");
+        }
+        meta.addProperty("normal_element_count", layout.serializedElements.size());
+        meta.addProperty("vanilla_element_count", layout.serializedVanillaButtonElements.size());
+        meta.addProperty("deep_element_count", layout.serializedDeepElements.size());
+        meta.addProperty("background_count", layout.menuBackgrounds.size());
+        meta.addProperty("overlay_count", layout.decorationOverlays.size());
+        meta.addProperty("layer_group_count", layout.layerGroups.size());
+        meta.addProperty("has_open_screen_script", !layout.openScreenExecutableBlocks.isEmpty());
+        meta.addProperty("has_close_screen_script", !layout.closeScreenExecutableBlocks.isEmpty());
+        if (includeRequirements) {
+            RequirementContainer requirementContainer = layout.layoutWideRequirementContainer != null
+                    ? layout.layoutWideRequirementContainer
+                    : new RequirementContainer();
+            meta.add("layout_wide_requirement_container", FancyMenuMcpSerialization.requirementContainerToJson(requirementContainer));
+        }
+        if (includeUniversalLists) {
+            JsonArray whitelist = new JsonArray();
+            layout.universalLayoutMenuWhitelist.forEach(whitelist::add);
+            meta.add("universal_layout_whitelist", whitelist);
+            JsonArray blacklist = new JsonArray();
+            layout.universalLayoutMenuBlacklist.forEach(blacklist::add);
+            meta.add("universal_layout_blacklist", blacklist);
+        }
+        LayoutEditorScreen editor = LayoutEditorScreen.getCurrentInstance();
+        meta.addProperty("open_in_editor", editor != null && matchesLayout(editor.layout, layout));
+        JsonObject out = new JsonObject();
+        out.add("layout_meta", meta);
+        return out;
+    }
+
+    static @NotNull JsonObject getLayoutElements(@NotNull JsonObject args) {
+        Layout layout = requireLayout(args);
+        String section = getString(args, "section", "normal");
+        if (section == null || section.isBlank()) {
+            section = "normal";
+        }
+        section = section.toLowerCase(Locale.ROOT);
+        String query = normalizedQuery(args);
+        String builderFilter = getString(args, "builder_identifier", null);
+        boolean includeSerialized = getBoolean(args, "include_serialized", false);
+        boolean includeProperties = getBoolean(args, "include_properties", false);
+        int offset = getOffset(args);
+        int limit = getLimit(args, 100, 5000);
+        JsonArray elements = new JsonArray();
+        int totalMatches = 0;
+
+        if ("normal".equals(section) || "all".equals(section)) {
+            totalMatches = appendSerializedElements(
+                    elements,
+                    layout.serializedElements,
+                    "normal",
+                    builderFilter,
+                    query,
+                    includeSerialized,
+                    includeProperties,
+                    offset,
+                    limit,
+                    totalMatches
+            );
+        }
+        if ("vanilla".equals(section) || "all".equals(section)) {
+            totalMatches = appendSerializedElements(
+                    elements,
+                    layout.serializedVanillaButtonElements,
+                    "vanilla",
+                    builderFilter,
+                    query,
+                    includeSerialized,
+                    includeProperties,
+                    offset,
+                    limit,
+                    totalMatches
+            );
+        }
+        if ("deep".equals(section) || "all".equals(section)) {
+            totalMatches = appendSerializedElements(
+                    elements,
+                    layout.serializedDeepElements,
+                    "deep",
+                    builderFilter,
+                    query,
+                    includeSerialized,
+                    includeProperties,
+                    offset,
+                    limit,
+                    totalMatches
+            );
+        }
+        if (!"normal".equals(section) && !"vanilla".equals(section) && !"deep".equals(section) && !"all".equals(section)) {
+            throw new IllegalArgumentException("Unknown section: " + section + ". Expected normal/vanilla/deep/all.");
+        }
+
+        JsonObject out = new JsonObject();
+        out.addProperty("runtime_layout_identifier", layout.runtimeLayoutIdentifier);
+        out.addProperty("layout_name", layout.getLayoutName());
+        out.addProperty("section", section);
+        out.add("elements", elements);
+        out.addProperty("count", elements.size());
+        out.addProperty("total_matches", totalMatches);
+        out.addProperty("offset", offset);
+        out.addProperty("limit", limit);
         return out;
     }
 
@@ -575,7 +1319,7 @@ final class FancyMenuMcpOperations {
             openOrRefreshLayoutEditor(saved, true);
         }
         JsonObject out = new JsonObject();
-        out.add("layout", layoutToJson(saved, true));
+        out.add("layout", layoutToJson(saved, true, true));
         return out;
     }
 
@@ -601,93 +1345,13 @@ final class FancyMenuMcpOperations {
             openOrRefreshLayoutEditor(saved, true);
         }
         JsonObject out = new JsonObject();
-        out.add("layout", layoutToJson(saved, true));
+        out.add("layout", layoutToJson(saved, true, true));
         return out;
     }
 
     static @NotNull JsonObject updateLayoutMeta(@NotNull JsonObject args) {
         Layout layout = requireLayout(args);
-        if (args.has("enabled")) {
-            layout.setEnabled(getBoolean(args, "enabled", layout.isEnabled()), false);
-        }
-        if (args.has("layout_index")) {
-            layout.layoutIndex = getInt(args, "layout_index", layout.layoutIndex);
-        }
-        if (args.has("render_elements_behind_vanilla")) {
-            layout.renderElementsBehindVanilla = getBoolean(args, "render_elements_behind_vanilla", layout.renderElementsBehindVanilla);
-        }
-        if (args.has("random_mode")) {
-            layout.randomMode = getBoolean(args, "random_mode", layout.randomMode);
-        }
-        if (args.has("random_group")) {
-            layout.randomGroup = requireString(args, "random_group");
-        }
-        if (args.has("random_only_first_time")) {
-            layout.randomOnlyFirstTime = getBoolean(args, "random_only_first_time", layout.randomOnlyFirstTime);
-        }
-        if (args.has("screen_identifier")) {
-            layout.setScreenIdentifier(requireString(args, "screen_identifier"));
-        }
-        if (args.has("universal_layout_whitelist")) {
-            layout.universalLayoutMenuWhitelist = getStringArray(args, "universal_layout_whitelist");
-        }
-        if (args.has("universal_layout_blacklist")) {
-            layout.universalLayoutMenuBlacklist = getStringArray(args, "universal_layout_blacklist");
-        }
-        if (args.has("layout_wide_requirement_container")) {
-            layout.layoutWideRequirementContainer = FancyMenuMcpSerialization.requirementContainerFromJson(requireJsonObject(args, "layout_wide_requirement_container"));
-        }
-        if (args.has("custom_menu_title")) {
-            layout.customMenuTitle = getNullableString(args, "custom_menu_title");
-        }
-        if (args.has("forced_scale")) {
-            layout.forcedScale = getFloat(args, "forced_scale", layout.forcedScale);
-        }
-        if (args.has("auto_scaling_width")) {
-            layout.autoScalingWidth = getInt(args, "auto_scaling_width", layout.autoScalingWidth);
-        }
-        if (args.has("auto_scaling_height")) {
-            layout.autoScalingHeight = getInt(args, "auto_scaling_height", layout.autoScalingHeight);
-        }
-        if (args.has("preserve_background_aspect_ratio")) {
-            layout.preserveBackgroundAspectRatio = getBoolean(args, "preserve_background_aspect_ratio", layout.preserveBackgroundAspectRatio);
-        }
-        if (args.has("open_audio_source")) {
-            layout.openAudio = SerializationHelper.INSTANCE.deserializeAudioResourceSupplier(getNullableString(args, "open_audio_source"));
-        }
-        if (args.has("close_audio_source")) {
-            layout.closeAudio = SerializationHelper.INSTANCE.deserializeAudioResourceSupplier(getNullableString(args, "close_audio_source"));
-        }
-        if (args.has("preserve_scroll_list_header_footer_aspect_ratio")) {
-            layout.preserveScrollListHeaderFooterAspectRatio = getBoolean(args, "preserve_scroll_list_header_footer_aspect_ratio", layout.preserveScrollListHeaderFooterAspectRatio);
-        }
-        if (args.has("repeat_scroll_list_header_texture")) {
-            layout.repeatScrollListHeaderTexture = getBoolean(args, "repeat_scroll_list_header_texture", layout.repeatScrollListHeaderTexture);
-        }
-        if (args.has("repeat_scroll_list_footer_texture")) {
-            layout.repeatScrollListFooterTexture = getBoolean(args, "repeat_scroll_list_footer_texture", layout.repeatScrollListFooterTexture);
-        }
-        if (args.has("scroll_list_header_texture_source")) {
-            layout.scrollListHeaderTexture = SerializationHelper.INSTANCE.deserializeImageResourceSupplier(getNullableString(args, "scroll_list_header_texture_source"));
-        }
-        if (args.has("scroll_list_footer_texture_source")) {
-            layout.scrollListFooterTexture = SerializationHelper.INSTANCE.deserializeImageResourceSupplier(getNullableString(args, "scroll_list_footer_texture_source"));
-        }
-        if (args.has("render_scroll_list_header_shadow")) {
-            layout.renderScrollListHeaderShadow = getBoolean(args, "render_scroll_list_header_shadow", layout.renderScrollListHeaderShadow);
-        }
-        if (args.has("render_scroll_list_footer_shadow")) {
-            layout.renderScrollListFooterShadow = getBoolean(args, "render_scroll_list_footer_shadow", layout.renderScrollListFooterShadow);
-        }
-        if (args.has("show_scroll_list_header_footer_preview_in_editor")) {
-            layout.showScrollListHeaderFooterPreviewInEditor = getBoolean(args, "show_scroll_list_header_footer_preview_in_editor", layout.showScrollListHeaderFooterPreviewInEditor);
-        }
-        if (args.has("show_screen_background_overlay_on_custom_background")) {
-            layout.showScreenBackgroundOverlayOnCustomBackground = getBoolean(args, "show_screen_background_overlay_on_custom_background", layout.showScreenBackgroundOverlayOnCustomBackground);
-        }
-        if (args.has("apply_vanilla_background_blur")) {
-            layout.applyVanillaBackgroundBlur = getBoolean(args, "apply_vanilla_background_blur", layout.applyVanillaBackgroundBlur);
-        }
+        applyLayoutMetaPatch(layout, args);
 
         layout.updateLastEditedTime();
         boolean saved = layout.saveToFileIfPossible();
@@ -702,7 +1366,7 @@ final class FancyMenuMcpOperations {
 
         JsonObject out = new JsonObject();
         out.addProperty("saved", saved);
-        out.add("layout", layoutToJson(updated, true));
+        out.add("layout", layoutToJson(updated, true, true));
         return out;
     }
 
@@ -741,7 +1405,7 @@ final class FancyMenuMcpOperations {
         openOrRefreshLayoutEditor(layout, true);
         JsonObject out = new JsonObject();
         out.addProperty("opened", true);
-        out.add("layout", layoutToJson(layout, false));
+        out.add("layout", layoutToJson(layout, false, false));
         return out;
     }
 
@@ -755,20 +1419,33 @@ final class FancyMenuMcpOperations {
         return out;
     }
 
-    static @NotNull JsonObject getEditorState() throws Exception {
+    static @NotNull JsonObject getEditorState(@NotNull JsonObject args) throws Exception {
         LayoutEditorScreen editor = LayoutEditorScreen.getCurrentInstance();
         JsonObject out = new JsonObject();
         if (editor == null) {
             out.addProperty("editor_open", false);
             return out;
         }
-        syncEditorLayout(editor);
+        boolean syncLayout = getBoolean(args, "sync_layout", true);
+        if (syncLayout) {
+            syncEditorLayout(editor);
+        }
         out.addProperty("editor_open", true);
         out.addProperty("unsaved_changes", editor.unsavedChanges);
         out.addProperty("layout_target_identifier", editor.layoutTargetScreen != null ? ScreenIdentifierHandler.getIdentifierOfScreen(editor.layoutTargetScreen) : "");
-        out.add("layout", layoutToJson(editor.layout, true));
-        out.addProperty("selected_element_count", editor.getSelectedElements().size());
-        out.addProperty("total_element_count", editor.getAllElements().size());
+        boolean includeLayout = getBoolean(args, "include_layout", false);
+        if (includeLayout) {
+            boolean includeSerializedSet = getBoolean(args, "include_serialized_set", false);
+            boolean includeFancyString = getBoolean(args, "include_fancy_string", false);
+            out.add("layout", layoutToJson(editor.layout, includeSerializedSet, includeFancyString));
+        }
+        if (getBoolean(args, "include_counts", true)) {
+            out.addProperty("selected_element_count", editor.getSelectedElements().size());
+            out.addProperty("total_element_count", editor.getAllElements().size());
+            out.addProperty("normal_count", editor.normalEditorElements.size());
+            out.addProperty("vanilla_count", editor.vanillaWidgetEditorElements.size());
+        }
+        out.addProperty("editor_fingerprint", computeEditorFingerprint(editor));
         return out;
     }
 
@@ -789,15 +1466,41 @@ final class FancyMenuMcpOperations {
 
     static @NotNull JsonObject editorListElements(@NotNull JsonObject args) {
         LayoutEditorScreen editor = requireEditor(args);
+        String query = normalizedQuery(args);
+        String builderFilter = getString(args, "builder_identifier", null);
+        boolean includeSerializedElement = getBoolean(args, "include_serialized_element", false);
+        boolean includeVanillaWidgets = getBoolean(args, "include_vanilla_widgets", true);
+        boolean selectedOnly = getBoolean(args, "selected_only", false);
+        int offset = getOffset(args);
+        int limit = getLimit(args, 200, 5000);
         JsonArray normal = new JsonArray();
+        JsonArray vanilla = new JsonArray();
+        int totalMatches = 0;
         for (int i = 0; i < editor.normalEditorElements.size(); i++) {
             AbstractEditorElement<?, ?> element = editor.normalEditorElements.get(i);
-            normal.add(editorElementToJson(element, i, false));
+            JsonObject serialized = editorElementToJson(element, i, false, includeSerializedElement);
+            if (!matchesEditorElementFilter(serialized, query, builderFilter, selectedOnly)) {
+                continue;
+            }
+            totalMatches++;
+            if (totalMatches <= offset || (normal.size() + vanilla.size()) >= limit) {
+                continue;
+            }
+            normal.add(serialized);
         }
-        JsonArray vanilla = new JsonArray();
-        for (int i = 0; i < editor.vanillaWidgetEditorElements.size(); i++) {
-            AbstractEditorElement<?, ?> element = editor.vanillaWidgetEditorElements.get(i);
-            vanilla.add(editorElementToJson(element, i, true));
+        if (includeVanillaWidgets) {
+            for (int i = 0; i < editor.vanillaWidgetEditorElements.size(); i++) {
+                AbstractEditorElement<?, ?> element = editor.vanillaWidgetEditorElements.get(i);
+                JsonObject serialized = editorElementToJson(element, i, true, includeSerializedElement);
+                if (!matchesEditorElementFilter(serialized, query, builderFilter, selectedOnly)) {
+                    continue;
+                }
+                totalMatches++;
+                if (totalMatches <= offset || (normal.size() + vanilla.size()) >= limit) {
+                    continue;
+                }
+                vanilla.add(serialized);
+            }
         }
 
         JsonObject out = new JsonObject();
@@ -808,6 +1511,234 @@ final class FancyMenuMcpOperations {
         out.addProperty("selected_count", editor.getSelectedElements().size());
         out.addProperty("unsaved_changes", editor.unsavedChanges);
         out.addProperty("editor_fingerprint", computeEditorFingerprint(editor));
+        out.addProperty("total_matches", totalMatches);
+        out.addProperty("offset", offset);
+        out.addProperty("limit", limit == Integer.MAX_VALUE ? -1 : limit);
+        return out;
+    }
+
+    static @NotNull JsonObject editorGetElement(@NotNull JsonObject args) {
+        LayoutEditorScreen editor = requireEditor(args);
+        String elementIdentifier = requireString(args, "element_identifier");
+        boolean includeSerializedElement = getBoolean(args, "include_serialized_element", true);
+        AbstractEditorElement<?, ?> target = editor.getElementByInstanceIdentifier(elementIdentifier);
+        if (target == null) {
+            throw new IllegalArgumentException("Element not found: " + elementIdentifier);
+        }
+        int index = editor.normalEditorElements.indexOf(target);
+        boolean vanilla = false;
+        if (index < 0) {
+            index = editor.vanillaWidgetEditorElements.indexOf(target);
+            vanilla = true;
+        }
+        JsonObject out = new JsonObject();
+        out.add("element", editorElementToJson(target, index, vanilla, includeSerializedElement));
+        out.addProperty("unsaved_changes", editor.unsavedChanges);
+        out.addProperty("editor_fingerprint", computeEditorFingerprint(editor));
+        return out;
+    }
+
+    static @NotNull JsonObject editorPatchLayout(@NotNull JsonObject args) throws Exception {
+        LayoutEditorScreen editor = requireEditor(args);
+        int addedElements = 0;
+        int updatedElements = 0;
+        int movedElements = 0;
+        int removedElements = 0;
+        int updatedBackgrounds = 0;
+        int removedBackgrounds = 0;
+        int reorderedBackgrounds = 0;
+        int updatedOverlays = 0;
+        int removedOverlays = 0;
+        int reorderedOverlays = 0;
+        boolean metaPatched = false;
+
+        if (args.has("meta_patch") && args.get("meta_patch").isJsonObject()) {
+            applyLayoutMetaPatch(editor.layout, args.getAsJsonObject("meta_patch"));
+            metaPatched = true;
+        }
+
+        if (args.has("element_additions") && args.get("element_additions").isJsonArray()) {
+            for (JsonElement raw : args.getAsJsonArray("element_additions")) {
+                if (!raw.isJsonObject()) {
+                    continue;
+                }
+                JsonObject item = raw.getAsJsonObject();
+                String builderIdentifier = getString(item, "builder_identifier", null);
+                JsonObject serializedElement = item.has("serialized_element") && item.get("serialized_element").isJsonObject()
+                        ? item.getAsJsonObject("serialized_element")
+                        : null;
+                if ((builderIdentifier == null || builderIdentifier.isBlank()) && serializedElement != null) {
+                    builderIdentifier = getString(serializedElement, "element_type", null);
+                }
+                if (builderIdentifier == null || builderIdentifier.isBlank()) {
+                    throw new IllegalArgumentException("Each element_additions entry requires builder_identifier or serialized_element.element_type.");
+                }
+                JsonObject addArgs = new JsonObject();
+                addArgs.addProperty("builder_identifier", builderIdentifier);
+                if (item.has("x")) {
+                    addArgs.add("x", item.get("x"));
+                }
+                if (item.has("y")) {
+                    addArgs.add("y", item.get("y"));
+                }
+                if (item.has("select")) {
+                    addArgs.add("select", item.get("select"));
+                }
+                JsonObject addResult = editorAddElement(addArgs);
+                String newIdentifier = getString(addResult, "instance_identifier", null);
+                addedElements++;
+                if (serializedElement != null && newIdentifier != null) {
+                    JsonObject updateArgs = new JsonObject();
+                    updateArgs.addProperty("element_identifier", newIdentifier);
+                    JsonObject payload = serializedElement.deepCopy();
+                    if (!payload.has("instance_identifier")) {
+                        payload.addProperty("instance_identifier", newIdentifier);
+                    }
+                    updateArgs.add("serialized_element", payload);
+                    editorUpdateElement(updateArgs);
+                    updatedElements++;
+                }
+            }
+        }
+
+        if (args.has("element_updates") && args.get("element_updates").isJsonArray()) {
+            for (JsonElement raw : args.getAsJsonArray("element_updates")) {
+                if (!raw.isJsonObject()) {
+                    continue;
+                }
+                JsonObject item = raw.getAsJsonObject();
+                editorUpdateElement(item);
+                updatedElements++;
+            }
+        }
+
+        if (args.has("element_moves") && args.get("element_moves").isJsonArray()) {
+            for (JsonElement raw : args.getAsJsonArray("element_moves")) {
+                if (!raw.isJsonObject()) {
+                    continue;
+                }
+                JsonObject item = raw.getAsJsonObject();
+                editorMoveElement(item);
+                movedElements++;
+            }
+        }
+
+        if (args.has("element_removals") && args.get("element_removals").isJsonArray()) {
+            for (JsonElement raw : args.getAsJsonArray("element_removals")) {
+                JsonObject removeArgs = new JsonObject();
+                if (raw.isJsonPrimitive()) {
+                    removeArgs.addProperty("element_identifier", raw.getAsString());
+                } else if (raw.isJsonObject()) {
+                    removeArgs = raw.getAsJsonObject();
+                } else {
+                    continue;
+                }
+                editorRemoveElement(removeArgs);
+                removedElements++;
+            }
+        }
+
+        if (args.has("ordered_element_identifiers")) {
+            JsonObject orderArgs = new JsonObject();
+            orderArgs.add("ordered_element_identifiers", args.get("ordered_element_identifiers"));
+            editorSetElementOrder(orderArgs);
+        }
+
+        if (args.has("background_set") && args.get("background_set").isJsonArray()) {
+            for (JsonElement raw : args.getAsJsonArray("background_set")) {
+                if (!raw.isJsonObject()) {
+                    continue;
+                }
+                editorSetBackground(raw.getAsJsonObject());
+                updatedBackgrounds++;
+            }
+        }
+
+        if (args.has("background_remove") && args.get("background_remove").isJsonArray()) {
+            for (JsonElement raw : args.getAsJsonArray("background_remove")) {
+                JsonObject removeArgs = new JsonObject();
+                if (raw.isJsonPrimitive()) {
+                    removeArgs.addProperty("background_identifier", raw.getAsString());
+                } else if (raw.isJsonObject()) {
+                    removeArgs = raw.getAsJsonObject();
+                } else {
+                    continue;
+                }
+                editorRemoveBackground(removeArgs);
+                removedBackgrounds++;
+            }
+        }
+
+        if (args.has("background_reorder") && args.get("background_reorder").isJsonArray()) {
+            for (JsonElement raw : args.getAsJsonArray("background_reorder")) {
+                if (!raw.isJsonObject()) {
+                    continue;
+                }
+                editorReorderBackground(raw.getAsJsonObject());
+                reorderedBackgrounds++;
+            }
+        }
+
+        if (args.has("overlay_set") && args.get("overlay_set").isJsonArray()) {
+            for (JsonElement raw : args.getAsJsonArray("overlay_set")) {
+                if (!raw.isJsonObject()) {
+                    continue;
+                }
+                editorSetDecorationOverlay(raw.getAsJsonObject());
+                updatedOverlays++;
+            }
+        }
+
+        if (args.has("overlay_remove") && args.get("overlay_remove").isJsonArray()) {
+            for (JsonElement raw : args.getAsJsonArray("overlay_remove")) {
+                JsonObject removeArgs = new JsonObject();
+                if (raw.isJsonPrimitive()) {
+                    removeArgs.addProperty("overlay_identifier", raw.getAsString());
+                } else if (raw.isJsonObject()) {
+                    removeArgs = raw.getAsJsonObject();
+                } else {
+                    continue;
+                }
+                editorRemoveDecorationOverlay(removeArgs);
+                removedOverlays++;
+            }
+        }
+
+        if (args.has("overlay_reorder") && args.get("overlay_reorder").isJsonArray()) {
+            for (JsonElement raw : args.getAsJsonArray("overlay_reorder")) {
+                if (!raw.isJsonObject()) {
+                    continue;
+                }
+                editorReorderDecorationOverlay(raw.getAsJsonObject());
+                reorderedOverlays++;
+            }
+        }
+
+        boolean autoSave = getBoolean(args, "auto_save", false);
+        if (autoSave) {
+            editor.saveLayout();
+            LayoutHandler.reloadLayouts();
+        }
+
+        JsonObject out = new JsonObject();
+        out.addProperty("patched", true);
+        out.addProperty("meta_patched", metaPatched);
+        out.addProperty("added_elements", addedElements);
+        out.addProperty("updated_elements", updatedElements);
+        out.addProperty("moved_elements", movedElements);
+        out.addProperty("removed_elements", removedElements);
+        out.addProperty("updated_backgrounds", updatedBackgrounds);
+        out.addProperty("removed_backgrounds", removedBackgrounds);
+        out.addProperty("reordered_backgrounds", reorderedBackgrounds);
+        out.addProperty("updated_overlays", updatedOverlays);
+        out.addProperty("removed_overlays", removedOverlays);
+        out.addProperty("reordered_overlays", reorderedOverlays);
+        out.addProperty("auto_saved", autoSave);
+        out.addProperty("unsaved_changes", editor.unsavedChanges);
+        out.addProperty("editor_fingerprint", computeEditorFingerprint(editor));
+        if (getBoolean(args, "include_editor_poll", true)) {
+            out.add("editor_poll", editorPoll(new JsonObject()));
+        }
         return out;
     }
 
@@ -854,13 +1785,16 @@ final class FancyMenuMcpOperations {
 
     static @NotNull JsonObject editorGetVisualLayers(@NotNull JsonObject args) {
         LayoutEditorScreen editor = requireEditor(args);
+        boolean includeSerialized = getBoolean(args, "include_serialized_container", false);
         JsonArray backgrounds = new JsonArray();
         for (int i = 0; i < editor.layout.menuBackgrounds.size(); i++) {
             MenuBackground<?> background = editor.layout.menuBackgrounds.get(i);
             JsonObject item = new JsonObject();
             item.addProperty("index", i);
             item.addProperty("identifier", background.builder.getIdentifier());
-            item.add("serialized_container", FancyMenuMcpSerialization.toJson(background.builder._serializeBackground(background)));
+            if (includeSerialized) {
+                item.add("serialized_container", FancyMenuMcpSerialization.toJson(background.builder._serializeBackground(background)));
+            }
             backgrounds.add(item);
         }
         JsonArray overlays = new JsonArray();
@@ -869,7 +1803,9 @@ final class FancyMenuMcpOperations {
             JsonObject item = new JsonObject();
             item.addProperty("index", i);
             item.addProperty("identifier", pair.getFirst().getIdentifier());
-            item.add("serialized_container", FancyMenuMcpSerialization.toJson(pair.getFirst()._serialize(pair.getSecond())));
+            if (includeSerialized) {
+                item.add("serialized_container", FancyMenuMcpSerialization.toJson(pair.getFirst()._serialize(pair.getSecond())));
+            }
             overlays.add(item);
         }
         JsonObject out = new JsonObject();
@@ -1031,7 +1967,7 @@ final class FancyMenuMcpOperations {
         LayoutHandler.openLayoutEditor(parsed, resolveLayoutTargetScreen(parsed, editor.layoutTargetScreen));
         JsonObject out = new JsonObject();
         out.addProperty("updated", true);
-        out.add("layout", layoutToJson(parsed, true));
+        out.add("layout", layoutToJson(parsed, true, true));
         return out;
     }
 
@@ -1243,19 +2179,61 @@ final class FancyMenuMcpOperations {
         return out;
     }
 
-    static @NotNull JsonObject listListenerInstances() {
+    static @NotNull JsonObject listListenerInstances(@NotNull JsonObject args) {
+        String query = normalizedQuery(args);
+        String listenerIdentifier = getString(args, "listener_identifier", null);
+        boolean includeSerialized = getBoolean(args, "include_serialized", false);
+        int offset = getOffset(args);
+        int limit = getLimit(args, 200, 5000);
         JsonArray instances = new JsonArray();
+        int totalMatches = 0;
         for (ListenerInstance instance : ListenerHandler.getInstances()) {
+            String instanceId = instance.instanceIdentifier;
+            String typeId = instance.parent.getIdentifier();
+            String displayName = Objects.requireNonNullElse(instance.getDisplayName(), "");
+            if (listenerIdentifier != null && !listenerIdentifier.isBlank() && !typeId.equalsIgnoreCase(listenerIdentifier)) {
+                continue;
+            }
+            if (!matchesQuery(query, instanceId, typeId, displayName)) {
+                continue;
+            }
+            totalMatches++;
+            if (totalMatches <= offset || instances.size() >= limit) {
+                continue;
+            }
             JsonObject item = new JsonObject();
-            item.addProperty("instance_identifier", instance.instanceIdentifier);
-            item.addProperty("listener_identifier", instance.parent.getIdentifier());
-            item.addProperty("display_name", Objects.requireNonNullElse(instance.getDisplayName(), ""));
-            item.add("serialized", FancyMenuMcpSerialization.toJson(instance.serialize()));
+            item.addProperty("instance_identifier", instanceId);
+            item.addProperty("listener_identifier", typeId);
+            item.addProperty("display_name", displayName);
+            if (includeSerialized) {
+                item.add("serialized", FancyMenuMcpSerialization.toJson(instance.serialize()));
+            }
             instances.add(item);
         }
         JsonObject out = new JsonObject();
         out.add("listener_instances", instances);
         out.addProperty("count", instances.size());
+        out.addProperty("total_matches", totalMatches);
+        out.addProperty("offset", offset);
+        out.addProperty("limit", limit == Integer.MAX_VALUE ? -1 : limit);
+        return out;
+    }
+
+    static @NotNull JsonObject getListenerInstance(@NotNull JsonObject args) {
+        String instanceIdentifier = requireString(args, "instance_identifier");
+        ListenerInstance instance = ListenerHandler.getInstance(instanceIdentifier);
+        if (instance == null) {
+            throw new IllegalArgumentException("Listener instance not found: " + instanceIdentifier);
+        }
+        JsonObject item = new JsonObject();
+        item.addProperty("instance_identifier", instance.instanceIdentifier);
+        item.addProperty("listener_identifier", instance.parent.getIdentifier());
+        item.addProperty("display_name", Objects.requireNonNullElse(instance.getDisplayName(), ""));
+        if (getBoolean(args, "include_serialized", true)) {
+            item.add("serialized", FancyMenuMcpSerialization.toJson(instance.serialize()));
+        }
+        JsonObject out = new JsonObject();
+        out.add("listener_instance", item);
         return out;
     }
 
@@ -1347,22 +2325,64 @@ final class FancyMenuMcpOperations {
         return out;
     }
 
-    static @NotNull JsonObject listSchedulers() {
+    static @NotNull JsonObject listSchedulers(@NotNull JsonObject args) {
+        String query = normalizedQuery(args);
+        boolean includeSerialized = getBoolean(args, "include_serialized", false);
+        boolean includeRuntimeStatus = getBoolean(args, "include_runtime_status", true);
+        int offset = getOffset(args);
+        int limit = getLimit(args, 200, 5000);
         JsonArray schedulers = new JsonArray();
+        int totalMatches = 0;
         for (SchedulerInstance instance : SchedulerHandler.getInstances()) {
+            String identifier = instance.getIdentifier();
+            if (!matchesQuery(query, identifier)) {
+                continue;
+            }
+            totalMatches++;
+            if (totalMatches <= offset || schedulers.size() >= limit) {
+                continue;
+            }
             JsonObject item = new JsonObject();
-            item.addProperty("identifier", instance.getIdentifier());
+            item.addProperty("identifier", identifier);
             item.addProperty("start_on_launch", instance.isStartOnLaunch());
             item.addProperty("start_delay_ms", instance.getStartDelayMs());
             item.addProperty("tick_delay_ms", instance.getTickDelayMs());
             item.addProperty("ticks_to_run", instance.getTicksToRun());
-            item.addProperty("running", SchedulerHandler.isRunning(instance.getIdentifier()));
-            item.add("serialized", FancyMenuMcpSerialization.toJson(instance.serialize()));
+            if (includeRuntimeStatus) {
+                item.addProperty("running", SchedulerHandler.isRunning(identifier));
+            }
+            if (includeSerialized) {
+                item.add("serialized", FancyMenuMcpSerialization.toJson(instance.serialize()));
+            }
             schedulers.add(item);
         }
         JsonObject out = new JsonObject();
         out.add("schedulers", schedulers);
         out.addProperty("count", schedulers.size());
+        out.addProperty("total_matches", totalMatches);
+        out.addProperty("offset", offset);
+        out.addProperty("limit", limit == Integer.MAX_VALUE ? -1 : limit);
+        return out;
+    }
+
+    static @NotNull JsonObject getScheduler(@NotNull JsonObject args) {
+        String identifier = requireString(args, "identifier");
+        SchedulerInstance instance = SchedulerHandler.getInstance(identifier);
+        if (instance == null) {
+            throw new IllegalArgumentException("Scheduler not found: " + identifier);
+        }
+        JsonObject item = new JsonObject();
+        item.addProperty("identifier", instance.getIdentifier());
+        item.addProperty("start_on_launch", instance.isStartOnLaunch());
+        item.addProperty("start_delay_ms", instance.getStartDelayMs());
+        item.addProperty("tick_delay_ms", instance.getTickDelayMs());
+        item.addProperty("ticks_to_run", instance.getTicksToRun());
+        item.addProperty("running", SchedulerHandler.isRunning(instance.getIdentifier()));
+        if (getBoolean(args, "include_serialized", true)) {
+            item.add("serialized", FancyMenuMcpSerialization.toJson(instance.serialize()));
+        }
+        JsonObject out = new JsonObject();
+        out.add("scheduler", item);
         return out;
     }
 
@@ -1488,19 +2508,58 @@ final class FancyMenuMcpOperations {
         return out;
     }
 
-    static @NotNull JsonObject listVariables() {
+    static @NotNull JsonObject listVariables(@NotNull JsonObject args) {
+        String query = normalizedQuery(args);
+        boolean includeSerialized = getBoolean(args, "include_serialized", false);
+        boolean includeValues = getBoolean(args, "include_values", true);
+        int offset = getOffset(args);
+        int limit = getLimit(args, 200, 5000);
         JsonArray variables = new JsonArray();
+        int totalMatches = 0;
         for (Variable variable : VariableHandler.getVariables()) {
+            String name = variable.getName();
+            if (!matchesQuery(query, name, variable.getValue())) {
+                continue;
+            }
+            totalMatches++;
+            if (totalMatches <= offset || variables.size() >= limit) {
+                continue;
+            }
             JsonObject item = new JsonObject();
-            item.addProperty("name", variable.getName());
-            item.addProperty("value", variable.getValue());
+            item.addProperty("name", name);
             item.addProperty("reset_on_launch", variable.isResetOnLaunch());
-            item.add("serialized", FancyMenuMcpSerialization.toJson(variable.serialize()));
+            if (includeValues) {
+                item.addProperty("value", variable.getValue());
+            }
+            if (includeSerialized) {
+                item.add("serialized", FancyMenuMcpSerialization.toJson(variable.serialize()));
+            }
             variables.add(item);
         }
         JsonObject out = new JsonObject();
         out.add("variables", variables);
         out.addProperty("count", variables.size());
+        out.addProperty("total_matches", totalMatches);
+        out.addProperty("offset", offset);
+        out.addProperty("limit", limit == Integer.MAX_VALUE ? -1 : limit);
+        return out;
+    }
+
+    static @NotNull JsonObject getVariable(@NotNull JsonObject args) {
+        String name = requireString(args, "name");
+        Variable variable = VariableHandler.getVariable(name);
+        if (variable == null) {
+            throw new IllegalArgumentException("Variable not found: " + name);
+        }
+        JsonObject item = new JsonObject();
+        item.addProperty("name", variable.getName());
+        item.addProperty("value", variable.getValue());
+        item.addProperty("reset_on_launch", variable.isResetOnLaunch());
+        if (getBoolean(args, "include_serialized", true)) {
+            item.add("serialized", FancyMenuMcpSerialization.toJson(variable.serialize()));
+        }
+        JsonObject out = new JsonObject();
+        out.add("variable", item);
         return out;
     }
 
@@ -1590,6 +2649,134 @@ final class FancyMenuMcpOperations {
         if (args.has("script")) {
             instance.setActionScript(FancyMenuMcpSerialization.scriptFromJson(requireJsonObject(args, "script")));
         }
+    }
+
+    private static void applyLayoutMetaPatch(@NotNull Layout layout, @NotNull JsonObject args) {
+        if (args.has("enabled")) {
+            layout.setEnabled(getBoolean(args, "enabled", layout.isEnabled()), false);
+        }
+        if (args.has("layout_index")) {
+            layout.layoutIndex = getInt(args, "layout_index", layout.layoutIndex);
+        }
+        if (args.has("render_elements_behind_vanilla")) {
+            layout.renderElementsBehindVanilla = getBoolean(args, "render_elements_behind_vanilla", layout.renderElementsBehindVanilla);
+        }
+        if (args.has("random_mode")) {
+            layout.randomMode = getBoolean(args, "random_mode", layout.randomMode);
+        }
+        if (args.has("random_group")) {
+            layout.randomGroup = requireString(args, "random_group");
+        }
+        if (args.has("random_only_first_time")) {
+            layout.randomOnlyFirstTime = getBoolean(args, "random_only_first_time", layout.randomOnlyFirstTime);
+        }
+        if (args.has("screen_identifier")) {
+            layout.setScreenIdentifier(requireString(args, "screen_identifier"));
+        }
+        if (args.has("universal_layout_whitelist")) {
+            layout.universalLayoutMenuWhitelist = getStringArray(args, "universal_layout_whitelist");
+        }
+        if (args.has("universal_layout_blacklist")) {
+            layout.universalLayoutMenuBlacklist = getStringArray(args, "universal_layout_blacklist");
+        }
+        if (args.has("layout_wide_requirement_container")) {
+            layout.layoutWideRequirementContainer = FancyMenuMcpSerialization.requirementContainerFromJson(requireJsonObject(args, "layout_wide_requirement_container"));
+        }
+        if (args.has("custom_menu_title")) {
+            layout.customMenuTitle = getNullableString(args, "custom_menu_title");
+        }
+        if (args.has("forced_scale")) {
+            layout.forcedScale = getFloat(args, "forced_scale", layout.forcedScale);
+        }
+        if (args.has("auto_scaling_width")) {
+            layout.autoScalingWidth = getInt(args, "auto_scaling_width", layout.autoScalingWidth);
+        }
+        if (args.has("auto_scaling_height")) {
+            layout.autoScalingHeight = getInt(args, "auto_scaling_height", layout.autoScalingHeight);
+        }
+        if (args.has("preserve_background_aspect_ratio")) {
+            layout.preserveBackgroundAspectRatio = getBoolean(args, "preserve_background_aspect_ratio", layout.preserveBackgroundAspectRatio);
+        }
+        if (args.has("open_audio_source")) {
+            layout.openAudio = SerializationHelper.INSTANCE.deserializeAudioResourceSupplier(getNullableString(args, "open_audio_source"));
+        }
+        if (args.has("close_audio_source")) {
+            layout.closeAudio = SerializationHelper.INSTANCE.deserializeAudioResourceSupplier(getNullableString(args, "close_audio_source"));
+        }
+        if (args.has("preserve_scroll_list_header_footer_aspect_ratio")) {
+            layout.preserveScrollListHeaderFooterAspectRatio = getBoolean(args, "preserve_scroll_list_header_footer_aspect_ratio", layout.preserveScrollListHeaderFooterAspectRatio);
+        }
+        if (args.has("repeat_scroll_list_header_texture")) {
+            layout.repeatScrollListHeaderTexture = getBoolean(args, "repeat_scroll_list_header_texture", layout.repeatScrollListHeaderTexture);
+        }
+        if (args.has("repeat_scroll_list_footer_texture")) {
+            layout.repeatScrollListFooterTexture = getBoolean(args, "repeat_scroll_list_footer_texture", layout.repeatScrollListFooterTexture);
+        }
+        if (args.has("scroll_list_header_texture_source")) {
+            layout.scrollListHeaderTexture = SerializationHelper.INSTANCE.deserializeImageResourceSupplier(getNullableString(args, "scroll_list_header_texture_source"));
+        }
+        if (args.has("scroll_list_footer_texture_source")) {
+            layout.scrollListFooterTexture = SerializationHelper.INSTANCE.deserializeImageResourceSupplier(getNullableString(args, "scroll_list_footer_texture_source"));
+        }
+        if (args.has("render_scroll_list_header_shadow")) {
+            layout.renderScrollListHeaderShadow = getBoolean(args, "render_scroll_list_header_shadow", layout.renderScrollListHeaderShadow);
+        }
+        if (args.has("render_scroll_list_footer_shadow")) {
+            layout.renderScrollListFooterShadow = getBoolean(args, "render_scroll_list_footer_shadow", layout.renderScrollListFooterShadow);
+        }
+        if (args.has("show_scroll_list_header_footer_preview_in_editor")) {
+            layout.showScrollListHeaderFooterPreviewInEditor = getBoolean(args, "show_scroll_list_header_footer_preview_in_editor", layout.showScrollListHeaderFooterPreviewInEditor);
+        }
+        if (args.has("show_screen_background_overlay_on_custom_background")) {
+            layout.showScreenBackgroundOverlayOnCustomBackground = getBoolean(args, "show_screen_background_overlay_on_custom_background", layout.showScreenBackgroundOverlayOnCustomBackground);
+        }
+        if (args.has("apply_vanilla_background_blur")) {
+            layout.applyVanillaBackgroundBlur = getBoolean(args, "apply_vanilla_background_blur", layout.applyVanillaBackgroundBlur);
+        }
+    }
+
+    private static int appendSerializedElements(
+            @NotNull JsonArray out,
+            @NotNull List<SerializedElement> elements,
+            @NotNull String section,
+            @Nullable String builderFilter,
+            @Nullable String query,
+            boolean includeSerialized,
+            boolean includeProperties,
+            int offset,
+            int limit,
+            int runningTotalMatches
+    ) {
+        for (int index = 0; index < elements.size(); index++) {
+            SerializedElement element = elements.get(index);
+            String builderIdentifier = Objects.requireNonNullElse(element.getValue("element_type"), "");
+            String instanceIdentifier = Objects.requireNonNullElse(element.getValue("instance_identifier"), "");
+            if (builderFilter != null && !builderFilter.isBlank() && !builderIdentifier.equalsIgnoreCase(builderFilter)) {
+                continue;
+            }
+            if (!matchesQuery(query, instanceIdentifier, builderIdentifier)) {
+                continue;
+            }
+            runningTotalMatches++;
+            if (runningTotalMatches <= offset || out.size() >= limit) {
+                continue;
+            }
+            JsonObject item = new JsonObject();
+            item.addProperty("section", section);
+            item.addProperty("index", index);
+            item.addProperty("instance_identifier", instanceIdentifier);
+            item.addProperty("builder_identifier", builderIdentifier);
+            if (includeProperties) {
+                JsonObject properties = new JsonObject();
+                element.getProperties().forEach(properties::addProperty);
+                item.add("properties", properties);
+            }
+            if (includeSerialized) {
+                item.add("serialized_element", FancyMenuMcpSerialization.toJson(element));
+            }
+            out.add(item);
+        }
+        return runningTotalMatches;
     }
 
     private static @NotNull Layout requireLayout(@NotNull JsonObject args) {
@@ -1752,7 +2939,7 @@ final class FancyMenuMcpOperations {
                 || args.has("screen_identifier");
     }
 
-    private static @NotNull JsonObject layoutToJson(@NotNull Layout layout, boolean includeSerializedSet) {
+    private static @NotNull JsonObject layoutToJson(@NotNull Layout layout, boolean includeSerializedSet, boolean includeFancyString) {
         JsonObject json = new JsonObject();
         json.addProperty("runtime_layout_identifier", layout.runtimeLayoutIdentifier);
         json.addProperty("layout_name", layout.getLayoutName());
@@ -1792,13 +2979,16 @@ final class FancyMenuMcpOperations {
         layout.universalLayoutMenuBlacklist.forEach(blacklist::add);
         json.add("universal_layout_blacklist", blacklist);
         if (includeSerializedSet) {
-            json.add("serialized_set", FancyMenuMcpSerialization.toJson(layout.serialize()));
-            json.addProperty("fancy_string", PropertiesParser.serializeSetToFancyString(layout.serialize()));
+            PropertyContainerSet serializedSet = layout.serialize();
+            json.add("serialized_set", FancyMenuMcpSerialization.toJson(serializedSet));
+            if (includeFancyString) {
+                json.addProperty("fancy_string", PropertiesParser.serializeSetToFancyString(serializedSet));
+            }
         }
         return json;
     }
 
-    private static @NotNull JsonObject editorElementToJson(@NotNull AbstractEditorElement<?, ?> element, int index, boolean vanillaWidget) {
+    private static @NotNull JsonObject editorElementToJson(@NotNull AbstractEditorElement<?, ?> element, int index, boolean vanillaWidget, boolean includeSerializedElement) {
         JsonObject item = new JsonObject();
         item.addProperty("index", index);
         item.addProperty("instance_identifier", element.element.getInstanceIdentifier());
@@ -1813,8 +3003,10 @@ final class FancyMenuMcpOperations {
         item.addProperty("hovered", element.isHovered());
         item.addProperty("hidden_in_editor", element.element.layerHiddenInEditor);
         item.addProperty("vanilla_widget", vanillaWidget || element.element instanceof VanillaWidgetElement);
-        SerializedElement serialized = element.element.getBuilder().serializeElementInternal(element.element);
-        item.add("serialized_element", serialized != null ? FancyMenuMcpSerialization.toJson(serialized) : new JsonObject());
+        if (includeSerializedElement) {
+            SerializedElement serialized = element.element.getBuilder().serializeElementInternal(element.element);
+            item.add("serialized_element", serialized != null ? FancyMenuMcpSerialization.toJson(serialized) : new JsonObject());
+        }
         return item;
     }
 
@@ -1984,5 +3176,66 @@ final class FancyMenuMcpOperations {
             }
         });
         return values;
+    }
+
+    private static int getOffset(@NotNull JsonObject args) {
+        return Math.max(0, getInt(args, "offset", 0));
+    }
+
+    private static int getLimit(@NotNull JsonObject args, int fallback, int max) {
+        int value = getInt(args, "limit", fallback);
+        if (value <= 0) {
+            return fallback;
+        }
+        return Math.min(max, value);
+    }
+
+    private static @Nullable String normalizedQuery(@NotNull JsonObject args) {
+        String query = getString(args, "query", null);
+        if (query == null || query.isBlank()) {
+            return null;
+        }
+        return query.toLowerCase(Locale.ROOT);
+    }
+
+    private static boolean matchesQuery(@Nullable String normalizedQuery, @Nullable String... values) {
+        if (normalizedQuery == null || normalizedQuery.isBlank()) {
+            return true;
+        }
+        for (String raw : values) {
+            if (raw != null && raw.toLowerCase(Locale.ROOT).contains(normalizedQuery)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean matchesEditorElementFilter(
+            @NotNull JsonObject element,
+            @Nullable String query,
+            @Nullable String builderFilter,
+            boolean selectedOnly
+    ) {
+        String builderIdentifier = getString(element, "builder_identifier", "");
+        if (builderFilter != null && !builderFilter.isBlank() && !builderIdentifier.equalsIgnoreCase(builderFilter)) {
+            return false;
+        }
+        if (selectedOnly && !getBoolean(element, "selected", false)) {
+            return false;
+        }
+        String instanceIdentifier = getString(element, "instance_identifier", "");
+        String displayName = getString(element, "display_name", "");
+        return matchesQuery(query, instanceIdentifier, builderIdentifier, displayName);
+    }
+
+    private static boolean isHiddenPath(@NotNull Path path, @NotNull String fileName) {
+        if (fileName.startsWith(".")) {
+            return true;
+        }
+        try {
+            return Files.isHidden(path);
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 }
