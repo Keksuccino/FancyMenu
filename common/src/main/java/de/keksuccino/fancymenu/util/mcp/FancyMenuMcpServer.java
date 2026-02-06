@@ -18,14 +18,18 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -41,6 +45,7 @@ final class FancyMenuMcpServer {
     private final int configuredPort;
     private final AtomicBoolean running = new AtomicBoolean(false);
     private final List<ClientConnection> clients = new CopyOnWriteArrayList<>();
+    private final Map<String, FancyMenuMcpSession> httpSessions = new ConcurrentHashMap<>();
 
     private volatile @Nullable ServerSocket serverSocket;
     private volatile @Nullable Thread acceptThread;
@@ -56,7 +61,8 @@ final class FancyMenuMcpServer {
         }
         ServerSocket socket = new ServerSocket();
         socket.setReuseAddress(true);
-        socket.bind(new InetSocketAddress(InetAddress.getLoopbackAddress(), configuredPort));
+        // Bind on all interfaces so WSL-based MCP clients can connect via Windows host IP.
+        socket.bind(new InetSocketAddress(configuredPort));
         this.serverSocket = socket;
         this.boundPort = socket.getLocalPort();
         running.set(true);
@@ -87,6 +93,7 @@ final class FancyMenuMcpServer {
             client.close();
         }
         clients.clear();
+        httpSessions.clear();
     }
 
     boolean isRunning() {
@@ -98,7 +105,7 @@ final class FancyMenuMcpServer {
     }
 
     private void acceptLoop() {
-        LOGGER.info("[FANCYMENU MCP] Server started on 127.0.0.1:{}.", boundPort);
+        LOGGER.info("[FANCYMENU MCP] Server started on 0.0.0.0:{}.", boundPort);
         while (running.get()) {
             try {
                 ServerSocket socket = this.serverSocket;
@@ -145,18 +152,24 @@ final class FancyMenuMcpServer {
             try (BufferedInputStream in = new BufferedInputStream(socket.getInputStream());
                  BufferedOutputStream out = new BufferedOutputStream(socket.getOutputStream())) {
                 while (running.get() && connected.get()) {
-                    String message;
+                    IncomingMessage incoming;
                     try {
-                        message = readMessage(in);
+                        incoming = readIncomingMessage(in);
                     } catch (SocketTimeoutException ignored) {
                         continue;
                     }
-                    if (message == null) {
+                    if (incoming == null) {
                         break;
                     }
-                    JsonObject response = handleMessage(message);
-                    if (response != null) {
-                        writeMessage(out, response.toString());
+                    if (incoming.transport() == IncomingTransport.HTTP) {
+                        HttpResponse response = handleHttpMessage(incoming);
+                        writeHttpResponse(out, response);
+                        continue;
+                    }
+
+                    JsonObject response = handleMessage(session, incoming.payload());
+                    if (response != null && incoming.payload() != null) {
+                        writeFramedMessage(out, response.toString());
                     }
                 }
             } catch (Exception ex) {
@@ -168,7 +181,85 @@ final class FancyMenuMcpServer {
             }
         }
 
-        private @Nullable JsonObject handleMessage(@NotNull String rawMessage) {
+        private @NotNull HttpResponse handleHttpMessage(@NotNull IncomingMessage incoming) {
+            String method = incoming.httpMethod();
+            if (method == null) {
+                return HttpResponse.empty(400, "Bad Request", null);
+            }
+
+            if ("GET".equals(method)) {
+                return HttpResponse.empty(405, "Method Not Allowed", null);
+            }
+
+            if ("DELETE".equals(method)) {
+                String sessionId = incoming.headers().get("mcp-session-id");
+                if (sessionId != null && !sessionId.isBlank()) {
+                    httpSessions.remove(sessionId.trim());
+                }
+                return HttpResponse.empty(204, "No Content", null);
+            }
+
+            if (!"POST".equals(method)) {
+                return HttpResponse.empty(405, "Method Not Allowed", null);
+            }
+
+            String rawPayload = incoming.payload();
+            if (rawPayload == null || rawPayload.isBlank()) {
+                JsonObject error = error(null, -32600, "Invalid Request: empty body.");
+                return HttpResponse.json(400, "Bad Request", error, null);
+            }
+
+            JsonElement parsed;
+            try {
+                parsed = JsonParser.parseString(rawPayload);
+            } catch (Exception ex) {
+                JsonObject error = error(null, -32700, "Parse error: invalid JSON.");
+                return HttpResponse.json(400, "Bad Request", error, null);
+            }
+            if (!parsed.isJsonObject()) {
+                JsonObject error = error(null, -32600, "Invalid Request: expected JSON object.");
+                return HttpResponse.json(400, "Bad Request", error, null);
+            }
+
+            JsonObject request = parsed.getAsJsonObject();
+            String requestMethod = getString(request, "method", null);
+            String requestedSessionId = incoming.headers().get("mcp-session-id");
+            FancyMenuMcpSession requestSession = resolveHttpSession(requestedSessionId, requestMethod);
+            JsonObject response = handleParsedMessage(requestSession, request);
+
+            String responseSessionId = null;
+            if ("initialize".equals(requestMethod) && response != null && response.has("result")) {
+                responseSessionId = (requestedSessionId != null && !requestedSessionId.isBlank())
+                        ? requestedSessionId
+                        : UUID.randomUUID().toString();
+                httpSessions.put(responseSessionId, requestSession);
+            } else if (requestedSessionId != null && httpSessions.containsKey(requestedSessionId)) {
+                responseSessionId = requestedSessionId;
+            }
+
+            if (response == null) {
+                return HttpResponse.empty(202, "Accepted", responseSessionId);
+            }
+            return HttpResponse.json(200, "OK", response, responseSessionId);
+        }
+
+        private @NotNull FancyMenuMcpSession resolveHttpSession(@Nullable String requestedSessionId, @Nullable String requestMethod) {
+            if (requestedSessionId != null) {
+                FancyMenuMcpSession known = httpSessions.get(requestedSessionId);
+                if (known != null) {
+                    return known;
+                }
+                if ("initialize".equals(requestMethod)) {
+                    return new FancyMenuMcpSession(socket.getRemoteSocketAddress());
+                }
+            }
+            return session;
+        }
+
+        private @Nullable JsonObject handleMessage(@NotNull FancyMenuMcpSession activeSession, @Nullable String rawMessage) {
+            if (rawMessage == null) {
+                return error(null, -32600, "Invalid Request: empty payload.");
+            }
             JsonElement parsed;
             try {
                 parsed = JsonParser.parseString(rawMessage);
@@ -178,7 +269,10 @@ final class FancyMenuMcpServer {
             if (!parsed.isJsonObject()) {
                 return error(null, -32600, "Invalid Request: expected JSON object.");
             }
-            JsonObject request = parsed.getAsJsonObject();
+            return handleParsedMessage(activeSession, parsed.getAsJsonObject());
+        }
+
+        private @Nullable JsonObject handleParsedMessage(@NotNull FancyMenuMcpSession activeSession, @NotNull JsonObject request) {
             JsonElement id = request.get("id");
             boolean respond = id != null && !id.isJsonNull();
             String method = getString(request, "method", null);
@@ -189,24 +283,26 @@ final class FancyMenuMcpServer {
             try {
                 JsonObject response = switch (method) {
                     case "initialize" -> {
-                        session.setInitializeCalled(true);
-                        session.setInitialized(false);
-                        session.setIntroCalled(false);
-                        yield success(id, initializeResult());
+                        JsonObject initializeParams = request.has("params") && request.get("params").isJsonObject()
+                                ? request.getAsJsonObject("params")
+                                : null;
+                        activeSession.setInitializeCalled(true);
+                        activeSession.setInitialized(false);
+                        activeSession.setIntroCalled(false);
+                        yield success(id, initializeResult(initializeParams));
                     }
                     case "notifications/initialized" -> {
-                        ensureInitializeCalled();
-                        session.setInitialized(true);
+                        ensureInitializeCalled(activeSession);
+                        activeSession.setInitialized(true);
                         yield null;
                     }
                     case "ping" -> success(id, new JsonObject());
                     case "tools/list" -> {
-                        ensureInitializeCalled();
                         yield success(id, toolsListResult());
                     }
                     case "tools/call" -> {
-                        ensureInitialized();
-                        yield handleToolCall(id, request.getAsJsonObject("params"));
+                        ensureInitialized(activeSession);
+                        yield handleToolCall(activeSession, id, request.getAsJsonObject("params"));
                     }
                     default -> error(id, -32601, "Method not found: " + method);
                 };
@@ -222,7 +318,7 @@ final class FancyMenuMcpServer {
             }
         }
 
-        private @Nullable JsonObject handleToolCall(@Nullable JsonElement id, @Nullable JsonObject params) throws Exception {
+        private @Nullable JsonObject handleToolCall(@NotNull FancyMenuMcpSession activeSession, @Nullable JsonElement id, @Nullable JsonObject params) throws Exception {
             if (params == null) {
                 throw new IllegalArgumentException("Missing tools/call params.");
             }
@@ -233,7 +329,7 @@ final class FancyMenuMcpServer {
             if (!FancyMenuMcpTools.toolExists(toolName)) {
                 throw new IllegalArgumentException("Unknown tool: " + toolName);
             }
-            if (!session.isIntroCalled() && !"fancymenu_intro".equals(toolName)) {
+            if (!activeSession.isIntroCalled() && !"fancymenu_intro".equals(toolName)) {
                 throw new IllegalArgumentException("You must call 'fancymenu_intro' first in this session before using other tools.");
             }
 
@@ -243,7 +339,7 @@ final class FancyMenuMcpServer {
 
             FancyMenuMcpTools.ToolExecution execution = FancyMenuMcpTools.executeTool(toolName, toolArguments);
             if ("fancymenu_intro".equals(execution.getToolName())) {
-                session.setIntroCalled(true);
+                activeSession.setIntroCalled(true);
             }
 
             JsonObject toolResult = new JsonObject();
@@ -268,9 +364,9 @@ final class FancyMenuMcpServer {
             return success(id, toolResult);
         }
 
-        private @NotNull JsonObject initializeResult() {
+        private @NotNull JsonObject initializeResult(@Nullable JsonObject initializeParams) {
             JsonObject result = new JsonObject();
-            result.addProperty("protocolVersion", PROTOCOL_VERSION);
+            result.addProperty("protocolVersion", negotiateProtocolVersion(initializeParams));
             JsonObject capabilities = new JsonObject();
             capabilities.add("tools", new JsonObject());
             result.add("capabilities", capabilities);
@@ -287,18 +383,19 @@ final class FancyMenuMcpServer {
             return result;
         }
 
-        private void ensureInitializeCalled() {
-            if (!session.isInitializeCalled()) {
+        private void ensureInitializeCalled(@NotNull FancyMenuMcpSession activeSession) {
+            if (!activeSession.isInitializeCalled()) {
                 throw new IllegalArgumentException("Call 'initialize' before using this method.");
             }
         }
 
-        private void ensureInitialized() {
-            if (!session.isInitializeCalled()) {
+        private void ensureInitialized(@NotNull FancyMenuMcpSession activeSession) {
+            if (!activeSession.isInitializeCalled()) {
                 throw new IllegalArgumentException("Call 'initialize' before calling tools.");
             }
-            if (!session.isInitialized()) {
-                throw new IllegalArgumentException("Send 'notifications/initialized' before calling tools.");
+            // Some clients skip notifications/initialized - tolerate this.
+            if (!activeSession.isInitialized()) {
+                activeSession.setInitialized(true);
             }
         }
 
@@ -318,7 +415,33 @@ final class FancyMenuMcpServer {
         }
     }
 
-    private static @Nullable String readMessage(@NotNull InputStream inputStream) throws IOException {
+    private static @NotNull String negotiateProtocolVersion(@Nullable JsonObject initializeParams) {
+        if (initializeParams == null) {
+            return PROTOCOL_VERSION;
+        }
+        String requested = getString(initializeParams, "protocolVersion", null);
+        if (requested != null && !requested.isBlank()) {
+            return requested.trim();
+        }
+        if (initializeParams.has("supportedProtocolVersions") && initializeParams.get("supportedProtocolVersions").isJsonArray()) {
+            JsonArray supported = initializeParams.getAsJsonArray("supportedProtocolVersions");
+            for (JsonElement element : supported) {
+                if (element == null || element.isJsonNull()) {
+                    continue;
+                }
+                String value = element.getAsString();
+                if (value != null) {
+                    String normalized = value.trim();
+                    if (!normalized.isEmpty()) {
+                        return normalized;
+                    }
+                }
+            }
+        }
+        return PROTOCOL_VERSION;
+    }
+
+    private static @Nullable IncomingMessage readIncomingMessage(@NotNull InputStream inputStream) throws IOException {
         String firstLine = readLine(inputStream);
         if (firstLine == null) {
             return null;
@@ -334,39 +457,100 @@ final class FancyMenuMcpServer {
             throw new IOException("Unsupported unframed JSON request. Use Content-Length framing.");
         }
 
-        int contentLength = -1;
-        String line = firstLine;
+        if (isHttpRequestLine(firstLine)) {
+            String[] parts = firstLine.split(" ", 3);
+            String method = (parts.length > 0 ? parts[0] : "").toUpperCase(Locale.ROOT);
+            Map<String, String> headers = readHeaders(inputStream, readLine(inputStream));
+            int contentLength = parseContentLength(headers, false);
+            String payload = "";
+            if (contentLength > 0) {
+                byte[] bytes = readExact(inputStream, contentLength);
+                payload = new String(bytes, StandardCharsets.UTF_8);
+            }
+            return IncomingMessage.http(method, headers, payload);
+        }
+
+        Map<String, String> headers = readHeaders(inputStream, firstLine);
+        int contentLength = parseContentLength(headers, true);
+        if (contentLength <= 0) {
+            throw new IOException("Missing or invalid Content-Length header.");
+        }
+        byte[] payload = readExact(inputStream, contentLength);
+        return IncomingMessage.framed(new String(payload, StandardCharsets.UTF_8));
+    }
+
+    private static @NotNull Map<String, String> readHeaders(@NotNull InputStream inputStream, @Nullable String firstHeaderLine) throws IOException {
+        Map<String, String> headers = new LinkedHashMap<>();
+        String line = firstHeaderLine;
         while (line != null && !line.isBlank()) {
             int separator = line.indexOf(':');
             if (separator > 0) {
-                String key = line.substring(0, separator).trim();
+                String key = line.substring(0, separator).trim().toLowerCase(Locale.ROOT);
                 String value = line.substring(separator + 1).trim();
-                if ("content-length".equalsIgnoreCase(key)) {
-                    try {
-                        contentLength = Integer.parseInt(value);
-                    } catch (NumberFormatException ex) {
-                        throw new IOException("Invalid Content-Length header value: " + value, ex);
-                    }
-                }
+                headers.put(key, value);
             }
             line = readLine(inputStream);
         }
-        if (contentLength <= 0) {
-            throw new IOException("Missing or invalid Content-Length header.");
+        return headers;
+    }
+
+    private static int parseContentLength(@NotNull Map<String, String> headers, boolean required) throws IOException {
+        String value = headers.get("content-length");
+        if (value == null || value.isBlank()) {
+            if (required) {
+                throw new IOException("Missing or invalid Content-Length header.");
+            }
+            return 0;
+        }
+        int contentLength;
+        try {
+            contentLength = Integer.parseInt(value.trim());
+        } catch (NumberFormatException ex) {
+            throw new IOException("Invalid Content-Length header value: " + value, ex);
+        }
+        if (contentLength < 0) {
+            throw new IOException("Invalid Content-Length header value: " + value);
         }
         if (contentLength > MAX_REQUEST_BYTES) {
             throw new IOException("Content-Length exceeds max request size: " + contentLength);
         }
-        byte[] payload = readExact(inputStream, contentLength);
-        return new String(payload, StandardCharsets.UTF_8);
+        return contentLength;
     }
 
-    private static void writeMessage(@NotNull OutputStream outputStream, @NotNull String payload) throws IOException {
+    private static void writeFramedMessage(@NotNull OutputStream outputStream, @NotNull String payload) throws IOException {
         byte[] bytes = payload.getBytes(StandardCharsets.UTF_8);
         String header = "Content-Length: " + bytes.length + "\r\n\r\n";
         outputStream.write(header.getBytes(StandardCharsets.US_ASCII));
         outputStream.write(bytes);
         outputStream.flush();
+    }
+
+    private static void writeHttpResponse(@NotNull OutputStream outputStream, @NotNull HttpResponse response) throws IOException {
+        byte[] body = response.body() != null ? response.body().getBytes(StandardCharsets.UTF_8) : new byte[0];
+        StringBuilder header = new StringBuilder();
+        header.append("HTTP/1.1 ").append(response.status()).append(' ').append(response.reason()).append("\r\n");
+        header.append("Content-Length: ").append(body.length).append("\r\n");
+        if (body.length > 0) {
+            header.append("Content-Type: application/json; charset=utf-8\r\n");
+        }
+        if (response.status() == 405) {
+            header.append("Allow: GET, POST, DELETE\r\n");
+        }
+        header.append("Cache-Control: no-store\r\n");
+        header.append("Connection: keep-alive\r\n");
+        if (response.sessionId() != null && !response.sessionId().isBlank()) {
+            header.append("Mcp-Session-Id: ").append(response.sessionId()).append("\r\n");
+        }
+        header.append("\r\n");
+        outputStream.write(header.toString().getBytes(StandardCharsets.US_ASCII));
+        if (body.length > 0) {
+            outputStream.write(body);
+        }
+        outputStream.flush();
+    }
+
+    private static boolean isHttpRequestLine(@NotNull String line) {
+        return line.contains("HTTP/") && line.indexOf(' ') > 0;
     }
 
     private static @Nullable String readLine(@NotNull InputStream inputStream) throws IOException {
@@ -425,6 +609,45 @@ final class FancyMenuMcpServer {
         if (!json.has(key) || json.get(key).isJsonNull()) {
             return fallback;
         }
-        return json.get(key).getAsString();
+        String value = json.get(key).getAsString();
+        if (value == null) {
+            return fallback;
+        }
+        return value.trim();
+    }
+
+    private enum IncomingTransport {
+        FRAMED,
+        HTTP
+    }
+
+    private record IncomingMessage(
+            @NotNull IncomingTransport transport,
+            @Nullable String httpMethod,
+            @NotNull Map<String, String> headers,
+            @Nullable String payload
+    ) {
+        private static @NotNull IncomingMessage framed(@NotNull String payload) {
+            return new IncomingMessage(IncomingTransport.FRAMED, null, Map.of(), payload);
+        }
+
+        private static @NotNull IncomingMessage http(@NotNull String method, @NotNull Map<String, String> headers, @Nullable String payload) {
+            return new IncomingMessage(IncomingTransport.HTTP, method, headers, payload);
+        }
+    }
+
+    private record HttpResponse(
+            int status,
+            @NotNull String reason,
+            @Nullable String body,
+            @Nullable String sessionId
+    ) {
+        private static @NotNull HttpResponse empty(int status, @NotNull String reason, @Nullable String sessionId) {
+            return new HttpResponse(status, reason, null, sessionId);
+        }
+
+        private static @NotNull HttpResponse json(int status, @NotNull String reason, @NotNull JsonObject body, @Nullable String sessionId) {
+            return new HttpResponse(status, reason, GSON.toJson(body), sessionId);
+        }
     }
 }

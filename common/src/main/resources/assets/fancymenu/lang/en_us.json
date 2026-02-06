@@ -2895,5 +2895,5 @@
   "fancymenu.overlay.menu_bar.customization.settings.mcp_server": "FancyMenu MCP Server: %s",
   "fancymenu.overlay.menu_bar.customization.settings.mcp_server.desc": "Starts a local MCP server for AI agents with full FancyMenu control.\nWhen enabled, call the 'fancymenu_intro' tool first in every MCP session.",
   "fancymenu.overlay.menu_bar.customization.settings.mcp_server_port": "FancyMenu MCP Server Port",
-  "fancymenu.overlay.menu_bar.customization.settings.mcp_server_port.desc": "TCP port used by the local FancyMenu MCP server.\nIf the server is enabled, changing this restarts it."
+  "fancymenu.overlay.menu_bar.customization.settings.mcp_server_port.desc": "Port used by the local FancyMenu MCP server for Streamable HTTP and framed TCP.\nIf the server is enabled, changing this restarts it."
 }

@@ -83,6 +83,7 @@ final class FancyMenuMcpOperations {
         out.addProperty("summary", "FancyMenu is like Figma for real Minecraft menus: you design live, functional menus that directly run in-game.");
         JsonArray instructions = new JsonArray();
         instructions.add("Always call this intro tool first in every new MCP session.");
+        instructions.add("Prefer direct Streamable HTTP MCP transport via the configured MCP port (for example: http://127.0.0.1:<port>/mcp).");
         instructions.add("When editing layouts, open the Layout Editor for the target layout/screen and keep updates live so the user can watch changes.");
         instructions.add("When editing action scripts for layouts/listeners/schedulers, open the Action Script Editor and keep it live-updated.");
         instructions.add("Use screenshot capture to visually validate current UI state before and after changes.");
@@ -105,8 +106,15 @@ final class FancyMenuMcpOperations {
         JsonObject out = new JsonObject();
         out.addProperty("enabled_option", FancyMenu.getOptions().mcpServerEnabled.getValue());
         out.addProperty("configured_port", FancyMenu.getOptions().mcpServerPort.getValue());
-        out.addProperty("running", FancyMenuMcpManager.isRunning());
-        out.addProperty("bound_port", FancyMenuMcpManager.getBoundPort());
+        boolean running = FancyMenuMcpManager.isRunning();
+        int boundPort = FancyMenuMcpManager.getBoundPort();
+        out.addProperty("running", running);
+        out.addProperty("bound_port", boundPort);
+        if (running && boundPort > 0) {
+            out.addProperty("http_url", "http://127.0.0.1:" + boundPort + "/mcp");
+            out.addProperty("tcp_host", "127.0.0.1");
+            out.addProperty("tcp_port", boundPort);
+        }
         return out;
     }
 
