@@ -925,22 +925,36 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         float circleDiameter = radius * 2.0F;
         float circleX = centerX - radius;
         float circleY = centerY - radius;
-        float rotationAngleRad = (float) -Math.toRadians(this.element.getRotationDegrees() - 90.0F);
-        float arcHalfRadians = (float) Math.toRadians(15.0F);
-        SmoothCircleRenderer.renderSmoothCircleBorderArc(
-                graphics,
-                circleX,
-                circleY,
-                circleDiameter,
-                circleDiameter,
-                1.0F,
-                2.0F,
-                rotationAngleRad - arcHalfRadians,
-                rotationAngleRad + arcHalfRadians,
-                true,
-                circleColor,
-                partial
-        );
+        if (this.isGettingRotated()) {
+            SmoothCircleRenderer.renderSmoothCircleBorderScaled(
+                    graphics,
+                    circleX,
+                    circleY,
+                    circleDiameter,
+                    circleDiameter,
+                    1.0F,
+                    2.0F,
+                    circleColor,
+                    partial
+            );
+        } else {
+            float rotationAngleRad = (float) -Math.toRadians(this.element.getRotationDegrees() - 90.0F);
+            float arcHalfRadians = (float) Math.toRadians(15.0F);
+            SmoothCircleRenderer.renderSmoothCircleBorderArc(
+                    graphics,
+                    circleX,
+                    circleY,
+                    circleDiameter,
+                    circleDiameter,
+                    1.0F,
+                    2.0F,
+                    rotationAngleRad - arcHalfRadians,
+                    rotationAngleRad + arcHalfRadians,
+                    true,
+                    circleColor,
+                    partial
+            );
+        }
 
         this.rotationGrabber.render(graphics, mouseX, mouseY, partial);
 
