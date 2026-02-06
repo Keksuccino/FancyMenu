@@ -96,6 +96,18 @@
 - Added "Delay Disappearance" feature to elements that works similar to the "Delay Appearance" feature and delays the element's visibility change for X seconds when its loading requirements make it hide (#1348)
 - Ported "Is Player Using Item" requirement from Spiffy (#1401)
 - Ported "Is Player In Structure" requirement from Spiffy (#1402)
+- Ported "Action Bar Message" placeholder from SpiffyHUD that gets the current action bar message text above the hotbar
+- Ported "Action Bar Message Time" placeholder from SpiffyHUD that returns how many ticks the vanilla action bar message will still be shown
+- Ported "Camera Rotation X" placeholder from SpiffyHUD that returns the camera X rotation in degrees
+- Ported "Camera Rotation Y" placeholder from SpiffyHUD that returns the camera Y rotation in degrees
+- Ported "Camera Rotation Delta X" placeholder from SpiffyHUD that returns the per-tick change in camera pitch
+- Ported "Camera Rotation Delta Y" placeholder from SpiffyHUD that returns the per-tick change in camera yaw
+- Ported "Highlighted Item Time" placeholder from SpiffyHUD that returns how many ticks the highlighted item name will still be shown above the hotbar
+- Ported "Player Item Use Progress" placeholder from SpiffyHUD that returns current item-use progress as a value from 0.0 to 1.0
+- Ported "Player Position Delta X" placeholder from SpiffyHUD that returns the per-tick change in player position on the X axis
+- Ported "Player Position Delta Y" placeholder from SpiffyHUD that returns the per-tick change in player position on the Y axis
+- Ported "Player Position Delta Z" placeholder from SpiffyHUD that returns the per-tick change in player position on the Z axis
+- Ported "Slot Item Display Name" placeholder from SpiffyHUD that returns the display name of the item in a specified slot, with spectator handling support
 - The "Layer" widget of the layout editor now has support for creating groups that can hold layers for better organization (you can also collapse groups to save space) (#1449)
 - The "Player Entity" element now respects/mirrors the client's skin settings when "Copy Client Player" is enabled for the element (#481)
 - "Button" and "Slider" elements got some new features
