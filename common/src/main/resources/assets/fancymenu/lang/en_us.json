@@ -2891,5 +2891,9 @@
   "fancymenu.placeholders.world.player_position_delta_z_fm": "Player Position Delta Z (FM)",
   "fancymenu.placeholders.world.player_position_delta_z_fm.desc": "Displays the change in player position along the Z axis between ticks as a decimal value.\nThe value can be positive or negative.",
   "fancymenu.placeholders.world.slot_item_display_name_fm": "Slot Item Display Name (FM)",
-  "fancymenu.placeholders.world.slot_item_display_name_fm.desc": "Gets the display name of an item in a specific slot.\nSetting 'ignore_spectator' to 'true' will ignore spectator GUI slots in spectator mode."
+  "fancymenu.placeholders.world.slot_item_display_name_fm.desc": "Gets the display name of an item in a specific slot.\nSetting 'ignore_spectator' to 'true' will ignore spectator GUI slots in spectator mode.",
+  "fancymenu.overlay.menu_bar.customization.settings.mcp_server": "FancyMenu MCP Server: %s",
+  "fancymenu.overlay.menu_bar.customization.settings.mcp_server.desc": "Starts a local MCP server for AI agents with full FancyMenu control.\nWhen enabled, call the 'fancymenu_intro' tool first in every MCP session.",
+  "fancymenu.overlay.menu_bar.customization.settings.mcp_server_port": "FancyMenu MCP Server Port",
+  "fancymenu.overlay.menu_bar.customization.settings.mcp_server_port.desc": "TCP port used by the local FancyMenu MCP server.\nIf the server is enabled, changing this restarts it."
 }
