@@ -134,6 +134,11 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
 
         layoutMenu.addSeparatorEntry("separator_after_layout_settings");
 
+        layoutMenu.addSubMenuEntry("fancymenu_settings", Component.translatable("fancymenu.overlay.menu_bar.customization.settings"), CustomizationOverlayUI.buildSettingsMenu())
+                .setIcon(MaterialIcons.SETTINGS);
+
+        layoutMenu.addSeparatorEntry("separator_after_settings");
+
         layoutMenu.addClickableEntry("close_editor", Component.translatable("fancymenu.editor.close"), (menu, entry) -> {
             menu.closeMenuChain();
             displayUnsavedWarning(call -> {
@@ -378,9 +383,6 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 .setIcon(MaterialIcons.FILTER_TILT_SHIFT);
 
         windowMenu.addSeparatorEntry("separator_after_rotation_tilting_controls");
-
-        //USER INTERFACE
-        CustomizationOverlayUI.buildUITabAndAddTo(menuBar);
 
         //HELP
         CustomizationOverlayUI.buildHelpTabAndAddTo(menuBar);

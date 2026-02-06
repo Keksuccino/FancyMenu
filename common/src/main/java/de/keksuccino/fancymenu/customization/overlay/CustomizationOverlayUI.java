@@ -197,7 +197,7 @@ public class CustomizationOverlayUI {
 
         customizationMenu.addSeparatorEntry("separator_after_global_customizations");
 
-        customizationMenu.addSubMenuEntry("screen_settings", Component.translatable("fancymenu.overlay.menu_bar.customization.settings"), buildSettingsMenu(emptyImageSupplier))
+        customizationMenu.addSubMenuEntry("fancymenu_settings", Component.translatable("fancymenu.overlay.menu_bar.customization.settings"), buildSettingsMenu())
                 .setIcon(MaterialIcons.SETTINGS);
 
         customizationMenu.addSeparatorEntry("separator_after_settings");
@@ -493,14 +493,7 @@ public class CustomizationOverlayUI {
 
     }
 
-    @NotNull
-    public static ContextMenu buildLayoutMenu(boolean includeNewEntry) {
-        Screen screen = Minecraft.getInstance().screen;
-        String identifier = (screen != null) ? ScreenIdentifierHandler.getIdentifierOfScreen(screen) : null;
-        return buildLayoutMenu(screen, identifier, includeNewEntry, layout -> buildManageLayoutSubMenu(layout, List.of("layouts"), screen));
-    }
-
-    public static ContextMenu buildSettingsMenu(@NotNull ResourceSupplier<ITexture> emptyImageSupplier) {
+    public static ContextMenu buildSettingsMenu() {
 
         ContextMenu customizationSettingsMenu = new ContextMenu();
 
@@ -1478,7 +1471,8 @@ public class CustomizationOverlayUI {
                                 speedString = "3";
                             }
                             FancyMenu.getOptions().contextMenuHoverOpenSpeed.setValue(Integer.parseInt(speedString));
-                        }))
+                        })
+                        .setValueComponentStyleSupplier(consumes -> Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt())))
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.user_interface.context_menu_hover_open_speed.desc")))
                 .setIcon(MaterialIcons.TIMER);
 
