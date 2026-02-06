@@ -84,6 +84,7 @@ final class FancyMenuMcpTools {
             case "fancymenu_editor_select_elements" -> structured = FancyMenuMcpOperations.editorSelectElements(arguments);
             case "fancymenu_editor_get_visual_layers" -> structured = FancyMenuMcpOperations.editorGetVisualLayers(arguments);
             case "fancymenu_editor_patch_layout" -> structured = FancyMenuMcpOperations.editorPatchLayout(arguments);
+            case "fancymenu_editor_quick_patch_elements" -> structured = FancyMenuMcpOperations.editorQuickPatchElements(arguments);
             case "fancymenu_editor_add_element" -> structured = FancyMenuMcpOperations.editorAddElement(arguments);
             case "fancymenu_editor_remove_element" -> structured = FancyMenuMcpOperations.editorRemoveElement(arguments);
             case "fancymenu_editor_move_element" -> structured = FancyMenuMcpOperations.editorMoveElement(arguments);
@@ -181,7 +182,8 @@ final class FancyMenuMcpTools {
         tools.put("fancymenu_editor_select_elements", tool("fancymenu_editor_select_elements", "Changes editor selection using modes set/add/remove/clear/all.", editorSelectElementsSchema()));
         tools.put("fancymenu_editor_get_visual_layers", tool("fancymenu_editor_get_visual_layers", "Lists backgrounds and decoration overlays in current editor order. Serialized payload is optional.", editorVisualLayersSchema()));
         tools.put("fancymenu_editor_patch_layout", tool("fancymenu_editor_patch_layout", "Batch patch tool for live layout editing in one call: meta patch + element/background/overlay operations + optional auto-save.", editorPatchLayoutSchema()));
-        tools.put("fancymenu_editor_add_element", tool("fancymenu_editor_add_element", "Adds a new element by builder identifier to current editor.", editorAddElementSchema()));
+        tools.put("fancymenu_editor_quick_patch_elements", tool("fancymenu_editor_quick_patch_elements", "Bulk-patches common element fields (position, anchor, button textures, image source, custom properties) for filtered targets including vanilla widgets.", editorQuickPatchElementsSchema()));
+        tools.put("fancymenu_editor_add_element", tool("fancymenu_editor_add_element", "Adds a new element by builder identifier to current editor. Use exact ids from fancymenu_list_elements (example: vanilla_button).", editorAddElementSchema()));
         tools.put("fancymenu_editor_remove_element", tool("fancymenu_editor_remove_element", "Removes an element from current editor.", editorRemoveElementSchema()));
         tools.put("fancymenu_editor_move_element", tool("fancymenu_editor_move_element", "Moves/repositions an element in current editor.", editorMoveElementSchema()));
         tools.put("fancymenu_editor_set_element_order", tool("fancymenu_editor_set_element_order", "Sets order of normal editor elements based on identifier list.", editorSetElementOrderSchema()));
@@ -415,6 +417,30 @@ final class FancyMenuMcpTools {
         properties.add("overlay_remove", stringOrObjectArrayProperty("Array of overlay identifiers or remove objects."));
         properties.add("overlay_reorder", objectArrayProperty("Array of overlay reorder objects (overlay_identifier + target_index)."));
         properties.add("auto_save", booleanProperty("Save layout immediately after applying patch operations."));
+        properties.add("include_editor_poll", booleanProperty("Include compact editor poll result in response."));
+        return schemaObject(properties);
+    }
+
+    private static @NotNull JsonObject editorQuickPatchElementsSchema() {
+        JsonObject properties = withLayoutSelectorProperties(new JsonObject());
+        properties.add("element_identifiers", stringArrayProperty("Optional explicit target element instance identifiers."));
+        properties.add("query", stringProperty("Optional case-insensitive target filter against instance id/builder/display name."));
+        properties.add("builder_identifier", stringProperty("Optional builder filter. Alias-friendly (e.g. vanilla_widget resolves to vanilla_button)."));
+        properties.add("selected_only", booleanProperty("Only patch currently selected editor elements."));
+        properties.add("include_vanilla_widgets", booleanProperty("Include vanilla widget elements in target search (default true)."));
+        properties.add("x", integerProperty("Set absolute x offset for matched elements."));
+        properties.add("y", integerProperty("Set absolute y offset for matched elements."));
+        properties.add("x_delta", integerProperty("Additive x offset delta applied to matched elements."));
+        properties.add("y_delta", integerProperty("Additive y offset delta applied to matched elements."));
+        properties.add("anchor_point", stringOrNullProperty("Set anchor point (top-left/top-centered/.../element/vanilla). Use null to clear."));
+        properties.add("anchor_point_element", stringOrNullProperty("Set anchor point element id. Use null to clear."));
+        properties.add("button_texture_normal_source", stringOrNullProperty("Set button normal texture source (backgroundnormal). Use null to clear."));
+        properties.add("button_texture_hover_source", stringOrNullProperty("Set button hover texture source (backgroundhovered). Use null to clear."));
+        properties.add("button_texture_inactive_source", stringOrNullProperty("Set button inactive texture source (background_texture_inactive). Use null to clear."));
+        properties.add("image_source", stringOrNullProperty("Set image texture source property (source). Use null to clear."));
+        properties.add("set_properties", objectProperty("Optional generic property patch map (key -> primitive value or null to clear)."));
+        properties.add("clear_properties", stringArrayProperty("Optional explicit property keys to clear."));
+        properties.add("auto_save", booleanProperty("Save layout immediately after patching."));
         properties.add("include_editor_poll", booleanProperty("Include compact editor poll result in response."));
         return schemaObject(properties);
     }

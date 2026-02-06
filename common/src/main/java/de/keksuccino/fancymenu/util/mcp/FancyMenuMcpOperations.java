@@ -21,6 +21,7 @@ import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetEditorElement;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -88,13 +89,18 @@ final class FancyMenuMcpOperations {
         out.addProperty("workflow_hint", "Use compact discovery tools first, then switch to precise patch/edit tools. Avoid full exports unless needed.");
         JsonArray instructions = new JsonArray();
         instructions.add("Always call this intro tool first in every new MCP session.");
+        instructions.add("For FancyMenu tasks, always prefer FancyMenu MCP tools over external/manual approaches.");
+        instructions.add("Never manually edit layout files directly; always use FancyMenu MCP tools to read, patch, and save layout data.");
         instructions.add("Prefer direct Streamable HTTP MCP transport via the configured MCP port (for example: http://127.0.0.1:<port>/mcp).");
         instructions.add("When exploring data, prefer compact tools with filtering/pagination (limit/offset/query/include_* flags) to save context.");
+        instructions.add("If your agent runtime allows spawning sub-agents, use them for inspecting very large layout payloads/files so only the sub-agent context gets filled for that deep-dive task.");
         instructions.add("Suggested discovery sequence: fancymenu_list_layouts_compact -> fancymenu_get_layout_meta -> fancymenu_get_layout_elements.");
+        instructions.add("Use exact builder identifiers from registry/editor tools (example: vanilla buttons use builder id 'vanilla_button').");
         instructions.add("When editing layouts, open the Layout Editor for the target layout/screen and keep updates live so the user can watch changes.");
         instructions.add("For multi-step layout edits, prefer fancymenu_editor_patch_layout to reduce roundtrips.");
         instructions.add("When editing action scripts for layouts/listeners/schedulers, open the Action Script Editor and keep it live-updated.");
         instructions.add("Use screenshot capture to visually validate current UI state before and after changes.");
+        instructions.add("When working on layouts, regularly capture screenshots and inspect them to evaluate composition, spacing, readability, and overall visual quality while iterating.");
         instructions.add("Use full serialization tools only when required for exact cloning or low-level patching.");
         out.add("instructions", instructions);
         JsonArray capabilities = new JsonArray();
@@ -835,12 +841,13 @@ final class FancyMenuMcpOperations {
         sortOrder = sortOrder.toLowerCase(Locale.ROOT);
         int offset = getOffset(args);
         int limit = getLimit(args, 200, 5000);
+        final Path scanRoot = startPath;
 
         List<JsonObject> matches = new ArrayList<>();
-        if (Files.exists(startPath)) {
-            try (var stream = Files.walk(startPath, maxDepth)) {
+        if (Files.exists(scanRoot)) {
+            try (var stream = Files.walk(scanRoot, maxDepth)) {
                 stream.forEach(path -> {
-                    if (path.equals(startPath)) {
+                    if (path.equals(scanRoot)) {
                         return;
                     }
                     String relativePath = rootPath.relativize(path).toString().replace("\\", "/");
@@ -908,7 +915,7 @@ final class FancyMenuMcpOperations {
         }
         JsonObject out = new JsonObject();
         out.addProperty("assets_root", rootPath.toString());
-        out.addProperty("scan_root", startPath.toString());
+        out.addProperty("scan_root", scanRoot.toString());
         out.add("assets", files);
         out.addProperty("count", files.size());
         out.addProperty("total_matches", matches.size());
@@ -1819,7 +1826,8 @@ final class FancyMenuMcpOperations {
     static @NotNull JsonObject editorAddElement(@NotNull JsonObject args) {
         LayoutEditorScreen editor = requireEditor(args);
         String builderId = requireString(args, "builder_identifier");
-        ElementBuilder<?, ?> builder = ElementRegistry.getBuilder(builderId);
+        String resolvedBuilderId = resolveElementBuilderIdentifier(builderId);
+        ElementBuilder<?, ?> builder = resolvedBuilderId != null ? ElementRegistry.getBuilder(resolvedBuilderId) : null;
         if (builder == null) {
             throw new IllegalArgumentException("Unknown element builder: " + builderId);
         }
@@ -1838,12 +1846,17 @@ final class FancyMenuMcpOperations {
             editor.deselectAllElements();
             editorElement.setSelected(true);
         }
-        editor.normalEditorElements.add(editorElement);
+        if (editorElement instanceof VanillaWidgetEditorElement vanillaWidgetEditorElement) {
+            editor.vanillaWidgetEditorElements.add(vanillaWidgetEditorElement);
+        } else {
+            editor.normalEditorElements.add(editorElement);
+        }
         editor.layoutEditorWidgets.forEach(widget -> widget.editorElementAdded(editorElement));
         editor.unsavedChanges = true;
         JsonObject out = new JsonObject();
         out.addProperty("added", true);
         out.addProperty("instance_identifier", editorElement.element.getInstanceIdentifier());
+        out.addProperty("builder_identifier", builder.getIdentifier());
         return out;
     }
 
@@ -1929,13 +1942,18 @@ final class FancyMenuMcpOperations {
         if (elementType == null || elementType.isBlank()) {
             throw new IllegalArgumentException("serialized_element.element_type is required.");
         }
-        ElementBuilder<?, ?> builder = ElementRegistry.getBuilder(elementType);
-        if (builder == null) {
+        String resolvedElementType = resolveElementBuilderIdentifier(elementType);
+        if (resolvedElementType == null || resolvedElementType.isBlank()) {
             throw new IllegalArgumentException("Unknown element builder in serialized element: " + elementType);
+        }
+        ElementBuilder<?, ?> builder = ElementRegistry.getBuilder(resolvedElementType);
+        if (builder == null) {
+            throw new IllegalArgumentException("Unknown element builder in serialized element: " + resolvedElementType);
         }
         if (!serialized.hasProperty("instance_identifier")) {
             serialized.putProperty("instance_identifier", previous.element.getInstanceIdentifier());
         }
+        serialized.putProperty("element_type", builder.getIdentifier());
         var deserialized = builder.deserializeElementInternal(serialized);
         if (deserialized == null) {
             throw new IllegalStateException("Failed to deserialize element payload.");
@@ -1944,12 +1962,33 @@ final class FancyMenuMcpOperations {
         if (replacement == null) {
             throw new IllegalStateException("Failed to wrap replacement editor element.");
         }
-        int index = editor.normalEditorElements.indexOf(previous);
-        if (index >= 0) {
-            editor.normalEditorElements.set(index, replacement);
+        boolean wasSelected = previous.isSelected();
+        boolean wasMultiSelected = previous.isMultiSelected();
+        int normalIndex = editor.normalEditorElements.indexOf(previous);
+        int vanillaIndex = editor.vanillaWidgetEditorElements.indexOf(previous);
+        if (normalIndex >= 0) {
+            if (replacement instanceof VanillaWidgetEditorElement vanillaReplacement) {
+                editor.normalEditorElements.remove(normalIndex);
+                editor.vanillaWidgetEditorElements.add(vanillaReplacement);
+            } else {
+                editor.normalEditorElements.set(normalIndex, replacement);
+            }
+        } else if (vanillaIndex >= 0) {
+            if (replacement instanceof VanillaWidgetEditorElement vanillaReplacement) {
+                editor.vanillaWidgetEditorElements.set(vanillaIndex, vanillaReplacement);
+            } else {
+                editor.vanillaWidgetEditorElements.remove(vanillaIndex);
+                editor.normalEditorElements.add(replacement);
+            }
         } else {
-            editor.normalEditorElements.add(replacement);
+            if (replacement instanceof VanillaWidgetEditorElement vanillaReplacement) {
+                editor.vanillaWidgetEditorElements.add(vanillaReplacement);
+            } else {
+                editor.normalEditorElements.add(replacement);
+            }
         }
+        replacement.setSelected(wasSelected);
+        replacement.setMultiSelected(wasMultiSelected);
         editor.layoutEditorWidgets.forEach(widget -> {
             widget.editorElementRemovedOrHidden(previous);
             widget.editorElementAdded(replacement);
@@ -1958,6 +1997,176 @@ final class FancyMenuMcpOperations {
         JsonObject out = new JsonObject();
         out.addProperty("updated", true);
         out.addProperty("element_identifier", replacement.element.getInstanceIdentifier());
+        return out;
+    }
+
+    static @NotNull JsonObject editorQuickPatchElements(@NotNull JsonObject args) {
+        LayoutEditorScreen editor = requireEditor(args);
+        boolean includeVanillaWidgets = getBoolean(args, "include_vanilla_widgets", true);
+        boolean selectedOnly = getBoolean(args, "selected_only", false);
+        String query = normalizedQuery(args);
+        String builderFilter = getString(args, "builder_identifier", null);
+        Set<String> explicitIds = new HashSet<>();
+        for (String rawId : getStringArray(args, "element_identifiers")) {
+            explicitIds.add(normalizeElementIdentifier(rawId));
+        }
+
+        List<AbstractEditorElement<?, ?>> candidates = new ArrayList<>(editor.normalEditorElements);
+        if (includeVanillaWidgets) {
+            candidates.addAll(editor.vanillaWidgetEditorElements);
+        }
+
+        int matched = 0;
+        int updated = 0;
+        int unchanged = 0;
+        int failed = 0;
+        JsonArray updatedIdentifiers = new JsonArray();
+        JsonArray failedIdentifiers = new JsonArray();
+
+        for (AbstractEditorElement<?, ?> target : candidates) {
+            String instanceIdentifier = target.element.getInstanceIdentifier();
+            if (!explicitIds.isEmpty() && !explicitIds.contains(normalizeElementIdentifier(instanceIdentifier))) {
+                continue;
+            }
+
+            String targetBuilderId = target.element.getBuilder().getIdentifier();
+            if (!matchesBuilderFilter(builderFilter, targetBuilderId)) {
+                continue;
+            }
+            if (selectedOnly && !target.isSelected()) {
+                continue;
+            }
+            if (!matchesQuery(query, instanceIdentifier, targetBuilderId, target.element.getDisplayName().getString())) {
+                continue;
+            }
+            matched++;
+
+            SerializedElement serialized = target.element.getBuilder().serializeElementInternal(target.element);
+            if (serialized == null) {
+                failed++;
+                failedIdentifiers.add(instanceIdentifier);
+                continue;
+            }
+
+            boolean changed = false;
+
+            if (args.has("x")) {
+                serialized.putProperty("x", Integer.toString(getInt(args, "x", target.element.posOffsetX)));
+                changed = true;
+            }
+            if (args.has("y")) {
+                serialized.putProperty("y", Integer.toString(getInt(args, "y", target.element.posOffsetY)));
+                changed = true;
+            }
+            if (args.has("x_delta")) {
+                int currentX = parseIntOrDefault(serialized.getValue("x"), target.element.posOffsetX);
+                serialized.putProperty("x", Integer.toString(currentX + getInt(args, "x_delta", 0)));
+                changed = true;
+            }
+            if (args.has("y_delta")) {
+                int currentY = parseIntOrDefault(serialized.getValue("y"), target.element.posOffsetY);
+                serialized.putProperty("y", Integer.toString(currentY + getInt(args, "y_delta", 0)));
+                changed = true;
+            }
+
+            if (args.has("anchor_point")) {
+                String anchor = getNullableString(args, "anchor_point");
+                if (anchor == null || anchor.isBlank()) {
+                    serialized.removeProperty("anchor_point");
+                } else {
+                    String normalizedAnchor = normalizeAnchorName(anchor);
+                    if (ElementAnchorPoints.getAnchorPointByName(normalizedAnchor) == null) {
+                        throw new IllegalArgumentException("Unknown anchor_point: " + anchor);
+                    }
+                    serialized.putProperty("anchor_point", normalizedAnchor);
+                }
+                changed = true;
+            }
+            if (args.has("anchor_point_element")) {
+                serialized.putProperty("anchor_point_element", getNullableString(args, "anchor_point_element"));
+                changed = true;
+            }
+
+            if (args.has("button_texture_normal_source")) {
+                serialized.putProperty("backgroundnormal", getNullableString(args, "button_texture_normal_source"));
+                changed = true;
+            }
+            if (args.has("button_texture_hover_source")) {
+                serialized.putProperty("backgroundhovered", getNullableString(args, "button_texture_hover_source"));
+                changed = true;
+            }
+            if (args.has("button_texture_inactive_source")) {
+                serialized.putProperty("background_texture_inactive", getNullableString(args, "button_texture_inactive_source"));
+                changed = true;
+            }
+            if (args.has("image_source")) {
+                serialized.putProperty("source", getNullableString(args, "image_source"));
+                changed = true;
+            }
+
+            if (args.has("set_properties") && args.get("set_properties").isJsonObject()) {
+                JsonObject setProperties = args.getAsJsonObject("set_properties");
+                for (Map.Entry<String, JsonElement> entry : setProperties.entrySet()) {
+                    String propertyName = entry.getKey();
+                    JsonElement value = entry.getValue();
+                    if (value == null || value.isJsonNull()) {
+                        serialized.removeProperty(propertyName);
+                    } else if (value.isJsonPrimitive()) {
+                        serialized.putProperty(propertyName, value.getAsString());
+                    } else {
+                        throw new IllegalArgumentException("set_properties values must be primitives or null.");
+                    }
+                    changed = true;
+                }
+            }
+            if (args.has("clear_properties") && args.get("clear_properties").isJsonArray()) {
+                for (String propertyName : getStringArray(args, "clear_properties")) {
+                    serialized.removeProperty(propertyName);
+                    changed = true;
+                }
+            }
+
+            if (!changed) {
+                unchanged++;
+                continue;
+            }
+
+            JsonObject updateArgs = new JsonObject();
+            updateArgs.addProperty("element_identifier", instanceIdentifier);
+            JsonObject serializedJson = FancyMenuMcpSerialization.toJson(serialized);
+            serializedJson.addProperty("instance_identifier", instanceIdentifier);
+            serializedJson.addProperty("element_type", targetBuilderId);
+            updateArgs.add("serialized_element", serializedJson);
+            try {
+                editorUpdateElement(updateArgs);
+                updated++;
+                updatedIdentifiers.add(instanceIdentifier);
+            } catch (Exception ignored) {
+                failed++;
+                failedIdentifiers.add(instanceIdentifier);
+            }
+        }
+
+        boolean autoSave = getBoolean(args, "auto_save", false);
+        if (autoSave) {
+            editor.saveLayout();
+            LayoutHandler.reloadLayouts();
+        }
+
+        JsonObject out = new JsonObject();
+        out.addProperty("patched", true);
+        out.addProperty("matched", matched);
+        out.addProperty("updated", updated);
+        out.addProperty("unchanged", unchanged);
+        out.addProperty("failed", failed);
+        out.addProperty("auto_saved", autoSave);
+        out.add("updated_element_identifiers", updatedIdentifiers);
+        out.add("failed_element_identifiers", failedIdentifiers);
+        out.addProperty("unsaved_changes", editor.unsavedChanges);
+        out.addProperty("editor_fingerprint", computeEditorFingerprint(editor));
+        if (getBoolean(args, "include_editor_poll", true)) {
+            out.add("editor_poll", editorPoll(new JsonObject()));
+        }
         return out;
     }
 
@@ -2751,7 +2960,7 @@ final class FancyMenuMcpOperations {
             SerializedElement element = elements.get(index);
             String builderIdentifier = Objects.requireNonNullElse(element.getValue("element_type"), "");
             String instanceIdentifier = Objects.requireNonNullElse(element.getValue("instance_identifier"), "");
-            if (builderFilter != null && !builderFilter.isBlank() && !builderIdentifier.equalsIgnoreCase(builderFilter)) {
+            if (!matchesBuilderFilter(builderFilter, builderIdentifier)) {
                 continue;
             }
             if (!matchesQuery(query, instanceIdentifier, builderIdentifier)) {
@@ -3217,7 +3426,7 @@ final class FancyMenuMcpOperations {
             boolean selectedOnly
     ) {
         String builderIdentifier = getString(element, "builder_identifier", "");
-        if (builderFilter != null && !builderFilter.isBlank() && !builderIdentifier.equalsIgnoreCase(builderFilter)) {
+        if (!matchesBuilderFilter(builderFilter, builderIdentifier)) {
             return false;
         }
         if (selectedOnly && !getBoolean(element, "selected", false)) {
@@ -3226,6 +3435,76 @@ final class FancyMenuMcpOperations {
         String instanceIdentifier = getString(element, "instance_identifier", "");
         String displayName = getString(element, "display_name", "");
         return matchesQuery(query, instanceIdentifier, builderIdentifier, displayName);
+    }
+
+    private static boolean matchesBuilderFilter(@Nullable String builderFilter, @Nullable String actualBuilderIdentifier) {
+        if (builderFilter == null || builderFilter.isBlank()) {
+            return true;
+        }
+        if (actualBuilderIdentifier == null || actualBuilderIdentifier.isBlank()) {
+            return false;
+        }
+        String resolvedFilter = resolveElementBuilderIdentifier(builderFilter);
+        if (resolvedFilter != null) {
+            return resolvedFilter.equalsIgnoreCase(actualBuilderIdentifier);
+        }
+        return normalizeBuilderLookupToken(builderFilter).equals(normalizeBuilderLookupToken(actualBuilderIdentifier));
+    }
+
+    private static @Nullable String resolveElementBuilderIdentifier(@Nullable String rawBuilderIdentifier) {
+        if (rawBuilderIdentifier == null || rawBuilderIdentifier.isBlank()) {
+            return null;
+        }
+        ElementBuilder<?, ?> direct = ElementRegistry.getBuilder(rawBuilderIdentifier);
+        if (direct != null) {
+            return direct.getIdentifier();
+        }
+        String normalized = normalizeBuilderLookupToken(rawBuilderIdentifier);
+        if ("vanillawidget".equals(normalized) || "vanillawidgets".equals(normalized)) {
+            normalized = "vanillabutton";
+        }
+        if ("button".equals(normalized)) {
+            normalized = "custombutton";
+        }
+        for (ElementBuilder<?, ?> builder : ElementRegistry.getBuilders()) {
+            if (normalizeBuilderLookupToken(builder.getIdentifier()).equals(normalized)) {
+                return builder.getIdentifier();
+            }
+        }
+        return null;
+    }
+
+    private static @NotNull String normalizeBuilderLookupToken(@NotNull String value) {
+        return value.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");
+    }
+
+    private static @NotNull String normalizeElementIdentifier(@NotNull String identifier) {
+        return identifier.replace("vanillabtn:", "").replace("button_compatibility_id:", "");
+    }
+
+    private static @NotNull String normalizeAnchorName(@NotNull String raw) {
+        String normalized = raw.trim().toLowerCase(Locale.ROOT).replace('_', '-').replace(' ', '-');
+        if ("center".equals(normalized) || "centre".equals(normalized) || "middle".equals(normalized) || "mid".equals(normalized)) {
+            return "mid-centered";
+        }
+        if ("top-center".equals(normalized) || "top-centre".equals(normalized)) {
+            return "top-centered";
+        }
+        if ("bottom-center".equals(normalized) || "bottom-centre".equals(normalized)) {
+            return "bottom-centered";
+        }
+        return normalized;
+    }
+
+    private static int parseIntOrDefault(@Nullable String raw, int fallback) {
+        if (raw == null || raw.isBlank()) {
+            return fallback;
+        }
+        try {
+            return Integer.parseInt(raw);
+        } catch (Exception ignored) {
+            return fallback;
+        }
     }
 
     private static boolean isHiddenPath(@NotNull Path path, @NotNull String fileName) {
