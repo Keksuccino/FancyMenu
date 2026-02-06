@@ -20,6 +20,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PipableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
+import de.keksuccino.fancymenu.util.player.CameraRotationObserver;
+import de.keksuccino.fancymenu.util.player.PlayerPositionObserver;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.preload.ResourcePreLoader;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
@@ -115,6 +117,8 @@ public class MixinMinecraft {
 	private void head_tick_FancyMenu(CallbackInfo info) {
 
         ScreenOverlayHandler.INSTANCE.tick();
+        CameraRotationObserver.tick();
+        PlayerPositionObserver.tick();
 
 		if (this.pendingServerJoinEvent_FancyMenu && this.player != null) {
 			this.fireServerJoined_FancyMenu();

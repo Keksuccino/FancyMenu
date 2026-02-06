@@ -30,6 +30,7 @@
     "client.IMixinRealmsNotificationsScreen",
     "client.IMixinReceivingLevelScreen",
     "client.IMixinScreen",
+    "client.IMixinSpectatorGui",
     "client.IMixinServerList",
     "client.IMixinSplashRenderer",
     "client.IMixinSuggestionsList",
