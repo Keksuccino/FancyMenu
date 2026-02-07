@@ -2893,7 +2893,7 @@
   "fancymenu.placeholders.world.slot_item_display_name_fm": "Slot Item Display Name (FM)",
   "fancymenu.placeholders.world.slot_item_display_name_fm.desc": "Gets the display name of an item in a specific slot.\nSetting 'ignore_spectator' to 'true' will ignore spectator GUI slots in spectator mode.",
   "fancymenu.overlay.menu_bar.customization.settings.mcp_server": "FancyMenu MCP Server: %s",
-  "fancymenu.overlay.menu_bar.customization.settings.mcp_server.desc": "Starts a local MCP server for AI agents with full FancyMenu control.\n\nFor the Codex CLI, use this command to add the MCP server:\n\ncodex mcp add fancymenu --url http://127.0.0.1:48561/mcp",
+  "fancymenu.overlay.menu_bar.customization.settings.mcp_server.desc": "Starts a local MCP server for AI agents with full FancyMenu control.\n\nFor the Codex CLI, use this command to add the MCP server:\ncodex mcp add fancymenu --url http://127.0.0.1:48561/mcp\n\n§xThis MCP is highly experimental and I would not recommend you to use that thing. It's super WIP, unstable and unoptimized.",
   "fancymenu.overlay.menu_bar.customization.settings.mcp_server_port": "FancyMenu MCP Server Port",
   "fancymenu.overlay.menu_bar.customization.settings.mcp_server_port.desc": "Port used by the local FancyMenu MCP server for Streamable HTTP and framed TCP.\nIf the server is enabled, changing this restarts it."
 }
