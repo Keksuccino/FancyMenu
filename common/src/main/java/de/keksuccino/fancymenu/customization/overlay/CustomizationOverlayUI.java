@@ -1542,7 +1542,7 @@ public class CustomizationOverlayUI {
             menu1.closeMenu();
             Dialogs.openMessageWithCallback(Component.translatable("fancymenu.layout.manage.delete.confirm"), MessageDialogStyle.WARNING, call -> {
                 if (call) {
-                    layout.delete(false);
+                    layout.delete(true);
                 }
                 if ((entryPath != null) && !entryPath.isEmpty()) {
                     forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(entryPath));
