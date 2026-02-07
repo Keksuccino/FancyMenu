@@ -165,7 +165,7 @@ final class FancyMenuMcpTools {
         tools.put("fancymenu_list_layouts_compact", tool("fancymenu_list_layouts_compact", "Recommended for discovery: compact layout list with counts and pagination.", layoutListCompactSchema()));
         tools.put("fancymenu_list_layouts", tool("fancymenu_list_layouts", "Lists layouts with optional filtering and optional serialized payload flags.", layoutListSchema()));
         tools.put("fancymenu_get_layout_meta", tool("fancymenu_get_layout_meta", "Returns compact metadata + counts for a single layout.", layoutMetaSchema()));
-        tools.put("fancymenu_get_layout_elements", tool("fancymenu_get_layout_elements", "Returns paginated serialized-layout element entries for normal/vanilla/deep sections.", layoutElementsSchema()));
+        tools.put("fancymenu_get_layout_elements", tool("fancymenu_get_layout_elements", "Returns paginated serialized-layout element entries for section normal/vanilla/deep/all. If selector fields are omitted, tools can use the currently open editor layout.", layoutElementsSchema()));
         tools.put("fancymenu_get_layout", tool("fancymenu_get_layout", "Returns a single layout. Disable include_serialized_set/include_fancy_string for low-context reads.", getLayoutSchema()));
         tools.put("fancymenu_create_layout", tool("fancymenu_create_layout", "Creates and saves a new layout, optionally opening editor.", createLayoutSchema()));
         tools.put("fancymenu_set_layout", tool("fancymenu_set_layout", "Replaces layout content from serialized payload and optionally opens editor.", setLayoutSchema()));
@@ -178,14 +178,14 @@ final class FancyMenuMcpTools {
         tools.put("fancymenu_editor_get_state", tool("fancymenu_editor_get_state", "Returns live editor state. Disable include_layout/include_serialized_set for compact polling.", editorStateSchema()));
         tools.put("fancymenu_editor_poll", tool("fancymenu_editor_poll", "Returns compact editor poll data (fingerprint, counts, selection).", editorWithOptionalLayoutSelectorSchema()));
         tools.put("fancymenu_editor_get_element", tool("fancymenu_editor_get_element", "Gets one editor element by instance identifier.", editorGetElementSchema()));
-        tools.put("fancymenu_editor_list_elements", tool("fancymenu_editor_list_elements", "Lists editor elements with filtering, pagination, and optional serialized payload.", editorListElementsSchema()));
+        tools.put("fancymenu_editor_list_elements", tool("fancymenu_editor_list_elements", "Lists editor elements with filtering, pagination, and optional serialized payload. Useful before bulk patches to confirm exact target identifiers.", editorListElementsSchema()));
         tools.put("fancymenu_editor_select_elements", tool("fancymenu_editor_select_elements", "Changes editor selection using modes set/add/remove/clear/all.", editorSelectElementsSchema()));
         tools.put("fancymenu_editor_get_visual_layers", tool("fancymenu_editor_get_visual_layers", "Lists backgrounds and decoration overlays in current editor order. Serialized payload is optional.", editorVisualLayersSchema()));
         tools.put("fancymenu_editor_patch_layout", tool("fancymenu_editor_patch_layout", "Batch patch tool for live layout editing in one call: meta patch + element/background/overlay operations + optional auto-save.", editorPatchLayoutSchema()));
-        tools.put("fancymenu_editor_quick_patch_elements", tool("fancymenu_editor_quick_patch_elements", "Bulk-patches common element fields (position, anchor, button textures, image source, custom properties) for filtered targets including vanilla widgets.", editorQuickPatchElementsSchema()));
+        tools.put("fancymenu_editor_quick_patch_elements", tool("fancymenu_editor_quick_patch_elements", "Bulk-patches common element fields (position, anchor, button textures, image source, custom properties) for filtered targets including vanilla widgets. Supports dry_run + exclude list for safe targeting; dry_run returns matched identifiers.", editorQuickPatchElementsSchema()));
         tools.put("fancymenu_editor_add_element", tool("fancymenu_editor_add_element", "Adds a new element by builder identifier to current editor. Use exact ids from fancymenu_list_elements (example: vanilla_button).", editorAddElementSchema()));
         tools.put("fancymenu_editor_remove_element", tool("fancymenu_editor_remove_element", "Removes an element from current editor.", editorRemoveElementSchema()));
-        tools.put("fancymenu_editor_move_element", tool("fancymenu_editor_move_element", "Moves/repositions an element in current editor.", editorMoveElementSchema()));
+        tools.put("fancymenu_editor_move_element", tool("fancymenu_editor_move_element", "Moves/repositions an element in current editor. Vanilla-anchored widgets may need anchor change first for movement to persist.", editorMoveElementSchema()));
         tools.put("fancymenu_editor_set_element_order", tool("fancymenu_editor_set_element_order", "Sets order of normal editor elements based on identifier list.", editorSetElementOrderSchema()));
         tools.put("fancymenu_editor_update_element", tool("fancymenu_editor_update_element", "Replaces an element in current editor from serialized element payload.", editorUpdateElementSchema()));
         tools.put("fancymenu_editor_set_layout_from_serialized", tool("fancymenu_editor_set_layout_from_serialized", "Replaces current editor layout from serialized payload and live-updates editor.", editorSetLayoutSchema()));
@@ -357,7 +357,7 @@ final class FancyMenuMcpTools {
 
     private static @NotNull JsonObject layoutElementsSchema() {
         JsonObject properties = withLayoutSelectorProperties(new JsonObject());
-        properties.add("section", enumStringProperty("Element section to query.", "normal", "vanilla", "deep", "all"));
+        properties.add("section", enumStringProperty("Element section to query. Valid values: normal/vanilla/deep/all (backgrounds/overlays are not valid here).", "normal", "vanilla", "deep", "all"));
         properties.add("builder_identifier", stringProperty("Optional element builder filter."));
         properties.add("query", stringProperty("Optional case-insensitive match for instance/builder id."));
         properties.add("include_properties", booleanProperty("Include flattened properties object."));
@@ -389,7 +389,7 @@ final class FancyMenuMcpTools {
         properties.add("query", stringProperty("Optional case-insensitive instance/builder/display-name filter."));
         properties.add("builder_identifier", stringProperty("Optional builder identifier filter."));
         properties.add("selected_only", booleanProperty("If true, return only selected elements."));
-        properties.add("include_vanilla_widgets", booleanProperty("Include vanilla widget elements list."));
+        properties.add("include_vanilla_widgets", booleanProperty("Include vanilla widget elements list (default true). Note: vanilla_button includes decorative widgets too."));
         properties.add("include_serialized_element", booleanProperty("Include serialized element payload per item (default false)."));
         properties.add("offset", integerProperty("Pagination offset."));
         properties.add("limit", integerProperty("Pagination limit."));
@@ -423,16 +423,18 @@ final class FancyMenuMcpTools {
 
     private static @NotNull JsonObject editorQuickPatchElementsSchema() {
         JsonObject properties = withLayoutSelectorProperties(new JsonObject());
-        properties.add("element_identifiers", stringArrayProperty("Optional explicit target element instance identifiers."));
+        properties.add("element_identifiers", stringArrayProperty("Optional explicit target element instance identifiers (intersection with other filters)."));
+        properties.add("exclude_element_identifiers", stringArrayProperty("Optional explicit element identifiers to exclude after matching."));
         properties.add("query", stringProperty("Optional case-insensitive target filter against instance id/builder/display name."));
         properties.add("builder_identifier", stringProperty("Optional builder filter. Alias-friendly (e.g. vanilla_widget resolves to vanilla_button)."));
         properties.add("selected_only", booleanProperty("Only patch currently selected editor elements."));
-        properties.add("include_vanilla_widgets", booleanProperty("Include vanilla widget elements in target search (default true)."));
+        properties.add("include_vanilla_widgets", booleanProperty("Include vanilla widget elements in target search (default true). Note: vanilla_button can match non-clickable decorative widgets."));
+        properties.add("dry_run", booleanProperty("Preview matches only; no updates are applied and auto_save is ignored. Response includes matched_element_identifiers."));
         properties.add("x", integerProperty("Set absolute x offset for matched elements."));
         properties.add("y", integerProperty("Set absolute y offset for matched elements."));
         properties.add("x_delta", integerProperty("Additive x offset delta applied to matched elements."));
         properties.add("y_delta", integerProperty("Additive y offset delta applied to matched elements."));
-        properties.add("anchor_point", stringOrNullProperty("Set anchor point (top-left/top-centered/.../element/vanilla). Use null to clear."));
+        properties.add("anchor_point", stringOrNullProperty("Set anchor point (top-left/top-centered/.../element/vanilla). Use null to clear. For vanilla-anchored widgets, set a non-vanilla anchor before x/y moves."));
         properties.add("anchor_point_element", stringOrNullProperty("Set anchor point element id. Use null to clear."));
         properties.add("button_texture_normal_source", stringOrNullProperty("Set button normal texture source (backgroundnormal). Use null to clear."));
         properties.add("button_texture_hover_source", stringOrNullProperty("Set button hover texture source (backgroundhovered). Use null to clear."));
@@ -489,7 +491,7 @@ final class FancyMenuMcpTools {
 
     private static @NotNull JsonObject layoutSelectorSchema() {
         JsonObject properties = new JsonObject();
-        properties.add("runtime_layout_identifier", stringProperty("Preferred selector: runtime id from list/get tools."));
+        properties.add("runtime_layout_identifier", stringProperty("Preferred selector: runtime id from list/get tools. If all selector fields are omitted, tools may use the open editor layout when available."));
         properties.add("layout_file", stringProperty("Absolute layout file path."));
         properties.add("layout_name", stringProperty("Layout file name without extension."));
         properties.add("screen_identifier", stringProperty("Fallback selector: screen id."));
@@ -725,7 +727,7 @@ final class FancyMenuMcpTools {
     }
 
     private static @NotNull JsonObject withLayoutSelectorProperties(@NotNull JsonObject properties) {
-        properties.add("runtime_layout_identifier", stringProperty("Optional runtime layout id."));
+        properties.add("runtime_layout_identifier", stringProperty("Optional runtime layout id. Leave selector fields unset to target the open editor layout when available."));
         properties.add("layout_file", stringProperty("Optional absolute layout file path."));
         properties.add("layout_name", stringProperty("Optional layout name."));
         properties.add("screen_identifier", stringProperty("Optional selector by screen identifier."));

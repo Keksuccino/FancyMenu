@@ -95,7 +95,12 @@ final class FancyMenuMcpOperations {
         instructions.add("When exploring data, prefer compact tools with filtering/pagination (limit/offset/query/include_* flags) to save context.");
         instructions.add("If your agent runtime allows spawning sub-agents, use them for inspecting very large layout payloads/files so only the sub-agent context gets filled for that deep-dive task.");
         instructions.add("Suggested discovery sequence: fancymenu_list_layouts_compact -> fancymenu_get_layout_meta -> fancymenu_get_layout_elements.");
+        instructions.add("If the user says the target is currently open in the Layout Editor, prefer fancymenu_editor_* tools and leave layout selector fields unset unless the user explicitly asks for a different layout.");
+        instructions.add("For fancymenu_get_layout_elements, valid section values are only normal/vanilla/deep/all; backgrounds and overlays are not valid element sections.");
         instructions.add("Use exact builder identifiers from registry/editor tools (example: vanilla buttons use builder id 'vanilla_button').");
+        instructions.add("Treat builder_identifier='vanilla_button' as broad: it can include decorative vanilla widgets (logo/splash/branding/copyright/notification icons), not only clickable menu buttons.");
+        instructions.add("Before bulk patching vanilla widgets, run a compact target check (for example quick patch dry_run or editor_list_elements) so only intended identifiers are touched.");
+        instructions.add("When moving vanilla widgets that use anchor_point='vanilla', set a non-vanilla anchor first (for example mid-left/top-left), then apply coordinates.");
         instructions.add("When editing layouts, open the Layout Editor for the target layout/screen and keep updates live so the user can watch changes.");
         instructions.add("For multi-step layout edits, prefer fancymenu_editor_patch_layout to reduce roundtrips.");
         instructions.add("When editing action scripts for layouts/listeners/schedulers, open the Action Script Editor and keep it live-updated.");
@@ -2040,11 +2045,16 @@ final class FancyMenuMcpOperations {
         LayoutEditorScreen editor = requireEditor(args);
         boolean includeVanillaWidgets = getBoolean(args, "include_vanilla_widgets", true);
         boolean selectedOnly = getBoolean(args, "selected_only", false);
+        boolean dryRun = getBoolean(args, "dry_run", false);
         String query = normalizedQuery(args);
         String builderFilter = getString(args, "builder_identifier", null);
         Set<String> explicitIds = new HashSet<>();
         for (String rawId : getStringArray(args, "element_identifiers")) {
             explicitIds.add(normalizeElementIdentifier(rawId));
+        }
+        Set<String> excludedIds = new HashSet<>();
+        for (String rawId : getStringArray(args, "exclude_element_identifiers")) {
+            excludedIds.add(normalizeElementIdentifier(rawId));
         }
 
         List<AbstractEditorElement<?, ?>> candidates = new ArrayList<>(editor.normalEditorElements);
@@ -2056,13 +2066,18 @@ final class FancyMenuMcpOperations {
         int updated = 0;
         int unchanged = 0;
         int failed = 0;
+        JsonArray matchedIdentifiers = new JsonArray();
         JsonArray updatedIdentifiers = new JsonArray();
         JsonArray failedIdentifiers = new JsonArray();
         JsonArray failedElementErrors = new JsonArray();
 
         for (AbstractEditorElement<?, ?> target : candidates) {
             String instanceIdentifier = target.element.getInstanceIdentifier();
-            if (!explicitIds.isEmpty() && !explicitIds.contains(normalizeElementIdentifier(instanceIdentifier))) {
+            String normalizedInstanceIdentifier = normalizeElementIdentifier(instanceIdentifier);
+            if (!explicitIds.isEmpty() && !explicitIds.contains(normalizedInstanceIdentifier)) {
+                continue;
+            }
+            if (excludedIds.contains(normalizedInstanceIdentifier)) {
                 continue;
             }
 
@@ -2077,6 +2092,10 @@ final class FancyMenuMcpOperations {
                 continue;
             }
             matched++;
+            matchedIdentifiers.add(instanceIdentifier);
+            if (dryRun) {
+                continue;
+            }
 
             SerializedElement serialized = target.element.getBuilder().serializeElementInternal(target.element);
             if (serialized == null) {
@@ -2190,7 +2209,7 @@ final class FancyMenuMcpOperations {
             }
         }
 
-        boolean autoSave = getBoolean(args, "auto_save", false);
+        boolean autoSave = !dryRun && getBoolean(args, "auto_save", false);
         if (autoSave) {
             editor.saveLayout();
             LayoutHandler.reloadLayouts();
@@ -2198,11 +2217,13 @@ final class FancyMenuMcpOperations {
 
         JsonObject out = new JsonObject();
         out.addProperty("patched", true);
+        out.addProperty("dry_run", dryRun);
         out.addProperty("matched", matched);
         out.addProperty("updated", updated);
         out.addProperty("unchanged", unchanged);
         out.addProperty("failed", failed);
         out.addProperty("auto_saved", autoSave);
+        out.add("matched_element_identifiers", matchedIdentifiers);
         out.add("updated_element_identifiers", updatedIdentifiers);
         out.add("failed_element_identifiers", failedIdentifiers);
         out.add("failed_element_errors", failedElementErrors);
