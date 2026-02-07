@@ -506,30 +506,6 @@ public class CustomizationOverlayUI {
 
         customizationSettingsMenu.addSeparatorEntry("separator_after_advanced_mode");
 
-        customizationSettingsMenu.addValueCycleEntry("fancymenu_mcp_server",
-                        CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.mcp_server", FancyMenu.getOptions().mcpServerEnabled.getValue())
-                                .addCycleListener(cycle -> {
-                                    FancyMenu.getOptions().mcpServerEnabled.setValue(cycle.getAsBoolean());
-                                    FancyMenuMcpManager.syncWithOptions();
-                                }))
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.mcp_server.desc")))
-                .setIcon(MaterialIcons.TERMINAL);
-
-        ContextMenuUtils.addIntegerInputContextMenuEntryTo(customizationSettingsMenu, "fancymenu_mcp_server_port",
-                        Component.translatable("fancymenu.overlay.menu_bar.customization.settings.mcp_server_port"),
-                        () -> FancyMenu.getOptions().mcpServerPort.getValue(),
-                        port -> {
-                            FancyMenu.getOptions().mcpServerPort.setValue(port);
-                            if (FancyMenu.getOptions().mcpServerEnabled.getValue()) {
-                                FancyMenuMcpManager.syncWithOptions();
-                            }
-                        },
-                        true, FancyMenu.getOptions().mcpServerPort.getDefaultValue(), null, null)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.mcp_server_port.desc")))
-                .setIcon(MaterialIcons.SETTINGS_INPUT_COMPONENT);
-
-        customizationSettingsMenu.addSeparatorEntry("separator_after_mcp_server");
-
         customizationSettingsMenu.addSubMenuEntry("user_interface", Component.translatable("fancymenu.overlay.menu_bar.user_interface"), buildUserInterfaceMenu())
                 .setIcon(MaterialIcons.TUNE);
 
@@ -578,6 +554,32 @@ public class CustomizationOverlayUI {
                                 }))
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.developer.smooth_font_multiline_rendering.desc")))
                 .setIcon(MaterialIcons.FORMAT_TEXT_WRAP);
+
+        developerMenu.addSeparatorEntry("separator_before_mcp_server");
+
+        developerMenu.addValueCycleEntry("fancymenu_mcp_server",
+                        CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.mcp_server", FancyMenu.getOptions().mcpServerEnabled.getValue())
+                                .addCycleListener(cycle -> {
+                                    FancyMenu.getOptions().mcpServerEnabled.setValue(cycle.getAsBoolean());
+                                    FancyMenuMcpManager.syncWithOptions();
+                                }))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.mcp_server.desc")))
+                .setIcon(MaterialIcons.TERMINAL);
+
+        ContextMenuUtils.addIntegerInputContextMenuEntryTo(developerMenu, "fancymenu_mcp_server_port",
+                        Component.translatable("fancymenu.overlay.menu_bar.customization.settings.mcp_server_port"),
+                        () -> FancyMenu.getOptions().mcpServerPort.getValue(),
+                        port -> {
+                            FancyMenu.getOptions().mcpServerPort.setValue(port);
+                            if (FancyMenu.getOptions().mcpServerEnabled.getValue()) {
+                                FancyMenuMcpManager.syncWithOptions();
+                            }
+                        },
+                        true, FancyMenu.getOptions().mcpServerPort.getDefaultValue(), null, null)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.mcp_server_port.desc")))
+                .setIcon(MaterialIcons.SETTINGS_INPUT_COMPONENT);
+
+        developerMenu.addSeparatorEntry("separator_after_mcp_server");
 
         developerMenu.addClickableEntry("reset_welcome_screen",
                         Component.translatable("fancymenu.overlay.menu_bar.customization.settings.developer.reset_welcome_screen"),
