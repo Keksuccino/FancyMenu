@@ -1006,7 +1006,13 @@ final class FancyMenuMcpOperations {
                 out.add("entry", item);
             }
             case "elements", "element" -> {
-                ElementBuilder<?, ?> builder = ElementRegistry.getBuilder(identifier);
+                String resolvedBuilderIdentifier = resolveElementBuilderIdentifier(identifier);
+                ElementBuilder<?, ?> builder = resolvedBuilderIdentifier != null
+                        ? ElementRegistry.getBuilder(resolvedBuilderIdentifier)
+                        : ElementRegistry.getBuilder(identifier);
+                if (builder == null) {
+                    builder = findElementBuilderInOpenEditor(identifier);
+                }
                 if (builder == null) {
                     throw new IllegalArgumentException("Element builder not found: " + identifier);
                 }
@@ -1226,7 +1232,19 @@ final class FancyMenuMcpOperations {
     }
 
     static @NotNull JsonObject getLayoutElements(@NotNull JsonObject args) {
-        Layout layout = requireLayout(args);
+        Layout layout = resolveLayout(args);
+        boolean usedEditorLayoutFallback = false;
+        if (layout == null) {
+            LayoutEditorScreen editor = LayoutEditorScreen.getCurrentInstance();
+            if (editor != null && editor.layout != null) {
+                // Read-only fallback for stale selectors while working in the open editor session.
+                layout = editor.layout;
+                usedEditorLayoutFallback = true;
+            }
+        }
+        if (layout == null) {
+            throw new IllegalArgumentException("Layout not found for provided selector: " + describeLayoutSelector(args));
+        }
         String section = getString(args, "section", "normal");
         if (section == null || section.isBlank()) {
             section = "normal";
@@ -1296,6 +1314,7 @@ final class FancyMenuMcpOperations {
         out.addProperty("total_matches", totalMatches);
         out.addProperty("offset", offset);
         out.addProperty("limit", limit);
+        out.addProperty("used_editor_layout_fallback", usedEditorLayoutFallback);
         return out;
     }
 
@@ -1943,12 +1962,23 @@ final class FancyMenuMcpOperations {
             throw new IllegalArgumentException("serialized_element.element_type is required.");
         }
         String resolvedElementType = resolveElementBuilderIdentifier(elementType);
-        if (resolvedElementType == null || resolvedElementType.isBlank()) {
-            throw new IllegalArgumentException("Unknown element builder in serialized element: " + elementType);
+        ElementBuilder<?, ?> builder = null;
+        if (resolvedElementType != null && !resolvedElementType.isBlank()) {
+            builder = ElementRegistry.getBuilder(resolvedElementType);
         }
-        ElementBuilder<?, ?> builder = ElementRegistry.getBuilder(resolvedElementType);
+        if (builder == null && normalizeBuilderLookupToken(previous.element.getBuilder().getIdentifier())
+                .equals(normalizeBuilderLookupToken(elementType))) {
+            builder = previous.element.getBuilder();
+            resolvedElementType = builder.getIdentifier();
+        }
         if (builder == null) {
-            throw new IllegalArgumentException("Unknown element builder in serialized element: " + resolvedElementType);
+            builder = findElementBuilderInOpenEditor(elementType);
+            if (builder != null) {
+                resolvedElementType = builder.getIdentifier();
+            }
+        }
+        if (resolvedElementType == null || resolvedElementType.isBlank() || builder == null) {
+            throw new IllegalArgumentException("Unknown element builder in serialized element: " + elementType);
         }
         if (!serialized.hasProperty("instance_identifier")) {
             serialized.putProperty("instance_identifier", previous.element.getInstanceIdentifier());
@@ -1961,6 +1991,12 @@ final class FancyMenuMcpOperations {
         AbstractEditorElement<?, ?> replacement = builder.wrapIntoEditorElementInternal(deserialized, editor);
         if (replacement == null) {
             throw new IllegalStateException("Failed to wrap replacement editor element.");
+        }
+        if (previous.element instanceof VanillaWidgetElement previousVanilla
+                && replacement.element instanceof VanillaWidgetElement replacementVanilla
+                && previousVanilla.widgetMeta != null) {
+            // Preserve the live vanilla widget binding so editor rendering stays intact without re-init.
+            replacementVanilla.setVanillaWidget(previousVanilla.widgetMeta, replacementVanilla.anchorPoint == ElementAnchorPoints.VANILLA);
         }
         boolean wasSelected = previous.isSelected();
         boolean wasMultiSelected = previous.isMultiSelected();
@@ -2022,6 +2058,7 @@ final class FancyMenuMcpOperations {
         int failed = 0;
         JsonArray updatedIdentifiers = new JsonArray();
         JsonArray failedIdentifiers = new JsonArray();
+        JsonArray failedElementErrors = new JsonArray();
 
         for (AbstractEditorElement<?, ?> target : candidates) {
             String instanceIdentifier = target.element.getInstanceIdentifier();
@@ -2045,6 +2082,7 @@ final class FancyMenuMcpOperations {
             if (serialized == null) {
                 failed++;
                 failedIdentifiers.add(instanceIdentifier);
+                failedElementErrors.add(quickPatchErrorEntry(instanceIdentifier, "Failed to serialize element payload."));
                 continue;
             }
 
@@ -2141,9 +2179,14 @@ final class FancyMenuMcpOperations {
                 editorUpdateElement(updateArgs);
                 updated++;
                 updatedIdentifiers.add(instanceIdentifier);
-            } catch (Exception ignored) {
+            } catch (Exception ex) {
                 failed++;
                 failedIdentifiers.add(instanceIdentifier);
+                String message = ex.getMessage();
+                if (message == null || message.isBlank()) {
+                    message = ex.getClass().getSimpleName();
+                }
+                failedElementErrors.add(quickPatchErrorEntry(instanceIdentifier, message));
             }
         }
 
@@ -2162,6 +2205,7 @@ final class FancyMenuMcpOperations {
         out.addProperty("auto_saved", autoSave);
         out.add("updated_element_identifiers", updatedIdentifiers);
         out.add("failed_element_identifiers", failedIdentifiers);
+        out.add("failed_element_errors", failedElementErrors);
         out.addProperty("unsaved_changes", editor.unsavedChanges);
         out.addProperty("editor_fingerprint", computeEditorFingerprint(editor));
         if (getBoolean(args, "include_editor_poll", true)) {
@@ -2991,7 +3035,7 @@ final class FancyMenuMcpOperations {
     private static @NotNull Layout requireLayout(@NotNull JsonObject args) {
         Layout layout = resolveLayout(args);
         if (layout == null) {
-            throw new IllegalArgumentException("Layout not found for provided selector.");
+            throw new IllegalArgumentException("Layout not found for provided selector: " + describeLayoutSelector(args));
         }
         return layout;
     }
@@ -3030,6 +3074,16 @@ final class FancyMenuMcpOperations {
             }
             if (layoutsForScreen.size() == 1) {
                 return layoutsForScreen.getFirst();
+            }
+        }
+        boolean hasExplicitSelector = args.has("runtime_layout_identifier")
+                || args.has("layout_file")
+                || args.has("layout_name")
+                || args.has("screen_identifier");
+        if (!hasExplicitSelector) {
+            LayoutEditorScreen editor = LayoutEditorScreen.getCurrentInstance();
+            if (editor != null && editor.layout != null) {
+                return editor.layout;
             }
         }
         return null;
@@ -3100,7 +3154,7 @@ final class FancyMenuMcpOperations {
         if (args != null && hasLayoutSelector(args)) {
             Layout layout = resolveLayout(args);
             if (layout == null) {
-                throw new IllegalArgumentException("Layout not found for provided selector.");
+                throw new IllegalArgumentException("Layout not found for provided selector: " + describeLayoutSelector(args));
             }
             if (editor == null || !matchesLayout(editor.layout, layout)) {
                 openOrRefreshLayoutEditor(layout, true);
@@ -3146,6 +3200,43 @@ final class FancyMenuMcpOperations {
                 || args.has("layout_file")
                 || args.has("layout_name")
                 || args.has("screen_identifier");
+    }
+
+    private static @NotNull String describeLayoutSelector(@NotNull JsonObject args) {
+        List<String> parts = new ArrayList<>();
+        if (args.has("runtime_layout_identifier")) {
+            parts.add("runtime_layout_identifier=" + selectorValueToDebugString(args.get("runtime_layout_identifier")));
+        }
+        if (args.has("layout_file")) {
+            parts.add("layout_file=" + selectorValueToDebugString(args.get("layout_file")));
+        }
+        if (args.has("layout_name")) {
+            parts.add("layout_name=" + selectorValueToDebugString(args.get("layout_name")));
+        }
+        if (args.has("screen_identifier")) {
+            parts.add("screen_identifier=" + selectorValueToDebugString(args.get("screen_identifier")));
+        }
+        if (args.has("layout_index")) {
+            parts.add("layout_index=" + selectorValueToDebugString(args.get("layout_index")));
+        }
+        if (parts.isEmpty()) {
+            return "no selector fields provided";
+        }
+        return String.join(", ", parts);
+    }
+
+    private static @NotNull String selectorValueToDebugString(@Nullable JsonElement value) {
+        if (value == null || value.isJsonNull()) {
+            return "null";
+        }
+        if (value.isJsonPrimitive()) {
+            try {
+                return '"' + value.getAsString() + '"';
+            } catch (Exception ignored) {
+                return value.toString();
+            }
+        }
+        return value.toString();
     }
 
     private static @NotNull JsonObject layoutToJson(@NotNull Layout layout, boolean includeSerializedSet, boolean includeFancyString) {
@@ -3476,6 +3567,43 @@ final class FancyMenuMcpOperations {
 
     private static @NotNull String normalizeBuilderLookupToken(@NotNull String value) {
         return value.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");
+    }
+
+    private static @Nullable ElementBuilder<?, ?> findElementBuilderInOpenEditor(@Nullable String rawBuilderIdentifier) {
+        if (rawBuilderIdentifier == null || rawBuilderIdentifier.isBlank()) {
+            return null;
+        }
+        LayoutEditorScreen editor = LayoutEditorScreen.getCurrentInstance();
+        if (editor == null) {
+            return null;
+        }
+        String normalizedIdentifier = normalizeBuilderLookupToken(rawBuilderIdentifier);
+        if ("vanillawidget".equals(normalizedIdentifier) || "vanillawidgets".equals(normalizedIdentifier)) {
+            normalizedIdentifier = "vanillabutton";
+        }
+        if ("button".equals(normalizedIdentifier)) {
+            normalizedIdentifier = "custombutton";
+        }
+        for (AbstractEditorElement<?, ?> editorElement : editor.normalEditorElements) {
+            ElementBuilder<?, ?> builder = editorElement.element.getBuilder();
+            if (normalizeBuilderLookupToken(builder.getIdentifier()).equals(normalizedIdentifier)) {
+                return builder;
+            }
+        }
+        for (AbstractEditorElement<?, ?> editorElement : editor.vanillaWidgetEditorElements) {
+            ElementBuilder<?, ?> builder = editorElement.element.getBuilder();
+            if (normalizeBuilderLookupToken(builder.getIdentifier()).equals(normalizedIdentifier)) {
+                return builder;
+            }
+        }
+        return null;
+    }
+
+    private static @NotNull JsonObject quickPatchErrorEntry(@NotNull String elementIdentifier, @NotNull String error) {
+        JsonObject entry = new JsonObject();
+        entry.addProperty("element_identifier", elementIdentifier);
+        entry.addProperty("error", error);
+        return entry;
     }
 
     private static @NotNull String normalizeElementIdentifier(@NotNull String identifier) {
