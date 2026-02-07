@@ -1534,12 +1534,12 @@ public class CustomizationOverlayUI {
                 .setIcon(MaterialIcons.TOGGLE_ON);
 
         menu.addClickableEntry("edit_layout", Component.translatable("fancymenu.layout.manage.edit"), (menu1, entry) -> {
-            menu1.closeMenu();
+            menu.closeMenuChain();
             MainThreadTaskExecutor.executeInMainThread(() -> LayoutHandler.openLayoutEditor(layout, layout.isUniversalLayout() ? null : layoutTargetScreen), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         }).setIcon(MaterialIcons.EDIT);
 
         menu.addClickableEntry("delete_layout", Component.translatable("fancymenu.layout.manage.delete"), (menu1, entry) -> {
-            menu1.closeMenu();
+            menu.closeMenuChain();
             Dialogs.openMessageWithCallback(Component.translatable("fancymenu.layout.manage.delete.confirm"), MessageDialogStyle.WARNING, call -> {
                 if (call) {
                     layout.delete(true);
