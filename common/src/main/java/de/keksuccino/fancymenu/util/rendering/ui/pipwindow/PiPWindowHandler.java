@@ -1,6 +1,9 @@
 package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.Tickable;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.UISounds;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -17,6 +20,7 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
     public static final PiPWindowHandler INSTANCE = new PiPWindowHandler();
     private static final double DEFAULT_WINDOW_SIZE_SCALE_WIDTH = 0.4;
     private static final double DEFAULT_WINDOW_SIZE_SCALE_HEIGHT = 0.5;
+    private static final long BLOCKED_INPUT_OVERLAY_DURATION_MS = 1500L;
 
     private final List<PiPWindow> windows = new ArrayList<>();
     @Nullable
@@ -31,6 +35,9 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
     @Nullable
     private PiPWindow activeScreenRenderWindow;
     private double activeScreenRenderScaleFactor = 1.0;
+    private long blockedInputOverlayUntilMs = -1L;
+    @Nullable
+    private PiPWindow blockedInputOverlayWindow;
 
     private PiPWindowHandler() {
     }
@@ -186,9 +193,13 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        PiPWindow overlayTargetWindow = resolveBlockedInputOverlayWindow();
         isRendering = true;
         try {
             for (PiPWindow window : new ArrayList<>(windows)) {
+                if (overlayTargetWindow == window) {
+                    renderBlockedInputOverlay(graphics);
+                }
                 window.render(graphics, mouseX, mouseY, partial);
             }
         } finally {
@@ -241,6 +252,9 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
     public void tick() {
         windowClickedThisTick = false;
         lastClickedWindowThisTick = null;
+        if (this.blockedInputOverlayUntilMs <= System.currentTimeMillis()) {
+            this.blockedInputOverlayWindow = null;
+        }
         for (PiPWindow window : new ArrayList<>(windows)) {
             window.tick();
         }
@@ -262,6 +276,7 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
             }
             focusedWindow = forcedWindow;
             if (!forcedWindow.isMouseOver(mouseX, mouseY)) {
+                triggerBlockedInputOverlay(forcedWindow);
                 UISounds.playDefaultBeep();
                 return true;
             }
@@ -589,6 +604,37 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
         if (forced != null && forced.isVisible() && !forced.isInputLocked()) {
             focusedWindow = forced;
         }
+    }
+
+    private void triggerBlockedInputOverlay(@NotNull PiPWindow blockedWindow) {
+        this.blockedInputOverlayUntilMs = System.currentTimeMillis() + BLOCKED_INPUT_OVERLAY_DURATION_MS;
+        this.blockedInputOverlayWindow = blockedWindow;
+    }
+
+    @Nullable
+    private PiPWindow resolveBlockedInputOverlayWindow() {
+        if (this.blockedInputOverlayUntilMs <= System.currentTimeMillis()) {
+            this.blockedInputOverlayWindow = null;
+            return null;
+        }
+        if (this.blockedInputOverlayWindow != null
+                && this.windows.contains(this.blockedInputOverlayWindow)
+                && this.blockedInputOverlayWindow.isVisible()
+                && isInputBlockingWindow(this.blockedInputOverlayWindow)) {
+            return this.blockedInputOverlayWindow;
+        }
+        this.blockedInputOverlayWindow = getTopInputBlockingWindow();
+        return this.blockedInputOverlayWindow;
+    }
+
+    private void renderBlockedInputOverlay(@NotNull GuiGraphics graphics) {
+        Minecraft minecraft = Minecraft.getInstance();
+        int screenWidth = minecraft.getWindow().getGuiScaledWidth();
+        int screenHeight = minecraft.getWindow().getGuiScaledHeight();
+        RenderSystem.disableDepthTest();
+        RenderingUtils.setDepthTestLocked(true);
+        graphics.fill(0, 0, screenWidth, screenHeight, UIBase.getUITheme().pip_input_blocked_overlay_color.getColorInt());
+        RenderingUtils.setDepthTestLocked(false);
     }
 
 }

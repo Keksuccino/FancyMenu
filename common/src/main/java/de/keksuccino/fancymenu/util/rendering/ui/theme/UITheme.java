@@ -94,6 +94,7 @@ public class UITheme {
 
     public DrawableColor pip_docking_overlay_color = DrawableColor.of(new Color(64, 150, 255, 80));
     public DrawableColor pip_docking_overlay_border_color = DrawableColor.of(new Color(64, 150, 255, 200));
+    public DrawableColor pip_input_blocked_overlay_color = DrawableColor.of(new Color(255, 255, 255, 60));
 
     public DrawableColor scroll_grabber_color_normal = DrawableColor.of(new Color(89, 91, 93, 100));
     public DrawableColor scroll_grabber_color_hover = DrawableColor.of(new Color(102, 104, 104, 100));
