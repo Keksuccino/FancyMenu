@@ -2895,5 +2895,21 @@
   "fancymenu.overlay.menu_bar.customization.settings.mcp_server": "FancyMenu MCP Server: %s",
   "fancymenu.overlay.menu_bar.customization.settings.mcp_server.desc": "Starts a local MCP server for AI agents with full FancyMenu control.\n\nFor the Codex CLI, use this command to add the MCP server:\ncodex mcp add fancymenu --url http://127.0.0.1:48561/mcp\n\n§xThis MCP is highly experimental and I would not recommend you to use that thing. It's super WIP, unstable and unoptimized.",
   "fancymenu.overlay.menu_bar.customization.settings.mcp_server_port": "FancyMenu MCP Server Port",
-  "fancymenu.overlay.menu_bar.customization.settings.mcp_server_port.desc": "Port used by the local FancyMenu MCP server for Streamable HTTP and framed TCP.\nIf the server is enabled, changing this restarts it."
+  "fancymenu.overlay.menu_bar.customization.settings.mcp_server_port.desc": "Port used by the local FancyMenu MCP server for Streamable HTTP and framed TCP.\nIf the server is enabled, changing this restarts it.",
+  "fancymenu.decoration_overlays.browser": "Browser Overlay",
+  "fancymenu.decoration_overlays.browser.desc": "A fullscreen browser decoration overlay.",
+  "fancymenu.decoration_overlays.browser.url": "URL",
+  "fancymenu.decoration_overlays.browser.url.desc": "The URL the browser overlay should load.",
+  "fancymenu.decoration_overlays.browser.interactable": "Interactable: %s",
+  "fancymenu.decoration_overlays.browser.interactable.desc": "If the user should be able to interact with the browser overlay.",
+  "fancymenu.decoration_overlays.browser.hide_video_controls": "Hide Video Controls: %s",
+  "fancymenu.decoration_overlays.browser.hide_video_controls.desc": "If the controls of all videos should be hidden.\nThis will probably not work in some cases.",
+  "fancymenu.decoration_overlays.browser.loop_videos": "Loop Videos: %s",
+  "fancymenu.decoration_overlays.browser.loop_videos.desc": "If all videos should loop.\nThis will probably not work in some cases.",
+  "fancymenu.decoration_overlays.browser.mute_media": "Mute Audios/Videos On Load: %s",
+  "fancymenu.decoration_overlays.browser.mute_media.desc": "If all audios and videos should get muted on load.\nThis will probably not work in some cases.",
+  "fancymenu.decoration_overlays.browser.media_volume": "Audio/Video Volume",
+  "fancymenu.decoration_overlays.browser.media_volume.desc": "Set the base volume of media elements like audios and videos.\nShould be a value between 0.0 (0%) and 1.0 (100%).\nThis will probably not work in some cases.",
+  "fancymenu.decoration_overlays.browser.mcef_not_loaded.line_1": "MCEF is not loaded!",
+  "fancymenu.decoration_overlays.browser.mcef_not_loaded.line_2": "You need to install MCEF (mod) to use this overlay!"
 }

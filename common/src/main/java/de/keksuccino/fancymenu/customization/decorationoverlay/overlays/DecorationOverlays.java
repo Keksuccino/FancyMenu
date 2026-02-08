@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.decorationoverlay.overlays;
 
 import de.keksuccino.fancymenu.customization.decorationoverlay.DecorationOverlayRegistry;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.browser.BrowserDecorationOverlayBuilder;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.BuddyDecorationOverlayBuilder;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.confetti.ConfettiDecorationOverlayBuilder;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.firefly.FireflyDecorationOverlayBuilder;
@@ -20,6 +21,7 @@ public class DecorationOverlays {
     public static final LeavesDecorationOverlayBuilder LEAVES = new LeavesDecorationOverlayBuilder();
     public static final ConfettiDecorationOverlayBuilder CONFETTI = new ConfettiDecorationOverlayBuilder();
     public static final BuddyDecorationOverlayBuilder BUDDY = new BuddyDecorationOverlayBuilder();
+    public static final BrowserDecorationOverlayBuilder BROWSER = new BrowserDecorationOverlayBuilder();
 
     public static void registerAll() {
 
@@ -31,6 +33,7 @@ public class DecorationOverlays {
         DecorationOverlayRegistry.register(LEAVES);
         DecorationOverlayRegistry.register(CONFETTI);
         DecorationOverlayRegistry.register(BUDDY);
+        DecorationOverlayRegistry.register(BROWSER);
 
     }
 

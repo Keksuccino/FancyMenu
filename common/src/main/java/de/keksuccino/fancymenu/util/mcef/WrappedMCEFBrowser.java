@@ -306,6 +306,15 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         return this.interactable;
     }
 
+    public void setBrowserFocused(boolean browserFocused) {
+        this.browserFocused = browserFocused;
+        this.browser.setFocus(browserFocused);
+    }
+
+    public boolean isBrowserFocused() {
+        return this.browserFocused;
+    }
+
     public void setAutoHandle(boolean autoHandle) {
         this.autoHandle = autoHandle;
     }

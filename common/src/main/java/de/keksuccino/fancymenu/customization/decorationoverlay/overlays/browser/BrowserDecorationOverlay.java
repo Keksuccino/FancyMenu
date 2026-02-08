@@ -1,0 +1,523 @@
+package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.browser;
+
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.math.Axis;
+import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
+import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
+import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
+import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
+import de.keksuccino.fancymenu.util.properties.Property;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.awt.Color;
+import java.util.List;
+import java.util.Objects;
+
+public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserDecorationOverlay> {
+
+    private static final DrawableColor ERROR_BACKGROUND_COLOR = DrawableColor.of(Color.RED);
+    private static final DrawableColor EDITOR_PREVIEW_BACKGROUND_COLOR = DrawableColor.of(new Color(20, 25, 35));
+    private static final DrawableColor EDITOR_PREVIEW_STRIPE_COLOR = DrawableColor.of(new Color(140, 170, 210));
+    private static final String FALLBACK_URL = "about:blank";
+
+    public final Property.StringProperty url = putProperty(Property.stringProperty("url", "https://docs.fancymenu.net", false, true, "fancymenu.decoration_overlays.browser.url"));
+    public final Property<Boolean> interactable = putProperty(Property.booleanProperty("interactable", true, "fancymenu.decoration_overlays.browser.interactable"));
+    public final Property<Boolean> hideVideoControls = putProperty(Property.booleanProperty("hide_video_controls", false, "fancymenu.decoration_overlays.browser.hide_video_controls"));
+    public final Property<Boolean> loopVideos = putProperty(Property.booleanProperty("loop_videos", false, "fancymenu.decoration_overlays.browser.loop_videos"));
+    public final Property<Boolean> muteMedia = putProperty(Property.booleanProperty("mute_media", false, "fancymenu.decoration_overlays.browser.mute_media"));
+    public final Property.FloatProperty mediaVolume = putProperty(Property.floatProperty("media_volume", 1.0F, "fancymenu.decoration_overlays.browser.media_volume"));
+
+    @Nullable
+    private WrappedMCEFBrowser browser = null;
+    @Nullable
+    private Screen attachedScreen = null;
+    @Nullable
+    private String lastTickUrl = null;
+    private int lastTickWidth = -1;
+    private int lastTickHeight = -1;
+    private long inputCaptureOverlayId = -1L;
+    private boolean autoFocusPending = true;
+
+    private final InputCaptureOverlay inputCaptureOverlay = new InputCaptureOverlay();
+
+    public BrowserDecorationOverlay() {
+        this.showOverlay.addValueSetListener((oldValue, newValue) -> {
+            boolean nowEnabled = Boolean.TRUE.equals(newValue);
+            this.autoFocusPending = nowEnabled;
+            if (nowEnabled) {
+                if (this.attachedScreen != null) {
+                    if (this.isEditorScreenActive()) {
+                        this.unregisterInputCaptureOverlay();
+                        this.destroyBrowser();
+                    } else {
+                        this.ensureInputCaptureOverlayRegistered();
+                        this.ensureBrowserCreated();
+                        this.focusSelfAndBrowser();
+                    }
+                }
+            } else {
+                this.unregisterInputCaptureOverlay();
+                if (this.browser != null) {
+                    this.browser.setBrowserFocused(false);
+                }
+            }
+        });
+        this.interactable.addValueSetListener((oldValue, newValue) -> {
+            if (this.browser != null && !Boolean.TRUE.equals(newValue)) {
+                this.browser.setBrowserFocused(false);
+            }
+        });
+    }
+
+    @Override
+    protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
+
+        this.url.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.OPEN_IN_BROWSER)
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.browser.url.desc")));
+
+        this.interactable.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.TOUCH_APP)
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.browser.interactable.desc")));
+
+        menu.addSeparatorEntry("separator_after_interactable");
+
+        this.hideVideoControls.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.VIDEO_SETTINGS)
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.browser.hide_video_controls.desc")));
+
+        this.loopVideos.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.REPEAT)
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.browser.loop_videos.desc")));
+
+        this.muteMedia.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.VOLUME_OFF)
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.browser.mute_media.desc")));
+
+        this.mediaVolume.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.VOLUME_UP)
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.browser.media_volume.desc")));
+
+    }
+
+    @Override
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        int width = getScreenWidth();
+        int height = getScreenHeight();
+        if (this.isEditorScreenActive()) {
+            this.unregisterInputCaptureOverlay();
+            this.destroyBrowser();
+            this.renderEditorPreview(graphics, width, height);
+            return;
+        }
+        this.ensureBrowserCreated();
+        this.ensureInputCaptureOverlayRegistered();
+        if (this.autoFocusPending) {
+            this.focusSelfAndBrowser();
+            this.autoFocusPending = false;
+        }
+        if (this.browser != null) {
+            BrowserHandler.notifyHandler(this.getInstanceIdentifier(), this.browser);
+            this.syncBrowserSettings(width, height);
+            RenderSystem.enableBlend();
+            this.browser.render(graphics, mouseX, mouseY, partial);
+            return;
+        }
+        RenderSystem.enableBlend();
+        graphics.fill(RenderType.guiOverlay(), 0, 0, width, height, ERROR_BACKGROUND_COLOR.getColorInt());
+        graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.decoration_overlays.browser.mcef_not_loaded.line_1").setStyle(Style.EMPTY.withBold(true)), width / 2, (height / 2) - Minecraft.getInstance().font.lineHeight - 2, -1);
+        graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.decoration_overlays.browser.mcef_not_loaded.line_2").setStyle(Style.EMPTY.withBold(true)), width / 2, (height / 2) + 2, -1);
+    }
+
+    @Override
+    public void onScreenInitializedOrResized(@NotNull Screen screen, @NotNull List<AbstractElement> elements) {
+        this.attachedScreen = screen;
+        this.autoFocusPending = true;
+        if (this.isEditorScreenActive()) {
+            this.unregisterInputCaptureOverlay();
+            this.destroyBrowser();
+            return;
+        }
+        if (this.showOverlay.tryGetNonNullElse(false)) {
+            this.ensureInputCaptureOverlayRegistered();
+            this.ensureBrowserCreated();
+        }
+        if (this.browser != null && this.showOverlay.tryGetNonNullElse(false)) {
+            this.browser.setPosition(0, 0);
+            this.browser.setSize(screen.width, screen.height);
+            this.lastTickWidth = screen.width;
+            this.lastTickHeight = screen.height;
+        }
+    }
+
+    @Override
+    public void onCloseScreen(@Nullable Screen closedScreen, @Nullable Screen newScreen) {
+        this.attachedScreen = null;
+        this.unregisterInputCaptureOverlay();
+        this.destroyBrowser();
+        CursorHandler.setClientTickCursor(CursorHandler.CURSOR_NORMAL);
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        return this.consumeMouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        return this.consumeMouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        return this.consumeMouseDragged(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
+        return this.consumeMouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        return this.consumeKeyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        return this.consumeKeyReleased(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        return this.consumeCharTyped(codePoint, modifiers);
+    }
+
+    private void ensureBrowserCreated() {
+        if (this.browser != null) {
+            BrowserHandler.notifyHandler(this.getInstanceIdentifier(), this.browser);
+            return;
+        }
+        if (!MCEFUtil.isMCEFLoaded() || !MCEFUtil.MCEF_initialized) {
+            return;
+        }
+        this.browser = BrowserHandler.get(this.getInstanceIdentifier());
+        if (this.browser == null) {
+            String resolvedUrl = this.url.getString();
+            if (resolvedUrl == null || resolvedUrl.isBlank()) {
+                resolvedUrl = FALLBACK_URL;
+            }
+            this.browser = WrappedMCEFBrowser.build(resolvedUrl, true, false, null);
+        }
+        BrowserHandler.notifyHandler(this.getInstanceIdentifier(), this.browser);
+        this.lastTickUrl = null;
+        this.lastTickWidth = -1;
+        this.lastTickHeight = -1;
+        this.autoFocusPending = true;
+    }
+
+    private void destroyBrowser() {
+        if (this.browser == null) {
+            return;
+        }
+        BrowserHandler.remove(this.getInstanceIdentifier(), true);
+        this.browser = null;
+        this.lastTickUrl = null;
+        this.lastTickWidth = -1;
+        this.lastTickHeight = -1;
+    }
+
+    private void syncBrowserSettings(int width, int height) {
+        WrappedMCEFBrowser wrappedBrowser = this.browser;
+        if (wrappedBrowser == null) {
+            return;
+        }
+
+        BrowserHandler.notifyHandler(this.getInstanceIdentifier(), wrappedBrowser);
+
+        wrappedBrowser.setOpacity(1.0F);
+        wrappedBrowser.setPosition(0, 0);
+
+        if (this.lastTickWidth != width || this.lastTickHeight != height) {
+            wrappedBrowser.setSize(width, height);
+        }
+        this.lastTickWidth = width;
+        this.lastTickHeight = height;
+
+        String finalUrl = this.url.getString();
+        if (finalUrl == null || finalUrl.isBlank()) {
+            finalUrl = FALLBACK_URL;
+        }
+        if (!Objects.equals(finalUrl, this.lastTickUrl)) {
+            wrappedBrowser.setUrl(finalUrl);
+            this.lastTickUrl = finalUrl;
+        }
+
+        boolean hideControls = this.hideVideoControls.tryGetNonNullElse(false);
+        if (wrappedBrowser.isHideVideoControls() != hideControls) {
+            wrappedBrowser.setHideVideoControls(hideControls);
+        }
+
+        boolean loopAllVideos = this.loopVideos.tryGetNonNullElse(false);
+        if (wrappedBrowser.isLoopAllVideos() != loopAllVideos) {
+            wrappedBrowser.setLoopAllVideos(loopAllVideos);
+        }
+
+        boolean muteOnLoad = this.muteMedia.tryGetNonNullElse(false);
+        if (wrappedBrowser.isMuteAllMediaOnLoad() != muteOnLoad) {
+            wrappedBrowser.setMuteAllMediaOnLoad(muteOnLoad);
+        }
+
+        float resolvedVolume = this.mediaVolume.getFloat();
+        if (resolvedVolume > 1.0F) {
+            resolvedVolume = 1.0F;
+        } else if (resolvedVolume < 0.0F) {
+            resolvedVolume = 0.0F;
+        }
+        if (wrappedBrowser.getVolume() != resolvedVolume) {
+            wrappedBrowser.setVolume(resolvedVolume);
+        }
+
+        wrappedBrowser.setInteractable(this.isBrowserInteractable());
+    }
+
+    private boolean isInputCaptureActive() {
+        if (!this.showOverlay.tryGetNonNullElse(false)) {
+            return false;
+        }
+        if (this.attachedScreen == null) {
+            return false;
+        }
+        if (this.isEditorScreenActive()) {
+            return false;
+        }
+        return Minecraft.getInstance().screen == this.attachedScreen;
+    }
+
+    private boolean isInputCaptureActiveFor(@NotNull Screen screen) {
+        return this.showOverlay.tryGetNonNullElse(false) && this.attachedScreen == screen && !this.isEditorScreenActive();
+    }
+
+    private boolean isBrowserInteractable() {
+        return this.interactable.tryGetNonNullElse(true);
+    }
+
+    private void ensureInputCaptureOverlayRegistered() {
+        if (this.attachedScreen == null) {
+            return;
+        }
+        if (this.isEditorScreenActive()) {
+            return;
+        }
+        if (this.inputCaptureOverlayId >= 0L) {
+            return;
+        }
+        this.inputCaptureOverlayId = ScreenOverlayHandler.INSTANCE.addOverlay(this.inputCaptureOverlay);
+        ScreenOverlayHandler.INSTANCE.setVisibilityControllerFor(this.inputCaptureOverlayId, this::isInputCaptureActiveFor);
+        ScreenOverlayHandler.INSTANCE.setInputConsumptionControllerFor(this.inputCaptureOverlayId, this::isInputCaptureActiveFor);
+    }
+
+    private boolean isEditorScreenActive() {
+        return this.attachedScreen instanceof LayoutEditorScreen;
+    }
+
+    private void renderEditorPreview(@NotNull GuiGraphics graphics, int width, int height) {
+        RenderSystem.enableBlend();
+        graphics.fill(RenderType.guiOverlay(), 0, 0, width, height, EDITOR_PREVIEW_BACKGROUND_COLOR.getColorIntWithAlpha(0.35F));
+
+        graphics.pose().pushPose();
+        graphics.pose().translate(width / 2.0F, height / 2.0F, 0.0F);
+        graphics.pose().mulPose(Axis.ZP.rotationDegrees(-28.0F));
+        graphics.pose().translate(-width / 2.0F, -height / 2.0F, 0.0F);
+
+        int stripeWidth = 20;
+        int stripeGap = 16;
+        int startX = -height;
+        int endX = width + height;
+        int stripeColor = EDITOR_PREVIEW_STRIPE_COLOR.getColorIntWithAlpha(0.35F);
+        for (int x = startX; x < endX; x += stripeWidth + stripeGap) {
+            graphics.fill(x, -height, x + stripeWidth, height * 2, stripeColor);
+        }
+
+        graphics.pose().popPose();
+    }
+
+    private void unregisterInputCaptureOverlay() {
+        if (this.inputCaptureOverlayId < 0L) {
+            return;
+        }
+        ScreenOverlayHandler.INSTANCE.removeOverlay(this.inputCaptureOverlayId, false, true);
+        this.inputCaptureOverlayId = -1L;
+    }
+
+    private void focusSelfAndBrowser() {
+        if (!this.isInputCaptureActive()) {
+            return;
+        }
+        Screen screen = this.attachedScreen;
+        if (screen != null && screen.getFocused() != this) {
+            screen.setFocused(this);
+        }
+        if (this.browser != null && this.isBrowserInteractable()) {
+            this.browser.setBrowserFocused(true);
+        }
+    }
+
+    private boolean consumeMouseClicked(double mouseX, double mouseY, int button) {
+        if (!this.isInputCaptureActive()) {
+            return false;
+        }
+        this.focusSelfAndBrowser();
+        WrappedMCEFBrowser wrappedBrowser = this.browser;
+        if (wrappedBrowser != null && this.isBrowserInteractable()) {
+            wrappedBrowser.mouseClicked(mouseX, mouseY, button);
+        }
+        return true;
+    }
+
+    private boolean consumeMouseReleased(double mouseX, double mouseY, int button) {
+        if (!this.isInputCaptureActive()) {
+            return false;
+        }
+        WrappedMCEFBrowser wrappedBrowser = this.browser;
+        if (wrappedBrowser != null && this.isBrowserInteractable()) {
+            wrappedBrowser.mouseReleased(mouseX, mouseY, button);
+        }
+        return true;
+    }
+
+    private boolean consumeMouseDragged(double mouseX, double mouseY, int button) {
+        if (!this.isInputCaptureActive()) {
+            return false;
+        }
+        WrappedMCEFBrowser wrappedBrowser = this.browser;
+        if (wrappedBrowser != null && this.isBrowserInteractable()) {
+            wrappedBrowser.mouseMoved(mouseX, mouseY);
+        }
+        return true;
+    }
+
+    private boolean consumeMouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
+        if (!this.isInputCaptureActive()) {
+            return false;
+        }
+        WrappedMCEFBrowser wrappedBrowser = this.browser;
+        if (wrappedBrowser != null && this.isBrowserInteractable()) {
+            wrappedBrowser.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
+        }
+        return true;
+    }
+
+    private boolean consumeKeyPressed(int keyCode, int scanCode, int modifiers) {
+        if (!this.isInputCaptureActive()) {
+            return false;
+        }
+        WrappedMCEFBrowser wrappedBrowser = this.browser;
+        if (wrappedBrowser != null && this.isBrowserInteractable()) {
+            wrappedBrowser.setBrowserFocused(true);
+            wrappedBrowser.keyPressed(keyCode, scanCode, modifiers);
+        }
+        return true;
+    }
+
+    private boolean consumeKeyReleased(int keyCode, int scanCode, int modifiers) {
+        if (!this.isInputCaptureActive()) {
+            return false;
+        }
+        WrappedMCEFBrowser wrappedBrowser = this.browser;
+        if (wrappedBrowser != null && this.isBrowserInteractable()) {
+            wrappedBrowser.setBrowserFocused(true);
+            wrappedBrowser.keyReleased(keyCode, scanCode, modifiers);
+        }
+        return true;
+    }
+
+    private boolean consumeCharTyped(char codePoint, int modifiers) {
+        if (!this.isInputCaptureActive()) {
+            return false;
+        }
+        WrappedMCEFBrowser wrappedBrowser = this.browser;
+        if (wrappedBrowser != null && this.isBrowserInteractable()) {
+            wrappedBrowser.setBrowserFocused(true);
+            wrappedBrowser.charTyped(codePoint, modifiers);
+        }
+        return true;
+    }
+
+    private class InputCaptureOverlay implements Renderable, GuiEventListener {
+
+        private boolean focused = false;
+
+        @Override
+        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            // No visual output, this only captures input before vanilla screen handling.
+        }
+
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            return consumeMouseClicked(mouseX, mouseY, button);
+        }
+
+        @Override
+        public boolean mouseReleased(double mouseX, double mouseY, int button) {
+            return consumeMouseReleased(mouseX, mouseY, button);
+        }
+
+        @Override
+        public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+            return consumeMouseDragged(mouseX, mouseY, button);
+        }
+
+        @Override
+        public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
+            return consumeMouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
+        }
+
+        @Override
+        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            return consumeKeyPressed(keyCode, scanCode, modifiers);
+        }
+
+        @Override
+        public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+            return consumeKeyReleased(keyCode, scanCode, modifiers);
+        }
+
+        @Override
+        public boolean charTyped(char codePoint, int modifiers) {
+            return consumeCharTyped(codePoint, modifiers);
+        }
+
+        @Override
+        public boolean isMouseOver(double mouseX, double mouseY) {
+            return true;
+        }
+
+        @Override
+        public void setFocused(boolean focused) {
+            this.focused = focused;
+        }
+
+        @Override
+        public boolean isFocused() {
+            return this.focused;
+        }
+    }
+}
