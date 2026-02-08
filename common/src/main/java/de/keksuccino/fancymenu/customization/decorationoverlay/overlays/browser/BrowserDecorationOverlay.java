@@ -12,7 +12,6 @@ import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import net.minecraft.client.Minecraft;
@@ -52,7 +51,8 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
     private String lastTickUrl = null;
     private int lastTickWidth = -1;
     private int lastTickHeight = -1;
-    private long inputCaptureOverlayId = -1L;
+    @Nullable
+    private String registeredInputConsumerId = null;
     private boolean autoFocusPending = true;
 
     private final InputCaptureOverlay inputCaptureOverlay = new InputCaptureOverlay();
@@ -311,10 +311,6 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
         return Minecraft.getInstance().screen == this.attachedScreen;
     }
 
-    private boolean isInputCaptureActiveFor(@NotNull Screen screen) {
-        return this.showOverlay.tryGetNonNullElse(false) && this.attachedScreen == screen && !this.isEditorScreenActive();
-    }
-
     private boolean isBrowserInteractable() {
         return this.interactable.tryGetNonNullElse(true);
     }
@@ -326,12 +322,15 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
         if (this.isEditorScreenActive()) {
             return;
         }
-        if (this.inputCaptureOverlayId >= 0L) {
+        String desiredId = this.getInstanceIdentifier();
+        if (Objects.equals(this.registeredInputConsumerId, desiredId)) {
             return;
         }
-        this.inputCaptureOverlayId = ScreenOverlayHandler.INSTANCE.addOverlay(this.inputCaptureOverlay);
-        ScreenOverlayHandler.INSTANCE.setVisibilityControllerFor(this.inputCaptureOverlayId, this::isInputCaptureActiveFor);
-        ScreenOverlayHandler.INSTANCE.setInputConsumptionControllerFor(this.inputCaptureOverlayId, this::isInputCaptureActiveFor);
+        if (this.registeredInputConsumerId != null) {
+            BrowserOverlayInputConsumers.unregister(this.registeredInputConsumerId);
+        }
+        BrowserOverlayInputConsumers.register(desiredId, this.inputCaptureOverlay);
+        this.registeredInputConsumerId = desiredId;
     }
 
     private boolean isEditorScreenActive() {
@@ -360,11 +359,11 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
     }
 
     private void unregisterInputCaptureOverlay() {
-        if (this.inputCaptureOverlayId < 0L) {
+        if (this.registeredInputConsumerId == null) {
             return;
         }
-        ScreenOverlayHandler.INSTANCE.removeOverlay(this.inputCaptureOverlayId, false, true);
-        this.inputCaptureOverlayId = -1L;
+        BrowserOverlayInputConsumers.unregister(this.registeredInputConsumerId);
+        this.registeredInputConsumerId = null;
     }
 
     private void focusSelfAndBrowser() {
