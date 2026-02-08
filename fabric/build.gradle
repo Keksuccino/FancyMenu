@@ -29,7 +29,8 @@ dependencies {
     modImplementation "maven.modrinth:modmenu:11.0.0-beta.1"
     //modImplementation "maven.modrinth:fancy-entity-renderer:JjeSIcya"
     modImplementation "it.crystalnest:fancy-entity-renderer-fabric:$fer_mc_version-$fer_version"
-    modCompileOnly 'com.cinemamod:mcef:2.1.6-1.21.1'
+    //modCompileOnly 'com.cinemamod:mcef:2.1.6-1.21.1'
+    modImplementation "curse.maven:mcef-636236:5828244"
     modImplementation "curse.maven:xaeros-world-map-317780:6538360"
     modImplementation "curse.maven:xaeros-minimap-263420:6515046"
     //modImplementation "maven.modrinth:drippy-loading-screen:3.0.12-1.21.1-fabric"

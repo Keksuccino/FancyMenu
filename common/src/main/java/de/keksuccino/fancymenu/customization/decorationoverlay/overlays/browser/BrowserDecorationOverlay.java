@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
@@ -22,6 +23,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,6 +33,8 @@ import java.util.List;
 import java.util.Objects;
 
 public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserDecorationOverlay> {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final DrawableColor ERROR_BACKGROUND_COLOR = DrawableColor.of(Color.RED);
     private static final DrawableColor EDITOR_PREVIEW_BACKGROUND_COLOR = DrawableColor.of(new Color(20, 25, 35));
@@ -80,8 +85,15 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
             }
         });
         this.interactable.addValueSetListener((oldValue, newValue) -> {
-            if (this.browser != null && !Boolean.TRUE.equals(newValue)) {
-                this.browser.setBrowserFocused(false);
+            boolean nowInteractable = Boolean.TRUE.equals(newValue);
+            if (!nowInteractable) {
+                this.unregisterInputCaptureOverlay();
+                if (this.browser != null) {
+                    this.browser.setBrowserFocused(false);
+                }
+            } else if (this.showOverlay.tryGetNonNullElse(false) && this.attachedScreen != null && !this.isEditorScreenActive()) {
+                this.ensureInputCaptureOverlayRegistered();
+                this.autoFocusPending = true;
             }
         });
     }
@@ -128,16 +140,27 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
             return;
         }
         this.ensureBrowserCreated();
-        this.ensureInputCaptureOverlayRegistered();
+        if (this.isBrowserInteractable()) {
+            this.ensureInputCaptureOverlayRegistered();
+        } else {
+            this.unregisterInputCaptureOverlay();
+        }
         if (this.autoFocusPending) {
             this.focusSelfAndBrowser();
             this.autoFocusPending = false;
         }
         if (this.browser != null) {
-            BrowserHandler.notifyHandler(this.getInstanceIdentifier(), this.browser);
-            this.syncBrowserSettings(width, height);
-            RenderSystem.enableBlend();
-            this.browser.render(graphics, mouseX, mouseY, partial);
+            RenderSystem.disableDepthTest();
+            RenderingUtils.setDepthTestLocked(true);
+            try {
+                BrowserHandler.notifyHandler(this.getInstanceIdentifier(), this.browser);
+                this.syncBrowserSettings(width, height);
+                RenderSystem.enableBlend();
+                this.browser.render(graphics, mouseX, mouseY, partial);
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to render browser instance of BrowserDecorationOverlay!", ex);
+            }
+            RenderingUtils.setDepthTestLocked(false);
             return;
         }
         RenderSystem.enableBlend();
@@ -322,6 +345,9 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
         if (this.isEditorScreenActive()) {
             return;
         }
+        if (!this.isBrowserInteractable()) {
+            return;
+        }
         String desiredId = this.getInstanceIdentifier();
         if (Objects.equals(this.registeredInputConsumerId, desiredId)) {
             return;
@@ -370,6 +396,9 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
         if (!this.isInputCaptureActive()) {
             return;
         }
+        if (!this.isBrowserInteractable()) {
+            return;
+        }
         Screen screen = this.attachedScreen;
         if (screen != null && screen.getFocused() != this) {
             screen.setFocused(this);
@@ -380,56 +409,56 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
     }
 
     private boolean consumeMouseClicked(double mouseX, double mouseY, int button) {
-        if (!this.isInputCaptureActive()) {
+        if (!this.isInputCaptureActive() || !this.isBrowserInteractable()) {
             return false;
         }
         this.focusSelfAndBrowser();
         WrappedMCEFBrowser wrappedBrowser = this.browser;
-        if (wrappedBrowser != null && this.isBrowserInteractable()) {
+        if (wrappedBrowser != null) {
             wrappedBrowser.mouseClicked(mouseX, mouseY, button);
         }
         return true;
     }
 
     private boolean consumeMouseReleased(double mouseX, double mouseY, int button) {
-        if (!this.isInputCaptureActive()) {
+        if (!this.isInputCaptureActive() || !this.isBrowserInteractable()) {
             return false;
         }
         WrappedMCEFBrowser wrappedBrowser = this.browser;
-        if (wrappedBrowser != null && this.isBrowserInteractable()) {
+        if (wrappedBrowser != null) {
             wrappedBrowser.mouseReleased(mouseX, mouseY, button);
         }
         return true;
     }
 
     private boolean consumeMouseDragged(double mouseX, double mouseY, int button) {
-        if (!this.isInputCaptureActive()) {
+        if (!this.isInputCaptureActive() || !this.isBrowserInteractable()) {
             return false;
         }
         WrappedMCEFBrowser wrappedBrowser = this.browser;
-        if (wrappedBrowser != null && this.isBrowserInteractable()) {
+        if (wrappedBrowser != null) {
             wrappedBrowser.mouseMoved(mouseX, mouseY);
         }
         return true;
     }
 
     private boolean consumeMouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
-        if (!this.isInputCaptureActive()) {
+        if (!this.isInputCaptureActive() || !this.isBrowserInteractable()) {
             return false;
         }
         WrappedMCEFBrowser wrappedBrowser = this.browser;
-        if (wrappedBrowser != null && this.isBrowserInteractable()) {
+        if (wrappedBrowser != null) {
             wrappedBrowser.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
         }
         return true;
     }
 
     private boolean consumeKeyPressed(int keyCode, int scanCode, int modifiers) {
-        if (!this.isInputCaptureActive()) {
+        if (!this.isInputCaptureActive() || !this.isBrowserInteractable()) {
             return false;
         }
         WrappedMCEFBrowser wrappedBrowser = this.browser;
-        if (wrappedBrowser != null && this.isBrowserInteractable()) {
+        if (wrappedBrowser != null) {
             wrappedBrowser.setBrowserFocused(true);
             wrappedBrowser.keyPressed(keyCode, scanCode, modifiers);
         }
@@ -437,11 +466,11 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
     }
 
     private boolean consumeKeyReleased(int keyCode, int scanCode, int modifiers) {
-        if (!this.isInputCaptureActive()) {
+        if (!this.isInputCaptureActive() || !this.isBrowserInteractable()) {
             return false;
         }
         WrappedMCEFBrowser wrappedBrowser = this.browser;
-        if (wrappedBrowser != null && this.isBrowserInteractable()) {
+        if (wrappedBrowser != null) {
             wrappedBrowser.setBrowserFocused(true);
             wrappedBrowser.keyReleased(keyCode, scanCode, modifiers);
         }
@@ -449,11 +478,11 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
     }
 
     private boolean consumeCharTyped(char codePoint, int modifiers) {
-        if (!this.isInputCaptureActive()) {
+        if (!this.isInputCaptureActive() || !this.isBrowserInteractable()) {
             return false;
         }
         WrappedMCEFBrowser wrappedBrowser = this.browser;
-        if (wrappedBrowser != null && this.isBrowserInteractable()) {
+        if (wrappedBrowser != null) {
             wrappedBrowser.setBrowserFocused(true);
             wrappedBrowser.charTyped(codePoint, modifiers);
         }
