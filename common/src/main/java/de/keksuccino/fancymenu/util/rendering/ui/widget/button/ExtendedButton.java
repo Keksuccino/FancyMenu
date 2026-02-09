@@ -229,11 +229,18 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         if (icon == null) return;
         ResourceLocation iconLocation = icon.getResourceLocation();
         if (iconLocation == null) return;
-        int renderWidth = this.getWidth();
+        int iconWidth = icon.getWidth();
+        int iconHeight = icon.getHeight();
+        if (iconWidth <= 0 || iconHeight <= 0) return;
         int renderHeight = this.getHeight();
+        if (renderHeight <= 0) return;
+        int renderWidth = Math.max(1, (int) Math.round((double) renderHeight * ((double) iconWidth / (double) iconHeight)));
+        if (renderWidth <= 0) return;
+        int renderX = this.getX() + ((this.getWidth() - renderWidth) / 2);
         graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
         RenderSystem.enableBlend();
-        graphics.blit(iconLocation, this.getX(), this.getY(), 0.0F, 0.0F, renderWidth, renderHeight, renderWidth, renderHeight);
+        RenderSystem.enableDepthTest();
+        graphics.blit(iconLocation, renderX, this.getY(), 0.0F, 0.0F, renderWidth, renderHeight, renderWidth, renderHeight);
         RenderingUtils.resetShaderColor(graphics);
     }
 

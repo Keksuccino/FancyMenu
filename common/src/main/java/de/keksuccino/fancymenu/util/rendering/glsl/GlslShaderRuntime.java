@@ -19,7 +19,9 @@ import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GL12;
 
+import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.temporal.WeekFields;
@@ -49,6 +51,9 @@ public class GlslShaderRuntime {
             """;
 
     private static final int CHANNEL_COUNT = 4;
+    private static final int BUFFER_PASS_COUNT = 4;
+    private static final int TOTAL_PASS_COUNT = BUFFER_PASS_COUNT + 1;
+    private static final int IMAGE_PASS_INDEX = BUFFER_PASS_COUNT;
     private static final UniformDefinition[] UNIFORMS = new UniformDefinition[]{
             new UniformDefinition("iResolution", "uniform vec3 iResolution;"),
             new UniformDefinition("iTime", "uniform float iTime;"),
@@ -111,21 +116,17 @@ public class GlslShaderRuntime {
     private static final Pattern VERSION_DIRECTIVE_PATTERN = Pattern.compile("(?m)^\\s*#version\\s+.+$");
     private static final Pattern PRECISION_DIRECTIVE_PATTERN = Pattern.compile("(?m)^\\s*precision\\s+\\w+\\s+\\w+\\s*;\\s*$");
 
-    private int programId;
-    private int vertexShaderId;
-    private int fragmentShaderId;
     private int vaoId;
     private int vboId;
 
     @Nullable
-    private String currentProgramKey;
-    @Nullable
-    private String lastFailedProgramKey;
-    @Nullable
     private String lastCompileError;
     private boolean sourceMissing;
 
-    private final Map<String, Integer> uniformLocations = new HashMap<>();
+    private final ProgramState[] passPrograms_FancyMenu = new ProgramState[TOTAL_PASS_COUNT];
+    private final BufferTargetState[] bufferTargets_FancyMenu = new BufferTargetState[BUFFER_PASS_COUNT];
+    @Nullable
+    private ProgramState activeUniformProgram_FancyMenu;
 
     private long frameCounter;
     private long startNanoTime = -1L;
@@ -142,6 +143,72 @@ public class GlslShaderRuntime {
         SHADERTOY
     }
 
+    public enum ChannelInput {
+        NONE("none", -1),
+        RESOURCE0("resource0", -1),
+        RESOURCE1("resource1", -1),
+        RESOURCE2("resource2", -1),
+        RESOURCE3("resource3", -1),
+        BUFFER_A("buffer_a", 0),
+        BUFFER_B("buffer_b", 1),
+        BUFFER_C("buffer_c", 2),
+        BUFFER_D("buffer_d", 3);
+
+        @NotNull
+        private final String serializedName;
+        private final int bufferPassIndex;
+
+        ChannelInput(@NotNull String serializedName, int bufferPassIndex) {
+            this.serializedName = serializedName;
+            this.bufferPassIndex = bufferPassIndex;
+        }
+
+        @NotNull
+        public String serializedName() {
+            return this.serializedName;
+        }
+
+        public int bufferPassIndex() {
+            return this.bufferPassIndex;
+        }
+
+        @NotNull
+        public static ChannelInput fromSerialized(@Nullable String serialized, @NotNull ChannelInput fallback) {
+            if (serialized == null || serialized.isBlank()) {
+                return fallback;
+            }
+            for (ChannelInput value : values()) {
+                if (value.serializedName.equalsIgnoreCase(serialized.trim())) {
+                    return value;
+                }
+            }
+            return fallback;
+        }
+    }
+
+    public record ChannelRouting(
+            @NotNull ChannelInput channel0,
+            @NotNull ChannelInput channel1,
+            @NotNull ChannelInput channel2,
+            @NotNull ChannelInput channel3
+    ) {
+        @NotNull
+        public ChannelInput channelForIndex(int index) {
+            return switch (index) {
+                case 0 -> this.channel0;
+                case 1 -> this.channel1;
+                case 2 -> this.channel2;
+                case 3 -> this.channel3;
+                default -> ChannelInput.NONE;
+            };
+        }
+
+        @NotNull
+        public static ChannelRouting defaultResources() {
+            return new ChannelRouting(ChannelInput.RESOURCE0, ChannelInput.RESOURCE1, ChannelInput.RESOURCE2, ChannelInput.RESOURCE3);
+        }
+    }
+
     public record RenderSettings(
             @NotNull CompileMode compileMode,
             boolean forceShadertoyCompatibility,
@@ -153,7 +220,16 @@ public class GlslShaderRuntime {
             @Nullable ResourceSupplier<ITexture> channel0,
             @Nullable ResourceSupplier<ITexture> channel1,
             @Nullable ResourceSupplier<ITexture> channel2,
-            @Nullable ResourceSupplier<ITexture> channel3
+            @Nullable ResourceSupplier<ITexture> channel3,
+            @Nullable String bufferASource,
+            @Nullable String bufferBSource,
+            @Nullable String bufferCSource,
+            @Nullable String bufferDSource,
+            @NotNull ChannelRouting imageRouting,
+            @NotNull ChannelRouting bufferARouting,
+            @NotNull ChannelRouting bufferBRouting,
+            @NotNull ChannelRouting bufferCRouting,
+            @NotNull ChannelRouting bufferDRouting
     ) {
         @Nullable
         public ResourceSupplier<ITexture> channelSupplier(int index) {
@@ -165,6 +241,50 @@ public class GlslShaderRuntime {
                 default -> null;
             };
         }
+
+        @Nullable
+        public String bufferSource(int bufferPassIndex) {
+            return switch (bufferPassIndex) {
+                case 0 -> this.bufferASource;
+                case 1 -> this.bufferBSource;
+                case 2 -> this.bufferCSource;
+                case 3 -> this.bufferDSource;
+                default -> null;
+            };
+        }
+
+        @NotNull
+        public ChannelRouting routingForPass(int passIndex) {
+            return switch (passIndex) {
+                case 0 -> this.bufferARouting;
+                case 1 -> this.bufferBRouting;
+                case 2 -> this.bufferCRouting;
+                case 3 -> this.bufferDRouting;
+                case IMAGE_PASS_INDEX -> this.imageRouting;
+                default -> ChannelRouting.defaultResources();
+            };
+        }
+    }
+
+    private static final class ProgramState {
+        private int programId;
+        private int vertexShaderId;
+        private int fragmentShaderId;
+        @Nullable
+        private String currentProgramKey;
+        @Nullable
+        private String lastFailedProgramKey;
+        @Nullable
+        private String lastCompileError;
+        private final Map<String, Integer> uniformLocations = new HashMap<>();
+    }
+
+    private static final class BufferTargetState {
+        private int framebufferId;
+        private int readTextureId;
+        private int writeTextureId;
+        private int width;
+        private int height;
     }
 
     private record UniformDefinition(@NotNull String name, @NotNull String declaration) {
@@ -174,6 +294,15 @@ public class GlslShaderRuntime {
     }
 
     private record ChannelTextureState(int textureId, float resolutionX, float resolutionY) {
+    }
+
+    public GlslShaderRuntime() {
+        for (int i = 0; i < TOTAL_PASS_COUNT; i++) {
+            this.passPrograms_FancyMenu[i] = new ProgramState();
+        }
+        for (int i = 0; i < BUFFER_PASS_COUNT; i++) {
+            this.bufferTargets_FancyMenu[i] = new BufferTargetState();
+        }
     }
 
     public boolean render(@NotNull GuiGraphics graphics,
@@ -186,14 +315,6 @@ public class GlslShaderRuntime {
                           @NotNull RenderSettings settings) {
 
         if (areaWidth <= 0 || areaHeight <= 0) {
-            return false;
-        }
-
-        if (!this.ensureProgram(fragmentSource, settings)) {
-            return false;
-        }
-
-        if (this.programId <= 0) {
             return false;
         }
 
@@ -220,6 +341,32 @@ public class GlslShaderRuntime {
             return false;
         }
 
+        boolean[] activeBufferPasses = new boolean[BUFFER_PASS_COUNT];
+        for (int i = 0; i < BUFFER_PASS_COUNT; i++) {
+            String source = settings.bufferSource(i);
+            activeBufferPasses[i] = source != null && !source.isBlank();
+        }
+
+        this.sourceMissing = false;
+        this.lastCompileError = null;
+
+        for (int i = 0; i < BUFFER_PASS_COUNT; i++) {
+            if (!activeBufferPasses[i]) {
+                this.deleteProgram(this.passPrograms_FancyMenu[i]);
+                this.passPrograms_FancyMenu[i].currentProgramKey = null;
+                this.passPrograms_FancyMenu[i].lastFailedProgramKey = null;
+                this.passPrograms_FancyMenu[i].lastCompileError = null;
+                continue;
+            }
+            if (!this.ensureProgramForPass(i, settings.bufferSource(i), settings, false)) {
+                return false;
+            }
+        }
+
+        if (!this.ensureProgramForPass(IMAGE_PASS_INDEX, fragmentSource, settings, true)) {
+            return false;
+        }
+
         this.ensureGeometry();
         if (this.vaoId <= 0 || this.vboId <= 0) {
             return false;
@@ -233,6 +380,7 @@ public class GlslShaderRuntime {
         int previousProgram = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
         int previousVao = GL11.glGetInteger(GL30.GL_VERTEX_ARRAY_BINDING);
         int previousArrayBuffer = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
+        int previousFramebuffer = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
 
         int previousActiveTexture = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
         int[] previousTextureBindings = new int[CHANNEL_COUNT];
@@ -242,6 +390,51 @@ public class GlslShaderRuntime {
         try {
             graphics.flush();
 
+            for (int i = 0; i < CHANNEL_COUNT; i++) {
+                GL13.glActiveTexture(GL13.GL_TEXTURE0 + i);
+                previousTextureBindings[i] = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+            }
+
+            int missingTextureId = minecraft.getTextureManager().getTexture(MissingTextureAtlasSprite.getLocation()).getId();
+            ChannelTextureState[] externalChannelTextureStates = this.resolveExternalChannelTextureStates(minecraft, settings, missingTextureId);
+            this.ensureBufferTargets(areaWidthPx, areaHeightPx);
+
+            for (int passIndex = 0; passIndex < BUFFER_PASS_COUNT; passIndex++) {
+                if (!activeBufferPasses[passIndex]) {
+                    continue;
+                }
+
+                ProgramState program = this.passPrograms_FancyMenu[passIndex];
+                BufferTargetState target = this.bufferTargets_FancyMenu[passIndex];
+                this.bindBufferPassTarget(target);
+
+                GL11.glViewport(0, 0, areaWidthPx, areaHeightPx);
+                RenderSystem.disableBlend();
+
+                GL20.glUseProgram(program.programId);
+                GL30.glBindVertexArray(this.vaoId);
+                GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, this.vboId);
+
+                ChannelTextureState[] routedChannels = this.resolveRoutedChannelStates(
+                        settings.routingForPass(passIndex),
+                        externalChannelTextureStates,
+                        activeBufferPasses,
+                        missingTextureId
+                );
+                this.bindChannelTextures(routedChannels);
+
+                this.activeUniformProgram_FancyMenu = program;
+                this.uploadUniforms(minecraft, window, settings, partialTick,
+                        areaX, areaY, areaWidth, areaHeight,
+                        0, 0, areaWidthPx, areaHeightPx, 0,
+                        screenWidthPx, screenHeightPx, routedChannels);
+                GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, 6);
+                this.activeUniformProgram_FancyMenu = null;
+
+                this.swapBufferTargetTextures(target);
+            }
+
+            GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, previousFramebuffer);
             GL11.glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
 
             if (settings.enableBlend()) {
@@ -251,30 +444,36 @@ public class GlslShaderRuntime {
                 RenderSystem.disableBlend();
             }
 
-            GL20.glUseProgram(this.programId);
+            ProgramState imageProgram = this.passPrograms_FancyMenu[IMAGE_PASS_INDEX];
+            GL20.glUseProgram(imageProgram.programId);
             GL30.glBindVertexArray(this.vaoId);
             GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, this.vboId);
 
-            int missingTextureId = minecraft.getTextureManager().getTexture(MissingTextureAtlasSprite.getLocation()).getId();
-            ChannelTextureState[] channelTextureStates = this.resolveChannelTextureStates(minecraft, settings, missingTextureId);
-            for (int i = 0; i < CHANNEL_COUNT; i++) {
-                GL13.glActiveTexture(GL13.GL_TEXTURE0 + i);
-                previousTextureBindings[i] = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-                GL11.glBindTexture(GL11.GL_TEXTURE_2D, channelTextureStates[i].textureId());
-            }
+            ChannelTextureState[] imageChannels = this.resolveRoutedChannelStates(
+                    settings.routingForPass(IMAGE_PASS_INDEX),
+                    externalChannelTextureStates,
+                    activeBufferPasses,
+                    missingTextureId
+            );
+            this.bindChannelTextures(imageChannels);
 
+            this.activeUniformProgram_FancyMenu = imageProgram;
             this.uploadUniforms(minecraft, window, settings, partialTick,
                     areaX, areaY, areaWidth, areaHeight,
                     areaXPx, areaYPxTop, areaWidthPx, areaHeightPx, areaYPxBottom,
-                    screenWidthPx, screenHeightPx, channelTextureStates);
-
+                    screenWidthPx, screenHeightPx, imageChannels);
             GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, 6);
+            this.activeUniformProgram_FancyMenu = null;
+
+            this.lastCompileError = null;
 
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed rendering GLSL shader.", ex);
             this.lastCompileError = "Render error: " + ex.getMessage();
             return false;
         } finally {
+            this.activeUniformProgram_FancyMenu = null;
+
             for (int i = 0; i < CHANNEL_COUNT; i++) {
                 GL13.glActiveTexture(GL13.GL_TEXTURE0 + i);
                 GL11.glBindTexture(GL11.GL_TEXTURE_2D, previousTextureBindings[i]);
@@ -284,6 +483,7 @@ public class GlslShaderRuntime {
             GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, previousArrayBuffer);
             GL30.glBindVertexArray(previousVao);
             GL20.glUseProgram(previousProgram);
+            GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, previousFramebuffer);
             GL11.glViewport(previousViewport[0], previousViewport[1], previousViewport[2], previousViewport[3]);
 
             if (blendWasEnabled) {
@@ -313,10 +513,15 @@ public class GlslShaderRuntime {
     }
 
     public void close() {
-        this.deleteProgram();
+        for (ProgramState program : this.passPrograms_FancyMenu) {
+            this.deleteProgram(program);
+            program.currentProgramKey = null;
+            program.lastFailedProgramKey = null;
+            program.lastCompileError = null;
+        }
+        this.deleteBufferTargets();
         this.deleteGeometry();
-        this.currentProgramKey = null;
-        this.lastFailedProgramKey = null;
+        this.activeUniformProgram_FancyMenu = null;
         this.lastCompileError = null;
         this.sourceMissing = false;
     }
@@ -346,50 +551,83 @@ public class GlslShaderRuntime {
         this.frameCounter++;
     }
 
-    private boolean ensureProgram(@Nullable String source, @NotNull RenderSettings settings) {
+    private boolean ensureProgramForPass(int passIndex,
+                                         @Nullable String source,
+                                         @NotNull RenderSettings settings,
+                                         boolean requiredSource) {
+
+        ProgramState state = this.passPrograms_FancyMenu[passIndex];
+        String passName = getPassName(passIndex);
 
         if (source == null || source.isBlank()) {
-            this.sourceMissing = true;
-            this.lastFailedProgramKey = null;
-            this.lastCompileError = null;
-            return false;
+            if (requiredSource) {
+                this.sourceMissing = true;
+                state.lastFailedProgramKey = null;
+                state.lastCompileError = null;
+                this.lastCompileError = passName + ": Shader source is missing.";
+                return false;
+            }
+            this.deleteProgram(state);
+            state.currentProgramKey = null;
+            state.lastFailedProgramKey = null;
+            state.lastCompileError = null;
+            return true;
         }
 
-        this.sourceMissing = false;
+        if (passIndex == IMAGE_PASS_INDEX) {
+            this.sourceMissing = false;
+        }
 
         String normalizedSource = normalizeSource(source);
         String programKey = settings.compileMode().name() + "::" + settings.forceShadertoyCompatibility() + "::" + normalizedSource;
-        if (Objects.equals(this.currentProgramKey, programKey) && this.programId > 0) {
+        if (Objects.equals(state.currentProgramKey, programKey) && state.programId > 0) {
             return true;
         }
-        if (Objects.equals(this.lastFailedProgramKey, programKey) && this.programId <= 0) {
+        if (Objects.equals(state.lastFailedProgramKey, programKey) && state.programId <= 0) {
+            if (state.lastCompileError != null && !state.lastCompileError.isBlank()) {
+                this.lastCompileError = passName + ":\n" + state.lastCompileError;
+            }
             return false;
         }
 
         List<FragmentVariant> variants = buildFragmentVariants(normalizedSource, settings.compileMode(), settings.forceShadertoyCompatibility());
         if (variants.isEmpty()) {
-            this.deleteProgram();
-            this.currentProgramKey = null;
-            this.lastFailedProgramKey = programKey;
-            this.lastCompileError = "Shader source does not contain a valid entry point.";
+            this.deleteProgram(state);
+            state.currentProgramKey = null;
+            state.lastFailedProgramKey = programKey;
+            state.lastCompileError = "Shader source does not contain a valid entry point.";
+            this.lastCompileError = passName + ":\n" + state.lastCompileError;
             return false;
         }
 
         List<String> errors = new ArrayList<>();
         for (FragmentVariant variant : variants) {
-            if (tryCompileVariant(variant, errors)) {
-                this.currentProgramKey = programKey;
-                this.lastFailedProgramKey = null;
-                this.lastCompileError = null;
+            if (this.tryCompileVariantForPass(passIndex, state, variant, errors)) {
+                state.currentProgramKey = programKey;
+                state.lastFailedProgramKey = null;
+                state.lastCompileError = null;
                 return true;
             }
         }
 
-        this.deleteProgram();
-        this.currentProgramKey = null;
-        this.lastFailedProgramKey = programKey;
-        this.lastCompileError = String.join("\n", errors);
+        this.deleteProgram(state);
+        state.currentProgramKey = null;
+        state.lastFailedProgramKey = programKey;
+        state.lastCompileError = String.join("\n", errors);
+        this.lastCompileError = passName + ":\n" + state.lastCompileError;
         return false;
+    }
+
+    @NotNull
+    private static String getPassName(int passIndex) {
+        return switch (passIndex) {
+            case 0 -> "Buffer A";
+            case 1 -> "Buffer B";
+            case 2 -> "Buffer C";
+            case 3 -> "Buffer D";
+            case IMAGE_PASS_INDEX -> "Image";
+            default -> "Pass " + passIndex;
+        };
     }
 
     @NotNull
@@ -506,7 +744,10 @@ public class GlslShaderRuntime {
         return pattern.matcher(source).find();
     }
 
-    private boolean tryCompileVariant(@NotNull FragmentVariant variant, @NotNull List<String> errors) {
+    private boolean tryCompileVariantForPass(int passIndex,
+                                             @NotNull ProgramState state,
+                                             @NotNull FragmentVariant variant,
+                                             @NotNull List<String> errors) {
         int vertex = 0;
         int fragment = 0;
         int program = 0;
@@ -528,17 +769,17 @@ public class GlslShaderRuntime {
                 throw new IllegalStateException("Program link failed:\n" + log);
             }
 
-            this.deleteProgram();
-            this.programId = program;
-            this.vertexShaderId = vertex;
-            this.fragmentShaderId = fragment;
-            this.cacheUniformLocations();
+            this.deleteProgram(state);
+            state.programId = program;
+            state.vertexShaderId = vertex;
+            state.fragmentShaderId = fragment;
+            this.cacheUniformLocations(state);
             return true;
 
         } catch (Exception ex) {
             String message = "[" + variant.label() + "] " + ex.getMessage();
             errors.add(message);
-            LOGGER.warn("[FANCYMENU] GLSL variant '{}' failed to compile/link: {}", variant.label(), ex.getMessage());
+            LOGGER.warn("[FANCYMENU] GLSL {} variant '{}' failed to compile/link: {}", getPassName(passIndex), variant.label(), ex.getMessage());
             if (program > 0) {
                 GL20.glDeleteProgram(program);
             }
@@ -570,10 +811,10 @@ public class GlslShaderRuntime {
         return shader;
     }
 
-    private void cacheUniformLocations() {
-        this.uniformLocations.clear();
+    private void cacheUniformLocations(@NotNull ProgramState state) {
+        state.uniformLocations.clear();
         for (String lookup : CACHED_UNIFORM_LOOKUPS) {
-            this.uniformLocations.put(lookup, GL20.glGetUniformLocation(this.programId, lookup));
+            state.uniformLocations.put(lookup, GL20.glGetUniformLocation(state.programId, lookup));
         }
     }
 
@@ -607,27 +848,125 @@ public class GlslShaderRuntime {
         GL30.glBindVertexArray(0);
     }
 
-    private void deleteProgram() {
-        if (this.programId > 0) {
-            if (this.vertexShaderId > 0) {
-                GL20.glDetachShader(this.programId, this.vertexShaderId);
+    private void deleteProgram(@NotNull ProgramState state) {
+        if (state.programId > 0) {
+            if (state.vertexShaderId > 0) {
+                GL20.glDetachShader(state.programId, state.vertexShaderId);
             }
-            if (this.fragmentShaderId > 0) {
-                GL20.glDetachShader(this.programId, this.fragmentShaderId);
+            if (state.fragmentShaderId > 0) {
+                GL20.glDetachShader(state.programId, state.fragmentShaderId);
             }
-            GL20.glDeleteProgram(this.programId);
+            GL20.glDeleteProgram(state.programId);
         }
-        if (this.vertexShaderId > 0) {
-            GL20.glDeleteShader(this.vertexShaderId);
+        if (state.vertexShaderId > 0) {
+            GL20.glDeleteShader(state.vertexShaderId);
         }
-        if (this.fragmentShaderId > 0) {
-            GL20.glDeleteShader(this.fragmentShaderId);
+        if (state.fragmentShaderId > 0) {
+            GL20.glDeleteShader(state.fragmentShaderId);
         }
 
-        this.programId = 0;
-        this.vertexShaderId = 0;
-        this.fragmentShaderId = 0;
-        this.uniformLocations.clear();
+        state.programId = 0;
+        state.vertexShaderId = 0;
+        state.fragmentShaderId = 0;
+        state.uniformLocations.clear();
+    }
+
+    private void deleteBufferTargets() {
+        for (BufferTargetState target : this.bufferTargets_FancyMenu) {
+            if (target.readTextureId > 0) {
+                GL11.glDeleteTextures(target.readTextureId);
+            }
+            if (target.writeTextureId > 0) {
+                GL11.glDeleteTextures(target.writeTextureId);
+            }
+            if (target.framebufferId > 0) {
+                GL30.glDeleteFramebuffers(target.framebufferId);
+            }
+            target.readTextureId = 0;
+            target.writeTextureId = 0;
+            target.framebufferId = 0;
+            target.width = 0;
+            target.height = 0;
+        }
+    }
+
+    private void ensureBufferTargets(int width, int height) {
+        if (width <= 0 || height <= 0) {
+            return;
+        }
+        for (BufferTargetState target : this.bufferTargets_FancyMenu) {
+            if (target.framebufferId <= 0) {
+                target.framebufferId = GL30.glGenFramebuffers();
+            }
+            boolean needsRecreate = target.readTextureId <= 0
+                    || target.writeTextureId <= 0
+                    || target.width != width
+                    || target.height != height;
+            if (needsRecreate) {
+                this.recreateBufferTarget(target, width, height);
+            }
+        }
+    }
+
+    private void recreateBufferTarget(@NotNull BufferTargetState target, int width, int height) {
+        if (target.readTextureId > 0) {
+            GL11.glDeleteTextures(target.readTextureId);
+        }
+        if (target.writeTextureId > 0) {
+            GL11.glDeleteTextures(target.writeTextureId);
+        }
+        target.readTextureId = this.createRenderTexture(width, height);
+        target.writeTextureId = this.createRenderTexture(width, height);
+        target.width = width;
+        target.height = height;
+        this.clearTexture(target, target.readTextureId);
+        this.clearTexture(target, target.writeTextureId);
+    }
+
+    private int createRenderTexture(int width, int height) {
+        int textureId = GL11.glGenTextures();
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
+        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, (ByteBuffer) null);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+        return textureId;
+    }
+
+    private void clearTexture(@NotNull BufferTargetState target, int textureId) {
+        int previousFramebuffer = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
+        float[] previousClearColor = new float[4];
+        GL11.glGetFloatv(GL11.GL_COLOR_CLEAR_VALUE, previousClearColor);
+
+        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, target.framebufferId);
+        GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, textureId, 0);
+        int status = GL30.glCheckFramebufferStatus(GL30.GL_FRAMEBUFFER);
+        if (status != GL30.GL_FRAMEBUFFER_COMPLETE) {
+            GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, previousFramebuffer);
+            throw new IllegalStateException("Buffer framebuffer incomplete: " + status);
+        }
+        GL11.glClearColor(0.0F, 0.0F, 0.0F, 0.0F);
+        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
+
+        GL11.glClearColor(previousClearColor[0], previousClearColor[1], previousClearColor[2], previousClearColor[3]);
+        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, previousFramebuffer);
+    }
+
+    private void bindBufferPassTarget(@NotNull BufferTargetState target) {
+        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, target.framebufferId);
+        GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, target.writeTextureId, 0);
+        int status = GL30.glCheckFramebufferStatus(GL30.GL_FRAMEBUFFER);
+        if (status != GL30.GL_FRAMEBUFFER_COMPLETE) {
+            throw new IllegalStateException("Buffer framebuffer incomplete: " + status);
+        }
+    }
+
+    private void swapBufferTargetTextures(@NotNull BufferTargetState target) {
+        int temp = target.readTextureId;
+        target.readTextureId = target.writeTextureId;
+        target.writeTextureId = temp;
     }
 
     private void deleteGeometry() {
@@ -642,14 +981,65 @@ public class GlslShaderRuntime {
     }
 
     @NotNull
-    private ChannelTextureState[] resolveChannelTextureStates(@NotNull Minecraft minecraft,
-                                                              @NotNull RenderSettings settings,
-                                                              int fallbackTextureId) {
+    private ChannelTextureState[] resolveExternalChannelTextureStates(@NotNull Minecraft minecraft,
+                                                                      @NotNull RenderSettings settings,
+                                                                      int fallbackTextureId) {
         ChannelTextureState[] states = new ChannelTextureState[CHANNEL_COUNT];
         for (int i = 0; i < CHANNEL_COUNT; i++) {
             states[i] = this.resolveChannelTextureState(minecraft, settings.channelSupplier(i), fallbackTextureId);
         }
         return states;
+    }
+
+    @NotNull
+    private ChannelTextureState[] resolveRoutedChannelStates(@NotNull ChannelRouting routing,
+                                                             @NotNull ChannelTextureState[] externalChannelStates,
+                                                             @NotNull boolean[] activeBufferPasses,
+                                                             int fallbackTextureId) {
+        ChannelTextureState[] states = new ChannelTextureState[CHANNEL_COUNT];
+        for (int i = 0; i < CHANNEL_COUNT; i++) {
+            states[i] = this.resolveChannelInputState(routing.channelForIndex(i), externalChannelStates, activeBufferPasses, fallbackTextureId);
+        }
+        return states;
+    }
+
+    @NotNull
+    private ChannelTextureState resolveChannelInputState(@NotNull ChannelInput input,
+                                                         @NotNull ChannelTextureState[] externalChannelStates,
+                                                         @NotNull boolean[] activeBufferPasses,
+                                                         int fallbackTextureId) {
+        return switch (input) {
+            case RESOURCE0 -> externalChannelStates[0];
+            case RESOURCE1 -> externalChannelStates[1];
+            case RESOURCE2 -> externalChannelStates[2];
+            case RESOURCE3 -> externalChannelStates[3];
+            case BUFFER_A, BUFFER_B, BUFFER_C, BUFFER_D -> this.resolveBufferChannelState(input.bufferPassIndex(), activeBufferPasses, fallbackTextureId);
+            case NONE -> new ChannelTextureState(fallbackTextureId, 0.0F, 0.0F);
+        };
+    }
+
+    @NotNull
+    private ChannelTextureState resolveBufferChannelState(int bufferPassIndex,
+                                                          @NotNull boolean[] activeBufferPasses,
+                                                          int fallbackTextureId) {
+        if (bufferPassIndex < 0 || bufferPassIndex >= BUFFER_PASS_COUNT) {
+            return new ChannelTextureState(fallbackTextureId, 0.0F, 0.0F);
+        }
+        if (bufferPassIndex >= activeBufferPasses.length || !activeBufferPasses[bufferPassIndex]) {
+            return new ChannelTextureState(fallbackTextureId, 0.0F, 0.0F);
+        }
+        BufferTargetState target = this.bufferTargets_FancyMenu[bufferPassIndex];
+        if (target.readTextureId <= 0 || target.width <= 0 || target.height <= 0) {
+            return new ChannelTextureState(fallbackTextureId, 0.0F, 0.0F);
+        }
+        return new ChannelTextureState(target.readTextureId, target.width, target.height);
+    }
+
+    private void bindChannelTextures(@NotNull ChannelTextureState[] channelTextureStates) {
+        for (int i = 0; i < CHANNEL_COUNT; i++) {
+            GL13.glActiveTexture(GL13.GL_TEXTURE0 + i);
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, channelTextureStates[i].textureId());
+        }
     }
 
     @NotNull
@@ -877,59 +1267,68 @@ public class GlslShaderRuntime {
     }
 
     private void setUniform1f(@NotNull String name, float value) {
-        Integer location = this.uniformLocations.get(name);
+        Integer location = this.getActiveUniformLocation(name);
         if (location != null && location >= 0) {
             GL20.glUniform1f(location, value);
         }
     }
 
     private void setUniform2f(@NotNull String name, float v1, float v2) {
-        Integer location = this.uniformLocations.get(name);
+        Integer location = this.getActiveUniformLocation(name);
         if (location != null && location >= 0) {
             GL20.glUniform2f(location, v1, v2);
         }
     }
 
     private void setUniform3f(@NotNull String name, float v1, float v2, float v3) {
-        Integer location = this.uniformLocations.get(name);
+        Integer location = this.getActiveUniformLocation(name);
         if (location != null && location >= 0) {
             GL20.glUniform3f(location, v1, v2, v3);
         }
     }
 
     private void setUniform4f(@NotNull String name, float v1, float v2, float v3, float v4) {
-        Integer location = this.uniformLocations.get(name);
+        Integer location = this.getActiveUniformLocation(name);
         if (location != null && location >= 0) {
             GL20.glUniform4f(location, v1, v2, v3, v4);
         }
     }
 
     private void setUniform1i(@NotNull String name, int value) {
-        Integer location = this.uniformLocations.get(name);
+        Integer location = this.getActiveUniformLocation(name);
         if (location != null && location >= 0) {
             GL20.glUniform1i(location, value);
         }
     }
 
     private void setUniform4i(@NotNull String name, int v1, int v2, int v3, int v4) {
-        Integer location = this.uniformLocations.get(name);
+        Integer location = this.getActiveUniformLocation(name);
         if (location != null && location >= 0) {
             GL20.glUniform4i(location, v1, v2, v3, v4);
         }
     }
 
     private void setUniform1fv(@NotNull String name, @NotNull float[] values) {
-        Integer location = this.uniformLocations.get(name);
+        Integer location = this.getActiveUniformLocation(name);
         if (location != null && location >= 0) {
             GL20.glUniform1fv(location, values);
         }
     }
 
     private void setUniform3fv(@NotNull String name, @NotNull float[] values) {
-        Integer location = this.uniformLocations.get(name);
+        Integer location = this.getActiveUniformLocation(name);
         if (location != null && location >= 0) {
             GL20.glUniform3fv(location, values);
         }
+    }
+
+    @Nullable
+    private Integer getActiveUniformLocation(@NotNull String name) {
+        ProgramState state = this.activeUniformProgram_FancyMenu;
+        if (state == null) {
+            return null;
+        }
+        return state.uniformLocations.get(name);
     }
 
 }
