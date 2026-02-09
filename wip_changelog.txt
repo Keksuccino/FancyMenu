@@ -30,8 +30,8 @@
     - Fireworks, for, well, fireworks of course! Loooots of fireworks!
     - Confetti, to make confetti rain in the menu (with an option to make confetti come out of your mouse cursor on click instead of confetti rain)
     - Browser, which is what the name suggests
-      - Fully interactable browser, similar to the Browser element, but always fullscreen, auto-focused and blocks all inputs below it if set to "interactable"
-      - If "interactable" is set to false, it will not consume any inputs anymore, so you can also use it to make web-based overlays that don't block the whole screen
+      - Fully interactable browser, similar to the Browser element, but always fullscreen and auto-focused
+      - It has settings for toggling on/off mouse and keyboard event consumtion and processing, so you can configure it as interactive browser or as simple overlay in front of the normal Minecraft menu
 - Added new FancyMenu UI scales which will make it easier to find the correct UI scale for your monitor resolution
   - When the scale is set to Auto, the smallest scale is now 1.25 (was 1 before), because 1.25 looks way better on 1080p monitors (you can still manually set scale 1 if you prefer that)
 - Added shortcut to quickly open the layout editor with the last edited layout (CTRL+ALT+L) (#868)
