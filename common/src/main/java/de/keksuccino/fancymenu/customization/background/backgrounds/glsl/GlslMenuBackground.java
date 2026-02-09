@@ -66,6 +66,7 @@ public class GlslMenuBackground extends MenuBackground<GlslMenuBackground> {
     public final Property.FloatProperty timeScale = putProperty(Property.floatProperty("time_scale", 1.0F, "fancymenu.backgrounds.glsl.time_scale"));
     public final Property.BooleanProperty enableBlending = putProperty(Property.booleanProperty("enable_blending", true, "fancymenu.backgrounds.glsl.enable_blending"));
     public final Property.BooleanProperty useInput = putProperty(Property.booleanProperty("use_input", true, "fancymenu.backgrounds.glsl.use_input"));
+    public final Property.BooleanProperty mousePositionRequiresHold = putProperty(Property.booleanProperty("mouse_position_requires_hold", false, "fancymenu.backgrounds.glsl.mouse_position_requires_hold"));
     public final Property.FloatProperty opacityMultiplier = putProperty(Property.floatProperty("opacity_multiplier", 1.0F, "fancymenu.backgrounds.glsl.opacity_multiplier"));
     public final Property.BooleanProperty showCompileErrors = putProperty(Property.booleanProperty("show_compile_errors", true, "fancymenu.backgrounds.glsl.show_compile_errors"));
     public final Property<ResourceSupplier<ITexture>> iChannel0Source = putProperty(Property.resourceSupplierProperty(ITexture.class, "ichannel_0_source", null, "fancymenu.backgrounds.glsl.ichannel0_source", true, true, true, FileFilter.IMAGE_FILE_FILTER));
@@ -191,6 +192,10 @@ public class GlslMenuBackground extends MenuBackground<GlslMenuBackground> {
                 .setTooltipSupplier((m, entry) -> tooltip("fancymenu.backgrounds.glsl.use_input.desc"))
                 .setIcon(MaterialIcons.MOUSE);
 
+        this.mousePositionRequiresHold.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.backgrounds.glsl.mouse_position_requires_hold.desc"))
+                .setIcon(MaterialIcons.MOUSE);
+
         this.opacityMultiplier.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((m, entry) -> tooltip("fancymenu.backgrounds.glsl.opacity_multiplier.desc"))
                 .setIcon(MaterialIcons.PALETTE);
@@ -221,6 +226,7 @@ public class GlslMenuBackground extends MenuBackground<GlslMenuBackground> {
                         this.freezeTime.getBoolean(),
                         this.enableBlending.getBoolean(),
                         this.useInput.getBoolean(),
+                        this.mousePositionRequiresHold.getBoolean(),
                         resolvedOpacity,
                         this.iChannel0Source.get(),
                         this.iChannel1Source.get(),

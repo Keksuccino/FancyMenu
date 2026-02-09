@@ -141,6 +141,10 @@ public class GlslEditorElement extends AbstractEditorElement<GlslEditorElement, 
                 .setTooltipSupplier((menu, entry) -> tooltip("fancymenu.elements.glsl.use_input.desc"))
                 .setIcon(MaterialIcons.MOUSE);
 
+        this.element.mousePositionRequiresHold.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> tooltip("fancymenu.elements.glsl.mouse_position_requires_hold.desc"))
+                .setIcon(MaterialIcons.MOUSE);
+
         this.element.opacityMultiplier.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setTooltipSupplier((menu, entry) -> tooltip("fancymenu.elements.glsl.opacity_multiplier.desc"))
                 .setIcon(MaterialIcons.PALETTE);

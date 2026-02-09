@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.glsl;
 
 import org.jetbrains.annotations.NotNull;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.Arrays;
 
@@ -81,6 +82,34 @@ public final class GlslRuntimeEventTracker {
         GlslRuntimeEventTracker.mouseY = mouseY;
         mouseScrollTotalX += scrollDeltaX;
         mouseScrollTotalY += scrollDeltaY;
+    }
+
+    /**
+     * Reconciles tracked button states with GLFW polling.
+     *
+     * This prevents "stuck pressed" states if a callback is missed (for example when other
+     * handlers cancel flow).
+     */
+    public static synchronized void syncMouseButtonsFromWindow(long windowPointer) {
+        if (windowPointer == 0L) {
+            return;
+        }
+        for (int button = 0; button < TRACKED_MOUSE_BUTTONS; button++) {
+            boolean isPressed = GLFW.glfwGetMouseButton(windowPointer, button) == GLFW.GLFW_PRESS;
+            boolean wasPressed = MOUSE_BUTTON_STATES[button];
+            if (isPressed == wasPressed) {
+                continue;
+            }
+            MOUSE_BUTTON_STATES[button] = isPressed;
+            if (isPressed) {
+                MOUSE_CLICK_COUNTS[button]++;
+                LAST_MOUSE_CLICK_X[button] = mouseX;
+                LAST_MOUSE_CLICK_Y[button] = mouseY;
+                LAST_MOUSE_CLICK_NANOS[button] = System.nanoTime();
+            } else {
+                MOUSE_RELEASE_COUNTS[button]++;
+            }
+        }
     }
 
     public static synchronized void onKeyPressed(int keyCode, int scanCode, int modifiers, boolean repeated) {

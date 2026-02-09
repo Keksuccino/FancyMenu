@@ -3100,5 +3100,9 @@
   "fancymenu.glsl.channel_input.buffer_a": "Buffer A",
   "fancymenu.glsl.channel_input.buffer_b": "Buffer B",
   "fancymenu.glsl.channel_input.buffer_c": "Buffer C",
-  "fancymenu.glsl.channel_input.buffer_d": "Buffer D"
+  "fancymenu.glsl.channel_input.buffer_d": "Buffer D",
+  "fancymenu.backgrounds.glsl.mouse_position_requires_hold": "Update iMouse Position Only While Holding LMB: %s",
+  "fancymenu.backgrounds.glsl.mouse_position_requires_hold.desc": "Controls how iMouse.xy is updated when input is enabled.\nEnabled: iMouse.xy updates only while the left mouse button is held, then keeps the last held position.\nDisabled: iMouse.xy continuously follows cursor movement even when no mouse button is held.",
+  "fancymenu.elements.glsl.mouse_position_requires_hold": "Update iMouse Position Only While Holding LMB: %s",
+  "fancymenu.elements.glsl.mouse_position_requires_hold.desc": "Controls how iMouse.xy is updated when input is enabled.\nEnabled: iMouse.xy updates only while the left mouse button is held, then keeps the last held position.\nDisabled: iMouse.xy continuously follows cursor movement even when no mouse button is held."
 }

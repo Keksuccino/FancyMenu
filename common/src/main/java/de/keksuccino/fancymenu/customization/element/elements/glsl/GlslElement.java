@@ -51,6 +51,7 @@ public class GlslElement extends AbstractElement {
     public final Property.FloatProperty timeScale = putProperty(Property.floatProperty("time_scale", 1.0F, "fancymenu.elements.glsl.time_scale"));
     public final Property.BooleanProperty enableBlending = putProperty(Property.booleanProperty("enable_blending", true, "fancymenu.elements.glsl.enable_blending"));
     public final Property.BooleanProperty useInput = putProperty(Property.booleanProperty("use_input", true, "fancymenu.elements.glsl.use_input"));
+    public final Property.BooleanProperty mousePositionRequiresHold = putProperty(Property.booleanProperty("mouse_position_requires_hold", false, "fancymenu.elements.glsl.mouse_position_requires_hold"));
     public final Property.FloatProperty opacityMultiplier = putProperty(Property.floatProperty("opacity_multiplier", 1.0F, "fancymenu.elements.glsl.opacity_multiplier"));
     public final Property.BooleanProperty showCompileErrors = putProperty(Property.booleanProperty("show_compile_errors", true, "fancymenu.elements.glsl.show_compile_errors"));
     public final Property<ResourceSupplier<ITexture>> iChannel0Source = putProperty(Property.resourceSupplierProperty(ITexture.class, "ichannel_0_source", null, "fancymenu.elements.glsl.ichannel0_source", true, true, true, FileFilter.IMAGE_FILE_FILTER));
@@ -96,6 +97,7 @@ public class GlslElement extends AbstractElement {
                         this.freezeTime.getBoolean(),
                         this.enableBlending.getBoolean(),
                         this.useInput.getBoolean(),
+                        this.mousePositionRequiresHold.getBoolean(),
                         resolvedOpacity,
                         this.iChannel0Source.get(),
                         this.iChannel1Source.get(),

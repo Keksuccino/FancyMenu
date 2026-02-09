@@ -136,6 +136,9 @@ public class GlslShaderRuntime {
     private float lastFrameRate;
     private double lastMouseScrollTotalX;
     private double lastMouseScrollTotalY;
+    private float lastShadertoyMouseX;
+    private float lastShadertoyMouseY;
+    private boolean hasShadertoyMousePosition;
 
     public enum CompileMode {
         AUTO,
@@ -221,6 +224,7 @@ public class GlslShaderRuntime {
             boolean freezeTime,
             boolean enableBlend,
             boolean useInput,
+            boolean mousePositionRequiresHold,
             float opacity,
             @Nullable ResourceSupplier<ITexture> channel0,
             @Nullable ResourceSupplier<ITexture> channel1,
@@ -529,6 +533,9 @@ public class GlslShaderRuntime {
         this.activeUniformProgram_FancyMenu = null;
         this.lastCompileError = null;
         this.sourceMissing = false;
+        this.lastShadertoyMouseX = 0.0F;
+        this.lastShadertoyMouseY = 0.0F;
+        this.hasShadertoyMousePosition = false;
     }
 
     private void tickTime(@NotNull RenderSettings settings) {
@@ -1096,8 +1103,14 @@ public class GlslShaderRuntime {
                                 int screenHeightPx,
                                 @NotNull ChannelTextureState[] channelTextureStates) {
 
+        if (settings.useInput()) {
+            GlslRuntimeEventTracker.syncMouseButtonsFromWindow(window.getWindow());
+        }
         GlslRuntimeEventTracker.InputSnapshot input = GlslRuntimeEventTracker.snapshot();
         if (!settings.useInput()) {
+            this.lastShadertoyMouseX = 0.0F;
+            this.lastShadertoyMouseY = 0.0F;
+            this.hasShadertoyMousePosition = false;
             input = new GlslRuntimeEventTracker.InputSnapshot(
                     areaX,
                     areaY + areaHeight,
@@ -1147,9 +1160,34 @@ public class GlslShaderRuntime {
         boolean leftMouseDown = input.mouseButtonStates().length > 0 && input.mouseButtonStates()[0];
         double clickX = 0.0D;
         double clickY = 0.0D;
-        if (input.lastMouseClickX().length > 0 && input.lastMouseClickY().length > 0) {
+        boolean hasClickData = input.lastMouseClickNanos().length > 0 && input.lastMouseClickNanos()[0] > 0L;
+        if (hasClickData && input.lastMouseClickX().length > 0 && input.lastMouseClickY().length > 0) {
             clickX = (input.lastMouseClickX()[0] - areaX) * window.getGuiScale();
             clickY = (areaHeight - (input.lastMouseClickY()[0] - areaY)) * window.getGuiScale();
+        }
+
+        float iMouseX;
+        float iMouseY;
+        if (settings.mousePositionRequiresHold()) {
+            if (leftMouseDown) {
+                iMouseX = (float) localMousePxX;
+                iMouseY = (float) localMousePxYBottom;
+                this.lastShadertoyMouseX = iMouseX;
+                this.lastShadertoyMouseY = iMouseY;
+                this.hasShadertoyMousePosition = true;
+            } else if (this.hasShadertoyMousePosition) {
+                iMouseX = this.lastShadertoyMouseX;
+                iMouseY = this.lastShadertoyMouseY;
+            } else if (hasClickData) {
+                iMouseX = (float) clickX;
+                iMouseY = (float) clickY;
+            } else {
+                iMouseX = 0.0F;
+                iMouseY = 0.0F;
+            }
+        } else {
+            iMouseX = (float) localMousePxX;
+            iMouseY = (float) localMousePxYBottom;
         }
 
         double mouseScrollDeltaX = input.mouseScrollTotalX() - this.lastMouseScrollTotalX;
@@ -1179,8 +1217,8 @@ public class GlslShaderRuntime {
         setUniform1f("iFrameRate", frameRate);
         setUniform1i("iFrame", (int) Math.min(Integer.MAX_VALUE, this.frameCounter));
         setUniform4f("iMouse",
-                (float) localMousePxX,
-                (float) localMousePxYBottom,
+                iMouseX,
+                iMouseY,
                 (float) (leftMouseDown ? clickX : -Math.abs(clickX)),
                 (float) (leftMouseDown ? clickY : -Math.abs(clickY)));
         setUniform4f("iDate", now.getYear(), now.getMonthValue(), now.getDayOfMonth(), dateSeconds);
