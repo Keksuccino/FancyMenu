@@ -2900,8 +2900,6 @@
   "fancymenu.decoration_overlays.browser.desc": "A fullscreen browser.",
   "fancymenu.decoration_overlays.browser.url": "URL",
   "fancymenu.decoration_overlays.browser.url.desc": "The URL the browser overlay should load.",
-  "fancymenu.decoration_overlays.browser.interactable": "Interactable: %s",
-  "fancymenu.decoration_overlays.browser.interactable.desc": "If the user should be able to interact with the browser overlay.",
   "fancymenu.decoration_overlays.browser.hide_video_controls": "Hide Video Controls: %s",
   "fancymenu.decoration_overlays.browser.hide_video_controls.desc": "If the controls of all videos should be hidden.\nThis will probably not work in some cases.",
   "fancymenu.decoration_overlays.browser.loop_videos": "Loop Videos: %s",
@@ -2911,5 +2909,17 @@
   "fancymenu.decoration_overlays.browser.media_volume": "Audio/Video Volume",
   "fancymenu.decoration_overlays.browser.media_volume.desc": "Set the base volume of media elements like audios and videos.\nShould be a value between 0.0 (0%) and 1.0 (100%).\nThis will probably not work in some cases.",
   "fancymenu.decoration_overlays.browser.mcef_not_loaded.line_1": "MCEF is not loaded!",
-  "fancymenu.decoration_overlays.browser.mcef_not_loaded.line_2": "You need to install MCEF (mod) to use this overlay!"
+  "fancymenu.decoration_overlays.browser.mcef_not_loaded.line_2": "You need to install MCEF (mod) to use this overlay!",
+  "fancymenu.decoration_overlays.browser.consume_mouse_clicks": "Consume Mouse Clicks: %s",
+  "fancymenu.decoration_overlays.browser.consume_mouse_clicks.desc": "If mouse click events (clicked, released, dragged) should be consumed by this overlay.",
+  "fancymenu.decoration_overlays.browser.consume_mouse_scrolls": "Consume Mouse Scrolls: %s",
+  "fancymenu.decoration_overlays.browser.consume_mouse_scrolls.desc": "If mouse scroll events should be consumed by this overlay.",
+  "fancymenu.decoration_overlays.browser.consume_keyboard_presses": "Consume Keyboard Presses: %s",
+  "fancymenu.decoration_overlays.browser.consume_keyboard_presses.desc": "If keyboard events (pressed, released, charTyped) should be consumed by this overlay.",
+  "fancymenu.decoration_overlays.browser.process_mouse_clicks": "Process Mouse Clicks: %s",
+  "fancymenu.decoration_overlays.browser.process_mouse_clicks.desc": "If mouse click events (clicked, released, dragged) should be processed by the browser overlay.",
+  "fancymenu.decoration_overlays.browser.process_mouse_scrolls": "Process Mouse Scrolls: %s",
+  "fancymenu.decoration_overlays.browser.process_mouse_scrolls.desc": "If mouse scroll events should be processed by the browser overlay.",
+  "fancymenu.decoration_overlays.browser.process_keyboard_presses": "Process Keyboard Presses: %s",
+  "fancymenu.decoration_overlays.browser.process_keyboard_presses.desc": "If keyboard events (pressed, released, charTyped) should be processed by the browser overlay."
 }

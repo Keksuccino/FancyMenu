@@ -25,15 +25,15 @@ public class DecorationOverlays {
 
     public static void registerAll() {
 
+        DecorationOverlayRegistry.register(BROWSER); // Browser should be the first one, so other overlays can render in front of it
+        DecorationOverlayRegistry.register(BUDDY);
+        DecorationOverlayRegistry.register(STRING_LIGHTS);
+        DecorationOverlayRegistry.register(FIREWORKS);
         DecorationOverlayRegistry.register(SNOW);
         DecorationOverlayRegistry.register(RAIN);
         DecorationOverlayRegistry.register(FIREFLIES);
-        DecorationOverlayRegistry.register(FIREWORKS);
-        DecorationOverlayRegistry.register(STRING_LIGHTS);
         DecorationOverlayRegistry.register(LEAVES);
         DecorationOverlayRegistry.register(CONFETTI);
-        DecorationOverlayRegistry.register(BUDDY);
-        DecorationOverlayRegistry.register(BROWSER);
 
     }
 

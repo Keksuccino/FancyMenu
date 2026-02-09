@@ -42,7 +42,12 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
     private static final String FALLBACK_URL = "about:blank";
 
     public final Property.StringProperty url = putProperty(Property.stringProperty("url", "https://docs.fancymenu.net", false, true, "fancymenu.decoration_overlays.browser.url"));
-    public final Property<Boolean> interactable = putProperty(Property.booleanProperty("interactable", true, "fancymenu.decoration_overlays.browser.interactable"));
+    public final Property<Boolean> consumeMouseClicks = putProperty(Property.booleanProperty("consume_mouse_clicks", true, "fancymenu.decoration_overlays.browser.consume_mouse_clicks"));
+    public final Property<Boolean> consumeMouseScrolls = putProperty(Property.booleanProperty("consume_mouse_scrolls", true, "fancymenu.decoration_overlays.browser.consume_mouse_scrolls"));
+    public final Property<Boolean> consumeKeyboardPresses = putProperty(Property.booleanProperty("consume_keyboard_presses", true, "fancymenu.decoration_overlays.browser.consume_keyboard_presses"));
+    public final Property<Boolean> processMouseClicks = putProperty(Property.booleanProperty("process_mouse_clicks", true, "fancymenu.decoration_overlays.browser.process_mouse_clicks"));
+    public final Property<Boolean> processMouseScrolls = putProperty(Property.booleanProperty("process_mouse_scrolls", true, "fancymenu.decoration_overlays.browser.process_mouse_scrolls"));
+    public final Property<Boolean> processKeyboardPresses = putProperty(Property.booleanProperty("process_keyboard_presses", true, "fancymenu.decoration_overlays.browser.process_keyboard_presses"));
     public final Property<Boolean> hideVideoControls = putProperty(Property.booleanProperty("hide_video_controls", false, "fancymenu.decoration_overlays.browser.hide_video_controls"));
     public final Property<Boolean> loopVideos = putProperty(Property.booleanProperty("loop_videos", false, "fancymenu.decoration_overlays.browser.loop_videos"));
     public final Property<Boolean> muteMedia = putProperty(Property.booleanProperty("mute_media", false, "fancymenu.decoration_overlays.browser.mute_media"));
@@ -84,18 +89,6 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
                 }
             }
         });
-        this.interactable.addValueSetListener((oldValue, newValue) -> {
-            boolean nowInteractable = Boolean.TRUE.equals(newValue);
-            if (!nowInteractable) {
-                this.unregisterInputCaptureOverlay();
-                if (this.browser != null) {
-                    this.browser.setBrowserFocused(false);
-                }
-            } else if (this.showOverlay.tryGetNonNullElse(false) && this.attachedScreen != null && !this.isEditorScreenActive()) {
-                this.ensureInputCaptureOverlayRegistered();
-                this.autoFocusPending = true;
-            }
-        });
     }
 
     @Override
@@ -105,11 +98,35 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
                 .setIcon(MaterialIcons.OPEN_IN_BROWSER)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.browser.url.desc")));
 
-        this.interactable.buildContextMenuEntryAndAddTo(menu, this)
-                .setIcon(MaterialIcons.TOUCH_APP)
-                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.browser.interactable.desc")));
+        menu.addSeparatorEntry("separator_before_input_consumption");
 
-        menu.addSeparatorEntry("separator_after_interactable");
+        this.consumeMouseClicks.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.MOUSE)
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.browser.consume_mouse_clicks.desc")));
+
+        this.consumeMouseScrolls.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.SWIPE_VERTICAL)
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.browser.consume_mouse_scrolls.desc")));
+
+        this.consumeKeyboardPresses.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.KEYBOARD)
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.browser.consume_keyboard_presses.desc")));
+
+        menu.addSeparatorEntry("separator_between_input_consume_and_process");
+
+        this.processMouseClicks.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.MOUSE)
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.browser.process_mouse_clicks.desc")));
+
+        this.processMouseScrolls.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.SWIPE_VERTICAL)
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.browser.process_mouse_scrolls.desc")));
+
+        this.processKeyboardPresses.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.KEYBOARD)
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlays.browser.process_keyboard_presses.desc")));
+
+        menu.addSeparatorEntry("separator_after_input_consumption");
 
         this.hideVideoControls.buildContextMenuEntryAndAddTo(menu, this)
                 .setIcon(MaterialIcons.VIDEO_SETTINGS)
@@ -140,11 +157,7 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
             return;
         }
         this.ensureBrowserCreated();
-        if (this.isBrowserInteractable()) {
-            this.ensureInputCaptureOverlayRegistered();
-        } else {
-            this.unregisterInputCaptureOverlay();
-        }
+        this.ensureInputCaptureOverlayRegistered();
         if (this.autoFocusPending) {
             this.focusSelfAndBrowser();
             this.autoFocusPending = false;
@@ -318,7 +331,7 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
             wrappedBrowser.setVolume(resolvedVolume);
         }
 
-        wrappedBrowser.setInteractable(this.isBrowserInteractable());
+        wrappedBrowser.setInteractable(true);
     }
 
     private boolean isInputCaptureActive() {
@@ -334,18 +347,11 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
         return Minecraft.getInstance().screen == this.attachedScreen;
     }
 
-    private boolean isBrowserInteractable() {
-        return this.interactable.tryGetNonNullElse(true);
-    }
-
     private void ensureInputCaptureOverlayRegistered() {
         if (this.attachedScreen == null) {
             return;
         }
         if (this.isEditorScreenActive()) {
-            return;
-        }
-        if (!this.isBrowserInteractable()) {
             return;
         }
         String desiredId = this.getInstanceIdentifier();
@@ -396,97 +402,108 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
         if (!this.isInputCaptureActive()) {
             return;
         }
-        if (!this.isBrowserInteractable()) {
-            return;
-        }
         Screen screen = this.attachedScreen;
         if (screen != null && screen.getFocused() != this) {
             screen.setFocused(this);
         }
-        if (this.browser != null && this.isBrowserInteractable()) {
+        if (this.browser != null) {
             this.browser.setBrowserFocused(true);
         }
     }
 
     private boolean consumeMouseClicked(double mouseX, double mouseY, int button) {
-        if (!this.isInputCaptureActive() || !this.isBrowserInteractable()) {
+        if (!this.isInputCaptureActive()) {
             return false;
         }
-        this.focusSelfAndBrowser();
-        WrappedMCEFBrowser wrappedBrowser = this.browser;
-        if (wrappedBrowser != null) {
-            wrappedBrowser.mouseClicked(mouseX, mouseY, button);
+        if (this.processMouseClicks.tryGetNonNullElse(true)) {
+            this.focusSelfAndBrowser();
+            WrappedMCEFBrowser wrappedBrowser = this.browser;
+            if (wrappedBrowser != null) {
+                wrappedBrowser.mouseClicked(mouseX, mouseY, button);
+            }
         }
-        return true;
+        return this.consumeMouseClicks.tryGetNonNullElse(true);
     }
 
     private boolean consumeMouseReleased(double mouseX, double mouseY, int button) {
-        if (!this.isInputCaptureActive() || !this.isBrowserInteractable()) {
+        if (!this.isInputCaptureActive()) {
             return false;
         }
-        WrappedMCEFBrowser wrappedBrowser = this.browser;
-        if (wrappedBrowser != null) {
-            wrappedBrowser.mouseReleased(mouseX, mouseY, button);
+        if (this.processMouseClicks.tryGetNonNullElse(true)) {
+            WrappedMCEFBrowser wrappedBrowser = this.browser;
+            if (wrappedBrowser != null) {
+                wrappedBrowser.mouseReleased(mouseX, mouseY, button);
+            }
         }
-        return true;
+        return this.consumeMouseClicks.tryGetNonNullElse(true);
     }
 
     private boolean consumeMouseDragged(double mouseX, double mouseY, int button) {
-        if (!this.isInputCaptureActive() || !this.isBrowserInteractable()) {
+        if (!this.isInputCaptureActive()) {
             return false;
         }
-        WrappedMCEFBrowser wrappedBrowser = this.browser;
-        if (wrappedBrowser != null) {
-            wrappedBrowser.mouseMoved(mouseX, mouseY);
+        if (this.processMouseClicks.tryGetNonNullElse(true)) {
+            WrappedMCEFBrowser wrappedBrowser = this.browser;
+            if (wrappedBrowser != null) {
+                wrappedBrowser.mouseMoved(mouseX, mouseY);
+            }
         }
-        return true;
+        return this.consumeMouseClicks.tryGetNonNullElse(true);
     }
 
     private boolean consumeMouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
-        if (!this.isInputCaptureActive() || !this.isBrowserInteractable()) {
+        if (!this.isInputCaptureActive()) {
             return false;
         }
-        WrappedMCEFBrowser wrappedBrowser = this.browser;
-        if (wrappedBrowser != null) {
-            wrappedBrowser.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
+        if (this.processMouseScrolls.tryGetNonNullElse(true)) {
+            WrappedMCEFBrowser wrappedBrowser = this.browser;
+            if (wrappedBrowser != null) {
+                wrappedBrowser.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
+            }
         }
-        return true;
+        return this.consumeMouseScrolls.tryGetNonNullElse(true);
     }
 
     private boolean consumeKeyPressed(int keyCode, int scanCode, int modifiers) {
-        if (!this.isInputCaptureActive() || !this.isBrowserInteractable()) {
+        if (!this.isInputCaptureActive()) {
             return false;
         }
-        WrappedMCEFBrowser wrappedBrowser = this.browser;
-        if (wrappedBrowser != null) {
-            wrappedBrowser.setBrowserFocused(true);
-            wrappedBrowser.keyPressed(keyCode, scanCode, modifiers);
+        if (this.processKeyboardPresses.tryGetNonNullElse(true)) {
+            WrappedMCEFBrowser wrappedBrowser = this.browser;
+            if (wrappedBrowser != null) {
+                wrappedBrowser.setBrowserFocused(true);
+                wrappedBrowser.keyPressed(keyCode, scanCode, modifiers);
+            }
         }
-        return true;
+        return this.consumeKeyboardPresses.tryGetNonNullElse(true);
     }
 
     private boolean consumeKeyReleased(int keyCode, int scanCode, int modifiers) {
-        if (!this.isInputCaptureActive() || !this.isBrowserInteractable()) {
+        if (!this.isInputCaptureActive()) {
             return false;
         }
-        WrappedMCEFBrowser wrappedBrowser = this.browser;
-        if (wrappedBrowser != null) {
-            wrappedBrowser.setBrowserFocused(true);
-            wrappedBrowser.keyReleased(keyCode, scanCode, modifiers);
+        if (this.processKeyboardPresses.tryGetNonNullElse(true)) {
+            WrappedMCEFBrowser wrappedBrowser = this.browser;
+            if (wrappedBrowser != null) {
+                wrappedBrowser.setBrowserFocused(true);
+                wrappedBrowser.keyReleased(keyCode, scanCode, modifiers);
+            }
         }
-        return true;
+        return this.consumeKeyboardPresses.tryGetNonNullElse(true);
     }
 
     private boolean consumeCharTyped(char codePoint, int modifiers) {
-        if (!this.isInputCaptureActive() || !this.isBrowserInteractable()) {
+        if (!this.isInputCaptureActive()) {
             return false;
         }
-        WrappedMCEFBrowser wrappedBrowser = this.browser;
-        if (wrappedBrowser != null) {
-            wrappedBrowser.setBrowserFocused(true);
-            wrappedBrowser.charTyped(codePoint, modifiers);
+        if (this.processKeyboardPresses.tryGetNonNullElse(true)) {
+            WrappedMCEFBrowser wrappedBrowser = this.browser;
+            if (wrappedBrowser != null) {
+                wrappedBrowser.setBrowserFocused(true);
+                wrappedBrowser.charTyped(codePoint, modifiers);
+            }
         }
-        return true;
+        return this.consumeKeyboardPresses.tryGetNonNullElse(true);
     }
 
     private class InputCaptureOverlay implements Renderable, GuiEventListener {
