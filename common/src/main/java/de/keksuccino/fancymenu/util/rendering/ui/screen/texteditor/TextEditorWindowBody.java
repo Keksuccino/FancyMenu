@@ -249,10 +249,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton, UIBase.shouldBlur());
 
         this.doneButton = new ExtendedButton(this.width - this.borderRight - 100, this.height - 35, 100, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
-            if (this.isTextValid()) {
-                this.callback.accept(this.getText());
-                this.closeWindow();
-            }
+            this.triggerDoneAction();
         });
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton, UIBase.shouldBlur());
@@ -275,6 +272,13 @@ public class TextEditorWindowBody extends PiPWindowBody {
 
         this.updatePlaceholdersList();
 
+    }
+
+    protected void triggerDoneAction() {
+        if (this.isTextValid()) {
+            this.callback.accept(this.getText());
+            this.closeWindow();
+        }
     }
 
     public void updateRightClickContextMenu() {
@@ -1468,6 +1472,11 @@ public class TextEditorWindowBody extends PiPWindowBody {
         //CTRL + Y | STEP FORWARD
         if (Screen.hasControlDown() && (key.equals("y"))) {
             this.history.stepForward();
+            return true;
+        }
+        //CTRL + S | DONE
+        if (Screen.hasControlDown() && (keycode == GLFW.GLFW_KEY_S)) {
+            this.triggerDoneAction();
             return true;
         }
         //ALT + UP | MOVE LINE UP

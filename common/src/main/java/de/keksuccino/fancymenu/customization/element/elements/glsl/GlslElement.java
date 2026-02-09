@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.glsl.GlslShaderRuntime;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
+import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -35,6 +36,10 @@ public class GlslElement extends AbstractElement {
     public final Property.BooleanProperty useInput = putProperty(Property.booleanProperty("use_input", true, "fancymenu.elements.glsl.use_input"));
     public final Property.FloatProperty opacityMultiplier = putProperty(Property.floatProperty("opacity_multiplier", 1.0F, "fancymenu.elements.glsl.opacity_multiplier"));
     public final Property.BooleanProperty showCompileErrors = putProperty(Property.booleanProperty("show_compile_errors", true, "fancymenu.elements.glsl.show_compile_errors"));
+    public final Property<ResourceSupplier<ITexture>> iChannel0Source = putProperty(Property.resourceSupplierProperty(ITexture.class, "ichannel_0_source", null, "fancymenu.elements.glsl.ichannel0_source", true, true, true, FileFilter.IMAGE_FILE_FILTER));
+    public final Property<ResourceSupplier<ITexture>> iChannel1Source = putProperty(Property.resourceSupplierProperty(ITexture.class, "ichannel_1_source", null, "fancymenu.elements.glsl.ichannel1_source", true, true, true, FileFilter.IMAGE_FILE_FILTER));
+    public final Property<ResourceSupplier<ITexture>> iChannel2Source = putProperty(Property.resourceSupplierProperty(ITexture.class, "ichannel_2_source", null, "fancymenu.elements.glsl.ichannel2_source", true, true, true, FileFilter.IMAGE_FILE_FILTER));
+    public final Property<ResourceSupplier<ITexture>> iChannel3Source = putProperty(Property.resourceSupplierProperty(ITexture.class, "ichannel_3_source", null, "fancymenu.elements.glsl.ichannel3_source", true, true, true, FileFilter.IMAGE_FILE_FILTER));
 
     protected final GlslShaderRuntime shaderRuntime = new GlslShaderRuntime();
 
@@ -74,7 +79,11 @@ public class GlslElement extends AbstractElement {
                         this.freezeTime.getBoolean(),
                         this.enableBlending.getBoolean(),
                         this.useInput.getBoolean(),
-                        resolvedOpacity
+                        resolvedOpacity,
+                        this.iChannel0Source.get(),
+                        this.iChannel1Source.get(),
+                        this.iChannel2Source.get(),
+                        this.iChannel3Source.get()
                 )
         );
 

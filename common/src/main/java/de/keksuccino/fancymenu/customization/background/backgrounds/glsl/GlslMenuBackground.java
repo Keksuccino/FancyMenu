@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
+import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -46,6 +47,10 @@ public class GlslMenuBackground extends MenuBackground<GlslMenuBackground> {
     public final Property.BooleanProperty useInput = putProperty(Property.booleanProperty("use_input", true, "fancymenu.backgrounds.glsl.use_input"));
     public final Property.FloatProperty opacityMultiplier = putProperty(Property.floatProperty("opacity_multiplier", 1.0F, "fancymenu.backgrounds.glsl.opacity_multiplier"));
     public final Property.BooleanProperty showCompileErrors = putProperty(Property.booleanProperty("show_compile_errors", true, "fancymenu.backgrounds.glsl.show_compile_errors"));
+    public final Property<ResourceSupplier<ITexture>> iChannel0Source = putProperty(Property.resourceSupplierProperty(ITexture.class, "ichannel_0_source", null, "fancymenu.backgrounds.glsl.ichannel0_source", true, true, true, FileFilter.IMAGE_FILE_FILTER));
+    public final Property<ResourceSupplier<ITexture>> iChannel1Source = putProperty(Property.resourceSupplierProperty(ITexture.class, "ichannel_1_source", null, "fancymenu.backgrounds.glsl.ichannel1_source", true, true, true, FileFilter.IMAGE_FILE_FILTER));
+    public final Property<ResourceSupplier<ITexture>> iChannel2Source = putProperty(Property.resourceSupplierProperty(ITexture.class, "ichannel_2_source", null, "fancymenu.backgrounds.glsl.ichannel2_source", true, true, true, FileFilter.IMAGE_FILE_FILTER));
+    public final Property<ResourceSupplier<ITexture>> iChannel3Source = putProperty(Property.resourceSupplierProperty(ITexture.class, "ichannel_3_source", null, "fancymenu.backgrounds.glsl.ichannel3_source", true, true, true, FileFilter.IMAGE_FILE_FILTER));
 
     private final GlslShaderRuntime shaderRuntime = new GlslShaderRuntime();
 
@@ -68,7 +73,25 @@ public class GlslMenuBackground extends MenuBackground<GlslMenuBackground> {
                 .setTooltipSupplier((m, entry) -> tooltip("fancymenu.backgrounds.glsl.prefer_inline_shader_source.desc"))
                 .setIcon(MaterialIcons.SWAP_HORIZ);
 
-        menu.addSeparatorEntry("separator_after_source_selection");
+        menu.addSeparatorEntry("separator_before_channel_selection");
+
+        this.iChannel0Source.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.backgrounds.glsl.ichannel0_source.desc"))
+                .setIcon(MaterialIcons.IMAGE);
+
+        this.iChannel1Source.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.backgrounds.glsl.ichannel1_source.desc"))
+                .setIcon(MaterialIcons.IMAGE);
+
+        this.iChannel2Source.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.backgrounds.glsl.ichannel2_source.desc"))
+                .setIcon(MaterialIcons.IMAGE);
+
+        this.iChannel3Source.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.backgrounds.glsl.ichannel3_source.desc"))
+                .setIcon(MaterialIcons.IMAGE);
+
+        menu.addSeparatorEntry("separator_after_channel_selection");
 
         this.addCycleContextMenuEntryTo(menu,
                         "compile_mode",
@@ -132,7 +155,11 @@ public class GlslMenuBackground extends MenuBackground<GlslMenuBackground> {
                         this.freezeTime.getBoolean(),
                         this.enableBlending.getBoolean(),
                         this.useInput.getBoolean(),
-                        resolvedOpacity
+                        resolvedOpacity,
+                        this.iChannel0Source.get(),
+                        this.iChannel1Source.get(),
+                        this.iChannel2Source.get(),
+                        this.iChannel3Source.get()
                 )
         );
 

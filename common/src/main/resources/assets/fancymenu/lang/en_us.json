@@ -2981,5 +2981,21 @@
   "fancymenu.elements.glsl.enable_blending.desc": "Enables alpha blending while rendering this shader element.\nDisable for fully opaque shaders or when debugging blending artifacts.",
   "fancymenu.elements.glsl.use_input.desc": "If enabled, input-related uniforms are updated from live mouse/keyboard/scroll events.\nIf disabled, input uniforms are reset to neutral values.",
   "fancymenu.elements.glsl.opacity_multiplier.desc": "Additional opacity multiplier for this shader element.\nFinal alpha = element opacity x this multiplier (clamped to 0.0-1.0).",
-  "fancymenu.elements.glsl.show_compile_errors.desc": "Shows shader compile/link errors inside the element area.\nDisable if you want to hide diagnostics in production layouts."
+  "fancymenu.elements.glsl.show_compile_errors.desc": "Shows shader compile/link errors inside the element area.\nDisable if you want to hide diagnostics in production layouts.",
+  "fancymenu.backgrounds.glsl.ichannel0_source": "iChannel0 Resource",
+  "fancymenu.backgrounds.glsl.ichannel1_source": "iChannel1 Resource",
+  "fancymenu.backgrounds.glsl.ichannel2_source": "iChannel2 Resource",
+  "fancymenu.backgrounds.glsl.ichannel3_source": "iChannel3 Resource",
+  "fancymenu.backgrounds.glsl.ichannel0_source.desc": "Optional texture input for shader uniform iChannel0.\nWorks in Shadertoy and direct fragment shaders.\nAccepts local files, web URLs, and resource locations.\nIf missing or not loaded, FancyMenu binds a fallback texture and iChannelResolution[0] becomes 0.",
+  "fancymenu.backgrounds.glsl.ichannel1_source.desc": "Optional texture input for shader uniform iChannel1.\nWorks in Shadertoy and direct fragment shaders.\nAccepts local files, web URLs, and resource locations.\nIf missing or not loaded, FancyMenu binds a fallback texture and iChannelResolution[1] becomes 0.",
+  "fancymenu.backgrounds.glsl.ichannel2_source.desc": "Optional texture input for shader uniform iChannel2.\nWorks in Shadertoy and direct fragment shaders.\nAccepts local files, web URLs, and resource locations.\nIf missing or not loaded, FancyMenu binds a fallback texture and iChannelResolution[2] becomes 0.",
+  "fancymenu.backgrounds.glsl.ichannel3_source.desc": "Optional texture input for shader uniform iChannel3.\nWorks in Shadertoy and direct fragment shaders.\nAccepts local files, web URLs, and resource locations.\nIf missing or not loaded, FancyMenu binds a fallback texture and iChannelResolution[3] becomes 0.",
+  "fancymenu.elements.glsl.ichannel0_source": "iChannel0 Resource",
+  "fancymenu.elements.glsl.ichannel1_source": "iChannel1 Resource",
+  "fancymenu.elements.glsl.ichannel2_source": "iChannel2 Resource",
+  "fancymenu.elements.glsl.ichannel3_source": "iChannel3 Resource",
+  "fancymenu.elements.glsl.ichannel0_source.desc": "Optional texture input for shader uniform iChannel0.\nWorks in Shadertoy and direct fragment shaders.\nAccepts local files, web URLs, and resource locations.\nIf missing or not loaded, FancyMenu binds a fallback texture and iChannelResolution[0] becomes 0.",
+  "fancymenu.elements.glsl.ichannel1_source.desc": "Optional texture input for shader uniform iChannel1.\nWorks in Shadertoy and direct fragment shaders.\nAccepts local files, web URLs, and resource locations.\nIf missing or not loaded, FancyMenu binds a fallback texture and iChannelResolution[1] becomes 0.",
+  "fancymenu.elements.glsl.ichannel2_source.desc": "Optional texture input for shader uniform iChannel2.\nWorks in Shadertoy and direct fragment shaders.\nAccepts local files, web URLs, and resource locations.\nIf missing or not loaded, FancyMenu binds a fallback texture and iChannelResolution[2] becomes 0.",
+  "fancymenu.elements.glsl.ichannel3_source.desc": "Optional texture input for shader uniform iChannel3.\nWorks in Shadertoy and direct fragment shaders.\nAccepts local files, web URLs, and resource locations.\nIf missing or not loaded, FancyMenu binds a fallback texture and iChannelResolution[3] becomes 0."
 }

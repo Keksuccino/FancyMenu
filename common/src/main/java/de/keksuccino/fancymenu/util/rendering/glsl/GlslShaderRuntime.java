@@ -3,9 +3,12 @@ package de.keksuccino.fancymenu.util.rendering.glsl;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -146,14 +149,31 @@ public class GlslShaderRuntime {
             boolean freezeTime,
             boolean enableBlend,
             boolean useInput,
-            float opacity
+            float opacity,
+            @Nullable ResourceSupplier<ITexture> channel0,
+            @Nullable ResourceSupplier<ITexture> channel1,
+            @Nullable ResourceSupplier<ITexture> channel2,
+            @Nullable ResourceSupplier<ITexture> channel3
     ) {
+        @Nullable
+        public ResourceSupplier<ITexture> channelSupplier(int index) {
+            return switch (index) {
+                case 0 -> this.channel0;
+                case 1 -> this.channel1;
+                case 2 -> this.channel2;
+                case 3 -> this.channel3;
+                default -> null;
+            };
+        }
     }
 
     private record UniformDefinition(@NotNull String name, @NotNull String declaration) {
     }
 
     private record FragmentVariant(@NotNull String label, @NotNull String source) {
+    }
+
+    private record ChannelTextureState(int textureId, float resolutionX, float resolutionY) {
     }
 
     public boolean render(@NotNull GuiGraphics graphics,
@@ -236,16 +256,17 @@ public class GlslShaderRuntime {
             GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, this.vboId);
 
             int missingTextureId = minecraft.getTextureManager().getTexture(MissingTextureAtlasSprite.getLocation()).getId();
+            ChannelTextureState[] channelTextureStates = this.resolveChannelTextureStates(minecraft, settings, missingTextureId);
             for (int i = 0; i < CHANNEL_COUNT; i++) {
                 GL13.glActiveTexture(GL13.GL_TEXTURE0 + i);
                 previousTextureBindings[i] = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-                GL11.glBindTexture(GL11.GL_TEXTURE_2D, missingTextureId);
+                GL11.glBindTexture(GL11.GL_TEXTURE_2D, channelTextureStates[i].textureId());
             }
 
             this.uploadUniforms(minecraft, window, settings, partialTick,
                     areaX, areaY, areaWidth, areaHeight,
                     areaXPx, areaYPxTop, areaWidthPx, areaHeightPx, areaYPxBottom,
-                    screenWidthPx, screenHeightPx);
+                    screenWidthPx, screenHeightPx, channelTextureStates);
 
             GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, 6);
 
@@ -620,6 +641,47 @@ public class GlslShaderRuntime {
         }
     }
 
+    @NotNull
+    private ChannelTextureState[] resolveChannelTextureStates(@NotNull Minecraft minecraft,
+                                                              @NotNull RenderSettings settings,
+                                                              int fallbackTextureId) {
+        ChannelTextureState[] states = new ChannelTextureState[CHANNEL_COUNT];
+        for (int i = 0; i < CHANNEL_COUNT; i++) {
+            states[i] = this.resolveChannelTextureState(minecraft, settings.channelSupplier(i), fallbackTextureId);
+        }
+        return states;
+    }
+
+    @NotNull
+    private ChannelTextureState resolveChannelTextureState(@NotNull Minecraft minecraft,
+                                                           @Nullable ResourceSupplier<ITexture> supplier,
+                                                           int fallbackTextureId) {
+        if (supplier == null) {
+            return new ChannelTextureState(fallbackTextureId, 0.0F, 0.0F);
+        }
+
+        ITexture texture = supplier.get();
+        if (texture == null || !texture.isReady()) {
+            return new ChannelTextureState(fallbackTextureId, 0.0F, 0.0F);
+        }
+
+        ResourceLocation location = texture.getResourceLocation();
+        if (location == null) {
+            return new ChannelTextureState(fallbackTextureId, 0.0F, 0.0F);
+        }
+
+        int textureId;
+        try {
+            textureId = minecraft.getTextureManager().getTexture(location).getId();
+        } catch (Exception ex) {
+            return new ChannelTextureState(fallbackTextureId, 0.0F, 0.0F);
+        }
+
+        float width = Math.max(0.0F, texture.getWidth());
+        float height = Math.max(0.0F, texture.getHeight());
+        return new ChannelTextureState(textureId, width, height);
+    }
+
     private void uploadUniforms(@NotNull Minecraft minecraft,
                                 @NotNull Window window,
                                 @NotNull RenderSettings settings,
@@ -634,7 +696,8 @@ public class GlslShaderRuntime {
                                 int areaHeightPx,
                                 int areaYPxBottom,
                                 int screenWidthPx,
-                                int screenHeightPx) {
+                                int screenHeightPx,
+                                @NotNull ChannelTextureState[] channelTextureStates) {
 
         GlslRuntimeEventTracker.InputSnapshot input = GlslRuntimeEventTracker.snapshot();
         if (!settings.useInput()) {
@@ -732,12 +795,14 @@ public class GlslShaderRuntime {
                 (float) this.accumulatedTimeSeconds,
                 (float) this.accumulatedTimeSeconds
         };
-        float[] iChannelResolution = new float[]{
-                areaWidthPx, areaHeightPx, 1.0F,
-                0.0F, 0.0F, 0.0F,
-                0.0F, 0.0F, 0.0F,
-                0.0F, 0.0F, 0.0F
-        };
+        float[] iChannelResolution = new float[CHANNEL_COUNT * 3];
+        for (int i = 0; i < CHANNEL_COUNT; i++) {
+            int baseIndex = i * 3;
+            ChannelTextureState state = channelTextureStates[i];
+            iChannelResolution[baseIndex] = state.resolutionX();
+            iChannelResolution[baseIndex + 1] = state.resolutionY();
+            iChannelResolution[baseIndex + 2] = (state.resolutionX() > 0.0F && state.resolutionY() > 0.0F) ? 1.0F : 0.0F;
+        }
         setUniform1fv("iChannelTime[0]", iChannelTime);
         setUniform3fv("iChannelResolution[0]", iChannelResolution);
 

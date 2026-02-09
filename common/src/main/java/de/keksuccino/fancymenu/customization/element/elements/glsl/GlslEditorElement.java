@@ -40,7 +40,25 @@ public class GlslEditorElement extends AbstractEditorElement<GlslEditorElement, 
                 .setTooltipSupplier((menu, entry) -> tooltip("fancymenu.elements.glsl.prefer_inline_shader_source.desc"))
                 .setIcon(MaterialIcons.SWAP_HORIZ);
 
-        this.rightClickMenu.addSeparatorEntry("separator_after_source_selection");
+        this.rightClickMenu.addSeparatorEntry("separator_before_channel_selection");
+
+        this.element.iChannel0Source.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> tooltip("fancymenu.elements.glsl.ichannel0_source.desc"))
+                .setIcon(MaterialIcons.IMAGE);
+
+        this.element.iChannel1Source.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> tooltip("fancymenu.elements.glsl.ichannel1_source.desc"))
+                .setIcon(MaterialIcons.IMAGE);
+
+        this.element.iChannel2Source.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> tooltip("fancymenu.elements.glsl.ichannel2_source.desc"))
+                .setIcon(MaterialIcons.IMAGE);
+
+        this.element.iChannel3Source.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> tooltip("fancymenu.elements.glsl.ichannel3_source.desc"))
+                .setIcon(MaterialIcons.IMAGE);
+
+        this.rightClickMenu.addSeparatorEntry("separator_after_channel_selection");
 
         this.addCycleContextMenuEntryTo(this.rightClickMenu,
                         "compile_mode",
