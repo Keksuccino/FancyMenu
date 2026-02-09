@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.button.custombutt
 import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorWindowBody;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetEditorElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.util.input.TextValidators;
@@ -62,6 +63,7 @@ public class ButtonEditorElement<E extends ButtonEditorElement<?, ?>, N extends 
         this.rightClickMenu.addSeparatorEntry("button_separator_1");
 
         this.addTextureOptions(isButton, isSlider);
+        this.addIconTextureOptions(isButton);
 
         this.addSliderTextureOptionsForTemplateMode();
 
@@ -311,6 +313,41 @@ public class ButtonEditorElement<E extends ButtonEditorElement<?, ?>, N extends 
         this.element.nineSliceBorderY.buildContextMenuEntryAndAddTo(buttonBackgroundMenu, this)
                 .setIcon(MaterialIcons.BORDER_VERTICAL);
 
+    }
+
+    protected void addIconTextureOptions(boolean isButton) {
+        if (!isButton) return;
+
+        ContextMenu buttonIconMenu = new ContextMenu();
+        this.rightClickMenu.addSubMenuEntry("button_icon", Component.translatable("fancymenu.elements.buttons.buttonicon"), buttonIconMenu)
+                .setIcon(MaterialIcons.IMAGE)
+                .setStackable(true)
+                .addIsVisibleSupplier((menu, entry) -> !(this.element instanceof VanillaWidgetElement))
+                .addIsVisibleSupplier((menu, entry) -> !this.element.isTemplate || (this.element.templateShareWith == ButtonElement.TemplateSharing.BUTTONS));
+
+        this.addImageResourceChooserContextMenuEntryTo(buttonIconMenu, "normal_icon_texture",
+                        this.selfClass(),
+                        null,
+                        consumes -> consumes.element.iconTextureNormal,
+                        (buttonEditorElement, iTextureResourceSupplier) -> buttonEditorElement.element.iconTextureNormal = iTextureResourceSupplier,
+                        Component.translatable("fancymenu.elements.buttons.buttonicon.normal"), true, null, true, true, true)
+                .setIcon(MaterialIcons.IMAGE);
+
+        this.addImageResourceChooserContextMenuEntryTo(buttonIconMenu, "hover_icon_texture",
+                        this.selfClass(),
+                        null,
+                        consumes -> consumes.element.iconTextureHover,
+                        (buttonEditorElement, iTextureResourceSupplier) -> buttonEditorElement.element.iconTextureHover = iTextureResourceSupplier,
+                        Component.translatable("fancymenu.elements.buttons.buttonicon.hover"), true, null, true, true, true)
+                .setIcon(MaterialIcons.IMAGE);
+
+        this.addImageResourceChooserContextMenuEntryTo(buttonIconMenu, "inactive_icon_texture",
+                        this.selfClass(),
+                        null,
+                        consumes -> consumes.element.iconTextureInactive,
+                        (buttonEditorElement, iTextureResourceSupplier) -> buttonEditorElement.element.iconTextureInactive = iTextureResourceSupplier,
+                        Component.translatable("fancymenu.elements.buttons.buttonicon.inactive"), true, null, true, true, true)
+                .setIcon(MaterialIcons.IMAGE);
     }
 
     protected void addSliderTextureOptionsForTemplateMode() {

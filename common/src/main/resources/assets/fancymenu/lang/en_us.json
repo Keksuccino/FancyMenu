@@ -2955,5 +2955,9 @@
   "fancymenu.elements.glsl.use_input": "Pass Input Events To Shader: %s",
   "fancymenu.elements.glsl.opacity_multiplier": "Opacity Multiplier",
   "fancymenu.elements.glsl.show_compile_errors": "Show Compile Errors: %s",
-  "fancymenu.elements.glsl.error.no_source": "No shader source set. Choose a shader file or inline shader text."
+  "fancymenu.elements.glsl.error.no_source": "No shader source set. Choose a shader file or inline shader text.",
+  "fancymenu.elements.buttons.buttonicon": "Button Icon Textures",
+  "fancymenu.elements.buttons.buttonicon.normal": "Normal Icon",
+  "fancymenu.elements.buttons.buttonicon.hover": "Hover Icon",
+  "fancymenu.elements.buttons.buttonicon.inactive": "Inactive Icon"
 }

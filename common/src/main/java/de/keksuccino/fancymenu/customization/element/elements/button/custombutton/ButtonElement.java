@@ -60,6 +60,9 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public ResourceSupplier<ITexture> backgroundTextureNormal;
     public ResourceSupplier<ITexture> backgroundTextureHover;
     public ResourceSupplier<ITexture> backgroundTextureInactive;
+    public ResourceSupplier<ITexture> iconTextureNormal;
+    public ResourceSupplier<ITexture> iconTextureHover;
+    public ResourceSupplier<ITexture> iconTextureInactive;
     public boolean underlineLabelOnHover = false;
     public boolean transparentBackground = false;
     public boolean restartBackgroundAnimationsOnHover = true;
@@ -380,6 +383,9 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         RenderableResource backNormal = null;
         RenderableResource backHover = null;
         RenderableResource backInactive = null;
+        RenderableResource iconNormal = null;
+        RenderableResource iconHover = null;
+        RenderableResource iconInactive = null;
         boolean transparentBackground = this.getPropertySource().transparentBackground;
         RenderableResource transparentResource = null;
 
@@ -394,6 +400,18 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         //Inactive
         if (this.getPropertySource().backgroundTextureInactive != null) {
             backInactive = this.getPropertySource().backgroundTextureInactive.get();
+        }
+        //Icon Normal
+        if (this.getPropertySource().iconTextureNormal != null) {
+            iconNormal = this.getPropertySource().iconTextureNormal.get();
+        }
+        //Icon Hover
+        if (this.getPropertySource().iconTextureHover != null) {
+            iconHover = this.getPropertySource().iconTextureHover.get();
+        }
+        //Icon Inactive
+        if (this.getPropertySource().iconTextureInactive != null) {
+            iconInactive = this.getPropertySource().iconTextureInactive.get();
         }
         if (transparentBackground && !(this.getWidget() instanceof CustomizableSlider)) {
             transparentResource = PngTexture.FULLY_TRANSPARENT_PNG_TEXTURE_SUPPLIER.get();
@@ -416,6 +434,11 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
             w.setCustomBackgroundHoverFancyMenu(backHover);
             w.setCustomBackgroundInactiveFancyMenu(backInactive);
             w.setCustomBackgroundResetBehaviorFancyMenu(this.getPropertySource().restartBackgroundAnimationsOnHover ? CustomizableWidget.CustomBackgroundResetBehavior.RESET_ON_HOVER : CustomizableWidget.CustomBackgroundResetBehavior.RESET_NEVER);
+        }
+        if (this.getWidget() instanceof ExtendedButton b) {
+            b.setIconNormal(iconNormal);
+            b.setIconHover(iconHover);
+            b.setIconInactive(iconInactive);
         }
 
         //-------------------------------------

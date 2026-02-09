@@ -81,6 +81,12 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
         element.backgroundTextureInactive = deserializeImageResourceSupplier(serialized.getValue("background_texture_inactive"));
 
+        element.iconTextureNormal = deserializeImageResourceSupplier(serialized.getValue("iconnormal"));
+
+        element.iconTextureHover = deserializeImageResourceSupplier(serialized.getValue("iconhovered"));
+
+        element.iconTextureInactive = deserializeImageResourceSupplier(serialized.getValue("icon_texture_inactive"));
+
         element.underlineLabelOnHover = deserializeBoolean(element.underlineLabelOnHover, serialized.getValue("underline_label_on_hover"));
 
         element.transparentBackground = deserializeBoolean(element.transparentBackground, serialized.getValue("transparent_background"));
@@ -135,6 +141,15 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         }
         if (element.backgroundTextureInactive != null) {
             serializeTo.putProperty("background_texture_inactive", element.backgroundTextureInactive.getSourceWithPrefix());
+        }
+        if (element.iconTextureNormal != null) {
+            serializeTo.putProperty("iconnormal", element.iconTextureNormal.getSourceWithPrefix());
+        }
+        if (element.iconTextureHover != null) {
+            serializeTo.putProperty("iconhovered", element.iconTextureHover.getSourceWithPrefix());
+        }
+        if (element.iconTextureInactive != null) {
+            serializeTo.putProperty("icon_texture_inactive", element.iconTextureInactive.getSourceWithPrefix());
         }
         serializeTo.putProperty("underline_label_on_hover", "" + element.underlineLabelOnHover);
         serializeTo.putProperty("transparent_background", "" + element.transparentBackground);

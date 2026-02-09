@@ -123,6 +123,15 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
         if (e.backgroundTextureInactive != null) {
             stack.backgroundTextureInactive = e.backgroundTextureInactive;
         }
+        if (e.iconTextureNormal != null) {
+            stack.iconTextureNormal = e.iconTextureNormal;
+        }
+        if (e.iconTextureHover != null) {
+            stack.iconTextureHover = e.iconTextureHover;
+        }
+        if (e.iconTextureInactive != null) {
+            stack.iconTextureInactive = e.iconTextureInactive;
+        }
         if (e.underlineLabelOnHover) {
             stack.underlineLabelOnHover = true;
         }
