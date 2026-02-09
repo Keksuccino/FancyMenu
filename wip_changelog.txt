@@ -120,6 +120,7 @@
   - You can now set a base color for the label to change its default (white) color (without setting a custom label text)
   - There's support for setting the label text scale now
   - Both elements now let you toggle on/off the text shadow of labels
+- The "Button" element now supports setting a button icon texture (gets rendered after the background and before the label; supports normal/hover/inactive icon variations)
 - The file browser screens (choose/save file) got a little glow-up
   - They have a new set of icons and show different icons for audio, video, image and text files now
   - There is a Search bar now to search for files
@@ -174,6 +175,7 @@
   - Move Line Up/Down: Alt + Up/Down
   - Go To Start/End: Ctrl + Home / Ctrl + End
   - Go To Line: Ctrl + G (opens input box -> enter number)
+  - Pressing CTRL+S now counts as clicking the Done button
 
 ### Breaking Changes
 
