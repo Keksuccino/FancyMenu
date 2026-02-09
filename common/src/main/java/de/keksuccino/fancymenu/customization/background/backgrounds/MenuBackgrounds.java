@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.background.backgrounds;
 
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundRegistry;
 import de.keksuccino.fancymenu.customization.background.backgrounds.color.ColorMenuBackgroundBuilder;
+import de.keksuccino.fancymenu.customization.background.backgrounds.glsl.GlslMenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageMenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.backgrounds.panorama.PanoramaMenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.backgrounds.slideshow.SlideshowMenuBackgroundBuilder;
@@ -13,6 +14,7 @@ public class MenuBackgrounds {
     public static final SlideshowMenuBackgroundBuilder SLIDESHOW = new SlideshowMenuBackgroundBuilder();
     public static final PanoramaMenuBackgroundBuilder PANORAMA = new PanoramaMenuBackgroundBuilder();
     public static final ColorMenuBackgroundBuilder COLOR = new ColorMenuBackgroundBuilder();
+    public static final GlslMenuBackgroundBuilder GLSL = new GlslMenuBackgroundBuilder();
     public static final MCEFVideoMenuBackgroundBuilder VIDEO_MCEF = new MCEFVideoMenuBackgroundBuilder();
 
     public static void registerAll() {
@@ -21,6 +23,7 @@ public class MenuBackgrounds {
         MenuBackgroundRegistry.register(COLOR);
         MenuBackgroundRegistry.register(PANORAMA);
         MenuBackgroundRegistry.register(IMAGE);
+        MenuBackgroundRegistry.register(GLSL);
         MenuBackgroundRegistry.register(SLIDESHOW);
         MenuBackgroundRegistry.register(VIDEO_MCEF);
 

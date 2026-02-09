@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.customization.element.elements.button.custombutto
 import de.keksuccino.fancymenu.customization.element.elements.checkbox.CheckboxElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.cursor.CursorElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.dragger.DraggerElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.glsl.GlslElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.image.ImageElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.inputfield.InputFieldElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.item.ItemElementBuilder;
@@ -38,6 +39,7 @@ public class Elements {
     public static final PlayerEntityElementBuilder PLAYER_ENTITY_V1 = new PlayerEntityElementBuilder();
     public static final de.keksuccino.fancymenu.customization.element.elements.playerentity.PlayerEntityElementBuilder PLAYER_ENTITY_V2 = new de.keksuccino.fancymenu.customization.element.elements.playerentity.PlayerEntityElementBuilder();
     public static final ImageElementBuilder IMAGE = new ImageElementBuilder();
+    public static final GlslElementBuilder GLSL_SHADER = new GlslElementBuilder();
     public static final JsonModelElementBuilder JSON_MODEL = new JsonModelElementBuilder();
     public static final SplashTextElementBuilder SPLASH_TEXT = new SplashTextElementBuilder();
     public static final SlideshowElementBuilder SLIDESHOW = new SlideshowElementBuilder();
@@ -68,6 +70,7 @@ public class Elements {
             ElementRegistry.register(PLAYER_ENTITY_V2);
         }
         ElementRegistry.register(IMAGE);
+        ElementRegistry.register(GLSL_SHADER);
         ElementRegistry.register(JSON_MODEL);
         ElementRegistry.register(SPLASH_TEXT);
         ElementRegistry.register(SLIDESHOW);

@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.input.ClicksPerSecondTracker;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
+import de.keksuccino.fancymenu.util.rendering.glsl.GlslRuntimeEventTracker;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
@@ -41,6 +42,7 @@ public class MixinMouseHandler {
             double scrollDeltaY = (isDiscrete ? Math.signum(scrollY) : scrollY) * wheelSensitivity;
             double mX = this.xpos * (double)this.mc_FancyMenu.getWindow().getGuiScaledWidth() / (double)this.mc_FancyMenu.getWindow().getScreenWidth();
             double mY = this.ypos * (double)this.mc_FancyMenu.getWindow().getGuiScaledHeight() / (double)this.mc_FancyMenu.getWindow().getScreenHeight();
+            GlslRuntimeEventTracker.onMouseScrolled(mX, mY, scrollDeltaX, scrollDeltaY);
             if (ScreenOverlayHandler.INSTANCE.mouseScrolled(mX, mY, scrollDeltaX, scrollDeltaY)) info.cancel();
         }
     }
@@ -109,8 +111,10 @@ public class MixinMouseHandler {
         if (action == GLFW.GLFW_PRESS) {
             ClicksPerSecondTracker.recordClick(button);
             Listeners.ON_MOUSE_BUTTON_CLICKED.onMouseButtonClicked(button, mouseX, mouseY);
+            GlslRuntimeEventTracker.onMouseButtonPressed(button, mouseX, mouseY);
         } else if (action == GLFW.GLFW_RELEASE) {
             Listeners.ON_MOUSE_BUTTON_RELEASED.onMouseButtonReleased(button, mouseX, mouseY);
+            GlslRuntimeEventTracker.onMouseButtonReleased(button, mouseX, mouseY);
         }
     }
 
@@ -128,6 +132,7 @@ public class MixinMouseHandler {
 
         if ("mouseMoved event handler".equals(errorDesc)) {
             EventHandler.INSTANCE.postEvent(new ScreenMouseMoveEvent(this.mc_FancyMenu.screen, mouseX, mouseY, deltaX, deltaY));
+            GlslRuntimeEventTracker.onMouseMoved(mouseX, mouseY, deltaX, deltaY);
             if (MCEFUtil.isMCEFLoaded()) BrowserHandler.mouseMoved(mouseX, mouseY);
             ScreenOverlayHandler.INSTANCE.mouseMoved(mouseX, mouseY);
         } else if ("mouseDragged event handler".equals(errorDesc)) {

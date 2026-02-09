@@ -58,6 +58,12 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     @Nullable
     protected DrawableColor borderColorInactive;
     @Nullable
+    protected RenderableResource iconNormal;
+    @Nullable
+    protected RenderableResource iconHover;
+    @Nullable
+    protected RenderableResource iconInactive;
+    @Nullable
     protected ConsumingSupplier<ExtendedButton, Boolean> activeSupplier;
     protected ConsumingSupplier<ExtendedButton, Boolean> visibilitySupplier;
     protected boolean focusable = true;
@@ -100,8 +106,16 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
 
     @Override
     public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+        RenderSystem.disableDepthTest();
+        RenderingUtils.setDepthTestLocked(true);
+
         this.renderBackground(graphics, partial);
+        this.renderIcon(graphics);
         this.renderLabelText(graphics);
+
+        RenderingUtils.setDepthTestLocked(false);
+
     }
 
     protected void renderBackground(@NotNull GuiGraphics graphics, float partial) {
@@ -110,7 +124,6 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
             if (this.renderColorBackground(graphics, partial)) {
                 graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
                 RenderSystem.enableBlend();
-                RenderSystem.enableDepthTest();
                 graphics.blitSprite(SPRITES.get(this.active, this.isHoveredOrFocused()), this.getX(), this.getY(), this.getWidth(), this.getHeight());
                 RenderingUtils.resetShaderColor(graphics);
             }
@@ -209,6 +222,30 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
                 this.renderScrollingLabel(this, graphics, mc.font, 2, labelShadowFinal, k);
             }
         }
+    }
+
+    protected void renderIcon(@NotNull GuiGraphics graphics) {
+        RenderableResource icon = this.getCurrentIcon();
+        if (icon == null) return;
+        ResourceLocation iconLocation = icon.getResourceLocation();
+        if (iconLocation == null) return;
+        int renderWidth = this.getWidth();
+        int renderHeight = this.getHeight();
+        graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
+        RenderSystem.enableBlend();
+        graphics.blit(iconLocation, this.getX(), this.getY(), 0.0F, 0.0F, renderWidth, renderHeight, renderWidth, renderHeight);
+        RenderingUtils.resetShaderColor(graphics);
+    }
+
+    @Nullable
+    protected RenderableResource getCurrentIcon() {
+        if (this.active) {
+            if (this.isHoveredOrFocused()) {
+                return this.iconHover;
+            }
+            return this.iconNormal;
+        }
+        return this.iconInactive;
     }
 
     protected void updateLabel() {
@@ -488,6 +525,36 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
 
     public ExtendedButton setBackgroundInactive(@Nullable RenderableResource background) {
         this.getExtendedAsCustomizableWidget().setCustomBackgroundInactiveFancyMenu(background);
+        return this;
+    }
+
+    @Nullable
+    public RenderableResource getIconNormal() {
+        return this.iconNormal;
+    }
+
+    public ExtendedButton setIconNormal(@Nullable RenderableResource icon) {
+        this.iconNormal = icon;
+        return this;
+    }
+
+    @Nullable
+    public RenderableResource getIconHover() {
+        return this.iconHover;
+    }
+
+    public ExtendedButton setIconHover(@Nullable RenderableResource icon) {
+        this.iconHover = icon;
+        return this;
+    }
+
+    @Nullable
+    public RenderableResource getIconInactive() {
+        return this.iconInactive;
+    }
+
+    public ExtendedButton setIconInactive(@Nullable RenderableResource icon) {
+        this.iconInactive = icon;
         return this;
     }
 
