@@ -207,6 +207,11 @@ public class GlslShaderRuntime {
         public static ChannelRouting defaultResources() {
             return new ChannelRouting(ChannelInput.RESOURCE0, ChannelInput.RESOURCE1, ChannelInput.RESOURCE2, ChannelInput.RESOURCE3);
         }
+
+        @NotNull
+        public static ChannelRouting defaultNone() {
+            return new ChannelRouting(ChannelInput.NONE, ChannelInput.NONE, ChannelInput.NONE, ChannelInput.NONE);
+        }
     }
 
     public record RenderSettings(
@@ -261,7 +266,7 @@ public class GlslShaderRuntime {
                 case 2 -> this.bufferCRouting;
                 case 3 -> this.bufferDRouting;
                 case IMAGE_PASS_INDEX -> this.imageRouting;
-                default -> ChannelRouting.defaultResources();
+                default -> ChannelRouting.defaultNone();
             };
         }
     }
@@ -930,7 +935,9 @@ public class GlslShaderRuntime {
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
-        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, (ByteBuffer) null);
+        // Use floating-point buffers so Shadertoy multipass data channels can store
+        // reprojection/state values outside [0,1] without clamping.
+        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL30.GL_RGBA16F, width, height, 0, GL11.GL_RGBA, GL11.GL_FLOAT, (ByteBuffer) null);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
         return textureId;
     }

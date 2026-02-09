@@ -47,26 +47,26 @@ public class GlslMenuBackground extends MenuBackground<GlslMenuBackground> {
     public final Property.StringProperty bufferDInlineSource = putProperty(Property.stringProperty("buffer_d_inline_source", "", true, false, "fancymenu.backgrounds.glsl.buffer_d_inline_source"));
     public final Property.BooleanProperty preferInlineShaderSource = putProperty(Property.booleanProperty("prefer_inline_shader_source", false, "fancymenu.backgrounds.glsl.prefer_inline_shader_source"));
 
-    public final Property.StringProperty imageIChannel0Input = putProperty(Property.stringProperty("image_ichannel0_input", GlslShaderRuntime.ChannelInput.RESOURCE0.serializedName(), false, false, "fancymenu.backgrounds.glsl.image_ichannel0_input"));
-    public final Property.StringProperty imageIChannel1Input = putProperty(Property.stringProperty("image_ichannel1_input", GlslShaderRuntime.ChannelInput.RESOURCE1.serializedName(), false, false, "fancymenu.backgrounds.glsl.image_ichannel1_input"));
-    public final Property.StringProperty imageIChannel2Input = putProperty(Property.stringProperty("image_ichannel2_input", GlslShaderRuntime.ChannelInput.RESOURCE2.serializedName(), false, false, "fancymenu.backgrounds.glsl.image_ichannel2_input"));
-    public final Property.StringProperty imageIChannel3Input = putProperty(Property.stringProperty("image_ichannel3_input", GlslShaderRuntime.ChannelInput.RESOURCE3.serializedName(), false, false, "fancymenu.backgrounds.glsl.image_ichannel3_input"));
-    public final Property.StringProperty bufferAIChannel0Input = putProperty(Property.stringProperty("buffer_a_ichannel0_input", GlslShaderRuntime.ChannelInput.RESOURCE0.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_a_ichannel0_input"));
-    public final Property.StringProperty bufferAIChannel1Input = putProperty(Property.stringProperty("buffer_a_ichannel1_input", GlslShaderRuntime.ChannelInput.RESOURCE1.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_a_ichannel1_input"));
-    public final Property.StringProperty bufferAIChannel2Input = putProperty(Property.stringProperty("buffer_a_ichannel2_input", GlslShaderRuntime.ChannelInput.RESOURCE2.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_a_ichannel2_input"));
-    public final Property.StringProperty bufferAIChannel3Input = putProperty(Property.stringProperty("buffer_a_ichannel3_input", GlslShaderRuntime.ChannelInput.RESOURCE3.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_a_ichannel3_input"));
-    public final Property.StringProperty bufferBIChannel0Input = putProperty(Property.stringProperty("buffer_b_ichannel0_input", GlslShaderRuntime.ChannelInput.RESOURCE0.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_b_ichannel0_input"));
-    public final Property.StringProperty bufferBIChannel1Input = putProperty(Property.stringProperty("buffer_b_ichannel1_input", GlslShaderRuntime.ChannelInput.RESOURCE1.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_b_ichannel1_input"));
-    public final Property.StringProperty bufferBIChannel2Input = putProperty(Property.stringProperty("buffer_b_ichannel2_input", GlslShaderRuntime.ChannelInput.RESOURCE2.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_b_ichannel2_input"));
-    public final Property.StringProperty bufferBIChannel3Input = putProperty(Property.stringProperty("buffer_b_ichannel3_input", GlslShaderRuntime.ChannelInput.RESOURCE3.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_b_ichannel3_input"));
-    public final Property.StringProperty bufferCIChannel0Input = putProperty(Property.stringProperty("buffer_c_ichannel0_input", GlslShaderRuntime.ChannelInput.RESOURCE0.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_c_ichannel0_input"));
-    public final Property.StringProperty bufferCIChannel1Input = putProperty(Property.stringProperty("buffer_c_ichannel1_input", GlslShaderRuntime.ChannelInput.RESOURCE1.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_c_ichannel1_input"));
-    public final Property.StringProperty bufferCIChannel2Input = putProperty(Property.stringProperty("buffer_c_ichannel2_input", GlslShaderRuntime.ChannelInput.RESOURCE2.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_c_ichannel2_input"));
-    public final Property.StringProperty bufferCIChannel3Input = putProperty(Property.stringProperty("buffer_c_ichannel3_input", GlslShaderRuntime.ChannelInput.RESOURCE3.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_c_ichannel3_input"));
-    public final Property.StringProperty bufferDIChannel0Input = putProperty(Property.stringProperty("buffer_d_ichannel0_input", GlslShaderRuntime.ChannelInput.RESOURCE0.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_d_ichannel0_input"));
-    public final Property.StringProperty bufferDIChannel1Input = putProperty(Property.stringProperty("buffer_d_ichannel1_input", GlslShaderRuntime.ChannelInput.RESOURCE1.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_d_ichannel1_input"));
-    public final Property.StringProperty bufferDIChannel2Input = putProperty(Property.stringProperty("buffer_d_ichannel2_input", GlslShaderRuntime.ChannelInput.RESOURCE2.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_d_ichannel2_input"));
-    public final Property.StringProperty bufferDIChannel3Input = putProperty(Property.stringProperty("buffer_d_ichannel3_input", GlslShaderRuntime.ChannelInput.RESOURCE3.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_d_ichannel3_input"));
+    public final Property.StringProperty imageIChannel0Input = putProperty(Property.stringProperty("image_ichannel0_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.backgrounds.glsl.image_ichannel0_input"));
+    public final Property.StringProperty imageIChannel1Input = putProperty(Property.stringProperty("image_ichannel1_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.backgrounds.glsl.image_ichannel1_input"));
+    public final Property.StringProperty imageIChannel2Input = putProperty(Property.stringProperty("image_ichannel2_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.backgrounds.glsl.image_ichannel2_input"));
+    public final Property.StringProperty imageIChannel3Input = putProperty(Property.stringProperty("image_ichannel3_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.backgrounds.glsl.image_ichannel3_input"));
+    public final Property.StringProperty bufferAIChannel0Input = putProperty(Property.stringProperty("buffer_a_ichannel0_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_a_ichannel0_input"));
+    public final Property.StringProperty bufferAIChannel1Input = putProperty(Property.stringProperty("buffer_a_ichannel1_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_a_ichannel1_input"));
+    public final Property.StringProperty bufferAIChannel2Input = putProperty(Property.stringProperty("buffer_a_ichannel2_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_a_ichannel2_input"));
+    public final Property.StringProperty bufferAIChannel3Input = putProperty(Property.stringProperty("buffer_a_ichannel3_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_a_ichannel3_input"));
+    public final Property.StringProperty bufferBIChannel0Input = putProperty(Property.stringProperty("buffer_b_ichannel0_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_b_ichannel0_input"));
+    public final Property.StringProperty bufferBIChannel1Input = putProperty(Property.stringProperty("buffer_b_ichannel1_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_b_ichannel1_input"));
+    public final Property.StringProperty bufferBIChannel2Input = putProperty(Property.stringProperty("buffer_b_ichannel2_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_b_ichannel2_input"));
+    public final Property.StringProperty bufferBIChannel3Input = putProperty(Property.stringProperty("buffer_b_ichannel3_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_b_ichannel3_input"));
+    public final Property.StringProperty bufferCIChannel0Input = putProperty(Property.stringProperty("buffer_c_ichannel0_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_c_ichannel0_input"));
+    public final Property.StringProperty bufferCIChannel1Input = putProperty(Property.stringProperty("buffer_c_ichannel1_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_c_ichannel1_input"));
+    public final Property.StringProperty bufferCIChannel2Input = putProperty(Property.stringProperty("buffer_c_ichannel2_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_c_ichannel2_input"));
+    public final Property.StringProperty bufferCIChannel3Input = putProperty(Property.stringProperty("buffer_c_ichannel3_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_c_ichannel3_input"));
+    public final Property.StringProperty bufferDIChannel0Input = putProperty(Property.stringProperty("buffer_d_ichannel0_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_d_ichannel0_input"));
+    public final Property.StringProperty bufferDIChannel1Input = putProperty(Property.stringProperty("buffer_d_ichannel1_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_d_ichannel1_input"));
+    public final Property.StringProperty bufferDIChannel2Input = putProperty(Property.stringProperty("buffer_d_ichannel2_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_d_ichannel2_input"));
+    public final Property.StringProperty bufferDIChannel3Input = putProperty(Property.stringProperty("buffer_d_ichannel3_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.backgrounds.glsl.buffer_d_ichannel3_input"));
 
     public final Property.StringProperty compileMode = putProperty(Property.stringProperty("compile_mode", "auto", false, false, "fancymenu.backgrounds.glsl.compile_mode"));
     public final Property.BooleanProperty forceShadertoyCompatibility = putProperty(Property.booleanProperty("force_shadertoy_compatibility", true, "fancymenu.backgrounds.glsl.force_shadertoy_compatibility"));
@@ -408,10 +408,10 @@ public class GlslMenuBackground extends MenuBackground<GlslMenuBackground> {
                                                             @NotNull Property.StringProperty c2,
                                                             @NotNull Property.StringProperty c3) {
         return new GlslShaderRuntime.ChannelRouting(
-                this.getChannelInput(c0, GlslShaderRuntime.ChannelInput.RESOURCE0),
-                this.getChannelInput(c1, GlslShaderRuntime.ChannelInput.RESOURCE1),
-                this.getChannelInput(c2, GlslShaderRuntime.ChannelInput.RESOURCE2),
-                this.getChannelInput(c3, GlslShaderRuntime.ChannelInput.RESOURCE3)
+                this.getChannelInput(c0, GlslShaderRuntime.ChannelInput.NONE),
+                this.getChannelInput(c1, GlslShaderRuntime.ChannelInput.NONE),
+                this.getChannelInput(c2, GlslShaderRuntime.ChannelInput.NONE),
+                this.getChannelInput(c3, GlslShaderRuntime.ChannelInput.NONE)
         );
     }
 
