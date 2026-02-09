@@ -3,11 +3,13 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.glsl;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.glsl.GlslShaderRuntime;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import net.minecraft.client.Minecraft;
@@ -24,10 +26,7 @@ public class GlslMenuBackground extends MenuBackground<GlslMenuBackground> {
 
     private static final FileFilter SHADER_FILE_FILTER = file -> {
         String name = file.getName().toLowerCase(Locale.ROOT);
-        if (name.endsWith(".glsl") || name.endsWith(".frag") || name.endsWith(".fsh") || name.endsWith(".vsh") || name.endsWith(".vert") || name.endsWith(".shader") || name.endsWith(".txt")) {
-            return true;
-        }
-        return FileFilter.TEXT_FILE_FILTER.checkFile(file);
+        return name.endsWith(".txt");
     };
 
     private static final List<GlslShaderRuntime.CompileMode> COMPILE_MODES = List.of(
@@ -58,12 +57,15 @@ public class GlslMenuBackground extends MenuBackground<GlslMenuBackground> {
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
         this.shaderSource.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.backgrounds.glsl.shader_source.desc"))
                 .setIcon(MaterialIcons.TEXT_FIELDS);
 
         this.inlineShaderSource.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.backgrounds.glsl.inline_shader_source.desc"))
                 .setIcon(MaterialIcons.CODE);
 
         this.preferInlineShaderSource.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.backgrounds.glsl.prefer_inline_shader_source.desc"))
                 .setIcon(MaterialIcons.SWAP_HORIZ);
 
         menu.addSeparatorEntry("separator_after_source_selection");
@@ -75,29 +77,37 @@ public class GlslMenuBackground extends MenuBackground<GlslMenuBackground> {
                         GlslMenuBackground::getCompileMode,
                         GlslMenuBackground::setCompileMode,
                         (contextMenu, entry, mode) -> Component.translatable("fancymenu.backgrounds.glsl.compile_mode", getCompileModeDisplay(mode)))
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.backgrounds.glsl.compile_mode.desc"))
                 .setIcon(MaterialIcons.TUNE);
 
         this.forceShadertoyCompatibility.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.backgrounds.glsl.force_shadertoy_compatibility.desc"))
                 .setIcon(MaterialIcons.CODE);
 
         this.freezeTime.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.backgrounds.glsl.freeze_time.desc"))
                 .setIcon(MaterialIcons.PAUSE);
 
         this.timeScale.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.backgrounds.glsl.time_scale.desc"))
                 .setIcon(MaterialIcons.SPEED);
 
         menu.addSeparatorEntry("separator_before_render_settings");
 
         this.enableBlending.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.backgrounds.glsl.enable_blending.desc"))
                 .setIcon(MaterialIcons.BLUR_ON);
 
         this.useInput.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.backgrounds.glsl.use_input.desc"))
                 .setIcon(MaterialIcons.MOUSE);
 
         this.opacityMultiplier.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.backgrounds.glsl.opacity_multiplier.desc"))
                 .setIcon(MaterialIcons.PALETTE);
 
         this.showCompileErrors.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.backgrounds.glsl.show_compile_errors.desc"))
                 .setIcon(MaterialIcons.ERROR);
 
     }
@@ -197,6 +207,11 @@ public class GlslMenuBackground extends MenuBackground<GlslMenuBackground> {
             return null;
         }
         return String.join("\n", lines);
+    }
+
+    @NotNull
+    private static UITooltip tooltip(@NotNull String key) {
+        return UITooltip.of(LocalizationUtils.splitLocalizedLines(key));
     }
 
     private void renderErrorOverlay(@NotNull GuiGraphics graphics, @NotNull String message) {

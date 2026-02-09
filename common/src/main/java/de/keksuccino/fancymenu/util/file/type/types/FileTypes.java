@@ -69,7 +69,7 @@ public class FileTypes {
 
     public static final TextFileType TXT_TEXT = new TextFileType(
             FileCodec.advanced(IText.class, PlainText::of, PlainText::location, PlainText::local, PlainText::web),
-            "text/plain", "txt", "glsl", "frag", "fsh", "vsh", "vert", "shader");
+            "text/plain", "txt");
     public static final TextFileType MARKDOWN_TEXT = new TextFileType(
             FileCodec.advanced(IText.class, PlainText::of, PlainText::location, PlainText::local, PlainText::web),
             "text/markdown", "md", "markdown");

@@ -21,10 +21,7 @@ public class GlslElement extends AbstractElement {
 
     private static final FileFilter SHADER_FILE_FILTER = file -> {
         String name = file.getName().toLowerCase(Locale.ROOT);
-        if (name.endsWith(".glsl") || name.endsWith(".frag") || name.endsWith(".fsh") || name.endsWith(".vsh") || name.endsWith(".vert") || name.endsWith(".shader") || name.endsWith(".txt")) {
-            return true;
-        }
-        return FileFilter.TEXT_FILE_FILTER.checkFile(file);
+        return name.endsWith(".txt");
     };
 
     public final Property<ResourceSupplier<IText>> shaderSource = putProperty(Property.resourceSupplierProperty(IText.class, "shader_source", null, "fancymenu.elements.glsl.shader_source", true, true, true, SHADER_FILE_FILTER));

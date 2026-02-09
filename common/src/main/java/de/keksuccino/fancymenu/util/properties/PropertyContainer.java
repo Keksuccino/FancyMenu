@@ -8,6 +8,8 @@ import java.util.Objects;
 
 public class PropertyContainer {
 
+    private static final String SERIALIZED_PROPERTY_NEWLINE_TOKEN = "%%!serialized_property_newline!%%";
+
     @NotNull
     private String type;
     @NotNull
@@ -37,7 +39,7 @@ public class PropertyContainer {
             this.removeProperty(name);
             return;
         }
-        this.entries.put(Objects.requireNonNull(name), value.toString());
+        this.entries.put(Objects.requireNonNull(name), serializePropertyValue(value.toString()));
     }
 
     @NotNull
@@ -47,7 +49,11 @@ public class PropertyContainer {
 
     @Nullable
     public String getValue(@NotNull String name) {
-        return this.entries.get(Objects.requireNonNull(name));
+        String raw = this.entries.get(Objects.requireNonNull(name));
+        if (raw == null) {
+            return null;
+        }
+        return deserializePropertyValue(raw);
     }
 
     public void removeProperty(@NotNull String name) {
@@ -56,6 +62,19 @@ public class PropertyContainer {
 
     public boolean hasProperty(@NotNull String name) {
         return this.entries.containsKey(Objects.requireNonNull(name));
+    }
+
+    @NotNull
+    private static String serializePropertyValue(@NotNull String value) {
+        return value.replace("\r\n", SERIALIZED_PROPERTY_NEWLINE_TOKEN)
+                .replace("\r", SERIALIZED_PROPERTY_NEWLINE_TOKEN)
+                .replace("\n", SERIALIZED_PROPERTY_NEWLINE_TOKEN);
+    }
+
+    @NotNull
+    private static String deserializePropertyValue(@NotNull String value) {
+        // Newline variants are normalized to '\n' when deserialized.
+        return value.replace(SERIALIZED_PROPERTY_NEWLINE_TOKEN, "\n");
     }
 
     @NotNull
