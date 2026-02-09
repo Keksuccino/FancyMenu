@@ -12,7 +12,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
-import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -27,11 +26,6 @@ import java.util.Locale;
 
 public class GlslMenuBackground extends MenuBackground<GlslMenuBackground> {
 
-    private static final FileFilter SHADER_FILE_FILTER = file -> {
-        String name = file.getName().toLowerCase(Locale.ROOT);
-        return name.endsWith(".txt");
-    };
-
     private static final List<GlslShaderRuntime.CompileMode> COMPILE_MODES = List.of(
             GlslShaderRuntime.CompileMode.AUTO,
             GlslShaderRuntime.CompileMode.DIRECT,
@@ -39,13 +33,11 @@ public class GlslMenuBackground extends MenuBackground<GlslMenuBackground> {
     );
     private static final List<GlslShaderRuntime.ChannelInput> CHANNEL_INPUTS = List.of(GlslShaderRuntime.ChannelInput.values());
 
-    public final Property<ResourceSupplier<IText>> shaderSource = putProperty(Property.resourceSupplierProperty(IText.class, "shader_source", null, "fancymenu.backgrounds.glsl.shader_source", true, true, true, SHADER_FILE_FILTER));
     public final Property.StringProperty inlineShaderSource = putProperty(Property.stringProperty("inline_shader_source", "", true, false, "fancymenu.backgrounds.glsl.inline_shader_source"));
     public final Property.StringProperty bufferAInlineSource = putProperty(Property.stringProperty("buffer_a_inline_source", "", true, false, "fancymenu.backgrounds.glsl.buffer_a_inline_source"));
     public final Property.StringProperty bufferBInlineSource = putProperty(Property.stringProperty("buffer_b_inline_source", "", true, false, "fancymenu.backgrounds.glsl.buffer_b_inline_source"));
     public final Property.StringProperty bufferCInlineSource = putProperty(Property.stringProperty("buffer_c_inline_source", "", true, false, "fancymenu.backgrounds.glsl.buffer_c_inline_source"));
     public final Property.StringProperty bufferDInlineSource = putProperty(Property.stringProperty("buffer_d_inline_source", "", true, false, "fancymenu.backgrounds.glsl.buffer_d_inline_source"));
-    public final Property.BooleanProperty preferInlineShaderSource = putProperty(Property.booleanProperty("prefer_inline_shader_source", false, "fancymenu.backgrounds.glsl.prefer_inline_shader_source"));
 
     public final Property.StringProperty imageIChannel0Input = putProperty(Property.stringProperty("image_ichannel0_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.backgrounds.glsl.image_ichannel0_input"));
     public final Property.StringProperty imageIChannel1Input = putProperty(Property.stringProperty("image_ichannel1_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.backgrounds.glsl.image_ichannel1_input"));
@@ -90,17 +82,9 @@ public class GlslMenuBackground extends MenuBackground<GlslMenuBackground> {
     @Override
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
-        this.shaderSource.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.backgrounds.glsl.shader_source.desc"))
-                .setIcon(MaterialIcons.TEXT_FIELDS);
-
         this.inlineShaderSource.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((m, entry) -> tooltip("fancymenu.backgrounds.glsl.inline_shader_source.desc"))
                 .setIcon(MaterialIcons.CODE);
-
-        this.preferInlineShaderSource.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.backgrounds.glsl.prefer_inline_shader_source.desc"))
-                .setIcon(MaterialIcons.SWAP_HORIZ);
 
         menu.addSeparatorEntry("separator_before_buffer_sources");
 
@@ -291,40 +275,12 @@ public class GlslMenuBackground extends MenuBackground<GlslMenuBackground> {
     @Nullable
     private String resolveShaderSource() {
         String inlineSource = this.inlineShaderSource.get();
-        String fileSource = readSourceFromSupplier(this.shaderSource.get());
-
-        if (this.preferInlineShaderSource.getBoolean()) {
-            if (inlineSource != null && !inlineSource.isBlank()) {
-                return inlineSource;
-            }
-            return fileSource;
-        }
-
-        if (fileSource != null && !fileSource.isBlank()) {
-            return fileSource;
-        }
 
         if (inlineSource != null && !inlineSource.isBlank()) {
             return inlineSource;
         }
 
         return null;
-    }
-
-    @Nullable
-    private static String readSourceFromSupplier(@Nullable ResourceSupplier<IText> supplier) {
-        if (supplier == null) {
-            return null;
-        }
-        IText text = supplier.get();
-        if (text == null || !text.isReady()) {
-            return null;
-        }
-        List<String> lines = text.getTextLines();
-        if (lines == null) {
-            return null;
-        }
-        return String.join("\n", lines);
     }
 
     @NotNull

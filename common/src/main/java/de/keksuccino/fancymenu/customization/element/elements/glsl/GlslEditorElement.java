@@ -32,17 +32,9 @@ public class GlslEditorElement extends AbstractEditorElement<GlslEditorElement, 
 
         super.init();
 
-        this.element.shaderSource.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .setTooltipSupplier((menu, entry) -> tooltip("fancymenu.elements.glsl.shader_source.desc"))
-                .setIcon(MaterialIcons.TEXT_FIELDS);
-
         this.element.inlineShaderSource.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setTooltipSupplier((menu, entry) -> tooltip("fancymenu.elements.glsl.inline_shader_source.desc"))
                 .setIcon(MaterialIcons.CODE);
-
-        this.element.preferInlineShaderSource.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .setTooltipSupplier((menu, entry) -> tooltip("fancymenu.elements.glsl.prefer_inline_shader_source.desc"))
-                .setIcon(MaterialIcons.SWAP_HORIZ);
 
         this.rightClickMenu.addSeparatorEntry("separator_before_buffer_sources");
 
