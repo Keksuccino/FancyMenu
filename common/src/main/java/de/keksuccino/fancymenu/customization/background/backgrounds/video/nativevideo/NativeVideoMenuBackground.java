@@ -52,6 +52,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     public final Property.FloatProperty parallaxIntensityYString = putProperty(Property.floatProperty("parallax_intensity_y", 0.02F, "fancymenu.backgrounds.image.configure.parallax_intensity_y"));
     /** When TRUE, the parallax effect will move in the SAME direction as the mouse, otherwise it moves in the opposite direction **/
     public final Property<Boolean> invertParallax = putProperty(Property.booleanProperty("invert_parallax", false, "fancymenu.backgrounds.image.configure.invert_parallax"));
+    public final Property<Boolean> playInEditor = putProperty(Property.booleanProperty("play_in_editor", true, "fancymenu.backgrounds.video.play_in_editor"));
 
     protected volatile boolean initialized = false;
     @Nullable
@@ -126,6 +127,11 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         this.invertParallax.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.invert_parallax.desc")))
                 .setIcon(MaterialIcons.SWAP_HORIZ);
+
+        menu.addSeparatorEntry("separator_before_play_in_editor");
+
+        this.playInEditor.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.EDIT);
 
     }
 
@@ -386,6 +392,10 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     }
 
     protected boolean _isPaused() {
+        if (isEditor()) {
+            if (!this.playInEditor.tryGetNonNull()) return true;
+            return this.getControllerPausedState();
+        }
         return (this.getControllerPausedState() || this.pausedBySystem);
     }
 
