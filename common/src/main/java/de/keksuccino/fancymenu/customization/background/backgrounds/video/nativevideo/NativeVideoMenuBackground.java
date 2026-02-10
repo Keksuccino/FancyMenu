@@ -272,11 +272,16 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     }
 
     protected void updateVideoReference(@Nullable IVideo newVideo) {
-        if (this.video == newVideo) return;
+        String newVideoSource = (newVideo != null) ? this.currentResolvedVideoSource : null;
+        if ((this.video == newVideo) && Objects.equals(this.activeVideoSource, newVideoSource)) return;
 
         IVideo oldVideo = this.video;
         String oldVideoSource = this.activeVideoSource;
+        boolean sourceChanged = !Objects.equals(oldVideoSource, newVideoSource);
         if (oldVideo != null) {
+            if (sourceChanged && isEditor()) {
+                oldVideo.stop();
+            }
             this.releaseVideoReference(oldVideo, oldVideoSource);
         }
 
@@ -284,7 +289,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         if (newVideo != null) {
             this.acquireVideoReference(newVideo);
         }
-        this.activeVideoSource = (newVideo != null) ? this.currentResolvedVideoSource : null;
+        this.activeVideoSource = newVideoSource;
         if (newVideo != null) {
             this.tryRestorePlaybackPositionFromMemory(newVideo, this.activeVideoSource);
         }
