@@ -185,13 +185,21 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         this.lastLoop = loop;
 
         boolean pausedState = this._isPaused();
+        boolean keepAliveInEditor = isEditor() && this.playInEditor.tryGetNonNull();
+        boolean shouldForcePlaybackKeepAlive = keepAliveInEditor || loop;
+
         if (pausedState) {
             if ((this.lastPausedState == null) || !Objects.equals(true, this.lastPausedState)) {
                 this.video.pause();
             }
         } else {
-            // Keep editor playback alive even when lifecycle hooks paused the player in between renders.
-            if ((this.lastPausedState == null) || Objects.equals(true, this.lastPausedState) || this.video.isPaused()) {
+            boolean shouldTriggerPlay = (this.lastPausedState == null) || Objects.equals(true, this.lastPausedState) || this.video.isPaused();
+            if (!shouldTriggerPlay && shouldForcePlaybackKeepAlive) {
+                // Only do this in keep-alive modes so we recover from Watermedia terminal states
+                // (ENDED/STOPPED/ERROR) without overriding intentional non-loop/non-editor idle behavior.
+                shouldTriggerPlay = !this.video.isPlaying();
+            }
+            if (shouldTriggerPlay) {
                 this.video.play();
             }
         }
