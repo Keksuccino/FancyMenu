@@ -219,7 +219,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
             }
         } else {
             // Keep editor playback alive even when lifecycle hooks paused the player in between renders.
-            if ((this.lastPausedState == null) || Objects.equals(true, this.lastPausedState) || this.video.isPaused()) {
+            if (!this.shouldKeepNaturalEndedState(this.video) && ((this.lastPausedState == null) || Objects.equals(true, this.lastPausedState) || this.video.isPaused())) {
                 this.video.play();
             }
         }
@@ -326,7 +326,9 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         super.onOpenScreen();
         if (this.initialized && (this.video != null) && this.pausedBySystem) {
             this.pausedBySystem = false;
-            this.video.play();
+            if (!this.shouldKeepNaturalEndedState(this.video)) {
+                this.video.play();
+            }
         }
     }
 
@@ -345,7 +347,9 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         super.onAfterEnable();
         if (this.initialized && (this.video != null) && this.pausedBySystem) {
             this.pausedBySystem = false;
-            this.video.play();
+            if (!this.shouldKeepNaturalEndedState(this.video)) {
+                this.video.play();
+            }
         }
     }
 
@@ -537,7 +541,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         this.setEndedStateInMemory(source, ended);
         float playTime = Math.max(0.0F, video.getPlayTime());
         if (ended) {
-            float duration = Math.max(0.0F, video.getDuration());
+            float duration = Math.max(Math.max(0.0F, video.getDuration()), this.cachedDuration.get());
             if (duration > 0.05F) {
                 playTime = Math.max(playTime, duration - 0.05F);
             }
@@ -552,12 +556,12 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
 
     protected void tryRestorePlaybackPositionFromMemory(@NotNull IVideo video, @Nullable String source) {
         if ((source == null) || source.isEmpty()) return;
-        String cachedSource = this.getMemory().getStringProperty(MEMORY_LAST_STOPPED_SOURCE_FANCYMENU);
-        if (!Objects.equals(source, cachedSource)) return;
-        Float cachedPlayTime = this.getMemory().getProperty(MEMORY_LAST_STOPPED_PLAY_TIME_SECONDS_FANCYMENU, Float.class);
         boolean restoreEndedState = this.shouldRestoreEndedStateFromMemory(source) && !this.loop.tryGetNonNull();
+        String cachedSource = this.getMemory().getStringProperty(MEMORY_LAST_STOPPED_SOURCE_FANCYMENU);
+        if (!restoreEndedState && !Objects.equals(source, cachedSource)) return;
+        Float cachedPlayTime = this.getMemory().getProperty(MEMORY_LAST_STOPPED_PLAY_TIME_SECONDS_FANCYMENU, Float.class);
         if (((cachedPlayTime == null) || (cachedPlayTime <= 0.0F)) && !restoreEndedState) return;
-        float duration = video.getDuration();
+        float duration = Math.max(Math.max(0.0F, video.getDuration()), this.cachedDuration.get());
         float seekTime = Math.max(0.0F, Objects.requireNonNullElse(cachedPlayTime, 0.0F));
         if (restoreEndedState && (duration > 0.0F)) {
             seekTime = Math.max(seekTime, Math.max(0.0F, duration - 0.05F));
@@ -574,13 +578,24 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         boolean ended = this.isNonLoopingVideoNaturallyEnded(video);
         this.setEndedStateInMemory(source, ended);
         if (!ended) return;
-        float duration = Math.max(0.0F, video.getDuration());
-        if (duration <= 0.05F) return;
+        float duration = Math.max(Math.max(0.0F, video.getDuration()), this.cachedDuration.get());
+        float playTime = Math.max(Math.max(0.0F, video.getPlayTime()), this.cachedPlayTime.get());
+        float targetTime = playTime;
+        if (duration > 0.05F) {
+            targetTime = Math.max(targetTime, duration - 0.05F);
+        }
+        if (targetTime <= 0.05F) return;
         this.getMemory().putProperty(MEMORY_LAST_STOPPED_SOURCE_FANCYMENU, source);
-        this.getMemory().putProperty(MEMORY_LAST_STOPPED_PLAY_TIME_SECONDS_FANCYMENU, duration - 0.05F);
+        this.getMemory().putProperty(MEMORY_LAST_STOPPED_PLAY_TIME_SECONDS_FANCYMENU, targetTime);
     }
 
     protected boolean isNonLoopingVideoNaturallyEnded(@NotNull IVideo video) {
+        if (this.loop.tryGetNonNull()) return false;
+        if (video.isLooping()) return false;
+        return video.isEnded();
+    }
+
+    protected boolean shouldKeepNaturalEndedState(@NotNull IVideo video) {
         if (this.loop.tryGetNonNull()) return false;
         if (video.isLooping()) return false;
         return video.isEnded();
