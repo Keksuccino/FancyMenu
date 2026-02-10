@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.backgrounds.video.IVideoMenuBackground;
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -45,6 +46,8 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
     private static final Object VIDEO_REFERENCE_LOCK = new Object();
     private static final Map<IVideo, Integer> VIDEO_REFERENCE_COUNTS = new IdentityHashMap<>();
+    private static final String MEMORY_LAST_STOPPED_PLAY_TIME_SECONDS_FANCYMENU = "native_video_last_stopped_play_time_seconds";
+    private static final String MEMORY_LAST_STOPPED_SOURCE_FANCYMENU = "native_video_last_stopped_source";
 
     public final Property<ResourceSupplier<IVideo>> videoSupplier = putProperty(Property.resourceSupplierProperty(IVideo.class, "source", null, "fancymenu.elements.video_mcef.set_source", true, true, true, null));
     public final Property<Boolean> loop = putProperty(Property.booleanProperty("loop", false, "fancymenu.elements.video_mcef.loop"));
@@ -72,6 +75,10 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     protected boolean pausedBySystem = false;
     protected final AtomicReference<Float> cachedDuration = new AtomicReference<>(0F);
     protected final AtomicReference<Float> cachedPlayTime = new AtomicReference<>(0F);
+    @Nullable
+    protected volatile String currentResolvedVideoSource = null;
+    @Nullable
+    protected volatile String activeVideoSource = null;
     // The field is currently unused, but the scheduler is used, so don't delete this
     protected final ScheduledFuture<?> garbageChecker = EXECUTOR.scheduleAtFixedRate(() -> {
         if (this.initialized && !this.shouldSkipWatchdogAutoClear() && (this.lastRenderTickTime != -1L) && ((this.lastRenderTickTime + 11000L) < System.currentTimeMillis())) {
@@ -178,6 +185,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         graphics.fill(x, y, x + w, y + h, DrawableColor.BLACK.getColorIntWithAlpha(this.opacity));
 
         ResourceSupplier<IVideo> supplier = this.videoSupplier.get();
+        this.currentResolvedVideoSource = this.getResolvedVideoSource(supplier);
         IVideo currentVideo = (supplier != null) ? supplier.get() : null;
         this.updateVideoReference(currentVideo);
 
@@ -261,13 +269,18 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         if (this.video == newVideo) return;
 
         IVideo oldVideo = this.video;
+        String oldVideoSource = this.activeVideoSource;
         if (oldVideo != null) {
-            this.releaseVideoReference(oldVideo);
+            this.releaseVideoReference(oldVideo, oldVideoSource);
         }
 
         this.video = newVideo;
         if (newVideo != null) {
             this.acquireVideoReference(newVideo);
+        }
+        this.activeVideoSource = (newVideo != null) ? this.currentResolvedVideoSource : null;
+        if (newVideo != null) {
+            this.tryRestorePlaybackPositionFromMemory(newVideo, this.activeVideoSource);
         }
         this.initialized = (newVideo != null);
         this.lastLoop = null;
@@ -315,6 +328,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     public void onCloseScreen(@Nullable Screen closedScreen, @Nullable Screen newScreen) {
         super.onCloseScreen(closedScreen, newScreen);
         if (this.initialized && (this.video != null)) {
+            this.cachePlaybackPositionToMemory(this.video, this.activeVideoSource, true);
             this.pausedBySystem = true;
             this.video.pause();
         }
@@ -333,6 +347,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     public void onDisableOrRemove() {
         super.onDisableOrRemove();
         if (this.initialized && (this.video != null)) {
+            this.cachePlaybackPositionToMemory(this.video, this.activeVideoSource, true);
             this.pausedBySystem = true;
             this.video.pause();
         }
@@ -393,11 +408,13 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     protected boolean resetBackgroundAndReturnStopState() {
         boolean didStopPlayer = false;
         IVideo oldVideo = this.video;
+        String oldVideoSource = this.activeVideoSource;
         if (oldVideo != null) {
-            didStopPlayer = this.releaseVideoReference(oldVideo);
+            didStopPlayer = this.releaseVideoReference(oldVideo, oldVideoSource);
         }
         this.initialized = false;
         this.video = null;
+        this.activeVideoSource = null;
         this.cachedActualVolume = -10000F;
         this.lastCachedActualVolume = -11000F;
         this.lastLoop = null;
@@ -480,7 +497,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         }
     }
 
-    protected boolean releaseVideoReference(@NotNull IVideo video) {
+    protected boolean releaseVideoReference(@NotNull IVideo video, @Nullable String source) {
         boolean shouldStop = false;
         synchronized (VIDEO_REFERENCE_LOCK) {
             Integer amount = VIDEO_REFERENCE_COUNTS.get(video);
@@ -494,9 +511,43 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         // Video resources are shared by source via ResourceHandler cache.
         // Only stop once this was the last known background reference, otherwise another background would get interrupted.
         if (shouldStop) {
+            this.cachePlaybackPositionToMemory(video, source, !this.pausedBySystem);
             video.stop();
         }
         return shouldStop;
+    }
+
+    @Nullable
+    protected String getResolvedVideoSource(@Nullable ResourceSupplier<IVideo> supplier) {
+        if (supplier == null) return null;
+        String source = PlaceholderParser.replacePlaceholders(supplier.getSourceWithPrefix());
+        if (source.isEmpty()) return null;
+        return source;
+    }
+
+    protected void cachePlaybackPositionToMemory(@NotNull IVideo video, @Nullable String source, boolean allowLowerOverwrite) {
+        if ((source == null) || source.isEmpty()) return;
+        float playTime = Math.max(0.0F, video.getPlayTime());
+        if (playTime <= 0.05F) return;
+        String cachedSource = this.getMemory().getStringProperty(MEMORY_LAST_STOPPED_SOURCE_FANCYMENU);
+        Float cachedPlayTime = this.getMemory().getProperty(MEMORY_LAST_STOPPED_PLAY_TIME_SECONDS_FANCYMENU, Float.class);
+        if (!allowLowerOverwrite && Objects.equals(source, cachedSource) && (cachedPlayTime != null) && (cachedPlayTime > playTime)) return;
+        this.getMemory().putProperty(MEMORY_LAST_STOPPED_SOURCE_FANCYMENU, source);
+        this.getMemory().putProperty(MEMORY_LAST_STOPPED_PLAY_TIME_SECONDS_FANCYMENU, playTime);
+    }
+
+    protected void tryRestorePlaybackPositionFromMemory(@NotNull IVideo video, @Nullable String source) {
+        if ((source == null) || source.isEmpty()) return;
+        String cachedSource = this.getMemory().getStringProperty(MEMORY_LAST_STOPPED_SOURCE_FANCYMENU);
+        if (!Objects.equals(source, cachedSource)) return;
+        Float cachedPlayTime = this.getMemory().getProperty(MEMORY_LAST_STOPPED_PLAY_TIME_SECONDS_FANCYMENU, Float.class);
+        if ((cachedPlayTime == null) || (cachedPlayTime <= 0.0F)) return;
+        float duration = video.getDuration();
+        float seekTime = cachedPlayTime;
+        if (duration > 0.0F) {
+            seekTime = Math.min(seekTime, Math.max(0.0F, duration - 0.05F));
+        }
+        video.setPlayTime(Math.max(0.0F, seekTime));
     }
 
 }

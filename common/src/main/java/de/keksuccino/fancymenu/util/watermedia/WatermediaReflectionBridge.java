@@ -105,6 +105,12 @@ public class WatermediaReflectionBridge {
         return invokeLong(player, "time", 0L);
     }
 
+    public static boolean playerSeek(@Nullable Object player, long timeMs) {
+        Object result = invoke(player, "seek", 1, timeMs);
+        if (result instanceof Boolean b) return b;
+        return false;
+    }
+
     public static boolean playerRepeat(@Nullable Object player) {
         return invokeBoolean(player, "repeat", false);
     }

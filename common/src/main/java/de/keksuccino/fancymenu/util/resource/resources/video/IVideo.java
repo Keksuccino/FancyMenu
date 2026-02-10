@@ -19,6 +19,12 @@ public interface IVideo extends RenderableResource, PlayableResourceWithAudio {
         return 0.0F;
     }
 
+    /**
+     * Seeks to the given play time in seconds.
+     */
+    default void setPlayTime(float playTime) {
+    }
+
     default void setLooping(boolean looping) {
     }
 

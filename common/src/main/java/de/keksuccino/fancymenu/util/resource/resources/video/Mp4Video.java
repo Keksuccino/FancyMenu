@@ -56,6 +56,7 @@ public class Mp4Video implements IVideo {
     protected volatile boolean dependencyMissing = false;
     protected volatile boolean playRequested = false;
     protected volatile boolean pausedRequested = false;
+    protected volatile long seekRequestedMs = -1L;
     protected volatile boolean closed = false;
     protected volatile boolean playerInitTaskQueued = false;
     protected final Object playerInitLock = new Object();
@@ -286,6 +287,7 @@ public class Mp4Video implements IVideo {
             } else {
                 WatermediaReflectionBridge.playerStop(createdPlayer);
             }
+            this.tryApplyQueuedSeekToPlayer(createdPlayer);
         }
     }
 
@@ -332,6 +334,7 @@ public class Mp4Video implements IVideo {
         }
         Object cachedPlayer = this.mediaPlayer;
         if (cachedPlayer == null) return MISSING_TEXTURE_LOCATION;
+        this.tryApplyQueuedSeekToPlayer(cachedPlayer);
         this.updateSizeFromPlayer(cachedPlayer);
         int textureId = WatermediaReflectionBridge.playerTextureId(cachedPlayer);
         if (textureId <= 0) return MISSING_TEXTURE_LOCATION;
@@ -373,9 +376,11 @@ public class Mp4Video implements IVideo {
                 // Watermedia restarts FFMediaPlayer when start() is called while its thread is still active.
                 // Keep WAITING/LOADING/BUFFERING alive and only start from real terminal/idle states.
                 if (statusName.equals("PLAYING") || statusName.equals("WAITING") || statusName.equals("LOADING") || statusName.equals("BUFFERING")) {
+                    this.tryApplyQueuedSeekToPlayer(cachedPlayer);
                     return;
                 }
                 WatermediaReflectionBridge.playerStart(cachedPlayer);
+                this.tryApplyQueuedSeekToPlayer(cachedPlayer);
             }
         } else {
             this.queuePlayerInitializationTask();
@@ -456,6 +461,18 @@ public class Mp4Video implements IVideo {
         long timeMs = WatermediaReflectionBridge.playerTime(cachedPlayer);
         if (timeMs <= 0L) return 0.0F;
         return (timeMs / 1000.0F);
+    }
+
+    @Override
+    public void setPlayTime(float playTime) {
+        if (this.closed || this.dependencyMissing || this.loadingFailed) return;
+        this.seekRequestedMs = Math.max(0L, (long)Math.floor(playTime * 1000.0F));
+        Object cachedPlayer = this.mediaPlayer;
+        if (cachedPlayer != null) {
+            this.tryApplyQueuedSeekToPlayer(cachedPlayer);
+        } else if (this.playRequested) {
+            this.queuePlayerInitializationTask();
+        }
     }
 
     @Override
@@ -540,6 +557,29 @@ public class Mp4Video implements IVideo {
             LOGGER.error("[FANCYMENU] Failed to write MP4 video stream to temporary file: {}", sourceName, ex);
         }
         return null;
+    }
+
+    protected void tryApplyQueuedSeekToPlayer(@Nullable Object player) {
+        if (player == null) return;
+        long requestedMs = this.seekRequestedMs;
+        if (requestedMs < 0L) return;
+        if (requestedMs <= 0L) {
+            this.seekRequestedMs = -1L;
+            return;
+        }
+        String statusName = WatermediaReflectionBridge.playerStatusName(player);
+        if (statusName.equals("WAITING") || statusName.equals("LOADING") || statusName.equals("BUFFERING")) return;
+        // FFMediaPlayer.seek(..) clamps against duration(). If we seek before metadata is ready, duration is 0 and the target collapses to 0ms.
+        long durationMs = WatermediaReflectionBridge.playerDuration(player);
+        if (durationMs <= 0L) return;
+        requestedMs = Math.min(requestedMs, durationMs);
+        if (requestedMs <= 0L) {
+            this.seekRequestedMs = -1L;
+            return;
+        }
+        if (WatermediaReflectionBridge.playerSeek(player, requestedMs)) {
+            this.seekRequestedMs = -1L;
+        }
     }
 
     protected void onDependencyMissing(@NotNull String sourceName) {
