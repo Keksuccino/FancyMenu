@@ -35,6 +35,9 @@ public class WatermediaReflectionBridge {
     @Nullable
     public static Object createPlayer(@Nullable Object mrl, @NotNull Thread renderThread, @NotNull Executor renderThreadExecutor, boolean video, boolean audio) {
         if (mrl == null) return null;
+
+        WatermediaUtil.trySuppressDevelopmentFfmpegDebugLogs();
+
         Method createPlayer = findMethod(mrl.getClass(), "createPlayer", 7);
         if (createPlayer == null) {
             LOGGER.error("[FANCYMENU] Failed to create Watermedia player, unable to find MRL#createPlayer(..) method");
