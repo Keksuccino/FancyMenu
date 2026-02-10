@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageM
 import de.keksuccino.fancymenu.customization.background.backgrounds.panorama.PanoramaMenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.backgrounds.slideshow.SlideshowMenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.backgrounds.video.mcef.MCEFVideoMenuBackgroundBuilder;
+import de.keksuccino.fancymenu.customization.background.backgrounds.video.nativevideo.NativeVideoMenuBackgroundBuilder;
 
 public class MenuBackgrounds {
 
@@ -17,6 +18,7 @@ public class MenuBackgrounds {
     public static final ColorMenuBackgroundBuilder COLOR = new ColorMenuBackgroundBuilder();
     public static final BrowserMenuBackgroundBuilder BROWSER = new BrowserMenuBackgroundBuilder();
     public static final GlslMenuBackgroundBuilder GLSL = new GlslMenuBackgroundBuilder();
+    public static final NativeVideoMenuBackgroundBuilder VIDEO = new NativeVideoMenuBackgroundBuilder();
     public static final MCEFVideoMenuBackgroundBuilder VIDEO_MCEF = new MCEFVideoMenuBackgroundBuilder();
 
     public static void registerAll() {
@@ -26,6 +28,7 @@ public class MenuBackgrounds {
         MenuBackgroundRegistry.register(PANORAMA);
         MenuBackgroundRegistry.register(IMAGE);
         MenuBackgroundRegistry.register(SLIDESHOW);
+        MenuBackgroundRegistry.register(VIDEO);
         MenuBackgroundRegistry.register(VIDEO_MCEF);
         MenuBackgroundRegistry.register(BROWSER); // add as late as possible
         MenuBackgroundRegistry.register(GLSL); // add last

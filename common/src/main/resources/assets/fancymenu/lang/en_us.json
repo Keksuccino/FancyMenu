@@ -3212,5 +3212,8 @@
   "fancymenu.decoration_overlays.glsl.opacity_multiplier.desc": "Opacity multiplier for this shader overlay.\nFinal alpha = this multiplier (clamped to 0.0-1.0).",
   "fancymenu.decoration_overlays.glsl.show_compile_errors": "Show Compile Errors: %s",
   "fancymenu.decoration_overlays.glsl.show_compile_errors.desc": "Shows shader compile/link errors as an overlay on the menu.\nDisable if you want to hide diagnostics in production layouts.",
-  "fancymenu.decoration_overlays.glsl.error.no_source": "No shader source set. Add shader code to Shader Source."
+  "fancymenu.decoration_overlays.glsl.error.no_source": "No shader source set. Add shader code to Shader Source.",
+  "fancymenu.backgrounds.video": "Video",
+  "fancymenu.backgrounds.video.configure.no_video": "§xYou need to choose a video first!",
+  "fancymenu.backgrounds.video.desc": "Plays a video resource as menu background.\nSupports local, web and resource location video sources."
 }

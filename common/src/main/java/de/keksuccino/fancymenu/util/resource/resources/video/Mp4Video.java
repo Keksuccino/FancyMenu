@@ -46,6 +46,7 @@ public class Mp4Video implements IVideo {
     protected volatile int height = 10;
     protected volatile AspectRatio aspectRatio = new AspectRatio(10, 10);
     protected volatile float volume = 1.0F;
+    protected volatile boolean looping = false;
     protected final String uniqueId = ScreenCustomization.generateUniqueIdentifier();
     protected final ResourceLocation frameLocation = ResourceLocation.fromNamespaceAndPath("fancymenu", "watermedia_video_frame_" + this.uniqueId.toLowerCase().replace("-", ""));
     protected final WatermediaFrameTexture frameTexture = new WatermediaFrameTexture(-1);
@@ -274,6 +275,7 @@ public class Mp4Video implements IVideo {
             }
             this.mediaPlayer = createdPlayer;
             this.applyVolumeToPlayer();
+            this.applyLoopingToPlayer();
             if (this.playRequested) {
                 if (this.pausedRequested) {
                     WatermediaReflectionBridge.playerStartPaused(createdPlayer);
@@ -292,6 +294,13 @@ public class Mp4Video implements IVideo {
         if (cachedPlayer != null) {
             int volumePercent = (int) Math.max(0, Math.min(100, Math.round(this.volume * 100.0F)));
             WatermediaReflectionBridge.setPlayerVolume(cachedPlayer, volumePercent);
+        }
+    }
+
+    protected void applyLoopingToPlayer() {
+        Object cachedPlayer = this.mediaPlayer;
+        if (cachedPlayer != null) {
+            WatermediaReflectionBridge.setPlayerRepeat(cachedPlayer, this.looping);
         }
     }
 
@@ -422,6 +431,35 @@ public class Mp4Video implements IVideo {
     }
 
     @Override
+    public float getDuration() {
+        Object cachedPlayer = this.mediaPlayer;
+        if (cachedPlayer == null) return 0.0F;
+        long durationMs = WatermediaReflectionBridge.playerDuration(cachedPlayer);
+        if (durationMs <= 0L) return 0.0F;
+        return (durationMs / 1000.0F);
+    }
+
+    @Override
+    public float getPlayTime() {
+        Object cachedPlayer = this.mediaPlayer;
+        if (cachedPlayer == null) return 0.0F;
+        long timeMs = WatermediaReflectionBridge.playerTime(cachedPlayer);
+        if (timeMs <= 0L) return 0.0F;
+        return (timeMs / 1000.0F);
+    }
+
+    @Override
+    public void setLooping(boolean looping) {
+        this.looping = looping;
+        this.applyLoopingToPlayer();
+    }
+
+    @Override
+    public boolean isLooping() {
+        return this.looping;
+    }
+
+    @Override
     public @Nullable InputStream open() throws IOException {
         if (this.sourceURL != null) return WebUtils.openResourceStream(this.sourceURL);
         if (this.sourceFile != null) return new FileInputStream(this.sourceFile);
@@ -454,6 +492,7 @@ public class Mp4Video implements IVideo {
         this.closed = true;
         this.playRequested = false;
         this.pausedRequested = false;
+        this.looping = false;
         Object cachedPlayer = this.mediaPlayer;
         this.mediaPlayer = null;
         this.mrl = null;

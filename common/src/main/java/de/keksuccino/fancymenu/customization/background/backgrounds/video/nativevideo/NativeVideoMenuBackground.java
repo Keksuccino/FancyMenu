@@ -1,0 +1,385 @@
+package de.keksuccino.fancymenu.customization.background.backgrounds.video.nativevideo;
+
+import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.customization.background.MenuBackground;
+import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
+import de.keksuccino.fancymenu.customization.background.backgrounds.video.IVideoMenuBackground;
+import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.properties.Property;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
+import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundSource;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
+public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBackground> implements IVideoMenuBackground {
+
+    private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
+
+    public final Property<ResourceSupplier<IVideo>> videoSupplier = putProperty(Property.resourceSupplierProperty(IVideo.class, "source", null, "fancymenu.elements.video_mcef.set_source", true, true, true, null));
+    public final Property<Boolean> loop = putProperty(Property.booleanProperty("loop", false, "fancymenu.elements.video_mcef.loop"));
+    /** Value between 0.0 and 1.0 **/
+    public final Property<Float> volume = putProperty(Property.floatProperty("volume", 1.0F, "fancymenu.elements.video_mcef.volume"))
+            .setValueSetProcessor(value -> Math.max(0.0F, Math.min(1.0F, value)));
+    public final Property.StringProperty soundSource = putProperty(Property.stringProperty("sound_source", SoundSource.MASTER.getName(), false, false, "fancymenu.elements.video_mcef.sound_channel"));
+    public final Property<Boolean> parallaxEnabled = putProperty(Property.booleanProperty("parallax", false, "fancymenu.backgrounds.image.configure.parallax"));
+    /** Value between 0.0 and 1.0, where 0.0 is no movement and 1.0 is maximum movement **/
+    public final Property.FloatProperty parallaxIntensityXString = putProperty(Property.floatProperty("parallax_intensity_x", 0.02F, "fancymenu.backgrounds.image.configure.parallax_intensity_x"));
+    /** Value between 0.0 and 1.0, where 0.0 is no movement and 1.0 is maximum movement **/
+    public final Property.FloatProperty parallaxIntensityYString = putProperty(Property.floatProperty("parallax_intensity_y", 0.02F, "fancymenu.backgrounds.image.configure.parallax_intensity_y"));
+    /** When TRUE, the parallax effect will move in the SAME direction as the mouse, otherwise it moves in the opposite direction **/
+    public final Property<Boolean> invertParallax = putProperty(Property.booleanProperty("invert_parallax", false, "fancymenu.backgrounds.image.configure.invert_parallax"));
+
+    protected volatile boolean initialized = false;
+    @Nullable
+    protected IVideo video = null;
+    protected float cachedActualVolume = -10000F;
+    protected float lastCachedActualVolume = -11000F;
+    protected Boolean lastLoop = null;
+    protected Boolean lastPausedState = null;
+    protected volatile long lastRenderTickTime = -1L;
+    protected boolean pausedBySystem = false;
+    protected final AtomicReference<Float> cachedDuration = new AtomicReference<>(0F);
+    protected final AtomicReference<Float> cachedPlayTime = new AtomicReference<>(0F);
+    // The field is currently unused, but the scheduler is used, so don't delete this
+    protected final ScheduledFuture<?> garbageChecker = EXECUTOR.scheduleAtFixedRate(() -> {
+        if (this.initialized && (this.lastRenderTickTime != -1L) && ((this.lastRenderTickTime + 11000L) < System.currentTimeMillis())) {
+            this.resetBackground();
+        }
+    }, 0L, 100L, TimeUnit.MILLISECONDS);
+    // The field is currently unused, but the scheduler is used, so don't delete this
+    protected final ScheduledFuture<?> asyncTicker = EXECUTOR.scheduleAtFixedRate(() -> {
+        if (this.initialized) {
+            this.cachedDuration.set(this._getDuration());
+            this.cachedPlayTime.set(this._getPlayTime());
+        }
+    }, 0L, 900L, TimeUnit.MILLISECONDS);
+
+    public NativeVideoMenuBackground(MenuBackgroundBuilder<NativeVideoMenuBackground> builder) {
+        super(builder);
+    }
+
+    @Override
+    protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
+
+        this.videoSupplier.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> {
+                    ResourceSupplier<IVideo> supplier = this.videoSupplier.get();
+                    if (supplier == null) {
+                        return UITooltip.of(Component.translatable("fancymenu.backgrounds.video.configure.no_video"));
+                    }
+                    return null;
+                })
+                .setIcon(MaterialIcons.MOVIE);
+
+        menu.addSeparatorEntry("separator_after_video_source");
+
+        this.loop.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.REPEAT);
+        this.volume.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.VOLUME_UP);
+
+        List<SoundSource> soundSources = Arrays.asList(SoundSource.values());
+        this.addCycleContextMenuEntryTo(menu, "sound_source", soundSources, NativeVideoMenuBackground.class, NativeVideoMenuBackground::getSoundSourceOrDefault, (background, source) -> {
+            if (source != null) {
+                background.soundSource.set(source.getName());
+            }
+        }, (menu1, entry, switcherValue) -> {
+            Component name = Component.translatable("soundCategory." + switcherValue.getName())
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
+            return Component.translatable("fancymenu.elements.video_mcef.sound_channel", name);
+        }).setIcon(MaterialIcons.SPEAKER);
+
+        menu.addSeparatorEntry("separator_before_parallax");
+
+        this.parallaxEnabled.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons._3D);
+        this.parallaxIntensityXString.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_x.desc")))
+                .setIcon(MaterialIcons.SPLITSCREEN_LANDSCAPE);
+        this.parallaxIntensityYString.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_y.desc")))
+                .setIcon(MaterialIcons.SPLITSCREEN_PORTRAIT);
+        this.invertParallax.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.invert_parallax.desc")))
+                .setIcon(MaterialIcons.SWAP_HORIZ);
+
+    }
+
+    @Override
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+        float parallaxIntensityX = this.parallaxIntensityXString.getFloat();
+        float parallaxIntensityY = this.parallaxIntensityYString.getFloat();
+
+        this.lastRenderTickTime = System.currentTimeMillis();
+
+        RenderSystem.enableBlend();
+
+        float[] parallaxOffset = calculateParallaxOffset(mouseX, mouseY, parallaxIntensityX, parallaxIntensityY);
+        int x = 0;
+        int y = 0;
+        int w = getScreenWidth();
+        int h = getScreenHeight();
+
+        if (this.parallaxEnabled.tryGetNonNull()) {
+            // Reduce the expansion amount for parallax
+            w = (int) (getScreenWidth() * (1.0F + parallaxIntensityX));
+            h = (int) (getScreenHeight() * (1.0F + parallaxIntensityY));
+            // Center the expanded area and apply parallax offset
+            x = -((w - getScreenWidth()) / 2) + (int) parallaxOffset[0];
+            y = -((h - getScreenHeight()) / 2) + (int) parallaxOffset[1];
+        }
+
+        // Always draw black background
+        graphics.fill(x, y, x + w, y + h, DrawableColor.BLACK.getColorIntWithAlpha(this.opacity));
+
+        ResourceSupplier<IVideo> supplier = this.videoSupplier.get();
+        IVideo currentVideo = (supplier != null) ? supplier.get() : null;
+        this.updateVideoReference(currentVideo);
+
+        if (this.video == null) {
+            RenderSystem.disableBlend();
+            return;
+        }
+
+        this.updateVolume();
+        if ((this.lastCachedActualVolume == -11000F) || (this.cachedActualVolume != this.lastCachedActualVolume)) {
+            this.setVolume(this.volume.tryGetNonNull(), true);
+        }
+        this.lastCachedActualVolume = this.cachedActualVolume;
+
+        boolean loop = this.loop.tryGetNonNull();
+        if ((this.lastLoop == null) || !Objects.equals(loop, this.lastLoop)) {
+            this.video.setLooping(loop);
+        }
+        this.lastLoop = loop;
+
+        boolean pausedState = this._isPaused();
+        if ((this.lastPausedState == null) || !Objects.equals(pausedState, this.lastPausedState)) {
+            if (pausedState) {
+                this.video.pause();
+            } else {
+                this.video.play();
+            }
+        }
+        this.lastPausedState = pausedState;
+
+        ResourceLocation resourceLocation = this.video.getResourceLocation();
+        if (resourceLocation != null) {
+            graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
+            graphics.blit(resourceLocation, x, y, 0.0F, 0.0F, w, h, w, h);
+        }
+
+        RenderingUtils.resetShaderColor(graphics);
+
+        RenderSystem.disableBlend();
+
+    }
+
+    protected void updateVideoReference(@Nullable IVideo newVideo) {
+        if (this.video == newVideo) return;
+
+        if (this.video != null) {
+            this.video.stop();
+        }
+
+        this.video = newVideo;
+        this.initialized = (newVideo != null);
+        this.lastLoop = null;
+        this.cachedActualVolume = -10000F;
+        this.lastCachedActualVolume = -11000F;
+        this.lastPausedState = null;
+
+        if (newVideo == null) {
+            this.cachedDuration.set(0F);
+            this.cachedPlayTime.set(0F);
+        }
+    }
+
+    protected float[] calculateParallaxOffset(int mouseX, int mouseY, float parallaxIntensityX, float parallaxIntensityY) {
+
+        if (!this.parallaxEnabled.tryGetNonNull()) {
+            return new float[]{0, 0};
+        }
+
+        // Calculate mouse position as a percentage from the center of the screen
+        float mouseXPercent = (2.0f * mouseX / getScreenWidth()) - 1.0f;
+        float mouseYPercent = (2.0f * mouseY / getScreenHeight()) - 1.0f;
+
+        // Apply inversion if enabled
+        float directionMultiplier = this.invertParallax.tryGetNonNull() ? 1.0f : -1.0f;
+
+        // Calculate offset based on screen dimensions and center-adjusted mouse position
+        float xOffset = directionMultiplier * parallaxIntensityX * mouseXPercent * getScreenWidth() * 0.5f;
+        float yOffset = directionMultiplier * parallaxIntensityY * mouseYPercent * getScreenHeight() * 0.5f;
+
+        return new float[]{xOffset, yOffset};
+
+    }
+
+    @Override
+    public void onOpenScreen() {
+        super.onOpenScreen();
+        if (this.initialized && (this.video != null) && this.pausedBySystem) {
+            this.pausedBySystem = false;
+            this.video.play();
+        }
+    }
+
+    @Override
+    public void onCloseScreen(@Nullable Screen closedScreen, @Nullable Screen newScreen) {
+        super.onCloseScreen(closedScreen, newScreen);
+        if (this.initialized && (this.video != null)) {
+            this.pausedBySystem = true;
+            this.video.pause();
+        }
+    }
+
+    @Override
+    public void onAfterEnable() {
+        super.onAfterEnable();
+        if (this.initialized && (this.video != null) && this.pausedBySystem) {
+            this.pausedBySystem = false;
+            this.video.play();
+        }
+    }
+
+    @Override
+    public void onDisableOrRemove() {
+        super.onDisableOrRemove();
+        if (this.initialized && (this.video != null)) {
+            this.pausedBySystem = true;
+            this.video.pause();
+        }
+    }
+
+    /**
+     * @param volume Value between 0.0 and 1.0.
+     */
+    protected void setVolume(float volume, boolean updateVideo) {
+        volume = Math.max(0.0F, Math.min(1.0F, volume));
+        if (this.video != null) {
+            float actualVolume = volume;
+            float masterVolume = Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER);
+            SoundSource resolvedSoundSource = this.getSoundSourceOrDefault();
+            float soundSourceVolume = Minecraft.getInstance().options.getSoundSourceVolume(resolvedSoundSource);
+            if (resolvedSoundSource != SoundSource.MASTER) {
+                soundSourceVolume *= masterVolume;
+            }
+            actualVolume *= soundSourceVolume;
+            actualVolume *= this.getControllerVolume();
+            this.cachedActualVolume = actualVolume;
+            if (updateVideo) {
+                this.video.setVolume(Math.min(1.0F, Math.max(0.0F, actualVolume)));
+            }
+        }
+    }
+
+    protected void updateVolume() {
+        this.setVolume(this.volume.tryGetNonNull(), false);
+    }
+
+    /**
+     * Returns the volume of this element that is set in the {@link VideoElementController}.<br>
+     * The controller volume is set by actions and similar things that are user-controlled in most cases.
+     */
+    public float getControllerVolume() {
+        if (!VideoElementController.hasMetaFor(this.getInstanceIdentifier())) VideoElementController.putMeta(this.getInstanceIdentifier(), new VideoElementController.VideoElementMeta(this.getInstanceIdentifier(), 1.0F, false));
+        VideoElementController.VideoElementMeta meta = VideoElementController.getMeta(this.getInstanceIdentifier());
+        if (meta != null) return Math.max(0.0F, Math.min(1.0F, meta.volume));
+        return 1.0F;
+    }
+
+    /**
+     * Returns the paused state of this element that is set in the {@link VideoElementController}.<br>
+     * The controller paused state is set by actions and similar things that are user-controlled in most cases.
+     */
+    public boolean getControllerPausedState() {
+        if (!VideoElementController.hasMetaFor(this.getInstanceIdentifier())) VideoElementController.putMeta(this.getInstanceIdentifier(), new VideoElementController.VideoElementMeta(this.getInstanceIdentifier(), 1.0F, false));
+        VideoElementController.VideoElementMeta meta = VideoElementController.getMeta(this.getInstanceIdentifier());
+        if (meta == null) return false;
+        return meta.paused;
+    }
+
+    public void resetBackground() {
+        if (this.video != null) {
+            this.video.stop();
+        }
+        this.initialized = false;
+        this.video = null;
+        this.cachedActualVolume = -10000F;
+        this.lastCachedActualVolume = -11000F;
+        this.lastLoop = null;
+        this.lastPausedState = null;
+        this.lastRenderTickTime = -1L;
+        this.pausedBySystem = false;
+        this.cachedDuration.set(0F);
+        this.cachedPlayTime.set(0F);
+    }
+
+    protected float _getDuration() {
+        if (!this.initialized || (this.video == null)) return 0F;
+        return Math.max(0F, this.video.getDuration());
+    }
+
+    protected float _getPlayTime() {
+        if (!this.initialized || (this.video == null)) return 0F;
+        return Math.max(0F, this.video.getPlayTime());
+    }
+
+    protected boolean _isPaused() {
+        return (this.getControllerPausedState() || this.pausedBySystem);
+    }
+
+    @Override
+    public float getDuration() {
+        return this.cachedDuration.get();
+    }
+
+    @Override
+    public float getPlayTime() {
+        return this.cachedPlayTime.get();
+    }
+
+    @NotNull
+    protected SoundSource getSoundSourceOrDefault() {
+        String name = this.soundSource.get();
+        if (name != null) {
+            SoundSource source = getSoundSourceByName(name);
+            if (source != null) return source;
+        }
+        return SoundSource.MASTER;
+    }
+
+    @Nullable
+    protected static SoundSource getSoundSourceByName(@NotNull String name) {
+        for (SoundSource source : SoundSource.values()) {
+            if (source.getName().equals(name)) return source;
+        }
+        return null;
+    }
+
+}

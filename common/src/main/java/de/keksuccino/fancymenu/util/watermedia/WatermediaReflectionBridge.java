@@ -94,6 +94,22 @@ public class WatermediaReflectionBridge {
         return invokeInt(player, "height", 0);
     }
 
+    public static long playerDuration(@Nullable Object player) {
+        return invokeLong(player, "duration", 0L);
+    }
+
+    public static long playerTime(@Nullable Object player) {
+        return invokeLong(player, "time", 0L);
+    }
+
+    public static boolean playerRepeat(@Nullable Object player) {
+        return invokeBoolean(player, "repeat", false);
+    }
+
+    public static void setPlayerRepeat(@Nullable Object player, boolean repeat) {
+        invoke(player, "repeat", 1, repeat);
+    }
+
     public static void setPlayerVolume(@Nullable Object player, int volumePercent) {
         invoke(player, "volume", 1, volumePercent);
     }
@@ -121,6 +137,12 @@ public class WatermediaReflectionBridge {
     private static int invokeInt(@Nullable Object target, @NotNull String methodName, int fallback) {
         Object result = invoke(target, methodName, 0);
         if (result instanceof Number n) return n.intValue();
+        return fallback;
+    }
+
+    private static long invokeLong(@Nullable Object target, @NotNull String methodName, long fallback) {
+        Object result = invoke(target, methodName, 0);
+        if (result instanceof Number n) return n.longValue();
         return fallback;
     }
 
