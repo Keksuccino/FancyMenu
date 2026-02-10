@@ -23,6 +23,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,6 +39,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBackground> implements IVideoMenuBackground {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
 
     public final Property<ResourceSupplier<IVideo>> videoSupplier = putProperty(Property.resourceSupplierProperty(IVideo.class, "source", null, "fancymenu.elements.video_mcef.set_source", true, true, true, null));
@@ -68,6 +71,10 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     // The field is currently unused, but the scheduler is used, so don't delete this
     protected final ScheduledFuture<?> garbageChecker = EXECUTOR.scheduleAtFixedRate(() -> {
         if (this.initialized && (this.lastRenderTickTime != -1L) && ((this.lastRenderTickTime + 11000L) < System.currentTimeMillis())) {
+            LOGGER.info("[FANCYMENU] Auto-clearing native video background after watchdog timeout. source: {}, videoType: {}, backgroundInstance: {}",
+                    this.getConfiguredVideoSourceForLog(),
+                    this.getVideoTypeForLog(),
+                    this.getInstanceIdentifier());
             this.resetBackground();
         }
     }, 0L, 100L, TimeUnit.MILLISECONDS);
@@ -185,21 +192,13 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         this.lastLoop = loop;
 
         boolean pausedState = this._isPaused();
-        boolean keepAliveInEditor = isEditor() && this.playInEditor.tryGetNonNull();
-        boolean shouldForcePlaybackKeepAlive = keepAliveInEditor || loop;
-
         if (pausedState) {
             if ((this.lastPausedState == null) || !Objects.equals(true, this.lastPausedState)) {
                 this.video.pause();
             }
         } else {
-            boolean shouldTriggerPlay = (this.lastPausedState == null) || Objects.equals(true, this.lastPausedState) || this.video.isPaused();
-            if (!shouldTriggerPlay && shouldForcePlaybackKeepAlive) {
-                // Only do this in keep-alive modes so we recover from Watermedia terminal states
-                // (ENDED/STOPPED/ERROR) without overriding intentional non-loop/non-editor idle behavior.
-                shouldTriggerPlay = !this.video.isPlaying();
-            }
-            if (shouldTriggerPlay) {
+            // Keep editor playback alive even when lifecycle hooks paused the player in between renders.
+            if ((this.lastPausedState == null) || Objects.equals(true, this.lastPausedState) || this.video.isPaused()) {
                 this.video.play();
             }
         }
@@ -436,6 +435,21 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
             if (source.getName().equals(name)) return source;
         }
         return null;
+    }
+
+    @NotNull
+    protected String getConfiguredVideoSourceForLog() {
+        ResourceSupplier<IVideo> supplier = this.videoSupplier.get();
+        if (supplier == null) return "[null]";
+        String source = supplier.getSourceWithPrefix();
+        return source.isEmpty() ? "[empty]" : source;
+    }
+
+    @NotNull
+    protected String getVideoTypeForLog() {
+        IVideo cachedVideo = this.video;
+        if (cachedVideo == null) return "[null]";
+        return cachedVideo.getClass().getName();
     }
 
 }

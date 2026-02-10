@@ -364,7 +364,17 @@ public class Mp4Video implements IVideo {
         if (cachedPlayer != null) {
             if (WatermediaReflectionBridge.playerIsPaused(cachedPlayer)) {
                 WatermediaReflectionBridge.playerPause(cachedPlayer, false);
-            } else if (!WatermediaReflectionBridge.playerIsPlaying(cachedPlayer)) {
+            } else {
+                String statusName = WatermediaReflectionBridge.playerStatusName(cachedPlayer);
+                if (statusName.equals("PAUSED")) {
+                    WatermediaReflectionBridge.playerPause(cachedPlayer, false);
+                    return;
+                }
+                // Watermedia restarts FFMediaPlayer when start() is called while its thread is still active.
+                // Keep WAITING/LOADING/BUFFERING alive and only start from real terminal/idle states.
+                if (statusName.equals("PLAYING") || statusName.equals("WAITING") || statusName.equals("LOADING") || statusName.equals("BUFFERING")) {
+                    return;
+                }
                 WatermediaReflectionBridge.playerStart(cachedPlayer);
             }
         } else {
