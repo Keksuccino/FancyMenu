@@ -25,6 +25,10 @@ public interface IVideo extends RenderableResource, PlayableResourceWithAudio {
     default void setPlayTime(float playTime) {
     }
 
+    default boolean isEnded() {
+        return false;
+    }
+
     default void setLooping(boolean looping) {
     }
 

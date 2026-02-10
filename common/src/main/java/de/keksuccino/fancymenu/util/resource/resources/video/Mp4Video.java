@@ -476,6 +476,14 @@ public class Mp4Video implements IVideo {
     }
 
     @Override
+    public boolean isEnded() {
+        if (this.closed || this.dependencyMissing || this.loadingFailed) return false;
+        Object cachedPlayer = this.mediaPlayer;
+        if (cachedPlayer == null) return false;
+        return WatermediaReflectionBridge.playerStatusName(cachedPlayer).equals("ENDED");
+    }
+
+    @Override
     public void setLooping(boolean looping) {
         this.looping = looping;
         this.applyLoopingToPlayer();

@@ -48,6 +48,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     private static final Map<IVideo, Integer> VIDEO_REFERENCE_COUNTS = new IdentityHashMap<>();
     private static final String MEMORY_LAST_STOPPED_PLAY_TIME_SECONDS_FANCYMENU = "native_video_last_stopped_play_time_seconds";
     private static final String MEMORY_LAST_STOPPED_SOURCE_FANCYMENU = "native_video_last_stopped_source";
+    private static final String MEMORY_LAST_ENDED_SOURCE_FANCYMENU = "native_video_last_ended_source";
 
     public final Property<ResourceSupplier<IVideo>> videoSupplier = putProperty(Property.resourceSupplierProperty(IVideo.class, "source", null, "fancymenu.elements.video_mcef.set_source", true, true, true, null));
     public final Property<Boolean> loop = putProperty(Property.booleanProperty("loop", false, "fancymenu.elements.video_mcef.loop"));
@@ -97,6 +98,10 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         if (this.initialized) {
             this.cachedDuration.set(this._getDuration());
             this.cachedPlayTime.set(this._getPlayTime());
+            IVideo cachedVideo = this.video;
+            if (cachedVideo != null) {
+                this.updateEndedStateMemory(cachedVideo, this.activeVideoSource);
+            }
         }
     }, 0L, 900L, TimeUnit.MILLISECONDS);
 
@@ -205,6 +210,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
             this.video.setLooping(loop);
         }
         this.lastLoop = loop;
+        this.updateEndedStateMemory(this.video, this.activeVideoSource);
 
         boolean pausedState = this._isPaused();
         if (pausedState) {
@@ -527,7 +533,15 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
 
     protected void cachePlaybackPositionToMemory(@NotNull IVideo video, @Nullable String source, boolean allowLowerOverwrite) {
         if ((source == null) || source.isEmpty()) return;
+        boolean ended = this.isNonLoopingVideoNaturallyEnded(video);
+        this.setEndedStateInMemory(source, ended);
         float playTime = Math.max(0.0F, video.getPlayTime());
+        if (ended) {
+            float duration = Math.max(0.0F, video.getDuration());
+            if (duration > 0.05F) {
+                playTime = Math.max(playTime, duration - 0.05F);
+            }
+        }
         if (playTime <= 0.05F) return;
         String cachedSource = this.getMemory().getStringProperty(MEMORY_LAST_STOPPED_SOURCE_FANCYMENU);
         Float cachedPlayTime = this.getMemory().getProperty(MEMORY_LAST_STOPPED_PLAY_TIME_SECONDS_FANCYMENU, Float.class);
@@ -541,13 +555,53 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         String cachedSource = this.getMemory().getStringProperty(MEMORY_LAST_STOPPED_SOURCE_FANCYMENU);
         if (!Objects.equals(source, cachedSource)) return;
         Float cachedPlayTime = this.getMemory().getProperty(MEMORY_LAST_STOPPED_PLAY_TIME_SECONDS_FANCYMENU, Float.class);
-        if ((cachedPlayTime == null) || (cachedPlayTime <= 0.0F)) return;
+        boolean restoreEndedState = this.shouldRestoreEndedStateFromMemory(source) && !this.loop.tryGetNonNull();
+        if (((cachedPlayTime == null) || (cachedPlayTime <= 0.0F)) && !restoreEndedState) return;
         float duration = video.getDuration();
-        float seekTime = cachedPlayTime;
+        float seekTime = Math.max(0.0F, Objects.requireNonNullElse(cachedPlayTime, 0.0F));
+        if (restoreEndedState && (duration > 0.0F)) {
+            seekTime = Math.max(seekTime, Math.max(0.0F, duration - 0.05F));
+        }
+        if (seekTime <= 0.0F) return;
         if (duration > 0.0F) {
             seekTime = Math.min(seekTime, Math.max(0.0F, duration - 0.05F));
         }
         video.setPlayTime(Math.max(0.0F, seekTime));
+    }
+
+    protected void updateEndedStateMemory(@NotNull IVideo video, @Nullable String source) {
+        if ((source == null) || source.isEmpty()) return;
+        boolean ended = this.isNonLoopingVideoNaturallyEnded(video);
+        this.setEndedStateInMemory(source, ended);
+        if (!ended) return;
+        float duration = Math.max(0.0F, video.getDuration());
+        if (duration <= 0.05F) return;
+        this.getMemory().putProperty(MEMORY_LAST_STOPPED_SOURCE_FANCYMENU, source);
+        this.getMemory().putProperty(MEMORY_LAST_STOPPED_PLAY_TIME_SECONDS_FANCYMENU, duration - 0.05F);
+    }
+
+    protected boolean isNonLoopingVideoNaturallyEnded(@NotNull IVideo video) {
+        if (this.loop.tryGetNonNull()) return false;
+        if (video.isLooping()) return false;
+        return video.isEnded();
+    }
+
+    protected void setEndedStateInMemory(@Nullable String source, boolean ended) {
+        if ((source == null) || source.isEmpty()) return;
+        if (ended) {
+            this.getMemory().putProperty(MEMORY_LAST_ENDED_SOURCE_FANCYMENU, source);
+            return;
+        }
+        String endedSource = this.getMemory().getStringProperty(MEMORY_LAST_ENDED_SOURCE_FANCYMENU);
+        if (Objects.equals(source, endedSource)) {
+            this.getMemory().removeProperty(MEMORY_LAST_ENDED_SOURCE_FANCYMENU);
+        }
+    }
+
+    protected boolean shouldRestoreEndedStateFromMemory(@Nullable String source) {
+        if ((source == null) || source.isEmpty()) return false;
+        String endedSource = this.getMemory().getStringProperty(MEMORY_LAST_ENDED_SOURCE_FANCYMENU);
+        return Objects.equals(source, endedSource);
     }
 
 }
