@@ -160,6 +160,7 @@ subprojects {
                 "fer_version": fer_version,
                 "fer_mc_version": fer_mc_version,
                 "watermedia_version": watermedia_version,
+                "watermedia_binaries_version": watermedia_binaries_version,
                 "parchment_version": parchment_version,
                 "parchment_mc_version": parchment_mc_version,
                 "mixin_extras_version": mixin_extras_version,
