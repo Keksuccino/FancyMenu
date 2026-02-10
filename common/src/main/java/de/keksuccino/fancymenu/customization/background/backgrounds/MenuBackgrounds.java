@@ -22,13 +22,13 @@ public class MenuBackgrounds {
     public static void registerAll() {
 
         // Registering COLOR first is important to be able to use it as fallback for other background types or just to have a filler for backgrounds with transparent parts
-        MenuBackgroundRegistry.register(COLOR);
-        MenuBackgroundRegistry.register(BROWSER);
+        MenuBackgroundRegistry.register(COLOR); // add first to always have a way to set a simple and save background for fallback
         MenuBackgroundRegistry.register(PANORAMA);
         MenuBackgroundRegistry.register(IMAGE);
-        MenuBackgroundRegistry.register(GLSL);
         MenuBackgroundRegistry.register(SLIDESHOW);
         MenuBackgroundRegistry.register(VIDEO_MCEF);
+        MenuBackgroundRegistry.register(BROWSER); // add as late as possible
+        MenuBackgroundRegistry.register(GLSL); // add last
 
     }
 

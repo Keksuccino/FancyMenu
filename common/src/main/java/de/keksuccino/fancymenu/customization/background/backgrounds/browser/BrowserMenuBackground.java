@@ -17,6 +17,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
@@ -59,6 +60,8 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
     private int lastTickWidth = -1;
     private int lastTickHeight = -1;
     private boolean autoFocusPending = true;
+    private boolean focused = false;
+    private boolean focusable = true;
 
     public BrowserMenuBackground(MenuBackgroundBuilder<BrowserMenuBackground> builder) {
         super(builder);
@@ -218,6 +221,7 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
     @Override
     public void onCloseScreen(@Nullable Screen closedScreen, @Nullable Screen newScreen) {
         this.attachedScreen = null;
+        this.focused = false;
         this.destroyBrowser();
         CursorHandler.setClientTickCursor(CursorHandler.CURSOR_NORMAL);
     }
@@ -225,6 +229,7 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
     @Override
     public void onDisableOrRemove() {
         this.attachedScreen = null;
+        this.focused = false;
         this.destroyBrowser();
         CursorHandler.setClientTickCursor(CursorHandler.CURSOR_NORMAL);
     }
@@ -269,23 +274,67 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
         return true;
     }
 
+    @Override
+    public void setFocused(boolean focused) {
+        this.focused = focused;
+        WrappedMCEFBrowser wrappedBrowser = this.browser;
+        if (wrappedBrowser != null) {
+            wrappedBrowser.setBrowserFocused(focused);
+        }
+    }
+
+    @Override
+    public boolean isFocused() {
+        return this.focused;
+    }
+
+    @Override
+    public boolean isFocusable() {
+        return this.focusable;
+    }
+
+    @Override
+    public void setFocusable(boolean focusable) {
+        this.focusable = focusable;
+    }
+
+    @Override
+    public boolean isNavigatable() {
+        return false;
+    }
+
+    @Override
+    public void setNavigatable(boolean navigatable) {
+        // Browser backgrounds should not be tabbable/navigatable in screen focus order.
+    }
+
     private void ensureBrowserCreated() {
-        if (this.browser != null) {
-            BrowserHandler.notifyHandler(this.getInstanceIdentifier(), this.browser);
+        String instanceIdentifier = this.getInstanceIdentifier();
+        WrappedMCEFBrowser wrappedBrowser = this.browser;
+        if (wrappedBrowser != null && wrappedBrowser.isClosed()) {
+            this.browser = null;
+            wrappedBrowser = null;
+        }
+        if (wrappedBrowser != null) {
+            BrowserHandler.notifyHandler(instanceIdentifier, wrappedBrowser);
             return;
         }
         if (!MCEFUtil.isMCEFLoaded() || !MCEFUtil.MCEF_initialized) {
             return;
         }
-        this.browser = BrowserHandler.get(this.getInstanceIdentifier());
-        if (this.browser == null) {
+        wrappedBrowser = BrowserHandler.get(instanceIdentifier);
+        if (wrappedBrowser != null && wrappedBrowser.isClosed()) {
+            wrappedBrowser = null;
+        }
+        if (wrappedBrowser == null) {
             String resolvedUrl = this.url.getString();
             if (resolvedUrl == null || resolvedUrl.isBlank()) {
                 resolvedUrl = FALLBACK_URL;
             }
-            this.browser = WrappedMCEFBrowser.build(resolvedUrl, true, false, null);
+            wrappedBrowser = WrappedMCEFBrowser.build(resolvedUrl, true, false, null);
         }
-        BrowserHandler.notifyHandler(this.getInstanceIdentifier(), this.browser);
+        this.browser = wrappedBrowser;
+        BrowserHandler.notifyHandler(instanceIdentifier, wrappedBrowser);
         this.lastTickUrl = null;
         this.lastTickWidth = -1;
         this.lastTickHeight = -1;
@@ -306,6 +355,10 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
     private void syncBrowserSettings(int width, int height) {
         WrappedMCEFBrowser wrappedBrowser = this.browser;
         if (wrappedBrowser == null) {
+            return;
+        }
+        if (wrappedBrowser.isClosed()) {
+            this.browser = null;
             return;
         }
 
@@ -417,6 +470,10 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
             WrappedMCEFBrowser wrappedBrowser = this.browser;
             if (wrappedBrowser != null) {
                 wrappedBrowser.mouseClicked(mouseX, mouseY, button);
+            }
+            // Keep release routing stable even when click consumption is disabled.
+            if (button == 0 && this.attachedScreen instanceof ContainerEventHandler containerEventHandler) {
+                containerEventHandler.setDragging(true);
             }
         }
         return this.consumeMouseClicks.tryGetNonNullElse(true);

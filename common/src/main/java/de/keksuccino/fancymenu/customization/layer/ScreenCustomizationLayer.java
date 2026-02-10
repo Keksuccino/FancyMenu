@@ -147,6 +147,18 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		this.layoutBase.menuBackgrounds.forEach(MenuBackground::onCloseScreen);
 		this.layoutBase.decorationOverlays.forEach(pair -> pair.getSecond().onCloseScreen(e.getClosedScreen(), e.getNewScreen()));
 
+		IMixinScreen closedScreenMixin = (IMixinScreen)e.getClosedScreen();
+		this.layoutBase.menuBackgrounds.forEach(menuBackground -> {
+			closedScreenMixin.getChildrenFancyMenu().remove(menuBackground);
+			if (menuBackground instanceof Renderable renderable) closedScreenMixin.getRenderablesFancyMenu().remove(renderable);
+			if (menuBackground instanceof NarratableEntry narratable) closedScreenMixin.getNarratablesFancyMenu().remove(narratable);
+		});
+		this.layoutBase.decorationOverlays.forEach(pair -> {
+			closedScreenMixin.getChildrenFancyMenu().remove(pair.getSecond());
+			if (pair.getSecond() instanceof Renderable renderable) closedScreenMixin.getRenderablesFancyMenu().remove(renderable);
+			if (pair.getSecond() instanceof NarratableEntry narratable) closedScreenMixin.getNarratablesFancyMenu().remove(narratable);
+		});
+
 		if (this.layoutBase.closeAudio != null) {
 			final ResourceSupplier<IAudio> closeAudioSupplier = this.layoutBase.closeAudio;
 			IAudio audio = closeAudioSupplier.get();
@@ -366,9 +378,9 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			if (e.getScreen() instanceof CustomizableScreen c) c.removeOnInitChildrenFancyMenu().add(menuBackground);
 		});
 
-			if (e.getInitializationPhase() == InitOrResizeScreenEvent.InitializationPhase.RESIZE) {
-				this.layoutBase.menuBackgrounds.forEach(MenuBackground::onAfterResizeScreen);
-			}
+		if (e.getInitializationPhase() == InitOrResizeScreenEvent.InitializationPhase.RESIZE) {
+			this.layoutBase.menuBackgrounds.forEach(MenuBackground::onAfterResizeScreen);
+		}
 
         this.layoutBase.decorationOverlays.forEach(pair -> {
             pair.getSecond().onScreenInitializedOrResized(e.getScreen(), this.allElements);

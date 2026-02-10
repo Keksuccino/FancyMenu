@@ -247,22 +247,32 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
     }
 
     private void ensureBrowserCreated() {
-        if (this.browser != null) {
-            BrowserHandler.notifyHandler(this.getInstanceIdentifier(), this.browser);
+        String instanceIdentifier = this.getInstanceIdentifier();
+        WrappedMCEFBrowser wrappedBrowser = this.browser;
+        if (wrappedBrowser != null && wrappedBrowser.isClosed()) {
+            this.browser = null;
+            wrappedBrowser = null;
+        }
+        if (wrappedBrowser != null) {
+            BrowserHandler.notifyHandler(instanceIdentifier, wrappedBrowser);
             return;
         }
         if (!MCEFUtil.isMCEFLoaded() || !MCEFUtil.MCEF_initialized) {
             return;
         }
-        this.browser = BrowserHandler.get(this.getInstanceIdentifier());
-        if (this.browser == null) {
+        wrappedBrowser = BrowserHandler.get(instanceIdentifier);
+        if (wrappedBrowser != null && wrappedBrowser.isClosed()) {
+            wrappedBrowser = null;
+        }
+        if (wrappedBrowser == null) {
             String resolvedUrl = this.url.getString();
             if (resolvedUrl == null || resolvedUrl.isBlank()) {
                 resolvedUrl = FALLBACK_URL;
             }
-            this.browser = WrappedMCEFBrowser.build(resolvedUrl, true, false, null);
+            wrappedBrowser = WrappedMCEFBrowser.build(resolvedUrl, true, false, null);
         }
-        BrowserHandler.notifyHandler(this.getInstanceIdentifier(), this.browser);
+        this.browser = wrappedBrowser;
+        BrowserHandler.notifyHandler(instanceIdentifier, wrappedBrowser);
         this.lastTickUrl = null;
         this.lastTickWidth = -1;
         this.lastTickHeight = -1;
@@ -283,6 +293,10 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
     private void syncBrowserSettings(int width, int height) {
         WrappedMCEFBrowser wrappedBrowser = this.browser;
         if (wrappedBrowser == null) {
+            return;
+        }
+        if (wrappedBrowser.isClosed()) {
+            this.browser = null;
             return;
         }
 

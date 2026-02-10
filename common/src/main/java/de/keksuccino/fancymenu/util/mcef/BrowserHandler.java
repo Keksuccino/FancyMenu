@@ -68,10 +68,20 @@ public class BrowserHandler {
     }
 
     public static void notifyHandler(@NotNull String identifier, @NotNull WrappedMCEFBrowser browser) {
-        if (!BROWSERS.containsKey(identifier)) {
-            BROWSERS.put(identifier, Pair.of(browser, System.currentTimeMillis()));
+        long now = System.currentTimeMillis();
+        Pair<WrappedMCEFBrowser, Long> cached = BROWSERS.get(identifier);
+        if ((cached == null) || (cached.getFirst() != browser)) {
+            if ((cached != null) && (cached.getFirst() != null) && (cached.getFirst() != browser) && !cached.getFirst().isClosed()) {
+                try {
+                    cached.getFirst().close();
+                } catch (Exception ex) {
+                    LOGGER.error("[FANCYMENU] Failed to close stale MCEFBrowser!", ex);
+                }
+            }
+            BROWSERS.put(identifier, Pair.of(browser, now));
+            return;
         }
-        BROWSERS.get(identifier).setSecond(System.currentTimeMillis());
+        cached.setSecond(now);
     }
 
     @Nullable
