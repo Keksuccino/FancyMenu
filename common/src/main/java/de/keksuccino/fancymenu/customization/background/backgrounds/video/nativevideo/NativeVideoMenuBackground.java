@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.background.backgrounds.video.IVideo
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.properties.Property;
+import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -190,13 +191,47 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         ResourceLocation resourceLocation = this.video.getResourceLocation();
         if (resourceLocation != null) {
             graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
-            graphics.blit(resourceLocation, x, y, 0.0F, 0.0F, w, h, w, h);
+            if (this.keepBackgroundAspectRatio) {
+                this.renderKeepAspectRatio(graphics, resourceLocation, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
+            } else {
+                this.renderFullScreen(graphics, resourceLocation, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
+            }
         }
 
         RenderingUtils.resetShaderColor(graphics);
 
         RenderSystem.disableBlend();
 
+    }
+
+    protected void renderKeepAspectRatio(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset, float parallaxIntensityX, float parallaxIntensityY) {
+        AspectRatio ratio = this.video.getAspectRatio();
+        boolean parallax = this.parallaxEnabled.tryGetNonNull();
+        float parallaxScaleX = parallax ? (1.0F + parallaxIntensityX) : 1.0F;
+        float parallaxScaleY = parallax ? (1.0F + parallaxIntensityY) : 1.0F;
+        int[] baseSize = ratio.getAspectRatioSizeByMinimumSize(
+                (int)(getScreenWidth() * parallaxScaleX),
+                (int)(getScreenHeight() * parallaxScaleY)
+        );
+
+        int x = (getScreenWidth() - baseSize[0]) / 2 + (int)parallaxOffset[0];
+        int y = (getScreenHeight() - baseSize[1]) / 2 + (int)parallaxOffset[1];
+
+        graphics.blit(resourceLocation, x, y, 0.0F, 0.0F, baseSize[0], baseSize[1], baseSize[0], baseSize[1]);
+    }
+
+    protected void renderFullScreen(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset, float parallaxIntensityX, float parallaxIntensityY) {
+        if (this.parallaxEnabled.tryGetNonNull()) {
+            int expandedWidth = (int)(getScreenWidth() * (1.0F + parallaxIntensityX));
+            int expandedHeight = (int)(getScreenHeight() * (1.0F + parallaxIntensityY));
+
+            int x = -((expandedWidth - getScreenWidth()) / 2) + (int)parallaxOffset[0];
+            int y = -((expandedHeight - getScreenHeight()) / 2) + (int)parallaxOffset[1];
+
+            graphics.blit(resourceLocation, x, y, 0.0F, 0.0F, expandedWidth, expandedHeight, expandedWidth, expandedHeight);
+        } else {
+            graphics.blit(resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
+        }
     }
 
     protected void updateVideoReference(@Nullable IVideo newVideo) {
