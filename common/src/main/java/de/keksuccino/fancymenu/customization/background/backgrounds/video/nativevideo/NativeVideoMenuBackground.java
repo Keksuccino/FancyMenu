@@ -29,7 +29,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -41,6 +43,8 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
+    private static final Object VIDEO_REFERENCE_LOCK = new Object();
+    private static final Map<IVideo, Integer> VIDEO_REFERENCE_COUNTS = new IdentityHashMap<>();
 
     public final Property<ResourceSupplier<IVideo>> videoSupplier = putProperty(Property.resourceSupplierProperty(IVideo.class, "source", null, "fancymenu.elements.video_mcef.set_source", true, true, true, null));
     public final Property<Boolean> loop = putProperty(Property.booleanProperty("loop", false, "fancymenu.elements.video_mcef.loop"));
@@ -70,12 +74,15 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     protected final AtomicReference<Float> cachedPlayTime = new AtomicReference<>(0F);
     // The field is currently unused, but the scheduler is used, so don't delete this
     protected final ScheduledFuture<?> garbageChecker = EXECUTOR.scheduleAtFixedRate(() -> {
-        if (this.initialized && (this.lastRenderTickTime != -1L) && ((this.lastRenderTickTime + 11000L) < System.currentTimeMillis())) {
-            LOGGER.info("[FANCYMENU] Auto-clearing native video background after watchdog timeout. source: {}, videoType: {}, backgroundInstance: {}",
-                    this.getConfiguredVideoSourceForLog(),
-                    this.getVideoTypeForLog(),
+        if (this.initialized && !this.shouldSkipWatchdogAutoClear() && (this.lastRenderTickTime != -1L) && ((this.lastRenderTickTime + 11000L) < System.currentTimeMillis())) {
+            String sourceForLog = this.getConfiguredVideoSourceForLog();
+            String videoTypeForLog = this.getVideoTypeForLog();
+            boolean didStopPlayer = this.resetBackgroundAndReturnStopState();
+            LOGGER.info("[FANCYMENU] Auto-clearing native video background after watchdog timeout. source: {}, videoType: {}, didStopPlayer: {}, backgroundInstance: {}",
+                    sourceForLog,
+                    videoTypeForLog,
+                    didStopPlayer,
                     this.getInstanceIdentifier());
-            this.resetBackground();
         }
     }, 0L, 100L, TimeUnit.MILLISECONDS);
     // The field is currently unused, but the scheduler is used, so don't delete this
@@ -253,11 +260,15 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     protected void updateVideoReference(@Nullable IVideo newVideo) {
         if (this.video == newVideo) return;
 
-        if (this.video != null) {
-            this.video.stop();
+        IVideo oldVideo = this.video;
+        if (oldVideo != null) {
+            this.releaseVideoReference(oldVideo);
         }
 
         this.video = newVideo;
+        if (newVideo != null) {
+            this.acquireVideoReference(newVideo);
+        }
         this.initialized = (newVideo != null);
         this.lastLoop = null;
         this.cachedActualVolume = -10000F;
@@ -376,8 +387,14 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     }
 
     public void resetBackground() {
-        if (this.video != null) {
-            this.video.stop();
+        this.resetBackgroundAndReturnStopState();
+    }
+
+    protected boolean resetBackgroundAndReturnStopState() {
+        boolean didStopPlayer = false;
+        IVideo oldVideo = this.video;
+        if (oldVideo != null) {
+            didStopPlayer = this.releaseVideoReference(oldVideo);
         }
         this.initialized = false;
         this.video = null;
@@ -389,6 +406,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         this.pausedBySystem = false;
         this.cachedDuration.set(0F);
         this.cachedPlayTime.set(0F);
+        return didStopPlayer;
     }
 
     protected float _getDuration() {
@@ -450,6 +468,35 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         IVideo cachedVideo = this.video;
         if (cachedVideo == null) return "[null]";
         return cachedVideo.getClass().getName();
+    }
+
+    protected boolean shouldSkipWatchdogAutoClear() {
+        return isEditor() && this.playInEditor.tryGetNonNull();
+    }
+
+    protected void acquireVideoReference(@NotNull IVideo video) {
+        synchronized (VIDEO_REFERENCE_LOCK) {
+            VIDEO_REFERENCE_COUNTS.merge(video, 1, Integer::sum);
+        }
+    }
+
+    protected boolean releaseVideoReference(@NotNull IVideo video) {
+        boolean shouldStop = false;
+        synchronized (VIDEO_REFERENCE_LOCK) {
+            Integer amount = VIDEO_REFERENCE_COUNTS.get(video);
+            if ((amount == null) || (amount <= 1)) {
+                VIDEO_REFERENCE_COUNTS.remove(video);
+                shouldStop = true;
+            } else {
+                VIDEO_REFERENCE_COUNTS.put(video, amount - 1);
+            }
+        }
+        // Video resources are shared by source via ResourceHandler cache.
+        // Only stop once this was the last known background reference, otherwise another background would get interrupted.
+        if (shouldStop) {
+            video.stop();
+        }
+        return shouldStop;
     }
 
 }
