@@ -4,6 +4,7 @@ This document describes the GLSL runtime used by FancyMenu's:
 
 - `GLSL` menu background
 - `GLSL` element
+- `GLSL` decoration overlay
 
 It covers compile modes, multipass routing, supported uniforms, and practical shader authoring patterns.
 

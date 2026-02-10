@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.background.backgrounds;
 
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundRegistry;
+import de.keksuccino.fancymenu.customization.background.backgrounds.browser.BrowserMenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.backgrounds.color.ColorMenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.backgrounds.glsl.GlslMenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageMenuBackgroundBuilder;
@@ -14,6 +15,7 @@ public class MenuBackgrounds {
     public static final SlideshowMenuBackgroundBuilder SLIDESHOW = new SlideshowMenuBackgroundBuilder();
     public static final PanoramaMenuBackgroundBuilder PANORAMA = new PanoramaMenuBackgroundBuilder();
     public static final ColorMenuBackgroundBuilder COLOR = new ColorMenuBackgroundBuilder();
+    public static final BrowserMenuBackgroundBuilder BROWSER = new BrowserMenuBackgroundBuilder();
     public static final GlslMenuBackgroundBuilder GLSL = new GlslMenuBackgroundBuilder();
     public static final MCEFVideoMenuBackgroundBuilder VIDEO_MCEF = new MCEFVideoMenuBackgroundBuilder();
 
@@ -21,6 +23,7 @@ public class MenuBackgrounds {
 
         // Registering COLOR first is important to be able to use it as fallback for other background types or just to have a filler for backgrounds with transparent parts
         MenuBackgroundRegistry.register(COLOR);
+        MenuBackgroundRegistry.register(BROWSER);
         MenuBackgroundRegistry.register(PANORAMA);
         MenuBackgroundRegistry.register(IMAGE);
         MenuBackgroundRegistry.register(GLSL);

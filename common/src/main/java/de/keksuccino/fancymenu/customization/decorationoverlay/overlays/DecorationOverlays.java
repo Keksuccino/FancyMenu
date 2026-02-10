@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.Bu
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.confetti.ConfettiDecorationOverlayBuilder;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.firefly.FireflyDecorationOverlayBuilder;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.fireworks.FireworksDecorationOverlayBuilder;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.glsl.GlslDecorationOverlayBuilder;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.leaves.LeavesDecorationOverlayBuilder;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.rain.RainDecorationOverlayBuilder;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.snow.SnowDecorationOverlayBuilder;
@@ -22,10 +23,12 @@ public class DecorationOverlays {
     public static final ConfettiDecorationOverlayBuilder CONFETTI = new ConfettiDecorationOverlayBuilder();
     public static final BuddyDecorationOverlayBuilder BUDDY = new BuddyDecorationOverlayBuilder();
     public static final BrowserDecorationOverlayBuilder BROWSER = new BrowserDecorationOverlayBuilder();
+    public static final GlslDecorationOverlayBuilder GLSL = new GlslDecorationOverlayBuilder();
 
     public static void registerAll() {
 
         DecorationOverlayRegistry.register(BROWSER); // Browser should be the first one, so other overlays can render in front of it
+        DecorationOverlayRegistry.register(GLSL); // Keep GLSL near the back so overlays can render in front when needed
         DecorationOverlayRegistry.register(BUDDY);
         DecorationOverlayRegistry.register(STRING_LIGHTS);
         DecorationOverlayRegistry.register(FIREWORKS);
