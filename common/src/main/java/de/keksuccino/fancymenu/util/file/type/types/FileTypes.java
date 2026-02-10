@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.file.type.types;
 import de.keksuccino.fancymenu.util.file.type.FileCodec;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.FileTypeRegistry;
+import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
@@ -19,8 +20,10 @@ import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 public class FileTypes {
@@ -66,7 +69,17 @@ public class FileTypes {
 
     public static final VideoFileType MP4_VIDEO = new VideoFileType(
             FileCodec.advanced(IVideo.class, Mp4Video::of, Mp4Video::location, Mp4Video::local, Mp4Video::web),
-            "video/mp4", "mp4");
+            "video/mp4", "mp4") {
+        @Override
+        public boolean isFileTypeWeb(@NotNull String fileUrl) {
+            return super.isFileTypeWeb(fileUrl) || isYouTubeVideoUrl(fileUrl);
+        }
+
+        @Override
+        public boolean isFileTypeWebAdvanced(@NotNull String fileUrl) {
+            return isYouTubeVideoUrl(fileUrl) || super.isFileTypeWebAdvanced(fileUrl);
+        }
+    };
 
     public static final TextFileType TXT_TEXT = new TextFileType(
             FileCodec.advanced(IText.class, PlainText::of, PlainText::location, PlainText::local, PlainText::web),
@@ -252,6 +265,41 @@ public class FileTypes {
             }
         }
         return null;
+    }
+
+    protected static boolean isYouTubeVideoUrl(@NotNull String url) {
+        if (!TextValidators.BASIC_URL_TEXT_VALIDATOR.get(url)) return false;
+        try {
+            URI uri = new URI(url.trim());
+            String host = uri.getHost();
+            if (host == null) return false;
+            host = host.toLowerCase(Locale.ROOT);
+            if (host.startsWith("www.")) {
+                host = host.substring(4);
+            }
+            String path = Objects.requireNonNullElse(uri.getPath(), "").toLowerCase(Locale.ROOT);
+            String query = Objects.requireNonNullElse(uri.getQuery(), "").toLowerCase(Locale.ROOT);
+
+            if (host.equals("youtu.be")) {
+                return path.length() > 1;
+            }
+
+            boolean isYouTubeHost = host.equals("youtube.com")
+                    || host.endsWith(".youtube.com")
+                    || host.equals("youtube-nocookie.com")
+                    || host.endsWith(".youtube-nocookie.com");
+            if (!isYouTubeHost) return false;
+
+            if (path.equals("/watch")) {
+                return query.contains("v=");
+            }
+
+            return path.startsWith("/embed/")
+                    || path.startsWith("/shorts/")
+                    || path.startsWith("/live/");
+        } catch (Exception ignore) {
+            return false;
+        }
     }
 
 }
