@@ -194,7 +194,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		});
 
 		if (e.getInitializationPhase() == InitOrResizeScreenEvent.InitializationPhase.RESIZE) {
-			this.layoutBase.menuBackgrounds.forEach(MenuBackground::onBeforeResizeScreen);
+		this.layoutBase.menuBackgrounds.forEach(MenuBackground::onBeforeResizeScreen);
 		}
 
 		List<MenuBackground> oldMenuBackgrounds = new ArrayList<>(this.layoutBase.menuBackgrounds);
@@ -361,13 +361,14 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		//Add menu background to screen's widget list
 		this.layoutBase.menuBackgrounds.forEach(menuBackground -> {
-			((IMixinScreen)e.getScreen()).getChildrenFancyMenu().addFirst(menuBackground);
+			// Keep backgrounds at the end so normal screen widgets can consume input first.
+			((IMixinScreen)e.getScreen()).getChildrenFancyMenu().add(menuBackground);
 			if (e.getScreen() instanceof CustomizableScreen c) c.removeOnInitChildrenFancyMenu().add(menuBackground);
 		});
 
-		if (e.getInitializationPhase() == InitOrResizeScreenEvent.InitializationPhase.RESIZE) {
-			this.layoutBase.menuBackgrounds.forEach(MenuBackground::onAfterResizeScreen);
-		}
+			if (e.getInitializationPhase() == InitOrResizeScreenEvent.InitializationPhase.RESIZE) {
+				this.layoutBase.menuBackgrounds.forEach(MenuBackground::onAfterResizeScreen);
+			}
 
         this.layoutBase.decorationOverlays.forEach(pair -> {
             pair.getSecond().onScreenInitializedOrResized(e.getScreen(), this.allElements);

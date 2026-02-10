@@ -4,7 +4,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
-import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.browser.BrowserOverlayInputConsumers;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
@@ -18,8 +17,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Renderable;
-import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
@@ -61,11 +58,7 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
     private String lastTickUrl = null;
     private int lastTickWidth = -1;
     private int lastTickHeight = -1;
-    @Nullable
-    private String registeredInputConsumerId = null;
     private boolean autoFocusPending = true;
-
-    private final InputCaptureOverlay inputCaptureOverlay = new InputCaptureOverlay();
 
     public BrowserMenuBackground(MenuBackgroundBuilder<BrowserMenuBackground> builder) {
         super(builder);
@@ -78,16 +71,13 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
                 }
                 if (this.attachedScreen != null) {
                     if (this.isEditorScreenActive()) {
-                        this.unregisterInputCaptureOverlay();
                         this.destroyBrowser();
                     } else {
-                        this.ensureInputCaptureOverlayRegistered();
                         this.ensureBrowserCreated();
                         this.focusSelfAndBrowser();
                     }
                 }
             } else {
-                this.unregisterInputCaptureOverlay();
                 if (this.browser != null) {
                     this.browser.setBrowserFocused(false);
                 }
@@ -160,14 +150,12 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
         }
 
         if (this.isEditorScreenActive()) {
-            this.unregisterInputCaptureOverlay();
             this.destroyBrowser();
             this.renderEditorPreview(graphics, width, height);
             return;
         }
 
         this.ensureBrowserCreated();
-        this.ensureInputCaptureOverlayRegistered();
         if (this.autoFocusPending) {
             this.focusSelfAndBrowser();
             this.autoFocusPending = false;
@@ -213,12 +201,10 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
         this.attachedScreen = Minecraft.getInstance().screen;
         this.autoFocusPending = true;
         if (this.isEditorScreenActive()) {
-            this.unregisterInputCaptureOverlay();
             this.destroyBrowser();
             return;
         }
         if (this.showBackground.tryGetNonNullElse(false)) {
-            this.ensureInputCaptureOverlayRegistered();
             this.ensureBrowserCreated();
         }
         if (this.attachedScreen != null && this.browser != null && this.showBackground.tryGetNonNullElse(false)) {
@@ -232,7 +218,6 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
     @Override
     public void onCloseScreen(@Nullable Screen closedScreen, @Nullable Screen newScreen) {
         this.attachedScreen = null;
-        this.unregisterInputCaptureOverlay();
         this.destroyBrowser();
         CursorHandler.setClientTickCursor(CursorHandler.CURSOR_NORMAL);
     }
@@ -240,7 +225,6 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
     @Override
     public void onDisableOrRemove() {
         this.attachedScreen = null;
-        this.unregisterInputCaptureOverlay();
         this.destroyBrowser();
         CursorHandler.setClientTickCursor(CursorHandler.CURSOR_NORMAL);
     }
@@ -278,6 +262,11 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
         return this.consumeCharTyped(codePoint, modifiers);
+    }
+
+    @Override
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        return true;
     }
 
     private void ensureBrowserCreated() {
@@ -381,24 +370,6 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
         return Minecraft.getInstance().screen == this.attachedScreen;
     }
 
-    private void ensureInputCaptureOverlayRegistered() {
-        if (this.attachedScreen == null) {
-            return;
-        }
-        if (this.isEditorScreenActive()) {
-            return;
-        }
-        String desiredId = "background:" + this.getInstanceIdentifier();
-        if (Objects.equals(this.registeredInputConsumerId, desiredId)) {
-            return;
-        }
-        if (this.registeredInputConsumerId != null) {
-            BrowserOverlayInputConsumers.unregister(this.registeredInputConsumerId);
-        }
-        BrowserOverlayInputConsumers.register(desiredId, this.inputCaptureOverlay);
-        this.registeredInputConsumerId = desiredId;
-    }
-
     private boolean isEditorScreenActive() {
         return this.attachedScreen instanceof LayoutEditorScreen;
     }
@@ -422,14 +393,6 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
         }
 
         graphics.pose().popPose();
-    }
-
-    private void unregisterInputCaptureOverlay() {
-        if (this.registeredInputConsumerId == null) {
-            return;
-        }
-        BrowserOverlayInputConsumers.unregister(this.registeredInputConsumerId);
-        this.registeredInputConsumerId = null;
     }
 
     private void focusSelfAndBrowser() {
@@ -540,63 +503,4 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
         return this.consumeKeyboardPresses.tryGetNonNullElse(true);
     }
 
-    private class InputCaptureOverlay implements Renderable, GuiEventListener {
-
-        private boolean focused = false;
-
-        @Override
-        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            // No visual output, this only captures input before vanilla screen handling.
-        }
-
-        @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            return consumeMouseClicked(mouseX, mouseY, button);
-        }
-
-        @Override
-        public boolean mouseReleased(double mouseX, double mouseY, int button) {
-            return consumeMouseReleased(mouseX, mouseY, button);
-        }
-
-        @Override
-        public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-            return consumeMouseDragged(mouseX, mouseY, button);
-        }
-
-        @Override
-        public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
-            return consumeMouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
-        }
-
-        @Override
-        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-            return consumeKeyPressed(keyCode, scanCode, modifiers);
-        }
-
-        @Override
-        public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-            return consumeKeyReleased(keyCode, scanCode, modifiers);
-        }
-
-        @Override
-        public boolean charTyped(char codePoint, int modifiers) {
-            return consumeCharTyped(codePoint, modifiers);
-        }
-
-        @Override
-        public boolean isMouseOver(double mouseX, double mouseY) {
-            return true;
-        }
-
-        @Override
-        public void setFocused(boolean focused) {
-            this.focused = focused;
-        }
-
-        @Override
-        public boolean isFocused() {
-            return this.focused;
-        }
-    }
 }
