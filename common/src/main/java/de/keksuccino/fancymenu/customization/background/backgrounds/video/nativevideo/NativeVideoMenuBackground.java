@@ -219,7 +219,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
             }
         } else {
             // Keep editor playback alive even when lifecycle hooks paused the player in between renders.
-            if (!this.shouldKeepNaturalEndedState(this.video) && ((this.lastPausedState == null) || Objects.equals(true, this.lastPausedState) || this.video.isPaused())) {
+            if (!this.shouldKeepNaturalEndedState(this.video) && ((this.lastPausedState == null) || Objects.equals(true, this.lastPausedState) || this.video.isPaused() || (loop && this.video.isEnded()))) {
                 this.video.play();
             }
         }
