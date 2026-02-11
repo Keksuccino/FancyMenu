@@ -73,6 +73,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     private static final File VIDEO_THUMBNAIL_DIR_FANCYMENU = FileUtils.createDirectory(new File(FancyMenu.INSTANCE_DATA_DIR, "video_thumbnails"));
     private static final DrawableColor WATERMEDIA_MISSING_BACKGROUND_COLOR_FANCYMENU = DrawableColor.of(180, 0, 0);
     private static final String WATERMEDIA_V3_DOWNLOAD_URL_FANCYMENU = "https://www.curseforge.com/minecraft/mc-mods/watermedia/files/all?page=1&pageSize=20&showAlphaFiles=show";
+    private static final String WATERMEDIA_BINARIES_DOWNLOAD_URL_FANCYMENU = "https://www.curseforge.com/minecraft/mc-mods/watermedia-binaries/files/all?page=1&pageSize=20&showAlphaFiles=show";
 
     public final Property<ResourceSupplier<IVideo>> videoSupplier = putProperty(Property.resourceSupplierProperty(IVideo.class, "source", null, "fancymenu.elements.video_mcef.set_source", true, true, true, null));
     public final Property<Boolean> loop = putProperty(Property.booleanProperty("loop", false, "fancymenu.elements.video_mcef.loop"));
@@ -112,6 +113,10 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     protected float watermediaDownloadY_FancyMenu = Float.NaN;
     protected float watermediaDownloadWidth_FancyMenu = Float.NaN;
     protected float watermediaDownloadHeight_FancyMenu = Float.NaN;
+    protected float watermediaBinariesDownloadX_FancyMenu = Float.NaN;
+    protected float watermediaBinariesDownloadY_FancyMenu = Float.NaN;
+    protected float watermediaBinariesDownloadWidth_FancyMenu = Float.NaN;
+    protected float watermediaBinariesDownloadHeight_FancyMenu = Float.NaN;
     // The field is currently unused, but the scheduler is used, so don't delete this
     protected final ScheduledFuture<?> garbageChecker = EXECUTOR.scheduleAtFixedRate(() -> {
         if (this.initialized && !this.shouldSkipWatchdogAutoClear() && (this.lastRenderTickTime != -1L) && ((this.lastRenderTickTime + 11000L) < System.currentTimeMillis())) {
@@ -353,9 +358,15 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         if (button != 0) return false;
         if (!this.showBackground.tryGetNonNull()) return false;
         if (!this.shouldRenderWatermediaMissingOverlay_FancyMenu(this.videoSupplier.get())) return false;
-        if (!this.isMouseOverWatermediaDownloadLink_FancyMenu(mouseX, mouseY)) return false;
-        WebUtils.openWebLink(WATERMEDIA_V3_DOWNLOAD_URL_FANCYMENU);
-        return true;
+        if (this.isMouseOverWatermediaDownloadLink_FancyMenu(mouseX, mouseY)) {
+            WebUtils.openWebLink(WATERMEDIA_V3_DOWNLOAD_URL_FANCYMENU);
+            return true;
+        }
+        if (this.isMouseOverWatermediaBinariesDownloadLink_FancyMenu(mouseX, mouseY)) {
+            WebUtils.openWebLink(WATERMEDIA_BINARIES_DOWNLOAD_URL_FANCYMENU);
+            return true;
+        }
+        return false;
     }
 
     protected boolean shouldRenderWatermediaMissingOverlay_FancyMenu(@Nullable ResourceSupplier<IVideo> supplier) {
@@ -369,6 +380,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
 
         Component infoText = Component.translatable("fancymenu.backgrounds.video.watermedia_missing.info");
         Component downloadText = Component.translatable("fancymenu.backgrounds.video.watermedia_missing.download");
+        Component downloadBinariesText = Component.translatable("fancymenu.backgrounds.video.watermedia_missing.download_binaries");
 
         float normalTextSize = UIBase.getUITextSizeNormal();
         float largeTextSize = UIBase.getUITextSizeLarge();
@@ -376,28 +388,39 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         float infoTextHeight = UIBase.getUITextHeight(normalTextSize);
         float downloadTextWidth = UIBase.getUITextWidth(downloadText, largeTextSize);
         float downloadTextHeight = UIBase.getUITextHeight(largeTextSize);
+        float downloadBinariesTextWidth = UIBase.getUITextWidth(downloadBinariesText, largeTextSize);
+        float downloadBinariesTextHeight = UIBase.getUITextHeight(largeTextSize);
         float spacing = Math.max(4.0F, UIBase.getUITextHeightSmall());
-        float totalHeight = infoTextHeight + spacing + downloadTextHeight;
+        float totalHeight = infoTextHeight + spacing + downloadTextHeight + spacing + downloadBinariesTextHeight;
 
         float infoX = (width / 2.0F) - (infoTextWidth / 2.0F);
         float infoY = (height / 2.0F) - (totalHeight / 2.0F);
         float downloadX = (width / 2.0F) - (downloadTextWidth / 2.0F);
         float downloadY = infoY + infoTextHeight + spacing;
+        float downloadBinariesX = (width / 2.0F) - (downloadBinariesTextWidth / 2.0F);
+        float downloadBinariesY = downloadY + downloadTextHeight + spacing;
 
         this.watermediaDownloadX_FancyMenu = downloadX;
         this.watermediaDownloadY_FancyMenu = downloadY;
         this.watermediaDownloadWidth_FancyMenu = downloadTextWidth;
         this.watermediaDownloadHeight_FancyMenu = downloadTextHeight;
+        this.watermediaBinariesDownloadX_FancyMenu = downloadBinariesX;
+        this.watermediaBinariesDownloadY_FancyMenu = downloadBinariesY;
+        this.watermediaBinariesDownloadWidth_FancyMenu = downloadBinariesTextWidth;
+        this.watermediaBinariesDownloadHeight_FancyMenu = downloadBinariesTextHeight;
 
-        boolean hovered = this.isMouseOverWatermediaDownloadLink_FancyMenu(mouseX, mouseY);
-        if (hovered) {
+        boolean hoveredMain = this.isMouseOverWatermediaDownloadLink_FancyMenu(mouseX, mouseY);
+        boolean hoveredBinaries = this.isMouseOverWatermediaBinariesDownloadLink_FancyMenu(mouseX, mouseY);
+        if (hoveredMain || hoveredBinaries) {
             CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
         }
-        Component renderedDownloadText = downloadText.copy().setStyle(Style.EMPTY.withUnderlined(hovered));
+        Component renderedDownloadText = downloadText.copy().setStyle(Style.EMPTY.withUnderlined(hoveredMain));
+        Component renderedDownloadBinariesText = downloadBinariesText.copy().setStyle(Style.EMPTY.withUnderlined(hoveredBinaries));
 
         int textColor = DrawableColor.WHITE.getColorIntWithAlpha(this.opacity);
         UIBase.renderText(graphics, infoText, infoX, infoY, textColor, normalTextSize);
         UIBase.renderText(graphics, renderedDownloadText, downloadX, downloadY, textColor, largeTextSize);
+        UIBase.renderText(graphics, renderedDownloadBinariesText, downloadBinariesX, downloadBinariesY, textColor, largeTextSize);
     }
 
     protected boolean isMouseOverWatermediaDownloadLink_FancyMenu(double mouseX, double mouseY) {
@@ -413,11 +436,28 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
                 && (mouseY <= (this.watermediaDownloadY_FancyMenu + this.watermediaDownloadHeight_FancyMenu));
     }
 
+    protected boolean isMouseOverWatermediaBinariesDownloadLink_FancyMenu(double mouseX, double mouseY) {
+        if (!Float.isFinite(this.watermediaBinariesDownloadX_FancyMenu)
+                || !Float.isFinite(this.watermediaBinariesDownloadY_FancyMenu)
+                || !Float.isFinite(this.watermediaBinariesDownloadWidth_FancyMenu)
+                || !Float.isFinite(this.watermediaBinariesDownloadHeight_FancyMenu)) {
+            return false;
+        }
+        return (mouseX >= this.watermediaBinariesDownloadX_FancyMenu)
+                && (mouseX <= (this.watermediaBinariesDownloadX_FancyMenu + this.watermediaBinariesDownloadWidth_FancyMenu))
+                && (mouseY >= this.watermediaBinariesDownloadY_FancyMenu)
+                && (mouseY <= (this.watermediaBinariesDownloadY_FancyMenu + this.watermediaBinariesDownloadHeight_FancyMenu));
+    }
+
     protected void resetWatermediaDownloadLinkBounds_FancyMenu() {
         this.watermediaDownloadX_FancyMenu = Float.NaN;
         this.watermediaDownloadY_FancyMenu = Float.NaN;
         this.watermediaDownloadWidth_FancyMenu = Float.NaN;
         this.watermediaDownloadHeight_FancyMenu = Float.NaN;
+        this.watermediaBinariesDownloadX_FancyMenu = Float.NaN;
+        this.watermediaBinariesDownloadY_FancyMenu = Float.NaN;
+        this.watermediaBinariesDownloadWidth_FancyMenu = Float.NaN;
+        this.watermediaBinariesDownloadHeight_FancyMenu = Float.NaN;
     }
 
     protected void renderKeepAspectRatio(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset, float parallaxIntensityX, float parallaxIntensityY) {
