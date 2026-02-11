@@ -8,8 +8,6 @@ import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.konkrete.math.MathUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.Map;
-import java.util.function.Supplier;
 
 public class DelayExecutableBlock extends AbstractExecutableBlock {
 
@@ -99,13 +97,7 @@ public class DelayExecutableBlock extends AbstractExecutableBlock {
             return null;
         }
         if (!this.valuePlaceholders.isEmpty()) {
-            for (Map.Entry<String, Supplier<String>> entry : this.valuePlaceholders.entrySet()) {
-                String replaceWith = entry.getValue().get();
-                if (replaceWith == null) {
-                    replaceWith = "";
-                }
-                value = value.replace(ValuePlaceholderHolder.VALUE_PLACEHOLDER_PREFIX + entry.getKey(), replaceWith);
-            }
+            value = ValuePlaceholderHolder.applyValuePlaceholders(value, this.valuePlaceholders);
         }
         return PlaceholderParser.replacePlaceholders(value);
     }

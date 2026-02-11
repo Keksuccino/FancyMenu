@@ -40,11 +40,7 @@ public class RequirementInstance implements ValuePlaceholderHolder {
         if (!this.requirement.checkAsync()) return false;
         String v = this.value;
         if (v != null) {
-            for (Map.Entry<String, Supplier<String>> m : this.valuePlaceholders.entrySet()) {
-                String replaceWith = m.getValue().get();
-                if (replaceWith == null) replaceWith = "";
-                v = v.replace(VALUE_PLACEHOLDER_PREFIX + m.getKey(), replaceWith);
-            }
+            v = ValuePlaceholderHolder.applyValuePlaceholders(v, this.valuePlaceholders);
             v = PlaceholderParser.replacePlaceholders(v);
         }
         this.requirement.setCurrentInstance(this);
