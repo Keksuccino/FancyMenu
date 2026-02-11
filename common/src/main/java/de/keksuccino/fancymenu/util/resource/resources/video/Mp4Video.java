@@ -29,6 +29,7 @@ public class Mp4Video implements IVideo {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final File TEMP_VIDEO_DIR = FileUtils.createDirectory(new File(FancyMenu.TEMP_DATA_DIR, "/watermedia_videos"));
+    private static final int HARD_STOP_DEFER_TICKS = 2;
 
     @Nullable
     protected volatile Object mrl;
@@ -59,6 +60,8 @@ public class Mp4Video implements IVideo {
     protected volatile long seekRequestedMs = -1L;
     protected volatile boolean closed = false;
     protected volatile boolean playerInitTaskQueued = false;
+    protected volatile long stopRequestVersion = 0L;
+    protected volatile boolean restartFromBeginningOnNextPlay = false;
     protected final Object playerInitLock = new Object();
 
     @NotNull
@@ -361,10 +364,16 @@ public class Mp4Video implements IVideo {
     @Override
     public void play() {
         if (this.closed || this.dependencyMissing || this.loadingFailed) return;
+        this.stopRequestVersion++;
         this.playRequested = true;
         this.pausedRequested = false;
+        boolean restartFromBeginning = this.restartFromBeginningOnNextPlay;
+        this.restartFromBeginningOnNextPlay = false;
         Object cachedPlayer = this.mediaPlayer;
         if (cachedPlayer != null) {
+            if (restartFromBeginning) {
+                this.seekPlayerToBeginning(cachedPlayer);
+            }
             if (WatermediaReflectionBridge.playerIsPaused(cachedPlayer)) {
                 WatermediaReflectionBridge.playerPause(cachedPlayer, false);
             } else {
@@ -428,9 +437,14 @@ public class Mp4Video implements IVideo {
     public void stop() {
         this.playRequested = false;
         this.pausedRequested = false;
+        this.seekRequestedMs = -1L;
+        this.restartFromBeginningOnNextPlay = true;
+        long stopVersion = ++this.stopRequestVersion;
         Object cachedPlayer = this.mediaPlayer;
         if (cachedPlayer != null) {
-            WatermediaReflectionBridge.playerStop(cachedPlayer);
+            // Queue a deferred hard-stop so render-thread upload tasks can drain before FFmpeg cleanup.
+            WatermediaReflectionBridge.playerPause(cachedPlayer, true);
+            this.queueDeferredHardStop(cachedPlayer, stopVersion, HARD_STOP_DEFER_TICKS);
         }
     }
 
@@ -524,9 +538,11 @@ public class Mp4Video implements IVideo {
 
     @Override
     public void close() {
+        this.stopRequestVersion++;
         this.closed = true;
         this.playRequested = false;
         this.pausedRequested = false;
+        this.restartFromBeginningOnNextPlay = false;
         this.looping = false;
         Object cachedPlayer = this.mediaPlayer;
         this.mediaPlayer = null;
@@ -604,6 +620,39 @@ public class Mp4Video implements IVideo {
         this.playRequested = false;
         if (cause != null) LOGGER.error("[FANCYMENU] {}", message, cause);
         else LOGGER.error("[FANCYMENU] {}", message);
+    }
+
+    protected void queueDeferredHardStop(@NotNull Object player, long stopVersion, int ticksToWait) {
+        MainThreadTaskExecutor.executeInMainThread(() -> this.runDeferredHardStop(player, stopVersion, ticksToWait), MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
+    }
+
+    protected void runDeferredHardStop(@NotNull Object player, long stopVersion, int ticksToWait) {
+        if (!this.shouldExecuteDeferredHardStop(player, stopVersion)) return;
+        if (ticksToWait > 0) {
+            this.queueDeferredHardStop(player, stopVersion, ticksToWait - 1);
+            return;
+        }
+        WatermediaReflectionBridge.playerStop(player);
+    }
+
+    protected boolean shouldExecuteDeferredHardStop(@NotNull Object player, long stopVersion) {
+        if (this.closed) return false;
+        if (this.stopRequestVersion != stopVersion) return false;
+        if (this.playRequested) return false;
+        return this.mediaPlayer == player;
+    }
+
+    protected void seekPlayerToBeginning(@NotNull Object player) {
+        String statusName = WatermediaReflectionBridge.playerStatusName(player);
+        if (statusName.equals("WAITING") || statusName.equals("LOADING") || statusName.equals("BUFFERING")) {
+            this.seekRequestedMs = 1L;
+            return;
+        }
+        if (WatermediaReflectionBridge.playerSeek(player, 0L)) {
+            this.seekRequestedMs = -1L;
+            return;
+        }
+        this.seekRequestedMs = 1L;
     }
 
 }
