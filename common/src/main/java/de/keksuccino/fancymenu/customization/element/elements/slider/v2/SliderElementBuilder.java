@@ -75,7 +75,7 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
         if (executableBlockId != null) {
             AbstractExecutableBlock b = ExecutableBlockDeserializer.deserializeWithIdentifier(serialized, executableBlockId);
             if (b instanceof GenericExecutableBlock g) {
-                element.executableBlock = g;
+                element.setExecutableBlock(g);
             }
         }
 

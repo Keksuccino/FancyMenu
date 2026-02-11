@@ -98,7 +98,7 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                             ActionScriptEditorWindowBody s = new ActionScriptEditorWindowBody((this.element).getExecutableBlock(), call -> {
                                 if (call != null) {
                                     this.editor.history.saveSnapshot();
-                                    (this.element).executableBlock = call;
+                                    (this.element).setExecutableBlock(call);
                                 }
                             });
                             menu.closeMenuChain();

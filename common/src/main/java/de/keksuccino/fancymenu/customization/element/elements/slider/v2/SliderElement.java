@@ -298,6 +298,11 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         return this.executableBlock;
     }
 
+    public void setExecutableBlock(@NotNull GenericExecutableBlock executableBlock) {
+        this.executableBlock = executableBlock;
+        this.prepareExecutableBlock();
+    }
+
     @Override
     public int getAbsoluteWidth() {
         if (this.isTemplateActive()) {
