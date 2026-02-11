@@ -24,8 +24,6 @@ public class Listeners {
     public static final OnElementSpawnedListener ON_ELEMENT_SPAWNED = new OnElementSpawnedListener();
     public static final OnAnimatedTextureStartedPlayingListener ON_ANIMATED_TEXTURE_STARTED_PLAYING = new OnAnimatedTextureStartedPlayingListener();
     public static final OnAnimatedTextureFinishedPlayingListener ON_ANIMATED_TEXTURE_FINISHED_PLAYING = new OnAnimatedTextureFinishedPlayingListener();
-    public static final OnVideoStartedPlayingListener ON_VIDEO_STARTED_PLAYING = new OnVideoStartedPlayingListener();
-    public static final OnVideoFinishedPlayingListener ON_VIDEO_FINISHED_PLAYING = new OnVideoFinishedPlayingListener();
     public static final OnVideoPlaybackStatusChangedListener ON_VIDEO_PLAYBACK_STATUS_CHANGED = new OnVideoPlaybackStatusChangedListener();
     public static final OnChatMessageReceivedListener ON_CHAT_MESSAGE_RECEIVED = new OnChatMessageReceivedListener();
     public static final OnChatMessageSentListener ON_CHAT_MESSAGE_SENT = new OnChatMessageSentListener();
@@ -109,8 +107,6 @@ public class Listeners {
         ListenerRegistry.register(ON_ELEMENT_SPAWNED);
         ListenerRegistry.register(ON_ANIMATED_TEXTURE_STARTED_PLAYING);
         ListenerRegistry.register(ON_ANIMATED_TEXTURE_FINISHED_PLAYING);
-        ListenerRegistry.register(ON_VIDEO_STARTED_PLAYING);
-        ListenerRegistry.register(ON_VIDEO_FINISHED_PLAYING);
         ListenerRegistry.register(ON_VIDEO_PLAYBACK_STATUS_CHANGED);
         ListenerRegistry.register(ON_CHAT_MESSAGE_RECEIVED);
         ListenerRegistry.register(ON_CHAT_MESSAGE_SENT);

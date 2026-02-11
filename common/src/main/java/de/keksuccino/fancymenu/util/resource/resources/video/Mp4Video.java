@@ -773,11 +773,6 @@ public class Mp4Video implements IVideo {
         this.listenerPlaybackCycleActive = true;
         this.listenerFinishedEventEmittedForCycle = false;
         this.listenerLastKnownPlaybackTimeSeconds = 0.0D;
-        Listeners.ON_VIDEO_STARTED_PLAYING.onVideoStartedPlaying(
-                this.resolveVideoSourceForListener(),
-                this.resolveVideoSourceTypeForListener(),
-                this.looping
-        );
         return true;
     }
 
@@ -786,11 +781,6 @@ public class Mp4Video implements IVideo {
         if (!this.listenerPlaybackCycleActive || this.listenerFinishedEventEmittedForCycle) return false;
         this.listenerPlaybackCycleActive = false;
         this.listenerFinishedEventEmittedForCycle = true;
-        Listeners.ON_VIDEO_FINISHED_PLAYING.onVideoFinishedPlaying(
-                this.resolveVideoSourceForListener(),
-                this.resolveVideoSourceTypeForListener(),
-                willRestart
-        );
         return true;
     }
 
@@ -801,9 +791,7 @@ public class Mp4Video implements IVideo {
     }
 
     protected boolean hasVideoPlaybackListeners() {
-        return Listeners.ON_VIDEO_STARTED_PLAYING.hasInstancesListening()
-                || Listeners.ON_VIDEO_FINISHED_PLAYING.hasInstancesListening()
-                || Listeners.ON_VIDEO_PLAYBACK_STATUS_CHANGED.hasInstancesListening();
+        return Listeners.ON_VIDEO_PLAYBACK_STATUS_CHANGED.hasInstancesListening();
     }
 
     protected void maybeEmitVideoPlaybackStatusChanged(@NotNull OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus status) {
