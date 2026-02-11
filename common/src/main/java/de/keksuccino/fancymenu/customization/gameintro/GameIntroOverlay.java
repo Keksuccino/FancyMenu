@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollS
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.resources.audio.PlayableResourceWithAudio;
+import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -214,7 +215,12 @@ public class GameIntroOverlay extends Overlay {
     }
 
     protected void close() {
-        this.intro.stop();
+        if (this.intro instanceof IVideo) {
+            // Watermedia-backed videos can crash when hard-stopped during skip, so pause instead.
+            this.intro.pause();
+        } else {
+            this.intro.stop();
+        }
         if (!this.fadeToInitialized) this.initFadeToScreen();
         Minecraft.getInstance().setOverlay(null);
     }
