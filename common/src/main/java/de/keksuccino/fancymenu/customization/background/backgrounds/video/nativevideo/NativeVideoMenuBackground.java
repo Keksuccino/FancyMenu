@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -29,11 +30,15 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -46,6 +51,8 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
     private static final Object VIDEO_REFERENCE_LOCK = new Object();
     private static final Map<IVideo, Integer> VIDEO_REFERENCE_COUNTS = new IdentityHashMap<>();
+    private static final Object BACKGROUND_INSTANCE_LOCK_FANCYMENU = new Object();
+    private static final Set<NativeVideoMenuBackground> BACKGROUND_INSTANCES_FANCYMENU = Collections.newSetFromMap(new WeakHashMap<>());
     private static final String MEMORY_LAST_STOPPED_PLAY_TIME_SECONDS_FANCYMENU = "native_video_last_stopped_play_time_seconds";
     private static final String MEMORY_LAST_STOPPED_SOURCE_FANCYMENU = "native_video_last_stopped_source";
     private static final String MEMORY_LAST_ENDED_SOURCE_FANCYMENU = "native_video_last_ended_source";
@@ -107,6 +114,51 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
 
     public NativeVideoMenuBackground(MenuBackgroundBuilder<NativeVideoMenuBackground> builder) {
         super(builder);
+        synchronized (BACKGROUND_INSTANCE_LOCK_FANCYMENU) {
+            BACKGROUND_INSTANCES_FANCYMENU.add(this);
+        }
+    }
+
+    public static int forceReloadAllAfterSoundEngineReload_FancyMenu() {
+        List<NativeVideoMenuBackground> backgrounds;
+        synchronized (BACKGROUND_INSTANCE_LOCK_FANCYMENU) {
+            backgrounds = new ArrayList<>(BACKGROUND_INSTANCES_FANCYMENU);
+        }
+
+        if (backgrounds.isEmpty()) return 0;
+
+        Set<IVideo> videosToRelease = Collections.newSetFromMap(new IdentityHashMap<>());
+        int resetCount = 0;
+        int stoppedCount = 0;
+
+        for (NativeVideoMenuBackground background : backgrounds) {
+            if (background == null) continue;
+            IVideo oldVideo = background.video;
+            if (oldVideo != null) {
+                videosToRelease.add(oldVideo);
+            }
+            if (background.resetBackgroundAndReturnStopState()) {
+                stoppedCount++;
+            }
+            resetCount++;
+        }
+
+        int releasedCount = 0;
+        for (IVideo video : videosToRelease) {
+            try {
+                ResourceHandlers.getVideoHandler().release(video);
+                releasedCount++;
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to release cached native video resource after sound engine reload!", ex);
+            }
+        }
+
+        LOGGER.info("[FANCYMENU] Forced native video background reload after sound engine reload. backgroundsReset: {}, stoppedPlayers: {}, videoResourcesReleased: {}",
+                resetCount,
+                stoppedCount,
+                releasedCount);
+
+        return resetCount;
     }
 
     @Override
