@@ -40,7 +40,6 @@ public class FancyMenu {
 		if (f.isDirectory()) org.apache.commons.io.FileUtils.deleteQuietly(f);
 		return createDirectory(f);
 	});
-	public static final File CACHE_DIR = createDirectory(new File(INSTANCE_DATA_DIR, "/cached_data"));
 
 	private static Options options;
 

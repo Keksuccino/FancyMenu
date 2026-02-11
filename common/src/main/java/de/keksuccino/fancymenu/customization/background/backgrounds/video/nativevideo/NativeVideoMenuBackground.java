@@ -56,6 +56,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     private static final String MEMORY_LAST_STOPPED_PLAY_TIME_SECONDS_FANCYMENU = "native_video_last_stopped_play_time_seconds";
     private static final String MEMORY_LAST_STOPPED_SOURCE_FANCYMENU = "native_video_last_stopped_source";
     private static final String MEMORY_LAST_ENDED_SOURCE_FANCYMENU = "native_video_last_ended_source";
+    private static final ResourceLocation MISSING_TEXTURE_FANCYMENU = IVideo.MISSING_TEXTURE_LOCATION;
 
     public final Property<ResourceSupplier<IVideo>> videoSupplier = putProperty(Property.resourceSupplierProperty(IVideo.class, "source", null, "fancymenu.elements.video_mcef.set_source", true, true, true, null));
     public final Property<Boolean> loop = putProperty(Property.booleanProperty("loop", false, "fancymenu.elements.video_mcef.loop"));
@@ -284,7 +285,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         this.lastPausedState = pausedState;
 
         ResourceLocation resourceLocation = this.video.getResourceLocation();
-        if (resourceLocation != null) {
+        if ((resourceLocation != null) && !(pausedState && Objects.equals(resourceLocation, MISSING_TEXTURE_FANCYMENU))) {
             graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
             if (this.keepBackgroundAspectRatio) {
                 this.renderKeepAspectRatio(graphics, resourceLocation, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
