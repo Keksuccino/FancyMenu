@@ -85,6 +85,10 @@
   - Force-executes a command in singleplayer as the integrated server, ignoring permissions and the cheats setting
   - Does nothing on multiplayer or when the world is opened to LAN
 - Added "Stop All Action Audios" action to stop all audio tracks started via the "Play Audio" action
+- Added "Video" menu background type (powered by Watermedia v3) that will replace the now deprecated "MCEF Video" menu background type
+  - This new Video menu background is now an actual (native) Video background and not just a wrapped web browser anymore, which makes it a lot more stable and optimizable
+  - The "Watermedia" (v3) and "Watermedia Binaries" (v3) mods are needed for video support to work (these are not mandatory dependencies, so you need to manually add them to your instance if needed)
+- Added "Video Playback Status Changed" listener that triggers whenever a video resource changes its playback status (PLAYING, PAUSED, STOPPED, FINISHED)
 - Added "Animated Texture Started Playing" listener that triggers when an animated texture (FMA, APNG, GIF) starts playing (#1335)
 - Added "Animated Texture Finished Playing" listener that triggers when an animated texture (FMA, APNG, GIF) finished playing (#1335)
 - Added "On Item Hovered in Inventory" listener that triggers when the users hovers an item in any inventory (player inventory, chests, etc.) (#1432)
