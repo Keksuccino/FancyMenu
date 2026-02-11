@@ -215,9 +215,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         this.updateRightClickContextMenu(false, null);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
-            this.finishInlineNameEditing(true);
-            this.finishInlineValueEditing(true);
-            this.closeWithResult(this.executableBlock);
+            this.onDone();
         });
         this.doneButton.setNavigatable(false);
         this.addWidget(this.doneButton);
@@ -289,6 +287,12 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         this.skipCloseWarning = true;
         this.callback.accept(result);
         this.closeWindow();
+    }
+
+    protected void onDone() {
+        this.finishInlineNameEditing(true);
+        this.finishInlineValueEditing(true);
+        this.closeWithResult(this.executableBlock);
     }
 
     protected void updateRightClickContextMenu(boolean reopen, @Nullable List<String> entryPath) {
@@ -1524,6 +1528,15 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        boolean ctrlDown = hasControlDown();
+        String keyName = GLFW.glfwGetKeyName(keyCode, scanCode);
+        keyName = (keyName != null) ? keyName.toLowerCase(Locale.ROOT) : "";
+
+        if (ctrlDown && "s".equals(keyName)) {
+            this.onDone();
+            return true;
+        }
+
         if (this.inlineNameEditBox != null) {
             if ((keyCode == InputConstants.KEY_ENTER) || (keyCode == InputConstants.KEY_NUMPADENTER)) {
                 this.finishInlineNameEditing(true);
@@ -1557,10 +1570,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
 
         if (!contextMenuActive && !inlineEditingActive) {
             ExecutableEntry selected = this.getSelectedEntry();
-            boolean ctrlDown = hasControlDown();
             boolean shiftDown = hasShiftDown();
-            String keyName = GLFW.glfwGetKeyName(keyCode, scanCode);
-            keyName = (keyName != null) ? keyName.toLowerCase(Locale.ROOT) : "";
 
             if (keyCode == InputConstants.KEY_DELETE) {
                 if (this.deleteSelectedEntryDirectly()) {
