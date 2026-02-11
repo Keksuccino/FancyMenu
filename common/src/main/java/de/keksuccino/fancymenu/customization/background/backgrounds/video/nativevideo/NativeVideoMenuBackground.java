@@ -569,7 +569,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     protected boolean _isPaused() {
         if (isEditor()) {
             if (!this.playInEditor.tryGetNonNull()) return true;
-            return this.getControllerPausedState();
+            return false;
         }
         return (this.getControllerPausedState() || this.pausedBySystem);
     }

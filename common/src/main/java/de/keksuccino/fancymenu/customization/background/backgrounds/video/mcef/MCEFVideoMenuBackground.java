@@ -413,6 +413,7 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
     }
 
     protected boolean _isPaused() {
+        if (isEditor()) return false;
         return (this.getControllerPausedState() || this.pausedBySystem);
     }
 
