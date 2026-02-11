@@ -387,12 +387,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     @Override
     public void onOpenScreen() {
         super.onOpenScreen();
-        if (this.initialized && (this.video != null) && this.pausedBySystem) {
-            this.pausedBySystem = false;
-            if (!this.shouldKeepNaturalEndedState(this.video)) {
-                this.video.play();
-            }
-        }
+        this.tryResumeFromSystemPauseIfNeeded();
     }
 
     @Override
@@ -408,12 +403,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     @Override
     public void onAfterEnable() {
         super.onAfterEnable();
-        if (this.initialized && (this.video != null) && this.pausedBySystem) {
-            this.pausedBySystem = false;
-            if (!this.shouldKeepNaturalEndedState(this.video)) {
-                this.video.play();
-            }
-        }
+        this.tryResumeFromSystemPauseIfNeeded();
     }
 
     @Override
@@ -515,6 +505,18 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
             return this.getControllerPausedState();
         }
         return (this.getControllerPausedState() || this.pausedBySystem);
+    }
+
+    protected void tryResumeFromSystemPauseIfNeeded() {
+        if (!this.initialized || (this.video == null) || !this.pausedBySystem) return;
+        this.pausedBySystem = false;
+        if (this._isPaused()) {
+            this.video.pause();
+            return;
+        }
+        if (!this.shouldKeepNaturalEndedState(this.video)) {
+            this.video.play();
+        }
     }
 
     @Override
