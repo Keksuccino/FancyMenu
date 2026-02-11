@@ -1,20 +1,25 @@
 package de.keksuccino.fancymenu.util.rendering.video.mcef;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.ObjectHolder;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
+import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -28,6 +33,10 @@ public class MCEFVideoPlayer {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final long JS_RESULT_TIMEOUT_MS = 1000; // Timeout for waiting for JS result (e.g., 1 second)
+    private static final ScheduledExecutorService PLAYBACK_LISTENER_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
+    private static final long PLAYBACK_LISTENER_TICK_MS = 250L;
+    private static final double PLAYBACK_END_EPSILON_SECONDS = 0.12D;
+    private static final double LOOP_RESTART_WINDOW_SECONDS = 0.40D;
 
     protected volatile WrappedMCEFBrowser browser;
     protected volatile float volume = 1.0f;
@@ -41,6 +50,11 @@ public class MCEFVideoPlayer {
     protected volatile int width = 200;
     protected volatile int height = 200;
     protected volatile boolean initialized = false;
+    protected volatile boolean listenerPlaybackCycleActive = false;
+    protected volatile boolean listenerFinishedEventEmittedForCycle = false;
+    protected volatile double listenerLastKnownPlaybackTimeSeconds = 0.0D;
+    @Nullable
+    protected volatile ScheduledFuture<?> playbackListenerTicker = null;
     private final String instanceId = UUID.randomUUID().toString(); // For unique JS communication if needed
 
     /**
@@ -97,6 +111,7 @@ public class MCEFVideoPlayer {
             this.browser = WrappedMCEFBrowser.build(playerUrl, false, false, posX, posY, width, height, success -> {
                 if (success) {
                     initialized = true;
+                    this.startPlaybackListenerTicker();
                 } else {
                     LOGGER.error("[FANCYMENU] Failed to initialize MCEFVideoPlayer for browser with ID: " + (this.browser != null ? this.browser.getIdentifier() : "unknown"));
                     initialized = false;
@@ -192,6 +207,10 @@ public class MCEFVideoPlayer {
      */
     public void loadVideo(@NotNull String videoPath) {
         executeWhenInitialized(() -> {
+            boolean sourceChanged = !Objects.equals(this.currentVideoPath, videoPath);
+            if (sourceChanged) {
+                this.resetVideoPlaybackListenerState();
+            }
             this.currentVideoPath = videoPath;
             String escapedVideoPath = videoPath.replace("\\", "\\\\").replace("'", "\\'");
             String script = String.format("if(window.videoPlayerAPI && window.videoPlayerAPI.loadVideo) { window.videoPlayerAPI.loadVideo('%s'); } else { console.error('[FANCYMENU] videoPlayerAPI.loadVideo not found!'); }", escapedVideoPath);
@@ -204,6 +223,7 @@ public class MCEFVideoPlayer {
      */
     public void play() {
         executeWhenInitialized(() -> {
+            this.maybeEmitVideoStartedEvent();
             executeJavaScript("if(window.videoPlayerAPI && window.videoPlayerAPI.play) { window.videoPlayerAPI.play(); } else { console.error('[FANCYMENU] videoPlayerAPI.play not found!'); }");
         });
     }
@@ -231,6 +251,7 @@ public class MCEFVideoPlayer {
      */
     public void stop() {
         executeWhenInitialized(() -> {
+            this.resetVideoPlaybackListenerState();
             executeJavaScript("if(window.videoPlayerAPI && window.videoPlayerAPI.stop) { window.videoPlayerAPI.stop(); } else { console.error('[FANCYMENU] videoPlayerAPI.stop not found!'); }");
         });
     }
@@ -800,6 +821,8 @@ public class MCEFVideoPlayer {
      */
     public void dispose() {
         this.stop();
+        this.stopPlaybackListenerTicker();
+        this.resetVideoPlaybackListenerState();
         if (browser != null) {
             try {
                 browser.close();
@@ -809,6 +832,120 @@ public class MCEFVideoPlayer {
         }
         browser = null;
         initialized = false;
+    }
+
+    protected void startPlaybackListenerTicker() {
+        if (this.playbackListenerTicker != null && !this.playbackListenerTicker.isCancelled()) return;
+        this.playbackListenerTicker = PLAYBACK_LISTENER_EXECUTOR.scheduleAtFixedRate(this::updatePlaybackListenerState, 0L, PLAYBACK_LISTENER_TICK_MS, TimeUnit.MILLISECONDS);
+    }
+
+    protected void stopPlaybackListenerTicker() {
+        ScheduledFuture<?> ticker = this.playbackListenerTicker;
+        if (ticker != null) {
+            ticker.cancel(true);
+        }
+        this.playbackListenerTicker = null;
+    }
+
+    protected void updatePlaybackListenerState() {
+        if (!this.hasVideoPlaybackListeners()) {
+            this.resetVideoPlaybackListenerState();
+            return;
+        }
+        if (!this.initialized) return;
+        if (this.currentVideoPath == null || this.currentVideoPath.isBlank()) return;
+        if (!this.listenerPlaybackCycleActive && !this.listenerFinishedEventEmittedForCycle) return;
+
+        double duration = Math.max(0.0D, this.getDuration());
+        double currentTime = Math.max(0.0D, this.getCurrentTime());
+        boolean playing = this.isPlaying();
+        double previousTime = Math.max(0.0D, this.listenerLastKnownPlaybackTimeSeconds);
+
+        if (this.listenerPlaybackCycleActive && !this.listenerFinishedEventEmittedForCycle) {
+            boolean nearEnd = duration > PLAYBACK_END_EPSILON_SECONDS && currentTime >= Math.max(0.0D, duration - PLAYBACK_END_EPSILON_SECONDS);
+            if (!this.looping && nearEnd && !playing) {
+                this.maybeEmitVideoFinishedEvent(false);
+            } else if (this.looping) {
+                boolean wrappedAround = duration > PLAYBACK_END_EPSILON_SECONDS
+                        && previousTime >= Math.max(0.0D, duration - PLAYBACK_END_EPSILON_SECONDS)
+                        && currentTime <= LOOP_RESTART_WINDOW_SECONDS
+                        && playing;
+                if (wrappedAround) {
+                    this.maybeEmitVideoFinishedEvent(true);
+                    this.maybeEmitVideoStartedEvent();
+                } else if (nearEnd && !playing) {
+                    this.maybeEmitVideoFinishedEvent(true);
+                }
+            }
+        } else if (this.looping && this.listenerFinishedEventEmittedForCycle) {
+            boolean restarted = playing && (currentTime <= LOOP_RESTART_WINDOW_SECONDS || (previousTime > (currentTime + LOOP_RESTART_WINDOW_SECONDS)));
+            if (restarted) {
+                this.maybeEmitVideoStartedEvent();
+            }
+        }
+
+        this.listenerLastKnownPlaybackTimeSeconds = currentTime;
+    }
+
+    protected void maybeEmitVideoStartedEvent() {
+        if (!this.hasVideoPlaybackListeners()) return;
+        if (this.listenerPlaybackCycleActive) return;
+        if (this.currentVideoPath == null || this.currentVideoPath.isBlank()) return;
+        this.listenerPlaybackCycleActive = true;
+        this.listenerFinishedEventEmittedForCycle = false;
+        this.listenerLastKnownPlaybackTimeSeconds = 0.0D;
+        Listeners.ON_VIDEO_STARTED_PLAYING.onVideoStartedPlaying(
+                this.resolveVideoSourceForListener(),
+                this.resolveVideoSourceTypeForListener(),
+                this.looping
+        );
+    }
+
+    protected void maybeEmitVideoFinishedEvent(boolean willRestart) {
+        if (!this.hasVideoPlaybackListeners()) return;
+        if (!this.listenerPlaybackCycleActive || this.listenerFinishedEventEmittedForCycle) return;
+        this.listenerPlaybackCycleActive = false;
+        this.listenerFinishedEventEmittedForCycle = true;
+        Listeners.ON_VIDEO_FINISHED_PLAYING.onVideoFinishedPlaying(
+                this.resolveVideoSourceForListener(),
+                this.resolveVideoSourceTypeForListener(),
+                willRestart
+        );
+    }
+
+    protected void resetVideoPlaybackListenerState() {
+        this.listenerPlaybackCycleActive = false;
+        this.listenerFinishedEventEmittedForCycle = false;
+        this.listenerLastKnownPlaybackTimeSeconds = 0.0D;
+    }
+
+    protected boolean hasVideoPlaybackListeners() {
+        return Listeners.ON_VIDEO_STARTED_PLAYING.hasInstancesListening() || Listeners.ON_VIDEO_FINISHED_PLAYING.hasInstancesListening();
+    }
+
+    @NotNull
+    protected String resolveVideoSourceForListener() {
+        String source = this.currentVideoPath;
+        if (source == null || source.isBlank()) return "ERROR";
+        if (source.startsWith("file:/")) {
+            try {
+                return new File(URI.create(source)).getAbsolutePath().replace("\\", "/");
+            } catch (Exception ignored) {
+            }
+        }
+        return source;
+    }
+
+    @NotNull
+    protected String resolveVideoSourceTypeForListener() {
+        String source = this.currentVideoPath;
+        if (source == null || source.isBlank()) return "UNKNOWN";
+        String trimmed = source.trim();
+        String lower = trimmed.toLowerCase(Locale.ROOT);
+        if (lower.startsWith("https://") || lower.startsWith("http://")) return "WEB";
+        if (lower.startsWith("file:/")) return "LOCAL";
+        if (ResourceLocation.tryParse(trimmed) != null) return "RESOURCE_LOCATION";
+        return "LOCAL";
     }
 
     protected static void executeWithCondition(@NotNull Runnable task, @NotNull Supplier<Boolean> condition) {

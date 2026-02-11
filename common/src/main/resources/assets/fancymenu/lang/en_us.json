@@ -3225,5 +3225,9 @@
   "fancymenu.overlay.menu_bar.customization.settings.game_intro.volume.slider_label": "Game Intro Volume: %s",
   "fancymenu.overlay.menu_bar.customization.settings.game_intro.sound_channel": "Game Intro Sound Channel: %s",
   "fancymenu.overlay.menu_bar.customization.settings.game_intro.retrigger": "Re-Trigger Game Intro",
-  "fancymenu.overlay.menu_bar.customization.settings.game_intro.retrigger.tooltip": "Opens the configured Game Intro again, just like it would play when launching the game.\nUseful for testing."
+  "fancymenu.overlay.menu_bar.customization.settings.game_intro.retrigger.tooltip": "Opens the configured Game Intro again, just like it would play when launching the game.\nUseful for testing.",
+  "fancymenu.listeners.on_video_started_playing": "Video Started Playing",
+  "fancymenu.listeners.on_video_started_playing.desc": "This listener triggers when a video starts playing. It also triggers when the video restarts because of looping.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$video_source §r= The source of the video (local path, web URL or resource location)\n- §z$$video_source_type §r= Source type (LOCAL, WEB, RESOURCE_LOCATION)\n- §z$$video_will_restart §r= TRUE if the video will restart after this cycle, otherwise FALSE",
+  "fancymenu.listeners.on_video_finished_playing": "Video Finished Playing",
+  "fancymenu.listeners.on_video_finished_playing.desc": "This listener triggers when a video finishes a playback cycle. If the video loops, it fires right before the next cycle starts.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$video_source §r= The source of the video (local path, web URL or resource location)\n- §z$$video_source_type §r= Source type (LOCAL, WEB, RESOURCE_LOCATION)\n- §z$$video_will_restart §r= TRUE if the video will restart after this cycle, otherwise FALSE"
 }

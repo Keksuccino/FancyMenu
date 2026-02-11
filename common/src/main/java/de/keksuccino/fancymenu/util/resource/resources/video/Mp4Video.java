@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.resource.resources.video;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
@@ -64,6 +65,8 @@ public class Mp4Video implements IVideo {
     protected volatile long stopRequestVersion = 0L;
     protected volatile boolean restartFromBeginningOnNextPlay = false;
     protected volatile long lastPlayRequestTimestampMs = -1L;
+    protected volatile boolean listenerPlaybackCycleActive = false;
+    protected volatile boolean listenerFinishedEventEmittedForCycle = false;
     protected final Object playerInitLock = new Object();
 
     @NotNull
@@ -373,10 +376,21 @@ public class Mp4Video implements IVideo {
         this.stopRequestVersion++;
         this.lastPlayRequestTimestampMs = System.currentTimeMillis();
         this.playRequested = true;
+        Object cachedPlayer = this.mediaPlayer;
+        boolean wasPaused = this.pausedRequested;
+        if (cachedPlayer != null) {
+            if (WatermediaReflectionBridge.playerIsPaused(cachedPlayer) || WatermediaReflectionBridge.playerStatusName(cachedPlayer).equals("PAUSED")) {
+                wasPaused = true;
+            }
+        }
         this.pausedRequested = false;
+        if (wasPaused) {
+            // Resuming from pause should re-trigger "Video Started Playing".
+            this.resetVideoPlaybackListenerState();
+        }
+        this.maybeEmitVideoStartedEvent();
         boolean restartFromBeginning = this.restartFromBeginningOnNextPlay;
         this.restartFromBeginningOnNextPlay = false;
-        Object cachedPlayer = this.mediaPlayer;
         if (cachedPlayer != null) {
             String statusName = WatermediaReflectionBridge.playerStatusName(cachedPlayer);
             if (this.isTerminalPlayerStatus(statusName)) {
@@ -463,6 +477,7 @@ public class Mp4Video implements IVideo {
         this.seekRequestedMs = -1L;
         this.restartFromBeginningOnNextPlay = true;
         this.lastPlayRequestTimestampMs = -1L;
+        this.resetVideoPlaybackListenerState();
         this.frameTexture.setId(-1);
         long stopVersion = ++this.stopRequestVersion;
         Object cachedPlayer = this.mediaPlayer;
@@ -521,7 +536,11 @@ public class Mp4Video implements IVideo {
         if (this.closed || this.dependencyMissing || this.loadingFailed) return false;
         Object cachedPlayer = this.mediaPlayer;
         if (cachedPlayer == null) return false;
-        return WatermediaReflectionBridge.playerStatusName(cachedPlayer).equals("ENDED");
+        boolean ended = WatermediaReflectionBridge.playerStatusName(cachedPlayer).equals("ENDED");
+        if (ended && this.playRequested && !this.pausedRequested) {
+            this.maybeEmitVideoFinishedEvent(this.looping);
+        }
+        return ended;
     }
 
     @Override
@@ -572,6 +591,7 @@ public class Mp4Video implements IVideo {
         this.restartFromBeginningOnNextPlay = false;
         this.lastPlayRequestTimestampMs = -1L;
         this.looping = false;
+        this.resetVideoPlaybackListenerState();
         Object cachedPlayer = this.mediaPlayer;
         this.mediaPlayer = null;
         this.mrl = null;
@@ -640,6 +660,7 @@ public class Mp4Video implements IVideo {
         this.ready = true;
         this.playRequested = false;
         this.lastPlayRequestTimestampMs = -1L;
+        this.resetVideoPlaybackListenerState();
         LOGGER.warn("[FANCYMENU] Watermedia is not loaded, MP4 source will render as missing texture: {}", sourceName);
     }
 
@@ -648,6 +669,7 @@ public class Mp4Video implements IVideo {
         this.ready = true;
         this.playRequested = false;
         this.lastPlayRequestTimestampMs = -1L;
+        this.resetVideoPlaybackListenerState();
         if (cause != null) LOGGER.error("[FANCYMENU] {}", message, cause);
         else LOGGER.error("[FANCYMENU] {}", message);
     }
@@ -715,6 +737,55 @@ public class Mp4Video implements IVideo {
             return;
         }
         this.seekRequestedMs = 1L;
+    }
+
+    protected void maybeEmitVideoStartedEvent() {
+        if (!this.hasVideoPlaybackListeners()) return;
+        if (this.listenerPlaybackCycleActive) return;
+        this.listenerPlaybackCycleActive = true;
+        this.listenerFinishedEventEmittedForCycle = false;
+        Listeners.ON_VIDEO_STARTED_PLAYING.onVideoStartedPlaying(
+                this.resolveVideoSourceForListener(),
+                this.resolveVideoSourceTypeForListener(),
+                this.looping
+        );
+    }
+
+    protected void maybeEmitVideoFinishedEvent(boolean willRestart) {
+        if (!this.hasVideoPlaybackListeners()) return;
+        if (!this.listenerPlaybackCycleActive || this.listenerFinishedEventEmittedForCycle) return;
+        this.listenerPlaybackCycleActive = false;
+        this.listenerFinishedEventEmittedForCycle = true;
+        Listeners.ON_VIDEO_FINISHED_PLAYING.onVideoFinishedPlaying(
+                this.resolveVideoSourceForListener(),
+                this.resolveVideoSourceTypeForListener(),
+                willRestart
+        );
+    }
+
+    protected void resetVideoPlaybackListenerState() {
+        this.listenerPlaybackCycleActive = false;
+        this.listenerFinishedEventEmittedForCycle = false;
+    }
+
+    protected boolean hasVideoPlaybackListeners() {
+        return Listeners.ON_VIDEO_STARTED_PLAYING.hasInstancesListening() || Listeners.ON_VIDEO_FINISHED_PLAYING.hasInstancesListening();
+    }
+
+    @NotNull
+    protected String resolveVideoSourceForListener() {
+        if (this.sourceURL != null) return this.sourceURL;
+        if (this.sourceLocation != null) return this.sourceLocation.toString();
+        if (this.sourceFile != null) return this.sourceFile.getPath();
+        return "ERROR";
+    }
+
+    @NotNull
+    protected String resolveVideoSourceTypeForListener() {
+        if (this.sourceURL != null) return "WEB";
+        if (this.sourceLocation != null) return "RESOURCE_LOCATION";
+        if (this.sourceFile != null) return "LOCAL";
+        return "UNKNOWN";
     }
 
 }
