@@ -1374,6 +1374,7 @@ public class CustomizationOverlayUI {
                                 "fancymenu.overlay.menu_bar.customization.settings.game_intro.volume.slider_label",
                                 ((int) Math.round(Math.max(0.0D, Math.min(1.0D, value)) * 100.0D)) + "%"
                         ))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro.volume.tooltip")))
                 .setIcon(MaterialIcons.VOLUME_UP);
 
         gameIntroMenu.addValueCycleEntry("game_intro_sound_channel",
