@@ -15,6 +15,11 @@ public class MCEFVideoMenuBackgroundBuilder extends MenuBackgroundBuilder<MCEFVi
     }
 
     @Override
+    public boolean isDeprecated() {
+        return true;
+    }
+
+    @Override
     public @NotNull MCEFVideoMenuBackground buildDefaultInstance() {
         return new MCEFVideoMenuBackground(this);
     }
