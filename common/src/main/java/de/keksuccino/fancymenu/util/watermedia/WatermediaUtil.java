@@ -18,6 +18,7 @@ public class WatermediaUtil {
 
     public static boolean isWatermediaLoaded() {
         if (WATERMEDIA_critical_failure) return false;
+        if (FancyMenu.getOptions().devForceWatermediaMissing.getValue()) return false;
         try {
             Class.forName("org.watermedia.api.media.MRL", false, FancyMenu.class.getClassLoader());
             return true;

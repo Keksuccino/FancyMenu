@@ -114,6 +114,8 @@ public class Options extends AbstractOptions {
     public final Option<Long> requirementCachingDurationMs = new Option<>(config, "requirement_caching_duration_ms", 0L, "advanced");
 
     public final Option<Boolean> devShowPipWindowDebug = new Option<>(config, "dev_pip_window_debug", false, "dev");
+    public final Option<Boolean> devForceWatermediaMissing = new Option<>(config, "dev_force_watermedia_missing", false, "dev");
+    public final Option<Boolean> devForceMcefMissing = new Option<>(config, "dev_force_mcef_missing", false, "dev");
     public final Option<Boolean> mcpServerEnabled = new Option<>(config, "mcp_server_enabled", false, "dev");
     public final Option<Integer> mcpServerPort = new Option<>(config, "mcp_server_port", 48561, "dev");
 

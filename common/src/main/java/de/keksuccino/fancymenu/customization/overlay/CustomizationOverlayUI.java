@@ -69,6 +69,8 @@ import de.keksuccino.fancymenu.util.mcp.FancyMenuMcpManager;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
+import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
+import de.keksuccino.fancymenu.util.watermedia.WatermediaUtil;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.fancymenu.util.MathUtils;
 import net.minecraft.client.Minecraft;
@@ -545,6 +547,22 @@ public class CustomizationOverlayUI {
                                     FancyMenu.getOptions().devShowPipWindowDebug.setValue(cycle.getAsBoolean());
                                 }))
                 .setIcon(MaterialIcons.DEVELOPER_BOARD);
+
+        developerMenu.addValueCycleEntry("force_watermedia_missing",
+                        CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.developer.force_watermedia_missing", FancyMenu.getOptions().devForceWatermediaMissing.getValue())
+                                .addCycleListener(cycle -> {
+                                    FancyMenu.getOptions().devForceWatermediaMissing.setValue(cycle.getAsBoolean());
+                                    WatermediaUtil.WATERMEDIA_initialized = false;
+                                }))
+                .setIcon(MaterialIcons.DEVELOPER_BOARD_OFF);
+
+        developerMenu.addValueCycleEntry("force_mcef_missing",
+                        CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.developer.force_mcef_missing", FancyMenu.getOptions().devForceMcefMissing.getValue())
+                                .addCycleListener(cycle -> {
+                                    FancyMenu.getOptions().devForceMcefMissing.setValue(cycle.getAsBoolean());
+                                    MCEFUtil.MCEF_initialized = false;
+                                }))
+                .setIcon(MaterialIcons.DEVELOPER_BOARD_OFF);
 
         developerMenu.addValueCycleEntry("smooth_font_multiline_rendering",
                         CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.developer.smooth_font_multiline_rendering", FancyMenu.getOptions().smoothFontMultilineRendering.getValue())
