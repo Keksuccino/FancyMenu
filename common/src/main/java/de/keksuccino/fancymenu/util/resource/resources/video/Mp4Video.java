@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.resource.resources.video;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
+import de.keksuccino.fancymenu.customization.listener.listeners.OnVideoPlaybackStatusChangedListener;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
@@ -32,6 +33,8 @@ public class Mp4Video implements IVideo {
     private static final File TEMP_VIDEO_DIR = FileUtils.createDirectory(new File(FancyMenu.TEMP_DATA_DIR, "/watermedia_videos"));
     private static final int HARD_STOP_DEFER_TICKS = 2;
     private static final long PLAY_REQUEST_GRACE_MS = 2200L;
+    private static final double PLAYBACK_END_EPSILON_SECONDS = 0.12D;
+    private static final double LOOP_RESTART_WINDOW_SECONDS = 0.40D;
 
     @Nullable
     protected volatile Object mrl;
@@ -67,6 +70,7 @@ public class Mp4Video implements IVideo {
     protected volatile long lastPlayRequestTimestampMs = -1L;
     protected volatile boolean listenerPlaybackCycleActive = false;
     protected volatile boolean listenerFinishedEventEmittedForCycle = false;
+    protected volatile double listenerLastKnownPlaybackTimeSeconds = 0.0D;
     protected final Object playerInitLock = new Object();
 
     @NotNull
@@ -345,6 +349,7 @@ public class Mp4Video implements IVideo {
         Object cachedPlayer = this.mediaPlayer;
         if (cachedPlayer == null) return FULLY_TRANSPARENT_TEXTURE;
         String statusName = WatermediaReflectionBridge.playerStatusName(cachedPlayer);
+        this.updateVideoPlaybackListenerStateFromPlayer(cachedPlayer, statusName);
         if (!this.shouldPresentFrame(statusName)) return FULLY_TRANSPARENT_TEXTURE;
         this.tryApplyQueuedSeekToPlayer(cachedPlayer);
         this.updateSizeFromPlayer(cachedPlayer);
@@ -388,7 +393,9 @@ public class Mp4Video implements IVideo {
             // Resuming from pause should re-trigger "Video Started Playing".
             this.resetVideoPlaybackListenerState();
         }
-        this.maybeEmitVideoStartedEvent();
+        if (this.maybeEmitVideoStartedEvent()) {
+            this.maybeEmitVideoPlaybackStatusChanged(OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus.PLAYING);
+        }
         boolean restartFromBeginning = this.restartFromBeginningOnNextPlay;
         this.restartFromBeginningOnNextPlay = false;
         if (cachedPlayer != null) {
@@ -455,10 +462,19 @@ public class Mp4Video implements IVideo {
     @Override
     public void pause() {
         if (this.closed || this.dependencyMissing || this.loadingFailed) return;
-        this.pausedRequested = true;
+        boolean wasPaused = this.pausedRequested;
         Object cachedPlayer = this.mediaPlayer;
         if (cachedPlayer != null) {
+            if (WatermediaReflectionBridge.playerIsPaused(cachedPlayer) || WatermediaReflectionBridge.playerStatusName(cachedPlayer).equals("PAUSED")) {
+                wasPaused = true;
+            }
+        }
+        this.pausedRequested = true;
+        if (cachedPlayer != null) {
             WatermediaReflectionBridge.playerPause(cachedPlayer, true);
+        }
+        if (!wasPaused && (this.playRequested || this.listenerPlaybackCycleActive)) {
+            this.maybeEmitVideoPlaybackStatusChanged(OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus.PAUSED);
         }
     }
 
@@ -472,11 +488,15 @@ public class Mp4Video implements IVideo {
 
     @Override
     public void stop() {
+        boolean shouldEmitStoppedStatus = this.playRequested || this.pausedRequested || this.listenerPlaybackCycleActive;
         this.playRequested = false;
         this.pausedRequested = false;
         this.seekRequestedMs = -1L;
         this.restartFromBeginningOnNextPlay = true;
         this.lastPlayRequestTimestampMs = -1L;
+        if (shouldEmitStoppedStatus) {
+            this.maybeEmitVideoPlaybackStatusChanged(OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus.STOPPED);
+        }
         this.resetVideoPlaybackListenerState();
         this.frameTexture.setId(-1);
         long stopVersion = ++this.stopRequestVersion;
@@ -536,9 +556,17 @@ public class Mp4Video implements IVideo {
         if (this.closed || this.dependencyMissing || this.loadingFailed) return false;
         Object cachedPlayer = this.mediaPlayer;
         if (cachedPlayer == null) return false;
-        boolean ended = WatermediaReflectionBridge.playerStatusName(cachedPlayer).equals("ENDED");
+        String statusName = WatermediaReflectionBridge.playerStatusName(cachedPlayer);
+        this.updateVideoPlaybackListenerStateFromPlayer(cachedPlayer, statusName);
+        boolean ended = statusName.equals("ENDED");
         if (ended && this.playRequested && !this.pausedRequested) {
-            this.maybeEmitVideoFinishedEvent(this.looping);
+            if (this.maybeEmitVideoFinishedEvent(this.looping)) {
+                this.maybeEmitVideoPlaybackStatusChanged(OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus.FINISHED);
+            }
+        } else if (this.looping && this.playRequested && !this.pausedRequested && this.listenerFinishedEventEmittedForCycle) {
+            if (this.maybeEmitVideoStartedEvent()) {
+                this.maybeEmitVideoPlaybackStatusChanged(OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus.PLAYING);
+            }
         }
         return ended;
     }
@@ -739,21 +767,23 @@ public class Mp4Video implements IVideo {
         this.seekRequestedMs = 1L;
     }
 
-    protected void maybeEmitVideoStartedEvent() {
-        if (!this.hasVideoPlaybackListeners()) return;
-        if (this.listenerPlaybackCycleActive) return;
+    protected boolean maybeEmitVideoStartedEvent() {
+        if (!this.hasVideoPlaybackListeners()) return false;
+        if (this.listenerPlaybackCycleActive) return false;
         this.listenerPlaybackCycleActive = true;
         this.listenerFinishedEventEmittedForCycle = false;
+        this.listenerLastKnownPlaybackTimeSeconds = 0.0D;
         Listeners.ON_VIDEO_STARTED_PLAYING.onVideoStartedPlaying(
                 this.resolveVideoSourceForListener(),
                 this.resolveVideoSourceTypeForListener(),
                 this.looping
         );
+        return true;
     }
 
-    protected void maybeEmitVideoFinishedEvent(boolean willRestart) {
-        if (!this.hasVideoPlaybackListeners()) return;
-        if (!this.listenerPlaybackCycleActive || this.listenerFinishedEventEmittedForCycle) return;
+    protected boolean maybeEmitVideoFinishedEvent(boolean willRestart) {
+        if (!this.hasVideoPlaybackListeners()) return false;
+        if (!this.listenerPlaybackCycleActive || this.listenerFinishedEventEmittedForCycle) return false;
         this.listenerPlaybackCycleActive = false;
         this.listenerFinishedEventEmittedForCycle = true;
         Listeners.ON_VIDEO_FINISHED_PLAYING.onVideoFinishedPlaying(
@@ -761,15 +791,80 @@ public class Mp4Video implements IVideo {
                 this.resolveVideoSourceTypeForListener(),
                 willRestart
         );
+        return true;
     }
 
     protected void resetVideoPlaybackListenerState() {
         this.listenerPlaybackCycleActive = false;
         this.listenerFinishedEventEmittedForCycle = false;
+        this.listenerLastKnownPlaybackTimeSeconds = 0.0D;
     }
 
     protected boolean hasVideoPlaybackListeners() {
-        return Listeners.ON_VIDEO_STARTED_PLAYING.hasInstancesListening() || Listeners.ON_VIDEO_FINISHED_PLAYING.hasInstancesListening();
+        return Listeners.ON_VIDEO_STARTED_PLAYING.hasInstancesListening()
+                || Listeners.ON_VIDEO_FINISHED_PLAYING.hasInstancesListening()
+                || Listeners.ON_VIDEO_PLAYBACK_STATUS_CHANGED.hasInstancesListening();
+    }
+
+    protected void maybeEmitVideoPlaybackStatusChanged(@NotNull OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus status) {
+        if (!Listeners.ON_VIDEO_PLAYBACK_STATUS_CHANGED.hasInstancesListening()) return;
+        Listeners.ON_VIDEO_PLAYBACK_STATUS_CHANGED.onVideoPlaybackStatusChanged(
+                this.resolveVideoSourceForListener(),
+                this.resolveVideoSourceTypeForListener(),
+                this.looping,
+                status
+        );
+    }
+
+    protected void updateVideoPlaybackListenerStateFromPlayer(@NotNull Object player, @NotNull String statusName) {
+        if (!this.hasVideoPlaybackListeners()) {
+            this.resetVideoPlaybackListenerState();
+            return;
+        }
+        if (!this.playRequested || this.pausedRequested) return;
+        if (!this.listenerPlaybackCycleActive && !this.listenerFinishedEventEmittedForCycle) return;
+
+        long durationMs = WatermediaReflectionBridge.playerDuration(player);
+        long timeMs = WatermediaReflectionBridge.playerTime(player);
+        double duration = Math.max(0.0D, durationMs / 1000.0D);
+        double currentTime = Math.max(0.0D, timeMs / 1000.0D);
+        double previousTime = Math.max(0.0D, this.listenerLastKnownPlaybackTimeSeconds);
+        boolean playing = WatermediaReflectionBridge.playerIsPlaying(player) || statusName.equals("PLAYING");
+
+        if (this.listenerPlaybackCycleActive && !this.listenerFinishedEventEmittedForCycle) {
+            boolean nearEnd = duration > PLAYBACK_END_EPSILON_SECONDS && currentTime >= Math.max(0.0D, duration - PLAYBACK_END_EPSILON_SECONDS);
+            if (!this.looping && nearEnd && !playing) {
+                if (this.maybeEmitVideoFinishedEvent(false)) {
+                    this.maybeEmitVideoPlaybackStatusChanged(OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus.FINISHED);
+                }
+            } else if (this.looping) {
+                boolean wrappedAround = duration > PLAYBACK_END_EPSILON_SECONDS
+                        && previousTime >= Math.max(0.0D, duration - PLAYBACK_END_EPSILON_SECONDS)
+                        && currentTime <= LOOP_RESTART_WINDOW_SECONDS
+                        && playing;
+                if (wrappedAround) {
+                    if (this.maybeEmitVideoFinishedEvent(true)) {
+                        this.maybeEmitVideoPlaybackStatusChanged(OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus.FINISHED);
+                    }
+                    if (this.maybeEmitVideoStartedEvent()) {
+                        this.maybeEmitVideoPlaybackStatusChanged(OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus.PLAYING);
+                    }
+                } else if (nearEnd && !playing) {
+                    if (this.maybeEmitVideoFinishedEvent(true)) {
+                        this.maybeEmitVideoPlaybackStatusChanged(OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus.FINISHED);
+                    }
+                }
+            }
+        } else if (this.looping && this.listenerFinishedEventEmittedForCycle) {
+            boolean restarted = playing && (currentTime <= LOOP_RESTART_WINDOW_SECONDS || (previousTime > (currentTime + LOOP_RESTART_WINDOW_SECONDS)));
+            if (restarted) {
+                if (this.maybeEmitVideoStartedEvent()) {
+                    this.maybeEmitVideoPlaybackStatusChanged(OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus.PLAYING);
+                }
+            }
+        }
+
+        this.listenerLastKnownPlaybackTimeSeconds = currentTime;
     }
 
     @NotNull

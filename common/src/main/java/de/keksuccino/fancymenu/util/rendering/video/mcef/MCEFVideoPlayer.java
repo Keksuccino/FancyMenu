@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.video.mcef;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
+import de.keksuccino.fancymenu.customization.listener.listeners.OnVideoPlaybackStatusChangedListener;
 import de.keksuccino.fancymenu.util.ObjectHolder;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
@@ -53,6 +54,7 @@ public class MCEFVideoPlayer {
     protected volatile boolean listenerPlaybackCycleActive = false;
     protected volatile boolean listenerFinishedEventEmittedForCycle = false;
     protected volatile double listenerLastKnownPlaybackTimeSeconds = 0.0D;
+    protected volatile boolean listenerPausedState = false;
     @Nullable
     protected volatile ScheduledFuture<?> playbackListenerTicker = null;
     private final String instanceId = UUID.randomUUID().toString(); // For unique JS communication if needed
@@ -223,7 +225,12 @@ public class MCEFVideoPlayer {
      */
     public void play() {
         executeWhenInitialized(() -> {
-            this.maybeEmitVideoStartedEvent();
+            boolean wasPaused = this.listenerPausedState;
+            this.listenerPausedState = false;
+            boolean startedNow = this.maybeEmitVideoStartedEvent();
+            if (startedNow || wasPaused) {
+                this.maybeEmitVideoPlaybackStatusChanged(OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus.PLAYING);
+            }
             executeJavaScript("if(window.videoPlayerAPI && window.videoPlayerAPI.play) { window.videoPlayerAPI.play(); } else { console.error('[FANCYMENU] videoPlayerAPI.play not found!'); }");
         });
     }
@@ -233,6 +240,11 @@ public class MCEFVideoPlayer {
      */
     public void pause() {
         executeWhenInitialized(() -> {
+            boolean wasPaused = this.listenerPausedState;
+            this.listenerPausedState = true;
+            if (!wasPaused && this.listenerPlaybackCycleActive) {
+                this.maybeEmitVideoPlaybackStatusChanged(OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus.PAUSED);
+            }
             executeJavaScript("if(window.videoPlayerAPI && window.videoPlayerAPI.pause) { window.videoPlayerAPI.pause(); } else { console.error('[FANCYMENU] videoPlayerAPI.pause not found!'); }");
         });
     }
@@ -251,6 +263,10 @@ public class MCEFVideoPlayer {
      */
     public void stop() {
         executeWhenInitialized(() -> {
+            boolean hadActivePlaybackState = this.listenerPlaybackCycleActive || this.listenerPausedState;
+            if (hadActivePlaybackState) {
+                this.maybeEmitVideoPlaybackStatusChanged(OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus.STOPPED);
+            }
             this.resetVideoPlaybackListenerState();
             executeJavaScript("if(window.videoPlayerAPI && window.videoPlayerAPI.stop) { window.videoPlayerAPI.stop(); } else { console.error('[FANCYMENU] videoPlayerAPI.stop not found!'); }");
         });
@@ -863,34 +879,44 @@ public class MCEFVideoPlayer {
 
         if (this.listenerPlaybackCycleActive && !this.listenerFinishedEventEmittedForCycle) {
             boolean nearEnd = duration > PLAYBACK_END_EPSILON_SECONDS && currentTime >= Math.max(0.0D, duration - PLAYBACK_END_EPSILON_SECONDS);
-            if (!this.looping && nearEnd && !playing) {
-                this.maybeEmitVideoFinishedEvent(false);
+            if (!this.looping && nearEnd && !playing && !this.listenerPausedState) {
+                if (this.maybeEmitVideoFinishedEvent(false)) {
+                    this.maybeEmitVideoPlaybackStatusChanged(OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus.FINISHED);
+                }
             } else if (this.looping) {
                 boolean wrappedAround = duration > PLAYBACK_END_EPSILON_SECONDS
                         && previousTime >= Math.max(0.0D, duration - PLAYBACK_END_EPSILON_SECONDS)
                         && currentTime <= LOOP_RESTART_WINDOW_SECONDS
                         && playing;
                 if (wrappedAround) {
-                    this.maybeEmitVideoFinishedEvent(true);
-                    this.maybeEmitVideoStartedEvent();
-                } else if (nearEnd && !playing) {
-                    this.maybeEmitVideoFinishedEvent(true);
+                    if (this.maybeEmitVideoFinishedEvent(true)) {
+                        this.maybeEmitVideoPlaybackStatusChanged(OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus.FINISHED);
+                    }
+                    if (this.maybeEmitVideoStartedEvent()) {
+                        this.maybeEmitVideoPlaybackStatusChanged(OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus.PLAYING);
+                    }
+                } else if (nearEnd && !playing && !this.listenerPausedState) {
+                    if (this.maybeEmitVideoFinishedEvent(true)) {
+                        this.maybeEmitVideoPlaybackStatusChanged(OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus.FINISHED);
+                    }
                 }
             }
         } else if (this.looping && this.listenerFinishedEventEmittedForCycle) {
             boolean restarted = playing && (currentTime <= LOOP_RESTART_WINDOW_SECONDS || (previousTime > (currentTime + LOOP_RESTART_WINDOW_SECONDS)));
             if (restarted) {
-                this.maybeEmitVideoStartedEvent();
+                if (this.maybeEmitVideoStartedEvent()) {
+                    this.maybeEmitVideoPlaybackStatusChanged(OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus.PLAYING);
+                }
             }
         }
 
         this.listenerLastKnownPlaybackTimeSeconds = currentTime;
     }
 
-    protected void maybeEmitVideoStartedEvent() {
-        if (!this.hasVideoPlaybackListeners()) return;
-        if (this.listenerPlaybackCycleActive) return;
-        if (this.currentVideoPath == null || this.currentVideoPath.isBlank()) return;
+    protected boolean maybeEmitVideoStartedEvent() {
+        if (!this.hasVideoPlaybackListeners()) return false;
+        if (this.listenerPlaybackCycleActive) return false;
+        if (this.currentVideoPath == null || this.currentVideoPath.isBlank()) return false;
         this.listenerPlaybackCycleActive = true;
         this.listenerFinishedEventEmittedForCycle = false;
         this.listenerLastKnownPlaybackTimeSeconds = 0.0D;
@@ -899,11 +925,12 @@ public class MCEFVideoPlayer {
                 this.resolveVideoSourceTypeForListener(),
                 this.looping
         );
+        return true;
     }
 
-    protected void maybeEmitVideoFinishedEvent(boolean willRestart) {
-        if (!this.hasVideoPlaybackListeners()) return;
-        if (!this.listenerPlaybackCycleActive || this.listenerFinishedEventEmittedForCycle) return;
+    protected boolean maybeEmitVideoFinishedEvent(boolean willRestart) {
+        if (!this.hasVideoPlaybackListeners()) return false;
+        if (!this.listenerPlaybackCycleActive || this.listenerFinishedEventEmittedForCycle) return false;
         this.listenerPlaybackCycleActive = false;
         this.listenerFinishedEventEmittedForCycle = true;
         Listeners.ON_VIDEO_FINISHED_PLAYING.onVideoFinishedPlaying(
@@ -911,16 +938,30 @@ public class MCEFVideoPlayer {
                 this.resolveVideoSourceTypeForListener(),
                 willRestart
         );
+        return true;
     }
 
     protected void resetVideoPlaybackListenerState() {
         this.listenerPlaybackCycleActive = false;
         this.listenerFinishedEventEmittedForCycle = false;
         this.listenerLastKnownPlaybackTimeSeconds = 0.0D;
+        this.listenerPausedState = false;
     }
 
     protected boolean hasVideoPlaybackListeners() {
-        return Listeners.ON_VIDEO_STARTED_PLAYING.hasInstancesListening() || Listeners.ON_VIDEO_FINISHED_PLAYING.hasInstancesListening();
+        return Listeners.ON_VIDEO_STARTED_PLAYING.hasInstancesListening()
+                || Listeners.ON_VIDEO_FINISHED_PLAYING.hasInstancesListening()
+                || Listeners.ON_VIDEO_PLAYBACK_STATUS_CHANGED.hasInstancesListening();
+    }
+
+    protected void maybeEmitVideoPlaybackStatusChanged(@NotNull OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus status) {
+        if (!Listeners.ON_VIDEO_PLAYBACK_STATUS_CHANGED.hasInstancesListening()) return;
+        Listeners.ON_VIDEO_PLAYBACK_STATUS_CHANGED.onVideoPlaybackStatusChanged(
+                this.resolveVideoSourceForListener(),
+                this.resolveVideoSourceTypeForListener(),
+                this.looping,
+                status
+        );
     }
 
     @NotNull
