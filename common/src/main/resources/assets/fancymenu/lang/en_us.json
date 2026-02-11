@@ -3218,5 +3218,7 @@
   "fancymenu.backgrounds.video.desc": "Plays a video resource as menu background.\nSupports local, web and resource location video sources.",
   "fancymenu.backgrounds.video.play_in_editor": "Play Video In Layout Editor: %s",
   "fancymenu.overlay.menu_bar.customization.settings.developer.force_watermedia_missing": "Force Watermedia Missing: %s",
-  "fancymenu.overlay.menu_bar.customization.settings.developer.force_mcef_missing": "Force MCEF Missing: %s"
+  "fancymenu.overlay.menu_bar.customization.settings.developer.force_mcef_missing": "Force MCEF Missing: %s",
+  "fancymenu.backgrounds.video.watermedia_missing.info": "Watermedia V3 is needed to play videos.",
+  "fancymenu.backgrounds.video.watermedia_missing.download": "Download Watermedia V3"
 }

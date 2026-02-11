@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.customization.background.backgrounds.video.IVideo
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
@@ -17,6 +18,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -25,6 +27,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
+import de.keksuccino.fancymenu.util.watermedia.WatermediaUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -68,6 +71,8 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     private static final String MEMORY_LAST_ENDED_SOURCE_FANCYMENU = "native_video_last_ended_source";
     private static final ResourceLocation MISSING_TEXTURE_FANCYMENU = IVideo.MISSING_TEXTURE_LOCATION;
     private static final File VIDEO_THUMBNAIL_DIR_FANCYMENU = FileUtils.createDirectory(new File(FancyMenu.INSTANCE_DATA_DIR, "video_thumbnails"));
+    private static final DrawableColor WATERMEDIA_MISSING_BACKGROUND_COLOR_FANCYMENU = DrawableColor.of(180, 0, 0);
+    private static final String WATERMEDIA_V3_DOWNLOAD_URL_FANCYMENU = "https://www.curseforge.com/minecraft/mc-mods/watermedia/files/all?page=1&pageSize=20&showAlphaFiles=show";
 
     public final Property<ResourceSupplier<IVideo>> videoSupplier = putProperty(Property.resourceSupplierProperty(IVideo.class, "source", null, "fancymenu.elements.video_mcef.set_source", true, true, true, null));
     public final Property<Boolean> loop = putProperty(Property.booleanProperty("loop", false, "fancymenu.elements.video_mcef.loop"));
@@ -103,6 +108,10 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     protected ResourceSupplier<ITexture> pausedThumbnailSupplier = null;
     @Nullable
     protected String pausedThumbnailSource = null;
+    protected float watermediaDownloadX_FancyMenu = Float.NaN;
+    protected float watermediaDownloadY_FancyMenu = Float.NaN;
+    protected float watermediaDownloadWidth_FancyMenu = Float.NaN;
+    protected float watermediaDownloadHeight_FancyMenu = Float.NaN;
     // The field is currently unused, but the scheduler is used, so don't delete this
     protected final ScheduledFuture<?> garbageChecker = EXECUTOR.scheduleAtFixedRate(() -> {
         if (this.initialized && !this.shouldSkipWatchdogAutoClear() && (this.lastRenderTickTime != -1L) && ((this.lastRenderTickTime + 11000L) < System.currentTimeMillis())) {
@@ -275,6 +284,14 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         IVideo currentVideo = (supplier != null) ? supplier.get() : null;
         this.updateVideoReference(currentVideo);
 
+        if (this.shouldRenderWatermediaMissingOverlay_FancyMenu(supplier)) {
+            this.renderWatermediaMissingOverlay_FancyMenu(graphics, mouseX, mouseY);
+            RenderingUtils.resetShaderColor(graphics);
+            RenderSystem.disableBlend();
+            return;
+        }
+        this.resetWatermediaDownloadLinkBounds_FancyMenu();
+
         if (this.video == null) {
             RenderSystem.disableBlend();
             return;
@@ -329,6 +346,78 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
 
         RenderSystem.disableBlend();
 
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button != 0) return false;
+        if (!this.showBackground.tryGetNonNull()) return false;
+        if (!this.shouldRenderWatermediaMissingOverlay_FancyMenu(this.videoSupplier.get())) return false;
+        if (!this.isMouseOverWatermediaDownloadLink_FancyMenu(mouseX, mouseY)) return false;
+        WebUtils.openWebLink(WATERMEDIA_V3_DOWNLOAD_URL_FANCYMENU);
+        return true;
+    }
+
+    protected boolean shouldRenderWatermediaMissingOverlay_FancyMenu(@Nullable ResourceSupplier<IVideo> supplier) {
+        return (supplier != null) && !WatermediaUtil.isWatermediaLoaded();
+    }
+
+    protected void renderWatermediaMissingOverlay_FancyMenu(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
+        int width = getScreenWidth();
+        int height = getScreenHeight();
+        graphics.fill(0, 0, width, height, WATERMEDIA_MISSING_BACKGROUND_COLOR_FANCYMENU.getColorIntWithAlpha(this.opacity));
+
+        Component infoText = Component.translatable("fancymenu.backgrounds.video.watermedia_missing.info");
+        Component downloadText = Component.translatable("fancymenu.backgrounds.video.watermedia_missing.download");
+
+        float normalTextSize = UIBase.getUITextSizeNormal();
+        float largeTextSize = UIBase.getUITextSizeLarge();
+        float infoTextWidth = UIBase.getUITextWidth(infoText, normalTextSize);
+        float infoTextHeight = UIBase.getUITextHeight(normalTextSize);
+        float downloadTextWidth = UIBase.getUITextWidth(downloadText, largeTextSize);
+        float downloadTextHeight = UIBase.getUITextHeight(largeTextSize);
+        float spacing = Math.max(4.0F, UIBase.getUITextHeightSmall());
+        float totalHeight = infoTextHeight + spacing + downloadTextHeight;
+
+        float infoX = (width / 2.0F) - (infoTextWidth / 2.0F);
+        float infoY = (height / 2.0F) - (totalHeight / 2.0F);
+        float downloadX = (width / 2.0F) - (downloadTextWidth / 2.0F);
+        float downloadY = infoY + infoTextHeight + spacing;
+
+        this.watermediaDownloadX_FancyMenu = downloadX;
+        this.watermediaDownloadY_FancyMenu = downloadY;
+        this.watermediaDownloadWidth_FancyMenu = downloadTextWidth;
+        this.watermediaDownloadHeight_FancyMenu = downloadTextHeight;
+
+        boolean hovered = this.isMouseOverWatermediaDownloadLink_FancyMenu(mouseX, mouseY);
+        if (hovered) {
+            CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
+        }
+        Component renderedDownloadText = downloadText.copy().setStyle(Style.EMPTY.withUnderlined(hovered));
+
+        int textColor = DrawableColor.WHITE.getColorIntWithAlpha(this.opacity);
+        UIBase.renderText(graphics, infoText, infoX, infoY, textColor, normalTextSize);
+        UIBase.renderText(graphics, renderedDownloadText, downloadX, downloadY, textColor, largeTextSize);
+    }
+
+    protected boolean isMouseOverWatermediaDownloadLink_FancyMenu(double mouseX, double mouseY) {
+        if (!Float.isFinite(this.watermediaDownloadX_FancyMenu)
+                || !Float.isFinite(this.watermediaDownloadY_FancyMenu)
+                || !Float.isFinite(this.watermediaDownloadWidth_FancyMenu)
+                || !Float.isFinite(this.watermediaDownloadHeight_FancyMenu)) {
+            return false;
+        }
+        return (mouseX >= this.watermediaDownloadX_FancyMenu)
+                && (mouseX <= (this.watermediaDownloadX_FancyMenu + this.watermediaDownloadWidth_FancyMenu))
+                && (mouseY >= this.watermediaDownloadY_FancyMenu)
+                && (mouseY <= (this.watermediaDownloadY_FancyMenu + this.watermediaDownloadHeight_FancyMenu));
+    }
+
+    protected void resetWatermediaDownloadLinkBounds_FancyMenu() {
+        this.watermediaDownloadX_FancyMenu = Float.NaN;
+        this.watermediaDownloadY_FancyMenu = Float.NaN;
+        this.watermediaDownloadWidth_FancyMenu = Float.NaN;
+        this.watermediaDownloadHeight_FancyMenu = Float.NaN;
     }
 
     protected void renderKeepAspectRatio(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset, float parallaxIntensityX, float parallaxIntensityY) {
@@ -421,6 +510,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         this.lastPausedState = null;
         this.pausedThumbnailSupplier = null;
         this.pausedThumbnailSource = null;
+        this.resetWatermediaDownloadLinkBounds_FancyMenu();
 
         if (newVideo == null) {
             this.cachedDuration.set(0F);
@@ -551,6 +641,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         this.pausedBySystem = false;
         this.pausedThumbnailSupplier = null;
         this.pausedThumbnailSource = null;
+        this.resetWatermediaDownloadLinkBounds_FancyMenu();
         this.cachedDuration.set(0F);
         this.cachedPlayTime.set(0F);
         return didStopPlayer;
