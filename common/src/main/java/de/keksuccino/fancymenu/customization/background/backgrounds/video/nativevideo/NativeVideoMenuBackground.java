@@ -1,12 +1,16 @@
 package de.keksuccino.fancymenu.customization.background.backgrounds.video.nativevideo;
 
+import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.backgrounds.video.IVideoMenuBackground;
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -17,19 +21,25 @@ import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
+import de.keksuccino.fancymenu.util.resource.ResourceSource;
+import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
+import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -57,6 +67,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     private static final String MEMORY_LAST_STOPPED_SOURCE_FANCYMENU = "native_video_last_stopped_source";
     private static final String MEMORY_LAST_ENDED_SOURCE_FANCYMENU = "native_video_last_ended_source";
     private static final ResourceLocation MISSING_TEXTURE_FANCYMENU = IVideo.MISSING_TEXTURE_LOCATION;
+    private static final File VIDEO_THUMBNAIL_DIR_FANCYMENU = FileUtils.createDirectory(new File(FancyMenu.INSTANCE_DATA_DIR, "video_thumbnails"));
 
     public final Property<ResourceSupplier<IVideo>> videoSupplier = putProperty(Property.resourceSupplierProperty(IVideo.class, "source", null, "fancymenu.elements.video_mcef.set_source", true, true, true, null));
     public final Property<Boolean> loop = putProperty(Property.booleanProperty("loop", false, "fancymenu.elements.video_mcef.loop"));
@@ -88,6 +99,10 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     protected volatile String currentResolvedVideoSource = null;
     @Nullable
     protected volatile String activeVideoSource = null;
+    @Nullable
+    protected ResourceSupplier<ITexture> pausedThumbnailSupplier = null;
+    @Nullable
+    protected String pausedThumbnailSource = null;
     // The field is currently unused, but the scheduler is used, so don't delete this
     protected final ScheduledFuture<?> garbageChecker = EXECUTOR.scheduleAtFixedRate(() -> {
         if (this.initialized && !this.shouldSkipWatchdogAutoClear() && (this.lastRenderTickTime != -1L) && ((this.lastRenderTickTime + 11000L) < System.currentTimeMillis())) {
@@ -160,6 +175,19 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
                 releasedCount);
 
         return resetCount;
+    }
+
+    public static void savePauseThumbnailForBackgroundIdentifier_FancyMenu(@Nullable String identifier) {
+        if ((identifier == null) || identifier.isBlank()) return;
+        List<NativeVideoMenuBackground> backgrounds;
+        synchronized (BACKGROUND_INSTANCE_LOCK_FANCYMENU) {
+            backgrounds = new ArrayList<>(BACKGROUND_INSTANCES_FANCYMENU);
+        }
+        for (NativeVideoMenuBackground background : backgrounds) {
+            if (background == null) continue;
+            if (!identifier.equals(background.getInstanceIdentifier())) continue;
+            background.trySaveCurrentFrameThumbnail_FancyMenu();
+        }
     }
 
     @Override
@@ -285,7 +313,10 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         this.lastPausedState = pausedState;
 
         ResourceLocation resourceLocation = this.video.getResourceLocation();
-        if ((resourceLocation != null) && !(pausedState && Objects.equals(resourceLocation, MISSING_TEXTURE_FANCYMENU))) {
+        boolean missingPausedFrame = pausedState && ((resourceLocation == null) || Objects.equals(resourceLocation, MISSING_TEXTURE_FANCYMENU));
+        if (missingPausedFrame) {
+            this.renderPausedThumbnailFallback_FancyMenu(graphics, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
+        } else if (resourceLocation != null) {
             graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
             if (this.keepBackgroundAspectRatio) {
                 this.renderKeepAspectRatio(graphics, resourceLocation, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
@@ -301,7 +332,10 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     }
 
     protected void renderKeepAspectRatio(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset, float parallaxIntensityX, float parallaxIntensityY) {
-        AspectRatio ratio = this.video.getAspectRatio();
+        this.renderKeepAspectRatioWithAspectRatio_FancyMenu(graphics, resourceLocation, this.video.getAspectRatio(), parallaxOffset, parallaxIntensityX, parallaxIntensityY);
+    }
+
+    protected void renderKeepAspectRatioWithAspectRatio_FancyMenu(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, @NotNull AspectRatio ratio, float[] parallaxOffset, float parallaxIntensityX, float parallaxIntensityY) {
         boolean parallax = this.parallaxEnabled.tryGetNonNull();
         float parallaxScaleX = parallax ? (1.0F + parallaxIntensityX) : 1.0F;
         float parallaxScaleY = parallax ? (1.0F + parallaxIntensityY) : 1.0F;
@@ -314,6 +348,34 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         int y = (getScreenHeight() - baseSize[1]) / 2 + (int)parallaxOffset[1];
 
         graphics.blit(resourceLocation, x, y, 0.0F, 0.0F, baseSize[0], baseSize[1], baseSize[0], baseSize[1]);
+    }
+
+    protected boolean renderPausedThumbnailFallback_FancyMenu(@NotNull GuiGraphics graphics, float[] parallaxOffset, float parallaxIntensityX, float parallaxIntensityY) {
+        ITexture thumbnail = this.getPausedThumbnailTexture_FancyMenu();
+        if (thumbnail == null) return false;
+        ResourceLocation thumbnailLocation = thumbnail.getResourceLocation();
+        if ((thumbnailLocation == null) || Objects.equals(thumbnailLocation, ITexture.MISSING_TEXTURE_LOCATION)) return false;
+        graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
+        if (this.keepBackgroundAspectRatio) {
+            this.renderKeepAspectRatioWithAspectRatio_FancyMenu(graphics, thumbnailLocation, thumbnail.getAspectRatio(), parallaxOffset, parallaxIntensityX, parallaxIntensityY);
+        } else {
+            this.renderFullScreen(graphics, thumbnailLocation, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
+        }
+        return true;
+    }
+
+    @Nullable
+    protected ITexture getPausedThumbnailTexture_FancyMenu() {
+        File thumbnailFile = getThumbnailFileForIdentifier_FancyMenu(this.getInstanceIdentifier());
+        if (!thumbnailFile.isFile()) return null;
+        String thumbnailSource = toLocalThumbnailSource_FancyMenu(thumbnailFile);
+        if ((this.pausedThumbnailSupplier == null) || !Objects.equals(this.pausedThumbnailSource, thumbnailSource)) {
+            this.pausedThumbnailSupplier = ResourceSupplier.image(thumbnailSource);
+            this.pausedThumbnailSource = thumbnailSource;
+        }
+        ITexture thumbnail = this.pausedThumbnailSupplier.get();
+        if ((thumbnail == null) || thumbnail.isLoadingFailed()) return null;
+        return thumbnail;
     }
 
     protected void renderFullScreen(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset, float parallaxIntensityX, float parallaxIntensityY) {
@@ -357,6 +419,8 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         this.cachedActualVolume = -10000F;
         this.lastCachedActualVolume = -11000F;
         this.lastPausedState = null;
+        this.pausedThumbnailSupplier = null;
+        this.pausedThumbnailSource = null;
 
         if (newVideo == null) {
             this.cachedDuration.set(0F);
@@ -485,6 +549,8 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         this.lastPausedState = null;
         this.lastRenderTickTime = -1L;
         this.pausedBySystem = false;
+        this.pausedThumbnailSupplier = null;
+        this.pausedThumbnailSource = null;
         this.cachedDuration.set(0F);
         this.cachedPlayTime.set(0F);
         return didStopPlayer;
@@ -517,6 +583,54 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         }
         if (!this.shouldKeepNaturalEndedState(this.video)) {
             this.video.play();
+        }
+    }
+
+    protected void trySaveCurrentFrameThumbnail_FancyMenu() {
+        if (!this.initialized || (this.video == null)) return;
+        ResourceLocation resourceLocation = this.video.getResourceLocation();
+        if ((resourceLocation == null) || Objects.equals(resourceLocation, MISSING_TEXTURE_FANCYMENU)) return;
+        int width = Math.max(1, this.video.getWidth());
+        int height = Math.max(1, this.video.getHeight());
+        String identifier = this.getInstanceIdentifier();
+        Runnable captureTask = () -> this.saveCurrentFrameThumbnailOnRenderThread_FancyMenu(identifier, resourceLocation, width, height);
+        if (RenderSystem.isOnRenderThreadOrInit()) {
+            captureTask.run();
+        } else {
+            RenderSystem.recordRenderCall(captureTask::run);
+        }
+    }
+
+    protected void saveCurrentFrameThumbnailOnRenderThread_FancyMenu(@NotNull String identifier, @NotNull ResourceLocation resourceLocation, int width, int height) {
+        NativeImage image = null;
+        try {
+            AbstractTexture texture = Minecraft.getInstance().getTextureManager().getTexture(resourceLocation);
+            if (texture == null) return;
+            int textureId = texture.getId();
+            if (textureId <= 0) return;
+            GlStateManager._bindTexture(textureId);
+            image = new NativeImage(width, height, false);
+            image.downloadTexture(0, false);
+            File thumbnailFile = getThumbnailFileForIdentifier_FancyMenu(identifier);
+            FileUtils.createDirectory(thumbnailFile.getParentFile());
+            NativeImage capturedImage = image;
+            image = null;
+            Util.ioPool().execute(() -> {
+                try {
+                    capturedImage.writeToFile(thumbnailFile);
+                    releaseCachedThumbnailTexture_FancyMenu(thumbnailFile);
+                } catch (Exception ex) {
+                    LOGGER.warn("[FANCYMENU] Failed to save paused native video thumbnail. backgroundId: {}", identifier, ex);
+                } finally {
+                    capturedImage.close();
+                }
+            });
+        } catch (Exception ex) {
+            LOGGER.warn("[FANCYMENU] Failed to save paused native video thumbnail. backgroundId: {}", identifier, ex);
+        } finally {
+            if (image != null) {
+                image.close();
+            }
         }
     }
 
@@ -683,6 +797,41 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         if ((source == null) || source.isEmpty()) return false;
         String endedSource = this.getMemory().getStringProperty(MEMORY_LAST_ENDED_SOURCE_FANCYMENU);
         return Objects.equals(source, endedSource);
+    }
+
+    @NotNull
+    protected static File getThumbnailFileForIdentifier_FancyMenu(@NotNull String identifier) {
+        return new File(VIDEO_THUMBNAIL_DIR_FANCYMENU, sanitizeThumbnailFileName_FancyMenu(identifier) + ".png");
+    }
+
+    @NotNull
+    protected static String sanitizeThumbnailFileName_FancyMenu(@NotNull String identifier) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < identifier.length(); i++) {
+            char c = identifier.charAt(i);
+            boolean allowed = ((c >= 'a') && (c <= 'z'))
+                    || ((c >= 'A') && (c <= 'Z'))
+                    || ((c >= '0') && (c <= '9'))
+                    || (c == '-')
+                    || (c == '_')
+                    || (c == '.');
+            builder.append(allowed ? c : '_');
+        }
+        if (builder.isEmpty()) return "video_background";
+        return builder.toString();
+    }
+
+    @NotNull
+    protected static String toLocalThumbnailSource_FancyMenu(@NotNull File thumbnailFile) {
+        return ResourceSource.of(thumbnailFile.getAbsolutePath().replace("\\", "/"), ResourceSourceType.LOCAL).getSourceWithPrefix();
+    }
+
+    protected static void releaseCachedThumbnailTexture_FancyMenu(@NotNull File thumbnailFile) {
+        try {
+            ResourceHandlers.getImageHandler().release(toLocalThumbnailSource_FancyMenu(thumbnailFile), true);
+        } catch (Exception ex) {
+            LOGGER.warn("[FANCYMENU] Failed to release cached native video thumbnail texture.", ex);
+        }
     }
 
 }
