@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.resource.resources.audio.ALAudio;
 import de.keksuccino.fancymenu.util.resource.resources.audio.AudioPlayTimeTracker;
-import de.keksuccino.fancymenu.util.resource.resources.audio.AudioEngineReloadHandler;
+import de.keksuccino.fancymenu.util.resource.resources.audio.AudioResourceReloadTracker;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.audio.OpenAlAudioClipFactory;
 import de.keksuccino.melody.resources.audio.openal.ALAudioBuffer;
@@ -270,12 +270,11 @@ public class OggAudio implements IAudio, ALAudio {
     }
 
     protected OggAudio() {
+        AudioResourceReloadTracker.registerAudioInstance_FancyMenu(this);
     }
 
     private static boolean isOpenAlNotReadyOrReloading() {
-        return !ALUtils.isOpenAlReady()
-                || AudioEngineReloadHandler.isInPostReloadCooldown()
-                || OpenAlAudioClipFactory.isCreationTemporarilyBlocked();
+        return !ALUtils.isOpenAlReady();
     }
 
     private static void failBecauseOpenAlNotReady(@NotNull OggAudio audio, @NotNull String sourceName) {
