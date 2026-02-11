@@ -30,7 +30,8 @@ public class GameIntroHandler {
 		source = PlaceholderParser.replacePlaceholders(source);
 		ResourceSource resourceSource = ResourceSource.of(source);
 		FileType<?> fileType;
-		fileType = FileTypes.getType(resourceSource, false);
+		// Use advanced checks for web sources so MP4 URLs with query parameters are detected reliably.
+		fileType = FileTypes.getType(resourceSource, true);
 		if (fileType != null) {
 			if (fileType instanceof ImageFileType) {
 				ITexture t = ResourceHandlers.getImageHandler().get(resourceSource);

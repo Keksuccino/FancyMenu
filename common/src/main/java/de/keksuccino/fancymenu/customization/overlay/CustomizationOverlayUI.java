@@ -1300,7 +1300,15 @@ public class CustomizationOverlayUI {
 
         ContextMenu gameIntroMenu = new ContextMenu();
 
-        FileTypeGroup<ImageFileType> introFileTypeGroup = FileTypeGroup.of(FileTypes.APNG_IMAGE, FileTypes.GIF_IMAGE, FileTypes.FMA_IMAGE);
+        @SuppressWarnings("unchecked")
+        FileTypeGroup<ImageFileType> introFileTypeGroup = new FileTypeGroup<>(() -> (List<ImageFileType>) (List<?>) List.of(
+                FileTypes.APNG_IMAGE,
+                FileTypes.GIF_IMAGE,
+                FileTypes.FMA_IMAGE,
+                FileTypes.MP4_VIDEO
+        ), Component.translatable("fancymenu.file_types.groups.image")
+                .append(Component.literal(" + "))
+                .append(Component.translatable("fancymenu.file_types.groups.video")));
 
         ContextMenuUtils.addGenericResourceChooserContextMenuEntryTo(gameIntroMenu, "set_game_intro",
                 () -> new ResourceChooserWindowBody<>(Component.empty(), introFileTypeGroup, null, s -> {}),
