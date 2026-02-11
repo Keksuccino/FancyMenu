@@ -43,7 +43,7 @@ public abstract class MixinSoundManager {
             SoundEvent event = SoundEvents.UI_BUTTON_CLICK.value();
             if ((event != null) && (i.getLocation() == event.getLocation())) {
                 IAudio globalClickSound = GlobalCustomizationHandler.getCustomButtonClickSound();
-                if (globalClickSound != null) {
+                if ((globalClickSound != null) && globalClickSound.isReady()) {
                     globalClickSound.setSoundChannel(SoundSource.MASTER);
                     globalClickSound.stop();
                     globalClickSound.play();

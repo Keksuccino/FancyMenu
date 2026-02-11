@@ -218,8 +218,14 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
                 this.video.pause();
             }
         } else {
+            boolean shouldRecoverPlayback =
+                    (this.lastPausedState == null)
+                    || Objects.equals(true, this.lastPausedState)
+                    || this.video.isPaused()
+                    || !this.video.isPlaying()
+                    || (loop && this.video.isEnded());
             // Keep editor playback alive even when lifecycle hooks paused the player in between renders.
-            if (!this.shouldKeepNaturalEndedState(this.video) && ((this.lastPausedState == null) || Objects.equals(true, this.lastPausedState) || this.video.isPaused() || (loop && this.video.isEnded()))) {
+            if (!this.shouldKeepNaturalEndedState(this.video) && shouldRecoverPlayback) {
                 this.video.play();
             }
         }
