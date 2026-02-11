@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollS
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.resources.audio.PlayableResourceWithAudio;
+import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -64,6 +65,9 @@ public class GameIntroOverlay extends Overlay {
         if (startIntro) {
             this.start = System.currentTimeMillis();
             this.intro.stop();
+            if (this.intro instanceof IVideo videoIntro) {
+                videoIntro.setPlayTime(0.0F);
+            }
         }
 
         this.updateIntroVolume();
