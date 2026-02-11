@@ -188,6 +188,7 @@
   - Go To Line: Ctrl + G (opens input box -> enter number)
   - Pressing CTRL+S now counts as clicking the Done button
 - The action script editor now lets you press CTRL+S as an alternative to clicking the Done button
+- The "Game Intro" feature now has video support (with sound, including settings for volume and sound channel)
 - The old "Video [MCEF]" menu background type is now DEPRECATED (please switch to the new native "Video" background type powered by Watermedia v3)
 
 ### Breaking Changes
