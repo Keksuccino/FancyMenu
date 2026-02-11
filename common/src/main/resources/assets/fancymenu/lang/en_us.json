@@ -3220,5 +3220,10 @@
   "fancymenu.overlay.menu_bar.customization.settings.developer.force_watermedia_missing": "Force Watermedia Missing: %s",
   "fancymenu.overlay.menu_bar.customization.settings.developer.force_mcef_missing": "Force MCEF Missing: %s",
   "fancymenu.backgrounds.video.watermedia_missing.info": "Watermedia V3 is needed to play videos.",
-  "fancymenu.backgrounds.video.watermedia_missing.download": "Download Watermedia V3"
+  "fancymenu.backgrounds.video.watermedia_missing.download": "Download Watermedia V3",
+  "fancymenu.overlay.menu_bar.customization.settings.game_intro.volume": "Game Intro Volume",
+  "fancymenu.overlay.menu_bar.customization.settings.game_intro.volume.slider_label": "Game Intro Volume: %s",
+  "fancymenu.overlay.menu_bar.customization.settings.game_intro.sound_channel": "Game Intro Sound Channel: %s",
+  "fancymenu.overlay.menu_bar.customization.settings.game_intro.retrigger": "Re-Trigger Game Intro",
+  "fancymenu.overlay.menu_bar.customization.settings.game_intro.retrigger.tooltip": "Opens the configured Game Intro again, just like it would play when launching the game.\nUseful for testing."
 }

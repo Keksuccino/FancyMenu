@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
+import de.keksuccino.fancymenu.util.resource.resources.audio.PlayableResourceWithAudio;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -22,6 +23,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -40,6 +42,8 @@ public class GameIntroOverlay extends Overlay {
     protected boolean fadeToInitialized = false;
     protected int width;
     protected int height;
+    protected float cachedActualVolume = -10000F;
+    protected float lastCachedActualVolume = -11000F;
 
     public GameIntroOverlay(@NotNull Screen fadeTo, @NotNull PlayableResource intro) {
         super();
@@ -56,9 +60,15 @@ public class GameIntroOverlay extends Overlay {
 
         //----------------------
 
-        if (this.start == -1) {
+        boolean startIntro = (this.start == -1);
+        if (startIntro) {
             this.start = System.currentTimeMillis();
             this.intro.stop();
+        }
+
+        this.updateIntroVolume();
+
+        if (startIntro) {
             this.intro.play();
         }
 
@@ -142,6 +152,33 @@ public class GameIntroOverlay extends Overlay {
         return FancyMenu.getOptions().gameIntroFadeOut.getValue();
     }
 
+    protected void updateIntroVolume() {
+        if (!(this.intro instanceof PlayableResourceWithAudio)) return;
+        float volume = GameIntroHandler.getIntroVolume();
+        this.setIntroVolume(volume, false);
+        if ((this.lastCachedActualVolume == -11000F) || (this.cachedActualVolume != this.lastCachedActualVolume)) {
+            this.setIntroVolume(volume, true);
+        }
+        this.lastCachedActualVolume = this.cachedActualVolume;
+    }
+
+    protected void setIntroVolume(float volume, boolean updateIntro) {
+        if (this.intro instanceof PlayableResourceWithAudio introAudio) {
+            float actualVolume = Math.max(0.0F, Math.min(1.0F, volume));
+            float masterVolume = Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER);
+            SoundSource soundSource = GameIntroHandler.getIntroSoundSource();
+            float soundSourceVolume = Minecraft.getInstance().options.getSoundSourceVolume(soundSource);
+            if (soundSource != SoundSource.MASTER) {
+                soundSourceVolume *= masterVolume;
+            }
+            actualVolume *= soundSourceVolume;
+            this.cachedActualVolume = actualVolume;
+            if (updateIntro) {
+                introAudio.setVolume(Math.max(0.0F, Math.min(1.0F, actualVolume)));
+            }
+        }
+    }
+
     protected boolean endOfIntroReached() {
         if (this.start == -1) return false;
         long now = System.currentTimeMillis();
@@ -177,6 +214,7 @@ public class GameIntroOverlay extends Overlay {
     }
 
     protected void close() {
+        this.intro.stop();
         if (!this.fadeToInitialized) this.initFadeToScreen();
         Minecraft.getInstance().setOverlay(null);
     }

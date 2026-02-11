@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu;
 
 import de.keksuccino.fancymenu.util.AbstractOptions;
 import de.keksuccino.konkrete.config.Config;
+import net.minecraft.sounds.SoundSource;
 
 public class Options extends AbstractOptions {
 
@@ -19,6 +20,8 @@ public class Options extends AbstractOptions {
     public final Option<Boolean> gameIntroAllowSkip = new Option<>(config, "allow_game_intro_skip", true, "loading");
     public final Option<Boolean> gameIntroFadeOut = new Option<>(config, "game_intro_fade_out", true, "loading");
     public final Option<String> gameIntroCustomSkipText = new Option<>(config, "custom_game_intro_skip_text", "", "loading");
+    public final Option<Float> gameIntroVolume = new Option<>(config, "game_intro_volume", 1.0F, "loading");
+    public final Option<String> gameIntroSoundChannel = new Option<>(config, "game_intro_sound_channel", SoundSource.MASTER.getName(), "loading");
     public final Option<String> preLoadResources = new Option<>(config, "preload_resources", "", "loading");
 
     public final Option<Boolean> showCustomWindowIcon = new Option<>(config, "show_custom_window_icon", false, "window");

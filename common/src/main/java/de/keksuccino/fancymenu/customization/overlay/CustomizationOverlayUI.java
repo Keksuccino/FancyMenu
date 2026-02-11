@@ -8,6 +8,8 @@ import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.customgui.ManageCustomGuisScreen;
 import de.keksuccino.fancymenu.customization.customgui.ManageOverriddenGuisScreen;
+import de.keksuccino.fancymenu.customization.gameintro.GameIntroHandler;
+import de.keksuccino.fancymenu.customization.gameintro.GameIntroOverlay;
 import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.customization.global.ManageGlobalMenuMusicTracksScreen;
 import de.keksuccino.fancymenu.customization.layout.Layout;
@@ -60,6 +62,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
+import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
@@ -80,11 +83,13 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1352,6 +1357,51 @@ public class CustomizationOverlayUI {
                         })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro.set_custom_skip_text.tooltip")))
                 .setIcon(MaterialIcons.TEXT_FIELDS);
+
+        gameIntroMenu.addSeparatorEntry("separator_before_game_intro_audio_settings");
+
+        ContextMenuUtils.addRangeSliderInputContextMenuEntryTo(
+                        gameIntroMenu,
+                        "game_intro_volume",
+                        Component.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro.volume"),
+                        () -> FancyMenu.getOptions().gameIntroVolume.getValue().doubleValue(),
+                        value -> FancyMenu.getOptions().gameIntroVolume.setValue((float) Math.max(0.0D, Math.min(1.0D, value))),
+                        true,
+                        FancyMenu.getOptions().gameIntroVolume.getDefaultValue().doubleValue(),
+                        0.0D,
+                        1.0D,
+                        value -> Component.translatable(
+                                "fancymenu.overlay.menu_bar.customization.settings.game_intro.volume.slider_label",
+                                ((int) Math.round(Math.max(0.0D, Math.min(1.0D, value)) * 100.0D)) + "%"
+                        ))
+                .setIcon(MaterialIcons.VOLUME_UP);
+
+        gameIntroMenu.addValueCycleEntry("game_intro_sound_channel",
+                        CommonCycles.cycle(
+                                        "fancymenu.overlay.menu_bar.customization.settings.game_intro.sound_channel",
+                                        Arrays.asList(SoundSource.values()),
+                                        GameIntroHandler.getIntroSoundSource())
+                                .setValueNameSupplier(soundSource -> Component.translatable("soundCategory." + soundSource.getName()).getString())
+                                .setValueComponentStyleSupplier(soundSource -> Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
+                                .addCycleListener(soundSource -> FancyMenu.getOptions().gameIntroSoundChannel.setValue(soundSource.getName())))
+                .setIcon(MaterialIcons.SPEAKER);
+
+        gameIntroMenu.addSeparatorEntry("separator_before_game_intro_retrigger");
+
+        gameIntroMenu.addClickableEntry("game_intro_retrigger",
+                        Component.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro.retrigger"),
+                        (menu, entry) -> {
+                            Screen current = Minecraft.getInstance().screen;
+                            if (current == null) return;
+                            PlayableResource intro = GameIntroHandler.getIntro();
+                            if (intro == null) return;
+                            menu.closeMenuChain();
+                            GameIntroHandler.introPlayed = true;
+                            Minecraft.getInstance().setOverlay(new GameIntroOverlay(current, intro));
+                        })
+                .addIsActiveSupplier((menu, entry) -> !FancyMenu.getOptions().gameIntroAnimation.getValue().trim().isEmpty())
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro.retrigger.tooltip")))
+                .setIcon(MaterialIcons.REPLAY);
 
         return gameIntroMenu;
 
