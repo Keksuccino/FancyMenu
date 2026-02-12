@@ -32,6 +32,7 @@ public class Mp4Video implements IVideo {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final File TEMP_VIDEO_DIR = FileUtils.createDirectory(new File(FancyMenu.TEMP_DATA_DIR, "/watermedia_videos"));
     private static final int HARD_STOP_DEFER_TICKS = 2;
+    private static final int CLOSE_RELEASE_MAX_DEFER_TICKS = 16;
     private static final long PLAY_REQUEST_GRACE_MS = 2200L;
     private static final double PLAYBACK_END_EPSILON_SECONDS = 0.12D;
     private static final double LOOP_RESTART_WINDOW_SECONDS = 0.40D;
@@ -66,6 +67,7 @@ public class Mp4Video implements IVideo {
     protected volatile boolean closed = false;
     protected volatile boolean playerInitTaskQueued = false;
     protected volatile long stopRequestVersion = 0L;
+    protected volatile long closeReleaseRequestVersion = 0L;
     protected volatile boolean restartFromBeginningOnNextPlay = false;
     protected volatile long lastPlayRequestTimestampMs = -1L;
     protected volatile boolean listenerPlaybackCycleActive = false;
@@ -612,10 +614,13 @@ public class Mp4Video implements IVideo {
 
     @Override
     public void close() {
+        if (this.closed) return;
         this.stopRequestVersion++;
+        long closeReleaseVersion = ++this.closeReleaseRequestVersion;
         this.closed = true;
         this.playRequested = false;
         this.pausedRequested = false;
+        this.seekRequestedMs = -1L;
         this.restartFromBeginningOnNextPlay = false;
         this.lastPlayRequestTimestampMs = -1L;
         this.looping = false;
@@ -624,7 +629,10 @@ public class Mp4Video implements IVideo {
         this.mediaPlayer = null;
         this.mrl = null;
         if (cachedPlayer != null) {
-            WatermediaReflectionBridge.playerRelease(cachedPlayer);
+            WatermediaReflectionBridge.playerPause(cachedPlayer, true);
+            // FFmpeg can still enqueue render-thread upload tasks right after stop.
+            // Run stop/release in a deferred sequence so queued uploads can drain first.
+            this.queueDeferredHardStopAndReleaseForClose(cachedPlayer, closeReleaseVersion, HARD_STOP_DEFER_TICKS);
         }
         try {
             Minecraft.getInstance().getTextureManager().release(this.frameLocation);
@@ -752,6 +760,43 @@ public class Mp4Video implements IVideo {
         if (this.stopRequestVersion != stopVersion) return false;
         if (this.playRequested) return false;
         return this.mediaPlayer == player;
+    }
+
+    protected void queueDeferredPlayerRelease(@NotNull Object player, long closeReleaseVersion, int ticksToWait) {
+        MainThreadTaskExecutor.executeInMainThread(() -> this.runDeferredPlayerRelease(player, closeReleaseVersion, ticksToWait), MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
+    }
+
+    protected void queueDeferredHardStopAndReleaseForClose(@NotNull Object player, long closeReleaseVersion, int ticksToWait) {
+        MainThreadTaskExecutor.executeInMainThread(() -> this.runDeferredHardStopAndReleaseForClose(player, closeReleaseVersion, ticksToWait), MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
+    }
+
+    protected void runDeferredHardStopAndReleaseForClose(@NotNull Object player, long closeReleaseVersion, int ticksToWait) {
+        if (!this.shouldExecuteDeferredPlayerRelease(closeReleaseVersion)) return;
+        if (ticksToWait > 0) {
+            this.queueDeferredHardStopAndReleaseForClose(player, closeReleaseVersion, ticksToWait - 1);
+            return;
+        }
+        WatermediaReflectionBridge.playerStop(player);
+        this.queueDeferredPlayerRelease(player, closeReleaseVersion, CLOSE_RELEASE_MAX_DEFER_TICKS);
+    }
+
+    protected void runDeferredPlayerRelease(@NotNull Object player, long closeReleaseVersion, int ticksToWait) {
+        if (!this.shouldExecuteDeferredPlayerRelease(closeReleaseVersion)) return;
+        if ((ticksToWait > 0) && !this.isReadyForDeferredPlayerRelease(player)) {
+            this.queueDeferredPlayerRelease(player, closeReleaseVersion, ticksToWait - 1);
+            return;
+        }
+        WatermediaReflectionBridge.playerRelease(player);
+    }
+
+    protected boolean shouldExecuteDeferredPlayerRelease(long closeReleaseVersion) {
+        return this.closeReleaseRequestVersion == closeReleaseVersion;
+    }
+
+    protected boolean isReadyForDeferredPlayerRelease(@NotNull Object player) {
+        String statusName = WatermediaReflectionBridge.playerStatusName(player);
+        if (statusName.equals("UNKNOWN")) return true;
+        return this.isTerminalPlayerStatus(statusName);
     }
 
     protected void seekPlayerToBeginning(@NotNull Object player) {
