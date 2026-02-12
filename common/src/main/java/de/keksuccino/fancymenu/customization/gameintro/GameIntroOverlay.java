@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.MouseUtil;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
@@ -61,8 +62,7 @@ public class GameIntroOverlay extends Overlay {
     protected float watermediaBinariesDownloadY_FancyMenu = Float.NaN;
     protected float watermediaBinariesDownloadWidth_FancyMenu = Float.NaN;
     protected float watermediaBinariesDownloadHeight_FancyMenu = Float.NaN;
-    protected double lastMouseX_FancyMenu = 0.0D;
-    protected double lastMouseY_FancyMenu = 0.0D;
+    protected boolean watermediaLeftMouseWasDown_FancyMenu = false;
 
     public GameIntroOverlay(@NotNull Screen fadeTo, @NotNull PlayableResource intro) {
         super();
@@ -76,8 +76,6 @@ public class GameIntroOverlay extends Overlay {
 
         this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
         this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
-        this.lastMouseX_FancyMenu = mouseX;
-        this.lastMouseY_FancyMenu = mouseY;
         this.resetWatermediaDownloadLinkBounds_FancyMenu();
 
         //----------------------
@@ -122,8 +120,12 @@ public class GameIntroOverlay extends Overlay {
         RenderingUtils.resetShaderColor(graphics);
 
         this.renderIntro(graphics, mouseX, mouseY, partial);
-        if (this.shouldRenderWatermediaMissingOverlay_FancyMenu()) {
-            this.renderWatermediaMissingOverlay_FancyMenu(graphics, mouseX, mouseY);
+        double resolvedMouseX_FancyMenu = MouseUtil.getGuiScaledMouseX();
+        double resolvedMouseY_FancyMenu = MouseUtil.getGuiScaledMouseY();
+        boolean showWatermediaWarning_FancyMenu = this.shouldRenderWatermediaMissingOverlay_FancyMenu();
+        this.tickWatermediaMissingOverlayMouseClick_FancyMenu(showWatermediaWarning_FancyMenu, resolvedMouseX_FancyMenu, resolvedMouseY_FancyMenu);
+        if (showWatermediaWarning_FancyMenu) {
+            this.renderWatermediaMissingOverlay_FancyMenu(graphics, resolvedMouseX_FancyMenu, resolvedMouseY_FancyMenu);
         }
 
         this.renderSkipText(graphics, mouseX, mouseY, partial);
@@ -255,8 +257,12 @@ public class GameIntroOverlay extends Overlay {
     }
 
     public void mouseClicked(int button) {
-        if ((button == 0) && this.handleWatermediaMissingOverlayClick_FancyMenu(this.lastMouseX_FancyMenu, this.lastMouseY_FancyMenu)) {
-            return;
+        if (MouseUtil.MouseButton.fromGlfwButton(button) == MouseUtil.MouseButton.LEFT || MouseUtil.isLeftMouseDown()) {
+            boolean handled = this.handleWatermediaMissingOverlayClick_FancyMenu(MouseUtil.getGuiScaledMouseX(), MouseUtil.getGuiScaledMouseY());
+            if (handled) {
+                this.watermediaLeftMouseWasDown_FancyMenu = true;
+                return;
+            }
         }
         //Handle "Press Any Key to Skip" if enabled
         if (FancyMenu.getOptions().gameIntroAllowSkip.getValue()) {
@@ -268,7 +274,7 @@ public class GameIntroOverlay extends Overlay {
         return (this.intro instanceof IVideo) && !WatermediaUtil.isWatermediaVideoPlaybackAvailable();
     }
 
-    protected void renderWatermediaMissingOverlay_FancyMenu(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
+    protected void renderWatermediaMissingOverlay_FancyMenu(@NotNull GuiGraphics graphics, double mouseX, double mouseY) {
         graphics.fill(0, 0, this.width, this.height, WATERMEDIA_MISSING_BACKGROUND_COLOR_FANCYMENU.getColorIntWithAlpha(this.opacity));
 
         Component infoText = Component.translatable("fancymenu.backgrounds.video.watermedia_missing.info");
@@ -327,6 +333,14 @@ public class GameIntroOverlay extends Overlay {
             return true;
         }
         return false;
+    }
+
+    protected void tickWatermediaMissingOverlayMouseClick_FancyMenu(boolean showWarning, double mouseX, double mouseY) {
+        boolean leftDown = MouseUtil.isLeftMouseDown();
+        if (showWarning && leftDown && !this.watermediaLeftMouseWasDown_FancyMenu) {
+            this.handleWatermediaMissingOverlayClick_FancyMenu(mouseX, mouseY);
+        }
+        this.watermediaLeftMouseWasDown_FancyMenu = leftDown;
     }
 
     protected boolean isMouseOverWatermediaDownloadLink_FancyMenu(double mouseX, double mouseY) {

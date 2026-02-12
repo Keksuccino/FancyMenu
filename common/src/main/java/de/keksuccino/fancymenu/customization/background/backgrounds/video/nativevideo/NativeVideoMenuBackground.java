@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.customization.background.backgrounds.video.IVideo
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.MouseUtil;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.properties.Property;
@@ -117,6 +118,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     protected float watermediaBinariesDownloadY_FancyMenu = Float.NaN;
     protected float watermediaBinariesDownloadWidth_FancyMenu = Float.NaN;
     protected float watermediaBinariesDownloadHeight_FancyMenu = Float.NaN;
+    protected boolean watermediaLeftMouseWasDown_FancyMenu = false;
     // The field is currently unused, but the scheduler is used, so don't delete this
     protected final ScheduledFuture<?> garbageChecker = EXECUTOR.scheduleAtFixedRate(() -> {
         if (this.initialized && !this.shouldSkipWatchdogAutoClear() && (this.lastRenderTickTime != -1L) && ((this.lastRenderTickTime + 11000L) < System.currentTimeMillis())) {
@@ -288,9 +290,13 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         this.currentResolvedVideoSource = this.getResolvedVideoSource(supplier);
         IVideo currentVideo = (supplier != null) ? supplier.get() : null;
         this.updateVideoReference(currentVideo);
+        double resolvedMouseX_FancyMenu = MouseUtil.getGuiScaledMouseX();
+        double resolvedMouseY_FancyMenu = MouseUtil.getGuiScaledMouseY();
+        boolean showWatermediaWarning = this.shouldRenderWatermediaMissingOverlay_FancyMenu(supplier);
+        this.tickWatermediaMissingOverlayMouseClick_FancyMenu(showWatermediaWarning, resolvedMouseX_FancyMenu, resolvedMouseY_FancyMenu);
 
-        if (this.shouldRenderWatermediaMissingOverlay_FancyMenu(supplier)) {
-            this.renderWatermediaMissingOverlay_FancyMenu(graphics, mouseX, mouseY);
+        if (showWatermediaWarning) {
+            this.renderWatermediaMissingOverlay_FancyMenu(graphics, resolvedMouseX_FancyMenu, resolvedMouseY_FancyMenu);
             RenderingUtils.resetShaderColor(graphics);
             RenderSystem.disableBlend();
             return;
@@ -355,9 +361,19 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button != 0) return false;
+        if (MouseUtil.MouseButton.fromGlfwButton(button) != MouseUtil.MouseButton.LEFT && !MouseUtil.isLeftMouseDown()) return false;
         if (!this.showBackground.tryGetNonNull()) return false;
         if (!this.shouldRenderWatermediaMissingOverlay_FancyMenu(this.videoSupplier.get())) return false;
+        double resolvedMouseX_FancyMenu = MouseUtil.getGuiScaledMouseX();
+        double resolvedMouseY_FancyMenu = MouseUtil.getGuiScaledMouseY();
+        boolean handled = this.handleWatermediaMissingOverlayClick_FancyMenu(resolvedMouseX_FancyMenu, resolvedMouseY_FancyMenu);
+        if (handled) {
+            this.watermediaLeftMouseWasDown_FancyMenu = true;
+        }
+        return handled;
+    }
+
+    protected boolean handleWatermediaMissingOverlayClick_FancyMenu(double mouseX, double mouseY) {
         if (this.isMouseOverWatermediaDownloadLink_FancyMenu(mouseX, mouseY)) {
             WebUtils.openWebLink(WATERMEDIA_V3_DOWNLOAD_URL_FANCYMENU);
             return true;
@@ -369,11 +385,19 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         return false;
     }
 
+    protected void tickWatermediaMissingOverlayMouseClick_FancyMenu(boolean showWarning, double mouseX, double mouseY) {
+        boolean leftDown = MouseUtil.isLeftMouseDown();
+        if (showWarning && leftDown && !this.watermediaLeftMouseWasDown_FancyMenu) {
+            this.handleWatermediaMissingOverlayClick_FancyMenu(mouseX, mouseY);
+        }
+        this.watermediaLeftMouseWasDown_FancyMenu = leftDown;
+    }
+
     protected boolean shouldRenderWatermediaMissingOverlay_FancyMenu(@Nullable ResourceSupplier<IVideo> supplier) {
         return (supplier != null) && !WatermediaUtil.isWatermediaVideoPlaybackAvailable();
     }
 
-    protected void renderWatermediaMissingOverlay_FancyMenu(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
+    protected void renderWatermediaMissingOverlay_FancyMenu(@NotNull GuiGraphics graphics, double mouseX, double mouseY) {
         int width = getScreenWidth();
         int height = getScreenHeight();
         graphics.fill(0, 0, width, height, WATERMEDIA_MISSING_BACKGROUND_COLOR_FANCYMENU.getColorIntWithAlpha(this.opacity));
