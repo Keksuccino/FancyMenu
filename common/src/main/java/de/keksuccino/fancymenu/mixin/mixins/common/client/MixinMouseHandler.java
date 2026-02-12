@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(MouseHandler.class)
+@Mixin(value = MouseHandler.class, priority = 2147483647)
 public class MixinMouseHandler {
 
     @Shadow private double xpos;
@@ -33,6 +33,38 @@ public class MixinMouseHandler {
     @Shadow private int activeButton;
 
     @Unique private final Minecraft mc_FancyMenu = Minecraft.getInstance();
+    @Unique private int fakeRightMouse_FancyMenu = 0;
+    @Unique private int mappedButtonOnPress_FancyMenu = -1;
+
+    @Inject(method = "onPress", at = @At("HEAD"))
+    private void head_onPress_FancyMenu(long window, int button, int action, int modifiers, CallbackInfo info) {
+        if (window != this.mc_FancyMenu.getWindow().getWindow()) return;
+
+        boolean pressed = (action == GLFW.GLFW_PRESS);
+        int mappedButton = button;
+        // Mirror vanilla macOS fake right click behavior (Ctrl + Left Click).
+        if (Minecraft.ON_OSX && (mappedButton == GLFW.GLFW_MOUSE_BUTTON_LEFT)) {
+            if (pressed) {
+                if ((modifiers & GLFW.GLFW_MOD_CONTROL) == GLFW.GLFW_MOD_CONTROL) {
+                    mappedButton = GLFW.GLFW_MOUSE_BUTTON_RIGHT;
+                    this.fakeRightMouse_FancyMenu++;
+                }
+            } else if (this.fakeRightMouse_FancyMenu > 0) {
+                mappedButton = GLFW.GLFW_MOUSE_BUTTON_RIGHT;
+                this.fakeRightMouse_FancyMenu--;
+            }
+        }
+
+        double guiWidth = this.mc_FancyMenu.getWindow().getGuiScaledWidth();
+        double guiHeight = this.mc_FancyMenu.getWindow().getGuiScaledHeight();
+        double screenWidth = this.mc_FancyMenu.getWindow().getScreenWidth();
+        double screenHeight = this.mc_FancyMenu.getWindow().getScreenHeight();
+        double mouseX = this.xpos * guiWidth / screenWidth;
+        double mouseY = this.ypos * guiHeight / screenHeight;
+        MouseUtil.cacheMousePosition(mouseX, mouseY);
+        MouseUtil.cacheMouseButtonState(mappedButton, action);
+        this.mappedButtonOnPress_FancyMenu = mappedButton;
+    }
 
     @Inject(method = "onScroll", at = @At("HEAD"), cancellable = true)
     private void head_onScroll_FancyMenu(long windowPointer, double scrollX, double scrollY, CallbackInfo info) {
@@ -109,15 +141,17 @@ public class MixinMouseHandler {
         double screenHeight = this.mc_FancyMenu.getWindow().getScreenHeight();
         double mouseX = this.xpos * guiWidth / screenWidth;
         double mouseY = this.ypos * guiHeight / screenHeight;
+        int mappedButton = (this.mappedButtonOnPress_FancyMenu != -1) ? this.mappedButtonOnPress_FancyMenu : button;
+        this.mappedButtonOnPress_FancyMenu = -1;
         if (action == GLFW.GLFW_PRESS) {
-            ClicksPerSecondTracker.recordClick(button);
-            Listeners.ON_MOUSE_BUTTON_CLICKED.onMouseButtonClicked(button, mouseX, mouseY);
-            MouseUtil.onMouseButtonPressed(button, mouseX, mouseY);
-            GlslRuntimeEventTracker.onMouseButtonPressed(button, mouseX, mouseY);
+            ClicksPerSecondTracker.recordClick(mappedButton);
+            Listeners.ON_MOUSE_BUTTON_CLICKED.onMouseButtonClicked(mappedButton, mouseX, mouseY);
+            MouseUtil.onMouseButtonPressed(mappedButton, mouseX, mouseY);
+            GlslRuntimeEventTracker.onMouseButtonPressed(mappedButton, mouseX, mouseY);
         } else if (action == GLFW.GLFW_RELEASE) {
-            Listeners.ON_MOUSE_BUTTON_RELEASED.onMouseButtonReleased(button, mouseX, mouseY);
-            MouseUtil.onMouseButtonReleased(button, mouseX, mouseY);
-            GlslRuntimeEventTracker.onMouseButtonReleased(button, mouseX, mouseY);
+            Listeners.ON_MOUSE_BUTTON_RELEASED.onMouseButtonReleased(mappedButton, mouseX, mouseY);
+            MouseUtil.onMouseButtonReleased(mappedButton, mouseX, mouseY);
+            GlslRuntimeEventTracker.onMouseButtonReleased(mappedButton, mouseX, mouseY);
         }
     }
 

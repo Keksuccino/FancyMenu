@@ -21,10 +21,18 @@ public class MouseUtil {
     private static boolean mouseStateInitialized = false;
     private static double lastMouseX = 0D;
     private static double lastMouseY = 0D;
+    private static boolean cachedLeftMouseDown = false;
+    private static boolean cachedRightMouseDown = false;
+    private static boolean cachedMousePositionInitialized = false;
+    private static double cachedGuiScaledMouseX = 0D;
+    private static double cachedGuiScaledMouseY = 0D;
 
     public static void tick() {
-        double mouseX = getGuiScaledMouseX();
-        double mouseY = getGuiScaledMouseY();
+        double mouseX = getLiveGuiScaledMouseX();
+        double mouseY = getLiveGuiScaledMouseY();
+        cacheMousePosition(mouseX, mouseY);
+        cachedLeftMouseDown = MC.mouseHandler.isLeftPressed();
+        cachedRightMouseDown = MC.mouseHandler.isRightPressed();
 
         if (!mouseStateInitialized) {
             mouseStateInitialized = true;
@@ -161,6 +169,8 @@ public class MouseUtil {
     }
 
     public static void onMouseButtonPressed(int button, double mouseX, double mouseY) {
+        cacheMousePosition(mouseX, mouseY);
+        cacheMouseButtonState(button, GLFW.GLFW_PRESS);
         MouseButton mouseButton = MouseButton.fromGlfwButton(button);
         for (MouseButtonListener listener : new ArrayList<>(CLICK_LISTENERS.values())) {
             listener.onMouseButton(mouseButton, mouseX, mouseY);
@@ -168,10 +178,28 @@ public class MouseUtil {
     }
 
     public static void onMouseButtonReleased(int button, double mouseX, double mouseY) {
+        cacheMousePosition(mouseX, mouseY);
+        cacheMouseButtonState(button, GLFW.GLFW_RELEASE);
         MouseButton mouseButton = MouseButton.fromGlfwButton(button);
         for (MouseButtonListener listener : new ArrayList<>(RELEASE_LISTENERS.values())) {
             listener.onMouseButton(mouseButton, mouseX, mouseY);
         }
+    }
+
+    public static void cacheMouseButtonState(int button, int action) {
+        MouseButton mouseButton = MouseButton.fromGlfwButton(button);
+        boolean down = (action != GLFW.GLFW_RELEASE);
+        switch (mouseButton) {
+            case LEFT -> cachedLeftMouseDown = down;
+            case RIGHT -> cachedRightMouseDown = down;
+            default -> {}
+        }
+    }
+
+    public static void cacheMousePosition(double mouseX, double mouseY) {
+        cachedGuiScaledMouseX = mouseX;
+        cachedGuiScaledMouseY = mouseY;
+        cachedMousePositionInitialized = true;
     }
 
     public static boolean isMouseGrabbed() {
@@ -179,18 +207,32 @@ public class MouseUtil {
     }
 
     public static boolean isLeftMouseDown() {
-        return MC.mouseHandler.isLeftPressed();
+        return cachedLeftMouseDown;
     }
 
     public static boolean isRightMouseDown() {
-        return MC.mouseHandler.isRightPressed();
+        return cachedRightMouseDown;
     }
 
     public static double getGuiScaledMouseX() {
-        return getMouseX() * (double) MC.getWindow().getGuiScaledWidth() / (double) MC.getWindow().getScreenWidth();
+        if (cachedMousePositionInitialized) {
+            return cachedGuiScaledMouseX;
+        }
+        return getLiveGuiScaledMouseX();
     }
 
     public static double getGuiScaledMouseY() {
+        if (cachedMousePositionInitialized) {
+            return cachedGuiScaledMouseY;
+        }
+        return getLiveGuiScaledMouseY();
+    }
+
+    private static double getLiveGuiScaledMouseX() {
+        return getMouseX() * (double) MC.getWindow().getGuiScaledWidth() / (double) MC.getWindow().getScreenWidth();
+    }
+
+    private static double getLiveGuiScaledMouseY() {
         return getMouseY() * (double) MC.getWindow().getGuiScaledHeight() / (double) MC.getWindow().getScreenHeight();
     }
 
