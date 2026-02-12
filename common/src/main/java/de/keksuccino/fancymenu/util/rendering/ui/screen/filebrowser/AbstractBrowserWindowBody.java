@@ -35,6 +35,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -1003,6 +1004,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
             this.previewVideoPlaying = false;
             return;
         }
+        this.applyPreviewVideoVolume(BrowserVideoSettings.getVolume());
         if (this.previewVideoPlaying) {
             if (!video.isPlaying()) video.play();
             if (video.isEnded() || (video.getDuration() > 0.0F && video.getPlayTime() >= video.getDuration())) {
@@ -1015,12 +1017,18 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     }
 
     protected void renderVideoPreview(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        int previewWidth = 200;
+        int previewMaxWidth = 200;
         int topY = (int) this.getMainAreaTopY();
         int availableHeight = (this.cancelButton.getY() - 50) - topY;
         int textHeight = Math.round(UIBase.getUITextHeightNormal());
         int progressAreaHeight = AUDIO_PREVIEW_PROGRESS_BAR_SPACING + AUDIO_PREVIEW_PROGRESS_BAR_HEIGHT + AUDIO_PREVIEW_TIME_SPACING + textHeight;
-        int previewHeight = Math.max(40, availableHeight - (AUDIO_PREVIEW_BUTTON_SIZE + AUDIO_PREVIEW_BUTTON_SPACING + progressAreaHeight));
+        int controlsAreaHeight = AUDIO_PREVIEW_BUTTON_SIZE + AUDIO_PREVIEW_BUTTON_SPACING + progressAreaHeight;
+        int maxFrameHeight = Math.max(12, availableHeight - controlsAreaHeight);
+        IVideo video = this.getPreviewVideo();
+        AspectRatio ratio = this.getPreviewVideoAspectRatio(video);
+        int[] frameSize = ratio.getAspectRatioSizeByMaximumSize(previewMaxWidth, maxFrameHeight);
+        int previewWidth = Math.max(1, frameSize[0]);
+        int previewHeight = Math.max(1, frameSize[1]);
         int x = this.width - 20 - previewWidth;
         int y = topY;
         int previewBackgroundColor = UIBase.shouldBlur()
@@ -1032,18 +1040,11 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
 
         graphics.fill(x, y, x + previewWidth, y + previewHeight, previewBackgroundColor);
 
-        IVideo video = this.getPreviewVideo();
         ResourceLocation location = (video != null) ? video.getResourceLocation() : null;
         if (location != null) {
-            AspectRatio ratio = video.getAspectRatio();
-            int[] size = ratio.getAspectRatioSizeByMaximumSize(previewWidth, previewHeight);
-            int renderWidth = Math.max(1, size[0]);
-            int renderHeight = Math.max(1, size[1]);
-            int renderX = x + (previewWidth - renderWidth) / 2;
-            int renderY = y + (previewHeight - renderHeight) / 2;
             RenderingUtils.resetShaderColor(graphics);
             RenderSystem.enableBlend();
-            graphics.blit(location, renderX, renderY, 0.0F, 0.0F, renderWidth, renderHeight, renderWidth, renderHeight);
+            graphics.blit(location, x, y, 0.0F, 0.0F, previewWidth, previewHeight, previewWidth, previewHeight);
             UIBase.resetShaderColor(graphics);
         }
 
@@ -1242,9 +1243,33 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     }
 
     protected void applyPreviewVideoVolume(float volume) {
+        float clampedVolume = Math.max(0.0F, Math.min(1.0F, volume));
+        float masterVolume = this.getPreviewVideoMasterVolume();
+        float effectiveVolume = Math.max(0.0F, Math.min(1.0F, clampedVolume * masterVolume));
         if (this.currentPreviewVideo != null) {
-            this.currentPreviewVideo.setVolume(volume);
+            this.currentPreviewVideo.setVolume(effectiveVolume);
         }
+    }
+
+    @NotNull
+    protected AspectRatio getPreviewVideoAspectRatio(@Nullable IVideo video) {
+        if (video == null) {
+            return new AspectRatio(16, 9);
+        }
+        int videoWidth = video.getWidth();
+        int videoHeight = video.getHeight();
+        if (videoWidth <= 16 || videoHeight <= 16) {
+            return new AspectRatio(16, 9);
+        }
+        return video.getAspectRatio();
+    }
+
+    protected float getPreviewVideoMasterVolume() {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft == null || minecraft.options == null) {
+            return 1.0F;
+        }
+        return Math.max(0.0F, Math.min(1.0F, minecraft.options.getSoundSourceVolume(SoundSource.MASTER)));
     }
 
     protected float getAudioVisualizerTime() {

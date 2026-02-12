@@ -35,3 +35,6 @@ You have access to many of the libraries used in FancyMenu and Minecraft, includ
 
 ## Git & Run/Compile
 NEVER try to run git commands or try to run/compile the project!
+
+## Sub Agents
+DON'S SPAWN SUB AGENTS unless the user explicitly tells you to do that.
