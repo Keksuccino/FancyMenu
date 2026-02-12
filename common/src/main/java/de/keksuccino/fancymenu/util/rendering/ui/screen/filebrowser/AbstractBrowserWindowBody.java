@@ -27,6 +27,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
+import de.keksuccino.fancymenu.util.resource.resources.texture.ApngTexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.GifTexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaUtil;
@@ -424,10 +426,20 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
                         ? UIBase.getUITheme().ui_blur_interface_area_border_color.getColorInt()
                         : UIBase.getUITheme().ui_interface_widget_border_color.getColorInt();
                 AspectRatio ratio = t.getAspectRatio();
+                int previewMaxWidth = 200;
                 int previewTopY = (int) this.getMainAreaTopY();
-                int[] size = ratio.getAspectRatioSizeByMaximumSize(200, (this.cancelButton.getY() - 50) - previewTopY);
-                int w = size[0];
-                int h = size[1];
+                int availableHeight = Math.max(12, (this.cancelButton.getY() - 50) - previewTopY);
+                boolean showAnimatedImageWatermediaRecommendation = this.shouldRenderAnimatedImageWatermediaRecommendation_FancyMenu(t);
+                int recommendationSpacing = 4;
+                int recommendationHeight = showAnimatedImageWatermediaRecommendation
+                        ? this.getAnimatedImageWatermediaRecommendationHeight_FancyMenu(previewMaxWidth)
+                        : 0;
+                int maxPreviewHeight = showAnimatedImageWatermediaRecommendation
+                        ? Math.max(12, availableHeight - recommendationHeight - recommendationSpacing)
+                        : availableHeight;
+                int[] size = ratio.getAspectRatioSizeByMaximumSize(previewMaxWidth, maxPreviewHeight);
+                int w = Math.max(1, size[0]);
+                int h = Math.max(1, size[1]);
                 int x = this.width - 20 - w;
                 int y = previewTopY;
                 UIBase.resetShaderColor(graphics);
@@ -437,6 +449,11 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
                 graphics.blit(loc, x, y, 0.0F, 0.0F, w, h, w, h);
                 UIBase.resetShaderColor(graphics);
                 UIBase.renderBorder(graphics, x, y, x + w, y + h, UIBase.ELEMENT_BORDER_THICKNESS, previewBorderColor, true, true, true, true);
+                if (showAnimatedImageWatermediaRecommendation) {
+                    int recommendationX = this.width - 20 - previewMaxWidth;
+                    int recommendationY = y + h + recommendationSpacing;
+                    this.renderAnimatedImageWatermediaRecommendation_FancyMenu(graphics, mouseX, mouseY, recommendationX, recommendationY, previewMaxWidth);
+                }
             }
         } else {
             this.previewTextScrollArea.setWidth(200, true);
@@ -654,7 +671,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     }
 
     protected boolean handleWatermediaMissingWarningClick_FancyMenu(double mouseX, double mouseY) {
-        if (!this.shouldRenderWatermediaMissingWarning_FancyMenu()) return false;
+        if (!this.shouldHandleWatermediaDownloadLinks_FancyMenu()) return false;
         if (this.isMouseOverWatermediaDownloadLink_FancyMenu(mouseX, mouseY)) {
             WebUtils.openWebLink(WATERMEDIA_V3_DOWNLOAD_URL_FANCYMENU);
             return true;
@@ -1183,6 +1200,77 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         return (this.previewVideoSupplier != null) && !WatermediaUtil.isWatermediaVideoPlaybackAvailable();
     }
 
+    protected boolean shouldRenderAnimatedImageWatermediaRecommendation_FancyMenu(@Nullable ITexture texture) {
+        return !WatermediaUtil.isWatermediaVideoPlaybackAvailable()
+                && ((texture instanceof ApngTexture) || (texture instanceof GifTexture));
+    }
+
+    protected boolean shouldHandleWatermediaDownloadLinks_FancyMenu() {
+        if (this.shouldRenderWatermediaMissingWarning_FancyMenu()) return true;
+        if (this.previewTextureSupplier == null) return false;
+        return this.shouldRenderAnimatedImageWatermediaRecommendation_FancyMenu(this.previewTextureSupplier.get());
+    }
+
+    protected int getAnimatedImageWatermediaRecommendationHeight_FancyMenu(int width) {
+        float contentWidth = Math.max(1.0F, width);
+        Component infoText = Component.translatable("fancymenu.ui.filechooser.preview.watermedia_recommended_apng_gif");
+        List<MutableComponent> infoLines = UIBase.lineWrapUIComponentsSmall(infoText, contentWidth);
+        float textSize = UIBase.getUITextSizeSmall();
+        float textHeight = UIBase.getUITextHeight(textSize);
+        float spacing = Math.max(2.0F, UIBase.getUITextHeightSmall() * 0.5F);
+        float totalHeight = (infoLines.size() * textHeight) + spacing + textHeight + spacing + textHeight;
+        return Math.max(1, Math.round(totalHeight));
+    }
+
+    protected void renderAnimatedImageWatermediaRecommendation_FancyMenu(@NotNull GuiGraphics graphics, int mouseX, int mouseY, int x, int y, int width) {
+        Component infoText = Component.translatable("fancymenu.ui.filechooser.preview.watermedia_recommended_apng_gif");
+        Component downloadText = Component.translatable("fancymenu.backgrounds.video.watermedia_missing.download");
+        Component downloadBinariesText = Component.translatable("fancymenu.backgrounds.video.watermedia_missing.download_binaries");
+
+        float contentWidth = Math.max(1.0F, width);
+        float textSize = UIBase.getUITextSizeSmall();
+        float lineHeight = UIBase.getUITextHeight(textSize);
+        float spacing = Math.max(2.0F, UIBase.getUITextHeightSmall() * 0.5F);
+        List<MutableComponent> infoLines = UIBase.lineWrapUIComponentsSmall(infoText, contentWidth);
+        float infoHeight = infoLines.size() * lineHeight;
+        float downloadTextWidth = UIBase.getUITextWidth(downloadText, textSize);
+        float downloadBinariesTextWidth = UIBase.getUITextWidth(downloadBinariesText, textSize);
+
+        float currentY = y;
+        int textColor = UIBase.getUITheme().warning_color.getColorInt();
+        for (MutableComponent line : infoLines) {
+            float lineWidth = UIBase.getUITextWidth(line, textSize);
+            float lineX = x + contentWidth - lineWidth;
+            UIBase.renderText(graphics, line, lineX, currentY, textColor, textSize);
+            currentY += lineHeight;
+        }
+
+        float downloadX = x + contentWidth - downloadTextWidth;
+        float downloadY = y + infoHeight + spacing;
+        float downloadBinariesX = x + contentWidth - downloadBinariesTextWidth;
+        float downloadBinariesY = downloadY + lineHeight + spacing;
+
+        this.watermediaDownloadX_FancyMenu = downloadX;
+        this.watermediaDownloadY_FancyMenu = downloadY;
+        this.watermediaDownloadWidth_FancyMenu = downloadTextWidth;
+        this.watermediaDownloadHeight_FancyMenu = lineHeight;
+        this.watermediaBinariesDownloadX_FancyMenu = downloadBinariesX;
+        this.watermediaBinariesDownloadY_FancyMenu = downloadBinariesY;
+        this.watermediaBinariesDownloadWidth_FancyMenu = downloadBinariesTextWidth;
+        this.watermediaBinariesDownloadHeight_FancyMenu = lineHeight;
+
+        boolean hoveredMain = this.isMouseOverWatermediaDownloadLink_FancyMenu(mouseX, mouseY);
+        boolean hoveredBinaries = this.isMouseOverWatermediaBinariesDownloadLink_FancyMenu(mouseX, mouseY);
+        if (hoveredMain || hoveredBinaries) {
+            CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
+        }
+
+        Component renderedDownloadText = downloadText.copy().setStyle(Style.EMPTY.withBold(true).withUnderlined(hoveredMain));
+        Component renderedDownloadBinariesText = downloadBinariesText.copy().setStyle(Style.EMPTY.withBold(true).withUnderlined(hoveredBinaries));
+        UIBase.renderText(graphics, renderedDownloadText, downloadX, downloadY, textColor, textSize);
+        UIBase.renderText(graphics, renderedDownloadBinariesText, downloadBinariesX, downloadBinariesY, textColor, textSize);
+    }
+
     protected void renderWatermediaMissingWarning_FancyMenu(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
         int previewMaxWidth = 200;
         int topY = (int) this.getMainAreaTopY();
@@ -1272,8 +1360,8 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         if (hoveredMain || hoveredBinaries) {
             CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
         }
-        Component renderedDownloadText = downloadText.copy().setStyle(Style.EMPTY.withUnderlined(hoveredMain));
-        Component renderedDownloadBinariesText = downloadBinariesText.copy().setStyle(Style.EMPTY.withUnderlined(hoveredBinaries));
+        Component renderedDownloadText = downloadText.copy().setStyle(Style.EMPTY.withBold(true).withUnderlined(hoveredMain));
+        Component renderedDownloadBinariesText = downloadBinariesText.copy().setStyle(Style.EMPTY.withBold(true).withUnderlined(hoveredBinaries));
         UIBase.renderText(graphics, renderedDownloadText, downloadX, downloadY, textColor, linkTextSize);
         UIBase.renderText(graphics, renderedDownloadBinariesText, downloadBinariesX, downloadBinariesY, textColor, linkTextSize);
     }

@@ -414,8 +414,8 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         if (hoveredMain || hoveredBinaries) {
             CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
         }
-        Component renderedDownloadText = downloadText.copy().setStyle(Style.EMPTY.withUnderlined(hoveredMain));
-        Component renderedDownloadBinariesText = downloadBinariesText.copy().setStyle(Style.EMPTY.withUnderlined(hoveredBinaries));
+        Component renderedDownloadText = downloadText.copy().setStyle(Style.EMPTY.withBold(true).withUnderlined(hoveredMain));
+        Component renderedDownloadBinariesText = downloadBinariesText.copy().setStyle(Style.EMPTY.withBold(true).withUnderlined(hoveredBinaries));
 
         int textColor = DrawableColor.WHITE.getColorIntWithAlpha(this.opacity);
         UIBase.renderText(graphics, infoText, infoX, infoY, textColor, normalTextSize);
