@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
-import de.keksuccino.fancymenu.util.watermedia.WatermediaReflectionBridge;
+import de.keksuccino.fancymenu.util.watermedia.WatermediaAnimatedTextureBackend;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -22,7 +22,6 @@ import org.jetbrains.annotations.Nullable;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -59,6 +58,8 @@ public class GifTexture implements ITexture, PlayableResource {
     protected volatile boolean maxLoopsReached = false;
     protected volatile boolean pendingStartEvent = true;
     protected final AtomicBoolean closed = new AtomicBoolean(false);
+    @Nullable
+    protected volatile WatermediaAnimatedTextureBackend watermediaBackend = null;
 
     @NotNull
     public static GifTexture location(@NotNull ResourceLocation location) {
@@ -139,22 +140,14 @@ public class GifTexture implements ITexture, PlayableResource {
 
         //Download and decode GIF image
         new Thread(() -> {
-            InputStream in = null;
-            ByteArrayInputStream byteIn = null;
             try {
-                in = WebUtils.openResourceStream(gifUrl);
-                if (in == null) throw new NullPointerException("Web resource input stream was NULL!");
-                //The extract method seems to struggle with a direct web input stream, so read all bytes of it and wrap them into a ByteArrayInputStream
-                byteIn = new ByteArrayInputStream(in.readAllBytes());
+                populateTexture(texture, null, gifUrl);
+                if (texture.closed.get()) MainThreadTaskExecutor.executeInMainThread(texture::close, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
             } catch (Exception ex) {
                 texture.loadingFailed.set(true);
+                texture.decoded.set(true);
                 LOGGER.error("[FANCYMENU] Failed to read GIF image from URL: " + gifUrl, ex);
             }
-            if (byteIn != null) {
-                of(byteIn, gifUrl, texture);
-            }
-            //"byteIn" gets closed in of(), so only close "in" here
-            CloseableUtils.closeQuietly(in);
         }).start();
 
         return texture;
@@ -189,22 +182,47 @@ public class GifTexture implements ITexture, PlayableResource {
         return of(in, null, null);
     }
 
-    protected static void populateTexture(@NotNull GifTexture texture, @NotNull InputStream in, @NotNull String gifTextureName) {
+    protected static void populateTexture(@NotNull GifTexture texture, @Nullable InputStream in, @NotNull String gifTextureName) {
+        InputStream readInput = in;
         if (!texture.closed.get()) {
-            byte[] gifData;
-            try {
-                gifData = in.readAllBytes();
-            } catch (Exception ex) {
-                texture.loadingFailed.set(true);
-                texture.decoded.set(true);
-                LOGGER.error("[FANCYMENU] Failed to read GIF image data: " + gifTextureName, ex);
-                CloseableUtils.closeQuietly(in);
-                return;
-            }
-
             boolean decodedByWatermedia = false;
             if (WatermediaUtil.isWatermediaLoaded()) {
-                LOGGER.info("[FANCYMENU] Starting GIF decode via Watermedia: {}", gifTextureName);
+                LOGGER.info("[FANCYMENU] Starting GIF loading via Watermedia (direct source preferred): {}", gifTextureName);
+                decodedByWatermedia = populateTextureWithWatermediaDirectSource(texture, gifTextureName);
+            }
+
+            byte[] gifData = null;
+            if (!decodedByWatermedia) {
+                if (readInput == null) {
+                    try {
+                        readInput = texture.open();
+                    } catch (Exception ex) {
+                        texture.loadingFailed.set(true);
+                        texture.decoded.set(true);
+                        LOGGER.error("[FANCYMENU] Failed to open GIF image data stream: " + gifTextureName, ex);
+                        CloseableUtils.closeQuietly(readInput);
+                        return;
+                    }
+                }
+                if (readInput == null) {
+                    texture.loadingFailed.set(true);
+                    texture.decoded.set(true);
+                    LOGGER.error("[FANCYMENU] Failed to open GIF image data stream: {}", gifTextureName);
+                    CloseableUtils.closeQuietly(readInput);
+                    return;
+                }
+                try {
+                    gifData = readInput.readAllBytes();
+                } catch (Exception ex) {
+                    texture.loadingFailed.set(true);
+                    texture.decoded.set(true);
+                    LOGGER.error("[FANCYMENU] Failed to read GIF image data: " + gifTextureName, ex);
+                    CloseableUtils.closeQuietly(readInput);
+                    return;
+                }
+            }
+
+            if (!decodedByWatermedia && WatermediaUtil.isWatermediaLoaded()) {
                 decodedByWatermedia = populateTextureWithWatermedia(texture, gifData, gifTextureName);
                 if (decodedByWatermedia) {
                     WatermediaUtil.WATERMEDIA_initialized = true;
@@ -214,11 +232,39 @@ public class GifTexture implements ITexture, PlayableResource {
             }
 
             if (!decodedByWatermedia) {
+                if (gifData == null) {
+                    texture.loadingFailed.set(true);
+                    LOGGER.error("[FANCYMENU] Failed to read GIF image data: {}", gifTextureName);
+                    texture.decoded.set(true);
+                    CloseableUtils.closeQuietly(readInput);
+                    return;
+                }
                 populateTextureWithPrimitiveDecoder(texture, gifData, gifTextureName);
             }
         }
         texture.decoded.set(true);
-        CloseableUtils.closeQuietly(in);
+        CloseableUtils.closeQuietly(readInput);
+    }
+
+    protected static boolean populateTextureWithWatermediaDirectSource(@NotNull GifTexture texture, @NotNull String gifTextureName) {
+        String directSource = null;
+        if (texture.sourceURL != null) {
+            directSource = texture.sourceURL;
+        } else if ((texture.sourceFile != null) && texture.sourceFile.isFile()) {
+            directSource = texture.sourceFile.getAbsolutePath();
+        }
+        if (directSource == null) return false;
+
+        WatermediaAnimatedTextureBackend backend = new WatermediaAnimatedTextureBackend(texture.uniqueId, "gif");
+        backend.setLoopCount(-1);
+        boolean initialized = backend.initializeFromSource(directSource, gifTextureName);
+        if (!initialized) {
+            backend.close();
+            return false;
+        }
+        texture.watermediaBackend = backend;
+        texture.decoded.set(true);
+        return true;
     }
 
     protected static void populateTextureWithPrimitiveDecoder(@NotNull GifTexture texture, @NotNull byte[] gifData, @NotNull String gifTextureName) {
@@ -257,91 +303,79 @@ public class GifTexture implements ITexture, PlayableResource {
     }
 
     protected static boolean populateTextureWithWatermedia(@NotNull GifTexture texture, @NotNull byte[] gifData, @NotNull String gifTextureName) {
-        Object decodedImage = WatermediaReflectionBridge.decodeImage(gifData);
-        if (decodedImage == null) return false;
-
-        ByteBuffer[] frameBuffers = WatermediaReflectionBridge.imageFrames(decodedImage);
-        long[] frameDelays = WatermediaReflectionBridge.imageDelay(decodedImage);
-        int imageWidth = WatermediaReflectionBridge.imageWidth(decodedImage);
-        int imageHeight = WatermediaReflectionBridge.imageHeight(decodedImage);
-        int repeat = WatermediaReflectionBridge.imageRepeat(decodedImage);
-
-        if ((imageWidth <= 0) || (imageHeight <= 0) || (frameBuffers == null) || (frameDelays == null) || (frameBuffers.length == 0) || (frameBuffers.length != frameDelays.length)) {
-            LOGGER.warn("[FANCYMENU] Watermedia GIF decoder returned invalid metadata for source: {}", gifTextureName);
+        WatermediaAnimatedTextureBackend backend = new WatermediaAnimatedTextureBackend(texture.uniqueId, "gif");
+        backend.setLoopCount(readGifLoopCount(gifData));
+        boolean initialized = backend.initializeFromBytes(gifData, ".gif", gifTextureName);
+        if (!initialized) {
+            backend.close();
             return false;
         }
-
-        List<GifFrame> decodedFrames = new ArrayList<>();
-        for (int frameIndex = 0; frameIndex < frameBuffers.length; frameIndex++) {
-            NativeImage nativeFrame = decodeNativeImageFromWatermediaFrame(frameBuffers[frameIndex], imageWidth, imageHeight, gifTextureName, frameIndex);
-            if (nativeFrame == null) {
-                closeDecodedGifFrames(decodedFrames);
-                return false;
-            }
-            long delayMs = Math.max(0L, frameDelays[frameIndex]);
-            GifFrame frame = new GifFrame(frameIndex, new ByteArrayInputStream(new byte[0]), delayMs, new ByteArrayOutputStream(0));
-            frame.nativeImage = nativeFrame;
-            decodedFrames.add(frame);
-        }
-
-        texture.width = imageWidth;
-        texture.height = imageHeight;
-        texture.aspectRatio = new AspectRatio(imageWidth, imageHeight);
-        texture.numPlays.set(mapWatermediaRepeatToNumPlays(repeat));
+        texture.watermediaBackend = backend;
         texture.decoded.set(true);
-        texture.frames.addAll(decodedFrames);
-        texture.loadingCompleted.set(true);
-        texture.allFramesDecoded = true;
         return true;
     }
 
-    @Nullable
-    protected static NativeImage decodeNativeImageFromWatermediaFrame(@Nullable ByteBuffer frameBuffer, int imageWidth, int imageHeight, @NotNull String gifTextureName, int frameIndex) {
-        if (frameBuffer == null) {
-            LOGGER.warn("[FANCYMENU] Watermedia GIF decoder returned NULL frame {} for source: {}", frameIndex, gifTextureName);
-            return null;
+    protected static int readGifLoopCount(@NotNull byte[] gifData) {
+        // Defaults to one playback if no loop extension is present.
+        if (gifData.length < 13) return 1;
+        int index = 6;
+        int packed = gifData[index + 4] & 255;
+        index += 7;
+        if ((packed & 0x80) != 0) {
+            int gctSize = 3 * (1 << ((packed & 0x07) + 1));
+            index += gctSize;
         }
-        int requiredBytes = imageWidth * imageHeight * 4;
-        ByteBuffer source = frameBuffer.duplicate();
-        source.rewind();
-        if (source.remaining() < requiredBytes) {
-            LOGGER.warn("[FANCYMENU] Watermedia GIF frame {} has too few pixels ({} < {}) for source: {}", frameIndex, source.remaining(), requiredBytes, gifTextureName);
-            return null;
-        }
-
-        NativeImage image = null;
-        try {
-            image = new NativeImage(imageWidth, imageHeight, true);
-            for (int y = 0; y < imageHeight; y++) {
-                for (int x = 0; x < imageWidth; x++) {
-                    int b = source.get() & 255;
-                    int g = source.get() & 255;
-                    int r = source.get() & 255;
-                    int a = source.get() & 255;
-                    int abgr = (a << 24) | (b << 16) | (g << 8) | r;
-                    image.setPixelRGBA(x, y, abgr);
+        while (index < gifData.length) {
+            int block = gifData[index++] & 255;
+            if (block == 0x3B) break; // trailer
+            if (block == 0x21) { // extension
+                if (index >= gifData.length) break;
+                int label = gifData[index++] & 255;
+                String appIdentifier = null;
+                if ((label == 0xFF) && (index < gifData.length)) {
+                    int appBlockSize = gifData[index++] & 255;
+                    if ((appBlockSize > 0) && ((index + appBlockSize) <= gifData.length)) {
+                        appIdentifier = new String(gifData, index, appBlockSize);
+                        index += appBlockSize;
+                    } else {
+                        return 1;
+                    }
                 }
+                while (index < gifData.length) {
+                    int size = gifData[index++] & 255;
+                    if (size == 0) break;
+                    if ((index + size) > gifData.length) return 1;
+                    if ((appIdentifier != null)
+                            && (size >= 3)
+                            && (("NETSCAPE2.0".equals(appIdentifier)) || ("ANIMEXTS1.0".equals(appIdentifier)))
+                            && ((gifData[index] & 255) == 1)) {
+                        int loops = (gifData[index + 1] & 255) | ((gifData[index + 2] & 255) << 8);
+                        return (loops == 0) ? -1 : Math.max(1, loops);
+                    }
+                    index += size;
+                    if (index > gifData.length) return 1;
+                }
+            } else if (block == 0x2C) { // image descriptor
+                if ((index + 9) > gifData.length) break;
+                int localPacked = gifData[index + 8] & 255;
+                index += 9;
+                if ((localPacked & 0x80) != 0) {
+                    int lctSize = 3 * (1 << ((localPacked & 0x07) + 1));
+                    index += lctSize;
+                }
+                if (index >= gifData.length) break;
+                index++; // LZW min code size
+                while (index < gifData.length) {
+                    int size = gifData[index++] & 255;
+                    if (size == 0) break;
+                    index += size;
+                    if (index > gifData.length) return 1;
+                }
+            } else {
+                break;
             }
-            return image;
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to decode Watermedia GIF frame " + frameIndex + " into NativeImage: " + gifTextureName, ex);
-            CloseableUtils.closeQuietly(image);
-            return null;
         }
-    }
-
-    protected static int mapWatermediaRepeatToNumPlays(int repeat) {
-        if (repeat == 0) return -1;
-        if (repeat < 0) return 1;
-        return repeat;
-    }
-
-    protected static void closeDecodedGifFrames(@NotNull List<GifFrame> frames) {
-        for (GifFrame frame : frames) {
-            CloseableUtils.closeQuietly(frame.closeAfterLoading);
-            CloseableUtils.closeQuietly(frame.frameInputStream);
-            CloseableUtils.closeQuietly(frame.nativeImage);
-        }
+        return 1;
     }
 
     protected GifTexture() {
@@ -439,6 +473,14 @@ public class GifTexture implements ITexture, PlayableResource {
     @Nullable
     @Override
     public ResourceLocation getResourceLocation() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) {
+            this.width = backend.getWidth();
+            this.height = backend.getHeight();
+            this.aspectRatio = backend.getAspectRatio();
+            ResourceLocation resourceLocation = backend.getResourceLocation();
+            return (resourceLocation != null) ? resourceLocation : FULLY_TRANSPARENT_TEXTURE;
+        }
         if (this.closed.get()) return FULLY_TRANSPARENT_TEXTURE;
         this.lastResourceLocationCall = System.currentTimeMillis();
         this.startTickerIfNeeded();
@@ -461,16 +503,22 @@ public class GifTexture implements ITexture, PlayableResource {
 
     @Override
     public int getWidth() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) return backend.getWidth();
         return this.width;
     }
 
     @Override
     public int getHeight() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) return backend.getHeight();
         return this.height;
     }
 
     @Override
     public @NotNull AspectRatio getAspectRatio() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) return backend.getAspectRatio();
         return this.aspectRatio;
     }
 
@@ -484,21 +532,32 @@ public class GifTexture implements ITexture, PlayableResource {
 
     @Override
     public boolean isReady() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) return backend.isReady();
         //Everything important (like size) is set at this point, so it is considered ready
         return this.decoded.get();
     }
 
     @Override
     public boolean isLoadingCompleted() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) return backend.isLoadingCompleted();
         return !this.closed.get() && !this.loadingFailed.get() && this.loadingCompleted.get();
     }
 
     @Override
     public boolean isLoadingFailed() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) return backend.isLoadingFailed();
         return this.loadingFailed.get();
     }
 
     public void reset() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) {
+            backend.reset();
+            return;
+        }
         this.current = null;
         this.pendingStartEvent = true;
         List<GifFrame> l = new ArrayList<>(this.frames);
@@ -553,24 +612,41 @@ public class GifTexture implements ITexture, PlayableResource {
 
     @Override
     public void play() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) {
+            backend.play();
+        }
     }
 
     @Override
     public boolean isPlaying() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) return backend.isPlaying();
         return !this.maxLoopsReached;
     }
 
     @Override
     public void pause() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) {
+            backend.pause();
+        }
     }
 
     @Override
     public boolean isPaused() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) return backend.isPaused();
         return false;
     }
 
     @Override
     public void stop() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) {
+            backend.stop();
+            return;
+        }
         this.reset();
     }
 
@@ -581,6 +657,11 @@ public class GifTexture implements ITexture, PlayableResource {
 
     @Override
     public void close() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) {
+            backend.close();
+            this.watermediaBackend = null;
+        }
         this.closed.set(true);
         this.sourceLocation = null;
         for (GifFrame frame : new ArrayList<>(this.frames)) {

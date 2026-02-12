@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
-import de.keksuccino.fancymenu.util.watermedia.WatermediaReflectionBridge;
+import de.keksuccino.fancymenu.util.watermedia.WatermediaAnimatedTextureBackend;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaUtil;
 import net.ellerton.japng.Png;
 import net.ellerton.japng.argb8888.Argb8888Bitmap;
@@ -24,7 +24,6 @@ import org.jetbrains.annotations.Nullable;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -61,6 +60,8 @@ public class ApngTexture implements ITexture, PlayableResource {
     protected volatile boolean maxLoopsReached = false;
     protected volatile boolean pendingStartEvent = true;
     protected final AtomicBoolean closed = new AtomicBoolean(false);
+    @Nullable
+    protected volatile WatermediaAnimatedTextureBackend watermediaBackend = null;
 
     @NotNull
     public static ApngTexture location(@NotNull ResourceLocation location) {
@@ -141,22 +142,14 @@ public class ApngTexture implements ITexture, PlayableResource {
 
         //Download and decode APNG image
         new Thread(() -> {
-            InputStream in = null;
-            ByteArrayInputStream byteIn = null;
             try {
-                in = WebUtils.openResourceStream(apngUrl);
-                if (in == null) throw new NullPointerException("Web resource input stream was NULL!");
-                //The extract method seems to struggle with a direct web input stream, so read all bytes of it and wrap them into a ByteArrayInputStream
-                byteIn = new ByteArrayInputStream(in.readAllBytes());
+                populateTexture(texture, null, apngUrl);
+                if (texture.closed.get()) MainThreadTaskExecutor.executeInMainThread(texture::close, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
             } catch (Exception ex) {
                 texture.loadingFailed.set(true);
+                texture.decoded.set(true);
                 LOGGER.error("[FANCYMENU] Failed to read APNG image from URL: " + apngUrl, ex);
             }
-            if (byteIn != null) {
-                of(byteIn, apngUrl, texture);
-            }
-            //"byteIn" gets closed in of(), so only close "in" here
-            CloseableUtils.closeQuietly(in);
         }).start();
 
         return texture;
@@ -191,22 +184,47 @@ public class ApngTexture implements ITexture, PlayableResource {
         return of(in, null, null);
     }
 
-    protected static void populateTexture(@NotNull ApngTexture texture, @NotNull InputStream in, @NotNull String apngTextureName) {
+    protected static void populateTexture(@NotNull ApngTexture texture, @Nullable InputStream in, @NotNull String apngTextureName) {
+        InputStream readInput = in;
         if (!texture.closed.get()) {
-            byte[] apngData;
-            try {
-                apngData = in.readAllBytes();
-            } catch (Exception ex) {
-                texture.loadingFailed.set(true);
-                texture.decoded.set(true);
-                LOGGER.error("[FANCYMENU] Failed to read APNG image data: " + apngTextureName, ex);
-                CloseableUtils.closeQuietly(in);
-                return;
-            }
-
             boolean decodedByWatermedia = false;
             if (WatermediaUtil.isWatermediaLoaded()) {
-                LOGGER.info("[FANCYMENU] Starting APNG decode via Watermedia: {}", apngTextureName);
+                LOGGER.info("[FANCYMENU] Starting APNG loading via Watermedia (direct source preferred): {}", apngTextureName);
+                decodedByWatermedia = populateTextureWithWatermediaDirectSource(texture, apngTextureName);
+            }
+
+            byte[] apngData = null;
+            if (!decodedByWatermedia) {
+                if (readInput == null) {
+                    try {
+                        readInput = texture.open();
+                    } catch (Exception ex) {
+                        texture.loadingFailed.set(true);
+                        texture.decoded.set(true);
+                        LOGGER.error("[FANCYMENU] Failed to open APNG image data stream: " + apngTextureName, ex);
+                        CloseableUtils.closeQuietly(readInput);
+                        return;
+                    }
+                }
+                if (readInput == null) {
+                    texture.loadingFailed.set(true);
+                    texture.decoded.set(true);
+                    LOGGER.error("[FANCYMENU] Failed to open APNG image data stream: {}", apngTextureName);
+                    CloseableUtils.closeQuietly(readInput);
+                    return;
+                }
+                try {
+                    apngData = readInput.readAllBytes();
+                } catch (Exception ex) {
+                    texture.loadingFailed.set(true);
+                    texture.decoded.set(true);
+                    LOGGER.error("[FANCYMENU] Failed to read APNG image data: " + apngTextureName, ex);
+                    CloseableUtils.closeQuietly(readInput);
+                    return;
+                }
+            }
+
+            if (!decodedByWatermedia && WatermediaUtil.isWatermediaLoaded()) {
                 decodedByWatermedia = populateTextureWithWatermedia(texture, apngData, apngTextureName);
                 if (decodedByWatermedia) {
                     WatermediaUtil.WATERMEDIA_initialized = true;
@@ -216,11 +234,42 @@ public class ApngTexture implements ITexture, PlayableResource {
             }
 
             if (!decodedByWatermedia) {
+                if (apngData == null) {
+                    texture.loadingFailed.set(true);
+                    LOGGER.error("[FANCYMENU] Failed to read APNG image data: {}", apngTextureName);
+                    texture.decoded.set(true);
+                    CloseableUtils.closeQuietly(readInput);
+                    return;
+                }
                 populateTextureWithPrimitiveDecoder(texture, apngData, apngTextureName);
             }
         }
         texture.decoded.set(true);
-        CloseableUtils.closeQuietly(in);
+        CloseableUtils.closeQuietly(readInput);
+    }
+
+    protected static boolean populateTextureWithWatermediaDirectSource(@NotNull ApngTexture texture, @NotNull String apngTextureName) {
+        String directSource = null;
+        if (texture.sourceURL != null) {
+            directSource = texture.sourceURL;
+        } else if ((texture.sourceFile != null) && texture.sourceFile.isFile()) {
+            // Java's URLConnection usually reports ".apng" files as unknown media type.
+            // If we pass that directly, Watermedia can resolve it as a generic source and use FF instead of Tx.
+            // Fall back to the byte path for local APNG files so we can provide a ".png" source extension.
+            return false;
+        }
+        if (directSource == null) return false;
+
+        WatermediaAnimatedTextureBackend backend = new WatermediaAnimatedTextureBackend(texture.uniqueId, "apng");
+        backend.setLoopCount(-1);
+        boolean initialized = backend.initializeFromSource(directSource, apngTextureName);
+        if (!initialized) {
+            backend.close();
+            return false;
+        }
+        texture.watermediaBackend = backend;
+        texture.decoded.set(true);
+        return true;
     }
 
     protected static void populateTextureWithPrimitiveDecoder(@NotNull ApngTexture texture, @NotNull byte[] apngData, @NotNull String apngTextureName) {
@@ -259,91 +308,48 @@ public class ApngTexture implements ITexture, PlayableResource {
     }
 
     protected static boolean populateTextureWithWatermedia(@NotNull ApngTexture texture, @NotNull byte[] apngData, @NotNull String apngTextureName) {
-        Object decodedImage = WatermediaReflectionBridge.decodeImage(apngData);
-        if (decodedImage == null) return false;
-
-        ByteBuffer[] frameBuffers = WatermediaReflectionBridge.imageFrames(decodedImage);
-        long[] frameDelays = WatermediaReflectionBridge.imageDelay(decodedImage);
-        int imageWidth = WatermediaReflectionBridge.imageWidth(decodedImage);
-        int imageHeight = WatermediaReflectionBridge.imageHeight(decodedImage);
-        int repeat = WatermediaReflectionBridge.imageRepeat(decodedImage);
-
-        if ((imageWidth <= 0) || (imageHeight <= 0) || (frameBuffers == null) || (frameDelays == null) || (frameBuffers.length == 0) || (frameBuffers.length != frameDelays.length)) {
-            LOGGER.warn("[FANCYMENU] Watermedia APNG decoder returned invalid metadata for source: {}", apngTextureName);
+        WatermediaAnimatedTextureBackend backend = new WatermediaAnimatedTextureBackend(texture.uniqueId, "apng");
+        backend.setLoopCount(readApngLoopCount(apngData));
+        // Use ".png" extension so Watermedia classifies the media as IMAGE and routes playback through TxMediaPlayer.
+        boolean initialized = backend.initializeFromBytes(apngData, ".png", apngTextureName);
+        if (!initialized) {
+            backend.close();
             return false;
         }
-
-        List<ApngFrame> decodedFrames = new ArrayList<>();
-        for (int frameIndex = 0; frameIndex < frameBuffers.length; frameIndex++) {
-            NativeImage nativeFrame = decodeNativeImageFromWatermediaFrame(frameBuffers[frameIndex], imageWidth, imageHeight, apngTextureName, frameIndex);
-            if (nativeFrame == null) {
-                closeDecodedApngFrames(decodedFrames);
-                return false;
-            }
-            int delayMs = (int)Math.max(0L, Math.min(Integer.MAX_VALUE, frameDelays[frameIndex]));
-            ApngFrame frame = new ApngFrame(frameIndex, new ByteArrayInputStream(new byte[0]), delayMs, new ByteArrayOutputStream(0));
-            frame.nativeImage = nativeFrame;
-            decodedFrames.add(frame);
-        }
-
-        texture.width = imageWidth;
-        texture.height = imageHeight;
-        texture.aspectRatio = new AspectRatio(imageWidth, imageHeight);
-        texture.numPlays.set(mapWatermediaRepeatToNumPlays(repeat));
+        texture.watermediaBackend = backend;
         texture.decoded.set(true);
-        texture.frames.addAll(decodedFrames);
-        texture.loadingCompleted.set(true);
-        texture.allFramesDecoded = true;
         return true;
     }
 
-    @Nullable
-    protected static NativeImage decodeNativeImageFromWatermediaFrame(@Nullable ByteBuffer frameBuffer, int imageWidth, int imageHeight, @NotNull String apngTextureName, int frameIndex) {
-        if (frameBuffer == null) {
-            LOGGER.warn("[FANCYMENU] Watermedia APNG decoder returned NULL frame {} for source: {}", frameIndex, apngTextureName);
-            return null;
-        }
-        int requiredBytes = imageWidth * imageHeight * 4;
-        ByteBuffer source = frameBuffer.duplicate();
-        source.rewind();
-        if (source.remaining() < requiredBytes) {
-            LOGGER.warn("[FANCYMENU] Watermedia APNG frame {} has too few pixels ({} < {}) for source: {}", frameIndex, source.remaining(), requiredBytes, apngTextureName);
-            return null;
-        }
-
-        NativeImage image = null;
-        try {
-            image = new NativeImage(imageWidth, imageHeight, true);
-            for (int y = 0; y < imageHeight; y++) {
-                for (int x = 0; x < imageWidth; x++) {
-                    int b = source.get() & 255;
-                    int g = source.get() & 255;
-                    int r = source.get() & 255;
-                    int a = source.get() & 255;
-                    int abgr = (a << 24) | (b << 16) | (g << 8) | r;
-                    image.setPixelRGBA(x, y, abgr);
+    protected static int readApngLoopCount(@NotNull byte[] apngData) {
+        // Default to infinite loops if the acTL chunk cannot be read.
+        if (apngData.length < 8) return -1;
+        int index = 8; // skip PNG signature
+        while ((index + 12) <= apngData.length) {
+            int chunkLength = ((apngData[index] & 255) << 24)
+                    | ((apngData[index + 1] & 255) << 16)
+                    | ((apngData[index + 2] & 255) << 8)
+                    | (apngData[index + 3] & 255);
+            int chunkType = ((apngData[index + 4] & 255) << 24)
+                    | ((apngData[index + 5] & 255) << 16)
+                    | ((apngData[index + 6] & 255) << 8)
+                    | (apngData[index + 7] & 255);
+            if (chunkType == 0x6163544C) { // acTL
+                int dataStart = index + 8;
+                if ((dataStart + 8) <= apngData.length) {
+                    int plays = ((apngData[dataStart + 4] & 255) << 24)
+                            | ((apngData[dataStart + 5] & 255) << 16)
+                            | ((apngData[dataStart + 6] & 255) << 8)
+                            | (apngData[dataStart + 7] & 255);
+                    return (plays == 0) ? -1 : Math.max(1, plays);
                 }
+                return -1;
             }
-            return image;
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to decode Watermedia APNG frame " + frameIndex + " into NativeImage: " + apngTextureName, ex);
-            CloseableUtils.closeQuietly(image);
-            return null;
+            long next = index + 12L + chunkLength;
+            if (next > apngData.length) break;
+            index = (int) next;
         }
-    }
-
-    protected static int mapWatermediaRepeatToNumPlays(int repeat) {
-        if (repeat == 0) return -1;
-        if (repeat < 0) return 1;
-        return repeat;
-    }
-
-    protected static void closeDecodedApngFrames(@NotNull List<ApngFrame> frames) {
-        for (ApngFrame frame : frames) {
-            CloseableUtils.closeQuietly(frame.closeAfterLoading);
-            CloseableUtils.closeQuietly(frame.frameInputStream);
-            CloseableUtils.closeQuietly(frame.nativeImage);
-        }
+        return -1;
     }
 
     protected ApngTexture() {
@@ -441,6 +447,14 @@ public class ApngTexture implements ITexture, PlayableResource {
     @Nullable
     @Override
     public ResourceLocation getResourceLocation() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) {
+            this.width = backend.getWidth();
+            this.height = backend.getHeight();
+            this.aspectRatio = backend.getAspectRatio();
+            ResourceLocation resourceLocation = backend.getResourceLocation();
+            return (resourceLocation != null) ? resourceLocation : FULLY_TRANSPARENT_TEXTURE;
+        }
         if (this.closed.get()) return FULLY_TRANSPARENT_TEXTURE;
         this.lastResourceLocationCall = System.currentTimeMillis();
         this.startTickerIfNeeded();
@@ -463,16 +477,22 @@ public class ApngTexture implements ITexture, PlayableResource {
 
     @Override
     public int getWidth() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) return backend.getWidth();
         return this.width;
     }
 
     @Override
     public int getHeight() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) return backend.getHeight();
         return this.height;
     }
 
     @Override
     public @NotNull AspectRatio getAspectRatio() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) return backend.getAspectRatio();
         return this.aspectRatio;
     }
 
@@ -486,21 +506,32 @@ public class ApngTexture implements ITexture, PlayableResource {
 
     @Override
     public boolean isReady() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) return backend.isReady();
         //Everything important (like size) is set at this point, so it is considered ready
         return this.decoded.get();
     }
 
     @Override
     public boolean isLoadingCompleted() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) return backend.isLoadingCompleted();
         return !this.closed.get() && !this.loadingFailed.get() && this.loadingCompleted.get();
     }
 
     @Override
     public boolean isLoadingFailed() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) return backend.isLoadingFailed();
         return this.loadingFailed.get();
     }
 
     public void reset() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) {
+            backend.reset();
+            return;
+        }
         this.maxLoopsReached = false;
         this.current = null;
         this.pendingStartEvent = true;
@@ -556,24 +587,41 @@ public class ApngTexture implements ITexture, PlayableResource {
 
     @Override
     public void play() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) {
+            backend.play();
+        }
     }
 
     @Override
     public boolean isPlaying() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) return backend.isPlaying();
         return !this.maxLoopsReached;
     }
 
     @Override
     public void pause() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) {
+            backend.pause();
+        }
     }
 
     @Override
     public boolean isPaused() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) return backend.isPaused();
         return false;
     }
 
     @Override
     public void stop() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) {
+            backend.stop();
+            return;
+        }
         this.reset();
     }
 
@@ -584,6 +632,11 @@ public class ApngTexture implements ITexture, PlayableResource {
 
     @Override
     public void close() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) {
+            backend.close();
+            this.watermediaBackend = null;
+        }
         this.closed.set(true);
         this.sourceLocation = null;
         for (ApngFrame frame : new ArrayList<>(this.frames)) {
