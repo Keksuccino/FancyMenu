@@ -205,12 +205,19 @@ public abstract class AbstractFileBrowserWindowBody extends AbstractBrowserWindo
         if (type instanceof ImageFileType) {
             this.previewTextureSupplier = ResourceSupplier.image(file.getPath());
             this.setPreviewAudio(null, null);
+            this.setPreviewVideo(null, null);
         } else if (type instanceof AudioFileType) {
             this.previewTextureSupplier = null;
+            this.setPreviewVideo(null, null);
             this.setPreviewAudio(ResourceSupplier.audio(GameDirectoryUtils.getAbsoluteGameDirectoryPath(file.getPath())), file);
+        } else if (type instanceof VideoFileType) {
+            this.previewTextureSupplier = null;
+            this.setPreviewAudio(null, null);
+            this.setPreviewVideo(ResourceSupplier.video(GameDirectoryUtils.getAbsoluteGameDirectoryPath(file.getPath())), file);
         } else {
             this.previewTextureSupplier = null;
             this.setPreviewAudio(null, null);
+            this.setPreviewVideo(null, null);
         }
     }
 

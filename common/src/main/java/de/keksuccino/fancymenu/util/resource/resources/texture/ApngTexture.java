@@ -9,6 +9,8 @@ import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
+import de.keksuccino.fancymenu.util.watermedia.WatermediaReflectionBridge;
+import de.keksuccino.fancymenu.util.watermedia.WatermediaUtil;
 import net.ellerton.japng.Png;
 import net.ellerton.japng.argb8888.Argb8888Bitmap;
 import net.ellerton.japng.argb8888.Argb8888BitmapSequence;
@@ -22,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -190,40 +193,157 @@ public class ApngTexture implements ITexture, PlayableResource {
 
     protected static void populateTexture(@NotNull ApngTexture texture, @NotNull InputStream in, @NotNull String apngTextureName) {
         if (!texture.closed.get()) {
-            DecodedApngImage decodedImage = decodeApng(in, apngTextureName);
-            if (decodedImage == null) {
-                LOGGER.error("[FANCYMENU] Failed to read APNG image, because DecodedApngImage was NULL: " + apngTextureName);
-                texture.decoded.set(true);
-                texture.loadingFailed.set(true);
-                return;
-            }
-            texture.width = decodedImage.imageWidth;
-            texture.height = decodedImage.imageHeight;
-            texture.aspectRatio = new AspectRatio(decodedImage.imageWidth, decodedImage.imageHeight);
-            texture.numPlays.set(decodedImage.numPlays);
-            texture.decoded.set(true);
+            byte[] apngData;
             try {
-                deliverApngFrames(decodedImage.sequence(), apngTextureName, true, frame -> {
-                    if (frame != null) {
-                        try {
-                            frame.nativeImage = NativeImage.read(frame.frameInputStream);
-                        } catch (Exception ex) {
-                            LOGGER.error("[FANCYMENU] Failed to read frame of APNG image into NativeImage: " + apngTextureName, ex);
-                        }
-                        CloseableUtils.closeQuietly(frame.closeAfterLoading);
-                        CloseableUtils.closeQuietly(frame.frameInputStream);
-                        texture.frames.add(frame);
-                    }
-                });
-                texture.loadingCompleted.set(true);
+                apngData = in.readAllBytes();
             } catch (Exception ex) {
                 texture.loadingFailed.set(true);
-                LOGGER.error("[FANCYMENU] Failed to read frames of APNG image: " + apngTextureName, ex);
+                texture.decoded.set(true);
+                LOGGER.error("[FANCYMENU] Failed to read APNG image data: " + apngTextureName, ex);
+                CloseableUtils.closeQuietly(in);
+                return;
             }
-            texture.allFramesDecoded = true;
+
+            boolean decodedByWatermedia = false;
+            if (WatermediaUtil.isWatermediaLoaded()) {
+                LOGGER.info("[FANCYMENU] Starting APNG decode via Watermedia: {}", apngTextureName);
+                decodedByWatermedia = populateTextureWithWatermedia(texture, apngData, apngTextureName);
+                if (decodedByWatermedia) {
+                    WatermediaUtil.WATERMEDIA_initialized = true;
+                } else {
+                    LOGGER.warn("[FANCYMENU] Watermedia APNG decoding failed, falling back to primitive decoder: {}", apngTextureName);
+                }
+            }
+
+            if (!decodedByWatermedia) {
+                populateTextureWithPrimitiveDecoder(texture, apngData, apngTextureName);
+            }
         }
         texture.decoded.set(true);
         CloseableUtils.closeQuietly(in);
+    }
+
+    protected static void populateTextureWithPrimitiveDecoder(@NotNull ApngTexture texture, @NotNull byte[] apngData, @NotNull String apngTextureName) {
+        DecodedApngImage decodedImage = decodeApng(new ByteArrayInputStream(apngData), apngTextureName);
+        if (decodedImage == null) {
+            LOGGER.error("[FANCYMENU] Failed to read APNG image, because DecodedApngImage was NULL: " + apngTextureName);
+            texture.loadingFailed.set(true);
+            return;
+        }
+        texture.width = decodedImage.imageWidth;
+        texture.height = decodedImage.imageHeight;
+        texture.aspectRatio = new AspectRatio(decodedImage.imageWidth, decodedImage.imageHeight);
+        texture.numPlays.set(decodedImage.numPlays);
+        texture.decoded.set(true);
+        try {
+            deliverApngFrames(decodedImage.sequence(), apngTextureName, true, frame -> {
+                if (frame != null) {
+                    try {
+                        if ((frame.nativeImage == null) && (frame.frameInputStream != null)) {
+                            frame.nativeImage = NativeImage.read(frame.frameInputStream);
+                        }
+                    } catch (Exception ex) {
+                        LOGGER.error("[FANCYMENU] Failed to read frame of APNG image into NativeImage: " + apngTextureName, ex);
+                    }
+                    CloseableUtils.closeQuietly(frame.closeAfterLoading);
+                    CloseableUtils.closeQuietly(frame.frameInputStream);
+                    texture.frames.add(frame);
+                }
+            });
+            texture.loadingCompleted.set(true);
+        } catch (Exception ex) {
+            texture.loadingFailed.set(true);
+            LOGGER.error("[FANCYMENU] Failed to read frames of APNG image: " + apngTextureName, ex);
+        }
+        texture.allFramesDecoded = true;
+    }
+
+    protected static boolean populateTextureWithWatermedia(@NotNull ApngTexture texture, @NotNull byte[] apngData, @NotNull String apngTextureName) {
+        Object decodedImage = WatermediaReflectionBridge.decodeImage(apngData);
+        if (decodedImage == null) return false;
+
+        ByteBuffer[] frameBuffers = WatermediaReflectionBridge.imageFrames(decodedImage);
+        long[] frameDelays = WatermediaReflectionBridge.imageDelay(decodedImage);
+        int imageWidth = WatermediaReflectionBridge.imageWidth(decodedImage);
+        int imageHeight = WatermediaReflectionBridge.imageHeight(decodedImage);
+        int repeat = WatermediaReflectionBridge.imageRepeat(decodedImage);
+
+        if ((imageWidth <= 0) || (imageHeight <= 0) || (frameBuffers == null) || (frameDelays == null) || (frameBuffers.length == 0) || (frameBuffers.length != frameDelays.length)) {
+            LOGGER.warn("[FANCYMENU] Watermedia APNG decoder returned invalid metadata for source: {}", apngTextureName);
+            return false;
+        }
+
+        List<ApngFrame> decodedFrames = new ArrayList<>();
+        for (int frameIndex = 0; frameIndex < frameBuffers.length; frameIndex++) {
+            NativeImage nativeFrame = decodeNativeImageFromWatermediaFrame(frameBuffers[frameIndex], imageWidth, imageHeight, apngTextureName, frameIndex);
+            if (nativeFrame == null) {
+                closeDecodedApngFrames(decodedFrames);
+                return false;
+            }
+            int delayMs = (int)Math.max(0L, Math.min(Integer.MAX_VALUE, frameDelays[frameIndex]));
+            ApngFrame frame = new ApngFrame(frameIndex, new ByteArrayInputStream(new byte[0]), delayMs, new ByteArrayOutputStream(0));
+            frame.nativeImage = nativeFrame;
+            decodedFrames.add(frame);
+        }
+
+        texture.width = imageWidth;
+        texture.height = imageHeight;
+        texture.aspectRatio = new AspectRatio(imageWidth, imageHeight);
+        texture.numPlays.set(mapWatermediaRepeatToNumPlays(repeat));
+        texture.decoded.set(true);
+        texture.frames.addAll(decodedFrames);
+        texture.loadingCompleted.set(true);
+        texture.allFramesDecoded = true;
+        return true;
+    }
+
+    @Nullable
+    protected static NativeImage decodeNativeImageFromWatermediaFrame(@Nullable ByteBuffer frameBuffer, int imageWidth, int imageHeight, @NotNull String apngTextureName, int frameIndex) {
+        if (frameBuffer == null) {
+            LOGGER.warn("[FANCYMENU] Watermedia APNG decoder returned NULL frame {} for source: {}", frameIndex, apngTextureName);
+            return null;
+        }
+        int requiredBytes = imageWidth * imageHeight * 4;
+        ByteBuffer source = frameBuffer.duplicate();
+        source.rewind();
+        if (source.remaining() < requiredBytes) {
+            LOGGER.warn("[FANCYMENU] Watermedia APNG frame {} has too few pixels ({} < {}) for source: {}", frameIndex, source.remaining(), requiredBytes, apngTextureName);
+            return null;
+        }
+
+        NativeImage image = null;
+        try {
+            image = new NativeImage(imageWidth, imageHeight, true);
+            for (int y = 0; y < imageHeight; y++) {
+                for (int x = 0; x < imageWidth; x++) {
+                    int b = source.get() & 255;
+                    int g = source.get() & 255;
+                    int r = source.get() & 255;
+                    int a = source.get() & 255;
+                    int abgr = (a << 24) | (b << 16) | (g << 8) | r;
+                    image.setPixelRGBA(x, y, abgr);
+                }
+            }
+            return image;
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to decode Watermedia APNG frame " + frameIndex + " into NativeImage: " + apngTextureName, ex);
+            CloseableUtils.closeQuietly(image);
+            return null;
+        }
+    }
+
+    protected static int mapWatermediaRepeatToNumPlays(int repeat) {
+        if (repeat == 0) return -1;
+        if (repeat < 0) return 1;
+        return repeat;
+    }
+
+    protected static void closeDecodedApngFrames(@NotNull List<ApngFrame> frames) {
+        for (ApngFrame frame : frames) {
+            CloseableUtils.closeQuietly(frame.closeAfterLoading);
+            CloseableUtils.closeQuietly(frame.frameInputStream);
+            CloseableUtils.closeQuietly(frame.nativeImage);
+        }
     }
 
     protected ApngTexture() {

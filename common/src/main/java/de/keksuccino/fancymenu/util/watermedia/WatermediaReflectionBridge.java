@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
 import java.util.concurrent.Executor;
 
 public class WatermediaReflectionBridge {
@@ -21,6 +22,44 @@ public class WatermediaReflectionBridge {
         } catch (Throwable ex) {
             LOGGER.error("[FANCYMENU] Failed to create Watermedia MRL for source: {}", source, ex);
         }
+        return null;
+    }
+
+    @Nullable
+    public static Object decodeImage(@NotNull byte[] data) {
+        try {
+            Class<?> decoderApiClass = Class.forName("org.watermedia.api.decode.DecoderAPI", false, FancyMenu.class.getClassLoader());
+            Method decodeImage = decoderApiClass.getMethod("decodeImage", byte[].class);
+            return decodeImage.invoke(null, (Object) data);
+        } catch (Throwable ex) {
+            LOGGER.error("[FANCYMENU] Failed to decode image with Watermedia DecoderAPI", ex);
+        }
+        return null;
+    }
+
+    public static int imageWidth(@Nullable Object image) {
+        return invokeInt(image, "width", 0);
+    }
+
+    public static int imageHeight(@Nullable Object image) {
+        return invokeInt(image, "height", 0);
+    }
+
+    public static int imageRepeat(@Nullable Object image) {
+        return invokeInt(image, "repeat", 0);
+    }
+
+    @Nullable
+    public static long[] imageDelay(@Nullable Object image) {
+        Object result = invoke(image, "delay", 0);
+        if (result instanceof long[] delays) return delays;
+        return null;
+    }
+
+    @Nullable
+    public static ByteBuffer[] imageFrames(@Nullable Object image) {
+        Object result = invoke(image, "frames", 0);
+        if (result instanceof ByteBuffer[] frameBuffers) return frameBuffers;
         return null;
     }
 

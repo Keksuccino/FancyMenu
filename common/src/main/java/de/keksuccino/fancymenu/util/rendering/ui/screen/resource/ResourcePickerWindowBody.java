@@ -191,12 +191,19 @@ public class ResourcePickerWindowBody extends AbstractBrowserWindowBody {
         if (this.isImageLocation(location)) {
             this.previewTextureSupplier = ResourceSupplier.image(location.toString());
             this.setPreviewAudio(null, null);
+            this.setPreviewVideo(null, null);
         } else if (this.isAudioLocation(location)) {
             this.previewTextureSupplier = null;
+            this.setPreviewVideo(null, null);
             this.setPreviewAudio(ResourceSupplier.audio(location.toString()), location);
+        } else if (this.isVideoLocation(location)) {
+            this.previewTextureSupplier = null;
+            this.setPreviewAudio(null, null);
+            this.setPreviewVideo(ResourceSupplier.video(location.toString()), location);
         } else {
             this.previewTextureSupplier = null;
             this.setPreviewAudio(null, null);
+            this.setPreviewVideo(null, null);
         }
     }
 
@@ -448,6 +455,13 @@ public class ResourcePickerWindowBody extends AbstractBrowserWindowBody {
 
     protected boolean isAudioLocation(@NotNull ResourceLocation location) {
         for (AudioFileType type : FileTypes.getAllAudioFileTypes()) {
+            if (type.isFileTypeLocation(location)) return true;
+        }
+        return false;
+    }
+
+    protected boolean isVideoLocation(@NotNull ResourceLocation location) {
+        for (VideoFileType type : FileTypes.getAllVideoFileTypes()) {
             if (type.isFileTypeLocation(location)) return true;
         }
         return false;
