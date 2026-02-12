@@ -1226,6 +1226,8 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         Component infoText = Component.translatable("fancymenu.ui.filechooser.preview.watermedia_recommended_apng_gif");
         Component downloadText = Component.translatable("fancymenu.backgrounds.video.watermedia_missing.download");
         Component downloadBinariesText = Component.translatable("fancymenu.backgrounds.video.watermedia_missing.download_binaries");
+        Component boldDownloadText = downloadText.copy().setStyle(Style.EMPTY.withBold(true));
+        Component boldDownloadBinariesText = downloadBinariesText.copy().setStyle(Style.EMPTY.withBold(true));
 
         float contentWidth = Math.max(1.0F, width);
         float textSize = UIBase.getUITextSizeSmall();
@@ -1233,8 +1235,8 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         float spacing = Math.max(2.0F, UIBase.getUITextHeightSmall() * 0.5F);
         List<MutableComponent> infoLines = UIBase.lineWrapUIComponentsSmall(infoText, contentWidth);
         float infoHeight = infoLines.size() * lineHeight;
-        float downloadTextWidth = UIBase.getUITextWidth(downloadText, textSize);
-        float downloadBinariesTextWidth = UIBase.getUITextWidth(downloadBinariesText, textSize);
+        float downloadTextWidth = UIBase.getUITextWidth(boldDownloadText, textSize);
+        float downloadBinariesTextWidth = UIBase.getUITextWidth(boldDownloadBinariesText, textSize);
 
         float currentY = y;
         int textColor = UIBase.getUITheme().warning_color.getColorInt();
@@ -1291,6 +1293,8 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         Component infoText = Component.translatable("fancymenu.backgrounds.video.watermedia_missing.info");
         Component downloadText = Component.translatable("fancymenu.backgrounds.video.watermedia_missing.download");
         Component downloadBinariesText = Component.translatable("fancymenu.backgrounds.video.watermedia_missing.download_binaries");
+        Component boldDownloadText = downloadText.copy().setStyle(Style.EMPTY.withBold(true));
+        Component boldDownloadBinariesText = downloadBinariesText.copy().setStyle(Style.EMPTY.withBold(true));
 
         float maxTextWidth = previewWidth - 12.0F;
         float spacing = Math.max(3.0F, UIBase.getUITextHeightSmall() * 0.5F);
@@ -1299,22 +1303,22 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         List<MutableComponent> infoLines = UIBase.lineWrapUIComponentsNormal(infoText, maxTextWidth);
         float infoLineHeight = UIBase.getUITextHeight(infoTextSize);
         float infoHeight = infoLines.size() * infoLineHeight;
-        float downloadTextWidth = UIBase.getUITextWidth(downloadText, linkTextSize);
+        float downloadTextWidth = UIBase.getUITextWidth(boldDownloadText, linkTextSize);
         float downloadTextHeight = UIBase.getUITextHeight(linkTextSize);
-        float downloadBinariesTextWidth = UIBase.getUITextWidth(downloadBinariesText, linkTextSize);
+        float downloadBinariesTextWidth = UIBase.getUITextWidth(boldDownloadBinariesText, linkTextSize);
         float downloadBinariesTextHeight = UIBase.getUITextHeight(linkTextSize);
         if ((downloadTextWidth > maxTextWidth) || (downloadBinariesTextWidth > maxTextWidth)) {
             linkTextSize = UIBase.getUITextSizeNormal();
-            downloadTextWidth = UIBase.getUITextWidth(downloadText, linkTextSize);
+            downloadTextWidth = UIBase.getUITextWidth(boldDownloadText, linkTextSize);
             downloadTextHeight = UIBase.getUITextHeight(linkTextSize);
-            downloadBinariesTextWidth = UIBase.getUITextWidth(downloadBinariesText, linkTextSize);
+            downloadBinariesTextWidth = UIBase.getUITextWidth(boldDownloadBinariesText, linkTextSize);
             downloadBinariesTextHeight = UIBase.getUITextHeight(linkTextSize);
         }
         if ((downloadTextWidth > maxTextWidth) || (downloadBinariesTextWidth > maxTextWidth)) {
             linkTextSize = UIBase.getUITextSizeSmall();
-            downloadTextWidth = UIBase.getUITextWidth(downloadText, linkTextSize);
+            downloadTextWidth = UIBase.getUITextWidth(boldDownloadText, linkTextSize);
             downloadTextHeight = UIBase.getUITextHeight(linkTextSize);
-            downloadBinariesTextWidth = UIBase.getUITextWidth(downloadBinariesText, linkTextSize);
+            downloadBinariesTextWidth = UIBase.getUITextWidth(boldDownloadBinariesText, linkTextSize);
             downloadBinariesTextHeight = UIBase.getUITextHeight(linkTextSize);
         }
         float totalHeight = infoHeight + spacing + downloadTextHeight + spacing + downloadBinariesTextHeight;
@@ -1325,9 +1329,9 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
             infoLineHeight = UIBase.getUITextHeight(infoTextSize);
             infoHeight = infoLines.size() * infoLineHeight;
             linkTextSize = UIBase.getUITextSizeSmall();
-            downloadTextWidth = UIBase.getUITextWidth(downloadText, linkTextSize);
+            downloadTextWidth = UIBase.getUITextWidth(boldDownloadText, linkTextSize);
             downloadTextHeight = UIBase.getUITextHeight(linkTextSize);
-            downloadBinariesTextWidth = UIBase.getUITextWidth(downloadBinariesText, linkTextSize);
+            downloadBinariesTextWidth = UIBase.getUITextWidth(boldDownloadBinariesText, linkTextSize);
             downloadBinariesTextHeight = UIBase.getUITextHeight(linkTextSize);
             totalHeight = infoHeight + spacing + downloadTextHeight + spacing + downloadBinariesTextHeight;
         }
