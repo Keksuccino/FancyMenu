@@ -33,4 +33,10 @@ public interface IAudio extends PlayableResourceWithAudio {
      */
     float getPlayTime();
 
+    /**
+     * Seeks to the given play time in seconds.
+     */
+    default void setPlayTime(float playTime) {
+    }
+
 }

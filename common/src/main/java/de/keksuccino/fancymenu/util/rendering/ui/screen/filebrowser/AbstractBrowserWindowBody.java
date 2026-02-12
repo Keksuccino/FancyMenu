@@ -104,6 +104,16 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     protected boolean previewAudioPlaying = false;
     protected long previewAudioSeed = 0L;
     protected boolean previewVideoPlaying = false;
+    protected int audioPreviewProgressBarX = 0;
+    protected int audioPreviewProgressBarY = 0;
+    protected int audioPreviewProgressBarWidth = 0;
+    protected int audioPreviewProgressBarHeight = 0;
+    protected int videoPreviewProgressBarX = 0;
+    protected int videoPreviewProgressBarY = 0;
+    protected int videoPreviewProgressBarWidth = 0;
+    protected int videoPreviewProgressBarHeight = 0;
+    protected boolean audioPreviewProgressDragging = false;
+    protected boolean videoPreviewProgressDragging = false;
     protected ExtendedButton confirmButton;
     @Nullable
     protected ExtendedButton applyButton;
@@ -362,6 +372,10 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     }
 
     protected void renderPreview(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        this.audioPreviewProgressBarWidth = 0;
+        this.audioPreviewProgressBarHeight = 0;
+        this.videoPreviewProgressBarWidth = 0;
+        this.videoPreviewProgressBarHeight = 0;
         this.tickPreviewDelay();
         this.tickAudioPreview();
         this.tickVideoPreview();
@@ -523,6 +537,9 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if ((button == 0) && this.handleProgressBarClick(mouseX, mouseY)) {
+            return true;
+        }
         if ((button == 0) && (this.previewAudioSupplier != null) && (this.audioPreviewToggleButton != null)) {
             if (this.audioPreviewToggleButton.mouseClicked(mouseX, mouseY, button)) {
                 return true;
@@ -534,7 +551,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
             }
         }
 
-        if ((button == 0) && !this.fileListScrollArea.isMouseOverInnerArea(mouseX, mouseY) && !this.fileListScrollArea.isMouseInteractingWithGrabbers() && !this.previewTextScrollArea.isMouseOverInnerArea(mouseX, mouseY) && !this.previewTextScrollArea.isMouseInteractingWithGrabbers() && !this.isWidgetHovered()) {
+        if ((button == 0) && !this.fileListScrollArea.isMouseOverInnerArea(mouseX, mouseY) && !this.fileListScrollArea.isMouseInteractingWithGrabbers() && !this.previewTextScrollArea.isMouseOverInnerArea(mouseX, mouseY) && !this.previewTextScrollArea.isMouseInteractingWithGrabbers() && !this.isAudioProgressBarHovered(mouseX, mouseY) && !this.isVideoProgressBarHovered(mouseX, mouseY) && !this.isWidgetHovered()) {
             for (ScrollAreaEntry e : this.fileListScrollArea.getEntries()) {
                 e.setSelected(false);
             }
@@ -543,6 +560,42 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
 
         return super.mouseClicked(mouseX, mouseY, button);
 
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (button == 0) {
+            if (this.audioPreviewProgressDragging) {
+                this.seekAudioPreviewByMouseX(mouseX);
+                return true;
+            }
+            if (this.videoPreviewProgressDragging) {
+                this.seekVideoPreviewByMouseX(mouseX);
+                return true;
+            }
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        boolean handled = false;
+        if (button == 0) {
+            if (this.audioPreviewProgressDragging) {
+                this.seekAudioPreviewByMouseX(mouseX);
+                handled = true;
+            }
+            if (this.videoPreviewProgressDragging) {
+                this.seekVideoPreviewByMouseX(mouseX);
+                handled = true;
+            }
+            this.audioPreviewProgressDragging = false;
+            this.videoPreviewProgressDragging = false;
+        }
+        if (handled) {
+            return true;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     protected boolean isWidgetHovered() {
@@ -558,6 +611,67 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
             return true;
         }
         return false;
+    }
+
+    protected boolean handleProgressBarClick(double mouseX, double mouseY) {
+        this.audioPreviewProgressDragging = false;
+        this.videoPreviewProgressDragging = false;
+        if (this.isAudioProgressBarHovered(mouseX, mouseY)) {
+            this.audioPreviewProgressDragging = true;
+            this.seekAudioPreviewByMouseX(mouseX);
+            return true;
+        }
+        if (this.isVideoProgressBarHovered(mouseX, mouseY)) {
+            this.videoPreviewProgressDragging = true;
+            this.seekVideoPreviewByMouseX(mouseX);
+            return true;
+        }
+        return false;
+    }
+
+    protected boolean isAudioProgressBarHovered(double mouseX, double mouseY) {
+        if (this.previewAudioSupplier == null) return false;
+        return this.isPreviewProgressBarHovered(mouseX, mouseY, this.audioPreviewProgressBarX, this.audioPreviewProgressBarY, this.audioPreviewProgressBarWidth, this.audioPreviewProgressBarHeight);
+    }
+
+    protected boolean isVideoProgressBarHovered(double mouseX, double mouseY) {
+        if (this.previewVideoSupplier == null) return false;
+        return this.isPreviewProgressBarHovered(mouseX, mouseY, this.videoPreviewProgressBarX, this.videoPreviewProgressBarY, this.videoPreviewProgressBarWidth, this.videoPreviewProgressBarHeight);
+    }
+
+    protected boolean isPreviewProgressBarHovered(double mouseX, double mouseY, int x, int y, int width, int height) {
+        if (width <= 0 || height <= 0) return false;
+        return mouseX >= x && mouseX < (x + width) && mouseY >= y && mouseY < (y + height);
+    }
+
+    protected void seekAudioPreviewByMouseX(double mouseX) {
+        if (this.audioPreviewProgressBarWidth <= 0) return;
+        float progress = (float) ((mouseX - this.audioPreviewProgressBarX) / (double) this.audioPreviewProgressBarWidth);
+        this.seekAudioPreviewByProgress(progress);
+    }
+
+    protected void seekVideoPreviewByMouseX(double mouseX) {
+        if (this.videoPreviewProgressBarWidth <= 0) return;
+        float progress = (float) ((mouseX - this.videoPreviewProgressBarX) / (double) this.videoPreviewProgressBarWidth);
+        this.seekVideoPreviewByProgress(progress);
+    }
+
+    protected void seekAudioPreviewByProgress(float progress) {
+        IAudio audio = this.getPreviewAudio();
+        if (audio == null) return;
+        float duration = Math.max(0.0F, audio.getDuration());
+        if (duration <= 0.0F) return;
+        float clamped = Math.max(0.0F, Math.min(1.0F, progress));
+        audio.setPlayTime(duration * clamped);
+    }
+
+    protected void seekVideoPreviewByProgress(float progress) {
+        IVideo video = this.getPreviewVideo();
+        if (video == null) return;
+        float duration = Math.max(0.0F, video.getDuration());
+        if (duration <= 0.0F) return;
+        float clamped = Math.max(0.0F, Math.min(1.0F, progress));
+        video.setPlayTime(duration * clamped);
     }
 
     protected void updatePreviewForEntry(@Nullable ScrollAreaEntry entry) {
@@ -622,6 +736,10 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         this.previewTextSupplier = null;
         this.previewAudioSupplier = null;
         this.previewVideoSupplier = null;
+        this.audioPreviewProgressBarWidth = 0;
+        this.audioPreviewProgressBarHeight = 0;
+        this.videoPreviewProgressBarWidth = 0;
+        this.videoPreviewProgressBarHeight = 0;
         this.currentPreviewText = null;
         this.stopPreviewMedia();
         if (showNoPreview) {
@@ -971,6 +1089,8 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     protected void stopPreviewMedia() {
         this.stopPreviewAudio();
         this.stopPreviewVideo();
+        this.audioPreviewProgressDragging = false;
+        this.videoPreviewProgressDragging = false;
     }
 
     protected void tickAudioPreview() {
@@ -1088,6 +1208,10 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         int barWidth = previewWidth;
         int barY = progressY;
         int barYEnd = barY + AUDIO_PREVIEW_PROGRESS_BAR_HEIGHT;
+        this.videoPreviewProgressBarX = barX;
+        this.videoPreviewProgressBarY = barY;
+        this.videoPreviewProgressBarWidth = barWidth;
+        this.videoPreviewProgressBarHeight = AUDIO_PREVIEW_PROGRESS_BAR_HEIGHT;
         int progressBackgroundColor = UIBase.shouldBlur()
                 ? UIBase.getUITheme().ui_blur_interface_area_background_color_type_1.getColorInt()
                 : UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt();
@@ -1193,6 +1317,10 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         int barWidth = previewWidth;
         int barY = progressY;
         int barYEnd = barY + AUDIO_PREVIEW_PROGRESS_BAR_HEIGHT;
+        this.audioPreviewProgressBarX = barX;
+        this.audioPreviewProgressBarY = barY;
+        this.audioPreviewProgressBarWidth = barWidth;
+        this.audioPreviewProgressBarHeight = AUDIO_PREVIEW_PROGRESS_BAR_HEIGHT;
         int progressBackgroundColor = UIBase.shouldBlur()
                 ? UIBase.getUITheme().ui_blur_interface_area_background_color_type_1.getColorInt()
                 : UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt();

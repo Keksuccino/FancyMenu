@@ -34,6 +34,7 @@ import java.util.function.Consumer;
 public class OggAudio implements IAudio, ALAudio {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final int AL_SEC_OFFSET_FANCYMENU = 0x1024;
 
     @Nullable
     protected volatile ALAudioClip clip;
@@ -396,6 +397,33 @@ public class OggAudio implements IAudio, ALAudio {
     @Override
     public float getPlayTime() {
         return this.playTimeTracker.getCurrentPlayTime();
+    }
+
+    @Override
+    public void setPlayTime(float playTime) {
+        float clamped = playTime;
+        if (!Float.isFinite(clamped) || clamped < 0.0F) clamped = 0.0F;
+        float duration = this.getDuration();
+        if (duration > 0.0F) {
+            clamped = Math.min(clamped, duration);
+        }
+        ALAudioClip cachedClip = this.clip;
+        if (cachedClip == null || cachedClip.isClosed() || !cachedClip.isValidOpenAlSource()) {
+            return;
+        }
+        int source = this.getALSource();
+        if (source == 0) {
+            return;
+        }
+        boolean playing = this.isPlaying();
+        boolean paused = this.isPaused();
+        try {
+            AL10.alSourcef(source, AL_SEC_OFFSET_FANCYMENU, clamped);
+            ALErrorHandler.checkOpenAlError();
+            this.playTimeTracker.setPlayTime(clamped, paused || !playing);
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to seek OGG audio preview play time!", ex);
+        }
     }
 
     @Override
