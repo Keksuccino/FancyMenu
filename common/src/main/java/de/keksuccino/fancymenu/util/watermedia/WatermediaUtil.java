@@ -26,6 +26,20 @@ public class WatermediaUtil {
         return false;
     }
 
+    public static boolean isWatermediaBinariesLoaded() {
+        if (WATERMEDIA_critical_failure) return false;
+        if (FancyMenu.getOptions().devForceWatermediaMissing.getValue()) return false;
+        try {
+            Class.forName("org.bytedeco.ffmpeg.global.avutil", false, FancyMenu.class.getClassLoader());
+            return true;
+        } catch (Throwable ignored) {}
+        return false;
+    }
+
+    public static boolean isWatermediaVideoPlaybackAvailable() {
+        return isWatermediaLoaded() && isWatermediaBinariesLoaded();
+    }
+
     /**
      * Suppresses FFmpeg debug spam from Watermedia while developing FancyMenu.
      * Production behavior is intentionally left untouched.

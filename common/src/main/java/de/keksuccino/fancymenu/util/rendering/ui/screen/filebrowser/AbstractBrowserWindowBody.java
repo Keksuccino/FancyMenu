@@ -1,10 +1,13 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.InitialWidgetFocusScreen;
@@ -26,6 +29,7 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
+import de.keksuccino.fancymenu.util.watermedia.WatermediaUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -68,6 +72,9 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     protected static final int AUDIO_PREVIEW_PROGRESS_BAR_HEIGHT = 6;
     protected static final int AUDIO_PREVIEW_PROGRESS_BAR_SPACING = 4;
     protected static final int AUDIO_PREVIEW_TIME_SPACING = 2;
+    protected static final DrawableColor VIDEO_PREVIEW_WATERMEDIA_WARNING_BACKGROUND_COLOR = DrawableColor.of(180, 0, 0);
+    protected static final String WATERMEDIA_V3_DOWNLOAD_URL_FANCYMENU = "https://www.curseforge.com/minecraft/mc-mods/watermedia/files/all?page=1&pageSize=20&showAlphaFiles=show";
+    protected static final String WATERMEDIA_BINARIES_DOWNLOAD_URL_FANCYMENU = "https://www.curseforge.com/minecraft/mc-mods/watermedia-binaries/files/all?page=1&pageSize=20&showAlphaFiles=show";
 
     protected static final long PREVIEW_DELAY_MS = 1000L;
     protected static final Component FILE_TYPE_PREFIX_TEXT = Component.translatable("fancymenu.file_browser.file_type");
@@ -114,6 +121,14 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     protected int videoPreviewProgressBarHeight = 0;
     protected boolean audioPreviewProgressDragging = false;
     protected boolean videoPreviewProgressDragging = false;
+    protected float watermediaDownloadX_FancyMenu = Float.NaN;
+    protected float watermediaDownloadY_FancyMenu = Float.NaN;
+    protected float watermediaDownloadWidth_FancyMenu = Float.NaN;
+    protected float watermediaDownloadHeight_FancyMenu = Float.NaN;
+    protected float watermediaBinariesDownloadX_FancyMenu = Float.NaN;
+    protected float watermediaBinariesDownloadY_FancyMenu = Float.NaN;
+    protected float watermediaBinariesDownloadWidth_FancyMenu = Float.NaN;
+    protected float watermediaBinariesDownloadHeight_FancyMenu = Float.NaN;
     protected ExtendedButton confirmButton;
     @Nullable
     protected ExtendedButton applyButton;
@@ -376,22 +391,28 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         this.audioPreviewProgressBarHeight = 0;
         this.videoPreviewProgressBarWidth = 0;
         this.videoPreviewProgressBarHeight = 0;
+        this.resetWatermediaDownloadLinkBounds_FancyMenu();
         this.tickPreviewDelay();
         this.tickAudioPreview();
         this.tickVideoPreview();
         this.tickTextPreview();
+        boolean showVideoDependencyWarning = this.shouldRenderWatermediaMissingWarning_FancyMenu();
         if (this.previewAudioSupplier == null && this.audioPreviewVolumeSlider != null) {
             this.audioPreviewVolumeSlider.visible = false;
             this.audioPreviewVolumeSlider.active = false;
         }
-        if (this.previewVideoSupplier == null && this.videoPreviewVolumeSlider != null) {
+        if ((this.previewVideoSupplier == null || showVideoDependencyWarning) && this.videoPreviewVolumeSlider != null) {
             this.videoPreviewVolumeSlider.visible = false;
             this.videoPreviewVolumeSlider.active = false;
         }
         if (this.previewAudioSupplier != null) {
             this.renderAudioPreview(graphics, mouseX, mouseY, partial);
         } else if (this.previewVideoSupplier != null) {
-            this.renderVideoPreview(graphics, mouseX, mouseY, partial);
+            if (showVideoDependencyWarning) {
+                this.renderWatermediaMissingWarning_FancyMenu(graphics, mouseX, mouseY);
+            } else {
+                this.renderVideoPreview(graphics, mouseX, mouseY, partial);
+            }
         } else if (this.previewTextureSupplier != null) {
             ITexture t = this.previewTextureSupplier.get();
             ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
@@ -537,6 +558,9 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if ((button == 0) && this.handleWatermediaMissingWarningClick_FancyMenu(mouseX, mouseY)) {
+            return true;
+        }
         if ((button == 0) && this.handleProgressBarClick(mouseX, mouseY)) {
             return true;
         }
@@ -545,7 +569,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
                 return true;
             }
         }
-        if ((button == 0) && (this.previewVideoSupplier != null) && (this.videoPreviewToggleButton != null)) {
+        if ((button == 0) && (this.previewVideoSupplier != null) && !this.shouldRenderWatermediaMissingWarning_FancyMenu() && (this.videoPreviewToggleButton != null)) {
             if (this.videoPreviewToggleButton.mouseClicked(mouseX, mouseY, button)) {
                 return true;
             }
@@ -607,7 +631,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         if (this.previewAudioSupplier != null && this.audioPreviewToggleButton != null && this.audioPreviewToggleButton.isHovered()) {
             return true;
         }
-        if (this.previewVideoSupplier != null && this.videoPreviewToggleButton != null && this.videoPreviewToggleButton.isHovered()) {
+        if (this.previewVideoSupplier != null && !this.shouldRenderWatermediaMissingWarning_FancyMenu() && this.videoPreviewToggleButton != null && this.videoPreviewToggleButton.isHovered()) {
             return true;
         }
         return false;
@@ -629,12 +653,26 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         return false;
     }
 
+    protected boolean handleWatermediaMissingWarningClick_FancyMenu(double mouseX, double mouseY) {
+        if (!this.shouldRenderWatermediaMissingWarning_FancyMenu()) return false;
+        if (this.isMouseOverWatermediaDownloadLink_FancyMenu(mouseX, mouseY)) {
+            WebUtils.openWebLink(WATERMEDIA_V3_DOWNLOAD_URL_FANCYMENU);
+            return true;
+        }
+        if (this.isMouseOverWatermediaBinariesDownloadLink_FancyMenu(mouseX, mouseY)) {
+            WebUtils.openWebLink(WATERMEDIA_BINARIES_DOWNLOAD_URL_FANCYMENU);
+            return true;
+        }
+        return false;
+    }
+
     protected boolean isAudioProgressBarHovered(double mouseX, double mouseY) {
         if (this.previewAudioSupplier == null) return false;
         return this.isPreviewProgressBarHovered(mouseX, mouseY, this.audioPreviewProgressBarX, this.audioPreviewProgressBarY, this.audioPreviewProgressBarWidth, this.audioPreviewProgressBarHeight);
     }
 
     protected boolean isVideoProgressBarHovered(double mouseX, double mouseY) {
+        if (this.shouldRenderWatermediaMissingWarning_FancyMenu()) return false;
         if (this.previewVideoSupplier == null) return false;
         return this.isPreviewProgressBarHovered(mouseX, mouseY, this.videoPreviewProgressBarX, this.videoPreviewProgressBarY, this.videoPreviewProgressBarWidth, this.videoPreviewProgressBarHeight);
     }
@@ -741,6 +779,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         this.videoPreviewProgressBarWidth = 0;
         this.videoPreviewProgressBarHeight = 0;
         this.currentPreviewText = null;
+        this.resetWatermediaDownloadLinkBounds_FancyMenu();
         this.stopPreviewMedia();
         if (showNoPreview) {
             this.setNoTextPreview();
@@ -1119,6 +1158,10 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
             this.stopPreviewVideo();
             return;
         }
+        if (this.shouldRenderWatermediaMissingWarning_FancyMenu()) {
+            this.stopPreviewVideo();
+            return;
+        }
         IVideo video = this.getPreviewVideo();
         if (video == null) {
             this.previewVideoPlaying = false;
@@ -1134,6 +1177,142 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         } else if (video.isPlaying()) {
             video.pause();
         }
+    }
+
+    protected boolean shouldRenderWatermediaMissingWarning_FancyMenu() {
+        return (this.previewVideoSupplier != null) && !WatermediaUtil.isWatermediaVideoPlaybackAvailable();
+    }
+
+    protected void renderWatermediaMissingWarning_FancyMenu(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
+        int previewMaxWidth = 200;
+        int topY = (int) this.getMainAreaTopY();
+        int availableHeight = Math.max(40, (this.cancelButton.getY() - 50) - topY);
+        AspectRatio previewAspectRatio = new AspectRatio(16, 9);
+        int[] previewSize = previewAspectRatio.getAspectRatioSizeByMaximumSize(previewMaxWidth, availableHeight);
+        int previewWidth = Math.max(1, previewSize[0]);
+        int previewHeight = Math.max(1, previewSize[1]);
+        int x = this.width - 20 - previewWidth;
+        int y = topY;
+
+        int warningBorderColor = UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_area_border_color.getColorInt()
+                : UIBase.getUITheme().ui_interface_widget_border_color.getColorInt();
+        graphics.fill(x, y, x + previewWidth, y + previewHeight, VIDEO_PREVIEW_WATERMEDIA_WARNING_BACKGROUND_COLOR.getColorInt());
+        UIBase.renderBorder(graphics, x, y, x + previewWidth, y + previewHeight, UIBase.ELEMENT_BORDER_THICKNESS, warningBorderColor, true, true, true, true);
+
+        Component infoText = Component.translatable("fancymenu.backgrounds.video.watermedia_missing.info");
+        Component downloadText = Component.translatable("fancymenu.backgrounds.video.watermedia_missing.download");
+        Component downloadBinariesText = Component.translatable("fancymenu.backgrounds.video.watermedia_missing.download_binaries");
+
+        float maxTextWidth = previewWidth - 12.0F;
+        float spacing = Math.max(3.0F, UIBase.getUITextHeightSmall() * 0.5F);
+        float infoTextSize = UIBase.getUITextSizeNormal();
+        float linkTextSize = UIBase.getUITextSizeLarge();
+        List<MutableComponent> infoLines = UIBase.lineWrapUIComponentsNormal(infoText, maxTextWidth);
+        float infoLineHeight = UIBase.getUITextHeight(infoTextSize);
+        float infoHeight = infoLines.size() * infoLineHeight;
+        float downloadTextWidth = UIBase.getUITextWidth(downloadText, linkTextSize);
+        float downloadTextHeight = UIBase.getUITextHeight(linkTextSize);
+        float downloadBinariesTextWidth = UIBase.getUITextWidth(downloadBinariesText, linkTextSize);
+        float downloadBinariesTextHeight = UIBase.getUITextHeight(linkTextSize);
+        if ((downloadTextWidth > maxTextWidth) || (downloadBinariesTextWidth > maxTextWidth)) {
+            linkTextSize = UIBase.getUITextSizeNormal();
+            downloadTextWidth = UIBase.getUITextWidth(downloadText, linkTextSize);
+            downloadTextHeight = UIBase.getUITextHeight(linkTextSize);
+            downloadBinariesTextWidth = UIBase.getUITextWidth(downloadBinariesText, linkTextSize);
+            downloadBinariesTextHeight = UIBase.getUITextHeight(linkTextSize);
+        }
+        if ((downloadTextWidth > maxTextWidth) || (downloadBinariesTextWidth > maxTextWidth)) {
+            linkTextSize = UIBase.getUITextSizeSmall();
+            downloadTextWidth = UIBase.getUITextWidth(downloadText, linkTextSize);
+            downloadTextHeight = UIBase.getUITextHeight(linkTextSize);
+            downloadBinariesTextWidth = UIBase.getUITextWidth(downloadBinariesText, linkTextSize);
+            downloadBinariesTextHeight = UIBase.getUITextHeight(linkTextSize);
+        }
+        float totalHeight = infoHeight + spacing + downloadTextHeight + spacing + downloadBinariesTextHeight;
+        float maxContentHeight = previewHeight - 8.0F;
+        if (totalHeight > maxContentHeight) {
+            infoTextSize = UIBase.getUITextSizeSmall();
+            infoLines = UIBase.lineWrapUIComponentsSmall(infoText, maxTextWidth);
+            infoLineHeight = UIBase.getUITextHeight(infoTextSize);
+            infoHeight = infoLines.size() * infoLineHeight;
+            linkTextSize = UIBase.getUITextSizeSmall();
+            downloadTextWidth = UIBase.getUITextWidth(downloadText, linkTextSize);
+            downloadTextHeight = UIBase.getUITextHeight(linkTextSize);
+            downloadBinariesTextWidth = UIBase.getUITextWidth(downloadBinariesText, linkTextSize);
+            downloadBinariesTextHeight = UIBase.getUITextHeight(linkTextSize);
+            totalHeight = infoHeight + spacing + downloadTextHeight + spacing + downloadBinariesTextHeight;
+        }
+        float currentY = y + (previewHeight / 2.0F) - (totalHeight / 2.0F);
+
+        int textColor = DrawableColor.WHITE.getColorInt();
+        for (MutableComponent line : infoLines) {
+            float lineWidth = UIBase.getUITextWidth(line, infoTextSize);
+            float lineX = x + (previewWidth / 2.0F) - (lineWidth / 2.0F);
+            UIBase.renderText(graphics, line, lineX, currentY, textColor, infoTextSize);
+            currentY += infoLineHeight;
+        }
+
+        float downloadX = x + (previewWidth / 2.0F) - (downloadTextWidth / 2.0F);
+        float downloadY = currentY + spacing;
+        float downloadBinariesX = x + (previewWidth / 2.0F) - (downloadBinariesTextWidth / 2.0F);
+        float downloadBinariesY = downloadY + downloadTextHeight + spacing;
+
+        this.watermediaDownloadX_FancyMenu = downloadX;
+        this.watermediaDownloadY_FancyMenu = downloadY;
+        this.watermediaDownloadWidth_FancyMenu = downloadTextWidth;
+        this.watermediaDownloadHeight_FancyMenu = downloadTextHeight;
+        this.watermediaBinariesDownloadX_FancyMenu = downloadBinariesX;
+        this.watermediaBinariesDownloadY_FancyMenu = downloadBinariesY;
+        this.watermediaBinariesDownloadWidth_FancyMenu = downloadBinariesTextWidth;
+        this.watermediaBinariesDownloadHeight_FancyMenu = downloadBinariesTextHeight;
+
+        boolean hoveredMain = this.isMouseOverWatermediaDownloadLink_FancyMenu(mouseX, mouseY);
+        boolean hoveredBinaries = this.isMouseOverWatermediaBinariesDownloadLink_FancyMenu(mouseX, mouseY);
+        if (hoveredMain || hoveredBinaries) {
+            CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
+        }
+        Component renderedDownloadText = downloadText.copy().setStyle(Style.EMPTY.withUnderlined(hoveredMain));
+        Component renderedDownloadBinariesText = downloadBinariesText.copy().setStyle(Style.EMPTY.withUnderlined(hoveredBinaries));
+        UIBase.renderText(graphics, renderedDownloadText, downloadX, downloadY, textColor, linkTextSize);
+        UIBase.renderText(graphics, renderedDownloadBinariesText, downloadBinariesX, downloadBinariesY, textColor, linkTextSize);
+    }
+
+    protected boolean isMouseOverWatermediaDownloadLink_FancyMenu(double mouseX, double mouseY) {
+        if (!Float.isFinite(this.watermediaDownloadX_FancyMenu)
+                || !Float.isFinite(this.watermediaDownloadY_FancyMenu)
+                || !Float.isFinite(this.watermediaDownloadWidth_FancyMenu)
+                || !Float.isFinite(this.watermediaDownloadHeight_FancyMenu)) {
+            return false;
+        }
+        return (mouseX >= this.watermediaDownloadX_FancyMenu)
+                && (mouseX <= (this.watermediaDownloadX_FancyMenu + this.watermediaDownloadWidth_FancyMenu))
+                && (mouseY >= this.watermediaDownloadY_FancyMenu)
+                && (mouseY <= (this.watermediaDownloadY_FancyMenu + this.watermediaDownloadHeight_FancyMenu));
+    }
+
+    protected boolean isMouseOverWatermediaBinariesDownloadLink_FancyMenu(double mouseX, double mouseY) {
+        if (!Float.isFinite(this.watermediaBinariesDownloadX_FancyMenu)
+                || !Float.isFinite(this.watermediaBinariesDownloadY_FancyMenu)
+                || !Float.isFinite(this.watermediaBinariesDownloadWidth_FancyMenu)
+                || !Float.isFinite(this.watermediaBinariesDownloadHeight_FancyMenu)) {
+            return false;
+        }
+        return (mouseX >= this.watermediaBinariesDownloadX_FancyMenu)
+                && (mouseX <= (this.watermediaBinariesDownloadX_FancyMenu + this.watermediaBinariesDownloadWidth_FancyMenu))
+                && (mouseY >= this.watermediaBinariesDownloadY_FancyMenu)
+                && (mouseY <= (this.watermediaBinariesDownloadY_FancyMenu + this.watermediaBinariesDownloadHeight_FancyMenu));
+    }
+
+    protected void resetWatermediaDownloadLinkBounds_FancyMenu() {
+        this.watermediaDownloadX_FancyMenu = Float.NaN;
+        this.watermediaDownloadY_FancyMenu = Float.NaN;
+        this.watermediaDownloadWidth_FancyMenu = Float.NaN;
+        this.watermediaDownloadHeight_FancyMenu = Float.NaN;
+        this.watermediaBinariesDownloadX_FancyMenu = Float.NaN;
+        this.watermediaBinariesDownloadY_FancyMenu = Float.NaN;
+        this.watermediaBinariesDownloadWidth_FancyMenu = Float.NaN;
+        this.watermediaBinariesDownloadHeight_FancyMenu = Float.NaN;
     }
 
     protected void renderVideoPreview(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {

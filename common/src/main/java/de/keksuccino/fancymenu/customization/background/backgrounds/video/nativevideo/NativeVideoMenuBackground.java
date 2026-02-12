@@ -370,7 +370,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     }
 
     protected boolean shouldRenderWatermediaMissingOverlay_FancyMenu(@Nullable ResourceSupplier<IVideo> supplier) {
-        return (supplier != null) && !WatermediaUtil.isWatermediaLoaded();
+        return (supplier != null) && !WatermediaUtil.isWatermediaVideoPlaybackAvailable();
     }
 
     protected void renderWatermediaMissingOverlay_FancyMenu(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {

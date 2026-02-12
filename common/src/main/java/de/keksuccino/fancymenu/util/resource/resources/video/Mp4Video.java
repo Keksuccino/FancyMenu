@@ -174,7 +174,7 @@ public class Mp4Video implements IVideo {
 
     protected void initializeInternal(@NotNull String sourceName) {
         if (this.closed) return;
-        if (!WatermediaUtil.isWatermediaLoaded()) {
+        if (!WatermediaUtil.isWatermediaVideoPlaybackAvailable()) {
             this.onDependencyMissing(sourceName);
             return;
         }
@@ -697,7 +697,7 @@ public class Mp4Video implements IVideo {
         this.playRequested = false;
         this.lastPlayRequestTimestampMs = -1L;
         this.resetVideoPlaybackListenerState();
-        LOGGER.warn("[FANCYMENU] Watermedia is not loaded, MP4 source will render as missing texture: {}", sourceName);
+        LOGGER.warn("[FANCYMENU] Watermedia V3 and/or Watermedia Binaries are not loaded, MP4 source will render as missing texture: {}", sourceName);
     }
 
     protected void fail(@NotNull String message, @Nullable Throwable cause) {
