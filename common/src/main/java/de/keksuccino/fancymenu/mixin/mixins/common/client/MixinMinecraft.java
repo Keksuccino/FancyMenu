@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierH
 import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.customization.listener.listeners.helpers.WorldSessionTracker;
+import de.keksuccino.fancymenu.util.MouseUtil;
 import de.keksuccino.fancymenu.util.mcp.FancyMenuMcpManager;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
@@ -117,6 +118,8 @@ public class MixinMinecraft {
 
 	@Inject(method = "tick", at = @At("HEAD"))
 	private void head_tick_FancyMenu(CallbackInfo info) {
+
+        MouseUtil.tick();
 
         ScreenOverlayHandler.INSTANCE.tick();
         CameraRotationObserver.tick();
