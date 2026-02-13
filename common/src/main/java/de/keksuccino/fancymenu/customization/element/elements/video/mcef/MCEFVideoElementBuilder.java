@@ -23,6 +23,11 @@ public class MCEFVideoElementBuilder extends ElementBuilder<MCEFVideoElement, MC
     }
 
     @Override
+    public boolean isDeprecated() {
+        return true;
+    }
+
+    @Override
     public @NotNull MCEFVideoElement buildDefaultInstance() {
         MCEFVideoElement i = new MCEFVideoElement(this);
         i.baseWidth = 400;

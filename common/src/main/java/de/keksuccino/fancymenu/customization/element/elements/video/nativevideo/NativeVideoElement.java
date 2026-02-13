@@ -18,6 +18,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import de.keksuccino.fancymenu.util.resource.resources.video.NativeVideoReferenceTracker;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -33,8 +34,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -48,8 +51,12 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
+    private static final long DESTROY_RECOVERY_DELAY_MS_FANCYMENU = 1000L;
     private static final Object ELEMENT_INSTANCE_LOCK_FANCYMENU = new Object();
+    private static final Object DESTROY_RECOVERY_LOCK_FANCYMENU = new Object();
     private static final Set<NativeVideoElement> ELEMENT_INSTANCES_FANCYMENU = Collections.newSetFromMap(new WeakHashMap<>());
+    private static final Map<String, DelayedDestroyTask_FancyMenu> DELAYED_DESTROY_TASKS_BY_ELEMENT_ID_FANCYMENU = new HashMap<>();
+    private static long delayedDestroyTaskTokenCounter_FancyMenu = 0L;
     private static final String MEMORY_LAST_STOPPED_PLAY_TIME_SECONDS_FANCYMENU = "native_video_element_last_stopped_play_time_seconds";
     private static final String MEMORY_LAST_STOPPED_SOURCE_FANCYMENU = "native_video_element_last_stopped_source";
     private static final String MEMORY_LAST_ENDED_SOURCE_FANCYMENU = "native_video_element_last_ended_source";
@@ -81,7 +88,6 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
     protected volatile String currentResolvedVideoSource = null;
     @Nullable
     protected volatile String activeVideoSource = null;
-    protected boolean skipStopOnReleaseForDestroyRecovery_FancyMenu = false;
     protected float watermediaDownloadX_FancyMenu = Float.NaN;
     protected float watermediaDownloadY_FancyMenu = Float.NaN;
     protected float watermediaDownloadWidth_FancyMenu = Float.NaN;
@@ -118,6 +124,23 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
             }
         }
     }, 0L, 900L, TimeUnit.MILLISECONDS);
+
+    protected static final class DelayedDestroyTask_FancyMenu {
+        protected final String elementId;
+        protected final long token;
+        protected final IVideo video;
+        @Nullable
+        protected final String source;
+        @Nullable
+        protected ScheduledFuture<?> future;
+
+        protected DelayedDestroyTask_FancyMenu(@NotNull String elementId, long token, @NotNull IVideo video, @Nullable String source) {
+            this.elementId = elementId;
+            this.token = token;
+            this.video = video;
+            this.source = source;
+        }
+    }
 
     public NativeVideoElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -168,6 +191,96 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
                 releasedCount);
 
         return resetCount;
+    }
+
+    protected static void cancelDelayedDestroyTask_FancyMenu(@Nullable DelayedDestroyTask_FancyMenu task) {
+        if (task == null) return;
+        ScheduledFuture<?> future = task.future;
+        if (future != null) {
+            future.cancel(false);
+        }
+    }
+
+    protected static long nextDelayedDestroyTaskToken_FancyMenu() {
+        synchronized (DESTROY_RECOVERY_LOCK_FANCYMENU) {
+            delayedDestroyTaskTokenCounter_FancyMenu++;
+            return delayedDestroyTaskTokenCounter_FancyMenu;
+        }
+    }
+
+    protected void scheduleDelayedDestroyTaskForElementId_FancyMenu(@NotNull IVideo video, @Nullable String source) {
+        String elementId = this.getInstanceIdentifier();
+        if ((elementId == null) || elementId.isBlank()) {
+            this.finalizeDelayedDestroyTaskVideo_FancyMenu(video, source);
+            return;
+        }
+
+        long taskToken = nextDelayedDestroyTaskToken_FancyMenu();
+        DelayedDestroyTask_FancyMenu task = new DelayedDestroyTask_FancyMenu(elementId, taskToken, video, source);
+        DelayedDestroyTask_FancyMenu previousTask;
+        synchronized (DESTROY_RECOVERY_LOCK_FANCYMENU) {
+            previousTask = DELAYED_DESTROY_TASKS_BY_ELEMENT_ID_FANCYMENU.put(elementId, task);
+        }
+        cancelDelayedDestroyTask_FancyMenu(previousTask);
+        task.future = EXECUTOR.schedule(
+                () -> MainThreadTaskExecutor.executeInMainThread(
+                        () -> runDelayedDestroyTask_FancyMenu(task),
+                        MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK
+                ),
+                DESTROY_RECOVERY_DELAY_MS_FANCYMENU,
+                TimeUnit.MILLISECONDS
+        );
+    }
+
+    protected static void runDelayedDestroyTask_FancyMenu(@NotNull DelayedDestroyTask_FancyMenu task) {
+        synchronized (DESTROY_RECOVERY_LOCK_FANCYMENU) {
+            DelayedDestroyTask_FancyMenu cachedTask = DELAYED_DESTROY_TASKS_BY_ELEMENT_ID_FANCYMENU.get(task.elementId);
+            if ((cachedTask == null) || (cachedTask.token != task.token) || (cachedTask.video != task.video)) return;
+            DELAYED_DESTROY_TASKS_BY_ELEMENT_ID_FANCYMENU.remove(task.elementId);
+        }
+        if (NativeVideoReferenceTracker.hasReferences(task.video)) return;
+        try {
+            task.video.stop();
+        } catch (Exception ex) {
+            LOGGER.warn("[FANCYMENU] Failed to stop native video element during delayed destroy task. elementId: {}, source: {}", task.elementId, Objects.requireNonNullElse(task.source, "[null]"), ex);
+        }
+        if (NativeVideoReferenceTracker.hasReferences(task.video)) return;
+        try {
+            ResourceHandlers.getVideoHandler().release(task.video);
+        } catch (Exception ex) {
+            LOGGER.warn("[FANCYMENU] Failed to release native video element during delayed destroy task. elementId: {}, source: {}", task.elementId, Objects.requireNonNullElse(task.source, "[null]"), ex);
+        }
+    }
+
+    protected boolean abortDelayedDestroyTaskAndReuseVideo_FancyMenu(@Nullable IVideo video, @Nullable String source) {
+        if (video == null) return false;
+        String elementId = this.getInstanceIdentifier();
+        if ((elementId == null) || elementId.isBlank()) return false;
+        DelayedDestroyTask_FancyMenu taskToAbort = null;
+        synchronized (DESTROY_RECOVERY_LOCK_FANCYMENU) {
+            DelayedDestroyTask_FancyMenu cachedTask = DELAYED_DESTROY_TASKS_BY_ELEMENT_ID_FANCYMENU.get(elementId);
+            if (cachedTask == null) return false;
+            if ((cachedTask.video != video) || !Objects.equals(cachedTask.source, source)) return false;
+            DELAYED_DESTROY_TASKS_BY_ELEMENT_ID_FANCYMENU.remove(elementId);
+            taskToAbort = cachedTask;
+        }
+        cancelDelayedDestroyTask_FancyMenu(taskToAbort);
+        return true;
+    }
+
+    protected void finalizeDelayedDestroyTaskVideo_FancyMenu(@NotNull IVideo video, @Nullable String source) {
+        if (NativeVideoReferenceTracker.hasReferences(video)) return;
+        try {
+            video.stop();
+        } catch (Exception ex) {
+            LOGGER.warn("[FANCYMENU] Failed to stop native video element during immediate destroy finalization. elementId: {}, source: {}", this.getInstanceIdentifier(), Objects.requireNonNullElse(source, "[null]"), ex);
+        }
+        if (NativeVideoReferenceTracker.hasReferences(video)) return;
+        try {
+            ResourceHandlers.getVideoHandler().release(video);
+        } catch (Exception ex) {
+            LOGGER.warn("[FANCYMENU] Failed to release native video element during immediate destroy finalization. elementId: {}, source: {}", this.getInstanceIdentifier(), Objects.requireNonNullElse(source, "[null]"), ex);
+        }
     }
 
     @Override
@@ -411,12 +524,14 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
             this.releaseVideoReference(oldVideo, oldVideoSource);
         }
 
+        boolean reusedDelayedDestroyVideo = false;
         this.video = newVideo;
         if (newVideo != null) {
+            reusedDelayedDestroyVideo = this.abortDelayedDestroyTaskAndReuseVideo_FancyMenu(newVideo, newVideoSource);
             this.acquireVideoReference(newVideo);
         }
         this.activeVideoSource = newVideoSource;
-        if (newVideo != null) {
+        if ((newVideo != null) && !reusedDelayedDestroyVideo) {
             this.tryRestorePlaybackPositionFromMemory(newVideo, this.activeVideoSource);
         }
         this.initialized = (newVideo != null);
@@ -477,17 +592,24 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
     @Override
     public void onDestroyElement() {
         super.onDestroyElement();
-        if (!isEditor() && this.initialized && (this.video != null)) {
-            this.cachePlaybackPositionToMemory(this.video, this.activeVideoSource, true);
-            this.pausedBySystem = true;
-            this.video.pause();
-            this.skipStopOnReleaseForDestroyRecovery_FancyMenu = true;
-        }
         this.destroyed_FancyMenu = true;
         this.garbageChecker.cancel(true);
         this.asyncTicker.cancel(true);
-        this.resetElement();
-        this.skipStopOnReleaseForDestroyRecovery_FancyMenu = false;
+        IVideo oldVideo = this.video;
+        String oldVideoSource = this.activeVideoSource;
+        if (oldVideo != null) {
+            this.cachePlaybackPositionToMemory(oldVideo, oldVideoSource, true);
+        }
+        if (!isEditor() && (oldVideo != null)) {
+            boolean shouldFinalize = NativeVideoReferenceTracker.release(oldVideo);
+            if (shouldFinalize) {
+                oldVideo.pause();
+                this.scheduleDelayedDestroyTaskForElementId_FancyMenu(oldVideo, oldVideoSource);
+            }
+        } else if (oldVideo != null) {
+            this.releaseVideoReference(oldVideo, oldVideoSource);
+        }
+        this.clearRuntimeState_FancyMenu();
         synchronized (ELEMENT_INSTANCE_LOCK_FANCYMENU) {
             ELEMENT_INSTANCES_FANCYMENU.remove(this);
         }
@@ -552,6 +674,11 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
         if (oldVideo != null) {
             didStopPlayer = this.releaseVideoReference(oldVideo, oldVideoSource);
         }
+        this.clearRuntimeState_FancyMenu();
+        return didStopPlayer;
+    }
+
+    protected void clearRuntimeState_FancyMenu() {
         this.initialized = false;
         this.video = null;
         this.activeVideoSource = null;
@@ -564,7 +691,6 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
         this.resetWatermediaDownloadLinkBounds_FancyMenu();
         this.cachedDuration.set(0F);
         this.cachedPlayTime.set(0F);
-        return didStopPlayer;
     }
 
     protected float _getDuration() {
@@ -653,11 +779,7 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
         // Only finalize once this was the last known reference, otherwise another element/background would get interrupted.
         if (shouldStop) {
             this.cachePlaybackPositionToMemory(video, source, !this.pausedBySystem);
-            if (this.skipStopOnReleaseForDestroyRecovery_FancyMenu) {
-                video.pause();
-            } else {
-                video.stop();
-            }
+            video.stop();
         }
         return shouldStop;
     }
