@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.element.elements.video.nativevideo
 
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
@@ -13,6 +14,7 @@ import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class NativeVideoEditorElement extends AbstractEditorElement<NativeVideoEditorElement, NativeVideoElement> {
 
@@ -42,10 +44,6 @@ public class NativeVideoEditorElement extends AbstractEditorElement<NativeVideoE
                 .setIcon(MaterialIcons.REPEAT)
                 .setStackable(false);
 
-        this.element.preserveAspectRatio.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .setIcon(MaterialIcons.ASPECT_RATIO)
-                .setStackable(false);
-
         this.element.volume.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setIcon(MaterialIcons.VOLUME_UP)
                 .setStackable(false);
@@ -69,5 +67,15 @@ public class NativeVideoEditorElement extends AbstractEditorElement<NativeVideoE
         this.element.playInEditor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setIcon(MaterialIcons.EDIT)
                 .setStackable(false);
+
+        this.rightClickMenu.addSeparatorEntry("separator_before_restore_aspect_ratio");
+
+        this.rightClickMenu.addClickableEntry("restore_aspect_ratio", Component.translatable("fancymenu.elements.image.restore_aspect_ratio"), (menu, entry) -> {
+            List<AbstractEditorElement<?, ?>> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof NativeVideoEditorElement));
+            this.editor.history.saveSnapshot();
+            for (AbstractEditorElement<?, ?> e : selectedElements) {
+                ((NativeVideoElement)e.element).restoreAspectRatio();
+            }
+        }).setIcon(MaterialIcons.ASPECT_RATIO);
     }
 }

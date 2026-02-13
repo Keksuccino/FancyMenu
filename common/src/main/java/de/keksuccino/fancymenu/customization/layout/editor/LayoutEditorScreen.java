@@ -769,6 +769,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public boolean deleteElement(@NotNull AbstractEditorElement<?, ?> element) {
 		if (element.settings.isDestroyable()) {
 			if (!element.settings.shouldHideInsteadOfDestroy()) {
+				element.element.onDestroyElement();
 				this.removeElementsFromLayerGroups(List.of(element.element.getInstanceIdentifier()));
 				this.normalEditorElements.remove(element);
 				this.vanillaWidgetEditorElements.remove(element);

@@ -64,7 +64,6 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
     public final Property<Float> volume = putProperty(Property.floatProperty("volume", 1.0F, "fancymenu.elements.video_mcef.volume"))
             .setValueSetProcessor(value -> Math.max(0.0F, Math.min(1.0F, value)));
     public final Property.StringProperty soundSource = putProperty(Property.stringProperty("sound_source", SoundSource.MASTER.getName(), false, false, "fancymenu.elements.video_mcef.sound_channel"));
-    public final Property.BooleanProperty preserveAspectRatio = putProperty(Property.booleanProperty("preserve_aspect_ratio", true, "fancymenu.elements.video_mcef.preserve_aspect_ratio"));
     public final Property.BooleanProperty playInEditor = putProperty(Property.booleanProperty("play_in_editor", true, "fancymenu.backgrounds.video.play_in_editor"));
 
     protected volatile boolean initialized = false;
@@ -82,6 +81,7 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
     protected volatile String currentResolvedVideoSource = null;
     @Nullable
     protected volatile String activeVideoSource = null;
+    protected boolean skipStopOnReleaseForDestroyRecovery_FancyMenu = false;
     protected float watermediaDownloadX_FancyMenu = Float.NaN;
     protected float watermediaDownloadY_FancyMenu = Float.NaN;
     protected float watermediaDownloadWidth_FancyMenu = Float.NaN;
@@ -252,11 +252,7 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
         ResourceLocation resourceLocation = this.video.getResourceLocation();
         if ((resourceLocation != null) && !Objects.equals(resourceLocation, MISSING_TEXTURE_FANCYMENU)) {
             graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
-            if (this.preserveAspectRatio.tryGetNonNull()) {
-                this.renderKeepAspectRatio(graphics, resourceLocation, this.video.getAspectRatio());
-            } else {
-                this.renderFullArea(graphics, resourceLocation);
-            }
+            this.renderFullArea(graphics, resourceLocation);
         }
 
         RenderingUtils.resetShaderColor(graphics);
@@ -385,15 +381,20 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
         this.watermediaBinariesDownloadHeight_FancyMenu = Float.NaN;
     }
 
-    protected void renderKeepAspectRatio(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, @NotNull AspectRatio ratio) {
-        int[] size = ratio.getAspectRatioSizeByMaximumSize(this.getAbsoluteWidth(), this.getAbsoluteHeight());
-        int x = this.getAbsoluteX() + ((this.getAbsoluteWidth() - size[0]) / 2);
-        int y = this.getAbsoluteY() + ((this.getAbsoluteHeight() - size[1]) / 2);
-        graphics.blit(resourceLocation, x, y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
-    }
-
     protected void renderFullArea(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation) {
         graphics.blit(resourceLocation, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+    }
+
+    @Nullable
+    public IVideo getVideoResource() {
+        ResourceSupplier<IVideo> supplier = this.videoSupplier.get();
+        return (supplier != null) ? supplier.get() : null;
+    }
+
+    public void restoreAspectRatio() {
+        IVideo video = this.getVideoResource();
+        AspectRatio ratio = (video != null) ? video.getAspectRatio() : new AspectRatio(10, 10);
+        this.baseWidth = ratio.getAspectRatioWidth(this.getAbsoluteHeight());
     }
 
     protected void updateVideoReference(@Nullable IVideo newVideo) {
@@ -402,7 +403,11 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
 
         IVideo oldVideo = this.video;
         String oldVideoSource = this.activeVideoSource;
+        boolean sourceChanged = !Objects.equals(oldVideoSource, newVideoSource);
         if (oldVideo != null) {
+            if (sourceChanged && isEditor()) {
+                oldVideo.stop();
+            }
             this.releaseVideoReference(oldVideo, oldVideoSource);
         }
 
@@ -472,10 +477,17 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
     @Override
     public void onDestroyElement() {
         super.onDestroyElement();
+        if (!isEditor() && this.initialized && (this.video != null)) {
+            this.cachePlaybackPositionToMemory(this.video, this.activeVideoSource, true);
+            this.pausedBySystem = true;
+            this.video.pause();
+            this.skipStopOnReleaseForDestroyRecovery_FancyMenu = true;
+        }
         this.destroyed_FancyMenu = true;
         this.garbageChecker.cancel(true);
         this.asyncTicker.cancel(true);
         this.resetElement();
+        this.skipStopOnReleaseForDestroyRecovery_FancyMenu = false;
         synchronized (ELEMENT_INSTANCE_LOCK_FANCYMENU) {
             ELEMENT_INSTANCES_FANCYMENU.remove(this);
         }
@@ -567,7 +579,7 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
 
     protected boolean _isPaused() {
         if (isEditor()) {
-            return !this.playInEditor.tryGetNonNull();
+            return !this.playInEditor.tryGetNonNull() || this.getControllerPausedState();
         }
         return (this.getControllerPausedState() || this.pausedBySystem);
     }
@@ -638,10 +650,14 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
     protected boolean releaseVideoReference(@NotNull IVideo video, @Nullable String source) {
         boolean shouldStop = NativeVideoReferenceTracker.release(video);
         // Video resources are shared by source via ResourceHandler cache.
-        // Only stop once this was the last known reference, otherwise another element/background would get interrupted.
+        // Only finalize once this was the last known reference, otherwise another element/background would get interrupted.
         if (shouldStop) {
             this.cachePlaybackPositionToMemory(video, source, !this.pausedBySystem);
-            video.stop();
+            if (this.skipStopOnReleaseForDestroyRecovery_FancyMenu) {
+                video.pause();
+            } else {
+                video.stop();
+            }
         }
         return shouldStop;
     }
