@@ -1,56 +1,40 @@
-package de.keksuccino.fancymenu.customization.background.backgrounds.video.nativevideo;
+package de.keksuccino.fancymenu.customization.element.elements.video.nativevideo;
 
-import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.customization.background.MenuBackground;
-import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
-import de.keksuccino.fancymenu.customization.background.backgrounds.video.IVideoMenuBackground;
+import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.video.IVideoElement;
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
-import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.MouseUtil;
 import de.keksuccino.fancymenu.util.WebUtils;
-import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
-import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
-import de.keksuccino.fancymenu.util.resource.ResourceSource;
-import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
-import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import de.keksuccino.fancymenu.util.resource.resources.video.NativeVideoReferenceTracker;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -60,35 +44,28 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBackground> implements IVideoMenuBackground {
+public class NativeVideoElement extends AbstractElement implements IVideoElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
-    private static final Object BACKGROUND_INSTANCE_LOCK_FANCYMENU = new Object();
-    private static final Set<NativeVideoMenuBackground> BACKGROUND_INSTANCES_FANCYMENU = Collections.newSetFromMap(new WeakHashMap<>());
-    private static final String MEMORY_LAST_STOPPED_PLAY_TIME_SECONDS_FANCYMENU = "native_video_last_stopped_play_time_seconds";
-    private static final String MEMORY_LAST_STOPPED_SOURCE_FANCYMENU = "native_video_last_stopped_source";
-    private static final String MEMORY_LAST_ENDED_SOURCE_FANCYMENU = "native_video_last_ended_source";
+    private static final Object ELEMENT_INSTANCE_LOCK_FANCYMENU = new Object();
+    private static final Set<NativeVideoElement> ELEMENT_INSTANCES_FANCYMENU = Collections.newSetFromMap(new WeakHashMap<>());
+    private static final String MEMORY_LAST_STOPPED_PLAY_TIME_SECONDS_FANCYMENU = "native_video_element_last_stopped_play_time_seconds";
+    private static final String MEMORY_LAST_STOPPED_SOURCE_FANCYMENU = "native_video_element_last_stopped_source";
+    private static final String MEMORY_LAST_ENDED_SOURCE_FANCYMENU = "native_video_element_last_ended_source";
     private static final ResourceLocation MISSING_TEXTURE_FANCYMENU = IVideo.MISSING_TEXTURE_LOCATION;
-    private static final File VIDEO_THUMBNAIL_DIR_FANCYMENU = FileUtils.createDirectory(new File(FancyMenu.INSTANCE_DATA_DIR, "video_thumbnails"));
     private static final DrawableColor WATERMEDIA_MISSING_BACKGROUND_COLOR_FANCYMENU = DrawableColor.of(180, 0, 0);
     private static final String WATERMEDIA_V3_DOWNLOAD_URL_FANCYMENU = "https://www.curseforge.com/minecraft/mc-mods/watermedia/files/all?page=1&pageSize=20&showAlphaFiles=show";
     private static final String WATERMEDIA_BINARIES_DOWNLOAD_URL_FANCYMENU = "https://www.curseforge.com/minecraft/mc-mods/watermedia-binaries/files/all?page=1&pageSize=20&showAlphaFiles=show";
 
     public final Property<ResourceSupplier<IVideo>> videoSupplier = putProperty(Property.resourceSupplierProperty(IVideo.class, "source", null, "fancymenu.elements.video_mcef.set_source", true, true, true, null));
-    public final Property<Boolean> loop = putProperty(Property.booleanProperty("loop", false, "fancymenu.elements.video_mcef.loop"));
+    public final Property.BooleanProperty loop = putProperty(Property.booleanProperty("loop", false, "fancymenu.elements.video_mcef.loop"));
     /** Value between 0.0 and 1.0 **/
     public final Property<Float> volume = putProperty(Property.floatProperty("volume", 1.0F, "fancymenu.elements.video_mcef.volume"))
             .setValueSetProcessor(value -> Math.max(0.0F, Math.min(1.0F, value)));
     public final Property.StringProperty soundSource = putProperty(Property.stringProperty("sound_source", SoundSource.MASTER.getName(), false, false, "fancymenu.elements.video_mcef.sound_channel"));
-    public final Property<Boolean> parallaxEnabled = putProperty(Property.booleanProperty("parallax", false, "fancymenu.backgrounds.image.configure.parallax"));
-    /** Value between 0.0 and 1.0, where 0.0 is no movement and 1.0 is maximum movement **/
-    public final Property.FloatProperty parallaxIntensityXString = putProperty(Property.floatProperty("parallax_intensity_x", 0.02F, "fancymenu.backgrounds.image.configure.parallax_intensity_x"));
-    /** Value between 0.0 and 1.0, where 0.0 is no movement and 1.0 is maximum movement **/
-    public final Property.FloatProperty parallaxIntensityYString = putProperty(Property.floatProperty("parallax_intensity_y", 0.02F, "fancymenu.backgrounds.image.configure.parallax_intensity_y"));
-    /** When TRUE, the parallax effect will move in the SAME direction as the mouse, otherwise it moves in the opposite direction **/
-    public final Property<Boolean> invertParallax = putProperty(Property.booleanProperty("invert_parallax", false, "fancymenu.backgrounds.image.configure.invert_parallax"));
-    public final Property<Boolean> playInEditor = putProperty(Property.booleanProperty("play_in_editor", true, "fancymenu.backgrounds.video.play_in_editor"));
+    public final Property.BooleanProperty preserveAspectRatio = putProperty(Property.booleanProperty("preserve_aspect_ratio", true, "fancymenu.elements.video_mcef.preserve_aspect_ratio"));
+    public final Property.BooleanProperty playInEditor = putProperty(Property.booleanProperty("play_in_editor", true, "fancymenu.backgrounds.video.play_in_editor"));
 
     protected volatile boolean initialized = false;
     @Nullable
@@ -105,10 +82,6 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     protected volatile String currentResolvedVideoSource = null;
     @Nullable
     protected volatile String activeVideoSource = null;
-    @Nullable
-    protected ResourceSupplier<ITexture> pausedThumbnailSupplier = null;
-    @Nullable
-    protected String pausedThumbnailSource = null;
     protected float watermediaDownloadX_FancyMenu = Float.NaN;
     protected float watermediaDownloadY_FancyMenu = Float.NaN;
     protected float watermediaDownloadWidth_FancyMenu = Float.NaN;
@@ -118,13 +91,15 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     protected float watermediaBinariesDownloadWidth_FancyMenu = Float.NaN;
     protected float watermediaBinariesDownloadHeight_FancyMenu = Float.NaN;
     protected boolean watermediaLeftMouseWasDown_FancyMenu = false;
+    protected volatile boolean destroyed_FancyMenu = false;
     // The field is currently unused, but the scheduler is used, so don't delete this
     protected final ScheduledFuture<?> garbageChecker = EXECUTOR.scheduleAtFixedRate(() -> {
+        if (this.destroyed_FancyMenu) return;
         if (this.initialized && !this.shouldSkipWatchdogAutoClear() && (this.lastRenderTickTime != -1L) && ((this.lastRenderTickTime + 11000L) < System.currentTimeMillis())) {
             String sourceForLog = this.getConfiguredVideoSourceForLog();
             String videoTypeForLog = this.getVideoTypeForLog();
-            boolean didStopPlayer = this.resetBackgroundAndReturnStopState();
-            LOGGER.info("[FANCYMENU] Auto-clearing native video background after watchdog timeout. source: {}, videoType: {}, didStopPlayer: {}, backgroundInstance: {}",
+            boolean didStopPlayer = this.resetElementAndReturnStopState();
+            LOGGER.info("[FANCYMENU] Auto-clearing native video element after watchdog timeout. source: {}, videoType: {}, didStopPlayer: {}, elementInstance: {}",
                     sourceForLog,
                     videoTypeForLog,
                     didStopPlayer,
@@ -133,6 +108,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     }, 0L, 100L, TimeUnit.MILLISECONDS);
     // The field is currently unused, but the scheduler is used, so don't delete this
     protected final ScheduledFuture<?> asyncTicker = EXECUTOR.scheduleAtFixedRate(() -> {
+        if (this.destroyed_FancyMenu) return;
         if (this.initialized) {
             this.cachedDuration.set(this._getDuration());
             this.cachedPlayTime.set(this._getPlayTime());
@@ -143,32 +119,33 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         }
     }, 0L, 900L, TimeUnit.MILLISECONDS);
 
-    public NativeVideoMenuBackground(MenuBackgroundBuilder<NativeVideoMenuBackground> builder) {
+    public NativeVideoElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
-        synchronized (BACKGROUND_INSTANCE_LOCK_FANCYMENU) {
-            BACKGROUND_INSTANCES_FANCYMENU.add(this);
+        this.allowDepthTestManipulation = true;
+        synchronized (ELEMENT_INSTANCE_LOCK_FANCYMENU) {
+            ELEMENT_INSTANCES_FANCYMENU.add(this);
         }
     }
 
     public static int forceReloadAllAfterSoundEngineReload_FancyMenu() {
-        List<NativeVideoMenuBackground> backgrounds;
-        synchronized (BACKGROUND_INSTANCE_LOCK_FANCYMENU) {
-            backgrounds = new ArrayList<>(BACKGROUND_INSTANCES_FANCYMENU);
+        List<NativeVideoElement> elements;
+        synchronized (ELEMENT_INSTANCE_LOCK_FANCYMENU) {
+            elements = new ArrayList<>(ELEMENT_INSTANCES_FANCYMENU);
         }
 
-        if (backgrounds.isEmpty()) return 0;
+        if (elements.isEmpty()) return 0;
 
         Set<IVideo> videosToRelease = Collections.newSetFromMap(new IdentityHashMap<>());
         int resetCount = 0;
         int stoppedCount = 0;
 
-        for (NativeVideoMenuBackground background : backgrounds) {
-            if (background == null) continue;
-            IVideo oldVideo = background.video;
+        for (NativeVideoElement element : elements) {
+            if ((element == null) || element.destroyed_FancyMenu) continue;
+            IVideo oldVideo = element.video;
             if (oldVideo != null) {
                 videosToRelease.add(oldVideo);
             }
-            if (background.resetBackgroundAndReturnStopState()) {
+            if (element.resetElementAndReturnStopState()) {
                 stoppedCount++;
             }
             resetCount++;
@@ -185,7 +162,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
             }
         }
 
-        LOGGER.info("[FANCYMENU] Forced native video background reload after sound engine reload. backgroundsReset: {}, stoppedPlayers: {}, videoResourcesReleased: {}",
+        LOGGER.info("[FANCYMENU] Forced native video element reload after sound engine reload. elementsReset: {}, stoppedPlayers: {}, videoResourcesReleased: {}",
                 resetCount,
                 stoppedCount,
                 releasedCount);
@@ -193,97 +170,30 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         return resetCount;
     }
 
-    public static void savePauseThumbnailForBackgroundIdentifier_FancyMenu(@Nullable String identifier) {
-        if ((identifier == null) || identifier.isBlank()) return;
-        List<NativeVideoMenuBackground> backgrounds;
-        synchronized (BACKGROUND_INSTANCE_LOCK_FANCYMENU) {
-            backgrounds = new ArrayList<>(BACKGROUND_INSTANCES_FANCYMENU);
-        }
-        for (NativeVideoMenuBackground background : backgrounds) {
-            if (background == null) continue;
-            if (!identifier.equals(background.getInstanceIdentifier())) continue;
-            background.trySaveCurrentFrameThumbnail_FancyMenu();
-        }
-    }
-
     @Override
-    protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
-
-        this.videoSupplier.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((m, entry) -> {
-                    ResourceSupplier<IVideo> supplier = this.videoSupplier.get();
-                    if (supplier == null) {
-                        return UITooltip.of(Component.translatable("fancymenu.backgrounds.video.configure.no_video"));
-                    }
-                    return null;
-                })
-                .setIcon(MaterialIcons.MOVIE);
-
-        menu.addSeparatorEntry("separator_after_video_source");
-
-        this.loop.buildContextMenuEntryAndAddTo(menu, this)
-                .setIcon(MaterialIcons.REPEAT);
-        this.volume.buildContextMenuEntryAndAddTo(menu, this)
-                .setIcon(MaterialIcons.VOLUME_UP);
-
-        List<SoundSource> soundSources = Arrays.asList(SoundSource.values());
-        this.addCycleContextMenuEntryTo(menu, "sound_source", soundSources, NativeVideoMenuBackground.class, NativeVideoMenuBackground::getSoundSourceOrDefault, (background, source) -> {
-            if (source != null) {
-                background.soundSource.set(source.getName());
-            }
-        }, (menu1, entry, switcherValue) -> {
-            Component name = Component.translatable("soundCategory." + switcherValue.getName())
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
-            return Component.translatable("fancymenu.elements.video_mcef.sound_channel", name);
-        }).setIcon(MaterialIcons.SPEAKER);
-
-        menu.addSeparatorEntry("separator_before_parallax");
-
-        this.parallaxEnabled.buildContextMenuEntryAndAddTo(menu, this)
-                .setIcon(MaterialIcons._3D);
-        this.parallaxIntensityXString.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_x.desc")))
-                .setIcon(MaterialIcons.SPLITSCREEN_LANDSCAPE);
-        this.parallaxIntensityYString.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_y.desc")))
-                .setIcon(MaterialIcons.SPLITSCREEN_PORTRAIT);
-        this.invertParallax.buildContextMenuEntryAndAddTo(menu, this)
-                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.invert_parallax.desc")))
-                .setIcon(MaterialIcons.SWAP_HORIZ);
-
-        menu.addSeparatorEntry("separator_before_play_in_editor");
-
-        this.playInEditor.buildContextMenuEntryAndAddTo(menu, this)
-                .setIcon(MaterialIcons.EDIT);
-
+    public void afterConstruction() {
+        super.afterConstruction();
+        if (!VideoElementController.hasMetaFor(this.getInstanceIdentifier())) {
+            VideoElementController.putMeta(this.getInstanceIdentifier(), new VideoElementController.VideoElementMeta(this.getInstanceIdentifier(), 1.0F, false));
+        }
+        if (getSoundSourceByName(Objects.requireNonNullElse(this.soundSource.get(), SoundSource.MASTER.getName())) == null) {
+            this.soundSource.set(SoundSource.MASTER.getName());
+        }
     }
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        float parallaxIntensityX = this.parallaxIntensityXString.getFloat();
-        float parallaxIntensityY = this.parallaxIntensityYString.getFloat();
+        if (!this.shouldRender()) return;
 
         this.lastRenderTickTime = System.currentTimeMillis();
 
+        int x = this.getAbsoluteX();
+        int y = this.getAbsoluteY();
+        int w = this.getAbsoluteWidth();
+        int h = this.getAbsoluteHeight();
+
         RenderSystem.enableBlend();
-
-        float[] parallaxOffset = calculateParallaxOffset(mouseX, mouseY, parallaxIntensityX, parallaxIntensityY);
-        int x = 0;
-        int y = 0;
-        int w = getScreenWidth();
-        int h = getScreenHeight();
-
-        if (this.parallaxEnabled.tryGetNonNull()) {
-            // Reduce the expansion amount for parallax
-            w = (int) (getScreenWidth() * (1.0F + parallaxIntensityX));
-            h = (int) (getScreenHeight() * (1.0F + parallaxIntensityY));
-            // Center the expanded area and apply parallax offset
-            x = -((w - getScreenWidth()) / 2) + (int) parallaxOffset[0];
-            y = -((h - getScreenHeight()) / 2) + (int) parallaxOffset[1];
-        }
-
-        // Always draw black background
         graphics.fill(x, y, x + w, y + h, DrawableColor.BLACK.getColorIntWithAlpha(this.opacity));
 
         ResourceSupplier<IVideo> supplier = this.videoSupplier.get();
@@ -296,7 +206,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         this.tickWatermediaMissingOverlayMouseClick_FancyMenu(showWatermediaWarning, resolvedMouseX_FancyMenu, resolvedMouseY_FancyMenu);
 
         if (showWatermediaWarning) {
-            this.renderWatermediaMissingOverlay_FancyMenu(graphics, resolvedMouseX_FancyMenu, resolvedMouseY_FancyMenu);
+            this.renderWatermediaMissingOverlay_FancyMenu(graphics, resolvedMouseX_FancyMenu, resolvedMouseY_FancyMenu, x, y, w, h);
             RenderingUtils.resetShaderColor(graphics);
             RenderSystem.disableBlend();
             return;
@@ -333,7 +243,6 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
                     || this.video.isPaused()
                     || !this.video.isPlaying()
                     || (loop && this.video.isEnded());
-            // Keep editor playback alive even when lifecycle hooks paused the player in between renders.
             if (!this.shouldKeepNaturalEndedState(this.video) && shouldRecoverPlayback) {
                 this.video.play();
             }
@@ -341,28 +250,22 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         this.lastPausedState = pausedState;
 
         ResourceLocation resourceLocation = this.video.getResourceLocation();
-        boolean missingPausedFrame = pausedState && ((resourceLocation == null) || Objects.equals(resourceLocation, MISSING_TEXTURE_FANCYMENU));
-        if (missingPausedFrame) {
-            this.renderPausedThumbnailFallback_FancyMenu(graphics, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
-        } else if (resourceLocation != null) {
+        if ((resourceLocation != null) && !Objects.equals(resourceLocation, MISSING_TEXTURE_FANCYMENU)) {
             graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
-            if (this.keepBackgroundAspectRatio) {
-                this.renderKeepAspectRatio(graphics, resourceLocation, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
+            if (this.preserveAspectRatio.tryGetNonNull()) {
+                this.renderKeepAspectRatio(graphics, resourceLocation, this.video.getAspectRatio());
             } else {
-                this.renderFullScreen(graphics, resourceLocation, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
+                this.renderFullArea(graphics, resourceLocation);
             }
         }
 
         RenderingUtils.resetShaderColor(graphics);
-
         RenderSystem.disableBlend();
-
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (MouseUtil.MouseButton.fromGlfwButton(button) != MouseUtil.MouseButton.LEFT && !MouseUtil.isLeftMouseDown()) return false;
-        if (!this.showBackground.tryGetNonNull()) return false;
         if (!this.shouldRenderWatermediaMissingOverlay_FancyMenu(this.videoSupplier.get())) return false;
         double resolvedMouseX_FancyMenu = MouseUtil.getGuiScaledMouseX();
         double resolvedMouseY_FancyMenu = MouseUtil.getGuiScaledMouseY();
@@ -397,10 +300,8 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         return (supplier != null) && !WatermediaUtil.isWatermediaVideoPlaybackAvailable();
     }
 
-    protected void renderWatermediaMissingOverlay_FancyMenu(@NotNull GuiGraphics graphics, double mouseX, double mouseY) {
-        int width = getScreenWidth();
-        int height = getScreenHeight();
-        graphics.fill(0, 0, width, height, WATERMEDIA_MISSING_BACKGROUND_COLOR_FANCYMENU.getColorIntWithAlpha(this.opacity));
+    protected void renderWatermediaMissingOverlay_FancyMenu(@NotNull GuiGraphics graphics, double mouseX, double mouseY, int x, int y, int w, int h) {
+        graphics.fill(x, y, x + w, y + h, WATERMEDIA_MISSING_BACKGROUND_COLOR_FANCYMENU.getColorIntWithAlpha(this.opacity));
 
         Component infoText = Component.translatable("fancymenu.backgrounds.video.watermedia_missing.info");
         Component downloadText = Component.translatable("fancymenu.backgrounds.video.watermedia_missing.download");
@@ -417,11 +318,11 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         float spacing = Math.max(4.0F, UIBase.getUITextHeightSmall());
         float totalHeight = infoTextHeight + spacing + downloadTextHeight + spacing + downloadBinariesTextHeight;
 
-        float infoX = (width / 2.0F) - (infoTextWidth / 2.0F);
-        float infoY = (height / 2.0F) - (totalHeight / 2.0F);
-        float downloadX = (width / 2.0F) - (downloadTextWidth / 2.0F);
+        float infoX = (x + (w / 2.0F)) - (infoTextWidth / 2.0F);
+        float infoY = (y + (h / 2.0F)) - (totalHeight / 2.0F);
+        float downloadX = (x + (w / 2.0F)) - (downloadTextWidth / 2.0F);
         float downloadY = infoY + infoTextHeight + spacing;
-        float downloadBinariesX = (width / 2.0F) - (downloadBinariesTextWidth / 2.0F);
+        float downloadBinariesX = (x + (w / 2.0F)) - (downloadBinariesTextWidth / 2.0F);
         float downloadBinariesY = downloadY + downloadTextHeight + spacing;
 
         this.watermediaDownloadX_FancyMenu = downloadX;
@@ -484,65 +385,15 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         this.watermediaBinariesDownloadHeight_FancyMenu = Float.NaN;
     }
 
-    protected void renderKeepAspectRatio(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset, float parallaxIntensityX, float parallaxIntensityY) {
-        this.renderKeepAspectRatioWithAspectRatio_FancyMenu(graphics, resourceLocation, this.video.getAspectRatio(), parallaxOffset, parallaxIntensityX, parallaxIntensityY);
+    protected void renderKeepAspectRatio(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, @NotNull AspectRatio ratio) {
+        int[] size = ratio.getAspectRatioSizeByMaximumSize(this.getAbsoluteWidth(), this.getAbsoluteHeight());
+        int x = this.getAbsoluteX() + ((this.getAbsoluteWidth() - size[0]) / 2);
+        int y = this.getAbsoluteY() + ((this.getAbsoluteHeight() - size[1]) / 2);
+        graphics.blit(resourceLocation, x, y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
     }
 
-    protected void renderKeepAspectRatioWithAspectRatio_FancyMenu(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, @NotNull AspectRatio ratio, float[] parallaxOffset, float parallaxIntensityX, float parallaxIntensityY) {
-        boolean parallax = this.parallaxEnabled.tryGetNonNull();
-        float parallaxScaleX = parallax ? (1.0F + parallaxIntensityX) : 1.0F;
-        float parallaxScaleY = parallax ? (1.0F + parallaxIntensityY) : 1.0F;
-        int[] baseSize = ratio.getAspectRatioSizeByMinimumSize(
-                (int)(getScreenWidth() * parallaxScaleX),
-                (int)(getScreenHeight() * parallaxScaleY)
-        );
-
-        int x = (getScreenWidth() - baseSize[0]) / 2 + (int)parallaxOffset[0];
-        int y = (getScreenHeight() - baseSize[1]) / 2 + (int)parallaxOffset[1];
-
-        graphics.blit(resourceLocation, x, y, 0.0F, 0.0F, baseSize[0], baseSize[1], baseSize[0], baseSize[1]);
-    }
-
-    protected boolean renderPausedThumbnailFallback_FancyMenu(@NotNull GuiGraphics graphics, float[] parallaxOffset, float parallaxIntensityX, float parallaxIntensityY) {
-        ITexture thumbnail = this.getPausedThumbnailTexture_FancyMenu();
-        if (thumbnail == null) return false;
-        ResourceLocation thumbnailLocation = thumbnail.getResourceLocation();
-        if ((thumbnailLocation == null) || Objects.equals(thumbnailLocation, ITexture.MISSING_TEXTURE_LOCATION)) return false;
-        graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
-        if (this.keepBackgroundAspectRatio) {
-            this.renderKeepAspectRatioWithAspectRatio_FancyMenu(graphics, thumbnailLocation, thumbnail.getAspectRatio(), parallaxOffset, parallaxIntensityX, parallaxIntensityY);
-        } else {
-            this.renderFullScreen(graphics, thumbnailLocation, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
-        }
-        return true;
-    }
-
-    @Nullable
-    protected ITexture getPausedThumbnailTexture_FancyMenu() {
-        File thumbnailFile = getThumbnailFileForIdentifier_FancyMenu(this.getInstanceIdentifier());
-        if (!thumbnailFile.isFile()) return null;
-        String thumbnailSource = toLocalThumbnailSource_FancyMenu(thumbnailFile);
-        if ((this.pausedThumbnailSupplier == null) || !Objects.equals(this.pausedThumbnailSource, thumbnailSource)) {
-            this.pausedThumbnailSupplier = ResourceSupplier.image(thumbnailSource);
-            this.pausedThumbnailSource = thumbnailSource;
-        }
-        ITexture thumbnail = this.pausedThumbnailSupplier.get();
-        if ((thumbnail == null) || thumbnail.isLoadingFailed()) return null;
-        return thumbnail;
-    }
-
-    protected void renderFullScreen(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset, float parallaxIntensityX, float parallaxIntensityY) {
-        if (this.parallaxEnabled.tryGetNonNull()) {
-            int expandedWidth = (int)(getScreenWidth() * (1.0F + parallaxIntensityX));
-            int expandedHeight = (int)(getScreenHeight() * (1.0F + parallaxIntensityY));
-
-            int x = -((expandedWidth - getScreenWidth()) / 2) + (int)parallaxOffset[0];
-            int y = -((expandedHeight - getScreenHeight()) / 2) + (int)parallaxOffset[1];
-
-            graphics.blit(resourceLocation, x, y, 0.0F, 0.0F, expandedWidth, expandedHeight, expandedWidth, expandedHeight);
-        } else {
-            graphics.blit(resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
-        }
+    protected void renderFullArea(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation) {
+        graphics.blit(resourceLocation, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
     }
 
     protected void updateVideoReference(@Nullable IVideo newVideo) {
@@ -551,11 +402,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
 
         IVideo oldVideo = this.video;
         String oldVideoSource = this.activeVideoSource;
-        boolean sourceChanged = !Objects.equals(oldVideoSource, newVideoSource);
         if (oldVideo != null) {
-            if (sourceChanged && isEditor()) {
-                oldVideo.stop();
-            }
             this.releaseVideoReference(oldVideo, oldVideoSource);
         }
 
@@ -572,35 +419,12 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         this.cachedActualVolume = -10000F;
         this.lastCachedActualVolume = -11000F;
         this.lastPausedState = null;
-        this.pausedThumbnailSupplier = null;
-        this.pausedThumbnailSource = null;
         this.resetWatermediaDownloadLinkBounds_FancyMenu();
 
         if (newVideo == null) {
             this.cachedDuration.set(0F);
             this.cachedPlayTime.set(0F);
         }
-    }
-
-    protected float[] calculateParallaxOffset(int mouseX, int mouseY, float parallaxIntensityX, float parallaxIntensityY) {
-
-        if (!this.parallaxEnabled.tryGetNonNull()) {
-            return new float[]{0, 0};
-        }
-
-        // Calculate mouse position as a percentage from the center of the screen
-        float mouseXPercent = (2.0f * mouseX / getScreenWidth()) - 1.0f;
-        float mouseYPercent = (2.0f * mouseY / getScreenHeight()) - 1.0f;
-
-        // Apply inversion if enabled
-        float directionMultiplier = this.invertParallax.tryGetNonNull() ? 1.0f : -1.0f;
-
-        // Calculate offset based on screen dimensions and center-adjusted mouse position
-        float xOffset = directionMultiplier * parallaxIntensityX * mouseXPercent * getScreenWidth() * 0.5f;
-        float yOffset = directionMultiplier * parallaxIntensityY * mouseYPercent * getScreenHeight() * 0.5f;
-
-        return new float[]{xOffset, yOffset};
-
     }
 
     @Override
@@ -620,18 +444,40 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     }
 
     @Override
-    public void onAfterEnable() {
-        super.onAfterEnable();
-        this.tryResumeFromSystemPauseIfNeeded();
-    }
-
-    @Override
-    public void onDisableOrRemove() {
-        super.onDisableOrRemove();
+    public void onBeforeResizeScreen() {
+        super.onBeforeResizeScreen();
         if (this.initialized && (this.video != null)) {
             this.cachePlaybackPositionToMemory(this.video, this.activeVideoSource, true);
             this.pausedBySystem = true;
             this.video.pause();
+        }
+    }
+
+    @Override
+    public void onBecomeVisible() {
+        super.onBecomeVisible();
+        this.tryResumeFromSystemPauseIfNeeded();
+    }
+
+    @Override
+    public void onBecomeInvisible() {
+        super.onBecomeInvisible();
+        if (this.initialized && (this.video != null)) {
+            this.cachePlaybackPositionToMemory(this.video, this.activeVideoSource, true);
+            this.pausedBySystem = true;
+            this.video.pause();
+        }
+    }
+
+    @Override
+    public void onDestroyElement() {
+        super.onDestroyElement();
+        this.destroyed_FancyMenu = true;
+        this.garbageChecker.cancel(true);
+        this.asyncTicker.cancel(true);
+        this.resetElement();
+        synchronized (ELEMENT_INSTANCE_LOCK_FANCYMENU) {
+            ELEMENT_INSTANCES_FANCYMENU.remove(this);
         }
     }
 
@@ -683,11 +529,11 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         return meta.paused;
     }
 
-    public void resetBackground() {
-        this.resetBackgroundAndReturnStopState();
+    public void resetElement() {
+        this.resetElementAndReturnStopState();
     }
 
-    protected boolean resetBackgroundAndReturnStopState() {
+    protected boolean resetElementAndReturnStopState() {
         boolean didStopPlayer = false;
         IVideo oldVideo = this.video;
         String oldVideoSource = this.activeVideoSource;
@@ -703,8 +549,6 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         this.lastPausedState = null;
         this.lastRenderTickTime = -1L;
         this.pausedBySystem = false;
-        this.pausedThumbnailSupplier = null;
-        this.pausedThumbnailSource = null;
         this.resetWatermediaDownloadLinkBounds_FancyMenu();
         this.cachedDuration.set(0F);
         this.cachedPlayTime.set(0F);
@@ -723,8 +567,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
 
     protected boolean _isPaused() {
         if (isEditor()) {
-            if (!this.playInEditor.tryGetNonNull()) return true;
-            return false;
+            return !this.playInEditor.tryGetNonNull();
         }
         return (this.getControllerPausedState() || this.pausedBySystem);
     }
@@ -738,54 +581,6 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         }
         if (!this.shouldKeepNaturalEndedState(this.video)) {
             this.video.play();
-        }
-    }
-
-    protected void trySaveCurrentFrameThumbnail_FancyMenu() {
-        if (!this.initialized || (this.video == null)) return;
-        ResourceLocation resourceLocation = this.video.getResourceLocation();
-        if ((resourceLocation == null) || Objects.equals(resourceLocation, MISSING_TEXTURE_FANCYMENU)) return;
-        int width = Math.max(1, this.video.getWidth());
-        int height = Math.max(1, this.video.getHeight());
-        String identifier = this.getInstanceIdentifier();
-        Runnable captureTask = () -> this.saveCurrentFrameThumbnailOnRenderThread_FancyMenu(identifier, resourceLocation, width, height);
-        if (RenderSystem.isOnRenderThreadOrInit()) {
-            captureTask.run();
-        } else {
-            RenderSystem.recordRenderCall(captureTask::run);
-        }
-    }
-
-    protected void saveCurrentFrameThumbnailOnRenderThread_FancyMenu(@NotNull String identifier, @NotNull ResourceLocation resourceLocation, int width, int height) {
-        NativeImage image = null;
-        try {
-            AbstractTexture texture = Minecraft.getInstance().getTextureManager().getTexture(resourceLocation);
-            if (texture == null) return;
-            int textureId = texture.getId();
-            if (textureId <= 0) return;
-            GlStateManager._bindTexture(textureId);
-            image = new NativeImage(width, height, false);
-            image.downloadTexture(0, false);
-            File thumbnailFile = getThumbnailFileForIdentifier_FancyMenu(identifier);
-            FileUtils.createDirectory(thumbnailFile.getParentFile());
-            NativeImage capturedImage = image;
-            image = null;
-            Util.ioPool().execute(() -> {
-                try {
-                    capturedImage.writeToFile(thumbnailFile);
-                    releaseCachedThumbnailTexture_FancyMenu(thumbnailFile);
-                } catch (Exception ex) {
-                    LOGGER.warn("[FANCYMENU] Failed to save paused native video thumbnail. backgroundId: {}", identifier, ex);
-                } finally {
-                    capturedImage.close();
-                }
-            });
-        } catch (Exception ex) {
-            LOGGER.warn("[FANCYMENU] Failed to save paused native video thumbnail. backgroundId: {}", identifier, ex);
-        } finally {
-            if (image != null) {
-                image.close();
-            }
         }
     }
 
@@ -810,7 +605,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     }
 
     @Nullable
-    protected static SoundSource getSoundSourceByName(@NotNull String name) {
+    public static SoundSource getSoundSourceByName(@NotNull String name) {
         for (SoundSource source : SoundSource.values()) {
             if (source.getName().equals(name)) return source;
         }
@@ -843,7 +638,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     protected boolean releaseVideoReference(@NotNull IVideo video, @Nullable String source) {
         boolean shouldStop = NativeVideoReferenceTracker.release(video);
         // Video resources are shared by source via ResourceHandler cache.
-        // Only stop once this was the last known background reference, otherwise another background would get interrupted.
+        // Only stop once this was the last known reference, otherwise another element/background would get interrupted.
         if (shouldStop) {
             this.cachePlaybackPositionToMemory(video, source, !this.pausedBySystem);
             video.stop();
@@ -942,40 +737,4 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         String endedSource = this.getMemory().getStringProperty(MEMORY_LAST_ENDED_SOURCE_FANCYMENU);
         return Objects.equals(source, endedSource);
     }
-
-    @NotNull
-    protected static File getThumbnailFileForIdentifier_FancyMenu(@NotNull String identifier) {
-        return new File(VIDEO_THUMBNAIL_DIR_FANCYMENU, sanitizeThumbnailFileName_FancyMenu(identifier) + ".png");
-    }
-
-    @NotNull
-    protected static String sanitizeThumbnailFileName_FancyMenu(@NotNull String identifier) {
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < identifier.length(); i++) {
-            char c = identifier.charAt(i);
-            boolean allowed = ((c >= 'a') && (c <= 'z'))
-                    || ((c >= 'A') && (c <= 'Z'))
-                    || ((c >= '0') && (c <= '9'))
-                    || (c == '-')
-                    || (c == '_')
-                    || (c == '.');
-            builder.append(allowed ? c : '_');
-        }
-        if (builder.isEmpty()) return "video_background";
-        return builder.toString();
-    }
-
-    @NotNull
-    protected static String toLocalThumbnailSource_FancyMenu(@NotNull File thumbnailFile) {
-        return ResourceSource.of(thumbnailFile.getAbsolutePath().replace("\\", "/"), ResourceSourceType.LOCAL).getSourceWithPrefix();
-    }
-
-    protected static void releaseCachedThumbnailTexture_FancyMenu(@NotNull File thumbnailFile) {
-        try {
-            ResourceHandlers.getImageHandler().release(toLocalThumbnailSource_FancyMenu(thumbnailFile), true);
-        } catch (Exception ex) {
-            LOGGER.warn("[FANCYMENU] Failed to release cached native video thumbnail texture.", ex);
-        }
-    }
-
 }

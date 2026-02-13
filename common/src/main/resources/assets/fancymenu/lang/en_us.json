@@ -3230,5 +3230,8 @@
   "fancymenu.listeners.on_video_playback_status_changed.desc": "This listener triggers whenever video playback state changes.\n\nPossible values for §z$$new_status§r:\n- PLAYING: Video started and is now playing (including when resuming from pause)\n- STOPPED: Video was stopped through stop()\n- PAUSED: Video was paused through pause()\n- FINISHED: Video naturally reached the end of playback\n\nIf looping is enabled, FINISHED is emitted when the end is reached, right before the next loop starts.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$video_source §r= The source of the video (local path, web URL or resource location)\n- §z$$video_source_type §r= Source type (LOCAL, WEB, RESOURCE_LOCATION)\n- §z$$is_looping §r= TRUE if looping is enabled, otherwise FALSE\n- §z$$new_status §r= New playback status (PLAYING, STOPPED, PAUSED, FINISHED)",
   "fancymenu.overlay.menu_bar.customization.settings.game_intro.volume.tooltip": "Valid range: 0.0 to 1.0.\n0.0 = muted (0%%), 1.0 = full volume (100%%).\nValues in-between scale linearly.",
   "fancymenu.backgrounds.video.watermedia_missing.download_binaries": "Download Watermedia Binaries",
-  "fancymenu.ui.filechooser.preview.watermedia_recommended_apng_gif": "It is recommended to install Watermedia when working with APNG and GIF textures, for better performance and less RAM consumption."
+  "fancymenu.ui.filechooser.preview.watermedia_recommended_apng_gif": "It is recommended to install Watermedia when working with APNG and GIF textures, for better performance and less RAM consumption.",
+  "fancymenu.elements.video": "Video",
+  "fancymenu.elements.video.desc": "A native video player powered by Watermedia V3.\nSupports local, web and resource location video sources.",
+  "fancymenu.elements.video.configure.no_video": "§xYou need to choose a video first!"
 }
