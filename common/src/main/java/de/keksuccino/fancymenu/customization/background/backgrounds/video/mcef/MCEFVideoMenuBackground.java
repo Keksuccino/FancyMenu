@@ -251,6 +251,7 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
             }
         }
 
+        this.tryApplyPendingControllerSeekTimeMs(finalVideoUrl != null);
         if ((this.lastPausedState == null) || !Objects.equals(pausedState, this.lastPausedState)) {
             if (pausedState) {
                 this.videoPlayer.pause();
@@ -375,6 +376,19 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
         VideoElementController.VideoElementMeta meta = VideoElementController.getMeta(this.getInstanceIdentifier());
         if (meta == null) return false;
         return meta.paused;
+    }
+
+    protected void tryApplyPendingControllerSeekTimeMs(boolean hasVideoSource) {
+        if (!this.initialized || (this.videoPlayer == null) || !hasVideoSource) return;
+        if (this.cachedDuration.get() <= 0.0F) return;
+        Long pendingSeekTimeMs = VideoElementController.pollPendingSeekTimeMs(this.getInstanceIdentifier());
+        if (pendingSeekTimeMs == null) return;
+        try {
+            this.videoPlayer.setCurrentTimeMillis(Math.max(0L, pendingSeekTimeMs));
+            this.cachedPlayTime.set(Math.max(0.0F, pendingSeekTimeMs / 1000.0F));
+        } catch (Exception ex) {
+            LOGGER.warn("[FANCYMENU] Failed to apply pending seek time to MCEF video background. backgroundId: {}, seekTimeMs: {}", this.getInstanceIdentifier(), pendingSeekTimeMs, ex);
+        }
     }
 
     public void disposePlayer() {

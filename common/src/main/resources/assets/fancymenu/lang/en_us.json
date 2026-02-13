@@ -3233,5 +3233,11 @@
   "fancymenu.ui.filechooser.preview.watermedia_recommended_apng_gif": "It is recommended to install Watermedia when working with APNG and GIF textures, for better performance and less RAM consumption.",
   "fancymenu.elements.video": "Video",
   "fancymenu.elements.video.desc": "A native video player powered by Watermedia V3.\nSupports local, web and resource location video sources.",
-  "fancymenu.elements.video.configure.no_video": "§xYou need to choose a video first!"
+  "fancymenu.elements.video.configure.no_video": "§xYou need to choose a video first!",
+  "fancymenu.actions.video.set_video_element_play_time": "Set Video Element Play Time",
+  "fancymenu.actions.video.set_video_element_play_time.desc": "Seeks a Video element to a specific play time in milliseconds.\nThe time is forced to be at least 0 and is not clamped to the video duration.",
+  "fancymenu.actions.video.set_video_element_play_time.value.desc": "Video Element Identifier + Play Time in Milliseconds [ Separated by : ]",
+  "fancymenu.actions.video.set_video_background_play_time": "Set Video Background Play Time",
+  "fancymenu.actions.video.set_video_background_play_time.desc": "Seeks a Video menu background to a specific play time in milliseconds by its identifier.\nThe time is forced to be at least 0 and is not clamped to the video duration.\n\nTo get the identifier of a background, right-click the\neditor background and click on 'Copy Background Identifier'.",
+  "fancymenu.actions.video.set_video_background_play_time.value.desc": "Video Background Identifier + Play Time in Milliseconds [ Separated by : ]"
 }

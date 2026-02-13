@@ -331,6 +331,7 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
             return;
         }
 
+        this.tryApplyPendingControllerSeekTimeMs();
         this.updateVolume();
         if ((this.lastCachedActualVolume == -11000F) || (this.cachedActualVolume != this.lastCachedActualVolume)) {
             this.setVolume(this.volume.tryGetNonNull(), true);
@@ -661,6 +662,20 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
         VideoElementController.VideoElementMeta meta = VideoElementController.getMeta(this.getInstanceIdentifier());
         if (meta == null) return false;
         return meta.paused;
+    }
+
+    protected void tryApplyPendingControllerSeekTimeMs() {
+        if (!this.initialized || (this.video == null)) return;
+        Long pendingSeekTimeMs = VideoElementController.pollPendingSeekTimeMs(this.getInstanceIdentifier());
+        if (pendingSeekTimeMs == null) return;
+        float seekTimeSeconds = Math.max(0.0F, pendingSeekTimeMs / 1000.0F);
+        try {
+            this.video.setPlayTime(seekTimeSeconds);
+            this.cachedPlayTime.set(seekTimeSeconds);
+            this.setEndedStateInMemory(this.activeVideoSource, false);
+        } catch (Exception ex) {
+            LOGGER.warn("[FANCYMENU] Failed to apply pending seek time to native video element. elementId: {}, seekTimeMs: {}", this.getInstanceIdentifier(), pendingSeekTimeMs, ex);
+        }
     }
 
     public void resetElement() {

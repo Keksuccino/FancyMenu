@@ -26,8 +26,10 @@ import de.keksuccino.fancymenu.customization.action.actions.screen.UpdateScreenA
 import de.keksuccino.fancymenu.customization.action.actions.variables.ClearVariablesAction;
 import de.keksuccino.fancymenu.customization.action.actions.variables.SetVariableAction;
 import de.keksuccino.fancymenu.customization.action.ActionRegistry;
+import de.keksuccino.fancymenu.customization.action.actions.video.background.SetVideoMenuBackgroundPlayTimeAction;
 import de.keksuccino.fancymenu.customization.action.actions.video.background.SetVideoMenuBackgroundVolumeAction;
 import de.keksuccino.fancymenu.customization.action.actions.video.background.ToggleVideoMenuBackgroundPauseStateAction;
+import de.keksuccino.fancymenu.customization.action.actions.video.element.SetVideoElementPlayTimeAction;
 import de.keksuccino.fancymenu.customization.action.actions.video.element.SetVideoElementVolumeAction;
 import de.keksuccino.fancymenu.customization.action.actions.video.element.ToggleVideoElementPauseStateAction;
 
@@ -64,8 +66,10 @@ public class Actions {
     public static final StopAllActionAudiosAction STOP_ALL_ACTION_AUDIOS = new StopAllActionAudiosAction();
     public static final BackToLastScreenAction BACK_TO_LAST_SCREEN = new BackToLastScreenAction();
     public static final SetVideoElementVolumeAction SET_VIDEO_ELEMENT_VOLUME = new SetVideoElementVolumeAction();
+    public static final SetVideoElementPlayTimeAction SET_VIDEO_ELEMENT_PLAY_TIME = new SetVideoElementPlayTimeAction();
     public static final ToggleVideoElementPauseStateAction TOGGLE_VIDEO_ELEMENT_PAUSE_STATE = new ToggleVideoElementPauseStateAction();
     public static final SetVideoMenuBackgroundVolumeAction SET_VIDEO_MENU_BACKGROUND_VOLUME = new SetVideoMenuBackgroundVolumeAction();
+    public static final SetVideoMenuBackgroundPlayTimeAction SET_VIDEO_MENU_BACKGROUND_PLAY_TIME = new SetVideoMenuBackgroundPlayTimeAction();
     public static final ToggleVideoMenuBackgroundPauseStateAction TOGGLE_VIDEO_MENU_BACKGROUND_PAUSE_STATE = new ToggleVideoMenuBackgroundPauseStateAction();
     public static final ToggleElementAnimatorAction TOGGLE_ELEMENT_ANIMATOR = new ToggleElementAnimatorAction();
     public static final EnableElementAnimatorAction ENABLE_ELEMENT_ANIMATOR = new EnableElementAnimatorAction();
@@ -123,8 +127,10 @@ public class Actions {
         ActionRegistry.register(STOP_ALL_ACTION_AUDIOS);
         ActionRegistry.register(BACK_TO_LAST_SCREEN);
         ActionRegistry.register(SET_VIDEO_ELEMENT_VOLUME);
+        ActionRegistry.register(SET_VIDEO_ELEMENT_PLAY_TIME);
         ActionRegistry.register(TOGGLE_VIDEO_ELEMENT_PAUSE_STATE);
         ActionRegistry.register(SET_VIDEO_MENU_BACKGROUND_VOLUME);
+        ActionRegistry.register(SET_VIDEO_MENU_BACKGROUND_PLAY_TIME);
         ActionRegistry.register(TOGGLE_VIDEO_MENU_BACKGROUND_PAUSE_STATE);
         ActionRegistry.register(TOGGLE_ELEMENT_ANIMATOR);
         ActionRegistry.register(ENABLE_ELEMENT_ANIMATOR);
@@ -152,7 +158,6 @@ public class Actions {
     }
 
 }
-
 
 
 
