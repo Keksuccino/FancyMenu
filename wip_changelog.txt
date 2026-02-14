@@ -194,6 +194,7 @@
 - The "Duration" placeholders for Video element and menu background now have an "output_as_timestamp" value that makes them return a millisecond timestamp
 - The "Play Time" placeholders for Video element and menu background now have an "output_as_timestamp" value that makes them return a millisecond timestamp
 - APNG and GIF textures now use Watermedia V3 (+ Watermedia Binaries V3) for decoding (when available), which makes them load faster and barely consumes any memory, so you can use long and complex APNG/GIF textures now!
+- Greatly optimized FMA files to use way less memory and load faster while still being performance-friendly
 - The old "Video [MCEF]" menu background type is now DEPRECATED (please switch to the new native "Video" background type powered by Watermedia v3)
 - The old "Video [MCEF]" element is now DEPRECATED (please switch to the new native "Video" element powered by Watermedia v3)
 
