@@ -152,6 +152,15 @@ public abstract class Requirement {
         }
     }
 
+    public void editValueInternal(@NotNull RequirementInstance instance, @NotNull RequirementEditingCompletedFeedback onEditingCompleted, @NotNull RequirementEditingCanceledFeedback onEditingCanceled) {
+        this.editValueInternal(instance, onEditingCompleted, onEditingCanceled, null);
+    }
+
+    public void editValueInternal(@NotNull RequirementInstance instance, @NotNull RequirementEditingCompletedFeedback onEditingCompleted, @NotNull RequirementEditingCanceledFeedback onEditingCanceled, @Nullable PiPWindow parentWindow) {
+        PiPWindowHandler.INSTANCE.withFullscreenInheritanceFrom(parentWindow, () ->
+                this.editValue(instance, onEditingCompleted, onEditingCanceled));
+    }
+
     @NotNull
     protected static Runnable openRequirementValueEditor(@NotNull Screen editorScreen, @NotNull Runnable onWindowClosedExternally) {
         PiPWindow window = new PiPWindow(editorScreen.getTitle())

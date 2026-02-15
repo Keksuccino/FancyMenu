@@ -227,12 +227,91 @@ Default value:
 | `fmInWorld` | `int` | `1` when in a world, else `0` |
 | `fmIsPaused` | `int` | `1` when paused, else `0` |
 | `fmOpacity` | `float` | Effective opacity multiplier (`0..1`) |
+| `fmVariableCount` | `int` | Current amount of FancyMenu variables |
 
 Key action values (`fmKeyEvent.w`):
 
 - `0` = release
 - `1` = press
 - `2` = repeat
+
+## 6.3 FancyMenu Variable Uniform API
+
+FancyMenu variables are exposed directly as runtime uniforms (for background, element, and decoration overlay shaders) without shader recompilation when values change.
+
+### Naming
+
+For each variable `<name>`, FancyMenu exposes:
+
+- `fmVarFloat_<name>`
+- `fmVarInt_<name>`
+- `fmVarBool_<name>`
+- `fmVarVec2_<name>`
+- `fmVarVec3_<name>`
+- `fmVarVec4_<name>`
+- `fmVarExists_<name>` (`1` = variable currently exists, `0` = not present/removed)
+
+Uniform suffix sanitization for `<name>`:
+
+- allowed chars are `[A-Za-z0-9_]`
+- all other chars are converted to `_`
+- if the first char is a digit, `_` is prepended
+
+Examples:
+
+- variable `player_hp` -> suffix `player_hp`
+- variable `player-hp` -> suffix `player_hp`
+- variable `2nd_phase` -> suffix `_2nd_phase`
+
+Important:
+
+- these dynamic variable uniforms are **not auto-declared** in shader source (declare the ones you use manually)
+- avoid variable names that sanitize to the same suffix, because they map to the same GLSL uniform name
+
+### Value conversion
+
+Given variable text value `v`:
+
+- `fmVarFloat_*`: parsed float (`0.0` fallback)
+- `fmVarInt_*`: parsed int (`0` fallback)
+- `fmVarBool_*`: boolean/int interpretation (`true/yes/on/enabled` => `1`, `false/no/off/disabled` => `0`, otherwise numeric non-zero => `1`)
+- vector parsing accepts separators: whitespace, `,`, `;`, `|`
+  - `fmVarVec2_*`: first 2 parsed components
+  - `fmVarVec3_*`: first 3 parsed components
+  - `fmVarVec4_*`: first 4 parsed components
+  - if fewer components are present, the last parsed component is repeated for missing slots
+  - if no numeric components are present, all vector components use scalar fallback
+
+If a variable gets removed:
+
+- `fmVarExists_*` becomes `0`
+- all corresponding `fmVar*_*` values are reset to `0`
+
+### Example declaration and usage
+
+```glsl
+uniform float fmVarFloat_player_hp;
+uniform int fmVarBool_is_boss_phase;
+uniform vec3 fmVarVec3_theme_color;
+uniform int fmVarExists_player_hp;
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    vec2 uv = fragCoord / iResolution.xy;
+
+    float hp = clamp(fmVarFloat_player_hp / 100.0, 0.0, 1.0);
+    vec3 theme = fmVarVec3_theme_color;
+    float boss = float(fmVarBool_is_boss_phase);
+
+    vec3 col = mix(theme * 0.25, theme, hp);
+    col += vec3(0.2, 0.0, 0.0) * boss;
+
+    if (fmVarExists_player_hp == 0) {
+        col = vec3(0.15);
+    }
+
+    fragColor = vec4(col, 1.0);
+}
+```
 
 ## 7. Input Tracking Model
 

@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.util.rendering.glsl;
 
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.customization.variables.Variable;
+import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -26,10 +28,14 @@ import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.temporal.WeekFields;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -54,6 +60,33 @@ public class GlslShaderRuntime {
     private static final int BUFFER_PASS_COUNT = 4;
     private static final int TOTAL_PASS_COUNT = BUFFER_PASS_COUNT + 1;
     private static final int IMAGE_PASS_INDEX = BUFFER_PASS_COUNT;
+
+    // FancyMenu variable API uniforms (replace <name> with the variable name):
+    // fmVarFloat_<name>, fmVarInt_<name>, fmVarBool_<name>, fmVarVec2_<name>, fmVarVec3_<name>,
+    // fmVarVec4_<name>, fmVarExists_<name>, and the global fmVariableCount.
+    private static final String VARIABLE_UNIFORM_FLOAT_PREFIX = "fmVarFloat_";
+    private static final String VARIABLE_UNIFORM_INT_PREFIX = "fmVarInt_";
+    private static final String VARIABLE_UNIFORM_BOOL_PREFIX = "fmVarBool_";
+    private static final String VARIABLE_UNIFORM_VEC2_PREFIX = "fmVarVec2_";
+    private static final String VARIABLE_UNIFORM_VEC3_PREFIX = "fmVarVec3_";
+    private static final String VARIABLE_UNIFORM_VEC4_PREFIX = "fmVarVec4_";
+    private static final String VARIABLE_UNIFORM_EXISTS_PREFIX = "fmVarExists_";
+    private static final Pattern VARIABLE_COMPONENT_SPLIT_PATTERN = Pattern.compile("[\\s,;|]+");
+    private static final VariableUniformValue ZERO_VARIABLE_UNIFORM_VALUE_FANCYMENU = new VariableUniformValue(
+            0.0F,
+            0,
+            0,
+            0.0F,
+            0.0F,
+            0.0F,
+            0.0F,
+            0.0F,
+            0.0F,
+            0.0F,
+            0.0F,
+            0.0F
+    );
+
     private static final UniformDefinition[] UNIFORMS = new UniformDefinition[]{
             new UniformDefinition("iResolution", "uniform vec3 iResolution;"),
             new UniformDefinition("iTime", "uniform float iTime;"),
@@ -97,7 +130,8 @@ public class GlslShaderRuntime {
             new UniformDefinition("fmRealtimeDeltaTicks", "uniform float fmRealtimeDeltaTicks;"),
             new UniformDefinition("fmInWorld", "uniform int fmInWorld;"),
             new UniformDefinition("fmIsPaused", "uniform int fmIsPaused;"),
-            new UniformDefinition("fmOpacity", "uniform float fmOpacity;")
+            new UniformDefinition("fmOpacity", "uniform float fmOpacity;"),
+            new UniformDefinition("fmVariableCount", "uniform int fmVariableCount;")
     };
 
     private static final String[] CACHED_UNIFORM_LOOKUPS = new String[]{
@@ -110,7 +144,8 @@ public class GlslShaderRuntime {
             "fmKeyEvent", "fmKeyEventCount", "fmCharEvent", "fmCharEventCount",
             "fmDateParts", "fmTimeParts", "fmDayOfYear", "fmWeekOfYear",
             "fmUnixTimeSeconds", "fmUnixTimeMilliseconds",
-            "fmPartialTick", "fmGameDeltaTicks", "fmRealtimeDeltaTicks", "fmInWorld", "fmIsPaused", "fmOpacity"
+            "fmPartialTick", "fmGameDeltaTicks", "fmRealtimeDeltaTicks", "fmInWorld", "fmIsPaused", "fmOpacity",
+            "fmVariableCount"
     };
 
     private static final Pattern VERSION_DIRECTIVE_PATTERN = Pattern.compile("(?m)^\\s*#version\\s+.+$");
@@ -139,6 +174,7 @@ public class GlslShaderRuntime {
     private float lastShadertoyMouseX;
     private float lastShadertoyMouseY;
     private boolean hasShadertoyMousePosition;
+    private final Set<String> lastVariableUniformSuffixes_FancyMenu = new HashSet<>();
 
     public enum CompileMode {
         AUTO,
@@ -305,6 +341,29 @@ public class GlslShaderRuntime {
     private record ChannelTextureState(int textureId, float resolutionX, float resolutionY) {
     }
 
+    private record VariableUniformValue(
+            float floatValue,
+            int intValue,
+            int boolValue,
+            float vec2X,
+            float vec2Y,
+            float vec3X,
+            float vec3Y,
+            float vec3Z,
+            float vec4X,
+            float vec4Y,
+            float vec4Z,
+            float vec4W
+    ) {
+    }
+
+    private record VariableUniformSnapshot(
+            @NotNull Map<String, VariableUniformValue> valuesBySuffix,
+            @NotNull Set<String> removedSuffixes,
+            int variableCount
+    ) {
+    }
+
     public GlslShaderRuntime() {
         for (int i = 0; i < TOTAL_PASS_COUNT; i++) {
             this.passPrograms_FancyMenu[i] = new ProgramState();
@@ -382,6 +441,7 @@ public class GlslShaderRuntime {
         }
 
         this.tickTime(settings);
+        VariableUniformSnapshot variableUniformSnapshot = this.buildVariableUniformSnapshot();
 
         int[] previousViewport = new int[4];
         GL11.glGetIntegerv(GL11.GL_VIEWPORT, previousViewport);
@@ -436,7 +496,7 @@ public class GlslShaderRuntime {
                 this.uploadUniforms(minecraft, window, settings, partialTick,
                         areaX, areaY, areaWidth, areaHeight,
                         0, 0, areaWidthPx, areaHeightPx, 0,
-                        screenWidthPx, screenHeightPx, routedChannels);
+                        screenWidthPx, screenHeightPx, routedChannels, variableUniformSnapshot);
                 GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, 6);
                 this.activeUniformProgram_FancyMenu = null;
 
@@ -470,7 +530,7 @@ public class GlslShaderRuntime {
             this.uploadUniforms(minecraft, window, settings, partialTick,
                     areaX, areaY, areaWidth, areaHeight,
                     areaXPx, areaYPxTop, areaWidthPx, areaHeightPx, areaYPxBottom,
-                    screenWidthPx, screenHeightPx, imageChannels);
+                    screenWidthPx, screenHeightPx, imageChannels, variableUniformSnapshot);
             GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, 6);
             this.activeUniformProgram_FancyMenu = null;
 
@@ -536,6 +596,7 @@ public class GlslShaderRuntime {
         this.lastShadertoyMouseX = 0.0F;
         this.lastShadertoyMouseY = 0.0F;
         this.hasShadertoyMousePosition = false;
+        this.lastVariableUniformSuffixes_FancyMenu.clear();
     }
 
     private void tickTime(@NotNull RenderSettings settings) {
@@ -1101,7 +1162,8 @@ public class GlslShaderRuntime {
                                 int areaYPxBottom,
                                 int screenWidthPx,
                                 int screenHeightPx,
-                                @NotNull ChannelTextureState[] channelTextureStates) {
+                                @NotNull ChannelTextureState[] channelTextureStates,
+                                @NotNull VariableUniformSnapshot variableUniformSnapshot) {
 
         if (settings.useInput()) {
             GlslRuntimeEventTracker.syncMouseButtonsFromWindow(window.getWindow());
@@ -1295,6 +1357,8 @@ public class GlslShaderRuntime {
         setUniform1i("fmInWorld", minecraft.level != null ? 1 : 0);
         setUniform1i("fmIsPaused", minecraft.isPaused() ? 1 : 0);
         setUniform1f("fmOpacity", Mth.clamp(settings.opacity(), 0.0F, 1.0F));
+        setUniform1i("fmVariableCount", variableUniformSnapshot.variableCount());
+        this.uploadVariableUniforms(variableUniformSnapshot);
     }
 
     private static int resolveButtonState(@NotNull boolean[] array, int index) {
@@ -1309,6 +1373,190 @@ public class GlslShaderRuntime {
             return 0;
         }
         return array[index];
+    }
+
+    @NotNull
+    private VariableUniformSnapshot buildVariableUniformSnapshot() {
+        List<Variable> variables = VariableHandler.getVariables();
+        variables.sort(Comparator.comparing(Variable::getName));
+
+        Map<String, VariableUniformValue> valuesBySuffix = new HashMap<>();
+        for (Variable variable : variables) {
+            String uniformSuffix = toVariableUniformSuffix(variable.getName());
+            if (uniformSuffix.isEmpty()) {
+                continue;
+            }
+            valuesBySuffix.put(uniformSuffix, parseVariableUniformValue(variable.getValue()));
+        }
+
+        Set<String> removedSuffixes = new HashSet<>(this.lastVariableUniformSuffixes_FancyMenu);
+        removedSuffixes.removeAll(valuesBySuffix.keySet());
+        this.lastVariableUniformSuffixes_FancyMenu.clear();
+        this.lastVariableUniformSuffixes_FancyMenu.addAll(valuesBySuffix.keySet());
+
+        return new VariableUniformSnapshot(valuesBySuffix, removedSuffixes, variables.size());
+    }
+
+    private void uploadVariableUniforms(@NotNull VariableUniformSnapshot snapshot) {
+        for (Map.Entry<String, VariableUniformValue> entry : snapshot.valuesBySuffix().entrySet()) {
+            this.uploadVariableUniformValue(entry.getKey(), entry.getValue(), 1);
+        }
+        for (String removedSuffix : snapshot.removedSuffixes()) {
+            this.uploadVariableUniformValue(removedSuffix, ZERO_VARIABLE_UNIFORM_VALUE_FANCYMENU, 0);
+        }
+    }
+
+    private void uploadVariableUniformValue(@NotNull String suffix, @NotNull VariableUniformValue value, int existsFlag) {
+        setUniform1f(VARIABLE_UNIFORM_FLOAT_PREFIX + suffix, value.floatValue());
+        setUniform1i(VARIABLE_UNIFORM_INT_PREFIX + suffix, value.intValue());
+        setUniform1i(VARIABLE_UNIFORM_BOOL_PREFIX + suffix, value.boolValue());
+        setUniform2f(VARIABLE_UNIFORM_VEC2_PREFIX + suffix, value.vec2X(), value.vec2Y());
+        setUniform3f(VARIABLE_UNIFORM_VEC3_PREFIX + suffix, value.vec3X(), value.vec3Y(), value.vec3Z());
+        setUniform4f(VARIABLE_UNIFORM_VEC4_PREFIX + suffix, value.vec4X(), value.vec4Y(), value.vec4Z(), value.vec4W());
+        setUniform1i(VARIABLE_UNIFORM_EXISTS_PREFIX + suffix, existsFlag);
+    }
+
+    @NotNull
+    private static String toVariableUniformSuffix(@Nullable String variableName) {
+        if (variableName == null || variableName.isEmpty()) {
+            return "";
+        }
+        // Keep mapping deterministic and GLSL-safe so variable updates never require shader recompilation.
+        StringBuilder builder = new StringBuilder(variableName.length() + 2);
+        for (int i = 0; i < variableName.length(); i++) {
+            char c = variableName.charAt(i);
+            if ((c >= 'a' && c <= 'z')
+                    || (c >= 'A' && c <= 'Z')
+                    || (c >= '0' && c <= '9')
+                    || c == '_') {
+                builder.append(c);
+            } else {
+                builder.append('_');
+            }
+        }
+        if (builder.isEmpty()) {
+            return "";
+        }
+        if (builder.charAt(0) >= '0' && builder.charAt(0) <= '9') {
+            builder.insert(0, '_');
+        }
+        return builder.toString();
+    }
+
+    @NotNull
+    private static VariableUniformValue parseVariableUniformValue(@Nullable String rawValue) {
+        String normalized = rawValue == null ? "" : rawValue.trim();
+        float floatValue = parseFloatValue(normalized);
+        int intValue = parseIntValue(normalized, floatValue);
+        int boolValue = parseBoolValue(normalized, floatValue);
+        float[] vec4 = parseVec4Value(normalized, floatValue);
+        return new VariableUniformValue(
+                floatValue,
+                intValue,
+                boolValue,
+                vec4[0],
+                vec4[1],
+                vec4[0],
+                vec4[1],
+                vec4[2],
+                vec4[0],
+                vec4[1],
+                vec4[2],
+                vec4[3]
+        );
+    }
+
+    private static float parseFloatValue(@NotNull String normalizedValue) {
+        if (normalizedValue.isEmpty()) {
+            return 0.0F;
+        }
+        try {
+            return Float.parseFloat(normalizedValue);
+        } catch (Exception ignored) {
+        }
+        float[] components = parseFloatComponents(normalizedValue);
+        if (components.length > 0) {
+            return components[0];
+        }
+        return parseBoolValue(normalizedValue, 0.0F);
+    }
+
+    private static int parseIntValue(@NotNull String normalizedValue, float fallbackFloat) {
+        if (normalizedValue.isEmpty()) {
+            return 0;
+        }
+        try {
+            return Integer.parseInt(normalizedValue);
+        } catch (Exception ignored) {
+        }
+        try {
+            return (int) Float.parseFloat(normalizedValue);
+        } catch (Exception ignored) {
+        }
+        float[] components = parseFloatComponents(normalizedValue);
+        if (components.length > 0) {
+            return (int) components[0];
+        }
+        return (int) fallbackFloat;
+    }
+
+    private static int parseBoolValue(@NotNull String normalizedValue, float fallbackFloat) {
+        if (normalizedValue.isEmpty()) {
+            return 0;
+        }
+        String lower = normalizedValue.toLowerCase(Locale.ROOT);
+        if (lower.equals("true") || lower.equals("yes") || lower.equals("on") || lower.equals("enabled")) {
+            return 1;
+        }
+        if (lower.equals("false") || lower.equals("no") || lower.equals("off") || lower.equals("disabled")) {
+            return 0;
+        }
+        try {
+            return Float.parseFloat(normalizedValue) != 0.0F ? 1 : 0;
+        } catch (Exception ignored) {
+        }
+        return fallbackFloat != 0.0F ? 1 : 0;
+    }
+
+    @NotNull
+    private static float[] parseVec4Value(@NotNull String normalizedValue, float fallbackScalar) {
+        float[] components = parseFloatComponents(normalizedValue);
+        if (components.length == 0) {
+            return new float[]{fallbackScalar, fallbackScalar, fallbackScalar, fallbackScalar};
+        }
+
+        float[] vec4 = new float[4];
+        for (int i = 0; i < 4; i++) {
+            if (i < components.length) {
+                vec4[i] = components[i];
+            } else {
+                vec4[i] = components[components.length - 1];
+            }
+        }
+        return vec4;
+    }
+
+    @NotNull
+    private static float[] parseFloatComponents(@NotNull String value) {
+        if (value.isEmpty()) {
+            return new float[0];
+        }
+        String[] split = VARIABLE_COMPONENT_SPLIT_PATTERN.split(value);
+        List<Float> components = new ArrayList<>(split.length);
+        for (String token : split) {
+            if (token == null || token.isEmpty()) {
+                continue;
+            }
+            try {
+                components.add(Float.parseFloat(token));
+            } catch (Exception ignored) {
+            }
+        }
+        float[] array = new float[components.size()];
+        for (int i = 0; i < components.size(); i++) {
+            array[i] = components.get(i);
+        }
+        return array;
     }
 
     private void setUniform1f(@NotNull String name, float value) {
@@ -1373,7 +1621,7 @@ public class GlslShaderRuntime {
         if (state == null) {
             return null;
         }
-        return state.uniformLocations.get(name);
+        return state.uniformLocations.computeIfAbsent(name, lookup -> GL20.glGetUniformLocation(state.programId, lookup));
     }
 
 }

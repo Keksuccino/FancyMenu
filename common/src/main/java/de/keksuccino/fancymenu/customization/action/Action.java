@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
@@ -119,9 +120,18 @@ public abstract class Action {
 
     @ApiStatus.Internal
     public void editValueInternal(@NotNull ActionInstance instance, @NotNull Action.ActionEditingCompletedFeedback onEditingCompleted, @NotNull Action.ActionEditingCanceledFeedback onEditingCanceled) {
+        this.editValueInternal(instance, onEditingCompleted, onEditingCanceled, null);
+    }
+
+    @ApiStatus.Internal
+    public void editValueInternal(@NotNull ActionInstance instance, @NotNull Action.ActionEditingCompletedFeedback onEditingCompleted, @NotNull Action.ActionEditingCanceledFeedback onEditingCanceled, @Nullable PiPWindow parentWindow) {
         ScreenUtils.blockSetScreenCalls(true);
-        this.editValue(instance, onEditingCompleted, onEditingCanceled);
-        ScreenUtils.blockSetScreenCalls(false);
+        try {
+            PiPWindowHandler.INSTANCE.withFullscreenInheritanceFrom(parentWindow, () ->
+                    this.editValue(instance, onEditingCompleted, onEditingCanceled));
+        } finally {
+            ScreenUtils.blockSetScreenCalls(false);
+        }
     }
 
     public boolean canRunAsync() {

@@ -202,8 +202,12 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             return;
         }
         childWindow.setPosition(parentWindow.getX(), parentWindow.getY());
+        childWindow.setMaximized(parentWindow.isMaximized());
         parentWindow.setVisible(false);
-        childWindow.addCloseCallback(() -> parentWindow.setVisible(true));
+        childWindow.addCloseCallback(() -> {
+            parentWindow.setMaximized(childWindow.isMaximized());
+            parentWindow.setVisible(true);
+        });
     }
 
     @Override
@@ -660,7 +664,8 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                         if (parentWindow != null) {
                             parentWindow.setVisible(true);
                         }
-                    });
+                    },
+                    parentWindow);
         } else if (targetExecutable instanceof IfExecutableBlock block) {
             ManageRequirementsScreen s = new ManageRequirementsScreen(block.condition.copy(false), container -> {
                 if (container != null) {

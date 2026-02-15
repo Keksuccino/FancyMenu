@@ -38,11 +38,14 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
     private long blockedInputOverlayUntilMs = -1L;
     @Nullable
     private PiPWindow blockedInputOverlayWindow;
+    @Nullable
+    private PiPWindow fullscreenInheritanceParentWindow;
 
     private PiPWindowHandler() {
     }
 
     public PiPWindow openWindow(@NotNull PiPWindow window, @Nullable PiPWindow parentWindow) {
+        PiPWindow fullscreenInheritanceParent = (parentWindow != null) ? parentWindow : this.fullscreenInheritanceParentWindow;
         if (parentWindow != null) {
             parentWindow.registerChildWindow(window);
         }
@@ -51,8 +54,14 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
             return window;
         }
         inheritTopLayerSettings(window);
+        if (fullscreenInheritanceParent != null) {
+            window.setMaximized(fullscreenInheritanceParent.isMaximized());
+        }
         windows.add(window);
         window.addCloseCallback(() -> closeWindow(window));
+        if (parentWindow == null && fullscreenInheritanceParent != null) {
+            window.addCloseCallback(() -> fullscreenInheritanceParent.setMaximized(window.isMaximized()));
+        }
         bringToFront(window);
         return window;
     }
@@ -95,6 +104,7 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
     }
 
     private void closeWindowInternal(@NotNull PiPWindow window) {
+        PiPWindow parent = window.getParentWindow();
         boolean closedByScreen = window.consumeClosingFromScreen();
         if (!closedByScreen) {
             var screen = window.getScreen();
@@ -109,8 +119,8 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
             return;
         }
         window.handleClosed();
-        PiPWindow parent = window.getParentWindow();
         if (parent != null) {
+            parent.setMaximized(window.isMaximized());
             parent.unregisterChildWindow(window);
         }
         if (focusedWindow == window) {
@@ -510,6 +520,16 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
             return forced == window;
         }
         return focusedWindow == window;
+    }
+
+    public void withFullscreenInheritanceFrom(@Nullable PiPWindow parentWindow, @NotNull Runnable action) {
+        PiPWindow previousParent = this.fullscreenInheritanceParentWindow;
+        this.fullscreenInheritanceParentWindow = parentWindow;
+        try {
+            action.run();
+        } finally {
+            this.fullscreenInheritanceParentWindow = previousParent;
+        }
     }
 
     public boolean isAnyWindowBlockingMinecraftScreenInputs() {

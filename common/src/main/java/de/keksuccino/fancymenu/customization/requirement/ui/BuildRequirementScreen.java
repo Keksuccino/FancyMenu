@@ -175,8 +175,9 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
         if (this.instance.requirement == null) {
             return;
         }
+        PiPWindow parentWindow = this.getWindow();
         this.setWindowVisible(false);
-        this.instance.requirement.editValue(this.instance, (instance1, oldValue, newValue) -> {
+        this.instance.requirement.editValueInternal(this.instance, (instance1, oldValue, newValue) -> {
             if (this.canClickDone()) {
                 this.onDone();
             } else {
@@ -184,7 +185,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
             }
         }, instance1 -> {
             this.setWindowVisible(true);
-        });
+        }, parentWindow);
     }
 
     protected boolean hasValue() {
