@@ -19,11 +19,17 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 public class DebugOverlayBuilder {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     @NotNull
     public static DebugOverlay buildDebugOverlay() {
@@ -56,11 +62,16 @@ public class DebugOverlayBuilder {
         if (!FancyMenu.getOptions().debugOverlayShowBasicScreenCategory.getValue() && !FancyMenu.getOptions().debugOverlayShowAdvancedScreenCategory.getValue()) return;
 
         String currentIdentifier = ScreenIdentifierHandler.getIdentifierOfScreen(currentScreen);
+        final String normalizedCurrentIdentifier = currentIdentifier != null ? currentIdentifier : "unknown";
         boolean customizationEnabled = ScreenCustomization.isCustomizationEnabledForScreen(currentScreen);
-        List<Layout> allLayoutsCurrent = LayoutHandler.getAllLayoutsForScreenIdentifier(currentIdentifier, false);
-        List<Layout> allUniversalLayoutsCurrent = LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true);
+        List<Layout> allLayoutsCurrentRaw = LayoutHandler.getAllLayoutsForScreenIdentifier(normalizedCurrentIdentifier, false);
+        final List<Layout> allLayoutsCurrent = allLayoutsCurrentRaw != null ? allLayoutsCurrentRaw : Collections.emptyList();
+        List<Layout> allUniversalLayoutsCurrentRaw = LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true);
+        final List<Layout> allUniversalLayoutsCurrent = allUniversalLayoutsCurrentRaw != null ? allUniversalLayoutsCurrentRaw : Collections.emptyList();
+        final List<Layout> activeLayouts = currentScreenLayer.activeLayouts != null ? currentScreenLayer.activeLayouts : Collections.emptyList();
+        final List<?> allElements = currentScreenLayer.allElements != null ? currentScreenLayer.allElements : Collections.emptyList();
         List<Layout> enabledUniversalLayoutsCurrent = new ArrayList<>();
-        for (Layout l : currentScreenLayer.activeLayouts) {
+        for (Layout l : activeLayouts) {
             if (l.isUniversalLayout()) enabledUniversalLayoutsCurrent.add(l);
         }
 
@@ -68,21 +79,21 @@ public class DebugOverlayBuilder {
 
             overlay.addLine("screen_identifier", DebugOverlay.LinePosition.TOP_LEFT,
                             consumes -> {
-                                MutableComponent c = Component.translatable("fancymenu.overlay.debug.screen_identifier", currentIdentifier);
+                                MutableComponent c = Component.translatable("fancymenu.overlay.debug.screen_identifier", normalizedCurrentIdentifier);
                                 if (consumes.isHovered()) c = c.setStyle(Style.EMPTY.withUnderlined(true));
                                 if (consumes.recentlyClicked()) c = Component.translatable("fancymenu.overlay.debug.screen_identifier.copied").setStyle(Style.EMPTY.withColor(ChatFormatting.GREEN));
                                 return c;
                             })
-                    .setClickAction(line -> Minecraft.getInstance().keyboardHandler.setClipboard(currentIdentifier));
+                    .setClickAction(line -> Minecraft.getInstance().keyboardHandler.setClipboard(normalizedCurrentIdentifier));
             overlay.addLine("screen_size", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.screen_size", "" + Minecraft.getInstance().getWindow().getScreenWidth(), "" + Minecraft.getInstance().getWindow().getScreenHeight()));
 
         }
 
         if (FancyMenu.getOptions().debugOverlayShowAdvancedScreenCategory.getValue()) {
 
-            overlay.addLine("active_layout_count", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.screen_active_layout_count", "" + (customizationEnabled ? currentScreenLayer.activeLayouts.size() : 0), "" + (customizationEnabled ? enabledUniversalLayoutsCurrent.size() : 0)));
+            overlay.addLine("active_layout_count", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.screen_active_layout_count", "" + (customizationEnabled ? activeLayouts.size() : 0), "" + (customizationEnabled ? enabledUniversalLayoutsCurrent.size() : 0)));
             overlay.addLine("total_layout_count", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.screen_total_layout_count", "" + (allLayoutsCurrent.size() + allUniversalLayoutsCurrent.size()), "" + allUniversalLayoutsCurrent.size()));
-            overlay.addLine("active_elements_count", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.screen_active_element_count", "" + (customizationEnabled ? currentScreenLayer.allElements.size() : 0)));
+            overlay.addLine("active_elements_count", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.screen_active_element_count", "" + (customizationEnabled ? allElements.size() : 0)));
 
         }
 
@@ -94,10 +105,11 @@ public class DebugOverlayBuilder {
 
         if (!FancyMenu.getOptions().debugOverlayShowResourcesCategory.getValue()) return;
 
-        int slideshowCount = SlideshowHandler.getSlideshows().size();
+        List<ExternalTextureSlideshowRenderer> slideshows = new ArrayList<>(SlideshowHandler.getSlideshows());
+        int slideshowCount = slideshows.size();
         int totalSlideshowImages = 0;
-        for (ExternalTextureSlideshowRenderer slide : SlideshowHandler.getSlideshows()) {
-            totalSlideshowImages += slide.getImageCount();
+        for (ExternalTextureSlideshowRenderer slide : slideshows) {
+            if (slide != null) totalSlideshowImages += slide.getImageCount();
         }
         final int finalTotalSlideshowImages = totalSlideshowImages;
 
@@ -126,8 +138,8 @@ public class DebugOverlayBuilder {
             long max = Runtime.getRuntime().maxMemory();
             long total = Runtime.getRuntime().totalMemory();
             long free = Runtime.getRuntime().freeMemory();
-            long used = total - free;
-            long percent = (total - free) * 100L / max;
+            long used = Math.max(0L, total - free);
+            long percent = (max > 0L) ? Math.max(0L, Math.min(100L, (long)(((double)used * 100.0D) / (double)max))) : 0L;
             String ramString = bytesToMb(used) + "/" + bytesToMb(max) + "MB";
             String percentString = percent + "%";
             if (percent >= 60) percentString = ChatFormatting.GOLD + "" + percent + "%" + ChatFormatting.RESET;
@@ -138,9 +150,11 @@ public class DebugOverlayBuilder {
             long max = Runtime.getRuntime().maxMemory();
             long total = Runtime.getRuntime().totalMemory();
             long free = Runtime.getRuntime().freeMemory();
-            long used = total - free;
+            long used = Math.max(0L, total - free);
             if (max <= 0L) return 0.0D;
-            return (double)(used * 100L) / (double)max;
+            double percent = ((double)used * 100.0D) / (double)max;
+            if (!Double.isFinite(percent)) return 0.0D;
+            return Math.max(0.0D, Math.min(100.0D, percent));
         }, 0.0D, 100.0D);
         overlay.addLine("cpu_jvm_usage", DebugOverlay.LinePosition.TOP_LEFT, consumes -> {
             double usage = PerformanceUtils.getJvmCpuUsage();
@@ -172,8 +186,16 @@ public class DebugOverlayBuilder {
             if (usage < 0D) usage = 0D;
             return usage * 100.0D;
         }, 0.0D, 100.0D);
-        overlay.addLine("cpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.cpu", GlUtil.getCpuInfo()));
-        overlay.addLine("gpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.gpu", GlUtil.getRenderer(), GlUtil.getOpenGLVersion()));
+        overlay.addLine("cpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes ->
+                Component.translatable("fancymenu.overlay.debug.cpu", safeReadSystemInfo("cpu_info", GlUtil::getCpuInfo))
+        );
+        overlay.addLine("gpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes ->
+                Component.translatable(
+                        "fancymenu.overlay.debug.gpu",
+                        safeReadSystemInfo("gpu_renderer", GlUtil::getRenderer),
+                        safeReadSystemInfo("gpu_opengl", GlUtil::getOpenGLVersion)
+                )
+        );
 
         overlay.addSpacerLine("spacer_after_gpu_info", DebugOverlay.LinePosition.TOP_LEFT, 5);
 
@@ -181,6 +203,17 @@ public class DebugOverlayBuilder {
 
     private static long bytesToMb(long bytes) {
         return bytes / 1024L / 1024L;
+    }
+
+    @NotNull
+    private static String safeReadSystemInfo(@NotNull String key, @NotNull Supplier<String> supplier) {
+        try {
+            String value = supplier.get();
+            return value != null ? value : "Unknown";
+        } catch (Throwable ex) {
+            LOGGER.error("[FANCYMENU] Failed to read debug overlay system info '{}'", key, ex);
+            return "Unknown";
+        }
     }
 
 }
