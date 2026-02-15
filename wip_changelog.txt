@@ -1,6 +1,7 @@
 
 ## Alpha 2 Changelog
 
+- Switched to a new shader for smooth rectangle rendering to hopefully improve performance on low end hardware
 - Fixed crash when opening Debug Overlay
 
 
