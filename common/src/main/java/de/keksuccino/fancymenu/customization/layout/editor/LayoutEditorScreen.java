@@ -241,7 +241,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
     public void removed() {
         this.closeActiveElementMenu(true);
         this.closeRightClickMenu(true);
-        PiPWindowHandler.INSTANCE.closeAllWindows();
+        PiPWindowHandler.INSTANCE.forceCloseAllWindows();
     }
 
     @Override
@@ -1535,9 +1535,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
         this.removed();
     }
 
-    @SuppressWarnings("deprecation")
+	@SuppressWarnings("deprecation")
 	public void closeEditor() {
-        PiPWindowHandler.INSTANCE.closeAllWindows();
+        PiPWindowHandler.INSTANCE.forceCloseAllWindows();
         this.closeActiveElementMenu(true);
         this.closeRightClickMenu(true);
 		this.saveWidgetSettings();

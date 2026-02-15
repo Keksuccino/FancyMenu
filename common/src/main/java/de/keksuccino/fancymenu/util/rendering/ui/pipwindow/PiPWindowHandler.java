@@ -134,8 +134,19 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
     }
 
     public void closeAllWindows() {
+        closeAllWindows(false);
+    }
+
+    public void forceCloseAllWindows() {
+        closeAllWindows(true);
+    }
+
+    private void closeAllWindows(boolean force) {
         List<PiPWindow> copy = new ArrayList<>(windows);
         for (PiPWindow window : copy) {
+            if (force) {
+                window.setCloseWindowCheck(null);
+            }
             closeWindow(window);
         }
         focusedWindow = null;
