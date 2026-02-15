@@ -1,4 +1,16 @@
 
+## Alpha 2 Changelog
+
+- Fixed crash when opening Debug Overlay
+
+
+
+
+
+
+
+
+
 ## CHANGELOG | FANCYMENU v3.9.0 [ W I P !! Not public yet !! ]
 
 ### New Features and Improvements
