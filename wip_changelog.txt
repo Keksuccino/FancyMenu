@@ -3,6 +3,7 @@
 
 - Switched to a new shader for smooth rectangle rendering to hopefully improve performance on low end hardware
 - Multi-window-flow UIs (like the file chooser) now inherit the fullscreen flag of their parent windows
+- FancyMenu variables now get exposed to GLSL shaders (element, menu background, decoration overlay)
 - Fixed crash when opening Debug Overlay
 
 
