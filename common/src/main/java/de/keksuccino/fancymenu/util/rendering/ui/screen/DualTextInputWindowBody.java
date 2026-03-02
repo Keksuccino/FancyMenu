@@ -88,7 +88,8 @@ public class DualTextInputWindowBody extends PiPWindowBody implements InitialWid
                 .centerWidget(this)
                 .setTextAlignment(TextWidget.TextAlignment.CENTER)
                 .setBaseColor(UIBase.getUITheme().ui_interface_generic_text_color))
-                .setShadowEnabled(false);
+                .setShadowEnabled(false)
+                .setForUI(true);
 
         String oldValueOne = "";
         if (this.input_one != null) {
@@ -120,7 +121,8 @@ public class DualTextInputWindowBody extends PiPWindowBody implements InitialWid
                 .centerWidget(this)
                 .setTextAlignment(TextWidget.TextAlignment.CENTER)
                 .setBaseColor(UIBase.getUITheme().ui_interface_generic_text_color))
-                .setShadowEnabled(false);
+                .setShadowEnabled(false)
+                .setForUI(true);
 
         String oldValueTwo = "";
         if (this.input_two != null) {
