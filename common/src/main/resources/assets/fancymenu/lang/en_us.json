@@ -3239,5 +3239,11 @@
   "fancymenu.actions.video.set_video_element_play_time.value.desc": "Video Element Identifier + Play Time in Milliseconds [ Separated by : ]",
   "fancymenu.actions.video.set_video_background_play_time": "Set Video Background Play Time",
   "fancymenu.actions.video.set_video_background_play_time.desc": "Seeks a Video menu background to a specific play time in milliseconds by its identifier.\nThe time is forced to be at least 0 and is not clamped to the video duration.\n\nTo get the identifier of a background, right-click the\neditor background and click on 'Copy Background Identifier'.",
-  "fancymenu.actions.video.set_video_background_play_time.value.desc": "Video Background Identifier + Play Time in Milliseconds [ Separated by : ]"
+  "fancymenu.actions.video.set_video_background_play_time.value.desc": "Video Background Identifier + Play Time in Milliseconds [ Separated by : ]",
+  "fancymenu.actions.send_fm_data_to_server": "Send FM Data To Server",
+  "fancymenu.actions.send_fm_data_to_server.desc": "Sends custom string data to the connected FancyMenu server using the FMData packet channel.\nUse this together with '/fmdata listener ...' on the server to react to client-side events.",
+  "fancymenu.actions.send_fm_data_to_server.value.identifier": "Data Identifier",
+  "fancymenu.actions.send_fm_data_to_server.value.data": "Data",
+  "fancymenu.listeners.on_fm_data_received": "On FM Data Received",
+  "fancymenu.listeners.on_fm_data_received.desc": "This listener triggers when the server sends FMData to this client via '/fmdata send'.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$data_identifier §r= The identifier string that was sent with the data\n- §z$$data §r= The data payload string that was sent\n- §z$$sent_by §r= The server IP that sent the data, or 'integrated_server' in singleplayer"
 }

@@ -7,6 +7,8 @@ import de.keksuccino.fancymenu.networking.packets.commands.layout.suggestions.La
 import de.keksuccino.fancymenu.networking.packets.commands.opengui.OpenGuiCommandPacketCodec;
 import de.keksuccino.fancymenu.networking.packets.commands.variable.command.VariableCommandPacketCodec;
 import de.keksuccino.fancymenu.networking.packets.commands.variable.suggestions.VariableCommandSuggestionsPacketCodec;
+import de.keksuccino.fancymenu.networking.packets.fmdata.FmDataToClientPacketCodec;
+import de.keksuccino.fancymenu.networking.packets.fmdata.FmDataToServerPacketCodec;
 import de.keksuccino.fancymenu.networking.packets.handshake.HandshakePacketCodec;
 import de.keksuccino.fancymenu.networking.packets.placeholders.nbt.ServerNbtDataRequestPacketCodec;
 import de.keksuccino.fancymenu.networking.packets.placeholders.nbt.ServerNbtDataResponsePacketCodec;
@@ -30,6 +32,8 @@ public class Packets {
     public static final ServerNbtDataResponsePacketCodec SERVER_NBT_DATA_RESPONSE_PACKET_CODEC = new ServerNbtDataResponsePacketCodec();
     public static final StructuresPacketCodec STRUCTURES_PACKET_CODEC = new StructuresPacketCodec();
     public static final PlayerPosStructuresPacketCodec PLAYER_POS_STRUCTURES_PACKET_CODEC = new PlayerPosStructuresPacketCodec();
+    public static final FmDataToClientPacketCodec FMDATA_TO_CLIENT_PACKET_CODEC = new FmDataToClientPacketCodec();
+    public static final FmDataToServerPacketCodec FMDATA_TO_SERVER_PACKET_CODEC = new FmDataToServerPacketCodec();
 
     public static void registerAll() {
 
@@ -46,6 +50,8 @@ public class Packets {
         PacketRegistry.register(SERVER_NBT_DATA_RESPONSE_PACKET_CODEC);
         PacketRegistry.register(STRUCTURES_PACKET_CODEC);
         PacketRegistry.register(PLAYER_POS_STRUCTURES_PACKET_CODEC);
+        PacketRegistry.register(FMDATA_TO_CLIENT_PACKET_CODEC);
+        PacketRegistry.register(FMDATA_TO_SERVER_PACKET_CODEC);
 
     }
 
