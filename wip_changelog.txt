@@ -1,4 +1,14 @@
 
+## Alpha 3 Changelog
+
+- Fixed "World Save Names" placeholder sometimes returning empty result (#1526)
+
+
+
+
+
+
+
 ## Alpha 2 Changelog
 
 - Switched to a new shader for smooth rectangle rendering to hopefully improve performance on low end hardware
@@ -244,5 +254,6 @@
 - Fixed changing the element anchor by hovering an anchor point or other element sometimes getting triggered when resizing, rotating or tilting the element instead of moving/dragging it
 - Fixed opening the Accessibility Options screen via command/action doesn't work (#1485)
 - Fixed audio resources sometimes not working anymore after changing audio settings like enabling/disabling directional audio
+- Fixed "World Save Names" placeholder sometimes returning empty result (#1526)
 
 %changelog:end%
