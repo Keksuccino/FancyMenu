@@ -42,7 +42,7 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                         TextEditorElement.class,
                         null,
                         consumes -> consumes.element.textResourceSupplier,
-                        (element, supplier) -> element.element.setSource(TextElement.SourceMode.RESOURCE, supplier.getSourceWithPrefix()),
+                        (element, supplier) -> element.element.setSource(TextElement.SourceMode.RESOURCE, (supplier != null) ? supplier.getSourceWithPrefix() : null),
                         Component.translatable("fancymenu.elements.text.v2.source.choose"),
                         false, null, true, true, true)
                 .setIcon(MaterialIcons.FILE_OPEN)

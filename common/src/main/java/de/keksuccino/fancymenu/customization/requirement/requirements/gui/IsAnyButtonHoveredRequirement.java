@@ -41,17 +41,11 @@ public class IsAnyButtonHoveredRequirement extends Requirement {
         if (s != null) {
             ScreenCustomizationLayer handler = ScreenCustomizationLayerHandler.getLayerOfScreen(s);
             if (handler != null) {
+                int mX = MouseInput.getMouseX();
+                int mY = MouseInput.getMouseY();
                 for (AbstractElement e : handler.allElements) {
-                    if (e instanceof ButtonElement) {
-                        int mX = MouseInput.getMouseX();
-                        int mY = MouseInput.getMouseY();
-                        int iX = e.getAbsoluteX();
-                        int iY = e.getAbsoluteY();
-                        int iW = e.getAbsoluteWidth();
-                        int iH = e.getAbsoluteHeight();
-                        if ((mX >= iX) && (mX <= (iX + iW)) && (mY >= iY) && (mY <= (iY + iH))) {
-                            return true;
-                        }
+                    if ((e instanceof ButtonElement) && HoverRequirementUtils.isElementHovered(e, mX, mY)) {
+                        return true;
                     }
                 }
             }

@@ -47,11 +47,7 @@ public class IsElementHoveredRequirement extends Requirement {
                     if (i != null) {
                         int mX = MouseInput.getMouseX();
                         int mY = MouseInput.getMouseY();
-                        int iX = i.getAbsoluteX();
-                        int iY = i.getAbsoluteY();
-                        int iW = i.getAbsoluteWidth();
-                        int iH = i.getAbsoluteHeight();
-                        if ((mX >= iX) && (mX <= (iX + iW)) && (mY >= iY) && (mY <= (iY + iH))) {
+                        if (HoverRequirementUtils.isElementHovered(i, mX, mY)) {
                             return true;
                         }
                     }

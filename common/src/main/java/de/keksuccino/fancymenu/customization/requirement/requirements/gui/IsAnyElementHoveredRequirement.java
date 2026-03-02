@@ -40,14 +40,10 @@ public class IsAnyElementHoveredRequirement extends Requirement {
         if (s != null) {
             ScreenCustomizationLayer handler = ScreenCustomizationLayerHandler.getLayerOfScreen(s);
             if (handler != null) {
+                int mX = MouseInput.getMouseX();
+                int mY = MouseInput.getMouseY();
                 for (AbstractElement e : handler.allElements) {
-                    int mX = MouseInput.getMouseX();
-                    int mY = MouseInput.getMouseY();
-                    int iX = e.getAbsoluteX();
-                    int iY = e.getAbsoluteY();
-                    int iW = e.getAbsoluteWidth();
-                    int iH = e.getAbsoluteHeight();
-                    if ((mX >= iX) && (mX <= (iX + iW)) && (mY >= iY) && (mY <= (iY + iH))) {
+                    if (HoverRequirementUtils.isElementHovered(e, mX, mY)) {
                         return true;
                     }
                 }
