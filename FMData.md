@@ -1,18 +1,13 @@
 ---
-title: FMData
+title: Client <-> Server Data Sharing
 description: Send and receive custom data between server and client with FancyMenu.
-published: true
-date: 2026-03-02T00:00:00.000Z
-tags: commands, multiplayer, automation
-editor: markdown
-dateCreated: 2026-03-02T00:00:00.000Z
 ---
 
-# FMData
+# FM Data
 
-FMData lets you send custom text data between server and client.
+The "FM Data" system lets you send custom text data between server and client.
 
-Every FMData message has:
+Every FM Data message has:
 
 1. A **data identifier** (what kind of message this is)
 2. A **data value** (the actual content)
@@ -138,7 +133,7 @@ Manage them with:
 
 Supported placeholders:
 
-- `%fm_sender%` -> player who sent the FMData
+- `%fm_sender%` -> player who sent the FM Data
 - `%fm_data%` -> data value received from client
 
 Commands run as server commands.
@@ -159,7 +154,7 @@ Run multiple commands when data contains `gold`:
 
 # Welcome Data
 
-Welcome data sends FMData to matching players when they join.
+Welcome data sends FM Data to matching players when they join.
 
 Manage entries with:
 
