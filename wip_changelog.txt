@@ -8,7 +8,8 @@
 - UI blur is now disabled by default (you guys will not notice this in testing, because your config already got generated with "true" as default)
 - Fixed "World Save Names" placeholder sometimes returning empty result (#1526)
 - Fixed dual text input dialog still using hardcoded Minecraft font for drawing input field labels
-- Fixed crash when editing text source (https://discord.com/channels/704163135787106365/1472913516619894834)
+- Fixed crash when editing text source
+- Fixed "Is Any Button Hovered", "Is Any Element Hovered" and "Is Element Hovered" requirements returning true when hovering hidden Vanilla widgets
 
 
 
@@ -266,5 +267,6 @@
 - Fixed opening the Accessibility Options screen via command/action doesn't work (#1485)
 - Fixed audio resources sometimes not working anymore after changing audio settings like enabling/disabling directional audio
 - Fixed "World Save Names" placeholder sometimes returning empty result (#1526)
+- Fixed "Is Any Button Hovered", "Is Any Element Hovered" and "Is Element Hovered" requirements returning true when hovering hidden Vanilla widgets
 
 %changelog:end%
