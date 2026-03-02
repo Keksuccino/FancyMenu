@@ -5,7 +5,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.io.File;
 import java.lang.reflect.Method;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Executor;
 
@@ -15,13 +17,51 @@ public class WatermediaReflectionBridge {
 
     @Nullable
     public static Object createMrl(@NotNull String source) {
+        ClassLoader classLoader = FancyMenu.class.getClassLoader();
+
+        // Watermedia 3.x+ API
         try {
-            Class<?> mrlClass = Class.forName("org.watermedia.api.media.MRL", false, FancyMenu.class.getClassLoader());
+            Class<?> mediaApiClass = Class.forName("org.watermedia.api.media.MediaAPI", false, classLoader);
+            Method getMrl = mediaApiClass.getMethod("getMRL", String.class);
+            return getMrl.invoke(null, source);
+        } catch (ClassNotFoundException | NoSuchMethodException ignored) {
+            // Fall back to older APIs below
+        } catch (Throwable ex) {
+            LOGGER.error("[FANCYMENU] Failed to create Watermedia MRL via MediaAPI#getMRL for source: {}", source, ex);
+        }
+
+        // Legacy Watermedia API
+        try {
+            Class<?> mrlClass = Class.forName("org.watermedia.api.media.MRL", false, classLoader);
             Method get = mrlClass.getMethod("get", String.class);
             return get.invoke(null, source);
+        } catch (NoSuchMethodException ignored) {
+            // Some versions only expose get(URI)
+        } catch (Throwable ex) {
+            LOGGER.error("[FANCYMENU] Failed to create Watermedia MRL via MRL#get(String) for source: {}", source, ex);
+        }
+
+        // Legacy/alpha variants with URI signature.
+        try {
+            Class<?> mrlClass = Class.forName("org.watermedia.api.media.MRL", false, classLoader);
+            Method get = mrlClass.getDeclaredMethod("get", URI.class);
+            get.setAccessible(true);
+            File sourceFile = new File(source);
+            URI sourceUri;
+            if (sourceFile.exists()) {
+                sourceUri = sourceFile.getAbsoluteFile().toURI();
+            } else {
+                try {
+                    sourceUri = URI.create(source);
+                } catch (Throwable ignored) {
+                    sourceUri = sourceFile.getAbsoluteFile().toURI();
+                }
+            }
+            return get.invoke(null, sourceUri);
         } catch (Throwable ex) {
             LOGGER.error("[FANCYMENU] Failed to create Watermedia MRL for source: {}", source, ex);
         }
+
         return null;
     }
 
