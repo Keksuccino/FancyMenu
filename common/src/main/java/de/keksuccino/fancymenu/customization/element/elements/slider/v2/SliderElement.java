@@ -72,6 +72,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public GenericExecutableBlock executableBlock = new GenericExecutableBlock();
     @NotNull
     public RequirementContainer activeStateSupplier = new RequirementContainer();
+    public ResourceSupplier<IAudio> clickSound;
     public ResourceSupplier<IAudio> hoverSound;
 
     public final Property<ResourceSupplier<IAudio>> unhoverAudio = putProperty(Property.resourceSupplierProperty(IAudio.class, "unhover_audio", null, "fancymenu.elements.widgets.unhover_audio", true, true, true, null));
@@ -197,6 +198,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         if (this.slider == null) return;
         this.updateWidgetHoverSound();
         this.updateWidgetUnhoverSound();
+        this.updateWidgetClickSound();
         this.updateWidgetActiveState();
         this.updateWidgetTooltip();
         this.updateWidgetTexture();
@@ -219,6 +221,13 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         if (this.slider instanceof CustomizableWidget w) {
             ResourceSupplier<IAudio> supplier = this.getUnhoverSound();
             w.setUnhoverSoundFancyMenu((supplier != null) ? supplier.get() : null);
+        }
+    }
+
+    public void updateWidgetClickSound() {
+        if (this.slider instanceof CustomizableWidget w) {
+            ResourceSupplier<IAudio> supplier = this.getClickSound();
+            w.setCustomClickSoundFancyMenu((supplier != null) ? supplier.get() : null);
         }
     }
 
@@ -354,6 +363,10 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
 
     public ResourceSupplier<IAudio> getUnhoverSound() {
         return this.getTemplateProperty(template -> template.unhoverAudio.get(), this.unhoverAudio.get());
+    }
+
+    public ResourceSupplier<IAudio> getClickSound() {
+        return this.getTemplateProperty(template -> template.clickSound, this.clickSound);
     }
 
     public ResourceSupplier<ITexture> getHandleTextureNormal() {

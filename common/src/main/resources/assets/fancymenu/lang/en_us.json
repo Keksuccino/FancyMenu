@@ -3245,5 +3245,6 @@
   "fancymenu.actions.send_fm_data_to_server.value.identifier": "Data Identifier",
   "fancymenu.actions.send_fm_data_to_server.value.data": "Data",
   "fancymenu.listeners.on_fm_data_received": "On FM Data Received",
-  "fancymenu.listeners.on_fm_data_received.desc": "This listener triggers when the server sends FMData to this client via '/fmdata send'.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$data_identifier §r= The identifier string that was sent with the data\n- §z$$data §r= The data payload string that was sent\n- §z$$sent_by §r= The server IP that sent the data, or 'integrated_server' in singleplayer"
+  "fancymenu.listeners.on_fm_data_received.desc": "This listener triggers when the server sends FMData to this client via '/fmdata send'.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$data_identifier §r= The identifier string that was sent with the data\n- §z$$data §r= The data payload string that was sent\n- §z$$sent_by §r= The server IP that sent the data, or 'integrated_server' in singleplayer",
+  "fancymenu.elements.slider.v2.clicksound": "Click Sound"
 }

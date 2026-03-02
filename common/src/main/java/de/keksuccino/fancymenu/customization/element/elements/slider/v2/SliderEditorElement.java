@@ -170,6 +170,14 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
         this.element.unhoverAudio.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setIcon(MaterialIcons.VOLUME_UP);
 
+        this.addAudioResourceChooserContextMenuEntryTo(this.rightClickMenu, "click_sound",
+                        SliderEditorElement.class,
+                        null,
+                        consumes -> consumes.element.clickSound,
+                        (sliderEditorElement, supplier) -> sliderEditorElement.element.clickSound = supplier,
+                        Component.translatable("fancymenu.elements.slider.v2.clicksound"), true, null, true, true, true)
+                .setIcon(MaterialIcons.VOLUME_UP);
+
         this.rightClickMenu.addSeparatorEntry("separator_after_hover_sound").setStackable(true);
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_tooltip",

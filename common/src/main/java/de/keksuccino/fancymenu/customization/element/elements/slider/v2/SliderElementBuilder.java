@@ -108,6 +108,7 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
         }
 
         element.hoverSound = deserializeAudioResourceSupplier(serialized.getValue("hoversound"));
+        element.clickSound = deserializeAudioResourceSupplier(serialized.getValue("clicksound"));
 
         return element;
 
@@ -171,6 +172,9 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
 
         if (element.hoverSound != null) {
             serializeTo.putProperty("hoversound", element.hoverSound.getSourceWithPrefix());
+        }
+        if (element.clickSound != null) {
+            serializeTo.putProperty("clicksound", element.clickSound.getSourceWithPrefix());
         }
 
         return serializeTo;
