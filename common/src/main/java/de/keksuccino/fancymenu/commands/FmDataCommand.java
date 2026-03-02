@@ -9,6 +9,8 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import de.keksuccino.fancymenu.fmdata.FmDataMatchingType;
 import de.keksuccino.fancymenu.fmdata.FmDataServerListener;
 import de.keksuccino.fancymenu.fmdata.FmDataServerListenerHandler;
+import de.keksuccino.fancymenu.fmdata.FmDataWelcomeData;
+import de.keksuccino.fancymenu.fmdata.FmDataWelcomeDataHandler;
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.networking.packets.fmdata.FmDataToClientPacket;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
@@ -38,10 +40,30 @@ public class FmDataCommand {
     private static final int COLOR_MATCH_META = 0xA8B0BA;
     private static final int COLOR_MATCH_TRUE = 0x7EE787;
     private static final int COLOR_MATCH_FALSE = 0xFF7B72;
+    private static final int COLOR_LIST_SEPARATOR = 0x5E6772;
+    private static final int COLOR_LIST_TITLE = 0xF8C86A;
+    private static final int COLOR_LIST_TOTAL_LABEL = 0xAAB4C0;
+    private static final int COLOR_LIST_TOTAL_VALUE = 0xD2A8FF;
+    private static final int COLOR_LIST_EMPTY = 0xFF9B9B;
+    private static final int COLOR_LIST_HINT = 0xB7C0CC;
+    private static final int COLOR_ENTRY_INDEX = 0xE8C06D;
+    private static final int COLOR_ENTRY_NAME = 0xFFE3A8;
+    private static final int COLOR_FIRE_LABEL = 0x6CD8C9;
+    private static final int COLOR_FIRE_VALUE = 0xB8FFF5;
+    private static final int COLOR_COMMANDS_LABEL = 0xD3A9FF;
+    private static final int COLOR_COMMANDS_VALUE = 0xF2D9FF;
+    private static final int COLOR_COMMAND_ENTRY = 0xCBD5E1;
+    private static final int COLOR_WELCOME_TARGET_LABEL = 0x6CD8C9;
+    private static final int COLOR_WELCOME_TARGET_VALUE = 0xB8FFF5;
+    private static final int COLOR_WELCOME_IDENTIFIER_LABEL = 0x59C8FF;
+    private static final int COLOR_WELCOME_IDENTIFIER_VALUE = 0xA4E3FF;
+    private static final int COLOR_WELCOME_DATA_LABEL = 0xFFB86B;
+    private static final int COLOR_WELCOME_DATA_VALUE = 0xFFE1BA;
 
     public static void register(@NotNull CommandDispatcher<CommandSourceStack> dispatcher) {
 
         FmDataServerListenerHandler.init();
+        FmDataWelcomeDataHandler.init();
 
         dispatcher.register(Commands.literal("fmdata")
                 .requires(source -> source.hasPermission(2))
@@ -113,6 +135,41 @@ public class FmDataCommand {
                                 )
                         )
                 )
+                .then(Commands.literal("welcome_data")
+                        .then(Commands.literal("list")
+                                .executes(context -> listWelcomeData(context.getSource()))
+                        )
+                        .then(Commands.literal("remove")
+                                .then(Commands.argument("welcome_data_name", StringArgumentType.word())
+                                        .suggests((context, builder) -> CommandUtils.getStringSuggestions(builder, FmDataWelcomeDataHandler.getWelcomeDataNameSuggestions()))
+                                        .executes(FmDataCommand::removeWelcomeData)
+                                )
+                        )
+                        .then(Commands.literal("add")
+                                .then(Commands.argument("unique_welcome_data_name", StringArgumentType.word())
+                                        .suggests((context, builder) -> CommandUtils.getStringSuggestions(builder, "<unique_welcome_data_name>"))
+                                        .then(Commands.argument("target_player", EntityArgument.players())
+                                                .then(Commands.argument("data_identifier", StringArgumentType.string())
+                                                        .then(Commands.argument("string_data", StringArgumentType.greedyString())
+                                                                .executes(context -> addWelcomeData(context, getRawArgument(context, "target_player")))
+                                                        )
+                                                )
+                                        )
+                                )
+                        )
+                        .then(Commands.literal("edit")
+                                .then(Commands.argument("welcome_data_name", StringArgumentType.word())
+                                        .suggests((context, builder) -> CommandUtils.getStringSuggestions(builder, FmDataWelcomeDataHandler.getWelcomeDataNameSuggestions()))
+                                        .then(Commands.argument("target_player", EntityArgument.players())
+                                                .then(Commands.argument("data_identifier", StringArgumentType.string())
+                                                        .then(Commands.argument("string_data", StringArgumentType.greedyString())
+                                                                .executes(context -> editWelcomeData(context, getRawArgument(context, "target_player")))
+                                                        )
+                                                )
+                                        )
+                                )
+                        )
+                )
         );
     }
 
@@ -156,7 +213,7 @@ public class FmDataCommand {
         CommandSourceStack source = context.getSource();
         String listenerName = StringArgumentType.getString(context, "unique_listener_name");
 
-        if (!isListenerNameValid(listenerName)) {
+        if (!isResourceNameValid(listenerName)) {
             source.sendFailure(Component.literal("[FancyMenu] Invalid listener name! Use only [a-z], [0-9], '-' and '_'."));
             return 0;
         }
@@ -226,21 +283,23 @@ public class FmDataCommand {
     private static int listListeners(@NotNull CommandSourceStack source) {
         List<FmDataServerListener> listeners = FmDataServerListenerHandler.getListeners();
 
-        source.sendSuccess(() -> Component.literal("---------------------------------------------").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.STRIKETHROUGH), false);
-        source.sendSuccess(() -> Component.literal("FancyMenu FMData Server Listeners").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
-        source.sendSuccess(() -> Component.literal("Total listeners: " + listeners.size()).withStyle(ChatFormatting.GRAY), false);
+        source.sendSuccess(() -> Component.literal("---------------------------------------------").withStyle(style -> style.withColor(COLOR_LIST_SEPARATOR).withStrikethrough(true)), false);
+        source.sendSuccess(() -> Component.literal("FancyMenu FMData Server Listeners").withStyle(style -> style.withColor(COLOR_LIST_TITLE).withBold(true)), false);
+        source.sendSuccess(() -> Component.literal("Total listeners: ").withStyle(style -> style.withColor(COLOR_LIST_TOTAL_LABEL))
+                .append(Component.literal(String.valueOf(listeners.size())).withStyle(style -> style.withColor(COLOR_LIST_TOTAL_VALUE))), false);
 
         if (listeners.isEmpty()) {
-            source.sendSuccess(() -> Component.literal("No server-side FMData listeners configured yet.").withStyle(ChatFormatting.RED), false);
-            source.sendSuccess(() -> Component.literal("Use /fmdata listener add ... to create one.").withStyle(ChatFormatting.GRAY), false);
-            source.sendSuccess(() -> Component.literal("---------------------------------------------").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.STRIKETHROUGH), false);
+            source.sendSuccess(() -> Component.literal("No server-side FMData listeners configured yet.").withStyle(style -> style.withColor(COLOR_LIST_EMPTY)), false);
+            source.sendSuccess(() -> Component.literal("Use /fmdata listener add ... to create one.").withStyle(style -> style.withColor(COLOR_LIST_HINT)), false);
+            source.sendSuccess(() -> Component.literal("---------------------------------------------").withStyle(style -> style.withColor(COLOR_LIST_SEPARATOR).withStrikethrough(true)), false);
             return 1;
         }
 
         int index = 1;
         for (FmDataServerListener listener : listeners) {
             int entryIndex = index;
-            source.sendSuccess(() -> Component.literal("" + entryIndex + ") " + listener.listener_name).withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD), false);
+            source.sendSuccess(() -> Component.literal(entryIndex + ") ").withStyle(style -> style.withColor(COLOR_ENTRY_INDEX).withBold(true))
+                    .append(Component.literal(listener.listener_name).withStyle(style -> style.withColor(COLOR_ENTRY_NAME).withBold(true))), false);
             source.sendSuccess(() -> buildMatchLine(
                     "Identifier Match",
                     listener.matchingTypeIdentifierNormalized(),
@@ -257,18 +316,124 @@ public class FmDataCommand {
                     COLOR_DATA_LABEL,
                     COLOR_DATA_VALUE
             ), false);
-            source.sendSuccess(() -> Component.literal("   Fire For Player: " + listener.describePlayerFilter()).withStyle(ChatFormatting.AQUA), false);
-            source.sendSuccess(() -> Component.literal("   Commands on Fire: " + listener.commands_to_execute_on_fire.size()).withStyle(ChatFormatting.LIGHT_PURPLE), false);
+            source.sendSuccess(() -> Component.literal("   Fire For Player: ").withStyle(style -> style.withColor(COLOR_FIRE_LABEL))
+                    .append(Component.literal(listener.describePlayerFilter()).withStyle(style -> style.withColor(COLOR_FIRE_VALUE))), false);
+            source.sendSuccess(() -> Component.literal("   Commands on Fire: ").withStyle(style -> style.withColor(COLOR_COMMANDS_LABEL))
+                    .append(Component.literal(String.valueOf(listener.commands_to_execute_on_fire.size())).withStyle(style -> style.withColor(COLOR_COMMANDS_VALUE))), false);
 
             for (String command : listener.commands_to_execute_on_fire) {
-                source.sendSuccess(() -> Component.literal("      - " + command).withStyle(ChatFormatting.GRAY), false);
+                source.sendSuccess(() -> Component.literal("      - " + command).withStyle(style -> style.withColor(COLOR_COMMAND_ENTRY)), false);
             }
 
             index++;
         }
 
-        source.sendSuccess(() -> Component.literal("---------------------------------------------").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.STRIKETHROUGH), false);
+        source.sendSuccess(() -> Component.literal("---------------------------------------------").withStyle(style -> style.withColor(COLOR_LIST_SEPARATOR).withStrikethrough(true)), false);
         return listeners.size();
+    }
+
+    private static int addWelcomeData(@NotNull CommandContext<CommandSourceStack> context, @Nullable String targetPlayerSelector) {
+        CommandSourceStack source = context.getSource();
+        String welcomeDataName = StringArgumentType.getString(context, "unique_welcome_data_name");
+
+        if (!isResourceNameValid(welcomeDataName)) {
+            source.sendFailure(Component.literal("[FancyMenu] Invalid welcome data name! Use only [a-z], [0-9], '-' and '_'."));
+            return 0;
+        }
+        if (FmDataWelcomeDataHandler.isWelcomeDataNameAlreadyUsed(welcomeDataName)) {
+            source.sendFailure(Component.literal("[FancyMenu] Welcome data with that name already exists: " + welcomeDataName));
+            return 0;
+        }
+
+        FmDataWelcomeData welcomeData = buildWelcomeDataFromContext(context, welcomeDataName, targetPlayerSelector);
+        if (welcomeData == null) {
+            source.sendFailure(Component.literal("[FancyMenu] Failed to create welcome data. Check target selector and data values."));
+            return 0;
+        }
+
+        if (!FmDataWelcomeDataHandler.addWelcomeData(welcomeData)) {
+            source.sendFailure(Component.literal("[FancyMenu] Failed to add welcome data: " + welcomeDataName));
+            return 0;
+        }
+
+        source.sendSuccess(() -> Component.literal("[FancyMenu] Added welcome data '")
+                .append(Component.literal(welcomeDataName).withStyle(ChatFormatting.GREEN))
+                .append(Component.literal("'.")), false);
+        return 1;
+    }
+
+    private static int editWelcomeData(@NotNull CommandContext<CommandSourceStack> context, @Nullable String targetPlayerSelector) {
+        CommandSourceStack source = context.getSource();
+        String welcomeDataName = StringArgumentType.getString(context, "welcome_data_name");
+
+        if (FmDataWelcomeDataHandler.getWelcomeData(welcomeDataName) == null) {
+            source.sendFailure(Component.literal("[FancyMenu] Welcome data not found: " + welcomeDataName));
+            return 0;
+        }
+
+        FmDataWelcomeData welcomeData = buildWelcomeDataFromContext(context, welcomeDataName, targetPlayerSelector);
+        if (welcomeData == null) {
+            source.sendFailure(Component.literal("[FancyMenu] Failed to edit welcome data. Check target selector and data values."));
+            return 0;
+        }
+
+        if (!FmDataWelcomeDataHandler.editWelcomeData(welcomeDataName, welcomeData)) {
+            source.sendFailure(Component.literal("[FancyMenu] Failed to edit welcome data: " + welcomeDataName));
+            return 0;
+        }
+
+        source.sendSuccess(() -> Component.literal("[FancyMenu] Updated welcome data '")
+                .append(Component.literal(welcomeDataName).withStyle(ChatFormatting.GREEN))
+                .append(Component.literal("'.")), false);
+        return 1;
+    }
+
+    private static int removeWelcomeData(@NotNull CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
+        String welcomeDataName = StringArgumentType.getString(context, "welcome_data_name");
+
+        if (!FmDataWelcomeDataHandler.removeWelcomeData(welcomeDataName)) {
+            source.sendFailure(Component.literal("[FancyMenu] Welcome data not found: " + welcomeDataName));
+            return 0;
+        }
+
+        source.sendSuccess(() -> Component.literal("[FancyMenu] Removed welcome data '")
+                .append(Component.literal(welcomeDataName).withStyle(ChatFormatting.GREEN))
+                .append(Component.literal("'.")), false);
+        return 1;
+    }
+
+    private static int listWelcomeData(@NotNull CommandSourceStack source) {
+        List<FmDataWelcomeData> entries = FmDataWelcomeDataHandler.getWelcomeDataEntries();
+
+        source.sendSuccess(() -> Component.literal("---------------------------------------------").withStyle(style -> style.withColor(COLOR_LIST_SEPARATOR).withStrikethrough(true)), false);
+        source.sendSuccess(() -> Component.literal("FancyMenu FMData Welcome Data").withStyle(style -> style.withColor(COLOR_LIST_TITLE).withBold(true)), false);
+        source.sendSuccess(() -> Component.literal("Total entries: ").withStyle(style -> style.withColor(COLOR_LIST_TOTAL_LABEL))
+                .append(Component.literal(String.valueOf(entries.size())).withStyle(style -> style.withColor(COLOR_LIST_TOTAL_VALUE))), false);
+
+        if (entries.isEmpty()) {
+            source.sendSuccess(() -> Component.literal("No FMData welcome data configured yet.").withStyle(style -> style.withColor(COLOR_LIST_EMPTY)), false);
+            source.sendSuccess(() -> Component.literal("Use /fmdata welcome_data add ... to create one.").withStyle(style -> style.withColor(COLOR_LIST_HINT)), false);
+            source.sendSuccess(() -> Component.literal("---------------------------------------------").withStyle(style -> style.withColor(COLOR_LIST_SEPARATOR).withStrikethrough(true)), false);
+            return 1;
+        }
+
+        int index = 1;
+        for (FmDataWelcomeData entry : entries) {
+            int entryIndex = index;
+            source.sendSuccess(() -> Component.literal(entryIndex + ") ").withStyle(style -> style.withColor(COLOR_ENTRY_INDEX).withBold(true))
+                    .append(Component.literal(entry.welcome_data_name).withStyle(style -> style.withColor(COLOR_ENTRY_NAME).withBold(true))), false);
+            source.sendSuccess(() -> Component.literal("   Target Players: ").withStyle(style -> style.withColor(COLOR_WELCOME_TARGET_LABEL))
+                    .append(Component.literal(entry.describeTargetPlayer()).withStyle(style -> style.withColor(COLOR_WELCOME_TARGET_VALUE))), false);
+            source.sendSuccess(() -> Component.literal("   Data Identifier: ").withStyle(style -> style.withColor(COLOR_WELCOME_IDENTIFIER_LABEL))
+                    .append(Component.literal(entry.data_identifier).withStyle(style -> style.withColor(COLOR_WELCOME_IDENTIFIER_VALUE))), false);
+            source.sendSuccess(() -> Component.literal("   Data: ").withStyle(style -> style.withColor(COLOR_WELCOME_DATA_LABEL))
+                    .append(Component.literal(entry.data).withStyle(style -> style.withColor(COLOR_WELCOME_DATA_VALUE))), false);
+            index++;
+        }
+
+        source.sendSuccess(() -> Component.literal("---------------------------------------------").withStyle(style -> style.withColor(COLOR_LIST_SEPARATOR).withStrikethrough(true)), false);
+        return entries.size();
     }
 
     @Nullable
@@ -308,11 +473,44 @@ public class FmDataCommand {
     }
 
     @Nullable
+    private static FmDataWelcomeData buildWelcomeDataFromContext(@NotNull CommandContext<CommandSourceStack> context, @NotNull String welcomeDataName, @Nullable String targetPlayerSelector) {
+        String dataIdentifier = StringArgumentType.getString(context, "data_identifier");
+        String data = normalizeGreedyString(StringArgumentType.getString(context, "string_data"));
+        String normalizedTargetSelector = normalizeTargetSelector(targetPlayerSelector);
+        if (normalizedTargetSelector == null) {
+            return null;
+        }
+
+        FmDataWelcomeData welcomeData = new FmDataWelcomeData();
+        welcomeData.welcome_data_name = welcomeDataName;
+        welcomeData.target_player = normalizedTargetSelector;
+        welcomeData.data_identifier = Objects.requireNonNullElse(dataIdentifier, "");
+        welcomeData.data = Objects.requireNonNullElse(data, "");
+        welcomeData.normalize();
+        if (!welcomeData.hasValidTargetSelector()) {
+            return null;
+        }
+        return welcomeData;
+    }
+
+    @Nullable
     private static String normalizeFireForPlayer(@Nullable String fireForPlayerSelector) {
         if (fireForPlayerSelector == null) {
             return null;
         }
         String trimmed = fireForPlayerSelector.trim();
+        if (trimmed.isBlank()) {
+            return null;
+        }
+        return trimmed;
+    }
+
+    @Nullable
+    private static String normalizeTargetSelector(@Nullable String targetSelector) {
+        if (targetSelector == null) {
+            return null;
+        }
+        String trimmed = targetSelector.trim();
         if (trimmed.isBlank()) {
             return null;
         }
@@ -332,8 +530,8 @@ public class FmDataCommand {
         return localIp;
     }
 
-    private static boolean isListenerNameValid(@NotNull String listenerName) {
-        return LISTENER_NAME_FILTER.isAllowedText(listenerName) && !listenerName.isBlank();
+    private static boolean isResourceNameValid(@NotNull String name) {
+        return LISTENER_NAME_FILTER.isAllowedText(name) && !name.isBlank();
     }
 
     @NotNull
