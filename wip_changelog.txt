@@ -1,6 +1,7 @@
 
 ## Alpha 3 Changelog
 
+- UI blur is now disabled by default (you guys will not notice this in testing, because your config already got generated with "true" as default)
 - Fixed "World Save Names" placeholder sometimes returning empty result (#1526)
 
 
