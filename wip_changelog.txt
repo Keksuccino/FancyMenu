@@ -8,6 +8,7 @@
 - UI blur is now disabled by default (you guys will not notice this in testing, because your config already got generated with "true" as default)
 - Fixed "World Save Names" placeholder sometimes returning empty result (#1526)
 - Fixed dual text input dialog still using hardcoded Minecraft font for drawing input field labels
+- Fixed crash when editing text source (https://discord.com/channels/704163135787106365/1472913516619894834)
 
 
 
