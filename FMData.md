@@ -1,372 +1,213 @@
 ---
 title: FMData
-description: Detailed documentation for FancyMenu's FMData system (server -> client, client -> server, listeners, and welcome data).
+description: Send and receive custom data between server and client with FancyMenu.
 published: true
 date: 2026-03-02T00:00:00.000Z
-tags: networking, commands, listeners, automation
+tags: commands, multiplayer, automation
 editor: markdown
 dateCreated: 2026-03-02T00:00:00.000Z
 ---
 
 # FMData
 
-FMData is FancyMenu's custom data bridge between server and client.
+FMData lets you send custom text data between server and client.
 
-It supports:
+Every FMData message has:
 
-1. Server -> Client data sending via `/fmdata send`
-2. Client-side reaction via the `On FM Data Received` listener
-3. Client -> Server data sending via the `Send FM Data To Server` action
-4. Persistent server-side FMData listeners via `/fmdata listener ...`
-5. Persistent server-side FMData welcome data via `/fmdata welcome_data ...`
+1. A **data identifier** (what kind of message this is)
+2. A **data value** (the actual content)
 
-> [!INFO]
-> FMData is string-based by design: both identifier and payload are plain strings.
-> This makes it easy to integrate with command logic, placeholders, and rich text formats.
+Example idea:
 
-# Permissions
+- Identifier: `hud.food`
+- Data: `18/20`
 
-The `/fmdata` command requires permission level `2` (operator-level command access).
+# Quick Start
 
-# Quick Overview
+1. Server sends data with `/fmdata send ...`
+2. Client receives it with the FancyMenu listener **On FM Data Received**
+3. Client can also send data back with the action **Send FM Data To Server**
+4. Server can react automatically with `/fmdata listener ...`
+5. Server can auto-send data on join with `/fmdata welcome_data ...`
 
-## Data Flow A: Server -> Client
+# Server -> Client
 
-1. A server/admin runs `/fmdata send <target_player> <data_identifier> <string_data>`
-2. FancyMenu sends the data to each targeted FancyMenu client
-3. Client-side FancyMenu listener `On FM Data Received` fires
-4. You can use `$$data_identifier`, `$$data`, `$$sent_by` in listener actions/requirements
-
-## Data Flow B: Client -> Server
-
-1. A client executes FancyMenu action `Send FM Data To Server`
-2. FancyMenu sends the data to the server
-3. Server receives it and evaluates all configured `/fmdata listener` entries
-4. Matching listeners execute one or multiple server commands
-
-## Data Flow C: Server Welcome Data
-
-1. Server admin configures entries with `/fmdata welcome_data add ...`
-2. A FancyMenu client joins the server
-3. Server evaluates all welcome-data entries for the joining player
-4. Matching entries are sent to that joining client as normal FMData
-
-# Server -> Client Sending
-
-## Command
+Use:
 
 ```mcfunction
 /fmdata send <target_player> <data_identifier> <string_data>
 ```
 
-### `<target_player>`
-
-Real built-in Minecraft player selector argument.
-
 Examples:
 
-- `Player761`
-- `@a`
-- `@p`
-- `@s`
-- `@a[distance=..50]`
+```mcfunction
+/fmdata send Player761 hud.food 18/20
+/fmdata send @a "food value update" "18 of 20"
+```
 
-### `<data_identifier>`
+Notes:
 
-`StringArgumentType.string()`:
+- `<target_player>` supports normal player selectors like `@a`, `@p`, `@s`
+- Use quotes for values with spaces
 
-- single word: `food_update`
-- quoted string: `"food value update"`
+# Client: Receive Data
 
-### `<string_data>`
+Use FancyMenu listener:
 
-`StringArgumentType.greedyString()`:
+- **On FM Data Received**
 
-- can contain spaces and rich text content
-- can also be wrapped in quotes if preferred
+Available variables:
 
-> [!WARNING]
-> Delivery is only effective for clients with FancyMenu installed
+- `$$data_identifier`
+- `$$data`
+- `$$sent_by`
 
-# Client-Side Receive Listener
+`$$sent_by` is:
 
-## `On FM Data Received` Listener
+- Server IP in multiplayer
+- `integrated_server` in singleplayer
 
-This listener fires when the client receives FMData from the server.
+Common use cases:
 
-## Provided Custom Variables
+- Update text elements
+- Trigger menu actions
+- Run logic based on incoming identifier/data
 
-1. `$$data_identifier`
-2. `$$data`
-3. `$$sent_by`
+# Client -> Server
 
-## Typical Use Cases
+Use FancyMenu action:
 
-1. Update UI text on server events
-2. Trigger menu actions from command blocks/functions
-3. Build lightweight server -> client state sync for menus
+- **Send FM Data To Server**
 
-> [!WARNING]
-> `On FM Data Received` is client-side FancyMenu logic.  
-> It does not execute server commands by itself.
+The action has 2 inputs:
 
-# Client -> Server Sending
+1. Data Identifier
+2. Data
 
-## `Send FM Data To Server` Action
+The server can then process incoming data with `/fmdata listener ...`.
 
-The action sends data to the server, which can then listen to this data via **FMData listeners**.
+# Server Listeners
 
-**For this to work:**
+Server listeners are saved and stay active after restart.
 
-1. Server must run FancyMenu
-2. Client must run FancyMenu
-3. The connection must be fully established
+Manage them with:
 
-## Server-Side FMData Listeners
+- `/fmdata listener list`
+- `/fmdata listener add ...`
+- `/fmdata listener edit ...`
+- `/fmdata listener remove ...`
 
-Server-side listeners are persistent rules that react to incoming client FMData.
-
-### `/fmdata listener list`
-
-Shows all listeners in formatted chat output with metadata.
-
-### `/fmdata listener add`
-
-Add new listeners via the `add` sub-command.
+## Add / Edit Syntax
 
 ```mcfunction
 /fmdata listener add <unique_listener_name> <matching_type_identifier> <matching_type_data> <ignore_case_identifier> <ignore_case_data> <fire_for_player> <listen_for_identifier> <listen_for_data> <commands_to_execute_on_fire>
 ```
 
-### `/fmdata listener edit`
-
-Edit existing listeners via the `edit` sub-command.
-
-### `/fmdata listener remove`
-
-Remove existing listeners via the `remove` sub-command.
-
-## Wildcard Matching
-
-For `listen_for_identifier` and `listen_for_data`:
-
-- if value is exactly `*`, it always matches
-
-This wildcard behavior is only for matching these fields.
-
-## Case Control
-
-Two separate booleans:
-
-1. `ignore_case_identifier`
-2. `ignore_case_data`
-
-So identifier and payload matching can be configured independently.
-
-## `fire_for_player` Selector
-
-`fire_for_player` uses Minecraft's normal player selector format.
-
-Examples:
-
-- `@a` (any player)
-- `@p`
-- `Player761`
-- `@a[team=blue]`
-
-If you want "all players", use `@a`.
-
-## Executed Commands on Fire
-
-`commands_to_execute_on_fire` is a greedy string.
-
-Multiple commands are separated by:
-
-```text
-|||
+```mcfunction
+/fmdata listener edit <listener_name> <matching_type_identifier> <matching_type_data> <ignore_case_identifier> <ignore_case_data> <fire_for_player> <listen_for_identifier> <listen_for_data> <commands_to_execute_on_fire>
 ```
 
-If you need literal `|||` in command text, escape it as:
+## Remove Syntax
 
-```text
-\|\|\|
+```mcfunction
+/fmdata listener remove <listener_name>
 ```
 
-It will be restored to normal `|||` before execution.
+## Matching Types
 
-## Listener Command Placeholders
+`matching_type_identifier` and `matching_type_data` can be:
 
-Before command execution:
+- `equals`
+- `contains`
+- `starts_with`
+- `ends_with`
 
-1. `%fm_sender%` -> replaced with sender player name (`sender.getScoreboardName()`)
-2. `%fm_data%` -> replaced with incoming client FMData payload
+## Matching Rules
 
-## Command Execution Context
+- `ignore_case_identifier` and `ignore_case_data` are true/false toggles
+- `listen_for_identifier` supports wildcard `*` (always matches)
+- `listen_for_data` supports wildcard `*` (always matches)
+- `fire_for_player` uses normal player selectors (for example `@a`, `@p`, `Player761`)
 
-Listener commands run as server commands, not as client chat commands.
+## Commands On Fire
+
+`commands_to_execute_on_fire` is one text input.
+
+- Separate multiple commands with `|||`
+- Escape a literal separator as `\|\|\|`
+
+Supported placeholders:
+
+- `%fm_sender%` -> player who sent the FMData
+- `%fm_data%` -> data value received from client
+
+Commands run as server commands.
+
+## Example Commands
+
+React to a button press from any player:
+
+```mcfunction
+/fmdata listener add button_ping equals equals false false @a ui.button pressed "tellraw @a {\"text\":\"%fm_sender% pressed the button\"}"
+```
+
+Run multiple commands when data contains `gold`:
+
+```mcfunction
+/fmdata listener add reward equals contains false true @a reward "gold" "say Reward from %fm_sender%: %fm_data%|||effect give %fm_sender% minecraft:speed 3 1 true"
+```
 
 # Welcome Data
 
-Welcome data is persistent server config that sends FMData to joining FancyMenu clients.
+Welcome data sends FMData to matching players when they join.
 
-Data file:
+Manage entries with:
 
-```text
-FancyMenu.MOD_DIR/fmdata_welcome_data.json
-```
+- `/fmdata welcome_data list`
+- `/fmdata welcome_data add ...`
+- `/fmdata welcome_data edit ...`
+- `/fmdata welcome_data remove ...`
 
-## Commands
-
-### List
-
-```mcfunction
-/fmdata welcome_data list
-```
-
-### Add
+## Add / Edit Syntax
 
 ```mcfunction
 /fmdata welcome_data add <unique_welcome_data_name> <target_player> <data_identifier> <string_data>
 ```
 
-### Edit
-
 ```mcfunction
 /fmdata welcome_data edit <welcome_data_name> <target_player> <data_identifier> <string_data>
 ```
 
-### Remove
+## Remove Syntax
 
 ```mcfunction
 /fmdata welcome_data remove <welcome_data_name>
 ```
 
-`welcome_data_name` has tab-complete suggestions for edit/remove.
+Notes:
 
-## Field Meaning
+- `<target_player>` supports normal selectors like `@a`, `@p`, `@s`
+- Data is sent to matching players when they join
+- Entries are saved and loaded automatically
 
-1. `unique_welcome_data_name`: unique entry key (resource-name style)
-2. `target_player`: selector defining who should receive this entry on join
-3. `data_identifier`: FMData identifier to send
-4. `string_data`: FMData payload to send
+## Example Commands
 
-## Target Logic
-
-`target_player` is evaluated against the joining player.
-
-Examples:
-
-- `@a` -> every joining FancyMenu client gets this entry
-- `Player761` -> only that player gets it
-- `@a[team=vip]` -> only VIP team joiners get it
-
-## Join Timing
-
-Welcome data is sent shortly after the player joins.
-
-Flow:
-
-1. Player joins
-2. FancyMenu checks all welcome-data entries
-3. Matching entries are sent to that player
-
-# Name Validation Rules
-
-These names use resource-name-style validation:
-
-1. `listener_name`
-2. `unique_listener_name`
-3. `welcome_data_name`
-4. `unique_welcome_data_name`
-
-Allowed:
-
-- lowercase letters `a-z`
-- numbers `0-9`
-- `_`
-- `-`
-
-# String and Quoting Notes
-
-## For `StringArgumentType.string()` fields
-
-You can use:
-
-- simple word: `hello`
-- quoted phrase: `"hello world"`
-
-## For `StringArgumentType.greedyString()` fields
-
-You can pass rich text with spaces directly.
-
-Quoted full values are also accepted and normalized by command logic (outer quotes removed, escapes handled).
-
-# Practical Examples
-
-## 1) Send from server to all players
+Send welcome data to all joining players:
 
 ```mcfunction
-/fmdata send @a "food value update" "{\"food\":18,\"max\":20}"
+/fmdata welcome_data add welcome_all @a hud.welcome "Welcome!"
 ```
 
-## 2) Add listener that reacts to all players and any identifier
+Send welcome data only to one player:
 
 ```mcfunction
-/fmdata listener add food_sync contains contains false false @a "*" "hunger=" "tellraw %fm_sender% \"Server got hunger value: %fm_data%\""
+/fmdata welcome_data add welcome_vip Player761 hud.vip "VIP perks enabled"
 ```
 
-## 3) Add listener with multiple commands
+# Best Practices
 
-```mcfunction
-/fmdata listener add demo equals contains false true @a "event_demo" "start" "say Triggered by %fm_sender% with %fm_data%|||effect give %fm_sender% minecraft:speed 3 1 true"
-```
-
-## 4) Add welcome data for all players
-
-```mcfunction
-/fmdata welcome_data add default_intro @a "welcome" "{\"text\":\"Welcome to the server!\"}"
-```
-
-## 5) Add welcome data only for one player
-
-```mcfunction
-/fmdata welcome_data add vip_message Player761 "vip_info" "You have VIP perks enabled."
-```
-
-# Troubleshooting
-
-## FMData send reports targets but client does nothing
-
-Check:
-
-1. target really has FancyMenu installed
-2. client-side listener `On FM Data Received` is configured
-3. your listener logic is attached to the right layout/screen context
-
-## Client action does not reach server listeners
-
-Check:
-
-1. server runs FancyMenu
-2. client runs FancyMenu
-3. `/fmdata listener list` actually contains matching listener entries
-4. matching mode / ignore-case settings are correct
-5. `fire_for_player` selector includes sender
-
-## Listener exists but commands do not execute
-
-Check:
-
-1. `commands_to_execute_on_fire` not empty
-2. multiple commands correctly separated by `|||`
-3. placeholder usage is valid (`%fm_sender%`, `%fm_data%`)
-4. resulting command is valid server command syntax
-
-# Final Notes
-
-FMData is intentionally flexible and string-based.  
-For robust setups, use clear identifier conventions, keep payload formats consistent (for example JSON-like strings), and split responsibilities:
-
-1. identifier routes logic
-2. data carries payload
-3. listeners/welcome-data apply server automation
+1. Use clear identifiers like `hud.food`, `menu.shop.open`, `quest.progress`.
+2. Keep data format consistent for each identifier.
+3. Start simple: test with `/fmdata send` before building complex listeners.
+4. Use `@a` only when you really want global behavior.
+5. Use `/fmdata listener list` and `/fmdata welcome_data list` to keep configs clean.
