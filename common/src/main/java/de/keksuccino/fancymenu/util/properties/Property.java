@@ -283,6 +283,46 @@ public class Property<T> {
         return NumericInputBehavior.<N>builder().freeInput().build();
     }
 
+    private static boolean isEmptyNumberValue(@Nullable Number value) {
+        if (value == null) {
+            return true;
+        }
+        if (value instanceof Integer integerValue) {
+            return integerValue == Integer.MIN_VALUE;
+        }
+        if (value instanceof Long longValue) {
+            return longValue == Long.MIN_VALUE;
+        }
+        if (value instanceof Double doubleValue) {
+            return Double.compare(doubleValue, Double.MIN_VALUE) == 0;
+        }
+        if (value instanceof Float floatValue) {
+            return Float.compare(floatValue, Float.MIN_VALUE) == 0;
+        }
+        if (value instanceof Short shortValue) {
+            return shortValue == Short.MIN_VALUE;
+        }
+        if (value instanceof Byte byteValue) {
+            return byteValue == Byte.MIN_VALUE;
+        }
+        return false;
+    }
+
+    @Nullable
+    private static String resolveNumberPropertyPreviewValue(@Nullable ManualInputProperty<? extends Number> property, @NotNull Number fallbackValue) {
+        if (property == null) {
+            return isEmptyNumberValue(fallbackValue) ? null : String.valueOf(fallbackValue);
+        }
+        if (!property.hasManualInput()) {
+            Number typedValue = property.get();
+            if (typedValue == null) typedValue = property.getDefault();
+            if (isEmptyNumberValue(typedValue)) {
+                return null;
+            }
+        }
+        return property.getRawInputOrFormattedValue();
+    }
+
     private static <N extends Number> void restoreNumericSnapshots(@NotNull List<? extends PropertyHolder> selectedObjects, @NotNull List<Pair<String, N>> snapshots, @NotNull String key) {
         for (int i = 0; i < selectedObjects.size(); i++) {
             PropertyHolder holder = selectedObjects.get(i);
@@ -505,7 +545,7 @@ public class Property<T> {
                         if (selectedObjects.size() == 1) {
                             Component valueComponent;
                             IntegerProperty resolved = (IntegerProperty) selectedObjects.get(0).getProperty(key);
-                            String val = (resolved != null) ? resolved.getRawInputOrFormattedValue() : String.valueOf(defaultValue);
+                            String val = resolveNumberPropertyPreviewValue(resolved, defaultValue);
                             if (val == null) {
                                 valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt()));
                             } else {
@@ -708,7 +748,7 @@ public class Property<T> {
                         if (selectedObjects.size() == 1) {
                             Component valueComponent;
                             DoubleProperty resolved = (DoubleProperty) selectedObjects.get(0).getProperty(key);
-                            String val = (resolved != null) ? resolved.getRawInputOrFormattedValue() : String.valueOf(defaultValue);
+                            String val = resolveNumberPropertyPreviewValue(resolved, defaultValue);
                             if (val == null) {
                                 valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt()));
                             } else {
@@ -911,7 +951,7 @@ public class Property<T> {
                         if (selectedObjects.size() == 1) {
                             Component valueComponent;
                             LongProperty resolved = (LongProperty) selectedObjects.get(0).getProperty(key);
-                            String val = (resolved != null) ? resolved.getRawInputOrFormattedValue() : String.valueOf(defaultValue);
+                            String val = resolveNumberPropertyPreviewValue(resolved, defaultValue);
                             if (val == null) {
                                 valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt()));
                             } else {
@@ -1114,7 +1154,7 @@ public class Property<T> {
                         if (selectedObjects.size() == 1) {
                             Component valueComponent;
                             FloatProperty resolved = (FloatProperty) selectedObjects.get(0).getProperty(key);
-                            String val = (resolved != null) ? resolved.getRawInputOrFormattedValue() : String.valueOf(defaultValue);
+                            String val = resolveNumberPropertyPreviewValue(resolved, defaultValue);
                             if (val == null) {
                                 valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt()));
                             } else {

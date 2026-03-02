@@ -94,17 +94,42 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
 
     public NumberPickerWindowBody(@NotNull InputMode inputMode, @Nullable N minValue, @Nullable N maxValue, @Nullable List<N> cycleValues, @NotNull N presetValue, @NotNull CharacterFilter inputFilter, @NotNull ValueAdapter<N> adapter, @NotNull Consumer<N> onValueUpdate, @NotNull Consumer<N> onDone, @NotNull Consumer<N> onCancel) {
         super(Component.empty());
+        N resolvedPresetValue = resolvePresetValue(presetValue);
         this.inputMode = sanitizeInputMode(inputMode, minValue, maxValue, cycleValues);
         this.minValue = minValue;
         this.maxValue = maxValue;
         this.cycleValues = (cycleValues != null) ? new ArrayList<>(cycleValues) : null;
-        this.presetValue = presetValue;
-        this.currentValue = presetValue;
+        this.presetValue = resolvedPresetValue;
+        this.currentValue = resolvedPresetValue;
         this.inputFilter = inputFilter;
         this.adapter = adapter;
         this.onValueUpdate = onValueUpdate;
         this.onDone = onDone;
         this.onCancel = onCancel;
+    }
+
+    @NotNull
+    @SuppressWarnings("unchecked")
+    private static <N extends Number> N resolvePresetValue(@NotNull N value) {
+        if (value instanceof Integer integerValue && integerValue == Integer.MIN_VALUE) {
+            return (N) Integer.valueOf(0);
+        }
+        if (value instanceof Long longValue && longValue == Long.MIN_VALUE) {
+            return (N) Long.valueOf(0L);
+        }
+        if (value instanceof Double doubleValue && Double.compare(doubleValue, Double.MIN_VALUE) == 0) {
+            return (N) Double.valueOf(0.0D);
+        }
+        if (value instanceof Float floatValue && Float.compare(floatValue, Float.MIN_VALUE) == 0) {
+            return (N) Float.valueOf(0.0F);
+        }
+        if (value instanceof Short shortValue && shortValue == Short.MIN_VALUE) {
+            return (N) Short.valueOf((short)0);
+        }
+        if (value instanceof Byte byteValue && byteValue == Byte.MIN_VALUE) {
+            return (N) Byte.valueOf((byte)0);
+        }
+        return value;
     }
 
     private static <N extends Number> InputMode sanitizeInputMode(@NotNull InputMode mode, @Nullable N minValue, @Nullable N maxValue, @Nullable List<N> cycleValues) {

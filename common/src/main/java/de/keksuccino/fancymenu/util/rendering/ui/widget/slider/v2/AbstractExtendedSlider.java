@@ -572,13 +572,16 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!this.canClick()) return false;
-        if (button == 0) this.leftMouseDown = true;
-        return super.mouseClicked(mouseX, mouseY, button);
+        boolean handled = super.mouseClicked(mouseX, mouseY, button);
+        if (button == 0) this.leftMouseDown = handled;
+        return handled;
     }
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        boolean wasLeftMouseDown = this.leftMouseDown;
         this.leftMouseDown = false;
+        if (!wasLeftMouseDown || (button != 0)) return false;
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
