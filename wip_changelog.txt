@@ -1,6 +1,10 @@
 
 ## Alpha 3 Changelog
 
+- Added the "FM Data" system that allows FancyMenu clients and servers to share data between each other
+  - Servers can send text data via "/fmdata send", the client can then listen to this data via the "On FM Data Received" listener
+  - Clients can send text data to the current server via the "Send FM Data to Server" action and the server can listen to this data via "/fmdata listener"
+  - It is possible to send so called "welcome data" to clients that join the server, so you can basically send welcome packets to FancyMenu clients now
 - UI blur is now disabled by default (you guys will not notice this in testing, because your config already got generated with "true" as default)
 - Fixed "World Save Names" placeholder sometimes returning empty result (#1526)
 - Fixed dual text input dialog still using hardcoded Minecraft font for drawing input field labels
@@ -65,6 +69,10 @@
     - Confetti, to make confetti rain in the menu (with an option to make confetti come out of your mouse cursor on click instead of confetti rain)
     - Browser, which is what the name suggests (Fully interactable browser, similar to the Browser element, but always fullscreen and auto-focused)
       - It has settings for toggling on/off mouse and keyboard event consumtion and processing, so you can configure it as interactive browser or as simple overlay in front of the normal Minecraft menu
+- Added the "FM Data" system that allows FancyMenu clients and servers to share data between each other
+  - Servers can send text data via "/fmdata send", the client can then listen to this data via the "On FM Data Received" listener
+  - Clients can send text data to the current server via the "Send FM Data to Server" action and the server can listen to this data via "/fmdata listener"
+  - It is possible to send so called "welcome data" to clients that join the server, so you can basically send welcome packets to FancyMenu clients now
 - Added new FancyMenu UI scales which will make it easier to find the correct UI scale for your monitor resolution
   - When the scale is set to Auto, the smallest scale is now 1.25 (was 1 before), because 1.25 looks way better on 1080p monitors (you can still manually set scale 1 if you prefer that)
 - Added shortcut to quickly open the layout editor with the last edited layout (CTRL+ALT+L) (#868)
