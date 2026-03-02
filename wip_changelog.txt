@@ -5,6 +5,7 @@
   - Servers can send text data via "/fmdata send", the client can then listen to this data via the "On FM Data Received" listener
   - Clients can send text data to the current server via the "Send FM Data to Server" action and the server can listen to this data via "/fmdata listener"
   - It is possible to send so called "welcome data" to clients that join the server, so you can basically send welcome packets to FancyMenu clients now
+- The "Slider" element now supports setting a custom click sound
 - UI blur is now disabled by default (you guys will not notice this in testing, because your config already got generated with "true" as default)
 - Fixed "World Save Names" placeholder sometimes returning empty result (#1526)
 - Fixed dual text input dialog still using hardcoded Minecraft font for drawing input field labels
@@ -201,6 +202,7 @@
 - The "Rectangle Shape" element now has support for enabling blurring, so the shape can be used as a blur background for menu areas, etc. (#1484)
 - You can now set an "Unhover Sound" for buttons, sliders and checkboxes, similar to the hover sound, but for unhover (duh) (#1415)
 - Rotated buttons and sliders now adjust their "hitbox" to the rotation, so even when rotated you can click/hover the actual visible body instead of the original/not-rotated body
+- The "Slider" element now supports setting a custom click sound
 - The "Input Field" element now has support for setting hover, unhover and click sounds
 - Most of FancyMenu's simple text inputs (input fields) now allow for selecting text by holding down the mouse and moving over the text
 - The "New Element" menu's entries are now ordered alphabetically
