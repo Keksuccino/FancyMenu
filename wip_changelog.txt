@@ -12,6 +12,7 @@
 - Fixed dual text input dialog still using hardcoded Minecraft font for drawing input field labels
 - Fixed crash when editing text source
 - Fixed "Is Any Button Hovered", "Is Any Element Hovered" and "Is Element Hovered" requirements returning true when hovering hidden Vanilla widgets
+- Fixed invisible sliders still produce click sounds when clicked
 
 
 
@@ -271,5 +272,6 @@
 - Fixed audio resources sometimes not working anymore after changing audio settings like enabling/disabling directional audio
 - Fixed "World Save Names" placeholder sometimes returning empty result (#1526)
 - Fixed "Is Any Button Hovered", "Is Any Element Hovered" and "Is Element Hovered" requirements returning true when hovering hidden Vanilla widgets
+- Fixed invisible sliders still produce click sounds when clicked
 
 %changelog:end%
