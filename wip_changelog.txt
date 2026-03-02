@@ -7,6 +7,7 @@
   - It is possible to send so called "welcome data" to clients that join the server, so you can basically send welcome packets to FancyMenu clients now
 - The "Slider" element now supports setting a custom click sound
 - UI blur is now disabled by default (you guys will not notice this in testing, because your config already got generated with "true" as default)
+- Improved how number inputs handle their default value when the default is "empty" (the really big negative number)
 - Fixed "World Save Names" placeholder sometimes returning empty result (#1526)
 - Fixed dual text input dialog still using hardcoded Minecraft font for drawing input field labels
 - Fixed crash when editing text source
