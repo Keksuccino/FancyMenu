@@ -294,5 +294,6 @@
 - Fixed "Is Any Button Hovered", "Is Any Element Hovered" and "Is Element Hovered" requirements returning true when hovering hidden Vanilla widgets
 - Fixed invisible sliders still produce click sounds when clicked
 - Fixed Video background freezing after random amount of time (should be fixed when using the new WaterMedia-powered Video background) (#1200)
+- Fixed fading in/out not working for Video element (should be fixed when using the new WatermMedia-powered Video element) (#1240)
 
 %changelog:end%
