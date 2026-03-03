@@ -71,19 +71,18 @@ public final class RemoteServerConnectionManager {
     }
 
     public static void sendData(@NotNull String remoteServerUrl, @Nullable String data) {
-        String normalizedUrl = normalizeRemoteServerUrl(remoteServerUrl);
-        if (normalizedUrl == null) {
-            LOGGER.warn("[FANCYMENU] Ignoring remote data send request due to invalid remote server URL: {}", remoteServerUrl);
+        ConnectionState state = getOrCreateConnectionState(remoteServerUrl);
+        if (state == null) {
             return;
         }
-
-        ConnectionState state = CONNECTIONS_BY_URL.computeIfAbsent(normalizedUrl, RemoteServerConnectionManager::createAndRegisterConnectionState);
         state.pendingPayloads.add(Objects.requireNonNullElse(data, ""));
-        synchronized (state.lock) {
-            state.reconnectRequested = true;
-            if (state.nextReconnectAttemptAtMillis <= 0L) {
-                state.nextReconnectAttemptAtMillis = System.currentTimeMillis();
-            }
+        connectIfNeededAndFlush(state);
+    }
+
+    public static void connect(@NotNull String remoteServerUrl) {
+        ConnectionState state = getOrCreateConnectionState(remoteServerUrl);
+        if (state == null) {
+            return;
         }
         connectIfNeededAndFlush(state);
     }
@@ -141,6 +140,24 @@ public final class RemoteServerConnectionManager {
         } catch (Exception ex) {
             return null;
         }
+    }
+
+    @Nullable
+    private static ConnectionState getOrCreateConnectionState(@Nullable String remoteServerUrl) {
+        String normalizedUrl = normalizeRemoteServerUrl(remoteServerUrl);
+        if (normalizedUrl == null) {
+            LOGGER.warn("[FANCYMENU] Ignoring remote server request due to invalid remote server URL: {}", remoteServerUrl);
+            return null;
+        }
+
+        ConnectionState state = CONNECTIONS_BY_URL.computeIfAbsent(normalizedUrl, RemoteServerConnectionManager::createAndRegisterConnectionState);
+        synchronized (state.lock) {
+            state.reconnectRequested = true;
+            if (state.nextReconnectAttemptAtMillis <= 0L) {
+                state.nextReconnectAttemptAtMillis = System.currentTimeMillis();
+            }
+        }
+        return state;
     }
 
     @NotNull

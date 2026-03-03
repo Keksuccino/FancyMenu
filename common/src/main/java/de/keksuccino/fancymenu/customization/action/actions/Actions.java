@@ -43,6 +43,7 @@ public class Actions {
     public static final DisableLayoutAction DISABLE_LAYOUT = new DisableLayoutAction();
     public static final SendMessageAction SEND_MESSAGE = new SendMessageAction();
     public static final SendFmDataToServerAction SEND_FM_DATA_TO_SERVER = new SendFmDataToServerAction();
+    public static final ConnectToRemoteServerAction CONNECT_TO_REMOTE_SERVER = new ConnectToRemoteServerAction();
     public static final SendDataToRemoteServerAction SEND_DATA_TO_REMOTE_SERVER = new SendDataToRemoteServerAction();
     public static final CloseAllRemoteServerConnectionsAction CLOSE_ALL_REMOTE_SERVER_CONNECTIONS = new CloseAllRemoteServerConnectionsAction();
     public static final CloseRemoteServerConnectionAction CLOSE_REMOTE_SERVER_CONNECTION = new CloseRemoteServerConnectionAction();
@@ -108,6 +109,7 @@ public class Actions {
         ActionRegistry.register(DISABLE_LAYOUT);
         ActionRegistry.register(SEND_MESSAGE);
         ActionRegistry.register(SEND_FM_DATA_TO_SERVER);
+        ActionRegistry.register(CONNECT_TO_REMOTE_SERVER);
         ActionRegistry.register(SEND_DATA_TO_REMOTE_SERVER);
         ActionRegistry.register(CLOSE_ALL_REMOTE_SERVER_CONNECTIONS);
         ActionRegistry.register(CLOSE_REMOTE_SERVER_CONNECTION);
@@ -166,5 +168,4 @@ public class Actions {
     }
 
 }
-
 
