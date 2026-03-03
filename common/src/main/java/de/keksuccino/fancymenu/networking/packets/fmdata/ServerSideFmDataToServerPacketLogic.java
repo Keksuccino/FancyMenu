@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.networking.packets.fmdata;
 
-import de.keksuccino.fancymenu.fmdata.FmDataServerListenerHandler;
+import de.keksuccino.fancymenu.customization.fmdata.FmDataServerListenerHandler;
 import net.minecraft.server.level.ServerPlayer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.fmdata;
+package de.keksuccino.fancymenu.customization.fmdata;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

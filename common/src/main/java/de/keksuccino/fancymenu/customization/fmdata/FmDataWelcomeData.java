@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.fmdata;
+package de.keksuccino.fancymenu.customization.fmdata;
 
 import com.mojang.brigadier.StringReader;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;

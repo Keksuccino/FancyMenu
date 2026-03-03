@@ -43,6 +43,9 @@ public class Actions {
     public static final DisableLayoutAction DISABLE_LAYOUT = new DisableLayoutAction();
     public static final SendMessageAction SEND_MESSAGE = new SendMessageAction();
     public static final SendFmDataToServerAction SEND_FM_DATA_TO_SERVER = new SendFmDataToServerAction();
+    public static final SendDataToRemoteServerAction SEND_DATA_TO_REMOTE_SERVER = new SendDataToRemoteServerAction();
+    public static final CloseAllRemoteServerConnectionsAction CLOSE_ALL_REMOTE_SERVER_CONNECTIONS = new CloseAllRemoteServerConnectionsAction();
+    public static final CloseRemoteServerConnectionAction CLOSE_REMOTE_SERVER_CONNECTION = new CloseRemoteServerConnectionAction();
     public static final ExecuteCommandAsIntegratedServerAction EXECUTE_COMMAND_AS_INTEGRATED_SERVER = new ExecuteCommandAsIntegratedServerAction();
     public static final QuitGameAction QUIT_GAME = new QuitGameAction();
     public static final JoinServerAction JOIN_SERVER = new JoinServerAction();
@@ -105,6 +108,9 @@ public class Actions {
         ActionRegistry.register(DISABLE_LAYOUT);
         ActionRegistry.register(SEND_MESSAGE);
         ActionRegistry.register(SEND_FM_DATA_TO_SERVER);
+        ActionRegistry.register(SEND_DATA_TO_REMOTE_SERVER);
+        ActionRegistry.register(CLOSE_ALL_REMOTE_SERVER_CONNECTIONS);
+        ActionRegistry.register(CLOSE_REMOTE_SERVER_CONNECTION);
         ActionRegistry.register(EXECUTE_COMMAND_AS_INTEGRATED_SERVER);
         ActionRegistry.register(QUIT_GAME);
         ActionRegistry.register(JOIN_SERVER);
@@ -160,6 +166,5 @@ public class Actions {
     }
 
 }
-
 
 

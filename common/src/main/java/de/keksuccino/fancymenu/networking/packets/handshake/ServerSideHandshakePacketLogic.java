@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.networking.packets.handshake;
 
-import de.keksuccino.fancymenu.fmdata.FmDataWelcomeDataHandler;
+import de.keksuccino.fancymenu.customization.fmdata.FmDataWelcomeDataHandler;
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;

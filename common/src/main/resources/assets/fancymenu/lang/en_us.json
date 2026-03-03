@@ -3246,5 +3246,20 @@
   "fancymenu.actions.send_fm_data_to_server.value.data": "Data",
   "fancymenu.listeners.on_fm_data_received": "On FM Data Received",
   "fancymenu.listeners.on_fm_data_received.desc": "This listener triggers when the server sends FMData to this client via '/fmdata send'.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$data_identifier §r= The identifier string that was sent with the data\n- §z$$data §r= The data payload string that was sent\n- §z$$sent_by §r= The server IP that sent the data, or 'integrated_server' in singleplayer",
-  "fancymenu.elements.slider.v2.clicksound": "Click Sound"
+  "fancymenu.elements.slider.v2.clicksound": "Click Sound",
+  "fancymenu.actions.send_data_to_remote_server": "Send Data To Remote Server",
+  "fancymenu.actions.send_data_to_remote_server.desc": "Connects to a remote WebSocket server (or reuses an existing connection) and sends text data.\n\nFancyMenu automatically keeps one cached request ID per server URL and prefixes outgoing data with that request ID.",
+  "fancymenu.actions.send_data_to_remote_server.value.remote_server_url": "Remote Server URL",
+  "fancymenu.actions.send_data_to_remote_server.value.data": "Data",
+  "fancymenu.actions.close_all_remote_server_connections": "Close All Remote Server Connections",
+  "fancymenu.actions.close_all_remote_server_connections.desc": "Closes all currently active remote server connections that were opened by FancyMenu.",
+  "fancymenu.actions.close_remote_server_connection": "Close Remote Server Connection",
+  "fancymenu.actions.close_remote_server_connection.desc": "Closes a specific remote server connection by its request ID.",
+  "fancymenu.actions.close_remote_server_connection.value": "Connection Request ID",
+  "fancymenu.listeners.on_remote_server_connected": "On Remote Server Connected",
+  "fancymenu.listeners.on_remote_server_connected.desc": "This listener triggers when FancyMenu initializes a remote server connection.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$request_id §r= The cached request ID of the connection\n- §z$$remote_server_url §r= The URL of the remote server connection",
+  "fancymenu.listeners.on_remote_server_data_received": "On Remote Server Data Received",
+  "fancymenu.listeners.on_remote_server_data_received.desc": "This listener triggers whenever text data is received from a connected remote server.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$request_id §r= The request ID of the remote connection/message\n- §z$$remote_server_url §r= The URL of the remote server connection\n- §z$$data §r= The received text data payload",
+  "fancymenu.listeners.on_remote_server_connection_closed": "On Remote Server Connection Closed",
+  "fancymenu.listeners.on_remote_server_connection_closed.desc": "This listener triggers when a remote server connection gets closed.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$request_id §r= The request ID of the closed connection\n- §z$$remote_server_url §r= The URL of the closed remote server connection\n- §z$$intentionally_closed §r= TRUE if the close was triggered by a close action\n- §z$$crashed §r= TRUE if the connection crashed unexpectedly\n- §z$$unknown_close_reason §r= TRUE if the connection closed unexpectedly without a known crash reason"
 }

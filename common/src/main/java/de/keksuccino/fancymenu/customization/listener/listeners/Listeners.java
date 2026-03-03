@@ -75,6 +75,9 @@ public class Listeners {
     public static final OnServerJoinedListener ON_SERVER_JOINED = new OnServerJoinedListener();
     public static final OnServerLeftListener ON_SERVER_LEFT = new OnServerLeftListener();
     public static final OnFmDataReceivedListener ON_FM_DATA_RECEIVED = new OnFmDataReceivedListener();
+    public static final OnRemoteServerConnectedListener ON_REMOTE_SERVER_CONNECTED = new OnRemoteServerConnectedListener();
+    public static final OnRemoteServerDataReceivedListener ON_REMOTE_SERVER_DATA_RECEIVED = new OnRemoteServerDataReceivedListener();
+    public static final OnRemoteServerConnectionClosedListener ON_REMOTE_SERVER_CONNECTION_CLOSED = new OnRemoteServerConnectionClosedListener();
     public static final OnWorldEnteredListener ON_WORLD_ENTERED = new OnWorldEnteredListener();
     public static final OnWorldLeftListener ON_WORLD_LEFT = new OnWorldLeftListener();
     public static final OnOtherPlayerJoinedWorldListener ON_OTHER_PLAYER_JOINED_WORLD = new OnOtherPlayerJoinedWorldListener();
@@ -162,6 +165,9 @@ public class Listeners {
         ListenerRegistry.register(ON_SERVER_JOINED);
         ListenerRegistry.register(ON_SERVER_LEFT);
         ListenerRegistry.register(ON_FM_DATA_RECEIVED);
+        ListenerRegistry.register(ON_REMOTE_SERVER_CONNECTED);
+        ListenerRegistry.register(ON_REMOTE_SERVER_DATA_RECEIVED);
+        ListenerRegistry.register(ON_REMOTE_SERVER_CONNECTION_CLOSED);
         ListenerRegistry.register(ON_WORLD_ENTERED);
         ListenerRegistry.register(ON_WORLD_LEFT);
         ListenerRegistry.register(ON_OTHER_PLAYER_JOINED_WORLD);

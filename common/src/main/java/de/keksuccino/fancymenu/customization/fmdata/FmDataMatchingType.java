@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.fmdata;
+package de.keksuccino.fancymenu.customization.fmdata;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
