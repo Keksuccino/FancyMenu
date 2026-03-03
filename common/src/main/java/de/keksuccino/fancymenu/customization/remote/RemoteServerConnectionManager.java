@@ -32,6 +32,7 @@ public final class RemoteServerConnectionManager {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final long RECONNECT_DELAY_MILLIS = 10_000L;
+    private static final long QUEUED_PAYLOAD_MAX_AGE_MILLIS = 30_000L;
     private static final long HEARTBEAT_TICK_INTERVAL_MILLIS = 5_000L;
     private static final long HEARTBEAT_PING_INTERVAL_MILLIS = 20_000L;
     private static final long HEARTBEAT_PONG_TIMEOUT_MILLIS = 70_000L;
@@ -75,7 +76,7 @@ public final class RemoteServerConnectionManager {
         if (state == null) {
             return;
         }
-        state.pendingPayloads.add(Objects.requireNonNullElse(data, ""));
+        enqueuePayload(state, Objects.requireNonNullElse(data, ""));
         connectIfNeededAndFlush(state);
     }
 
@@ -275,26 +276,46 @@ public final class RemoteServerConnectionManager {
         }
     }
 
+    private static void enqueuePayload(@NotNull ConnectionState state, @NotNull String payload) {
+        long now = System.currentTimeMillis();
+        pruneExpiredQueuedPayloads(state, now);
+        state.pendingPayloads.add(new QueuedPayload(payload, now));
+    }
+
+    private static void pruneExpiredQueuedPayloads(@NotNull ConnectionState state, long now) {
+        state.pendingPayloads.removeIf(queuedPayload -> isQueuedPayloadExpired(queuedPayload, now));
+    }
+
+    private static boolean isQueuedPayloadExpired(@NotNull QueuedPayload payload, long now) {
+        return now - payload.queuedAtMillis() > QUEUED_PAYLOAD_MAX_AGE_MILLIS;
+    }
+
     private static void flushPendingPayloads(@NotNull ConnectionState state, @NotNull WebSocket socket) {
         if (!isSocketOpen(socket)) {
             return;
         }
 
-        String payload;
-        while ((payload = state.pendingPayloads.poll()) != null) {
-            sendPayload(state, socket, payload);
+        long now = System.currentTimeMillis();
+        QueuedPayload queuedPayload;
+        while ((queuedPayload = state.pendingPayloads.poll()) != null) {
+            if (isQueuedPayloadExpired(queuedPayload, now)) {
+                continue;
+            }
+            sendPayload(state, socket, queuedPayload);
         }
     }
 
-    private static void sendPayload(@NotNull ConnectionState state, @NotNull WebSocket socket, @NotNull String payload) {
+    private static void sendPayload(@NotNull ConnectionState state, @NotNull WebSocket socket, @NotNull QueuedPayload payload) {
         final long generation;
         synchronized (state.lock) {
             generation = state.connectionGeneration;
         }
 
-        String outgoing = buildOutgoingMessage(state.requestId, payload);
+        String outgoing = buildOutgoingMessage(state.requestId, payload.payload());
         socket.sendText(outgoing, true).exceptionally(ex -> {
-            state.pendingPayloads.add(payload);
+            if (!isQueuedPayloadExpired(payload, System.currentTimeMillis())) {
+                state.pendingPayloads.add(payload);
+            }
             onSocketCrashed(state, generation, "send_failed", ex);
             return null;
         });
@@ -323,6 +344,8 @@ public final class RemoteServerConnectionManager {
         long now = System.currentTimeMillis();
 
         for (ConnectionState state : CONNECTIONS_BY_URL.values()) {
+            pruneExpiredQueuedPayloads(state, now);
+
             WebSocket socket;
             long generation;
             boolean shouldReconnect = false;
@@ -542,7 +565,7 @@ public final class RemoteServerConnectionManager {
     private static final class ConnectionState {
 
         private final Object lock = new Object();
-        private final Queue<String> pendingPayloads = new ConcurrentLinkedQueue<>();
+        private final Queue<QueuedPayload> pendingPayloads = new ConcurrentLinkedQueue<>();
         private final String remoteServerUrl;
         private final String requestId;
 
@@ -565,6 +588,9 @@ public final class RemoteServerConnectionManager {
     }
 
     private record IncomingMessage(@NotNull String requestId, @NotNull String data) {
+    }
+
+    private record QueuedPayload(@NotNull String payload, long queuedAtMillis) {
     }
 
     private static final class RemoteWebSocketListener implements WebSocket.Listener {
