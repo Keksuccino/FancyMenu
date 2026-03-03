@@ -2,10 +2,10 @@
 ## Alpha 4 Changelog
 
 - Added a new system to let FancyMenu communicate with a "remote server", which means a non-Minecraft server (WebSocket)
-  - This new system allows FancyMenu to initialiate a real keep-alive/persistent connection to a remote server for sending messages between server and client
+  - This new system allows FancyMenu to initiate a real keep-alive/persistent connection to a remote server for sending data between server and client
   - This is especially useful for true real-time updates to shop systems and similar server-sided backends
   - The system uses a persistent, client-initiated WebSocket (ws:// or wss://) channel for two-way text-based communication 
-  - It is important to note thate the client needs to initiate a connection, for safety reasons
+  - It is important to note that the client needs to initiate a connection, for safety reasons
   - There are various actions and listeners to send/receive data from remote servers (all of them have "Remote Server" in its name for easy searching)
 
 
@@ -93,10 +93,10 @@
   - Clients can send text data to the current server via the "Send FM Data to Server" action and the server can listen to this data via "/fmdata listener"
   - It is possible to send so called "welcome data" to clients that join the server, so you can basically send welcome packets to FancyMenu clients now
 - Added a new system to let FancyMenu communicate with a "remote server", which means a non-Minecraft server (WebSocket)
-  - This new system allows FancyMenu to initialiate a real keep-alive/persistent connection to a remote server for sending messages between server and client
+  - This new system allows FancyMenu to initiate a real keep-alive/persistent connection to a remote server for sending data between server and client
   - This is especially useful for true real-time updates to shop systems and similar server-sided backends
   - The system uses a persistent, client-initiated WebSocket (ws:// or wss://) channel for two-way text-based communication 
-  - It is important to note thate the client needs to initiate a connection, for safety reasons
+  - It is important to note that the client needs to initiate a connection, for safety reasons
   - There are various actions and listeners to send/receive data from remote servers (all of them have "Remote Server" in its name for easy searching)
 - Added new FancyMenu UI scales which will make it easier to find the correct UI scale for your monitor resolution
   - When the scale is set to Auto, the smallest scale is now 1.25 (was 1 before), because 1.25 looks way better on 1080p monitors (you can still manually set scale 1 if you prefer that)
