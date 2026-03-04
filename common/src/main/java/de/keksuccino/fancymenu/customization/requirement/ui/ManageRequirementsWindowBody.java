@@ -4,7 +4,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGroup;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
@@ -12,6 +14,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
@@ -25,6 +28,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,6 +47,7 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
 
     protected RequirementContainer container;
     protected Consumer<RequirementContainer> callback;
+    protected final boolean allowGroupManagement;
 
     protected ScrollArea requirementsScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ExtendedButton doneButton;
@@ -58,9 +63,14 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
     private final Deque<RequirementsSnapshot> redoHistory = new ArrayDeque<>();
 
     public ManageRequirementsWindowBody(@NotNull RequirementContainer container, @NotNull Consumer<RequirementContainer> callback) {
+        this(container, callback, true);
+    }
+
+    public ManageRequirementsWindowBody(@NotNull RequirementContainer container, @NotNull Consumer<RequirementContainer> callback, boolean allowGroupManagement) {
         super(Component.literal(I18n.get("fancymenu.requirements.screens.manage_screen.manage")));
         this.container = container;
         this.callback = callback;
+        this.allowGroupManagement = allowGroupManagement;
         this.updateRequirementsScrollArea();
     }
 
@@ -101,29 +111,82 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
                 }).setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.requirements.screens.manage_screen.add_requirement.desc")))
                 .setIcon(MaterialIcons.ADD);
 
-        this.rightClickContextMenu.addClickableEntry("add_group", Component.translatable("fancymenu.requirements.screens.add_group"), (menu, entry) -> {
-                    menu.closeMenuChain();
-                    this.onAddGroup();
-                }).setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.add_group.desc")))
-                .setIcon(MaterialIcons.ADD);
+        if (this.allowGroupManagement) {
+            this.rightClickContextMenu.addClickableEntry("add_group", Component.translatable("fancymenu.requirements.screens.add_group"), (menu, entry) -> {
+                        menu.closeMenuChain();
+                        this.onAddGroup();
+                    }).setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.add_group.desc")))
+                    .setIcon(MaterialIcons.ADD);
+        }
 
         this.rightClickContextMenu.addSeparatorEntry("separator_after_add");
 
+        if (this.allowGroupManagement) {
+            this.rightClickContextMenu.addClickableEntry("edit_group_requirements", Component.translatable("fancymenu.requirements.screens.manage_screen.group_settings.edit_requirements"), (menu, entry) -> {
+                        RequirementGroup selectedGroup = this.getContextMenuTargetGroup();
+                        if (selectedGroup == null) {
+                            return;
+                        }
+                        menu.closeMenuChain();
+                        this.onEditGroupRequirements(selectedGroup);
+                        }).addIsActiveSupplier((menu, entry) -> this.getContextMenuTargetGroup() != null)
+                    .addIsVisibleSupplier((menu, entry) -> this.getContextMenuTargetInstance() == null)
+                    .setTooltipSupplier((menu, entry) -> this.getContextMenuTargetGroup() != null
+                            ? UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.group_settings.edit_requirements.desc"))
+                            : UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.group_settings.no_group_selected")))
+                    .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.enter"))
+                    .setIcon(MaterialIcons.EDIT);
+
+            this.rightClickContextMenu.addClickableEntry("edit_group_identifier", Component.translatable("fancymenu.requirements.screens.manage_screen.group_settings.edit_identifier"), (menu, entry) -> {
+                        RequirementGroup selectedGroup = this.getContextMenuTargetGroup();
+                        if (selectedGroup == null) {
+                            return;
+                        }
+                        menu.closeMenuChain();
+                        this.onEditGroupIdentifier(selectedGroup);
+                    }).addIsActiveSupplier((menu, entry) -> this.getContextMenuTargetGroup() != null)
+                    .addIsVisibleSupplier((menu, entry) -> this.getContextMenuTargetInstance() == null)
+                    .setTooltipSupplier((menu, entry) -> this.getContextMenuTargetGroup() != null
+                            ? UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.group_settings.edit_identifier.desc"))
+                            : UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.group_settings.no_group_selected")))
+                    .setIcon(MaterialIcons.DRIVE_FILE_RENAME_OUTLINE);
+
+            this.rightClickContextMenu.addClickableEntry("cycle_group_mode", Component.translatable("fancymenu.requirements.screens.manage_screen.group_settings.cycle_mode.generic"), (menu, entry) -> {
+                        RequirementGroup selectedGroup = this.getContextMenuTargetGroup();
+                        if (selectedGroup == null) {
+                            return;
+                        }
+                        this.onCycleGroupMode(selectedGroup);
+                    }).setLabelSupplier((menu, entry) -> this.getContextMenuCycleGroupModeLabel())
+                    .addIsActiveSupplier((menu, entry) -> this.getContextMenuTargetGroup() != null)
+                    .addIsVisibleSupplier((menu, entry) -> this.getContextMenuTargetInstance() == null)
+                    .setTooltipSupplier((menu, entry) -> this.getContextMenuTargetGroup() != null
+                            ? UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.group_settings.cycle_mode.desc"))
+                            : UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.group_settings.no_group_selected")))
+                    .setIcon(MaterialIcons.SWAP_HORIZ);
+
+            this.rightClickContextMenu.addSeparatorEntry("separator_after_group_settings")
+                    .addIsVisibleSupplier((menu, entry) -> this.getContextMenuTargetInstance() == null);
+        }
+
         this.rightClickContextMenu.addClickableEntry("edit", Component.translatable("fancymenu.requirements.screens.manage_screen.edit.generic"), (menu, entry) -> {
                     RequirementInstance selectedInstance = this.getContextMenuTargetInstance();
-                    RequirementGroup selectedGroup = this.getContextMenuTargetGroup();
-                    if ((selectedInstance == null) && (selectedGroup == null)) {
+                    if (selectedInstance == null) {
                         return;
                     }
                     menu.closeMenuChain();
-                    this.onEdit(selectedInstance, selectedGroup);
+                    this.onEdit(selectedInstance, null);
                 }).setLabelSupplier((menu, entry) -> this.getContextMenuEditLabel())
-                .addIsActiveSupplier((menu, entry) -> this.hasContextMenuTarget())
-                .setTooltipSupplier((menu, entry) -> this.hasContextMenuTarget()
+                .addIsActiveSupplier((menu, entry) -> this.getContextMenuTargetInstance() != null)
+                .addIsVisibleSupplier((menu, entry) -> this.getContextMenuTargetGroup() == null)
+                .setTooltipSupplier((menu, entry) -> (this.getContextMenuTargetInstance() != null)
                         ? UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.edit.desc"))
                         : UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.no_entry_selected")))
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.enter"))
                 .setIcon(MaterialIcons.EDIT);
+
+        this.rightClickContextMenu.addSeparatorEntry("separator_before_remove")
+                .addIsVisibleSupplier((menu, entry) -> this.getContextMenuTargetGroup() == null);
 
         this.rightClickContextMenu.addClickableEntry("remove", Component.translatable("fancymenu.requirements.screens.manage_screen.remove.generic"), (menu, entry) -> {
                     RequirementInstance selectedInstance = this.getContextMenuTargetInstance();
@@ -178,15 +241,22 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
     }
 
     protected void onAddGroup() {
+        if (!this.allowGroupManagement) {
+            return;
+        }
         RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
-        BuildRequirementGroupScreen screen = new BuildRequirementGroupScreen(this.container, null, (call) -> {
-            if (call != null) {
-                this.container.addGroup(call);
-                this.updateRequirementsScrollArea();
-                this.createUndoPointIfChanged(beforeSnapshot);
+        RequirementGroup group = this.container.createAndAddGroup(this.generateUniqueGroupIdentifier(), RequirementGroup.GroupMode.AND);
+        if (group != null) {
+            this.contextMenuTargetGroupIdentifier = group.identifier;
+            this.contextMenuTargetInstanceIdentifier = null;
+            this.updateRequirementsScrollArea();
+            this.restoreSelection(group.identifier, null);
+            ScrollAreaEntry focusedEntry = this.requirementsScrollArea.getFocusedEntry();
+            if (focusedEntry != null) {
+                this.scrollEntryIntoView(focusedEntry);
             }
-        });
-        this.openChildWindow(parentWindow -> BuildRequirementGroupScreen.openInWindow(screen, parentWindow));
+            this.createUndoPointIfChanged(beforeSnapshot);
+        }
     }
 
     protected void onEdit(@Nullable RequirementInstance selectedInstance, @Nullable RequirementGroup selectedGroup) {
@@ -202,15 +272,64 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
             return;
         }
         if (selectedGroup != null) {
-            RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
-            BuildRequirementGroupScreen groupScreen = new BuildRequirementGroupScreen(this.container, selectedGroup, (call) -> {
-                if (call != null) {
-                    this.updateRequirementsScrollArea();
-                    this.createUndoPointIfChanged(beforeSnapshot);
-                }
-            });
-            this.openChildWindow(parentWindow -> BuildRequirementGroupScreen.openInWindow(groupScreen, parentWindow));
+            this.onEditGroupRequirements(selectedGroup);
         }
+    }
+
+    protected void onEditGroupRequirements(@NotNull RequirementGroup selectedGroup) {
+        RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
+        String selectedGroupIdentifier = selectedGroup.identifier;
+        RequirementContainer groupRequirements = this.buildGroupRequirementsContainer(selectedGroup);
+        ManageRequirementsWindowBody groupRequirementsScreen = new ManageRequirementsWindowBody(groupRequirements, (call) -> {
+            if (call == null) {
+                return;
+            }
+            RequirementGroup currentGroup = this.container.getGroup(selectedGroupIdentifier);
+            if (currentGroup == null) {
+                return;
+            }
+            this.applyGroupRequirementsFromContainer(currentGroup, call);
+            this.updateRequirementsScrollArea();
+            this.restoreSelection(currentGroup.identifier, null);
+            this.createUndoPointIfChanged(beforeSnapshot);
+        }, false);
+        this.openChildWindow(parentWindow -> ManageRequirementsWindowBody.openInWindow(groupRequirementsScreen, parentWindow));
+    }
+
+    protected void onEditGroupIdentifier(@NotNull RequirementGroup selectedGroup) {
+        TextInputWindowBody inputScreen = new TextInputWindowBody(CharacterFilter.buildOnlyLowercaseFileNameFilter(), (call) -> {
+            if (call == null) {
+                return;
+            }
+            if (call.equals(selectedGroup.identifier)) {
+                return;
+            }
+            RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
+            selectedGroup.identifier = call;
+            this.contextMenuTargetGroupIdentifier = call;
+            this.contextMenuTargetInstanceIdentifier = null;
+            this.updateRequirementsScrollArea();
+            this.restoreSelection(call, null);
+            this.createUndoPointIfChanged(beforeSnapshot);
+        });
+        inputScreen.setText(selectedGroup.identifier);
+        inputScreen.setTextValidator(s -> this.isGroupIdentifierValidForRename(selectedGroup, s.getText()));
+        inputScreen.setTextValidatorUserFeedback(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.group_settings.edit_identifier.invalid")));
+        Dialogs.openGeneric(inputScreen,
+                Component.translatable("fancymenu.requirements.screens.manage_screen.group_settings.edit_identifier"),
+                null, TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT)
+                .getSecond().setIcon(MaterialIcons.DRIVE_FILE_RENAME_OUTLINE);
+    }
+
+    protected void onCycleGroupMode(@NotNull RequirementGroup selectedGroup) {
+        RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
+        selectedGroup.mode = (selectedGroup.mode == RequirementGroup.GroupMode.AND)
+                ? RequirementGroup.GroupMode.OR
+                : RequirementGroup.GroupMode.AND;
+        this.updateRequirementsScrollArea();
+        this.restoreSelection(selectedGroup.identifier, null);
+        this.createUndoPointIfChanged(beforeSnapshot);
+        this.updateRightClickContextMenu(true);
     }
 
     protected void onRemove(@Nullable RequirementInstance selectedInstance, @Nullable RequirementGroup selectedGroup) {
@@ -246,7 +365,10 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
                 : UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
         int scrollAreaTop = 50 + 15;
         float labelY = scrollAreaTop - UIBase.getUITextHeightNormal() - 3.0F;
-        UIBase.renderText(graphics, I18n.get("fancymenu.requirements.screens.manage_screen.requirements_and_groups"), 20, labelY, textColor);
+        Component requirementsLabel = this.allowGroupManagement
+                ? Component.translatable("fancymenu.requirements.screens.manage_screen.requirements_and_groups")
+                : Component.translatable("fancymenu.requirements.screens.build_group_screen.group_requirements");
+        UIBase.renderText(graphics, requirementsLabel, 20, labelY, textColor);
 
         this.requirementsScrollArea.setWidth(this.width - 20 - 20, true);
         this.requirementsScrollArea.setHeight(this.height - 85, true);
@@ -262,7 +384,9 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
 
         this.requirementsScrollArea.render(graphics, mouseX, mouseY, partial);
         if (this.requirementsScrollArea.getEntries().isEmpty()) {
-            Component hint = Component.translatable("fancymenu.requirements.screens.manage_screen.empty_hint");
+            Component hint = Component.translatable(this.allowGroupManagement
+                    ? "fancymenu.requirements.screens.manage_screen.empty_hint"
+                    : "fancymenu.requirements.screens.manage_screen.empty_hint.requirements_only");
             float hintWidth = UIBase.getUITextWidthNormal(hint);
             float hintX = this.requirementsScrollArea.getInnerX() + (this.requirementsScrollArea.getInnerWidth() / 2F) - (hintWidth / 2F);
             float hintY = this.requirementsScrollArea.getInnerY() + (this.requirementsScrollArea.getInnerHeight() / 2F) - (UIBase.getUITextHeightNormal() / 2F);
@@ -429,10 +553,20 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
         if (this.getContextMenuTargetInstance() != null) {
             return Component.translatable("fancymenu.requirements.screens.edit_requirement");
         }
-        if (this.getContextMenuTargetGroup() != null) {
-            return Component.translatable("fancymenu.requirements.screens.edit_group");
-        }
         return Component.translatable("fancymenu.requirements.screens.manage_screen.edit.generic");
+    }
+
+    @NotNull
+    protected Component getContextMenuCycleGroupModeLabel() {
+        RequirementGroup selectedGroup = this.getContextMenuTargetGroup();
+        if (selectedGroup == null) {
+            return Component.translatable("fancymenu.requirements.screens.manage_screen.group_settings.cycle_mode.generic");
+        }
+        MutableComponent currentMode = Component.translatable((selectedGroup.mode == RequirementGroup.GroupMode.AND)
+                ? "fancymenu.requirements.screens.manage_screen.group_mode.and"
+                : "fancymenu.requirements.screens.manage_screen.group_mode.or")
+                .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
+        return Component.translatable("fancymenu.requirements.screens.manage_screen.group_settings.cycle_mode", currentMode);
     }
 
     @NotNull
@@ -502,9 +636,11 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
 
         this.requirementsScrollArea.clearEntries();
 
-        for (RequirementGroup g : this.container.getGroups()) {
-            RequirementGroupEntry e = new RequirementGroupEntry(this.requirementsScrollArea, g);
-            this.requirementsScrollArea.addEntry(e);
+        if (this.allowGroupManagement) {
+            for (RequirementGroup g : this.container.getGroups()) {
+                RequirementGroupEntry e = new RequirementGroupEntry(this.requirementsScrollArea, g);
+                this.requirementsScrollArea.addEntry(e);
+            }
         }
 
         for (RequirementInstance i : this.container.getInstances()) {
@@ -533,6 +669,47 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
             this.createUndoPointIfChanged(beforeSnapshot);
         }
         return changed;
+    }
+
+    protected @NotNull RequirementContainer buildGroupRequirementsContainer(@NotNull RequirementGroup group) {
+        RequirementContainer groupRequirements = new RequirementContainer();
+        group.getValuePlaceholders().forEach(groupRequirements::addValuePlaceholder);
+        for (RequirementInstance instance : group.getInstances()) {
+            RequirementInstance instanceCopy = instance.copy(false);
+            instanceCopy.parent = groupRequirements;
+            instanceCopy.group = null;
+            groupRequirements.addInstance(instanceCopy);
+        }
+        return groupRequirements;
+    }
+
+    protected void applyGroupRequirementsFromContainer(@NotNull RequirementGroup group, @NotNull RequirementContainer editedContainer) {
+        for (RequirementInstance instance : group.getInstances()) {
+            group.removeInstance(instance);
+        }
+        for (RequirementInstance editedInstance : editedContainer.getInstances()) {
+            RequirementInstance instanceCopy = editedInstance.copy(false);
+            instanceCopy.parent = this.container;
+            group.addInstance(instanceCopy);
+        }
+    }
+
+    protected boolean isGroupIdentifierValidForRename(@NotNull RequirementGroup selectedGroup, @Nullable String newIdentifier) {
+        if ((newIdentifier == null) || newIdentifier.replace(" ", "").isEmpty()) {
+            return false;
+        }
+        RequirementGroup existingGroup = this.container.getGroup(newIdentifier);
+        return (existingGroup == null) || (existingGroup == selectedGroup);
+    }
+
+    protected @NotNull String generateUniqueGroupIdentifier() {
+        int index = this.container.getGroups().size() + 1;
+        String identifier = "group_" + index;
+        while (this.container.groupExists(identifier)) {
+            index++;
+            identifier = "group_" + index;
+        }
+        return identifier;
     }
 
     private boolean selectAdjacentRequirementsEntry(boolean moveDown) {

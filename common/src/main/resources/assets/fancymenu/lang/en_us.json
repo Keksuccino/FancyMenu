@@ -3266,5 +3266,18 @@
   "fancymenu.actions.connect_to_remote_server.desc": "Initializes a remote server connection by URL without sending payload data yet.\n\nThe connection stays active in the background and can later be used by remote send actions.",
   "fancymenu.actions.connect_to_remote_server.value": "Remote Server URL",
   "fancymenu.requirements.screens.manage_screen.empty_hint": "Right-click here to add requirements or groups",
-  "fancymenu.editor.shortcuts.enter": "Enter"
+  "fancymenu.editor.shortcuts.enter": "Enter",
+  "fancymenu.requirements.screens.manage_screen.empty_hint.requirements_only": "Right-click here to add requirements",
+  "fancymenu.requirements.screens.manage_screen.edit_group_requirements": "Edit Group Requirements",
+  "fancymenu.requirements.screens.manage_screen.group_mode.and": "And",
+  "fancymenu.requirements.screens.manage_screen.group_mode.or": "Or",
+  "fancymenu.requirements.screens.manage_screen.group_settings.no_group_selected": "§xYou need to select a group first!",
+  "fancymenu.requirements.screens.manage_screen.group_settings.edit_requirements": "Edit Group Requirements",
+  "fancymenu.requirements.screens.manage_screen.group_settings.edit_requirements.desc": "Manage the requirements inside the selected group.",
+  "fancymenu.requirements.screens.manage_screen.group_settings.edit_identifier": "Edit Group Identifier",
+  "fancymenu.requirements.screens.manage_screen.group_settings.edit_identifier.desc": "Edit the unique identifier of the selected group.",
+  "fancymenu.requirements.screens.manage_screen.group_settings.edit_identifier.invalid": "§xThe group identifier needs to be unique\n§xand cannot be empty!",
+  "fancymenu.requirements.screens.manage_screen.group_settings.cycle_mode": "Group Mode: %s",
+  "fancymenu.requirements.screens.manage_screen.group_settings.cycle_mode.generic": "Cycle Group Mode",
+  "fancymenu.requirements.screens.manage_screen.group_settings.cycle_mode.desc": "Cycle the mode of the selected group\nbetween AND and OR."
 }
