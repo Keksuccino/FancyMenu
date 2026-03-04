@@ -8,7 +8,7 @@
   - It is important to note that the client needs to initiate a connection, for safety reasons
   - There are various actions and listeners to send/receive data from remote servers (all of them have "Remote Server" in its name for easy searching)
 - Focused PiP windows now consume all keyboard/char inputs when focused, to not let key presses through to the real Minecraft screen
-
+- The Game Intro now always consumes all mouse clicks while open, so you don't acidentally click the screen behind it anymore
 
 
 
@@ -260,6 +260,7 @@
 - Greatly optimized FMA files to use way less memory and load faster while still being performance-friendly
 - The old "Video [MCEF]" menu background type is now DEPRECATED (please switch to the new native "Video" background type powered by Watermedia v3)
 - The old "Video [MCEF]" element is now DEPRECATED (please switch to the new native "Video" element powered by Watermedia v3)
+- The Game Intro now always consumes all mouse clicks while open, so you don't acidentally click the screen behind it anymore
 
 ### Breaking Changes
 
