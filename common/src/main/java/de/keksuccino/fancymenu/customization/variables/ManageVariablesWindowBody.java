@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
 
-public class ManageVariablesScreen extends PiPWindowBody implements InitialWidgetFocusScreen {
+public class ManageVariablesWindowBody extends PiPWindowBody implements InitialWidgetFocusScreen {
 
     public static final int PIP_WINDOW_WIDTH = 640;
     public static final int PIP_WINDOW_HEIGHT = 420;
@@ -50,7 +50,7 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
     @Nullable
     protected ExtendedButton doneButton;
 
-    public ManageVariablesScreen(@NotNull Consumer<List<Variable>> callback) {
+    public ManageVariablesWindowBody(@NotNull Consumer<List<Variable>> callback) {
         super(Component.translatable("fancymenu.overlay.menu_bar.variables.manage"));
         this.callback = callback;
     }
@@ -224,7 +224,7 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
     }
 
     @Nullable
-    protected ManageVariablesScreen.VariableScrollEntry getSelectedEntry() {
+    protected ManageVariablesWindowBody.VariableScrollEntry getSelectedEntry() {
         for (ScrollAreaEntry e : this.variableListScrollArea.getEntries()) {
             if (e instanceof VariableScrollEntry s) {
                 if (s.isSelected()) return s;
@@ -312,7 +312,7 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
 
     }
 
-    public static @NotNull PiPWindow openInWindow(@NotNull ManageVariablesScreen screen, @Nullable PiPWindow parentWindow) {
+    public static @NotNull PiPWindow openInWindow(@NotNull ManageVariablesWindowBody screen, @Nullable PiPWindow parentWindow) {
         PiPWindow window = new PiPWindow(screen.getTitle())
                 .setScreen(screen)
                 .setForceFancyMenuUiScale(true)
@@ -322,7 +322,7 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
         return window;
     }
 
-    public static @NotNull PiPWindow openInWindow(@NotNull ManageVariablesScreen screen) {
+    public static @NotNull PiPWindow openInWindow(@NotNull ManageVariablesWindowBody screen) {
         return openInWindow(screen, null);
     }
 

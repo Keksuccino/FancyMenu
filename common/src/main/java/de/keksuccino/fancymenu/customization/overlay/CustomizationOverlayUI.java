@@ -15,12 +15,12 @@ import de.keksuccino.fancymenu.customization.global.ManageGlobalMenuMusicTracksS
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.ChoosePanoramaScreen;
-import de.keksuccino.fancymenu.customization.listener.gui.ManageListenersScreen;
-import de.keksuccino.fancymenu.customization.scheduler.gui.ManageSchedulersScreen;
+import de.keksuccino.fancymenu.customization.listener.gui.ManageListenersWindowBody;
+import de.keksuccino.fancymenu.customization.scheduler.gui.ManageSchedulersWindowBody;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.dummyscreen.DummyScreenBuilder;
 import de.keksuccino.fancymenu.customization.screen.dummyscreen.DummyScreenRegistry;
-import de.keksuccino.fancymenu.customization.variables.ManageVariablesScreen;
+import de.keksuccino.fancymenu.customization.variables.ManageVariablesWindowBody;
 import de.keksuccino.fancymenu.util.*;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
@@ -262,26 +262,26 @@ public class CustomizationOverlayUI {
                 .setIcon(MaterialIcons.SCREEN_SHARE);
 
         customizationMenu.addClickableEntry("variables", Component.translatable("fancymenu.overlay.menu_bar.variables.manage"), (menu, entry) -> {
-                    ManageVariablesScreen s = new ManageVariablesScreen(call -> {});
-                    ManageVariablesScreen.openInWindow(s);
+                    ManageVariablesWindowBody s = new ManageVariablesWindowBody(call -> {});
+                    ManageVariablesWindowBody.openInWindow(s);
                     menu.closeMenuChain();
                 })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.variables.desc")))
                 .setIcon(MaterialIcons.CODE);
 
         customizationMenu.addClickableEntry("manage_listeners", Component.translatable("fancymenu.listeners.manage"), (menu, entry) -> {
-                    ManageListenersScreen s = new ManageListenersScreen(call -> {
+                    ManageListenersWindowBody s = new ManageListenersWindowBody(call -> {
                     });
-                    ManageListenersScreen.openInWindow(s);
+                    ManageListenersWindowBody.openInWindow(s);
                     menu.closeMenuChain();
                 })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.listeners.manage.desc")))
                 .setIcon(MaterialIcons.HEARING);
 
         customizationMenu.addClickableEntry("manage_schedulers", Component.translatable("fancymenu.schedulers.manage"), (menu, entry) -> {
-                    ManageSchedulersScreen s = new ManageSchedulersScreen(call -> {
+                    ManageSchedulersWindowBody s = new ManageSchedulersWindowBody(call -> {
                     });
-                    ManageSchedulersScreen.openInWindow(s);
+                    ManageSchedulersWindowBody.openInWindow(s);
                     menu.closeMenuChain();
                 })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.schedulers.manage.desc")))

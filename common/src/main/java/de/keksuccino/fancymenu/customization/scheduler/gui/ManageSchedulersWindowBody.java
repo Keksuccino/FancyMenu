@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-public class ManageSchedulersScreen extends PiPCellWindowBody {
+public class ManageSchedulersWindowBody extends PiPCellWindowBody {
 
     public static final int PIP_WINDOW_WIDTH = 640;
     public static final int PIP_WINDOW_HEIGHT = 476;
@@ -60,7 +60,7 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
     protected String cachedStatusIdentifier;
     protected boolean cachedStatusRunning = false;
 
-    public ManageSchedulersScreen(@NotNull Consumer<Boolean> callback) {
+    public ManageSchedulersWindowBody(@NotNull Consumer<Boolean> callback) {
         super(Component.translatable("fancymenu.schedulers.manage"));
         this.callback = callback;
         this.setAllowCloseOnEsc(false);
@@ -366,7 +366,7 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
         return false;
     }
 
-    public static @NotNull PiPWindow openInWindow(@NotNull ManageSchedulersScreen screen, @Nullable PiPWindow parentWindow) {
+    public static @NotNull PiPWindow openInWindow(@NotNull ManageSchedulersWindowBody screen, @Nullable PiPWindow parentWindow) {
         PiPWindow window = new PiPWindow(screen.getTitle())
                 .setScreen(screen)
                 .setForceFancyMenuUiScale(true)
@@ -377,7 +377,7 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
         return window;
     }
 
-    public static @NotNull PiPWindow openInWindow(@NotNull ManageSchedulersScreen screen) {
+    public static @NotNull PiPWindow openInWindow(@NotNull ManageSchedulersWindowBody screen) {
         return openInWindow(screen, null);
     }
 
@@ -627,7 +627,7 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
         
         protected void updateLabelComponent() {
             this.labelComponent = Component.literal(this.instance.getIdentifier())
-                    .setStyle(Style.EMPTY.withColor(ManageSchedulersScreen.this.getLabelTextColor()));
+                    .setStyle(Style.EMPTY.withColor(ManageSchedulersWindowBody.this.getLabelTextColor()));
         }
 
         @Override
@@ -655,7 +655,7 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
         @Override
         protected void updateSize(@NotNull CellScrollEntry scrollEntry) {
             if (this.editMode && this.editBox != null) {
-                this.setWidth(Math.min((int)(ManageSchedulersScreen.this.scrollArea.getInnerWidth() - 40), 200));
+                this.setWidth(Math.min((int)(ManageSchedulersWindowBody.this.scrollArea.getInnerWidth() - 40), 200));
             } else {
                 this.setWidth((int)UIBase.getUITextWidthNormal(this.labelComponent));
             }
@@ -684,8 +684,8 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
                 MainThreadTaskExecutor.executeInMainThread(() -> {
                     MainThreadTaskExecutor.executeInMainThread(() -> {
                         this.setSelected(true);
-                        ManageSchedulersScreen.this.updateSelectedInstance();
-                        ManageSchedulersScreen.this.onEditActionsOfSelected();
+                        ManageSchedulersWindowBody.this.updateSelectedInstance();
+                        ManageSchedulersWindowBody.this.onEditActionsOfSelected();
                     }, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
                 }, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
             }
@@ -723,7 +723,7 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
                     Minecraft.getInstance().font,
                     this.getX(),
                     this.getY(),
-                    Math.min(200, (int)(ManageSchedulersScreen.this.scrollArea.getInnerWidth() - 40)),
+                    Math.min(200, (int)(ManageSchedulersWindowBody.this.scrollArea.getInnerWidth() - 40)),
                     18,
                     Component.empty()
             );
@@ -746,11 +746,11 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
             if (save) {
                 String newIdentifier = this.editBox.getValue().trim();
                 String oldIdentifier = this.instance.getIdentifier();
-                if (!newIdentifier.isBlank() && SchedulerHandler.isIdentifierValid(newIdentifier) && ManageSchedulersScreen.this.isIdentifierAvailable(this.instance, newIdentifier)) {
+                if (!newIdentifier.isBlank() && SchedulerHandler.isIdentifierValid(newIdentifier) && ManageSchedulersWindowBody.this.isIdentifierAvailable(this.instance, newIdentifier)) {
                     if (!oldIdentifier.equals(newIdentifier)) {
                         SchedulerHandler.stopScheduler(oldIdentifier);
                         this.instance.setIdentifier(newIdentifier);
-                        ManageSchedulersScreen.this.applyChangesNow();
+                        ManageSchedulersWindowBody.this.applyChangesNow();
                     }
                 } else if (!newIdentifier.equals(oldIdentifier)) {
                     if (!SchedulerHandler.isIdentifierValid(newIdentifier) || newIdentifier.isBlank()) {
@@ -760,8 +760,8 @@ public class ManageSchedulersScreen extends PiPCellWindowBody {
                     }
                 }
                 this.updateLabelComponent();
-                if (ManageSchedulersScreen.this.selectedInstance == this.instance) {
-                    ManageSchedulersScreen.this.updateDescriptionArea();
+                if (ManageSchedulersWindowBody.this.selectedInstance == this.instance) {
+                    ManageSchedulersWindowBody.this.updateDescriptionArea();
                 }
             }
 

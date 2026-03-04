@@ -41,7 +41,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ManageListenersScreen extends PiPCellWindowBody {
+public class ManageListenersWindowBody extends PiPCellWindowBody {
 
     public static final int PIP_WINDOW_WIDTH = 640;
     public static final int PIP_WINDOW_HEIGHT = 420;
@@ -55,7 +55,7 @@ public class ManageListenersScreen extends PiPCellWindowBody {
     @Nullable
     protected ListenerInstance selectedInstance;
 
-    public ManageListenersScreen(@NotNull Consumer<Boolean> callback) {
+    public ManageListenersWindowBody(@NotNull Consumer<Boolean> callback) {
         super(Component.translatable("fancymenu.listeners.manage"));
         this.callback = callback;
         this.setAllowCloseOnEsc(false);
@@ -328,7 +328,7 @@ public class ManageListenersScreen extends PiPCellWindowBody {
         this.closeWindow();
     }
 
-    public static @NotNull PiPWindow openInWindow(@NotNull ManageListenersScreen screen, @Nullable PiPWindow parentWindow) {
+    public static @NotNull PiPWindow openInWindow(@NotNull ManageListenersWindowBody screen, @Nullable PiPWindow parentWindow) {
         PiPWindow window = new PiPWindow(screen.getTitle())
                 .setScreen(screen)
                 .setForceFancyMenuUiScale(true)
@@ -339,7 +339,7 @@ public class ManageListenersScreen extends PiPCellWindowBody {
         return window;
     }
 
-    public static @NotNull PiPWindow openInWindow(@NotNull ManageListenersScreen screen) {
+    public static @NotNull PiPWindow openInWindow(@NotNull ManageListenersWindowBody screen) {
         return openInWindow(screen, null);
     }
 
@@ -572,11 +572,11 @@ public class ManageListenersScreen extends PiPCellWindowBody {
             if (this.instance.getDisplayName() != null && !this.instance.getDisplayName().isBlank()) {
                 // Show display name if it exists
                 this.labelComponent = Component.literal(this.instance.getDisplayName())
-                        .setStyle(Style.EMPTY.withColor(ManageListenersScreen.this.getLabelTextColor()));
+                        .setStyle(Style.EMPTY.withColor(ManageListenersWindowBody.this.getLabelTextColor()));
             } else {
                 // Show default label (listener type)
                 this.labelComponent = this.instance.parent.getDisplayName().copy()
-                        .setStyle(Style.EMPTY.withColor(ManageListenersScreen.this.getLabelTextColor()));
+                        .setStyle(Style.EMPTY.withColor(ManageListenersWindowBody.this.getLabelTextColor()));
             }
         }
         
@@ -609,7 +609,7 @@ public class ManageListenersScreen extends PiPCellWindowBody {
         @Override
         protected void updateSize(@NotNull CellScrollEntry scrollEntry) {
             if (this.editMode && this.editBox != null) {
-                this.setWidth(Math.min((int)(ManageListenersScreen.this.scrollArea.getInnerWidth() - 40), 200));
+                this.setWidth(Math.min((int)(ManageListenersWindowBody.this.scrollArea.getInnerWidth() - 40), 200));
             } else {
                 this.setWidth((int)UIBase.getUITextWidthNormal(this.labelComponent));
             }
@@ -639,8 +639,8 @@ public class ManageListenersScreen extends PiPCellWindowBody {
                 MainThreadTaskExecutor.executeInMainThread(() -> {
                     MainThreadTaskExecutor.executeInMainThread(() -> {
                         this.setSelected(true);
-                        ManageListenersScreen.this.updateSelectedInstance();
-                        ManageListenersScreen.this.onEditActionsOfSelected();
+                        ManageListenersWindowBody.this.updateSelectedInstance();
+                        ManageListenersWindowBody.this.onEditActionsOfSelected();
                     }, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
                 }, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
             }
@@ -680,7 +680,7 @@ public class ManageListenersScreen extends PiPCellWindowBody {
                     Minecraft.getInstance().font, 
                     this.getX(), 
                     this.getY(), 
-                    Math.min(200, (int)(ManageListenersScreen.this.scrollArea.getInnerWidth() - 40)), 
+                    Math.min(200, (int)(ManageListenersWindowBody.this.scrollArea.getInnerWidth() - 40)),
                     18, 
                     Component.empty()
             );
@@ -716,8 +716,8 @@ public class ManageListenersScreen extends PiPCellWindowBody {
                 }
                 this.updateLabelComponent();
                 // Update the description area if this is the selected cell
-                if (ManageListenersScreen.this.selectedInstance == this.instance) {
-                    ManageListenersScreen.this.updateDescriptionArea();
+                if (ManageListenersWindowBody.this.selectedInstance == this.instance) {
+                    ManageListenersWindowBody.this.updateDescriptionArea();
                 }
             }
             
