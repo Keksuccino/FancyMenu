@@ -83,6 +83,8 @@ The server can then process incoming data with `/fmdata listener ...`.
 
 # Server Listeners
 
+Server listeners listen for incoming data from clients and can run one or multiple commands when they get triggered.
+
 Server listeners are saved and stay active after restart.
 
 Manage them with:
@@ -131,7 +133,7 @@ Manage them with:
 - Separate multiple commands with `|||`
 - Escape a literal separator as `\|\|\|`
 
-Supported placeholders:
+You can use two special placeholders here that get replaced right before the commands get executed:
 
 - `%fm_sender%` -> player who sent the FM Data
 - `%fm_data%` -> data value received from client
