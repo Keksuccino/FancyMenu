@@ -15,7 +15,7 @@
   - Use the Arrow keys to navigate in the requirement/group list
   - CTRL+S is a shortcut for pressing "Done"
   - There's a history now to undo/redo adding/removing/editing requirements/groups (CTRL+Z / CTRL+Y)
-- Many parts of FancyMenu's UI now supports Arrow key + Enter navigation to navigate in window UIs without using the mouse
+- Many parts of FancyMenu's UI now support Arrow key + Enter navigation to navigate in window UIs without using the mouse
 - Many of FancyMenu's windows that allow editing/changing things now support pressing CTRL+S as a shortcut to the "Done" button in many of these windows (and ESC acts as Cancel, just like before)
 
 
@@ -267,7 +267,7 @@
   - CTRL+S is a shortcut for pressing "Done"
   - There's a history now to undo/redo adding/removing/editing requirements/groups (CTRL+Z / CTRL+Y)
 - The action script editor now lets you press CTRL+S as an alternative to clicking the Done button
-- Many parts of FancyMenu's UI now supports Arrow key + Enter navigation to navigate in window UIs without using the mouse
+- Many parts of FancyMenu's UI now support Arrow key + Enter navigation to navigate in window UIs without using the mouse
 - Many of FancyMenu's windows that allow editing/changing things now support pressing CTRL+S as a shortcut to the "Done" button in many of these windows (and ESC acts as Cancel, just like before)
 - The "Game Intro" feature now has video support (with sound, including settings for volume and sound channel)
 - The "Duration" placeholders for Video element and menu background now have an "output_as_timestamp" value that makes them return a millisecond timestamp
