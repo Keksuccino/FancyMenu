@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.requirement.ui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGroup;
@@ -22,8 +23,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
+
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -31,6 +37,7 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
 
     public static final int PIP_WINDOW_WIDTH = 640;
     public static final int PIP_WINDOW_HEIGHT = 420;
+    private static final int HISTORY_LIMIT = 500;
 
     protected RequirementContainer container;
     protected Consumer<RequirementContainer> callback;
@@ -42,6 +49,8 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
     protected ExtendedButton removeButton;
     protected ExtendedButton doneButton;
     protected ExtendedButton cancelButton;
+    private final Deque<RequirementsSnapshot> undoHistory = new ArrayDeque<>();
+    private final Deque<RequirementsSnapshot> redoHistory = new ArrayDeque<>();
 
     public ManageRequirementsWindowBody(@NotNull RequirementContainer container, @NotNull Consumer<RequirementContainer> callback) {
         super(Component.literal(I18n.get("fancymenu.requirements.screens.manage_screen.manage")));
@@ -56,10 +65,12 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
         this.requirementsScrollArea.setSetupForBlurInterface(blur);
 
         this.addRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.requirements.screens.add_requirement"), (button) -> {
+            RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
             BuildRequirementScreen s = new BuildRequirementScreen(this.container, null, (call) -> {
                 if (call != null) {
                     this.container.addInstance(call);
                     this.updateRequirementsScrollArea();
+                    this.createUndoPointIfChanged(beforeSnapshot);
                 }
             });
             this.openChildWindow(parentWindow -> BuildRequirementScreen.openInWindow(s, parentWindow));
@@ -69,10 +80,12 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
         UIBase.applyDefaultWidgetSkinTo(this.addRequirementButton, blur);
 
         this.addGroupButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.requirements.screens.add_group"), (button) -> {
+            RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
             BuildRequirementGroupScreen s = new BuildRequirementGroupScreen(this.container, null, (call) -> {
                 if (call != null) {
                     this.container.addGroup(call);
                     this.updateRequirementsScrollArea();
+                    this.createUndoPointIfChanged(beforeSnapshot);
                 }
             });
             this.openChildWindow(parentWindow -> BuildRequirementGroupScreen.openInWindow(s, parentWindow));
@@ -82,27 +95,32 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
         UIBase.applyDefaultWidgetSkinTo(this.addGroupButton, blur);
 
         this.editButton = new ExtendedButton(0, 0, 150, 20, "", (button) -> {
-            BuildRequirementScreen requirementScreen = null;
-            BuildRequirementGroupScreen groupScreen = null;
             if (this.isInstanceSelected()) {
-                requirementScreen = new BuildRequirementScreen(this.container, this.getSelectedInstance(), (call) -> {
+                RequirementInstance selectedInstance = this.getSelectedInstance();
+                if (selectedInstance == null) {
+                    return;
+                }
+                RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
+                BuildRequirementScreen requirementScreen = new BuildRequirementScreen(this.container, selectedInstance, (call) -> {
                     if (call != null) {
                         this.updateRequirementsScrollArea();
+                        this.createUndoPointIfChanged(beforeSnapshot);
                     }
                 });
+                this.openChildWindow(parentWindow -> BuildRequirementScreen.openInWindow(requirementScreen, parentWindow));
             } else if (this.isGroupSelected()) {
-                groupScreen = new BuildRequirementGroupScreen(this.container, this.getSelectedGroup(), (call) -> {
+                RequirementGroup selectedGroup = this.getSelectedGroup();
+                if (selectedGroup == null) {
+                    return;
+                }
+                RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
+                BuildRequirementGroupScreen groupScreen = new BuildRequirementGroupScreen(this.container, selectedGroup, (call) -> {
                     if (call != null) {
                         this.updateRequirementsScrollArea();
+                        this.createUndoPointIfChanged(beforeSnapshot);
                     }
                 });
-            }
-            if (requirementScreen != null) {
-                BuildRequirementScreen requirementScreenFinal = requirementScreen;
-                this.openChildWindow(parentWindow -> BuildRequirementScreen.openInWindow(requirementScreenFinal, parentWindow));
-            } else if (groupScreen != null) {
-                BuildRequirementGroupScreen groupScreenFinal = groupScreen;
-                this.openChildWindow(parentWindow -> BuildRequirementGroupScreen.openInWindow(groupScreenFinal, parentWindow));
+                this.openChildWindow(parentWindow -> BuildRequirementGroupScreen.openInWindow(groupScreen, parentWindow));
             }
         }) {
             @Override
@@ -130,18 +148,22 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
         this.removeButton = new ExtendedButton(0, 0, 150, 20, "", (button) -> {
             if (this.isInstanceSelected()) {
                 RequirementInstance i = this.getSelectedInstance();
+                RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
                 Dialogs.openMessageWithCallback(Component.translatable("fancymenu.requirements.screens.remove_requirement.confirm"), MessageDialogStyle.WARNING, call -> {
                     if (call) {
                         this.container.removeInstance(i);
                         this.updateRequirementsScrollArea();
+                        this.createUndoPointIfChanged(beforeSnapshot);
                     }
                 });
             } else if (this.isGroupSelected()) {
                 RequirementGroup g = this.getSelectedGroup();
+                RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
                 Dialogs.openMessageWithCallback(Component.translatable("fancymenu.requirements.screens.remove_group.confirm"), MessageDialogStyle.WARNING, call -> {
                     if (call) {
                         this.container.removeGroup(g);
                         this.updateRequirementsScrollArea();
+                        this.createUndoPointIfChanged(beforeSnapshot);
                     }
                 });
             }
@@ -175,10 +197,7 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton, blur);
 
-        this.doneButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.common_components.done"), (button) -> {
-            this.callback.accept(this.container);
-            this.closeWindow();
-        });
+        this.doneButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.common_components.done"), (button) -> this.triggerDoneAction());
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton, blur);
 
@@ -235,6 +254,45 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
     public void renderBackground(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
     }
 
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        String keyName = GLFW.glfwGetKeyName(keyCode, scanCode);
+        if (keyName == null) {
+            keyName = "";
+        }
+        keyName = keyName.toLowerCase();
+
+        if (keyCode == InputConstants.KEY_DELETE) {
+            if (this.deleteSelectedEntryWithoutConfirmation()) {
+                return true;
+            }
+        }
+
+        if (hasControlDown() && "z".equals(keyName)) {
+            if (this.undo()) {
+                return true;
+            }
+        }
+
+        if (hasControlDown() && "y".equals(keyName)) {
+            if (this.redo()) {
+                return true;
+            }
+        }
+
+        if (hasControlDown() && (keyCode == GLFW.GLFW_KEY_S)) {
+            this.triggerDoneAction();
+            return true;
+        }
+
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    private void triggerDoneAction() {
+        this.callback.accept(this.container);
+        this.closeWindow();
+    }
+
     @Nullable
     protected RequirementInstance getSelectedInstance() {
         ScrollAreaEntry e = this.requirementsScrollArea.getFocusedEntry();
@@ -277,6 +335,112 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
 
     }
 
+    private boolean deleteSelectedEntryWithoutConfirmation() {
+        RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
+        boolean changed = false;
+        if (this.isInstanceSelected()) {
+            RequirementInstance selectedInstance = this.getSelectedInstance();
+            if (selectedInstance != null) {
+                changed = this.container.removeInstance(selectedInstance);
+            }
+        } else if (this.isGroupSelected()) {
+            RequirementGroup selectedGroup = this.getSelectedGroup();
+            if (selectedGroup != null) {
+                changed = this.container.removeGroup(selectedGroup);
+            }
+        }
+        if (changed) {
+            this.updateRequirementsScrollArea();
+            this.createUndoPointIfChanged(beforeSnapshot);
+        }
+        return changed;
+    }
+
+    private boolean canUndo() {
+        return !this.undoHistory.isEmpty();
+    }
+
+    private boolean canRedo() {
+        return !this.redoHistory.isEmpty();
+    }
+
+    private boolean undo() {
+        if (!this.canUndo()) {
+            return false;
+        }
+        RequirementsSnapshot snapshot = this.undoHistory.pop();
+        this.redoHistory.push(this.captureCurrentState());
+        this.trimHistory(this.redoHistory);
+        this.applySnapshot(snapshot);
+        return true;
+    }
+
+    private boolean redo() {
+        if (!this.canRedo()) {
+            return false;
+        }
+        RequirementsSnapshot snapshot = this.redoHistory.pop();
+        this.undoHistory.push(this.captureCurrentState());
+        this.trimHistory(this.undoHistory);
+        this.applySnapshot(snapshot);
+        return true;
+    }
+
+    private void createUndoPointIfChanged(@NotNull RequirementsSnapshot previousState) {
+        if (this.container.equals(previousState.container())) {
+            return;
+        }
+        this.undoHistory.push(previousState);
+        this.trimHistory(this.undoHistory);
+        this.redoHistory.clear();
+    }
+
+    private void trimHistory(@NotNull Deque<RequirementsSnapshot> history) {
+        while (history.size() > HISTORY_LIMIT) {
+            history.removeLast();
+        }
+    }
+
+    private @NotNull RequirementsSnapshot captureCurrentState() {
+        String selectedGroupIdentifier = null;
+        String selectedInstanceIdentifier = null;
+        ScrollAreaEntry selectedEntry = this.requirementsScrollArea.getFocusedEntry();
+        if (selectedEntry instanceof RequirementGroupEntry groupEntry) {
+            selectedGroupIdentifier = groupEntry.group.identifier;
+        } else if (selectedEntry instanceof RequirementInstanceEntry instanceEntry) {
+            selectedInstanceIdentifier = instanceEntry.instance.instanceIdentifier;
+        }
+        return new RequirementsSnapshot(
+                this.container.copy(false),
+                this.requirementsScrollArea.verticalScrollBar.getScroll(),
+                this.requirementsScrollArea.horizontalScrollBar.getScroll(),
+                selectedGroupIdentifier,
+                selectedInstanceIdentifier
+        );
+    }
+
+    private void applySnapshot(@NotNull RequirementsSnapshot snapshot) {
+        this.container = snapshot.container().copy(false);
+        this.updateRequirementsScrollArea();
+        this.requirementsScrollArea.verticalScrollBar.setScroll(Mth.clamp(snapshot.verticalScroll(), 0.0F, 1.0F));
+        this.requirementsScrollArea.horizontalScrollBar.setScroll(Mth.clamp(snapshot.horizontalScroll(), 0.0F, 1.0F));
+        this.requirementsScrollArea.updateEntries(null);
+        this.restoreSelection(snapshot.selectedGroupIdentifier(), snapshot.selectedInstanceIdentifier());
+    }
+
+    private void restoreSelection(@Nullable String selectedGroupIdentifier, @Nullable String selectedInstanceIdentifier) {
+        for (ScrollAreaEntry entry : this.requirementsScrollArea.getEntries()) {
+            if ((selectedGroupIdentifier != null) && (entry instanceof RequirementGroupEntry groupEntry) && selectedGroupIdentifier.equals(groupEntry.group.identifier)) {
+                entry.setSelected(true);
+                return;
+            }
+            if ((selectedInstanceIdentifier != null) && (entry instanceof RequirementInstanceEntry instanceEntry) && selectedInstanceIdentifier.equals(instanceEntry.instance.instanceIdentifier)) {
+                entry.setSelected(true);
+                return;
+            }
+        }
+    }
+
     private void openChildWindow(@NotNull Function<PiPWindow, PiPWindow> opener) {
         PiPWindow parentWindow = this.getWindow();
         PiPWindow childWindow = opener.apply(parentWindow);
@@ -286,6 +450,9 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
         childWindow.setPosition(parentWindow.getX(), parentWindow.getY());
         parentWindow.setVisible(false);
         childWindow.addCloseCallback(() -> parentWindow.setVisible(true));
+    }
+
+    private record RequirementsSnapshot(@NotNull RequirementContainer container, float verticalScroll, float horizontalScroll, @Nullable String selectedGroupIdentifier, @Nullable String selectedInstanceIdentifier) {
     }
 
     public static class RequirementGroupEntry extends TextListScrollAreaEntry {
