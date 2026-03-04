@@ -11,12 +11,18 @@
 - The Game Intro now always consumes all mouse clicks while open, so you don't acidentally click the screen behind it anymore
 - The Manage Requirements window got reworked to be more in line with the Action Script Editor window
   - No sidebar buttons anymore (instead you have a right-click context menu for everything important)
-  - Lots of shortcuts, many of these explained in the context menu
+  - Lots of shortcuts, many of them explained in the context menu
   - Use the Arrow keys to navigate in the requirement/group list
   - CTRL+S is a shortcut for pressing "Done"
   - There's a history now to undo/redo adding/removing/editing requirements/groups (CTRL+Z / CTRL+Y)
 - Many parts of FancyMenu's UI now support Arrow key + Enter navigation to navigate in window UIs without using the mouse
 - Many of FancyMenu's windows that allow editing/changing things now support pressing CTRL+S as a shortcut to the "Done" button in many of these windows (and ESC acts as Cancel, just like before)
+- The Manage Variables window got reworked to be more in line with the Action Script Editor window
+  - No sidebar buttons anymore (instead there's a right-click context menu with everything important)
+  - Lots of shortcuts, many of them explained in the context menu
+  - There's an undo/redo history now to undo/redo adding/removing/editing variables
+  - There's copy-paste now for variables
+  - The Arrow keys can be used to navigate in the variable list
 
 
 
@@ -262,10 +268,17 @@
   - Pressing CTRL+S now counts as clicking the Done button
 - The Manage Requirements window got reworked to be more in line with the Action Script Editor window
   - No sidebar buttons anymore (instead you have a right-click context menu for everything important)
-  - Lots of shortcuts, many of these explained in the context menu
+  - Lots of shortcuts, many of them explained in the context menu
   - Use the Arrow keys to navigate in the requirement/group list
   - CTRL+S is a shortcut for pressing "Done"
   - There's a history now to undo/redo adding/removing/editing requirements/groups (CTRL+Z / CTRL+Y)
+- The Manage Variables window got reworked to be more in line with the Action Script Editor window
+  - No sidebar buttons anymore (instead there's a right-click context menu with everything important)
+  - Lots of shortcuts, many of them explained in the context menu
+  - There's an undo/redo history now to undo/redo adding/removing/editing variables
+  - There's copy-paste now for variables
+  - The Arrow keys can be used to navigate in the variable list
+  - CTRL+S is a shortcut for pressing "Done"
 - The action script editor now lets you press CTRL+S as an alternative to clicking the Done button
 - Many parts of FancyMenu's UI now support Arrow key + Enter navigation to navigate in window UIs without using the mouse
 - Many of FancyMenu's windows that allow editing/changing things now support pressing CTRL+S as a shortcut to the "Done" button in many of these windows (and ESC acts as Cancel, just like before)
