@@ -70,7 +70,7 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
     }
 
     public ManageRequirementsWindowBody(@NotNull RequirementContainer container, @NotNull Consumer<RequirementContainer> callback, boolean allowGroupManagement) {
-        super(Component.literal(I18n.get("fancymenu.requirements.screens.manage_screen.manage")));
+        super(Component.translatable("fancymenu.requirements.screens.manage_screen.manage"));
         this.container = container;
         this.callback = callback;
         this.allowGroupManagement = allowGroupManagement;
@@ -83,7 +83,7 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
         this.requirementsScrollArea.setSetupForBlurInterface(blur);
         this.updateRightClickContextMenu(false);
 
-        this.cancelButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.common_components.cancel"), (button) -> {
+        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
             this.closeRightClickContextMenu();
             this.callback.accept(null);
             this.closeWindow();
@@ -92,7 +92,7 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton, blur);
 
-        this.doneButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.common_components.done"), (button) -> this.triggerDoneAction());
+        this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.done"), (button) -> this.triggerDoneAction());
         this.doneButton.setNavigatable(false);
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton, blur);
