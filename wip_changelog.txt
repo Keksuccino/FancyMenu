@@ -24,6 +24,7 @@
   - There's copy-paste now for variables
   - The Arrow keys can be used to navigate in the variable list
   - Simply start typing to search something up (will automatically start typing in the search bar)
+- Added "Gamerule Value" placeholder that returns the current value of a gamerule of the current world/server (#1521)
 
 
 
@@ -153,6 +154,7 @@
 - Added "Current Dimension" placeholder that returns the dimension the player is in (has option to return the display name of Vanilla dimensions, otherwise returns dimension key) (#1437)
 - Added "Item Category" placeholder that returns the creative tab category of the input item key (#1435)
 - Added "Hovered Inventory Item" placeholder that returns the item that is hovered in the currently open inventory (player inventory, chest, etc.) (#1434)
+- Added "Gamerule Value" placeholder that returns the current value of a gamerule of the current world/server (#1521)
 - Added "Set Text Input Field Value" action to set the value of an input field (text box) by its element identifier (works for custom and Vanilla elements) (#1392)
 - Added "Extract ZIP File In Game Directory" action to extract ZIP files in the game directory or the default .minecraft folder (#1394)
   - Also added a listener called "On ZIP Extracted via Action" that triggers once the ZIP finished extracting
