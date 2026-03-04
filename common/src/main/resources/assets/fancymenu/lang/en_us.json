@@ -3265,5 +3265,6 @@
   "fancymenu.actions.connect_to_remote_server": "Connect To Remote Server",
   "fancymenu.actions.connect_to_remote_server.desc": "Initializes a remote server connection by URL without sending payload data yet.\n\nThe connection stays active in the background and can later be used by remote send actions.",
   "fancymenu.actions.connect_to_remote_server.value": "Remote Server URL",
-  "fancymenu.requirements.screens.manage_screen.empty_hint": "Right-click here to add requirements or groups"
+  "fancymenu.requirements.screens.manage_screen.empty_hint": "Right-click here to add requirements or groups",
+  "fancymenu.editor.shortcuts.enter": "Enter"
 }

@@ -112,6 +112,16 @@ public class MixinMouseHandler {
         double mouseX = this.xpos * (double)Minecraft.getInstance().getWindow().getGuiScaledWidth() / (double)Minecraft.getInstance().getWindow().getScreenWidth();
         double mouseY = this.ypos * (double)Minecraft.getInstance().getWindow().getGuiScaledHeight() / (double)Minecraft.getInstance().getWindow().getScreenHeight();
 
+        if (Minecraft.getInstance().getOverlay() instanceof GameIntroOverlay o) {
+            // Consume all mouse button events while the intro overlay is active.
+            if (clicked) {
+                int mappedButton = (this.mappedButtonOnPress_FancyMenu != -1) ? this.mappedButtonOnPress_FancyMenu : button;
+                o.mouseClicked(mappedButton);
+            }
+            info.cancel();
+            return;
+        }
+
         boolean cancel = false;
         if (clicked) {
             if (ScreenOverlayHandler.INSTANCE.mouseClicked(mouseX, mouseY, button)) cancel = true;
@@ -122,8 +132,6 @@ public class MixinMouseHandler {
             info.cancel();
             return;
         }
-
-        if (clicked && (Minecraft.getInstance().getOverlay() instanceof GameIntroOverlay o)) o.mouseClicked(button);
 
     }
 

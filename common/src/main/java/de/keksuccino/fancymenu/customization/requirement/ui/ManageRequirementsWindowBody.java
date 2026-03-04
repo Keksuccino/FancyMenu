@@ -1,12 +1,10 @@
 package de.keksuccino.fancymenu.customization.requirement.ui;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGroup;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
@@ -20,6 +18,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.Text
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
@@ -49,6 +48,8 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
     protected ExtendedButton doneButton;
     protected ExtendedButton cancelButton;
     protected ContextMenu rightClickContextMenu;
+    protected float rightClickContextMenuLastOpenX = Float.NaN;
+    protected float rightClickContextMenuLastOpenY = Float.NaN;
     @Nullable
     protected String contextMenuTargetGroupIdentifier;
     @Nullable
@@ -67,17 +68,19 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
     protected void init() {
         boolean blur = UIBase.shouldBlur();
         this.requirementsScrollArea.setSetupForBlurInterface(blur);
-        this.updateRightClickContextMenu();
+        this.updateRightClickContextMenu(false);
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.common_components.cancel"), (button) -> {
             this.closeRightClickContextMenu();
             this.callback.accept(null);
             this.closeWindow();
         });
+        this.cancelButton.setNavigatable(false);
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton, blur);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.common_components.done"), (button) -> this.triggerDoneAction());
+        this.doneButton.setNavigatable(false);
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton, blur);
 
@@ -85,20 +88,21 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
 
     }
 
-    protected void updateRightClickContextMenu() {
+    protected void updateRightClickContextMenu(boolean reopen) {
+        boolean wasOpen = (this.rightClickContextMenu != null) && this.rightClickContextMenu.isOpen();
         if (this.rightClickContextMenu != null) {
             this.rightClickContextMenu.closeMenu();
         }
         this.rightClickContextMenu = new ContextMenu();
 
         this.rightClickContextMenu.addClickableEntry("add_requirement", Component.translatable("fancymenu.requirements.screens.add_requirement"), (menu, entry) -> {
-                    menu.closeMenu();
+                    menu.closeMenuChain();
                     this.onAddRequirement();
                 }).setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.requirements.screens.manage_screen.add_requirement.desc")))
                 .setIcon(MaterialIcons.ADD);
 
         this.rightClickContextMenu.addClickableEntry("add_group", Component.translatable("fancymenu.requirements.screens.add_group"), (menu, entry) -> {
-                    menu.closeMenu();
+                    menu.closeMenuChain();
                     this.onAddGroup();
                 }).setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.add_group.desc")))
                 .setIcon(MaterialIcons.ADD);
@@ -111,13 +115,14 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
                     if ((selectedInstance == null) && (selectedGroup == null)) {
                         return;
                     }
-                    menu.closeMenu();
+                    menu.closeMenuChain();
                     this.onEdit(selectedInstance, selectedGroup);
                 }).setLabelSupplier((menu, entry) -> this.getContextMenuEditLabel())
                 .addIsActiveSupplier((menu, entry) -> this.hasContextMenuTarget())
                 .setTooltipSupplier((menu, entry) -> this.hasContextMenuTarget()
                         ? UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.edit.desc"))
                         : UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.no_entry_selected")))
+                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.enter"))
                 .setIcon(MaterialIcons.EDIT);
 
         this.rightClickContextMenu.addClickableEntry("remove", Component.translatable("fancymenu.requirements.screens.manage_screen.remove.generic"), (menu, entry) -> {
@@ -126,14 +131,38 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
                     if ((selectedInstance == null) && (selectedGroup == null)) {
                         return;
                     }
-                    menu.closeMenu();
+                    menu.closeMenuChain();
                     this.onRemove(selectedInstance, selectedGroup);
                 }).setLabelSupplier((menu, entry) -> this.getContextMenuRemoveLabel())
                 .addIsActiveSupplier((menu, entry) -> this.hasContextMenuTarget())
                 .setTooltipSupplier((menu, entry) -> this.hasContextMenuTarget()
                         ? UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.remove.desc"))
                         : UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.no_entry_selected")))
+                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.delete"))
                 .setIcon(MaterialIcons.DELETE);
+
+        this.rightClickContextMenu.addSeparatorEntry("separator_after_remove");
+
+        this.rightClickContextMenu.addClickableEntry("undo", Component.translatable("fancymenu.editor.edit.undo"), (menu, entry) -> {
+                    if (this.undo()) {
+                        this.updateRightClickContextMenu(true);
+                    }
+                }).addIsActiveSupplier((menu, entry) -> this.canUndo())
+                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.undo"))
+                .setIcon(MaterialIcons.UNDO);
+
+        this.rightClickContextMenu.addClickableEntry("redo", Component.translatable("fancymenu.editor.edit.redo"), (menu, entry) -> {
+                    if (this.redo()) {
+                        this.updateRightClickContextMenu(true);
+                    }
+                }).addIsActiveSupplier((menu, entry) -> this.canRedo())
+                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.redo"))
+                .setIcon(MaterialIcons.REDO);
+
+        if (reopen || wasOpen) {
+            this.openRightClickContextMenuAtMouse(true);
+        }
+
     }
 
     protected void onAddRequirement() {
@@ -187,24 +216,20 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
     protected void onRemove(@Nullable RequirementInstance selectedInstance, @Nullable RequirementGroup selectedGroup) {
         if (selectedInstance != null) {
             RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
-            Dialogs.openMessageWithCallback(Component.translatable("fancymenu.requirements.screens.remove_requirement.confirm"), MessageDialogStyle.WARNING, call -> {
-                if (call) {
-                    this.container.removeInstance(selectedInstance);
-                    this.updateRequirementsScrollArea();
-                    this.createUndoPointIfChanged(beforeSnapshot);
-                }
-            });
+            if (this.container.removeInstance(selectedInstance)) {
+                this.clearContextMenuTarget();
+                this.updateRequirementsScrollArea();
+                this.createUndoPointIfChanged(beforeSnapshot);
+            }
             return;
         }
         if (selectedGroup != null) {
             RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
-            Dialogs.openMessageWithCallback(Component.translatable("fancymenu.requirements.screens.remove_group.confirm"), MessageDialogStyle.WARNING, call -> {
-                if (call) {
-                    this.container.removeGroup(selectedGroup);
-                    this.updateRequirementsScrollArea();
-                    this.createUndoPointIfChanged(beforeSnapshot);
-                }
-            });
+            if (this.container.removeGroup(selectedGroup)) {
+                this.clearContextMenuTarget();
+                this.updateRequirementsScrollArea();
+                this.createUndoPointIfChanged(beforeSnapshot);
+            }
         }
     }
 
@@ -260,6 +285,7 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
             keyName = "";
         }
         keyName = keyName.toLowerCase();
+        boolean contextMenuActive = (this.rightClickContextMenu != null) && this.rightClickContextMenu.isOpen();
 
         if (keyCode == InputConstants.KEY_DELETE) {
             if (this.deleteSelectedEntryWithoutConfirmation()) {
@@ -275,6 +301,24 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
 
         if (hasControlDown() && "y".equals(keyName)) {
             if (this.redo()) {
+                return true;
+            }
+        }
+
+        if ((keyCode == InputConstants.KEY_UP) || (keyCode == InputConstants.KEY_DOWN)) {
+            if (contextMenuActive) {
+                ContextMenuHandler.INSTANCE.keyPressed(keyCode, scanCode, modifiers);
+                return true;
+            }
+            this.selectAdjacentRequirementsEntry(keyCode == InputConstants.KEY_DOWN);
+            return true;
+        }
+
+        if (!contextMenuActive && ((keyCode == InputConstants.KEY_ENTER) || (keyCode == InputConstants.KEY_NUMPADENTER))) {
+            RequirementInstance selectedInstance = this.getSelectedInstance();
+            RequirementGroup selectedGroup = this.getSelectedGroup();
+            if ((selectedInstance != null) || (selectedGroup != null)) {
+                this.onEdit(selectedInstance, selectedGroup);
                 return true;
             }
         }
@@ -308,9 +352,7 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
             if (targetEntry != null) {
                 targetEntry.setSelected(true);
             }
-            if (this.rightClickContextMenu != null) {
-                ContextMenuHandler.INSTANCE.setAndOpenAtMouse(this.rightClickContextMenu);
-            }
+            this.openRightClickContextMenuAtMouse(false);
             return true;
         }
 
@@ -363,6 +405,23 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
 
     protected boolean hasContextMenuTarget() {
         return (this.getContextMenuTargetInstance() != null) || (this.getContextMenuTargetGroup() != null);
+    }
+
+    protected boolean hasStoredRightClickContextMenuPosition() {
+        return !Float.isNaN(this.rightClickContextMenuLastOpenX) && !Float.isNaN(this.rightClickContextMenuLastOpenY);
+    }
+
+    protected void openRightClickContextMenuAtMouse(boolean reopen) {
+        if (this.rightClickContextMenu == null) {
+            return;
+        }
+        int mX = MouseInput.getMouseX();
+        if (reopen && !Float.isNaN(this.rightClickContextMenuLastOpenX)) mX = (int) this.rightClickContextMenuLastOpenX;
+        int mY = MouseInput.getMouseY();
+        if (reopen && !Float.isNaN(this.rightClickContextMenuLastOpenY)) mY = (int) this.rightClickContextMenuLastOpenY;
+        ContextMenuHandler.INSTANCE.setAndOpen(this.rightClickContextMenu, mX, mY);
+        this.rightClickContextMenuLastOpenX = mX;
+        this.rightClickContextMenuLastOpenY = mY;
     }
 
     @NotNull
@@ -474,6 +533,59 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
             this.createUndoPointIfChanged(beforeSnapshot);
         }
         return changed;
+    }
+
+    private boolean selectAdjacentRequirementsEntry(boolean moveDown) {
+        java.util.List<ScrollAreaEntry> entries = this.requirementsScrollArea.getEntries();
+        if (entries.isEmpty()) {
+            return false;
+        }
+        ScrollAreaEntry selected = this.requirementsScrollArea.getFocusedEntry();
+        int targetIndex;
+        if (selected == null) {
+            targetIndex = moveDown ? 0 : entries.size() - 1;
+        } else {
+            int currentIndex = entries.indexOf(selected);
+            if (currentIndex == -1) {
+                targetIndex = moveDown ? 0 : entries.size() - 1;
+            } else {
+                targetIndex = currentIndex + (moveDown ? 1 : -1);
+                if (targetIndex < 0) {
+                    targetIndex = entries.size() - 1;
+                } else if (targetIndex >= entries.size()) {
+                    targetIndex = 0;
+                }
+            }
+        }
+        ScrollAreaEntry target = entries.get(targetIndex);
+        target.setSelected(true);
+        this.scrollEntryIntoView(target);
+        return true;
+    }
+
+    private void scrollEntryIntoView(@NotNull ScrollAreaEntry entry) {
+        java.util.List<ScrollAreaEntry> entries = this.requirementsScrollArea.getEntries();
+        int totalHeight = 0;
+        for (ScrollAreaEntry e : entries) {
+            totalHeight += (int)e.getHeight();
+        }
+        int visibleHeight = (int)this.requirementsScrollArea.getInnerHeight();
+        if (totalHeight <= visibleHeight) {
+            return;
+        }
+        int offset = 0;
+        for (ScrollAreaEntry e : entries) {
+            if (e == entry) {
+                break;
+            }
+            offset += (int)e.getHeight();
+        }
+        int entryCenter = offset + ((int)entry.getHeight() / 2);
+        int target = Math.max(0, entryCenter - (visibleHeight / 2));
+        int maxScroll = Math.max(1, totalHeight - visibleHeight);
+        float scroll = Math.min(1.0F, (float)target / (float)maxScroll);
+        this.requirementsScrollArea.verticalScrollBar.setScroll(scroll);
+        this.requirementsScrollArea.updateEntries(null);
     }
 
     private boolean canUndo() {
