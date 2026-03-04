@@ -614,7 +614,29 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
                 return true;
             }
         }
+
+        if ((keycode == InputConstants.KEY_BACKSPACE) && this.shouldAutoFocusSearchBarForTyping()) {
+            if ((this.searchBar != null) && !this.searchBar.isFocused()) {
+                this.focusSearchBarForNavigation();
+            }
+            if (this.searchBar != null) {
+                return this.searchBar.keyPressed(keycode, scancode, modifiers);
+            }
+        }
         return super.keyPressed(keycode, scancode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (this.shouldAutoFocusSearchBarForTyping()) {
+            if ((this.searchBar != null) && !this.searchBar.isFocused()) {
+                this.focusSearchBarForNavigation();
+            }
+            if (this.searchBar != null) {
+                return this.searchBar.charTyped(codePoint, modifiers);
+            }
+        }
+        return super.charTyped(codePoint, modifiers);
     }
 
     @NotNull
@@ -663,24 +685,77 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
     protected boolean navigateVerticalCells(boolean moveDown) {
         List<RenderCell> cells = this.getSelectableVisibleCells();
+        boolean searchBarNavigatable = this.isSearchBarNavigatable();
+        RenderCell selected = this.getSelectedCell();
+        int selectedIndex = cells.indexOf(selected);
+        boolean searchBarFocused = searchBarNavigatable && this.searchBar.isFocused();
+
         if (cells.isEmpty()) {
+            if (searchBarNavigatable) {
+                this.focusSearchBarForNavigation();
+            }
             return true;
         }
 
-        RenderCell selected = this.getSelectedCell();
-        int selectedIndex = cells.indexOf(selected);
+        if (selectedIndex >= 0) {
+            if (searchBarNavigatable) {
+                if (moveDown) {
+                    if (selectedIndex >= (cells.size() - 1)) {
+                        this.focusSearchBarForNavigation();
+                    } else {
+                        this.selectCell(cells.get(selectedIndex + 1), true);
+                    }
+                } else {
+                    if (selectedIndex <= 0) {
+                        this.focusSearchBarForNavigation();
+                    } else {
+                        this.selectCell(cells.get(selectedIndex - 1), true);
+                    }
+                }
+                return true;
+            }
 
-        RenderCell target;
-        if (selectedIndex < 0) {
-            target = moveDown ? cells.get(0) : cells.get(cells.size() - 1);
-        } else if (moveDown) {
-            target = cells.get((selectedIndex + 1) % cells.size());
-        } else {
-            target = cells.get((selectedIndex - 1 + cells.size()) % cells.size());
+            if (moveDown) {
+                this.selectCell(cells.get((selectedIndex + 1) % cells.size()), true);
+            } else {
+                this.selectCell(cells.get((selectedIndex - 1 + cells.size()) % cells.size()), true);
+            }
+            return true;
         }
 
-        this.selectCell(target, true);
+        if (searchBarNavigatable) {
+            if (searchBarFocused) {
+                this.selectCell(moveDown ? cells.get(0) : cells.get(cells.size() - 1), true);
+            } else if (moveDown) {
+                this.focusSearchBarForNavigation();
+            } else {
+                this.selectCell(cells.get(cells.size() - 1), true);
+            }
+            return true;
+        }
+
+        this.selectCell(moveDown ? cells.get(0) : cells.get(cells.size() - 1), true);
         return true;
+    }
+
+    protected boolean isSearchBarNavigatable() {
+        return this.searchBarEnabled
+                && (this.searchBar != null)
+                && this.searchBar.visible
+                && this.searchBar.active;
+    }
+
+    protected void focusSearchBarForNavigation() {
+        if (!this.isSearchBarNavigatable()) {
+            return;
+        }
+        this.selectCell(null, false);
+        this.searchBar.setFocused(true);
+        this.setFocused(this.searchBar);
+    }
+
+    protected boolean shouldAutoFocusSearchBarForTyping() {
+        return this.isSearchBarNavigatable() && (this.getSelectedCell() == null);
     }
 
     protected boolean handleHorizontalNavigation(boolean moveRight, int keycode, int scancode, int modifiers) {

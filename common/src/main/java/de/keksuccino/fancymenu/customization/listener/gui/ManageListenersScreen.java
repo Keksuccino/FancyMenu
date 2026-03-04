@@ -229,6 +229,18 @@ public class ManageListenersScreen extends PiPCellWindowBody {
     }
 
     @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (super.keyPressed(keyCode, scanCode, modifiers)) {
+            return true;
+        }
+        if (keyCode == InputConstants.KEY_ESCAPE) {
+            this.onCancel();
+            return true;
+        }
+        return false;
+    }
+
+    @Override
     public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.updateSelectedInstance();
     }

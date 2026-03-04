@@ -23,12 +23,16 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
+
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Consumer;
 
 public class ManageVariablesScreen extends PiPWindowBody implements InitialWidgetFocusScreen {
@@ -43,6 +47,8 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
 
     protected ScrollArea variableListScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ExtendedEditBox searchBar;
+    @Nullable
+    protected ExtendedButton doneButton;
 
     public ManageVariablesScreen(@NotNull Consumer<List<Variable>> callback) {
         super(Component.translatable("fancymenu.overlay.menu_bar.variables.manage"));
@@ -149,12 +155,12 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
         this.addRenderableWidget(toggleResetOnLaunchButton);
         UIBase.applyDefaultWidgetSkinTo(toggleResetOnLaunchButton, blur);
 
-        ExtendedButton doneButton = new ExtendedButton(doneButtonX, doneButtonY, buttonWidth, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
+        this.doneButton = new ExtendedButton(doneButtonX, doneButtonY, buttonWidth, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
             this.callback.accept(VariableHandler.getVariables());
             this.closeWindow();
         });
-        this.addRenderableWidget(doneButton);
-        UIBase.applyDefaultWidgetSkinTo(doneButton, blur);
+        this.addRenderableWidget(this.doneButton);
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton, blur);
 
         this.refreshVariablesList();
 
@@ -183,6 +189,13 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (Screen.hasControlDown() && !Screen.hasShiftDown() && !Screen.hasAltDown() && this.isLetterKeyPressed(keyCode, scanCode, "s")) {
+            if ((this.doneButton != null) && this.doneButton.visible && this.doneButton.active) {
+                this.doneButton.onPress();
+                return true;
+            }
+        }
+
         if (super.keyPressed(keyCode, scanCode, modifiers)) return true;
         if (keyCode == InputConstants.KEY_DELETE) {
             if (this.getSelectedEntry() != null) {
@@ -191,6 +204,19 @@ public class ManageVariablesScreen extends PiPWindowBody implements InitialWidge
             }
         }
         return false;
+    }
+
+    @NotNull
+    protected String getLetterKeyName(int keyCode, int scanCode) {
+        String keyName = GLFW.glfwGetKeyName(keyCode, scanCode);
+        if (keyName == null) {
+            return "";
+        }
+        return keyName.toLowerCase(Locale.ROOT);
+    }
+
+    protected boolean isLetterKeyPressed(int keyCode, int scanCode, @NotNull String letter) {
+        return letter.toLowerCase(Locale.ROOT).equals(this.getLetterKeyName(keyCode, scanCode));
     }
 
     @Override
