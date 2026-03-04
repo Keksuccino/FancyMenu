@@ -124,7 +124,7 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
             parent.unregisterChildWindow(window);
         }
         if (focusedWindow == window) {
-            focusedWindow = null;
+            focusedWindow = getTopVisibleWindow();
         }
         if (activePointerWindow == window) {
             activePointerWindow = null;
@@ -493,6 +493,17 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
             return focusedWindow;
         }
         focusedWindow = null;
+        return null;
+    }
+
+    @Nullable
+    private PiPWindow getTopVisibleWindow() {
+        for (int i = windows.size() - 1; i >= 0; i--) {
+            PiPWindow window = windows.get(i);
+            if (window.isVisible()) {
+                return window;
+            }
+        }
         return null;
     }
 

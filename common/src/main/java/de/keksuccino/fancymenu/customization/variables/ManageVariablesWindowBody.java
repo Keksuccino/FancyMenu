@@ -1,14 +1,13 @@
 package de.keksuccino.fancymenu.customization.variables;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
+import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
@@ -28,11 +27,15 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
@@ -41,6 +44,7 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
 
     public static final int PIP_WINDOW_WIDTH = 640;
     public static final int PIP_WINDOW_HEIGHT = 420;
+    private static final int HISTORY_LIMIT = 500;
     private static final int LIST_ENTRY_TOP_DOWN_BORDER = 1;
     private static final int LIST_ENTRY_OUTER_PADDING = 3;
     private static final int LIST_TOP_SPACER_HEIGHT = 5;
@@ -56,6 +60,8 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
     protected float rightClickContextMenuLastOpenY = Float.NaN;
     @Nullable
     protected String contextMenuTargetVariableName;
+    private final Deque<VariablesSnapshot> undoHistory = new ArrayDeque<>();
+    private final Deque<VariablesSnapshot> redoHistory = new ArrayDeque<>();
 
     public ManageVariablesWindowBody(@NotNull Consumer<List<Variable>> callback) {
         super(Component.translatable("fancymenu.overlay.menu_bar.variables.manage"));
@@ -103,8 +109,7 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
         this.rightClickContextMenu.addClickableEntry("add_variable", Component.translatable("fancymenu.overlay.menu_bar.variables.manage.add_variable"), (menu, entry) -> {
                     menu.closeMenuChain();
                     this.requestAddVariable();
-                }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.a"))
-                .setIcon(MaterialIcons.ADD);
+                }).setIcon(MaterialIcons.ADD);
 
         this.rightClickContextMenu.addSeparatorEntry("separator_after_add")
                 .addIsVisibleSupplier((menu, entry) -> this.hasContextMenuTargetVariable());
@@ -126,7 +131,9 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
                     if (selectedVariable == null) {
                         return;
                     }
+                    VariablesSnapshot beforeSnapshot = this.captureCurrentState();
                     selectedVariable.setResetOnLaunch(!selectedVariable.isResetOnLaunch());
+                    this.createUndoPointIfChanged(beforeSnapshot);
                 }).setLabelSupplier((menu, entry) -> this.getContextMenuToggleResetOnLaunchLabel())
                 .addIsActiveSupplier((menu, entry) -> this.hasContextMenuTargetVariable())
                 .addIsVisibleSupplier((menu, entry) -> this.hasContextMenuTargetVariable())
@@ -143,6 +150,25 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
                 .addIsVisibleSupplier((menu, entry) -> this.hasContextMenuTargetVariable())
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.delete"))
                 .setIcon(MaterialIcons.DELETE);
+
+        this.rightClickContextMenu.addSeparatorEntry("separator_after_edit_actions")
+                .addIsVisibleSupplier((menu, entry) -> this.hasContextMenuTargetVariable());
+
+        this.rightClickContextMenu.addClickableEntry("undo", Component.translatable("fancymenu.editor.edit.undo"), (menu, entry) -> {
+                    if (this.undo()) {
+                        this.updateRightClickContextMenu(true);
+                    }
+                }).addIsActiveSupplier((menu, entry) -> this.canUndo())
+                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.undo"))
+                .setIcon(MaterialIcons.UNDO);
+
+        this.rightClickContextMenu.addClickableEntry("redo", Component.translatable("fancymenu.editor.edit.redo"), (menu, entry) -> {
+                    if (this.redo()) {
+                        this.updateRightClickContextMenu(true);
+                    }
+                }).addIsActiveSupplier((menu, entry) -> this.canRedo())
+                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.redo"))
+                .setIcon(MaterialIcons.REDO);
 
         if (reopen || wasOpen) {
             this.openRightClickContextMenuAtMouse(true);
@@ -195,6 +221,18 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         boolean contextMenuActive = (this.rightClickContextMenu != null) && this.rightClickContextMenu.isOpen();
+        String keyName = this.getLetterKeyName(keyCode, scanCode);
+
+        if (!contextMenuActive && (keyCode == InputConstants.KEY_BACKSPACE)) {
+            if (this.searchBar != null) {
+                if (!this.searchBar.isFocused()) {
+                    this.focusSearchBar();
+                }
+                this.searchBar.keyPressed(keyCode, scanCode, modifiers);
+                return true;
+            }
+        }
+
         if (Screen.hasControlDown() && !Screen.hasShiftDown() && !Screen.hasAltDown() && this.isLetterKeyPressed(keyCode, scanCode, "s")) {
             if ((this.doneButton != null) && this.doneButton.visible && this.doneButton.active) {
                 this.doneButton.onPress();
@@ -202,11 +240,32 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
             }
         }
 
+        if (Screen.hasControlDown() && "z".equals(keyName)) {
+            if (this.undo()) {
+                return true;
+            }
+        }
+
+        if (Screen.hasControlDown() && "y".equals(keyName)) {
+            if (this.redo()) {
+                return true;
+            }
+        }
+
+        if (keyCode == InputConstants.KEY_TAB) {
+            return true;
+        }
+
         if ((keyCode == InputConstants.KEY_UP) || (keyCode == InputConstants.KEY_DOWN)) {
             if (contextMenuActive) {
                 ContextMenuHandler.INSTANCE.keyPressed(keyCode, scanCode, modifiers);
                 return true;
             }
+            return this.selectAdjacentVariableEntry(keyCode == InputConstants.KEY_DOWN);
+        }
+
+        if (!contextMenuActive && ((keyCode == InputConstants.KEY_LEFT) || (keyCode == InputConstants.KEY_RIGHT))) {
+            return true;
         }
 
         if (!contextMenuActive && ((keyCode == InputConstants.KEY_ENTER) || (keyCode == InputConstants.KEY_NUMPADENTER))) {
@@ -227,6 +286,18 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
         return false;
     }
 
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        boolean contextMenuActive = (this.rightClickContextMenu != null) && this.rightClickContextMenu.isOpen();
+        if (!contextMenuActive && this.shouldRouteTypedCharacterToSearchBar(codePoint) && (this.searchBar != null) && !this.searchBar.isFocused()) {
+            this.focusSearchBar();
+            if (this.searchBar.charTyped(codePoint, modifiers)) {
+                return true;
+            }
+        }
+        return super.charTyped(codePoint, modifiers);
+    }
+
     @NotNull
     protected String getLetterKeyName(int keyCode, int scanCode) {
         String keyName = GLFW.glfwGetKeyName(keyCode, scanCode);
@@ -238,6 +309,127 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
 
     protected boolean isLetterKeyPressed(int keyCode, int scanCode, @NotNull String letter) {
         return letter.toLowerCase(Locale.ROOT).equals(this.getLetterKeyName(keyCode, scanCode));
+    }
+
+    private void focusSearchBar() {
+        if (this.searchBar == null) {
+            return;
+        }
+        this.setFocused(this.searchBar);
+        this.searchBar.setFocused(true);
+    }
+
+    private void defocusSearchBar() {
+        if (this.searchBar == null) {
+            return;
+        }
+        this.searchBar.setFocused(false);
+        if (this.getFocused() == this.searchBar) {
+            this.setFocused(null);
+        }
+    }
+
+    private void clearSelectedVariableEntries() {
+        for (ScrollAreaEntry entry : this.variableListScrollArea.getEntries()) {
+            if (entry instanceof VariableScrollEntry) {
+                entry.setSelected(false);
+            }
+        }
+    }
+
+    private boolean selectAdjacentVariableEntry(boolean moveDown) {
+        List<VariableScrollEntry> entries = this.getVariableEntriesForNavigation();
+        boolean searchBarAvailable = this.searchBar != null;
+        boolean searchBarFocused = searchBarAvailable && this.searchBar.isFocused();
+        int totalNavigationTargets = entries.size() + (searchBarAvailable ? 1 : 0);
+
+        if (totalNavigationTargets <= 0) {
+            return false;
+        }
+
+        int currentIndex = -1;
+        if (searchBarAvailable && searchBarFocused) {
+            currentIndex = 0;
+        } else {
+            VariableScrollEntry selectedEntry = this.getSelectedEntry();
+            if (selectedEntry != null) {
+                int selectedEntryIndex = entries.indexOf(selectedEntry);
+                if (selectedEntryIndex != -1) {
+                    currentIndex = searchBarAvailable ? selectedEntryIndex + 1 : selectedEntryIndex;
+                }
+            }
+        }
+
+        int targetIndex;
+        if (currentIndex == -1) {
+            targetIndex = moveDown ? 0 : (totalNavigationTargets - 1);
+        } else {
+            targetIndex = currentIndex + (moveDown ? 1 : -1);
+            if (targetIndex < 0) {
+                targetIndex = totalNavigationTargets - 1;
+            } else if (targetIndex >= totalNavigationTargets) {
+                targetIndex = 0;
+            }
+        }
+
+        if (searchBarAvailable && (targetIndex == 0)) {
+            this.clearSelectedVariableEntries();
+            this.focusSearchBar();
+            return true;
+        }
+
+        int entryIndex = searchBarAvailable ? targetIndex - 1 : targetIndex;
+        if ((entryIndex < 0) || (entryIndex >= entries.size())) {
+            return false;
+        }
+        VariableScrollEntry target = entries.get(entryIndex);
+        this.defocusSearchBar();
+        target.setSelected(true);
+        this.scrollVariableEntryIntoView(target);
+        return true;
+    }
+
+    private boolean shouldRouteTypedCharacterToSearchBar(char codePoint) {
+        if (hasControlDown() || hasAltDown()) {
+            return false;
+        }
+        return !Character.isISOControl(codePoint);
+    }
+
+    @NotNull
+    private List<VariableScrollEntry> getVariableEntriesForNavigation() {
+        List<VariableScrollEntry> entries = new ArrayList<>();
+        for (ScrollAreaEntry entry : this.variableListScrollArea.getEntries()) {
+            if (entry instanceof VariableScrollEntry variableEntry) {
+                entries.add(variableEntry);
+            }
+        }
+        return entries;
+    }
+
+    private void scrollVariableEntryIntoView(@NotNull ScrollAreaEntry entry) {
+        List<ScrollAreaEntry> entries = this.variableListScrollArea.getEntries();
+        int totalHeight = 0;
+        for (ScrollAreaEntry scrollEntry : entries) {
+            totalHeight += (int)scrollEntry.getHeight();
+        }
+        int visibleHeight = (int)this.variableListScrollArea.getInnerHeight();
+        if (totalHeight <= visibleHeight) {
+            return;
+        }
+        int offset = 0;
+        for (ScrollAreaEntry scrollEntry : entries) {
+            if (scrollEntry == entry) {
+                break;
+            }
+            offset += (int)scrollEntry.getHeight();
+        }
+        int entryCenter = offset + ((int)entry.getHeight() / 2);
+        int targetOffset = Math.max(0, entryCenter - (visibleHeight / 2));
+        int maxScroll = Math.max(1, totalHeight - visibleHeight);
+        float scroll = Math.min(1.0F, (float)targetOffset / (float)maxScroll);
+        this.variableListScrollArea.verticalScrollBar.setScroll(scroll);
+        this.variableListScrollArea.updateEntries(null);
     }
 
     @Override
@@ -367,8 +559,12 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
         TextInputWindowBody s = new TextInputWindowBody(CharacterFilter.buildOnlyLowercaseFileNameFilter(), (call) -> {
             if (call != null) {
                 if (!VariableHandler.variableExists(call)) {
+                    VariablesSnapshot beforeSnapshot = this.captureCurrentState();
                     VariableHandler.setVariable(call, "");
+                    this.contextMenuTargetVariableName = call;
                     this.refreshVariablesList();
+                    this.restoreSelection(call);
+                    this.createUndoPointIfChanged(beforeSnapshot);
                 }
             }
         });
@@ -381,8 +577,11 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
     protected void requestSetVariableValue(@NotNull Variable variable) {
         TextInputWindowBody s = new TextInputWindowBody(null, (call) -> {
             if (call != null) {
+                VariablesSnapshot beforeSnapshot = this.captureCurrentState();
                 variable.setValue(call);
                 this.refreshVariablesList();
+                this.restoreSelection(variable.getName());
+                this.createUndoPointIfChanged(beforeSnapshot);
             }
         });
         Dialogs.openGeneric(s,
@@ -451,12 +650,10 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
     }
 
     protected void requestDeleteVariable(@NotNull Variable variable) {
-        Dialogs.openMessageWithCallback(Component.translatable("fancymenu.overlay.menu_bar.variables.manage.delete_variable.confirm"), MessageDialogStyle.WARNING, call -> {
-            if (call) {
-                VariableHandler.removeVariable(variable.getName());
-                this.refreshVariablesList();
-            }
-        });
+        VariablesSnapshot beforeSnapshot = this.captureCurrentState();
+        VariableHandler.removeVariable(variable.getName());
+        this.refreshVariablesList();
+        this.createUndoPointIfChanged(beforeSnapshot);
     }
 
     protected int getListEntryHeight() {
@@ -472,6 +669,117 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
             }
         }
         return false;
+    }
+
+    private boolean canUndo() {
+        return !this.undoHistory.isEmpty();
+    }
+
+    private boolean canRedo() {
+        return !this.redoHistory.isEmpty();
+    }
+
+    private boolean undo() {
+        if (!this.canUndo()) {
+            return false;
+        }
+        VariablesSnapshot snapshot = this.undoHistory.pop();
+        this.redoHistory.push(this.captureCurrentState());
+        this.trimHistory(this.redoHistory);
+        this.applySnapshot(snapshot);
+        return true;
+    }
+
+    private boolean redo() {
+        if (!this.canRedo()) {
+            return false;
+        }
+        VariablesSnapshot snapshot = this.redoHistory.pop();
+        this.undoHistory.push(this.captureCurrentState());
+        this.trimHistory(this.undoHistory);
+        this.applySnapshot(snapshot);
+        return true;
+    }
+
+    private void createUndoPointIfChanged(@NotNull VariablesSnapshot previousState) {
+        if (this.captureVariableSnapshots().equals(previousState.variables())) {
+            return;
+        }
+        this.undoHistory.push(previousState);
+        this.trimHistory(this.undoHistory);
+        this.redoHistory.clear();
+    }
+
+    private void trimHistory(@NotNull Deque<VariablesSnapshot> history) {
+        while (history.size() > HISTORY_LIMIT) {
+            history.removeLast();
+        }
+    }
+
+    private @NotNull VariablesSnapshot captureCurrentState() {
+        VariableScrollEntry selectedEntry = this.getSelectedEntry();
+        String selectedVariableName = (selectedEntry != null) ? selectedEntry.variable.getName() : null;
+        return new VariablesSnapshot(
+                this.captureVariableSnapshots(),
+                this.variableListScrollArea.verticalScrollBar.getScroll(),
+                this.variableListScrollArea.horizontalScrollBar.getScroll(),
+                selectedVariableName,
+                this.contextMenuTargetVariableName
+        );
+    }
+
+    private @NotNull List<VariableSnapshot> captureVariableSnapshots() {
+        List<Variable> variables = VariableHandler.getVariables();
+        variables.sort(Comparator
+                .comparing(Variable::getName, String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(Variable::getName));
+        List<VariableSnapshot> snapshots = new ArrayList<>();
+        for (Variable variable : variables) {
+            snapshots.add(new VariableSnapshot(variable.getName(), variable.getValue(), variable.isResetOnLaunch()));
+        }
+        return snapshots;
+    }
+
+    private void applySnapshot(@NotNull VariablesSnapshot snapshot) {
+        this.applyVariableSnapshots(snapshot.variables());
+        this.refreshVariablesList();
+        this.variableListScrollArea.verticalScrollBar.setScroll(Mth.clamp(snapshot.verticalScroll(), 0.0F, 1.0F));
+        this.variableListScrollArea.horizontalScrollBar.setScroll(Mth.clamp(snapshot.horizontalScroll(), 0.0F, 1.0F));
+        this.variableListScrollArea.updateEntries(null);
+        this.restoreSelection(snapshot.selectedVariableName());
+        this.contextMenuTargetVariableName = snapshot.contextMenuTargetVariableName();
+        if (this.getContextMenuTargetVariable() == null) {
+            this.clearContextMenuTarget();
+        }
+    }
+
+    private void applyVariableSnapshots(@NotNull List<VariableSnapshot> snapshots) {
+        VariableHandler.clearVariables();
+        for (VariableSnapshot snapshot : snapshots) {
+            VariableHandler.setVariable(snapshot.name(), snapshot.value());
+            Variable variable = VariableHandler.getVariable(snapshot.name());
+            if (variable != null) {
+                variable.setResetOnLaunch(snapshot.resetOnLaunch());
+            }
+        }
+    }
+
+    private void restoreSelection(@Nullable String selectedVariableName) {
+        if (selectedVariableName == null) {
+            return;
+        }
+        for (ScrollAreaEntry entry : this.variableListScrollArea.getEntries()) {
+            if ((entry instanceof VariableScrollEntry variableEntry) && selectedVariableName.equals(variableEntry.variable.getName())) {
+                entry.setSelected(true);
+                return;
+            }
+        }
+    }
+
+    private record VariablesSnapshot(@NotNull List<VariableSnapshot> variables, float verticalScroll, float horizontalScroll, @Nullable String selectedVariableName, @Nullable String contextMenuTargetVariableName) {
+    }
+
+    private record VariableSnapshot(@NotNull String name, @NotNull String value, boolean resetOnLaunch) {
     }
 
     public static class VariableScrollEntry extends TextScrollAreaEntry {
