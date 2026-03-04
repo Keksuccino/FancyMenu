@@ -84,6 +84,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     private static final float OPEN_ANIMATION_MIN_SCALE = 0.78F;
     private long openAnimationStartMs = 0L;
     private boolean openAnimationActive = false;
+    private boolean supressOpenAnimationNextOpen = false;
     protected int renderMouseX = 0;
     protected int renderMouseY = 0;
     private final SearchContextMenuEntry searchEntry;
@@ -733,6 +734,11 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         return this;
     }
 
+    public ContextMenu supressOpenAnimationForNextOpen() {
+        this.supressOpenAnimationNextOpen = true;
+        return this;
+    }
+
     public ContextMenu setScale(float scale) {
         if (this.forceUIScale) LOGGER.error("[FANCYMENU] Unable to set scale of ContextMenu while ContextMenu#isForceUIScale()!");
         this.scale = scale;
@@ -1043,7 +1049,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         this.rawX = x;
         this.rawY = y;
         this.open = true;
-        if (!this.isSubMenu() && UIBase.shouldPlayAnimations() && this.openAnimationEnabled) {
+        boolean supressOpenAnimation = this.supressOpenAnimationNextOpen;
+        this.supressOpenAnimationNextOpen = false;
+        if (!this.isSubMenu() && UIBase.shouldPlayAnimations() && this.openAnimationEnabled && !supressOpenAnimation) {
             this.openAnimationStartMs = net.minecraft.Util.getMillis();
             this.openAnimationActive = true;
         } else {

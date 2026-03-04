@@ -20,12 +20,9 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.Scro
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -115,7 +112,7 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
             this.rightClickContextMenu.addClickableEntry("add_group", Component.translatable("fancymenu.requirements.screens.add_group"), (menu, entry) -> {
                         menu.closeMenuChain();
                         this.onAddGroup();
-                    }).setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.add_group.desc")))
+                    }).setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.requirements.screens.manage_screen.add_group.desc")))
                     .setIcon(MaterialIcons.ADD);
         }
 
@@ -130,10 +127,10 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
                         menu.closeMenuChain();
                         this.onEditGroupRequirements(selectedGroup);
                         }).addIsActiveSupplier((menu, entry) -> this.getContextMenuTargetGroup() != null)
-                    .addIsVisibleSupplier((menu, entry) -> this.getContextMenuTargetInstance() == null)
+                    .addIsVisibleSupplier((menu, entry) -> this.getContextMenuTargetGroup() != null)
                     .setTooltipSupplier((menu, entry) -> this.getContextMenuTargetGroup() != null
-                            ? UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.group_settings.edit_requirements.desc"))
-                            : UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.group_settings.no_group_selected")))
+                            ? UITooltip.of(Component.translatable("fancymenu.requirements.screens.manage_screen.group_settings.edit_requirements.desc"))
+                            : UITooltip.of(Component.translatable("fancymenu.requirements.screens.manage_screen.group_settings.no_group_selected")))
                     .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.enter"))
                     .setIcon(MaterialIcons.EDIT);
 
@@ -145,10 +142,10 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
                         menu.closeMenuChain();
                         this.onEditGroupIdentifier(selectedGroup);
                     }).addIsActiveSupplier((menu, entry) -> this.getContextMenuTargetGroup() != null)
-                    .addIsVisibleSupplier((menu, entry) -> this.getContextMenuTargetInstance() == null)
+                    .addIsVisibleSupplier((menu, entry) -> this.getContextMenuTargetGroup() != null)
                     .setTooltipSupplier((menu, entry) -> this.getContextMenuTargetGroup() != null
-                            ? UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.group_settings.edit_identifier.desc"))
-                            : UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.group_settings.no_group_selected")))
+                            ? UITooltip.of(Component.translatable("fancymenu.requirements.screens.manage_screen.group_settings.edit_identifier.desc"))
+                            : UITooltip.of(Component.translatable("fancymenu.requirements.screens.manage_screen.group_settings.no_group_selected")))
                     .setIcon(MaterialIcons.DRIVE_FILE_RENAME_OUTLINE);
 
             this.rightClickContextMenu.addClickableEntry("cycle_group_mode", Component.translatable("fancymenu.requirements.screens.manage_screen.group_settings.cycle_mode.generic"), (menu, entry) -> {
@@ -159,14 +156,14 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
                         this.onCycleGroupMode(selectedGroup);
                     }).setLabelSupplier((menu, entry) -> this.getContextMenuCycleGroupModeLabel())
                     .addIsActiveSupplier((menu, entry) -> this.getContextMenuTargetGroup() != null)
-                    .addIsVisibleSupplier((menu, entry) -> this.getContextMenuTargetInstance() == null)
+                    .addIsVisibleSupplier((menu, entry) -> this.getContextMenuTargetGroup() != null)
                     .setTooltipSupplier((menu, entry) -> this.getContextMenuTargetGroup() != null
-                            ? UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.group_settings.cycle_mode.desc"))
-                            : UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.group_settings.no_group_selected")))
+                            ? UITooltip.of(Component.translatable("fancymenu.requirements.screens.build_group_screen.mode.desc"))
+                            : UITooltip.of(Component.translatable("fancymenu.requirements.screens.manage_screen.group_settings.no_group_selected")))
                     .setIcon(MaterialIcons.SWAP_HORIZ);
 
             this.rightClickContextMenu.addSeparatorEntry("separator_after_group_settings")
-                    .addIsVisibleSupplier((menu, entry) -> this.getContextMenuTargetInstance() == null);
+                    .addIsVisibleSupplier((menu, entry) -> this.getContextMenuTargetGroup() != null);
         }
 
         this.rightClickContextMenu.addClickableEntry("edit", Component.translatable("fancymenu.requirements.screens.manage_screen.edit.generic"), (menu, entry) -> {
@@ -178,15 +175,15 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
                     this.onEdit(selectedInstance, null);
                 }).setLabelSupplier((menu, entry) -> this.getContextMenuEditLabel())
                 .addIsActiveSupplier((menu, entry) -> this.getContextMenuTargetInstance() != null)
-                .addIsVisibleSupplier((menu, entry) -> this.getContextMenuTargetGroup() == null)
+                .addIsVisibleSupplier((menu, entry) -> this.getContextMenuTargetInstance() != null)
                 .setTooltipSupplier((menu, entry) -> (this.getContextMenuTargetInstance() != null)
-                        ? UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.edit.desc"))
-                        : UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.no_entry_selected")))
+                        ? UITooltip.of(Component.translatable("fancymenu.requirements.screens.manage_screen.edit.desc"))
+                        : UITooltip.of(Component.translatable("fancymenu.requirements.screens.manage_screen.no_entry_selected")))
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.enter"))
                 .setIcon(MaterialIcons.EDIT);
 
         this.rightClickContextMenu.addSeparatorEntry("separator_before_remove")
-                .addIsVisibleSupplier((menu, entry) -> this.getContextMenuTargetGroup() == null);
+                .addIsVisibleSupplier((menu, entry) -> this.hasContextMenuTarget());
 
         this.rightClickContextMenu.addClickableEntry("remove", Component.translatable("fancymenu.requirements.screens.manage_screen.remove.generic"), (menu, entry) -> {
                     RequirementInstance selectedInstance = this.getContextMenuTargetInstance();
@@ -198,13 +195,15 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
                     this.onRemove(selectedInstance, selectedGroup);
                 }).setLabelSupplier((menu, entry) -> this.getContextMenuRemoveLabel())
                 .addIsActiveSupplier((menu, entry) -> this.hasContextMenuTarget())
+                .addIsVisibleSupplier((menu, entry) -> this.hasContextMenuTarget())
                 .setTooltipSupplier((menu, entry) -> this.hasContextMenuTarget()
-                        ? UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.remove.desc"))
-                        : UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.no_entry_selected")))
+                        ? UITooltip.of(Component.translatable("fancymenu.requirements.screens.manage_screen.remove.desc"))
+                        : UITooltip.of(Component.translatable("fancymenu.requirements.screens.manage_screen.no_entry_selected")))
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.delete"))
                 .setIcon(MaterialIcons.DELETE);
 
-        this.rightClickContextMenu.addSeparatorEntry("separator_after_remove");
+        this.rightClickContextMenu.addSeparatorEntry("separator_after_remove")
+                .addIsVisibleSupplier((menu, entry) -> this.hasContextMenuTarget());
 
         this.rightClickContextMenu.addClickableEntry("undo", Component.translatable("fancymenu.editor.edit.undo"), (menu, entry) -> {
                     if (this.undo()) {
@@ -314,7 +313,7 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
         });
         inputScreen.setText(selectedGroup.identifier);
         inputScreen.setTextValidator(s -> this.isGroupIdentifierValidForRename(selectedGroup, s.getText()));
-        inputScreen.setTextValidatorUserFeedback(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.group_settings.edit_identifier.invalid")));
+        inputScreen.setTextValidatorUserFeedback(UITooltip.of(Component.translatable("fancymenu.requirements.screens.manage_screen.group_settings.edit_identifier.invalid")));
         Dialogs.openGeneric(inputScreen,
                 Component.translatable("fancymenu.requirements.screens.manage_screen.group_settings.edit_identifier"),
                 null, TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT)
@@ -543,6 +542,9 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
         if (reopen && !Float.isNaN(this.rightClickContextMenuLastOpenX)) mX = (int) this.rightClickContextMenuLastOpenX;
         int mY = MouseInput.getMouseY();
         if (reopen && !Float.isNaN(this.rightClickContextMenuLastOpenY)) mY = (int) this.rightClickContextMenuLastOpenY;
+        if (reopen) {
+            this.rightClickContextMenu.supressOpenAnimationForNextOpen();
+        }
         ContextMenuHandler.INSTANCE.setAndOpen(this.rightClickContextMenu, mX, mY);
         this.rightClickContextMenuLastOpenX = mX;
         this.rightClickContextMenuLastOpenY = mY;
@@ -887,7 +889,6 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
 
         public RequirementInstance instance;
         public final int lineHeight;
-        public Font font = Minecraft.getInstance().font;
 
         private final MutableComponent displayNameComponent;
         private final MutableComponent modeComponent;
@@ -918,6 +919,7 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
             int centerYLine1 = baseY + HEADER_FOOTER_HEIGHT + (this.lineHeight / 2);
             int centerYLine2 = baseY + HEADER_FOOTER_HEIGHT + ((this.lineHeight / 2) * 3);
             int centerYLine3 = baseY + HEADER_FOOTER_HEIGHT + ((this.lineHeight / 2) * 5);
+            float textHeight = UIBase.getUITextHeightNormal();
 
             RenderSystem.enableBlend();
             int labelColor = UIBase.shouldBlur()
@@ -925,20 +927,20 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
                     : UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt();
 
             renderListingDot(graphics, baseX + 5, centerYLine1 - 2, UIBase.getUITheme().bullet_list_dot_color_2.getColorInt());
-            graphics.drawString(this.font, this.displayNameComponent, (baseX + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), labelColor, false);
+            UIBase.renderText(graphics, this.displayNameComponent, (baseX + 5 + 4 + 3), (centerYLine1 - (textHeight / 2f)), labelColor);
 
             renderListingDot(graphics, baseX + 5 + 4 + 3, centerYLine2 - 2, UIBase.getUITheme().bullet_list_dot_color_1.getColorInt());
-            graphics.drawString(this.font, this.modeComponent, (baseX + 5 + 4 + 3 + 4 + 3), (centerYLine2 - (this.font.lineHeight / 2)), labelColor, false);
+            UIBase.renderText(graphics, this.modeComponent, (baseX + 5 + 4 + 3 + 4 + 3), (centerYLine2 - (textHeight / 2f)), labelColor);
 
             renderListingDot(graphics, baseX + 5 + 4 + 3, centerYLine3 - 2, UIBase.getUITheme().bullet_list_dot_color_1.getColorInt());
-            graphics.drawString(this.font, this.valueComponent, (baseX + 5 + 4 + 3 + 4 + 3), (centerYLine3 - (this.font.lineHeight / 2)), labelColor, false);
+            UIBase.renderText(graphics, this.valueComponent, (baseX + 5 + 4 + 3 + 4 + 3), (centerYLine3 - (textHeight / 2f)), labelColor);
 
         }
 
         private int calculateWidth() {
-            int w = 5 + 4 + 3 + this.font.width(this.displayNameComponent) + 5;
-            int w2 = 5 + 4 + 3 + 4 + 3 + this.font.width(this.modeComponent) + 5;
-            int w3 = 5 + 4 + 3 + 4 + 3 + this.font.width(this.valueComponent) + 5;
+            int w = (int)(5 + 4 + 3 + UIBase.getUITextWidthNormal(this.displayNameComponent) + 5);
+            int w2 = (int)(5 + 4 + 3 + 4 + 3 + UIBase.getUITextWidthNormal(this.modeComponent) + 5);
+            int w3 = (int)(5 + 4 + 3 + 4 + 3 + UIBase.getUITextWidthNormal(this.valueComponent) + 5);
             if (w2 > w) {
                 w = w2;
             }
