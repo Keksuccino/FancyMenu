@@ -103,6 +103,7 @@ public class Placeholders {
     public static final ActiveHotbarSlotPlaceholder ACTIVE_HOTBAR_SLOT = new ActiveHotbarSlotPlaceholder();
     public static final CurrentPlayerHealthPlaceholder CURRENT_PLAYER_HEALTH = new CurrentPlayerHealthPlaceholder();
     public static final GameTimePlaceholder GAME_TIME = new GameTimePlaceholder();
+    public static final GameruleValuePlaceholder GAMERULE_VALUE = new GameruleValuePlaceholder();
     public static final SlotItemPlaceholder SLOT_ITEM = new SlotItemPlaceholder();
     public static final InventoryItemCountPlaceholder INVENTORY_ITEM_COUNT = new InventoryItemCountPlaceholder();
     public static final SlotItemCountPlaceholder SLOT_ITEM_COUNT = new SlotItemCountPlaceholder();
@@ -266,6 +267,7 @@ public class Placeholders {
         PlaceholderRegistry.register(CURRENT_MOUNT_HEALTH_PERCENTAGE);
         PlaceholderRegistry.register(CURRENT_MOUNT_JUMP_METER);
         PlaceholderRegistry.register(GAME_TIME);
+        PlaceholderRegistry.register(GAMERULE_VALUE);
         PlaceholderRegistry.register(SLOT_ITEM);
         PlaceholderRegistry.register(INVENTORY_ITEM_COUNT);
         PlaceholderRegistry.register(SLOT_ITEM_COUNT);

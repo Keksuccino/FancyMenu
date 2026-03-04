@@ -10,6 +10,8 @@ import de.keksuccino.fancymenu.networking.packets.commands.variable.suggestions.
 import de.keksuccino.fancymenu.networking.packets.fmdata.FmDataToClientPacketCodec;
 import de.keksuccino.fancymenu.networking.packets.fmdata.FmDataToServerPacketCodec;
 import de.keksuccino.fancymenu.networking.packets.handshake.HandshakePacketCodec;
+import de.keksuccino.fancymenu.networking.packets.placeholders.gamerule.ServerGameruleValueRequestPacketCodec;
+import de.keksuccino.fancymenu.networking.packets.placeholders.gamerule.ServerGameruleValueResponsePacketCodec;
 import de.keksuccino.fancymenu.networking.packets.placeholders.nbt.ServerNbtDataRequestPacketCodec;
 import de.keksuccino.fancymenu.networking.packets.placeholders.nbt.ServerNbtDataResponsePacketCodec;
 import de.keksuccino.fancymenu.networking.packets.structure.clientstructures.StructureEventPacketCodec;
@@ -28,6 +30,8 @@ public class Packets {
     public static final HandshakePacketCodec HANDSHAKE_PACKET_CODEC = new HandshakePacketCodec();
     public static final StructureEventPacketCodec STRUCTURE_EVENT_PACKET_CODEC = new StructureEventPacketCodec();
     public static final EntityEventPacketCodec ENTITY_EVENT_PACKET_CODEC = new EntityEventPacketCodec();
+    public static final ServerGameruleValueRequestPacketCodec SERVER_GAMERULE_VALUE_REQUEST_PACKET_CODEC = new ServerGameruleValueRequestPacketCodec();
+    public static final ServerGameruleValueResponsePacketCodec SERVER_GAMERULE_VALUE_RESPONSE_PACKET_CODEC = new ServerGameruleValueResponsePacketCodec();
     public static final ServerNbtDataRequestPacketCodec SERVER_NBT_DATA_REQUEST_PACKET_CODEC = new ServerNbtDataRequestPacketCodec();
     public static final ServerNbtDataResponsePacketCodec SERVER_NBT_DATA_RESPONSE_PACKET_CODEC = new ServerNbtDataResponsePacketCodec();
     public static final StructuresPacketCodec STRUCTURES_PACKET_CODEC = new StructuresPacketCodec();
@@ -46,6 +50,8 @@ public class Packets {
         PacketRegistry.register(HANDSHAKE_PACKET_CODEC);
         PacketRegistry.register(STRUCTURE_EVENT_PACKET_CODEC);
         PacketRegistry.register(ENTITY_EVENT_PACKET_CODEC);
+        PacketRegistry.register(SERVER_GAMERULE_VALUE_REQUEST_PACKET_CODEC);
+        PacketRegistry.register(SERVER_GAMERULE_VALUE_RESPONSE_PACKET_CODEC);
         PacketRegistry.register(SERVER_NBT_DATA_REQUEST_PACKET_CODEC);
         PacketRegistry.register(SERVER_NBT_DATA_RESPONSE_PACKET_CODEC);
         PacketRegistry.register(STRUCTURES_PACKET_CODEC);
