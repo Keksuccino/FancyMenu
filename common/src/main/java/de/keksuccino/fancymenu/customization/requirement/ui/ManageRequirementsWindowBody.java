@@ -7,6 +7,9 @@ import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGro
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
@@ -43,12 +46,13 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
     protected Consumer<RequirementContainer> callback;
 
     protected ScrollArea requirementsScrollArea = new ScrollArea(0, 0, 0, 0);
-    protected ExtendedButton addRequirementButton;
-    protected ExtendedButton addGroupButton;
-    protected ExtendedButton editButton;
-    protected ExtendedButton removeButton;
     protected ExtendedButton doneButton;
     protected ExtendedButton cancelButton;
+    protected ContextMenu rightClickContextMenu;
+    @Nullable
+    protected String contextMenuTargetGroupIdentifier;
+    @Nullable
+    protected String contextMenuTargetInstanceIdentifier;
     private final Deque<RequirementsSnapshot> undoHistory = new ArrayDeque<>();
     private final Deque<RequirementsSnapshot> redoHistory = new ArrayDeque<>();
 
@@ -63,134 +67,10 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
     protected void init() {
         boolean blur = UIBase.shouldBlur();
         this.requirementsScrollArea.setSetupForBlurInterface(blur);
-
-        this.addRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.requirements.screens.add_requirement"), (button) -> {
-            RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
-            BuildRequirementScreen s = new BuildRequirementScreen(this.container, null, (call) -> {
-                if (call != null) {
-                    this.container.addInstance(call);
-                    this.updateRequirementsScrollArea();
-                    this.createUndoPointIfChanged(beforeSnapshot);
-                }
-            });
-            this.openChildWindow(parentWindow -> BuildRequirementScreen.openInWindow(s, parentWindow));
-        });
-        this.addWidget(this.addRequirementButton);
-        this.addRequirementButton.setUITooltip(UITooltip.of(Component.translatable("fancymenu.requirements.screens.manage_screen.add_requirement.desc")));
-        UIBase.applyDefaultWidgetSkinTo(this.addRequirementButton, blur);
-
-        this.addGroupButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.requirements.screens.add_group"), (button) -> {
-            RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
-            BuildRequirementGroupScreen s = new BuildRequirementGroupScreen(this.container, null, (call) -> {
-                if (call != null) {
-                    this.container.addGroup(call);
-                    this.updateRequirementsScrollArea();
-                    this.createUndoPointIfChanged(beforeSnapshot);
-                }
-            });
-            this.openChildWindow(parentWindow -> BuildRequirementGroupScreen.openInWindow(s, parentWindow));
-        });
-        this.addWidget(this.addGroupButton);
-        this.addGroupButton.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.add_group.desc")));
-        UIBase.applyDefaultWidgetSkinTo(this.addGroupButton, blur);
-
-        this.editButton = new ExtendedButton(0, 0, 150, 20, "", (button) -> {
-            if (this.isInstanceSelected()) {
-                RequirementInstance selectedInstance = this.getSelectedInstance();
-                if (selectedInstance == null) {
-                    return;
-                }
-                RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
-                BuildRequirementScreen requirementScreen = new BuildRequirementScreen(this.container, selectedInstance, (call) -> {
-                    if (call != null) {
-                        this.updateRequirementsScrollArea();
-                        this.createUndoPointIfChanged(beforeSnapshot);
-                    }
-                });
-                this.openChildWindow(parentWindow -> BuildRequirementScreen.openInWindow(requirementScreen, parentWindow));
-            } else if (this.isGroupSelected()) {
-                RequirementGroup selectedGroup = this.getSelectedGroup();
-                if (selectedGroup == null) {
-                    return;
-                }
-                RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
-                BuildRequirementGroupScreen groupScreen = new BuildRequirementGroupScreen(this.container, selectedGroup, (call) -> {
-                    if (call != null) {
-                        this.updateRequirementsScrollArea();
-                        this.createUndoPointIfChanged(beforeSnapshot);
-                    }
-                });
-                this.openChildWindow(parentWindow -> BuildRequirementGroupScreen.openInWindow(groupScreen, parentWindow));
-            }
-        }) {
-            @Override
-            public void render(@NotNull GuiGraphics graphics, int p_93658_, int p_93659_, float p_93660_) {
-                ManageRequirementsWindowBody s = ManageRequirementsWindowBody.this;
-                if (!s.isInstanceSelected() && !s.isGroupSelected()) {
-                    this.setLabel(I18n.get("fancymenu.requirements.screens.manage_screen.edit.generic"));
-                    this.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.no_entry_selected")));
-                    this.active = false;
-                } else {
-                    if (s.isInstanceSelected()) {
-                        this.setLabel(I18n.get("fancymenu.requirements.screens.edit_requirement"));
-                    } else {
-                        this.setLabel(I18n.get("fancymenu.requirements.screens.edit_group"));
-                    }
-                    this.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.edit.desc")));
-                    this.active = true;
-                }
-                super.render(graphics, p_93658_, p_93659_, p_93660_);
-            }
-        };
-        this.addWidget(this.editButton);
-        UIBase.applyDefaultWidgetSkinTo(this.editButton, blur);
-
-        this.removeButton = new ExtendedButton(0, 0, 150, 20, "", (button) -> {
-            if (this.isInstanceSelected()) {
-                RequirementInstance i = this.getSelectedInstance();
-                RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
-                Dialogs.openMessageWithCallback(Component.translatable("fancymenu.requirements.screens.remove_requirement.confirm"), MessageDialogStyle.WARNING, call -> {
-                    if (call) {
-                        this.container.removeInstance(i);
-                        this.updateRequirementsScrollArea();
-                        this.createUndoPointIfChanged(beforeSnapshot);
-                    }
-                });
-            } else if (this.isGroupSelected()) {
-                RequirementGroup g = this.getSelectedGroup();
-                RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
-                Dialogs.openMessageWithCallback(Component.translatable("fancymenu.requirements.screens.remove_group.confirm"), MessageDialogStyle.WARNING, call -> {
-                    if (call) {
-                        this.container.removeGroup(g);
-                        this.updateRequirementsScrollArea();
-                        this.createUndoPointIfChanged(beforeSnapshot);
-                    }
-                });
-            }
-        }) {
-            @Override
-            public void render(@NotNull GuiGraphics graphics, int p_93658_, int p_93659_, float p_93660_) {
-                ManageRequirementsWindowBody s = ManageRequirementsWindowBody.this;
-                if (!s.isInstanceSelected() && !s.isGroupSelected()) {
-                    this.setLabel(I18n.get("fancymenu.requirements.screens.manage_screen.remove.generic"));
-                    this.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.no_entry_selected")));
-                    this.active = false;
-                } else {
-                    if (s.isInstanceSelected()) {
-                        this.setLabel(I18n.get("fancymenu.requirements.screens.remove_requirement"));
-                    } else {
-                        this.setLabel(I18n.get("fancymenu.requirements.screens.remove_group"));
-                    }
-                    this.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.remove.desc")));
-                    this.active = true;
-                }
-                super.render(graphics, p_93658_, p_93659_, p_93660_);
-            }
-        };
-        this.addWidget(this.removeButton);
-        UIBase.applyDefaultWidgetSkinTo(this.removeButton, blur);
+        this.updateRightClickContextMenu();
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.common_components.cancel"), (button) -> {
+            this.closeRightClickContextMenu();
             this.callback.accept(null);
             this.closeWindow();
         });
@@ -201,12 +81,136 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton, blur);
 
-        this.addRenderableWidget(this.requirementsScrollArea);
+        this.addWidget(this.requirementsScrollArea);
 
+    }
+
+    protected void updateRightClickContextMenu() {
+        if (this.rightClickContextMenu != null) {
+            this.rightClickContextMenu.closeMenu();
+        }
+        this.rightClickContextMenu = new ContextMenu();
+
+        this.rightClickContextMenu.addClickableEntry("add_requirement", Component.translatable("fancymenu.requirements.screens.add_requirement"), (menu, entry) -> {
+                    menu.closeMenu();
+                    this.onAddRequirement();
+                }).setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.requirements.screens.manage_screen.add_requirement.desc")))
+                .setIcon(MaterialIcons.ADD);
+
+        this.rightClickContextMenu.addClickableEntry("add_group", Component.translatable("fancymenu.requirements.screens.add_group"), (menu, entry) -> {
+                    menu.closeMenu();
+                    this.onAddGroup();
+                }).setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.add_group.desc")))
+                .setIcon(MaterialIcons.ADD);
+
+        this.rightClickContextMenu.addSeparatorEntry("separator_after_add");
+
+        this.rightClickContextMenu.addClickableEntry("edit", Component.translatable("fancymenu.requirements.screens.manage_screen.edit.generic"), (menu, entry) -> {
+                    RequirementInstance selectedInstance = this.getContextMenuTargetInstance();
+                    RequirementGroup selectedGroup = this.getContextMenuTargetGroup();
+                    if ((selectedInstance == null) && (selectedGroup == null)) {
+                        return;
+                    }
+                    menu.closeMenu();
+                    this.onEdit(selectedInstance, selectedGroup);
+                }).setLabelSupplier((menu, entry) -> this.getContextMenuEditLabel())
+                .addIsActiveSupplier((menu, entry) -> this.hasContextMenuTarget())
+                .setTooltipSupplier((menu, entry) -> this.hasContextMenuTarget()
+                        ? UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.edit.desc"))
+                        : UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.no_entry_selected")))
+                .setIcon(MaterialIcons.EDIT);
+
+        this.rightClickContextMenu.addClickableEntry("remove", Component.translatable("fancymenu.requirements.screens.manage_screen.remove.generic"), (menu, entry) -> {
+                    RequirementInstance selectedInstance = this.getContextMenuTargetInstance();
+                    RequirementGroup selectedGroup = this.getContextMenuTargetGroup();
+                    if ((selectedInstance == null) && (selectedGroup == null)) {
+                        return;
+                    }
+                    menu.closeMenu();
+                    this.onRemove(selectedInstance, selectedGroup);
+                }).setLabelSupplier((menu, entry) -> this.getContextMenuRemoveLabel())
+                .addIsActiveSupplier((menu, entry) -> this.hasContextMenuTarget())
+                .setTooltipSupplier((menu, entry) -> this.hasContextMenuTarget()
+                        ? UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.remove.desc"))
+                        : UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.no_entry_selected")))
+                .setIcon(MaterialIcons.DELETE);
+    }
+
+    protected void onAddRequirement() {
+        RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
+        BuildRequirementScreen screen = new BuildRequirementScreen(this.container, null, (call) -> {
+            if (call != null) {
+                this.container.addInstance(call);
+                this.updateRequirementsScrollArea();
+                this.createUndoPointIfChanged(beforeSnapshot);
+            }
+        });
+        this.openChildWindow(parentWindow -> BuildRequirementScreen.openInWindow(screen, parentWindow));
+    }
+
+    protected void onAddGroup() {
+        RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
+        BuildRequirementGroupScreen screen = new BuildRequirementGroupScreen(this.container, null, (call) -> {
+            if (call != null) {
+                this.container.addGroup(call);
+                this.updateRequirementsScrollArea();
+                this.createUndoPointIfChanged(beforeSnapshot);
+            }
+        });
+        this.openChildWindow(parentWindow -> BuildRequirementGroupScreen.openInWindow(screen, parentWindow));
+    }
+
+    protected void onEdit(@Nullable RequirementInstance selectedInstance, @Nullable RequirementGroup selectedGroup) {
+        if (selectedInstance != null) {
+            RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
+            BuildRequirementScreen requirementScreen = new BuildRequirementScreen(this.container, selectedInstance, (call) -> {
+                if (call != null) {
+                    this.updateRequirementsScrollArea();
+                    this.createUndoPointIfChanged(beforeSnapshot);
+                }
+            });
+            this.openChildWindow(parentWindow -> BuildRequirementScreen.openInWindow(requirementScreen, parentWindow));
+            return;
+        }
+        if (selectedGroup != null) {
+            RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
+            BuildRequirementGroupScreen groupScreen = new BuildRequirementGroupScreen(this.container, selectedGroup, (call) -> {
+                if (call != null) {
+                    this.updateRequirementsScrollArea();
+                    this.createUndoPointIfChanged(beforeSnapshot);
+                }
+            });
+            this.openChildWindow(parentWindow -> BuildRequirementGroupScreen.openInWindow(groupScreen, parentWindow));
+        }
+    }
+
+    protected void onRemove(@Nullable RequirementInstance selectedInstance, @Nullable RequirementGroup selectedGroup) {
+        if (selectedInstance != null) {
+            RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
+            Dialogs.openMessageWithCallback(Component.translatable("fancymenu.requirements.screens.remove_requirement.confirm"), MessageDialogStyle.WARNING, call -> {
+                if (call) {
+                    this.container.removeInstance(selectedInstance);
+                    this.updateRequirementsScrollArea();
+                    this.createUndoPointIfChanged(beforeSnapshot);
+                }
+            });
+            return;
+        }
+        if (selectedGroup != null) {
+            RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
+            Dialogs.openMessageWithCallback(Component.translatable("fancymenu.requirements.screens.remove_group.confirm"), MessageDialogStyle.WARNING, call -> {
+                if (call) {
+                    this.container.removeGroup(selectedGroup);
+                    this.updateRequirementsScrollArea();
+                    this.createUndoPointIfChanged(beforeSnapshot);
+                }
+            });
+        }
     }
 
     @Override
     public void onWindowClosedExternally() {
+        this.closeRightClickContextMenu();
         this.callback.accept(null);
     }
 
@@ -219,34 +223,29 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
         float labelY = scrollAreaTop - UIBase.getUITextHeightNormal() - 3.0F;
         UIBase.renderText(graphics, I18n.get("fancymenu.requirements.screens.manage_screen.requirements_and_groups"), 20, labelY, textColor);
 
-        this.requirementsScrollArea.setWidth(this.width - 20 - 150 - 20 - 20, true);
+        this.requirementsScrollArea.setWidth(this.width - 20 - 20, true);
         this.requirementsScrollArea.setHeight(this.height - 85, true);
         this.requirementsScrollArea.setX(20, true);
         this.requirementsScrollArea.setY(scrollAreaTop, true);
 
-        this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
-        this.doneButton.setY(this.height - 20 - 20);
+        int buttonsRightEdge = this.width - 20;
+        int buttonY = Math.max(20, (int)(this.requirementsScrollArea.getYWithBorder() - this.doneButton.getHeight() - 5));
+        this.doneButton.setX(buttonsRightEdge - this.doneButton.getWidth());
+        this.doneButton.setY(buttonY);
+        this.cancelButton.setX(Math.max(20, this.doneButton.getX() - 5 - this.cancelButton.getWidth()));
+        this.cancelButton.setY(buttonY);
+
+        this.requirementsScrollArea.render(graphics, mouseX, mouseY, partial);
+        if (this.requirementsScrollArea.getEntries().isEmpty()) {
+            Component hint = Component.translatable("fancymenu.requirements.screens.manage_screen.empty_hint");
+            float hintWidth = UIBase.getUITextWidthNormal(hint);
+            float hintX = this.requirementsScrollArea.getInnerX() + (this.requirementsScrollArea.getInnerWidth() / 2F) - (hintWidth / 2F);
+            float hintY = this.requirementsScrollArea.getInnerY() + (this.requirementsScrollArea.getInnerHeight() / 2F) - (UIBase.getUITextHeightNormal() / 2F);
+            UIBase.renderText(graphics, hint, hintX, hintY, UIBase.getUITheme().ui_interface_widget_label_color_inactive.getColorInt());
+        }
+
         this.doneButton.render(graphics, mouseX, mouseY, partial);
-
-        this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
-        this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
         this.cancelButton.render(graphics, mouseX, mouseY, partial);
-
-        this.removeButton.setX(this.width - 20 - this.removeButton.getWidth());
-        this.removeButton.setY(this.cancelButton.getY() - 15 - 20);
-        this.removeButton.render(graphics, mouseX, mouseY, partial);
-
-        this.editButton.setX(this.width - 20 - this.editButton.getWidth());
-        this.editButton.setY(this.removeButton.getY() - 5 - 20);
-        this.editButton.render(graphics, mouseX, mouseY, partial);
-
-        this.addGroupButton.setX(this.width - 20 - this.addGroupButton.getWidth());
-        this.addGroupButton.setY(this.editButton.getY() - 5 - 20);
-        this.addGroupButton.render(graphics, mouseX, mouseY, partial);
-
-        this.addRequirementButton.setX(this.width - 20 - this.addRequirementButton.getWidth());
-        this.addRequirementButton.setY(this.addGroupButton.getY() - 5 - 20);
-        this.addRequirementButton.render(graphics, mouseX, mouseY, partial);
 
     }
 
@@ -289,8 +288,129 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
     }
 
     private void triggerDoneAction() {
+        this.closeRightClickContextMenu();
         this.callback.accept(this.container);
         this.closeWindow();
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        boolean contextMenuInteracting = this.isUserNavigatingInRightClickContextMenu();
+
+        if ((button == 0) && !contextMenuInteracting && (this.rightClickContextMenu != null)) {
+            this.rightClickContextMenu.closeMenu();
+            this.clearContextMenuTarget();
+        }
+
+        if (!contextMenuInteracting && (button == 1) && this.isInsideRequirementsScrollArea((int)mouseX, (int)mouseY)) {
+            ScrollAreaEntry targetEntry = this.getRequirementsEntryAt(mouseX, mouseY);
+            this.setContextMenuTarget(targetEntry);
+            if (targetEntry != null) {
+                targetEntry.setSelected(true);
+            }
+            if (this.rightClickContextMenu != null) {
+                ContextMenuHandler.INSTANCE.setAndOpenAtMouse(this.rightClickContextMenu);
+            }
+            return true;
+        }
+
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    protected boolean isUserNavigatingInRightClickContextMenu() {
+        return (this.rightClickContextMenu != null) && this.rightClickContextMenu.isUserNavigatingInMenu();
+    }
+
+    protected boolean isInsideRequirementsScrollArea(int mouseX, int mouseY) {
+        return UIBase.isXYInArea(mouseX, mouseY, this.requirementsScrollArea.getXWithBorder(), this.requirementsScrollArea.getYWithBorder(), this.requirementsScrollArea.getWidthWithBorder(), this.requirementsScrollArea.getHeightWithBorder());
+    }
+
+    @Nullable
+    protected ScrollAreaEntry getRequirementsEntryAt(double mouseX, double mouseY) {
+        if (!this.requirementsScrollArea.isMouseOverInnerArea(mouseX, mouseY)) {
+            return null;
+        }
+        for (ScrollAreaEntry entry : this.requirementsScrollArea.getEntries()) {
+            if (UIBase.isXYInArea(mouseX, mouseY, entry.getX(), entry.getY(), this.requirementsScrollArea.getInnerWidth(), entry.getHeight())) {
+                return entry;
+            }
+        }
+        return null;
+    }
+
+    protected void setContextMenuTarget(@Nullable ScrollAreaEntry targetEntry) {
+        this.clearContextMenuTarget();
+        if (targetEntry instanceof RequirementGroupEntry groupEntry) {
+            this.contextMenuTargetGroupIdentifier = groupEntry.group.identifier;
+            return;
+        }
+        if (targetEntry instanceof RequirementInstanceEntry instanceEntry) {
+            this.contextMenuTargetInstanceIdentifier = instanceEntry.instance.instanceIdentifier;
+        }
+    }
+
+    protected void clearContextMenuTarget() {
+        this.contextMenuTargetGroupIdentifier = null;
+        this.contextMenuTargetInstanceIdentifier = null;
+    }
+
+    protected void closeRightClickContextMenu() {
+        if (this.rightClickContextMenu != null) {
+            this.rightClickContextMenu.closeMenu();
+        }
+        this.clearContextMenuTarget();
+    }
+
+    protected boolean hasContextMenuTarget() {
+        return (this.getContextMenuTargetInstance() != null) || (this.getContextMenuTargetGroup() != null);
+    }
+
+    @NotNull
+    protected Component getContextMenuEditLabel() {
+        if (this.getContextMenuTargetInstance() != null) {
+            return Component.translatable("fancymenu.requirements.screens.edit_requirement");
+        }
+        if (this.getContextMenuTargetGroup() != null) {
+            return Component.translatable("fancymenu.requirements.screens.edit_group");
+        }
+        return Component.translatable("fancymenu.requirements.screens.manage_screen.edit.generic");
+    }
+
+    @NotNull
+    protected Component getContextMenuRemoveLabel() {
+        if (this.getContextMenuTargetInstance() != null) {
+            return Component.translatable("fancymenu.requirements.screens.remove_requirement");
+        }
+        if (this.getContextMenuTargetGroup() != null) {
+            return Component.translatable("fancymenu.requirements.screens.remove_group");
+        }
+        return Component.translatable("fancymenu.requirements.screens.manage_screen.remove.generic");
+    }
+
+    @Nullable
+    protected RequirementInstance getContextMenuTargetInstance() {
+        if (this.contextMenuTargetInstanceIdentifier == null) {
+            return null;
+        }
+        for (RequirementInstance instance : this.container.getInstances()) {
+            if (this.contextMenuTargetInstanceIdentifier.equals(instance.instanceIdentifier)) {
+                return instance;
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    protected RequirementGroup getContextMenuTargetGroup() {
+        if (this.contextMenuTargetGroupIdentifier == null) {
+            return null;
+        }
+        for (RequirementGroup group : this.container.getGroups()) {
+            if (this.contextMenuTargetGroupIdentifier.equals(group.identifier)) {
+                return group;
+            }
+        }
+        return null;
     }
 
     @Nullable

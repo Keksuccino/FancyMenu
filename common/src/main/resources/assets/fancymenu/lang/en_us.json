@@ -3264,5 +3264,6 @@
   "fancymenu.listeners.on_remote_server_connection_closed.desc": "This listener triggers when a remote server connection gets closed.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$request_id §r= The request ID of the closed connection\n- §z$$remote_server_url §r= The URL of the closed remote server connection\n- §z$$intentionally_closed §r= TRUE if the close was triggered by a close action\n- §z$$crashed §r= TRUE if the connection crashed unexpectedly\n- §z$$unknown_close_reason §r= TRUE if the connection closed unexpectedly without a known crash reason",
   "fancymenu.actions.connect_to_remote_server": "Connect To Remote Server",
   "fancymenu.actions.connect_to_remote_server.desc": "Initializes a remote server connection by URL without sending payload data yet.\n\nThe connection stays active in the background and can later be used by remote send actions.",
-  "fancymenu.actions.connect_to_remote_server.value": "Remote Server URL"
+  "fancymenu.actions.connect_to_remote_server.value": "Remote Server URL",
+  "fancymenu.requirements.screens.manage_screen.empty_hint": "Right-click here to add requirements or groups"
 }
