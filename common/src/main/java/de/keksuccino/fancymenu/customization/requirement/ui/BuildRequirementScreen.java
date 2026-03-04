@@ -161,13 +161,13 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
         int textColor = this.getGenericTextColor();
         float labelHeight = UIBase.getUITextHeightNormal();
         int availableAreaTop = (this.searchBar != null) ? this.searchBar.getY() : (50 + 15 + 1);
-        float availableLabelY = availableAreaTop - labelHeight - 3.0F;
+        float availableLabelY = availableAreaTop - labelHeight - UIBase.getAreaLabelVerticalPadding();
         UIBase.renderText(graphics, Component.translatable("fancymenu.requirements.screens.build_screen.available_requirements"), 20, availableLabelY, textColor);
 
         Component descLabel = Component.translatable("fancymenu.requirements.screens.build_screen.requirement_description");
         float descLabelWidth = UIBase.getUITextWidthNormal(descLabel);
         float descAreaTop = (this.descriptionScrollArea != null) ? this.descriptionScrollArea.getYWithBorder() : (50 + 15);
-        float descLabelY = descAreaTop - labelHeight - 3.0F;
+        float descLabelY = descAreaTop - labelHeight - UIBase.getAreaLabelVerticalPadding();
         UIBase.renderText(graphics, descLabel, this.width - 20 - descLabelWidth, descLabelY, textColor);
 
         this.performInitialWidgetFocusActionInRender();
@@ -425,6 +425,22 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
         this.searchBar.setFocused(true);
     }
 
+    private void defocusSearchBar() {
+        if (this.searchBar == null) {
+            return;
+        }
+        this.searchBar.setFocused(false);
+        if (this.getFocused() == this.searchBar) {
+            this.setFocused(null);
+        }
+    }
+
+    private void clearSelectedRequirementsEntries() {
+        for (ScrollAreaEntry entry : this.requirementsListScrollArea.getEntries()) {
+            entry.setSelected(false);
+        }
+    }
+
     private boolean shouldRouteTypedCharacterToSearchBar(char codePoint) {
         if (hasControlDown() || hasAltDown()) {
             return false;
@@ -480,27 +496,71 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
 
     private boolean selectAdjacentRequirementsEntry(boolean moveDown) {
         List<ScrollAreaEntry> entries = this.requirementsListScrollArea.getEntries();
+        boolean searchBarAvailable = this.searchBar != null;
+        boolean searchBarFocused = searchBarAvailable && this.searchBar.isFocused();
+
         if (entries.isEmpty()) {
+            if (searchBarAvailable && !searchBarFocused) {
+                this.clearSelectedRequirementsEntries();
+                this.focusSearchBar();
+                return true;
+            }
             return false;
         }
+
+        if (searchBarFocused) {
+            if (moveDown) {
+                this.defocusSearchBar();
+                ScrollAreaEntry firstEntry = entries.get(0);
+                firstEntry.setSelected(true);
+                this.scrollRequirementsEntryIntoView(firstEntry);
+            } else {
+                this.defocusSearchBar();
+                ScrollAreaEntry lastEntry = entries.get(entries.size() - 1);
+                lastEntry.setSelected(true);
+                this.scrollRequirementsEntryIntoView(lastEntry);
+            }
+            return true;
+        }
+
         ScrollAreaEntry selected = this.requirementsListScrollArea.getFocusedEntry();
-        int targetIndex;
         if (selected == null) {
+            if (searchBarAvailable) {
+                this.clearSelectedRequirementsEntries();
+                this.focusSearchBar();
+                return true;
+            }
+            ScrollAreaEntry fallbackTarget = moveDown ? entries.get(0) : entries.get(entries.size() - 1);
+            fallbackTarget.setSelected(true);
+            this.scrollRequirementsEntryIntoView(fallbackTarget);
+            return true;
+        }
+
+        int currentIndex = entries.indexOf(selected);
+        if (currentIndex <= 0 && !moveDown && searchBarAvailable) {
+            this.clearSelectedRequirementsEntries();
+            this.focusSearchBar();
+            return true;
+        }
+        if (currentIndex == (entries.size() - 1) && moveDown && searchBarAvailable) {
+            this.clearSelectedRequirementsEntries();
+            this.focusSearchBar();
+            return true;
+        }
+
+        int targetIndex;
+        if (currentIndex == -1) {
             targetIndex = moveDown ? 0 : entries.size() - 1;
         } else {
-            int currentIndex = entries.indexOf(selected);
-            if (currentIndex == -1) {
-                targetIndex = moveDown ? 0 : entries.size() - 1;
-            } else {
-                targetIndex = currentIndex + (moveDown ? 1 : -1);
-                if (targetIndex < 0) {
-                    targetIndex = entries.size() - 1;
-                } else if (targetIndex >= entries.size()) {
-                    targetIndex = 0;
-                }
+            targetIndex = currentIndex + (moveDown ? 1 : -1);
+            if (targetIndex < 0) {
+                targetIndex = entries.size() - 1;
+            } else if (targetIndex >= entries.size()) {
+                targetIndex = 0;
             }
         }
         ScrollAreaEntry target = entries.get(targetIndex);
+        this.defocusSearchBar();
         target.setSelected(true);
         this.scrollRequirementsEntryIntoView(target);
         return true;

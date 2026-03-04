@@ -371,7 +371,7 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
                 ? UIBase.getUITheme().ui_blur_interface_generic_text_color.getColorInt()
                 : UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
         int scrollAreaTop = 50 + 15;
-        float labelY = scrollAreaTop - UIBase.getUITextHeightNormal() - 3.0F;
+        float labelY = scrollAreaTop - UIBase.getUITextHeightNormal() - UIBase.getAreaLabelVerticalPadding();
         Component requirementsLabel = this.allowGroupManagement
                 ? Component.translatable("fancymenu.requirements.screens.manage_screen.requirements_and_groups")
                 : Component.translatable("fancymenu.requirements.screens.build_group_screen.group_requirements");
