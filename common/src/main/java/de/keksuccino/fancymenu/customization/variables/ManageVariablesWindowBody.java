@@ -209,6 +209,14 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
             }
         }
 
+        if (!contextMenuActive && ((keyCode == InputConstants.KEY_ENTER) || (keyCode == InputConstants.KEY_NUMPADENTER))) {
+            VariableScrollEntry selectedEntry = this.getSelectedEntry();
+            if (selectedEntry != null) {
+                this.requestSetVariableValue(selectedEntry.variable);
+                return true;
+            }
+        }
+
         if (super.keyPressed(keyCode, scanCode, modifiers)) return true;
         if (keyCode == InputConstants.KEY_DELETE) {
             if (this.getSelectedEntry() != null) {
@@ -234,6 +242,18 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
 
     @Override
     public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    }
+
+    @Override
+    public void renderLateBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        if (this.hasVariableEntriesInList()) {
+            return;
+        }
+        Component hint = Component.translatable("fancymenu.overlay.menu_bar.variables.manage.empty_hint");
+        float hintWidth = UIBase.getUITextWidthNormal(hint);
+        float hintX = this.variableListScrollArea.getInnerX() + (this.variableListScrollArea.getInnerWidth() / 2F) - (hintWidth / 2F);
+        float hintY = this.variableListScrollArea.getInnerY() + (this.variableListScrollArea.getInnerHeight() / 2F) - (UIBase.getUITextHeightNormal() / 2F);
+        UIBase.renderText(graphics, hint, hintX, hintY, UIBase.getUITheme().ui_interface_widget_label_color_inactive.getColorInt());
     }
 
     @Override
@@ -415,12 +435,6 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
             e.setHeight(this.getListEntryHeight());
             this.variableListScrollArea.addEntry(e);
         }
-        if (this.variableListScrollArea.getEntries().size() == 1) {
-            TextScrollAreaEntry emptyEntry = new TextScrollAreaEntry(this.variableListScrollArea, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.no_variables").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt())), (entry) -> {});
-            emptyEntry.setHeight(this.getListEntryHeight());
-            this.variableListScrollArea.addEntry(emptyEntry);
-        }
-
     }
 
     protected void refreshVariablesList() {
@@ -449,6 +463,15 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
         return (int)(UIBase.getUITextHeightNormal()
                 + (LIST_ENTRY_TOP_DOWN_BORDER * 2)
                 + (LIST_ENTRY_OUTER_PADDING * 2));
+    }
+
+    protected boolean hasVariableEntriesInList() {
+        for (ScrollAreaEntry entry : this.variableListScrollArea.getEntries()) {
+            if (entry instanceof VariableScrollEntry) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static class VariableScrollEntry extends TextScrollAreaEntry {

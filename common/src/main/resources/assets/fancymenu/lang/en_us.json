@@ -3281,5 +3281,6 @@
   "fancymenu.requirements.screens.manage_screen.group_settings.cycle_mode.generic": "Cycle Group Mode",
   "fancymenu.requirements.screens.manage_screen.group_settings.cycle_mode.desc": "Cycle the mode of the selected group\nbetween AND and OR.",
   "fancymenu.editor.shortcuts.a": "A",
-  "fancymenu.editor.shortcuts.g": "G"
+  "fancymenu.editor.shortcuts.g": "G",
+  "fancymenu.overlay.menu_bar.variables.manage.empty_hint": "Right-click here to add variables"
 }
