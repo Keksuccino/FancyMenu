@@ -27,7 +27,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class ManageRequirementsScreen extends PiPWindowBody {
+public class ManageRequirementsWindowBody extends PiPWindowBody {
 
     public static final int PIP_WINDOW_WIDTH = 640;
     public static final int PIP_WINDOW_HEIGHT = 420;
@@ -43,7 +43,7 @@ public class ManageRequirementsScreen extends PiPWindowBody {
     protected ExtendedButton doneButton;
     protected ExtendedButton cancelButton;
 
-    public ManageRequirementsScreen(@NotNull RequirementContainer container, @NotNull Consumer<RequirementContainer> callback) {
+    public ManageRequirementsWindowBody(@NotNull RequirementContainer container, @NotNull Consumer<RequirementContainer> callback) {
         super(Component.literal(I18n.get("fancymenu.requirements.screens.manage_screen.manage")));
         this.container = container;
         this.callback = callback;
@@ -107,7 +107,7 @@ public class ManageRequirementsScreen extends PiPWindowBody {
         }) {
             @Override
             public void render(@NotNull GuiGraphics graphics, int p_93658_, int p_93659_, float p_93660_) {
-                ManageRequirementsScreen s = ManageRequirementsScreen.this;
+                ManageRequirementsWindowBody s = ManageRequirementsWindowBody.this;
                 if (!s.isInstanceSelected() && !s.isGroupSelected()) {
                     this.setLabel(I18n.get("fancymenu.requirements.screens.manage_screen.edit.generic"));
                     this.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.no_entry_selected")));
@@ -148,7 +148,7 @@ public class ManageRequirementsScreen extends PiPWindowBody {
         }) {
             @Override
             public void render(@NotNull GuiGraphics graphics, int p_93658_, int p_93659_, float p_93660_) {
-                ManageRequirementsScreen s = ManageRequirementsScreen.this;
+                ManageRequirementsWindowBody s = ManageRequirementsWindowBody.this;
                 if (!s.isInstanceSelected() && !s.isGroupSelected()) {
                     this.setLabel(I18n.get("fancymenu.requirements.screens.manage_screen.remove.generic"));
                     this.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.no_entry_selected")));
@@ -377,7 +377,7 @@ public class ManageRequirementsScreen extends PiPWindowBody {
 
     }
 
-    public static @NotNull PiPWindow openInWindow(@NotNull ManageRequirementsScreen screen, @Nullable PiPWindow parentWindow) {
+    public static @NotNull PiPWindow openInWindow(@NotNull ManageRequirementsWindowBody screen, @Nullable PiPWindow parentWindow) {
         PiPWindow window = new PiPWindow(screen.getTitle())
                 .setScreen(screen)
                 .setForceFancyMenuUiScale(true)
@@ -387,7 +387,7 @@ public class ManageRequirementsScreen extends PiPWindowBody {
         return window;
     }
 
-    public static @NotNull PiPWindow openInWindow(@NotNull ManageRequirementsScreen screen) {
+    public static @NotNull PiPWindow openInWindow(@NotNull ManageRequirementsWindowBody screen) {
         return openInWindow(screen, null);
     }
 

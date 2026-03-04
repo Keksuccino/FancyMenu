@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBloc
 import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorWindowBody;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
-import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsScreen;
+import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsWindowBody;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.MathUtils;
@@ -1875,7 +1875,7 @@ public class Property<T> {
      * Creates a {@link RequirementContainer} property with custom serialization and a specialized
      * editor UI entry.
      * <p>
-     * The context menu entry opens {@link ManageRequirementsScreen}. When used in stacked context
+     * The context menu entry opens {@link ManageRequirementsWindowBody}. When used in stacked context
      * menus, it can optionally prompt the user before overwriting differing values and then applies
      * the edited container to all selected objects.
      * </p>
@@ -1948,7 +1948,7 @@ public class Property<T> {
                 if (container == null) {
                     container = new RequirementContainer();
                 }
-                ManageRequirementsScreen s = new ManageRequirementsScreen(container.copy(false), (call) -> {
+                ManageRequirementsWindowBody s = new ManageRequirementsWindowBody(container.copy(false), (call) -> {
                     if (call != null) {
                         builder.saveSnapshot();
                         if (resolved != null) {
@@ -1957,7 +1957,7 @@ public class Property<T> {
                     }
                 });
                 contextMenu.closeMenuChain();
-                ManageRequirementsScreen.openInWindow(s);
+                ManageRequirementsWindowBody.openInWindow(s);
             } else if (entry.getStackMeta().isFirstInStack()) {
                 List<RequirementContainer> containers = ObjectUtils.getOfAll(RequirementContainer.class,
                         builder.getFilteredStackableObjectsList(consumes -> consumes.getProperty(key) != null),
@@ -1972,7 +1972,7 @@ public class Property<T> {
                 if (allEqual && !containers.isEmpty() && containers.getFirst() != null) {
                     containerToUseInManager = containers.getFirst().copy(true);
                 }
-                ManageRequirementsScreen s = new ManageRequirementsScreen(containerToUseInManager, (call) -> {
+                ManageRequirementsWindowBody s = new ManageRequirementsWindowBody(containerToUseInManager, (call) -> {
                     if (call != null) {
                         builder.saveSnapshot();
                         for (PropertyHolder holder : builder.getFilteredStackableObjectsList(consumes -> consumes.getProperty(key) != null)) {
@@ -1985,12 +1985,12 @@ public class Property<T> {
                 });
                 if (allEqual) {
                     contextMenu.closeMenuChain();
-                    ManageRequirementsScreen.openInWindow(s);
+                    ManageRequirementsWindowBody.openInWindow(s);
                 } else {
                     Dialogs.openMessageWithCallback(Component.translatable("fancymenu.requirements.multiselect.warning.override"), MessageDialogStyle.WARNING, call -> {
                         if (call) {
                             contextMenu.closeMenuChain();
-                            ManageRequirementsScreen.openInWindow(s);
+                            ManageRequirementsWindowBody.openInWindow(s);
                         }
                     });
                 }

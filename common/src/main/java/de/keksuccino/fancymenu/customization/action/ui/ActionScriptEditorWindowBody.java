@@ -21,7 +21,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.statements.WhileExecu
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
-import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsScreen;
+import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsWindowBody;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGroup;
 import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
@@ -667,7 +667,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                     },
                     parentWindow);
         } else if (targetExecutable instanceof IfExecutableBlock block) {
-            ManageRequirementsScreen s = new ManageRequirementsScreen(block.condition.copy(false), container -> {
+            ManageRequirementsWindowBody s = new ManageRequirementsWindowBody(block.condition.copy(false), container -> {
                 if (container != null) {
                     ExecutableEntry currentEntry = this.findEntryForExecutable(block);
                     if ((currentEntry != null) && (currentEntry.executable instanceof IfExecutableBlock currentBlock)) {
@@ -680,9 +680,9 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                     }
                 }
             });
-            this.openChildWindow(parentWindow -> ManageRequirementsScreen.openInWindow(s, parentWindow));
+            this.openChildWindow(parentWindow -> ManageRequirementsWindowBody.openInWindow(s, parentWindow));
         } else if (targetExecutable instanceof ElseIfExecutableBlock block) {
-            ManageRequirementsScreen s = new ManageRequirementsScreen(block.condition.copy(false), container -> {
+            ManageRequirementsWindowBody s = new ManageRequirementsWindowBody(block.condition.copy(false), container -> {
                 if (container != null) {
                     ExecutableEntry currentEntry = this.findEntryForExecutable(block);
                     if ((currentEntry != null) && (currentEntry.executable instanceof ElseIfExecutableBlock currentBlock)) {
@@ -695,9 +695,9 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                     }
                 }
             });
-            this.openChildWindow(parentWindow -> ManageRequirementsScreen.openInWindow(s, parentWindow));
+            this.openChildWindow(parentWindow -> ManageRequirementsWindowBody.openInWindow(s, parentWindow));
         } else if (targetExecutable instanceof WhileExecutableBlock block) {
-            ManageRequirementsScreen s = new ManageRequirementsScreen(block.condition.copy(false), container -> {
+            ManageRequirementsWindowBody s = new ManageRequirementsWindowBody(block.condition.copy(false), container -> {
                 if (container != null) {
                     ExecutableEntry currentEntry = this.findEntryForExecutable(block);
                     if ((currentEntry != null) && (currentEntry.executable instanceof WhileExecutableBlock currentBlock)) {
@@ -710,7 +710,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                     }
                 }
             });
-            this.openChildWindow(parentWindow -> ManageRequirementsScreen.openInWindow(s, parentWindow));
+            this.openChildWindow(parentWindow -> ManageRequirementsWindowBody.openInWindow(s, parentWindow));
         } else if (targetExecutable instanceof DelayExecutableBlock block) {
             TextEditorWindowBody s = new TextEditorWindowBody(Component.translatable("fancymenu.actions.blocks.delay.edit"), null, call -> {
                 if (call != null) {
@@ -827,26 +827,26 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
 
     protected void onAddIf(@Nullable ExecutableEntry selectionReference) {
         final Executable selectionExecutable = (selectionReference != null) ? selectionReference.executable : null;
-        ManageRequirementsScreen s = new ManageRequirementsScreen(new RequirementContainer(), container -> {
+        ManageRequirementsWindowBody s = new ManageRequirementsWindowBody(new RequirementContainer(), container -> {
             if (container != null) {
                 ExecutableEntry resolvedReference = (selectionExecutable != null) ? this.findEntryForExecutable(selectionExecutable) : null;
                 IfExecutableBlock block = new IfExecutableBlock(container);
                 this.finalizeExecutableAddition(block, resolvedReference, true);
             }
         });
-        this.openChildWindow(parentWindow -> ManageRequirementsScreen.openInWindow(s, parentWindow));
+        this.openChildWindow(parentWindow -> ManageRequirementsWindowBody.openInWindow(s, parentWindow));
     }
 
     protected void onAddWhile(@Nullable ExecutableEntry selectionReference) {
         final Executable selectionExecutable = (selectionReference != null) ? selectionReference.executable : null;
-        ManageRequirementsScreen s = new ManageRequirementsScreen(new RequirementContainer(), container -> {
+        ManageRequirementsWindowBody s = new ManageRequirementsWindowBody(new RequirementContainer(), container -> {
             if (container != null) {
                 ExecutableEntry resolvedReference = (selectionExecutable != null) ? this.findEntryForExecutable(selectionExecutable) : null;
                 WhileExecutableBlock block = new WhileExecutableBlock(container);
                 this.finalizeExecutableAddition(block, resolvedReference, true);
             }
         });
-        this.openChildWindow(parentWindow -> ManageRequirementsScreen.openInWindow(s, parentWindow));
+        this.openChildWindow(parentWindow -> ManageRequirementsWindowBody.openInWindow(s, parentWindow));
     }
 
     protected void onAddDelay(@Nullable ExecutableEntry selectionReference) {
@@ -891,7 +891,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             return;
         }
         final Executable targetExecutable = targetEntry.executable;
-        ManageRequirementsScreen s = new ManageRequirementsScreen(new RequirementContainer(), container -> {
+        ManageRequirementsWindowBody s = new ManageRequirementsWindowBody(new RequirementContainer(), container -> {
             if (container != null) {
                 ExecutableEntry resolvedEntry = this.findEntryForExecutable(targetExecutable);
                 if ((resolvedEntry == null) || !(resolvedEntry.executable instanceof AbstractExecutableBlock resolvedBlock)) {
@@ -905,7 +905,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 this.focusEntryForExecutable(appended, true, true);
             }
         });
-        this.openChildWindow(parentWindow -> ManageRequirementsScreen.openInWindow(s, parentWindow));
+        this.openChildWindow(parentWindow -> ManageRequirementsWindowBody.openInWindow(s, parentWindow));
     }
 
     protected void onAppendElse(@Nullable ExecutableEntry targetEntry) {

@@ -14,7 +14,7 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetEditorElement;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
-import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsScreen;
+import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsWindowBody;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlayUI;
@@ -739,13 +739,13 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
         menu.addSeparatorEntry("separator_after_close_audio");
 
         menu.addClickableEntry("layout_wide_requirements", Component.translatable("fancymenu.requirements.layouts.loading_requirements"), (menu1, entry) -> {
-                    ManageRequirementsScreen s = new ManageRequirementsScreen(editor.layout.layoutWideRequirementContainer.copy(false), (call) -> {
+                    ManageRequirementsWindowBody s = new ManageRequirementsWindowBody(editor.layout.layoutWideRequirementContainer.copy(false), (call) -> {
                         if (call != null) {
                             editor.layout.layoutWideRequirementContainer = call;
                         }
                     });
                     menu1.closeMenuChain();
-                    ManageRequirementsScreen.openInWindow(s);
+                    ManageRequirementsWindowBody.openInWindow(s);
                 }).setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.requirements.layouts.loading_requirements.desc")))
                 .setIcon(MaterialIcons.CHECKLIST);
 

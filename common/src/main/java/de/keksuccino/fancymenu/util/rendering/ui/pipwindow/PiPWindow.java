@@ -564,6 +564,19 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     private void renderDebugOverlay(@NotNull GuiGraphics graphics) {
         List<String> lines = new ArrayList<>();
+        String windowType = this.getClass().getSimpleName();
+        if (windowType.isEmpty()) {
+            windowType = this.getClass().getName();
+        }
+        lines.add("window_type: " + windowType);
+        String screenType = "null";
+        if (this.screen != null) {
+            screenType = this.screen.getClass().getSimpleName();
+            if (screenType.isEmpty()) {
+                screenType = this.screen.getClass().getName();
+            }
+        }
+        lines.add("screen_type: " + screenType);
         double renderScale = getScreenRenderScaleFactor();
         if (!Double.isFinite(renderScale) || renderScale <= 0.0) {
             renderScale = 1.0;

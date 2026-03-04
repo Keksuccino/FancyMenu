@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.AnchorPointOverlay;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorHistory;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
-import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsScreen;
+import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsWindowBody;
 import de.keksuccino.fancymenu.util.*;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.properties.Property;
@@ -378,14 +378,14 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
             this.rightClickMenu.addClickableEntry("loading_requirements", Component.translatable("fancymenu.requirements.elements.loading_requirements"), (menu, entry) ->
                     {
                         if (!entry.getStackMeta().isPartOfStack()) {
-                            ManageRequirementsScreen s = new ManageRequirementsScreen(this.element.requirementContainer.copy(false), (call) -> {
+                            ManageRequirementsWindowBody s = new ManageRequirementsWindowBody(this.element.requirementContainer.copy(false), (call) -> {
                                 if (call != null) {
                                     this.editor.history.saveSnapshot();
                                     this.element.requirementContainer = call;
                                 }
                             });
                             menu.closeMenuChain();
-                            ManageRequirementsScreen.openInWindow(s);
+                            ManageRequirementsWindowBody.openInWindow(s);
                         } else if (entry.getStackMeta().isFirstInStack()) {
                             List<E> selectedElements = this.getFilteredSelectedElementList(element -> element.settings.isLoadingRequirementsEnabled());
                             List<RequirementContainer> containers = ObjectUtils.getOfAll(RequirementContainer.class, selectedElements, consumes -> consumes.element.requirementContainer);
@@ -394,7 +394,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                             if (allEqual) {
                                 containerToUseInManager = containers.get(0).copy(true);
                             }
-                            ManageRequirementsScreen s = new ManageRequirementsScreen(containerToUseInManager, (call) -> {
+                            ManageRequirementsWindowBody s = new ManageRequirementsWindowBody(containerToUseInManager, (call) -> {
                                 if (call != null) {
                                     this.editor.history.saveSnapshot();
                                     for (AbstractEditorElement<?, ?> e : selectedElements) {
@@ -404,12 +404,12 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                             });
                             if (allEqual) {
                                 menu.closeMenuChain();
-                                ManageRequirementsScreen.openInWindow(s);
+                                ManageRequirementsWindowBody.openInWindow(s);
                             } else {
                                 Dialogs.openMessageWithCallback(Component.translatable("fancymenu.elements.multiselect.loading_requirements.warning.override"), MessageDialogStyle.WARNING, call -> {
                                     if (call) {
                                         menu.closeMenuChain();
-                                        ManageRequirementsScreen.openInWindow(s);
+                                        ManageRequirementsWindowBody.openInWindow(s);
                                     }
                                 });
                             }

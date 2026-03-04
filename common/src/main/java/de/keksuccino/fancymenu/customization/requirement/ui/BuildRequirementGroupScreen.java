@@ -272,8 +272,8 @@ public class BuildRequirementGroupScreen extends PiPWindowBody {
     @Nullable
     protected RequirementInstance getSelectedInstance() {
         ScrollAreaEntry e = this.requirementsScrollArea.getFocusedEntry();
-        if (e instanceof ManageRequirementsScreen.RequirementInstanceEntry) {
-            return ((ManageRequirementsScreen.RequirementInstanceEntry) e).instance;
+        if (e instanceof ManageRequirementsWindowBody.RequirementInstanceEntry) {
+            return ((ManageRequirementsWindowBody.RequirementInstanceEntry) e).instance;
         }
         return null;
     }
@@ -283,7 +283,7 @@ public class BuildRequirementGroupScreen extends PiPWindowBody {
         this.requirementsScrollArea.clearEntries();
 
         for (RequirementInstance i : this.group.getInstances()) {
-            ManageRequirementsScreen.RequirementInstanceEntry e = new ManageRequirementsScreen.RequirementInstanceEntry(this.requirementsScrollArea, i, 14);
+            ManageRequirementsWindowBody.RequirementInstanceEntry e = new ManageRequirementsWindowBody.RequirementInstanceEntry(this.requirementsScrollArea, i, 14);
             this.requirementsScrollArea.addEntry(e);
         }
 

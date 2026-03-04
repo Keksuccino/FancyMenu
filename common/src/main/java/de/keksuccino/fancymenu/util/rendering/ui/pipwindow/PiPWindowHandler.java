@@ -450,50 +450,32 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        PiPWindow forcedWindow = getTopInputBlockingWindow();
-        if (forcedWindow != null && forcedWindow.isVisible()) {
-            forcedWindow.keyPressed(keyCode, scanCode, modifiers);
-            return true;
-        }
         PiPWindow window = getFocusedWindow();
-        if (window != null) {
-            if (window.keyPressed(keyCode, scanCode, modifiers)) {
-                return true;
-            }
+        if (window == null) {
+            return false;
         }
-        return isAnyWindowBlockingMinecraftScreenInputs();
+        window.keyPressed(keyCode, scanCode, modifiers);
+        return true;
     }
 
     @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        PiPWindow forcedWindow = getTopInputBlockingWindow();
-        if (forcedWindow != null && forcedWindow.isVisible()) {
-            forcedWindow.keyReleased(keyCode, scanCode, modifiers);
-            return true;
-        }
         PiPWindow window = getFocusedWindow();
-        if (window != null) {
-            if (window.keyReleased(keyCode, scanCode, modifiers)) {
-                return true;
-            }
+        if (window == null) {
+            return false;
         }
-        return isAnyWindowBlockingMinecraftScreenInputs();
+        window.keyReleased(keyCode, scanCode, modifiers);
+        return true;
     }
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
-        PiPWindow forcedWindow = getTopInputBlockingWindow();
-        if (forcedWindow != null && forcedWindow.isVisible()) {
-            forcedWindow.charTyped(codePoint, modifiers);
-            return true;
-        }
         PiPWindow window = getFocusedWindow();
-        if (window != null) {
-            if (window.charTyped(codePoint, modifiers)) {
-                return true;
-            }
+        if (window == null) {
+            return false;
         }
-        return isAnyWindowBlockingMinecraftScreenInputs();
+        window.charTyped(codePoint, modifiers);
+        return true;
     }
 
     @Override
@@ -507,21 +489,10 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
 
     @Nullable
     private PiPWindow getFocusedWindow() {
-        PiPWindow forced = getTopInputBlockingWindow();
-        if (forced != null && forced.isVisible() && !forced.isInputLocked()) {
-            focusedWindow = forced;
-            return forced;
-        }
-        if (focusedWindow != null && focusedWindow.isVisible() && !focusedWindow.isInputLocked()) {
+        if (focusedWindow != null && focusedWindow.isVisible()) {
             return focusedWindow;
         }
-        for (int i = windows.size() - 1; i >= 0; i--) {
-            PiPWindow window = windows.get(i);
-            if (window.isVisible() && !window.isInputLocked()) {
-                focusedWindow = window;
-                return window;
-            }
-        }
+        focusedWindow = null;
         return null;
     }
 
