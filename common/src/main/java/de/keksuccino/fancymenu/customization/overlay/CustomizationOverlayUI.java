@@ -67,7 +67,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
-import de.keksuccino.fancymenu.util.resource.preload.ManageResourcePreLoadScreen;
+import de.keksuccino.fancymenu.util.resource.preload.ManageResourcePreLoadWindowBody;
 import de.keksuccino.fancymenu.util.mcp.FancyMenuMcpManager;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -289,8 +289,8 @@ public class CustomizationOverlayUI {
 
         customizationMenu.addClickableEntry("pre_load_resources", Component.translatable("fancymenu.resources.pre_loading"),
                         (menu, entry) -> {
-                            ManageResourcePreLoadScreen s = new ManageResourcePreLoadScreen(aBoolean -> {});
-                            ManageResourcePreLoadScreen.openInWindow(s);
+                            ManageResourcePreLoadWindowBody s = new ManageResourcePreLoadWindowBody(aBoolean -> {});
+                            ManageResourcePreLoadWindowBody.openInWindow(s);
                             menu.closeMenuChain();
                         })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.resources.pre_loading.desc")))

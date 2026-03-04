@@ -24,7 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
 
-public class ManageResourcePreLoadScreen extends PiPCellWindowBody {
+public class ManageResourcePreLoadWindowBody extends PiPCellWindowBody {
 
     public static final int PIP_WINDOW_WIDTH = 640;
     public static final int PIP_WINDOW_HEIGHT = 420;
@@ -35,7 +35,7 @@ public class ManageResourcePreLoadScreen extends PiPCellWindowBody {
     protected String cachedSerialized = FancyMenu.getOptions().preLoadResources.getValue();
     protected Consumer<Boolean> callback;
 
-    public ManageResourcePreLoadScreen(@NotNull Consumer<Boolean> callback) {
+    public ManageResourcePreLoadWindowBody(@NotNull Consumer<Boolean> callback) {
         super(Component.translatable("fancymenu.resources.pre_loading.manage"));
         this.callback = callback;
         this.setSearchBarEnabled(true);
@@ -202,7 +202,7 @@ public class ManageResourcePreLoadScreen extends PiPCellWindowBody {
         this.callback.accept(false);
     }
 
-    public static @NotNull PiPWindow openInWindow(@NotNull ManageResourcePreLoadScreen screen, @Nullable PiPWindow parentWindow) {
+    public static @NotNull PiPWindow openInWindow(@NotNull ManageResourcePreLoadWindowBody screen, @Nullable PiPWindow parentWindow) {
         PiPWindow window = new PiPWindow(screen.getTitle())
                 .setScreen(screen)
                 .setForceFancyMenuUiScale(true)
@@ -215,7 +215,7 @@ public class ManageResourcePreLoadScreen extends PiPCellWindowBody {
         return window;
     }
 
-    public static @NotNull PiPWindow openInWindow(@NotNull ManageResourcePreLoadScreen screen) {
+    public static @NotNull PiPWindow openInWindow(@NotNull ManageResourcePreLoadWindowBody screen) {
         return openInWindow(screen, null);
     }
 
