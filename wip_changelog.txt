@@ -9,6 +9,14 @@
   - There are various actions and listeners to send/receive data from remote servers (all of them have "Remote Server" in its name for easy searching)
 - Focused PiP windows now consume all keyboard/char inputs when focused, to not let key presses through to the real Minecraft screen
 - The Game Intro now always consumes all mouse clicks while open, so you don't acidentally click the screen behind it anymore
+- The Manage Requirements window got reworked to be more in line with the Action Script Editor window
+  - No sidebar buttons anymore (instead you have a right-click context menu for everything important)
+  - Lots of shortcuts, many of these explained in the context menu
+  - Use the Arrow keys to navigate in the requirement/group list
+  - CTRL+S is a shortcut for pressing "Done"
+  - There's a history now to undo/redo adding/removing/editing requirements/groups (CTRL+Z / CTRL+Y)
+- Many parts of FancyMenu's UI now supports Arrow key + Enter navigation to navigate in window UIs without using the mouse
+- Many of FancyMenu's windows that allow editing/changing things now support pressing CTRL+S as a shortcut to the "Done" button in many of these windows (and ESC acts as Cancel, just like before)
 
 
 
@@ -252,7 +260,15 @@
   - Go To Start/End: Ctrl + Home / Ctrl + End
   - Go To Line: Ctrl + G (opens input box -> enter number)
   - Pressing CTRL+S now counts as clicking the Done button
+- The Manage Requirements window got reworked to be more in line with the Action Script Editor window
+  - No sidebar buttons anymore (instead you have a right-click context menu for everything important)
+  - Lots of shortcuts, many of these explained in the context menu
+  - Use the Arrow keys to navigate in the requirement/group list
+  - CTRL+S is a shortcut for pressing "Done"
+  - There's a history now to undo/redo adding/removing/editing requirements/groups (CTRL+Z / CTRL+Y)
 - The action script editor now lets you press CTRL+S as an alternative to clicking the Done button
+- Many parts of FancyMenu's UI now supports Arrow key + Enter navigation to navigate in window UIs without using the mouse
+- Many of FancyMenu's windows that allow editing/changing things now support pressing CTRL+S as a shortcut to the "Done" button in many of these windows (and ESC acts as Cancel, just like before)
 - The "Game Intro" feature now has video support (with sound, including settings for volume and sound channel)
 - The "Duration" placeholders for Video element and menu background now have an "output_as_timestamp" value that makes them return a millisecond timestamp
 - The "Play Time" placeholders for Video element and menu background now have an "output_as_timestamp" value that makes them return a millisecond timestamp
