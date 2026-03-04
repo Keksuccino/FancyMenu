@@ -3279,5 +3279,7 @@
   "fancymenu.requirements.screens.manage_screen.group_settings.edit_identifier.invalid": "§xThe group identifier needs to be unique\n§xand cannot be empty!",
   "fancymenu.requirements.screens.manage_screen.group_settings.cycle_mode": "Group Mode: %s",
   "fancymenu.requirements.screens.manage_screen.group_settings.cycle_mode.generic": "Cycle Group Mode",
-  "fancymenu.requirements.screens.manage_screen.group_settings.cycle_mode.desc": "Cycle the mode of the selected group\nbetween AND and OR."
+  "fancymenu.requirements.screens.manage_screen.group_settings.cycle_mode.desc": "Cycle the mode of the selected group\nbetween AND and OR.",
+  "fancymenu.editor.shortcuts.a": "A",
+  "fancymenu.editor.shortcuts.g": "G"
 }

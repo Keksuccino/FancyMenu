@@ -112,6 +112,7 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
                     menu.closeMenuChain();
                     this.onAddRequirement();
                 }).setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.requirements.screens.manage_screen.add_requirement.desc")))
+                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.a"))
                 .setIcon(MaterialIcons.ADD);
 
         if (this.allowGroupManagement) {
@@ -119,6 +120,7 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
                         menu.closeMenuChain();
                         this.onAddGroup();
                     }).setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.requirements.screens.manage_screen.add_group.desc")))
+                    .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.g"))
                     .setIcon(MaterialIcons.ADD);
         }
 
@@ -432,6 +434,16 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
             if (this.redo()) {
                 return true;
             }
+        }
+
+        if (!contextMenuActive && !hasControlDown() && (keyCode == GLFW.GLFW_KEY_A)) {
+            this.onAddRequirement();
+            return true;
+        }
+
+        if (!contextMenuActive && !hasControlDown() && this.allowGroupManagement && (keyCode == GLFW.GLFW_KEY_G)) {
+            this.onAddGroup();
+            return true;
         }
 
         if ((keyCode == InputConstants.KEY_UP) || (keyCode == InputConstants.KEY_DOWN)) {
