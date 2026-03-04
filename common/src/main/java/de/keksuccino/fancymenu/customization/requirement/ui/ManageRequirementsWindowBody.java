@@ -20,7 +20,9 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.Scro
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.input.MouseInput;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -41,6 +43,7 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
     public static final int PIP_WINDOW_WIDTH = 640;
     public static final int PIP_WINDOW_HEIGHT = 420;
     private static final int HISTORY_LIMIT = 500;
+    private static final long ENTRY_DOUBLE_CLICK_TIME_MS = 500L;
 
     protected RequirementContainer container;
     protected Consumer<RequirementContainer> callback;
@@ -56,6 +59,9 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
     protected String contextMenuTargetGroupIdentifier;
     @Nullable
     protected String contextMenuTargetInstanceIdentifier;
+    @Nullable
+    protected ScrollAreaEntry lastLeftClickedRequirementsEntry;
+    protected long lastLeftRequirementsEntryClickTimeMs = 0L;
     private final Deque<RequirementsSnapshot> undoHistory = new ArrayDeque<>();
     private final Deque<RequirementsSnapshot> redoHistory = new ArrayDeque<>();
 
@@ -292,7 +298,7 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
             this.restoreSelection(currentGroup.identifier, null);
             this.createUndoPointIfChanged(beforeSnapshot);
         }, false);
-        this.openChildWindow(parentWindow -> ManageRequirementsWindowBody.openInWindow(groupRequirementsScreen, parentWindow));
+        this.openChildWindow(parentWindow -> ManageRequirementsWindowBody.openInWindow(groupRequirementsScreen, parentWindow), true);
     }
 
     protected void onEditGroupIdentifier(@NotNull RequirementGroup selectedGroup) {
@@ -469,6 +475,34 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
             this.clearContextMenuTarget();
         }
 
+        if (!contextMenuInteracting && (button == 0) && this.isInsideRequirementsScrollArea((int)mouseX, (int)mouseY)) {
+            ScrollAreaEntry targetEntry = this.getRequirementsEntryAt(mouseX, mouseY);
+            boolean isEditableEntry = (targetEntry instanceof RequirementInstanceEntry) || (targetEntry instanceof RequirementGroupEntry);
+            boolean isDoubleClick = false;
+            if (isEditableEntry) {
+                long now = System.currentTimeMillis();
+                isDoubleClick = (targetEntry == this.lastLeftClickedRequirementsEntry)
+                        && ((now - this.lastLeftRequirementsEntryClickTimeMs) <= ENTRY_DOUBLE_CLICK_TIME_MS);
+                if (isDoubleClick) {
+                    this.resetRequirementsEntryDoubleClickState();
+                } else {
+                    this.lastLeftClickedRequirementsEntry = targetEntry;
+                    this.lastLeftRequirementsEntryClickTimeMs = now;
+                }
+            } else {
+                this.resetRequirementsEntryDoubleClickState();
+            }
+
+            boolean handled = super.mouseClicked(mouseX, mouseY, button);
+            if (isDoubleClick) {
+                RequirementInstance selectedInstance = (targetEntry instanceof RequirementInstanceEntry instanceEntry) ? instanceEntry.instance : null;
+                RequirementGroup selectedGroup = (targetEntry instanceof RequirementGroupEntry groupEntry) ? groupEntry.group : null;
+                this.onEdit(selectedInstance, selectedGroup);
+                return true;
+            }
+            return handled;
+        }
+
         if (!contextMenuInteracting && (button == 1) && this.isInsideRequirementsScrollArea((int)mouseX, (int)mouseY)) {
             ScrollAreaEntry targetEntry = this.getRequirementsEntryAt(mouseX, mouseY);
             this.setContextMenuTarget(targetEntry);
@@ -480,6 +514,11 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
         }
 
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    private void resetRequirementsEntryDoubleClickState() {
+        this.lastLeftClickedRequirementsEntry = null;
+        this.lastLeftRequirementsEntryClickTimeMs = 0L;
     }
 
     protected boolean isUserNavigatingInRightClickContextMenu() {
@@ -853,14 +892,64 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
     }
 
     private void openChildWindow(@NotNull Function<PiPWindow, PiPWindow> opener) {
+        this.openChildWindow(opener, false);
+    }
+
+    private void openChildWindow(@NotNull Function<PiPWindow, PiPWindow> opener, boolean syncWindowSizeBothWays) {
         PiPWindow parentWindow = this.getWindow();
         PiPWindow childWindow = opener.apply(parentWindow);
         if (parentWindow == null || childWindow == null) {
             return;
         }
         childWindow.setPosition(parentWindow.getX(), parentWindow.getY());
+        if (syncWindowSizeBothWays) {
+            this.syncWindowSize(parentWindow, childWindow);
+        }
         parentWindow.setVisible(false);
-        childWindow.addCloseCallback(() -> parentWindow.setVisible(true));
+        childWindow.addCloseCallback(() -> {
+            if (syncWindowSizeBothWays) {
+                this.syncWindowSize(childWindow, parentWindow);
+            }
+            this.restoreAndFocusParentWindow(parentWindow);
+        });
+    }
+
+    private void restoreAndFocusParentWindow(@NotNull PiPWindow parentWindow) {
+        parentWindow.setVisible(true);
+        this.focusParentWindow(parentWindow);
+        MainThreadTaskExecutor.executeInMainThread(() ->
+                        MainThreadTaskExecutor.executeInMainThread(() -> this.focusParentWindow(parentWindow),
+                                MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK),
+                MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
+    }
+
+    private void focusParentWindow(@NotNull PiPWindow parentWindow) {
+        if (PiPWindowHandler.INSTANCE.getOpenWindows().contains(parentWindow)) {
+            PiPWindowHandler.INSTANCE.bringToFront(parentWindow);
+        }
+    }
+
+    private void syncWindowSize(@NotNull PiPWindow sourceWindow, @NotNull PiPWindow targetWindow) {
+        if (sourceWindow.isMaximized()) {
+            targetWindow.setMaximized(true);
+            return;
+        }
+        targetWindow.setMaximized(false);
+        targetWindow.setSize(
+                this.convertScaledWindowSizeToRaw(targetWindow, sourceWindow.getWidth()),
+                this.convertScaledWindowSizeToRaw(targetWindow, sourceWindow.getHeight())
+        );
+    }
+
+    private int convertScaledWindowSizeToRaw(@NotNull PiPWindow targetWindow, int scaledSize) {
+        if (!targetWindow.isSizeScaledToGuiScale()) {
+            return scaledSize;
+        }
+        double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+        if (guiScale <= 1.0D) {
+            return scaledSize;
+        }
+        return Math.max(1, (int)Math.round((double)scaledSize * guiScale));
     }
 
     private record RequirementsSnapshot(@NotNull RequirementContainer container, float verticalScroll, float horizontalScroll, @Nullable String selectedGroupIdentifier, @Nullable String selectedInstanceIdentifier) {
