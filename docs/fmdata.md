@@ -133,7 +133,7 @@ Manage them with:
 - Separate multiple commands with `|||`
 - Escape a literal separator as `\|\|\|`
 
-Supported placeholders:
+You can use two special placeholders here that get replaced right before the commands get executed:
 
 - `%fm_sender%` -> player who sent the FM Data
 - `%fm_data%` -> data value received from client
