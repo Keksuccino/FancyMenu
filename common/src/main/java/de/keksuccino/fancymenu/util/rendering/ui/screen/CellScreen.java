@@ -210,6 +210,14 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         // Restore scroll position
         this.scrollArea.horizontalScrollBar.setScroll(scrollX);
         this.scrollArea.verticalScrollBar.setScroll(scrollY);
+
+        if ((this.selectedCell != null) && (this.getCellEntry(this.selectedCell) == null)) {
+            RenderCell oldSelected = this.selectedCell;
+            this.clearFocusForCell(oldSelected);
+            oldSelected.selected = false;
+            this.selectedCell = null;
+            this.updateDescriptionArea();
+        }
     }
 
     /**
@@ -577,13 +585,369 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
     @Override
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
-        if (keycode == InputConstants.KEY_ENTER) {
+        if (keycode == InputConstants.KEY_TAB) {
+            return true;
+        }
+
+        if ((keycode == InputConstants.KEY_UP) || (keycode == InputConstants.KEY_DOWN)) {
+            return this.navigateVerticalCells(keycode == InputConstants.KEY_DOWN);
+        }
+
+        if ((keycode == InputConstants.KEY_LEFT) || (keycode == InputConstants.KEY_RIGHT)) {
+            return this.handleHorizontalNavigation(keycode == InputConstants.KEY_RIGHT, keycode, scancode, modifiers);
+        }
+
+        if ((keycode == InputConstants.KEY_ENTER) || (keycode == InputConstants.KEY_NUMPADENTER)) {
+            if (this.handleEnterForSelectedCell(keycode, scancode, modifiers)) {
+                return true;
+            }
             if (this.allowDone() && this.allowEnterForDone()) {
                 this.onDone();
                 return true;
             }
         }
         return super.keyPressed(keycode, scancode, modifiers);
+    }
+
+    protected boolean handleEnterForSelectedCell(int keycode, int scancode, int modifiers) {
+        if (this.searchBarEnabled && (this.searchBar != null) && this.searchBar.isFocused()) {
+            return false;
+        }
+
+        RenderCell selected = this.getSelectedCell();
+        if (selected == null) {
+            return false;
+        }
+
+        List<GuiEventListener> focusTargets = this.getNavigatableTargets(selected);
+        if (focusTargets.isEmpty()) {
+            return false;
+        }
+
+        GuiEventListener focusedTarget = this.getFocusedTarget(selected, focusTargets);
+        if (focusedTarget == null) {
+            GuiEventListener preferredTarget = this.getPreferredFocusTarget(selected, focusTargets);
+            if (preferredTarget != null) {
+                this.focusTarget(selected, preferredTarget);
+                focusedTarget = preferredTarget;
+            }
+        }
+
+        if (focusedTarget != null) {
+            focusedTarget.keyPressed(keycode, scancode, modifiers);
+        }
+
+        return true;
+    }
+
+    protected boolean navigateVerticalCells(boolean moveDown) {
+        List<RenderCell> cells = this.getSelectableVisibleCells();
+        if (cells.isEmpty()) {
+            return true;
+        }
+
+        RenderCell selected = this.getSelectedCell();
+        int selectedIndex = cells.indexOf(selected);
+
+        RenderCell target;
+        if (selectedIndex < 0) {
+            target = moveDown ? cells.get(0) : cells.get(cells.size() - 1);
+        } else if (moveDown) {
+            target = cells.get((selectedIndex + 1) % cells.size());
+        } else {
+            target = cells.get((selectedIndex - 1 + cells.size()) % cells.size());
+        }
+
+        this.selectCell(target, true);
+        return true;
+    }
+
+    protected boolean handleHorizontalNavigation(boolean moveRight, int keycode, int scancode, int modifiers) {
+        if (this.searchBarEnabled && (this.searchBar != null) && this.searchBar.isFocused()) {
+            return this.searchBar.keyPressed(keycode, scancode, modifiers);
+        }
+
+        RenderCell selected = this.getSelectedCell();
+        if (selected == null) {
+            GuiEventListener focused = this.getFocused();
+            if (focused != null) {
+                focused.keyPressed(keycode, scancode, modifiers);
+            }
+            return true;
+        }
+
+        if (selected instanceof TextInputCell textInputCell) {
+            return this.handleTextInputHorizontalNavigation(textInputCell, moveRight, keycode, scancode, modifiers);
+        }
+
+        List<GuiEventListener> focusTargets = this.getNavigatableTargets(selected);
+        if (focusTargets.isEmpty()) {
+            return true;
+        }
+
+        if (focusTargets.size() == 1) {
+            return focusTargets.get(0).keyPressed(keycode, scancode, modifiers);
+        }
+
+        return this.navigateHorizontalTargets(selected, focusTargets, moveRight);
+    }
+
+    protected boolean handleTextInputHorizontalNavigation(@NotNull TextInputCell cell, boolean moveRight, int keycode, int scancode, int modifiers) {
+        List<GuiEventListener> focusTargets = this.getNavigatableTargets(cell);
+        if (focusTargets.isEmpty()) {
+            return true;
+        }
+
+        GuiEventListener focusedTarget = this.getFocusedTarget(cell, focusTargets);
+        if (focusedTarget == cell.editBox) {
+            if (!Screen.hasShiftDown() && !Screen.hasControlDown() && !Screen.hasAltDown()) {
+                boolean canJumpToEditorButton = cell.allowEditor
+                        && (cell.openEditorButton != null)
+                        && this.isNavigatableTarget(cell.openEditorButton);
+                if (canJumpToEditorButton) {
+                    int cursorPos = cell.editBox.getCursorPosition();
+                    int highlightPos = cell.editBox.getHighlightPosition();
+                    int valueLength = cell.editBox.getValue().length();
+                    boolean atStart = (cursorPos <= 0) && (highlightPos <= 0);
+                    boolean atEnd = (cursorPos >= valueLength) && (highlightPos >= valueLength);
+                    if ((!moveRight && atStart) || (moveRight && atEnd)) {
+                        this.focusTarget(cell, cell.openEditorButton);
+                        return true;
+                    }
+                }
+            }
+            return cell.editBox.keyPressed(keycode, scancode, modifiers);
+        }
+
+        if (focusTargets.size() == 1) {
+            return focusTargets.get(0).keyPressed(keycode, scancode, modifiers);
+        }
+
+        return this.navigateHorizontalTargets(cell, focusTargets, moveRight);
+    }
+
+    protected boolean navigateHorizontalTargets(@NotNull RenderCell cell, @NotNull List<GuiEventListener> focusTargets, boolean moveRight) {
+        GuiEventListener focusedTarget = this.getFocusedTarget(cell, focusTargets);
+        int focusedIndex = (focusedTarget != null) ? focusTargets.indexOf(focusedTarget) : -1;
+
+        GuiEventListener target;
+        if (focusedIndex < 0) {
+            target = moveRight ? focusTargets.get(0) : focusTargets.get(focusTargets.size() - 1);
+        } else if (moveRight) {
+            target = focusTargets.get((focusedIndex + 1) % focusTargets.size());
+        } else {
+            target = focusTargets.get((focusedIndex - 1 + focusTargets.size()) % focusTargets.size());
+        }
+
+        this.focusTarget(cell, target);
+        return true;
+    }
+
+    @NotNull
+    protected List<GuiEventListener> getNavigatableTargets(@NotNull RenderCell cell) {
+        List<GuiEventListener> targets = new ArrayList<>();
+        for (GuiEventListener listener : cell.children()) {
+            if (this.isNavigatableTarget(listener)) {
+                targets.add(listener);
+            }
+        }
+        targets.sort(Comparator
+                .comparingInt((GuiEventListener listener) -> listener.getRectangle().top())
+                .thenComparingInt(listener -> listener.getRectangle().left()));
+        return targets;
+    }
+
+    @Nullable
+    protected GuiEventListener getFocusedTarget(@NotNull RenderCell cell, @NotNull List<GuiEventListener> focusTargets) {
+        GuiEventListener focused = cell.getFocused();
+        if ((focused != null) && focusTargets.contains(focused)) {
+            return focused;
+        }
+        GuiEventListener screenFocused = this.getFocused();
+        if ((screenFocused != null) && focusTargets.contains(screenFocused)) {
+            return screenFocused;
+        }
+        return null;
+    }
+
+    @Nullable
+    protected GuiEventListener getPreferredFocusTarget(@NotNull RenderCell cell, @NotNull List<GuiEventListener> focusTargets) {
+        if (focusTargets.isEmpty()) {
+            return null;
+        }
+        if (cell instanceof TextInputCell textInputCell) {
+            if (this.isNavigatableTarget(textInputCell.editBox)) {
+                return textInputCell.editBox;
+            }
+        }
+        return focusTargets.get(0);
+    }
+
+    protected void focusTarget(@NotNull RenderCell cell, @Nullable GuiEventListener target) {
+        cell.setFocused(target);
+        this.setFocused(cell);
+    }
+
+    protected boolean isNavigatableTarget(@Nullable GuiEventListener listener) {
+        if (listener == null) {
+            return false;
+        }
+        if (listener instanceof NavigatableWidget navigatableWidget) {
+            if (!navigatableWidget.isFocusable() || !navigatableWidget.isNavigatable()) {
+                return false;
+            }
+        }
+        if (listener instanceof AbstractWidget widget) {
+            return widget.visible && widget.active;
+        }
+        return true;
+    }
+
+    @NotNull
+    protected List<RenderCell> getSelectableVisibleCells() {
+        List<RenderCell> cells = new ArrayList<>();
+        for (ScrollAreaEntry entry : this.scrollArea.getEntries()) {
+            if ((entry instanceof CellScrollEntry cellEntry) && cellEntry.cell.isSelectable()) {
+                cells.add(cellEntry.cell);
+            }
+        }
+        return cells;
+    }
+
+    @Nullable
+    protected CellScrollEntry getCellEntry(@NotNull RenderCell cell) {
+        for (ScrollAreaEntry entry : this.scrollArea.getEntries()) {
+            if ((entry instanceof CellScrollEntry cellEntry) && (cellEntry.cell == cell)) {
+                return cellEntry;
+            }
+        }
+        return null;
+    }
+
+    protected void selectCell(@Nullable RenderCell cell, boolean focusPreferredWidget) {
+        if ((cell != null) && !cell.isSelectable()) {
+            return;
+        }
+
+        RenderCell previous = this.selectedCell;
+        if (previous == cell) {
+            if (cell != null) {
+                this.ensureCellVisible(cell);
+                if (focusPreferredWidget) {
+                    List<GuiEventListener> focusTargets = this.getNavigatableTargets(cell);
+                    GuiEventListener preferred = this.getPreferredFocusTarget(cell, focusTargets);
+                    if (preferred != null) {
+                        this.focusTarget(cell, preferred);
+                    }
+                }
+            }
+            return;
+        }
+
+        this.clearFocusForAllCells();
+
+        for (ScrollAreaEntry entry : this.scrollArea.getEntries()) {
+            if (entry instanceof CellScrollEntry cellEntry) {
+                cellEntry.cell.selected = false;
+            }
+        }
+
+        this.selectedCell = null;
+
+        if (cell != null) {
+            cell.selected = true;
+            this.selectedCell = cell;
+            this.ensureCellVisible(cell);
+            if (focusPreferredWidget) {
+                List<GuiEventListener> focusTargets = this.getNavigatableTargets(cell);
+                GuiEventListener preferred = this.getPreferredFocusTarget(cell, focusTargets);
+                if (preferred != null) {
+                    this.focusTarget(cell, preferred);
+                } else {
+                    this.setFocused(cell);
+                }
+            } else {
+                this.setFocused(cell);
+            }
+            if (this.searchBar != null) {
+                this.searchBar.setFocused(false);
+            }
+        }
+
+        if (previous != this.selectedCell) {
+            this.updateDescriptionArea();
+        }
+    }
+
+    protected void clearFocusForAllCells() {
+        this.clearFocus();
+        this.setFocused(null);
+        if (this.searchBar != null) {
+            this.searchBar.setFocused(false);
+        }
+        for (RenderCell cell : this.allCells) {
+            this.clearFocusForCell(cell);
+        }
+    }
+
+    protected void clearFocusForCell(@Nullable RenderCell cell) {
+        if (cell == null) {
+            return;
+        }
+        cell.setFocused(null);
+        for (GuiEventListener child : cell.children()) {
+            if (child instanceof AbstractContainerEventHandler container) {
+                GuiEventListener focusedChild = container.getFocused();
+                if (focusedChild != null) {
+                    focusedChild.setFocused(false);
+                }
+                container.setFocused(null);
+            }
+            child.setFocused(false);
+        }
+    }
+
+    protected void ensureCellVisible(@NotNull RenderCell cell) {
+        CellScrollEntry entry = this.getCellEntry(cell);
+        if (entry == null) {
+            return;
+        }
+
+        float totalScrollHeight = this.scrollArea.getTotalScrollHeight();
+        if (totalScrollHeight <= 0.0F) {
+            return;
+        }
+
+        float innerY = this.scrollArea.getInnerY();
+        float innerHeight = this.scrollArea.getInnerHeight();
+        float entryTopUnscrolled = innerY;
+        for (ScrollAreaEntry e : this.scrollArea.getEntries()) {
+            if (e == entry) {
+                break;
+            }
+            entryTopUnscrolled += e.getHeight();
+        }
+
+        float entryTop = entryTopUnscrolled + this.scrollArea.getEntryRenderOffsetY(totalScrollHeight);
+        float entryBottom = entryTop + entry.getHeight();
+        float innerBottom = innerY + innerHeight;
+
+        float scroll = this.scrollArea.verticalScrollBar.getScroll();
+        float newScroll = scroll;
+
+        if (entryTop < innerY) {
+            float delta = innerY - entryTop;
+            newScroll = scroll - (delta / totalScrollHeight);
+        } else if (entryBottom > innerBottom) {
+            float delta = entryBottom - innerBottom;
+            newScroll = scroll + (delta / totalScrollHeight);
+        }
+
+        if (newScroll < 0.0F) newScroll = 0.0F;
+        if (newScroll > 1.0F) newScroll = 1.0F;
+        if (newScroll != scroll) {
+            this.scrollArea.verticalScrollBar.setScroll(newScroll);
+        }
     }
 
     @Override
@@ -648,10 +1012,12 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
         public SeparatorCell() {
             this.setHeight(10);
+            super.setSelectable(false);
         }
 
         public SeparatorCell(int height) {
             this.setHeight(height);
+            super.setSelectable(false);
         }
 
         @Override
@@ -698,6 +1064,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         public SpacerCell(int height) {
             this.setHeight(height);
             this.setWidth(10);
+            super.setSelectable(false);
         }
 
         @Override
@@ -759,6 +1126,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         public LabelCell(@NotNull Component label) {
             this.text = label;
             this.setSearchStringSupplier(() -> this.text.getString());
+            super.setSelectable(false);
         }
 
         @Override
@@ -918,7 +1286,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         protected int y;
         protected int width;
         protected int height;
-        private boolean selectable = false;
+        private boolean selectable = true;
         private boolean selected = false;
         protected boolean hovered = false;
         protected Supplier<DrawableColor> hoverColorSupplier = () -> {
@@ -1115,10 +1483,11 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
             if (!CellScreen.this.scrollArea.isInnerAreaHovered()) {
                 return false;
             }
-            if (this.hovered && this.selectable) {
-                this.setSelected(true);
-            } else {
-                this.setSelected(false);
+            if (!this.hovered) {
+                return false;
+            }
+            if (this.selectable) {
+                CellScreen.this.selectCell(this, false);
             }
             return super.mouseClicked($$0, $$1, $$2);
         }

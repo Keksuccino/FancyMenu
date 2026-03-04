@@ -185,6 +185,16 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
             return true;
         }
 
+        if (keyCode == InputConstants.KEY_BACKSPACE) {
+            if (this.searchBar != null) {
+                if (!this.searchBar.isFocused()) {
+                    this.focusSearchBar();
+                }
+                this.searchBar.keyPressed(keyCode, scanCode, modifiers);
+                return true;
+            }
+        }
+
         if (keyCode == InputConstants.KEY_TAB) {
             return true;
         }
