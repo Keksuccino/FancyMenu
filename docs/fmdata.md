@@ -83,6 +83,8 @@ The server can then process incoming data with `/fmdata listener ...`.
 
 # Server Listeners
 
+Server listeners listen for incoming data from clients and can run one or multiple commands when they get triggered.
+
 Server listeners are saved and stay active after restart.
 
 Manage them with:
