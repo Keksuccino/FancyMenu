@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.networking.packets.placeholders.gamerule;
 
 import de.keksuccino.fancymenu.networking.PacketHandler;
-import net.minecraft.commands.Commands;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.GameRules;
 import org.apache.logging.log4j.LogManager;
@@ -21,7 +20,7 @@ public class ServerSideServerGameruleValueRequestPacketLogic {
 
         String result = "";
         try {
-            if (sender.hasPermissions(Commands.LEVEL_GAMEMASTERS) && (sender.getServer() != null)) {
+            if (sender.getServer() != null) {
                 String gameruleName = normalizeGameruleName(packet.gamerule);
                 if (gameruleName != null) {
                     String gameruleValue = getGameruleValue(sender.getServer().getGameRules(), gameruleName);

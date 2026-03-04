@@ -3284,5 +3284,5 @@
   "fancymenu.editor.shortcuts.g": "G",
   "fancymenu.overlay.menu_bar.variables.manage.empty_hint": "Right-click here to add variables",
   "fancymenu.placeholders.world.gamerule_value": "Gamerule Value",
-  "fancymenu.placeholders.world.gamerule_value.desc": "§xFancyMenu needs to be installed on the server for this to work!\n\nReturns the value of the specified gamerule in the current world/server. Takes the gamerule name (for example doDaylightCycle). Returns an empty value if no world is loaded, if the gamerule does not exist, or if the player has no permission to query gamerules."
+  "fancymenu.placeholders.world.gamerule_value.desc": "§xFancyMenu needs to be installed on the server for this to work!\n\nReturns the value of the specified gamerule in the current world/server. Takes the gamerule name (for example doDaylightCycle). Returns an empty value if no world is loaded or if the gamerule does not exist."
 }

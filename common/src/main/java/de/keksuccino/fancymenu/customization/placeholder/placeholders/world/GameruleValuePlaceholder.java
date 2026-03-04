@@ -6,7 +6,6 @@ import de.keksuccino.fancymenu.networking.packets.placeholders.gamerule.ServerGa
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.server.IntegratedServer;
-import net.minecraft.commands.Commands;
 import net.minecraft.world.level.GameRules;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,10 +37,6 @@ public class GameruleValuePlaceholder extends AbstractWorldPlaceholder {
 
         LocalPlayer player = this.getPlayer();
         if ((this.getLevel() == null) || (player == null)) {
-            return "";
-        }
-
-        if (!player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {
             return "";
         }
 
