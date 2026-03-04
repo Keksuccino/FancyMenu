@@ -19,13 +19,16 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.Text
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
@@ -171,6 +174,41 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
     public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
     }
 
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == InputConstants.KEY_TAB) {
+            return true;
+        }
+
+        if ((keyCode == InputConstants.KEY_UP) || (keyCode == InputConstants.KEY_DOWN)) {
+            this.selectAdjacentRequirementsEntry(keyCode == InputConstants.KEY_DOWN);
+            return true;
+        }
+
+        if ((keyCode == InputConstants.KEY_LEFT) || (keyCode == InputConstants.KEY_RIGHT)) {
+            return true;
+        }
+
+        if ((keyCode == InputConstants.KEY_ENTER) || (keyCode == InputConstants.KEY_NUMPADENTER) || (keyCode == GLFW.GLFW_KEY_KP_ENTER)) {
+            if (this.activateSelectedRequirementsListEntry()) {
+                return true;
+            }
+        }
+
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (this.shouldRouteTypedCharacterToSearchBar(codePoint) && (this.searchBar != null) && !this.searchBar.isFocused()) {
+            this.focusSearchBar();
+            if (this.searchBar.charTyped(codePoint, modifiers)) {
+                return true;
+            }
+        }
+        return super.charTyped(codePoint, modifiers);
+    }
+
     protected void onEditValue() {
         if (this.instance.requirement == null) {
             return;
@@ -299,7 +337,6 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
                     BuildRequirementScreen.this.instance.requirement = null;
                     this.setDescription(null);
                 });
-                e.setSelectable(false);
                 e.setTextBaseColor(labelColor);
                 this.requirementsListScrollArea.addEntry(e);
             }
@@ -328,7 +365,6 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
                 BuildRequirementScreen.this.instance.requirement = null;
                 this.setDescription(null);
             });
-            backEntry.setSelectable(false);
             backEntry.setTextBaseColor(UIBase.getUITheme().warning_color.getColorInt());
             this.requirementsListScrollArea.addEntry(backEntry);
 
@@ -367,6 +403,91 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
             }
         }
 
+    }
+
+    private void focusSearchBar() {
+        if (this.searchBar == null) {
+            return;
+        }
+        this.setFocused(this.searchBar);
+        this.searchBar.setFocused(true);
+    }
+
+    private boolean shouldRouteTypedCharacterToSearchBar(char codePoint) {
+        if (hasControlDown() || hasAltDown()) {
+            return false;
+        }
+        return !Character.isISOControl(codePoint);
+    }
+
+    private boolean activateSelectedRequirementsListEntry() {
+        ScrollAreaEntry selectedEntry = this.requirementsListScrollArea.getFocusedEntry();
+        if (selectedEntry instanceof RequirementScrollEntry requirementEntry) {
+            if (requirementEntry.requirement != null) {
+                this.instance.requirement = requirementEntry.requirement;
+                this.setDescription(this.instance.requirement);
+            }
+            this.onNextStep();
+            return true;
+        }
+        if (selectedEntry instanceof TextListScrollAreaEntry textEntry) {
+            textEntry.onClick(textEntry, this.getRenderMouseX(), this.getRenderMouseY(), 0);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean selectAdjacentRequirementsEntry(boolean moveDown) {
+        List<ScrollAreaEntry> entries = this.requirementsListScrollArea.getEntries();
+        if (entries.isEmpty()) {
+            return false;
+        }
+        ScrollAreaEntry selected = this.requirementsListScrollArea.getFocusedEntry();
+        int targetIndex;
+        if (selected == null) {
+            targetIndex = moveDown ? 0 : entries.size() - 1;
+        } else {
+            int currentIndex = entries.indexOf(selected);
+            if (currentIndex == -1) {
+                targetIndex = moveDown ? 0 : entries.size() - 1;
+            } else {
+                targetIndex = currentIndex + (moveDown ? 1 : -1);
+                if (targetIndex < 0) {
+                    targetIndex = entries.size() - 1;
+                } else if (targetIndex >= entries.size()) {
+                    targetIndex = 0;
+                }
+            }
+        }
+        ScrollAreaEntry target = entries.get(targetIndex);
+        target.setSelected(true);
+        this.scrollRequirementsEntryIntoView(target);
+        return true;
+    }
+
+    private void scrollRequirementsEntryIntoView(@NotNull ScrollAreaEntry entry) {
+        List<ScrollAreaEntry> entries = this.requirementsListScrollArea.getEntries();
+        int totalHeight = 0;
+        for (ScrollAreaEntry e : entries) {
+            totalHeight += (int)e.getHeight();
+        }
+        int visibleHeight = (int)this.requirementsListScrollArea.getInnerHeight();
+        if (totalHeight <= visibleHeight) {
+            return;
+        }
+        int offset = 0;
+        for (ScrollAreaEntry e : entries) {
+            if (e == entry) {
+                break;
+            }
+            offset += (int)e.getHeight();
+        }
+        int entryCenter = offset + ((int)entry.getHeight() / 2);
+        int target = Math.max(0, entryCenter - (visibleHeight / 2));
+        int maxScroll = Math.max(1, totalHeight - visibleHeight);
+        float scroll = Math.min(1.0F, (float)target / (float)maxScroll);
+        this.requirementsListScrollArea.verticalScrollBar.setScroll(Mth.clamp(scroll, 0.0F, 1.0F));
+        this.requirementsListScrollArea.updateEntries(null);
     }
 
     public class RequirementScrollEntry extends TextListScrollAreaEntry {
