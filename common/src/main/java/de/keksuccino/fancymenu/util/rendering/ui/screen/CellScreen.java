@@ -32,6 +32,7 @@ import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.*;
+import org.lwjgl.glfw.GLFW;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -585,6 +586,13 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
     @Override
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
+        if (Screen.hasControlDown() && !Screen.hasShiftDown() && !Screen.hasAltDown() && this.isLetterKeyPressed(keycode, scancode, "s")) {
+            if ((this.doneButton != null) && this.doneButton.visible && this.doneButton.active) {
+                this.doneButton.onPress();
+                return true;
+            }
+        }
+
         if (keycode == InputConstants.KEY_TAB) {
             return true;
         }
@@ -607,6 +615,19 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
             }
         }
         return super.keyPressed(keycode, scancode, modifiers);
+    }
+
+    @NotNull
+    protected String getLetterKeyName(int keycode, int scancode) {
+        String keyName = GLFW.glfwGetKeyName(keycode, scancode);
+        if (keyName == null) {
+            return "";
+        }
+        return keyName.toLowerCase(Locale.ROOT);
+    }
+
+    protected boolean isLetterKeyPressed(int keycode, int scancode, @NotNull String letter) {
+        return letter.toLowerCase(Locale.ROOT).equals(this.getLetterKeyName(keycode, scancode));
     }
 
     protected boolean handleEnterForSelectedCell(int keycode, int scancode, int modifiers) {
@@ -723,24 +744,49 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
             return focusTargets.get(0).keyPressed(keycode, scancode, modifiers);
         }
 
-        return this.navigateHorizontalTargets(cell, focusTargets, moveRight);
+        GuiEventListener target = this.getAdjacentHorizontalTarget(cell, focusTargets, moveRight);
+        if (target != null) {
+            this.focusTarget(cell, target);
+            if ((target == cell.editBox) && (focusedTarget != cell.editBox)) {
+                if (moveRight) {
+                    cell.editBox.setCursorPosition(0);
+                    cell.editBox.setHighlightPos(0);
+                    cell.editBox.setDisplayPosition(0);
+                } else {
+                    int end = cell.editBox.getValue().length();
+                    cell.editBox.setCursorPosition(end);
+                    cell.editBox.setHighlightPos(end);
+                }
+            }
+        }
+        return true;
     }
 
     protected boolean navigateHorizontalTargets(@NotNull RenderCell cell, @NotNull List<GuiEventListener> focusTargets, boolean moveRight) {
+        GuiEventListener target = this.getAdjacentHorizontalTarget(cell, focusTargets, moveRight);
+        if (target == null) {
+            return true;
+        }
+        this.focusTarget(cell, target);
+        return true;
+    }
+
+    @Nullable
+    protected GuiEventListener getAdjacentHorizontalTarget(@NotNull RenderCell cell, @NotNull List<GuiEventListener> focusTargets, boolean moveRight) {
+        if (focusTargets.isEmpty()) {
+            return null;
+        }
+
         GuiEventListener focusedTarget = this.getFocusedTarget(cell, focusTargets);
         int focusedIndex = (focusedTarget != null) ? focusTargets.indexOf(focusedTarget) : -1;
 
-        GuiEventListener target;
         if (focusedIndex < 0) {
-            target = moveRight ? focusTargets.get(0) : focusTargets.get(focusTargets.size() - 1);
-        } else if (moveRight) {
-            target = focusTargets.get((focusedIndex + 1) % focusTargets.size());
-        } else {
-            target = focusTargets.get((focusedIndex - 1 + focusTargets.size()) % focusTargets.size());
+            return moveRight ? focusTargets.get(0) : focusTargets.get(focusTargets.size() - 1);
         }
-
-        this.focusTarget(cell, target);
-        return true;
+        if (moveRight) {
+            return focusTargets.get((focusedIndex + 1) % focusTargets.size());
+        }
+        return focusTargets.get((focusedIndex - 1 + focusTargets.size()) % focusTargets.size());
     }
 
     @NotNull

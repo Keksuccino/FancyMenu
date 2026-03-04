@@ -34,7 +34,7 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class BuildRequirementScreen extends PiPWindowBody implements InitialWidgetFocusScreen {
+public class BuildRequirementWindowBody extends PiPWindowBody implements InitialWidgetFocusScreen {
 
     public static final int PIP_WINDOW_WIDTH = 640;
     public static final int PIP_WINDOW_HEIGHT = 420;
@@ -55,7 +55,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
             .thenComparing(requirement -> requirement.getDisplayName().getString())
             .thenComparing(Requirement::getIdentifier);
 
-    public BuildRequirementScreen(@NotNull RequirementContainer parent, @Nullable RequirementInstance instanceToEdit, @NotNull Consumer<RequirementInstance> callback) {
+    public BuildRequirementWindowBody(@NotNull RequirementContainer parent, @Nullable RequirementInstance instanceToEdit, @NotNull Consumer<RequirementInstance> callback) {
 
         super((instanceToEdit != null) ? Component.translatable("fancymenu.requirements.screens.edit_requirement") : Component.translatable("fancymenu.requirements.screens.add_requirement"));
 
@@ -355,9 +355,9 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
             for (Map.Entry<String, List<Requirement>> m : sortedCategories) {
                 Component label = Component.literal(m.getKey());
                 TextListScrollAreaEntry e = new TextListScrollAreaEntry(this.requirementsListScrollArea, label, UIBase.getUITheme().bullet_list_dot_color_2, (entry) -> {
-                    BuildRequirementScreen.this.setContentOfRequirementsList(m.getKey());
-                    BuildRequirementScreen.this.instance.requirement = null;
-                    BuildRequirementScreen.this.instance.value = null;
+                    BuildRequirementWindowBody.this.setContentOfRequirementsList(m.getKey());
+                    BuildRequirementWindowBody.this.instance.requirement = null;
+                    BuildRequirementWindowBody.this.instance.value = null;
                     this.setDescription(null);
                 });
                 e.setTextBaseColor(labelColor);
@@ -383,9 +383,9 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
             //Add "Back" button
             Component backLabel = Component.translatable("fancymenu.requirements.screens.lists.back");
             TextListScrollAreaEntry backEntry = new TextListScrollAreaEntry(this.requirementsListScrollArea, backLabel, UIBase.getUITheme().bullet_list_dot_color_2, (entry) -> {
-                BuildRequirementScreen.this.setContentOfRequirementsList(null);
-                BuildRequirementScreen.this.instance.requirement = null;
-                BuildRequirementScreen.this.instance.value = null;
+                BuildRequirementWindowBody.this.setContentOfRequirementsList(null);
+                BuildRequirementWindowBody.this.instance.requirement = null;
+                BuildRequirementWindowBody.this.instance.value = null;
                 this.setDescription(null);
             });
             backEntry.setTextBaseColor(UIBase.getUITheme().warning_color.getColorInt());
@@ -618,9 +618,9 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
             // Check if this is a double-click
             if (currentTime - this.lastClickTime < DOUBLE_CLICK_TIME) {
                 // Double-click detected
-                if ((this.requirement != null) && (BuildRequirementScreen.this.instance.requirement == this.requirement)) {
+                if ((this.requirement != null) && (BuildRequirementWindowBody.this.instance.requirement == this.requirement)) {
                     // Check if requirement has value or doesn't need value -> act as "Done"
-                    BuildRequirementScreen.this.onNextStep();
+                    BuildRequirementWindowBody.this.onNextStep();
                     this.lastClickTime = 0; // Reset to prevent triple clicks
                     return;
                 }
@@ -646,7 +646,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
                 : UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt();
     }
 
-    public static @NotNull PiPWindow openInWindow(@NotNull BuildRequirementScreen screen, @Nullable PiPWindow parentWindow) {
+    public static @NotNull PiPWindow openInWindow(@NotNull BuildRequirementWindowBody screen, @Nullable PiPWindow parentWindow) {
         PiPWindow window = new PiPWindow(screen.getTitle())
                 .setScreen(screen)
                 .setForceFancyMenuUiScale(true)
@@ -674,7 +674,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
                 MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
     }
 
-    public static @NotNull PiPWindow openInWindow(@NotNull BuildRequirementScreen screen) {
+    public static @NotNull PiPWindow openInWindow(@NotNull BuildRequirementWindowBody screen) {
         return openInWindow(screen, null);
     }
 

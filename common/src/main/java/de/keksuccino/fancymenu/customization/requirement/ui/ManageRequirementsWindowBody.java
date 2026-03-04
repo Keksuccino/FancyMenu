@@ -237,14 +237,14 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
 
     protected void onAddRequirement() {
         RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
-        BuildRequirementScreen screen = new BuildRequirementScreen(this.container, null, (call) -> {
+        BuildRequirementWindowBody screen = new BuildRequirementWindowBody(this.container, null, (call) -> {
             if (call != null) {
                 this.container.addInstance(call);
                 this.updateRequirementsScrollArea();
                 this.createUndoPointIfChanged(beforeSnapshot);
             }
         });
-        this.openChildWindow(parentWindow -> BuildRequirementScreen.openInWindow(screen, parentWindow));
+        this.openChildWindow(parentWindow -> BuildRequirementWindowBody.openInWindow(screen, parentWindow));
     }
 
     protected void onAddGroup() {
@@ -269,13 +269,13 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
     protected void onEdit(@Nullable RequirementInstance selectedInstance, @Nullable RequirementGroup selectedGroup) {
         if (selectedInstance != null) {
             RequirementsSnapshot beforeSnapshot = this.captureCurrentState();
-            BuildRequirementScreen requirementScreen = new BuildRequirementScreen(this.container, selectedInstance, (call) -> {
+            BuildRequirementWindowBody requirementScreen = new BuildRequirementWindowBody(this.container, selectedInstance, (call) -> {
                 if (call != null) {
                     this.updateRequirementsScrollArea();
                     this.createUndoPointIfChanged(beforeSnapshot);
                 }
             });
-            this.openChildWindow(parentWindow -> BuildRequirementScreen.openInWindow(requirementScreen, parentWindow));
+            this.openChildWindow(parentWindow -> BuildRequirementWindowBody.openInWindow(requirementScreen, parentWindow));
             return;
         }
         if (selectedGroup != null) {
