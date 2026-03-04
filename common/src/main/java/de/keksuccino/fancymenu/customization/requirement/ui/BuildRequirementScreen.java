@@ -20,6 +20,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.Minecraft;
@@ -40,6 +41,8 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
 
     protected RequirementContainer parent;
     protected final RequirementInstance instance;
+    @Nullable
+    protected final RequirementInstance editTargetInstance;
     protected boolean isEdit;
     protected Consumer<RequirementInstance> callback;
 
@@ -57,8 +60,15 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
         super((instanceToEdit != null) ? Component.translatable("fancymenu.requirements.screens.edit_requirement") : Component.translatable("fancymenu.requirements.screens.add_requirement"));
 
         this.parent = parent;
-        this.instance = (instanceToEdit != null) ? instanceToEdit : new RequirementInstance(null, null, RequirementInstance.RequirementMode.IF, parent);
         this.isEdit = instanceToEdit != null;
+        this.editTargetInstance = instanceToEdit;
+        if (instanceToEdit != null) {
+            this.instance = instanceToEdit.copy(false);
+            this.instance.parent = parent;
+            this.instance.group = instanceToEdit.group;
+        } else {
+            this.instance = new RequirementInstance(null, null, RequirementInstance.RequirementMode.IF, parent);
+        }
         this.callback = callback;
 
     }
@@ -99,7 +109,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
         int cancelButtonX = doneButtonX;
         int cancelButtonY = doneButtonY - 5 - 20;
         int requirementModeButtonX = doneButtonX;
-        int requirementModeButtonY = (this.isEdit ? doneButtonY : cancelButtonY) - 15 - 20;
+        int requirementModeButtonY = cancelButtonY - 15 - 20;
 
         // Create buttons with positions in constructors
         ExtendedButton doneOrNextButton = new ExtendedButton(doneButtonX, doneButtonY, 150, 20, Component.empty(), (button) -> {
@@ -111,14 +121,8 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
         UIBase.applyDefaultWidgetSkinTo(doneOrNextButton, blur);
 
         ExtendedButton cancelButton = new ExtendedButton(cancelButtonX, cancelButtonY, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
-            if (this.isEdit) {
-                this.callback.accept(this.instance);
-            } else {
-                this.callback.accept(null);
-            }
-            this.closeWindow();
-        }).setIsActiveSupplier(consumes -> !this.isEdit);
-        cancelButton.visible = !this.isEdit;
+            this.onCancelOrEscape();
+        });
         this.addRenderableWidget(cancelButton);
         UIBase.applyDefaultWidgetSkinTo(cancelButton, blur);
 
@@ -146,7 +150,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
     @Override
     public void onWindowClosedExternally() {
         if (this.isEdit) {
-            this.callback.accept(this.instance);
+            this.callback.accept(this.applyCurrentEditResultToTarget());
         } else {
             this.callback.accept(null);
         }
@@ -176,6 +180,11 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (this.isEdit && (keyCode == InputConstants.KEY_ESCAPE)) {
+            this.onCancelOrEscape();
+            return true;
+        }
+
         if (keyCode == InputConstants.KEY_TAB) {
             return true;
         }
@@ -231,7 +240,11 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
     }
 
     protected void onDone() {
-        this.callback.accept((this.instance.requirement != null) ? this.instance : null);
+        if (this.isEdit) {
+            this.callback.accept(this.applyCurrentEditResultToTarget());
+        } else {
+            this.callback.accept((this.instance.requirement != null) ? this.instance : null);
+        }
         this.closeWindow();
     }
 
@@ -310,8 +323,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
                 if (!this.requirementFitsSearchValue(r, searchValue)) continue;
                 Component label = r.getDisplayName();
                 RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUITheme().bullet_list_dot_color_1, (entry) -> {
-                    this.instance.requirement = r;
-                    this.setDescription(this.instance.requirement);
+                    this.selectRequirement(r);
                 });
                 e.setTextBaseColor(labelColor);
                 e.requirement = r;
@@ -335,6 +347,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
                 TextListScrollAreaEntry e = new TextListScrollAreaEntry(this.requirementsListScrollArea, label, UIBase.getUITheme().bullet_list_dot_color_2, (entry) -> {
                     BuildRequirementScreen.this.setContentOfRequirementsList(m.getKey());
                     BuildRequirementScreen.this.instance.requirement = null;
+                    BuildRequirementScreen.this.instance.value = null;
                     this.setDescription(null);
                 });
                 e.setTextBaseColor(labelColor);
@@ -348,8 +361,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
                 if ((LayoutEditorScreen.getCurrentInstance() != null) && !r.shouldShowUpInEditorRequirementMenu(LayoutEditorScreen.getCurrentInstance())) continue;
                 Component label = r.getDisplayName();
                 RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUITheme().bullet_list_dot_color_1, (entry) -> {
-                    this.instance.requirement = r;
-                    this.setDescription(this.instance.requirement);
+                    this.selectRequirement(r);
                 });
                 e.setTextBaseColor(labelColor);
                 e.requirement = r;
@@ -363,6 +375,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
             TextListScrollAreaEntry backEntry = new TextListScrollAreaEntry(this.requirementsListScrollArea, backLabel, UIBase.getUITheme().bullet_list_dot_color_2, (entry) -> {
                 BuildRequirementScreen.this.setContentOfRequirementsList(null);
                 BuildRequirementScreen.this.instance.requirement = null;
+                BuildRequirementScreen.this.instance.value = null;
                 this.setDescription(null);
             });
             backEntry.setTextBaseColor(UIBase.getUITheme().warning_color.getColorInt());
@@ -375,8 +388,7 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
                     if ((LayoutEditorScreen.getCurrentInstance() != null) && !r.shouldShowUpInEditorRequirementMenu(LayoutEditorScreen.getCurrentInstance())) continue;
                     Component label = r.getDisplayName();
                     RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUITheme().bullet_list_dot_color_1, (entry) -> {
-                        this.instance.requirement = r;
-                        this.setDescription(this.instance.requirement);
+                        this.selectRequirement(r);
                     });
                     e.setTextBaseColor(labelColor);
                     e.requirement = r;
@@ -420,12 +432,41 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
         return !Character.isISOControl(codePoint);
     }
 
+    private void selectRequirement(@NotNull Requirement requirement) {
+        Requirement previousRequirement = this.instance.requirement;
+        this.instance.requirement = requirement;
+        if (previousRequirement != requirement) {
+            this.instance.value = null;
+        }
+        this.setDescription(this.instance.requirement);
+    }
+
+    @Nullable
+    private RequirementInstance applyCurrentEditResultToTarget() {
+        if (!this.isEdit) {
+            return this.instance;
+        }
+        if (this.editTargetInstance == null) {
+            return null;
+        }
+        this.editTargetInstance.requirement = this.instance.requirement;
+        this.editTargetInstance.value = this.instance.value;
+        this.editTargetInstance.mode = this.instance.mode;
+        this.editTargetInstance.parent = this.parent;
+        this.editTargetInstance.group = this.instance.group;
+        return this.editTargetInstance;
+    }
+
+    private void onCancelOrEscape() {
+        this.callback.accept(null);
+        this.closeWindow();
+    }
+
     private boolean activateSelectedRequirementsListEntry() {
         ScrollAreaEntry selectedEntry = this.requirementsListScrollArea.getFocusedEntry();
         if (selectedEntry instanceof RequirementScrollEntry requirementEntry) {
             if (requirementEntry.requirement != null) {
-                this.instance.requirement = requirementEntry.requirement;
-                this.setDescription(this.instance.requirement);
+                this.selectRequirement(requirementEntry.requirement);
             }
             this.onNextStep();
             return true;
@@ -545,7 +586,22 @@ public class BuildRequirementScreen extends PiPWindowBody implements InitialWidg
                 .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
                 .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);
         PiPWindowHandler.INSTANCE.openWindowCentered(window, parentWindow);
+        focusWindowAfterOpen(window);
         return window;
+    }
+
+    private static void focusWindowAfterOpen(@NotNull PiPWindow window) {
+        if (PiPWindowHandler.INSTANCE.getOpenWindows().contains(window)) {
+            PiPWindowHandler.INSTANCE.bringToFront(window);
+        }
+        MainThreadTaskExecutor.executeInMainThread(() ->
+                        MainThreadTaskExecutor.executeInMainThread(() -> {
+                                    if (PiPWindowHandler.INSTANCE.getOpenWindows().contains(window) && window.isVisible()) {
+                                        PiPWindowHandler.INSTANCE.bringToFront(window);
+                                    }
+                                },
+                                MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK),
+                MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
     }
 
     public static @NotNull PiPWindow openInWindow(@NotNull BuildRequirementScreen screen) {
