@@ -60,6 +60,8 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
     protected float rightClickContextMenuLastOpenY = Float.NaN;
     @Nullable
     protected String contextMenuTargetVariableName;
+    @Nullable
+    protected VariableSnapshot variableClipboard;
     private final Deque<VariablesSnapshot> undoHistory = new ArrayDeque<>();
     private final Deque<VariablesSnapshot> redoHistory = new ArrayDeque<>();
 
@@ -151,8 +153,27 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.delete"))
                 .setIcon(MaterialIcons.DELETE);
 
-        this.rightClickContextMenu.addSeparatorEntry("separator_after_edit_actions")
-                .addIsVisibleSupplier((menu, entry) -> this.hasContextMenuTargetVariable());
+        this.rightClickContextMenu.addSeparatorEntry("separator_before_copy_paste");
+
+        this.rightClickContextMenu.addClickableEntry("copy_variable", Component.translatable("fancymenu.editor.edit.copy"), (menu, entry) -> {
+                    Variable selectedVariable = this.getContextMenuTargetVariable();
+                    if (selectedVariable == null) {
+                        return;
+                    }
+                    menu.closeMenuChain();
+                    this.copyVariableToClipboard(selectedVariable);
+                }).addIsActiveSupplier((menu, entry) -> this.hasContextMenuTargetVariable())
+                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.copy"))
+                .setIcon(MaterialIcons.CONTENT_COPY);
+
+        this.rightClickContextMenu.addClickableEntry("paste_variable", Component.translatable("fancymenu.editor.edit.paste"), (menu, entry) -> {
+                    menu.closeMenuChain();
+                    this.pasteVariableFromClipboard();
+                }).addIsActiveSupplier((menu, entry) -> this.canPasteVariableFromClipboard())
+                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.paste"))
+                .setIcon(MaterialIcons.CONTENT_PASTE);
+
+        this.rightClickContextMenu.addSeparatorEntry("separator_after_copy_paste");
 
         this.rightClickContextMenu.addClickableEntry("undo", Component.translatable("fancymenu.editor.edit.undo"), (menu, entry) -> {
                     if (this.undo()) {
@@ -248,6 +269,19 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
 
         if (Screen.hasControlDown() && "y".equals(keyName)) {
             if (this.redo()) {
+                return true;
+            }
+        }
+
+        boolean searchBarFocused = (this.searchBar != null) && this.searchBar.isFocused();
+        if (!contextMenuActive && !searchBarFocused && Screen.hasControlDown() && "c".equals(keyName)) {
+            if (this.copySelectedVariableToClipboard()) {
+                return true;
+            }
+        }
+
+        if (!contextMenuActive && !searchBarFocused && Screen.hasControlDown() && "v".equals(keyName)) {
+            if (this.pasteVariableFromClipboard()) {
                 return true;
             }
         }
@@ -589,6 +623,53 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
                 null, TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT)
                 .getSecond().setIcon(MaterialIcons.TEXT_FIELDS);
         s.setText(variable.getValue());
+    }
+
+    protected boolean copySelectedVariableToClipboard() {
+        VariableScrollEntry selectedEntry = this.getSelectedEntry();
+        if (selectedEntry == null) {
+            return false;
+        }
+        this.copyVariableToClipboard(selectedEntry.variable);
+        return true;
+    }
+
+    protected void copyVariableToClipboard(@NotNull Variable variable) {
+        this.variableClipboard = new VariableSnapshot(variable.getName(), variable.getValue(), variable.isResetOnLaunch());
+    }
+
+    protected boolean canPasteVariableFromClipboard() {
+        return this.variableClipboard != null;
+    }
+
+    protected boolean pasteVariableFromClipboard() {
+        if (this.variableClipboard == null) {
+            return false;
+        }
+        VariablesSnapshot beforeSnapshot = this.captureCurrentState();
+        String pastedVariableName = this.generatePastedVariableName(this.variableClipboard.name());
+        VariableHandler.setVariable(pastedVariableName, this.variableClipboard.value());
+        Variable pastedVariable = VariableHandler.getVariable(pastedVariableName);
+        if (pastedVariable != null) {
+            pastedVariable.setResetOnLaunch(this.variableClipboard.resetOnLaunch());
+        }
+        this.contextMenuTargetVariableName = pastedVariableName;
+        this.refreshVariablesList();
+        this.restoreSelection(pastedVariableName);
+        this.createUndoPointIfChanged(beforeSnapshot);
+        return true;
+    }
+
+    @NotNull
+    protected String generatePastedVariableName(@NotNull String sourceVariableName) {
+        String baseName = sourceVariableName + "_Copy";
+        String candidate = baseName;
+        int suffix = 2;
+        while (VariableHandler.variableExists(candidate)) {
+            candidate = baseName + suffix;
+            suffix++;
+        }
+        return candidate;
     }
 
     @Nullable
