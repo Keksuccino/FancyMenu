@@ -57,36 +57,37 @@ public class CreditsScreen extends Screen {
 
     }
 
+    private void ensureTextSet() {
+        if (this.textSet) return;
+    
+        IText text = this.creditsTextSupplier.get();
+        if (text == null) return;
+    
+        List<String> lines = text.getTextLines();
+        if (lines == null) return;
+    
+        StringBuilder sb = new StringBuilder();
+        for (String s : lines) {
+            sb.append(s).append('\n');
+        }
+    
+        this.markdownRenderer.setText(sb.toString());
+        this.textSet = true;
+    }
+
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-
-        if (!this.textSet) {
-            IText text = this.creditsTextSupplier.get();
-            if (text != null) {
-                List<String> lines = text.getTextLines();
-                if (lines != null) {
-                    StringBuilder lineString = new StringBuilder();
-                    for (String s : lines) {
-                        lineString.append(s).append("\n");
-                    }
-                    this.markdownRenderer.setText(lineString.toString());
-                    this.textSet = true;
-                }
-            }
-        }
+        ensureTextSet();
 
         RenderSystem.enableBlend();
-
         //Background
         graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
         RenderingUtils.resetShaderColor(graphics);
-
         //Footer
         graphics.fill(0, this.height - this.footerHeight, this.width, this.height, UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt());
         RenderingUtils.resetShaderColor(graphics);
 
         super.render(graphics, mouseX, mouseY, partial);
-
     }
 
     @Override
@@ -114,3 +115,4 @@ public class CreditsScreen extends Screen {
     }
 
 }
+
