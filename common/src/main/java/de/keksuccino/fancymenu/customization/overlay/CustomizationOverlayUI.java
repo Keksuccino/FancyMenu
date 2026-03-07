@@ -782,6 +782,12 @@ public class CustomizationOverlayUI {
                                 .addCycleListener(cycle -> FancyMenu.getOptions().globalButtonLabelShadow.setValue(cycle.getAsBoolean())))
                 .setIcon(MaterialIcons.SHADOW);
 
+        ContextMenuUtils.addAudioResourceChooserContextMenuEntryTo(globalCustomizationsMenu, "button_click_sound", emptyAudioSupplier,
+                        GlobalCustomizationHandler::getCustomButtonClickSoundSupplier,
+                        supplier -> FancyMenu.getOptions().globalButtonClickSound.setValue((supplier == null || supplier.isEmpty()) ? "" : supplier.getSourceWithPrefix()),
+                        Component.translatable("fancymenu.global_customizations.button_click_sound"), true, null, true, true, true)
+                .setIcon(MaterialIcons.VOLUME_UP);
+
         globalCustomizationsMenu.addSeparatorEntry("separator_after_button_textures");
 
         ContextMenu sliderTexturesMenu = new ContextMenu();
@@ -996,12 +1002,6 @@ public class CustomizationOverlayUI {
                 .setIcon(MaterialIcons.QUEUE_MUSIC);
 
         globalCustomizationsMenu.addSeparatorEntry("separator_after_menu_music");
-
-        ContextMenuUtils.addAudioResourceChooserContextMenuEntryTo(globalCustomizationsMenu, "button_click_sound", emptyAudioSupplier,
-                        GlobalCustomizationHandler::getCustomButtonClickSoundSupplier,
-                        supplier -> FancyMenu.getOptions().globalButtonClickSound.setValue((supplier == null || supplier.isEmpty()) ? "" : supplier.getSourceWithPrefix()),
-                        Component.translatable("fancymenu.global_customizations.button_click_sound"), true, null, true, true, true)
-                .setIcon(MaterialIcons.VOLUME_UP);
 
         return globalCustomizationsMenu;
 
