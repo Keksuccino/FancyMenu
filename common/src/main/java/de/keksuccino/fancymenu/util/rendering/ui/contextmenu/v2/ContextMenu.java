@@ -1025,6 +1025,11 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         return this.parentEntry;
     }
 
+    public ContextMenu detachFromParentEntry() {
+        this.parentEntry = null;
+        return this;
+    }
+
     public boolean isSubMenuHovered() {
         if (!this.isOpen()) return false;
         for (ContextMenuEntry<?> e : this.entries) {

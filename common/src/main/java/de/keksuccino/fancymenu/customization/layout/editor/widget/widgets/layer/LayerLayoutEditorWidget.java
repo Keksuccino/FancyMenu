@@ -853,14 +853,36 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     }
 
     private void openLayerContextMenu(@Nullable LayerElementEntry layerEntry, @Nullable LayerGroupEntry groupEntry) {
-        ContextMenu menu = new ContextMenu();
+        final ContextMenu[] attachedElementSettingsMenu = new ContextMenu[1];
+        ContextMenu menu = new ContextMenu() {
+            private void detachElementSettingsMenu_FancyMenu() {
+                if (attachedElementSettingsMenu[0] != null) {
+                    attachedElementSettingsMenu[0].detachFromParentEntry();
+                    attachedElementSettingsMenu[0] = null;
+                }
+            }
+
+            @Override
+            public ContextMenu closeMenu() {
+                ContextMenu closed = super.closeMenu();
+                this.detachElementSettingsMenu_FancyMenu();
+                return closed;
+            }
+
+            @Override
+            public ContextMenu closeMenuChain() {
+                ContextMenu closed = super.closeMenuChain();
+                this.detachElementSettingsMenu_FancyMenu();
+                return closed;
+            }
+        };
 
         this.addAddGroupEntry(menu);
 
         if (layerEntry != null) {
             AbstractEditorElement<?, ?> element = layerEntry.element;
             menu.addSeparatorEntry("separator_layer");
-            this.addOpenElementSettingsEntry(menu, element);
+            this.addOpenElementSettingsSubMenuEntry(menu, element, attachedElementSettingsMenu);
             this.addToggleLayerVisibilityEntry(menu, element);
             this.addRenameLayerEntry(menu, layerEntry);
             this.addMoveLayerEntries(menu, element);
@@ -885,15 +907,16 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }).setIcon(MaterialIcons.ADD);
     }
 
-    private void addOpenElementSettingsEntry(@NotNull ContextMenu menu, @NotNull AbstractEditorElement<?, ?> element) {
-        menu.addClickableEntry("open_element_settings", Component.translatable("fancymenu.editor.widgets.layers.context.element_settings"), (menu1, entry) -> {
-            if (!element.isSelected()) {
-                this.editor.deselectAllElements();
-                element.setSelected(true);
-            }
-            menu1.closeMenuChain();
-            this.editor.openElementContextMenuAtMouseIfPossible();
-        }).setIcon(MaterialIcons.SETTINGS);
+    private void addOpenElementSettingsSubMenuEntry(@NotNull ContextMenu menu, @NotNull AbstractEditorElement<?, ?> element, @NotNull ContextMenu[] attachedElementSettingsMenu) {
+        if (!element.isSelected()) {
+            this.editor.deselectAllElements();
+            element.setSelected(true);
+        }
+        ContextMenu elementSettingsMenu = element.rightClickMenu;
+        elementSettingsMenu.detachFromParentEntry();
+        attachedElementSettingsMenu[0] = elementSettingsMenu;
+        menu.addSubMenuEntry("open_element_settings", Component.translatable("fancymenu.editor.widgets.layers.context.element_settings"), elementSettingsMenu)
+                .setIcon(MaterialIcons.SETTINGS);
     }
 
     private void addToggleLayerVisibilityEntry(@NotNull ContextMenu menu, @NotNull AbstractEditorElement<?, ?> element) {
