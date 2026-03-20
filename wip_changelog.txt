@@ -1,5 +1,5 @@
 
-## Alpha 4 Changelog
+## Beta 1 Changelog
 
 - Added a new system to let FancyMenu communicate with a "remote server", which means a non-Minecraft server (WebSocket)
   - This new system allows FancyMenu to initiate a real keep-alive/persistent connection to a remote server for sending data between server and client
