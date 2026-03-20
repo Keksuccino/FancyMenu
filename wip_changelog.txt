@@ -35,6 +35,7 @@
 - Fixed setting the cursor in the "Save File" window input field by clicking it moves the cursor to the wrong position
 - Fixed scroll indicator arrow icons of context menus invisible in high contrast themes
 - Fixed default Minecraft font being used in some windows where the modern/smooth font should be used instead
+- Some more changes I forgot to document here..ehem... They should be documented in the real (full) changelog tho
 
 
 
