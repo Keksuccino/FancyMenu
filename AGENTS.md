@@ -34,7 +34,8 @@ Make sure to always compare Vanilla classes from all 3 modloaders (Fabric, Forge
 You have access to many of the libraries used in FancyMenu and Minecraft, including full LWJGL/OpenGL library sources and full Watermedia V3 sources in the `library_sources` folder. Make sure to check the correct sources before starting to work with libraries.
 
 ## Git & Run/Compile
-NEVER try to run git commands or try to run/compile the project!
+Use git as needed for the task. Every time the agent finishes a task, it must commit its changes and push them to the configured remote.
+NEVER try to run/compile the project!
 
 ## Sub Agents
 DON'S SPAWN SUB AGENTS unless the user explicitly tells you to do that.
