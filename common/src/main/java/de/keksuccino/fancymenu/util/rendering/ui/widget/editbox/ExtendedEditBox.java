@@ -137,7 +137,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             int cursorPos = this.getCursorPosition() - access.getDisplayPosFancyMenu();
             int highlightPos = access.getHighlightPosFancyMenu() - access.getDisplayPosFancyMenu();
             boolean renderWithUiBase = this.renderLabelWithUiBase;
-            String text = this.font.plainSubstrByWidth(this.getValue().substring(access.getDisplayPosFancyMenu()), this.getInnerWidth());
+            String text = this.getVisibleText(access.getDisplayPosFancyMenu(), this.getInnerWidth(), renderWithUiBase);
             boolean isCursorInsideVisibleText = cursorPos >= 0 && cursorPos <= text.length();
             boolean isCursorVisible = this.isFocused() && (Util.getMillis() - ((IMixinEditBox)this).getFocusedTimeFancyMenu()) / 300L % 2L == 0L && isCursorInsideVisibleText;
             float textHeight = renderWithUiBase ? UIBase.getUITextHeightNormal() : 9.0F;
@@ -559,6 +559,16 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     }
 
     @Override
+    public void onClick(double mouseX, double mouseY) {
+        if (!this.renderLabelWithUiBase) {
+            super.onClick(mouseX, mouseY);
+            return;
+        }
+
+        this.moveCursorTo(this.getCursorPosFromMouseX(mouseX), Screen.hasShiftDown());
+    }
+
+    @Override
     public void insertText(@NotNull String textToWrite) {
         if (this.isInPrefixSuffix(this.getCursorPosition(), 0, 0)) return;
         if (this.isInPrefixSuffix(this.getHighlightPosition(), 0, 0)) return;
@@ -660,14 +670,81 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (!this.canConsumeUserInput) return false;
         if (!this.leftMouseDown || (button != 0)) return false;
+        this.moveCursorTo(this.getCursorPosFromMouseX(mouseX), true);
+        return true;
+    }
+
+    protected int getCursorPosFromMouseX(double mouseX) {
+        int displayPos = Math.max(0, this.getDisplayPosition());
+        String value = this.getValue();
+        if (value.isEmpty() || (displayPos >= value.length())) {
+            return value.length();
+        }
+
         int localX = Mth.floor(mouseX) - this.getX();
         if (((IMixinEditBox)this).getBorderedFancyMenu()) {
             localX -= 4;
         }
-        String visibleText = this.font.plainSubstrByWidth(this.getValue().substring(this.getDisplayPosition()), this.getInnerWidth());
-        int targetPos = this.font.plainSubstrByWidth(visibleText, localX).length() + this.getDisplayPosition();
-        this.moveCursorTo(targetPos, true);
-        return true;
+        if (localX <= 0) {
+            return displayPos;
+        }
+
+        float maxWidth = this.getInnerWidth();
+        float targetWidth = (maxWidth > 0.0F) ? Math.min(localX, maxWidth) : localX;
+        String remaining = value.substring(displayPos);
+        int offset = this.renderLabelWithUiBase
+                ? this.getTextIndexByWidthAtUIScale(remaining, targetWidth)
+                : this.font.plainSubstrByWidth(remaining, (int) targetWidth).length();
+        return Math.min(value.length(), displayPos + offset);
+    }
+
+    protected String getVisibleText(int displayPos, int innerWidth, boolean renderWithUiBase) {
+        String remaining = this.getValue().substring(displayPos);
+        if (!renderWithUiBase) {
+            return this.font.plainSubstrByWidth(remaining, innerWidth);
+        }
+        int length = this.getTextIndexByWidthAtUIScale(remaining, innerWidth);
+        return remaining.substring(0, length);
+    }
+
+    protected int getTextIndexByWidthAtUIScale(@NotNull String text, float targetWidth) {
+        if (text.isEmpty()) {
+            return 0;
+        }
+        if (!Float.isFinite(targetWidth)) {
+            return targetWidth > 0.0F ? text.length() : 0;
+        }
+        if (targetWidth <= 0.0F) {
+            return 0;
+        }
+        if (UIBase.isCurrentlyRenderingAtUIScale()) {
+            return this.getTextIndexByWidthAtUIScaleInternal(text, targetWidth);
+        }
+        UIBase.startUIScaleRendering();
+        try {
+            return this.getTextIndexByWidthAtUIScaleInternal(text, targetWidth);
+        } finally {
+            UIBase.stopUIScaleRendering();
+        }
+    }
+
+    protected int getTextIndexByWidthAtUIScaleInternal(@NotNull String text, float targetWidth) {
+        float fullWidth = UIBase.getUITextWidth(text);
+        if (targetWidth >= fullWidth) {
+            return text.length();
+        }
+        int low = 0;
+        int high = text.length();
+        while (low < high) {
+            int mid = (low + high + 1) / 2;
+            float width = UIBase.getUITextWidth(text.substring(0, mid));
+            if (width <= targetWidth) {
+                low = mid;
+            } else {
+                high = mid - 1;
+            }
+        }
+        return low;
     }
 
     @Override

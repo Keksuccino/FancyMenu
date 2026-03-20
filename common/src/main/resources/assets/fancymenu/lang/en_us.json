@@ -3288,5 +3288,6 @@
   "fancymenu.overlay.menu_bar.customization.reload_minecraft_resources": "Reload Minecraft Resources",
   "fancymenu.overlay.menu_bar.tools.open_fancymenu_directory": "Open FancyMenu Directory",
   "fancymenu.overlay.menu_bar.tools.open_fancymenu_directory.desc": "Opens the FancyMenu config directory\nin your operating system's file explorer.",
-  "fancymenu.editor.widgets.layers.context.element_settings": "Element Settings"
+  "fancymenu.editor.widgets.layers.context.element_settings": "Element Settings",
+  "fancymenu.backgrounds.slideshow.clear_slideshow": "Clear Slideshow"
 }

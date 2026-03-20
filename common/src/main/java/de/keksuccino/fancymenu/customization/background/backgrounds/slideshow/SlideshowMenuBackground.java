@@ -49,7 +49,7 @@ public class SlideshowMenuBackground extends MenuBackground<SlideshowMenuBackgro
                 }).setLabelSupplier((menu1, entry) -> Component.translatable("fancymenu.backgrounds.slideshow.name", this.getSlideshowNameComponent()))
                 .setIcon(MaterialIcons.SLIDESHOW);
 
-        menu.addClickableEntry("reset_slideshow_name", Component.translatable("fancymenu.common_components.reset"), (menu1, entry) -> {
+        menu.addClickableEntry("reset_slideshow_name", Component.translatable("fancymenu.backgrounds.slideshow.clear_slideshow"), (menu1, entry) -> {
                     if (this.slideshowName.getString() != null) {
                         editor.history.saveSnapshot();
                         this.slideshowName.set(null);
