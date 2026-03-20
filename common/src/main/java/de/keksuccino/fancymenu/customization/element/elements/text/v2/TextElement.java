@@ -50,6 +50,7 @@ public class TextElement extends AbstractElement {
     @NotNull
     public volatile ScrollArea scrollArea;
 
+    public final Property.ColorProperty baseColor = putProperty(Property.hexColorProperty("base_color", DrawableColor.WHITE.getHex(), true, "fancymenu.elements.text.base_color"));
     public final Property.ColorProperty scrollGrabberColorHexNormal = putProperty(Property.hexColorProperty("grabber_color_normal", null, true, "fancymenu.elements.text.scroll_grabber_color.normal"));
     public final Property.ColorProperty scrollGrabberColorHexHover = putProperty(Property.hexColorProperty("grabber_color_hover", null, true, "fancymenu.elements.text.scroll_grabber_color.hover"));
     public final Property.FloatProperty textScale = putProperty(Property.floatProperty("scale", 1.0F, "fancymenu.elements.text.scale"));
@@ -272,6 +273,11 @@ public class TextElement extends AbstractElement {
     }
 
     protected void syncMarkdownRendererProperties() {
+        String baseColorHex = this.baseColor.getHex();
+        if (!Objects.equals(this.markdownRenderer.getTextBaseColor().getHex(), baseColorHex)) {
+            this.markdownRenderer.setTextBaseColor(this.baseColor.getDrawable());
+        }
+
         float scale = Math.max(0.0F, this.textScale.getFloat());
         if (this.markdownRenderer.getTextBaseScale() != scale) {
             this.markdownRenderer.setTextBaseScale(scale);

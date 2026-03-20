@@ -259,7 +259,11 @@ public class TextEditorLine extends AdvancedTextField {
                 if (this.parent.isLineFocused() && (this.parent.getFocusedLine() == this) && (this.getCursorPosition() <= 0) && (this.parent.getLineIndex(this) > 0)) {
                     leftRightArrowWasDown = true;
                     this.parent.goUpLine();
-                    this.parent.getFocusedLine().moveCursorTo(this.parent.getFocusedLine().getValue().length(), false);
+                    if (Screen.hasShiftDown()) {
+                        this.parent.getFocusedLine().setCursorPosition(this.parent.getFocusedLine().getValue().length());
+                    } else {
+                        this.parent.getFocusedLine().moveCursorTo(this.parent.getFocusedLine().getValue().length(), false);
+                    }
                     this.parent.correctYScroll(0);
                     return true;
                 }
@@ -273,7 +277,11 @@ public class TextEditorLine extends AdvancedTextField {
                 if (this.parent.isLineFocused() && (this.parent.getFocusedLine() == this) && (this.getCursorPosition() >= this.getValue().length()) && (this.parent.getLineIndex(this) < this.parent.getLineCount() - 1)) {
                     leftRightArrowWasDown = true;
                     this.parent.goDownLine(false);
-                    this.parent.getFocusedLine().moveCursorTo(0, false);
+                    if (Screen.hasShiftDown()) {
+                        this.parent.getFocusedLine().setCursorPosition(0);
+                    } else {
+                        this.parent.getFocusedLine().moveCursorTo(0, false);
+                    }
                     this.parent.correctYScroll(0);
                     return true;
                 }

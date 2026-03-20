@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
@@ -54,6 +55,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     private static final DrawableColor SHADOW_COLOR = DrawableColor.of(new Color(43, 43, 43, 100));
     private static final int SCROLL_INDICATOR_HEIGHT = 12; // Space reserved for arrows
     private static final int SCROLL_INDICATOR_ICON_SIZE = 10;
+    private static final float SCROLL_INDICATOR_BACKGROUND_ICON_MIX = 0.12F;
     private static final String SEARCH_ENTRY_IDENTIFIER = "context_menu_search";
     private static final String SEARCH_SEPARATOR_IDENTIFIER = "context_menu_search_separator";
 
@@ -373,15 +375,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             // Calculate max scroll position
             float maxScrollPosition = this.rawHeight - (displayHeight - SCROLL_INDICATOR_HEIGHT * 2);
 
-            // Create a darker version of the background color (about 10% darker)
-            Color bgColor = UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_overlay_background_tint.getColor() : UIBase.getUITheme().ui_overlay_border_color.getColor();
-            Color darkerBgColor = new Color(
-                    Math.max(0, (int)(bgColor.getRed() * 0.9)),
-                    Math.max(0, (int)(bgColor.getGreen() * 0.9)),
-                    Math.max(0, (int)(bgColor.getBlue() * 0.9)),
-                    bgColor.getAlpha()
-            );
-            int darkerBackgroundColor = darkerBgColor.getRGB();
+            int scrollIndicatorBackgroundColor = this.getScrollIndicatorBackgroundColor();
 
             // Render up arrow background and arrow if scrolled down
             if (scrollPosition > 0) {
@@ -396,7 +390,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                         smoothCornerTopRight,
                         0.0F,
                         0.0F,
-                        darkerBackgroundColor,
+                        scrollIndicatorBackgroundColor,
                         partial
                 );
 
@@ -430,7 +424,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                         0.0F,
                         smoothCornerBottomRight,
                         smoothCornerBottomLeft,
-                        darkerBackgroundColor,
+                        scrollIndicatorBackgroundColor,
                         partial
                 );
 
@@ -500,6 +494,25 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             UIBase.stopUIScaleRendering();
         }
 
+    }
+
+    private int getScrollIndicatorBackgroundColor() {
+        boolean blur = UIBase.shouldBlur();
+        UITheme theme = UIBase.getUITheme();
+        Color backgroundColor = blur ? theme.ui_blur_overlay_background_tint.getColor() : theme.ui_overlay_background_color.getColor();
+        Color iconColor = blur ? theme.ui_blur_icon_texture_color.getColor() : theme.ui_icon_texture_color.getColor();
+        return mixRgb(backgroundColor, iconColor, SCROLL_INDICATOR_BACKGROUND_ICON_MIX).getRGB();
+    }
+
+    private static @NotNull Color mixRgb(@NotNull Color baseColor, @NotNull Color mixColor, float mixFactor) {
+        float clampedMixFactor = Math.max(0.0F, Math.min(1.0F, mixFactor));
+        float baseFactor = 1.0F - clampedMixFactor;
+        return new Color(
+                Math.round((baseColor.getRed() * baseFactor) + (mixColor.getRed() * clampedMixFactor)),
+                Math.round((baseColor.getGreen() * baseFactor) + (mixColor.getGreen() * clampedMixFactor)),
+                Math.round((baseColor.getBlue() * baseFactor) + (mixColor.getBlue() * clampedMixFactor)),
+                baseColor.getAlpha()
+        );
     }
 
     @NotNull

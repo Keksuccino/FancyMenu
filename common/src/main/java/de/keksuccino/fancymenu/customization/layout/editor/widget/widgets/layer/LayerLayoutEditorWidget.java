@@ -860,6 +860,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         if (layerEntry != null) {
             AbstractEditorElement<?, ?> element = layerEntry.element;
             menu.addSeparatorEntry("separator_layer");
+            this.addOpenElementSettingsEntry(menu, element);
             this.addToggleLayerVisibilityEntry(menu, element);
             this.addRenameLayerEntry(menu, layerEntry);
             this.addMoveLayerEntries(menu, element);
@@ -882,6 +883,17 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             menu1.closeMenuChain();
             MainThreadTaskExecutor.executeInMainThread(() -> this.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         }).setIcon(MaterialIcons.ADD);
+    }
+
+    private void addOpenElementSettingsEntry(@NotNull ContextMenu menu, @NotNull AbstractEditorElement<?, ?> element) {
+        menu.addClickableEntry("open_element_settings", Component.translatable("fancymenu.editor.widgets.layers.context.element_settings"), (menu1, entry) -> {
+            if (!element.isSelected()) {
+                this.editor.deselectAllElements();
+                element.setSelected(true);
+            }
+            menu1.closeMenuChain();
+            this.editor.openElementContextMenuAtMouseIfPossible();
+        }).setIcon(MaterialIcons.SETTINGS);
     }
 
     private void addToggleLayerVisibilityEntry(@NotNull ContextMenu menu, @NotNull AbstractEditorElement<?, ?> element) {

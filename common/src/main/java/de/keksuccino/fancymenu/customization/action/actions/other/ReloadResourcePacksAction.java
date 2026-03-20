@@ -26,14 +26,16 @@ public class ReloadResourcePacksAction extends Action {
 
     @Override
     public void execute(@Nullable String value) {
+        triggerReload();
+    }
 
+    public static void triggerReload() {
         // Block the action if called too fast (5 seconds cooldown after last call)
         long now = System.currentTimeMillis();
         if ((lastTriggered + 5000) > now) return;
         lastTriggered = now;
 
         Minecraft.getInstance().reloadResourcePacks();
-
     }
 
     @Override

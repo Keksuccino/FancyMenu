@@ -193,7 +193,7 @@
   "fancymenu.actions.screens.move_action_up.desc": "Moves the selected entry up in the\nlist, so it gets executed earlier.\nThis is more precise than using\ndrag-&-drop to move entries.",
   "fancymenu.actions.screens.remove_action": "Delete",
   "fancymenu.actions.script_editor.cancel_warning": "Do you really want to §xcancel§r the script editing?\n§xThis will undo everything you've done in here!",
-  "fancymenu.actions.script_editor.empty_hint": "Right-click here to add actions",
+  "fancymenu.actions.script_editor.empty_hint": "Right-click here or press A to add actions",
   "fancymenu.actions.script_editor.shortcuts.a": "A",
   "fancymenu.actions.script_editor.shortcuts.shift_arrow_down": "Shift + Down",
   "fancymenu.actions.script_editor.shortcuts.shift_arrow_up": "Shift + Up",
@@ -3284,5 +3284,9 @@
   "fancymenu.editor.shortcuts.g": "G",
   "fancymenu.overlay.menu_bar.variables.manage.empty_hint": "Right-click here to add variables",
   "fancymenu.placeholders.world.gamerule_value": "Gamerule Value",
-  "fancymenu.placeholders.world.gamerule_value.desc": "§xFancyMenu needs to be installed on the server for this to work!\n\nReturns the value of the specified gamerule in the current world/server. Takes the gamerule name (for example doDaylightCycle). Returns an empty value if no world is loaded or if the gamerule does not exist."
+  "fancymenu.placeholders.world.gamerule_value.desc": "§xFancyMenu needs to be installed on the server for this to work!\n\nReturns the value of the specified gamerule in the current world/server. Takes the gamerule name (for example doDaylightCycle). Returns an empty value if no world is loaded or if the gamerule does not exist.",
+  "fancymenu.overlay.menu_bar.customization.reload_minecraft_resources": "Reload Minecraft Resources",
+  "fancymenu.overlay.menu_bar.tools.open_fancymenu_directory": "Open FancyMenu Directory",
+  "fancymenu.overlay.menu_bar.tools.open_fancymenu_directory.desc": "Opens the FancyMenu config directory\nin your operating system's file explorer.",
+  "fancymenu.editor.widgets.layers.context.element_settings": "Element Settings"
 }

@@ -94,11 +94,7 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                 .setStackable(true)
                 .setIcon(MaterialIcons.SHADOW);
 
-        this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "set_base_color",
-                        consumes -> (consumes instanceof TextEditorElement),
-                        consumes -> (consumes.element).markdownRenderer.getTextBaseColor().getHex(),
-                        (element, colorHex) -> (element.element).markdownRenderer.setTextBaseColor(DrawableColor.of(colorHex)), null, false, false, Component.translatable("fancymenu.elements.text.base_color"),
-                        true, DrawableColor.WHITE.getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
+        this.element.baseColor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.base_color.desc")))
                 .setIcon(MaterialIcons.PALETTE);

@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.panorama;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
+import de.keksuccino.fancymenu.customization.layout.editor.ChoosePanoramaScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
@@ -16,7 +17,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
-import java.util.List;
+import java.util.Objects;
 
 public class PanoramaMenuBackground extends MenuBackground<PanoramaMenuBackground> {
 
@@ -34,22 +35,36 @@ public class PanoramaMenuBackground extends MenuBackground<PanoramaMenuBackgroun
     @Override
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
-        List<String> panoNames = PanoramaHandler.getPanoramaNames();
-        panoNames.addFirst("fancymenu.backgrounds.panorama.name.none");
+        menu.addClickableEntry("panorama_name", Component.empty(), (menu1, entry) -> {
+            String currentPanorama = this.panoramaName.get();
+            ChoosePanoramaScreen screen = new ChoosePanoramaScreen(currentPanorama, panoramaName -> {
+                if (!Objects.equals(this.panoramaName.get(), panoramaName)) {
+                    this.saveSnapshot();
+                    this.panoramaName.set(panoramaName);
+                }
+            });
+            menu1.closeMenuChain();
+            ChoosePanoramaScreen.openInWindow(screen);
+        }).setLabelSupplier((menu1, entry) -> Component.translatable("fancymenu.backgrounds.panorama.name", this.buildPanoramaDisplayName(this.panoramaName.get())))
+                .setIcon(MaterialIcons.PANORAMA);
 
-        this.addCycleContextMenuEntryTo(menu, "panorama_name", panoNames, PanoramaMenuBackground.class, background -> {
-            var name = background.panoramaName.get();
-            return (name == null) ? "fancymenu.backgrounds.panorama.name.none" : name;
-        }, (background, name) -> background.panoramaName.set(name), (menu1, entry, switcherValue) -> {
-            Component name;
-            if (switcherValue.equals("fancymenu.backgrounds.panorama.name.none")) {
-                name = Component.translatable("fancymenu.backgrounds.panorama.name.none").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt()));
-            } else {
-                name = Component.literal(switcherValue).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
+        menu.addClickableEntry("clear_panorama", Component.translatable("fancymenu.global_customizations.background_panorama.clear"), (menu1, entry) -> {
+            if (this.panoramaName.get() != null) {
+                this.saveSnapshot();
+                this.panoramaName.set(null);
             }
-            return Component.translatable("fancymenu.backgrounds.panorama.name", name);
-        }).setIcon(MaterialIcons.PANORAMA);
+        }).addIsActiveSupplier((menu1, entry) -> this.panoramaName.get() != null)
+                .setIcon(MaterialIcons.DELETE);
 
+    }
+
+    private @NotNull Component buildPanoramaDisplayName(String panoramaName) {
+        if (panoramaName == null) {
+            return Component.translatable("fancymenu.backgrounds.panorama.name.none")
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt()));
+        }
+        return Component.literal(panoramaName)
+                .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
     }
 
     @Override

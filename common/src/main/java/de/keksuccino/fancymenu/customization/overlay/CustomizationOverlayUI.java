@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.customgui.ManageCustomGuisScreen;
 import de.keksuccino.fancymenu.customization.customgui.ManageOverriddenGuisScreen;
+import de.keksuccino.fancymenu.customization.action.actions.other.ReloadResourcePacksAction;
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroOverlay;
 import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
@@ -350,6 +351,10 @@ public class CustomizationOverlayUI {
         }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.overlay.menu_bar.customization.reload_fancymenu.shortcut"))
                 .setIcon(MaterialIcons.REFRESH);
 
+        customizationMenu.addClickableEntry("reload_minecraft_resources", Component.translatable("fancymenu.overlay.menu_bar.customization.reload_minecraft_resources"), (menu, entry) -> {
+            MainThreadTaskExecutor.executeInMainThread(ReloadResourcePacksAction::triggerReload, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+        }).setIcon(MaterialIcons.REFRESH);
+
         customizationMenu.addClickableEntry("disable_customization_for_all", Component.translatable("fancymenu.overlay.menu_bar.customization.disable_customization_for_all"), (menu, entry) -> {
             Dialogs.openMessageWithCallback(Component.translatable("fancymenu.overlay.menu_bar.customization.disable_customization_for_all.confirm"), MessageDialogStyle.WARNING, call -> {
                 if (call) {
@@ -405,6 +410,12 @@ public class CustomizationOverlayUI {
             picker.openInWindow(null);
             menu.closeMenuChain();
         }).setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.tools.browse_game_resources.desc")))
+                .setIcon(MaterialIcons.FOLDER_OPEN);
+
+        toolsMenu.addClickableEntry("open_fancymenu_directory", Component.translatable("fancymenu.overlay.menu_bar.tools.open_fancymenu_directory"), (menu, entry) -> {
+            FileUtils.openFile(FancyMenu.MOD_DIR);
+            menu.closeMenuChain();
+        }).setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.tools.open_fancymenu_directory.desc")))
                 .setIcon(MaterialIcons.FOLDER_OPEN);
 
         // HELP

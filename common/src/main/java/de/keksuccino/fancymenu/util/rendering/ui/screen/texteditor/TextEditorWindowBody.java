@@ -120,6 +120,8 @@ public class TextEditorWindowBody extends PiPWindowBody {
     protected TextEditorLine startHighlightLine = null;
     protected int startHighlightLineIndex = -1;
     protected int endHighlightLineIndex = -1;
+    protected int keyboardHighlightAnchorLineIndex = -1;
+    protected int keyboardHighlightAnchorCursorPos = -1;
     protected int overriddenTotalScrollHeight = -1;
     protected List<Runnable> lineNumberRenderQueue = new ArrayList<>();
     public List<TextEditorFormattingRule> formattingRules = new ArrayList<>();
@@ -1165,8 +1167,113 @@ public class TextEditorWindowBody extends PiPWindowBody {
     public void resetHighlighting() {
         this.startHighlightLineIndex = -1;
         this.endHighlightLineIndex = -1;
+        this.keyboardHighlightAnchorLineIndex = -1;
+        this.keyboardHighlightAnchorCursorPos = -1;
         for (TextEditorLine t : this.textFieldLines) {
             t.setHighlightPos(t.getCursorPosition());
+        }
+    }
+
+    protected void captureKeyboardHighlightAnchor() {
+        if (!this.isLineFocused()) {
+            return;
+        }
+        if ((this.keyboardHighlightAnchorLineIndex >= 0) && (this.keyboardHighlightAnchorLineIndex < this.getLineCount())) {
+            return;
+        }
+        TextEditorLine focusedLine = this.getFocusedLine();
+        if (focusedLine == null) {
+            return;
+        }
+        int focusedLineIndex = this.getFocusedLineIndex();
+        if (this.isTextHighlighted()) {
+            if (focusedLineIndex == this.startHighlightLineIndex && (this.startHighlightLineIndex != this.endHighlightLineIndex)) {
+                TextEditorLine anchorLine = this.getLine(this.endHighlightLineIndex);
+                if (anchorLine != null) {
+                    this.keyboardHighlightAnchorLineIndex = this.endHighlightLineIndex;
+                    this.keyboardHighlightAnchorCursorPos = anchorLine.getAsAccessor().getHighlightPosFancyMenu();
+                    return;
+                }
+            }
+            if (focusedLineIndex == this.endHighlightLineIndex && (this.startHighlightLineIndex != this.endHighlightLineIndex)) {
+                TextEditorLine anchorLine = this.getLine(this.startHighlightLineIndex);
+                if (anchorLine != null) {
+                    this.keyboardHighlightAnchorLineIndex = this.startHighlightLineIndex;
+                    this.keyboardHighlightAnchorCursorPos = anchorLine.getAsAccessor().getHighlightPosFancyMenu();
+                    return;
+                }
+            }
+            if (focusedLine.getCursorPosition() != focusedLine.getAsAccessor().getHighlightPosFancyMenu()) {
+                this.keyboardHighlightAnchorLineIndex = focusedLineIndex;
+                this.keyboardHighlightAnchorCursorPos = focusedLine.getAsAccessor().getHighlightPosFancyMenu();
+                return;
+            }
+        }
+        this.keyboardHighlightAnchorLineIndex = focusedLineIndex;
+        this.keyboardHighlightAnchorCursorPos = focusedLine.getCursorPosition();
+    }
+
+    protected void syncKeyboardHighlightFromAnchor() {
+        if (!this.isLineFocused()) {
+            this.resetHighlighting();
+            return;
+        }
+        if ((this.keyboardHighlightAnchorLineIndex < 0) || (this.keyboardHighlightAnchorLineIndex >= this.getLineCount())) {
+            this.resetHighlighting();
+            return;
+        }
+        TextEditorLine focusedLine = this.getFocusedLine();
+        TextEditorLine anchorLine = this.getLine(this.keyboardHighlightAnchorLineIndex);
+        if ((focusedLine == null) || (anchorLine == null)) {
+            this.resetHighlighting();
+            return;
+        }
+
+        int focusedLineIndex = this.getFocusedLineIndex();
+        int focusedCursorPos = focusedLine.getCursorPosition();
+        int anchorCursorPos = Mth.clamp(this.keyboardHighlightAnchorCursorPos, 0, anchorLine.getValue().length());
+        if ((focusedLineIndex == this.keyboardHighlightAnchorLineIndex) && (focusedCursorPos == anchorCursorPos)) {
+            this.resetHighlighting();
+            return;
+        }
+
+        this.startHighlightLineIndex = Math.min(this.keyboardHighlightAnchorLineIndex, focusedLineIndex);
+        this.endHighlightLineIndex = Math.max(this.keyboardHighlightAnchorLineIndex, focusedLineIndex);
+
+        for (int i = 0; i < this.getLineCount(); i++) {
+            TextEditorLine line = this.getLine(i);
+            if (line == null) {
+                continue;
+            }
+            if ((i < this.startHighlightLineIndex) || (i > this.endHighlightLineIndex)) {
+                line.setHighlightPos(line.getCursorPosition());
+                continue;
+            }
+            if (this.keyboardHighlightAnchorLineIndex == focusedLineIndex) {
+                line.setHighlightPos(anchorCursorPos);
+                continue;
+            }
+            if (this.keyboardHighlightAnchorLineIndex < focusedLineIndex) {
+                if (i == this.keyboardHighlightAnchorLineIndex) {
+                    line.setCursorPosition(line.getValue().length());
+                    line.setHighlightPos(anchorCursorPos);
+                } else if (i == focusedLineIndex) {
+                    line.setHighlightPos(0);
+                } else {
+                    line.setCursorPosition(line.getValue().length());
+                    line.setHighlightPos(0);
+                }
+            } else {
+                if (i == this.keyboardHighlightAnchorLineIndex) {
+                    line.setCursorPosition(0);
+                    line.setHighlightPos(anchorCursorPos);
+                } else if (i == focusedLineIndex) {
+                    line.setHighlightPos(line.getValue().length());
+                } else {
+                    line.setCursorPosition(0);
+                    line.setHighlightPos(line.getValue().length());
+                }
+            }
         }
     }
 
@@ -1457,6 +1564,12 @@ public class TextEditorWindowBody extends PiPWindowBody {
             return this.searchBar.keyPressed(keycode, scancode, modifiers);
         }
 
+        boolean isHorizontalArrow = (keycode == InputConstants.KEY_RIGHT) || (keycode == InputConstants.KEY_LEFT);
+        boolean isVerticalArrow = (keycode == InputConstants.KEY_UP) || (keycode == InputConstants.KEY_DOWN);
+        if ((Screen.hasShiftDown() && (isHorizontalArrow || isVerticalArrow)) && !this.isInMouseHighlightingMode()) {
+            this.captureKeyboardHighlightAnchor();
+        }
+
         for (TextEditorLine l : new ArrayList<>(this.textFieldLines)) {
             l.keyPressed(keycode, scancode, modifiers);
         }
@@ -1539,8 +1652,12 @@ public class TextEditorWindowBody extends PiPWindowBody {
         //ARROW UP
         if (keycode == InputConstants.KEY_UP) {
             if (!this.isInMouseHighlightingMode()) {
-                this.resetHighlighting();
                 this.goUpLine();
+                if (Screen.hasShiftDown()) {
+                    this.syncKeyboardHighlightFromAnchor();
+                } else {
+                    this.resetHighlighting();
+                }
                 this.correctYScroll(0);
             }
             return true;
@@ -1548,8 +1665,12 @@ public class TextEditorWindowBody extends PiPWindowBody {
         //ARROW DOWN
         if (keycode == InputConstants.KEY_DOWN) {
             if (!this.isInMouseHighlightingMode()) {
-                this.resetHighlighting();
                 this.goDownLine(false);
+                if (Screen.hasShiftDown()) {
+                    this.syncKeyboardHighlightFromAnchor();
+                } else {
+                    this.resetHighlighting();
+                }
                 this.correctYScroll(0);
             }
             return true;
@@ -1603,7 +1724,11 @@ public class TextEditorWindowBody extends PiPWindowBody {
         }
         //Reset highlighting when pressing left/right arrow keys
         if ((keycode == InputConstants.KEY_RIGHT) || (keycode == InputConstants.KEY_LEFT)) {
-            this.resetHighlighting();
+            if (Screen.hasShiftDown() && !this.isInMouseHighlightingMode()) {
+                this.syncKeyboardHighlightFromAnchor();
+            } else {
+                this.resetHighlighting();
+            }
             return true;
         }
 

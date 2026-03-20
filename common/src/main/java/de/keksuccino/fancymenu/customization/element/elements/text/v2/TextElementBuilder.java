@@ -69,12 +69,6 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
             }
         }
 
-        String baseColorString = serialized.getValue("base_color");
-        if (baseColorString != null) {
-            DrawableColor c = DrawableColor.of(baseColorString);
-            element.markdownRenderer.setTextBaseColor(c);
-        }
-
         element.verticalScrollGrabberTextureNormal = deserializeImageResourceSupplier(serialized.getValue("grabber_texture_normal"));
         element.verticalScrollGrabberTextureHover = deserializeImageResourceSupplier(serialized.getValue("grabber_texture_hover"));
         element.horizontalScrollGrabberTextureNormal = deserializeImageResourceSupplier(serialized.getValue("horizontal_grabber_texture_normal"));
@@ -199,7 +193,6 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         } else if (element.markdownRenderer.getTextCase() == MarkdownRenderer.TextCase.ALL_UPPER) {
             serializeTo.putProperty("case_mode", "upper");
         }
-        serializeTo.putProperty("base_color", element.markdownRenderer.getTextBaseColor().getHex());
         if (element.verticalScrollGrabberTextureNormal != null) {
             serializeTo.putProperty("grabber_texture_normal", element.verticalScrollGrabberTextureNormal.getSourceWithPrefix());
         }

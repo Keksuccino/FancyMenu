@@ -78,7 +78,7 @@ public class SaveFileWindowBody extends AbstractFileBrowserWindowBody {
     @Override
     protected void init() {
 
-        this.addWidget(this.fileNameEditBox);
+        this.addRenderableWidget(this.fileNameEditBox);
 
         super.init();
 
@@ -91,20 +91,23 @@ public class SaveFileWindowBody extends AbstractFileBrowserWindowBody {
             this.fileNameEditBox.setValue(this.defaultFileName);
         }
 
+        this.updateFileNameEditBoxBounds();
         super.renderBody(graphics, mouseX, mouseY, partial);
 
     }
 
     @Override
     public void renderLateBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        this.renderFileNameEditBox(graphics, mouseX, mouseY, partial);
+        this.renderFileNameLabel(graphics);
     }
 
-    protected void renderFileNameEditBox(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void updateFileNameEditBoxBounds() {
         this.fileNameEditBox.setWidth(this.getBelowFileScrollAreaElementWidth() - 2);
         this.fileNameEditBox.setX((int)(this.fileListScrollArea.getXWithBorder() + this.fileListScrollArea.getWidthWithBorder() - this.fileNameEditBox.getWidth() - 1));
         this.fileNameEditBox.setY((int)(this.fileListScrollArea.getYWithBorder() + this.fileListScrollArea.getHeightWithBorder() + 5 + 1));
-        this.fileNameEditBox.render(graphics, mouseX, mouseY, partial);
+    }
+
+    protected void renderFileNameLabel(GuiGraphics graphics) {
         float labelPadding = UIBase.getAreaLabelVerticalPadding();
         float labelWidth = UIBase.getUITextWidthNormal(FILE_NAME_PREFIX_TEXT);
         float labelHeight = UIBase.getUITextHeightNormal();

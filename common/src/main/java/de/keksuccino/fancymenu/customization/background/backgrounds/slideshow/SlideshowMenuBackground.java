@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.slideshow;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
+import de.keksuccino.fancymenu.customization.layout.editor.ChooseSlideshowScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
@@ -17,7 +18,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
-import java.util.List;
+import java.util.Objects;
 
 public class SlideshowMenuBackground extends MenuBackground<SlideshowMenuBackground> {
 
@@ -35,22 +36,38 @@ public class SlideshowMenuBackground extends MenuBackground<SlideshowMenuBackgro
     @Override
     protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
 
-        List<String> slideshowNames = SlideshowHandler.getSlideshowNames();
-        slideshowNames.addFirst("fancymenu.backgrounds.slideshow.name.none");
+        menu.addClickableEntry("slideshow_name", Component.empty(), (menu1, entry) -> {
+                    String preSelectedSlideshow = this.slideshowName.getString();
+                    ChooseSlideshowScreen screen = new ChooseSlideshowScreen(preSelectedSlideshow, selectedSlideshow -> {
+                        if ((selectedSlideshow != null) && !Objects.equals(selectedSlideshow, this.slideshowName.getString())) {
+                            editor.history.saveSnapshot();
+                            this.slideshowName.set(selectedSlideshow);
+                        }
+                    });
+                    menu1.closeMenuChain();
+                    ChooseSlideshowScreen.openInWindow(screen);
+                }).setLabelSupplier((menu1, entry) -> Component.translatable("fancymenu.backgrounds.slideshow.name", this.getSlideshowNameComponent()))
+                .setIcon(MaterialIcons.SLIDESHOW);
 
-        this.addCycleContextMenuEntryTo(menu, "slideshow_name", slideshowNames, SlideshowMenuBackground.class, background -> {
-            var name = background.slideshowName.get();
-            return (name == null) ? "fancymenu.backgrounds.slideshow.name.none" : name;
-        }, (background, name) -> background.slideshowName.set(name), (menu1, entry, switcherValue) -> {
-            Component name;
-            if (switcherValue.equals("fancymenu.backgrounds.slideshow.name.none")) {
-                name = Component.translatable("fancymenu.backgrounds.slideshow.name.none").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt()));
-            } else {
-                name = Component.literal(switcherValue).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
-            }
-            return Component.translatable("fancymenu.backgrounds.slideshow.name", name);
-        }).setIcon(MaterialIcons.SLIDESHOW);
+        menu.addClickableEntry("reset_slideshow_name", Component.translatable("fancymenu.common_components.reset"), (menu1, entry) -> {
+                    if (this.slideshowName.getString() != null) {
+                        editor.history.saveSnapshot();
+                        this.slideshowName.set(null);
+                    }
+                }).addIsActiveSupplier((menu1, entry) -> this.slideshowName.getString() != null)
+                .setIcon(MaterialIcons.UNDO);
 
+    }
+
+    @NotNull
+    private Component getSlideshowNameComponent() {
+        String currentSlideshowName = this.slideshowName.getString();
+        if (currentSlideshowName == null) {
+            return Component.translatable("fancymenu.backgrounds.slideshow.name.none")
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt()));
+        }
+        return Component.literal(currentSlideshowName)
+                .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
     }
 
     @Override
