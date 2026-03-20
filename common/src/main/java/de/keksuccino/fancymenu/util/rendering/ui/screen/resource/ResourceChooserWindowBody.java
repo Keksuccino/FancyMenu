@@ -10,12 +10,15 @@ import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroups;
+import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.file.type.types.AudioFileType;
 import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
 import de.keksuccino.fancymenu.util.file.type.types.TextFileType;
 import de.keksuccino.fancymenu.util.file.type.types.VideoFileType;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPCellWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
@@ -26,7 +29,9 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.resource.Resource;
+import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
+import de.keksuccino.fancymenu.util.resource.resources.texture.fma.FmaDecoder;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -37,12 +42,14 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -251,7 +258,12 @@ public class ResourceChooserWindowBody<R extends Resource, F extends FileType<R>
                 });
                 if (this.previewApplyCallback != null) {
                     picker.setApplyButtonEnabled(true);
-                    picker.setPreviewApplyCallback(location -> this.previewApplyCallback.accept(ResourceSourceType.LOCATION.getSourcePrefix() + location));
+                    picker.setPreviewApplyCallback(location -> {
+                        String source = ResourceSourceType.LOCATION.getSourcePrefix() + location;
+                        if (this.validateSourceBeforeApply_FancyMenu(source)) {
+                            this.previewApplyCallback.accept(source);
+                        }
+                    });
                     picker.setPreviewCancelCallback(this.previewCancelCallback);
                 }
                 PiPWindow window = this.getWindow();
@@ -293,7 +305,10 @@ public class ResourceChooserWindowBody<R extends Resource, F extends FileType<R>
                     fileChooser.setPreviewApplyCallback(file -> {
                         String s = GameDirectoryUtils.getPathWithoutGameDirectory(file.getAbsolutePath());
                         if (!s.startsWith("/")) s = "/" + s;
-                        this.previewApplyCallback.accept(ResourceSourceType.LOCAL.getSourcePrefix() + s);
+                        String source = ResourceSourceType.LOCAL.getSourcePrefix() + s;
+                        if (this.validateSourceBeforeApply_FancyMenu(source)) {
+                            this.previewApplyCallback.accept(source);
+                        }
                     });
                     fileChooser.setPreviewCancelCallback(this.previewCancelCallback);
                 }
@@ -506,6 +521,14 @@ public class ResourceChooserWindowBody<R extends Resource, F extends FileType<R>
 
     @Override
     protected void onDone() {
+        if (this.resourceSource != null && !this.validateSourceBeforeApply_FancyMenu(this.resourceSourceType.getSourcePrefix() + this.resourceSource)) {
+            PiPWindow window = this.getWindow();
+            if (window != null) {
+                window.setVisible(true);
+            }
+            return;
+        }
+
         if (this.resourceSource == null) {
             this.resourceSourceCallback.accept(null);
         } else {
@@ -513,6 +536,44 @@ public class ResourceChooserWindowBody<R extends Resource, F extends FileType<R>
             this.resourceSourceCallback.accept(this.resourceSourceType.getSourcePrefix() + this.resourceSource);
         }
         this.closeWindow();
+    }
+
+    protected boolean validateSourceBeforeApply_FancyMenu(@NotNull String sourceWithPrefix) {
+        if (sourceWithPrefix.isBlank()) return true;
+        if (PlaceholderParser.containsPlaceholders(sourceWithPrefix)) return true;
+
+        ResourceSource source = ResourceSource.of(sourceWithPrefix);
+        FileType<?> fileType = FileTypes.getType(source, false);
+        if (fileType != FileTypes.FMA_IMAGE) return true;
+
+        try {
+            this.validateFmaSource_FancyMenu(source);
+            return true;
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to validate selected FMA resource before applying it: {}", sourceWithPrefix, ex);
+            Dialogs.openMessage(Component.translatable("fancymenu.resources.chooser_screen.invalid_fma.error"), MessageDialogStyle.ERROR);
+            return false;
+        }
+    }
+
+    protected void validateFmaSource_FancyMenu(@NotNull ResourceSource source) throws Exception {
+        if (source.getSourceType() == ResourceSourceType.LOCAL) {
+            try (FmaDecoder decoder = new FmaDecoder()) {
+                decoder.read(new File(source.getSourceWithoutPrefix()));
+            }
+            return;
+        }
+
+        if (source.getSourceType() == ResourceSourceType.LOCATION) {
+            ResourceLocation location = ResourceLocation.tryParse(source.getSourceWithoutPrefix());
+            if (location == null) {
+                throw new IllegalArgumentException("Failed to parse ResourceLocation of selected FMA resource: " + source);
+            }
+
+            try (FmaDecoder decoder = new FmaDecoder(); InputStream in = Minecraft.getInstance().getResourceManager().open(location)) {
+                decoder.read(in);
+            }
+        }
     }
 
     @Override

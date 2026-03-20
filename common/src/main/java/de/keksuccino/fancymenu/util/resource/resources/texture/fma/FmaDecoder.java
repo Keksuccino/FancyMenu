@@ -264,7 +264,16 @@ public class FmaDecoder implements Closeable {
                 metadataString = new String(metadataIn.readAllBytes(), StandardCharsets.UTF_8);
             }
 
-            this.metadata = Objects.requireNonNull(GSON.fromJson(metadataString, FmaMetadata.class), "Unable to parse metadata.json of FMA file!");
+            if (metadataString.trim().isEmpty()) {
+                throw new IOException("metadata.json of FMA file is empty!");
+            }
+
+            FmaMetadata parsedMetadata = GSON.fromJson(metadataString, FmaMetadata.class);
+            if (parsedMetadata == null) {
+                throw new IOException("Unable to parse metadata.json of FMA file!");
+            }
+
+            this.metadata = parsedMetadata;
         } catch (Exception ex) {
             throw new IOException(ex);
         }
