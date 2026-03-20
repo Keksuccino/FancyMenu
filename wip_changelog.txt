@@ -25,6 +25,15 @@
   - The Arrow keys can be used to navigate in the variable list
   - Simply start typing to search something up (will automatically start typing in the search bar)
 - Added "Gamerule Value" placeholder that returns the current value of a gamerule of the current world/server (#1521)
+- Added a "Reload Minecraft Resources" button to "menu bar -> Customization"
+- Added an "Open FancyMenu Directory" button to "menu bar -> Tools" that opens "/config/fancymenu/" as a normal OS-level file browser window
+- Added support for Shift + Arrow keys to highlight text (multi-line) in the text editor
+- The reworked Layer widget now has a context menu entry for opening the element's settings again (in the menu when right-clicking a layer entry in the widget)
+- The Slideshow menu background type now uses the slideshow picker window for selecting a slideshow
+- The Panorama menu background type now uses the panorama picker window for selecting a panorama
+- Fixed "Text" element not using the new color picker for its "Base Color" setting
+- Fixed setting the cursor in the "Save File" window input field by clicking it moves the cursor to the wrong position
+
 
 
 
@@ -189,6 +198,8 @@
   - The block gets queued for that and executed in the main thread after the delay
 - Added "Comment" object to the action script system that lets you add comments to your scripts for easier organization and logic explaination (#1465)
 - Added "Delay Disappearance" feature to elements that works similar to the "Delay Appearance" feature and delays the element's visibility change for X seconds when its loading requirements make it hide (#1348)
+- Added a "Reload Minecraft Resources" button to "menu bar -> Customization"
+- Added an "Open FancyMenu Directory" button to "menu bar -> Tools" that opens "/config/fancymenu/" as a normal OS-level file browser window
 - Ported "Is Player Using Item" requirement from Spiffy (#1401)
 - Ported "Is Player In Structure" requirement from Spiffy (#1402)
 - Ported "Action Bar Message" placeholder from SpiffyHUD that gets the current action bar message text above the hotbar
@@ -269,6 +280,7 @@
   - Go To Start/End: Ctrl + Home / Ctrl + End
   - Go To Line: Ctrl + G (opens input box -> enter number)
   - Pressing CTRL+S now counts as clicking the Done button
+  - Shift + Arrow keys to highlight text (multi-line)
 - The Manage Requirements window got reworked to be more in line with the Action Script Editor window
   - No sidebar buttons anymore (instead you have a right-click context menu for everything important)
   - Lots of shortcuts, many of them explained in the context menu
