@@ -1,3 +1,4 @@
+
 ## Beta 2 Changelog
 
 - Fixed stack overflow due to recursive hover requirement checks
