@@ -243,6 +243,13 @@ Semantics:
 - decoder first copies a rectangle from one canvas region to another
 - decoder then applies an optional patch image for newly exposed or changed pixels
 
+Exact copy semantics:
+
+- copy source pixels must be read from the current composited canvas state before the copy is applied
+- overlapping source/destination regions are valid and must behave like a `memmove`-style copy, not an unsafe forward overwrite
+- the optional patch is always applied after the copy step
+- copy behavior must be deterministic across all loaders and platforms
+
 Restrictions:
 
 - support at most one `copy_rect` operation per frame in AFMA v1
@@ -286,6 +293,7 @@ All image payloads written into AFMA archives must be normalized by the creator 
 - RGBA if transparency is needed
 - RGB if transparency is guaranteed absent and the implementation wants to optimize for that
 - non-interlaced
+- straight alpha, never premultiplied alpha
 
 This is mandatory, not optional, because current performance analysis already showed that 16-bit PNG frames can severely hurt playback.
 
@@ -296,8 +304,15 @@ The creator must accept input frames that are:
 - 16-bit PNG
 - PNGs with alpha
 - PNGs without alpha
+- PNGs carrying ICC/gamma/sRGB-related metadata
 
 Internally, the creator should normalize them to one working 8-bit RGBA representation before comparison and encoding decisions.
+
+Normalization rules should explicitly include:
+
+- compare frames only after they are normalized into one canonical straight-RGBA 8-bit byte representation
+- strip or ignore input color-management metadata for AFMA payload generation so hidden transforms do not affect diff detection
+- preserve visible pixel results as loaded by the creator, but do not carry source metadata that could cause cross-system decode differences
 
 ### Recommended payload policy
 For simplicity and predictability, AFMA v1 should likely write all patch/full PNGs as 8-bit RGBA.
@@ -351,6 +366,12 @@ Recommended behavior:
 - `copy_rect_patch`: upload the union dirty region, or full texture if that is simpler and not worse for that case
 
 This is important because AFMA should improve both archive size and runtime cost where possible.
+
+Implementation note:
+
+- AFMA will need its own upload path instead of relying only on the current FMA-style `DynamicTexture.upload()` full-texture flow
+- use the existing `NativeImage.upload(...)` partial-region capabilities directly for dirty-rect uploads
+- full upload should remain the fallback when a partial upload would be more complex than beneficial for a given frame
 
 ### Dirty region tracking
 Decoder should track the affected rectangle for each frame operation:
@@ -477,6 +498,12 @@ Example scoring factors:
 - patch area ratio vs full-frame area ratio
 - rect-copy usefulness ratio
 - whether keyframe is due
+
+Final selection rule:
+
+- after heuristic filtering narrows the candidate set, the encoder should perform real trial encodes for the shortlisted candidates using the exact production PNG settings
+- final candidate choice should be based on actual compressed payload bytes, with decode cost and simplicity used as tie-breakers
+- this is preferred because encode time is a lower priority than final AFMA size and correct representation choice
 
 ### Step 6: Keyframe enforcement
 Regardless of candidate size, force `full` when:
@@ -606,6 +633,8 @@ The AFMA Creator is a full in-game creation tool inside FancyMenu for producing 
 - preview of intro -> main transition
 - preview with effective custom frame timings
 - estimated output summary before final save
+- timeline scrubbing / frame stepping
+- preview seeking that reconstructs from the nearest prior full keyframe rather than always replaying from frame `0`
 
 #### Diagnostics
 - estimated frame count
@@ -621,6 +650,13 @@ The AFMA Creator is a full in-game creation tool inside FancyMenu for producing 
 - warn if output path would overwrite existing file
 - warn when no useful optimization could be applied
 
+#### Job execution model
+- creator analysis and export must run as cancellable background jobs, never on the main client/render thread
+- show progress for normalization, analysis, PNG writing, and final archive packing
+- support user cancellation during long-running analysis/export
+- clean up temporary files and partial outputs on cancellation or failure
+- prevent concurrent exports for the same creator session unless explicitly supported later
+
 ### Optional creator features for later
 - import from video through `ffmpeg`
 - batch conversion of current FMA archives to AFMA
@@ -633,7 +669,7 @@ The AFMA Creator is a full in-game creation tool inside FancyMenu for producing 
 1. choose source frames
 2. configure intro/main timing and loop settings
 3. configure advanced encoding settings
-4. run analysis pass
+4. run background analysis pass
 5. review optimization summary
 6. preview result
 7. export AFMA
@@ -667,6 +703,7 @@ The AFMA Creator is a full in-game creation tool inside FancyMenu for producing 
 - operation distribution summary
 - estimated size
 - timeline preview
+- seek/frame-step controls
 - export action
 
 ## Suggested Optimization Presets
@@ -743,6 +780,12 @@ When loading AFMA:
 - initialize streaming state
 - begin normal streamed playback
 
+Preview/seek behavior should follow the same reconstruction rules:
+
+- sequential playback continues normally from the current composited canvas
+- random access for preview/debugging should restart from the nearest prior full keyframe
+- AFMA v1 should not require retaining historical decoded keyframes in memory just to support seeking
+
 ## Backward Compatibility and Migration
 
 ### Existing FMA support
@@ -812,11 +855,15 @@ Runtime:
 
 ### Regression tests
 - transparency preservation
+- straight-alpha preservation after normalization
+- overlapping `copy_rect_patch` correctness
 - first-frame correctness
 - intro -> main transition correctness
 - loop restart correctness
 - custom timing correctness
 - partial upload correctness
+- preview seek correctness from nearest keyframe
+- normalized-input equivalence for 8-bit vs 16-bit source PNGs
 
 ### Stress tests
 - very large resolution animations
@@ -824,6 +871,7 @@ Runtime:
 - heavily scrolling animations
 - sparse-change animations
 - mostly static animations
+- cancelled long-running analysis/export jobs with temp cleanup verification
 
 ## Implementation Phases
 
@@ -845,12 +893,15 @@ Runtime:
 - implement timing and loop configuration
 - implement frame normalization to 8-bit RGBA
 - implement candidate analysis and scoring
+- implement trial-encode validation for shortlisted candidates
 - implement AFMA archive writer
+- implement background job execution, progress reporting, cancellation, and temp cleanup
 
 ### Phase 4: creator UX and preview
 - build creator UI
 - add analysis summary
 - add preview playback
+- add preview seek/frame-step behavior from nearest prior keyframe
 - add output validation and overwrite handling
 
 ### Phase 5: refinement and profiling
@@ -879,6 +930,8 @@ Runtime:
 - `AfmaEncodeOptions`
 - `AfmaEncodeAnalyzer`
 - `AfmaEncodePlanner`
+- `AfmaEncodeJob`
+- `AfmaEncodeProgress`
 - `AfmaArchiveWriter`
 - `AfmaFrameNormalizer`
 - `AfmaRectCopyDetector`
@@ -909,6 +962,15 @@ Rect-copy should remain intentionally limited to one simple copy operation per f
 
 ### Rule 6
 When in doubt, the encoder should prefer the simpler representation unless the more complex one gives a clear file-size win.
+
+### Rule 7
+All AFMA comparison and diff logic must operate on one canonical normalized straight-RGBA 8-bit representation.
+
+### Rule 8
+`copy_rect_patch` behavior must be defined as overlap-safe, deterministic copy-then-patch semantics.
+
+### Rule 9
+The creator must always use background jobs with progress/cancellation for analysis and export.
 
 ## Final Recommendation
 AFMA v1 should be implemented as a streamed ZIP+PNG animation format with:
