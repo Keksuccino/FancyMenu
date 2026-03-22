@@ -40,7 +40,13 @@ public class Dialogs {
     }
 
     public static MessageDialogBody openExpensiveFmaWarning(@NotNull String fmaName) {
-        return openWarningMessage(Component.translatable("fancymenu.resources.fma.expensive.warning", Objects.requireNonNull(fmaName)));
+        MessageDialogBody body = openWarningMessage(Component.translatable("fancymenu.resources.fma.expensive.warning", Objects.requireNonNull(fmaName)));
+        PiPWindow window = body.getWindow();
+        if (window != null) {
+            window.setMinSize(514, 254);
+            window.setSize(514, 254);
+        }
+        return body;
     }
 
     public static MessageDialogBody openMessageWithCallback(@NotNull Component message, @NotNull MessageDialogStyle style, @NotNull Consumer<Boolean> callback) {
