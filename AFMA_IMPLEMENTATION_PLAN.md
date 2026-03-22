@@ -28,7 +28,7 @@ This document is the implementation plan for the complete AFMA system, including
 
 ## Non-Goals
 - AFMA is not meant to become a full H.264/VP9/AV1-style codec
-- AFMA is not meant to require external native tools beyond `ffmpeg`
+- AFMA is not meant to require external native tools beyond `ffmpeg` (and FFMPEG only for encoding, not for decoding)
 - AFMA is not meant to support arbitrary frame dependency graphs
 - AFMA is not meant to keep many decoded frames in RAM
 
@@ -909,18 +909,6 @@ Rect-copy should remain intentionally limited to one simple copy operation per f
 
 ### Rule 6
 When in doubt, the encoder should prefer the simpler representation unless the more complex one gives a clear file-size win.
-
-## Future Extensions After AFMA v1
-Possible later additions, only if profiling justifies them:
-
-- tile-based delta mode
-- RGB payload optimization for alpha-free patches
-- video import workflow through `ffmpeg`
-- FMA -> AFMA converter wizard
-- smarter rect-copy search
-- encoder statistics export for debugging
-
-These are not part of the initial AFMA delivery scope.
 
 ## Final Recommendation
 AFMA v1 should be implemented as a streamed ZIP+PNG animation format with:
