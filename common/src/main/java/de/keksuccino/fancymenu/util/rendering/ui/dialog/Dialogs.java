@@ -35,6 +35,14 @@ public class Dialogs {
         return openMessageInternal(message, style, null);
     }
 
+    public static MessageDialogBody openWarningMessage(@NotNull Component message) {
+        return openMessage(message, MessageDialogStyle.WARNING).setForceOkOnly(true);
+    }
+
+    public static MessageDialogBody openExpensiveFmaWarning(@NotNull String fmaName) {
+        return openWarningMessage(Component.translatable("fancymenu.resources.fma.expensive.warning", Objects.requireNonNull(fmaName)));
+    }
+
     public static MessageDialogBody openMessageWithCallback(@NotNull Component message, @NotNull MessageDialogStyle style, @NotNull Consumer<Boolean> callback) {
         MessageDialogBody body = openMessageInternal(message, style, Objects.requireNonNull(callback));
         if ((style == MessageDialogStyle.INFO) || (style == MessageDialogStyle.ERROR)) body.setForceOkOnly(true);

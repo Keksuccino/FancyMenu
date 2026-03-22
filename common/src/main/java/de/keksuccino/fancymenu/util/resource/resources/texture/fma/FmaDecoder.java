@@ -27,10 +27,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,6 +43,9 @@ public class FmaDecoder implements Closeable {
     private static final File TEMP_DIR = FileUtils.createDirectory(new File(FancyMenu.TEMP_DATA_DIR, "/decoded_fma_images"));
     private static final Pattern FRAME_ENTRY_PATTERN = Pattern.compile("^frames/(\\d+)\\.png$", Pattern.CASE_INSENSITIVE);
     private static final Pattern INTRO_FRAME_ENTRY_PATTERN = Pattern.compile("^intro_frames/(\\d+)\\.png$", Pattern.CASE_INSENSITIVE);
+    private static final int EXPENSIVE_FRAME_SAMPLE_COUNT = 10;
+    private static final int PNG_HEADER_PROBE_BYTES = 33;
+    private static final byte[] PNG_SIGNATURE = new byte[] {(byte) 137, 80, 78, 71, 13, 10, 26, 10};
 
     @Nullable
     protected ZipFile zipFile = null;
@@ -297,6 +302,20 @@ public class FmaDecoder implements Closeable {
     }
 
     @Nullable
+    public ExpensiveFrameSample findExpensiveFrameSample() throws IOException {
+        Objects.requireNonNull(this.zipFile);
+
+        for (String framePath : this.pickSampleFramePaths()) {
+            PngFrameHeader pngHeader = this.readPngFrameHeader(framePath);
+            if ((pngHeader != null) && pngHeader.isExpensive()) {
+                return new ExpensiveFrameSample(framePath, pngHeader.width(), pngHeader.height(), pngHeader.bitDepth(), pngHeader.colorType(), pngHeader.interlaceMethod());
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
     public InputStream getFrame(int index) throws IOException {
         Objects.requireNonNull(this.zipFile);
         if (this.orderedFramePaths.isEmpty()) return null;
@@ -373,6 +392,87 @@ public class FmaDecoder implements Closeable {
     protected ZipArchiveEntry findEntry(@NotNull String path) {
         String normalizedPath = normalizeEntryPath(path).toLowerCase(Locale.ROOT);
         return this.entriesByNormalizedPath.get(normalizedPath);
+    }
+
+    @NotNull
+    protected List<String> pickSampleFramePaths() {
+        List<String> allFramePaths = new ArrayList<>(this.orderedIntroFramePaths.size() + this.orderedFramePaths.size());
+        allFramePaths.addAll(this.orderedIntroFramePaths);
+        allFramePaths.addAll(this.orderedFramePaths);
+
+        if (allFramePaths.isEmpty()) return List.of();
+
+        int sampleCount = Math.min(EXPENSIVE_FRAME_SAMPLE_COUNT, allFramePaths.size());
+        if (sampleCount >= allFramePaths.size()) {
+            return allFramePaths;
+        }
+
+        Set<Integer> sampleIndexes = new LinkedHashSet<>();
+        if (sampleCount == 1) {
+            sampleIndexes.add(0);
+        } else {
+            for (int i = 0; i < sampleCount; i++) {
+                int index = (int)Math.round((i * (allFramePaths.size() - 1D)) / (sampleCount - 1D));
+                sampleIndexes.add(Math.max(0, Math.min(allFramePaths.size() - 1, index)));
+            }
+        }
+
+        for (int i = 0; (sampleIndexes.size() < sampleCount) && (i < allFramePaths.size()); i++) {
+            sampleIndexes.add(i);
+        }
+
+        List<String> sampledPaths = new ArrayList<>(sampleIndexes.size());
+        for (int index : sampleIndexes) {
+            sampledPaths.add(allFramePaths.get(index));
+        }
+        return sampledPaths;
+    }
+
+    @Nullable
+    protected PngFrameHeader readPngFrameHeader(@NotNull String framePath) throws IOException {
+        Objects.requireNonNull(this.zipFile);
+
+        ZipArchiveEntry frameEntry = this.findEntry(framePath);
+        if (frameEntry == null) return null;
+
+        byte[] headerBytes = new byte[PNG_HEADER_PROBE_BYTES];
+        int totalRead = 0;
+        try (InputStream frameIn = this.zipFile.getInputStream(frameEntry)) {
+            while (totalRead < headerBytes.length) {
+                int read = frameIn.read(headerBytes, totalRead, headerBytes.length - totalRead);
+                if (read < 0) break;
+                totalRead += read;
+            }
+        } catch (Exception ex) {
+            throw new IOException(ex);
+        }
+
+        if (totalRead < PNG_HEADER_PROBE_BYTES) return null;
+        if (!matchesPngSignature(headerBytes)) return null;
+        if ((headerBytes[12] != 'I') || (headerBytes[13] != 'H') || (headerBytes[14] != 'D') || (headerBytes[15] != 'R')) return null;
+
+        return new PngFrameHeader(
+                readIntBigEndian(headerBytes, 16),
+                readIntBigEndian(headerBytes, 20),
+                Byte.toUnsignedInt(headerBytes[24]),
+                Byte.toUnsignedInt(headerBytes[25]),
+                Byte.toUnsignedInt(headerBytes[28])
+        );
+    }
+
+    protected static boolean matchesPngSignature(@NotNull byte[] headerBytes) {
+        if (headerBytes.length < PNG_SIGNATURE.length) return false;
+        for (int i = 0; i < PNG_SIGNATURE.length; i++) {
+            if (headerBytes[i] != PNG_SIGNATURE[i]) return false;
+        }
+        return true;
+    }
+
+    protected static int readIntBigEndian(@NotNull byte[] bytes, int offset) {
+        return ((bytes[offset] & 255) << 24)
+                | ((bytes[offset + 1] & 255) << 16)
+                | ((bytes[offset + 2] & 255) << 8)
+                | (bytes[offset + 3] & 255);
     }
 
     protected static int readFrameIndex(@NotNull String normalizedPath) {
@@ -468,6 +568,15 @@ public class FmaDecoder implements Closeable {
         protected List<String> frames;
         @Nullable
         protected List<String> intro_frames;
+    }
+
+    public record ExpensiveFrameSample(@NotNull String framePath, int width, int height, int bitDepth, int colorType, int interlaceMethod) {
+    }
+
+    protected record PngFrameHeader(int width, int height, int bitDepth, int colorType, int interlaceMethod) {
+        protected boolean isExpensive() {
+            return this.bitDepth > 8;
+        }
     }
 
 }

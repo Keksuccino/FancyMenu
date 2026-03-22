@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
@@ -807,6 +808,7 @@ public class FmaTexture implements ITexture, PlayableResource {
         try {
             decoder = new FmaDecoder();
             decoder.read(in);
+            warnAboutExpensiveFmaFrames(decoder, fmaName);
 
             FmaDecoder.FmaMetadata metadata = Objects.requireNonNull(decoder.getMetadata(), "FmaDecoder returned NULL for metadata!");
             InputStream firstFrameStream = decoder.hasIntroFrames() ? decoder.getIntroFrame(0) : decoder.getFirstFrame();
@@ -827,6 +829,37 @@ public class FmaTexture implements ITexture, PlayableResource {
             CloseableUtils.closeQuietly(decoder);
             return null;
         }
+    }
+
+    protected static void warnAboutExpensiveFmaFrames(@NotNull FmaDecoder decoder, @NotNull String fmaName) {
+        try {
+            FmaDecoder.ExpensiveFrameSample expensiveFrameSample = decoder.findExpensiveFrameSample();
+            if (expensiveFrameSample == null) return;
+
+            LOGGER.warn("[FANCYMENU] Detected expensive sampled frame while loading FMA {}. Frame: {}, bit depth: {}, color type: {}, interlace method: {}, resolution: {}x{}",
+                    fmaName,
+                    expensiveFrameSample.framePath(),
+                    expensiveFrameSample.bitDepth(),
+                    expensiveFrameSample.colorType(),
+                    expensiveFrameSample.interlaceMethod(),
+                    expensiveFrameSample.width(),
+                    expensiveFrameSample.height());
+
+            String displayName = resolveFmaDisplayName(fmaName);
+            MainThreadTaskExecutor.executeInMainThread(() -> Dialogs.openExpensiveFmaWarning(displayName), MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
+        } catch (Exception ex) {
+            LOGGER.warn("[FANCYMENU] Failed to scan FMA for expensive sampled frames before loading: {}", fmaName, ex);
+        }
+    }
+
+    @NotNull
+    protected static String resolveFmaDisplayName(@NotNull String fmaName) {
+        String normalized = fmaName.replace('\\', '/');
+        int slashIndex = normalized.lastIndexOf('/');
+        if ((slashIndex >= 0) && (slashIndex < (normalized.length() - 1))) {
+            return normalized.substring(slashIndex + 1);
+        }
+        return normalized;
     }
 
     protected static void sleepQuietly(long millis) {
