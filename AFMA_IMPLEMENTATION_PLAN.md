@@ -18,7 +18,7 @@ This document is the implementation plan for the complete AFMA system, including
 ### Primary priorities
 - file size as small as possible without turning AFMA into a full video codec
 - decode time optimized for real FancyMenu playback
-- memory consumption kept near the current FMA streaming model
+- memory consumption kept near the current FMA streaming model (check old FMA format for how FMA keeps frames in memory, etc.)
 
 ### Secondary priorities
 - robust authoring workflow inside FancyMenu
