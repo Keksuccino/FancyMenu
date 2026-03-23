@@ -9,27 +9,19 @@ Recent AFMA-related fixes already landed:
 - `9ffef061d` Fix AFMA NativeImage mixin and decoder teardown race
 - `5cfb1bf55` Fix AFMA payload channel order
 
-Do not run or compile the project. This repository explicitly forbids that.
-
 The current active task is:
 
 1. improve AFMA encode output so AFMA actually becomes smaller than equivalent FMA where it should
-2. integrate `ffmpeg` where it is genuinely useful during encoding, but not as a replacement for AFMA-specific logic
+2. integrate `ffmpeg` where it is genuinely useful during encoding, but not as a replacement for AFMA-specific logic (and only for ENCODING, not for decoding!)
 3. specifically address why `animation_2.afma` is much larger than `cave_animation_fancymenu_v3.fma` even though both are based on the same frame set
 
 ## Important Recent Runtime Fixes
 Before continuing encoder work, be aware of these runtime pitfalls that were just fixed:
 
-- `IMixinNativeImage` existed for a long time but was never registered in `fancymenu.mixins.json`
-- AFMA runtime started depending on that accessor in commit `3b0606b21`, which turned the old latent issue into a hard runtime crash
-- `IMixinNativeImage` is now registered in:
-  - [fancymenu.mixins.json](/mnt/e/coding/workspaces/intellij/minecraft%20mods/fancymenu-1.21.1/common/src/main/resources/fancymenu.mixins.json)
 - AFMA stream failure cleanup previously closed the decoder/archive while the stream thread was still inside payload decode, producing `ClosedChannelException`
-- decoder teardown is now deferred until the stream thread actually exits:
-  - [AfmaTexture.java](/mnt/e/coding/workspaces/intellij/minecraft%20mods/fancymenu-1.21.1/common/src/main/java/de/keksuccino/fancymenu/util/resource/resources/texture/afma/AfmaTexture.java)
+- decoder teardown is now deferred until the stream thread actually exits: [AfmaTexture.java](/mnt/e/coding/workspaces/intellij/minecraft%20mods/fancymenu-1.21.1/common/src/main/java/de/keksuccino/fancymenu/util/resource/resources/texture/afma/AfmaTexture.java)
 - AFMA playback colors were blue-shifted because Java `BufferedImage` ARGB pixels were written directly into `NativeImage` memory without channel conversion
-- that is now fixed by converting ARGB to ABGR in:
-  - [AfmaNativeImageHelper.java](/mnt/e/coding/workspaces/intellij/minecraft%20mods/fancymenu-1.21.1/common/src/main/java/de/keksuccino/fancymenu/util/resource/resources/texture/afma/AfmaNativeImageHelper.java)
+  - that is now fixed by converting ARGB to ABGR in: [AfmaNativeImageHelper.java](/mnt/e/coding/workspaces/intellij/minecraft%20mods/fancymenu-1.21.1/common/src/main/java/de/keksuccino/fancymenu/util/resource/resources/texture/afma/AfmaNativeImageHelper.java)
 
 ## The File-Size Problem That Must Be Fixed
 The user compared:
@@ -42,7 +34,7 @@ Observed sizes:
 - `animation_2.afma`: about `315 MB`
 - `cave_animation_fancymenu_v3.fma`: about `229 MB`
 
-The AFMA file is about `86-100 MB` larger, depending on exact filesystem reporting.
+The AFMA file is about `86-100 MB` larger, depending on exact filesystem reporting, even though the main idea behind the new AFMA format (successor to FMA) is reducing the file size as much as possible.
 
 ## Exact Archive Comparison Findings
 I already inspected the actual archives locally. The result was very clear: the size gap is almost entirely in the stored PNG payloads, not metadata.
