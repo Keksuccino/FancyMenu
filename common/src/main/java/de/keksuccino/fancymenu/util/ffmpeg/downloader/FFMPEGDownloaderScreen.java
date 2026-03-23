@@ -2,14 +2,13 @@ package de.keksuccino.fancymenu.util.ffmpeg.downloader;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.file.FileUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -48,16 +47,16 @@ public class FFMPEGDownloaderScreen extends Screen {
         int centerX = this.width / 2;
         int buttonY = this.height - 34;
 
-        this.actionButton = UIBase.applyDefaultWidgetSkinTo(this.addRenderableWidget(new ExtendedButton(centerX - 154, buttonY, 100, 20, Component.translatable("fancymenu.ffmpeg.downloader.start"), button -> this.startDownload())));
-        this.cancelButton = UIBase.applyDefaultWidgetSkinTo(this.addRenderableWidget(new ExtendedButton(centerX - 50, buttonY, 100, 20, Component.translatable("fancymenu.ffmpeg.downloader.cancel"), button -> FFMPEGDownloader.cancelCurrentDownload())));
-        this.openFolderButton = UIBase.applyDefaultWidgetSkinTo(this.addRenderableWidget(new ExtendedButton(centerX + 54, buttonY, 120, 20, Component.translatable("fancymenu.ffmpeg.downloader.open_folder"), button -> {
+        this.actionButton = this.addVanillaLikeButton(new ExtendedButton(centerX - 154, buttonY, 100, 20, Component.translatable("fancymenu.ffmpeg.downloader.start"), button -> this.startDownload()));
+        this.cancelButton = this.addVanillaLikeButton(new ExtendedButton(centerX - 50, buttonY, 100, 20, Component.translatable("fancymenu.ffmpeg.downloader.cancel"), button -> FFMPEGDownloader.cancelCurrentDownload()));
+        this.openFolderButton = this.addVanillaLikeButton(new ExtendedButton(centerX + 54, buttonY, 120, 20, Component.translatable("fancymenu.ffmpeg.downloader.open_folder"), button -> {
             File installationDir = FFMPEGDownloader.getInstalledDirectory();
             if (installationDir == null) {
                 installationDir = FFMPEGDownloader.getDownloadDirectory();
             }
             FileUtils.openFile(installationDir);
-        })));
-        this.closeButton = UIBase.applyDefaultWidgetSkinTo(this.addRenderableWidget(new ExtendedButton(centerX + 178, buttonY, 100, 20, Component.translatable("fancymenu.common.close"), button -> this.onClose())));
+        }));
+        this.closeButton = this.addVanillaLikeButton(new ExtendedButton(centerX + 178, buttonY, 100, 20, Component.translatable("fancymenu.common.close"), button -> this.onClose()));
 
         this.updateButtonStates(FFMPEGDownloader.getSnapshot());
 
@@ -154,12 +153,12 @@ public class FFMPEGDownloaderScreen extends Screen {
 
         if (snapshot.getFailureMessage() != null && !snapshot.getFailureMessage().isBlank()) {
             int infoMaxWidth = Math.min(this.width - 40, 420);
-            float infoX = (this.width / 2.0F) - (infoMaxWidth / 2.0F);
-            float infoY = (float) cy + 36.0F;
-            List<MutableComponent> wrappedFailure = UIBase.lineWrapUIComponentsSmall(Component.literal(snapshot.getFailureMessage()).withStyle(ChatFormatting.RED), infoMaxWidth);
-            for (MutableComponent line : wrappedFailure) {
-                UIBase.renderText(graphics, line, infoX, infoY, 0xFF7A7A, UIBase.getUITextSizeSmall());
-                infoY += UIBase.getUITextHeightSmall() + 2.0F;
+            int infoX = (this.width / 2) - (infoMaxWidth / 2);
+            int infoY = (int) cy + 36;
+            List<FormattedCharSequence> wrappedFailure = this.font.split(Component.literal(snapshot.getFailureMessage()).withStyle(ChatFormatting.RED), infoMaxWidth);
+            for (FormattedCharSequence line : wrappedFailure) {
+                graphics.drawString(this.font, line, infoX, infoY, 0xFF7A7A, false);
+                infoY += this.font.lineHeight + 2;
             }
         }
 
@@ -200,6 +199,12 @@ public class FFMPEGDownloaderScreen extends Screen {
     @Override
     public boolean isPauseScreen() {
         return true;
+    }
+
+    private @NotNull ExtendedButton addVanillaLikeButton(@NotNull ExtendedButton button) {
+        button.setLabelRenderedWithUiBase(false);
+        button.setLabelShadowEnabled(false);
+        return this.addRenderableWidget(button);
     }
 
 }
