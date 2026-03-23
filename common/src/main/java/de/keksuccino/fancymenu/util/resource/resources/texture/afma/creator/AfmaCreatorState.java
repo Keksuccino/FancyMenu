@@ -2,14 +2,16 @@ package de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.mojang.blaze3d.platform.NativeImage;
-import de.keksuccino.fancymenu.util.CloseableUtils;
-import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.file.FilenameComparator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,6 +29,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class AfmaCreatorState {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor(runnable -> {
         Thread thread = new Thread(runnable, "FancyMenu-AFMA-Creator");
         thread.setDaemon(true);
@@ -258,6 +261,7 @@ public class AfmaCreatorState {
         } catch (CancellationException ex) {
             job.completeCancelled();
         } catch (Throwable throwable) {
+            LOGGER.error("[FANCYMENU] AFMA creator analysis job failed", throwable);
             job.completeFailure(throwable);
         }
     }
@@ -308,6 +312,7 @@ public class AfmaCreatorState {
             job.completeCancelled();
         } catch (Throwable throwable) {
             org.apache.commons.io.FileUtils.deleteQuietly(tempFile);
+            LOGGER.error("[FANCYMENU] AFMA creator export job failed", throwable);
             job.completeFailure(throwable);
         }
     }
@@ -382,13 +387,17 @@ public class AfmaCreatorState {
 
     protected boolean detectAlphaUsage(@NotNull AfmaEncodePlan plan) throws IOException {
         for (byte[] payload : plan.getPayloads().values()) {
-            try (NativeImage image = NativeImage.read(new ByteArrayInputStream(payload))) {
-                for (int y = 0; y < image.getHeight(); y++) {
-                    for (int x = 0; x < image.getWidth(); x++) {
-                        if (((image.getPixelRGBA(x, y) >>> 24) & 0xFF) != 0xFF) {
-                            return true;
-                        }
-                    }
+            BufferedImage image = ImageIO.read(new ByteArrayInputStream(payload));
+            if (image == null) {
+                throw new IOException("Failed to decode AFMA payload while checking alpha usage");
+            }
+            int width = image.getWidth();
+            int height = image.getHeight();
+            int[] pixels = new int[width * height];
+            image.getRGB(0, 0, width, height, pixels, 0, width);
+            for (int color : pixels) {
+                if (((color >>> 24) & 0xFF) != 0xFF) {
+                    return true;
                 }
             }
         }
@@ -412,23 +421,32 @@ public class AfmaCreatorState {
             return null;
         }
 
-        try (NativeImage source = NativeImage.read(new ByteArrayInputStream(payload))) {
-            int maxWidth = 320;
-            int maxHeight = 180;
-            double scale = Math.min((double) maxWidth / source.getWidth(), (double) maxHeight / source.getHeight());
-            scale = Math.min(1.0D, scale);
-            int outWidth = Math.max(1, (int) Math.round(source.getWidth() * scale));
-            int outHeight = Math.max(1, (int) Math.round(source.getHeight() * scale));
-            try (NativeImage thumbnail = new NativeImage(outWidth, outHeight, true)) {
-                for (int y = 0; y < outHeight; y++) {
-                    int srcY = Math.min(source.getHeight() - 1, (int) (((double) y / Math.max(1, outHeight - 1)) * Math.max(0, source.getHeight() - 1)));
-                    for (int x = 0; x < outWidth; x++) {
-                        int srcX = Math.min(source.getWidth() - 1, (int) (((double) x / Math.max(1, outWidth - 1)) * Math.max(0, source.getWidth() - 1)));
-                        thumbnail.setPixelRGBA(x, y, source.getPixelRGBA(srcX, srcY));
-                    }
-                }
-                return thumbnail.asByteArray();
+        BufferedImage source = ImageIO.read(new ByteArrayInputStream(payload));
+        if (source == null) {
+            throw new IOException("Failed to decode AFMA payload while building thumbnail");
+        }
+
+        int maxWidth = 320;
+        int maxHeight = 180;
+        double scale = Math.min((double) maxWidth / source.getWidth(), (double) maxHeight / source.getHeight());
+        scale = Math.min(1.0D, scale);
+        int outWidth = Math.max(1, (int) Math.round(source.getWidth() * scale));
+        int outHeight = Math.max(1, (int) Math.round(source.getHeight() * scale));
+
+        BufferedImage thumbnail = new BufferedImage(outWidth, outHeight, BufferedImage.TYPE_INT_ARGB);
+        for (int y = 0; y < outHeight; y++) {
+            int srcY = Math.min(source.getHeight() - 1, (int) (((double) y / Math.max(1, outHeight - 1)) * Math.max(0, source.getHeight() - 1)));
+            for (int x = 0; x < outWidth; x++) {
+                int srcX = Math.min(source.getWidth() - 1, (int) (((double) x / Math.max(1, outWidth - 1)) * Math.max(0, source.getWidth() - 1)));
+                thumbnail.setRGB(x, y, source.getRGB(srcX, srcY));
             }
+        }
+
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            if (!ImageIO.write(thumbnail, "png", out)) {
+                throw new IOException("Failed to encode AFMA thumbnail PNG");
+            }
+            return out.toByteArray();
         }
     }
 

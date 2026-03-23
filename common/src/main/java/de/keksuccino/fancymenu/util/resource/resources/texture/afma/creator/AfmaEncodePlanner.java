@@ -1,13 +1,10 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator;
 
-import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaCopyRect;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameDescriptor;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameIndex;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameOperationType;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaMetadata;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaNativeImageHelper;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaPatchRegion;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaRect;
 import org.jetbrains.annotations.NotNull;
@@ -88,13 +85,13 @@ public class AfmaEncodePlanner {
             return plannedFrames;
         }
 
-        NativeImage previousFrame = null;
+        AfmaPixelFrame previousFrame = null;
         int framesSinceKeyframe = 0;
         try {
             for (int frameIndex = 0; frameIndex < sequence.size(); frameIndex++) {
                 checkCancelled(cancellationRequested);
                 File frameFile = Objects.requireNonNull(sequence.getFrame(frameIndex));
-                NativeImage currentFrame = this.frameNormalizer.loadFrame(frameFile);
+                AfmaPixelFrame currentFrame = this.frameNormalizer.loadFrame(frameFile);
                 try {
                     if ((currentFrame.getWidth() != dimension.width()) || (currentFrame.getHeight() != dimension.height())) {
                         throw new IOException("AFMA source frame dimensions do not match the expected canvas size: " + frameFile.getAbsolutePath());
@@ -103,7 +100,7 @@ public class AfmaEncodePlanner {
                     PlannedCandidate selectedCandidate;
                     if (previousFrame == null) {
                         selectedCandidate = this.createFullCandidate(currentFrame, introSequence, frameIndex);
-                    } else if (options.isDuplicateFrameElision() && AfmaNativeImageHelper.isIdentical(previousFrame, currentFrame)) {
+                    } else if (options.isDuplicateFrameElision() && AfmaPixelFrameHelper.isIdentical(previousFrame, currentFrame)) {
                         selectedCandidate = PlannedCandidate.same();
                     } else if (framesSinceKeyframe >= options.getKeyframeInterval()) {
                         selectedCandidate = this.createFullCandidate(currentFrame, introSequence, frameIndex);
@@ -127,13 +124,13 @@ public class AfmaEncodePlanner {
     }
 
     @NotNull
-    protected PlannedCandidate chooseBestCandidate(@NotNull NativeImage previousFrame, @NotNull NativeImage currentFrame,
+    protected PlannedCandidate chooseBestCandidate(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
                                                    boolean introSequence, int frameIndex, @NotNull AfmaEncodeOptions options,
                                                    @NotNull AfmaRectCopyDetector copyDetector) throws IOException {
         List<PlannedCandidate> candidates = new ArrayList<>();
         candidates.add(this.createFullCandidate(currentFrame, introSequence, frameIndex));
 
-        AfmaRect deltaBounds = AfmaNativeImageHelper.findDifferenceBounds(previousFrame, currentFrame);
+        AfmaRect deltaBounds = AfmaPixelFrameHelper.findDifferenceBounds(previousFrame, currentFrame);
         if (deltaBounds != null) {
             candidates.add(this.createDeltaCandidate(currentFrame, introSequence, frameIndex, deltaBounds));
         }
@@ -159,7 +156,7 @@ public class AfmaEncodePlanner {
     }
 
     @NotNull
-    protected PlannedCandidate createFullCandidate(@NotNull NativeImage currentFrame, boolean introSequence, int frameIndex) throws IOException {
+    protected PlannedCandidate createFullCandidate(@NotNull AfmaPixelFrame currentFrame, boolean introSequence, int frameIndex) throws IOException {
         String payloadPath = this.buildPayloadPath(introSequence, frameIndex);
         return new PlannedCandidate(
                 AfmaFrameDescriptor.full(payloadPath),
@@ -173,8 +170,8 @@ public class AfmaEncodePlanner {
     }
 
     @NotNull
-    protected PlannedCandidate createDeltaCandidate(@NotNull NativeImage currentFrame, boolean introSequence, int frameIndex, @NotNull AfmaRect deltaBounds) throws IOException {
-        NativeImage patchImage = this.frameNormalizer.extractPatch(currentFrame, deltaBounds.x(), deltaBounds.y(), deltaBounds.width(), deltaBounds.height());
+    protected PlannedCandidate createDeltaCandidate(@NotNull AfmaPixelFrame currentFrame, boolean introSequence, int frameIndex, @NotNull AfmaRect deltaBounds) throws IOException {
+        AfmaPixelFrame patchImage = this.frameNormalizer.extractPatch(currentFrame, deltaBounds.x(), deltaBounds.y(), deltaBounds.width(), deltaBounds.height());
         try {
             String payloadPath = this.buildPayloadPath(introSequence, frameIndex);
             return new PlannedCandidate(
@@ -192,7 +189,7 @@ public class AfmaEncodePlanner {
     }
 
     @Nullable
-    protected PlannedCandidate createCopyCandidate(@NotNull NativeImage currentFrame, boolean introSequence, int frameIndex,
+    protected PlannedCandidate createCopyCandidate(@NotNull AfmaPixelFrame currentFrame, boolean introSequence, int frameIndex,
                                                    @NotNull AfmaRectCopyDetector.Detection detection) throws IOException {
         AfmaCopyRect copyRect = detection.copyRect();
         AfmaRect patchBounds = detection.patchBounds();
@@ -205,7 +202,7 @@ public class AfmaEncodePlanner {
         byte[] payloadBytes = null;
 
         if (patchBounds != null) {
-            NativeImage patchImage = this.frameNormalizer.extractPatch(currentFrame, patchBounds.x(), patchBounds.y(), patchBounds.width(), patchBounds.height());
+            AfmaPixelFrame patchImage = this.frameNormalizer.extractPatch(currentFrame, patchBounds.x(), patchBounds.y(), patchBounds.width(), patchBounds.height());
             try {
                 payloadBytes = patchImage.asByteArray();
             } finally {
@@ -236,7 +233,7 @@ public class AfmaEncodePlanner {
         }
 
         File firstFrame = Objects.requireNonNull(sequence.getFrame(0));
-        try (NativeImage firstImage = this.frameNormalizer.loadFrame(firstFrame)) {
+        try (AfmaPixelFrame firstImage = this.frameNormalizer.loadFrame(firstFrame)) {
             return new Dimension(firstImage.getWidth(), firstImage.getHeight());
         }
     }
@@ -245,7 +242,7 @@ public class AfmaEncodePlanner {
                                               @NotNull String sequenceName, @Nullable BooleanSupplier cancellationRequested) throws IOException {
         for (File frame : sequence.getFrames()) {
             checkCancelled(cancellationRequested);
-            try (NativeImage image = this.frameNormalizer.loadFrame(frame)) {
+            try (AfmaPixelFrame image = this.frameNormalizer.loadFrame(frame)) {
                 if ((image.getWidth() != dimension.width()) || (image.getHeight() != dimension.height())) {
                     throw new IOException("AFMA " + sequenceName + " frame dimensions do not match: " + frame.getAbsolutePath());
                 }

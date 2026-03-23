@@ -1,8 +1,6 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator;
 
-import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaCopyRect;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaNativeImageHelper;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaRect;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,8 +22,8 @@ public class AfmaRectCopyDetector {
     }
 
     @Nullable
-    public Detection detect(@NotNull NativeImage previous, @NotNull NativeImage next) {
-        AfmaNativeImageHelper.ensureSameSize(previous, next);
+    public Detection detect(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next) {
+        AfmaPixelFrameHelper.ensureSameSize(previous, next);
 
         int width = previous.getWidth();
         int height = previous.getHeight();
@@ -53,7 +51,7 @@ public class AfmaRectCopyDetector {
                         overlapHeight
                 );
 
-                AfmaRect patchBounds = AfmaNativeImageHelper.findDirtyBoundsAfterCopy(previous, next, copyRect);
+                AfmaRect patchBounds = AfmaPixelFrameHelper.findDirtyBoundsAfterCopy(previous, next, copyRect);
                 long patchArea = (patchBounds != null) ? patchBounds.area() : 0L;
                 long copyArea = copyRect.getArea();
                 long usefulness = copyArea - patchArea;
@@ -71,7 +69,7 @@ public class AfmaRectCopyDetector {
     }
 
     @NotNull
-    protected List<Integer> collectAxisCandidates(@NotNull NativeImage previous, @NotNull NativeImage next, boolean horizontal, int maxOffset) {
+    protected List<Integer> collectAxisCandidates(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next, boolean horizontal, int maxOffset) {
         Set<Integer> offsets = new LinkedHashSet<>();
         offsets.add(0);
         if (maxOffset <= 0) {
@@ -97,7 +95,7 @@ public class AfmaRectCopyDetector {
         return List.copyOf(offsets);
     }
 
-    protected double scoreOffset(@NotNull NativeImage previous, @NotNull NativeImage next, boolean horizontal, int offset) {
+    protected double scoreOffset(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next, boolean horizontal, int offset) {
         int width = previous.getWidth();
         int height = previous.getHeight();
         int overlapWidth = horizontal ? width - Math.abs(offset) : width;
