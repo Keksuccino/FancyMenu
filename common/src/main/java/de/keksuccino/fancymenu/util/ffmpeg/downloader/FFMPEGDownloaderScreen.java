@@ -33,7 +33,7 @@ public class FFMPEGDownloaderScreen extends Screen {
     }
 
     public FFMPEGDownloaderScreen(@NotNull Consumer<FFMPEGDownloaderScreenResult> onClosed, boolean autoStart) {
-        super(Component.translatable("fancymenu.ffmpeg.downloader.title"));
+        super(Component.translatable("fancymenu.ffmpeg.downloader.title").withStyle(ChatFormatting.GOLD));
         this.onClosed = Objects.requireNonNull(onClosed);
         this.autoStart = autoStart;
     }
