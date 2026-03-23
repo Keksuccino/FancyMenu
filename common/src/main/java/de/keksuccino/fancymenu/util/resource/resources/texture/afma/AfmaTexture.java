@@ -101,6 +101,10 @@ public class AfmaTexture implements ITexture, PlayableResource {
     protected volatile boolean decodeIntro = false;
     protected volatile int decodeIndex = 0;
 
+    static {
+        ImageIO.setUseCache(false);
+    }
+
     @NotNull
     public static AfmaTexture location(@NotNull ResourceLocation location) {
         return location(location, null);
@@ -139,14 +143,16 @@ public class AfmaTexture implements ITexture, PlayableResource {
             return texture;
         }
 
-        new Thread(() -> {
+        Thread loaderThread = new Thread(() -> {
             try {
                 populateTexture(texture, afmaFile, afmaFile.getPath());
             } catch (Exception ex) {
                 texture.loadingFailed.set(true);
                 LOGGER.error("[FANCYMENU] Failed to read AFMA image from file: " + afmaFile.getPath(), ex);
             }
-        }).start();
+        }, "FancyMenu-AfmaLoader-Local-" + texture.uniqueId);
+        loaderThread.setDaemon(true);
+        loaderThread.start();
 
         return texture;
     }
@@ -168,7 +174,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
             return texture;
         }
 
-        new Thread(() -> {
+        Thread loaderThread = new Thread(() -> {
             InputStream in = null;
             try {
                 in = WebUtils.openResourceStream(afmaUrl);
@@ -179,7 +185,9 @@ public class AfmaTexture implements ITexture, PlayableResource {
                 LOGGER.error("[FANCYMENU] Failed to read AFMA image from URL: " + afmaUrl, ex);
                 CloseableUtils.closeQuietly(in);
             }
-        }).start();
+        }, "FancyMenu-AfmaLoader-Web-" + texture.uniqueId);
+        loaderThread.setDaemon(true);
+        loaderThread.start();
 
         return texture;
     }
@@ -189,12 +197,14 @@ public class AfmaTexture implements ITexture, PlayableResource {
         Objects.requireNonNull(in);
         AfmaTexture texture = (writeTo != null) ? writeTo : new AfmaTexture();
 
-        new Thread(() -> {
+        Thread loaderThread = new Thread(() -> {
             populateTexture(texture, in, (afmaTextureName != null) ? afmaTextureName : "[Generic InputStream Source]");
             if (texture.closed.get()) {
                 MainThreadTaskExecutor.executeInMainThread(texture::close, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
             }
-        }).start();
+        }, "FancyMenu-AfmaLoader-Stream-" + texture.uniqueId);
+        loaderThread.setDaemon(true);
+        loaderThread.start();
         return texture;
     }
 
