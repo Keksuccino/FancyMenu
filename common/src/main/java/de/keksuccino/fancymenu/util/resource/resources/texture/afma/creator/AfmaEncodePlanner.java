@@ -20,6 +20,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CancellationException;
+import java.util.function.BooleanSupplier;
 
 public class AfmaEncodePlanner {
 
@@ -36,22 +38,29 @@ public class AfmaEncodePlanner {
 
     @NotNull
     public AfmaEncodePlan plan(@NotNull AfmaSourceSequence mainSequence, @Nullable AfmaSourceSequence introSequence, @NotNull AfmaEncodeOptions options) throws IOException {
+        return this.plan(mainSequence, introSequence, options, null);
+    }
+
+    @NotNull
+    public AfmaEncodePlan plan(@NotNull AfmaSourceSequence mainSequence, @Nullable AfmaSourceSequence introSequence,
+                               @NotNull AfmaEncodeOptions options, @Nullable BooleanSupplier cancellationRequested) throws IOException {
         Objects.requireNonNull(mainSequence);
         Objects.requireNonNull(options);
 
         AfmaSourceSequence intro = (introSequence != null) ? introSequence : AfmaSourceSequence.empty();
         options.validateForCounts(mainSequence.size(), intro.size());
 
+        checkCancelled(cancellationRequested);
         Dimension dimension = this.readDimension(mainSequence);
-        this.validateSequenceDimensions(mainSequence, dimension, "main");
+        this.validateSequenceDimensions(mainSequence, dimension, "main", cancellationRequested);
         if (!intro.isEmpty()) {
-            this.validateSequenceDimensions(intro, dimension, "intro");
+            this.validateSequenceDimensions(intro, dimension, "intro", cancellationRequested);
         }
 
         AfmaRectCopyDetector copyDetector = new AfmaRectCopyDetector(options.getMaxCopySearchDistance(), options.getMaxCandidateAxisOffsets());
         LinkedHashMap<String, byte[]> payloads = new LinkedHashMap<>();
-        List<AfmaFrameDescriptor> plannedIntroFrames = this.planSequence(intro, true, dimension, options, copyDetector, payloads);
-        List<AfmaFrameDescriptor> plannedMainFrames = this.planSequence(mainSequence, false, dimension, options, copyDetector, payloads);
+        List<AfmaFrameDescriptor> plannedIntroFrames = this.planSequence(intro, true, dimension, options, copyDetector, payloads, cancellationRequested);
+        List<AfmaFrameDescriptor> plannedMainFrames = this.planSequence(mainSequence, false, dimension, options, copyDetector, payloads, cancellationRequested);
 
         AfmaMetadata metadata = AfmaMetadata.create(
                 dimension.width(),
@@ -72,7 +81,8 @@ public class AfmaEncodePlanner {
     @NotNull
     protected List<AfmaFrameDescriptor> planSequence(@NotNull AfmaSourceSequence sequence, boolean introSequence, @NotNull Dimension dimension,
                                                      @NotNull AfmaEncodeOptions options, @NotNull AfmaRectCopyDetector copyDetector,
-                                                     @NotNull LinkedHashMap<String, byte[]> payloads) throws IOException {
+                                                     @NotNull LinkedHashMap<String, byte[]> payloads,
+                                                     @Nullable BooleanSupplier cancellationRequested) throws IOException {
         List<AfmaFrameDescriptor> plannedFrames = new ArrayList<>();
         if (sequence.isEmpty()) {
             return plannedFrames;
@@ -82,6 +92,7 @@ public class AfmaEncodePlanner {
         int framesSinceKeyframe = 0;
         try {
             for (int frameIndex = 0; frameIndex < sequence.size(); frameIndex++) {
+                checkCancelled(cancellationRequested);
                 File frameFile = Objects.requireNonNull(sequence.getFrame(frameIndex));
                 NativeImage currentFrame = this.frameNormalizer.loadFrame(frameFile);
                 try {
@@ -230,13 +241,21 @@ public class AfmaEncodePlanner {
         }
     }
 
-    protected void validateSequenceDimensions(@NotNull AfmaSourceSequence sequence, @NotNull Dimension dimension, @NotNull String sequenceName) throws IOException {
+    protected void validateSequenceDimensions(@NotNull AfmaSourceSequence sequence, @NotNull Dimension dimension,
+                                              @NotNull String sequenceName, @Nullable BooleanSupplier cancellationRequested) throws IOException {
         for (File frame : sequence.getFrames()) {
+            checkCancelled(cancellationRequested);
             try (NativeImage image = this.frameNormalizer.loadFrame(frame)) {
                 if ((image.getWidth() != dimension.width()) || (image.getHeight() != dimension.height())) {
                     throw new IOException("AFMA " + sequenceName + " frame dimensions do not match: " + frame.getAbsolutePath());
                 }
             }
+        }
+    }
+
+    protected static void checkCancelled(@Nullable BooleanSupplier cancellationRequested) {
+        if ((cancellationRequested != null) && cancellationRequested.getAsBoolean()) {
+            throw new CancellationException("AFMA encode planning was cancelled");
         }
     }
 

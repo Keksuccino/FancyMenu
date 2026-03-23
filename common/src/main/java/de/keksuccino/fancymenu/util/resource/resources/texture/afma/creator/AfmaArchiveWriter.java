@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -13,12 +14,18 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CancellationException;
+import java.util.function.BooleanSupplier;
 
 public class AfmaArchiveWriter {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public void write(@NotNull AfmaEncodePlan plan, @NotNull File outputFile) throws IOException {
+        this.write(plan, outputFile, null);
+    }
+
+    public void write(@NotNull AfmaEncodePlan plan, @NotNull File outputFile, @Nullable BooleanSupplier cancellationRequested) throws IOException {
         Objects.requireNonNull(plan);
         Objects.requireNonNull(outputFile);
 
@@ -30,9 +37,12 @@ public class AfmaArchiveWriter {
         try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile)))) {
             out.setEncoding(StandardCharsets.UTF_8.name());
 
+            checkCancelled(cancellationRequested);
             this.writeJsonEntry(out, "metadata.json", GSON.toJson(plan.getMetadata()));
+            checkCancelled(cancellationRequested);
             this.writeJsonEntry(out, "frame_index.json", GSON.toJson(plan.getFrameIndex()));
             for (Map.Entry<String, byte[]> entry : plan.getPayloads().entrySet()) {
+                checkCancelled(cancellationRequested);
                 this.writeBinaryEntry(out, entry.getKey(), entry.getValue());
             }
             out.finish();
@@ -49,6 +59,12 @@ public class AfmaArchiveWriter {
         out.putArchiveEntry(entry);
         out.write(bytes);
         out.closeArchiveEntry();
+    }
+
+    protected static void checkCancelled(@Nullable BooleanSupplier cancellationRequested) {
+        if ((cancellationRequested != null) && cancellationRequested.getAsBoolean()) {
+            throw new CancellationException("AFMA archive writing was cancelled");
+        }
     }
 
 }

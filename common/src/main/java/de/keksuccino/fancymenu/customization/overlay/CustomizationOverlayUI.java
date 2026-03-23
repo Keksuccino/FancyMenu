@@ -71,6 +71,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.preload.ManageResourcePreLoadWindowBody;
 import de.keksuccino.fancymenu.util.mcp.FancyMenuMcpManager;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator.AfmaCreatorEntryGate;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
@@ -403,6 +404,17 @@ public class CustomizationOverlayUI {
         }
 
         toolsMenu.addSeparatorEntry("separator_after_dummy_screens");
+
+        toolsMenu.addClickableEntry("afma_creator", Component.translatable("fancymenu.overlay.menu_bar.tools.afma_creator"), (menu, entry) -> {
+            Screen current = Minecraft.getInstance().screen;
+            if (current != null) {
+                menu.closeMenuChain();
+                AfmaCreatorEntryGate.open(current);
+            }
+        }).setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.tools.afma_creator.desc")))
+                .setIcon(MaterialIcons.MOVIE_EDIT);
+
+        toolsMenu.addSeparatorEntry("separator_after_afma_creator");
 
         toolsMenu.addClickableEntry("browse_game_resources", Component.translatable("fancymenu.overlay.menu_bar.tools.browse_game_resources"), (menu, entry) -> {
             ResourcePickerWindowBody picker = new ResourcePickerWindowBody(null, null, location -> {
