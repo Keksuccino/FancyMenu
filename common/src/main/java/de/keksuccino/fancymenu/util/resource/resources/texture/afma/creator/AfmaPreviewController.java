@@ -195,8 +195,8 @@ public class AfmaPreviewController implements AutoCloseable {
 
     public void seekToFrame(int index) {
         if (this.previewFrames.isEmpty()) return;
-        index = Math.max(0, Math.min(this.previewFrames.size() - 1, index));
-        this.requestedPreviewIndex = index;
+        final int normalizedIndex = Math.max(0, Math.min(this.previewFrames.size() - 1, index));
+        this.requestedPreviewIndex = normalizedIndex;
         this.lastFailureMessage = null;
 
         if (this.previewPlan == null) {
@@ -206,7 +206,7 @@ public class AfmaPreviewController implements AutoCloseable {
         }
 
         int generation = this.previewGeneration.incrementAndGet();
-        this.previewExecutor.execute(() -> this.runPreviewTask(generation, index));
+        this.previewExecutor.execute(() -> this.runPreviewTask(generation, normalizedIndex));
     }
 
     public void tick() {
