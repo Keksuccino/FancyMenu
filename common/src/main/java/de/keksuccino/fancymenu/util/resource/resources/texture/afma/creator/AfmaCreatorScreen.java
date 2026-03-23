@@ -37,8 +37,10 @@ public class AfmaCreatorScreen extends Screen {
     private static final int PANEL_GAP = 16;
     private static final int FIELD_HEIGHT = 20;
     private static final int ROW_GAP = 24;
-    private static final int SECTION_GAP = 34;
+    private static final int SECTION_GAP = 46;
     private static final int PREVIEW_CONTROLS_HEIGHT = 24;
+    private static final int SOURCE_MAIN_ROW_Y = 54;
+    private static final int SOURCE_ROW_GAP = 28;
 
     private final @NotNull Screen parentScreen;
     private final @NotNull AfmaCreatorState state = new AfmaCreatorState();
@@ -335,9 +337,9 @@ public class AfmaCreatorScreen extends Screen {
         int pathFieldWidth = leftWidth - browseWidth - 8;
         int introPathFieldWidth = leftWidth - browseWidth - clearWidth - 12;
 
-        int y = 54;
+        int y = SOURCE_MAIN_ROW_Y;
         y = this.layoutPathRow(leftX, y, pathFieldWidth, browseWidth, this.mainFramesPathEditBox, this.browseMainFramesButton);
-        y += 4;
+        y += SOURCE_ROW_GAP;
         if (this.introFramesPathEditBox != null) {
             this.introFramesPathEditBox.setX(leftX);
             this.introFramesPathEditBox.setY(y);
@@ -493,8 +495,14 @@ public class AfmaCreatorScreen extends Screen {
     protected void renderFieldLabels(@NotNull GuiGraphics graphics) {
         int leftX = OUTER_PADDING;
         int sourceHeaderY = 28;
-        int playbackHeaderY = 112;
-        int optimizationHeaderY = 248;
+        int introRowY = SOURCE_MAIN_ROW_Y + SOURCE_ROW_GAP;
+        int outputRowY = introRowY + SECTION_GAP;
+        int playbackHeaderY = outputRowY + FIELD_HEIGHT + 8;
+        int playbackRowY = outputRowY + SECTION_GAP;
+        int secondPlaybackRowY = playbackRowY + ROW_GAP + 10;
+        int customMainRowY = secondPlaybackRowY + ROW_GAP + 10;
+        int customIntroRowY = customMainRowY + ROW_GAP + 10;
+        int optimizationHeaderY = customIntroRowY + FIELD_HEIGHT + 8;
 
         this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.source"), leftX, sourceHeaderY, true);
         this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.playback"), leftX, playbackHeaderY, true);
