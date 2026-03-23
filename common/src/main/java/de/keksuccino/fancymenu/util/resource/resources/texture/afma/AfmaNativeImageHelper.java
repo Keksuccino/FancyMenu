@@ -86,23 +86,22 @@ public final class AfmaNativeImageHelper {
         long pixels = pixels(image);
         int imageWidth = image.getWidth();
         long rowSize = (long)copyRect.getWidth() * RGBA_BYTES_PER_PIXEL;
-        long totalSize = rowSize * copyRect.getHeight();
-        long temp = MemoryUtil.nmemAlloc(totalSize);
+        int startRow = 0;
+        int endRow = copyRect.getHeight();
+        int rowStep = 1;
 
-        try {
-            for (int row = 0; row < copyRect.getHeight(); row++) {
-                long sourceOffset = offset(pixels, imageWidth, copyRect.getSrcX(), copyRect.getSrcY() + row);
-                long tempOffset = temp + (row * rowSize);
-                MemoryUtil.memCopy(sourceOffset, tempOffset, rowSize);
-            }
+        // Copy from bottom to top when moving downward so source rows are not overwritten
+        // before they are read. Horizontal overlap is handled by memMove itself.
+        if (copyRect.getDstY() > copyRect.getSrcY()) {
+            startRow = copyRect.getHeight() - 1;
+            endRow = -1;
+            rowStep = -1;
+        }
 
-            for (int row = 0; row < copyRect.getHeight(); row++) {
-                long targetOffset = offset(pixels, imageWidth, copyRect.getDstX(), copyRect.getDstY() + row);
-                long tempOffset = temp + (row * rowSize);
-                MemoryUtil.memCopy(tempOffset, targetOffset, rowSize);
-            }
-        } finally {
-            MemoryUtil.nmemFree(temp);
+        for (int row = startRow; row != endRow; row += rowStep) {
+            long sourceOffset = offset(pixels, imageWidth, copyRect.getSrcX(), copyRect.getSrcY() + row);
+            long targetOffset = offset(pixels, imageWidth, copyRect.getDstX(), copyRect.getDstY() + row);
+            MemoryUtil.memMove(sourceOffset, targetOffset, rowSize);
         }
     }
 

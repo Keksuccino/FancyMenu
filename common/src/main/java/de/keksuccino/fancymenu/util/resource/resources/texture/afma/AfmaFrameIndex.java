@@ -17,8 +17,8 @@ public class AfmaFrameIndex {
     }
 
     public AfmaFrameIndex(@NotNull List<AfmaFrameDescriptor> frames, @Nullable List<AfmaFrameDescriptor> introFrames) {
-        this.frames = new ArrayList<>(frames);
-        this.intro_frames = (introFrames != null) ? new ArrayList<>(introFrames) : new ArrayList<>();
+        this.frames = frames.isEmpty() ? null : new ArrayList<>(frames);
+        this.intro_frames = ((introFrames != null) && !introFrames.isEmpty()) ? new ArrayList<>(introFrames) : null;
     }
 
     @NotNull

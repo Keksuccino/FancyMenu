@@ -60,7 +60,11 @@ public class AfmaPixelFrame implements AutoCloseable {
     }
 
     public @NotNull byte[] asByteArray() throws IOException {
-        BufferedImage image = new BufferedImage(this.width, this.height, BufferedImage.TYPE_INT_ARGB);
+        return this.asByteArray(this.hasAlpha());
+    }
+
+    public @NotNull byte[] asByteArray(boolean includeAlpha) throws IOException {
+        BufferedImage image = new BufferedImage(this.width, this.height, includeAlpha ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
         image.setRGB(0, 0, this.width, this.height, this.pixels, 0, this.width);
 
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {

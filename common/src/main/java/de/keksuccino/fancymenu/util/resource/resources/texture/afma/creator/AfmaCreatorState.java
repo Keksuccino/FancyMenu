@@ -8,10 +8,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -35,7 +31,7 @@ public class AfmaCreatorState {
         thread.setDaemon(true);
         return thread;
     });
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final Gson GSON = new GsonBuilder().create();
 
     private final @NotNull AfmaEncodePlanner planner = new AfmaEncodePlanner();
     private final @NotNull AfmaEncodeAnalyzer analyzer = new AfmaEncodeAnalyzer();
@@ -52,10 +48,12 @@ public class AfmaCreatorState {
     private volatile long frameTimeMs = 41L;
     private volatile long introFrameTimeMs = 41L;
     private volatile int loopCount = 0;
-    private volatile int keyframeInterval = 30;
-    private volatile boolean rectCopyEnabled = true;
-    private volatile boolean duplicateFrameElision = true;
-    private volatile boolean generateThumbnail = true;
+    private volatile int keyframeInterval = AfmaOptimizationPreset.BALANCED.getKeyframeInterval();
+    private volatile boolean rectCopyEnabled = AfmaOptimizationPreset.BALANCED.isRectCopyEnabled();
+    private volatile boolean duplicateFrameElision = AfmaOptimizationPreset.BALANCED.isDuplicateFrameElision();
+    private volatile int maxCopySearchDistance = AfmaOptimizationPreset.BALANCED.getMaxCopySearchDistance();
+    private volatile int maxCandidateAxisOffsets = AfmaOptimizationPreset.BALANCED.getMaxCandidateAxisOffsets();
+    private volatile boolean generateThumbnail = AfmaOptimizationPreset.BALANCED.isThumbnailEnabledByDefault();
     private volatile @NotNull String customFrameTimesText = "";
     private volatile @NotNull String customIntroFrameTimesText = "";
     private volatile @NotNull AfmaOptimizationPreset optimizationPreset = AfmaOptimizationPreset.BALANCED;
@@ -202,8 +200,7 @@ public class AfmaCreatorState {
     }
 
     public void setOptimizationPreset(@NotNull AfmaOptimizationPreset optimizationPreset) {
-        this.optimizationPreset = Objects.requireNonNull(optimizationPreset);
-        this.markDirty();
+        this.applyPreset(optimizationPreset);
     }
 
     public void applyPreset(@NotNull AfmaOptimizationPreset preset) {
@@ -211,6 +208,9 @@ public class AfmaCreatorState {
         this.keyframeInterval = preset.getKeyframeInterval();
         this.rectCopyEnabled = preset.isRectCopyEnabled();
         this.duplicateFrameElision = preset.isDuplicateFrameElision();
+        this.maxCopySearchDistance = preset.getMaxCopySearchDistance();
+        this.maxCandidateAxisOffsets = preset.getMaxCandidateAxisOffsets();
+        this.generateThumbnail = preset.isThumbnailEnabledByDefault();
         this.markDirty();
     }
 
@@ -396,6 +396,8 @@ public class AfmaCreatorState {
                 .setKeyframeInterval(parsePositiveInt(this.keyframeInterval, "keyframe interval"))
                 .setRectCopyEnabled(this.rectCopyEnabled)
                 .setDuplicateFrameElision(this.duplicateFrameElision)
+                .setMaxCopySearchDistance(this.maxCopySearchDistance)
+                .setMaxCandidateAxisOffsets(this.maxCandidateAxisOffsets)
                 .setCustomFrameTimes(parseCustomFrameTimes(this.customFrameTimesText))
                 .setCustomIntroFrameTimes(parseCustomFrameTimes(this.customIntroFrameTimesText));
 
@@ -459,32 +461,27 @@ public class AfmaCreatorState {
             return null;
         }
 
-        BufferedImage source = ImageIO.read(sourceFile);
-        if (source == null) {
-            throw new IOException("Failed to decode AFMA source frame while building thumbnail");
-        }
+        AfmaFrameNormalizer normalizer = new AfmaFrameNormalizer();
+        try (AfmaPixelFrame source = normalizer.loadFrame(sourceFile)) {
+            int maxWidth = 320;
+            int maxHeight = 180;
+            double scale = Math.min((double) maxWidth / source.getWidth(), (double) maxHeight / source.getHeight());
+            scale = Math.min(1.0D, scale);
+            int outWidth = Math.max(1, (int) Math.round(source.getWidth() * scale));
+            int outHeight = Math.max(1, (int) Math.round(source.getHeight() * scale));
 
-        int maxWidth = 320;
-        int maxHeight = 180;
-        double scale = Math.min((double) maxWidth / source.getWidth(), (double) maxHeight / source.getHeight());
-        scale = Math.min(1.0D, scale);
-        int outWidth = Math.max(1, (int) Math.round(source.getWidth() * scale));
-        int outHeight = Math.max(1, (int) Math.round(source.getHeight() * scale));
-
-        BufferedImage thumbnail = new BufferedImage(outWidth, outHeight, BufferedImage.TYPE_INT_ARGB);
-        for (int y = 0; y < outHeight; y++) {
-            int srcY = Math.min(source.getHeight() - 1, (int) (((double) y / Math.max(1, outHeight - 1)) * Math.max(0, source.getHeight() - 1)));
-            for (int x = 0; x < outWidth; x++) {
-                int srcX = Math.min(source.getWidth() - 1, (int) (((double) x / Math.max(1, outWidth - 1)) * Math.max(0, source.getWidth() - 1)));
-                thumbnail.setRGB(x, y, source.getRGB(srcX, srcY));
+            int[] thumbnailPixels = new int[outWidth * outHeight];
+            for (int y = 0; y < outHeight; y++) {
+                int srcY = Math.min(source.getHeight() - 1, (int) (((double) y / Math.max(1, outHeight - 1)) * Math.max(0, source.getHeight() - 1)));
+                for (int x = 0; x < outWidth; x++) {
+                    int srcX = Math.min(source.getWidth() - 1, (int) (((double) x / Math.max(1, outWidth - 1)) * Math.max(0, source.getWidth() - 1)));
+                    thumbnailPixels[(y * outWidth) + x] = source.getPixelRGBA(srcX, srcY);
+                }
             }
-        }
 
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            if (!ImageIO.write(thumbnail, "png", out)) {
-                throw new IOException("Failed to encode AFMA thumbnail PNG");
+            try (AfmaPixelFrame thumbnail = new AfmaPixelFrame(outWidth, outHeight, thumbnailPixels)) {
+                return thumbnail.asByteArray();
             }
-            return out.toByteArray();
         }
     }
 

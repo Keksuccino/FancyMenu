@@ -12,7 +12,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,8 +70,9 @@ public class AfmaEncodePlanner {
 
         AfmaRectCopyDetector copyDetector = new AfmaRectCopyDetector(options.getMaxCopySearchDistance(), options.getMaxCandidateAxisOffsets());
         LinkedHashMap<String, byte[]> payloads = new LinkedHashMap<>();
-        List<AfmaFrameDescriptor> plannedIntroFrames = this.planSequence(intro, true, dimension, options, copyDetector, payloads, cancellationRequested, progressListener, 0, totalFrameCount);
-        List<AfmaFrameDescriptor> plannedMainFrames = this.planSequence(mainSequence, false, dimension, options, copyDetector, payloads, cancellationRequested, intro.size(), totalFrameCount);
+        Map<String, String> payloadPathsByFingerprint = new LinkedHashMap<>();
+        List<AfmaFrameDescriptor> plannedIntroFrames = this.planSequence(intro, true, dimension, options, copyDetector, payloads, payloadPathsByFingerprint, cancellationRequested, progressListener, 0, totalFrameCount);
+        List<AfmaFrameDescriptor> plannedMainFrames = this.planSequence(mainSequence, false, dimension, options, copyDetector, payloads, payloadPathsByFingerprint, cancellationRequested, progressListener, intro.size(), totalFrameCount);
 
         AfmaMetadata metadata = AfmaMetadata.create(
                 dimension.width(),
@@ -90,6 +94,7 @@ public class AfmaEncodePlanner {
     protected List<AfmaFrameDescriptor> planSequence(@NotNull AfmaSourceSequence sequence, boolean introSequence, @NotNull Dimension dimension,
                                                      @NotNull AfmaEncodeOptions options, @NotNull AfmaRectCopyDetector copyDetector,
                                                      @NotNull LinkedHashMap<String, byte[]> payloads,
+                                                     @NotNull Map<String, String> payloadPathsByFingerprint,
                                                      @Nullable BooleanSupplier cancellationRequested, @Nullable ProgressListener progressListener,
                                                      int startOffset, int totalFrameCount) throws IOException {
         List<AfmaFrameDescriptor> plannedFrames = new ArrayList<>();
@@ -123,9 +128,9 @@ public class AfmaEncodePlanner {
                         selectedCandidate = this.chooseBestCandidate(previousFrame, currentFrame, introSequence, frameIndex, options, copyDetector);
                     }
 
-                    plannedFrames.add(selectedCandidate.descriptor());
-                    selectedCandidate.writePayloads(payloads);
-                    framesSinceKeyframe = selectedCandidate.descriptor().isKeyframe() ? 0 : (framesSinceKeyframe + 1);
+                    PlannedCandidate finalizedCandidate = selectedCandidate.internPayloads(payloads, payloadPathsByFingerprint);
+                    plannedFrames.add(finalizedCandidate.descriptor());
+                    framesSinceKeyframe = finalizedCandidate.descriptor().isKeyframe() ? 0 : (framesSinceKeyframe + 1);
                 } finally {
                     CloseableUtils.closeQuietly(previousFrame);
                     previousFrame = currentFrame;
@@ -352,6 +357,77 @@ public class AfmaEncodePlanner {
             }
             if ((this.patchPayloadPath != null) && (this.patchPayload != null)) {
                 payloads.put(this.patchPayloadPath, this.patchPayload);
+            }
+        }
+
+        @NotNull
+        public PlannedCandidate internPayloads(@NotNull Map<String, byte[]> payloads, @NotNull Map<String, String> payloadPathsByFingerprint) {
+            PlannedCandidate candidate = this.internPrimaryPayload(payloadPathsByFingerprint);
+            candidate = candidate.internPatchPayload(payloadPathsByFingerprint);
+            candidate.writePayloads(payloads);
+            return candidate;
+        }
+
+        @NotNull
+        protected PlannedCandidate internPrimaryPayload(@NotNull Map<String, String> payloadPathsByFingerprint) {
+            if ((this.primaryPayloadPath == null) || (this.primaryPayload == null)) {
+                return this;
+            }
+
+            String fingerprint = fingerprintPayload(this.primaryPayload);
+            String existingPath = payloadPathsByFingerprint.get(fingerprint);
+            if ((existingPath != null) && !existingPath.equals(this.primaryPayloadPath)) {
+                return new PlannedCandidate(
+                        this.descriptor.withPrimaryPath(existingPath),
+                        existingPath,
+                        null,
+                        this.patchPayloadPath,
+                        this.patchPayload,
+                        this.decodeCost,
+                        this.complexityScore
+                );
+            }
+
+            payloadPathsByFingerprint.put(fingerprint, this.primaryPayloadPath);
+            return this;
+        }
+
+        @NotNull
+        protected PlannedCandidate internPatchPayload(@NotNull Map<String, String> payloadPathsByFingerprint) {
+            if ((this.patchPayloadPath == null) || (this.patchPayload == null)) {
+                return this;
+            }
+
+            String fingerprint = fingerprintPayload(this.patchPayload);
+            String existingPath = payloadPathsByFingerprint.get(fingerprint);
+            if ((existingPath != null) && !existingPath.equals(this.patchPayloadPath)) {
+                return new PlannedCandidate(
+                        this.descriptor.withPatchPath(existingPath),
+                        this.primaryPayloadPath,
+                        this.primaryPayload,
+                        existingPath,
+                        null,
+                        this.decodeCost,
+                        this.complexityScore
+                );
+            }
+
+            payloadPathsByFingerprint.put(fingerprint, this.patchPayloadPath);
+            return this;
+        }
+
+        @NotNull
+        protected static String fingerprintPayload(@NotNull byte[] payload) {
+            try {
+                byte[] digest = MessageDigest.getInstance("SHA-256").digest(payload);
+                StringBuilder builder = new StringBuilder(digest.length * 2);
+                for (byte digestByte : digest) {
+                    builder.append(Character.forDigit((digestByte >>> 4) & 0xF, 16));
+                    builder.append(Character.forDigit(digestByte & 0xF, 16));
+                }
+                return builder.toString();
+            } catch (NoSuchAlgorithmException ex) {
+                return payload.length + ":" + Arrays.hashCode(payload);
             }
         }
 

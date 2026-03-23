@@ -9,10 +9,14 @@ public class AfmaFrameDescriptor {
     protected AfmaFrameOperationType type;
     @Nullable
     protected String path;
-    protected int x;
-    protected int y;
-    protected int width;
-    protected int height;
+    @Nullable
+    protected Integer x;
+    @Nullable
+    protected Integer y;
+    @Nullable
+    protected Integer width;
+    @Nullable
+    protected Integer height;
     @Nullable
     protected AfmaCopyRect copy;
     @Nullable
@@ -68,19 +72,19 @@ public class AfmaFrameDescriptor {
     }
 
     public int getX() {
-        return this.x;
+        return (this.x != null) ? this.x : 0;
     }
 
     public int getY() {
-        return this.y;
+        return (this.y != null) ? this.y : 0;
     }
 
     public int getWidth() {
-        return this.width;
+        return (this.width != null) ? this.width : 0;
     }
 
     public int getHeight() {
-        return this.height;
+        return (this.height != null) ? this.height : 0;
     }
 
     @Nullable
@@ -105,6 +109,29 @@ public class AfmaFrameDescriptor {
         return (this.type == AfmaFrameOperationType.COPY_RECT_PATCH) && (this.patch != null) && (this.patch.getPath() != null) && !this.patch.getPath().isBlank();
     }
 
+    @NotNull
+    public AfmaFrameDescriptor withPrimaryPath(@NotNull String newPath) {
+        if (this.type == AfmaFrameOperationType.FULL) {
+            return full(newPath);
+        }
+        if (this.type == AfmaFrameOperationType.DELTA_RECT) {
+            return deltaRect(newPath, this.getX(), this.getY(), this.getWidth(), this.getHeight());
+        }
+        throw new IllegalStateException("AFMA frame type does not support a primary payload path override: " + this.type);
+    }
+
+    @NotNull
+    public AfmaFrameDescriptor withPatchPath(@NotNull String newPath) {
+        if (this.type != AfmaFrameOperationType.COPY_RECT_PATCH) {
+            throw new IllegalStateException("AFMA frame type does not support a patch payload path override: " + this.type);
+        }
+        if (this.patch == null) {
+            throw new IllegalStateException("AFMA copy_rect_patch frame does not contain a patch section");
+        }
+        AfmaPatchRegion patchRegion = new AfmaPatchRegion(newPath, this.patch.getX(), this.patch.getY(), this.patch.getWidth(), this.patch.getHeight());
+        return copyRectPatch(this.copy, patchRegion);
+    }
+
     public void validate(@NotNull String context, int canvasWidth, int canvasHeight, boolean requireFullFrame) {
         if (this.type == null) {
             throw new IllegalArgumentException(context + " is missing its operation type");
@@ -120,7 +147,7 @@ public class AfmaFrameDescriptor {
                 if ((this.path == null) || this.path.isBlank()) {
                     throw new IllegalArgumentException(context + " delta frame is missing its payload path");
                 }
-                new AfmaPatchRegion(this.path, this.x, this.y, this.width, this.height).validate(context, canvasWidth, canvasHeight, true);
+                new AfmaPatchRegion(this.path, this.getX(), this.getY(), this.getWidth(), this.getHeight()).validate(context, canvasWidth, canvasHeight, true);
             }
             case SAME -> {
                 if (requireFullFrame) {

@@ -19,8 +19,8 @@ public class AfmaEncodeOptions {
     protected int keyframeInterval = AfmaMetadata.DEFAULT_KEYFRAME_INTERVAL;
     protected boolean rectCopyEnabled = true;
     protected boolean duplicateFrameElision = true;
-    protected int maxCopySearchDistance = 256;
-    protected int maxCandidateAxisOffsets = 3;
+    protected int maxCopySearchDistance = AfmaOptimizationPreset.BALANCED.getMaxCopySearchDistance();
+    protected int maxCandidateAxisOffsets = AfmaOptimizationPreset.BALANCED.getMaxCandidateAxisOffsets();
 
     @NotNull
     public static AfmaEncodeOptions balanced() {

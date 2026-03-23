@@ -13,6 +13,8 @@ import java.util.Set;
 
 public class AfmaRectCopyDetector {
 
+    protected static final double MIN_CANDIDATE_SCORE = 0.50D;
+
     protected final int maxSearchDistance;
     protected final int maxCandidateAxisOffsets;
 
@@ -85,7 +87,7 @@ public class AfmaRectCopyDetector {
 
         candidates.sort(Comparator.comparingDouble(AxisCandidate::score).reversed());
         for (AxisCandidate candidate : candidates) {
-            if (candidate.score() <= 0.65D) continue;
+            if (candidate.score() <= MIN_CANDIDATE_SCORE) continue;
             offsets.add(candidate.offset());
             if (offsets.size() >= (this.maxCandidateAxisOffsets + 1)) {
                 break;
@@ -107,8 +109,8 @@ public class AfmaRectCopyDetector {
         int srcY = horizontal ? 0 : Math.max(0, -offset);
         int dstY = horizontal ? 0 : Math.max(0, offset);
 
-        int stepX = Math.max(1, overlapWidth / 32);
-        int stepY = Math.max(1, overlapHeight / 12);
+        int stepX = Math.max(1, overlapWidth / 48);
+        int stepY = Math.max(1, overlapHeight / 16);
         int matches = 0;
         int samples = 0;
 

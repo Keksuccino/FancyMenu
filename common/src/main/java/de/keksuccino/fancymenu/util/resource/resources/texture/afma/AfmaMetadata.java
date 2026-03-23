@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.afma;
 
-import de.keksuccino.fancymenu.FancyMenu;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -46,12 +45,19 @@ public class AfmaMetadata {
         metadata.loop_count = loopCount;
         metadata.frame_time = frameTime;
         metadata.frame_time_intro = frameTimeIntro;
-        metadata.custom_frame_times = (customFrameTimes != null) ? new LinkedHashMap<>(customFrameTimes) : new LinkedHashMap<>();
-        metadata.custom_frame_times_intro = (customFrameTimesIntro != null) ? new LinkedHashMap<>(customFrameTimesIntro) : new LinkedHashMap<>();
+        metadata.custom_frame_times = copyIfNotEmpty(customFrameTimes);
+        metadata.custom_frame_times_intro = copyIfNotEmpty(customFrameTimesIntro);
         metadata.keyframe_interval = keyframeInterval;
-        metadata.encoding = new Encoding(8, "RGBA", rectCopyEnabled, duplicateFrameElision);
-        metadata.creator = new Creator("FancyMenu AFMA Creator", FancyMenu.VERSION, null);
+        metadata.encoding = new Encoding(8, null, rectCopyEnabled, duplicateFrameElision);
+        metadata.creator = null;
         return metadata;
+    }
+
+    protected static @Nullable LinkedHashMap<Integer, Long> copyIfNotEmpty(@Nullable Map<Integer, Long> values) {
+        if ((values == null) || values.isEmpty()) {
+            return null;
+        }
+        return new LinkedHashMap<>(values);
     }
 
     @Nullable

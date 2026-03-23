@@ -19,7 +19,7 @@ import java.util.function.BooleanSupplier;
 
 public class AfmaArchiveWriter {
 
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final Gson GSON = new GsonBuilder().create();
 
     public void write(@NotNull AfmaEncodePlan plan, @NotNull File outputFile) throws IOException {
         this.write(plan, outputFile, null);
@@ -41,6 +41,7 @@ public class AfmaArchiveWriter {
 
         try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile)))) {
             out.setEncoding(StandardCharsets.UTF_8.name());
+            out.setLevel(9);
             int totalEntries = plan.getPayloads().size() + 2;
             int writtenEntries = 0;
 

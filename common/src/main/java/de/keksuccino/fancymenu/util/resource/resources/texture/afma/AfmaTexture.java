@@ -23,7 +23,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferInt;
+import java.awt.image.Raster;
+import java.awt.image.SinglePixelPackedSampleModel;
 import java.util.ArrayDeque;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -399,12 +404,68 @@ public class AfmaTexture implements ITexture, PlayableResource {
             if (image == null) {
                 throw new IOException("Failed to decode AFMA PNG payload: " + payloadPath);
             }
-            int width = image.getWidth();
-            int height = image.getHeight();
+            PixelPayload directPayload = createDirectPixelPayload(image);
+            if (directPayload != null) {
+                return directPayload;
+            }
+
+            BufferedImage normalizedImage = normalizePayloadImage(image);
+            directPayload = createDirectPixelPayload(normalizedImage);
+            if (directPayload != null) {
+                return directPayload;
+            }
+
+            int width = normalizedImage.getWidth();
+            int height = normalizedImage.getHeight();
             int[] pixels = new int[width * height];
-            image.getRGB(0, 0, width, height, pixels, 0, width);
-            return new PixelPayload(width, height, pixels);
+            normalizedImage.getRGB(0, 0, width, height, pixels, 0, width);
+            return new PixelPayload(width, height, pixels, 0, width, false);
         }
+    }
+
+    @Nullable
+    protected static PixelPayload createDirectPixelPayload(@NotNull BufferedImage image) {
+        int imageType = image.getType();
+        if ((imageType != BufferedImage.TYPE_INT_ARGB)
+                && (imageType != BufferedImage.TYPE_INT_RGB)) {
+            return null;
+        }
+
+        Raster raster = image.getRaster();
+        DataBuffer dataBuffer = raster.getDataBuffer();
+        if (!(dataBuffer instanceof DataBufferInt intBuffer)) {
+            return null;
+        }
+        if (intBuffer.getNumBanks() != 1) {
+            return null;
+        }
+        if (!(raster.getSampleModel() instanceof SinglePixelPackedSampleModel sampleModel)) {
+            return null;
+        }
+
+        int[] pixels = intBuffer.getData();
+        if (pixels.length <= 0) {
+            return null;
+        }
+
+        int stride = sampleModel.getScanlineStride();
+        int offset = intBuffer.getOffset();
+        offset += ((raster.getMinY() - raster.getSampleModelTranslateY()) * stride);
+        offset += (raster.getMinX() - raster.getSampleModelTranslateX());
+        return new PixelPayload(image.getWidth(), image.getHeight(), pixels, offset, stride, imageType == BufferedImage.TYPE_INT_RGB);
+    }
+
+    @NotNull
+    protected static BufferedImage normalizePayloadImage(@NotNull BufferedImage image) {
+        int targetType = image.getColorModel().hasAlpha() ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB;
+        BufferedImage normalized = new BufferedImage(image.getWidth(), image.getHeight(), targetType);
+        Graphics2D graphics = normalized.createGraphics();
+        try {
+            graphics.drawImage(image, 0, 0, null);
+        } finally {
+            graphics.dispose();
+        }
+        return normalized;
     }
 
     protected long resolveFrameDelay(boolean intro, int index) {
@@ -607,8 +668,13 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
     protected void copyPayloadIntoCanvas(@NotNull PixelPayload payload, @NotNull NativeImage canvas, int dstX, int dstY) {
         for (int y = 0; y < payload.height; y++) {
+            int rowStart = payload.offset + (y * payload.scanlineStride);
             for (int x = 0; x < payload.width; x++) {
-                canvas.setPixelRGBA(dstX + x, dstY + y, payload.pixels[(y * payload.width) + x]);
+                int color = payload.pixels[rowStart + x];
+                if (payload.forceOpaqueAlpha) {
+                    color |= 0xFF000000;
+                }
+                canvas.setPixelRGBA(dstX + x, dstY + y, color);
             }
         }
     }
@@ -842,25 +908,8 @@ public class AfmaTexture implements ITexture, PlayableResource {
             this.clearPrefetchedFramesLocked();
         }
 
-        if (this.streamingResourceLocation != null) {
-            Minecraft.getInstance().getTextureManager().release(this.streamingResourceLocation);
-            this.streamingResourceLocation = null;
-        }
-        if (this.streamingTexture != null) {
-            try {
-                this.streamingTexture.close();
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to close streaming DynamicTexture of AFMA", ex);
-            }
-            this.streamingTexture = null;
-        }
-
-        AfmaDecoder activeDecoder = this.decoder;
-        this.decoder = null;
-        this.frameIndex = null;
-        if (activeDecoder != null) {
-            CloseableUtils.closeQuietly(activeDecoder);
-        }
+        this.releaseStreamingTextureNow();
+        this.releaseDecoder();
 
         this.sourceLocation = null;
         this.sourceFile = null;
@@ -893,15 +942,62 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
     protected void failStreaming(@NotNull String message, @Nullable Throwable throwable) {
         this.loadingFailed.set(true);
+        this.loadingCompleted.set(false);
         this.playRequested = false;
         this.pausedRequested = false;
+        this.playbackInitialized = false;
         synchronized (this.streamStateLock) {
             this.clearPrefetchedFramesLocked();
         }
+        this.releaseDecoder();
+        this.scheduleStreamingTextureRelease();
         if (throwable != null) {
             LOGGER.error("[FANCYMENU] {}", message, throwable);
         } else {
             LOGGER.error("[FANCYMENU] {}", message);
+        }
+    }
+
+    protected void releaseDecoder() {
+        AfmaDecoder activeDecoder = this.decoder;
+        this.decoder = null;
+        this.frameIndex = null;
+        if (activeDecoder != null) {
+            CloseableUtils.closeQuietly(activeDecoder);
+        }
+    }
+
+    protected void scheduleStreamingTextureRelease() {
+        DynamicTexture activeTexture = this.streamingTexture;
+        ResourceLocation activeLocation = this.streamingResourceLocation;
+        this.streamingTexture = null;
+        this.streamingResourceLocation = null;
+        if ((activeTexture == null) && (activeLocation == null)) {
+            return;
+        }
+
+        MainThreadTaskExecutor.executeInMainThread(() -> this.releaseStreamingTexture(activeLocation, activeTexture),
+                MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
+    }
+
+    protected void releaseStreamingTextureNow() {
+        DynamicTexture activeTexture = this.streamingTexture;
+        ResourceLocation activeLocation = this.streamingResourceLocation;
+        this.streamingTexture = null;
+        this.streamingResourceLocation = null;
+        this.releaseStreamingTexture(activeLocation, activeTexture);
+    }
+
+    protected void releaseStreamingTexture(@Nullable ResourceLocation resourceLocation, @Nullable DynamicTexture texture) {
+        if (resourceLocation != null) {
+            Minecraft.getInstance().getTextureManager().release(resourceLocation);
+        }
+        if (texture != null) {
+            try {
+                texture.close();
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to close streaming DynamicTexture of AFMA", ex);
+            }
         }
     }
 
@@ -938,11 +1034,17 @@ public class AfmaTexture implements ITexture, PlayableResource {
         protected final int height;
         @NotNull
         protected final int[] pixels;
+        protected final int offset;
+        protected final int scanlineStride;
+        protected final boolean forceOpaqueAlpha;
 
-        protected PixelPayload(int width, int height, @NotNull int[] pixels) {
+        protected PixelPayload(int width, int height, @NotNull int[] pixels, int offset, int scanlineStride, boolean forceOpaqueAlpha) {
             this.width = width;
             this.height = height;
             this.pixels = pixels;
+            this.offset = Math.max(0, offset);
+            this.scanlineStride = Math.max(width, scanlineStride);
+            this.forceOpaqueAlpha = forceOpaqueAlpha;
         }
     }
 
