@@ -681,12 +681,6 @@ public class AfmaCreatorState {
         return total;
     }
 
-    protected static void checkCancelled(@NotNull AfmaEncodeJob job) {
-        if (job.isCancellationRequested()) {
-            throw new CancellationException("AFMA creator job was cancelled");
-        }
-    }
-
     protected static void checkCancelled(@Nullable AfmaEncodeJob job) {
         if ((job != null) && job.isCancellationRequested()) {
             throw new CancellationException("AFMA creator job was cancelled");
