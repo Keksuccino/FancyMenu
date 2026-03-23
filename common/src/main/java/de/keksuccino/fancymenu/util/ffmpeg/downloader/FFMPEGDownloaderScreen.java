@@ -2,13 +2,14 @@ package de.keksuccino.fancymenu.util.ffmpeg.downloader;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.file.FileUtils;
+import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.network.chat.MutableComponent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -155,8 +156,8 @@ public class FFMPEGDownloaderScreen extends Screen {
             int infoMaxWidth = Math.min(this.width - 40, 420);
             int infoX = (this.width / 2) - (infoMaxWidth / 2);
             int infoY = (int) cy + 36;
-            List<FormattedCharSequence> wrappedFailure = this.font.split(Component.literal(snapshot.getFailureMessage()).withStyle(ChatFormatting.RED), infoMaxWidth);
-            for (FormattedCharSequence line : wrappedFailure) {
+            List<MutableComponent> wrappedFailure = TextFormattingUtils.lineWrapComponents(Component.literal(snapshot.getFailureMessage()).withStyle(ChatFormatting.RED), infoMaxWidth);
+            for (MutableComponent line : wrappedFailure) {
                 graphics.drawString(this.font, line, infoX, infoY, 0xFF7A7A, false);
                 infoY += this.font.lineHeight + 2;
             }
