@@ -20,7 +20,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -330,7 +330,6 @@ public class AfmaCreatorScreen extends Screen {
         int leftX = OUTER_PADDING;
         int rightPanelX = (this.width / 2) + 8;
         int leftWidth = Math.max(320, (this.width / 2) - OUTER_PADDING - 12);
-        int rightWidth = this.width - rightPanelX - OUTER_PADDING;
         int browseWidth = 84;
         int clearWidth = 64;
         int pathFieldWidth = leftWidth - browseWidth - 8;
@@ -384,7 +383,7 @@ public class AfmaCreatorScreen extends Screen {
         this.layoutWidget(this.analyzeButton, leftX, bottomY, 120, FIELD_HEIGHT);
         this.layoutWidget(this.exportButton, leftX + 128, bottomY, 120, FIELD_HEIGHT);
         this.layoutWidget(this.cancelJobButton, leftX + 256, bottomY, 120, FIELD_HEIGHT);
-        this.layoutWidget(this.closeButton, leftX + Math.max(384, leftWidth - 120), bottomY, 120, FIELD_HEIGHT);
+        this.layoutWidget(this.closeButton, this.width - OUTER_PADDING - 120, bottomY, 120, FIELD_HEIGHT);
 
         int previewControlsY = this.height - OUTER_PADDING - FIELD_HEIGHT - 110;
         this.layoutWidget(this.previewPreviousButton, rightPanelX, previewControlsY, 90, FIELD_HEIGHT);
@@ -458,7 +457,7 @@ public class AfmaCreatorScreen extends Screen {
         graphics.fill(leftX - 8, panelTop, leftX + leftWidth + 8, panelBottom, UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt());
         graphics.fill(rightPanelX - 8, panelTop, rightPanelX + rightWidth + 8, panelBottom, UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt());
 
-        graphics.drawString(this.font, this.title, OUTER_PADDING, 16, 0xFFFFFF, false);
+        UIBase.renderText(graphics, this.title, OUTER_PADDING, 16, 0xFFFFFF);
 
         int previewX = rightPanelX;
         int previewY = 58;
@@ -477,7 +476,7 @@ public class AfmaCreatorScreen extends Screen {
             int renderY = previewY + ((previewHeight - renderHeight) / 2);
             graphics.blit(previewTexture, renderX, renderY, 0.0F, 0.0F, renderWidth, renderHeight, renderWidth, renderHeight);
         } else {
-            graphics.drawString(this.font, Component.translatable("fancymenu.afma.creator.preview.empty"), previewX + 8, previewY + 8, 0xA0A0A0, false);
+            this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.preview.empty"), previewX + 8, previewY + 8, previewWidth - 16, 0xA0A0A0);
         }
 
         int timelineY = previewY + previewHeight + 14;
@@ -493,62 +492,41 @@ public class AfmaCreatorScreen extends Screen {
 
     protected void renderFieldLabels(@NotNull GuiGraphics graphics) {
         int leftX = OUTER_PADDING;
-        int leftWidth = Math.max(320, (this.width / 2) - OUTER_PADDING - 12);
-        int browseWidth = 84;
-        int clearWidth = 64;
-        int pathFieldWidth = leftWidth - browseWidth - 8;
-        int introPathFieldWidth = leftWidth - browseWidth - clearWidth - 12;
-        int halfWidth = (leftWidth - 8) / 2;
+        int sourceHeaderY = 28;
+        int playbackHeaderY = 112;
+        int optimizationHeaderY = 248;
 
-        int y = 42;
-        this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.source"), leftX, y - 14, true);
-        y = 54;
-        this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.main_frames"), leftX, y - 12, false);
-        y += 28;
-        this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.intro_frames"), leftX, y - 12, false);
-        y += SECTION_GAP;
-        this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.output_file"), leftX, y - 12, false);
-        y += SECTION_GAP;
-        this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.playback"), leftX, y - 14, true);
-        this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.frame_time"), leftX, y, false);
-        this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.intro_frame_time"), leftX + halfWidth + 8, y, false);
-        y += ROW_GAP + 10;
-        this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.loop_count"), leftX, y, false);
-        this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.keyframe_interval"), leftX + halfWidth + 8, y, false);
-        y += ROW_GAP + 10;
-        this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.custom_frame_times"), leftX, y, false);
-        y += ROW_GAP + 10;
-        this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.custom_intro_frame_times"), leftX, y, false);
-        y += SECTION_GAP;
-        this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.optimization"), leftX, y - 14, true);
-        this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.optimization_preset.title"), leftX, y, false);
+        this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.source"), leftX, sourceHeaderY, true);
+        this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.playback"), leftX, playbackHeaderY, true);
+        this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.optimization"), leftX, optimizationHeaderY, true);
 
         int rightX = (this.width / 2) + 8;
-        this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.preview"), rightX, 42, true);
+        this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.preview"), rightX, 28, true);
     }
 
     protected void drawFieldLabel(@NotNull GuiGraphics graphics, @NotNull Component component, int x, int y, boolean header) {
-        graphics.drawString(this.font, component, x, y, header ? 0xFFFFFF : 0xD0D0D0, false);
+        UIBase.renderText(graphics, component, x, y, header ? 0xFFFFFF : 0xD0D0D0);
     }
 
     protected void renderDiagnostics(@NotNull GuiGraphics graphics) {
         int rightPanelX = (this.width / 2) + 8;
         int rightWidth = this.width - rightPanelX - OUTER_PADDING;
         int textY = this.height - OUTER_PADDING - 180;
+        int normalTextColor = 0xFFFFFF;
+        int dimTextColor = 0xA0A0A0;
+        int warningColor = UIBase.getUITheme().warning_color.getColorInt();
 
-        graphics.drawString(this.font, Component.translatable("fancymenu.afma.creator.ffmpeg_status", this.ffmpegBridge.describeStatus()), rightPanelX, textY, 0xFFFFFF, false);
-        textY += 12;
-        graphics.drawString(this.font, Component.translatable("fancymenu.afma.creator.ffmpeg_binary", this.ffmpegBridge.describeBinaryPath()), rightPanelX, textY, 0xA0A0A0, false);
-        textY += 18;
+        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.ffmpeg_status", this.ffmpegBridge.describeStatus()), rightPanelX, textY, rightWidth, normalTextColor);
+        textY += 2;
+        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.ffmpeg_binary", this.ffmpegBridge.describeBinaryPath()), rightPanelX, textY, rightWidth, dimTextColor);
+        textY += 8;
 
         AfmaEncodeJob job = this.state.getCurrentJob();
         if (job != null) {
             AfmaEncodeProgress progress = job.getProgress();
-            graphics.drawString(this.font, Component.translatable("fancymenu.afma.creator.job_status", progress.task()), rightPanelX, textY, 0xFFFFFF, false);
-            textY += 12;
+            textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.job_status", progress.task()), rightPanelX, textY, rightWidth, normalTextColor);
             if (progress.detail() != null && !progress.detail().isBlank()) {
-                graphics.drawString(this.font, Component.literal(progress.detail()), rightPanelX, textY, 0xD0D0D0, false);
-                textY += 12;
+                textY = this.renderWrappedUiText(graphics, Component.literal(progress.detail()), rightPanelX, textY, rightWidth, 0xD0D0D0);
             }
             int barWidth = rightWidth;
             graphics.fill(rightPanelX, textY, rightPanelX + barWidth, textY + 8, 0xFF202020);
@@ -558,35 +536,38 @@ public class AfmaCreatorScreen extends Screen {
 
         AfmaCreatorAnalysisResult result = this.state.getAnalysisResult();
         if (result == null) {
-            graphics.drawString(this.font, Component.translatable("fancymenu.afma.creator.analysis.pending"), rightPanelX, textY, 0xA0A0A0, false);
+            this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.analysis.pending"), rightPanelX, textY, rightWidth, dimTextColor);
             return;
         }
 
         if (this.state.isAnalysisDirty()) {
-            graphics.drawString(this.font, Component.translatable("fancymenu.afma.creator.analysis.stale").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt())), rightPanelX, textY, UIBase.getUITheme().warning_color.getColorInt(), false);
-            textY += 12;
+            textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.analysis.stale"), rightPanelX, textY, rightWidth, warningColor);
         }
 
-        graphics.drawString(this.font, Component.translatable("fancymenu.afma.creator.summary.canvas", result.plan().getMetadata().getCanvasWidth(), result.plan().getMetadata().getCanvasHeight()), rightPanelX, textY, 0xFFFFFF, false);
-        textY += 12;
-        graphics.drawString(this.font, Component.translatable("fancymenu.afma.creator.summary.frames", result.summary().mainFrameCount(), result.summary().introFrameCount()), rightPanelX, textY, 0xFFFFFF, false);
-        textY += 12;
-        graphics.drawString(this.font, Component.translatable("fancymenu.afma.creator.summary.ops", result.summary().fullFrames(), result.summary().deltaRectFrames(), result.summary().sameFrames(), result.summary().copyRectPatchFrames()), rightPanelX, textY, 0xFFFFFF, false);
-        textY += 12;
-        graphics.drawString(this.font, Component.translatable("fancymenu.afma.creator.summary.estimated_size", humanReadableBytes(result.estimatedArchiveBytes())), rightPanelX, textY, 0xFFFFFF, false);
-        textY += 12;
-        graphics.drawString(this.font, Component.translatable("fancymenu.afma.creator.summary.alpha", result.alphaUsed() ? Component.translatable("fancymenu.afma.creator.summary.alpha.yes") : Component.translatable("fancymenu.afma.creator.summary.alpha.no")), rightPanelX, textY, 0xFFFFFF, false);
-        textY += 12;
-        graphics.drawString(this.font, Component.translatable("fancymenu.afma.creator.preview.current_frame", this.previewController.getCurrentFrameLabel(), this.previewController.getCurrentFrameDurationMs()), rightPanelX, textY, 0xFFFFFF, false);
-        textY += 18;
+        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.summary.canvas", result.plan().getMetadata().getCanvasWidth(), result.plan().getMetadata().getCanvasHeight()), rightPanelX, textY, rightWidth, normalTextColor);
+        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.summary.frames", result.summary().mainFrameCount(), result.summary().introFrameCount()), rightPanelX, textY, rightWidth, normalTextColor);
+        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.summary.ops", result.summary().fullFrames(), result.summary().deltaRectFrames(), result.summary().sameFrames(), result.summary().copyRectPatchFrames()), rightPanelX, textY, rightWidth, normalTextColor);
+        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.summary.estimated_size", humanReadableBytes(result.estimatedArchiveBytes())), rightPanelX, textY, rightWidth, normalTextColor);
+        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.summary.alpha", result.alphaUsed() ? Component.translatable("fancymenu.afma.creator.summary.alpha.yes") : Component.translatable("fancymenu.afma.creator.summary.alpha.no")), rightPanelX, textY, rightWidth, normalTextColor);
+        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.preview.current_frame", this.previewController.getCurrentFrameLabel(), this.previewController.getCurrentFrameDurationMs()), rightPanelX, textY, rightWidth, normalTextColor);
+        textY += 4;
 
         for (String warning : result.warnings()) {
-            graphics.drawString(this.font, Component.literal("- " + warning), rightPanelX, textY, UIBase.getUITheme().warning_color.getColorInt(), false);
-            textY += 12;
+            textY = this.renderWrappedUiText(graphics, Component.literal("- " + warning), rightPanelX, textY, rightWidth, warningColor);
             if (textY > (this.height - OUTER_PADDING - 12)) {
                 break;
             }
         }
+    }
+
+    protected int renderWrappedUiText(@NotNull GuiGraphics graphics, @NotNull Component text, int x, int y, int maxWidth, int color) {
+        List<MutableComponent> lines = UIBase.lineWrapUIComponentsNormal(text, Math.max(20, maxWidth));
+        int lineHeight = Math.max(10, Math.round(UIBase.getUITextHeightNormal()));
+        for (MutableComponent line : lines) {
+            UIBase.renderText(graphics, line, x, y, color);
+            y += lineHeight + 2;
+        }
+        return y;
     }
 
     @Override
