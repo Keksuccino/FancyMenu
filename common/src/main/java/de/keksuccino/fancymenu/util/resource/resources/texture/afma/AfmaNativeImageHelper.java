@@ -109,17 +109,23 @@ public final class AfmaNativeImageHelper {
         int rowStep = 1;
 
         // Copy from bottom to top when moving downward so source rows are not overwritten
-        // before they are read. Horizontal overlap is handled by memMove itself.
+        // before they are read.
         if (copyRect.getDstY() > copyRect.getSrcY()) {
             startRow = copyRect.getHeight() - 1;
             endRow = -1;
             rowStep = -1;
         }
 
-        for (int row = startRow; row != endRow; row += rowStep) {
-            long sourceOffset = offset(pixels, imageWidth, copyRect.getSrcX(), copyRect.getSrcY() + row);
-            long targetOffset = offset(pixels, imageWidth, copyRect.getDstX(), copyRect.getDstY() + row);
-            MemoryUtil.memMove(sourceOffset, targetOffset, rowSize);
+        long scratchRow = MemoryUtil.nmemAlloc(rowSize);
+        try {
+            for (int row = startRow; row != endRow; row += rowStep) {
+                long sourceOffset = offset(pixels, imageWidth, copyRect.getSrcX(), copyRect.getSrcY() + row);
+                long targetOffset = offset(pixels, imageWidth, copyRect.getDstX(), copyRect.getDstY() + row);
+                MemoryUtil.memCopy(sourceOffset, scratchRow, rowSize);
+                MemoryUtil.memCopy(scratchRow, targetOffset, rowSize);
+            }
+        } finally {
+            MemoryUtil.nmemFree(scratchRow);
         }
     }
 
