@@ -149,8 +149,13 @@ public class AfmaCreatorScreen extends Screen {
         });
         this.browseOutputButton = this.addStyledButton(Component.translatable("fancymenu.afma.creator.browse"), button -> this.openOutputChooser(this.state.getOutputFile()));
 
+        LocalizedEnumValueCycle<AfmaOptimizationPreset> presetCycle = LocalizedEnumValueCycle.ofArray(
+                "fancymenu.afma.creator.optimization_preset.label",
+                AfmaOptimizationPreset.values()
+        );
+        presetCycle.setCurrentValue(this.state.getOptimizationPreset(), false);
         this.presetCycleButton = new CycleButton<>(0, 0, 200, FIELD_HEIGHT,
-                LocalizedEnumValueCycle.ofArray("fancymenu.afma.creator.optimization_preset.label", AfmaOptimizationPreset.values()).setCurrentValue(this.state.getOptimizationPreset(), false),
+                presetCycle,
                 (value, button) -> {
                     this.state.applyPreset(value);
                     this.syncWidgetsFromState();
