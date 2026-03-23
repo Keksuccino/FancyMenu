@@ -410,9 +410,37 @@ This keeps AFMA aligned with the current low-memory FMA architecture while still
 ## Encoder Architecture
 
 ### External dependency assumption
-Assume `ffmpeg` binaries are available.
+Assume `ffmpeg` binaries are managed through the existing FancyMenu downloader flow.
 
 AFMA should require no additional external native tools for v1.
+
+### Existing FFmpeg integration
+Use the existing downloader/runtime integration as the source of truth for FFmpeg availability:
+
+- `FFMPEGDownloader`
+- `FFMPEGDownloaderScreen`
+- `FFMPEGDownloaderScreenResult`
+
+AFMA Creator should not require manual FFmpeg path selection in v1 if FancyMenu-managed FFmpeg is the supported path.
+
+When AFMA Creator needs FFmpeg, it must resolve the installation through `FFMPEGDownloader` and use the installed binary paths from that installation.
+
+### Creator entry FFmpeg gate
+Opening AFMA Creator must perform an FFmpeg availability check first.
+
+Required behavior:
+
+- when creator is opened, check whether a valid FFmpeg installation is already available through `FFMPEGDownloader`
+- if FFmpeg is already installed, continue into AFMA Creator immediately
+- if FFmpeg is not installed yet, open `FFMPEGDownloaderScreen`
+- downloader flow should auto-start download as it already supports
+- after downloader screen closes, only continue into creator if the result is ready
+- if result is `INSTALLED` or `ALREADY_AVAILABLE`, continue into AFMA Creator
+- if result is `FAILED`, do not open creator; keep the user on a clear recovery path with retry/reopen support
+- if result is `CANCELLED`, do not open creator; return cleanly to the previous screen without entering a half-initialized creator session
+- if result is `NOT_STARTED` or otherwise unresolved, treat creator launch as aborted
+
+The creator must never continue into FFmpeg-dependent workflows if the downloader result is not ready.
 
 ### `ffmpeg` responsibility
 `ffmpeg` is used only for source ingestion and preprocessing, not for AFMA-specific decision making.
@@ -423,6 +451,7 @@ Use cases:
 - normalize FPS if importing from video in the future
 - transcode or flatten unsupported image inputs if needed
 - optionally extract thumbnails/previews
+- provide probe/introspection for future import validation where useful
 
 ### FancyMenu encoder responsibility
 FancyMenu must implement AFMA-specific encoding logic itself:
@@ -627,6 +656,7 @@ The AFMA Creator is a full in-game creation tool inside FancyMenu for producing 
 - optimization mode preset, with default set for best balanced output
 - optional transparency handling info
 - optional creator-generated thumbnail toggle
+- FFmpeg availability / installation status indicator
 
 #### Preview controls
 - playback preview before export
@@ -642,6 +672,7 @@ The AFMA Creator is a full in-game creation tool inside FancyMenu for producing 
 - alpha usage summary
 - count of `full`, `delta_rect`, `same`, and `copy_rect_patch` frames after analysis
 - estimated output size before final packing if feasible
+- current FFmpeg installation source/path summary when FFmpeg-backed features are in use
 
 #### Safety and validation
 - warn if frame dimensions mismatch
@@ -656,6 +687,9 @@ The AFMA Creator is a full in-game creation tool inside FancyMenu for producing 
 - support user cancellation during long-running analysis/export
 - clean up temporary files and partial outputs on cancellation or failure
 - prevent concurrent exports for the same creator session unless explicitly supported later
+- FFmpeg subprocess work must also run only inside these background jobs, never on the render thread
+- any temporary FFmpeg extraction/intermediate files must be cleaned up on completion, cancellation, or failure
+- creator job state must clearly distinguish FancyMenu analysis/export failure from FFmpeg invocation failure
 
 ### Optional creator features for later
 - import from video through `ffmpeg`
@@ -666,13 +700,16 @@ The AFMA Creator is a full in-game creation tool inside FancyMenu for producing 
 ## AFMA Creator UX Structure
 
 ### Recommended flow
-1. choose source frames
-2. configure intro/main timing and loop settings
-3. configure advanced encoding settings
-4. run background analysis pass
-5. review optimization summary
-6. preview result
-7. export AFMA
+1. attempt to open creator
+2. check FFmpeg installation via `FFMPEGDownloader`
+3. if missing, open `FFMPEGDownloaderScreen` and wait for a ready result
+4. choose source frames
+5. configure intro/main timing and loop settings
+6. configure advanced encoding settings
+7. run background analysis pass
+8. review optimization summary
+9. preview result
+10. export AFMA
 
 ### Creator screen sections
 
@@ -681,6 +718,7 @@ The AFMA Creator is a full in-game creation tool inside FancyMenu for producing 
 - intro frames input
 - frame ordering controls
 - source validation status
+- FFmpeg readiness status for workflows that depend on it
 
 #### Section 2: Playback
 - main frame time
@@ -812,7 +850,12 @@ Creator should allow users to create AFMA from the exact frame sequences they pr
 - invalid custom frame times
 - save path errors
 - archive write failure
-- `ffmpeg` process failure if used for future import paths
+- FFmpeg not installed / installation unavailable when creator is opened
+- FFmpeg download failed before creator launch
+- FFmpeg download cancelled before creator launch
+- `ffmpeg` process failure for FFmpeg-backed creator workflows
+- invalid or missing FFmpeg binary path returned from downloader installation
+- FFmpeg subprocess timeout or abnormal exit
 
 ### Runtime AFMA load errors
 - missing metadata/index
@@ -825,6 +868,8 @@ Creator should allow users to create AFMA from the exact frame sequences they pr
 Creator:
 
 - fail early and explain exactly what is invalid
+- if creator launch was blocked by FFmpeg download failure/cancellation, exit cleanly without opening a broken creator state
+- provide a direct retry/reopen path into `FFMPEGDownloaderScreen` when launch was blocked by missing FFmpeg
 
 Runtime:
 
@@ -924,8 +969,11 @@ Runtime:
 - `AfmaCopyRect`
 
 ### Creator
+- `AfmaCreatorEntryGate` or equivalent launch coordinator that checks `FFMPEGDownloader` before opening the creator
 - `AfmaCreatorScreen`
 - `AfmaCreatorState`
+- `AfmaFfmpegBridge` or equivalent wrapper that resolves the installed FFmpeg/FFprobe binaries from `FFMPEGDownloader`
+- `AfmaFfmpegProcessRunner` or equivalent terminal/process bridge for invoking FFmpeg in background jobs
 - `AfmaSourceSequence`
 - `AfmaEncodeOptions`
 - `AfmaEncodeAnalyzer`
@@ -971,6 +1019,9 @@ All AFMA comparison and diff logic must operate on one canonical normalized stra
 
 ### Rule 9
 The creator must always use background jobs with progress/cancellation for analysis and export.
+
+### Rule 10
+AFMA Creator launch must be gated on a ready FFmpeg installation from `FFMPEGDownloader`; failed or cancelled download flows must never leave the creator partially opened.
 
 ## Final Recommendation
 AFMA v1 should be implemented as a streamed ZIP+PNG animation format with:
