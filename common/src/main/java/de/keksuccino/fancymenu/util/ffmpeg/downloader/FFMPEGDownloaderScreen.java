@@ -12,7 +12,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,16 +47,16 @@ public class FFMPEGDownloaderScreen extends Screen {
         int centerX = this.width / 2;
         int buttonY = this.height - 34;
 
-        this.actionButton = this.addVanillaLikeButton(new ExtendedButton(centerX - 154, buttonY, 100, 20, Component.translatable("fancymenu.ffmpeg.downloader.start"), button -> this.startDownload()));
-        this.cancelButton = this.addVanillaLikeButton(new ExtendedButton(centerX - 50, buttonY, 100, 20, Component.translatable("fancymenu.ffmpeg.downloader.cancel"), button -> FFMPEGDownloader.cancelCurrentDownload()));
-        this.openFolderButton = this.addVanillaLikeButton(new ExtendedButton(centerX + 54, buttonY, 120, 20, Component.translatable("fancymenu.ffmpeg.downloader.open_folder"), button -> {
+        this.actionButton = this.addRenderableWidget(new ExtendedButton(centerX - 154, buttonY, 100, 20, Component.translatable("fancymenu.ffmpeg.downloader.start"), button -> this.startDownload()));
+        this.cancelButton = this.addRenderableWidget(new ExtendedButton(centerX - 50, buttonY, 100, 20, Component.translatable("fancymenu.ffmpeg.downloader.cancel"), button -> FFMPEGDownloader.cancelCurrentDownload()));
+        this.openFolderButton = this.addRenderableWidget(new ExtendedButton(centerX + 54, buttonY, 120, 20, Component.translatable("fancymenu.ffmpeg.downloader.open_folder"), button -> {
             File installationDir = FFMPEGDownloader.getInstalledDirectory();
             if (installationDir == null) {
                 installationDir = FFMPEGDownloader.getDownloadDirectory();
             }
             FileUtils.openFile(installationDir);
         }));
-        this.closeButton = this.addVanillaLikeButton(new ExtendedButton(centerX + 178, buttonY, 100, 20, Component.translatable("fancymenu.common.close"), button -> this.onClose()));
+        this.closeButton = this.addRenderableWidget(new ExtendedButton(centerX + 178, buttonY, 100, 20, Component.translatable("fancymenu.common.close"), button -> this.onClose()));
 
         this.updateButtonStates(FFMPEGDownloader.getSnapshot());
 
@@ -200,12 +199,6 @@ public class FFMPEGDownloaderScreen extends Screen {
     @Override
     public boolean isPauseScreen() {
         return true;
-    }
-
-    private @NotNull ExtendedButton addVanillaLikeButton(@NotNull ExtendedButton button) {
-        button.setLabelRenderedWithUiBase(false);
-        button.setLabelShadowEnabled(false);
-        return this.addRenderableWidget(button);
     }
 
 }
