@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.resource.resources.texture.afma;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinNativeImage;
+import net.minecraft.util.FastColor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.system.MemoryUtil;
@@ -95,7 +96,7 @@ public final class AfmaNativeImageHelper {
                 if (forceOpaqueAlpha) {
                     color |= 0xFF000000;
                 }
-                MemoryUtil.memPutInt(targetOffset + ((long) column * RGBA_BYTES_PER_PIXEL), color);
+                MemoryUtil.memPutInt(targetOffset + ((long) column * RGBA_BYTES_PER_PIXEL), FastColor.ABGR32.fromArgb32(color));
             }
         }
     }
