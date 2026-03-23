@@ -910,14 +910,6 @@ Runtime:
 - preview seek correctness from nearest keyframe
 - normalized-input equivalence for 8-bit vs 16-bit source PNGs
 
-### Stress tests
-- very large resolution animations
-- many-frame AFMAs
-- heavily scrolling animations
-- sparse-change animations
-- mostly static animations
-- cancelled long-running analysis/export jobs with temp cleanup verification
-
 ## Implementation Phases
 
 ### Phase 1: AFMA spec and runtime core
@@ -943,7 +935,7 @@ Runtime:
 - implement background job execution, progress reporting, cancellation, and temp cleanup
 
 ### Phase 4: creator UX and preview
-- build creator UI
+- build creator UI (This should be a normal Vanilla Minecraft `Screen`, similar to the `LayoutEditorScreen`, NOT a PipWindow, Dialog, etc.!)
 - add analysis summary
 - add preview playback
 - add preview seek/frame-step behavior from nearest prior keyframe
