@@ -3293,7 +3293,7 @@
   "fancymenu.resources.chooser_screen.invalid_fma.error": "Failed to load the selected FMA image!\nMake sure the file exists and that metadata.json contains valid JSON data.",
   "fancymenu.resources.fma.expensive.warning": "FancyMenu detected that the FMA '%s' likely contains expensive frame images.\n\nAt least one sampled frame uses 16-bit PNG color depth instead of normal 8-bit color depth.\n\n16-bit PNG frames are much more expensive to decode and can cause animation lag or very low playback FPS while the FMA is playing.\n\nTo fix this, convert the FMA frame images to normal 8-bit PNG files and then rebuild the FMA archive.",
   "fancymenu.ffmpeg.downloader.title": "FFmpeg is downloading required binaries...",
-  "fancymenu.ffmpeg.downloader.description": "FancyMenu is downloading ready-to-use FFmpeg and FFprobe binaries for the AFMA creator.\n\nThe downloader automatically picks a provider for your operating system, verifies downloaded archives with SHA-256 checksums, extracts the binaries into FancyMenu's local cache, and reuses the cached installation on future launches.",
+  "fancymenu.ffmpeg.downloader.description": "FancyMenu is downloading ready-to-use FFmpeg and FFprobe binaries for features that require FFmpeg support.\n\nThe downloader automatically picks a provider for your operating system, verifies downloaded archives with SHA-256 checksums, extracts the binaries into FancyMenu's local cache, and reuses the cached installation on future launches.",
   "fancymenu.ffmpeg.downloader.start": "Start Download",
   "fancymenu.ffmpeg.downloader.retry": "Retry Download",
   "fancymenu.ffmpeg.downloader.cancel": "Cancel Download",
