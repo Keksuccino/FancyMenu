@@ -15,31 +15,32 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class FFMPEGDownloaderScreen extends Screen {
 
-    private final @Nullable Screen parent;
-    private final @Nullable Runnable onInstalled;
+    private final @Nullable Consumer<FFMPEGDownloaderScreenResult> onClosed;
     private final boolean autoStart;
-    private final boolean closeOnSuccess;
 
     private @Nullable ExtendedButton actionButton;
     private @Nullable ExtendedButton cancelButton;
     private @Nullable ExtendedButton openFolderButton;
     private @Nullable ExtendedButton closeButton;
     private boolean startRequested;
-    private int successTicks;
+    private boolean closeCallbackHandledForRemoval;
 
-    public FFMPEGDownloaderScreen(@Nullable Screen parent) {
-        this(parent, null, true, true);
+    public FFMPEGDownloaderScreen() {
+        this(null, true);
     }
 
-    public FFMPEGDownloaderScreen(@Nullable Screen parent, @Nullable Runnable onInstalled, boolean autoStart, boolean closeOnSuccess) {
+    public FFMPEGDownloaderScreen(@Nullable Consumer<FFMPEGDownloaderScreenResult> onClosed) {
+        this(onClosed, true);
+    }
+
+    public FFMPEGDownloaderScreen(@Nullable Consumer<FFMPEGDownloaderScreenResult> onClosed, boolean autoStart) {
         super(Component.translatable("fancymenu.ffmpeg.downloader.title"));
-        this.parent = parent;
-        this.onInstalled = onInstalled;
+        this.onClosed = onClosed;
         this.autoStart = autoStart;
-        this.closeOnSuccess = closeOnSuccess;
     }
 
     @Override
@@ -67,7 +68,6 @@ public class FFMPEGDownloaderScreen extends Screen {
 
     private void startDownload() {
         this.startRequested = true;
-        this.successTicks = 0;
         FFMPEGDownloader.startDownloadIfNeededAsync();
     }
 
@@ -77,19 +77,6 @@ public class FFMPEGDownloaderScreen extends Screen {
 
         FFMPEGDownloadSnapshot snapshot = FFMPEGDownloader.getSnapshot();
         this.updateButtonStates(snapshot);
-
-        if ((snapshot.getStage() == FFMPEGDownloadSnapshot.Stage.COMPLETE) && this.closeOnSuccess) {
-            this.successTicks++;
-            if (this.successTicks >= 5) {
-                Runnable callback = this.onInstalled;
-                this.onClose();
-                if (callback != null) {
-                    callback.run();
-                }
-            }
-        } else {
-            this.successTicks = 0;
-        }
     }
 
     private void updateButtonStates(@NotNull FFMPEGDownloadSnapshot snapshot) {
@@ -188,7 +175,17 @@ public class FFMPEGDownloaderScreen extends Screen {
 
     @Override
     public void onClose() {
-        Minecraft.getInstance().setScreen(this.parent);
+        this.dispatchCloseCallback();
+        this.closeCallbackHandledForRemoval = Minecraft.getInstance().screen != this;
+    }
+
+    @Override
+    public void removed() {
+        super.removed();
+        if (!this.closeCallbackHandledForRemoval) {
+            this.dispatchCloseCallback();
+        }
+        this.closeCallbackHandledForRemoval = false;
     }
 
     @Override
@@ -199,6 +196,13 @@ public class FFMPEGDownloaderScreen extends Screen {
     @Override
     public boolean isPauseScreen() {
         return true;
+    }
+
+    private void dispatchCloseCallback() {
+        Consumer<FFMPEGDownloaderScreenResult> callback = this.onClosed;
+        if (callback != null) {
+            callback.accept(FFMPEGDownloaderScreenResult.fromSnapshot(FFMPEGDownloader.getSnapshot()));
+        }
     }
 
 }
