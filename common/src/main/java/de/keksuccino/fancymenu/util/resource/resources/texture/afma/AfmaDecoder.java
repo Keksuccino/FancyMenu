@@ -267,6 +267,32 @@ public class AfmaDecoder implements Closeable {
         }
     }
 
+    public void validateAllReferencedPayloadHeaders() throws IOException {
+        AfmaMetadata activeMetadata = Objects.requireNonNull(this.metadata, "AFMA metadata was NULL");
+        AfmaFrameIndex activeFrameIndex = Objects.requireNonNull(this.frameIndex, "AFMA frame index was NULL");
+        this.validateAllPayloadHeaders(activeFrameIndex.getFrames(), false, activeMetadata);
+        this.validateAllPayloadHeaders(activeFrameIndex.getIntroFrames(), true, activeMetadata);
+    }
+
+    protected void validateAllPayloadHeaders(@NotNull List<AfmaFrameDescriptor> sequence, boolean introSequence, @NotNull AfmaMetadata activeMetadata) throws IOException {
+        for (int i = 0; i < sequence.size(); i++) {
+            AfmaFrameDescriptor descriptor = sequence.get(i);
+            if (descriptor == null) {
+                continue;
+            }
+
+            String context = (introSequence ? "Intro" : "Main") + " frame " + i;
+            if (descriptor.getType() == AfmaFrameOperationType.FULL) {
+                this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPath()), activeMetadata.getCanvasWidth(), activeMetadata.getCanvasHeight());
+            } else if (descriptor.getType() == AfmaFrameOperationType.DELTA_RECT) {
+                this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPath()), descriptor.getWidth(), descriptor.getHeight());
+            } else if ((descriptor.getType() == AfmaFrameOperationType.COPY_RECT_PATCH) && descriptor.requiresPatchPayload()) {
+                AfmaPatchRegion patch = Objects.requireNonNull(descriptor.getPatch());
+                this.validatePayloadHeader(context, Objects.requireNonNull(patch.getPath()), patch.getWidth(), patch.getHeight());
+            }
+        }
+    }
+
     public int getFrameCount() {
         return (this.frameIndex != null) ? this.frameIndex.getFrames().size() : 0;
     }

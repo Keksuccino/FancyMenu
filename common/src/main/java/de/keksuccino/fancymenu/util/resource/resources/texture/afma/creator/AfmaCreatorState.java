@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -239,7 +240,13 @@ public class AfmaCreatorState {
         if ((plan == null) || (plan.configurationVersion != this.successfulAnalysisVersion)) {
             return null;
         }
-        return plan.plan;
+        try {
+            return plan.openPlan();
+        } catch (IOException ex) {
+            LOGGER.error("[FANCYMENU] Failed to open cached AFMA preview plan", ex);
+            this.clearCachedPlan();
+            return null;
+        }
     }
 
     public void cancelCurrentJob() {
@@ -257,6 +264,7 @@ public class AfmaCreatorState {
     }
 
     public void markDirty() {
+        this.clearCachedPlan();
         this.analysisDirty = true;
         this.configurationVersion.incrementAndGet();
     }
@@ -297,11 +305,14 @@ public class AfmaCreatorState {
             AfmaCreatorAnalysisResult result = this.buildAnalysisResult(plan, prepared.mainSequence, prepared.introSequence, prepared.warnings, job);
             checkCancelled(job);
 
+            CachedPlan cachedPlan = this.createCachedPlan(prepared.configurationVersion, plan);
             if (this.configurationVersion.get() == prepared.configurationVersion) {
                 this.analysisResult = result;
                 this.analysisDirty = false;
-                this.cachedPlan = new CachedPlan(prepared.configurationVersion, plan);
+                this.replaceCachedPlan(cachedPlan);
                 this.successfulAnalysisVersion = prepared.configurationVersion;
+            } else {
+                cachedPlan.close();
             }
 
             job.completeSuccess(result, null);
@@ -315,6 +326,7 @@ public class AfmaCreatorState {
 
     protected void runExportJob(@NotNull AfmaEncodeJob job, @NotNull PreparedInputs prepared) {
         File tempFile = null;
+        CachedPlan refreshedCache = null;
         try {
             job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.VALIDATING_SOURCES, "Validating AFMA creator input...", null, 0.10D));
             checkCancelled(job);
@@ -351,19 +363,27 @@ public class AfmaCreatorState {
             Files.move(tempFile.toPath(), prepared.outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             tempFile = null;
 
+            if ((this.cachedPlan == null) || (this.cachedPlan.configurationVersion != prepared.configurationVersion)) {
+                refreshedCache = this.createCachedPlan(prepared.configurationVersion, exportPlan);
+            }
             if (this.configurationVersion.get() == prepared.configurationVersion) {
                 this.analysisResult = exportAnalysis;
                 this.analysisDirty = false;
-                this.cachedPlan = new CachedPlan(prepared.configurationVersion, exportPlan);
+                if (refreshedCache != null) {
+                    this.replaceCachedPlan(refreshedCache);
+                    refreshedCache = null;
+                }
                 this.successfulAnalysisVersion = prepared.configurationVersion;
             }
 
             job.completeSuccess(exportAnalysis, prepared.outputFile);
         } catch (CancellationException ex) {
             org.apache.commons.io.FileUtils.deleteQuietly(tempFile);
+            closeQuietly(refreshedCache);
             job.completeCancelled();
         } catch (Throwable throwable) {
             org.apache.commons.io.FileUtils.deleteQuietly(tempFile);
+            closeQuietly(refreshedCache);
             LOGGER.error("[FANCYMENU] AFMA creator export job failed", throwable);
             job.completeFailure(throwable);
         }
@@ -373,7 +393,7 @@ public class AfmaCreatorState {
         CachedPlan cachedPlan = this.cachedPlan;
         if ((cachedPlan != null) && (cachedPlan.configurationVersion == prepared.configurationVersion)) {
             job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Reusing analyzed AFMA export plan...", null, 0.55D));
-            return cachedPlan.plan;
+            return cachedPlan.openPlan();
         }
 
         job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Analyzing AFMA frames for export...", null, 0.15D));
@@ -517,14 +537,58 @@ public class AfmaCreatorState {
     protected void validateWrittenArchive(@NotNull File archiveFile) throws IOException {
         try (AfmaDecoder decoder = new AfmaDecoder()) {
             decoder.read(archiveFile);
+            decoder.validateAllReferencedPayloadHeaders();
         }
     }
 
     public void close() {
         this.cancelCurrentJob();
         this.executor.shutdownNow();
-        this.cachedPlan = null;
+        this.clearCachedPlan();
         this.currentJob = null;
+    }
+
+    protected void replaceCachedPlan(@Nullable CachedPlan cachedPlan) {
+        CachedPlan previousPlan = this.cachedPlan;
+        this.cachedPlan = cachedPlan;
+        closeQuietly(previousPlan);
+    }
+
+    protected void clearCachedPlan() {
+        this.replaceCachedPlan(null);
+    }
+
+    protected @NotNull CachedPlan createCachedPlan(long configurationVersion, @NotNull AfmaEncodePlan plan) throws IOException {
+        Path payloadDirectory = Files.createTempDirectory("fancymenu_afma_creator_plan_");
+        boolean success = false;
+        try {
+            List<String> payloadPaths = new ArrayList<>(plan.getPayloads().size());
+            for (var entry : plan.getPayloads().entrySet()) {
+                Path outputPath = payloadDirectory.resolve(entry.getKey());
+                Path parent = outputPath.getParent();
+                if (parent != null) {
+                    Files.createDirectories(parent);
+                }
+                Files.write(outputPath, entry.getValue());
+                payloadPaths.add(entry.getKey());
+            }
+            success = true;
+            return new CachedPlan(configurationVersion, plan.withoutPayloads(), payloadDirectory.toFile(), List.copyOf(payloadPaths));
+        } finally {
+            if (!success) {
+                org.apache.commons.io.FileUtils.deleteQuietly(payloadDirectory.toFile());
+            }
+        }
+    }
+
+    protected static void closeQuietly(@Nullable AutoCloseable closeable) {
+        if (closeable == null) {
+            return;
+        }
+        try {
+            closeable.close();
+        } catch (Exception ignored) {
+        }
     }
 
     protected @NotNull ResolvedSource resolveSource(@NotNull File directory, boolean optional, @NotNull String sequenceName) {
@@ -653,7 +717,26 @@ public class AfmaCreatorState {
     ) {
     }
 
-    protected record CachedPlan(long configurationVersion, @NotNull AfmaEncodePlan plan) {
+    protected record CachedPlan(long configurationVersion, @NotNull AfmaEncodePlan summaryPlan,
+                                @NotNull File payloadDirectory, @NotNull List<String> payloadPaths) implements AutoCloseable {
+        public @NotNull AfmaEncodePlan openPlan() throws IOException {
+            return AfmaEncodePlan.lazy(
+                    this.summaryPlan.getMetadata(),
+                    this.summaryPlan.getFrameIndex(),
+                    this.payloadPaths,
+                    this.summaryPlan.getTotalPayloadBytes(),
+                    this::readPayload
+            );
+        }
+
+        private @NotNull byte[] readPayload(@NotNull String path) throws IOException {
+            return Files.readAllBytes(this.payloadDirectory.toPath().resolve(path));
+        }
+
+        @Override
+        public void close() {
+            org.apache.commons.io.FileUtils.deleteQuietly(this.payloadDirectory);
+        }
     }
 
     protected record ResolvedSource(@NotNull AfmaSourceSequence sequence, @NotNull List<String> warnings) {
