@@ -232,6 +232,10 @@ public class AfmaDecoder implements Closeable {
             AfmaSparsePayload sparse = Objects.requireNonNull(descriptor.getSparse());
             this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), descriptor.getWidth(), descriptor.getHeight(), 1, 8);
             this.validatePayloadHeader(context, Objects.requireNonNull(sparse.getPixelsPath()), sparse.getPackedWidth(), sparse.getPackedHeight(), 8);
+        } else if (descriptor.getType() == AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH) {
+            AfmaSparsePayload sparse = Objects.requireNonNull(descriptor.getSparse());
+            this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), descriptor.getWidth(), descriptor.getHeight(), 1, 8);
+            this.validatePayloadHeader(context, Objects.requireNonNull(sparse.getPixelsPath()), sparse.getPackedWidth(), sparse.getPackedHeight(), 8);
         } else if ((descriptor.getType() == AfmaFrameOperationType.COPY_RECT_PATCH) && descriptor.requiresPatchPayload()) {
             AfmaPatchRegion patch = Objects.requireNonNull(descriptor.getPatch());
             this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()), patch.getWidth(), patch.getHeight(), 8);
@@ -299,6 +303,10 @@ public class AfmaDecoder implements Closeable {
             } else if (descriptor.getType() == AfmaFrameOperationType.DELTA_RECT) {
                 this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), descriptor.getWidth(), descriptor.getHeight(), 8);
             } else if (descriptor.getType() == AfmaFrameOperationType.SPARSE_DELTA_RECT) {
+                AfmaSparsePayload sparse = Objects.requireNonNull(descriptor.getSparse());
+                this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), descriptor.getWidth(), descriptor.getHeight(), 1, 8);
+                this.validatePayloadHeader(context, Objects.requireNonNull(sparse.getPixelsPath()), sparse.getPackedWidth(), sparse.getPackedHeight(), 8);
+            } else if (descriptor.getType() == AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH) {
                 AfmaSparsePayload sparse = Objects.requireNonNull(descriptor.getSparse());
                 this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), descriptor.getWidth(), descriptor.getHeight(), 1, 8);
                 this.validatePayloadHeader(context, Objects.requireNonNull(sparse.getPixelsPath()), sparse.getPackedWidth(), sparse.getPackedHeight(), 8);

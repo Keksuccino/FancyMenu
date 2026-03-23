@@ -309,6 +309,19 @@ public class AfmaPreviewController implements AutoCloseable {
                     descriptor.getY(),
                     Objects.requireNonNull(descriptor.getSparse(), "AFMA preview sparse delta metadata is missing")
             );
+            case COPY_RECT_SPARSE_PATCH -> {
+                AfmaCopyRect copyRect = Objects.requireNonNull(descriptor.getCopy(), "AFMA preview copy rect is missing");
+                this.copyRectMemmove(canvasPixels, canvasWidth, canvasHeight, copyRect);
+                this.applySparseDeltaFrame(
+                        this.loadPayloadFrame(Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), generation),
+                        this.loadPayloadFrame(Objects.requireNonNull(descriptor.getSecondaryPayloadPath()), generation),
+                        canvasPixels,
+                        canvasWidth,
+                        descriptor.getX(),
+                        descriptor.getY(),
+                        Objects.requireNonNull(descriptor.getSparse(), "AFMA preview sparse copy metadata is missing")
+                );
+            }
             case COPY_RECT_PATCH -> {
                 AfmaCopyRect copyRect = Objects.requireNonNull(descriptor.getCopy(), "AFMA preview copy rect is missing");
                 this.copyRectMemmove(canvasPixels, canvasWidth, canvasHeight, copyRect);

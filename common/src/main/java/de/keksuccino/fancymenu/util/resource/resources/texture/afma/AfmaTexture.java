@@ -719,6 +719,25 @@ public class AfmaTexture implements ITexture, PlayableResource {
                     );
                     this.uploadDirtyRect(currentTexture, canvas, new AfmaRect(descriptor.getX(), descriptor.getY(), descriptor.getWidth(), descriptor.getHeight()));
                 }
+                case COPY_RECT_SPARSE_PATCH -> {
+                    AfmaCopyRect copyRect = Objects.requireNonNull(descriptor.getCopy(), "AFMA copy_rect_sparse_patch is missing its copy section");
+                    AfmaNativeImageHelper.copyRectMemmove(canvas, copyRect);
+                    this.applySparseDeltaPayload(
+                            Objects.requireNonNull(preparedFrame.primaryPayload, "AFMA copy_rect_sparse_patch mask payload was NULL"),
+                            Objects.requireNonNull(preparedFrame.patchPayload, "AFMA copy_rect_sparse_patch packed pixel payload was NULL"),
+                            canvas,
+                            descriptor.getX(),
+                            descriptor.getY(),
+                            descriptor.getWidth(),
+                            descriptor.getHeight(),
+                            Objects.requireNonNull(descriptor.getSparse(), "AFMA copy_rect_sparse_patch metadata was NULL")
+                    );
+                    AfmaRect dirtyRect = AfmaRect.union(
+                            new AfmaRect(copyRect.getDstX(), copyRect.getDstY(), copyRect.getWidth(), copyRect.getHeight()),
+                            new AfmaRect(descriptor.getX(), descriptor.getY(), descriptor.getWidth(), descriptor.getHeight())
+                    );
+                    this.uploadDirtyRect(currentTexture, canvas, dirtyRect);
+                }
                 case COPY_RECT_PATCH -> {
                     AfmaCopyRect copyRect = Objects.requireNonNull(descriptor.getCopy(), "AFMA copy_rect_patch is missing its copy section");
                     AfmaNativeImageHelper.copyRectMemmove(canvas, copyRect);

@@ -192,6 +192,13 @@ public class AfmaEncodePlanner {
                         options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
                     candidates.add(copyCandidate);
                 }
+
+                PlannedCandidate copySparseCandidate = this.createCopySparseCandidate(previousFrame, currentFrame, introSequence, frameIndex, detection);
+                if ((copySparseCandidate != null) && this.shouldKeepSparseCandidate(copySparseCandidate, fullCandidate,
+                        patchArea, currentFrame.getWidth(), currentFrame.getHeight(),
+                        options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
+                    candidates.add(copySparseCandidate);
+                }
             }
         }
 
@@ -287,6 +294,43 @@ public class AfmaEncodePlanner {
     }
 
     @Nullable
+    protected PlannedCandidate createCopySparseCandidate(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
+                                                         boolean introSequence, int frameIndex,
+                                                         @NotNull AfmaRectCopyDetector.Detection detection) throws IOException {
+        AfmaRect patchBounds = detection.patchBounds();
+        if ((patchBounds == null) || (patchBounds.area() <= 0L)) {
+            return null;
+        }
+
+        SparseDeltaPayloadData sparsePayload = this.buildCopySparsePayload(previousFrame, currentFrame, detection.copyRect(), patchBounds);
+        if (sparsePayload == null) {
+            return null;
+        }
+
+        String maskPayloadPath = this.buildPayloadPath(introSequence, frameIndex);
+        String packedPayloadPath = this.buildAuxPayloadPath(introSequence, frameIndex, "cs");
+        return new PlannedCandidate(
+                AfmaFrameDescriptor.copyRectSparsePatch(
+                        detection.copyRect(),
+                        maskPayloadPath,
+                        patchBounds.x(),
+                        patchBounds.y(),
+                        patchBounds.width(),
+                        patchBounds.height(),
+                        new AfmaSparsePayload(packedPayloadPath, sparsePayload.packedWidth(), sparsePayload.packedHeight())
+                ),
+                maskPayloadPath,
+                sparsePayload.maskPayload(),
+                false,
+                packedPayloadPath,
+                sparsePayload.packedPayload(),
+                false,
+                DecodeCost.COPY_RECT_SPARSE_PATCH,
+                5
+        );
+    }
+
+    @Nullable
     protected SparseDeltaPayloadData buildSparseDeltaPayload(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
                                                              @NotNull AfmaRect deltaBounds) throws IOException {
         int width = deltaBounds.width();
@@ -333,6 +377,65 @@ public class AfmaEncodePlanner {
             return null;
         }
         return new SparseDeltaPayloadData(maskPayload, packedPayload.payloadBytes(), packedPayload.width(), packedPayload.height());
+    }
+
+    @Nullable
+    protected SparseDeltaPayloadData buildCopySparsePayload(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
+                                                            @NotNull AfmaCopyRect copyRect, @NotNull AfmaRect patchBounds) throws IOException {
+        int width = patchBounds.width();
+        int height = patchBounds.height();
+        long bboxArea = patchBounds.area();
+        if ((bboxArea <= 0L) || (bboxArea > Integer.MAX_VALUE)) {
+            return null;
+        }
+
+        BufferedImage maskImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
+        WritableRaster maskRaster = maskImage.getRaster();
+        int[] changedPixels = new int[(int) bboxArea];
+        int changedPixelCount = 0;
+        boolean includeAlpha = false;
+
+        for (int localY = 0; localY < height; localY++) {
+            int sourceY = patchBounds.y() + localY;
+            for (int localX = 0; localX < width; localX++) {
+                int sourceX = patchBounds.x() + localX;
+                int expectedColor = this.getExpectedColorAfterCopy(previousFrame, copyRect, sourceX, sourceY);
+                int currentColor = currentFrame.getPixelRGBA(sourceX, sourceY);
+                if (expectedColor == currentColor) {
+                    continue;
+                }
+
+                maskRaster.setSample(localX, localY, 0, 1);
+                changedPixels[changedPixelCount++] = currentColor;
+                if (((currentColor >>> 24) & 0xFF) != 0xFF) {
+                    includeAlpha = true;
+                }
+            }
+        }
+
+        if (changedPixelCount < MIN_SPARSE_DELTA_CHANGED_PIXELS) {
+            return null;
+        }
+        if (((double) changedPixelCount / (double) bboxArea) > MAX_SPARSE_DELTA_CHANGED_DENSITY) {
+            return null;
+        }
+
+        byte[] maskPayload = AfmaPixelFrame.writeCompressedPng(maskImage);
+        SparsePackedPayload packedPayload = this.buildBestSparsePackedPayload(changedPixels, changedPixelCount, includeAlpha, width);
+        if (packedPayload == null) {
+            return null;
+        }
+        return new SparseDeltaPayloadData(maskPayload, packedPayload.payloadBytes(), packedPayload.width(), packedPayload.height());
+    }
+
+    protected int getExpectedColorAfterCopy(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaCopyRect copyRect, int x, int y) {
+        if ((x >= copyRect.getDstX()) && (x < (copyRect.getDstX() + copyRect.getWidth()))
+                && (y >= copyRect.getDstY()) && (y < (copyRect.getDstY() + copyRect.getHeight()))) {
+            int srcX = copyRect.getSrcX() + (x - copyRect.getDstX());
+            int srcY = copyRect.getSrcY() + (y - copyRect.getDstY());
+            return previousFrame.getPixelRGBA(srcX, srcY);
+        }
+        return previousFrame.getPixelRGBA(x, y);
     }
 
     @Nullable
@@ -564,7 +667,8 @@ public class AfmaEncodePlanner {
         FULL,
         DELTA,
         COPY_RECT_PATCH,
-        SPARSE_DELTA_RECT
+        SPARSE_DELTA_RECT,
+        COPY_RECT_SPARSE_PATCH
     }
 
     protected static class PlannedCandidate {
@@ -664,8 +768,8 @@ public class AfmaEncodePlanner {
             }
             if (this.patchPayloadPath != null) {
                 bytes += this.patchPayloadPath.length();
-            } else if ((this.descriptor.getPatch() != null) && (this.descriptor.getPatch().getPath() != null)) {
-                bytes += this.descriptor.getPatch().getPath().length();
+            } else if (this.descriptor.getSecondaryPayloadPath() != null) {
+                bytes += Objects.requireNonNull(this.descriptor.getSecondaryPayloadPath()).length();
             }
             if (this.descriptor.getType() == AfmaFrameOperationType.DELTA_RECT) {
                 bytes += 20;
@@ -673,6 +777,8 @@ public class AfmaEncodePlanner {
                 bytes += 32;
             } else if (this.descriptor.getType() == AfmaFrameOperationType.SPARSE_DELTA_RECT) {
                 bytes += 28;
+            } else if (this.descriptor.getType() == AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH) {
+                bytes += 40;
             }
             return bytes;
         }
