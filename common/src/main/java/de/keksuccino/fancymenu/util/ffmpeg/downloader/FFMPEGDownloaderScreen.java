@@ -15,11 +15,12 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public class FFMPEGDownloaderScreen extends Screen {
 
-    private final @Nullable Consumer<FFMPEGDownloaderScreenResult> onClosed;
+    private final @NotNull Consumer<FFMPEGDownloaderScreenResult> onClosed;
     private final boolean autoStart;
 
     private @Nullable ExtendedButton actionButton;
@@ -29,17 +30,13 @@ public class FFMPEGDownloaderScreen extends Screen {
     private boolean startRequested;
     private boolean closeCallbackHandledForRemoval;
 
-    public FFMPEGDownloaderScreen() {
-        this(null, true);
-    }
-
-    public FFMPEGDownloaderScreen(@Nullable Consumer<FFMPEGDownloaderScreenResult> onClosed) {
+    public FFMPEGDownloaderScreen(@NotNull Consumer<FFMPEGDownloaderScreenResult> onClosed) {
         this(onClosed, true);
     }
 
-    public FFMPEGDownloaderScreen(@Nullable Consumer<FFMPEGDownloaderScreenResult> onClosed, boolean autoStart) {
+    public FFMPEGDownloaderScreen(@NotNull Consumer<FFMPEGDownloaderScreenResult> onClosed, boolean autoStart) {
         super(Component.translatable("fancymenu.ffmpeg.downloader.title"));
-        this.onClosed = onClosed;
+        this.onClosed = Objects.requireNonNull(onClosed);
         this.autoStart = autoStart;
     }
 
@@ -190,7 +187,7 @@ public class FFMPEGDownloaderScreen extends Screen {
 
     @Override
     public boolean shouldCloseOnEsc() {
-        return !FFMPEGDownloader.isDownloadRunning();
+        return false;
     }
 
     @Override
@@ -199,10 +196,7 @@ public class FFMPEGDownloaderScreen extends Screen {
     }
 
     private void dispatchCloseCallback() {
-        Consumer<FFMPEGDownloaderScreenResult> callback = this.onClosed;
-        if (callback != null) {
-            callback.accept(FFMPEGDownloaderScreenResult.fromSnapshot(FFMPEGDownloader.getSnapshot()));
-        }
+        this.onClosed.accept(FFMPEGDownloaderScreenResult.fromSnapshot(FFMPEGDownloader.getSnapshot()));
     }
 
 }
