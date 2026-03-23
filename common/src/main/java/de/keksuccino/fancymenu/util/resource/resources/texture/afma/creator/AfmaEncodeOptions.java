@@ -21,6 +21,12 @@ public class AfmaEncodeOptions {
     protected boolean duplicateFrameElision = true;
     protected int maxCopySearchDistance = AfmaOptimizationPreset.BALANCED.getMaxCopySearchDistance();
     protected int maxCandidateAxisOffsets = AfmaOptimizationPreset.BALANCED.getMaxCandidateAxisOffsets();
+    protected double maxDeltaAreaRatioWithoutStrongSavings = 0.94D;
+    protected double maxCopyPatchAreaRatioWithoutStrongSavings = 0.90D;
+    protected long minComplexCandidateSavingsBytes = 24L * 1024L;
+    protected long minStrongComplexCandidateSavingsBytes = 96L * 1024L;
+    protected double minComplexCandidateSavingsRatio = 0.015D;
+    protected double minStrongComplexCandidateSavingsRatio = 0.06D;
 
     @NotNull
     public static AfmaEncodeOptions balanced() {
@@ -119,6 +125,30 @@ public class AfmaEncodeOptions {
         return this;
     }
 
+    public double getMaxDeltaAreaRatioWithoutStrongSavings() {
+        return this.maxDeltaAreaRatioWithoutStrongSavings;
+    }
+
+    public double getMaxCopyPatchAreaRatioWithoutStrongSavings() {
+        return this.maxCopyPatchAreaRatioWithoutStrongSavings;
+    }
+
+    public long getMinComplexCandidateSavingsBytes() {
+        return this.minComplexCandidateSavingsBytes;
+    }
+
+    public long getMinStrongComplexCandidateSavingsBytes() {
+        return this.minStrongComplexCandidateSavingsBytes;
+    }
+
+    public double getMinComplexCandidateSavingsRatio() {
+        return this.minComplexCandidateSavingsRatio;
+    }
+
+    public double getMinStrongComplexCandidateSavingsRatio() {
+        return this.minStrongComplexCandidateSavingsRatio;
+    }
+
     public void validateForCounts(int mainFrameCount, int introFrameCount) {
         if (mainFrameCount <= 0 && introFrameCount <= 0) {
             throw new IllegalArgumentException("AFMA encoding requires at least one main or intro frame");
@@ -134,6 +164,18 @@ public class AfmaEncodeOptions {
         }
         if (this.maxCandidateAxisOffsets <= 0) {
             throw new IllegalArgumentException("AFMA candidate axis count must be greater than 0");
+        }
+        if (this.maxDeltaAreaRatioWithoutStrongSavings <= 0D || this.maxDeltaAreaRatioWithoutStrongSavings > 1D) {
+            throw new IllegalArgumentException("AFMA delta area ratio must stay within (0, 1]");
+        }
+        if (this.maxCopyPatchAreaRatioWithoutStrongSavings <= 0D || this.maxCopyPatchAreaRatioWithoutStrongSavings > 1D) {
+            throw new IllegalArgumentException("AFMA copy patch area ratio must stay within (0, 1]");
+        }
+        if (this.minComplexCandidateSavingsBytes < 0L || this.minStrongComplexCandidateSavingsBytes < 0L) {
+            throw new IllegalArgumentException("AFMA candidate savings thresholds cannot be negative");
+        }
+        if (this.minComplexCandidateSavingsRatio < 0D || this.minStrongComplexCandidateSavingsRatio < 0D) {
+            throw new IllegalArgumentException("AFMA candidate savings ratios cannot be negative");
         }
 
         validateCustomFrameTimes(this.customFrameTimes, mainFrameCount, "main");

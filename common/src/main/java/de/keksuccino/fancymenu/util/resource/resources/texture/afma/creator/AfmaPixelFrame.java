@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -13,22 +14,26 @@ import java.awt.image.WritableRaster;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Iterator;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import org.jetbrains.annotations.Nullable;
 
 public class AfmaPixelFrame implements AutoCloseable {
 
     private final int width;
     private final int height;
     private final @NotNull int[] pixels;
+    private final @Nullable byte[] reusableSourcePngPayload;
 
     public AfmaPixelFrame(int width, int height, @NotNull int[] pixels) {
+        this(width, height, pixels, null);
+    }
+
+    public AfmaPixelFrame(int width, int height, @NotNull int[] pixels, @Nullable byte[] reusableSourcePngPayload) {
         if (width <= 0 || height <= 0) {
             throw new IllegalArgumentException("AFMA frame dimensions must be greater than zero");
         }
@@ -41,6 +46,7 @@ public class AfmaPixelFrame implements AutoCloseable {
         this.width = width;
         this.height = height;
         this.pixels = pixels;
+        this.reusableSourcePngPayload = reusableSourcePngPayload;
     }
 
     public int getWidth() {
@@ -68,8 +74,12 @@ public class AfmaPixelFrame implements AutoCloseable {
         return false;
     }
 
+    public @Nullable byte[] getReusableSourcePngPayload() {
+        return this.reusableSourcePngPayload;
+    }
+
     public @NotNull AfmaPixelFrame copy() {
-        return new AfmaPixelFrame(this.width, this.height, Arrays.copyOf(this.pixels, this.pixels.length));
+        return new AfmaPixelFrame(this.width, this.height, Arrays.copyOf(this.pixels, this.pixels.length), this.reusableSourcePngPayload);
     }
 
     public @NotNull byte[] asByteArray() throws IOException {

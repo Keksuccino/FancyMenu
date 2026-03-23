@@ -14,6 +14,8 @@ import java.util.Set;
 public class AfmaRectCopyDetector {
 
     protected static final double MIN_CANDIDATE_SCORE = 0.20D;
+    protected static final int SMALL_OFFSET_PROBE = 4;
+    protected static final int NEIGHBOR_OFFSET_RADIUS = 2;
 
     protected final int maxSearchDistance;
     protected final int maxCandidateAxisOffsets;
@@ -77,6 +79,10 @@ public class AfmaRectCopyDetector {
         if (maxOffset <= 0) {
             return List.copyOf(offsets);
         }
+        for (int offset = 1; offset <= Math.min(SMALL_OFFSET_PROBE, maxOffset); offset++) {
+            offsets.add(offset);
+            offsets.add(-offset);
+        }
 
         List<AxisCandidate> candidates = new ArrayList<>();
         for (int offset = -maxOffset; offset <= maxOffset; offset++) {
@@ -90,11 +96,15 @@ public class AfmaRectCopyDetector {
         for (AxisCandidate candidate : candidates) {
             if ((candidate.score() <= MIN_CANDIDATE_SCORE) && (acceptedCandidates >= this.maxCandidateAxisOffsets)) continue;
             offsets.add(candidate.offset());
-            if (candidate.offset() > (-maxOffset)) {
-                offsets.add(candidate.offset() - 1);
-            }
-            if (candidate.offset() < maxOffset) {
-                offsets.add(candidate.offset() + 1);
+            for (int neighborOffset = 1; neighborOffset <= NEIGHBOR_OFFSET_RADIUS; neighborOffset++) {
+                int negativeNeighbor = candidate.offset() - neighborOffset;
+                if (negativeNeighbor >= -maxOffset) {
+                    offsets.add(negativeNeighbor);
+                }
+                int positiveNeighbor = candidate.offset() + neighborOffset;
+                if (positiveNeighbor <= maxOffset) {
+                    offsets.add(positiveNeighbor);
+                }
             }
             acceptedCandidates++;
             if (acceptedCandidates >= this.maxCandidateAxisOffsets) {
@@ -117,13 +127,29 @@ public class AfmaRectCopyDetector {
         int srcY = horizontal ? 0 : Math.max(0, -offset);
         int dstY = horizontal ? 0 : Math.max(0, offset);
 
-        int stepX = Math.max(1, overlapWidth / 48);
-        int stepY = Math.max(1, overlapHeight / 16);
+        double fullScore = this.sampleMatchRatio(previous, next, srcX, srcY, dstX, dstY, overlapWidth, overlapHeight);
+        if (horizontal) {
+            int bandHeight = Math.max(1, overlapHeight / 2);
+            int bandY = srcY + Math.max(0, (overlapHeight - bandHeight) / 2);
+            int dstBandY = dstY + Math.max(0, (overlapHeight - bandHeight) / 2);
+            return Math.max(fullScore, this.sampleMatchRatio(previous, next, srcX, bandY, dstX, dstBandY, overlapWidth, bandHeight));
+        }
+
+        int bandWidth = Math.max(1, overlapWidth / 2);
+        int bandX = srcX + Math.max(0, (overlapWidth - bandWidth) / 2);
+        int dstBandX = dstX + Math.max(0, (overlapWidth - bandWidth) / 2);
+        return Math.max(fullScore, this.sampleMatchRatio(previous, next, bandX, srcY, dstBandX, dstY, bandWidth, overlapHeight));
+    }
+
+    protected double sampleMatchRatio(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next,
+                                      int srcX, int srcY, int dstX, int dstY, int sampleWidth, int sampleHeight) {
+        int stepX = Math.max(1, sampleWidth / 48);
+        int stepY = Math.max(1, sampleHeight / 16);
         int matches = 0;
         int samples = 0;
 
-        for (int y = 0; y < overlapHeight; y += stepY) {
-            for (int x = 0; x < overlapWidth; x += stepX) {
+        for (int y = 0; y < sampleHeight; y += stepY) {
+            for (int x = 0; x < sampleWidth; x += stepX) {
                 samples++;
                 if (previous.getPixelRGBA(srcX + x, srcY + y) == next.getPixelRGBA(dstX + x, dstY + y)) {
                     matches++;

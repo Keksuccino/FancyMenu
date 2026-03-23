@@ -26,6 +26,8 @@ import java.util.function.BooleanSupplier;
 
 public class AfmaEncodePlanner {
 
+    protected static final int MIN_FFMPEG_PNG_REWRITE_BYTES = 96 * 1024;
+
     @NotNull
     protected final AfmaFrameNormalizer frameNormalizer;
 
@@ -70,10 +72,11 @@ public class AfmaEncodePlanner {
         }
 
         AfmaRectCopyDetector copyDetector = new AfmaRectCopyDetector(options.getMaxCopySearchDistance(), options.getMaxCandidateAxisOffsets());
+        AfmaFfmpegBridge ffmpegBridge = new AfmaFfmpegBridge();
         LinkedHashMap<String, byte[]> payloads = new LinkedHashMap<>();
         Map<String, String> payloadPathsByFingerprint = new LinkedHashMap<>();
-        List<AfmaFrameDescriptor> plannedIntroFrames = this.planSequence(intro, true, dimension, options, copyDetector, payloads, payloadPathsByFingerprint, cancellationRequested, progressListener, 0, totalFrameCount);
-        List<AfmaFrameDescriptor> plannedMainFrames = this.planSequence(mainSequence, false, dimension, options, copyDetector, payloads, payloadPathsByFingerprint, cancellationRequested, progressListener, intro.size(), totalFrameCount);
+        List<AfmaFrameDescriptor> plannedIntroFrames = this.planSequence(intro, true, dimension, options, copyDetector, ffmpegBridge, payloads, payloadPathsByFingerprint, cancellationRequested, progressListener, 0, totalFrameCount);
+        List<AfmaFrameDescriptor> plannedMainFrames = this.planSequence(mainSequence, false, dimension, options, copyDetector, ffmpegBridge, payloads, payloadPathsByFingerprint, cancellationRequested, progressListener, intro.size(), totalFrameCount);
 
         AfmaMetadata metadata = AfmaMetadata.create(
                 dimension.width(),
@@ -94,6 +97,7 @@ public class AfmaEncodePlanner {
     @NotNull
     protected List<AfmaFrameDescriptor> planSequence(@NotNull AfmaSourceSequence sequence, boolean introSequence, @NotNull Dimension dimension,
                                                      @NotNull AfmaEncodeOptions options, @NotNull AfmaRectCopyDetector copyDetector,
+                                                     @NotNull AfmaFfmpegBridge ffmpegBridge,
                                                      @NotNull LinkedHashMap<String, byte[]> payloads,
                                                      @NotNull Map<String, String> payloadPathsByFingerprint,
                                                      @Nullable BooleanSupplier cancellationRequested, @Nullable ProgressListener progressListener,
@@ -129,6 +133,7 @@ public class AfmaEncodePlanner {
                         selectedCandidate = this.chooseBestCandidate(previousFrame, currentFrame, introSequence, frameIndex, options, copyDetector, payloadPathsByFingerprint);
                     }
 
+                    selectedCandidate = this.optimizeSelectedCandidatePayloads(selectedCandidate, ffmpegBridge);
                     PlannedCandidate finalizedCandidate = selectedCandidate.internPayloads(payloads, payloadPathsByFingerprint);
                     plannedFrames.add(finalizedCandidate.descriptor());
                     framesSinceKeyframe = finalizedCandidate.descriptor().isKeyframe() ? 0 : (framesSinceKeyframe + 1);
@@ -150,18 +155,27 @@ public class AfmaEncodePlanner {
                                                    @NotNull AfmaRectCopyDetector copyDetector,
                                                    @NotNull Map<String, String> payloadPathsByFingerprint) throws IOException {
         List<PlannedCandidate> candidates = new ArrayList<>();
-        candidates.add(this.createFullCandidate(currentFrame, introSequence, frameIndex));
+        PlannedCandidate fullCandidate = this.createFullCandidate(currentFrame, introSequence, frameIndex);
+        candidates.add(fullCandidate);
 
         AfmaRect deltaBounds = AfmaPixelFrameHelper.findDifferenceBounds(previousFrame, currentFrame);
         if (deltaBounds != null) {
-            candidates.add(this.createDeltaCandidate(currentFrame, introSequence, frameIndex, deltaBounds));
+            PlannedCandidate deltaCandidate = this.createDeltaCandidate(currentFrame, introSequence, frameIndex, deltaBounds);
+            if ((deltaCandidate != null) && this.shouldKeepComplexCandidate(deltaCandidate, fullCandidate,
+                    deltaBounds.area(), currentFrame.getWidth(), currentFrame.getHeight(),
+                    options.getMaxDeltaAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
+                candidates.add(deltaCandidate);
+            }
         }
 
         if (options.isRectCopyEnabled()) {
             AfmaRectCopyDetector.Detection detection = copyDetector.detect(previousFrame, currentFrame);
             if (detection != null) {
                 PlannedCandidate copyCandidate = this.createCopyCandidate(currentFrame, introSequence, frameIndex, detection);
-                if (copyCandidate != null) {
+                long patchArea = (detection.patchBounds() != null) ? detection.patchBounds().area() : 0L;
+                if ((copyCandidate != null) && this.shouldKeepComplexCandidate(copyCandidate, fullCandidate,
+                        patchArea, currentFrame.getWidth(), currentFrame.getHeight(),
+                        options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
                     candidates.add(copyCandidate);
                 }
             }
@@ -180,19 +194,31 @@ public class AfmaEncodePlanner {
     @NotNull
     protected PlannedCandidate createFullCandidate(@NotNull AfmaPixelFrame currentFrame, boolean introSequence, int frameIndex) throws IOException {
         String payloadPath = this.buildPayloadPath(introSequence, frameIndex);
+        byte[] encodedPayload = currentFrame.asByteArray();
+        byte[] reusableSourcePayload = currentFrame.getReusableSourcePngPayload();
+        byte[] payloadBytes = ((reusableSourcePayload != null) && (reusableSourcePayload.length <= encodedPayload.length))
+                ? reusableSourcePayload
+                : encodedPayload;
+        boolean payloadReusedFromSource = payloadBytes == reusableSourcePayload;
         return new PlannedCandidate(
                 AfmaFrameDescriptor.full(payloadPath),
                 payloadPath,
-                currentFrame.asByteArray(),
+                payloadBytes,
+                payloadReusedFromSource,
                 null,
                 null,
+                false,
                 DecodeCost.FULL,
                 1
         );
     }
 
-    @NotNull
+    @Nullable
     protected PlannedCandidate createDeltaCandidate(@NotNull AfmaPixelFrame currentFrame, boolean introSequence, int frameIndex, @NotNull AfmaRect deltaBounds) throws IOException {
+        if (deltaBounds.area() >= ((long) currentFrame.getWidth() * currentFrame.getHeight())) {
+            return null;
+        }
+
         AfmaPixelFrame patchImage = this.frameNormalizer.extractPatch(currentFrame, deltaBounds.x(), deltaBounds.y(), deltaBounds.width(), deltaBounds.height());
         try {
             String payloadPath = this.buildPayloadPath(introSequence, frameIndex);
@@ -200,8 +226,10 @@ public class AfmaEncodePlanner {
                     AfmaFrameDescriptor.deltaRect(payloadPath, deltaBounds.x(), deltaBounds.y(), deltaBounds.width(), deltaBounds.height()),
                     payloadPath,
                     patchImage.asByteArray(),
+                    false,
                     null,
                     null,
+                    false,
                     DecodeCost.DELTA,
                     2
             );
@@ -236,11 +264,82 @@ public class AfmaEncodePlanner {
                 AfmaFrameDescriptor.copyRectPatch(copyRect, patchRegion),
                 null,
                 null,
+                false,
                 payloadPath,
                 payloadBytes,
+                false,
                 DecodeCost.COPY_RECT_PATCH,
                 3
         );
+    }
+
+    protected boolean shouldKeepComplexCandidate(@NotNull PlannedCandidate candidate, @NotNull PlannedCandidate fullCandidate,
+                                                 long patchArea, int frameWidth, int frameHeight, double maxAreaRatioWithoutStrongSavings,
+                                                 @NotNull AfmaEncodeOptions options, @NotNull Map<String, String> payloadPathsByFingerprint) {
+        long frameArea = (long) frameWidth * frameHeight;
+        if (frameArea <= 0L || patchArea >= frameArea) {
+            return false;
+        }
+
+        long fullArchiveBytes = fullCandidate.estimatedArchiveBytes(payloadPathsByFingerprint);
+        long candidateArchiveBytes = candidate.estimatedArchiveBytes(payloadPathsByFingerprint);
+        long byteSavings = fullArchiveBytes - candidateArchiveBytes;
+        if (byteSavings <= 0L) {
+            return false;
+        }
+        if (patchArea <= 0L) {
+            return true;
+        }
+
+        long requiredSavings = this.computeRequiredComplexCandidateSavings(
+                fullArchiveBytes,
+                options.getMinComplexCandidateSavingsBytes(),
+                options.getMinComplexCandidateSavingsRatio()
+        );
+        double areaRatio = (double) patchArea / (double) frameArea;
+        if (areaRatio > maxAreaRatioWithoutStrongSavings) {
+            requiredSavings = Math.max(requiredSavings, this.computeRequiredComplexCandidateSavings(
+                    fullArchiveBytes,
+                    options.getMinStrongComplexCandidateSavingsBytes(),
+                    options.getMinStrongComplexCandidateSavingsRatio()
+            ));
+        }
+        return byteSavings >= requiredSavings;
+    }
+
+    protected long computeRequiredComplexCandidateSavings(long referenceBytes, long minAbsoluteSavings, double minSavingsRatio) {
+        long ratioSavings = (referenceBytes > 0L && minSavingsRatio > 0D)
+                ? (long) Math.ceil(referenceBytes * minSavingsRatio)
+                : 0L;
+        return Math.max(minAbsoluteSavings, ratioSavings);
+    }
+
+    @NotNull
+    protected PlannedCandidate optimizeSelectedCandidatePayloads(@NotNull PlannedCandidate candidate, @NotNull AfmaFfmpegBridge ffmpegBridge) throws IOException {
+        if (!ffmpegBridge.isReady()) {
+            return candidate;
+        }
+
+        byte[] optimizedPrimaryPayload = this.optimizePayloadWithFfmpeg(candidate.primaryPayload, candidate.primaryPayloadReusedFromSource, ffmpegBridge);
+        byte[] optimizedPatchPayload = this.optimizePayloadWithFfmpeg(candidate.patchPayload, candidate.patchPayloadReusedFromSource, ffmpegBridge);
+        if (optimizedPrimaryPayload == candidate.primaryPayload && optimizedPatchPayload == candidate.patchPayload) {
+            return candidate;
+        }
+        return candidate.withPayloads(optimizedPrimaryPayload, optimizedPatchPayload);
+    }
+
+    protected @Nullable byte[] optimizePayloadWithFfmpeg(@Nullable byte[] payloadBytes, boolean payloadReusedFromSource,
+                                                         @NotNull AfmaFfmpegBridge ffmpegBridge) throws IOException {
+        if (payloadBytes == null || payloadReusedFromSource || payloadBytes.length < MIN_FFMPEG_PNG_REWRITE_BYTES) {
+            return payloadBytes;
+        }
+
+        try {
+            byte[] optimizedPayload = ffmpegBridge.optimizePngPayload(payloadBytes);
+            return (optimizedPayload != null) ? optimizedPayload : payloadBytes;
+        } catch (IOException ignored) {
+            return payloadBytes;
+        }
     }
 
     @NotNull
@@ -305,30 +404,34 @@ public class AfmaEncodePlanner {
         protected final String primaryPayloadPath;
         @Nullable
         protected final byte[] primaryPayload;
+        protected final boolean primaryPayloadReusedFromSource;
         @Nullable
         protected final String patchPayloadPath;
         @Nullable
         protected final byte[] patchPayload;
+        protected final boolean patchPayloadReusedFromSource;
         @NotNull
         protected final DecodeCost decodeCost;
         protected final int complexityScore;
 
         protected PlannedCandidate(@NotNull AfmaFrameDescriptor descriptor,
-                                   @Nullable String primaryPayloadPath, @Nullable byte[] primaryPayload,
-                                   @Nullable String patchPayloadPath, @Nullable byte[] patchPayload,
+                                   @Nullable String primaryPayloadPath, @Nullable byte[] primaryPayload, boolean primaryPayloadReusedFromSource,
+                                   @Nullable String patchPayloadPath, @Nullable byte[] patchPayload, boolean patchPayloadReusedFromSource,
                                    @NotNull DecodeCost decodeCost, int complexityScore) {
             this.descriptor = descriptor;
             this.primaryPayloadPath = primaryPayloadPath;
             this.primaryPayload = primaryPayload;
+            this.primaryPayloadReusedFromSource = primaryPayloadReusedFromSource;
             this.patchPayloadPath = patchPayloadPath;
             this.patchPayload = patchPayload;
+            this.patchPayloadReusedFromSource = patchPayloadReusedFromSource;
             this.decodeCost = decodeCost;
             this.complexityScore = complexityScore;
         }
 
         @NotNull
         public static PlannedCandidate same() {
-            return new PlannedCandidate(AfmaFrameDescriptor.same(), null, null, null, null, DecodeCost.SAME, 0);
+            return new PlannedCandidate(AfmaFrameDescriptor.same(), null, null, false, null, null, false, DecodeCost.SAME, 0);
         }
 
         @NotNull
@@ -341,6 +444,21 @@ public class AfmaEncodePlanner {
             if (this.primaryPayload != null) total += this.primaryPayload.length;
             if (this.patchPayload != null) total += this.patchPayload.length;
             return total;
+        }
+
+        @NotNull
+        public PlannedCandidate withPayloads(@Nullable byte[] primaryPayload, @Nullable byte[] patchPayload) {
+            return new PlannedCandidate(
+                    this.descriptor,
+                    this.primaryPayloadPath,
+                    primaryPayload,
+                    this.primaryPayloadReusedFromSource && primaryPayload == this.primaryPayload,
+                    this.patchPayloadPath,
+                    patchPayload,
+                    this.patchPayloadReusedFromSource && patchPayload == this.patchPayload,
+                    this.decodeCost,
+                    this.complexityScore
+            );
         }
 
         public long estimatedArchiveBytes(@NotNull Map<String, String> payloadPathsByFingerprint) {
@@ -428,8 +546,10 @@ public class AfmaEncodePlanner {
                         this.descriptor.withPrimaryPath(existingPath),
                         existingPath,
                         null,
+                        false,
                         this.patchPayloadPath,
                         this.patchPayload,
+                        this.patchPayloadReusedFromSource,
                         this.decodeCost,
                         this.complexityScore
                 );
@@ -452,8 +572,10 @@ public class AfmaEncodePlanner {
                         this.descriptor.withPatchPath(existingPath),
                         this.primaryPayloadPath,
                         this.primaryPayload,
+                        this.primaryPayloadReusedFromSource,
                         existingPath,
                         null,
+                        false,
                         this.decodeCost,
                         this.complexityScore
                 );
