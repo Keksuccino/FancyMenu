@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -28,7 +27,6 @@ public class FFMPEGDownloaderScreen extends Screen {
     private @Nullable ExtendedButton openFolderButton;
     private @Nullable ExtendedButton closeButton;
     private boolean startRequested;
-    private boolean closeCallbackHandledForRemoval;
 
     public FFMPEGDownloaderScreen(@NotNull Consumer<FFMPEGDownloaderScreenResult> onClosed) {
         this(onClosed, true);
@@ -103,7 +101,8 @@ public class FFMPEGDownloaderScreen extends Screen {
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(graphics, mouseX, mouseY, partialTick);
+
+        super.render(graphics, mouseX, mouseY, partialTick);
 
         FFMPEGDownloadSnapshot snapshot = FFMPEGDownloader.getSnapshot();
         double cx = this.width / 2.0D;
@@ -111,29 +110,29 @@ public class FFMPEGDownloaderScreen extends Screen {
         int progressBarWidth = this.width / 3;
         int progressBarHeight = 14;
 
-        PoseStack matrix = graphics.pose();
+        PoseStack pose = graphics.pose();
 
-        matrix.pushPose();
-        matrix.translate((float) cx, (float) cy, 0.0F);
-        matrix.translate((float) (-progressBarWidth / 2.0D), (float) (-progressBarHeight / 2.0D), 0.0F);
+        pose.pushPose();
+        pose.translate((float) cx, (float) cy, 0.0F);
+        pose.translate((float) (-progressBarWidth / 2.0D), (float) (-progressBarHeight / 2.0D), 0.0F);
         graphics.fill(0, 0, progressBarWidth, progressBarHeight, -1);
         graphics.fill(2, 2, progressBarWidth - 2, progressBarHeight - 2, -16777215);
         int fillWidth = (int) ((progressBarWidth - 4) * snapshot.getProgress());
         if (fillWidth > 0) {
             graphics.fill(4, 4, 4 + fillWidth, progressBarHeight - 4, -1);
         }
-        matrix.popPose();
+        pose.popPose();
 
         List<Component> textLines = buildTextLines(snapshot);
         int offset = ((this.font.lineHeight / 2) + ((this.font.lineHeight + 2) * (textLines.size() + 2))) + 4;
-        matrix.pushPose();
-        matrix.translate((float) cx, (float) (cy - offset), 0.0F);
+        pose.pushPose();
+        pose.translate((float) cx, (float) (cy - offset), 0.0F);
         graphics.drawString(this.font, this.title, (int) -(this.font.width(this.title) / 2.0D), 0, -1);
         for (Component line : textLines) {
-            matrix.translate(0.0F, this.font.lineHeight + 2.0F, 0.0F);
+            pose.translate(0.0F, this.font.lineHeight + 2.0F, 0.0F);
             graphics.drawString(this.font, line, (int) -(this.font.width(line) / 2.0D), 0, -1);
         }
-        matrix.popPose();
+        pose.popPose();
 
         if (snapshot.getFailureMessage() != null && !snapshot.getFailureMessage().isBlank()) {
             int infoMaxWidth = Math.min(this.width - 40, 420);
@@ -146,7 +145,6 @@ public class FFMPEGDownloaderScreen extends Screen {
             }
         }
 
-        super.render(graphics, mouseX, mouseY, partialTick);
     }
 
     private @NotNull List<Component> buildTextLines(@NotNull FFMPEGDownloadSnapshot snapshot) {
@@ -172,17 +170,7 @@ public class FFMPEGDownloaderScreen extends Screen {
 
     @Override
     public void onClose() {
-        this.dispatchCloseCallback();
-        this.closeCallbackHandledForRemoval = Minecraft.getInstance().screen != this;
-    }
-
-    @Override
-    public void removed() {
-        super.removed();
-        if (!this.closeCallbackHandledForRemoval) {
-            this.dispatchCloseCallback();
-        }
-        this.closeCallbackHandledForRemoval = false;
+        this.onClosed.accept(FFMPEGDownloaderScreenResult.fromSnapshot(FFMPEGDownloader.getSnapshot()));
     }
 
     @Override
@@ -193,10 +181,6 @@ public class FFMPEGDownloaderScreen extends Screen {
     @Override
     public boolean isPauseScreen() {
         return true;
-    }
-
-    private void dispatchCloseCallback() {
-        this.onClosed.accept(FFMPEGDownloaderScreenResult.fromSnapshot(FFMPEGDownloader.getSnapshot()));
     }
 
 }
