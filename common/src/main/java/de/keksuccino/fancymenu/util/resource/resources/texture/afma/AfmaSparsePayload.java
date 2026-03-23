@@ -7,16 +7,16 @@ public class AfmaSparsePayload {
 
     @Nullable
     protected String pixels_path;
-    protected int packed_width;
-    protected int packed_height;
+    protected int pixel_count;
+    protected int channels;
 
     public AfmaSparsePayload() {
     }
 
-    public AfmaSparsePayload(@Nullable String pixelsPath, int packedWidth, int packedHeight) {
+    public AfmaSparsePayload(@Nullable String pixelsPath, int pixelCount, int channels) {
         this.pixels_path = pixelsPath;
-        this.packed_width = packedWidth;
-        this.packed_height = packedHeight;
+        this.pixel_count = pixelCount;
+        this.channels = channels;
     }
 
     @Nullable
@@ -24,30 +24,29 @@ public class AfmaSparsePayload {
         return this.pixels_path;
     }
 
-    public int getPackedWidth() {
-        return this.packed_width;
+    public int getChangedPixelCount() {
+        return this.pixel_count;
     }
 
-    public int getPackedHeight() {
-        return this.packed_height;
-    }
-
-    public long getPackedArea() {
-        return (long) this.packed_width * (long) this.packed_height;
+    public int getChannels() {
+        return this.channels;
     }
 
     public void validate(@NotNull String context) {
         if ((this.pixels_path == null) || this.pixels_path.isBlank()) {
-            throw new IllegalArgumentException(context + " is missing its packed pixel payload path");
+            throw new IllegalArgumentException(context + " is missing its sparse residual payload path");
         }
-        if ((this.packed_width <= 0) || (this.packed_height <= 0)) {
-            throw new IllegalArgumentException(context + " has invalid packed pixel dimensions " + this.packed_width + "x" + this.packed_height);
+        if (this.pixel_count <= 0) {
+            throw new IllegalArgumentException(context + " has an invalid sparse pixel count: " + this.pixel_count);
+        }
+        if (!AfmaResidualPayloadHelper.isValidChannelCount(this.channels)) {
+            throw new IllegalArgumentException(context + " has an invalid sparse residual channel count: " + this.channels);
         }
     }
 
     @NotNull
     public AfmaSparsePayload withPixelsPath(@NotNull String pixelsPath) {
-        return new AfmaSparsePayload(pixelsPath, this.getPackedWidth(), this.getPackedHeight());
+        return new AfmaSparsePayload(pixelsPath, this.getChangedPixelCount(), this.getChannels());
     }
 
 }

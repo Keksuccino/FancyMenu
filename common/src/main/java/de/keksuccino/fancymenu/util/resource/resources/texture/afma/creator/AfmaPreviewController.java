@@ -8,6 +8,8 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameInd
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameOperationType;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaMetadata;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaPatchRegion;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaResidualPayload;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaResidualPayloadHelper;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaSparsePayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -300,25 +302,53 @@ public class AfmaPreviewController implements AutoCloseable {
             }
             case FULL -> this.copyPixelFrame(this.loadPayloadFrame(Objects.requireNonNull(descriptor.getPath()), generation), canvasPixels, canvasWidth, 0, 0);
             case DELTA_RECT -> this.copyPixelFrame(this.loadPayloadFrame(Objects.requireNonNull(descriptor.getPath()), generation), canvasPixels, canvasWidth, descriptor.getX(), descriptor.getY());
-            case SPARSE_DELTA_RECT -> this.applySparseDeltaFrame(
-                    this.loadPayloadFrame(Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), generation),
-                    this.loadPayloadFrame(Objects.requireNonNull(descriptor.getSecondaryPayloadPath()), generation),
+            case RESIDUAL_DELTA_RECT -> this.applyResidualPayload(
+                    this.loadRawPayloadBytes(Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), generation),
                     canvasPixels,
                     canvasWidth,
                     descriptor.getX(),
                     descriptor.getY(),
+                    descriptor.getWidth(),
+                    descriptor.getHeight(),
+                    Objects.requireNonNull(descriptor.getResidual(), "AFMA preview residual delta metadata is missing")
+            );
+            case SPARSE_DELTA_RECT -> this.applySparseResidualPayload(
+                    this.loadRawPayloadBytes(Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), generation),
+                    this.loadRawPayloadBytes(Objects.requireNonNull(descriptor.getSecondaryPayloadPath()), generation),
+                    canvasPixels,
+                    canvasWidth,
+                    descriptor.getX(),
+                    descriptor.getY(),
+                    descriptor.getWidth(),
+                    descriptor.getHeight(),
                     Objects.requireNonNull(descriptor.getSparse(), "AFMA preview sparse delta metadata is missing")
             );
-            case COPY_RECT_SPARSE_PATCH -> {
+            case COPY_RECT_RESIDUAL_PATCH -> {
                 AfmaCopyRect copyRect = Objects.requireNonNull(descriptor.getCopy(), "AFMA preview copy rect is missing");
                 this.copyRectMemmove(canvasPixels, canvasWidth, canvasHeight, copyRect);
-                this.applySparseDeltaFrame(
-                        this.loadPayloadFrame(Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), generation),
-                        this.loadPayloadFrame(Objects.requireNonNull(descriptor.getSecondaryPayloadPath()), generation),
+                this.applyResidualPayload(
+                        this.loadRawPayloadBytes(Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), generation),
                         canvasPixels,
                         canvasWidth,
                         descriptor.getX(),
                         descriptor.getY(),
+                        descriptor.getWidth(),
+                        descriptor.getHeight(),
+                        Objects.requireNonNull(descriptor.getResidual(), "AFMA preview residual copy metadata is missing")
+                );
+            }
+            case COPY_RECT_SPARSE_PATCH -> {
+                AfmaCopyRect copyRect = Objects.requireNonNull(descriptor.getCopy(), "AFMA preview copy rect is missing");
+                this.copyRectMemmove(canvasPixels, canvasWidth, canvasHeight, copyRect);
+                this.applySparseResidualPayload(
+                        this.loadRawPayloadBytes(Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), generation),
+                        this.loadRawPayloadBytes(Objects.requireNonNull(descriptor.getSecondaryPayloadPath()), generation),
+                        canvasPixels,
+                        canvasWidth,
+                        descriptor.getX(),
+                        descriptor.getY(),
+                        descriptor.getWidth(),
+                        descriptor.getHeight(),
                         Objects.requireNonNull(descriptor.getSparse(), "AFMA preview sparse copy metadata is missing")
                 );
             }
@@ -367,29 +397,54 @@ public class AfmaPreviewController implements AutoCloseable {
         }
     }
 
-    protected void applySparseDeltaFrame(@NotNull AfmaPixelFrame maskFrame, @NotNull AfmaPixelFrame packedFrame,
-                                         @NotNull int[] canvasPixels, int canvasWidth, int dstX, int dstY,
-                                         @NotNull AfmaSparsePayload sparsePayload) {
-        if ((packedFrame.getWidth() != sparsePayload.getPackedWidth()) || (packedFrame.getHeight() != sparsePayload.getPackedHeight())) {
-            throw new IllegalStateException("AFMA preview sparse delta packed payload dimensions do not match the descriptor");
+    protected void applyResidualPayload(@NotNull byte[] residualBytes, @NotNull int[] canvasPixels, int canvasWidth,
+                                        int dstX, int dstY, int width, int height, @NotNull AfmaResidualPayload residualPayload) {
+        int channels = residualPayload.getChannels();
+        int expectedBytes = AfmaResidualPayloadHelper.expectedDenseResidualBytes(width, height, channels);
+        if ((expectedBytes <= 0) || (residualBytes.length != expectedBytes)) {
+            throw new IllegalStateException("AFMA preview residual payload dimensions do not match the descriptor");
         }
 
-        int packedIndex = 0;
-        int packedCapacity = packedFrame.getWidth() * packedFrame.getHeight();
-        for (int y = 0; y < maskFrame.getHeight(); y++) {
+        int residualIndex = 0;
+        for (int y = 0; y < height; y++) {
             int dstRowStart = ((dstY + y) * canvasWidth) + dstX;
-            for (int x = 0; x < maskFrame.getWidth(); x++) {
-                if ((maskFrame.getPixelRGBA(x, y) & 0x00FFFFFF) == 0) {
+            for (int x = 0; x < width; x++) {
+                int canvasIndex = dstRowStart + x;
+                canvasPixels[canvasIndex] = AfmaResidualPayloadHelper.applyResidualToArgb(canvasPixels[canvasIndex], residualBytes, residualIndex, channels);
+                residualIndex += channels;
+            }
+        }
+    }
+
+    protected void applySparseResidualPayload(@NotNull byte[] maskBytes, @NotNull byte[] residualBytes,
+                                              @NotNull int[] canvasPixels, int canvasWidth, int dstX, int dstY,
+                                              int width, int height, @NotNull AfmaSparsePayload sparsePayload) {
+        int expectedMaskBytes = AfmaResidualPayloadHelper.expectedSparseMaskBytes(width, height);
+        if ((expectedMaskBytes <= 0) || (maskBytes.length != expectedMaskBytes)) {
+            throw new IllegalStateException("AFMA preview sparse delta mask dimensions do not match the descriptor");
+        }
+
+        int channels = sparsePayload.getChannels();
+        int expectedResidualBytes = AfmaResidualPayloadHelper.expectedSparseResidualBytes(sparsePayload.getChangedPixelCount(), channels);
+        if ((expectedResidualBytes <= 0) || (residualBytes.length != expectedResidualBytes)) {
+            throw new IllegalStateException("AFMA preview sparse delta residual payload dimensions do not match the descriptor");
+        }
+
+        int residualIndex = 0;
+        int bitIndex = 0;
+        for (int y = 0; y < height; y++) {
+            int dstRowStart = ((dstY + y) * canvasWidth) + dstX;
+            for (int x = 0; x < width; x++, bitIndex++) {
+                if (!AfmaResidualPayloadHelper.isMaskBitSet(maskBytes, bitIndex)) {
                     continue;
                 }
-                if (packedIndex >= packedCapacity) {
-                    throw new IllegalStateException("AFMA preview sparse delta packed payload ended before the mask data");
-                }
-                int packedX = packedIndex % packedFrame.getWidth();
-                int packedY = packedIndex / packedFrame.getWidth();
-                canvasPixels[dstRowStart + x] = packedFrame.getPixelRGBA(packedX, packedY);
-                packedIndex++;
+                int canvasIndex = dstRowStart + x;
+                canvasPixels[canvasIndex] = AfmaResidualPayloadHelper.applyResidualToArgb(canvasPixels[canvasIndex], residualBytes, residualIndex, channels);
+                residualIndex += channels;
             }
+        }
+        if (residualIndex != expectedResidualBytes) {
+            throw new IllegalStateException("AFMA preview sparse delta residual payload ended before the mask data");
         }
     }
 
@@ -421,6 +476,19 @@ public class AfmaPreviewController implements AutoCloseable {
             this.payloadFrameCache.put(payloadPath, decodedFrame);
             return decodedFrame;
         }
+    }
+
+    protected @NotNull byte[] loadRawPayloadBytes(@NotNull String payloadPath, int generation) throws IOException {
+        if (generation != this.previewGeneration.get()) {
+            throw new IOException("AFMA preview payload decode was invalidated by a newer request.");
+        }
+
+        AfmaEncodePlan plan = Objects.requireNonNull(this.previewPlan, "AFMA preview plan is missing");
+        byte[] payloadBytes = plan.getPayloads().get(payloadPath);
+        if (payloadBytes == null) {
+            throw new IOException("AFMA preview payload is missing: " + payloadPath);
+        }
+        return payloadBytes;
     }
 
     protected @NotNull AfmaPixelFrame decodePayloadFrame(@NotNull byte[] payloadBytes, @NotNull String payloadPath) throws IOException {

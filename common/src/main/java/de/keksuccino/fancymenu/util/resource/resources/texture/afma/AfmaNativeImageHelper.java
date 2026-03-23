@@ -134,6 +134,73 @@ public final class AfmaNativeImageHelper {
         }
     }
 
+    public static void applyResidualBytes(@NotNull NativeImage target, int dstX, int dstY, int width, int height,
+                                          @NotNull byte[] residualBytes, int channels) {
+        int expectedBytes = AfmaResidualPayloadHelper.expectedDenseResidualBytes(width, height, channels);
+        if ((expectedBytes <= 0) || (residualBytes.length != expectedBytes)) {
+            throw new IllegalStateException("AFMA residual payload size does not match the frame descriptor");
+        }
+
+        long targetPixels = pixels(target);
+        int targetWidth = target.getWidth();
+        int residualIndex = 0;
+        for (int row = 0; row < height; row++) {
+            long targetOffset = offset(targetPixels, targetWidth, dstX, dstY + row);
+            for (int column = 0; column < width; column++) {
+                long pixelOffset = targetOffset + ((long) column * RGBA_BYTES_PER_PIXEL);
+                int predictedAbgr = MemoryUtil.memGetInt(pixelOffset);
+                int red = (((predictedAbgr) & 0xFF) + (residualBytes[residualIndex++] & 0xFF)) & 0xFF;
+                int green = (((predictedAbgr >> 8) & 0xFF) + (residualBytes[residualIndex++] & 0xFF)) & 0xFF;
+                int blue = (((predictedAbgr >> 16) & 0xFF) + (residualBytes[residualIndex++] & 0xFF)) & 0xFF;
+                int alpha = (predictedAbgr >>> 24) & 0xFF;
+                if (channels == AfmaResidualPayloadHelper.RGBA_CHANNELS) {
+                    alpha = (alpha + (residualBytes[residualIndex++] & 0xFF)) & 0xFF;
+                }
+                MemoryUtil.memPutInt(pixelOffset, FastColor.ABGR32.color(alpha, blue, green, red));
+            }
+        }
+    }
+
+    public static void applySparseResidualBytes(@NotNull NativeImage target, int dstX, int dstY, int width, int height,
+                                                @NotNull byte[] maskBytes, @NotNull byte[] residualBytes,
+                                                int changedPixelCount, int channels) {
+        int expectedMaskBytes = AfmaResidualPayloadHelper.expectedSparseMaskBytes(width, height);
+        if ((expectedMaskBytes <= 0) || (maskBytes.length != expectedMaskBytes)) {
+            throw new IllegalStateException("AFMA sparse mask payload size does not match the frame descriptor");
+        }
+        int expectedResidualBytes = AfmaResidualPayloadHelper.expectedSparseResidualBytes(changedPixelCount, channels);
+        if ((expectedResidualBytes <= 0) || (residualBytes.length != expectedResidualBytes)) {
+            throw new IllegalStateException("AFMA sparse residual payload size does not match the frame descriptor");
+        }
+
+        long targetPixels = pixels(target);
+        int targetWidth = target.getWidth();
+        int residualIndex = 0;
+        int bitIndex = 0;
+        for (int row = 0; row < height; row++) {
+            long targetOffset = offset(targetPixels, targetWidth, dstX, dstY + row);
+            for (int column = 0; column < width; column++, bitIndex++) {
+                if (!AfmaResidualPayloadHelper.isMaskBitSet(maskBytes, bitIndex)) {
+                    continue;
+                }
+
+                long pixelOffset = targetOffset + ((long) column * RGBA_BYTES_PER_PIXEL);
+                int predictedAbgr = MemoryUtil.memGetInt(pixelOffset);
+                int red = (((predictedAbgr) & 0xFF) + (residualBytes[residualIndex++] & 0xFF)) & 0xFF;
+                int green = (((predictedAbgr >> 8) & 0xFF) + (residualBytes[residualIndex++] & 0xFF)) & 0xFF;
+                int blue = (((predictedAbgr >> 16) & 0xFF) + (residualBytes[residualIndex++] & 0xFF)) & 0xFF;
+                int alpha = (predictedAbgr >>> 24) & 0xFF;
+                if (channels == AfmaResidualPayloadHelper.RGBA_CHANNELS) {
+                    alpha = (alpha + (residualBytes[residualIndex++] & 0xFF)) & 0xFF;
+                }
+                MemoryUtil.memPutInt(pixelOffset, FastColor.ABGR32.color(alpha, blue, green, red));
+            }
+        }
+        if (residualIndex != expectedResidualBytes) {
+            throw new IllegalStateException("AFMA sparse residual payload ended before the mask data");
+        }
+    }
+
     public static void copyRectMemmove(@NotNull NativeImage image, @NotNull AfmaCopyRect copyRect) {
         long pixels = pixels(image);
         int imageWidth = image.getWidth();

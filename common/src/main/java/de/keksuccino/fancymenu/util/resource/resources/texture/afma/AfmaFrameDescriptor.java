@@ -25,6 +25,8 @@ public class AfmaFrameDescriptor {
     protected AfmaPatchRegion patch;
     @Nullable
     protected AfmaSparsePayload sparse;
+    @Nullable
+    protected AfmaResidualPayload residual;
 
     public AfmaFrameDescriptor() {
     }
@@ -46,6 +48,20 @@ public class AfmaFrameDescriptor {
         descriptor.y = y;
         descriptor.width = width;
         descriptor.height = height;
+        return descriptor;
+    }
+
+    @NotNull
+    public static AfmaFrameDescriptor residualDeltaRect(@NotNull String path, int x, int y, int width, int height,
+                                                        @NotNull AfmaResidualPayload residualPayload) {
+        AfmaFrameDescriptor descriptor = new AfmaFrameDescriptor();
+        descriptor.type = AfmaFrameOperationType.RESIDUAL_DELTA_RECT;
+        descriptor.path = path;
+        descriptor.x = x;
+        descriptor.y = y;
+        descriptor.width = width;
+        descriptor.height = height;
+        descriptor.residual = Objects.requireNonNull(residualPayload);
         return descriptor;
     }
 
@@ -93,6 +109,21 @@ public class AfmaFrameDescriptor {
         return descriptor;
     }
 
+    @NotNull
+    public static AfmaFrameDescriptor copyRectResidualPatch(@NotNull AfmaCopyRect copyRect, @NotNull String path,
+                                                            int x, int y, int width, int height, @NotNull AfmaResidualPayload residualPayload) {
+        AfmaFrameDescriptor descriptor = new AfmaFrameDescriptor();
+        descriptor.type = AfmaFrameOperationType.COPY_RECT_RESIDUAL_PATCH;
+        descriptor.copy = copyRect;
+        descriptor.path = path;
+        descriptor.x = x;
+        descriptor.y = y;
+        descriptor.width = width;
+        descriptor.height = height;
+        descriptor.residual = Objects.requireNonNull(residualPayload);
+        return descriptor;
+    }
+
     @Nullable
     public AfmaFrameOperationType getType() {
         return this.type;
@@ -134,6 +165,11 @@ public class AfmaFrameDescriptor {
         return this.sparse;
     }
 
+    @Nullable
+    public AfmaResidualPayload getResidual() {
+        return this.residual;
+    }
+
     public boolean isKeyframe() {
         return this.type == AfmaFrameOperationType.FULL;
     }
@@ -141,7 +177,9 @@ public class AfmaFrameDescriptor {
     public boolean requiresPrimaryPayload() {
         return (this.type == AfmaFrameOperationType.FULL)
                 || (this.type == AfmaFrameOperationType.DELTA_RECT)
+                || (this.type == AfmaFrameOperationType.RESIDUAL_DELTA_RECT)
                 || (this.type == AfmaFrameOperationType.SPARSE_DELTA_RECT)
+                || (this.type == AfmaFrameOperationType.COPY_RECT_RESIDUAL_PATCH)
                 || (this.type == AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH);
     }
 
@@ -181,8 +219,15 @@ public class AfmaFrameDescriptor {
         if (this.type == AfmaFrameOperationType.DELTA_RECT) {
             return deltaRect(newPath, this.getX(), this.getY(), this.getWidth(), this.getHeight());
         }
+        if (this.type == AfmaFrameOperationType.RESIDUAL_DELTA_RECT) {
+            return residualDeltaRect(newPath, this.getX(), this.getY(), this.getWidth(), this.getHeight(), Objects.requireNonNull(this.residual));
+        }
         if (this.type == AfmaFrameOperationType.SPARSE_DELTA_RECT) {
             return sparseDeltaRect(newPath, this.getX(), this.getY(), this.getWidth(), this.getHeight(), Objects.requireNonNull(this.sparse));
+        }
+        if (this.type == AfmaFrameOperationType.COPY_RECT_RESIDUAL_PATCH) {
+            return copyRectResidualPatch(Objects.requireNonNull(this.copy), newPath,
+                    this.getX(), this.getY(), this.getWidth(), this.getHeight(), Objects.requireNonNull(this.residual));
         }
         if (this.type == AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH) {
             return copyRectSparsePatch(Objects.requireNonNull(this.copy), newPath, this.getX(), this.getY(), this.getWidth(), this.getHeight(), Objects.requireNonNull(this.sparse));
@@ -245,6 +290,19 @@ public class AfmaFrameDescriptor {
                 }
                 this.sparse.validate(context + " sparse payload");
             }
+            case RESIDUAL_DELTA_RECT -> {
+                if (requireFullFrame) {
+                    throw new IllegalArgumentException(context + " must be a full frame");
+                }
+                if ((this.path == null) || this.path.isBlank()) {
+                    throw new IllegalArgumentException(context + " residual delta frame is missing its payload path");
+                }
+                new AfmaPatchRegion(this.path, this.getX(), this.getY(), this.getWidth(), this.getHeight()).validate(context, canvasWidth, canvasHeight, true);
+                if (this.residual == null) {
+                    throw new IllegalArgumentException(context + " residual delta frame is missing its residual payload metadata");
+                }
+                this.residual.validate(context + " residual payload");
+            }
             case COPY_RECT_SPARSE_PATCH -> {
                 if (requireFullFrame) {
                     throw new IllegalArgumentException(context + " must be a full frame");
@@ -278,6 +336,23 @@ public class AfmaFrameDescriptor {
                 if (this.patch != null) {
                     this.patch.validate(context, canvasWidth, canvasHeight, true);
                 }
+            }
+            case COPY_RECT_RESIDUAL_PATCH -> {
+                if (requireFullFrame) {
+                    throw new IllegalArgumentException(context + " must be a full frame");
+                }
+                if (this.copy == null) {
+                    throw new IllegalArgumentException(context + " copy_rect_residual_patch frame is missing its copy section");
+                }
+                this.copy.validate(context, canvasWidth, canvasHeight);
+                if ((this.path == null) || this.path.isBlank()) {
+                    throw new IllegalArgumentException(context + " copy_rect_residual_patch frame is missing its residual payload path");
+                }
+                new AfmaPatchRegion(this.path, this.getX(), this.getY(), this.getWidth(), this.getHeight()).validate(context, canvasWidth, canvasHeight, true);
+                if (this.residual == null) {
+                    throw new IllegalArgumentException(context + " copy_rect_residual_patch frame is missing its residual payload metadata");
+                }
+                this.residual.validate(context + " residual payload");
             }
         }
     }

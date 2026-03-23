@@ -11,9 +11,13 @@ public class AfmaEncodeAnalyzer {
                 plan.getFrameIndex().getFrames().size(),
                 plan.getFrameIndex().getIntroFrames().size(),
                 plan.countFrames(AfmaFrameOperationType.FULL),
-                plan.countFrames(AfmaFrameOperationType.DELTA_RECT) + plan.countFrames(AfmaFrameOperationType.SPARSE_DELTA_RECT),
+                plan.countFrames(AfmaFrameOperationType.DELTA_RECT)
+                        + plan.countFrames(AfmaFrameOperationType.RESIDUAL_DELTA_RECT)
+                        + plan.countFrames(AfmaFrameOperationType.SPARSE_DELTA_RECT),
                 plan.countFrames(AfmaFrameOperationType.SAME),
-                plan.countFrames(AfmaFrameOperationType.COPY_RECT_PATCH) + plan.countFrames(AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH),
+                plan.countFrames(AfmaFrameOperationType.COPY_RECT_PATCH)
+                        + plan.countFrames(AfmaFrameOperationType.COPY_RECT_RESIDUAL_PATCH)
+                        + plan.countFrames(AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH),
                 plan.getTotalPayloadBytes()
         );
     }

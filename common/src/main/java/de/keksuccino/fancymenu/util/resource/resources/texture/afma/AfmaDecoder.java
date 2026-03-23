@@ -228,14 +228,26 @@ public class AfmaDecoder implements Closeable {
             this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), activeMetadata.getCanvasWidth(), activeMetadata.getCanvasHeight(), 8);
         } else if (descriptor.getType() == AfmaFrameOperationType.DELTA_RECT) {
             this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), descriptor.getWidth(), descriptor.getHeight(), 8);
+        } else if (descriptor.getType() == AfmaFrameOperationType.RESIDUAL_DELTA_RECT) {
+            AfmaResidualPayload residual = Objects.requireNonNull(descriptor.getResidual());
+            this.validateRawPayloadSize(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
+                    AfmaResidualPayloadHelper.expectedDenseResidualBytes(descriptor.getWidth(), descriptor.getHeight(), residual.getChannels()));
         } else if (descriptor.getType() == AfmaFrameOperationType.SPARSE_DELTA_RECT) {
             AfmaSparsePayload sparse = Objects.requireNonNull(descriptor.getSparse());
-            this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), descriptor.getWidth(), descriptor.getHeight(), 1, 8);
-            this.validatePayloadHeader(context, Objects.requireNonNull(sparse.getPixelsPath()), sparse.getPackedWidth(), sparse.getPackedHeight(), 8);
+            this.validateRawPayloadSize(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
+                    AfmaResidualPayloadHelper.expectedSparseMaskBytes(descriptor.getWidth(), descriptor.getHeight()));
+            this.validateRawPayloadSize(context, Objects.requireNonNull(sparse.getPixelsPath()),
+                    AfmaResidualPayloadHelper.expectedSparseResidualBytes(sparse.getChangedPixelCount(), sparse.getChannels()));
+        } else if (descriptor.getType() == AfmaFrameOperationType.COPY_RECT_RESIDUAL_PATCH) {
+            AfmaResidualPayload residual = Objects.requireNonNull(descriptor.getResidual());
+            this.validateRawPayloadSize(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
+                    AfmaResidualPayloadHelper.expectedDenseResidualBytes(descriptor.getWidth(), descriptor.getHeight(), residual.getChannels()));
         } else if (descriptor.getType() == AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH) {
             AfmaSparsePayload sparse = Objects.requireNonNull(descriptor.getSparse());
-            this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), descriptor.getWidth(), descriptor.getHeight(), 1, 8);
-            this.validatePayloadHeader(context, Objects.requireNonNull(sparse.getPixelsPath()), sparse.getPackedWidth(), sparse.getPackedHeight(), 8);
+            this.validateRawPayloadSize(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
+                    AfmaResidualPayloadHelper.expectedSparseMaskBytes(descriptor.getWidth(), descriptor.getHeight()));
+            this.validateRawPayloadSize(context, Objects.requireNonNull(sparse.getPixelsPath()),
+                    AfmaResidualPayloadHelper.expectedSparseResidualBytes(sparse.getChangedPixelCount(), sparse.getChannels()));
         } else if ((descriptor.getType() == AfmaFrameOperationType.COPY_RECT_PATCH) && descriptor.requiresPatchPayload()) {
             AfmaPatchRegion patch = Objects.requireNonNull(descriptor.getPatch());
             this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()), patch.getWidth(), patch.getHeight(), 8);
@@ -261,6 +273,30 @@ public class AfmaDecoder implements Closeable {
         }
         if (!allowed) {
             throw new IOException(context + " payload uses an unsupported PNG bit depth: " + path);
+        }
+    }
+
+    protected void validateRawPayloadSize(@NotNull String context, @NotNull String path, int expectedSize) throws IOException {
+        Objects.requireNonNull(this.zipFile);
+        if (expectedSize <= 0) {
+            throw new IOException(context + " references an invalid raw payload size for " + path);
+        }
+
+        ZipArchiveEntry entry = this.findEntry(path);
+        if (entry == null) {
+            throw new IOException(context + " references a missing raw payload: " + path);
+        }
+
+        long entrySize = entry.getSize();
+        if (entrySize < 0L) {
+            try (InputStream entryInput = this.zipFile.getInputStream(entry)) {
+                entrySize = entryInput.readAllBytes().length;
+            } catch (Exception ex) {
+                throw new IOException(ex);
+            }
+        }
+        if (entrySize != expectedSize) {
+            throw new IOException(context + " raw payload size does not match the descriptor for " + path);
         }
     }
 
@@ -302,14 +338,26 @@ public class AfmaDecoder implements Closeable {
                 this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), activeMetadata.getCanvasWidth(), activeMetadata.getCanvasHeight(), 8);
             } else if (descriptor.getType() == AfmaFrameOperationType.DELTA_RECT) {
                 this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), descriptor.getWidth(), descriptor.getHeight(), 8);
+            } else if (descriptor.getType() == AfmaFrameOperationType.RESIDUAL_DELTA_RECT) {
+                AfmaResidualPayload residual = Objects.requireNonNull(descriptor.getResidual());
+                this.validateRawPayloadSize(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
+                        AfmaResidualPayloadHelper.expectedDenseResidualBytes(descriptor.getWidth(), descriptor.getHeight(), residual.getChannels()));
             } else if (descriptor.getType() == AfmaFrameOperationType.SPARSE_DELTA_RECT) {
                 AfmaSparsePayload sparse = Objects.requireNonNull(descriptor.getSparse());
-                this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), descriptor.getWidth(), descriptor.getHeight(), 1, 8);
-                this.validatePayloadHeader(context, Objects.requireNonNull(sparse.getPixelsPath()), sparse.getPackedWidth(), sparse.getPackedHeight(), 8);
+                this.validateRawPayloadSize(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
+                        AfmaResidualPayloadHelper.expectedSparseMaskBytes(descriptor.getWidth(), descriptor.getHeight()));
+                this.validateRawPayloadSize(context, Objects.requireNonNull(sparse.getPixelsPath()),
+                        AfmaResidualPayloadHelper.expectedSparseResidualBytes(sparse.getChangedPixelCount(), sparse.getChannels()));
+            } else if (descriptor.getType() == AfmaFrameOperationType.COPY_RECT_RESIDUAL_PATCH) {
+                AfmaResidualPayload residual = Objects.requireNonNull(descriptor.getResidual());
+                this.validateRawPayloadSize(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
+                        AfmaResidualPayloadHelper.expectedDenseResidualBytes(descriptor.getWidth(), descriptor.getHeight(), residual.getChannels()));
             } else if (descriptor.getType() == AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH) {
                 AfmaSparsePayload sparse = Objects.requireNonNull(descriptor.getSparse());
-                this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), descriptor.getWidth(), descriptor.getHeight(), 1, 8);
-                this.validatePayloadHeader(context, Objects.requireNonNull(sparse.getPixelsPath()), sparse.getPackedWidth(), sparse.getPackedHeight(), 8);
+                this.validateRawPayloadSize(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
+                        AfmaResidualPayloadHelper.expectedSparseMaskBytes(descriptor.getWidth(), descriptor.getHeight()));
+                this.validateRawPayloadSize(context, Objects.requireNonNull(sparse.getPixelsPath()),
+                        AfmaResidualPayloadHelper.expectedSparseResidualBytes(sparse.getChangedPixelCount(), sparse.getChannels()));
             } else if ((descriptor.getType() == AfmaFrameOperationType.COPY_RECT_PATCH) && descriptor.requiresPatchPayload()) {
                 AfmaPatchRegion patch = Objects.requireNonNull(descriptor.getPatch());
                 this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()), patch.getWidth(), patch.getHeight(), 8);
@@ -361,9 +409,6 @@ public class AfmaDecoder implements Closeable {
         ZipArchiveEntry entry = this.findEntry(path);
         if (entry == null) {
             throw new FileNotFoundException("AFMA payload file not found: " + path);
-        }
-        if (this.getOrLoadPayloadHeader(path) == null) {
-            throw new IOException("AFMA payload is missing a valid PNG header: " + path);
         }
         try {
             return this.zipFile.getInputStream(entry);
