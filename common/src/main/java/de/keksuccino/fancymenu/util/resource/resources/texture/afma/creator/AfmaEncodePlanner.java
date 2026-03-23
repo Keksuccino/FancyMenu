@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CancellationException;
 import java.util.function.BooleanSupplier;
+import java.util.zip.Deflater;
 
 public class AfmaEncodePlanner {
 
@@ -902,6 +903,7 @@ public class AfmaEncodePlanner {
         @Nullable
         protected final PayloadKind primaryPayloadKind;
         protected final boolean primaryPayloadReusedFromSource;
+        protected final long estimatedPrimaryArchiveBytes;
         @Nullable
         protected final String patchPayloadPath;
         @Nullable
@@ -909,6 +911,7 @@ public class AfmaEncodePlanner {
         @Nullable
         protected final PayloadKind patchPayloadKind;
         protected final boolean patchPayloadReusedFromSource;
+        protected final long estimatedPatchArchiveBytes;
         @NotNull
         protected final DecodeCost decodeCost;
         protected final int complexityScore;
@@ -922,10 +925,12 @@ public class AfmaEncodePlanner {
             this.primaryPayload = primaryPayload;
             this.primaryPayloadKind = primaryPayloadKind;
             this.primaryPayloadReusedFromSource = primaryPayloadReusedFromSource;
+            this.estimatedPrimaryArchiveBytes = estimatePayloadArchiveBytes(primaryPayload, primaryPayloadKind);
             this.patchPayloadPath = patchPayloadPath;
             this.patchPayload = patchPayload;
             this.patchPayloadKind = patchPayloadKind;
             this.patchPayloadReusedFromSource = patchPayloadReusedFromSource;
+            this.estimatedPatchArchiveBytes = estimatePayloadArchiveBytes(patchPayload, patchPayloadKind);
             this.decodeCost = decodeCost;
             this.complexityScore = complexityScore;
         }
@@ -981,7 +986,16 @@ public class AfmaEncodePlanner {
             }
             String fingerprint = fingerprintPayload(payload);
             String existingPath = payloadPathsByFingerprint.get(fingerprint);
-            return ((existingPath != null) && !existingPath.equals(path)) ? 0L : payload.length;
+            if ((existingPath != null) && !existingPath.equals(path)) {
+                return 0L;
+            }
+            if (Objects.equals(path, this.primaryPayloadPath) && (payload == this.primaryPayload)) {
+                return this.estimatedPrimaryArchiveBytes;
+            }
+            if (Objects.equals(path, this.patchPayloadPath) && (payload == this.patchPayload)) {
+                return this.estimatedPatchArchiveBytes;
+            }
+            return estimatePayloadArchiveBytes(payload, null);
         }
 
         protected int estimateDescriptorBytes() {
@@ -1113,6 +1127,29 @@ public class AfmaEncodePlanner {
             } catch (NoSuchAlgorithmException ex) {
                 return payload.length + ":" + Arrays.hashCode(payload);
             }
+        }
+
+        protected static long estimatePayloadArchiveBytes(@Nullable byte[] payload, @Nullable PayloadKind payloadKind) {
+            if (payload == null) {
+                return 0L;
+            }
+            if (payloadKind != PayloadKind.RAW || payload.length < 1024) {
+                return payload.length;
+            }
+
+            Deflater deflater = new Deflater(9, true);
+            byte[] buffer = new byte[8192];
+            long compressedBytes = 0L;
+            try {
+                deflater.setInput(payload);
+                deflater.finish();
+                while (!deflater.finished()) {
+                    compressedBytes += deflater.deflate(buffer);
+                }
+            } finally {
+                deflater.end();
+            }
+            return Math.max(1L, compressedBytes);
         }
 
     }
