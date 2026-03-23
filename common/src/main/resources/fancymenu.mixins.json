@@ -22,6 +22,7 @@
     "client.IMixinLevelLoadingScreen",
     "client.IMixinMinecraft",
     "client.IMixinMusicManager",
+    "client.IMixinNativeImage",
     "client.IMixinOptions",
     "client.IMixinPostChain",
     "client.IMixinPathPackResources",

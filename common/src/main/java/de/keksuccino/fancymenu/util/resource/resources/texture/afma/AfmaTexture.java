@@ -89,6 +89,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
     @NotNull
     protected final ArrayDeque<PreparedFrame> prefetchedFrames = new ArrayDeque<>();
     protected final AtomicInteger streamGeneration = new AtomicInteger(0);
+    protected final AtomicBoolean deferredDecoderRelease = new AtomicBoolean(false);
 
     @Nullable
     protected volatile Thread streamThread = null;
@@ -337,38 +338,43 @@ public class AfmaTexture implements ITexture, PlayableResource {
     }
 
     protected void streamLoop(int generation) {
-        while (!this.closed.get() && !this.loadingFailed.get() && (generation == this.streamGeneration.get())) {
-            if (!this.playRequested || this.maxLoopsReached) {
-                sleepQuietly(IDLE_SLEEP_MS);
-                continue;
-            }
-            if (this.pausedRequested && this.playbackInitialized) {
-                sleepQuietly(IDLE_SLEEP_MS);
-                continue;
-            }
-
-            long now = System.currentTimeMillis();
-            if ((this.lastResourceLocationCall > 0L) && ((this.lastResourceLocationCall + INACTIVITY_TIMEOUT_MS) < now)) {
-                synchronized (this.streamStateLock) {
-                    this.clearPrefetchedFramesLocked();
+        try {
+            while (!this.closed.get() && !this.loadingFailed.get() && (generation == this.streamGeneration.get())) {
+                if (!this.playRequested || this.maxLoopsReached) {
+                    sleepQuietly(IDLE_SLEEP_MS);
+                    continue;
                 }
-                sleepQuietly(100L);
-                continue;
-            }
+                if (this.pausedRequested && this.playbackInitialized) {
+                    sleepQuietly(IDLE_SLEEP_MS);
+                    continue;
+                }
 
-            try {
-                this.fillPrefetchQueue(generation);
-                sleepQuietly(IDLE_SLEEP_MS);
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] An error happened in the streaming thread of an AFMA texture!", ex);
-                sleepQuietly(50L);
-            }
-        }
+                long now = System.currentTimeMillis();
+                if ((this.lastResourceLocationCall > 0L) && ((this.lastResourceLocationCall + INACTIVITY_TIMEOUT_MS) < now)) {
+                    synchronized (this.streamStateLock) {
+                        this.clearPrefetchedFramesLocked();
+                    }
+                    sleepQuietly(100L);
+                    continue;
+                }
 
-        synchronized (this.streamStateLock) {
-            if (generation == this.streamGeneration.get()) {
-                this.streamThread = null;
+                try {
+                    this.fillPrefetchQueue(generation);
+                    sleepQuietly(IDLE_SLEEP_MS);
+                } catch (Exception ex) {
+                    LOGGER.error("[FANCYMENU] An error happened in the streaming thread of an AFMA texture!", ex);
+                    sleepQuietly(50L);
+                }
             }
+        } finally {
+            synchronized (this.streamStateLock) {
+                if (generation == this.streamGeneration.get()) {
+                    this.streamThread = null;
+                } else if (this.streamThread == Thread.currentThread()) {
+                    this.streamThread = null;
+                }
+            }
+            this.releaseDeferredDecoderIfNeeded();
         }
     }
 
@@ -800,7 +806,6 @@ public class AfmaTexture implements ITexture, PlayableResource {
         if (running != null) {
             running.interrupt();
         }
-        this.streamThread = null;
 
         synchronized (this.streamStateLock) {
             if (nextGeneration == this.streamGeneration.get()) {
@@ -962,14 +967,13 @@ public class AfmaTexture implements ITexture, PlayableResource {
         if (running != null) {
             running.interrupt();
         }
-        this.streamThread = null;
 
         synchronized (this.streamStateLock) {
             this.clearPrefetchedFramesLocked();
         }
 
         this.releaseStreamingTextureNow();
-        this.releaseDecoder();
+        this.requestDecoderRelease();
 
         this.sourceLocation = null;
         this.sourceFile = null;
@@ -1021,15 +1025,36 @@ public class AfmaTexture implements ITexture, PlayableResource {
         this.playRequested = false;
         this.pausedRequested = false;
         this.playbackInitialized = false;
+        this.streamGeneration.incrementAndGet();
         synchronized (this.streamStateLock) {
             this.clearPrefetchedFramesLocked();
         }
-        this.releaseDecoder();
+        Thread running = this.streamThread;
+        if ((running != null) && (running != Thread.currentThread())) {
+            running.interrupt();
+        }
+        this.requestDecoderRelease();
         this.scheduleStreamingTextureRelease();
         if (throwable != null) {
             LOGGER.error("[FANCYMENU] {}", message, throwable);
         } else {
             LOGGER.error("[FANCYMENU] {}", message);
+        }
+    }
+
+    protected void requestDecoderRelease() {
+        Thread running = this.streamThread;
+        if ((running != null) && running.isAlive() && (running != Thread.currentThread())) {
+            this.deferredDecoderRelease.set(true);
+            return;
+        }
+        this.deferredDecoderRelease.set(false);
+        this.releaseDecoder();
+    }
+
+    protected void releaseDeferredDecoderIfNeeded() {
+        if (this.deferredDecoderRelease.compareAndSet(true, false)) {
+            this.releaseDecoder();
         }
     }
 
