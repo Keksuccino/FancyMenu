@@ -4,7 +4,9 @@ import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaCopyRect;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameDescriptor;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaNativeImageHelper;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameIndex;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameOperationType;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaMetadata;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaPatchRegion;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -14,27 +16,35 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.imageio.ImageIO;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class AfmaPreviewController implements AutoCloseable {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final int MAX_SOURCE_FRAME_CACHE = 8;
+    private static final int MAX_PAYLOAD_CACHE = 12;
 
-    private @Nullable AfmaCreatorAnalysisResult analysisResult;
-    private @Nullable NativeImage canvas;
-    private @Nullable DynamicTexture texture;
-    private @Nullable ResourceLocation textureLocation;
-    private final @NotNull AfmaFrameNormalizer frameNormalizer = new AfmaFrameNormalizer();
-    private final @NotNull LinkedHashMap<String, AfmaPixelFrame> sourceFrameCache = new LinkedHashMap<>(16, 0.75F, true) {
+    private final @NotNull ExecutorService previewExecutor = Executors.newSingleThreadExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "FancyMenu-AFMA-Preview");
+        thread.setDaemon(true);
+        return thread;
+    });
+    private final @NotNull AtomicInteger previewGeneration = new AtomicInteger(0);
+    private final @NotNull LinkedHashMap<String, AfmaPixelFrame> payloadFrameCache = new LinkedHashMap<>(16, 0.75F, true) {
         @Override
         protected boolean removeEldestEntry(Map.Entry<String, AfmaPixelFrame> eldest) {
-            if (this.size() > MAX_SOURCE_FRAME_CACHE) {
+            if (this.size() > MAX_PAYLOAD_CACHE) {
                 CloseableUtils.closeQuietly(eldest.getValue());
                 return true;
             }
@@ -42,24 +52,42 @@ public class AfmaPreviewController implements AutoCloseable {
         }
     };
     private final @NotNull List<PreviewFrameRef> previewFrames = new ArrayList<>();
+
+    private @Nullable AfmaCreatorAnalysisResult analysisResult;
+    private @Nullable AfmaEncodePlan previewPlan;
+    private @Nullable NativeImage canvas;
+    private @Nullable DynamicTexture texture;
+    private @Nullable ResourceLocation textureLocation;
+    private @Nullable PreviewTaskResult completedTaskResult;
+
+    private int requestedPreviewIndex = -1;
     private int currentPreviewIndex = -1;
     private boolean playing = false;
     private long nextFrameAtMs = 0L;
     private int completedMainLoops = 0;
     private @Nullable String lastFailureMessage = null;
 
-    public void setAnalysisResult(@Nullable AfmaCreatorAnalysisResult analysisResult) {
+    public void setAnalysisContext(@Nullable AfmaCreatorAnalysisResult analysisResult, @Nullable AfmaEncodePlan previewPlan) {
+        if ((this.analysisResult == analysisResult) && (this.previewPlan == previewPlan)) {
+            return;
+        }
+
         this.analysisResult = analysisResult;
-        this.clearSourceFrameCache();
+        this.previewPlan = previewPlan;
+        this.previewGeneration.incrementAndGet();
+        this.completedTaskResult = null;
+        this.clearPayloadCache();
         this.previewFrames.clear();
         this.currentPreviewIndex = -1;
+        this.requestedPreviewIndex = -1;
         this.playing = false;
         this.completedMainLoops = 0;
         this.lastFailureMessage = null;
 
         if (analysisResult != null) {
-            int introCount = analysisResult.plan().getFrameIndex().getIntroFrames().size();
-            int mainCount = analysisResult.plan().getFrameIndex().getFrames().size();
+            AfmaFrameIndex frameIndex = analysisResult.plan().getFrameIndex();
+            int introCount = frameIndex.getIntroFrames().size();
+            int mainCount = frameIndex.getFrames().size();
             for (int i = 0; i < introCount; i++) {
                 this.previewFrames.add(new PreviewFrameRef(true, i));
             }
@@ -68,15 +96,16 @@ public class AfmaPreviewController implements AutoCloseable {
             }
         }
 
-        if (!this.previewFrames.isEmpty()) {
-            this.seekToFrame(0);
-        } else {
+        if (this.previewFrames.isEmpty()) {
             this.clearSurface();
+            return;
         }
+
+        this.seekToFrame(0);
     }
 
     public boolean hasPreview() {
-        return this.analysisResult != null && !this.previewFrames.isEmpty() && this.textureLocation != null;
+        return (this.analysisResult != null) && !this.previewFrames.isEmpty() && (this.textureLocation != null);
     }
 
     public boolean isPlaying() {
@@ -88,11 +117,11 @@ public class AfmaPreviewController implements AutoCloseable {
             this.playing = false;
             return;
         }
-        if (playing && this.currentPreviewIndex < 0) {
+        if (playing && (this.currentPreviewIndex < 0)) {
             this.seekToFrame(0);
         }
         this.playing = playing;
-        this.nextFrameAtMs = System.currentTimeMillis() + this.getCurrentFrameDurationMs();
+        this.nextFrameAtMs = System.currentTimeMillis() + Math.max(1L, this.getCurrentFrameDurationMs());
     }
 
     public void togglePlaying() {
@@ -148,14 +177,13 @@ public class AfmaPreviewController implements AutoCloseable {
 
     public void stepPrevious() {
         if (this.previewFrames.isEmpty()) return;
-        int target = Math.max(0, this.currentPreviewIndex - 1);
-        this.seekToFrame(target);
+        this.seekToFrame(Math.max(0, this.currentPreviewIndex - 1));
     }
 
     public void stepNext() {
         if (this.previewFrames.isEmpty()) return;
-        int target = Math.min(this.previewFrames.size() - 1, this.currentPreviewIndex + 1);
-        this.seekToFrame(target);
+        int baseIndex = (this.currentPreviewIndex >= 0) ? this.currentPreviewIndex : 0;
+        this.seekToFrame(Math.min(this.previewFrames.size() - 1, baseIndex + 1));
     }
 
     public void seekToProgress(double progress) {
@@ -168,24 +196,27 @@ public class AfmaPreviewController implements AutoCloseable {
     public void seekToFrame(int index) {
         if (this.previewFrames.isEmpty()) return;
         index = Math.max(0, Math.min(this.previewFrames.size() - 1, index));
-        try {
-            if ((this.currentPreviewIndex >= 0) && (index == (this.currentPreviewIndex + 1))) {
-                this.applyFrame(this.previewFrames.get(index));
-            } else {
-                this.reconstructTo(index);
-            }
-            this.currentPreviewIndex = index;
-            this.nextFrameAtMs = System.currentTimeMillis() + this.getCurrentFrameDurationMs();
-            this.lastFailureMessage = null;
-        } catch (Exception ex) {
+        this.requestedPreviewIndex = index;
+        this.lastFailureMessage = null;
+
+        if (this.previewPlan == null) {
+            this.lastFailureMessage = "AFMA preview data is not ready yet.";
             this.playing = false;
-            this.lastFailureMessage = (ex.getMessage() != null) ? ex.getMessage() : "AFMA preview reconstruction failed.";
-            LOGGER.error("[FANCYMENU] AFMA creator preview failed while seeking to frame {}", index, ex);
+            return;
         }
+
+        int generation = this.previewGeneration.incrementAndGet();
+        this.previewExecutor.execute(() -> this.runPreviewTask(generation, index));
     }
 
     public void tick() {
+        this.applyCompletedPreviewIfAvailable();
+
         if (!this.playing || this.previewFrames.isEmpty()) {
+            return;
+        }
+
+        if (this.currentPreviewIndex < 0) {
             return;
         }
 
@@ -205,9 +236,10 @@ public class AfmaPreviewController implements AutoCloseable {
             return;
         }
 
-        int introCount = result.plan().getFrameIndex().getIntroFrames().size();
-        int mainCount = result.plan().getFrameIndex().getFrames().size();
-        if (mainCount <= 0 && introCount <= 0) {
+        AfmaFrameIndex frameIndex = result.plan().getFrameIndex();
+        int introCount = frameIndex.getIntroFrames().size();
+        int mainCount = frameIndex.getFrames().size();
+        if ((introCount + mainCount) <= 0) {
             this.playing = false;
             return;
         }
@@ -222,25 +254,151 @@ public class AfmaPreviewController implements AutoCloseable {
         this.seekToFrame(mainCount > 0 ? introCount : 0);
     }
 
-    protected void reconstructTo(int previewIndex) throws IOException {
-        AfmaCreatorAnalysisResult result = Objects.requireNonNull(this.analysisResult);
-        PreviewFrameRef target = this.previewFrames.get(previewIndex);
-        List<AfmaFrameDescriptor> frames = target.intro() ? result.plan().getFrameIndex().getIntroFrames() : result.plan().getFrameIndex().getFrames();
-        int keyframe = this.findNearestKeyframe(frames, target.sequenceIndex());
-        this.ensureSurface(result.plan().getMetadata().getCanvasWidth(), result.plan().getMetadata().getCanvasHeight());
-        this.applyFullFrame(frames.get(keyframe), new PreviewFrameRef(target.intro(), keyframe));
-        for (int i = keyframe + 1; i <= target.sequenceIndex(); i++) {
-            this.applyDescriptor(frames.get(i), new PreviewFrameRef(target.intro(), i));
+    protected void runPreviewTask(int generation, int previewIndex) {
+        try {
+            PreviewSurfaceSnapshot snapshot = this.buildPreviewSnapshot(previewIndex, generation);
+            if (generation != this.previewGeneration.get()) {
+                return;
+            }
+            this.completedTaskResult = new PreviewTaskResult(generation, snapshot, null);
+        } catch (Throwable throwable) {
+            if (generation != this.previewGeneration.get()) {
+                return;
+            }
+            this.completedTaskResult = new PreviewTaskResult(generation, null, throwable);
         }
-        this.uploadSurface();
     }
 
-    protected void applyFrame(@NotNull PreviewFrameRef ref) throws IOException {
-        AfmaCreatorAnalysisResult result = Objects.requireNonNull(this.analysisResult);
-        this.ensureSurface(result.plan().getMetadata().getCanvasWidth(), result.plan().getMetadata().getCanvasHeight());
-        List<AfmaFrameDescriptor> frames = ref.intro() ? result.plan().getFrameIndex().getIntroFrames() : result.plan().getFrameIndex().getFrames();
-        this.applyDescriptor(frames.get(ref.sequenceIndex()), ref);
-        this.uploadSurface();
+    protected @NotNull PreviewSurfaceSnapshot buildPreviewSnapshot(int previewIndex, int generation) throws IOException {
+        AfmaCreatorAnalysisResult result = Objects.requireNonNull(this.analysisResult, "AFMA preview analysis result is missing");
+        AfmaEncodePlan plan = Objects.requireNonNull(this.previewPlan, "AFMA preview plan is missing");
+        AfmaMetadata metadata = plan.getMetadata();
+
+        PreviewFrameRef target = this.previewFrames.get(previewIndex);
+        List<AfmaFrameDescriptor> frames = target.intro() ? plan.getFrameIndex().getIntroFrames() : plan.getFrameIndex().getFrames();
+        if (frames.isEmpty()) {
+            throw new IOException("AFMA preview frame sequence is empty.");
+        }
+
+        int[] canvasPixels = new int[metadata.getCanvasWidth() * metadata.getCanvasHeight()];
+        int keyframe = this.findNearestKeyframe(frames, target.sequenceIndex());
+        this.applyDescriptorToPixels(canvasPixels, metadata.getCanvasWidth(), metadata.getCanvasHeight(), frames.get(keyframe), generation);
+        for (int i = keyframe + 1; i <= target.sequenceIndex(); i++) {
+            this.applyDescriptorToPixels(canvasPixels, metadata.getCanvasWidth(), metadata.getCanvasHeight(), frames.get(i), generation);
+        }
+
+        long delay = result.plan().getMetadata().getFrameTimeForFrame(target.sequenceIndex(), target.intro());
+        return new PreviewSurfaceSnapshot(previewIndex, metadata.getCanvasWidth(), metadata.getCanvasHeight(), canvasPixels, delay);
+    }
+
+    protected void applyDescriptorToPixels(@NotNull int[] canvasPixels, int canvasWidth, int canvasHeight,
+                                           @NotNull AfmaFrameDescriptor descriptor, int generation) throws IOException {
+        AfmaFrameOperationType type = Objects.requireNonNull(descriptor.getType(), "AFMA preview descriptor type was NULL");
+        switch (type) {
+            case SAME -> {
+            }
+            case FULL -> this.copyPixelFrame(this.loadPayloadFrame(Objects.requireNonNull(descriptor.getPath()), generation), canvasPixels, canvasWidth, 0, 0);
+            case DELTA_RECT -> this.copyPixelFrame(this.loadPayloadFrame(Objects.requireNonNull(descriptor.getPath()), generation), canvasPixels, canvasWidth, descriptor.getX(), descriptor.getY());
+            case COPY_RECT_PATCH -> {
+                AfmaCopyRect copyRect = Objects.requireNonNull(descriptor.getCopy(), "AFMA preview copy rect is missing");
+                this.copyRectMemmove(canvasPixels, canvasWidth, canvasHeight, copyRect);
+
+                AfmaPatchRegion patch = descriptor.getPatch();
+                if ((patch != null) && (patch.getPath() != null)) {
+                    this.copyPixelFrame(this.loadPayloadFrame(patch.getPath(), generation), canvasPixels, canvasWidth, patch.getX(), patch.getY());
+                }
+            }
+        }
+    }
+
+    protected void copyRectMemmove(@NotNull int[] canvasPixels, int canvasWidth, int canvasHeight, @NotNull AfmaCopyRect copyRect) {
+        int width = copyRect.getWidth();
+        int height = copyRect.getHeight();
+        if ((width <= 0) || (height <= 0)) {
+            return;
+        }
+
+        int startY = (copyRect.getDstY() > copyRect.getSrcY()) ? (height - 1) : 0;
+        int endY = (copyRect.getDstY() > copyRect.getSrcY()) ? -1 : height;
+        int stepY = (copyRect.getDstY() > copyRect.getSrcY()) ? -1 : 1;
+
+        for (int localY = startY; localY != endY; localY += stepY) {
+            int srcY = copyRect.getSrcY() + localY;
+            int dstY = copyRect.getDstY() + localY;
+            if ((srcY < 0) || (srcY >= canvasHeight) || (dstY < 0) || (dstY >= canvasHeight)) {
+                continue;
+            }
+
+            int srcIndex = (srcY * canvasWidth) + copyRect.getSrcX();
+            int dstIndex = (dstY * canvasWidth) + copyRect.getDstX();
+            System.arraycopy(canvasPixels, srcIndex, canvasPixels, dstIndex, width);
+        }
+    }
+
+    protected void copyPixelFrame(@NotNull AfmaPixelFrame frame, @NotNull int[] canvasPixels, int canvasWidth, int dstX, int dstY) {
+        for (int y = 0; y < frame.getHeight(); y++) {
+            int dstRowStart = ((dstY + y) * canvasWidth) + dstX;
+            for (int x = 0; x < frame.getWidth(); x++) {
+                canvasPixels[dstRowStart + x] = frame.getPixelRGBA(x, y);
+            }
+        }
+    }
+
+    protected @NotNull AfmaPixelFrame loadPayloadFrame(@NotNull String payloadPath, int generation) throws IOException {
+        synchronized (this.payloadFrameCache) {
+            AfmaPixelFrame cached = this.payloadFrameCache.get(payloadPath);
+            if (cached != null) {
+                return cached;
+            }
+        }
+
+        if (generation != this.previewGeneration.get()) {
+            throw new IOException("AFMA preview payload decode was invalidated by a newer request.");
+        }
+
+        AfmaEncodePlan plan = Objects.requireNonNull(this.previewPlan, "AFMA preview plan is missing");
+        byte[] payloadBytes = plan.getPayloads().get(payloadPath);
+        if (payloadBytes == null) {
+            throw new IOException("AFMA preview payload is missing: " + payloadPath);
+        }
+
+        AfmaPixelFrame decodedFrame = this.decodePayloadFrame(payloadBytes, payloadPath);
+        synchronized (this.payloadFrameCache) {
+            AfmaPixelFrame cached = this.payloadFrameCache.get(payloadPath);
+            if (cached != null) {
+                decodedFrame.close();
+                return cached;
+            }
+            this.payloadFrameCache.put(payloadPath, decodedFrame);
+            return decodedFrame;
+        }
+    }
+
+    protected @NotNull AfmaPixelFrame decodePayloadFrame(@NotNull byte[] payloadBytes, @NotNull String payloadPath) throws IOException {
+        try (ByteArrayInputStream input = new ByteArrayInputStream(payloadBytes)) {
+            BufferedImage image = ImageIO.read(input);
+            if (image == null) {
+                throw new IOException("Failed to decode AFMA preview payload: " + payloadPath);
+            }
+
+            BufferedImage normalized = image;
+            if ((image.getType() != BufferedImage.TYPE_INT_ARGB) && (image.getType() != BufferedImage.TYPE_INT_RGB)) {
+                int targetType = image.getColorModel().hasAlpha() ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB;
+                normalized = new BufferedImage(image.getWidth(), image.getHeight(), targetType);
+                Graphics2D graphics = normalized.createGraphics();
+                try {
+                    graphics.drawImage(image, 0, 0, null);
+                } finally {
+                    graphics.dispose();
+                }
+            }
+
+            int width = normalized.getWidth();
+            int height = normalized.getHeight();
+            int[] pixels = new int[width * height];
+            normalized.getRGB(0, 0, width, height, pixels, 0, width);
+            return new AfmaPixelFrame(width, height, pixels);
+        }
     }
 
     protected int findNearestKeyframe(@NotNull List<AfmaFrameDescriptor> frames, int targetIndex) {
@@ -253,74 +411,47 @@ public class AfmaPreviewController implements AutoCloseable {
         return 0;
     }
 
-    protected void applyDescriptor(@NotNull AfmaFrameDescriptor descriptor, @NotNull PreviewFrameRef ref) throws IOException {
-        switch (Objects.requireNonNull(descriptor.getType())) {
-            case FULL -> this.applyFullFrame(descriptor, ref);
-            case DELTA_RECT -> this.applyDeltaFrame(descriptor, ref);
-            case SAME -> {
-            }
-            case COPY_RECT_PATCH -> this.applyCopyRectPatchFrame(descriptor, ref);
+    protected void applyCompletedPreviewIfAvailable() {
+        PreviewTaskResult result = this.completedTaskResult;
+        if (result == null) {
+            return;
         }
-    }
+        if (result.generation != this.previewGeneration.get()) {
+            this.completedTaskResult = null;
+            return;
+        }
 
-    protected void applyFullFrame(@NotNull AfmaFrameDescriptor descriptor, @NotNull PreviewFrameRef ref) throws IOException {
-        AfmaPixelFrame frame = this.loadSourceFrame(ref);
-        this.copyPixelFrame(frame, Objects.requireNonNull(this.canvas), 0, 0);
-    }
+        this.completedTaskResult = null;
+        if (result.failure != null) {
+            this.playing = false;
+            this.lastFailureMessage = (result.failure.getMessage() != null) ? result.failure.getMessage() : "AFMA preview reconstruction failed.";
+            LOGGER.error("[FANCYMENU] AFMA creator preview failed while preparing frame {}", this.requestedPreviewIndex, result.failure);
+            return;
+        }
 
-    protected void applyDeltaFrame(@NotNull AfmaFrameDescriptor descriptor, @NotNull PreviewFrameRef ref) throws IOException {
-        AfmaPixelFrame sourceFrame = this.loadSourceFrame(ref);
-        AfmaPixelFrame patch = this.frameNormalizer.extractPatch(sourceFrame, descriptor.getX(), descriptor.getY(), descriptor.getWidth(), descriptor.getHeight());
+        PreviewSurfaceSnapshot snapshot = result.snapshot;
+        if (snapshot == null) {
+            return;
+        }
+
         try {
-            this.copyPixelFrame(patch, Objects.requireNonNull(this.canvas), descriptor.getX(), descriptor.getY());
-        } finally {
-            patch.close();
-        }
-    }
-
-    protected void applyCopyRectPatchFrame(@NotNull AfmaFrameDescriptor descriptor, @NotNull PreviewFrameRef ref) throws IOException {
-        NativeImage canvasImage = Objects.requireNonNull(this.canvas);
-        AfmaCopyRect copyRect = Objects.requireNonNull(descriptor.getCopy());
-        AfmaNativeImageHelper.copyRectMemmove(canvasImage, copyRect);
-
-        AfmaPatchRegion patchRegion = descriptor.getPatch();
-        if ((patchRegion != null) && (patchRegion.getPath() != null)) {
-            AfmaPixelFrame sourceFrame = this.loadSourceFrame(ref);
-            AfmaPixelFrame patch = this.frameNormalizer.extractPatch(sourceFrame, patchRegion.getX(), patchRegion.getY(), patchRegion.getWidth(), patchRegion.getHeight());
-            try {
-                this.copyPixelFrame(patch, canvasImage, patchRegion.getX(), patchRegion.getY());
-            } finally {
-                patch.close();
+            this.ensureSurface(snapshot.width, snapshot.height);
+            NativeImage activeCanvas = Objects.requireNonNull(this.canvas, "AFMA preview canvas was NULL");
+            int pixelIndex = 0;
+            for (int y = 0; y < snapshot.height; y++) {
+                for (int x = 0; x < snapshot.width; x++) {
+                    activeCanvas.setPixelRGBA(x, y, snapshot.pixels[pixelIndex++]);
+                }
             }
+            this.uploadSurface();
+            this.currentPreviewIndex = snapshot.previewIndex;
+            this.nextFrameAtMs = System.currentTimeMillis() + Math.max(1L, snapshot.delayMs);
+            this.lastFailureMessage = null;
+        } catch (Exception ex) {
+            this.playing = false;
+            this.lastFailureMessage = (ex.getMessage() != null) ? ex.getMessage() : "AFMA preview upload failed.";
+            LOGGER.error("[FANCYMENU] AFMA creator preview failed while applying frame {}", snapshot.previewIndex, ex);
         }
-    }
-
-    protected @NotNull AfmaPixelFrame loadSourceFrame(@NotNull PreviewFrameRef ref) throws IOException {
-        AfmaCreatorAnalysisResult result = Objects.requireNonNull(this.analysisResult);
-        FileRef fileRef = this.resolveSourceFile(result, ref);
-        AfmaPixelFrame cached = this.sourceFrameCache.get(fileRef.cacheKey());
-        if (cached != null) {
-            return cached;
-        }
-
-        AfmaPixelFrame frame = this.frameNormalizer.loadFrame(fileRef.file());
-        this.sourceFrameCache.put(fileRef.cacheKey(), frame);
-        return frame;
-    }
-
-    protected @NotNull FileRef resolveSourceFile(@NotNull AfmaCreatorAnalysisResult result, @NotNull PreviewFrameRef ref) throws IOException {
-        AfmaSourceSequence sequence = ref.intro() ? result.introSequence() : result.mainSequence();
-        if (sequence.isEmpty() && ref.intro() && result.mainSequence().isEmpty()) {
-            sequence = result.introSequence();
-        }
-        if (sequence.isEmpty()) {
-            throw new IOException("Missing AFMA preview source sequence for " + (ref.intro() ? "intro" : "main") + " frame " + ref.sequenceIndex());
-        }
-        java.io.File file = sequence.getFrame(ref.sequenceIndex());
-        if (file == null) {
-            throw new IOException("Missing AFMA preview source frame for " + (ref.intro() ? "intro" : "main") + " frame " + ref.sequenceIndex());
-        }
-        return new FileRef(file, (ref.intro() ? "intro:" : "main:") + ref.sequenceIndex() + ":" + file.getAbsolutePath());
     }
 
     protected void ensureSurface(int width, int height) {
@@ -340,44 +471,60 @@ public class AfmaPreviewController implements AutoCloseable {
         }
     }
 
-    protected void clearSourceFrameCache() {
-        for (AfmaPixelFrame image : this.sourceFrameCache.values()) {
-            CloseableUtils.closeQuietly(image);
+    protected void clearPayloadCache() {
+        synchronized (this.payloadFrameCache) {
+            for (AfmaPixelFrame frame : this.payloadFrameCache.values()) {
+                CloseableUtils.closeQuietly(frame);
+            }
+            this.payloadFrameCache.clear();
         }
-        this.sourceFrameCache.clear();
     }
 
     protected void clearSurface() {
-        this.clearSourceFrameCache();
+        this.clearPayloadCache();
         if (this.textureLocation != null) {
             Minecraft.getInstance().getTextureManager().release(this.textureLocation);
             this.textureLocation = null;
         }
+        if (this.texture != null) {
+            try {
+                this.texture.close();
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to close AFMA creator preview texture", ex);
+            }
+        }
         this.texture = null;
+        if (this.canvas != null) {
+            try {
+                this.canvas.close();
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to close AFMA creator preview canvas", ex);
+            }
+        }
         this.canvas = null;
     }
 
     @Override
     public void close() {
         this.playing = false;
+        this.previewGeneration.incrementAndGet();
+        this.previewExecutor.shutdownNow();
         this.clearSurface();
         this.analysisResult = null;
+        this.previewPlan = null;
         this.previewFrames.clear();
         this.currentPreviewIndex = -1;
-    }
-
-    protected void copyPixelFrame(@NotNull AfmaPixelFrame frame, @NotNull NativeImage target, int dstX, int dstY) {
-        for (int y = 0; y < frame.getHeight(); y++) {
-            for (int x = 0; x < frame.getWidth(); x++) {
-                target.setPixelRGBA(dstX + x, dstY + y, frame.getPixelRGBA(x, y));
-            }
-        }
+        this.requestedPreviewIndex = -1;
+        this.completedTaskResult = null;
     }
 
     protected record PreviewFrameRef(boolean intro, int sequenceIndex) {
     }
 
-    protected record FileRef(@NotNull java.io.File file, @NotNull String cacheKey) {
+    protected record PreviewSurfaceSnapshot(int previewIndex, int width, int height, @NotNull int[] pixels, long delayMs) {
+    }
+
+    protected record PreviewTaskResult(int generation, @Nullable PreviewSurfaceSnapshot snapshot, @Nullable Throwable failure) {
     }
 
 }

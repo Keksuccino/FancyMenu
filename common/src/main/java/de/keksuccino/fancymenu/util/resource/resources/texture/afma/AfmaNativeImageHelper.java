@@ -82,6 +82,24 @@ public final class AfmaNativeImageHelper {
         }
     }
 
+    public static void blitPixels(@NotNull NativeImage target, int dstX, int dstY, int width, int height,
+                                  @NotNull int[] pixels, int offset, int stride, boolean forceOpaqueAlpha) {
+        long targetPixels = pixels(target);
+        int targetWidth = target.getWidth();
+
+        for (int row = 0; row < height; row++) {
+            long targetOffset = offset(targetPixels, targetWidth, dstX, dstY + row);
+            int sourceRowStart = offset + (row * stride);
+            for (int column = 0; column < width; column++) {
+                int color = pixels[sourceRowStart + column];
+                if (forceOpaqueAlpha) {
+                    color |= 0xFF000000;
+                }
+                MemoryUtil.memPutInt(targetOffset + ((long) column * RGBA_BYTES_PER_PIXEL), color);
+            }
+        }
+    }
+
     public static void copyRectMemmove(@NotNull NativeImage image, @NotNull AfmaCopyRect copyRect) {
         long pixels = pixels(image);
         int imageWidth = image.getWidth();

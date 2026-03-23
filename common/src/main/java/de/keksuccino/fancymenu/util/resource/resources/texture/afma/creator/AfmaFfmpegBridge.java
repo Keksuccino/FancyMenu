@@ -23,15 +23,15 @@ public class AfmaFfmpegBridge {
     public @NotNull String describeStatus() {
         FFMPEGInstallation installation = this.resolveInstallation();
         if (installation == null) {
-            return "Optional / not installed";
+            return "Not ready";
         }
-        return installation.getProviderId() + " | " + installation.getPlatformId();
+        return "Ready via " + installation.getProviderId() + " | " + installation.getPlatformId();
     }
 
     public @NotNull String describeBinaryPath() {
         FFMPEGInstallation installation = this.resolveInstallation();
         if (installation == null) {
-            return "Unavailable (not needed for PNG sequence export)";
+            return "Unavailable until the downloader finishes successfully";
         }
         return installation.getFfmpegBinary().getAbsolutePath();
     }

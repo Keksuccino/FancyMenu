@@ -195,11 +195,7 @@ public class AfmaCreatorScreen extends Screen {
 
     protected void syncPreviewFromAnalysisIfNeeded() {
         AfmaCreatorAnalysisResult result = this.state.getAnalysisResult();
-        if (result != null && result != this.previewController.getAnalysisResult()) {
-            this.previewController.setAnalysisResult(result);
-        } else if ((result == null) && (this.previewController.getAnalysisResult() != null)) {
-            this.previewController.setAnalysisResult(null);
-        }
+        this.previewController.setAnalysisContext(result, this.state.getPreviewPlan());
         AfmaEncodeJob job = this.state.getCurrentJob();
         if ((job != null) && !job.isRunning() && (job != this.handledTerminalJob)) {
             this.handledTerminalJob = job;
@@ -675,6 +671,7 @@ public class AfmaCreatorScreen extends Screen {
     @Override
     public void removed() {
         this.state.cancelCurrentJob();
+        this.state.close();
         this.previewController.close();
         for (PiPWindow window : List.copyOf(this.childWindows)) {
             if (window != null) {

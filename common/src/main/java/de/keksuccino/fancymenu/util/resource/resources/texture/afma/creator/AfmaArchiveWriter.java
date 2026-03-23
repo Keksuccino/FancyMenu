@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.apache.commons.compress.archivers.zip.UnixStat;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,6 +13,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.attribute.FileTime;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CancellationException;
@@ -20,6 +22,7 @@ import java.util.function.BooleanSupplier;
 public class AfmaArchiveWriter {
 
     private static final Gson GSON = new GsonBuilder().create();
+    private static final FileTime ZIP_EPOCH = FileTime.fromMillis(0L);
 
     public void write(@NotNull AfmaEncodePlan plan, @NotNull File outputFile) throws IOException {
         this.write(plan, outputFile, null);
@@ -70,6 +73,11 @@ public class AfmaArchiveWriter {
     protected void writeBinaryEntry(@NotNull ZipArchiveOutputStream out, @NotNull String path, @NotNull byte[] bytes) throws IOException {
         ZipArchiveEntry entry = new ZipArchiveEntry(path);
         entry.setSize(bytes.length);
+        entry.setTime(0L);
+        entry.setCreationTime(ZIP_EPOCH);
+        entry.setLastModifiedTime(ZIP_EPOCH);
+        entry.setLastAccessTime(ZIP_EPOCH);
+        entry.setUnixMode(UnixStat.FILE_FLAG | 0644);
         out.putArchiveEntry(entry);
         out.write(bytes);
         out.closeArchiveEntry();

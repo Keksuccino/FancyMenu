@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import de.keksuccino.fancymenu.util.file.FilenameComparator;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaDecoder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +27,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class AfmaCreatorState {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor(runnable -> {
+    private final ExecutorService executor = Executors.newSingleThreadExecutor(runnable -> {
         Thread thread = new Thread(runnable, "FancyMenu-AFMA-Creator");
         thread.setDaemon(true);
         return thread;
@@ -60,6 +61,8 @@ public class AfmaCreatorState {
     private volatile boolean analysisDirty = true;
     private volatile @Nullable AfmaCreatorAnalysisResult analysisResult;
     private volatile @Nullable AfmaEncodeJob currentJob;
+    private volatile @Nullable CachedPlan cachedPlan;
+    private volatile long successfulAnalysisVersion = -1L;
 
     public @Nullable File getMainFramesDirectory() {
         return this.mainFramesDirectory;
@@ -231,6 +234,14 @@ public class AfmaCreatorState {
         return (job != null) && job.isRunning();
     }
 
+    public @Nullable AfmaEncodePlan getPreviewPlan() {
+        CachedPlan plan = this.cachedPlan;
+        if ((plan == null) || (plan.configurationVersion != this.successfulAnalysisVersion)) {
+            return null;
+        }
+        return plan.plan;
+    }
+
     public void cancelCurrentJob() {
         AfmaEncodeJob job = this.currentJob;
         if (job != null) {
@@ -258,7 +269,7 @@ public class AfmaCreatorState {
         PreparedInputs prepared = this.prepare(false);
         AfmaEncodeJob job = new AfmaEncodeJob(AfmaEncodeJob.Kind.ANALYZE);
         this.currentJob = job;
-        EXECUTOR.execute(() -> this.runAnalysisJob(job, prepared));
+        this.executor.execute(() -> this.runAnalysisJob(job, prepared));
     }
 
     public void startExport() {
@@ -269,7 +280,7 @@ public class AfmaCreatorState {
         PreparedInputs prepared = this.prepare(true);
         AfmaEncodeJob job = new AfmaEncodeJob(AfmaEncodeJob.Kind.EXPORT);
         this.currentJob = job;
-        EXECUTOR.execute(() -> this.runExportJob(job, prepared));
+        this.executor.execute(() -> this.runExportJob(job, prepared));
     }
 
     protected void runAnalysisJob(@NotNull AfmaEncodeJob job, @NotNull PreparedInputs prepared) {
@@ -289,6 +300,8 @@ public class AfmaCreatorState {
             if (this.configurationVersion.get() == prepared.configurationVersion) {
                 this.analysisResult = result;
                 this.analysisDirty = false;
+                this.cachedPlan = new CachedPlan(prepared.configurationVersion, plan);
+                this.successfulAnalysisVersion = prepared.configurationVersion;
             }
 
             job.completeSuccess(result, null);
@@ -306,9 +319,7 @@ public class AfmaCreatorState {
             job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.VALIDATING_SOURCES, "Validating AFMA creator input...", null, 0.10D));
             checkCancelled(job);
 
-            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Analyzing AFMA frames for export...", null, 0.15D));
-            AfmaEncodePlan exportPlan = this.planner.plan(prepared.mainSequence, prepared.introSequence, prepared.options, job::isCancellationRequested,
-                    (detail, progress) -> job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Analyzing AFMA frames for export...", detail, 0.15D + (0.50D * progress))));
+            AfmaEncodePlan exportPlan = this.resolveExportPlan(prepared, job);
             checkCancelled(job);
 
             job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Building AFMA export summary...", null, 0.68D));
@@ -333,12 +344,18 @@ public class AfmaCreatorState {
                     (path, progress) -> job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Packing AFMA archive...", path, 0.82D + (0.16D * progress))));
             checkCancelled(job);
 
+            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Validating AFMA archive...", prepared.outputFile.getName(), 0.985D));
+            this.validateWrittenArchive(tempFile);
+            checkCancelled(job);
+
             Files.move(tempFile.toPath(), prepared.outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             tempFile = null;
 
             if (this.configurationVersion.get() == prepared.configurationVersion) {
                 this.analysisResult = exportAnalysis;
                 this.analysisDirty = false;
+                this.cachedPlan = new CachedPlan(prepared.configurationVersion, exportPlan);
+                this.successfulAnalysisVersion = prepared.configurationVersion;
             }
 
             job.completeSuccess(exportAnalysis, prepared.outputFile);
@@ -350,6 +367,18 @@ public class AfmaCreatorState {
             LOGGER.error("[FANCYMENU] AFMA creator export job failed", throwable);
             job.completeFailure(throwable);
         }
+    }
+
+    protected @NotNull AfmaEncodePlan resolveExportPlan(@NotNull PreparedInputs prepared, @NotNull AfmaEncodeJob job) throws IOException {
+        CachedPlan cachedPlan = this.cachedPlan;
+        if ((cachedPlan != null) && (cachedPlan.configurationVersion == prepared.configurationVersion)) {
+            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Reusing analyzed AFMA export plan...", null, 0.55D));
+            return cachedPlan.plan;
+        }
+
+        job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Analyzing AFMA frames for export...", null, 0.15D));
+        return this.planner.plan(prepared.mainSequence, prepared.introSequence, prepared.options, job::isCancellationRequested,
+                (detail, progress) -> job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Analyzing AFMA frames for export...", detail, 0.15D + (0.50D * progress))));
     }
 
     protected @NotNull PreparedInputs prepare(boolean requireOutput) {
@@ -485,6 +514,19 @@ public class AfmaCreatorState {
         }
     }
 
+    protected void validateWrittenArchive(@NotNull File archiveFile) throws IOException {
+        try (AfmaDecoder decoder = new AfmaDecoder()) {
+            decoder.read(archiveFile);
+        }
+    }
+
+    public void close() {
+        this.cancelCurrentJob();
+        this.executor.shutdownNow();
+        this.cachedPlan = null;
+        this.currentJob = null;
+    }
+
     protected @NotNull ResolvedSource resolveSource(@NotNull File directory, boolean optional, @NotNull String sequenceName) {
         File[] files = directory.listFiles(file -> file.isFile() && file.getName().toLowerCase(Locale.ROOT).endsWith(".png"));
         if ((files == null) || (files.length == 0)) {
@@ -609,6 +651,9 @@ public class AfmaCreatorState {
             boolean generateThumbnail,
             @NotNull List<String> warnings
     ) {
+    }
+
+    protected record CachedPlan(long configurationVersion, @NotNull AfmaEncodePlan plan) {
     }
 
     protected record ResolvedSource(@NotNull AfmaSourceSequence sequence, @NotNull List<String> warnings) {

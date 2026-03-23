@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaCopyRect;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameDescriptor;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameIndex;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameOperationType;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaMetadata;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaPatchRegion;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaRect;
@@ -122,10 +123,10 @@ public class AfmaEncodePlanner {
                         selectedCandidate = this.createFullCandidate(currentFrame, introSequence, frameIndex);
                     } else if (options.isDuplicateFrameElision() && AfmaPixelFrameHelper.isIdentical(previousFrame, currentFrame)) {
                         selectedCandidate = PlannedCandidate.same();
-                    } else if (framesSinceKeyframe >= options.getKeyframeInterval()) {
+                    } else if ((framesSinceKeyframe + 1) >= options.getKeyframeInterval()) {
                         selectedCandidate = this.createFullCandidate(currentFrame, introSequence, frameIndex);
                     } else {
-                        selectedCandidate = this.chooseBestCandidate(previousFrame, currentFrame, introSequence, frameIndex, options, copyDetector);
+                        selectedCandidate = this.chooseBestCandidate(previousFrame, currentFrame, introSequence, frameIndex, options, copyDetector, payloadPathsByFingerprint);
                     }
 
                     PlannedCandidate finalizedCandidate = selectedCandidate.internPayloads(payloads, payloadPathsByFingerprint);
@@ -146,7 +147,8 @@ public class AfmaEncodePlanner {
     @NotNull
     protected PlannedCandidate chooseBestCandidate(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
                                                    boolean introSequence, int frameIndex, @NotNull AfmaEncodeOptions options,
-                                                   @NotNull AfmaRectCopyDetector copyDetector) throws IOException {
+                                                   @NotNull AfmaRectCopyDetector copyDetector,
+                                                   @NotNull Map<String, String> payloadPathsByFingerprint) throws IOException {
         List<PlannedCandidate> candidates = new ArrayList<>();
         candidates.add(this.createFullCandidate(currentFrame, introSequence, frameIndex));
 
@@ -167,7 +169,7 @@ public class AfmaEncodePlanner {
 
         PlannedCandidate bestCandidate = null;
         for (PlannedCandidate candidate : candidates) {
-            if ((bestCandidate == null) || candidate.isBetterThan(bestCandidate)) {
+            if ((bestCandidate == null) || candidate.isBetterThan(bestCandidate, payloadPathsByFingerprint)) {
                 bestCandidate = candidate;
             }
         }
@@ -243,7 +245,7 @@ public class AfmaEncodePlanner {
 
     @NotNull
     protected String buildPayloadPath(boolean introSequence, int frameIndex) {
-        return (introSequence ? "intro_frames/" : "frames/") + String.format("%06d.png", frameIndex);
+        return (introSequence ? "intro_frames/" : "frames/") + Integer.toUnsignedString(frameIndex, 36) + ".png";
     }
 
     @NotNull
@@ -341,9 +343,54 @@ public class AfmaEncodePlanner {
             return total;
         }
 
-        public boolean isBetterThan(@NotNull PlannedCandidate other) {
-            if (this.totalBytes() != other.totalBytes()) {
-                return this.totalBytes() < other.totalBytes();
+        public long estimatedArchiveBytes(@NotNull Map<String, String> payloadPathsByFingerprint) {
+            return this.estimatedPayloadBytes(payloadPathsByFingerprint) + this.estimateDescriptorBytes();
+        }
+
+        protected long estimatedPayloadBytes(@NotNull Map<String, String> payloadPathsByFingerprint) {
+            long total = 0L;
+            total += this.estimatedPayloadBytes(this.primaryPayloadPath, this.primaryPayload, payloadPathsByFingerprint);
+            total += this.estimatedPayloadBytes(this.patchPayloadPath, this.patchPayload, payloadPathsByFingerprint);
+            return total;
+        }
+
+        protected long estimatedPayloadBytes(@Nullable String path, @Nullable byte[] payload, @NotNull Map<String, String> payloadPathsByFingerprint) {
+            if ((path == null) || (payload == null)) {
+                return 0L;
+            }
+            String fingerprint = fingerprintPayload(payload);
+            String existingPath = payloadPathsByFingerprint.get(fingerprint);
+            return ((existingPath != null) && !existingPath.equals(path)) ? 0L : payload.length;
+        }
+
+        protected int estimateDescriptorBytes() {
+            int bytes = 16;
+            if (this.descriptor.getType() != null) {
+                bytes += this.descriptor.getType().name().length();
+            }
+            if (this.primaryPayloadPath != null) {
+                bytes += this.primaryPayloadPath.length();
+            } else if (this.descriptor.getPath() != null) {
+                bytes += this.descriptor.getPath().length();
+            }
+            if (this.patchPayloadPath != null) {
+                bytes += this.patchPayloadPath.length();
+            } else if ((this.descriptor.getPatch() != null) && (this.descriptor.getPatch().getPath() != null)) {
+                bytes += this.descriptor.getPatch().getPath().length();
+            }
+            if (this.descriptor.getType() == AfmaFrameOperationType.DELTA_RECT) {
+                bytes += 20;
+            } else if (this.descriptor.getType() == AfmaFrameOperationType.COPY_RECT_PATCH) {
+                bytes += 32;
+            }
+            return bytes;
+        }
+
+        public boolean isBetterThan(@NotNull PlannedCandidate other, @NotNull Map<String, String> payloadPathsByFingerprint) {
+            long archiveBytes = this.estimatedArchiveBytes(payloadPathsByFingerprint);
+            long otherArchiveBytes = other.estimatedArchiveBytes(payloadPathsByFingerprint);
+            if (archiveBytes != otherArchiveBytes) {
+                return archiveBytes < otherArchiveBytes;
             }
             if (this.decodeCost != other.decodeCost) {
                 return this.decodeCost.ordinal() < other.decodeCost.ordinal();

@@ -44,11 +44,11 @@ public class AfmaMetadata {
         metadata.canvas_height = canvasHeight;
         metadata.loop_count = loopCount;
         metadata.frame_time = frameTime;
-        metadata.frame_time_intro = frameTimeIntro;
+        metadata.frame_time_intro = (frameTimeIntro != frameTime) ? frameTimeIntro : 0L;
         metadata.custom_frame_times = copyIfNotEmpty(customFrameTimes);
         metadata.custom_frame_times_intro = copyIfNotEmpty(customFrameTimesIntro);
         metadata.keyframe_interval = keyframeInterval;
-        metadata.encoding = new Encoding(8, null, rectCopyEnabled, duplicateFrameElision);
+        metadata.encoding = (rectCopyEnabled && duplicateFrameElision) ? null : new Encoding(8, null, rectCopyEnabled, duplicateFrameElision);
         metadata.creator = null;
         return metadata;
     }

@@ -197,16 +197,8 @@ public class AfmaDecoder implements Closeable {
         }
 
         this.payloadHeadersByPath.clear();
-        for (String payloadPath : this.collectReferencedPayloadPaths(frames, introFrames)) {
-            PngFrameHeader header = this.readPngFrameHeader(payloadPath);
-            if (header == null) {
-                throw new IOException("Failed to read PNG header of AFMA payload: " + payloadPath);
-            }
-            this.payloadHeadersByPath.put(payloadPath, header);
-        }
-
-        this.validatePayloadDimensions(frames, activeMetadata, false);
-        this.validatePayloadDimensions(introFrames, activeMetadata, true);
+        this.validateBootstrapPayloads(frames, activeMetadata, false);
+        this.validateBootstrapPayloads(introFrames, activeMetadata, true);
     }
 
     protected void validateSequence(@NotNull List<AfmaFrameDescriptor> sequence, boolean introSequence, @NotNull AfmaMetadata activeMetadata) {
@@ -226,24 +218,25 @@ public class AfmaDecoder implements Closeable {
         }
     }
 
-    protected void validatePayloadDimensions(@NotNull List<AfmaFrameDescriptor> sequence, @NotNull AfmaMetadata activeMetadata, boolean introSequence) throws IOException {
-        for (int i = 0; i < sequence.size(); i++) {
-            AfmaFrameDescriptor descriptor = sequence.get(i);
-            String context = (introSequence ? "Intro" : "Main") + " frame " + i;
+    protected void validateBootstrapPayloads(@NotNull List<AfmaFrameDescriptor> sequence, @NotNull AfmaMetadata activeMetadata, boolean introSequence) throws IOException {
+        if (sequence.isEmpty()) {
+            return;
+        }
 
-            if (descriptor.getType() == AfmaFrameOperationType.FULL) {
-                this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPath()), activeMetadata.getCanvasWidth(), activeMetadata.getCanvasHeight());
-            } else if (descriptor.getType() == AfmaFrameOperationType.DELTA_RECT) {
-                this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPath()), descriptor.getWidth(), descriptor.getHeight());
-            } else if ((descriptor.getType() == AfmaFrameOperationType.COPY_RECT_PATCH) && descriptor.requiresPatchPayload()) {
-                AfmaPatchRegion patch = Objects.requireNonNull(descriptor.getPatch());
-                this.validatePayloadHeader(context, Objects.requireNonNull(patch.getPath()), patch.getWidth(), patch.getHeight());
-            }
+        AfmaFrameDescriptor descriptor = sequence.get(0);
+        String context = (introSequence ? "Intro" : "Main") + " frame 0";
+        if (descriptor.getType() == AfmaFrameOperationType.FULL) {
+            this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPath()), activeMetadata.getCanvasWidth(), activeMetadata.getCanvasHeight());
+        } else if (descriptor.getType() == AfmaFrameOperationType.DELTA_RECT) {
+            this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPath()), descriptor.getWidth(), descriptor.getHeight());
+        } else if ((descriptor.getType() == AfmaFrameOperationType.COPY_RECT_PATCH) && descriptor.requiresPatchPayload()) {
+            AfmaPatchRegion patch = Objects.requireNonNull(descriptor.getPatch());
+            this.validatePayloadHeader(context, Objects.requireNonNull(patch.getPath()), patch.getWidth(), patch.getHeight());
         }
     }
 
     protected void validatePayloadHeader(@NotNull String context, @NotNull String path, int expectedWidth, int expectedHeight) throws IOException {
-        PngFrameHeader header = this.payloadHeadersByPath.get(normalizeEntryPath(path).toLowerCase(Locale.ROOT));
+        PngFrameHeader header = this.getOrLoadPayloadHeader(path);
         if (header == null) {
             throw new IOException(context + " references a missing payload header: " + path);
         }
@@ -319,6 +312,9 @@ public class AfmaDecoder implements Closeable {
         if (entry == null) {
             throw new FileNotFoundException("AFMA payload file not found: " + path);
         }
+        if (this.getOrLoadPayloadHeader(path) == null) {
+            throw new IOException("AFMA payload is missing a valid PNG header: " + path);
+        }
         try {
             return this.zipFile.getInputStream(entry);
         } catch (Exception ex) {
@@ -336,6 +332,21 @@ public class AfmaDecoder implements Closeable {
     @Nullable
     protected ZipArchiveEntry findEntry(@NotNull String path) {
         return this.entriesByNormalizedPath.get(normalizeEntryPath(path).toLowerCase(Locale.ROOT));
+    }
+
+    @Nullable
+    protected PngFrameHeader getOrLoadPayloadHeader(@NotNull String framePath) throws IOException {
+        String normalizedPath = normalizeEntryPath(framePath).toLowerCase(Locale.ROOT);
+        PngFrameHeader cachedHeader = this.payloadHeadersByPath.get(normalizedPath);
+        if (cachedHeader != null) {
+            return cachedHeader;
+        }
+
+        PngFrameHeader header = this.readPngFrameHeader(normalizedPath);
+        if (header != null) {
+            this.payloadHeadersByPath.put(normalizedPath, header);
+        }
+        return header;
     }
 
     @Nullable
