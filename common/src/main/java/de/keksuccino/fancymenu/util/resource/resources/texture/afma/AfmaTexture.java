@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
@@ -22,10 +23,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.awt.image.BufferedImage;
 import java.util.ArrayDeque;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import javax.imageio.ImageIO;
 
 public class AfmaTexture implements ITexture, PlayableResource {
 
@@ -181,7 +184,12 @@ public class AfmaTexture implements ITexture, PlayableResource {
         Objects.requireNonNull(in);
         AfmaTexture texture = (writeTo != null) ? writeTo : new AfmaTexture();
 
-        new Thread(() -> populateTexture(texture, in, (afmaTextureName != null) ? afmaTextureName : "[Generic InputStream Source]")).start();
+        new Thread(() -> {
+            populateTexture(texture, in, (afmaTextureName != null) ? afmaTextureName : "[Generic InputStream Source]");
+            if (texture.closed.get()) {
+                MainThreadTaskExecutor.executeInMainThread(texture::close, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
+            }
+        }).start();
         return texture;
     }
 
@@ -225,11 +233,11 @@ public class AfmaTexture implements ITexture, PlayableResource {
         }
 
         this.decoder = decodedImage.decoder();
-        this.frameIndex = decodedImage.decoder().getFrameIndex();
-        this.frameCount = this.decoder.getFrameCount();
-        this.introFrameCount = this.decoder.getIntroFrameCount();
+        AfmaFrameIndex activeFrameIndex = Objects.requireNonNull(decodedImage.decoder().getFrameIndex(), "AfmaDecoder returned NULL for frame index");
+        int mainFrameCount = this.decoder.getFrameCount();
+        int introCount = this.decoder.getIntroFrameCount();
 
-        if (this.frameCount <= 0) {
+        if ((mainFrameCount <= 0) && (introCount <= 0)) {
             throw new IllegalStateException("AFMA image has no usable frames");
         }
 
@@ -240,9 +248,19 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
         AfmaMetadata metadata = Objects.requireNonNull(this.decoder.getMetadata(), "AfmaDecoder returned NULL for metadata");
 
+        if ((mainFrameCount <= 0) && (introCount > 0)) {
+            this.frameIndex = new AfmaFrameIndex(activeFrameIndex.getIntroFrames(), java.util.List.of());
+            this.frameCount = introCount;
+            this.introFrameCount = 0;
+        } else {
+            this.frameIndex = activeFrameIndex;
+            this.frameCount = mainFrameCount;
+            this.introFrameCount = introCount;
+        }
+
         long[] normalDelays = new long[this.frameCount];
         for (int i = 0; i < normalDelays.length; i++) {
-            normalDelays[i] = sanitizeDelay(metadata.getFrameTimeForFrame(i, false));
+            normalDelays[i] = sanitizeDelay(metadata.getFrameTimeForFrame(i, mainFrameCount <= 0));
         }
 
         long[] introDelays = new long[this.introFrameCount];
@@ -252,7 +270,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
         this.frameDelaysMs = normalDelays;
         this.introFrameDelaysMs = introDelays;
-        this.loadingCompleted.set(true);
+        this.loadingCompleted.set(false);
         this.loadingFailed.set(false);
 
         this.requestPlaybackReset();
@@ -278,7 +296,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
     }
 
     protected void streamLoop(int generation) {
-        while (!this.closed.get() && (generation == this.streamGeneration.get())) {
+        while (!this.closed.get() && !this.loadingFailed.get() && (generation == this.streamGeneration.get())) {
             if (!this.playRequested || this.maxLoopsReached) {
                 sleepQuietly(IDLE_SLEEP_MS);
                 continue;
@@ -314,15 +332,22 @@ public class AfmaTexture implements ITexture, PlayableResource {
     }
 
     protected void fillPrefetchQueue(int generation) {
-        synchronized (this.streamStateLock) {
-            while (!this.closed.get() && (generation == this.streamGeneration.get()) && (this.prefetchedFrames.size() < PREFETCH_QUEUE_SIZE)) {
-                PreparedFrame preparedFrame = this.prepareNextFrame();
-                if (preparedFrame == null) {
-                    break;
+        while (!this.closed.get() && !this.loadingFailed.get() && (generation == this.streamGeneration.get())) {
+            synchronized (this.streamStateLock) {
+                if (this.prefetchedFrames.size() >= PREFETCH_QUEUE_SIZE) {
+                    return;
                 }
+            }
+
+            PreparedFrame preparedFrame = this.prepareNextFrame();
+            if (preparedFrame == null) {
+                return;
+            }
+
+            synchronized (this.streamStateLock) {
                 if (generation != this.streamGeneration.get()) {
                     preparedFrame.close();
-                    break;
+                    return;
                 }
                 this.prefetchedFrames.addLast(preparedFrame);
             }
@@ -337,11 +362,16 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
         boolean intro = this.decodeIntro;
         int index = this.decodeIndex;
-        AfmaFrameDescriptor descriptor = intro ? activeFrameIndex.getIntroFrames().get(index) : activeFrameIndex.getFrames().get(index);
+        java.util.List<AfmaFrameDescriptor> sequence = intro ? activeFrameIndex.getIntroFrames() : activeFrameIndex.getFrames();
+        if ((index < 0) || (index >= sequence.size())) {
+            this.failStreaming("AFMA frame index is out of bounds for the active playback sequence", null);
+            return null;
+        }
+        AfmaFrameDescriptor descriptor = sequence.get(index);
         long delay = this.resolveFrameDelay(intro, index);
 
-        NativeImage primaryPayload = null;
-        NativeImage patchPayload = null;
+        PixelPayload primaryPayload = null;
+        PixelPayload patchPayload = null;
         try {
             if (descriptor.requiresPrimaryPayload()) {
                 primaryPayload = this.readPayload(activeDecoder, Objects.requireNonNull(descriptor.getPath()));
@@ -350,9 +380,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
                 patchPayload = this.readPayload(activeDecoder, Objects.requireNonNull(Objects.requireNonNull(descriptor.getPatch()).getPath()));
             }
         } catch (Exception ex) {
-            CloseableUtils.closeQuietly(primaryPayload);
-            CloseableUtils.closeQuietly(patchPayload);
-            LOGGER.error("[FANCYMENU] Failed to decode AFMA payload for {} frame {}", intro ? "intro" : "normal", index, ex);
+            this.failStreaming("Failed to decode AFMA payload for " + (intro ? "intro" : "normal") + " frame " + index, ex);
             return null;
         }
 
@@ -361,13 +389,21 @@ public class AfmaTexture implements ITexture, PlayableResource {
     }
 
     @NotNull
-    protected NativeImage readPayload(@NotNull AfmaDecoder activeDecoder, @NotNull String payloadPath) throws IOException {
+    protected PixelPayload readPayload(@NotNull AfmaDecoder activeDecoder, @NotNull String payloadPath) throws IOException {
         InputStream payloadInput = activeDecoder.openPayload(payloadPath);
         if (payloadInput == null) {
             throw new FileNotFoundException("AFMA payload input stream was NULL: " + payloadPath);
         }
         try (InputStream closeableInput = payloadInput) {
-            return NativeImage.read(closeableInput);
+            BufferedImage image = ImageIO.read(closeableInput);
+            if (image == null) {
+                throw new IOException("Failed to decode AFMA PNG payload: " + payloadPath);
+            }
+            int width = image.getWidth();
+            int height = image.getHeight();
+            int[] pixels = new int[width * height];
+            image.getRGB(0, 0, width, height, pixels, 0, width);
+            return new PixelPayload(width, height, pixels);
         }
     }
 
@@ -425,11 +461,8 @@ public class AfmaTexture implements ITexture, PlayableResource {
     }
 
     protected void advancePlaybackIfNeeded() {
-        if (this.closed.get() || this.loadingFailed.get() || !this.playRequested || this.maxLoopsReached) return;
+        if (this.closed.get() || this.loadingFailed.get() || !this.decoded.get() || !this.playRequested || this.maxLoopsReached) return;
         if (this.pausedRequested && this.playbackInitialized) return;
-
-        this.ensureStreamingTexture();
-        if (this.streamingTexture == null) return;
 
         long now = System.currentTimeMillis();
         if (!this.playbackInitialized) {
@@ -443,7 +476,10 @@ public class AfmaTexture implements ITexture, PlayableResource {
                 this.playbackIndex = first.index;
                 this.playbackFrameStartMs = now;
                 this.playbackFrameDelayMs = sanitizeDelay(first.delayMs);
+                this.loadingCompleted.set(true);
                 this.maybeEmitStartEvent(first.intro, first.index);
+            } catch (Exception ex) {
+                this.failStreaming("Failed to initialize AFMA playback", ex);
             } finally {
                 first.close();
             }
@@ -478,17 +514,23 @@ public class AfmaTexture implements ITexture, PlayableResource {
             this.playbackFrameStartMs = now;
             this.playbackFrameDelayMs = sanitizeDelay(next.delayMs);
             this.maybeEmitStartEvent(next.intro, next.index);
+        } catch (Exception ex) {
+            this.failStreaming("Failed to advance AFMA playback", ex);
         } finally {
             next.close();
         }
     }
 
-    protected void ensureStreamingTexture() {
+    @Nullable
+    protected DynamicTexture ensureStreamingTexture() {
+        if ((this.width <= 0) || (this.height <= 0)) {
+            return null;
+        }
         DynamicTexture currentTexture = this.streamingTexture;
         if ((currentTexture != null) && (currentTexture.getPixels() != null)
                 && (currentTexture.getPixels().getWidth() == this.width)
                 && (currentTexture.getPixels().getHeight() == this.height)) {
-            return;
+            return currentTexture;
         }
 
         if (currentTexture != null) {
@@ -498,13 +540,18 @@ public class AfmaTexture implements ITexture, PlayableResource {
                 LOGGER.error("[FANCYMENU] Failed to close old AFMA DynamicTexture", ex);
             }
         }
+        if (this.streamingResourceLocation != null) {
+            Minecraft.getInstance().getTextureManager().release(this.streamingResourceLocation);
+            this.streamingResourceLocation = null;
+        }
 
         this.streamingTexture = new DynamicTexture(new NativeImage(this.width, this.height, true));
         this.streamingResourceLocation = Minecraft.getInstance().getTextureManager().register("fancymenu_afma_stream_" + this.uniqueId, this.streamingTexture);
+        return this.streamingTexture;
     }
 
     protected void applyPreparedFrame(@NotNull PreparedFrame preparedFrame) {
-        DynamicTexture currentTexture = this.streamingTexture;
+        DynamicTexture currentTexture = this.ensureStreamingTexture();
         if (currentTexture == null) {
             throw new IllegalStateException("AFMA streaming texture was NULL");
         }
@@ -522,12 +569,12 @@ public class AfmaTexture implements ITexture, PlayableResource {
                 case SAME -> {
                 }
                 case FULL -> {
-                    canvas.copyFrom(Objects.requireNonNull(preparedFrame.primaryPayload, "AFMA full frame payload was NULL"));
+                    this.copyPayloadIntoCanvas(Objects.requireNonNull(preparedFrame.primaryPayload, "AFMA full frame payload was NULL"), canvas, 0, 0);
                     currentTexture.upload();
                 }
                 case DELTA_RECT -> {
-                    AfmaNativeImageHelper.copyRect(Objects.requireNonNull(preparedFrame.primaryPayload, "AFMA delta payload was NULL"),
-                            0, 0, canvas, descriptor.getX(), descriptor.getY(), descriptor.getWidth(), descriptor.getHeight());
+                    this.copyPayloadIntoCanvas(Objects.requireNonNull(preparedFrame.primaryPayload, "AFMA delta payload was NULL"),
+                            canvas, descriptor.getX(), descriptor.getY());
                     this.uploadDirtyRect(currentTexture, canvas, new AfmaRect(descriptor.getX(), descriptor.getY(), descriptor.getWidth(), descriptor.getHeight()));
                 }
                 case COPY_RECT_PATCH -> {
@@ -537,22 +584,33 @@ public class AfmaTexture implements ITexture, PlayableResource {
                     AfmaRect dirtyRect = new AfmaRect(copyRect.getDstX(), copyRect.getDstY(), copyRect.getWidth(), copyRect.getHeight());
                     AfmaPatchRegion patch = descriptor.getPatch();
                     if (patch != null) {
-                        AfmaNativeImageHelper.copyRect(Objects.requireNonNull(preparedFrame.patchPayload, "AFMA copy_rect_patch patch payload was NULL"),
-                                0, 0, canvas, patch.getX(), patch.getY(), patch.getWidth(), patch.getHeight());
+                        this.copyPayloadIntoCanvas(Objects.requireNonNull(preparedFrame.patchPayload, "AFMA copy_rect_patch patch payload was NULL"),
+                                canvas, patch.getX(), patch.getY());
                         dirtyRect = AfmaRect.union(dirtyRect, new AfmaRect(patch.getX(), patch.getY(), patch.getWidth(), patch.getHeight()));
                     }
                     this.uploadDirtyRect(currentTexture, canvas, dirtyRect);
                 }
             }
         } catch (Exception ex) {
-            this.loadingFailed.set(true);
             throw new IllegalStateException("Failed to apply AFMA frame " + preparedFrame.index + " (" + type + ")", ex);
         }
     }
 
     protected void uploadDirtyRect(@NotNull DynamicTexture texture, @NotNull NativeImage canvas, @NotNull AfmaRect dirtyRect) {
+        if ((dirtyRect.width() >= canvas.getWidth()) && (dirtyRect.height() >= canvas.getHeight())) {
+            texture.upload();
+            return;
+        }
         texture.bind();
         canvas.upload(0, dirtyRect.x(), dirtyRect.y(), dirtyRect.x(), dirtyRect.y(), dirtyRect.width(), dirtyRect.height(), false, false);
+    }
+
+    protected void copyPayloadIntoCanvas(@NotNull PixelPayload payload, @NotNull NativeImage canvas, int dstX, int dstY) {
+        for (int y = 0; y < payload.height; y++) {
+            for (int x = 0; x < payload.width; x++) {
+                canvas.setPixelRGBA(dstX + x, dstY + y, payload.pixels[(y * payload.width) + x]);
+            }
+        }
     }
 
     protected boolean isAtNormalCycleBoundary() {
@@ -632,11 +690,18 @@ public class AfmaTexture implements ITexture, PlayableResource {
         if (this.closed.get()) return FULLY_TRANSPARENT_TEXTURE;
 
         this.lastResourceLocationCall = System.currentTimeMillis();
+        if (this.loadingFailed.get()) return FULLY_TRANSPARENT_TEXTURE;
+        if (!this.decoded.get()) return FULLY_TRANSPARENT_TEXTURE;
         this.startTickerIfNeeded();
-        this.advancePlaybackIfNeeded();
+        try {
+            this.advancePlaybackIfNeeded();
+        } catch (Exception ex) {
+            this.failStreaming("AFMA playback failed on the client thread", ex);
+            return FULLY_TRANSPARENT_TEXTURE;
+        }
 
         if (this.loadingFailed.get()) return FULLY_TRANSPARENT_TEXTURE;
-        return (this.streamingResourceLocation != null) ? this.streamingResourceLocation : FULLY_TRANSPARENT_TEXTURE;
+        return (this.loadingCompleted.get() && (this.streamingResourceLocation != null)) ? this.streamingResourceLocation : FULLY_TRANSPARENT_TEXTURE;
     }
 
     @Override
@@ -777,6 +842,10 @@ public class AfmaTexture implements ITexture, PlayableResource {
             this.clearPrefetchedFramesLocked();
         }
 
+        if (this.streamingResourceLocation != null) {
+            Minecraft.getInstance().getTextureManager().release(this.streamingResourceLocation);
+            this.streamingResourceLocation = null;
+        }
         if (this.streamingTexture != null) {
             try {
                 this.streamingTexture.close();
@@ -785,7 +854,6 @@ public class AfmaTexture implements ITexture, PlayableResource {
             }
             this.streamingTexture = null;
         }
-        this.streamingResourceLocation = null;
 
         AfmaDecoder activeDecoder = this.decoder;
         this.decoder = null;
@@ -823,6 +891,20 @@ public class AfmaTexture implements ITexture, PlayableResource {
         }
     }
 
+    protected void failStreaming(@NotNull String message, @Nullable Throwable throwable) {
+        this.loadingFailed.set(true);
+        this.playRequested = false;
+        this.pausedRequested = false;
+        synchronized (this.streamStateLock) {
+            this.clearPrefetchedFramesLocked();
+        }
+        if (throwable != null) {
+            LOGGER.error("[FANCYMENU] {}", message, throwable);
+        } else {
+            LOGGER.error("[FANCYMENU] {}", message);
+        }
+    }
+
     protected static class PreparedFrame implements AutoCloseable {
         protected final boolean intro;
         protected final int index;
@@ -830,12 +912,12 @@ public class AfmaTexture implements ITexture, PlayableResource {
         @NotNull
         protected final AfmaFrameDescriptor descriptor;
         @Nullable
-        protected NativeImage primaryPayload;
+        protected PixelPayload primaryPayload;
         @Nullable
-        protected NativeImage patchPayload;
+        protected PixelPayload patchPayload;
 
         protected PreparedFrame(boolean intro, int index, long delayMs, @NotNull AfmaFrameDescriptor descriptor,
-                                @Nullable NativeImage primaryPayload, @Nullable NativeImage patchPayload) {
+                                @Nullable PixelPayload primaryPayload, @Nullable PixelPayload patchPayload) {
             this.intro = intro;
             this.index = index;
             this.delayMs = delayMs;
@@ -846,20 +928,21 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
         @Override
         public void close() {
-            if (this.primaryPayload != null) {
-                try {
-                    this.primaryPayload.close();
-                } catch (Exception ignored) {
-                }
-                this.primaryPayload = null;
-            }
-            if (this.patchPayload != null) {
-                try {
-                    this.patchPayload.close();
-                } catch (Exception ignored) {
-                }
-                this.patchPayload = null;
-            }
+            this.primaryPayload = null;
+            this.patchPayload = null;
+        }
+    }
+
+    protected static class PixelPayload {
+        protected final int width;
+        protected final int height;
+        @NotNull
+        protected final int[] pixels;
+
+        protected PixelPayload(int width, int height, @NotNull int[] pixels) {
+            this.width = width;
+            this.height = height;
+            this.pixels = pixels;
         }
     }
 

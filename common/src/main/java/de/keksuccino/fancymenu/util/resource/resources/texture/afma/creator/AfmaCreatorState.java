@@ -44,6 +44,10 @@ public class AfmaCreatorState {
 
     private volatile @Nullable File mainFramesDirectory;
     private volatile @Nullable File introFramesDirectory;
+    private volatile @Nullable AfmaSourceSequence mainFramesSequenceOverride;
+    private volatile @Nullable AfmaSourceSequence introFramesSequenceOverride;
+    private volatile @NotNull String mainFramesInputText = "";
+    private volatile @NotNull String introFramesInputText = "";
     private volatile @Nullable File outputFile;
     private volatile long frameTimeMs = 41L;
     private volatile long introFrameTimeMs = 41L;
@@ -63,8 +67,14 @@ public class AfmaCreatorState {
         return this.mainFramesDirectory;
     }
 
+    public @NotNull String getMainFramesInputText() {
+        return this.mainFramesInputText;
+    }
+
     public void setMainFramesDirectory(@Nullable File mainFramesDirectory) {
         this.mainFramesDirectory = normalizeFile(mainFramesDirectory);
+        this.mainFramesSequenceOverride = null;
+        this.mainFramesInputText = (this.mainFramesDirectory != null) ? this.mainFramesDirectory.getPath().replace("\\", "/") : "";
         this.markDirty();
     }
 
@@ -72,8 +82,28 @@ public class AfmaCreatorState {
         return this.introFramesDirectory;
     }
 
+    public @NotNull String getIntroFramesInputText() {
+        return this.introFramesInputText;
+    }
+
     public void setIntroFramesDirectory(@Nullable File introFramesDirectory) {
         this.introFramesDirectory = normalizeFile(introFramesDirectory);
+        this.introFramesSequenceOverride = null;
+        this.introFramesInputText = (this.introFramesDirectory != null) ? this.introFramesDirectory.getPath().replace("\\", "/") : "";
+        this.markDirty();
+    }
+
+    public void setMainFramesList(@NotNull List<File> frames) {
+        this.mainFramesSequenceOverride = AfmaSourceSequence.ofFiles(frames);
+        this.mainFramesDirectory = null;
+        this.mainFramesInputText = summarizeSourceList("Ordered PNG List", frames);
+        this.markDirty();
+    }
+
+    public void setIntroFramesList(@NotNull List<File> frames) {
+        this.introFramesSequenceOverride = AfmaSourceSequence.ofFiles(frames);
+        this.introFramesDirectory = null;
+        this.introFramesInputText = summarizeSourceList("Ordered PNG List", frames);
         this.markDirty();
     }
 
@@ -210,6 +240,8 @@ public class AfmaCreatorState {
 
     public void clearIntroFramesDirectory() {
         this.introFramesDirectory = null;
+        this.introFramesSequenceOverride = null;
+        this.introFramesInputText = "";
         this.markDirty();
     }
 
@@ -245,11 +277,13 @@ public class AfmaCreatorState {
             job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.VALIDATING_SOURCES, "Validating AFMA creator input...", null, 0.10D));
             checkCancelled(job);
 
-            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Analyzing AFMA frames...", null, 0.55D));
-            AfmaEncodePlan plan = this.planner.plan(prepared.mainSequence, prepared.introSequence, prepared.options, job::isCancellationRequested);
+            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Analyzing AFMA frames...", null, 0.15D));
+            AfmaEncodePlan plan = this.planner.plan(prepared.mainSequence, prepared.introSequence, prepared.options, job::isCancellationRequested,
+                    (detail, progress) -> job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Analyzing AFMA frames...", detail, 0.15D + (0.60D * progress))));
             checkCancelled(job);
 
-            AfmaCreatorAnalysisResult result = this.buildAnalysisResult(plan, prepared.warnings);
+            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Summarizing AFMA analysis...", null, 0.80D));
+            AfmaCreatorAnalysisResult result = this.buildAnalysisResult(plan, prepared.mainSequence, prepared.introSequence, prepared.warnings, job);
             checkCancelled(job);
 
             if (this.configurationVersion.get() == prepared.configurationVersion) {
@@ -269,33 +303,34 @@ public class AfmaCreatorState {
     protected void runExportJob(@NotNull AfmaEncodeJob job, @NotNull PreparedInputs prepared) {
         File tempFile = null;
         try {
-            AfmaCreatorAnalysisResult exportAnalysis = this.analysisResult;
-            if (this.analysisDirty || (exportAnalysis == null) || (this.configurationVersion.get() != prepared.configurationVersion)) {
-                job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.VALIDATING_SOURCES, "Validating AFMA creator input...", null, 0.10D));
-                checkCancelled(job);
+            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.VALIDATING_SOURCES, "Validating AFMA creator input...", null, 0.10D));
+            checkCancelled(job);
 
-                job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Analyzing AFMA frames for export...", null, 0.55D));
-                AfmaEncodePlan plan = this.planner.plan(prepared.mainSequence, prepared.introSequence, prepared.options, job::isCancellationRequested);
-                checkCancelled(job);
-                exportAnalysis = this.buildAnalysisResult(plan, prepared.warnings);
-            }
+            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Analyzing AFMA frames for export...", null, 0.15D));
+            AfmaEncodePlan exportPlan = this.planner.plan(prepared.mainSequence, prepared.introSequence, prepared.options, job::isCancellationRequested,
+                    (detail, progress) -> job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Analyzing AFMA frames for export...", detail, 0.15D + (0.50D * progress))));
+            checkCancelled(job);
 
-            Objects.requireNonNull(exportAnalysis, "AFMA export analysis result is missing");
+            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Building AFMA export summary...", null, 0.68D));
+            AfmaCreatorAnalysisResult exportAnalysis = this.buildAnalysisResult(exportPlan, prepared.mainSequence, prepared.introSequence, prepared.warnings, job);
+            checkCancelled(job);
 
-            LinkedHashMap<String, byte[]> exportPayloads = new LinkedHashMap<>(exportAnalysis.plan().getPayloads());
+            LinkedHashMap<String, byte[]> exportPayloads = new LinkedHashMap<>(exportPlan.getPayloads());
             if (prepared.generateThumbnail) {
-                byte[] thumbnail = this.buildThumbnailBytes(exportAnalysis.plan());
+                job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Generating AFMA thumbnail...", null, 0.78D));
+                byte[] thumbnail = this.buildThumbnailBytes(prepared.mainSequence, prepared.introSequence);
                 if (thumbnail != null) {
                     exportPayloads.put("thumbnail.png", thumbnail);
                 }
             }
 
-            AfmaEncodePlan exportPlan = new AfmaEncodePlan(exportAnalysis.plan().getMetadata(), exportAnalysis.plan().getFrameIndex(), exportPayloads);
+            exportPlan = new AfmaEncodePlan(exportPlan.getMetadata(), exportPlan.getFrameIndex(), exportPayloads, exportPlan.getTotalPayloadBytes());
 
-            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Packing AFMA archive...", prepared.outputFile.getName(), 0.85D));
+            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Packing AFMA archive...", prepared.outputFile.getName(), 0.82D));
             tempFile = new File(prepared.outputFile.getParentFile(), prepared.outputFile.getName() + ".tmp");
             org.apache.commons.io.FileUtils.deleteQuietly(tempFile);
-            this.archiveWriter.write(exportPlan, tempFile, job::isCancellationRequested);
+            this.archiveWriter.write(exportPlan, tempFile, job::isCancellationRequested,
+                    (path, progress) -> job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Packing AFMA archive...", path, 0.82D + (0.16D * progress))));
             checkCancelled(job);
 
             Files.move(tempFile.toPath(), prepared.outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -319,14 +354,16 @@ public class AfmaCreatorState {
 
     protected @NotNull PreparedInputs prepare(boolean requireOutput) {
         File mainDirectory = normalizeFile(this.mainFramesDirectory);
-        if ((mainDirectory == null) || !mainDirectory.isDirectory()) {
-            throw new IllegalArgumentException("Select a valid main frames directory first.");
-        }
-
         File introDirectory = normalizeFile(this.introFramesDirectory);
         File output = normalizeFile(this.outputFile);
+        if ((mainDirectory != null) && !mainDirectory.isDirectory()) {
+            throw new IllegalArgumentException("Select a valid main frames directory or clear the main path.");
+        }
         if ((introDirectory != null) && !introDirectory.isDirectory()) {
             throw new IllegalArgumentException("Select a valid intro frames directory or clear the intro path.");
+        }
+        if ((mainDirectory == null) && (introDirectory == null) && (this.mainFramesSequenceOverride == null) && (this.introFramesSequenceOverride == null)) {
+            throw new IllegalArgumentException("Select a valid main or intro frames directory first.");
         }
         if (requireOutput) {
             if (output == null) {
@@ -342,8 +379,15 @@ public class AfmaCreatorState {
             }
         }
 
-        ResolvedSource main = this.resolveSource(mainDirectory, false, "main");
-        ResolvedSource intro = (introDirectory != null && introDirectory.isDirectory()) ? this.resolveSource(introDirectory, true, "intro") : ResolvedSource.empty();
+        ResolvedSource main = (this.mainFramesSequenceOverride != null)
+                ? new ResolvedSource(this.mainFramesSequenceOverride, List.of())
+                : ((mainDirectory != null) ? this.resolveSource(mainDirectory, true, "main") : ResolvedSource.empty());
+        ResolvedSource intro = (this.introFramesSequenceOverride != null)
+                ? new ResolvedSource(this.introFramesSequenceOverride, List.of())
+                : ((introDirectory != null && introDirectory.isDirectory()) ? this.resolveSource(introDirectory, true, "intro") : ResolvedSource.empty());
+        if (main.sequence.isEmpty() && intro.sequence.isEmpty()) {
+            throw new IllegalArgumentException("The selected source directories do not contain any PNG frame files.");
+        }
 
         AfmaEncodeOptions options = new AfmaEncodeOptions()
                 .setFrameTimeMs(parsePositiveLong(this.frameTimeMs, "main frame time"))
@@ -373,30 +417,35 @@ public class AfmaCreatorState {
         );
     }
 
-    protected @NotNull AfmaCreatorAnalysisResult buildAnalysisResult(@NotNull AfmaEncodePlan plan, @NotNull List<String> preparedWarnings) throws IOException {
+    protected @NotNull AfmaCreatorAnalysisResult buildAnalysisResult(@NotNull AfmaEncodePlan plan, @NotNull AfmaSourceSequence mainSequence,
+                                                                    @NotNull AfmaSourceSequence introSequence, @NotNull List<String> preparedWarnings,
+                                                                    @Nullable AfmaEncodeJob job) throws IOException {
         AfmaEncodeAnalyzer.Summary summary = this.analyzer.summarize(plan);
         List<String> warnings = new ArrayList<>(preparedWarnings);
         if ((summary.fullFrames() == (summary.mainFrameCount() + summary.introFrameCount())) && ((summary.mainFrameCount() + summary.introFrameCount()) > 1)) {
             warnings.add("No useful AFMA frame optimization was found for this input sequence.");
         }
 
-        boolean alphaUsed = this.detectAlphaUsage(plan);
+        if (job != null) {
+            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Checking AFMA alpha usage...", null, 0.88D));
+        }
+        boolean alphaUsed = this.detectAlphaUsage(mainSequence, introSequence, job);
         long estimatedArchiveBytes = estimateArchiveBytes(plan);
-        return new AfmaCreatorAnalysisResult(plan, summary, alphaUsed, estimatedArchiveBytes, List.copyOf(warnings));
+        return new AfmaCreatorAnalysisResult(plan.withoutPayloads(), mainSequence, introSequence, summary, alphaUsed, estimatedArchiveBytes, List.copyOf(warnings));
     }
 
-    protected boolean detectAlphaUsage(@NotNull AfmaEncodePlan plan) throws IOException {
-        for (byte[] payload : plan.getPayloads().values()) {
-            BufferedImage image = ImageIO.read(new ByteArrayInputStream(payload));
-            if (image == null) {
-                throw new IOException("Failed to decode AFMA payload while checking alpha usage");
+    protected boolean detectAlphaUsage(@NotNull AfmaSourceSequence mainSequence, @NotNull AfmaSourceSequence introSequence, @Nullable AfmaEncodeJob job) throws IOException {
+        AfmaFrameNormalizer normalizer = new AfmaFrameNormalizer();
+        List<File> frames = new ArrayList<>(mainSequence.getFrames());
+        frames.addAll(introSequence.getFrames());
+        for (int i = 0; i < frames.size(); i++) {
+            checkCancelled(job);
+            if (job != null) {
+                double progress = 0.88D + (0.07D * ((double) (i + 1) / Math.max(1, frames.size())));
+                job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Checking AFMA alpha usage...", frames.get(i).getName(), progress));
             }
-            int width = image.getWidth();
-            int height = image.getHeight();
-            int[] pixels = new int[width * height];
-            image.getRGB(0, 0, width, height, pixels, 0, width);
-            for (int color : pixels) {
-                if (((color >>> 24) & 0xFF) != 0xFF) {
+            try (AfmaPixelFrame frame = normalizer.loadFrame(frames.get(i))) {
+                if (frame.hasAlpha()) {
                     return true;
                 }
             }
@@ -404,26 +453,15 @@ public class AfmaCreatorState {
         return false;
     }
 
-    protected @Nullable byte[] buildThumbnailBytes(@NotNull AfmaEncodePlan plan) throws IOException {
-        String sourcePath = null;
-        if (!plan.getFrameIndex().getIntroFrames().isEmpty()) {
-            sourcePath = plan.getFrameIndex().getIntroFrames().get(0).getPath();
-        }
-        if ((sourcePath == null) && !plan.getFrameIndex().getFrames().isEmpty()) {
-            sourcePath = plan.getFrameIndex().getFrames().get(0).getPath();
-        }
-        if (sourcePath == null) {
+    protected @Nullable byte[] buildThumbnailBytes(@NotNull AfmaSourceSequence mainSequence, @NotNull AfmaSourceSequence introSequence) throws IOException {
+        File sourceFile = !introSequence.isEmpty() ? introSequence.getFrame(0) : mainSequence.getFrame(0);
+        if (sourceFile == null) {
             return null;
         }
 
-        byte[] payload = plan.getPayloads().get(sourcePath);
-        if (payload == null) {
-            return null;
-        }
-
-        BufferedImage source = ImageIO.read(new ByteArrayInputStream(payload));
+        BufferedImage source = ImageIO.read(sourceFile);
         if (source == null) {
-            throw new IOException("Failed to decode AFMA payload while building thumbnail");
+            throw new IOException("Failed to decode AFMA source frame while building thumbnail");
         }
 
         int maxWidth = 320;
@@ -546,9 +584,23 @@ public class AfmaCreatorState {
         }
     }
 
+    protected static void checkCancelled(@Nullable AfmaEncodeJob job) {
+        if ((job != null) && job.isCancellationRequested()) {
+            throw new CancellationException("AFMA creator job was cancelled");
+        }
+    }
+
     protected static @Nullable File normalizeFile(@Nullable File file) {
         if (file == null) return null;
         return new File(file.getPath().replace("\\", "/"));
+    }
+
+    protected static @NotNull String summarizeSourceList(@NotNull String label, @NotNull List<File> frames) {
+        String summary = label + " (" + frames.size() + " frames)";
+        if (!frames.isEmpty()) {
+            summary += ": " + frames.get(0).getName();
+        }
+        return summary;
     }
 
     protected record PreparedInputs(

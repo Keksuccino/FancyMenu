@@ -41,6 +41,13 @@ public class AfmaEncodePlanner {
     @NotNull
     public AfmaEncodePlan plan(@NotNull AfmaSourceSequence mainSequence, @Nullable AfmaSourceSequence introSequence,
                                @NotNull AfmaEncodeOptions options, @Nullable BooleanSupplier cancellationRequested) throws IOException {
+        return this.plan(mainSequence, introSequence, options, cancellationRequested, null);
+    }
+
+    @NotNull
+    public AfmaEncodePlan plan(@NotNull AfmaSourceSequence mainSequence, @Nullable AfmaSourceSequence introSequence,
+                               @NotNull AfmaEncodeOptions options, @Nullable BooleanSupplier cancellationRequested,
+                               @Nullable ProgressListener progressListener) throws IOException {
         Objects.requireNonNull(mainSequence);
         Objects.requireNonNull(options);
 
@@ -48,16 +55,20 @@ public class AfmaEncodePlanner {
         options.validateForCounts(mainSequence.size(), intro.size());
 
         checkCancelled(cancellationRequested);
-        Dimension dimension = this.readDimension(mainSequence);
-        this.validateSequenceDimensions(mainSequence, dimension, "main", cancellationRequested);
+        AfmaSourceSequence dimensionSource = !mainSequence.isEmpty() ? mainSequence : intro;
+        Dimension dimension = this.readDimension(dimensionSource);
+        int totalFrameCount = Math.max(1, mainSequence.size() + intro.size());
+        if (!mainSequence.isEmpty()) {
+            this.validateSequenceDimensions(mainSequence, dimension, "main", cancellationRequested, progressListener, 0, totalFrameCount);
+        }
         if (!intro.isEmpty()) {
-            this.validateSequenceDimensions(intro, dimension, "intro", cancellationRequested);
+            this.validateSequenceDimensions(intro, dimension, "intro", cancellationRequested, progressListener, mainSequence.size(), totalFrameCount);
         }
 
         AfmaRectCopyDetector copyDetector = new AfmaRectCopyDetector(options.getMaxCopySearchDistance(), options.getMaxCandidateAxisOffsets());
         LinkedHashMap<String, byte[]> payloads = new LinkedHashMap<>();
-        List<AfmaFrameDescriptor> plannedIntroFrames = this.planSequence(intro, true, dimension, options, copyDetector, payloads, cancellationRequested);
-        List<AfmaFrameDescriptor> plannedMainFrames = this.planSequence(mainSequence, false, dimension, options, copyDetector, payloads, cancellationRequested);
+        List<AfmaFrameDescriptor> plannedIntroFrames = this.planSequence(intro, true, dimension, options, copyDetector, payloads, cancellationRequested, progressListener, 0, totalFrameCount);
+        List<AfmaFrameDescriptor> plannedMainFrames = this.planSequence(mainSequence, false, dimension, options, copyDetector, payloads, cancellationRequested, intro.size(), totalFrameCount);
 
         AfmaMetadata metadata = AfmaMetadata.create(
                 dimension.width(),
@@ -79,7 +90,8 @@ public class AfmaEncodePlanner {
     protected List<AfmaFrameDescriptor> planSequence(@NotNull AfmaSourceSequence sequence, boolean introSequence, @NotNull Dimension dimension,
                                                      @NotNull AfmaEncodeOptions options, @NotNull AfmaRectCopyDetector copyDetector,
                                                      @NotNull LinkedHashMap<String, byte[]> payloads,
-                                                     @Nullable BooleanSupplier cancellationRequested) throws IOException {
+                                                     @Nullable BooleanSupplier cancellationRequested, @Nullable ProgressListener progressListener,
+                                                     int startOffset, int totalFrameCount) throws IOException {
         List<AfmaFrameDescriptor> plannedFrames = new ArrayList<>();
         if (sequence.isEmpty()) {
             return plannedFrames;
@@ -90,6 +102,9 @@ public class AfmaEncodePlanner {
         try {
             for (int frameIndex = 0; frameIndex < sequence.size(); frameIndex++) {
                 checkCancelled(cancellationRequested);
+                reportProgress(progressListener,
+                        "Planning " + (introSequence ? "intro" : "main") + " frame " + (frameIndex + 1) + "/" + sequence.size(),
+                        0.25D + (0.65D * ((double) (startOffset + frameIndex + 1) / Math.max(1, totalFrameCount))));
                 File frameFile = Objects.requireNonNull(sequence.getFrame(frameIndex));
                 AfmaPixelFrame currentFrame = this.frameNormalizer.loadFrame(frameFile);
                 try {
@@ -239,14 +254,26 @@ public class AfmaEncodePlanner {
     }
 
     protected void validateSequenceDimensions(@NotNull AfmaSourceSequence sequence, @NotNull Dimension dimension,
-                                              @NotNull String sequenceName, @Nullable BooleanSupplier cancellationRequested) throws IOException {
-        for (File frame : sequence.getFrames()) {
+                                              @NotNull String sequenceName, @Nullable BooleanSupplier cancellationRequested,
+                                              @Nullable ProgressListener progressListener, int startOffset, int totalFrameCount) throws IOException {
+        List<File> frames = sequence.getFrames();
+        for (int i = 0; i < frames.size(); i++) {
             checkCancelled(cancellationRequested);
+            File frame = frames.get(i);
+            reportProgress(progressListener,
+                    "Validating " + sequenceName + " frame " + (i + 1) + "/" + frames.size(),
+                    0.25D * ((double) (startOffset + i + 1) / Math.max(1, totalFrameCount)));
             try (AfmaPixelFrame image = this.frameNormalizer.loadFrame(frame)) {
                 if ((image.getWidth() != dimension.width()) || (image.getHeight() != dimension.height())) {
                     throw new IOException("AFMA " + sequenceName + " frame dimensions do not match: " + frame.getAbsolutePath());
                 }
             }
+        }
+    }
+
+    protected static void reportProgress(@Nullable ProgressListener progressListener, @NotNull String detail, double progress) {
+        if (progressListener != null) {
+            progressListener.update(detail, progress);
         }
     }
 
@@ -331,6 +358,11 @@ public class AfmaEncodePlanner {
     }
 
     protected record Dimension(int width, int height) {
+    }
+
+    @FunctionalInterface
+    public interface ProgressListener {
+        void update(@NotNull String detail, double progress);
     }
 
 }

@@ -6,6 +6,8 @@ import java.util.List;
 
 public record AfmaCreatorAnalysisResult(
         @NotNull AfmaEncodePlan plan,
+        @NotNull AfmaSourceSequence mainSequence,
+        @NotNull AfmaSourceSequence introSequence,
         @NotNull AfmaEncodeAnalyzer.Summary summary,
         boolean alphaUsed,
         long estimatedArchiveBytes,

@@ -9,10 +9,11 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaPatchReg
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -22,16 +23,18 @@ import java.util.Objects;
 
 public class AfmaPreviewController implements AutoCloseable {
 
-    private static final int MAX_DECODED_PAYLOAD_CACHE = 8;
+    private static final Logger LOGGER = LogManager.getLogger();
+    private static final int MAX_SOURCE_FRAME_CACHE = 8;
 
     private @Nullable AfmaCreatorAnalysisResult analysisResult;
     private @Nullable NativeImage canvas;
     private @Nullable DynamicTexture texture;
     private @Nullable ResourceLocation textureLocation;
-    private final @NotNull LinkedHashMap<String, NativeImage> payloadCache = new LinkedHashMap<>(16, 0.75F, true) {
+    private final @NotNull AfmaFrameNormalizer frameNormalizer = new AfmaFrameNormalizer();
+    private final @NotNull LinkedHashMap<String, AfmaPixelFrame> sourceFrameCache = new LinkedHashMap<>(16, 0.75F, true) {
         @Override
-        protected boolean removeEldestEntry(Map.Entry<String, NativeImage> eldest) {
-            if (this.size() > MAX_DECODED_PAYLOAD_CACHE) {
+        protected boolean removeEldestEntry(Map.Entry<String, AfmaPixelFrame> eldest) {
+            if (this.size() > MAX_SOURCE_FRAME_CACHE) {
                 CloseableUtils.closeQuietly(eldest.getValue());
                 return true;
             }
@@ -43,14 +46,16 @@ public class AfmaPreviewController implements AutoCloseable {
     private boolean playing = false;
     private long nextFrameAtMs = 0L;
     private int completedMainLoops = 0;
+    private @Nullable String lastFailureMessage = null;
 
     public void setAnalysisResult(@Nullable AfmaCreatorAnalysisResult analysisResult) {
         this.analysisResult = analysisResult;
-        this.clearPayloadCache();
+        this.clearSourceFrameCache();
         this.previewFrames.clear();
         this.currentPreviewIndex = -1;
         this.playing = false;
         this.completedMainLoops = 0;
+        this.lastFailureMessage = null;
 
         if (analysisResult != null) {
             int introCount = analysisResult.plan().getFrameIndex().getIntroFrames().size();
@@ -127,6 +132,10 @@ public class AfmaPreviewController implements AutoCloseable {
         return this.analysisResult;
     }
 
+    public @Nullable String getLastFailureMessage() {
+        return this.lastFailureMessage;
+    }
+
     public int getCanvasWidth() {
         AfmaCreatorAnalysisResult result = this.analysisResult;
         return (result != null) ? result.plan().getMetadata().getCanvasWidth() : 0;
@@ -167,8 +176,11 @@ public class AfmaPreviewController implements AutoCloseable {
             }
             this.currentPreviewIndex = index;
             this.nextFrameAtMs = System.currentTimeMillis() + this.getCurrentFrameDurationMs();
+            this.lastFailureMessage = null;
         } catch (Exception ex) {
             this.playing = false;
+            this.lastFailureMessage = (ex.getMessage() != null) ? ex.getMessage() : "AFMA preview reconstruction failed.";
+            LOGGER.error("[FANCYMENU] AFMA creator preview failed while seeking to frame {}", index, ex);
         }
     }
 
@@ -195,7 +207,7 @@ public class AfmaPreviewController implements AutoCloseable {
 
         int introCount = result.plan().getFrameIndex().getIntroFrames().size();
         int mainCount = result.plan().getFrameIndex().getFrames().size();
-        if (mainCount <= 0) {
+        if (mainCount <= 0 && introCount <= 0) {
             this.playing = false;
             return;
         }
@@ -207,7 +219,7 @@ public class AfmaPreviewController implements AutoCloseable {
         }
 
         this.completedMainLoops++;
-        this.seekToFrame(introCount);
+        this.seekToFrame(mainCount > 0 ? introCount : 0);
     }
 
     protected void reconstructTo(int previewIndex) throws IOException {
@@ -216,9 +228,9 @@ public class AfmaPreviewController implements AutoCloseable {
         List<AfmaFrameDescriptor> frames = target.intro() ? result.plan().getFrameIndex().getIntroFrames() : result.plan().getFrameIndex().getFrames();
         int keyframe = this.findNearestKeyframe(frames, target.sequenceIndex());
         this.ensureSurface(result.plan().getMetadata().getCanvasWidth(), result.plan().getMetadata().getCanvasHeight());
-        this.applyFullFrame(frames.get(keyframe));
+        this.applyFullFrame(frames.get(keyframe), new PreviewFrameRef(target.intro(), keyframe));
         for (int i = keyframe + 1; i <= target.sequenceIndex(); i++) {
-            this.applyDescriptor(frames.get(i));
+            this.applyDescriptor(frames.get(i), new PreviewFrameRef(target.intro(), i));
         }
         this.uploadSurface();
     }
@@ -227,7 +239,7 @@ public class AfmaPreviewController implements AutoCloseable {
         AfmaCreatorAnalysisResult result = Objects.requireNonNull(this.analysisResult);
         this.ensureSurface(result.plan().getMetadata().getCanvasWidth(), result.plan().getMetadata().getCanvasHeight());
         List<AfmaFrameDescriptor> frames = ref.intro() ? result.plan().getFrameIndex().getIntroFrames() : result.plan().getFrameIndex().getFrames();
-        this.applyDescriptor(frames.get(ref.sequenceIndex()));
+        this.applyDescriptor(frames.get(ref.sequenceIndex()), ref);
         this.uploadSurface();
     }
 
@@ -241,53 +253,74 @@ public class AfmaPreviewController implements AutoCloseable {
         return 0;
     }
 
-    protected void applyDescriptor(@NotNull AfmaFrameDescriptor descriptor) throws IOException {
+    protected void applyDescriptor(@NotNull AfmaFrameDescriptor descriptor, @NotNull PreviewFrameRef ref) throws IOException {
         switch (Objects.requireNonNull(descriptor.getType())) {
-            case FULL -> this.applyFullFrame(descriptor);
-            case DELTA_RECT -> this.applyDeltaFrame(descriptor);
+            case FULL -> this.applyFullFrame(descriptor, ref);
+            case DELTA_RECT -> this.applyDeltaFrame(descriptor, ref);
             case SAME -> {
             }
-            case COPY_RECT_PATCH -> this.applyCopyRectPatchFrame(descriptor);
+            case COPY_RECT_PATCH -> this.applyCopyRectPatchFrame(descriptor, ref);
         }
     }
 
-    protected void applyFullFrame(@NotNull AfmaFrameDescriptor descriptor) throws IOException {
-        NativeImage image = this.loadPayload(Objects.requireNonNull(descriptor.getPath()));
-        Objects.requireNonNull(this.canvas).copyFrom(image);
+    protected void applyFullFrame(@NotNull AfmaFrameDescriptor descriptor, @NotNull PreviewFrameRef ref) throws IOException {
+        AfmaPixelFrame frame = this.loadSourceFrame(ref);
+        this.copyPixelFrame(frame, Objects.requireNonNull(this.canvas), 0, 0);
     }
 
-    protected void applyDeltaFrame(@NotNull AfmaFrameDescriptor descriptor) throws IOException {
-        NativeImage patch = this.loadPayload(Objects.requireNonNull(descriptor.getPath()));
-        AfmaNativeImageHelper.copyRect(patch, 0, 0, Objects.requireNonNull(this.canvas), descriptor.getX(), descriptor.getY(), descriptor.getWidth(), descriptor.getHeight());
+    protected void applyDeltaFrame(@NotNull AfmaFrameDescriptor descriptor, @NotNull PreviewFrameRef ref) throws IOException {
+        AfmaPixelFrame sourceFrame = this.loadSourceFrame(ref);
+        AfmaPixelFrame patch = this.frameNormalizer.extractPatch(sourceFrame, descriptor.getX(), descriptor.getY(), descriptor.getWidth(), descriptor.getHeight());
+        try {
+            this.copyPixelFrame(patch, Objects.requireNonNull(this.canvas), descriptor.getX(), descriptor.getY());
+        } finally {
+            patch.close();
+        }
     }
 
-    protected void applyCopyRectPatchFrame(@NotNull AfmaFrameDescriptor descriptor) throws IOException {
+    protected void applyCopyRectPatchFrame(@NotNull AfmaFrameDescriptor descriptor, @NotNull PreviewFrameRef ref) throws IOException {
         NativeImage canvasImage = Objects.requireNonNull(this.canvas);
         AfmaCopyRect copyRect = Objects.requireNonNull(descriptor.getCopy());
         AfmaNativeImageHelper.copyRectMemmove(canvasImage, copyRect);
 
         AfmaPatchRegion patchRegion = descriptor.getPatch();
         if ((patchRegion != null) && (patchRegion.getPath() != null)) {
-            NativeImage patch = this.loadPayload(patchRegion.getPath());
-            AfmaNativeImageHelper.copyRect(patch, 0, 0, canvasImage, patchRegion.getX(), patchRegion.getY(), patchRegion.getWidth(), patchRegion.getHeight());
+            AfmaPixelFrame sourceFrame = this.loadSourceFrame(ref);
+            AfmaPixelFrame patch = this.frameNormalizer.extractPatch(sourceFrame, patchRegion.getX(), patchRegion.getY(), patchRegion.getWidth(), patchRegion.getHeight());
+            try {
+                this.copyPixelFrame(patch, canvasImage, patchRegion.getX(), patchRegion.getY());
+            } finally {
+                patch.close();
+            }
         }
     }
 
-    protected @NotNull NativeImage loadPayload(@NotNull String path) throws IOException {
-        NativeImage cached = this.payloadCache.get(path);
+    protected @NotNull AfmaPixelFrame loadSourceFrame(@NotNull PreviewFrameRef ref) throws IOException {
+        AfmaCreatorAnalysisResult result = Objects.requireNonNull(this.analysisResult);
+        FileRef fileRef = this.resolveSourceFile(result, ref);
+        AfmaPixelFrame cached = this.sourceFrameCache.get(fileRef.cacheKey());
         if (cached != null) {
             return cached;
         }
 
-        AfmaCreatorAnalysisResult result = Objects.requireNonNull(this.analysisResult);
-        byte[] bytes = result.plan().getPayloads().get(path);
-        if (bytes == null) {
-            throw new IOException("Missing AFMA preview payload: " + path);
-        }
+        AfmaPixelFrame frame = this.frameNormalizer.loadFrame(fileRef.file());
+        this.sourceFrameCache.put(fileRef.cacheKey(), frame);
+        return frame;
+    }
 
-        NativeImage image = NativeImage.read(new ByteArrayInputStream(bytes));
-        this.payloadCache.put(path, image);
-        return image;
+    protected @NotNull FileRef resolveSourceFile(@NotNull AfmaCreatorAnalysisResult result, @NotNull PreviewFrameRef ref) throws IOException {
+        AfmaSourceSequence sequence = ref.intro() ? result.introSequence() : result.mainSequence();
+        if (sequence.isEmpty() && ref.intro() && result.mainSequence().isEmpty()) {
+            sequence = result.introSequence();
+        }
+        if (sequence.isEmpty()) {
+            throw new IOException("Missing AFMA preview source sequence for " + (ref.intro() ? "intro" : "main") + " frame " + ref.sequenceIndex());
+        }
+        java.io.File file = sequence.getFrame(ref.sequenceIndex());
+        if (file == null) {
+            throw new IOException("Missing AFMA preview source frame for " + (ref.intro() ? "intro" : "main") + " frame " + ref.sequenceIndex());
+        }
+        return new FileRef(file, (ref.intro() ? "intro:" : "main:") + ref.sequenceIndex() + ":" + file.getAbsolutePath());
     }
 
     protected void ensureSurface(int width, int height) {
@@ -307,15 +340,15 @@ public class AfmaPreviewController implements AutoCloseable {
         }
     }
 
-    protected void clearPayloadCache() {
-        for (NativeImage image : this.payloadCache.values()) {
+    protected void clearSourceFrameCache() {
+        for (AfmaPixelFrame image : this.sourceFrameCache.values()) {
             CloseableUtils.closeQuietly(image);
         }
-        this.payloadCache.clear();
+        this.sourceFrameCache.clear();
     }
 
     protected void clearSurface() {
-        this.clearPayloadCache();
+        this.clearSourceFrameCache();
         if (this.textureLocation != null) {
             Minecraft.getInstance().getTextureManager().release(this.textureLocation);
             this.textureLocation = null;
@@ -333,7 +366,18 @@ public class AfmaPreviewController implements AutoCloseable {
         this.currentPreviewIndex = -1;
     }
 
+    protected void copyPixelFrame(@NotNull AfmaPixelFrame frame, @NotNull NativeImage target, int dstX, int dstY) {
+        for (int y = 0; y < frame.getHeight(); y++) {
+            for (int x = 0; x < frame.getWidth(); x++) {
+                target.setPixelRGBA(dstX + x, dstY + y, frame.getPixelRGBA(x, y));
+            }
+        }
+    }
+
     protected record PreviewFrameRef(boolean intro, int sequenceIndex) {
+    }
+
+    protected record FileRef(@NotNull java.io.File file, @NotNull String cacheKey) {
     }
 
 }

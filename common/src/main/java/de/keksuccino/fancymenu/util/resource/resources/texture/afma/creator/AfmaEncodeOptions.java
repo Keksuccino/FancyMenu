@@ -120,8 +120,8 @@ public class AfmaEncodeOptions {
     }
 
     public void validateForCounts(int mainFrameCount, int introFrameCount) {
-        if (mainFrameCount <= 0) {
-            throw new IllegalArgumentException("AFMA encoding requires at least one main frame");
+        if (mainFrameCount <= 0 && introFrameCount <= 0) {
+            throw new IllegalArgumentException("AFMA encoding requires at least one main or intro frame");
         }
         if (this.frameTimeMs <= 0L || this.introFrameTimeMs <= 0L) {
             throw new IllegalArgumentException("AFMA frame times must be greater than 0");

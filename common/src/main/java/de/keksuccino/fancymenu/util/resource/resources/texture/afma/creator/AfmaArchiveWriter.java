@@ -26,6 +26,11 @@ public class AfmaArchiveWriter {
     }
 
     public void write(@NotNull AfmaEncodePlan plan, @NotNull File outputFile, @Nullable BooleanSupplier cancellationRequested) throws IOException {
+        this.write(plan, outputFile, cancellationRequested, null);
+    }
+
+    public void write(@NotNull AfmaEncodePlan plan, @NotNull File outputFile, @Nullable BooleanSupplier cancellationRequested,
+                      @Nullable ProgressListener progressListener) throws IOException {
         Objects.requireNonNull(plan);
         Objects.requireNonNull(outputFile);
 
@@ -36,14 +41,22 @@ public class AfmaArchiveWriter {
 
         try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile)))) {
             out.setEncoding(StandardCharsets.UTF_8.name());
+            int totalEntries = plan.getPayloads().size() + 2;
+            int writtenEntries = 0;
 
             checkCancelled(cancellationRequested);
             this.writeJsonEntry(out, "metadata.json", GSON.toJson(plan.getMetadata()));
+            writtenEntries++;
+            reportProgress(progressListener, "metadata.json", writtenEntries, totalEntries);
             checkCancelled(cancellationRequested);
             this.writeJsonEntry(out, "frame_index.json", GSON.toJson(plan.getFrameIndex()));
+            writtenEntries++;
+            reportProgress(progressListener, "frame_index.json", writtenEntries, totalEntries);
             for (Map.Entry<String, byte[]> entry : plan.getPayloads().entrySet()) {
                 checkCancelled(cancellationRequested);
                 this.writeBinaryEntry(out, entry.getKey(), entry.getValue());
+                writtenEntries++;
+                reportProgress(progressListener, entry.getKey(), writtenEntries, totalEntries);
             }
             out.finish();
         }
@@ -65,6 +78,17 @@ public class AfmaArchiveWriter {
         if ((cancellationRequested != null) && cancellationRequested.getAsBoolean()) {
             throw new CancellationException("AFMA archive writing was cancelled");
         }
+    }
+
+    protected static void reportProgress(@Nullable ProgressListener progressListener, @NotNull String path, int writtenEntries, int totalEntries) {
+        if (progressListener != null) {
+            progressListener.update(path, (double) writtenEntries / Math.max(1, totalEntries));
+        }
+    }
+
+    @FunctionalInterface
+    public interface ProgressListener {
+        void update(@NotNull String path, double progress);
     }
 
 }

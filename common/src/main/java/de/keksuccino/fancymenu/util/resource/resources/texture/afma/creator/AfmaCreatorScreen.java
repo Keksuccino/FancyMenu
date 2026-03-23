@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator;
 
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
+import de.keksuccino.fancymenu.util.file.FilenameComparator;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -244,7 +245,7 @@ public class AfmaCreatorScreen extends Screen {
         }
         if (this.previewPreviousButton != null) this.previewPreviousButton.active = analysisFresh;
         if (this.previewNextButton != null) this.previewNextButton.active = analysisFresh;
-        if (this.clearIntroFramesButton != null) this.clearIntroFramesButton.active = this.state.getIntroFramesDirectory() != null && !jobRunning;
+        if (this.clearIntroFramesButton != null) this.clearIntroFramesButton.active = !this.state.getIntroFramesInputText().isBlank() && !jobRunning;
     }
 
     protected void openDirectoryChooser(@Nullable File initialDirectory, @NotNull java.util.function.Consumer<File> callback) {
@@ -275,8 +276,8 @@ public class AfmaCreatorScreen extends Screen {
     protected void syncWidgetsFromState() {
         this.syncingWidgets = true;
         try {
-            if (this.mainFramesPathEditBox != null) this.mainFramesPathEditBox.setValue(fileToPath(this.state.getMainFramesDirectory()));
-            if (this.introFramesPathEditBox != null) this.introFramesPathEditBox.setValue(fileToPath(this.state.getIntroFramesDirectory()));
+            if (this.mainFramesPathEditBox != null) this.mainFramesPathEditBox.setValue(this.state.getMainFramesInputText());
+            if (this.introFramesPathEditBox != null) this.introFramesPathEditBox.setValue(this.state.getIntroFramesInputText());
             if (this.outputPathEditBox != null) this.outputPathEditBox.setValue(fileToPath(this.state.getOutputFile()));
             if (this.frameTimeEditBox != null) this.frameTimeEditBox.setValue(String.valueOf(this.state.getFrameTimeMs()));
             if (this.introFrameTimeEditBox != null) this.introFrameTimeEditBox.setValue(String.valueOf(this.state.getIntroFrameTimeMs()));
@@ -295,10 +296,10 @@ public class AfmaCreatorScreen extends Screen {
 
     protected void syncStateFromWidgets() {
         if (this.syncingWidgets) return;
-        if (this.mainFramesPathEditBox != null && !fileToPath(this.state.getMainFramesDirectory()).equals(this.mainFramesPathEditBox.getValue())) {
+        if (this.mainFramesPathEditBox != null && !this.state.getMainFramesInputText().equals(this.mainFramesPathEditBox.getValue())) {
             this.state.setMainFramesDirectory(pathToDirectory(this.mainFramesPathEditBox.getValue()));
         }
-        if (this.introFramesPathEditBox != null && !fileToPath(this.state.getIntroFramesDirectory()).equals(this.introFramesPathEditBox.getValue())) {
+        if (this.introFramesPathEditBox != null && !this.state.getIntroFramesInputText().equals(this.introFramesPathEditBox.getValue())) {
             this.state.setIntroFramesDirectory(pathToDirectory(this.introFramesPathEditBox.getValue()));
         }
         if (this.outputPathEditBox != null && !fileToPath(this.state.getOutputFile()).equals(this.outputPathEditBox.getValue())) {
@@ -476,7 +477,7 @@ public class AfmaCreatorScreen extends Screen {
             int renderHeight = Math.max(1, Math.round(canvasHeight * scale));
             int renderX = previewX + ((previewWidth - renderWidth) / 2);
             int renderY = previewY + ((previewHeight - renderHeight) / 2);
-            graphics.blit(previewTexture, renderX, renderY, 0.0F, 0.0F, renderWidth, renderHeight, renderWidth, renderHeight);
+            graphics.blit(previewTexture, renderX, renderY, 0.0F, 0.0F, renderWidth, renderHeight, canvasWidth, canvasHeight);
         } else {
             this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.preview.empty"), previewX + 8, previewY + 8, previewWidth - 16, 0xFFA0A0A0);
         }
@@ -550,6 +551,11 @@ public class AfmaCreatorScreen extends Screen {
 
         if (this.state.isAnalysisDirty()) {
             textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.analysis.stale"), rightPanelX, textY, rightWidth, warningColor);
+        }
+
+        if (this.previewController.getLastFailureMessage() != null) {
+            textY = this.renderWrappedUiText(graphics, Component.literal("Preview Error: " + this.previewController.getLastFailureMessage()), rightPanelX, textY, rightWidth, warningColor);
+            textY += 4;
         }
 
         textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.summary.canvas", result.plan().getMetadata().getCanvasWidth(), result.plan().getMetadata().getCanvasHeight()), rightPanelX, textY, rightWidth, normalTextColor);
@@ -629,6 +635,7 @@ public class AfmaCreatorScreen extends Screen {
     public void onFilesDrop(@NotNull List<Path> paths) {
         if (paths.isEmpty()) return;
 
+        List<File> droppedPngFiles = new ArrayList<>();
         for (Path path : paths) {
             File file = path.toFile();
             if (file.isDirectory()) {
@@ -642,12 +649,18 @@ public class AfmaCreatorScreen extends Screen {
                 if (lowerName.endsWith(".afma")) {
                     this.state.setOutputFile(file);
                 } else if (lowerName.endsWith(".png")) {
-                    if (this.state.getMainFramesDirectory() == null) {
-                        this.state.setMainFramesDirectory(file.getParentFile());
-                    } else if (this.state.getIntroFramesDirectory() == null) {
-                        this.state.setIntroFramesDirectory(file.getParentFile());
-                    }
+                    droppedPngFiles.add(file);
                 }
+            }
+        }
+
+        if (!droppedPngFiles.isEmpty()) {
+            FilenameComparator comparator = new FilenameComparator();
+            droppedPngFiles.sort((first, second) -> comparator.compare(first.getName(), second.getName()));
+            if (this.state.getMainFramesDirectory() == null && this.state.getMainFramesInputText().isBlank()) {
+                this.state.setMainFramesList(droppedPngFiles);
+            } else if (this.state.getIntroFramesDirectory() == null && this.state.getIntroFramesInputText().isBlank()) {
+                this.state.setIntroFramesList(droppedPngFiles);
             }
         }
         this.syncWidgetsFromState();

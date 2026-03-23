@@ -18,11 +18,17 @@ public class AfmaEncodePlan {
     protected final AfmaFrameIndex frameIndex;
     @NotNull
     protected final LinkedHashMap<String, byte[]> payloads;
+    protected final long totalPayloadBytes;
 
     public AfmaEncodePlan(@NotNull AfmaMetadata metadata, @NotNull AfmaFrameIndex frameIndex, @NotNull LinkedHashMap<String, byte[]> payloads) {
+        this(metadata, frameIndex, payloads, calculateTotalPayloadBytes(Objects.requireNonNull(payloads)));
+    }
+
+    public AfmaEncodePlan(@NotNull AfmaMetadata metadata, @NotNull AfmaFrameIndex frameIndex, @NotNull LinkedHashMap<String, byte[]> payloads, long totalPayloadBytes) {
         this.metadata = Objects.requireNonNull(metadata);
         this.frameIndex = Objects.requireNonNull(frameIndex);
         this.payloads = new LinkedHashMap<>(Objects.requireNonNull(payloads));
+        this.totalPayloadBytes = Math.max(0L, totalPayloadBytes);
     }
 
     @NotNull
@@ -41,11 +47,11 @@ public class AfmaEncodePlan {
     }
 
     public long getTotalPayloadBytes() {
-        long total = 0L;
-        for (byte[] payload : this.payloads.values()) {
-            total += payload.length;
-        }
-        return total;
+        return this.totalPayloadBytes;
+    }
+
+    public @NotNull AfmaEncodePlan withoutPayloads() {
+        return new AfmaEncodePlan(this.metadata, this.frameIndex, new LinkedHashMap<>(), this.totalPayloadBytes);
     }
 
     public int countFrames(@NotNull AfmaFrameOperationType type) {
@@ -63,6 +69,16 @@ public class AfmaEncodePlan {
             }
         }
         return count;
+    }
+
+    private static long calculateTotalPayloadBytes(@NotNull Map<String, byte[]> payloads) {
+        long total = 0L;
+        for (byte[] payload : payloads.values()) {
+            if (payload != null) {
+                total += payload.length;
+            }
+        }
+        return total;
     }
 
 }

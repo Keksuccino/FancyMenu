@@ -4,7 +4,6 @@ import de.keksuccino.fancymenu.FancyMenu;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -51,7 +50,7 @@ public class AfmaMetadata {
         metadata.custom_frame_times_intro = (customFrameTimesIntro != null) ? new LinkedHashMap<>(customFrameTimesIntro) : new LinkedHashMap<>();
         metadata.keyframe_interval = keyframeInterval;
         metadata.encoding = new Encoding(8, "RGBA", rectCopyEnabled, duplicateFrameElision);
-        metadata.creator = new Creator("FancyMenu AFMA Creator", FancyMenu.VERSION, Instant.now().toString());
+        metadata.creator = new Creator("FancyMenu AFMA Creator", FancyMenu.VERSION, null);
         return metadata;
     }
 

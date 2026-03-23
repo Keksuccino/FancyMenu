@@ -185,11 +185,13 @@ public class AfmaDecoder implements Closeable {
         List<AfmaFrameDescriptor> frames = new ArrayList<>(activeFrameIndex.getFrames());
         List<AfmaFrameDescriptor> introFrames = new ArrayList<>(activeFrameIndex.getIntroFrames());
 
-        if (frames.isEmpty()) {
-            throw new IOException("AFMA file does not contain any main frames");
+        if (frames.isEmpty() && introFrames.isEmpty()) {
+            throw new IOException("AFMA file does not contain any frames");
         }
 
-        this.validateSequence(frames, false, activeMetadata);
+        if (!frames.isEmpty()) {
+            this.validateSequence(frames, false, activeMetadata);
+        }
         if (!introFrames.isEmpty()) {
             this.validateSequence(introFrames, true, activeMetadata);
         }
@@ -247,6 +249,9 @@ public class AfmaDecoder implements Closeable {
         }
         if (header.width != expectedWidth || header.height != expectedHeight) {
             throw new IOException(context + " payload dimensions do not match the descriptor for " + path);
+        }
+        if (header.bitDepth != 8) {
+            throw new IOException(context + " payload must use 8-bit PNG data: " + path);
         }
     }
 
