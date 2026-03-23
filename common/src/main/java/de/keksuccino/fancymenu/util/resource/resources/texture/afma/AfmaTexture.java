@@ -101,10 +101,6 @@ public class AfmaTexture implements ITexture, PlayableResource {
     protected volatile boolean decodeIntro = false;
     protected volatile int decodeIndex = 0;
 
-    static {
-        ImageIO.setUseCache(false);
-    }
-
     @NotNull
     public static AfmaTexture location(@NotNull ResourceLocation location) {
         return location(location, null);
@@ -149,6 +145,8 @@ public class AfmaTexture implements ITexture, PlayableResource {
             } catch (Exception ex) {
                 texture.loadingFailed.set(true);
                 LOGGER.error("[FANCYMENU] Failed to read AFMA image from file: " + afmaFile.getPath(), ex);
+            } finally {
+                scheduleCloseIfNeeded(texture);
             }
         }, "FancyMenu-AfmaLoader-Local-" + texture.uniqueId);
         loaderThread.setDaemon(true);
@@ -199,9 +197,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
         Thread loaderThread = new Thread(() -> {
             populateTexture(texture, in, (afmaTextureName != null) ? afmaTextureName : "[Generic InputStream Source]");
-            if (texture.closed.get()) {
-                MainThreadTaskExecutor.executeInMainThread(texture::close, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
-            }
+            scheduleCloseIfNeeded(texture);
         }, "FancyMenu-AfmaLoader-Stream-" + texture.uniqueId);
         loaderThread.setDaemon(true);
         loaderThread.start();
@@ -237,6 +233,12 @@ public class AfmaTexture implements ITexture, PlayableResource {
         }
 
         CloseableUtils.closeQuietly(in);
+    }
+
+    protected static void scheduleCloseIfNeeded(@NotNull AfmaTexture texture) {
+        if (texture.closed.get()) {
+            MainThreadTaskExecutor.executeInMainThread(texture::close, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
+        }
     }
 
     protected static void populateTexture(@NotNull AfmaTexture texture, @NotNull File afmaFile, @NotNull String afmaTextureName) {
@@ -431,12 +433,6 @@ public class AfmaTexture implements ITexture, PlayableResource {
         }
 
         if (!this.advanceDecodeCursor(generation)) {
-            if (primaryPayload != null) {
-                primaryPayload.close();
-            }
-            if (patchPayload != null) {
-                patchPayload.close();
-            }
             return null;
         }
         return new PreparedFrame(intro, index, delay, descriptor, primaryPayload, patchPayload);
