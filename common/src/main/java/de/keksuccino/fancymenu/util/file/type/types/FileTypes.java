@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.wav.WavAudio;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.text.PlainText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.*;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaTexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.fma.FmaTexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import de.keksuccino.fancymenu.util.resource.resources.video.Mp4Video;
@@ -58,6 +59,11 @@ public class FileTypes {
             FileCodec.advanced(ITexture.class, FmaTexture::of, FmaTexture::location, FmaTexture::local, FmaTexture::web),
             "image/fma", "fma")
             .setCustomDisplayName(Component.translatable("fancymenu.file_types.fma"))
+            .setAnimated(true);
+    public static final ImageFileType AFMA_IMAGE = new ImageFileType(
+            FileCodec.advanced(ITexture.class, AfmaTexture::of, AfmaTexture::location, AfmaTexture::local, AfmaTexture::web),
+            "image/afma", "afma")
+            .setCustomDisplayName(Component.translatable("fancymenu.file_types.afma"))
             .setAnimated(true);
 
     public static final AudioFileType OGG_AUDIO = new AudioFileType(
@@ -125,6 +131,7 @@ public class FileTypes {
         FileTypeRegistry.register("gif", GIF_IMAGE);
         FileTypeRegistry.register("apng", APNG_IMAGE);
         FileTypeRegistry.register("fma", FMA_IMAGE);
+        FileTypeRegistry.register("afma", AFMA_IMAGE);
 
         FileTypeRegistry.register("ogg", OGG_AUDIO);
         FileTypeRegistry.register("wav", WAV_AUDIO);

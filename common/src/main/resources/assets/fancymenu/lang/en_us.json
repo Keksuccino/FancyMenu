@@ -3296,5 +3296,7 @@
   "fancymenu.ffmpeg.downloader.start": "Start Download",
   "fancymenu.ffmpeg.downloader.retry": "Retry Download",
   "fancymenu.ffmpeg.downloader.cancel": "Cancel Download",
-  "fancymenu.ffmpeg.downloader.open_folder": "Open FFmpeg Folder"
+  "fancymenu.ffmpeg.downloader.open_folder": "Open FFmpeg Folder",
+  "fancymenu.file_types.afma": "Advanced FancyMenu Animation",
+  "fancymenu.resources.chooser_screen.invalid_afma.error": "Failed to load the selected AFMA image!\nMake sure the file exists and that metadata.json and frame_index.json contain valid AFMA data."
 }

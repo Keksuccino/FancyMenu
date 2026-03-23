@@ -31,6 +31,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.resource.Resource;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaDecoder;
 import de.keksuccino.fancymenu.util.resource.resources.texture.fma.FmaDecoder;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
@@ -544,16 +545,29 @@ public class ResourceChooserWindowBody<R extends Resource, F extends FileType<R>
 
         ResourceSource source = ResourceSource.of(sourceWithPrefix);
         FileType<?> fileType = FileTypes.getType(source, false);
-        if (fileType != FileTypes.FMA_IMAGE) return true;
-
-        try {
-            this.validateFmaSource_FancyMenu(source);
-            return true;
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to validate selected FMA resource before applying it: {}", sourceWithPrefix, ex);
-            Dialogs.openMessage(Component.translatable("fancymenu.resources.chooser_screen.invalid_fma.error"), MessageDialogStyle.ERROR);
-            return false;
+        if (fileType == FileTypes.FMA_IMAGE) {
+            try {
+                this.validateFmaSource_FancyMenu(source);
+                return true;
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to validate selected FMA resource before applying it: {}", sourceWithPrefix, ex);
+                Dialogs.openMessage(Component.translatable("fancymenu.resources.chooser_screen.invalid_fma.error"), MessageDialogStyle.ERROR);
+                return false;
+            }
         }
+
+        if (fileType == FileTypes.AFMA_IMAGE) {
+            try {
+                this.validateAfmaSource_FancyMenu(source);
+                return true;
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to validate selected AFMA resource before applying it: {}", sourceWithPrefix, ex);
+                Dialogs.openMessage(Component.translatable("fancymenu.resources.chooser_screen.invalid_afma.error"), MessageDialogStyle.ERROR);
+                return false;
+            }
+        }
+
+        return true;
     }
 
     protected void validateFmaSource_FancyMenu(@NotNull ResourceSource source) throws Exception {
@@ -571,6 +585,26 @@ public class ResourceChooserWindowBody<R extends Resource, F extends FileType<R>
             }
 
             try (FmaDecoder decoder = new FmaDecoder(); InputStream in = Minecraft.getInstance().getResourceManager().open(location)) {
+                decoder.read(in);
+            }
+        }
+    }
+
+    protected void validateAfmaSource_FancyMenu(@NotNull ResourceSource source) throws Exception {
+        if (source.getSourceType() == ResourceSourceType.LOCAL) {
+            try (AfmaDecoder decoder = new AfmaDecoder()) {
+                decoder.read(new File(source.getSourceWithoutPrefix()));
+            }
+            return;
+        }
+
+        if (source.getSourceType() == ResourceSourceType.LOCATION) {
+            ResourceLocation location = ResourceLocation.tryParse(source.getSourceWithoutPrefix());
+            if (location == null) {
+                throw new IllegalArgumentException("Failed to parse ResourceLocation of selected AFMA resource: " + source);
+            }
+
+            try (AfmaDecoder decoder = new AfmaDecoder(); InputStream in = Minecraft.getInstance().getResourceManager().open(location)) {
                 decoder.read(in);
             }
         }
