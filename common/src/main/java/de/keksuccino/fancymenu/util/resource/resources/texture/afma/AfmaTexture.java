@@ -444,27 +444,38 @@ public class AfmaTexture implements ITexture, PlayableResource {
         if (payloadInput == null) {
             throw new FileNotFoundException("AFMA payload input stream was NULL: " + payloadPath);
         }
-        try (InputStream closeableInput = payloadInput; MemoryCacheImageInputStream imageInput = new MemoryCacheImageInputStream(closeableInput)) {
-            BufferedImage image = ImageIO.read(imageInput);
-            if (image == null) {
-                throw new IOException("Failed to decode AFMA PNG payload: " + payloadPath);
-            }
-            PixelPayload directPayload = createDirectPixelPayload(image);
-            if (directPayload != null) {
-                return directPayload;
-            }
+        try (InputStream closeableInput = payloadInput) {
+            MemoryCacheImageInputStream imageInput = new MemoryCacheImageInputStream(closeableInput);
+            try {
+                BufferedImage image = ImageIO.read(imageInput);
+                if (image == null) {
+                    throw new IOException("Failed to decode AFMA PNG payload: " + payloadPath);
+                }
+                PixelPayload directPayload = createDirectPixelPayload(image);
+                if (directPayload != null) {
+                    return directPayload;
+                }
 
-            BufferedImage normalizedImage = normalizePayloadImage(image);
-            directPayload = createDirectPixelPayload(normalizedImage);
-            if (directPayload != null) {
-                return directPayload;
-            }
+                BufferedImage normalizedImage = normalizePayloadImage(image);
+                directPayload = createDirectPixelPayload(normalizedImage);
+                if (directPayload != null) {
+                    return directPayload;
+                }
 
-            int width = normalizedImage.getWidth();
-            int height = normalizedImage.getHeight();
-            int[] pixels = new int[width * height];
-            normalizedImage.getRGB(0, 0, width, height, pixels, 0, width);
-            return new PixelPayload(width, height, pixels, 0, width, false);
+                int width = normalizedImage.getWidth();
+                int height = normalizedImage.getHeight();
+                int[] pixels = new int[width * height];
+                normalizedImage.getRGB(0, 0, width, height, pixels, 0, width);
+                return new PixelPayload(width, height, pixels, 0, width, false);
+            } finally {
+                try {
+                    imageInput.close();
+                } catch (IOException ex) {
+                    if (!"closed".equalsIgnoreCase(String.valueOf(ex.getMessage()))) {
+                        throw ex;
+                    }
+                }
+            }
         }
     }
 
