@@ -152,17 +152,10 @@ public class FFMPEGDownloaderScreen extends Screen {
         }
         matrix.popPose();
 
-        int infoMaxWidth = Math.min(this.width - 40, 420);
-        float infoX = (this.width / 2.0F) - (infoMaxWidth / 2.0F);
-        float infoY = (float) cy + 36.0F;
-        List<MutableComponent> wrappedDescription = UIBase.lineWrapUIComponentsNormal(Component.translatable("fancymenu.ffmpeg.downloader.description"), infoMaxWidth);
-        for (MutableComponent line : wrappedDescription) {
-            UIBase.renderText(graphics, line, infoX, infoY, UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt());
-            infoY += UIBase.getUITextHeightNormal() + 2.0F;
-        }
-
         if (snapshot.getFailureMessage() != null && !snapshot.getFailureMessage().isBlank()) {
-            infoY += 6.0F;
+            int infoMaxWidth = Math.min(this.width - 40, 420);
+            float infoX = (this.width / 2.0F) - (infoMaxWidth / 2.0F);
+            float infoY = (float) cy + 36.0F;
             List<MutableComponent> wrappedFailure = UIBase.lineWrapUIComponentsSmall(Component.literal(snapshot.getFailureMessage()).withStyle(ChatFormatting.RED), infoMaxWidth);
             for (MutableComponent line : wrappedFailure) {
                 UIBase.renderText(graphics, line, infoX, infoY, 0xFF7A7A, UIBase.getUITextSizeSmall());
