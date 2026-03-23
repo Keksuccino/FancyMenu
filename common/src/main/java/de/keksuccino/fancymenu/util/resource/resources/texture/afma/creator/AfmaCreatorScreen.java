@@ -457,7 +457,7 @@ public class AfmaCreatorScreen extends Screen {
         graphics.fill(leftX - 8, panelTop, leftX + leftWidth + 8, panelBottom, UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt());
         graphics.fill(rightPanelX - 8, panelTop, rightPanelX + rightWidth + 8, panelBottom, UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt());
 
-        UIBase.renderText(graphics, this.title, OUTER_PADDING, 16, 0xFFFFFF);
+        UIBase.renderText(graphics, this.title, OUTER_PADDING, 16, 0xFFFFFFFF, UIBase.getUITextSizeNormal());
 
         int previewX = rightPanelX;
         int previewY = 58;
@@ -476,7 +476,7 @@ public class AfmaCreatorScreen extends Screen {
             int renderY = previewY + ((previewHeight - renderHeight) / 2);
             graphics.blit(previewTexture, renderX, renderY, 0.0F, 0.0F, renderWidth, renderHeight, renderWidth, renderHeight);
         } else {
-            this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.preview.empty"), previewX + 8, previewY + 8, previewWidth - 16, 0xA0A0A0);
+            this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.preview.empty"), previewX + 8, previewY + 8, previewWidth - 16, 0xFFA0A0A0);
         }
 
         int timelineY = previewY + previewHeight + 14;
@@ -505,15 +505,15 @@ public class AfmaCreatorScreen extends Screen {
     }
 
     protected void drawFieldLabel(@NotNull GuiGraphics graphics, @NotNull Component component, int x, int y, boolean header) {
-        UIBase.renderText(graphics, component, x, y, header ? 0xFFFFFF : 0xD0D0D0);
+        UIBase.renderText(graphics, component, x, y, header ? 0xFFFFFFFF : 0xFFD0D0D0, UIBase.getUITextSizeNormal());
     }
 
     protected void renderDiagnostics(@NotNull GuiGraphics graphics) {
         int rightPanelX = (this.width / 2) + 8;
         int rightWidth = this.width - rightPanelX - OUTER_PADDING;
         int textY = this.height - OUTER_PADDING - 180;
-        int normalTextColor = 0xFFFFFF;
-        int dimTextColor = 0xA0A0A0;
+        int normalTextColor = 0xFFFFFFFF;
+        int dimTextColor = 0xFFA0A0A0;
         int warningColor = UIBase.getUITheme().warning_color.getColorInt();
 
         textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.ffmpeg_status", this.ffmpegBridge.describeStatus()), rightPanelX, textY, rightWidth, normalTextColor);
@@ -526,7 +526,7 @@ public class AfmaCreatorScreen extends Screen {
             AfmaEncodeProgress progress = job.getProgress();
             textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.job_status", progress.task()), rightPanelX, textY, rightWidth, normalTextColor);
             if (progress.detail() != null && !progress.detail().isBlank()) {
-                textY = this.renderWrappedUiText(graphics, Component.literal(progress.detail()), rightPanelX, textY, rightWidth, 0xD0D0D0);
+                textY = this.renderWrappedUiText(graphics, Component.literal(progress.detail()), rightPanelX, textY, rightWidth, 0xFFD0D0D0);
             }
             int barWidth = rightWidth;
             graphics.fill(rightPanelX, textY, rightPanelX + barWidth, textY + 8, 0xFF202020);
@@ -564,7 +564,7 @@ public class AfmaCreatorScreen extends Screen {
         List<MutableComponent> lines = UIBase.lineWrapUIComponentsNormal(text, Math.max(20, maxWidth));
         int lineHeight = Math.max(10, Math.round(UIBase.getUITextHeightNormal()));
         for (MutableComponent line : lines) {
-            UIBase.renderText(graphics, line, x, y, color);
+            UIBase.renderText(graphics, line, x, y, color, UIBase.getUITextSizeNormal());
             y += lineHeight + 2;
         }
         return y;
