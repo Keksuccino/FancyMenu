@@ -148,7 +148,7 @@ public class AfmaPixelFrame implements AutoCloseable {
         return image;
     }
 
-    protected static @NotNull byte[] writeCompressedPng(@NotNull BufferedImage image) throws IOException {
+    public static @NotNull byte[] writeCompressedPng(@NotNull BufferedImage image) throws IOException {
         List<ImageWriter> writers = new ArrayList<>();
         Iterator<ImageWriter> iterator = ImageIO.getImageWritersByFormatName("png");
         while (iterator.hasNext()) {

@@ -8,6 +8,8 @@ public enum AfmaFrameOperationType {
     FULL,
     @SerializedName("delta_rect")
     DELTA_RECT,
+    @SerializedName("sparse_delta_rect")
+    SPARSE_DELTA_RECT,
     @SerializedName("same")
     SAME,
     @SerializedName("copy_rect_patch")

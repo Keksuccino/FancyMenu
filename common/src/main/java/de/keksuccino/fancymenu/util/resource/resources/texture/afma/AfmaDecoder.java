@@ -208,12 +208,11 @@ public class AfmaDecoder implements Closeable {
                 throw new IllegalArgumentException((introSequence ? "Intro" : "Main") + " frame " + i + " is NULL");
             }
             descriptor.validate((introSequence ? "Intro" : "Main") + " frame " + i, activeMetadata.getCanvasWidth(), activeMetadata.getCanvasHeight(), i == 0);
-            if ((descriptor.getType() == AfmaFrameOperationType.FULL || descriptor.getType() == AfmaFrameOperationType.DELTA_RECT)
-                    && this.findEntry(Objects.requireNonNull(descriptor.getPath())) == null) {
-                throw new IllegalArgumentException("Referenced AFMA payload was not found: " + descriptor.getPath());
+            if (descriptor.requiresPrimaryPayload() && this.findEntry(Objects.requireNonNull(descriptor.getPrimaryPayloadPath())) == null) {
+                throw new IllegalArgumentException("Referenced AFMA payload was not found: " + descriptor.getPrimaryPayloadPath());
             }
-            if (descriptor.requiresPatchPayload() && this.findEntry(Objects.requireNonNull(descriptor.getPatch()).getPath()) == null) {
-                throw new IllegalArgumentException("Referenced AFMA patch payload was not found: " + descriptor.getPatch().getPath());
+            if (descriptor.requiresPatchPayload() && this.findEntry(Objects.requireNonNull(descriptor.getSecondaryPayloadPath())) == null) {
+                throw new IllegalArgumentException("Referenced AFMA secondary payload was not found: " + descriptor.getSecondaryPayloadPath());
             }
         }
     }
@@ -226,16 +225,20 @@ public class AfmaDecoder implements Closeable {
         AfmaFrameDescriptor descriptor = sequence.get(0);
         String context = (introSequence ? "Intro" : "Main") + " frame 0";
         if (descriptor.getType() == AfmaFrameOperationType.FULL) {
-            this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPath()), activeMetadata.getCanvasWidth(), activeMetadata.getCanvasHeight());
+            this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), activeMetadata.getCanvasWidth(), activeMetadata.getCanvasHeight(), 8);
         } else if (descriptor.getType() == AfmaFrameOperationType.DELTA_RECT) {
-            this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPath()), descriptor.getWidth(), descriptor.getHeight());
+            this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), descriptor.getWidth(), descriptor.getHeight(), 8);
+        } else if (descriptor.getType() == AfmaFrameOperationType.SPARSE_DELTA_RECT) {
+            AfmaSparsePayload sparse = Objects.requireNonNull(descriptor.getSparse());
+            this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), descriptor.getWidth(), descriptor.getHeight(), 1, 8);
+            this.validatePayloadHeader(context, Objects.requireNonNull(sparse.getPixelsPath()), sparse.getPackedWidth(), sparse.getPackedHeight(), 8);
         } else if ((descriptor.getType() == AfmaFrameOperationType.COPY_RECT_PATCH) && descriptor.requiresPatchPayload()) {
             AfmaPatchRegion patch = Objects.requireNonNull(descriptor.getPatch());
-            this.validatePayloadHeader(context, Objects.requireNonNull(patch.getPath()), patch.getWidth(), patch.getHeight());
+            this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()), patch.getWidth(), patch.getHeight(), 8);
         }
     }
 
-    protected void validatePayloadHeader(@NotNull String context, @NotNull String path, int expectedWidth, int expectedHeight) throws IOException {
+    protected void validatePayloadHeader(@NotNull String context, @NotNull String path, int expectedWidth, int expectedHeight, int... allowedBitDepths) throws IOException {
         PngFrameHeader header = this.getOrLoadPayloadHeader(path);
         if (header == null) {
             throw new IOException(context + " references a missing payload header: " + path);
@@ -243,8 +246,17 @@ public class AfmaDecoder implements Closeable {
         if (header.width != expectedWidth || header.height != expectedHeight) {
             throw new IOException(context + " payload dimensions do not match the descriptor for " + path);
         }
-        if (header.bitDepth != 8) {
-            throw new IOException(context + " payload must use 8-bit PNG data: " + path);
+        boolean allowed = (allowedBitDepths == null) || (allowedBitDepths.length == 0);
+        if (!allowed) {
+            for (int allowedBitDepth : allowedBitDepths) {
+                if (header.bitDepth == allowedBitDepth) {
+                    allowed = true;
+                    break;
+                }
+            }
+        }
+        if (!allowed) {
+            throw new IOException(context + " payload uses an unsupported PNG bit depth: " + path);
         }
     }
 
@@ -259,10 +271,10 @@ public class AfmaDecoder implements Closeable {
     protected void collectReferencedPayloadPaths(@NotNull List<AfmaFrameDescriptor> sequence, @NotNull Set<String> payloads) {
         for (AfmaFrameDescriptor descriptor : sequence) {
             if (descriptor.requiresPrimaryPayload()) {
-                payloads.add(normalizeEntryPath(Objects.requireNonNull(descriptor.getPath())).toLowerCase(Locale.ROOT));
+                payloads.add(normalizeEntryPath(Objects.requireNonNull(descriptor.getPrimaryPayloadPath())).toLowerCase(Locale.ROOT));
             }
             if (descriptor.requiresPatchPayload()) {
-                payloads.add(normalizeEntryPath(Objects.requireNonNull(Objects.requireNonNull(descriptor.getPatch()).getPath())).toLowerCase(Locale.ROOT));
+                payloads.add(normalizeEntryPath(Objects.requireNonNull(descriptor.getSecondaryPayloadPath())).toLowerCase(Locale.ROOT));
             }
         }
     }
@@ -283,12 +295,16 @@ public class AfmaDecoder implements Closeable {
 
             String context = (introSequence ? "Intro" : "Main") + " frame " + i;
             if (descriptor.getType() == AfmaFrameOperationType.FULL) {
-                this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPath()), activeMetadata.getCanvasWidth(), activeMetadata.getCanvasHeight());
+                this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), activeMetadata.getCanvasWidth(), activeMetadata.getCanvasHeight(), 8);
             } else if (descriptor.getType() == AfmaFrameOperationType.DELTA_RECT) {
-                this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPath()), descriptor.getWidth(), descriptor.getHeight());
+                this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), descriptor.getWidth(), descriptor.getHeight(), 8);
+            } else if (descriptor.getType() == AfmaFrameOperationType.SPARSE_DELTA_RECT) {
+                AfmaSparsePayload sparse = Objects.requireNonNull(descriptor.getSparse());
+                this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), descriptor.getWidth(), descriptor.getHeight(), 1, 8);
+                this.validatePayloadHeader(context, Objects.requireNonNull(sparse.getPixelsPath()), sparse.getPackedWidth(), sparse.getPackedHeight(), 8);
             } else if ((descriptor.getType() == AfmaFrameOperationType.COPY_RECT_PATCH) && descriptor.requiresPatchPayload()) {
                 AfmaPatchRegion patch = Objects.requireNonNull(descriptor.getPatch());
-                this.validatePayloadHeader(context, Objects.requireNonNull(patch.getPath()), patch.getWidth(), patch.getHeight());
+                this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()), patch.getWidth(), patch.getHeight(), 8);
             }
         }
     }

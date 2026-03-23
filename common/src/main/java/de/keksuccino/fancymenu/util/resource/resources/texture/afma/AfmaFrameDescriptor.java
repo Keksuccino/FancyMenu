@@ -3,6 +3,8 @@ package de.keksuccino.fancymenu.util.resource.resources.texture.afma;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
+
 public class AfmaFrameDescriptor {
 
     @Nullable
@@ -21,6 +23,8 @@ public class AfmaFrameDescriptor {
     protected AfmaCopyRect copy;
     @Nullable
     protected AfmaPatchRegion patch;
+    @Nullable
+    protected AfmaSparsePayload sparse;
 
     public AfmaFrameDescriptor() {
     }
@@ -42,6 +46,19 @@ public class AfmaFrameDescriptor {
         descriptor.y = y;
         descriptor.width = width;
         descriptor.height = height;
+        return descriptor;
+    }
+
+    @NotNull
+    public static AfmaFrameDescriptor sparseDeltaRect(@NotNull String maskPath, int x, int y, int width, int height, @NotNull AfmaSparsePayload sparsePayload) {
+        AfmaFrameDescriptor descriptor = new AfmaFrameDescriptor();
+        descriptor.type = AfmaFrameOperationType.SPARSE_DELTA_RECT;
+        descriptor.path = maskPath;
+        descriptor.x = x;
+        descriptor.y = y;
+        descriptor.width = width;
+        descriptor.height = height;
+        descriptor.sparse = Objects.requireNonNull(sparsePayload);
         return descriptor;
     }
 
@@ -97,16 +114,45 @@ public class AfmaFrameDescriptor {
         return this.patch;
     }
 
+    @Nullable
+    public AfmaSparsePayload getSparse() {
+        return this.sparse;
+    }
+
     public boolean isKeyframe() {
         return this.type == AfmaFrameOperationType.FULL;
     }
 
     public boolean requiresPrimaryPayload() {
-        return (this.type == AfmaFrameOperationType.FULL) || (this.type == AfmaFrameOperationType.DELTA_RECT);
+        return (this.type == AfmaFrameOperationType.FULL)
+                || (this.type == AfmaFrameOperationType.DELTA_RECT)
+                || (this.type == AfmaFrameOperationType.SPARSE_DELTA_RECT);
     }
 
     public boolean requiresPatchPayload() {
-        return (this.type == AfmaFrameOperationType.COPY_RECT_PATCH) && (this.patch != null) && (this.patch.getPath() != null) && !this.patch.getPath().isBlank();
+        if ((this.type == AfmaFrameOperationType.COPY_RECT_PATCH) && (this.patch != null)) {
+            return (this.patch.getPath() != null) && !this.patch.getPath().isBlank();
+        }
+        if ((this.type == AfmaFrameOperationType.SPARSE_DELTA_RECT) && (this.sparse != null)) {
+            return (this.sparse.getPixelsPath() != null) && !this.sparse.getPixelsPath().isBlank();
+        }
+        return false;
+    }
+
+    @Nullable
+    public String getPrimaryPayloadPath() {
+        return this.requiresPrimaryPayload() ? this.path : null;
+    }
+
+    @Nullable
+    public String getSecondaryPayloadPath() {
+        if ((this.type == AfmaFrameOperationType.COPY_RECT_PATCH) && (this.patch != null)) {
+            return this.patch.getPath();
+        }
+        if ((this.type == AfmaFrameOperationType.SPARSE_DELTA_RECT) && (this.sparse != null)) {
+            return this.sparse.getPixelsPath();
+        }
+        return null;
     }
 
     @NotNull
@@ -117,19 +163,28 @@ public class AfmaFrameDescriptor {
         if (this.type == AfmaFrameOperationType.DELTA_RECT) {
             return deltaRect(newPath, this.getX(), this.getY(), this.getWidth(), this.getHeight());
         }
+        if (this.type == AfmaFrameOperationType.SPARSE_DELTA_RECT) {
+            return sparseDeltaRect(newPath, this.getX(), this.getY(), this.getWidth(), this.getHeight(), Objects.requireNonNull(this.sparse));
+        }
         throw new IllegalStateException("AFMA frame type does not support a primary payload path override: " + this.type);
     }
 
     @NotNull
     public AfmaFrameDescriptor withPatchPath(@NotNull String newPath) {
-        if (this.type != AfmaFrameOperationType.COPY_RECT_PATCH) {
-            throw new IllegalStateException("AFMA frame type does not support a patch payload path override: " + this.type);
+        if (this.type == AfmaFrameOperationType.COPY_RECT_PATCH) {
+            if (this.patch == null) {
+                throw new IllegalStateException("AFMA copy_rect_patch frame does not contain a patch section");
+            }
+            AfmaPatchRegion patchRegion = new AfmaPatchRegion(newPath, this.patch.getX(), this.patch.getY(), this.patch.getWidth(), this.patch.getHeight());
+            return copyRectPatch(this.copy, patchRegion);
         }
-        if (this.patch == null) {
-            throw new IllegalStateException("AFMA copy_rect_patch frame does not contain a patch section");
+        if (this.type == AfmaFrameOperationType.SPARSE_DELTA_RECT) {
+            if (this.sparse == null) {
+                throw new IllegalStateException("AFMA sparse_delta_rect frame does not contain sparse payload metadata");
+            }
+            return sparseDeltaRect(Objects.requireNonNull(this.path), this.getX(), this.getY(), this.getWidth(), this.getHeight(), this.sparse.withPixelsPath(newPath));
         }
-        AfmaPatchRegion patchRegion = new AfmaPatchRegion(newPath, this.patch.getX(), this.patch.getY(), this.patch.getWidth(), this.patch.getHeight());
-        return copyRectPatch(this.copy, patchRegion);
+        throw new IllegalStateException("AFMA frame type does not support a secondary payload path override: " + this.type);
     }
 
     public void validate(@NotNull String context, int canvasWidth, int canvasHeight, boolean requireFullFrame) {
@@ -148,6 +203,19 @@ public class AfmaFrameDescriptor {
                     throw new IllegalArgumentException(context + " delta frame is missing its payload path");
                 }
                 new AfmaPatchRegion(this.path, this.getX(), this.getY(), this.getWidth(), this.getHeight()).validate(context, canvasWidth, canvasHeight, true);
+            }
+            case SPARSE_DELTA_RECT -> {
+                if (requireFullFrame) {
+                    throw new IllegalArgumentException(context + " must be a full frame");
+                }
+                if ((this.path == null) || this.path.isBlank()) {
+                    throw new IllegalArgumentException(context + " sparse delta frame is missing its mask payload path");
+                }
+                new AfmaPatchRegion(this.path, this.getX(), this.getY(), this.getWidth(), this.getHeight()).validate(context, canvasWidth, canvasHeight, true);
+                if (this.sparse == null) {
+                    throw new IllegalArgumentException(context + " sparse delta frame is missing its sparse payload metadata");
+                }
+                this.sparse.validate(context + " sparse payload");
             }
             case SAME -> {
                 if (requireFullFrame) {

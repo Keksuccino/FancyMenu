@@ -8,9 +8,12 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameOpe
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaMetadata;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaPatchRegion;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaRect;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaSparsePayload;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.awt.image.BufferedImage;
+import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
 import java.security.MessageDigest;
@@ -18,6 +21,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -27,6 +31,9 @@ import java.util.function.BooleanSupplier;
 public class AfmaEncodePlanner {
 
     protected static final int MIN_FFMPEG_PNG_REWRITE_BYTES = 96 * 1024;
+    protected static final int MIN_SPARSE_DELTA_CHANGED_PIXELS = 4096;
+    protected static final double MAX_SPARSE_DELTA_CHANGED_DENSITY = 0.30D;
+    protected static final int MAX_SPARSE_PACKED_WIDTH = 2048;
 
     @NotNull
     protected final AfmaFrameNormalizer frameNormalizer;
@@ -166,6 +173,13 @@ public class AfmaEncodePlanner {
                     options.getMaxDeltaAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
                 candidates.add(deltaCandidate);
             }
+
+            PlannedCandidate sparseDeltaCandidate = this.createSparseDeltaCandidate(previousFrame, currentFrame, introSequence, frameIndex, deltaBounds);
+            if ((sparseDeltaCandidate != null) && this.shouldKeepSparseCandidate(sparseDeltaCandidate, fullCandidate,
+                    deltaBounds.area(), currentFrame.getWidth(), currentFrame.getHeight(),
+                    options.getMaxDeltaAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
+                candidates.add(sparseDeltaCandidate);
+            }
         }
 
         if (options.isRectCopyEnabled()) {
@@ -239,6 +253,125 @@ public class AfmaEncodePlanner {
     }
 
     @Nullable
+    protected PlannedCandidate createSparseDeltaCandidate(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
+                                                          boolean introSequence, int frameIndex, @NotNull AfmaRect deltaBounds) throws IOException {
+        if (deltaBounds.area() <= 0L) {
+            return null;
+        }
+
+        SparseDeltaPayloadData sparsePayload = this.buildSparseDeltaPayload(previousFrame, currentFrame, deltaBounds);
+        if (sparsePayload == null) {
+            return null;
+        }
+
+        String maskPayloadPath = this.buildPayloadPath(introSequence, frameIndex);
+        String packedPayloadPath = this.buildAuxPayloadPath(introSequence, frameIndex, "s");
+        return new PlannedCandidate(
+                AfmaFrameDescriptor.sparseDeltaRect(
+                        maskPayloadPath,
+                        deltaBounds.x(),
+                        deltaBounds.y(),
+                        deltaBounds.width(),
+                        deltaBounds.height(),
+                        new AfmaSparsePayload(packedPayloadPath, sparsePayload.packedWidth(), sparsePayload.packedHeight())
+                ),
+                maskPayloadPath,
+                sparsePayload.maskPayload(),
+                false,
+                packedPayloadPath,
+                sparsePayload.packedPayload(),
+                false,
+                DecodeCost.SPARSE_DELTA_RECT,
+                4
+        );
+    }
+
+    @Nullable
+    protected SparseDeltaPayloadData buildSparseDeltaPayload(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
+                                                             @NotNull AfmaRect deltaBounds) throws IOException {
+        int width = deltaBounds.width();
+        int height = deltaBounds.height();
+        long bboxArea = deltaBounds.area();
+        if ((bboxArea <= 0L) || (bboxArea > Integer.MAX_VALUE)) {
+            return null;
+        }
+
+        BufferedImage maskImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
+        WritableRaster maskRaster = maskImage.getRaster();
+        int[] changedPixels = new int[(int) bboxArea];
+        int changedPixelCount = 0;
+        boolean includeAlpha = false;
+
+        for (int localY = 0; localY < height; localY++) {
+            int sourceY = deltaBounds.y() + localY;
+            for (int localX = 0; localX < width; localX++) {
+                int sourceX = deltaBounds.x() + localX;
+                int previousColor = previousFrame.getPixelRGBA(sourceX, sourceY);
+                int currentColor = currentFrame.getPixelRGBA(sourceX, sourceY);
+                if (previousColor == currentColor) {
+                    continue;
+                }
+
+                maskRaster.setSample(localX, localY, 0, 1);
+                changedPixels[changedPixelCount++] = currentColor;
+                if (((currentColor >>> 24) & 0xFF) != 0xFF) {
+                    includeAlpha = true;
+                }
+            }
+        }
+
+        if (changedPixelCount < MIN_SPARSE_DELTA_CHANGED_PIXELS) {
+            return null;
+        }
+        if (((double) changedPixelCount / (double) bboxArea) > MAX_SPARSE_DELTA_CHANGED_DENSITY) {
+            return null;
+        }
+
+        byte[] maskPayload = AfmaPixelFrame.writeCompressedPng(maskImage);
+        SparsePackedPayload packedPayload = this.buildBestSparsePackedPayload(changedPixels, changedPixelCount, includeAlpha, width);
+        if (packedPayload == null) {
+            return null;
+        }
+        return new SparseDeltaPayloadData(maskPayload, packedPayload.payloadBytes(), packedPayload.width(), packedPayload.height());
+    }
+
+    @Nullable
+    protected SparsePackedPayload buildBestSparsePackedPayload(@NotNull int[] changedPixels, int changedPixelCount,
+                                                              boolean includeAlpha, int bboxWidth) throws IOException {
+        SparsePackedPayload bestPayload = null;
+        for (int packedWidth : this.collectSparsePackedWidths(changedPixelCount, bboxWidth)) {
+            int packedHeight = (int) Math.ceil((double) changedPixelCount / (double) packedWidth);
+            int[] packedPixels = Arrays.copyOf(changedPixels, packedWidth * packedHeight);
+            AfmaPixelFrame packedFrame = new AfmaPixelFrame(packedWidth, packedHeight, packedPixels);
+            byte[] payloadBytes = packedFrame.asByteArray(includeAlpha);
+            SparsePackedPayload candidate = new SparsePackedPayload(payloadBytes, packedWidth, packedHeight);
+            if ((bestPayload == null) || (candidate.payloadBytes().length < bestPayload.payloadBytes().length)) {
+                bestPayload = candidate;
+            }
+        }
+        return bestPayload;
+    }
+
+    @NotNull
+    protected List<Integer> collectSparsePackedWidths(int changedPixelCount, int bboxWidth) {
+        LinkedHashSet<Integer> widths = new LinkedHashSet<>();
+        widths.add(Math.min(changedPixelCount, Math.max(1, bboxWidth)));
+        widths.add(Math.min(changedPixelCount, 256));
+        widths.add(Math.min(changedPixelCount, 512));
+        widths.add(Math.min(changedPixelCount, 1024));
+        widths.add(Math.min(changedPixelCount, MAX_SPARSE_PACKED_WIDTH));
+
+        List<Integer> sortedWidths = new ArrayList<>();
+        for (Integer width : widths) {
+            if ((width != null) && (width > 0)) {
+                sortedWidths.add(width);
+            }
+        }
+        sortedWidths.sort(Integer::compareTo);
+        return sortedWidths;
+    }
+
+    @Nullable
     protected PlannedCandidate createCopyCandidate(@NotNull AfmaPixelFrame currentFrame, boolean introSequence, int frameIndex,
                                                    @NotNull AfmaRectCopyDetector.Detection detection) throws IOException {
         AfmaCopyRect copyRect = detection.copyRect();
@@ -307,6 +440,38 @@ public class AfmaEncodePlanner {
         return byteSavings >= requiredSavings;
     }
 
+    protected boolean shouldKeepSparseCandidate(@NotNull PlannedCandidate candidate, @NotNull PlannedCandidate fullCandidate,
+                                                long patchArea, int frameWidth, int frameHeight, double maxAreaRatioWithoutStrongSavings,
+                                                @NotNull AfmaEncodeOptions options, @NotNull Map<String, String> payloadPathsByFingerprint) {
+        long frameArea = (long) frameWidth * frameHeight;
+        if (frameArea <= 0L || patchArea <= 0L) {
+            return false;
+        }
+
+        long boundedPatchArea = Math.min(patchArea, frameArea);
+        long fullArchiveBytes = fullCandidate.estimatedArchiveBytes(payloadPathsByFingerprint);
+        long candidateArchiveBytes = candidate.estimatedArchiveBytes(payloadPathsByFingerprint);
+        long byteSavings = fullArchiveBytes - candidateArchiveBytes;
+        if (byteSavings <= 0L) {
+            return false;
+        }
+
+        long requiredSavings = this.computeRequiredComplexCandidateSavings(
+                fullArchiveBytes,
+                options.getMinComplexCandidateSavingsBytes(),
+                options.getMinComplexCandidateSavingsRatio()
+        );
+        double areaRatio = (double) boundedPatchArea / (double) frameArea;
+        if (areaRatio > maxAreaRatioWithoutStrongSavings) {
+            requiredSavings = Math.max(requiredSavings, this.computeRequiredComplexCandidateSavings(
+                    fullArchiveBytes,
+                    options.getMinStrongComplexCandidateSavingsBytes(),
+                    options.getMinStrongComplexCandidateSavingsRatio()
+            ));
+        }
+        return byteSavings >= requiredSavings;
+    }
+
     protected long computeRequiredComplexCandidateSavings(long referenceBytes, long minAbsoluteSavings, double minSavingsRatio) {
         long ratioSavings = (referenceBytes > 0L && minSavingsRatio > 0D)
                 ? (long) Math.ceil(referenceBytes * minSavingsRatio)
@@ -345,6 +510,11 @@ public class AfmaEncodePlanner {
     @NotNull
     protected String buildPayloadPath(boolean introSequence, int frameIndex) {
         return (introSequence ? "intro_frames/" : "frames/") + Integer.toUnsignedString(frameIndex, 36) + ".png";
+    }
+
+    @NotNull
+    protected String buildAuxPayloadPath(boolean introSequence, int frameIndex, @NotNull String suffix) {
+        return (introSequence ? "intro_frames/" : "frames/") + Integer.toUnsignedString(frameIndex, 36) + "_" + suffix + ".png";
     }
 
     @NotNull
@@ -393,7 +563,8 @@ public class AfmaEncodePlanner {
         SAME,
         FULL,
         DELTA,
-        COPY_RECT_PATCH
+        COPY_RECT_PATCH,
+        SPARSE_DELTA_RECT
     }
 
     protected static class PlannedCandidate {
@@ -500,6 +671,8 @@ public class AfmaEncodePlanner {
                 bytes += 20;
             } else if (this.descriptor.getType() == AfmaFrameOperationType.COPY_RECT_PATCH) {
                 bytes += 32;
+            } else if (this.descriptor.getType() == AfmaFrameOperationType.SPARSE_DELTA_RECT) {
+                bytes += 28;
             }
             return bytes;
         }
@@ -603,6 +776,12 @@ public class AfmaEncodePlanner {
     }
 
     protected record Dimension(int width, int height) {
+    }
+
+    protected record SparseDeltaPayloadData(@NotNull byte[] maskPayload, @NotNull byte[] packedPayload, int packedWidth, int packedHeight) {
+    }
+
+    protected record SparsePackedPayload(@NotNull byte[] payloadBytes, int width, int height) {
     }
 
     @FunctionalInterface

@@ -101,6 +101,39 @@ public final class AfmaNativeImageHelper {
         }
     }
 
+    public static void blitSparsePixels(@NotNull NativeImage target, int dstX, int dstY, int width, int height,
+                                        @NotNull int[] maskPixels, int maskOffset, int maskStride,
+                                        @NotNull int[] packedPixels, int packedOffset, int packedStride,
+                                        int packedWidth, int packedHeight, boolean forceOpaqueAlpha) {
+        long targetPixels = pixels(target);
+        int targetWidth = target.getWidth();
+        int packedIndex = 0;
+        int packedCapacity = packedWidth * packedHeight;
+
+        for (int row = 0; row < height; row++) {
+            long targetOffset = offset(targetPixels, targetWidth, dstX, dstY + row);
+            int maskRowStart = maskOffset + (row * maskStride);
+            for (int column = 0; column < width; column++) {
+                int maskColor = maskPixels[maskRowStart + column];
+                if ((maskColor & 0x00FFFFFF) == 0) {
+                    continue;
+                }
+                if (packedIndex >= packedCapacity) {
+                    throw new IllegalStateException("AFMA sparse delta packed payload ended before the mask data");
+                }
+
+                int packedRow = packedIndex / packedWidth;
+                int packedColumn = packedIndex % packedWidth;
+                int color = packedPixels[packedOffset + (packedRow * packedStride) + packedColumn];
+                if (forceOpaqueAlpha) {
+                    color |= 0xFF000000;
+                }
+                MemoryUtil.memPutInt(targetOffset + ((long) column * RGBA_BYTES_PER_PIXEL), FastColor.ABGR32.fromArgb32(color));
+                packedIndex++;
+            }
+        }
+    }
+
     public static void copyRectMemmove(@NotNull NativeImage image, @NotNull AfmaCopyRect copyRect) {
         long pixels = pixels(image);
         int imageWidth = image.getWidth();

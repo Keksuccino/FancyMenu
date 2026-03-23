@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameInd
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameOperationType;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaMetadata;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaPatchRegion;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaSparsePayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
@@ -299,6 +300,15 @@ public class AfmaPreviewController implements AutoCloseable {
             }
             case FULL -> this.copyPixelFrame(this.loadPayloadFrame(Objects.requireNonNull(descriptor.getPath()), generation), canvasPixels, canvasWidth, 0, 0);
             case DELTA_RECT -> this.copyPixelFrame(this.loadPayloadFrame(Objects.requireNonNull(descriptor.getPath()), generation), canvasPixels, canvasWidth, descriptor.getX(), descriptor.getY());
+            case SPARSE_DELTA_RECT -> this.applySparseDeltaFrame(
+                    this.loadPayloadFrame(Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), generation),
+                    this.loadPayloadFrame(Objects.requireNonNull(descriptor.getSecondaryPayloadPath()), generation),
+                    canvasPixels,
+                    canvasWidth,
+                    descriptor.getX(),
+                    descriptor.getY(),
+                    Objects.requireNonNull(descriptor.getSparse(), "AFMA preview sparse delta metadata is missing")
+            );
             case COPY_RECT_PATCH -> {
                 AfmaCopyRect copyRect = Objects.requireNonNull(descriptor.getCopy(), "AFMA preview copy rect is missing");
                 this.copyRectMemmove(canvasPixels, canvasWidth, canvasHeight, copyRect);
@@ -340,6 +350,32 @@ public class AfmaPreviewController implements AutoCloseable {
             int dstRowStart = ((dstY + y) * canvasWidth) + dstX;
             for (int x = 0; x < frame.getWidth(); x++) {
                 canvasPixels[dstRowStart + x] = frame.getPixelRGBA(x, y);
+            }
+        }
+    }
+
+    protected void applySparseDeltaFrame(@NotNull AfmaPixelFrame maskFrame, @NotNull AfmaPixelFrame packedFrame,
+                                         @NotNull int[] canvasPixels, int canvasWidth, int dstX, int dstY,
+                                         @NotNull AfmaSparsePayload sparsePayload) {
+        if ((packedFrame.getWidth() != sparsePayload.getPackedWidth()) || (packedFrame.getHeight() != sparsePayload.getPackedHeight())) {
+            throw new IllegalStateException("AFMA preview sparse delta packed payload dimensions do not match the descriptor");
+        }
+
+        int packedIndex = 0;
+        int packedCapacity = packedFrame.getWidth() * packedFrame.getHeight();
+        for (int y = 0; y < maskFrame.getHeight(); y++) {
+            int dstRowStart = ((dstY + y) * canvasWidth) + dstX;
+            for (int x = 0; x < maskFrame.getWidth(); x++) {
+                if ((maskFrame.getPixelRGBA(x, y) & 0x00FFFFFF) == 0) {
+                    continue;
+                }
+                if (packedIndex >= packedCapacity) {
+                    throw new IllegalStateException("AFMA preview sparse delta packed payload ended before the mask data");
+                }
+                int packedX = packedIndex % packedFrame.getWidth();
+                int packedY = packedIndex / packedFrame.getWidth();
+                canvasPixels[dstRowStart + x] = packedFrame.getPixelRGBA(packedX, packedY);
+                packedIndex++;
             }
         }
     }

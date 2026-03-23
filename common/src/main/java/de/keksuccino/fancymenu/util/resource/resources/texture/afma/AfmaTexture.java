@@ -428,10 +428,10 @@ public class AfmaTexture implements ITexture, PlayableResource {
         PixelPayload patchPayload = null;
         try {
             if (descriptor.requiresPrimaryPayload()) {
-                primaryPayload = this.readPayload(activeDecoder, Objects.requireNonNull(descriptor.getPath()));
+                primaryPayload = this.readPayload(activeDecoder, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()));
             }
             if (descriptor.requiresPatchPayload()) {
-                patchPayload = this.readPayload(activeDecoder, Objects.requireNonNull(Objects.requireNonNull(descriptor.getPatch()).getPath()));
+                patchPayload = this.readPayload(activeDecoder, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()));
             }
         } catch (Exception ex) {
             this.failStreaming("Failed to decode AFMA payload for " + (intro ? "intro" : "normal") + " frame " + index, ex);
@@ -706,6 +706,19 @@ public class AfmaTexture implements ITexture, PlayableResource {
                             canvas, descriptor.getX(), descriptor.getY());
                     this.uploadDirtyRect(currentTexture, canvas, new AfmaRect(descriptor.getX(), descriptor.getY(), descriptor.getWidth(), descriptor.getHeight()));
                 }
+                case SPARSE_DELTA_RECT -> {
+                    this.applySparseDeltaPayload(
+                            Objects.requireNonNull(preparedFrame.primaryPayload, "AFMA sparse delta mask payload was NULL"),
+                            Objects.requireNonNull(preparedFrame.patchPayload, "AFMA sparse delta packed pixel payload was NULL"),
+                            canvas,
+                            descriptor.getX(),
+                            descriptor.getY(),
+                            descriptor.getWidth(),
+                            descriptor.getHeight(),
+                            Objects.requireNonNull(descriptor.getSparse(), "AFMA sparse delta metadata was NULL")
+                    );
+                    this.uploadDirtyRect(currentTexture, canvas, new AfmaRect(descriptor.getX(), descriptor.getY(), descriptor.getWidth(), descriptor.getHeight()));
+                }
                 case COPY_RECT_PATCH -> {
                     AfmaCopyRect copyRect = Objects.requireNonNull(descriptor.getCopy(), "AFMA copy_rect_patch is missing its copy section");
                     AfmaNativeImageHelper.copyRectMemmove(canvas, copyRect);
@@ -736,6 +749,33 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
     protected void copyPayloadIntoCanvas(@NotNull PixelPayload payload, @NotNull NativeImage canvas, int dstX, int dstY) {
         AfmaNativeImageHelper.blitPixels(canvas, dstX, dstY, payload.width, payload.height, payload.pixels, payload.offset, payload.scanlineStride, payload.forceOpaqueAlpha);
+    }
+
+    protected void applySparseDeltaPayload(@NotNull PixelPayload maskPayload, @NotNull PixelPayload packedPayload,
+                                           @NotNull NativeImage canvas, int dstX, int dstY, int width, int height,
+                                           @NotNull AfmaSparsePayload sparsePayload) {
+        if ((maskPayload.width != width) || (maskPayload.height != height)) {
+            throw new IllegalStateException("AFMA sparse delta mask dimensions do not match the frame descriptor");
+        }
+        if ((packedPayload.width != sparsePayload.getPackedWidth()) || (packedPayload.height != sparsePayload.getPackedHeight())) {
+            throw new IllegalStateException("AFMA sparse delta packed payload dimensions do not match the frame descriptor");
+        }
+        AfmaNativeImageHelper.blitSparsePixels(
+                canvas,
+                dstX,
+                dstY,
+                width,
+                height,
+                maskPayload.pixels,
+                maskPayload.offset,
+                maskPayload.scanlineStride,
+                packedPayload.pixels,
+                packedPayload.offset,
+                packedPayload.scanlineStride,
+                packedPayload.width,
+                packedPayload.height,
+                packedPayload.forceOpaqueAlpha
+        );
     }
 
     protected boolean isAtNormalCycleBoundary() {
