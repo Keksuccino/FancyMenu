@@ -128,6 +128,10 @@ public class AfmaEncodePlanner {
                         throw new IOException("AFMA source frame dimensions do not match the expected canvas size: " + frameFile.getAbsolutePath());
                     }
 
+                    if ((previousFrame != null) && options.isNearLosslessEnabled() && ((framesSinceKeyframe + 1) < options.getKeyframeInterval())) {
+                        currentFrame = this.applyNearLosslessTemporalMerge(previousFrame, currentFrame, options.getNearLosslessMaxChannelDelta());
+                    }
+
                     PlannedCandidate selectedCandidate;
                     boolean candidateAlreadyScoredWithOptimizedPayloads = false;
                     if (previousFrame == null) {
@@ -228,6 +232,55 @@ public class AfmaEncodePlanner {
         }
 
         return Objects.requireNonNull(bestCandidate, "Failed to choose an AFMA encode candidate");
+    }
+
+    @NotNull
+    protected AfmaPixelFrame applyNearLosslessTemporalMerge(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame, int maxChannelDelta) {
+        AfmaPixelFrameHelper.ensureSameSize(previousFrame, currentFrame);
+        if (maxChannelDelta <= 0) {
+            return currentFrame;
+        }
+
+        int width = currentFrame.getWidth();
+        int height = currentFrame.getHeight();
+        int[] mergedPixels = null;
+        for (int y = 0; y < height; y++) {
+            int rowOffset = y * width;
+            for (int x = 0; x < width; x++) {
+                int previousColor = previousFrame.getPixelRGBA(x, y);
+                int currentColor = currentFrame.getPixelRGBA(x, y);
+                if (!shouldMergeNearLossless(previousColor, currentColor, maxChannelDelta)) {
+                    continue;
+                }
+
+                if (mergedPixels == null) {
+                    mergedPixels = currentFrame.copyPixels();
+                }
+                mergedPixels[rowOffset + x] = previousColor;
+            }
+        }
+
+        if (mergedPixels == null) {
+            return currentFrame;
+        }
+        return new AfmaPixelFrame(width, height, mergedPixels);
+    }
+
+    protected static boolean shouldMergeNearLossless(int previousColor, int currentColor, int maxChannelDelta) {
+        if (previousColor == currentColor) {
+            return false;
+        }
+        if (((previousColor ^ currentColor) & 0xFF000000) != 0) {
+            return false;
+        }
+
+        return channelDifference(previousColor >> 16, currentColor >> 16) <= maxChannelDelta
+                && channelDifference(previousColor >> 8, currentColor >> 8) <= maxChannelDelta
+                && channelDifference(previousColor, currentColor) <= maxChannelDelta;
+    }
+
+    protected static int channelDifference(int first, int second) {
+        return Math.abs((first & 0xFF) - (second & 0xFF));
     }
 
     @NotNull

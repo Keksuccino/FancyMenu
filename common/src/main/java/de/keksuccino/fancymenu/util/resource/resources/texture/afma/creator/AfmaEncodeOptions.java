@@ -9,6 +9,8 @@ import java.util.Map;
 
 public class AfmaEncodeOptions {
 
+    public static final int DEFAULT_NEAR_LOSSLESS_MAX_CHANNEL_DELTA = 2;
+
     protected int loopCount = 0;
     protected long frameTimeMs = 41L;
     protected long introFrameTimeMs = 41L;
@@ -27,6 +29,7 @@ public class AfmaEncodeOptions {
     protected long minStrongComplexCandidateSavingsBytes = 96L * 1024L;
     protected double minComplexCandidateSavingsRatio = 0.015D;
     protected double minStrongComplexCandidateSavingsRatio = 0.06D;
+    protected int nearLosslessMaxChannelDelta = 0;
 
     @NotNull
     public static AfmaEncodeOptions balanced() {
@@ -149,6 +152,19 @@ public class AfmaEncodeOptions {
         return this.minStrongComplexCandidateSavingsRatio;
     }
 
+    public int getNearLosslessMaxChannelDelta() {
+        return this.nearLosslessMaxChannelDelta;
+    }
+
+    public boolean isNearLosslessEnabled() {
+        return this.nearLosslessMaxChannelDelta > 0;
+    }
+
+    public AfmaEncodeOptions setNearLosslessMaxChannelDelta(int nearLosslessMaxChannelDelta) {
+        this.nearLosslessMaxChannelDelta = nearLosslessMaxChannelDelta;
+        return this;
+    }
+
     public void validateForCounts(int mainFrameCount, int introFrameCount) {
         if (mainFrameCount <= 0 && introFrameCount <= 0) {
             throw new IllegalArgumentException("AFMA encoding requires at least one main or intro frame");
@@ -176,6 +192,9 @@ public class AfmaEncodeOptions {
         }
         if (this.minComplexCandidateSavingsRatio < 0D || this.minStrongComplexCandidateSavingsRatio < 0D) {
             throw new IllegalArgumentException("AFMA candidate savings ratios cannot be negative");
+        }
+        if (this.nearLosslessMaxChannelDelta < 0 || this.nearLosslessMaxChannelDelta > 255) {
+            throw new IllegalArgumentException("AFMA near-lossless channel delta must stay within [0, 255]");
         }
 
         validateCustomFrameTimes(this.customFrameTimes, mainFrameCount, "main");

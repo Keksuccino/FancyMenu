@@ -82,6 +82,10 @@ public class AfmaPixelFrame implements AutoCloseable {
         return new AfmaPixelFrame(this.width, this.height, Arrays.copyOf(this.pixels, this.pixels.length), this.reusableSourcePngPayload);
     }
 
+    public @NotNull int[] copyPixels() {
+        return Arrays.copyOf(this.pixels, this.pixels.length);
+    }
+
     public @NotNull byte[] asByteArray() throws IOException {
         return this.asByteArray(this.hasAlpha());
     }

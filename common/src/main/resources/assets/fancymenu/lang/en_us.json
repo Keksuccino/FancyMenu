@@ -3351,5 +3351,7 @@
   "fancymenu.afma.creator.summary.alpha.yes": "Present",
   "fancymenu.afma.creator.summary.alpha.no": "Opaque Only",
   "fancymenu.afma.creator.ffmpeg_required.failed_retry": "AFMA Creator needs a ready FFmpeg installation.\nThe downloader did not finish successfully.\n\nPress Accept to reopen the downloader.",
-  "fancymenu.afma.creator.ffmpeg_required.cancelled_retry": "AFMA Creator launch was cancelled before FFmpeg finished downloading.\n\nPress Accept to reopen the downloader."
+  "fancymenu.afma.creator.ffmpeg_required.cancelled_retry": "AFMA Creator launch was cancelled before FFmpeg finished downloading.\n\nPress Accept to reopen the downloader.",
+  "fancymenu.afma.creator.near_lossless": "Near-Lossless Temporal Merge: %s",
+  "fancymenu.afma.creator.summary.near_lossless": "Near-Lossless Mode: %s"
 }

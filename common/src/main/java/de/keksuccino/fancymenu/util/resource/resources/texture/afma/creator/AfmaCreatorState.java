@@ -53,6 +53,7 @@ public class AfmaCreatorState {
     private volatile int keyframeInterval = AfmaOptimizationPreset.BALANCED.getKeyframeInterval();
     private volatile boolean rectCopyEnabled = AfmaOptimizationPreset.BALANCED.isRectCopyEnabled();
     private volatile boolean duplicateFrameElision = AfmaOptimizationPreset.BALANCED.isDuplicateFrameElision();
+    private volatile boolean nearLosslessEnabled = false;
     private volatile int maxCopySearchDistance = AfmaOptimizationPreset.BALANCED.getMaxCopySearchDistance();
     private volatile int maxCandidateAxisOffsets = AfmaOptimizationPreset.BALANCED.getMaxCandidateAxisOffsets();
     private volatile boolean generateThumbnail = AfmaOptimizationPreset.BALANCED.isThumbnailEnabledByDefault();
@@ -169,6 +170,15 @@ public class AfmaCreatorState {
 
     public void setDuplicateFrameElision(boolean duplicateFrameElision) {
         this.duplicateFrameElision = duplicateFrameElision;
+        this.markDirty();
+    }
+
+    public boolean isNearLosslessEnabled() {
+        return this.nearLosslessEnabled;
+    }
+
+    public void setNearLosslessEnabled(boolean nearLosslessEnabled) {
+        this.nearLosslessEnabled = nearLosslessEnabled;
         this.markDirty();
     }
 
@@ -445,6 +455,7 @@ public class AfmaCreatorState {
                 .setKeyframeInterval(parsePositiveInt(this.keyframeInterval, "keyframe interval"))
                 .setRectCopyEnabled(this.rectCopyEnabled)
                 .setDuplicateFrameElision(this.duplicateFrameElision)
+                .setNearLosslessMaxChannelDelta(this.nearLosslessEnabled ? AfmaEncodeOptions.DEFAULT_NEAR_LOSSLESS_MAX_CHANNEL_DELTA : 0)
                 .setMaxCopySearchDistance(this.maxCopySearchDistance)
                 .setMaxCandidateAxisOffsets(this.maxCandidateAxisOffsets)
                 .setCustomFrameTimes(parseCustomFrameTimes(this.customFrameTimesText))

@@ -76,6 +76,7 @@ public class AfmaCreatorScreen extends Screen {
     private @Nullable CycleButton<AfmaOptimizationPreset> presetCycleButton;
     private @Nullable CycleButton<CommonCycles.CycleEnabledDisabled> rectCopyCycleButton;
     private @Nullable CycleButton<CommonCycles.CycleEnabledDisabled> duplicateCycleButton;
+    private @Nullable CycleButton<CommonCycles.CycleEnabledDisabled> nearLosslessCycleButton;
     private @Nullable CycleButton<CommonCycles.CycleEnabledDisabled> thumbnailCycleButton;
 
     private boolean timelineDragging = false;
@@ -168,6 +169,7 @@ public class AfmaCreatorScreen extends Screen {
 
         this.rectCopyCycleButton = this.addToggleButton("fancymenu.afma.creator.rect_copy", this.state.isRectCopyEnabled(), value -> this.state.setRectCopyEnabled(value));
         this.duplicateCycleButton = this.addToggleButton("fancymenu.afma.creator.duplicate_elision", this.state.isDuplicateFrameElision(), value -> this.state.setDuplicateFrameElision(value));
+        this.nearLosslessCycleButton = this.addToggleButton("fancymenu.afma.creator.near_lossless", this.state.isNearLosslessEnabled(), value -> this.state.setNearLosslessEnabled(value));
         this.thumbnailCycleButton = this.addToggleButton("fancymenu.afma.creator.thumbnail", this.state.isGenerateThumbnail(), value -> this.state.setGenerateThumbnail(value));
 
         this.analyzeButton = this.addStyledButton(Component.translatable("fancymenu.afma.creator.analyze"), button -> this.startAnalysis());
@@ -284,6 +286,7 @@ public class AfmaCreatorScreen extends Screen {
             if (this.presetCycleButton != null) this.presetCycleButton.setSelectedValue(this.state.getOptimizationPreset(), false);
             if (this.rectCopyCycleButton != null) this.rectCopyCycleButton.setSelectedValue(CommonCycles.CycleEnabledDisabled.getByBoolean(this.state.isRectCopyEnabled()), false);
             if (this.duplicateCycleButton != null) this.duplicateCycleButton.setSelectedValue(CommonCycles.CycleEnabledDisabled.getByBoolean(this.state.isDuplicateFrameElision()), false);
+            if (this.nearLosslessCycleButton != null) this.nearLosslessCycleButton.setSelectedValue(CommonCycles.CycleEnabledDisabled.getByBoolean(this.state.isNearLosslessEnabled()), false);
             if (this.thumbnailCycleButton != null) this.thumbnailCycleButton.setSelectedValue(CommonCycles.CycleEnabledDisabled.getByBoolean(this.state.isGenerateThumbnail()), false);
         } finally {
             this.syncingWidgets = false;
@@ -376,7 +379,8 @@ public class AfmaCreatorScreen extends Screen {
         this.layoutWidget(this.rectCopyCycleButton, leftX, y, halfWidth, FIELD_HEIGHT);
         this.layoutWidget(this.duplicateCycleButton, leftX + halfWidth + 8, y, halfWidth, FIELD_HEIGHT);
         y += ROW_GAP + 10;
-        this.layoutWidget(this.thumbnailCycleButton, leftX, y, leftWidth, FIELD_HEIGHT);
+        this.layoutWidget(this.nearLosslessCycleButton, leftX, y, halfWidth, FIELD_HEIGHT);
+        this.layoutWidget(this.thumbnailCycleButton, leftX + halfWidth + 8, y, halfWidth, FIELD_HEIGHT);
 
         int bottomY = this.height - OUTER_PADDING - FIELD_HEIGHT;
         this.layoutWidget(this.analyzeButton, leftX, bottomY, 120, FIELD_HEIGHT);
@@ -559,6 +563,10 @@ public class AfmaCreatorScreen extends Screen {
         textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.summary.ops", result.summary().fullFrames(), result.summary().deltaRectFrames(), result.summary().sameFrames(), result.summary().copyRectPatchFrames()), rightPanelX, textY, rightWidth, normalTextColor);
         textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.summary.estimated_size", humanReadableBytes(result.estimatedArchiveBytes())), rightPanelX, textY, rightWidth, normalTextColor);
         textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.summary.alpha", result.alphaUsed() ? Component.translatable("fancymenu.afma.creator.summary.alpha.yes") : Component.translatable("fancymenu.afma.creator.summary.alpha.no")), rightPanelX, textY, rightWidth, normalTextColor);
+        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.summary.near_lossless",
+                Component.translatable(this.state.isNearLosslessEnabled()
+                        ? "fancymenu.general.cycle.enabled_disabled.enabled"
+                        : "fancymenu.general.cycle.enabled_disabled.disabled")), rightPanelX, textY, rightWidth, normalTextColor);
         textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.preview.current_frame", this.previewController.getCurrentFrameLabel(), this.previewController.getCurrentFrameDurationMs()), rightPanelX, textY, rightWidth, normalTextColor);
         textY += 4;
 
