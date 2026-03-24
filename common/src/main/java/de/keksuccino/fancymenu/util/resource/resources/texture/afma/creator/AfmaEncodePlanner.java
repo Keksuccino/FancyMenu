@@ -171,21 +171,21 @@ public class AfmaEncodePlanner {
 
         AfmaRect deltaBounds = AfmaPixelFrameHelper.findDifferenceBounds(previousFrame, currentFrame);
         if (deltaBounds != null) {
-            PlannedCandidate deltaCandidate = this.optimizeSelectedCandidatePayloads(this.createDeltaCandidate(currentFrame, introSequence, frameIndex, deltaBounds), ffmpegBridge);
+            PlannedCandidate deltaCandidate = this.optimizeNullableCandidatePayloads(this.createDeltaCandidate(currentFrame, introSequence, frameIndex, deltaBounds), ffmpegBridge);
             if ((deltaCandidate != null) && this.shouldKeepComplexCandidate(deltaCandidate, fullCandidate,
                     deltaBounds.area(), currentFrame.getWidth(), currentFrame.getHeight(),
                     options.getMaxDeltaAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
                 candidates.add(deltaCandidate);
             }
 
-            PlannedCandidate residualDeltaCandidate = this.optimizeSelectedCandidatePayloads(this.createResidualDeltaCandidate(previousFrame, currentFrame, introSequence, frameIndex, deltaBounds), ffmpegBridge);
+            PlannedCandidate residualDeltaCandidate = this.optimizeNullableCandidatePayloads(this.createResidualDeltaCandidate(previousFrame, currentFrame, introSequence, frameIndex, deltaBounds), ffmpegBridge);
             if ((residualDeltaCandidate != null) && this.shouldKeepResidualCandidate(residualDeltaCandidate, fullCandidate,
                     deltaBounds.area(), currentFrame.getWidth(), currentFrame.getHeight(),
                     options.getMaxDeltaAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
                 candidates.add(residualDeltaCandidate);
             }
 
-            PlannedCandidate sparseDeltaCandidate = this.optimizeSelectedCandidatePayloads(this.createSparseDeltaCandidate(previousFrame, currentFrame, introSequence, frameIndex, deltaBounds), ffmpegBridge);
+            PlannedCandidate sparseDeltaCandidate = this.optimizeNullableCandidatePayloads(this.createSparseDeltaCandidate(previousFrame, currentFrame, introSequence, frameIndex, deltaBounds), ffmpegBridge);
             if ((sparseDeltaCandidate != null) && this.shouldKeepSparseCandidate(sparseDeltaCandidate, fullCandidate,
                     deltaBounds.area(), currentFrame.getWidth(), currentFrame.getHeight(),
                     options.getMaxDeltaAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
@@ -196,7 +196,7 @@ public class AfmaEncodePlanner {
         if (options.isRectCopyEnabled()) {
             AfmaRectCopyDetector.Detection detection = copyDetector.detect(previousFrame, currentFrame);
             if (detection != null) {
-                PlannedCandidate copyCandidate = this.optimizeSelectedCandidatePayloads(this.createCopyCandidate(currentFrame, introSequence, frameIndex, detection), ffmpegBridge);
+                PlannedCandidate copyCandidate = this.optimizeNullableCandidatePayloads(this.createCopyCandidate(currentFrame, introSequence, frameIndex, detection), ffmpegBridge);
                 long patchArea = (detection.patchBounds() != null) ? detection.patchBounds().area() : 0L;
                 if ((copyCandidate != null) && this.shouldKeepComplexCandidate(copyCandidate, fullCandidate,
                         patchArea, currentFrame.getWidth(), currentFrame.getHeight(),
@@ -204,14 +204,14 @@ public class AfmaEncodePlanner {
                     candidates.add(copyCandidate);
                 }
 
-                PlannedCandidate copyResidualCandidate = this.optimizeSelectedCandidatePayloads(this.createCopyResidualCandidate(previousFrame, currentFrame, introSequence, frameIndex, detection), ffmpegBridge);
+                PlannedCandidate copyResidualCandidate = this.optimizeNullableCandidatePayloads(this.createCopyResidualCandidate(previousFrame, currentFrame, introSequence, frameIndex, detection), ffmpegBridge);
                 if ((copyResidualCandidate != null) && this.shouldKeepResidualCandidate(copyResidualCandidate, fullCandidate,
                         patchArea, currentFrame.getWidth(), currentFrame.getHeight(),
                         options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
                     candidates.add(copyResidualCandidate);
                 }
 
-                PlannedCandidate copySparseCandidate = this.optimizeSelectedCandidatePayloads(this.createCopySparseCandidate(previousFrame, currentFrame, introSequence, frameIndex, detection), ffmpegBridge);
+                PlannedCandidate copySparseCandidate = this.optimizeNullableCandidatePayloads(this.createCopySparseCandidate(previousFrame, currentFrame, introSequence, frameIndex, detection), ffmpegBridge);
                 if ((copySparseCandidate != null) && this.shouldKeepSparseCandidate(copySparseCandidate, fullCandidate,
                         patchArea, currentFrame.getWidth(), currentFrame.getHeight(),
                         options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
@@ -815,7 +815,7 @@ public class AfmaEncodePlanner {
     }
 
     @Nullable
-    protected PlannedCandidate optimizeSelectedCandidatePayloads(@Nullable PlannedCandidate candidate, @NotNull AfmaFfmpegBridge ffmpegBridge) throws IOException {
+    protected PlannedCandidate optimizeNullableCandidatePayloads(@Nullable PlannedCandidate candidate, @NotNull AfmaFfmpegBridge ffmpegBridge) throws IOException {
         if (candidate == null) {
             return null;
         }
