@@ -33,7 +33,6 @@ public class AfmaEncodePlanner {
     protected static final int MIN_FFMPEG_PNG_REWRITE_BYTES = 96 * 1024;
     protected static final int MIN_SPARSE_DELTA_CHANGED_PIXELS = 4096;
     protected static final double MAX_SPARSE_DELTA_CHANGED_DENSITY = 0.30D;
-    protected static final int MAX_COPY_NEAR_LOSSLESS_LOCAL_CONTRAST = 16;
 
     @NotNull
     protected final AfmaFrameNormalizer frameNormalizer;
@@ -199,46 +198,28 @@ public class AfmaEncodePlanner {
         }
 
         if (options.isRectCopyEnabled()) {
-            int nearLosslessMaxChannelDelta = options.getNearLosslessMaxChannelDelta();
-            AfmaRectCopyDetector.Detection detection = copyDetector.detect(previousFrame, currentFrame, nearLosslessMaxChannelDelta);
+            AfmaRectCopyDetector.Detection detection = copyDetector.detect(previousFrame, currentFrame);
             if (detection != null) {
-                AfmaPixelFrame copyAwareFrame = currentFrame;
-                try {
-                    AfmaRectCopyDetector.Detection candidateDetection = detection;
-                    if (nearLosslessMaxChannelDelta > 0) {
-                        copyAwareFrame = this.applyNearLosslessCopyMerge(previousFrame, currentFrame, detection.copyRect(), nearLosslessMaxChannelDelta);
-                        // Recompute exact dirty bounds after merging away tiny copy-prediction differences.
-                        AfmaRect copyAwarePatchBounds = AfmaPixelFrameHelper.findDirtyBoundsAfterCopy(previousFrame, copyAwareFrame, detection.copyRect());
-                        long copyAwarePatchArea = (copyAwarePatchBounds != null) ? copyAwarePatchBounds.area() : 0L;
-                        candidateDetection = new AfmaRectCopyDetector.Detection(detection.copyRect(), copyAwarePatchBounds,
-                                detection.copyRect().getArea() - copyAwarePatchArea);
-                    }
+                PlannedCandidate copyCandidate = this.optimizeNullableCandidatePayloads(this.createCopyCandidate(currentFrame, introSequence, frameIndex, detection), ffmpegBridge);
+                long patchArea = (detection.patchBounds() != null) ? detection.patchBounds().area() : 0L;
+                if ((copyCandidate != null) && this.shouldKeepComplexCandidate(copyCandidate, fullCandidate,
+                        patchArea, currentFrame.getWidth(), currentFrame.getHeight(),
+                        options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
+                    candidates.add(copyCandidate);
+                }
 
-                    PlannedCandidate copyCandidate = this.optimizeNullableCandidatePayloads(this.createCopyCandidate(copyAwareFrame, introSequence, frameIndex, candidateDetection), ffmpegBridge);
-                    long patchArea = (candidateDetection.patchBounds() != null) ? candidateDetection.patchBounds().area() : 0L;
-                    if ((copyCandidate != null) && this.shouldKeepComplexCandidate(copyCandidate, fullCandidate,
-                            patchArea, currentFrame.getWidth(), currentFrame.getHeight(),
-                            options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
-                        candidates.add(copyCandidate);
-                    }
+                PlannedCandidate copyResidualCandidate = this.optimizeNullableCandidatePayloads(this.createCopyResidualCandidate(previousFrame, currentFrame, introSequence, frameIndex, detection), ffmpegBridge);
+                if ((copyResidualCandidate != null) && this.shouldKeepResidualCandidate(copyResidualCandidate, fullCandidate,
+                        patchArea, currentFrame.getWidth(), currentFrame.getHeight(),
+                        options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
+                    candidates.add(copyResidualCandidate);
+                }
 
-                    PlannedCandidate copyResidualCandidate = this.optimizeNullableCandidatePayloads(this.createCopyResidualCandidate(previousFrame, copyAwareFrame, introSequence, frameIndex, candidateDetection), ffmpegBridge);
-                    if ((copyResidualCandidate != null) && this.shouldKeepResidualCandidate(copyResidualCandidate, fullCandidate,
-                            patchArea, currentFrame.getWidth(), currentFrame.getHeight(),
-                            options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
-                        candidates.add(copyResidualCandidate);
-                    }
-
-                    PlannedCandidate copySparseCandidate = this.optimizeNullableCandidatePayloads(this.createCopySparseCandidate(previousFrame, copyAwareFrame, introSequence, frameIndex, candidateDetection), ffmpegBridge);
-                    if ((copySparseCandidate != null) && this.shouldKeepSparseCandidate(copySparseCandidate, fullCandidate,
-                            patchArea, currentFrame.getWidth(), currentFrame.getHeight(),
-                            options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
-                        candidates.add(copySparseCandidate);
-                    }
-                } finally {
-                    if (copyAwareFrame != currentFrame) {
-                        copyAwareFrame.close();
-                    }
+                PlannedCandidate copySparseCandidate = this.optimizeNullableCandidatePayloads(this.createCopySparseCandidate(previousFrame, currentFrame, introSequence, frameIndex, detection), ffmpegBridge);
+                if ((copySparseCandidate != null) && this.shouldKeepSparseCandidate(copySparseCandidate, fullCandidate,
+                        patchArea, currentFrame.getWidth(), currentFrame.getHeight(),
+                        options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
+                    candidates.add(copySparseCandidate);
                 }
             }
         }
@@ -285,78 +266,17 @@ public class AfmaEncodePlanner {
         return new AfmaPixelFrame(width, height, mergedPixels);
     }
 
-    @NotNull
-    protected AfmaPixelFrame applyNearLosslessCopyMerge(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
-                                                        @NotNull AfmaCopyRect copyRect, int maxChannelDelta) {
-        AfmaPixelFrameHelper.ensureSameSize(previousFrame, currentFrame);
-        if (maxChannelDelta <= 0) {
-            return currentFrame;
-        }
-
-        int width = currentFrame.getWidth();
-        int height = currentFrame.getHeight();
-        int[] mergedPixels = null;
-        for (int y = 0; y < height; y++) {
-            int rowOffset = y * width;
-            for (int x = 0; x < width; x++) {
-                int predictedColor = this.getExpectedColorAfterCopy(previousFrame, copyRect, x, y);
-                int currentColor = currentFrame.getPixelRGBA(x, y);
-                if (!shouldMergeNearLossless(predictedColor, currentColor, maxChannelDelta)) {
-                    continue;
-                }
-                if (!this.isSafeCopyNearLosslessMerge(currentFrame, x, y)) {
-                    continue;
-                }
-
-                if (mergedPixels == null) {
-                    mergedPixels = currentFrame.copyPixels();
-                }
-                mergedPixels[rowOffset + x] = predictedColor;
-            }
-        }
-
-        if (mergedPixels == null) {
-            return currentFrame;
-        }
-        return new AfmaPixelFrame(width, height, mergedPixels);
-    }
-
-    protected boolean isSafeCopyNearLosslessMerge(@NotNull AfmaPixelFrame currentFrame, int x, int y) {
-        return this.computeLocalContrast(currentFrame, x, y) <= MAX_COPY_NEAR_LOSSLESS_LOCAL_CONTRAST;
-    }
-
-    protected int computeLocalContrast(@NotNull AfmaPixelFrame frame, int x, int y) {
-        int width = frame.getWidth();
-        int height = frame.getHeight();
-        int centerColor = frame.getPixelRGBA(x, y);
-        int maxDifference = 0;
-
-        if (x > 0) {
-            maxDifference = Math.max(maxDifference, this.colorChannelDifference(centerColor, frame.getPixelRGBA(x - 1, y)));
-        }
-        if ((x + 1) < width) {
-            maxDifference = Math.max(maxDifference, this.colorChannelDifference(centerColor, frame.getPixelRGBA(x + 1, y)));
-        }
-        if (y > 0) {
-            maxDifference = Math.max(maxDifference, this.colorChannelDifference(centerColor, frame.getPixelRGBA(x, y - 1)));
-        }
-        if ((y + 1) < height) {
-            maxDifference = Math.max(maxDifference, this.colorChannelDifference(centerColor, frame.getPixelRGBA(x, y + 1)));
-        }
-
-        return maxDifference;
-    }
-
-    protected int colorChannelDifference(int firstColor, int secondColor) {
-        return Math.max(
-                Math.max(channelDifference(firstColor >> 16, secondColor >> 16), channelDifference(firstColor >> 8, secondColor >> 8)),
-                channelDifference(firstColor, secondColor)
-        );
-    }
-
     protected static boolean shouldMergeNearLossless(int previousColor, int currentColor, int maxChannelDelta) {
-        return (previousColor != currentColor)
-                && AfmaPixelFrameHelper.isNearLosslessEquivalent(previousColor, currentColor, maxChannelDelta);
+        if (previousColor == currentColor) {
+            return false;
+        }
+        if (((previousColor ^ currentColor) & 0xFF000000) != 0) {
+            return false;
+        }
+
+        return channelDifference(previousColor >> 16, currentColor >> 16) <= maxChannelDelta
+                && channelDifference(previousColor >> 8, currentColor >> 8) <= maxChannelDelta
+                && channelDifference(previousColor, currentColor) <= maxChannelDelta;
     }
 
     protected static int channelDifference(int first, int second) {
