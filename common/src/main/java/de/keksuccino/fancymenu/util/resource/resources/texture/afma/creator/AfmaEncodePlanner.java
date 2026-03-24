@@ -33,6 +33,7 @@ public class AfmaEncodePlanner {
     protected static final int MIN_FFMPEG_PNG_REWRITE_BYTES = 96 * 1024;
     protected static final int MIN_SPARSE_DELTA_CHANGED_PIXELS = 4096;
     protected static final double MAX_SPARSE_DELTA_CHANGED_DENSITY = 0.30D;
+    protected static final int MAX_COPY_NEAR_LOSSLESS_LOCAL_CONTRAST = 16;
 
     @NotNull
     protected final AfmaFrameNormalizer frameNormalizer;
@@ -303,6 +304,9 @@ public class AfmaEncodePlanner {
                 if (!shouldMergeNearLossless(predictedColor, currentColor, maxChannelDelta)) {
                     continue;
                 }
+                if (!this.isSafeCopyNearLosslessMerge(currentFrame, x, y)) {
+                    continue;
+                }
 
                 if (mergedPixels == null) {
                     mergedPixels = currentFrame.copyPixels();
@@ -317,9 +321,46 @@ public class AfmaEncodePlanner {
         return new AfmaPixelFrame(width, height, mergedPixels);
     }
 
+    protected boolean isSafeCopyNearLosslessMerge(@NotNull AfmaPixelFrame currentFrame, int x, int y) {
+        return this.computeLocalContrast(currentFrame, x, y) <= MAX_COPY_NEAR_LOSSLESS_LOCAL_CONTRAST;
+    }
+
+    protected int computeLocalContrast(@NotNull AfmaPixelFrame frame, int x, int y) {
+        int width = frame.getWidth();
+        int height = frame.getHeight();
+        int centerColor = frame.getPixelRGBA(x, y);
+        int maxDifference = 0;
+
+        if (x > 0) {
+            maxDifference = Math.max(maxDifference, this.colorChannelDifference(centerColor, frame.getPixelRGBA(x - 1, y)));
+        }
+        if ((x + 1) < width) {
+            maxDifference = Math.max(maxDifference, this.colorChannelDifference(centerColor, frame.getPixelRGBA(x + 1, y)));
+        }
+        if (y > 0) {
+            maxDifference = Math.max(maxDifference, this.colorChannelDifference(centerColor, frame.getPixelRGBA(x, y - 1)));
+        }
+        if ((y + 1) < height) {
+            maxDifference = Math.max(maxDifference, this.colorChannelDifference(centerColor, frame.getPixelRGBA(x, y + 1)));
+        }
+
+        return maxDifference;
+    }
+
+    protected int colorChannelDifference(int firstColor, int secondColor) {
+        return Math.max(
+                Math.max(channelDifference(firstColor >> 16, secondColor >> 16), channelDifference(firstColor >> 8, secondColor >> 8)),
+                channelDifference(firstColor, secondColor)
+        );
+    }
+
     protected static boolean shouldMergeNearLossless(int previousColor, int currentColor, int maxChannelDelta) {
         return (previousColor != currentColor)
                 && AfmaPixelFrameHelper.isNearLosslessEquivalent(previousColor, currentColor, maxChannelDelta);
+    }
+
+    protected static int channelDifference(int first, int second) {
+        return Math.abs((first & 0xFF) - (second & 0xFF));
     }
 
     @NotNull
