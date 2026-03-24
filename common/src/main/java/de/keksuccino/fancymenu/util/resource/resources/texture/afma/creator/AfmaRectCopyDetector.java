@@ -27,6 +27,11 @@ public class AfmaRectCopyDetector {
 
     @Nullable
     public Detection detect(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next) {
+        return this.detect(previous, next, 0);
+    }
+
+    @Nullable
+    public Detection detect(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next, int maxChannelDelta) {
         AfmaPixelFrameHelper.ensureSameSize(previous, next);
 
         int width = previous.getWidth();
@@ -34,8 +39,8 @@ public class AfmaRectCopyDetector {
         int maxDx = Math.min(width - 1, this.maxSearchDistance);
         int maxDy = Math.min(height - 1, this.maxSearchDistance);
 
-        List<Integer> candidateDx = this.collectAxisCandidates(previous, next, true, maxDx);
-        List<Integer> candidateDy = this.collectAxisCandidates(previous, next, false, maxDy);
+        List<Integer> candidateDx = this.collectAxisCandidates(previous, next, true, maxDx, maxChannelDelta);
+        List<Integer> candidateDy = this.collectAxisCandidates(previous, next, false, maxDy, maxChannelDelta);
 
         Detection bestDetection = null;
         for (int dx : candidateDx) {
@@ -55,7 +60,7 @@ public class AfmaRectCopyDetector {
                         overlapHeight
                 );
 
-                AfmaRect patchBounds = AfmaPixelFrameHelper.findDirtyBoundsAfterCopy(previous, next, copyRect);
+                AfmaRect patchBounds = AfmaPixelFrameHelper.findDirtyBoundsAfterCopy(previous, next, copyRect, maxChannelDelta);
                 long patchArea = (patchBounds != null) ? patchBounds.area() : 0L;
                 long copyArea = copyRect.getArea();
                 long usefulness = copyArea - patchArea;
@@ -73,7 +78,8 @@ public class AfmaRectCopyDetector {
     }
 
     @NotNull
-    protected List<Integer> collectAxisCandidates(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next, boolean horizontal, int maxOffset) {
+    protected List<Integer> collectAxisCandidates(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next,
+                                                  boolean horizontal, int maxOffset, int maxChannelDelta) {
         Set<Integer> offsets = new LinkedHashSet<>();
         offsets.add(0);
         if (maxOffset <= 0) {
@@ -87,7 +93,7 @@ public class AfmaRectCopyDetector {
         List<AxisCandidate> candidates = new ArrayList<>();
         for (int offset = -maxOffset; offset <= maxOffset; offset++) {
             if (offset == 0) continue;
-            double score = this.scoreOffset(previous, next, horizontal, offset);
+            double score = this.scoreOffset(previous, next, horizontal, offset, maxChannelDelta);
             candidates.add(new AxisCandidate(offset, score));
         }
 
@@ -115,7 +121,8 @@ public class AfmaRectCopyDetector {
         return List.copyOf(offsets);
     }
 
-    protected double scoreOffset(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next, boolean horizontal, int offset) {
+    protected double scoreOffset(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next,
+                                 boolean horizontal, int offset, int maxChannelDelta) {
         int width = previous.getWidth();
         int height = previous.getHeight();
         int overlapWidth = horizontal ? width - Math.abs(offset) : width;
@@ -127,22 +134,23 @@ public class AfmaRectCopyDetector {
         int srcY = horizontal ? 0 : Math.max(0, -offset);
         int dstY = horizontal ? 0 : Math.max(0, offset);
 
-        double fullScore = this.sampleMatchRatio(previous, next, srcX, srcY, dstX, dstY, overlapWidth, overlapHeight);
+        double fullScore = this.sampleMatchRatio(previous, next, srcX, srcY, dstX, dstY, overlapWidth, overlapHeight, maxChannelDelta);
         if (horizontal) {
             int bandHeight = Math.max(1, overlapHeight / 2);
             int bandY = srcY + Math.max(0, (overlapHeight - bandHeight) / 2);
             int dstBandY = dstY + Math.max(0, (overlapHeight - bandHeight) / 2);
-            return Math.max(fullScore, this.sampleMatchRatio(previous, next, srcX, bandY, dstX, dstBandY, overlapWidth, bandHeight));
+            return Math.max(fullScore, this.sampleMatchRatio(previous, next, srcX, bandY, dstX, dstBandY, overlapWidth, bandHeight, maxChannelDelta));
         }
 
         int bandWidth = Math.max(1, overlapWidth / 2);
         int bandX = srcX + Math.max(0, (overlapWidth - bandWidth) / 2);
         int dstBandX = dstX + Math.max(0, (overlapWidth - bandWidth) / 2);
-        return Math.max(fullScore, this.sampleMatchRatio(previous, next, bandX, srcY, dstBandX, dstY, bandWidth, overlapHeight));
+        return Math.max(fullScore, this.sampleMatchRatio(previous, next, bandX, srcY, dstBandX, dstY, bandWidth, overlapHeight, maxChannelDelta));
     }
 
     protected double sampleMatchRatio(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next,
-                                      int srcX, int srcY, int dstX, int dstY, int sampleWidth, int sampleHeight) {
+                                      int srcX, int srcY, int dstX, int dstY, int sampleWidth, int sampleHeight,
+                                      int maxChannelDelta) {
         int stepX = Math.max(1, sampleWidth / 48);
         int stepY = Math.max(1, sampleHeight / 16);
         int matches = 0;
@@ -151,7 +159,11 @@ public class AfmaRectCopyDetector {
         for (int y = 0; y < sampleHeight; y += stepY) {
             for (int x = 0; x < sampleWidth; x += stepX) {
                 samples++;
-                if (previous.getPixelRGBA(srcX + x, srcY + y) == next.getPixelRGBA(dstX + x, dstY + y)) {
+                if (AfmaPixelFrameHelper.isNearLosslessEquivalent(
+                        previous.getPixelRGBA(srcX + x, srcY + y),
+                        next.getPixelRGBA(dstX + x, dstY + y),
+                        maxChannelDelta
+                )) {
                     matches++;
                 }
             }

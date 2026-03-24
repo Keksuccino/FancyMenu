@@ -28,6 +28,22 @@ public final class AfmaPixelFrameHelper {
         return true;
     }
 
+    public static boolean isNearLosslessEquivalent(int expectedColor, int actualColor, int maxChannelDelta) {
+        if (expectedColor == actualColor) {
+            return true;
+        }
+        if (maxChannelDelta <= 0) {
+            return false;
+        }
+        if (((expectedColor ^ actualColor) & 0xFF000000) != 0) {
+            return false;
+        }
+
+        return channelDifference(expectedColor >> 16, actualColor >> 16) <= maxChannelDelta
+                && channelDifference(expectedColor >> 8, actualColor >> 8) <= maxChannelDelta
+                && channelDifference(expectedColor, actualColor) <= maxChannelDelta;
+    }
+
     public static @Nullable AfmaRect findDifferenceBounds(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next) {
         ensureSameSize(previous, next);
 
@@ -65,6 +81,11 @@ public final class AfmaPixelFrameHelper {
     }
 
     public static @Nullable AfmaRect findDirtyBoundsAfterCopy(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next, @NotNull AfmaCopyRect copyRect) {
+        return findDirtyBoundsAfterCopy(previous, next, copyRect, 0);
+    }
+
+    public static @Nullable AfmaRect findDirtyBoundsAfterCopy(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next,
+                                                              @NotNull AfmaCopyRect copyRect, int maxChannelDelta) {
         ensureSameSize(previous, next);
 
         int width = previous.getWidth();
@@ -83,7 +104,7 @@ public final class AfmaPixelFrameHelper {
                     expected = previous.getPixelRGBA(srcX, srcY);
                 }
 
-                if (expected == next.getPixelRGBA(x, y)) continue;
+                if (isNearLosslessEquivalent(expected, next.getPixelRGBA(x, y), maxChannelDelta)) continue;
                 if (x < minX) minX = x;
                 if (y < minY) minY = y;
                 if (x > maxX) maxX = x;
@@ -99,6 +120,10 @@ public final class AfmaPixelFrameHelper {
 
     private static boolean inside(int x, int y, int left, int top, int width, int height) {
         return x >= left && y >= top && x < (left + width) && y < (top + height);
+    }
+
+    private static int channelDifference(int first, int second) {
+        return Math.abs((first & 0xFF) - (second & 0xFF));
     }
 
 }
