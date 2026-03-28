@@ -23,18 +23,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBuffer;
-import java.awt.image.DataBufferInt;
-import java.awt.image.Raster;
-import java.awt.image.SinglePixelPackedSampleModel;
 import java.util.ArrayDeque;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import javax.imageio.ImageIO;
-import javax.imageio.stream.MemoryCacheImageInputStream;
 
 public class AfmaTexture implements ITexture, PlayableResource {
 
@@ -472,7 +464,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
         try {
             AfmaFrameOperationType type = Objects.requireNonNull(descriptor.getType(), "AFMA frame descriptor type was NULL");
             switch (type) {
-                case FULL, DELTA_RECT -> primaryPayload = this.readPngPayload(activeDecoder, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()));
+                case FULL, DELTA_RECT -> primaryPayload = this.readBinIntraPayload(activeDecoder, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()));
                 case RESIDUAL_DELTA_RECT -> primaryPayload = this.readRawPayload(activeDecoder, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()));
                 case SPARSE_DELTA_RECT -> {
                     primaryPayload = this.readRawPayload(activeDecoder, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()));
@@ -482,7 +474,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
                 }
                 case COPY_RECT_PATCH -> {
                     if (descriptor.requiresPatchPayload()) {
-                        patchPayload = this.readPngPayload(activeDecoder, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()));
+                        patchPayload = this.readBinIntraPayload(activeDecoder, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()));
                     }
                 }
                 case COPY_RECT_RESIDUAL_PATCH -> primaryPayload = this.readRawPayload(activeDecoder, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()));
@@ -504,43 +496,14 @@ public class AfmaTexture implements ITexture, PlayableResource {
     }
 
     @NotNull
-    protected PixelPayload readPngPayload(@NotNull AfmaDecoder activeDecoder, @NotNull String payloadPath) throws IOException {
+    protected PixelPayload readBinIntraPayload(@NotNull AfmaDecoder activeDecoder, @NotNull String payloadPath) throws IOException {
         InputStream payloadInput = activeDecoder.openPayload(payloadPath);
         if (payloadInput == null) {
             throw new FileNotFoundException("AFMA payload input stream was NULL: " + payloadPath);
         }
         try (InputStream closeableInput = payloadInput) {
-            MemoryCacheImageInputStream imageInput = new MemoryCacheImageInputStream(closeableInput);
-            try {
-                BufferedImage image = ImageIO.read(imageInput);
-                if (image == null) {
-                    throw new IOException("Failed to decode AFMA PNG payload: " + payloadPath);
-                }
-                PixelPayload directPayload = createDirectPixelPayload(image);
-                if (directPayload != null) {
-                    return directPayload;
-                }
-
-                BufferedImage normalizedImage = normalizePayloadImage(image);
-                directPayload = createDirectPixelPayload(normalizedImage);
-                if (directPayload != null) {
-                    return directPayload;
-                }
-
-                int width = normalizedImage.getWidth();
-                int height = normalizedImage.getHeight();
-                int[] pixels = new int[width * height];
-                normalizedImage.getRGB(0, 0, width, height, pixels, 0, width);
-                return new PixelPayload(width, height, pixels, 0, width, false);
-            } finally {
-                try {
-                    imageInput.close();
-                } catch (IOException ex) {
-                    if (!"closed".equalsIgnoreCase(String.valueOf(ex.getMessage()))) {
-                        throw ex;
-                    }
-                }
-            }
+            AfmaBinIntraPayloadHelper.DecodedFrame decodedFrame = AfmaBinIntraPayloadHelper.decodePayload(closeableInput.readAllBytes());
+            return new PixelPayload(decodedFrame.width(), decodedFrame.height(), decodedFrame.pixels(), 0, decodedFrame.width(), false);
         }
     }
 
@@ -553,51 +516,6 @@ public class AfmaTexture implements ITexture, PlayableResource {
         try (InputStream closeableInput = payloadInput) {
             return new RawPayload(closeableInput.readAllBytes());
         }
-    }
-
-    @Nullable
-    protected static PixelPayload createDirectPixelPayload(@NotNull BufferedImage image) {
-        int imageType = image.getType();
-        if ((imageType != BufferedImage.TYPE_INT_ARGB)
-                && (imageType != BufferedImage.TYPE_INT_RGB)) {
-            return null;
-        }
-
-        Raster raster = image.getRaster();
-        DataBuffer dataBuffer = raster.getDataBuffer();
-        if (!(dataBuffer instanceof DataBufferInt intBuffer)) {
-            return null;
-        }
-        if (intBuffer.getNumBanks() != 1) {
-            return null;
-        }
-        if (!(raster.getSampleModel() instanceof SinglePixelPackedSampleModel sampleModel)) {
-            return null;
-        }
-
-        int[] pixels = intBuffer.getData();
-        if (pixels.length <= 0) {
-            return null;
-        }
-
-        int stride = sampleModel.getScanlineStride();
-        int offset = intBuffer.getOffset();
-        offset += ((raster.getMinY() - raster.getSampleModelTranslateY()) * stride);
-        offset += (raster.getMinX() - raster.getSampleModelTranslateX());
-        return new PixelPayload(image.getWidth(), image.getHeight(), pixels, offset, stride, imageType == BufferedImage.TYPE_INT_RGB);
-    }
-
-    @NotNull
-    protected static BufferedImage normalizePayloadImage(@NotNull BufferedImage image) {
-        int targetType = image.getColorModel().hasAlpha() ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB;
-        BufferedImage normalized = new BufferedImage(image.getWidth(), image.getHeight(), targetType);
-        Graphics2D graphics = normalized.createGraphics();
-        try {
-            graphics.drawImage(image, 0, 0, null);
-        } finally {
-            graphics.dispose();
-        }
-        return normalized;
     }
 
     protected long resolveFrameDelay(boolean intro, int index) {

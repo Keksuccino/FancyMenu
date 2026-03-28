@@ -46,7 +46,6 @@ public class AfmaCreatorScreen extends Screen {
     private final @NotNull Screen parentScreen;
     private final @NotNull AfmaCreatorState state = new AfmaCreatorState();
     private final @NotNull AfmaPreviewController previewController = new AfmaPreviewController();
-    private final @NotNull AfmaFfmpegBridge ffmpegBridge = new AfmaFfmpegBridge();
     private final @NotNull List<PiPWindow> childWindows = new ArrayList<>();
     private boolean syncingWidgets = false;
     private @Nullable AfmaEncodeJob handledTerminalJob = null;
@@ -524,11 +523,6 @@ public class AfmaCreatorScreen extends Screen {
         int normalTextColor = 0xFFFFFFFF;
         int dimTextColor = 0xFFA0A0A0;
         int warningColor = UIBase.getUITheme().warning_color.getColorInt();
-
-        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.ffmpeg_status", this.ffmpegBridge.describeStatus()), rightPanelX, textY, rightWidth, normalTextColor);
-        textY += 2;
-        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.ffmpeg_binary", this.ffmpegBridge.describeBinaryPath()), rightPanelX, textY, rightWidth, dimTextColor);
-        textY += 8;
 
         AfmaEncodeJob job = this.state.getCurrentJob();
         if (job != null) {

@@ -9,7 +9,7 @@ import java.util.Map;
 public class AfmaMetadata {
 
     public static final String FORMAT_NAME = "AFMA";
-    public static final int CURRENT_FORMAT_VERSION = 3;
+    public static final int CURRENT_FORMAT_VERSION = 4;
     public static final int DEFAULT_KEYFRAME_INTERVAL = 30;
 
     @Nullable
@@ -48,7 +48,7 @@ public class AfmaMetadata {
         metadata.custom_frame_times = copyIfNotEmpty(customFrameTimes);
         metadata.custom_frame_times_intro = copyIfNotEmpty(customFrameTimesIntro);
         metadata.keyframe_interval = keyframeInterval;
-        metadata.encoding = (rectCopyEnabled && duplicateFrameElision) ? null : new Encoding(8, null, rectCopyEnabled, duplicateFrameElision);
+        metadata.encoding = (rectCopyEnabled && duplicateFrameElision) ? null : new Encoding("bin_intra", null, rectCopyEnabled, duplicateFrameElision);
         metadata.creator = null;
         return metadata;
     }
@@ -141,7 +141,8 @@ public class AfmaMetadata {
 
     public static class Encoding {
 
-        protected int png_bit_depth;
+        @Nullable
+        protected String intra_payload_codec;
         @Nullable
         protected String color_model;
         protected boolean rect_copy_enabled;
@@ -150,15 +151,16 @@ public class AfmaMetadata {
         public Encoding() {
         }
 
-        public Encoding(int pngBitDepth, @Nullable String colorModel, boolean rectCopyEnabled, boolean duplicateFrameElision) {
-            this.png_bit_depth = pngBitDepth;
+        public Encoding(@Nullable String intraPayloadCodec, @Nullable String colorModel, boolean rectCopyEnabled, boolean duplicateFrameElision) {
+            this.intra_payload_codec = intraPayloadCodec;
             this.color_model = colorModel;
             this.rect_copy_enabled = rectCopyEnabled;
             this.duplicate_frame_elision = duplicateFrameElision;
         }
 
-        public int getPngBitDepth() {
-            return this.png_bit_depth;
+        @Nullable
+        public String getIntraPayloadCodec() {
+            return this.intra_payload_codec;
         }
 
         @Nullable

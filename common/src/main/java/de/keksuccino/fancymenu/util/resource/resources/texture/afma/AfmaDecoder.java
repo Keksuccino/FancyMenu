@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -35,9 +34,6 @@ public class AfmaDecoder implements Closeable {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson GSON = new GsonBuilder().create();
     private static final File TEMP_DIR = FileUtils.createDirectory(new File(FancyMenu.TEMP_DATA_DIR, "/decoded_afma_images"));
-    private static final int PNG_HEADER_PROBE_BYTES = 33;
-    private static final byte[] PNG_SIGNATURE = new byte[] {(byte)137, 80, 78, 71, 13, 10, 26, 10};
-
     @Nullable
     protected ZipFile zipFile = null;
     @Nullable
@@ -46,8 +42,6 @@ public class AfmaDecoder implements Closeable {
     protected AfmaFrameIndex frameIndex = null;
     @NotNull
     protected final Map<String, ZipArchiveEntry> entriesByNormalizedPath = new HashMap<>();
-    @NotNull
-    protected final Map<String, PngFrameHeader> payloadHeadersByPath = new LinkedHashMap<>();
 
     @Nullable
     protected File tempArchiveFile = null;
@@ -196,7 +190,6 @@ public class AfmaDecoder implements Closeable {
             this.validateSequence(introFrames, true, activeMetadata);
         }
 
-        this.payloadHeadersByPath.clear();
         this.validateBootstrapPayloads(frames, activeMetadata, false);
         this.validateBootstrapPayloads(introFrames, activeMetadata, true);
     }
@@ -225,9 +218,9 @@ public class AfmaDecoder implements Closeable {
         AfmaFrameDescriptor descriptor = sequence.get(0);
         String context = (introSequence ? "Intro" : "Main") + " frame 0";
         if (descriptor.getType() == AfmaFrameOperationType.FULL) {
-            this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), activeMetadata.getCanvasWidth(), activeMetadata.getCanvasHeight(), 8);
+            this.validateBinIntraPayload(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), activeMetadata.getCanvasWidth(), activeMetadata.getCanvasHeight());
         } else if (descriptor.getType() == AfmaFrameOperationType.DELTA_RECT) {
-            this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), descriptor.getWidth(), descriptor.getHeight(), 8);
+            this.validateBinIntraPayload(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), descriptor.getWidth(), descriptor.getHeight());
         } else if (descriptor.getType() == AfmaFrameOperationType.RESIDUAL_DELTA_RECT) {
             AfmaResidualPayload residual = Objects.requireNonNull(descriptor.getResidual());
             this.validateRawPayloadSize(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
@@ -250,31 +243,18 @@ public class AfmaDecoder implements Closeable {
                     AfmaResidualPayloadHelper.expectedSparseResidualBytes(sparse.getChangedPixelCount(), sparse.getChannels()));
         } else if ((descriptor.getType() == AfmaFrameOperationType.COPY_RECT_PATCH) && descriptor.requiresPatchPayload()) {
             AfmaPatchRegion patch = Objects.requireNonNull(descriptor.getPatch());
-            this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()), patch.getWidth(), patch.getHeight(), 8);
+            this.validateBinIntraPayload(context, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()), patch.getWidth(), patch.getHeight());
         } else if (descriptor.getType() == AfmaFrameOperationType.BLOCK_INTER) {
             this.validateBlockInterPayload(context, descriptor);
         }
     }
 
-    protected void validatePayloadHeader(@NotNull String context, @NotNull String path, int expectedWidth, int expectedHeight, int... allowedBitDepths) throws IOException {
-        PngFrameHeader header = this.getOrLoadPayloadHeader(path);
-        if (header == null) {
-            throw new IOException(context + " references a missing payload header: " + path);
-        }
-        if (header.width != expectedWidth || header.height != expectedHeight) {
-            throw new IOException(context + " payload dimensions do not match the descriptor for " + path);
-        }
-        boolean allowed = (allowedBitDepths == null) || (allowedBitDepths.length == 0);
-        if (!allowed) {
-            for (int allowedBitDepth : allowedBitDepths) {
-                if (header.bitDepth == allowedBitDepth) {
-                    allowed = true;
-                    break;
-                }
+    protected void validateBinIntraPayload(@NotNull String context, @NotNull String path, int expectedWidth, int expectedHeight) throws IOException {
+        try (InputStream payloadInput = this.openPayload(path)) {
+            if (payloadInput == null) {
+                throw new IOException(context + " references a missing payload: " + path);
             }
-        }
-        if (!allowed) {
-            throw new IOException(context + " payload uses an unsupported PNG bit depth: " + path);
+            AfmaBinIntraPayloadHelper.validatePayload(payloadInput.readAllBytes(), expectedWidth, expectedHeight);
         }
     }
 
@@ -337,9 +317,9 @@ public class AfmaDecoder implements Closeable {
 
             String context = (introSequence ? "Intro" : "Main") + " frame " + i;
             if (descriptor.getType() == AfmaFrameOperationType.FULL) {
-                this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), activeMetadata.getCanvasWidth(), activeMetadata.getCanvasHeight(), 8);
+                this.validateBinIntraPayload(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), activeMetadata.getCanvasWidth(), activeMetadata.getCanvasHeight());
             } else if (descriptor.getType() == AfmaFrameOperationType.DELTA_RECT) {
-                this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), descriptor.getWidth(), descriptor.getHeight(), 8);
+                this.validateBinIntraPayload(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), descriptor.getWidth(), descriptor.getHeight());
             } else if (descriptor.getType() == AfmaFrameOperationType.RESIDUAL_DELTA_RECT) {
                 AfmaResidualPayload residual = Objects.requireNonNull(descriptor.getResidual());
                 this.validateRawPayloadSize(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
@@ -362,7 +342,7 @@ public class AfmaDecoder implements Closeable {
                         AfmaResidualPayloadHelper.expectedSparseResidualBytes(sparse.getChangedPixelCount(), sparse.getChannels()));
             } else if ((descriptor.getType() == AfmaFrameOperationType.COPY_RECT_PATCH) && descriptor.requiresPatchPayload()) {
                 AfmaPatchRegion patch = Objects.requireNonNull(descriptor.getPatch());
-                this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()), patch.getWidth(), patch.getHeight(), 8);
+                this.validateBinIntraPayload(context, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()), patch.getWidth(), patch.getHeight());
             } else if (descriptor.getType() == AfmaFrameOperationType.BLOCK_INTER) {
                 this.validateBlockInterPayload(context, descriptor);
             }
@@ -444,73 +424,13 @@ public class AfmaDecoder implements Closeable {
     @Nullable
     public InputStream openThumbnail() throws IOException {
         Objects.requireNonNull(this.zipFile);
-        ZipArchiveEntry entry = this.findEntry("thumbnail.png");
+        ZipArchiveEntry entry = this.findEntry("thumbnail.bin");
         return (entry != null) ? this.zipFile.getInputStream(entry) : null;
     }
 
     @Nullable
     protected ZipArchiveEntry findEntry(@NotNull String path) {
         return this.entriesByNormalizedPath.get(normalizeEntryPath(path).toLowerCase(Locale.ROOT));
-    }
-
-    @Nullable
-    protected PngFrameHeader getOrLoadPayloadHeader(@NotNull String framePath) throws IOException {
-        String normalizedPath = normalizeEntryPath(framePath).toLowerCase(Locale.ROOT);
-        PngFrameHeader cachedHeader = this.payloadHeadersByPath.get(normalizedPath);
-        if (cachedHeader != null) {
-            return cachedHeader;
-        }
-
-        PngFrameHeader header = this.readPngFrameHeader(normalizedPath);
-        if (header != null) {
-            this.payloadHeadersByPath.put(normalizedPath, header);
-        }
-        return header;
-    }
-
-    @Nullable
-    protected PngFrameHeader readPngFrameHeader(@NotNull String framePath) throws IOException {
-        Objects.requireNonNull(this.zipFile);
-
-        ZipArchiveEntry frameEntry = this.findEntry(framePath);
-        if (frameEntry == null) return null;
-
-        byte[] headerBytes = new byte[PNG_HEADER_PROBE_BYTES];
-        int totalRead = 0;
-        try (InputStream frameIn = this.zipFile.getInputStream(frameEntry)) {
-            while (totalRead < headerBytes.length) {
-                int read = frameIn.read(headerBytes, totalRead, headerBytes.length - totalRead);
-                if (read < 0) break;
-                totalRead += read;
-            }
-        } catch (Exception ex) {
-            throw new IOException(ex);
-        }
-
-        if (totalRead < PNG_HEADER_PROBE_BYTES) return null;
-        if (!matchesPngSignature(headerBytes)) return null;
-        if ((headerBytes[12] != 'I') || (headerBytes[13] != 'H') || (headerBytes[14] != 'D') || (headerBytes[15] != 'R')) return null;
-
-        return new PngFrameHeader(
-                readIntBigEndian(headerBytes, 16),
-                readIntBigEndian(headerBytes, 20),
-                Byte.toUnsignedInt(headerBytes[24])
-        );
-    }
-
-    protected static boolean matchesPngSignature(@NotNull byte[] headerBytes) {
-        if (headerBytes.length < PNG_SIGNATURE.length) return false;
-        for (int i = 0; i < PNG_SIGNATURE.length; i++) {
-            if (headerBytes[i] != PNG_SIGNATURE[i]) return false;
-        }
-        return true;
-    }
-
-    protected static int readIntBigEndian(@NotNull byte[] bytes, int offset) {
-        return ((bytes[offset] & 255) << 24)
-                | ((bytes[offset + 1] & 255) << 16)
-                | ((bytes[offset + 2] & 255) << 8)
-                | (bytes[offset + 3] & 255);
     }
 
     @NotNull
@@ -530,7 +450,6 @@ public class AfmaDecoder implements Closeable {
         this.metadata = null;
         this.frameIndex = null;
         this.entriesByNormalizedPath.clear();
-        this.payloadHeadersByPath.clear();
 
         if (this.zipFile != null) {
             try {
@@ -548,18 +467,6 @@ public class AfmaDecoder implements Closeable {
 
         if (shouldDeleteTempArchive && (tempArchive != null) && tempArchive.exists() && !tempArchive.delete()) {
             LOGGER.warn("[FANCYMENU] Failed to delete temporary AFMA archive: {}", tempArchive.getAbsolutePath());
-        }
-    }
-
-    protected static class PngFrameHeader {
-        protected final int width;
-        protected final int height;
-        protected final int bitDepth;
-
-        protected PngFrameHeader(int width, int height, int bitDepth) {
-            this.width = width;
-            this.height = height;
-            this.bitDepth = bitDepth;
         }
     }
 

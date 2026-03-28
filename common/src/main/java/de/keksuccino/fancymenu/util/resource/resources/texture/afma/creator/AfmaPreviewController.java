@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.fancymenu.util.CloseableUtils;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaBinIntraPayloadHelper;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaBlockInter;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaBlockInterPayloadHelper;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaCopyRect;
@@ -21,10 +22,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.imageio.ImageIO;
-import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -567,30 +564,8 @@ public class AfmaPreviewController implements AutoCloseable {
     }
 
     protected @NotNull AfmaPixelFrame decodePayloadFrame(@NotNull byte[] payloadBytes, @NotNull String payloadPath) throws IOException {
-        try (ByteArrayInputStream input = new ByteArrayInputStream(payloadBytes)) {
-            BufferedImage image = ImageIO.read(input);
-            if (image == null) {
-                throw new IOException("Failed to decode AFMA preview payload: " + payloadPath);
-            }
-
-            BufferedImage normalized = image;
-            if ((image.getType() != BufferedImage.TYPE_INT_ARGB) && (image.getType() != BufferedImage.TYPE_INT_RGB)) {
-                int targetType = image.getColorModel().hasAlpha() ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB;
-                normalized = new BufferedImage(image.getWidth(), image.getHeight(), targetType);
-                Graphics2D graphics = normalized.createGraphics();
-                try {
-                    graphics.drawImage(image, 0, 0, null);
-                } finally {
-                    graphics.dispose();
-                }
-            }
-
-            int width = normalized.getWidth();
-            int height = normalized.getHeight();
-            int[] pixels = new int[width * height];
-            normalized.getRGB(0, 0, width, height, pixels, 0, width);
-            return new AfmaPixelFrame(width, height, pixels);
-        }
+        AfmaBinIntraPayloadHelper.DecodedFrame decodedFrame = AfmaBinIntraPayloadHelper.decodePayload(payloadBytes);
+        return new AfmaPixelFrame(decodedFrame.width(), decodedFrame.height(), decodedFrame.pixels());
     }
 
     protected int findNearestKeyframe(@NotNull List<AfmaFrameDescriptor> frames, int targetIndex) {

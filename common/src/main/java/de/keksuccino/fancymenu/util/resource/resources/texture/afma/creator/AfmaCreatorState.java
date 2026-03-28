@@ -353,7 +353,7 @@ public class AfmaCreatorState {
                 job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Generating AFMA thumbnail...", null, 0.78D));
                 byte[] thumbnail = this.buildThumbnailBytes(prepared.mainSequence, prepared.introSequence);
                 if (thumbnail != null) {
-                    exportPayloads.put("thumbnail.png", thumbnail);
+                    exportPayloads.put("thumbnail.bin", thumbnail);
                 }
             }
 
