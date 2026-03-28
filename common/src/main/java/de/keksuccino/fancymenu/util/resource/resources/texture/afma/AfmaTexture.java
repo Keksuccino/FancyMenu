@@ -377,6 +377,13 @@ public class AfmaTexture implements ITexture, PlayableResource {
                     sleepQuietly(IDLE_SLEEP_MS);
                     continue;
                 }
+                if (this.shouldIdleOnTerminalSingleMainFrame()) {
+                    synchronized (this.streamStateLock) {
+                        this.clearPrefetchedFramesLocked();
+                    }
+                    sleepQuietly(100L);
+                    continue;
+                }
 
                 long now = System.currentTimeMillis();
                 if ((this.lastResourceLocationCall > 0L) && ((this.lastResourceLocationCall + INACTIVITY_TIMEOUT_MS) < now)) {
@@ -408,6 +415,13 @@ public class AfmaTexture implements ITexture, PlayableResource {
     }
 
     protected void fillPrefetchQueue(int generation) {
+        if (this.shouldIdleOnTerminalSingleMainFrame()) {
+            synchronized (this.streamStateLock) {
+                this.clearPrefetchedFramesLocked();
+            }
+            return;
+        }
+
         while (!this.closed.get() && !this.loadingFailed.get() && (generation == this.streamGeneration.get())) {
             synchronized (this.streamStateLock) {
                 if (this.prefetchedFrames.size() >= PREFETCH_QUEUE_SIZE) {
@@ -699,6 +713,11 @@ public class AfmaTexture implements ITexture, PlayableResource {
             this.playbackFrameStartMs = now;
             this.playbackFrameDelayMs = sanitizeDelay(next.delayMs);
             this.maybeEmitStartEvent(next.intro, next.index);
+            if (this.shouldIdleOnTerminalSingleMainFrame()) {
+                synchronized (this.streamStateLock) {
+                    this.clearPrefetchedFramesLocked();
+                }
+            }
         } catch (Exception ex) {
             this.failStreaming("Failed to advance AFMA playback", ex);
         } finally {
@@ -1014,6 +1033,15 @@ public class AfmaTexture implements ITexture, PlayableResource {
         int plays = this.numPlays.get();
         if (plays <= 0) return true;
         return (this.cycles.get() + 1) < plays;
+    }
+
+    protected boolean shouldIdleOnTerminalSingleMainFrame() {
+        return this.playbackInitialized
+                && !this.playbackIntro
+                && (this.playbackIndex == 0)
+                && (this.introFrameCount > 0)
+                && (this.frameCount == 1)
+                && (this.numPlays.get() <= 0);
     }
 
     protected void requestPlaybackReset() {
