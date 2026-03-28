@@ -1,4 +1,10 @@
 
+## Beta 3 Changelog
+
+- Context menu chains now try to avoid overlapping parent menus in the chain
+
+
+
 ## Beta 2 Changelog
 
 - Fixed stack overflow due to recursive hover requirement checks
@@ -318,6 +324,7 @@
 - The old "Video [MCEF]" menu background type is now DEPRECATED (please switch to the new native "Video" background type powered by Watermedia v3)
 - The old "Video [MCEF]" element is now DEPRECATED (please switch to the new native "Video" element powered by Watermedia v3)
 - The Game Intro now always consumes all mouse clicks while open, so you don't acidentally click the screen behind it anymore
+- Context menu chains now try to avoid overlapping parent menus in the chain
 
 ### Breaking Changes
 
