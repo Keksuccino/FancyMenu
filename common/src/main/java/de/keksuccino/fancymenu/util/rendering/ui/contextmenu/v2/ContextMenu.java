@@ -806,31 +806,118 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         return 5;
     }
 
+    protected float clampActualXToScreen(float x, float width) {
+        float minX = this.getMinDistanceToScreenEdge();
+        float maxX = getScreenWidth() - width - this.getMinDistanceToScreenEdge() - 1;
+        if (maxX < minX) {
+            return minX;
+        }
+        return Math.max(minX, Math.min(x, maxX));
+    }
+
+    protected float getProjectedSubMenuActualX(@NotNull SubMenuOpeningSide side) {
+        float scale = UIBase.calculateFixedRenderScale(this.scale);
+        float scaledOffsetX = 5.0F * scale;
+        if (side == SubMenuOpeningSide.LEFT) {
+            return this.parentEntry.parent.getActualX() - this.getScaledWidth() + scaledOffsetX;
+        }
+        return this.parentEntry.parent.getActualX() + this.parentEntry.parent.getScaledWidth() - scaledOffsetX;
+    }
+
+    protected boolean isProjectedSubMenuWithinScreenBounds(@NotNull SubMenuOpeningSide side) {
+        float projectedX = this.getProjectedSubMenuActualX(side);
+        float clampedX = this.clampActualXToScreen(projectedX, this.getScaledWidthWithBorder());
+        return Math.abs(projectedX - clampedX) < 0.01F;
+    }
+
+    protected float getProjectedSubMenuChainOverlapArea(@NotNull SubMenuOpeningSide side) {
+        float projectedX = this.clampActualXToScreen(this.getProjectedSubMenuActualX(side), this.getScaledWidthWithBorder());
+        float projectedY = this.getActualY();
+        float projectedWidth = this.getScaledWidthWithBorder();
+        float projectedHeight = this.getScaledHeightWithBorder();
+        float overlapArea = 0.0F;
+        for (ContextMenu openAncestor : this.getOpenAncestorMenusForOverlapChecks()) {
+            overlapArea += this.getMenuOverlapArea(
+                    projectedX,
+                    projectedY,
+                    projectedWidth,
+                    projectedHeight,
+                    openAncestor.getActualX(),
+                    openAncestor.getActualY(),
+                    openAncestor.getScaledWidthWithBorder(),
+                    openAncestor.getScaledHeightWithBorder()
+            );
+        }
+        return overlapArea;
+    }
+
+    protected float getMenuOverlapArea(float firstX, float firstY, float firstWidth, float firstHeight, float secondX, float secondY, float secondWidth, float secondHeight) {
+        float overlapWidth = Math.max(0.0F, Math.min(firstX + firstWidth, secondX + secondWidth) - Math.max(firstX, secondX));
+        float overlapHeight = Math.max(0.0F, Math.min(firstY + firstHeight, secondY + secondHeight) - Math.max(firstY, secondY));
+        return overlapWidth * overlapHeight;
+    }
+
+    @NotNull
+    protected List<ContextMenu> getOpenAncestorMenusForOverlapChecks() {
+        List<ContextMenu> openAncestors = new ArrayList<>();
+        if (!this.isSubMenu()) {
+            return openAncestors;
+        }
+
+        // Ignore the direct parent overlap because sub menus intentionally attach to it.
+        ContextMenu current = this.parentEntry.parent;
+        boolean skipDirectParent = true;
+        while (current != null) {
+            if (!skipDirectParent && current.isOpen()) {
+                openAncestors.add(current);
+            }
+            skipDirectParent = false;
+            SubMenuContextMenuEntry currentParentEntry = current.parentEntry;
+            current = (currentParentEntry != null) ? currentParentEntry.parent : null;
+        }
+        return openAncestors;
+    }
+
+    @Nullable
+    protected SubMenuOpeningSide getPreferredNonOverlappingSubMenuOpeningSide() {
+        if (!this.isSubMenu()) {
+            return null;
+        }
+
+        SubMenuOpeningSide chainSide = null;
+        ContextMenu current = this.parentEntry.parent;
+        while (current != null && current.isSubMenu() && current.isOpen()) {
+            SubMenuOpeningSide currentSide = current.getPossibleSubMenuOpeningSide();
+            if (chainSide == null) {
+                chainSide = currentSide;
+            } else if (chainSide != currentSide) {
+                return null;
+            }
+            SubMenuContextMenuEntry currentParentEntry = current.parentEntry;
+            current = (currentParentEntry != null) ? currentParentEntry.parent : null;
+        }
+
+        if (chainSide == null) {
+            return null;
+        }
+        return this.getOppositeSubMenuOpeningSide(chainSide);
+    }
+
+    @NotNull
+    protected SubMenuOpeningSide getOppositeSubMenuOpeningSide(@NotNull SubMenuOpeningSide side) {
+        return side == SubMenuOpeningSide.LEFT ? SubMenuOpeningSide.RIGHT : SubMenuOpeningSide.LEFT;
+    }
+
     protected float getActualX() {
         if (this.isSubMenu()) {
-            float cachedScale = this.parentEntry.parent.scale;
-            float scale = UIBase.calculateFixedRenderScale(this.scale);
-            float scaledOffsetX = (float) (5.0F * scale);
             SubMenuOpeningSide side = this.getPossibleSubMenuOpeningSide();
-            if (side == SubMenuOpeningSide.LEFT) {
-                float actualX = this.parentEntry.parent.getActualX() - this.getScaledWidth() + scaledOffsetX;
-                this.parentEntry.parent.scale = cachedScale;
-                return actualX;
-            }
-            if (side == SubMenuOpeningSide.RIGHT) {
-                float actualX = this.parentEntry.parent.getActualX() + this.parentEntry.parent.getScaledWidth() - scaledOffsetX;
-                this.parentEntry.parent.scale = cachedScale;
-                return actualX;
-            }
+            float actualX = this.getProjectedSubMenuActualX(side);
+            return this.clampActualXToScreen(actualX, this.getScaledWidthWithBorder());
         }
         if (this.forceRawXY) {
             return this.getX();
         }
-        //Force the menu to stay on screen
-        if ((this.getX() + this.getScaledWidthWithBorder()) >= (getScreenWidth() - this.getMinDistanceToScreenEdge())) {
-            return getScreenWidth() - this.getScaledWidthWithBorder() - this.getMinDistanceToScreenEdge() - 1;
-        }
-        return Math.max(this.getX(), this.getMinDistanceToScreenEdge());
+        return this.clampActualXToScreen(this.getX(), this.getScaledWidthWithBorder());
     }
 
     protected float getActualY() {
@@ -870,16 +957,28 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         if (this.forceSide) {
             return this.subMenuOpeningSide;
         }
-        if (this.isSubMenu()) {
-            float potentialX = this.parentEntry.parent.getActualX() - this.getScaledWidth() + 5;
-            if ((this.subMenuOpeningSide == SubMenuOpeningSide.LEFT) && (potentialX < 5)) {
-                return SubMenuOpeningSide.RIGHT;
-            }
-            potentialX = this.parentEntry.parent.getActualX() + this.parentEntry.parent.getScaledWidth() - 5 + this.getScaledWidth();
-            if ((this.subMenuOpeningSide == SubMenuOpeningSide.RIGHT) && (potentialX > (getScreenWidth() - 5))) {
-                return SubMenuOpeningSide.LEFT;
-            }
+        if (!this.isSubMenu()) {
+            return this.subMenuOpeningSide;
         }
+
+        boolean canOpenLeft = this.isProjectedSubMenuWithinScreenBounds(SubMenuOpeningSide.LEFT);
+        boolean canOpenRight = this.isProjectedSubMenuWithinScreenBounds(SubMenuOpeningSide.RIGHT);
+        if (canOpenLeft != canOpenRight) {
+            return canOpenLeft ? SubMenuOpeningSide.LEFT : SubMenuOpeningSide.RIGHT;
+        }
+
+        float leftOverlapArea = this.getProjectedSubMenuChainOverlapArea(SubMenuOpeningSide.LEFT);
+        float rightOverlapArea = this.getProjectedSubMenuChainOverlapArea(SubMenuOpeningSide.RIGHT);
+        int overlapCompare = Float.compare(leftOverlapArea, rightOverlapArea);
+        if (overlapCompare != 0) {
+            return leftOverlapArea < rightOverlapArea ? SubMenuOpeningSide.LEFT : SubMenuOpeningSide.RIGHT;
+        }
+
+        SubMenuOpeningSide preferredSide = this.getPreferredNonOverlappingSubMenuOpeningSide();
+        if (preferredSide != null) {
+            return preferredSide;
+        }
+
         return this.subMenuOpeningSide;
     }
 
