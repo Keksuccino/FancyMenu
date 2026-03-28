@@ -3304,8 +3304,6 @@
   "fancymenu.overlay.menu_bar.tools.afma_creator": "AFMA Creator",
   "fancymenu.overlay.menu_bar.tools.afma_creator.desc": "Create Advanced FancyMenu Animation\nfiles from ordered PNG frame folders.",
   "fancymenu.afma.creator.title": "AFMA Creator",
-  "fancymenu.afma.creator.ffmpeg_required.failed": "AFMA Creator needs a ready FFmpeg installation.\nThe downloader did not finish successfully.",
-  "fancymenu.afma.creator.ffmpeg_required.cancelled": "AFMA Creator launch was cancelled before FFmpeg finished downloading.",
   "fancymenu.afma.creator.browse": "Browse",
   "fancymenu.afma.creator.clear": "Clear",
   "fancymenu.afma.creator.main_frames": "Main Frames Directory",
@@ -3338,8 +3336,6 @@
   "fancymenu.afma.creator.preview.next": "Next Frame",
   "fancymenu.afma.creator.preview.empty": "Run an analysis to build the AFMA preview.",
   "fancymenu.afma.creator.preview.current_frame": "Preview Frame: %s (%s ms)",
-  "fancymenu.afma.creator.ffmpeg_status": "FFmpeg Status: %s",
-  "fancymenu.afma.creator.ffmpeg_binary": "FFmpeg Binary: %s",
   "fancymenu.afma.creator.job_status": "Job: %s",
   "fancymenu.afma.creator.analysis.pending": "No AFMA analysis is available yet.",
   "fancymenu.afma.creator.analysis.stale": "The current analysis is stale. Re-run Analyze to refresh the preview and diagnostics.",
@@ -3350,8 +3346,6 @@
   "fancymenu.afma.creator.summary.alpha": "Alpha Usage: %s",
   "fancymenu.afma.creator.summary.alpha.yes": "Present",
   "fancymenu.afma.creator.summary.alpha.no": "Opaque Only",
-  "fancymenu.afma.creator.ffmpeg_required.failed_retry": "AFMA Creator needs a ready FFmpeg installation.\nThe downloader did not finish successfully.\n\nPress Accept to reopen the downloader.",
-  "fancymenu.afma.creator.ffmpeg_required.cancelled_retry": "AFMA Creator launch was cancelled before FFmpeg finished downloading.\n\nPress Accept to reopen the downloader.",
   "fancymenu.afma.creator.near_lossless": "Near-Lossless Temporal Merge: %s",
   "fancymenu.afma.creator.summary.near_lossless": "Near-Lossless Mode: %s"
 }
