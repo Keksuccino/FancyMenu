@@ -324,7 +324,10 @@ public class AfmaTexture implements ITexture, PlayableResource {
             CloseableUtils.closeQuietly(this.blockInterReferenceCanvas);
             this.blockInterReferenceCanvas = null;
         }
-        this.loadingCompleted.set(false);
+        // Match the older animated-texture contract used by pre-loading:
+        // once decode/setup finished successfully, async loading is complete
+        // even if the first streamed frame has not been uploaded yet.
+        this.loadingCompleted.set(true);
         this.loadingFailed.set(false);
 
         this.requestPlaybackReset();
