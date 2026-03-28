@@ -251,6 +251,8 @@ public class AfmaDecoder implements Closeable {
         } else if ((descriptor.getType() == AfmaFrameOperationType.COPY_RECT_PATCH) && descriptor.requiresPatchPayload()) {
             AfmaPatchRegion patch = Objects.requireNonNull(descriptor.getPatch());
             this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()), patch.getWidth(), patch.getHeight(), 8);
+        } else if (descriptor.getType() == AfmaFrameOperationType.BLOCK_INTER) {
+            this.validateBlockInterPayload(context, descriptor);
         }
     }
 
@@ -361,7 +363,29 @@ public class AfmaDecoder implements Closeable {
             } else if ((descriptor.getType() == AfmaFrameOperationType.COPY_RECT_PATCH) && descriptor.requiresPatchPayload()) {
                 AfmaPatchRegion patch = Objects.requireNonNull(descriptor.getPatch());
                 this.validatePayloadHeader(context, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()), patch.getWidth(), patch.getHeight(), 8);
+            } else if (descriptor.getType() == AfmaFrameOperationType.BLOCK_INTER) {
+                this.validateBlockInterPayload(context, descriptor);
             }
+        }
+    }
+
+    protected void validateBlockInterPayload(@NotNull String context, @NotNull AfmaFrameDescriptor descriptor) throws IOException {
+        AfmaBlockInter blockInter = Objects.requireNonNull(descriptor.getBlockInter(), "AFMA block_inter metadata was NULL");
+        try (InputStream payloadInput = this.openPayload(Objects.requireNonNull(descriptor.getPrimaryPayloadPath()))) {
+            if (payloadInput == null) {
+                throw new IOException(context + " references a missing block_inter payload");
+            }
+            AfmaMetadata activeMetadata = Objects.requireNonNull(this.metadata, "AFMA metadata was NULL");
+            AfmaBlockInterPayloadHelper.validatePayload(
+                    payloadInput.readAllBytes(),
+                    blockInter.getTileSize(),
+                    descriptor.getX(),
+                    descriptor.getY(),
+                    descriptor.getWidth(),
+                    descriptor.getHeight(),
+                    activeMetadata.getCanvasWidth(),
+                    activeMetadata.getCanvasHeight()
+            );
         }
     }
 

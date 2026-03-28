@@ -27,6 +27,8 @@ public class AfmaFrameDescriptor {
     protected AfmaSparsePayload sparse;
     @Nullable
     protected AfmaResidualPayload residual;
+    @Nullable
+    protected AfmaBlockInter block_inter;
 
     public AfmaFrameDescriptor() {
     }
@@ -124,6 +126,19 @@ public class AfmaFrameDescriptor {
         return descriptor;
     }
 
+    @NotNull
+    public static AfmaFrameDescriptor blockInter(@NotNull String path, int x, int y, int width, int height, @NotNull AfmaBlockInter blockInter) {
+        AfmaFrameDescriptor descriptor = new AfmaFrameDescriptor();
+        descriptor.type = AfmaFrameOperationType.BLOCK_INTER;
+        descriptor.path = path;
+        descriptor.x = x;
+        descriptor.y = y;
+        descriptor.width = width;
+        descriptor.height = height;
+        descriptor.block_inter = Objects.requireNonNull(blockInter);
+        return descriptor;
+    }
+
     @Nullable
     public AfmaFrameOperationType getType() {
         return this.type;
@@ -170,6 +185,11 @@ public class AfmaFrameDescriptor {
         return this.residual;
     }
 
+    @Nullable
+    public AfmaBlockInter getBlockInter() {
+        return this.block_inter;
+    }
+
     public boolean isKeyframe() {
         return this.type == AfmaFrameOperationType.FULL;
     }
@@ -180,7 +200,8 @@ public class AfmaFrameDescriptor {
                 || (this.type == AfmaFrameOperationType.RESIDUAL_DELTA_RECT)
                 || (this.type == AfmaFrameOperationType.SPARSE_DELTA_RECT)
                 || (this.type == AfmaFrameOperationType.COPY_RECT_RESIDUAL_PATCH)
-                || (this.type == AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH);
+                || (this.type == AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH)
+                || (this.type == AfmaFrameOperationType.BLOCK_INTER);
     }
 
     public boolean requiresPatchPayload() {
@@ -231,6 +252,9 @@ public class AfmaFrameDescriptor {
         }
         if (this.type == AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH) {
             return copyRectSparsePatch(Objects.requireNonNull(this.copy), newPath, this.getX(), this.getY(), this.getWidth(), this.getHeight(), Objects.requireNonNull(this.sparse));
+        }
+        if (this.type == AfmaFrameOperationType.BLOCK_INTER) {
+            return blockInter(newPath, this.getX(), this.getY(), this.getWidth(), this.getHeight(), Objects.requireNonNull(this.block_inter));
         }
         throw new IllegalStateException("AFMA frame type does not support a primary payload path override: " + this.type);
     }
@@ -353,6 +377,19 @@ public class AfmaFrameDescriptor {
                     throw new IllegalArgumentException(context + " copy_rect_residual_patch frame is missing its residual payload metadata");
                 }
                 this.residual.validate(context + " residual payload");
+            }
+            case BLOCK_INTER -> {
+                if (requireFullFrame) {
+                    throw new IllegalArgumentException(context + " must be a full frame");
+                }
+                if ((this.path == null) || this.path.isBlank()) {
+                    throw new IllegalArgumentException(context + " block_inter frame is missing its payload path");
+                }
+                new AfmaPatchRegion(this.path, this.getX(), this.getY(), this.getWidth(), this.getHeight()).validate(context, canvasWidth, canvasHeight, true);
+                if (this.block_inter == null) {
+                    throw new IllegalArgumentException(context + " block_inter frame is missing its block metadata");
+                }
+                this.block_inter.validate(context + " block metadata", this.getWidth(), this.getHeight());
             }
         }
     }

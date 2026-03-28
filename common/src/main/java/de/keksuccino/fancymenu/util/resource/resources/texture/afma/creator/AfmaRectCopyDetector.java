@@ -73,6 +73,41 @@ public class AfmaRectCopyDetector {
     }
 
     @NotNull
+    public List<MotionVector> collectMotionVectors(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next, boolean includeZeroVector) {
+        AfmaPixelFrameHelper.ensureSameSize(previous, next);
+
+        int width = previous.getWidth();
+        int height = previous.getHeight();
+        int maxDx = Math.min(width - 1, this.maxSearchDistance);
+        int maxDy = Math.min(height - 1, this.maxSearchDistance);
+        List<Integer> candidateDx = this.collectAxisCandidates(previous, next, true, maxDx);
+        List<Integer> candidateDy = this.collectAxisCandidates(previous, next, false, maxDy);
+
+        Set<MotionVector> vectors = new LinkedHashSet<>();
+        if (includeZeroVector) {
+            vectors.add(new MotionVector(0, 0));
+        }
+        for (int dx : candidateDx) {
+            for (int dy : candidateDy) {
+                if (!includeZeroVector && dx == 0 && dy == 0) {
+                    continue;
+                }
+                if ((dx == 0) && (dy == 0)) {
+                    continue;
+                }
+
+                int overlapWidth = width - Math.abs(dx);
+                int overlapHeight = height - Math.abs(dy);
+                if (overlapWidth <= 0 || overlapHeight <= 0) {
+                    continue;
+                }
+                vectors.add(new MotionVector(dx, dy));
+            }
+        }
+        return List.copyOf(vectors);
+    }
+
+    @NotNull
     protected List<Integer> collectAxisCandidates(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next, boolean horizontal, int maxOffset) {
         Set<Integer> offsets = new LinkedHashSet<>();
         offsets.add(0);
@@ -167,6 +202,9 @@ public class AfmaRectCopyDetector {
         public long patchArea() {
             return (this.patchBounds != null) ? this.patchBounds.area() : 0L;
         }
+    }
+
+    public record MotionVector(int dx, int dy) {
     }
 
 }

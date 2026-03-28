@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.fancymenu.util.CloseableUtils;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaBlockInter;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaBlockInterPayloadHelper;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaCopyRect;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameDescriptor;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameIndex;
@@ -361,6 +363,17 @@ public class AfmaPreviewController implements AutoCloseable {
                     this.copyPixelFrame(this.loadPayloadFrame(patch.getPath(), generation), canvasPixels, canvasWidth, patch.getX(), patch.getY());
                 }
             }
+            case BLOCK_INTER -> this.applyBlockInterPayload(
+                    this.loadRawPayloadBytes(Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), generation),
+                    canvasPixels,
+                    canvasWidth,
+                    canvasHeight,
+                    descriptor.getX(),
+                    descriptor.getY(),
+                    descriptor.getWidth(),
+                    descriptor.getHeight(),
+                    Objects.requireNonNull(descriptor.getBlockInter(), "AFMA preview block_inter metadata is missing")
+            );
         }
     }
 
@@ -445,6 +458,68 @@ public class AfmaPreviewController implements AutoCloseable {
         }
         if (residualIndex != expectedResidualBytes) {
             throw new IllegalStateException("AFMA preview sparse delta residual payload ended before the mask data");
+        }
+    }
+
+    protected void applyBlockInterPayload(@NotNull byte[] payloadBytes, @NotNull int[] canvasPixels, int canvasWidth, int canvasHeight,
+                                          int regionX, int regionY, int regionWidth, int regionHeight,
+                                          @NotNull AfmaBlockInter blockInter) throws IOException {
+        AfmaBlockInterPayloadHelper.validatePayload(payloadBytes, blockInter.getTileSize(), regionX, regionY, regionWidth, regionHeight, canvasWidth, canvasHeight);
+        int[] referencePixels = canvasPixels.clone();
+        AfmaBlockInterPayloadHelper.walkPayload(payloadBytes, blockInter.getTileSize(), regionWidth, regionHeight,
+                (localX, localY, tileWidth, tileHeight, mode, dx, dy, channels, changedPixelCount, primaryBytes, secondaryBytes) -> {
+                    int dstX = regionX + localX;
+                    int dstY = regionY + localY;
+                    switch (mode) {
+                        case SKIP -> {
+                        }
+                        case COPY -> this.copyTileFromReference(referencePixels, canvasPixels, canvasWidth, canvasHeight, dstX + dx, dstY + dy, dstX, dstY, tileWidth, tileHeight);
+                        case COPY_DENSE -> {
+                            this.copyTileFromReference(referencePixels, canvasPixels, canvasWidth, canvasHeight, dstX + dx, dstY + dy, dstX, dstY, tileWidth, tileHeight);
+                            this.applyResidualPayload(Objects.requireNonNull(primaryBytes), canvasPixels, canvasWidth, dstX, dstY, tileWidth, tileHeight, new AfmaResidualPayload(channels));
+                        }
+                        case COPY_SPARSE -> {
+                            this.copyTileFromReference(referencePixels, canvasPixels, canvasWidth, canvasHeight, dstX + dx, dstY + dy, dstX, dstY, tileWidth, tileHeight);
+                            this.applySparseResidualPayload(Objects.requireNonNull(primaryBytes), Objects.requireNonNull(secondaryBytes),
+                                    canvasPixels, canvasWidth, dstX, dstY, tileWidth, tileHeight, new AfmaSparsePayload(null, changedPixelCount, channels));
+                        }
+                        case RAW -> this.applyRawTilePayload(Objects.requireNonNull(primaryBytes), channels, canvasPixels, canvasWidth, dstX, dstY, tileWidth, tileHeight);
+                    }
+                });
+    }
+
+    protected void copyTileFromReference(@NotNull int[] referencePixels, @NotNull int[] canvasPixels, int canvasWidth, int canvasHeight,
+                                         int srcX, int srcY, int dstX, int dstY, int width, int height) {
+        for (int localY = 0; localY < height; localY++) {
+            int sourceY = srcY + localY;
+            int targetY = dstY + localY;
+            if ((sourceY < 0) || (sourceY >= canvasHeight) || (targetY < 0) || (targetY >= canvasHeight)) {
+                continue;
+            }
+
+            int srcIndex = (sourceY * canvasWidth) + srcX;
+            int dstIndex = (targetY * canvasWidth) + dstX;
+            System.arraycopy(referencePixels, srcIndex, canvasPixels, dstIndex, width);
+        }
+    }
+
+    protected void applyRawTilePayload(@NotNull byte[] rawBytes, int channels, @NotNull int[] canvasPixels, int canvasWidth,
+                                       int dstX, int dstY, int width, int height) {
+        int expectedBytes = AfmaBlockInterPayloadHelper.expectedRawTileBytes(width, height, channels);
+        if ((expectedBytes <= 0) || (rawBytes.length != expectedBytes)) {
+            throw new IllegalStateException("AFMA preview block_inter raw tile payload dimensions do not match the descriptor");
+        }
+
+        int rawIndex = 0;
+        for (int localY = 0; localY < height; localY++) {
+            int dstRowStart = ((dstY + localY) * canvasWidth) + dstX;
+            for (int localX = 0; localX < width; localX++) {
+                int red = rawBytes[rawIndex++] & 0xFF;
+                int green = rawBytes[rawIndex++] & 0xFF;
+                int blue = rawBytes[rawIndex++] & 0xFF;
+                int alpha = (channels == AfmaResidualPayloadHelper.RGBA_CHANNELS) ? (rawBytes[rawIndex++] & 0xFF) : 0xFF;
+                canvasPixels[dstRowStart + localX] = (alpha << 24) | (red << 16) | (green << 8) | blue;
+            }
         }
     }
 

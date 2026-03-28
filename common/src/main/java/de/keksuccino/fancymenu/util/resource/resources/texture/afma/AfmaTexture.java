@@ -93,6 +93,9 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
     @Nullable
     protected volatile Thread streamThread = null;
+    protected volatile boolean sequenceUsesBlockInter = false;
+    @Nullable
+    protected volatile NativeImage blockInterReferenceCanvas = null;
     protected volatile boolean playbackInitialized = false;
     protected volatile boolean playbackIntro = false;
     protected volatile int playbackIndex = -1;
@@ -312,10 +315,33 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
         this.frameDelaysMs = normalDelays;
         this.introFrameDelaysMs = introDelays;
+        this.sequenceUsesBlockInter = this.sequenceUsesBlockInter(activeFrameIndex);
+        if (!this.sequenceUsesBlockInter) {
+            CloseableUtils.closeQuietly(this.blockInterReferenceCanvas);
+            this.blockInterReferenceCanvas = null;
+        } else if ((this.blockInterReferenceCanvas != null)
+                && ((this.blockInterReferenceCanvas.getWidth() != this.width) || (this.blockInterReferenceCanvas.getHeight() != this.height))) {
+            CloseableUtils.closeQuietly(this.blockInterReferenceCanvas);
+            this.blockInterReferenceCanvas = null;
+        }
         this.loadingCompleted.set(false);
         this.loadingFailed.set(false);
 
         this.requestPlaybackReset();
+    }
+
+    protected boolean sequenceUsesBlockInter(@NotNull AfmaFrameIndex activeFrameIndex) {
+        for (AfmaFrameDescriptor descriptor : activeFrameIndex.getIntroFrames()) {
+            if ((descriptor != null) && (descriptor.getType() == AfmaFrameOperationType.BLOCK_INTER)) {
+                return true;
+            }
+        }
+        for (AfmaFrameDescriptor descriptor : activeFrameIndex.getFrames()) {
+            if ((descriptor != null) && (descriptor.getType() == AfmaFrameOperationType.BLOCK_INTER)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected static long sanitizeDelay(long delayMs) {
@@ -447,6 +473,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
                     primaryPayload = this.readRawPayload(activeDecoder, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()));
                     patchPayload = this.readRawPayload(activeDecoder, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()));
                 }
+                case BLOCK_INTER -> primaryPayload = this.readRawPayload(activeDecoder, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()));
             }
         } catch (Exception ex) {
             this.failStreaming("Failed to decode AFMA payload for " + (intro ? "intro" : "normal") + " frame " + index, ex);
@@ -720,6 +747,10 @@ public class AfmaTexture implements ITexture, PlayableResource {
         AfmaFrameOperationType type = Objects.requireNonNull(descriptor.getType(), "AFMA frame descriptor type was NULL");
 
         try {
+            if (type == AfmaFrameOperationType.BLOCK_INTER) {
+                NativeImage referenceCanvas = this.ensureBlockInterReferenceCanvas(canvas);
+                AfmaNativeImageHelper.copyRect(canvas, 0, 0, referenceCanvas, 0, 0, canvas.getWidth(), canvas.getHeight());
+            }
             switch (type) {
                 case SAME -> {
                 }
@@ -807,6 +838,18 @@ public class AfmaTexture implements ITexture, PlayableResource {
                     );
                     this.uploadDirtyRect(currentTexture, canvas, dirtyRect);
                 }
+                case BLOCK_INTER -> {
+                    this.applyBlockInterPayload(
+                            this.requireRawPayload(preparedFrame.primaryPayload, "AFMA block_inter payload was NULL"),
+                            canvas,
+                            descriptor.getX(),
+                            descriptor.getY(),
+                            descriptor.getWidth(),
+                            descriptor.getHeight(),
+                            Objects.requireNonNull(descriptor.getBlockInter(), "AFMA block_inter metadata was NULL")
+                    );
+                    this.uploadDirtyRect(currentTexture, canvas, new AfmaRect(descriptor.getX(), descriptor.getY(), descriptor.getWidth(), descriptor.getHeight()));
+                }
             }
         } catch (Exception ex) {
             throw new IllegalStateException("Failed to apply AFMA frame " + preparedFrame.index + " (" + type + ")", ex);
@@ -845,6 +888,68 @@ public class AfmaTexture implements ITexture, PlayableResource {
                 sparsePayload.getChangedPixelCount(),
                 sparsePayload.getChannels()
         );
+    }
+
+    protected void applyBlockInterPayload(@NotNull RawPayload blockPayload, @NotNull NativeImage canvas,
+                                          int regionX, int regionY, int regionWidth, int regionHeight,
+                                          @NotNull AfmaBlockInter blockInter) throws IOException {
+        NativeImage referenceCanvas = this.ensureBlockInterReferenceCanvas(canvas);
+        AfmaBlockInterPayloadHelper.walkPayload(blockPayload.bytes, blockInter.getTileSize(), regionWidth, regionHeight,
+                (localX, localY, tileWidth, tileHeight, mode, dx, dy, channels, changedPixelCount, primaryBytes, secondaryBytes) -> {
+                    int dstX = regionX + localX;
+                    int dstY = regionY + localY;
+                    switch (mode) {
+                        case SKIP -> {
+                        }
+                        case COPY -> AfmaNativeImageHelper.copyRect(referenceCanvas, dstX + dx, dstY + dy, canvas, dstX, dstY, tileWidth, tileHeight);
+                        case COPY_DENSE -> {
+                            AfmaNativeImageHelper.copyRect(referenceCanvas, dstX + dx, dstY + dy, canvas, dstX, dstY, tileWidth, tileHeight);
+                            this.applyResidualPayload(new RawPayload(Objects.requireNonNull(primaryBytes)), canvas, dstX, dstY, tileWidth, tileHeight, new AfmaResidualPayload(channels));
+                        }
+                        case COPY_SPARSE -> {
+                            AfmaNativeImageHelper.copyRect(referenceCanvas, dstX + dx, dstY + dy, canvas, dstX, dstY, tileWidth, tileHeight);
+                            this.applySparseResidualPayload(new RawPayload(Objects.requireNonNull(primaryBytes)), new RawPayload(Objects.requireNonNull(secondaryBytes)),
+                                    canvas, dstX, dstY, tileWidth, tileHeight, new AfmaSparsePayload(null, changedPixelCount, channels));
+                        }
+                        case RAW -> this.applyRawTilePayload(Objects.requireNonNull(primaryBytes), channels, canvas, dstX, dstY, tileWidth, tileHeight);
+                    }
+                });
+    }
+
+    @NotNull
+    protected NativeImage ensureBlockInterReferenceCanvas(@NotNull NativeImage sourceCanvas) {
+        NativeImage referenceCanvas = this.blockInterReferenceCanvas;
+        if ((referenceCanvas != null)
+                && (referenceCanvas.getWidth() == sourceCanvas.getWidth())
+                && (referenceCanvas.getHeight() == sourceCanvas.getHeight())) {
+            return referenceCanvas;
+        }
+
+        CloseableUtils.closeQuietly(referenceCanvas);
+        this.blockInterReferenceCanvas = new NativeImage(sourceCanvas.getWidth(), sourceCanvas.getHeight(), true);
+        return Objects.requireNonNull(this.blockInterReferenceCanvas);
+    }
+
+    protected void applyRawTilePayload(@NotNull byte[] rawBytes, int channels, @NotNull NativeImage canvas,
+                                       int dstX, int dstY, int width, int height) {
+        int expectedBytes = AfmaBlockInterPayloadHelper.expectedRawTileBytes(width, height, channels);
+        if ((expectedBytes <= 0) || (rawBytes.length != expectedBytes)) {
+            throw new IllegalStateException("AFMA block_inter raw tile payload size does not match the descriptor");
+        }
+
+        int[] unpackedPixels = new int[width * height];
+        int rawIndex = 0;
+        int pixelIndex = 0;
+        for (int localY = 0; localY < height; localY++) {
+            for (int localX = 0; localX < width; localX++) {
+                int red = rawBytes[rawIndex++] & 0xFF;
+                int green = rawBytes[rawIndex++] & 0xFF;
+                int blue = rawBytes[rawIndex++] & 0xFF;
+                int alpha = (channels == AfmaResidualPayloadHelper.RGBA_CHANNELS) ? (rawBytes[rawIndex++] & 0xFF) : 0xFF;
+                unpackedPixels[pixelIndex++] = (alpha << 24) | (red << 16) | (green << 8) | blue;
+            }
+        }
+        AfmaNativeImageHelper.blitPixels(canvas, dstX, dstY, width, height, unpackedPixels, 0, width, false);
     }
 
     @NotNull
@@ -1187,6 +1292,9 @@ public class AfmaTexture implements ITexture, PlayableResource {
         AfmaDecoder activeDecoder = this.decoder;
         this.decoder = null;
         this.frameIndex = null;
+        this.sequenceUsesBlockInter = false;
+        CloseableUtils.closeQuietly(this.blockInterReferenceCanvas);
+        this.blockInterReferenceCanvas = null;
         if (activeDecoder != null) {
             CloseableUtils.closeQuietly(activeDecoder);
         }

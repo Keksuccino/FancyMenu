@@ -19,6 +19,8 @@ public enum AfmaFrameOperationType {
     @SerializedName("copy_rect_residual_patch")
     COPY_RECT_RESIDUAL_PATCH,
     @SerializedName("copy_rect_sparse_patch")
-    COPY_RECT_SPARSE_PATCH
+    COPY_RECT_SPARSE_PATCH,
+    @SerializedName("block_inter")
+    BLOCK_INTER
 
 }

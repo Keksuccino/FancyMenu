@@ -9,7 +9,7 @@ import java.util.Map;
 public class AfmaMetadata {
 
     public static final String FORMAT_NAME = "AFMA";
-    public static final int CURRENT_FORMAT_VERSION = 2;
+    public static final int CURRENT_FORMAT_VERSION = 3;
     public static final int DEFAULT_KEYFRAME_INTERVAL = 30;
 
     @Nullable
