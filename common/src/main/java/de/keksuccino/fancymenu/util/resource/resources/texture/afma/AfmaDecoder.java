@@ -131,7 +131,7 @@ public class AfmaDecoder implements Closeable {
             throw new IOException("AFMA file does not contain any decoded frames");
         }
         if (this.thumbnailBytes != null) {
-            AfmaBinIntraPayloadHelper.validatePayload(this.thumbnailBytes);
+            AfmaBinIntraPayloadHelper.decodePayload(this.thumbnailBytes);
         }
     }
 
