@@ -2295,7 +2295,7 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
         }
         ByteArrayOutputStream payload = new ByteArrayOutputStream();
         writeTilePayload(payload, tile);
-        int size = SectionPacker.pack(payload.toByteArray()).length;
+        int size = AfmaSectionPacker.pack(payload.toByteArray()).length;
         payloadCostCache.put(tile, size);
         return size;
     }
@@ -3638,7 +3638,7 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
     }
 
     private static void writePackedSection(ByteArrayOutputStream out, byte[] rawBytes) throws IOException {
-        byte[] packed = SectionPacker.pack(rawBytes);
+        byte[] packed = AfmaSectionPacker.pack(rawBytes);
         AfmaVarInts.writeUnsigned(out, packed.length);
         out.write(packed);
     }
@@ -3649,7 +3649,7 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
         if (packed.length != length) {
             throw new IOException("Packed section ended early");
         }
-        return new ByteArrayInputStream(SectionPacker.unpack(new ByteArrayInputStream(packed)));
+        return new ByteArrayInputStream(AfmaSectionPacker.unpack(new ByteArrayInputStream(packed)));
     }
 
     private static void writeTilePayload(ByteArrayOutputStream out, TileBlock tile) throws IOException {
