@@ -332,7 +332,6 @@ public class AfmaCreatorState {
 
     protected void runExportJob(@NotNull AfmaEncodeJob job, @NotNull PreparedInputs prepared) {
         File tempFile = null;
-        CachedPlan refreshedCache = null;
         try {
             job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.VALIDATING_SOURCES, "Validating AFMA creator input...", null, 0.10D));
             checkCancelled(job);
@@ -347,10 +346,6 @@ public class AfmaCreatorState {
             }
             checkCancelled(job);
 
-            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Building AFMA export summary...", null, 0.78D));
-            AfmaCreatorAnalysisResult exportAnalysis = this.buildAnalysisResult(exportPlan, prepared.mainSequence, prepared.introSequence, prepared.warnings, thumbnailBytes, prepared.generateThumbnail, job);
-            checkCancelled(job);
-
             job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Writing AFMA file...", prepared.outputFile.getName(), 0.82D));
             tempFile = new File(prepared.outputFile.getParentFile(), prepared.outputFile.getName() + ".tmp");
             org.apache.commons.io.FileUtils.deleteQuietly(tempFile);
@@ -362,40 +357,14 @@ public class AfmaCreatorState {
             this.validateWrittenArchive(tempFile);
             checkCancelled(job);
 
-            exportAnalysis = new AfmaCreatorAnalysisResult(
-                    exportAnalysis.plan(),
-                    exportAnalysis.mainSequence(),
-                    exportAnalysis.introSequence(),
-                    exportAnalysis.summary(),
-                    exportAnalysis.alphaUsed(),
-                    tempFile.length(),
-                    exportAnalysis.warnings()
-            );
-
             Files.move(tempFile.toPath(), prepared.outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             tempFile = null;
-
-            if ((this.cachedPlan == null) || (this.cachedPlan.configurationVersion != prepared.configurationVersion)) {
-                refreshedCache = this.createCachedPlan(prepared.configurationVersion, exportPlan);
-            }
-            if (this.configurationVersion.get() == prepared.configurationVersion) {
-                this.analysisResult = exportAnalysis;
-                this.analysisDirty = false;
-                if (refreshedCache != null) {
-                    this.replaceCachedPlan(refreshedCache);
-                    refreshedCache = null;
-                }
-                this.successfulAnalysisVersion = prepared.configurationVersion;
-            }
-
-            job.completeSuccess(exportAnalysis, prepared.outputFile);
+            job.completeSuccess(null, prepared.outputFile);
         } catch (CancellationException ex) {
             org.apache.commons.io.FileUtils.deleteQuietly(tempFile);
-            closeQuietly(refreshedCache);
             job.completeCancelled();
         } catch (Throwable throwable) {
             org.apache.commons.io.FileUtils.deleteQuietly(tempFile);
-            closeQuietly(refreshedCache);
             LOGGER.error("[FANCYMENU] AFMA creator export job failed", throwable);
             job.completeFailure(throwable);
         }
