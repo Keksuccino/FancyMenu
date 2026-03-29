@@ -554,7 +554,11 @@ public class AfmaCreatorScreen extends Screen {
 
         textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.summary.canvas", result.plan().getMetadata().getCanvasWidth(), result.plan().getMetadata().getCanvasHeight()), rightPanelX, textY, rightWidth, normalTextColor);
         textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.summary.frames", result.summary().mainFrameCount(), result.summary().introFrameCount()), rightPanelX, textY, rightWidth, normalTextColor);
-        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.summary.ops", result.summary().fullFrames(), result.summary().deltaRectFrames(), result.summary().sameFrames(), result.summary().copyRectPatchFrames()), rightPanelX, textY, rightWidth, normalTextColor);
+        String codecName = "unknown";
+        if ((result.plan().getMetadata().getEncoding() != null) && (result.plan().getMetadata().getEncoding().getIntraPayloadCodec() != null)) {
+            codecName = result.plan().getMetadata().getEncoding().getIntraPayloadCodec();
+        }
+        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.summary.codec", codecName), rightPanelX, textY, rightWidth, normalTextColor);
         textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.summary.estimated_size", humanReadableBytes(result.estimatedArchiveBytes())), rightPanelX, textY, rightWidth, normalTextColor);
         textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.summary.alpha", result.alphaUsed() ? Component.translatable("fancymenu.afma.creator.summary.alpha.yes") : Component.translatable("fancymenu.afma.creator.summary.alpha.no")), rightPanelX, textY, rightWidth, normalTextColor);
         textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.summary.near_lossless",

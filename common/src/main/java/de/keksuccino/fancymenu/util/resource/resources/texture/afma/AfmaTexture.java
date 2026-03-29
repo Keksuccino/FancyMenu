@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.codec.AfmaDecodedFrame;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -20,7 +21,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayDeque;
@@ -67,8 +67,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
     @Nullable
     protected volatile AfmaDecoder decoder = null;
-    @Nullable
-    protected volatile AfmaFrameIndex frameIndex = null;
+    protected volatile boolean mainFramesUseIntroSequence = false;
 
     protected final String uniqueId = ScreenCustomization.generateUniqueIdentifier();
 
@@ -85,9 +84,6 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
     @Nullable
     protected volatile Thread streamThread = null;
-    protected volatile boolean sequenceUsesBlockInter = false;
-    @Nullable
-    protected volatile NativeImage blockInterReferenceCanvas = null;
     protected volatile boolean playbackInitialized = false;
     protected volatile boolean playbackIntro = false;
     protected volatile int playbackIndex = -1;
@@ -96,6 +92,8 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
     protected volatile boolean decodeIntro = false;
     protected volatile int decodeIndex = 0;
+    @Nullable
+    protected volatile int[] decodePreviousPixels = null;
 
     @NotNull
     public static AfmaTexture location(@NotNull ResourceLocation location) {
@@ -270,7 +268,6 @@ public class AfmaTexture implements ITexture, PlayableResource {
         }
 
         this.decoder = decodedImage.decoder();
-        AfmaFrameIndex activeFrameIndex = Objects.requireNonNull(decodedImage.decoder().getFrameIndex(), "AfmaDecoder returned NULL for frame index");
         int mainFrameCount = this.decoder.getFrameCount();
         int introCount = this.decoder.getIntroFrameCount();
 
@@ -285,19 +282,13 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
         AfmaMetadata metadata = Objects.requireNonNull(this.decoder.getMetadata(), "AfmaDecoder returned NULL for metadata");
 
-        if ((mainFrameCount <= 0) && (introCount > 0)) {
-            this.frameIndex = new AfmaFrameIndex(activeFrameIndex.getIntroFrames(), java.util.List.of());
-            this.frameCount = introCount;
-            this.introFrameCount = 0;
-        } else {
-            this.frameIndex = activeFrameIndex;
-            this.frameCount = mainFrameCount;
-            this.introFrameCount = introCount;
-        }
+        this.mainFramesUseIntroSequence = (mainFrameCount <= 0) && (introCount > 0);
+        this.frameCount = this.mainFramesUseIntroSequence ? introCount : mainFrameCount;
+        this.introFrameCount = this.mainFramesUseIntroSequence ? 0 : introCount;
 
         long[] normalDelays = new long[this.frameCount];
         for (int i = 0; i < normalDelays.length; i++) {
-            normalDelays[i] = sanitizeDelay(metadata.getFrameTimeForFrame(i, mainFrameCount <= 0));
+            normalDelays[i] = sanitizeDelay(metadata.getFrameTimeForFrame(i, this.mainFramesUseIntroSequence));
         }
 
         long[] introDelays = new long[this.introFrameCount];
@@ -307,15 +298,6 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
         this.frameDelaysMs = normalDelays;
         this.introFrameDelaysMs = introDelays;
-        this.sequenceUsesBlockInter = this.sequenceUsesBlockInter(activeFrameIndex);
-        if (!this.sequenceUsesBlockInter) {
-            CloseableUtils.closeQuietly(this.blockInterReferenceCanvas);
-            this.blockInterReferenceCanvas = null;
-        } else if ((this.blockInterReferenceCanvas != null)
-                && ((this.blockInterReferenceCanvas.getWidth() != this.width) || (this.blockInterReferenceCanvas.getHeight() != this.height))) {
-            CloseableUtils.closeQuietly(this.blockInterReferenceCanvas);
-            this.blockInterReferenceCanvas = null;
-        }
         // Match the older animated-texture contract used by pre-loading:
         // once decode/setup finished successfully, async loading is complete
         // even if the first streamed frame has not been uploaded yet.
@@ -323,20 +305,6 @@ public class AfmaTexture implements ITexture, PlayableResource {
         this.loadingFailed.set(false);
 
         this.requestPlaybackReset();
-    }
-
-    protected boolean sequenceUsesBlockInter(@NotNull AfmaFrameIndex activeFrameIndex) {
-        for (AfmaFrameDescriptor descriptor : activeFrameIndex.getIntroFrames()) {
-            if ((descriptor != null) && (descriptor.getType() == AfmaFrameOperationType.BLOCK_INTER)) {
-                return true;
-            }
-        }
-        for (AfmaFrameDescriptor descriptor : activeFrameIndex.getFrames()) {
-            if ((descriptor != null) && (descriptor.getType() == AfmaFrameOperationType.BLOCK_INTER)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     protected static long sanitizeDelay(long delayMs) {
@@ -439,8 +407,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
     @Nullable
     protected PreparedFrame prepareNextFrame(int generation) {
         AfmaDecoder activeDecoder = this.decoder;
-        AfmaFrameIndex activeFrameIndex = this.frameIndex;
-        if ((activeDecoder == null) || (activeFrameIndex == null)) return null;
+        if (activeDecoder == null) return null;
 
         boolean intro;
         int index;
@@ -451,71 +418,77 @@ public class AfmaTexture implements ITexture, PlayableResource {
             intro = this.decodeIntro;
             index = this.decodeIndex;
         }
-        java.util.List<AfmaFrameDescriptor> sequence = intro ? activeFrameIndex.getIntroFrames() : activeFrameIndex.getFrames();
-        if ((index < 0) || (index >= sequence.size())) {
-            this.failStreaming("AFMA frame index is out of bounds for the active playback sequence", null);
-            return null;
-        }
-        AfmaFrameDescriptor descriptor = sequence.get(index);
         long delay = this.resolveFrameDelay(intro, index);
-
-        FramePayload primaryPayload = null;
-        FramePayload patchPayload = null;
         try {
-            AfmaFrameOperationType type = Objects.requireNonNull(descriptor.getType(), "AFMA frame descriptor type was NULL");
-            switch (type) {
-                case FULL, DELTA_RECT -> primaryPayload = this.readBinIntraPayload(activeDecoder, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()));
-                case RESIDUAL_DELTA_RECT -> primaryPayload = this.readRawPayload(activeDecoder, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()));
-                case SPARSE_DELTA_RECT -> {
-                    primaryPayload = this.readRawPayload(activeDecoder, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()));
-                    patchPayload = this.readRawPayload(activeDecoder, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()));
-                }
-                case SAME -> {
-                }
-                case COPY_RECT_PATCH -> {
-                    if (descriptor.requiresPatchPayload()) {
-                        patchPayload = this.readBinIntraPayload(activeDecoder, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()));
-                    }
-                }
-                case COPY_RECT_RESIDUAL_PATCH -> primaryPayload = this.readRawPayload(activeDecoder, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()));
-                case COPY_RECT_SPARSE_PATCH -> {
-                    primaryPayload = this.readRawPayload(activeDecoder, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()));
-                    patchPayload = this.readRawPayload(activeDecoder, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()));
-                }
-                case BLOCK_INTER -> primaryPayload = this.readRawPayload(activeDecoder, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()));
+            AfmaDecodedFrame decodedFrame = this.resolveDecodedFrame(activeDecoder, intro, index);
+            int[] renderedPixels = decodedFrame.copyPixels();
+            PreparedFrame preparedFrame = this.buildPreparedFrame(intro, index, delay, renderedPixels);
+            if (!this.advanceDecodeCursor(generation)) {
+                preparedFrame.close();
+                return null;
             }
+            return preparedFrame;
         } catch (Exception ex) {
-            this.failStreaming("Failed to decode AFMA payload for " + (intro ? "intro" : "normal") + " frame " + index, ex);
+            this.failStreaming("Failed to decode AFMA frame " + (intro ? "intro" : "normal") + " " + index, ex);
             return null;
-        }
-
-        if (!this.advanceDecodeCursor(generation)) {
-            return null;
-        }
-        return new PreparedFrame(intro, index, delay, descriptor, primaryPayload, patchPayload);
-    }
-
-    @NotNull
-    protected PixelPayload readBinIntraPayload(@NotNull AfmaDecoder activeDecoder, @NotNull String payloadPath) throws IOException {
-        InputStream payloadInput = activeDecoder.openPayload(payloadPath);
-        if (payloadInput == null) {
-            throw new FileNotFoundException("AFMA payload input stream was NULL: " + payloadPath);
-        }
-        try (InputStream closeableInput = payloadInput) {
-            AfmaBinIntraPayloadHelper.DecodedFrame decodedFrame = AfmaBinIntraPayloadHelper.decodePayload(closeableInput.readAllBytes());
-            return new PixelPayload(decodedFrame.width(), decodedFrame.height(), decodedFrame.pixels(), 0, decodedFrame.width(), false);
         }
     }
 
-    @NotNull
-    protected RawPayload readRawPayload(@NotNull AfmaDecoder activeDecoder, @NotNull String payloadPath) throws IOException {
-        InputStream payloadInput = activeDecoder.openPayload(payloadPath);
-        if (payloadInput == null) {
-            throw new FileNotFoundException("AFMA payload input stream was NULL: " + payloadPath);
+    protected @NotNull AfmaDecodedFrame resolveDecodedFrame(@NotNull AfmaDecoder activeDecoder, boolean intro, int index) {
+        AfmaDecodedFrame frame = (intro || this.mainFramesUseIntroSequence) ? activeDecoder.getIntroFrame(index) : activeDecoder.getFrame(index);
+        if (frame == null) {
+            throw new IllegalStateException("AFMA frame index is out of bounds for the active playback sequence");
         }
-        try (InputStream closeableInput = payloadInput) {
-            return new RawPayload(closeableInput.readAllBytes());
+        return frame;
+    }
+
+    protected @NotNull PreparedFrame buildPreparedFrame(boolean intro, int index, long delayMs, @NotNull int[] framePixels) {
+        int[] previousPixels = this.decodePreviousPixels;
+        this.decodePreviousPixels = framePixels;
+
+        if ((previousPixels == null) || (previousPixels.length != framePixels.length)) {
+            return PreparedFrame.fullFrame(intro, index, delayMs, this.width, this.height, framePixels);
         }
+
+        AfmaRect dirtyRect = this.findDirtyRect(previousPixels, framePixels);
+        if (dirtyRect == null) {
+            return PreparedFrame.unchanged(intro, index, delayMs);
+        }
+        return PreparedFrame.dirtyRect(intro, index, delayMs, dirtyRect, this.extractRectPixels(framePixels, dirtyRect));
+    }
+
+    protected @Nullable AfmaRect findDirtyRect(@NotNull int[] previousPixels, @NotNull int[] currentPixels) {
+        int minX = this.width;
+        int minY = this.height;
+        int maxX = -1;
+        int maxY = -1;
+        for (int y = 0; y < this.height; y++) {
+            int rowOffset = y * this.width;
+            for (int x = 0; x < this.width; x++) {
+                int pixelIndex = rowOffset + x;
+                if (previousPixels[pixelIndex] == currentPixels[pixelIndex]) {
+                    continue;
+                }
+                if (x < minX) minX = x;
+                if (y < minY) minY = y;
+                if (x > maxX) maxX = x;
+                if (y > maxY) maxY = y;
+            }
+        }
+        if (maxX < minX || maxY < minY) {
+            return null;
+        }
+        return new AfmaRect(minX, minY, maxX - minX + 1, maxY - minY + 1);
+    }
+
+    protected @NotNull int[] extractRectPixels(@NotNull int[] sourcePixels, @NotNull AfmaRect dirtyRect) {
+        int[] rectPixels = new int[dirtyRect.width() * dirtyRect.height()];
+        for (int localY = 0; localY < dirtyRect.height(); localY++) {
+            int srcOffset = (dirtyRect.y() + localY) * this.width + dirtyRect.x();
+            int dstOffset = localY * dirtyRect.width();
+            System.arraycopy(sourcePixels, srcOffset, rectPixels, dstOffset, dirtyRect.width());
+        }
+        return rectPixels;
     }
 
     protected long resolveFrameDelay(boolean intro, int index) {
@@ -683,116 +656,13 @@ public class AfmaTexture implements ITexture, PlayableResource {
             throw new IllegalStateException("AFMA streaming texture returned NULL pixels");
         }
 
-        AfmaFrameDescriptor descriptor = preparedFrame.descriptor;
-        AfmaFrameOperationType type = Objects.requireNonNull(descriptor.getType(), "AFMA frame descriptor type was NULL");
-
         try {
-            if (type == AfmaFrameOperationType.BLOCK_INTER) {
-                NativeImage referenceCanvas = this.ensureBlockInterReferenceCanvas(canvas);
-                AfmaNativeImageHelper.copyRect(canvas, 0, 0, referenceCanvas, 0, 0, canvas.getWidth(), canvas.getHeight());
-            }
-            switch (type) {
-                case SAME -> {
-                }
-                case FULL -> {
-                    this.copyPayloadIntoCanvas(this.requirePixelPayload(preparedFrame.primaryPayload, "AFMA full frame payload was NULL"), canvas, 0, 0);
-                    currentTexture.upload();
-                }
-                case DELTA_RECT -> {
-                    this.copyPayloadIntoCanvas(this.requirePixelPayload(preparedFrame.primaryPayload, "AFMA delta payload was NULL"),
-                            canvas, descriptor.getX(), descriptor.getY());
-                    this.uploadDirtyRect(currentTexture, canvas, new AfmaRect(descriptor.getX(), descriptor.getY(), descriptor.getWidth(), descriptor.getHeight()));
-                }
-                case RESIDUAL_DELTA_RECT -> {
-                    this.applyResidualPayload(
-                            this.requireRawPayload(preparedFrame.primaryPayload, "AFMA residual delta payload was NULL"),
-                            canvas,
-                            descriptor.getX(),
-                            descriptor.getY(),
-                            descriptor.getWidth(),
-                            descriptor.getHeight(),
-                            Objects.requireNonNull(descriptor.getResidual(), "AFMA residual delta metadata was NULL")
-                    );
-                    this.uploadDirtyRect(currentTexture, canvas, new AfmaRect(descriptor.getX(), descriptor.getY(), descriptor.getWidth(), descriptor.getHeight()));
-                }
-                case SPARSE_DELTA_RECT -> {
-                    this.applySparseResidualPayload(
-                            this.requireRawPayload(preparedFrame.primaryPayload, "AFMA sparse delta mask payload was NULL"),
-                            this.requireRawPayload(preparedFrame.patchPayload, "AFMA sparse delta residual payload was NULL"),
-                            canvas,
-                            descriptor.getX(),
-                            descriptor.getY(),
-                            descriptor.getWidth(),
-                            descriptor.getHeight(),
-                            Objects.requireNonNull(descriptor.getSparse(), "AFMA sparse delta metadata was NULL")
-                    );
-                    this.uploadDirtyRect(currentTexture, canvas, new AfmaRect(descriptor.getX(), descriptor.getY(), descriptor.getWidth(), descriptor.getHeight()));
-                }
-                case COPY_RECT_SPARSE_PATCH -> {
-                    AfmaCopyRect copyRect = Objects.requireNonNull(descriptor.getCopy(), "AFMA copy_rect_sparse_patch is missing its copy section");
-                    AfmaNativeImageHelper.copyRectMemmove(canvas, copyRect);
-                    this.applySparseResidualPayload(
-                            this.requireRawPayload(preparedFrame.primaryPayload, "AFMA copy_rect_sparse_patch mask payload was NULL"),
-                            this.requireRawPayload(preparedFrame.patchPayload, "AFMA copy_rect_sparse_patch residual payload was NULL"),
-                            canvas,
-                            descriptor.getX(),
-                            descriptor.getY(),
-                            descriptor.getWidth(),
-                            descriptor.getHeight(),
-                            Objects.requireNonNull(descriptor.getSparse(), "AFMA copy_rect_sparse_patch metadata was NULL")
-                    );
-                    AfmaRect dirtyRect = AfmaRect.union(
-                            new AfmaRect(copyRect.getDstX(), copyRect.getDstY(), copyRect.getWidth(), copyRect.getHeight()),
-                            new AfmaRect(descriptor.getX(), descriptor.getY(), descriptor.getWidth(), descriptor.getHeight())
-                    );
-                    this.uploadDirtyRect(currentTexture, canvas, dirtyRect);
-                }
-                case COPY_RECT_PATCH -> {
-                    AfmaCopyRect copyRect = Objects.requireNonNull(descriptor.getCopy(), "AFMA copy_rect_patch is missing its copy section");
-                    AfmaNativeImageHelper.copyRectMemmove(canvas, copyRect);
-
-                    AfmaRect dirtyRect = new AfmaRect(copyRect.getDstX(), copyRect.getDstY(), copyRect.getWidth(), copyRect.getHeight());
-                    AfmaPatchRegion patch = descriptor.getPatch();
-                    if (patch != null) {
-                        this.copyPayloadIntoCanvas(this.requirePixelPayload(preparedFrame.patchPayload, "AFMA copy_rect_patch patch payload was NULL"),
-                                canvas, patch.getX(), patch.getY());
-                        dirtyRect = AfmaRect.union(dirtyRect, new AfmaRect(patch.getX(), patch.getY(), patch.getWidth(), patch.getHeight()));
-                    }
-                    this.uploadDirtyRect(currentTexture, canvas, dirtyRect);
-                }
-                case COPY_RECT_RESIDUAL_PATCH -> {
-                    AfmaCopyRect copyRect = Objects.requireNonNull(descriptor.getCopy(), "AFMA copy_rect_residual_patch is missing its copy section");
-                    AfmaNativeImageHelper.copyRectMemmove(canvas, copyRect);
-                    this.applyResidualPayload(
-                            this.requireRawPayload(preparedFrame.primaryPayload, "AFMA copy_rect_residual_patch payload was NULL"),
-                            canvas,
-                            descriptor.getX(),
-                            descriptor.getY(),
-                            descriptor.getWidth(),
-                            descriptor.getHeight(),
-                            Objects.requireNonNull(descriptor.getResidual(), "AFMA copy_rect_residual_patch metadata was NULL")
-                    );
-                    AfmaRect dirtyRect = AfmaRect.union(
-                            new AfmaRect(copyRect.getDstX(), copyRect.getDstY(), copyRect.getWidth(), copyRect.getHeight()),
-                            new AfmaRect(descriptor.getX(), descriptor.getY(), descriptor.getWidth(), descriptor.getHeight())
-                    );
-                    this.uploadDirtyRect(currentTexture, canvas, dirtyRect);
-                }
-                case BLOCK_INTER -> {
-                    this.applyBlockInterPayload(
-                            this.requireRawPayload(preparedFrame.primaryPayload, "AFMA block_inter payload was NULL"),
-                            canvas,
-                            descriptor.getX(),
-                            descriptor.getY(),
-                            descriptor.getWidth(),
-                            descriptor.getHeight(),
-                            Objects.requireNonNull(descriptor.getBlockInter(), "AFMA block_inter metadata was NULL")
-                    );
-                    this.uploadDirtyRect(currentTexture, canvas, new AfmaRect(descriptor.getX(), descriptor.getY(), descriptor.getWidth(), descriptor.getHeight()));
-                }
+            if ((preparedFrame.dirtyRect != null) && (preparedFrame.pixelPayload != null)) {
+                this.copyPayloadIntoCanvas(preparedFrame.pixelPayload, canvas, preparedFrame.dirtyRect.x(), preparedFrame.dirtyRect.y());
+                this.uploadDirtyRect(currentTexture, canvas, preparedFrame.dirtyRect);
             }
         } catch (Exception ex) {
-            throw new IllegalStateException("Failed to apply AFMA frame " + preparedFrame.index + " (" + type + ")", ex);
+            throw new IllegalStateException("Failed to apply AFMA frame " + preparedFrame.index, ex);
         }
     }
 
@@ -807,105 +677,6 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
     protected void copyPayloadIntoCanvas(@NotNull PixelPayload payload, @NotNull NativeImage canvas, int dstX, int dstY) {
         AfmaNativeImageHelper.blitPixels(canvas, dstX, dstY, payload.width, payload.height, payload.pixels, payload.offset, payload.scanlineStride, payload.forceOpaqueAlpha);
-    }
-
-    protected void applyResidualPayload(@NotNull RawPayload residualPayload, @NotNull NativeImage canvas,
-                                        int dstX, int dstY, int width, int height, @NotNull AfmaResidualPayload residualMetadata) {
-        AfmaNativeImageHelper.applyResidualBytes(canvas, dstX, dstY, width, height, residualPayload.bytes, residualMetadata.getChannels());
-    }
-
-    protected void applySparseResidualPayload(@NotNull RawPayload maskPayload, @NotNull RawPayload residualPayload,
-                                              @NotNull NativeImage canvas, int dstX, int dstY, int width, int height,
-                                              @NotNull AfmaSparsePayload sparsePayload) {
-        AfmaNativeImageHelper.applySparseResidualBytes(
-                canvas,
-                dstX,
-                dstY,
-                width,
-                height,
-                maskPayload.bytes,
-                residualPayload.bytes,
-                sparsePayload.getChangedPixelCount(),
-                sparsePayload.getChannels()
-        );
-    }
-
-    protected void applyBlockInterPayload(@NotNull RawPayload blockPayload, @NotNull NativeImage canvas,
-                                          int regionX, int regionY, int regionWidth, int regionHeight,
-                                          @NotNull AfmaBlockInter blockInter) throws IOException {
-        NativeImage referenceCanvas = this.ensureBlockInterReferenceCanvas(canvas);
-        AfmaBlockInterPayloadHelper.walkPayload(blockPayload.bytes, blockInter.getTileSize(), regionWidth, regionHeight,
-                (localX, localY, tileWidth, tileHeight, mode, dx, dy, channels, changedPixelCount, primaryBytes, secondaryBytes) -> {
-                    int dstX = regionX + localX;
-                    int dstY = regionY + localY;
-                    switch (mode) {
-                        case SKIP -> {
-                        }
-                        case COPY -> AfmaNativeImageHelper.copyRect(referenceCanvas, dstX + dx, dstY + dy, canvas, dstX, dstY, tileWidth, tileHeight);
-                        case COPY_DENSE -> {
-                            AfmaNativeImageHelper.copyRect(referenceCanvas, dstX + dx, dstY + dy, canvas, dstX, dstY, tileWidth, tileHeight);
-                            this.applyResidualPayload(new RawPayload(Objects.requireNonNull(primaryBytes)), canvas, dstX, dstY, tileWidth, tileHeight, new AfmaResidualPayload(channels));
-                        }
-                        case COPY_SPARSE -> {
-                            AfmaNativeImageHelper.copyRect(referenceCanvas, dstX + dx, dstY + dy, canvas, dstX, dstY, tileWidth, tileHeight);
-                            this.applySparseResidualPayload(new RawPayload(Objects.requireNonNull(primaryBytes)), new RawPayload(Objects.requireNonNull(secondaryBytes)),
-                                    canvas, dstX, dstY, tileWidth, tileHeight, new AfmaSparsePayload(null, changedPixelCount, channels));
-                        }
-                        case RAW -> this.applyRawTilePayload(Objects.requireNonNull(primaryBytes), channels, canvas, dstX, dstY, tileWidth, tileHeight);
-                    }
-                });
-    }
-
-    @NotNull
-    protected NativeImage ensureBlockInterReferenceCanvas(@NotNull NativeImage sourceCanvas) {
-        NativeImage referenceCanvas = this.blockInterReferenceCanvas;
-        if ((referenceCanvas != null)
-                && (referenceCanvas.getWidth() == sourceCanvas.getWidth())
-                && (referenceCanvas.getHeight() == sourceCanvas.getHeight())) {
-            return referenceCanvas;
-        }
-
-        CloseableUtils.closeQuietly(referenceCanvas);
-        this.blockInterReferenceCanvas = new NativeImage(sourceCanvas.getWidth(), sourceCanvas.getHeight(), true);
-        return Objects.requireNonNull(this.blockInterReferenceCanvas);
-    }
-
-    protected void applyRawTilePayload(@NotNull byte[] rawBytes, int channels, @NotNull NativeImage canvas,
-                                       int dstX, int dstY, int width, int height) {
-        int expectedBytes = AfmaBlockInterPayloadHelper.expectedRawTileBytes(width, height, channels);
-        if ((expectedBytes <= 0) || (rawBytes.length != expectedBytes)) {
-            throw new IllegalStateException("AFMA block_inter raw tile payload size does not match the descriptor");
-        }
-
-        int[] unpackedPixels = new int[width * height];
-        int rawIndex = 0;
-        int pixelIndex = 0;
-        for (int localY = 0; localY < height; localY++) {
-            for (int localX = 0; localX < width; localX++) {
-                int red = rawBytes[rawIndex++] & 0xFF;
-                int green = rawBytes[rawIndex++] & 0xFF;
-                int blue = rawBytes[rawIndex++] & 0xFF;
-                int alpha = (channels == AfmaResidualPayloadHelper.RGBA_CHANNELS) ? (rawBytes[rawIndex++] & 0xFF) : 0xFF;
-                unpackedPixels[pixelIndex++] = (alpha << 24) | (red << 16) | (green << 8) | blue;
-            }
-        }
-        AfmaNativeImageHelper.blitPixels(canvas, dstX, dstY, width, height, unpackedPixels, 0, width, false);
-    }
-
-    @NotNull
-    protected PixelPayload requirePixelPayload(@Nullable FramePayload payload, @NotNull String message) {
-        if (payload instanceof PixelPayload pixelPayload) {
-            return pixelPayload;
-        }
-        throw new IllegalStateException(message);
-    }
-
-    @NotNull
-    protected RawPayload requireRawPayload(@Nullable FramePayload payload, @NotNull String message) {
-        if (payload instanceof RawPayload rawPayload) {
-            return rawPayload;
-        }
-        throw new IllegalStateException(message);
     }
 
     protected boolean isAtNormalCycleBoundary() {
@@ -976,6 +747,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
         this.playbackFrameDelayMs = MIN_FRAME_DELAY_MS;
         this.decodeIntro = this.introFrameCount > 0;
         this.decodeIndex = 0;
+        this.decodePreviousPixels = null;
 
         synchronized (this.streamStateLock) {
             this.clearPrefetchedFramesLocked();
@@ -1240,10 +1012,8 @@ public class AfmaTexture implements ITexture, PlayableResource {
     protected void releaseDecoder() {
         AfmaDecoder activeDecoder = this.decoder;
         this.decoder = null;
-        this.frameIndex = null;
-        this.sequenceUsesBlockInter = false;
-        CloseableUtils.closeQuietly(this.blockInterReferenceCanvas);
-        this.blockInterReferenceCanvas = null;
+        this.mainFramesUseIntroSequence = false;
+        this.decodePreviousPixels = null;
         if (activeDecoder != null) {
             CloseableUtils.closeQuietly(activeDecoder);
         }
@@ -1288,33 +1058,37 @@ public class AfmaTexture implements ITexture, PlayableResource {
         protected final int index;
         protected final long delayMs;
         @NotNull
-        protected final AfmaFrameDescriptor descriptor;
+        protected final AfmaRect dirtyRect;
         @Nullable
-        protected FramePayload primaryPayload;
-        @Nullable
-        protected FramePayload patchPayload;
+        protected PixelPayload pixelPayload;
 
-        protected PreparedFrame(boolean intro, int index, long delayMs, @NotNull AfmaFrameDescriptor descriptor,
-                                @Nullable FramePayload primaryPayload, @Nullable FramePayload patchPayload) {
+        protected PreparedFrame(boolean intro, int index, long delayMs, @NotNull AfmaRect dirtyRect, @Nullable PixelPayload pixelPayload) {
             this.intro = intro;
             this.index = index;
             this.delayMs = delayMs;
-            this.descriptor = descriptor;
-            this.primaryPayload = primaryPayload;
-            this.patchPayload = patchPayload;
+            this.dirtyRect = dirtyRect;
+            this.pixelPayload = pixelPayload;
+        }
+
+        protected static @NotNull PreparedFrame fullFrame(boolean intro, int index, long delayMs, int width, int height, @NotNull int[] pixels) {
+            return new PreparedFrame(intro, index, delayMs, new AfmaRect(0, 0, width, height), new PixelPayload(width, height, pixels, 0, width, false));
+        }
+
+        protected static @NotNull PreparedFrame dirtyRect(boolean intro, int index, long delayMs, @NotNull AfmaRect dirtyRect, @NotNull int[] pixels) {
+            return new PreparedFrame(intro, index, delayMs, dirtyRect, new PixelPayload(dirtyRect.width(), dirtyRect.height(), pixels, 0, dirtyRect.width(), false));
+        }
+
+        protected static @NotNull PreparedFrame unchanged(boolean intro, int index, long delayMs) {
+            return new PreparedFrame(intro, index, delayMs, new AfmaRect(0, 0, 0, 0), null);
         }
 
         @Override
         public void close() {
-            this.primaryPayload = null;
-            this.patchPayload = null;
+            this.pixelPayload = null;
         }
     }
 
-    protected interface FramePayload {
-    }
-
-    protected static class PixelPayload implements FramePayload {
+    protected static class PixelPayload {
         protected final int width;
         protected final int height;
         @NotNull
@@ -1330,15 +1104,6 @@ public class AfmaTexture implements ITexture, PlayableResource {
             this.offset = Math.max(0, offset);
             this.scanlineStride = Math.max(width, scanlineStride);
             this.forceOpaqueAlpha = forceOpaqueAlpha;
-        }
-    }
-
-    protected static class RawPayload implements FramePayload {
-        @NotNull
-        protected final byte[] bytes;
-
-        protected RawPayload(@NotNull byte[] bytes) {
-            this.bytes = bytes;
         }
     }
 

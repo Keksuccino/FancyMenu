@@ -1,7 +1,5 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import de.keksuccino.fancymenu.util.file.FilenameComparator;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaDecoder;
 import org.apache.logging.log4j.LogManager;
@@ -33,8 +31,6 @@ public class AfmaCreatorState {
         thread.setDaemon(true);
         return thread;
     });
-    private static final Gson GSON = new GsonBuilder().create();
-
     private final @NotNull AfmaEncodePlanner planner = new AfmaEncodePlanner();
     private final @NotNull AfmaEncodeAnalyzer analyzer = new AfmaEncodeAnalyzer();
     private final @NotNull AfmaArchiveWriter archiveWriter = new AfmaArchiveWriter();
@@ -312,7 +308,7 @@ public class AfmaCreatorState {
             checkCancelled(job);
 
             job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Summarizing AFMA analysis...", null, 0.80D));
-            AfmaCreatorAnalysisResult result = this.buildAnalysisResult(plan, prepared.mainSequence, prepared.introSequence, prepared.warnings, job);
+            AfmaCreatorAnalysisResult result = this.buildAnalysisResult(plan, prepared.mainSequence, prepared.introSequence, prepared.warnings, null, prepared.generateThumbnail, job);
             checkCancelled(job);
 
             CachedPlan cachedPlan = this.createCachedPlan(prepared.configurationVersion, plan);
@@ -344,31 +340,37 @@ public class AfmaCreatorState {
             AfmaEncodePlan exportPlan = this.resolveExportPlan(prepared, job);
             checkCancelled(job);
 
-            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Building AFMA export summary...", null, 0.68D));
-            AfmaCreatorAnalysisResult exportAnalysis = this.buildAnalysisResult(exportPlan, prepared.mainSequence, prepared.introSequence, prepared.warnings, job);
+            byte[] thumbnailBytes = null;
+            if (prepared.generateThumbnail) {
+                job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Generating AFMA thumbnail...", null, 0.68D));
+                thumbnailBytes = this.buildThumbnailBytes(prepared.mainSequence, prepared.introSequence);
+            }
             checkCancelled(job);
 
-            LinkedHashMap<String, byte[]> exportPayloads = new LinkedHashMap<>(exportPlan.getPayloads());
-            if (prepared.generateThumbnail) {
-                job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Generating AFMA thumbnail...", null, 0.78D));
-                byte[] thumbnail = this.buildThumbnailBytes(prepared.mainSequence, prepared.introSequence);
-                if (thumbnail != null) {
-                    exportPayloads.put("thumbnail.bin", thumbnail);
-                }
-            }
+            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Building AFMA export summary...", null, 0.78D));
+            AfmaCreatorAnalysisResult exportAnalysis = this.buildAnalysisResult(exportPlan, prepared.mainSequence, prepared.introSequence, prepared.warnings, thumbnailBytes, prepared.generateThumbnail, job);
+            checkCancelled(job);
 
-            exportPlan = new AfmaEncodePlan(exportPlan.getMetadata(), exportPlan.getFrameIndex(), exportPayloads, exportPlan.getTotalPayloadBytes());
-
-            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Packing AFMA archive...", prepared.outputFile.getName(), 0.82D));
+            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Writing AFMA file...", prepared.outputFile.getName(), 0.82D));
             tempFile = new File(prepared.outputFile.getParentFile(), prepared.outputFile.getName() + ".tmp");
             org.apache.commons.io.FileUtils.deleteQuietly(tempFile);
-            this.archiveWriter.write(exportPlan, tempFile, job::isCancellationRequested,
-                    (path, progress) -> job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Packing AFMA archive...", path, 0.82D + (0.16D * progress))));
+            this.archiveWriter.write(exportPlan.getMetadata(), prepared.mainSequence, prepared.introSequence, thumbnailBytes, tempFile, job::isCancellationRequested,
+                    (detail, progress) -> job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Writing AFMA file...", detail, 0.82D + (0.16D * progress))));
             checkCancelled(job);
 
-            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Validating AFMA archive...", prepared.outputFile.getName(), 0.985D));
+            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Validating AFMA file...", prepared.outputFile.getName(), 0.985D));
             this.validateWrittenArchive(tempFile);
             checkCancelled(job);
+
+            exportAnalysis = new AfmaCreatorAnalysisResult(
+                    exportAnalysis.plan(),
+                    exportAnalysis.mainSequence(),
+                    exportAnalysis.introSequence(),
+                    exportAnalysis.summary(),
+                    exportAnalysis.alphaUsed(),
+                    tempFile.length(),
+                    exportAnalysis.warnings()
+            );
 
             Files.move(tempFile.toPath(), prepared.outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             tempFile = null;
@@ -481,18 +483,27 @@ public class AfmaCreatorState {
 
     protected @NotNull AfmaCreatorAnalysisResult buildAnalysisResult(@NotNull AfmaEncodePlan plan, @NotNull AfmaSourceSequence mainSequence,
                                                                     @NotNull AfmaSourceSequence introSequence, @NotNull List<String> preparedWarnings,
+                                                                    @Nullable byte[] thumbnailBytes, boolean generateThumbnail,
                                                                     @Nullable AfmaEncodeJob job) throws IOException {
         AfmaEncodeAnalyzer.Summary summary = this.analyzer.summarize(plan);
         List<String> warnings = new ArrayList<>(preparedWarnings);
-        if ((summary.fullFrames() == (summary.mainFrameCount() + summary.introFrameCount())) && ((summary.mainFrameCount() + summary.introFrameCount()) > 1)) {
-            warnings.add("No useful AFMA frame optimization was found for this input sequence.");
-        }
 
         if (job != null) {
             job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Checking AFMA alpha usage...", null, 0.88D));
         }
         boolean alphaUsed = this.detectAlphaUsage(mainSequence, introSequence, job);
-        long estimatedArchiveBytes = estimateArchiveBytes(plan);
+        byte[] estimatedThumbnailBytes = thumbnailBytes;
+        if (generateThumbnail && (estimatedThumbnailBytes == null)) {
+            estimatedThumbnailBytes = this.buildThumbnailBytes(mainSequence, introSequence);
+        }
+        long estimatedArchiveBytes = this.archiveWriter.estimateBytes(
+                plan.getMetadata(),
+                mainSequence,
+                introSequence,
+                estimatedThumbnailBytes,
+                (job != null) ? job::isCancellationRequested : null,
+                null
+        );
         return new AfmaCreatorAnalysisResult(plan.withoutPayloads(), mainSequence, introSequence, summary, alphaUsed, estimatedArchiveBytes, List.copyOf(warnings));
     }
 
@@ -682,14 +693,6 @@ public class AfmaCreatorState {
             result.put(frameIndex, delay);
         }
         return result;
-    }
-
-    protected static long estimateArchiveBytes(@NotNull AfmaEncodePlan plan) {
-        long total = plan.getTotalPayloadBytes();
-        total += GSON.toJson(plan.getMetadata()).getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
-        total += GSON.toJson(plan.getFrameIndex()).getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
-        total += (long) plan.getPayloads().size() * 96L;
-        return total;
     }
 
     protected static void checkCancelled(@Nullable AfmaEncodeJob job) {

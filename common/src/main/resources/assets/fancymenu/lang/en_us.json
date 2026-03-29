@@ -3347,5 +3347,6 @@
   "fancymenu.afma.creator.summary.alpha.yes": "Present",
   "fancymenu.afma.creator.summary.alpha.no": "Opaque Only",
   "fancymenu.afma.creator.near_lossless": "Near-Lossless Temporal Merge: %s",
-  "fancymenu.afma.creator.summary.near_lossless": "Near-Lossless Mode: %s"
+  "fancymenu.afma.creator.summary.near_lossless": "Near-Lossless Mode: %s",
+  "fancymenu.afma.creator.summary.codec": "Codec: %s"
 }
