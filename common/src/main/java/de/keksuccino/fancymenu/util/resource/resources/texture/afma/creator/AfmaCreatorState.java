@@ -487,6 +487,9 @@ public class AfmaCreatorState {
                                                                     @Nullable AfmaEncodeJob job) throws IOException {
         AfmaEncodeAnalyzer.Summary summary = this.analyzer.summarize(plan);
         List<String> warnings = new ArrayList<>(preparedWarnings);
+        if ((summary.fullFrames() == (summary.mainFrameCount() + summary.introFrameCount())) && ((summary.mainFrameCount() + summary.introFrameCount()) > 1)) {
+            warnings.add("No useful AFMA frame optimization was found for this input sequence.");
+        }
 
         if (job != null) {
             job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Checking AFMA alpha usage...", null, 0.88D));
@@ -496,14 +499,7 @@ public class AfmaCreatorState {
         if (generateThumbnail && (estimatedThumbnailBytes == null)) {
             estimatedThumbnailBytes = this.buildThumbnailBytes(mainSequence, introSequence);
         }
-        long estimatedArchiveBytes = this.archiveWriter.estimateBytes(
-                plan.getMetadata(),
-                mainSequence,
-                introSequence,
-                estimatedThumbnailBytes,
-                (job != null) ? job::isCancellationRequested : null,
-                null
-        );
+        long estimatedArchiveBytes = this.archiveWriter.estimateBytes(plan, estimatedThumbnailBytes);
         return new AfmaCreatorAnalysisResult(plan.withoutPayloads(), mainSequence, introSequence, summary, alphaUsed, estimatedArchiveBytes, List.copyOf(warnings));
     }
 

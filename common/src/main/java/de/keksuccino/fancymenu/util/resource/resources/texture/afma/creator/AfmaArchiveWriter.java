@@ -76,19 +76,27 @@ public class AfmaArchiveWriter {
     }
 
     /**
-     * Estimates the final native AFMA file size by running the same frame
-     * normalization and animation compression path that the writer uses for the
-     * on-disk stream, without writing a file.
+     * Produces a cheap creator-side size estimate without running the native
+     * AFMA animation codec.
+     *
+     * <p>The native codec is intentionally memory-heavy during export because it
+     * analyzes the full decoded animation globally. Running that same path again
+     * just to populate the creator's "Estimated AFMA Size" summary would double
+     * the peak memory pressure and can exhaust the heap before the real export
+     * even starts. The creator therefore uses the already computed frame plan as
+     * a heuristic estimate instead of triggering a second full encode.
      */
-    public long estimateBytes(@NotNull AfmaMetadata metadata, @NotNull AfmaSourceSequence mainSequence, @NotNull AfmaSourceSequence introSequence,
-                              @Nullable byte[] thumbnailBytes, @Nullable BooleanSupplier cancellationRequested,
-                              @Nullable ProgressListener progressListener) throws IOException {
-        EncodedAfmaStream encodedStream = this.encodeStream(metadata, mainSequence, introSequence, thumbnailBytes, cancellationRequested, progressListener);
+    public long estimateBytes(@NotNull AfmaEncodePlan plan, @Nullable byte[] thumbnailBytes) {
+        Objects.requireNonNull(plan);
+        long metadataBytes = GSON.toJson(plan.getMetadata()).getBytes(StandardCharsets.UTF_8).length;
+        long frameIndexBytes = GSON.toJson(plan.getFrameIndex()).getBytes(StandardCharsets.UTF_8).length;
+        long animationBytes = frameIndexBytes + plan.getTotalPayloadBytes();
+        long thumbnailSectionBytes = (thumbnailBytes != null) ? thumbnailBytes.length : 0L;
         return Integer.BYTES
                 + Byte.BYTES
-                + estimateSectionBytes(encodedStream.metadataBytes())
-                + estimateSectionBytes(encodedStream.animationBytes())
-                + estimateSectionBytes(encodedStream.thumbnailBytes());
+                + estimateSectionBytes(metadataBytes)
+                + estimateSectionBytes(animationBytes)
+                + estimateSectionBytes(thumbnailSectionBytes);
     }
 
     protected @NotNull EncodedAfmaStream encodeStream(@NotNull AfmaMetadata metadata, @NotNull AfmaSourceSequence mainSequence,
@@ -159,7 +167,11 @@ public class AfmaArchiveWriter {
     }
 
     protected static long estimateSectionBytes(byte @NotNull [] bytes) {
-        return Integer.BYTES + bytes.length;
+        return estimateSectionBytes(bytes.length);
+    }
+
+    protected static long estimateSectionBytes(long bytes) {
+        return Integer.BYTES + Math.max(0L, bytes);
     }
 
     protected static void checkCancelled(@Nullable BooleanSupplier cancellationRequested) {
