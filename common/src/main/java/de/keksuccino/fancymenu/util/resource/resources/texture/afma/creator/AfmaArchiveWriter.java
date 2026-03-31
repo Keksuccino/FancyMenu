@@ -9,12 +9,16 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.afma.codec.AfmaDe
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -55,21 +59,16 @@ public class AfmaArchiveWriter {
         Objects.requireNonNull(introSequence);
         Objects.requireNonNull(outputFile);
 
-        File parent = outputFile.getParentFile();
-        if ((parent != null) && !parent.exists() && !parent.mkdirs()) {
-            throw new IOException("Failed to create AFMA output directory: " + parent.getAbsolutePath());
-        }
-
-        EncodedAfmaStream encodedStream = this.encodeStream(metadata, mainSequence, introSequence, thumbnailBytes, cancellationRequested, progressListener);
-
-        try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile)))) {
+        Path outputDirectory = resolveOutputDirectory(outputFile);
+        try (StagedAfmaStream stagedStream = this.stageStream(metadata, mainSequence, introSequence, thumbnailBytes, outputDirectory, cancellationRequested, progressListener);
+             DataOutputStream out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile)))) {
             out.writeInt(MAGIC);
             out.writeByte(CONTAINER_VERSION);
-            writeSection(out, encodedStream.metadataBytes());
+            writeSection(out, stagedStream.metadataSection());
             reportProgress(progressListener, "metadata", 0.84D);
-            writeSection(out, encodedStream.animationBytes());
+            writeSection(out, stagedStream.animationSection());
             reportProgress(progressListener, "animation", 0.96D);
-            writeSection(out, encodedStream.thumbnailBytes());
+            writeSection(out, stagedStream.thumbnailSection());
             reportProgress(progressListener, "thumbnail", 1.0D);
             out.flush();
         }
@@ -99,19 +98,50 @@ public class AfmaArchiveWriter {
                 + estimateSectionBytes(thumbnailSectionBytes);
     }
 
-    protected @NotNull EncodedAfmaStream encodeStream(@NotNull AfmaMetadata metadata, @NotNull AfmaSourceSequence mainSequence,
-                                                      @NotNull AfmaSourceSequence introSequence, @Nullable byte[] thumbnailBytes,
-                                                      @Nullable BooleanSupplier cancellationRequested,
-                                                      @Nullable ProgressListener progressListener) throws IOException {
-        AfmaDecodedAnimation animation = this.loadDecodedAnimation(mainSequence, introSequence, cancellationRequested, progressListener);
-        checkCancelled(cancellationRequested);
-        reportProgress(progressListener, "animation", 0.72D);
-        byte[] animationBytes = CODEC.compress(animation);
-        checkCancelled(cancellationRequested);
+    protected @NotNull StagedAfmaStream stageStream(@NotNull AfmaMetadata metadata, @NotNull AfmaSourceSequence mainSequence,
+                                                    @NotNull AfmaSourceSequence introSequence, @Nullable byte[] thumbnailBytes,
+                                                    @NotNull Path outputDirectory, @Nullable BooleanSupplier cancellationRequested,
+                                                    @Nullable ProgressListener progressListener) throws IOException {
+        TempSection metadataSection = null;
+        TempSection animationSection = null;
+        TempSection thumbnailSection = null;
+        boolean success = false;
+        try {
+            checkCancelled(cancellationRequested);
+            metadataSection = writeTempSection(outputDirectory, "metadata", GSON.toJson(metadata).getBytes(StandardCharsets.UTF_8));
 
-        byte[] metadataBytes = GSON.toJson(metadata).getBytes(StandardCharsets.UTF_8);
-        byte[] thumbnailSection = (thumbnailBytes != null) ? thumbnailBytes : new byte[0];
-        return new EncodedAfmaStream(metadataBytes, animationBytes, thumbnailSection);
+            checkCancelled(cancellationRequested);
+            AfmaDecodedAnimation animation = this.loadDecodedAnimation(mainSequence, introSequence, cancellationRequested, progressListener);
+            checkCancelled(cancellationRequested);
+            reportProgress(progressListener, "animation", 0.72D);
+            animationSection = writeTempSection(outputDirectory, "animation", CODEC.compress(animation));
+            checkCancelled(cancellationRequested);
+
+            checkCancelled(cancellationRequested);
+            thumbnailSection = writeTempSection(outputDirectory, "thumbnail", (thumbnailBytes != null) ? thumbnailBytes : new byte[0]);
+            success = true;
+            return new StagedAfmaStream(metadataSection, animationSection, thumbnailSection);
+        } finally {
+            if (!success) {
+                deleteQuietly(metadataSection);
+                deleteQuietly(animationSection);
+                deleteQuietly(thumbnailSection);
+            }
+        }
+    }
+
+    protected static @NotNull TempSection writeTempSection(@NotNull Path outputDirectory, @NotNull String sectionName, byte @NotNull [] bytes) throws IOException {
+        Path tempFile = Files.createTempFile(outputDirectory, "fancymenu_afma_" + sectionName + "_", ".tmp");
+        boolean success = false;
+        try {
+            Files.write(tempFile, bytes);
+            success = true;
+            return new TempSection(tempFile, bytes.length);
+        } finally {
+            if (!success) {
+                Files.deleteIfExists(tempFile);
+            }
+        }
     }
 
     /**
@@ -161,9 +191,14 @@ public class AfmaArchiveWriter {
         return result;
     }
 
-    protected static void writeSection(@NotNull DataOutputStream out, @NotNull byte[] bytes) throws IOException {
-        out.writeInt(bytes.length);
-        out.write(bytes);
+    protected static void writeSection(@NotNull DataOutputStream out, @NotNull TempSection section) throws IOException {
+        if (section.length() > Integer.MAX_VALUE) {
+            throw new IOException("AFMA section is too large to write: " + section.path().toAbsolutePath());
+        }
+        out.writeInt((int) section.length());
+        try (InputStream in = new BufferedInputStream(Files.newInputStream(section.path()))) {
+            in.transferTo(out);
+        }
     }
 
     protected static long estimateSectionBytes(byte @NotNull [] bytes) {
@@ -172,6 +207,16 @@ public class AfmaArchiveWriter {
 
     protected static long estimateSectionBytes(long bytes) {
         return Integer.BYTES + Math.max(0L, bytes);
+    }
+
+    protected static @NotNull Path resolveOutputDirectory(@NotNull File outputFile) throws IOException {
+        Path outputPath = outputFile.toPath().toAbsolutePath();
+        Path outputDirectory = outputPath.getParent();
+        if (outputDirectory == null) {
+            throw new IOException("Failed to resolve AFMA output directory for: " + outputFile.getAbsolutePath());
+        }
+        Files.createDirectories(outputDirectory);
+        return outputDirectory;
     }
 
     protected static void checkCancelled(@Nullable BooleanSupplier cancellationRequested) {
@@ -186,11 +231,35 @@ public class AfmaArchiveWriter {
         }
     }
 
+    protected static void deleteQuietly(@Nullable AutoCloseable closeable) {
+        if (closeable == null) {
+            return;
+        }
+        try {
+            closeable.close();
+        } catch (Exception ignored) {
+        }
+    }
+
     @FunctionalInterface
     public interface ProgressListener {
         void update(@NotNull String detail, double progress);
     }
 
-    protected record EncodedAfmaStream(byte @NotNull [] metadataBytes, byte @NotNull [] animationBytes, byte @NotNull [] thumbnailBytes) {
+    protected record TempSection(@NotNull Path path, long length) implements AutoCloseable {
+        @Override
+        public void close() throws IOException {
+            Files.deleteIfExists(this.path);
+        }
+    }
+
+    protected record StagedAfmaStream(@NotNull TempSection metadataSection, @NotNull TempSection animationSection,
+                                      @NotNull TempSection thumbnailSection) implements AutoCloseable {
+        @Override
+        public void close() {
+            deleteQuietly(this.metadataSection);
+            deleteQuietly(this.animationSection);
+            deleteQuietly(this.thumbnailSection);
+        }
     }
 }
