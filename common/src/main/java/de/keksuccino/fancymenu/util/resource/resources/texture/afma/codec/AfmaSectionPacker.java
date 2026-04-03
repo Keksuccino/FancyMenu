@@ -38,6 +38,15 @@ public final class AfmaSectionPacker {
         return new Analysis(best.method.name(), originalLength, best.length, out.toByteArray());
     }
 
+    public static int measurePackedLength(byte[] originalBytes) throws IOException {
+        return measurePackedLength(originalBytes, originalBytes.length);
+    }
+
+    public static int measurePackedLength(byte[] originalBytes, int originalLength) throws IOException {
+        Candidate best = findBestCandidate(originalBytes, originalLength);
+        return 1 + measureUnsignedVarIntSize(originalLength) + measureUnsignedVarIntSize(best.length) + best.length;
+    }
+
     public static byte[] unpack(@NotNull ByteArrayInputStream in) throws IOException {
         int methodId = in.read();
         if (methodId < 0) {
@@ -107,6 +116,15 @@ public final class AfmaSectionPacker {
         AfmaVarInts.writeUnsigned(out, originalLength);
         AfmaVarInts.writeUnsigned(out, best.length);
         out.write(best.bytes, 0, best.length);
+    }
+
+    private static int measureUnsignedVarIntSize(int value) {
+        int remaining = value;
+        int bytes = 1;
+        while ((remaining >>>= 7) != 0) {
+            bytes++;
+        }
+        return bytes;
     }
 
     private record Candidate(@NotNull Method method, byte @NotNull [] bytes, int length) {
