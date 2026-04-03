@@ -9,7 +9,7 @@ import java.util.Map;
 public class AfmaMetadata {
 
     public static final String FORMAT_NAME = "AFMA";
-    public static final int CURRENT_FORMAT_VERSION = 5;
+    public static final int CURRENT_FORMAT_VERSION = 4;
     public static final int DEFAULT_KEYFRAME_INTERVAL = 30;
 
     @Nullable
@@ -48,7 +48,7 @@ public class AfmaMetadata {
         metadata.custom_frame_times = copyIfNotEmpty(customFrameTimes);
         metadata.custom_frame_times_intro = copyIfNotEmpty(customFrameTimesIntro);
         metadata.keyframe_interval = keyframeInterval;
-        metadata.encoding = new Encoding("atlas_pixel_offset_placement_program_v3", "argb", rectCopyEnabled, duplicateFrameElision);
+        metadata.encoding = (rectCopyEnabled && duplicateFrameElision) ? null : new Encoding("bin_intra", null, rectCopyEnabled, duplicateFrameElision);
         metadata.creator = null;
         return metadata;
     }
@@ -123,7 +123,7 @@ public class AfmaMetadata {
 
     public void validate() {
         if ((this.format == null) || !FORMAT_NAME.equalsIgnoreCase(this.format)) {
-            throw new IllegalArgumentException("AFMA metadata is missing the AFMA format marker");
+            throw new IllegalArgumentException("metadata.json is missing the AFMA format marker");
         }
         if (this.format_version != CURRENT_FORMAT_VERSION) {
             throw new IllegalArgumentException("Unsupported AFMA format version: " + this.format_version);
