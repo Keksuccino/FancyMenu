@@ -1109,6 +1109,11 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
         AtlasImage[] atlasImages = buildAtlasImages(atlasTiles, prepared.width, prepared.height, this.tileSize, prepared.columns, prepared.rows);
         Map<TileBlock, int[]> paletteCache = new ConcurrentHashMap<>();
         Map<RemapKey, Integer> remapCostCache = new ConcurrentHashMap<>();
+        final LinkedHashMap<TileBlock, Integer>[] atlasLookupsView = atlasLookups;
+        final AtlasImage[] atlasImagesView = atlasImages;
+        final Map<TileBlock, int[]> paletteCacheView = paletteCache;
+        final Map<RemapKey, Integer> remapCostCacheView = remapCostCache;
+        final List<PatchSource> globalAtlasWindowPatchSourcesView = globalAtlasWindowPatchSources;
 
         reportProgress(progressListener, "Scanning atlas and literal candidates...", 0.28D);
         LinkedHashMap<TileBlock, Integer> tentativeLiteralFrequencies = new LinkedHashMap<>();
@@ -1125,8 +1130,8 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                 if (tile.equals(baseTile)) {
                     continue;
                 }
-                AtlasMatch exactMatch = findAtlasMatch(tile, positionIndex, atlasTiles, atlasLookups);
-                if (exactMatch == null && findHorizontalSamplerMatch(tile, positionIndex, atlasImages, prepared.width, this.tileSize, prepared.columns) == null) {
+                AtlasMatch exactMatch = findAtlasMatch(tile, positionIndex, atlasTiles, atlasLookupsView);
+                if (exactMatch == null && findHorizontalSamplerMatch(tile, positionIndex, atlasImagesView, prepared.width, this.tileSize, prepared.columns) == null) {
                     localLiteralFrequencies.merge(tile, 1, Integer::sum);
                 }
             }
@@ -1144,6 +1149,8 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
             tentativeTileFrequencies.merge(entry.getKey(), entry.getValue(), Integer::sum);
         }
         LinkedHashMap<TileBlock, Integer> tentativeTileDictionaryIds = buildTileDictionary(tentativeTileFrequencies, this.minRepeatCount);
+        final LinkedHashMap<TileBlock, Integer> tentativeTileDictionaryIdsView = tentativeTileDictionaryIds;
+        final LinkedHashMap<TileBlock, EventState>[] stateCacheByPositionView = stateCacheByPosition;
 
         reportProgress(progressListener, "Resolving provisional patch and transform states...", 0.36D);
         LinkedHashMap<TileTransform, Integer> provisionalTransformFrequencies = new LinkedHashMap<>();
@@ -1153,7 +1160,7 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
         @SuppressWarnings("unchecked")
         LinkedHashMap<PatchShapeKey, Integer>[] provisionalPatchShapeFrequenciesByPosition = new LinkedHashMap[prepared.positionCount];
         parallelForIndexed(prepared.positionCount, progressListener, "Resolving provisional patch and transform states...", 0.36D, 0.22D, positionIndex -> {
-            List<PatchSource> patchSources = buildPatchSources(positionIndex, prepared.baseTiles, atlasTiles, globalAtlasWindowPatchSources);
+            List<PatchSource> patchSources = buildPatchSources(positionIndex, prepared.baseTiles, atlasTiles, globalAtlasWindowPatchSourcesView);
             LinkedHashMap<TileBlock, EventState> positionStateCache = new LinkedHashMap<>();
             LinkedHashMap<TileTransform, Integer> localTransformFrequencies = new LinkedHashMap<>();
             LinkedHashMap<PatchShapeKey, Integer> localPatchShapeFrequencies = new LinkedHashMap<>();
@@ -1165,23 +1172,23 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                 }
                 EventState cached = positionStateCache.get(tile);
                 if (cached == null) {
-                    AtlasMatch exactMatch = findAtlasMatch(tile, positionIndex, atlasTiles, atlasLookups);
+                    AtlasMatch exactMatch = findAtlasMatch(tile, positionIndex, atlasTiles, atlasLookupsView);
                     if (exactMatch != null) {
                         cached = exactMatch.samePosition
                                 ? EventState.samePositionAtlas(exactMatch.atlasIndex)
                                 : EventState.windowAtlas(exactMatch.atlasIndex, exactMatch.sourcePosition);
                     } else {
-                        HorizontalSamplerMatch samplerMatch = findHorizontalSamplerMatch(tile, positionIndex, atlasImages, prepared.width, this.tileSize, prepared.columns);
+                        HorizontalSamplerMatch samplerMatch = findHorizontalSamplerMatch(tile, positionIndex, atlasImagesView, prepared.width, this.tileSize, prepared.columns);
                         if (samplerMatch != null) {
                             cached = EventState.horizontalSampler(samplerMatch.atlasIndex, samplerMatch.deltaX);
                         } else {
                             cached = resolveEventState(
                                     tile,
-                                    tentativeTileDictionaryIds,
+                                    tentativeTileDictionaryIdsView,
                                     patchSources,
                                     payloadCostCache,
-                                    remapCostCache,
-                                    paletteCache,
+                                    remapCostCacheView,
+                                    paletteCacheView,
                                     new LinkedHashMap<>(),
                                     Map.of(),
                                     this.maxPatchPixels,
@@ -1211,11 +1218,13 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
         }
         LinkedHashMap<TileTransform, Integer> provisionalTransformDictionaryIds = buildTransformDictionary(provisionalTransformFrequencies, 2);
         LinkedHashMap<PatchShapeKey, Integer> provisionalPatchShapeDictionaryIds = buildPatchShapeDictionary(provisionalPatchShapeFrequencies);
+        final LinkedHashMap<TileTransform, Integer> provisionalTransformDictionaryIdsView = provisionalTransformDictionaryIds;
+        final LinkedHashMap<PatchShapeKey, Integer> provisionalPatchShapeDictionaryIdsView = provisionalPatchShapeDictionaryIds;
 
         reportProgress(progressListener, "Building position programs...", 0.58D);
         PositionProgram[] programArray = new PositionProgram[prepared.positionCount];
         parallelForIndexed(prepared.positionCount, progressListener, "Building position programs...", 0.58D, 0.18D, positionIndex -> {
-            List<PatchSource> patchSources = buildPatchSources(positionIndex, prepared.baseTiles, atlasTiles, globalAtlasWindowPatchSources);
+            List<PatchSource> patchSources = buildPatchSources(positionIndex, prepared.baseTiles, atlasTiles, globalAtlasWindowPatchSourcesView);
             TileBlock baseTile = prepared.baseTiles[positionIndex];
             EventState[] states = new EventState[prepared.totalFrames];
             for (int frameIndex = 0; frameIndex < prepared.totalFrames; frameIndex++) {
@@ -1224,33 +1233,33 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                     states[frameIndex] = null;
                     continue;
                 }
-                EventState cached = stateCacheByPosition[positionIndex].get(tile);
+                EventState cached = stateCacheByPositionView[positionIndex].get(tile);
                 if (cached == null) {
-                    AtlasMatch exactMatch = findAtlasMatch(tile, positionIndex, atlasTiles, atlasLookups);
+                    AtlasMatch exactMatch = findAtlasMatch(tile, positionIndex, atlasTiles, atlasLookupsView);
                     if (exactMatch != null) {
                         cached = exactMatch.samePosition
                                 ? EventState.samePositionAtlas(exactMatch.atlasIndex)
                                 : EventState.windowAtlas(exactMatch.atlasIndex, exactMatch.sourcePosition);
                     } else {
-                        HorizontalSamplerMatch samplerMatch = findHorizontalSamplerMatch(tile, positionIndex, atlasImages, prepared.width, this.tileSize, prepared.columns);
+                        HorizontalSamplerMatch samplerMatch = findHorizontalSamplerMatch(tile, positionIndex, atlasImagesView, prepared.width, this.tileSize, prepared.columns);
                         if (samplerMatch != null) {
                             cached = EventState.horizontalSampler(samplerMatch.atlasIndex, samplerMatch.deltaX);
                         } else {
                             cached = resolveEventState(
                                     tile,
-                                    tentativeTileDictionaryIds,
+                                    tentativeTileDictionaryIdsView,
                                     patchSources,
                                     payloadCostCache,
-                                    remapCostCache,
-                                    paletteCache,
-                                    provisionalTransformDictionaryIds,
-                                    provisionalPatchShapeDictionaryIds,
+                                    remapCostCacheView,
+                                    paletteCacheView,
+                                    provisionalTransformDictionaryIdsView,
+                                    provisionalPatchShapeDictionaryIdsView,
                                     this.maxPatchPixels,
                                     this.maxRemapColors
                             );
                         }
                     }
-                    stateCacheByPosition[positionIndex].put(tile, cached);
+                    stateCacheByPositionView[positionIndex].put(tile, cached);
                 }
                 states[frameIndex] = cached;
             }
