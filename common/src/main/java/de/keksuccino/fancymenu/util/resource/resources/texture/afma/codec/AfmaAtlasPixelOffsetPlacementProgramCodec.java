@@ -1079,7 +1079,8 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                 this.maxAtlasCount,
                 this.regularizedTileBudget,
                 this.localCandidateLimit,
-                payloadCostCache
+                payloadCostCache,
+                (detail, progress) -> reportProgress(progressListener, detail, 0.10D + (0.08D * progress))
         );
 
         reportProgress(progressListener, "Building atlas lookup tables...", 0.18D);
@@ -1931,10 +1932,24 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                                                          int totalFrames, int columns, int rows, int maxAtlasCount,
                                                          int regularizedTileBudget, int localCandidateLimit,
                                                          Map<TileBlock, Integer> payloadCostCache) throws IOException {
+        return buildRegularizedAtlases(tilesByPositionFrame, baseTiles, totalFrames, columns, rows, maxAtlasCount,
+                regularizedTileBudget, localCandidateLimit, payloadCostCache, null);
+    }
+
+    private static TileBlock[][] buildRegularizedAtlases(TileBlock[][] tilesByPositionFrame, TileBlock[] baseTiles,
+                                                         int totalFrames, int columns, int rows, int maxAtlasCount,
+                                                         int regularizedTileBudget, int localCandidateLimit,
+                                                         Map<TileBlock, Integer> payloadCostCache,
+                                                         @Nullable ProgressListener progressListener) throws IOException {
         int positionCount = columns * rows;
         boolean[][] uncovered = initialUncovered(tilesByPositionFrame, baseTiles, positionCount, totalFrames);
         ArrayList<TileBlock[]> atlases = new ArrayList<>(maxAtlasCount);
         for (int step = 0; step < maxAtlasCount; step++) {
+            double atlasStepStart = (double) step / Math.max(1, maxAtlasCount);
+            double atlasStepSpan = 1.0D / Math.max(1, maxAtlasCount);
+            reportProgress(progressListener,
+                    "Building regularized atlases... atlas " + (step + 1) + "/" + maxAtlasCount + " - scoring positions",
+                    atlasStepStart + (atlasStepSpan * 0.02D));
             @SuppressWarnings("unchecked")
             List<LocalTileScore>[] localScoresByPosition = new List[positionCount];
             LinkedHashMap<TileBlock, Double> globalScores = new LinkedHashMap<>();
@@ -1944,8 +1959,17 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                 for (LocalTileScore score : localScores) {
                     globalScores.merge(score.tile, score.score, Double::sum);
                 }
+                reportLoopProgress(progressListener,
+                        "Building regularized atlases... atlas " + (step + 1) + "/" + maxAtlasCount + " - scoring positions",
+                        atlasStepStart + (atlasStepSpan * 0.04D),
+                        atlasStepSpan * 0.36D,
+                        positionIndex,
+                        positionCount);
             }
 
+            reportProgress(progressListener,
+                    "Building regularized atlases... atlas " + (step + 1) + "/" + maxAtlasCount + " - ranking tiles",
+                    atlasStepStart + (atlasStepSpan * 0.42D));
             ArrayList<Map.Entry<TileBlock, Double>> scoredTiles = new ArrayList<>();
             for (Map.Entry<TileBlock, Double> entry : globalScores.entrySet()) {
                 double netScore = entry.getValue() - estimateTilePayloadSize(entry.getKey(), payloadCostCache);
@@ -1963,9 +1987,13 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                 }
             }
             if (allowedTiles.isEmpty()) {
+                reportProgress(progressListener, "Building regularized atlases... no more useful atlas tiles found.", 1.0D);
                 break;
             }
 
+            reportProgress(progressListener,
+                    "Building regularized atlases... atlas " + (step + 1) + "/" + maxAtlasCount + " - selecting row layouts",
+                    atlasStepStart + (atlasStepSpan * 0.52D));
             TileBlock[] atlas = new TileBlock[positionCount];
             for (int row = 0; row < rows; row++) {
                 @SuppressWarnings("unchecked")
@@ -1994,8 +2022,17 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                     int positionIndex = row * columns + column;
                     atlas[positionIndex] = selection[column].tile;
                 }
+                reportLoopProgress(progressListener,
+                        "Building regularized atlases... atlas " + (step + 1) + "/" + maxAtlasCount + " - selecting row layouts",
+                        atlasStepStart + (atlasStepSpan * 0.54D),
+                        atlasStepSpan * 0.22D,
+                        row,
+                        rows);
             }
 
+            reportProgress(progressListener,
+                    "Building regularized atlases... atlas " + (step + 1) + "/" + maxAtlasCount + " - applying coverage",
+                    atlasStepStart + (atlasStepSpan * 0.78D));
             long coveredOccurrences = 0L;
             for (int positionIndex = 0; positionIndex < positionCount; positionIndex++) {
                 TileBlock tile = atlas[positionIndex];
@@ -2008,12 +2045,20 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                         coveredOccurrences++;
                     }
                 }
+                reportLoopProgress(progressListener,
+                        "Building regularized atlases... atlas " + (step + 1) + "/" + maxAtlasCount + " - applying coverage",
+                        atlasStepStart + (atlasStepSpan * 0.80D),
+                        atlasStepSpan * 0.18D,
+                        positionIndex,
+                        positionCount);
             }
             if (coveredOccurrences <= 0L) {
+                reportProgress(progressListener, "Building regularized atlases... no additional frame coverage found.", 1.0D);
                 break;
             }
             atlases.add(atlas);
         }
+        reportProgress(progressListener, "Building regularized atlases... complete.", 1.0D);
         return atlases.toArray(new TileBlock[0][]);
     }
 
