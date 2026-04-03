@@ -116,7 +116,8 @@ public class AfmaArchiveWriter {
             AfmaDecodedAnimation animation = this.loadDecodedAnimation(mainSequence, introSequence, cancellationRequested, progressListener);
             checkCancelled(cancellationRequested);
             reportProgress(progressListener, "Encoding animation stream...", 0.62D);
-            animationSection = writeTempSection(outputDirectory, "animation", out -> CODEC.compress(animation, out));
+            animationSection = writeTempSection(outputDirectory, "animation", out -> CODEC.compress(animation, out,
+                    (detail, progress) -> reportProgress(progressListener, detail, 0.62D + (0.30D * progress))));
             checkCancelled(cancellationRequested);
 
             checkCancelled(cancellationRequested);

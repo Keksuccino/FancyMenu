@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.afma.codec;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -1060,7 +1062,13 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
      */
     @Override
     public void compress(AfmaDecodedAnimation animation, OutputStream output) throws IOException {
+        this.compress(animation, output, null);
+    }
+
+    public void compress(AfmaDecodedAnimation animation, OutputStream output, @Nullable ProgressListener progressListener) throws IOException {
+        reportProgress(progressListener, "Preparing animation tiles...", 0.02D);
         PreparedData prepared = prepare(animation, this.tileSize);
+        reportProgress(progressListener, "Building regularized atlases...", 0.10D);
         LinkedHashMap<TileBlock, Integer> payloadCostCache = new LinkedHashMap<>();
         TileBlock[][] atlasTiles = buildRegularizedAtlases(
                 prepared.tilesByPositionFrame,
@@ -1074,6 +1082,7 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                 payloadCostCache
         );
 
+        reportProgress(progressListener, "Building atlas lookup tables...", 0.18D);
         @SuppressWarnings("unchecked")
         LinkedHashMap<TileBlock, Integer>[] atlasLookups = new LinkedHashMap[atlasTiles.length];
         LinkedHashMap<TileBlock, Integer> structuralTileFrequencies = new LinkedHashMap<>();
@@ -1089,10 +1098,12 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
             }
             atlasLookups[atlasIndex] = atlasLookup;
         }
+        reportProgress(progressListener, "Building atlas images...", 0.24D);
         AtlasImage[] atlasImages = buildAtlasImages(atlasTiles, prepared.width, prepared.height, this.tileSize, prepared.columns, prepared.rows);
         LinkedHashMap<TileBlock, int[]> paletteCache = new LinkedHashMap<>();
         LinkedHashMap<RemapKey, Integer> remapCostCache = new LinkedHashMap<>();
 
+        reportProgress(progressListener, "Scanning atlas and literal candidates...", 0.28D);
         LinkedHashMap<TileBlock, Integer> tentativeLiteralFrequencies = new LinkedHashMap<>();
         @SuppressWarnings("unchecked")
         LinkedHashMap<TileBlock, EventState>[] stateCacheByPosition = new LinkedHashMap[prepared.positionCount];
@@ -1109,6 +1120,7 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                     tentativeLiteralFrequencies.merge(tile, 1, Integer::sum);
                 }
             }
+            reportLoopProgress(progressListener, "Scanning atlas and literal candidates...", 0.28D, 0.08D, positionIndex, prepared.positionCount);
         }
 
         LinkedHashMap<TileBlock, Integer> tentativeTileFrequencies = new LinkedHashMap<>(structuralTileFrequencies);
@@ -1117,6 +1129,7 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
         }
         LinkedHashMap<TileBlock, Integer> tentativeTileDictionaryIds = buildTileDictionary(tentativeTileFrequencies, this.minRepeatCount);
 
+        reportProgress(progressListener, "Resolving provisional patch and transform states...", 0.36D);
         LinkedHashMap<TileTransform, Integer> provisionalTransformFrequencies = new LinkedHashMap<>();
         LinkedHashMap<PatchShapeKey, Integer> provisionalPatchShapeFrequencies = new LinkedHashMap<>();
         @SuppressWarnings("unchecked")
@@ -1165,11 +1178,13 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                     provisionalTransformFrequencies.merge(cached.transform, 1, Integer::sum);
                 }
             }
+            reportLoopProgress(progressListener, "Resolving provisional patch and transform states...", 0.36D, 0.22D, positionIndex, prepared.positionCount);
         }
         LinkedHashMap<TileTransform, Integer> provisionalTransformDictionaryIds = buildTransformDictionary(provisionalTransformFrequencies, 2);
         LinkedHashMap<PatchShapeKey, Integer> provisionalPatchShapeDictionaryIds = buildPatchShapeDictionary(provisionalPatchShapeFrequencies);
         provisionalStateCacheByPosition = null;
 
+        reportProgress(progressListener, "Building position programs...", 0.58D);
         ArrayList<PositionProgram> programs = new ArrayList<>(prepared.positionCount);
         for (int positionIndex = 0; positionIndex < prepared.positionCount; positionIndex++) {
             List<PatchSource> patchSources = buildPatchSources(positionIndex, prepared.baseTiles, atlasTiles);
@@ -1230,13 +1245,16 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
 
             PositionProgram program = new PositionProgram(baseTile, events);
             programs.add(program);
+            reportLoopProgress(progressListener, "Building position programs...", 0.58D, 0.18D, positionIndex, prepared.positionCount);
         }
         atlasImages = null;
         atlasLookups = null;
         stateCacheByPosition = null;
 
+        reportProgress(progressListener, "Selecting placement programs...", 0.76D);
         PlacementSelection placementSelection = selectPlacementPrograms(programs, prepared.columns, prepared.rows, this.minPlacementArea, this.tileSize);
 
+        reportProgress(progressListener, "Building tile and timing dictionaries...", 0.80D);
         LinkedHashMap<TileBlock, Integer> finalTileFrequencies = new LinkedHashMap<>(structuralTileFrequencies);
         LinkedHashMap<TimePatternKey, Integer> timePatternFrequencies = new LinkedHashMap<>();
         LinkedHashMap<TileBlock, Integer> tileDictionaryIds = buildTileDictionary(finalTileFrequencies, this.minRepeatCount);
@@ -1267,6 +1285,7 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
         LinkedHashMap<TileTransform, Integer> transformDictionaryIds = buildTransformDictionary(transformFrequencies, 2);
         LinkedHashMap<PatchShapeKey, Integer> patchShapeDictionaryIds = buildPatchShapeDictionary(patchShapeFrequencies);
 
+        reportProgress(progressListener, "Serializing tile dictionaries...", 0.84D);
         SectionBuffer tileDictionaryMeta = new SectionBuffer();
         SectionBuffer tileDictionaryPayload = new SectionBuffer();
         for (TileBlock tile : tileDictionaryIds.keySet()) {
@@ -1286,6 +1305,7 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
             writePatchShape(patchShapeDictionaryPayload, patchShape);
         }
 
+        reportProgress(progressListener, "Serializing base and atlas predictors...", 0.88D);
         SectionBuffer baseMeta = new SectionBuffer();
         SectionBuffer baseRefs = new SectionBuffer();
         SectionBuffer baseInlinePayload = new SectionBuffer();
@@ -1339,6 +1359,7 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
             writeTimePattern(pattern, timePatternDictionaryMeta);
         }
 
+        reportProgress(progressListener, "Serializing event programs...", 0.92D);
         SectionBuffer timePatternDispatch = new SectionBuffer();
         SectionBuffer timePatternRefs = new SectionBuffer();
         SectionBuffer timePatternInlineMeta = new SectionBuffer();
@@ -1445,8 +1466,10 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                     }
                 }
             }
+            reportLoopProgress(progressListener, "Serializing event programs...", 0.92D, 0.04D, row, prepared.rows);
         }
 
+        reportProgress(progressListener, "Packing animation sections...", 0.96D);
         DataOutputStream dataOut = new DataOutputStream(output);
         dataOut.writeInt(MAGIC);
         dataOut.writeByte(VERSION);
@@ -1490,6 +1513,7 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
         writePackedSection(output, eventTransformRefs);
         writePackedSection(output, eventTransformPayload);
         dataOut.flush();
+        reportProgress(progressListener, "Animation stream encoded.", 1.0D);
     }
 
     /**
@@ -3825,6 +3849,28 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
 
     private static int ceilDiv(int numerator, int denominator) {
         return (numerator + denominator - 1) / denominator;
+    }
+
+    private static void reportProgress(@Nullable ProgressListener progressListener, String detail, double progress) {
+        if (progressListener != null) {
+            progressListener.update(detail, Math.max(0.0D, Math.min(1.0D, progress)));
+        }
+    }
+
+    private static void reportLoopProgress(@Nullable ProgressListener progressListener, String detail, double start, double span, int index, int total) {
+        if (progressListener == null || total <= 0) {
+            return;
+        }
+        if ((index != (total - 1)) && ((index & 15) != 0)) {
+            return;
+        }
+        double normalized = (double) (index + 1) / (double) total;
+        reportProgress(progressListener, detail, start + (span * normalized));
+    }
+
+    @FunctionalInterface
+    public interface ProgressListener {
+        void update(String detail, double progress);
     }
 
     public record WindowStats(
