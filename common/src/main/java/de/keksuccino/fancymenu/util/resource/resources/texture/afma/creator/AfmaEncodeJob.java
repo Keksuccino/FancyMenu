@@ -19,6 +19,7 @@ public class AfmaEncodeJob {
     private volatile @Nullable AfmaCreatorAnalysisResult analysisResult;
     private volatile @Nullable File outputFile;
     private volatile long finishedAtMillis = -1L;
+    private volatile @Nullable Long estimatedRemainingMillis;
 
     public AfmaEncodeJob(@NotNull Kind kind) {
         this.kind = Objects.requireNonNull(kind);
@@ -30,6 +31,7 @@ public class AfmaEncodeJob {
 
     public void cancel() {
         this.cancelled.set(true);
+        this.estimatedRemainingMillis = 0L;
         this.progress.set(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.CANCELLED, "Cancelling AFMA job...", null, this.progress.get().progress()));
     }
 
@@ -42,7 +44,9 @@ public class AfmaEncodeJob {
     }
 
     public void setProgress(@NotNull AfmaEncodeProgress progress) {
-        this.progress.set(Objects.requireNonNull(progress));
+        AfmaEncodeProgress nextProgress = Objects.requireNonNull(progress);
+        this.progress.set(nextProgress);
+        this.estimatedRemainingMillis = this.estimateRemainingMillis(nextProgress);
     }
 
     public @NotNull Status getStatus() {
@@ -74,13 +78,7 @@ public class AfmaEncodeJob {
         if (!this.isRunning()) {
             return 0L;
         }
-        double progressValue = this.progress.get().progress();
-        if (progressValue < 0.02D || progressValue >= 0.995D) {
-            return null;
-        }
-        long elapsedMillis = this.getElapsedMillis();
-        long estimatedTotalMillis = Math.max(elapsedMillis, Math.round(elapsedMillis / progressValue));
-        return Math.max(0L, estimatedTotalMillis - elapsedMillis);
+        return this.estimatedRemainingMillis;
     }
 
     public void completeSuccess(@Nullable AfmaCreatorAnalysisResult analysisResult, @Nullable File outputFile) {
@@ -88,12 +86,14 @@ public class AfmaEncodeJob {
         this.outputFile = outputFile;
         this.status = Status.SUCCEEDED;
         this.finishedAtMillis = System.currentTimeMillis();
+        this.estimatedRemainingMillis = 0L;
         this.progress.set(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.COMPLETE, "AFMA job finished.", null, 1.0D));
     }
 
     public void completeCancelled() {
         this.status = Status.CANCELLED;
         this.finishedAtMillis = System.currentTimeMillis();
+        this.estimatedRemainingMillis = 0L;
         this.progress.set(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.CANCELLED, "AFMA job cancelled.", null, this.progress.get().progress()));
     }
 
@@ -101,7 +101,21 @@ public class AfmaEncodeJob {
         this.failure = Objects.requireNonNull(throwable);
         this.status = Status.FAILED;
         this.finishedAtMillis = System.currentTimeMillis();
+        this.estimatedRemainingMillis = 0L;
         this.progress.set(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.FAILED, "AFMA job failed.", throwable.getMessage(), this.progress.get().progress()));
+    }
+
+    protected @Nullable Long estimateRemainingMillis(@NotNull AfmaEncodeProgress progress) {
+        if (!this.isRunning()) {
+            return 0L;
+        }
+        double progressValue = progress.progress();
+        if (progressValue < 0.02D || progressValue >= 0.995D) {
+            return null;
+        }
+        long elapsedMillis = this.getElapsedMillis();
+        long estimatedTotalMillis = Math.max(elapsedMillis, Math.round(elapsedMillis / progressValue));
+        return Math.max(0L, estimatedTotalMillis - elapsedMillis);
     }
 
     public enum Kind {
