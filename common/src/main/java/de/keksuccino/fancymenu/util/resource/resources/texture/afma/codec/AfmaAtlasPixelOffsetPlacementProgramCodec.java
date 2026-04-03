@@ -1121,6 +1121,8 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
         LinkedHashMap<TileBlock, EventState>[] stateCacheByPosition = new LinkedHashMap[prepared.positionCount];
         @SuppressWarnings("unchecked")
         LinkedHashMap<TileBlock, Integer>[] tentativeLiteralFrequenciesByPosition = new LinkedHashMap[prepared.positionCount];
+        final LinkedHashMap<TileBlock, EventState>[] stateCacheByPositionBuildView = stateCacheByPosition;
+        final LinkedHashMap<TileBlock, Integer>[] tentativeLiteralFrequenciesByPositionView = tentativeLiteralFrequenciesByPosition;
         parallelForIndexed(prepared.positionCount, progressListener, "Scanning atlas and literal candidates...", 0.28D, 0.08D, positionIndex -> {
             LinkedHashMap<TileBlock, EventState> stateCache = new LinkedHashMap<>();
             LinkedHashMap<TileBlock, Integer> localLiteralFrequencies = new LinkedHashMap<>();
@@ -1135,8 +1137,8 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                     localLiteralFrequencies.merge(tile, 1, Integer::sum);
                 }
             }
-            stateCacheByPosition[positionIndex] = stateCache;
-            tentativeLiteralFrequenciesByPosition[positionIndex] = localLiteralFrequencies;
+            stateCacheByPositionBuildView[positionIndex] = stateCache;
+            tentativeLiteralFrequenciesByPositionView[positionIndex] = localLiteralFrequencies;
         });
         for (LinkedHashMap<TileBlock, Integer> localLiteralFrequencies : tentativeLiteralFrequenciesByPosition) {
             for (Map.Entry<TileBlock, Integer> entry : localLiteralFrequencies.entrySet()) {
