@@ -4,10 +4,15 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -3851,12 +3856,25 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
     }
 
     private static void writePackedSection(OutputStream out, SectionBuffer rawBytes) throws IOException {
+        Path packedSectionFile = null;
         try {
-            AfmaSectionPacker.Analysis analysis = AfmaSectionPacker.analyze(rawBytes.buffer(), rawBytes.length());
-            byte[] packedBytes = analysis.packedBytes();
-            AfmaVarInts.writeUnsigned(out, packedBytes.length);
-            out.write(packedBytes);
+            packedSectionFile = Files.createTempFile("fancymenu_afma_packed_section_", ".tmp");
+            try (OutputStream packedOut = new BufferedOutputStream(Files.newOutputStream(packedSectionFile))) {
+                AfmaSectionPacker.packTo(packedOut, rawBytes.buffer(), rawBytes.length());
+                packedOut.flush();
+            }
+            long packedLength = Files.size(packedSectionFile);
+            if (packedLength > Integer.MAX_VALUE) {
+                throw new IOException("Packed AFMA section exceeds supported length: " + packedLength);
+            }
+            AfmaVarInts.writeUnsigned(out, (int) packedLength);
+            try (InputStream packedIn = new BufferedInputStream(Files.newInputStream(packedSectionFile))) {
+                packedIn.transferTo(out);
+            }
         } finally {
+            if (packedSectionFile != null) {
+                Files.deleteIfExists(packedSectionFile);
+            }
             rawBytes.release();
         }
     }

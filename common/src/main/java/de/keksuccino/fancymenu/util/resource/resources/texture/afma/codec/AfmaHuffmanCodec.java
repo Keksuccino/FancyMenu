@@ -1,8 +1,15 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.afma.codec;
 
+import org.jetbrains.annotations.NotNull;
+
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.PriorityQueue;
@@ -17,14 +24,19 @@ public final class AfmaHuffmanCodec {
 
     public static byte[] compress(byte[] input) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        AfmaVarInts.writeUnsigned(out, input.length);
-        if (input.length == 0) {
-            return out.toByteArray();
+        compressTo(out, input, input.length);
+        return out.toByteArray();
+    }
+
+    public static void compressTo(OutputStream out, byte[] input, int inputLength) throws IOException {
+        AfmaVarInts.writeUnsigned(out, inputLength);
+        if (inputLength == 0) {
+            return;
         }
 
         int[] frequencies = new int[256];
-        for (byte value : input) {
-            frequencies[value & 0xFF]++;
+        for (int index = 0; index < inputLength; index++) {
+            frequencies[input[index] & 0xFF]++;
         }
 
         int[] codeLengths = buildCodeLengths(frequencies);
@@ -34,12 +46,41 @@ public final class AfmaHuffmanCodec {
 
         CanonicalTable table = buildCanonicalTable(codeLengths);
         BitOutput bitOutput = new BitOutput(out);
-        for (byte value : input) {
-            int symbol = value & 0xFF;
+        for (int index = 0; index < inputLength; index++) {
+            int symbol = input[index] & 0xFF;
             bitOutput.writeBits(table.codes[symbol], table.codeLengths[symbol]);
         }
         bitOutput.flush();
-        return out.toByteArray();
+    }
+
+    public static void compress(@NotNull Path inputFile, int inputLength, @NotNull OutputStream out) throws IOException {
+        AfmaVarInts.writeUnsigned(out, inputLength);
+        if (inputLength == 0) {
+            return;
+        }
+
+        int[] frequencies = new int[256];
+        try (InputStream in = new BufferedInputStream(Files.newInputStream(inputFile))) {
+            int value;
+            while ((value = in.read()) >= 0) {
+                frequencies[value]++;
+            }
+        }
+
+        int[] codeLengths = buildCodeLengths(frequencies);
+        for (int length : codeLengths) {
+            out.write(length);
+        }
+
+        CanonicalTable table = buildCanonicalTable(codeLengths);
+        BitOutput bitOutput = new BitOutput(out);
+        try (InputStream in = new BufferedInputStream(Files.newInputStream(inputFile))) {
+            int value;
+            while ((value = in.read()) >= 0) {
+                bitOutput.writeBits(table.codes[value], table.codeLengths[value]);
+            }
+        }
+        bitOutput.flush();
     }
 
     public static byte[] decompress(byte[] input) throws IOException {
@@ -196,15 +237,15 @@ public final class AfmaHuffmanCodec {
 
     private static final class BitOutput {
 
-        private final ByteArrayOutputStream out;
+        private final OutputStream out;
         private int currentByte;
         private int bitCount;
 
-        private BitOutput(ByteArrayOutputStream out) {
+        private BitOutput(OutputStream out) {
             this.out = out;
         }
 
-        private void writeBits(int value, int length) {
+        private void writeBits(int value, int length) throws IOException {
             for (int bitIndex = length - 1; bitIndex >= 0; bitIndex--) {
                 this.currentByte = (this.currentByte << 1) | ((value >>> bitIndex) & 1);
                 this.bitCount++;
@@ -216,7 +257,7 @@ public final class AfmaHuffmanCodec {
             }
         }
 
-        private void flush() {
+        private void flush() throws IOException {
             if (this.bitCount > 0) {
                 this.out.write(this.currentByte << (8 - this.bitCount));
                 this.currentByte = 0;

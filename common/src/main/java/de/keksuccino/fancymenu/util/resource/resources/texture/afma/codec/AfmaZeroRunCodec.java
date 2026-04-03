@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.resource.resources.texture.afma.codec;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * Small zero-run codec used by AFMA section packing for metadata-heavy
@@ -22,10 +23,23 @@ public final class AfmaZeroRunCodec {
         }
 
         ByteArrayOutputStream out = new ByteArrayOutputStream(input.length);
+        try {
+            compressTo(out, input, input.length);
+        } catch (IOException e) {
+            throw new IllegalStateException("Unexpected zero-run compression failure", e);
+        }
+        return out.toByteArray();
+    }
+
+    public static void compressTo(OutputStream out, byte[] input, int inputLength) throws IOException {
+        if (inputLength == 0) {
+            return;
+        }
+
         ByteArrayOutputStream literals = new ByteArrayOutputStream();
         int index = 0;
-        while (index < input.length) {
-            int zeroRun = countZeroRun(input, index);
+        while (index < inputLength) {
+            int zeroRun = countZeroRun(input, index, inputLength);
             if (zeroRun >= 4) {
                 flushLiterals(literals, out);
                 int remaining = zeroRun;
@@ -46,7 +60,6 @@ public final class AfmaZeroRunCodec {
         }
 
         flushLiterals(literals, out);
-        return out.toByteArray();
     }
 
     public static byte[] decompress(byte[] input) throws IOException {
@@ -77,8 +90,8 @@ public final class AfmaZeroRunCodec {
         return out.toByteArray();
     }
 
-    private static int countZeroRun(byte[] input, int offset) {
-        int end = Math.min(input.length, offset + MAX_ZERO_RUN);
+    private static int countZeroRun(byte[] input, int offset, int inputLength) {
+        int end = Math.min(inputLength, offset + MAX_ZERO_RUN);
         int index = offset;
         while (index < end && input[index] == 0) {
             index++;
@@ -86,7 +99,7 @@ public final class AfmaZeroRunCodec {
         return index - offset;
     }
 
-    private static void flushLiterals(ByteArrayOutputStream literals, ByteArrayOutputStream out) {
+    private static void flushLiterals(ByteArrayOutputStream literals, OutputStream out) throws IOException {
         if (literals.size() == 0) {
             return;
         }

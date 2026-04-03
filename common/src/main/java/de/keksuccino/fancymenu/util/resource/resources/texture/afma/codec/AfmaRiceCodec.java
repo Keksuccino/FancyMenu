@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.resource.resources.texture.afma.codec;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * Small byte-oriented Rice codec used as one candidate in AFMA section
@@ -18,14 +19,30 @@ public final class AfmaRiceCodec {
             return input;
         }
 
-        byte[] best = null;
+        ByteArrayOutputStream out = new ByteArrayOutputStream(Math.max(16, input.length));
+        try {
+            compressTo(out, input, input.length);
+        } catch (IOException e) {
+            throw new IllegalStateException("Unexpected rice compression failure", e);
+        }
+        return out.toByteArray();
+    }
+
+    public static void compressTo(OutputStream out, byte[] input, int inputLength) throws IOException {
+        if (inputLength == 0) {
+            return;
+        }
+
+        int bestParameter = 0;
+        int bestLength = Integer.MAX_VALUE;
         for (int parameter = 0; parameter <= 7; parameter++) {
-            byte[] encoded = encode(input, parameter);
-            if (best == null || encoded.length < best.length) {
-                best = encoded;
+            int encodedLength = measureEncodedLength(input, inputLength, parameter);
+            if (encodedLength < bestLength) {
+                bestLength = encodedLength;
+                bestParameter = parameter;
             }
         }
-        return best;
+        encode(out, input, inputLength, bestParameter);
     }
 
     public static byte[] decompress(byte[] input, int expectedLength) throws IOException {
@@ -66,12 +83,11 @@ public final class AfmaRiceCodec {
         return output;
     }
 
-    private static byte[] encode(byte[] input, int parameter) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream(Math.max(16, input.length));
+    private static void encode(OutputStream out, byte[] input, int inputLength, int parameter) throws IOException {
         out.write(parameter);
         BitOutput bits = new BitOutput(out);
-        for (byte value : input) {
-            int unsigned = value & 0xFF;
+        for (int index = 0; index < inputLength; index++) {
+            int unsigned = input[index] & 0xFF;
             int quotient = unsigned >>> parameter;
             int remainder = unsigned & ((1 << parameter) - 1);
             for (int i = 0; i < quotient; i++) {
@@ -81,20 +97,29 @@ public final class AfmaRiceCodec {
             bits.writeBits(remainder, parameter);
         }
         bits.flush();
-        return out.toByteArray();
+    }
+
+    private static int measureEncodedLength(byte[] input, int inputLength, int parameter) {
+        long totalBits = 0L;
+        for (int index = 0; index < inputLength; index++) {
+            int unsigned = input[index] & 0xFF;
+            totalBits += (unsigned >>> parameter) + 1L + parameter;
+        }
+        long payloadBytes = 1L + ((totalBits + 7L) >>> 3);
+        return (payloadBytes > Integer.MAX_VALUE) ? Integer.MAX_VALUE : (int) payloadBytes;
     }
 
     private static final class BitOutput {
 
-        private final ByteArrayOutputStream out;
+        private final OutputStream out;
         private int currentByte;
         private int bitCount;
 
-        private BitOutput(ByteArrayOutputStream out) {
+        private BitOutput(OutputStream out) {
             this.out = out;
         }
 
-        private void writeBit(int bit) {
+        private void writeBit(int bit) throws IOException {
             this.currentByte = (this.currentByte << 1) | (bit & 1);
             this.bitCount++;
             if (this.bitCount == 8) {
@@ -102,13 +127,13 @@ public final class AfmaRiceCodec {
             }
         }
 
-        private void writeBits(int value, int bitCount) {
+        private void writeBits(int value, int bitCount) throws IOException {
             for (int shift = bitCount - 1; shift >= 0; shift--) {
                 writeBit((value >>> shift) & 1);
             }
         }
 
-        private void flush() {
+        private void flush() throws IOException {
             if (this.bitCount <= 0) {
                 return;
             }
@@ -116,7 +141,7 @@ public final class AfmaRiceCodec {
             flushByte();
         }
 
-        private void flushByte() {
+        private void flushByte() throws IOException {
             this.out.write(this.currentByte);
             this.currentByte = 0;
             this.bitCount = 0;

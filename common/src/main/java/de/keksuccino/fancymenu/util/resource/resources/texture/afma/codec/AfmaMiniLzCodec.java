@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Arrays;
 
 /**
@@ -28,18 +29,26 @@ public final class AfmaMiniLzCodec {
             return input;
         }
 
+        ByteArrayOutputStream out = new ByteArrayOutputStream(input.length);
+        compressTo(out, input, input.length);
+        return out.toByteArray();
+    }
+
+    public static void compressTo(@NotNull OutputStream out, byte[] input, int inputLength) throws IOException {
+        if (inputLength == 0) {
+            return;
+        }
+
         int[] head = new int[HASH_SIZE];
-        int[] prev = new int[input.length];
+        int[] prev = new int[inputLength];
         Arrays.fill(head, -1);
         Arrays.fill(prev, -1);
 
-        ByteArrayOutputStream out = new ByteArrayOutputStream(input.length);
         ByteArrayOutputStream literals = new ByteArrayOutputStream();
-
         int position = 0;
-        while (position < input.length) {
-            int rleLength = measureRle(input, position);
-            Match bestMatch = findBestMatch(input, position, head, prev);
+        while (position < inputLength) {
+            int rleLength = measureRle(input, position, inputLength);
+            Match bestMatch = findBestMatch(input, position, inputLength, head, prev);
 
             if (rleLength >= MIN_MATCH && rleLength >= bestMatch.length) {
                 flushLiterals(literals, out);
@@ -49,7 +58,7 @@ public final class AfmaMiniLzCodec {
                     out.write(128 + (chunk - MIN_MATCH));
                     out.write(input[position] & 0xFF);
                     for (int i = 0; i < chunk; i++) {
-                        link(input, position + i, head, prev);
+                        link(input, position + i, inputLength, head, prev);
                     }
                     position += chunk;
                     remaining -= chunk;
@@ -66,7 +75,7 @@ public final class AfmaMiniLzCodec {
                     out.write(192 + (chunk - MIN_MATCH));
                     AfmaVarInts.writeUnsigned(out, distance);
                     for (int i = 0; i < chunk; i++) {
-                        link(input, position + i, head, prev);
+                        link(input, position + i, inputLength, head, prev);
                     }
                     position += chunk;
                     remaining -= chunk;
@@ -75,7 +84,7 @@ public final class AfmaMiniLzCodec {
             }
 
             literals.write(input[position]);
-            link(input, position, head, prev);
+            link(input, position, inputLength, head, prev);
             position++;
             if (literals.size() == MAX_LITERAL_RUN) {
                 flushLiterals(literals, out);
@@ -83,7 +92,6 @@ public final class AfmaMiniLzCodec {
         }
 
         flushLiterals(literals, out);
-        return out.toByteArray();
     }
 
     public static byte[] decompress(byte[] compressed) throws IOException {
@@ -131,7 +139,7 @@ public final class AfmaMiniLzCodec {
         return out.toByteArray();
     }
 
-    private static void flushLiterals(ByteArrayOutputStream literals, ByteArrayOutputStream out) {
+    private static void flushLiterals(ByteArrayOutputStream literals, OutputStream out) throws IOException {
         if (literals.size() == 0) {
             return;
         }
@@ -146,8 +154,8 @@ public final class AfmaMiniLzCodec {
         literals.reset();
     }
 
-    private static int measureRle(byte[] input, int position) {
-        int end = Math.min(input.length, position + MAX_RLE_RUN);
+    private static int measureRle(byte[] input, int position, int inputLength) {
+        int end = Math.min(inputLength, position + MAX_RLE_RUN);
         int index = position + 1;
         while (index < end && input[index] == input[position]) {
             index++;
@@ -155,8 +163,8 @@ public final class AfmaMiniLzCodec {
         return index - position;
     }
 
-    private static @NotNull Match findBestMatch(byte[] input, int position, int[] head, int[] prev) {
-        if ((position + MIN_MATCH) > input.length) {
+    private static @NotNull Match findBestMatch(byte[] input, int position, int inputLength, int[] head, int[] prev) {
+        if ((position + MIN_MATCH) > inputLength) {
             return Match.NONE;
         }
 
@@ -171,7 +179,7 @@ public final class AfmaMiniLzCodec {
                 break;
             }
             int length = 0;
-            int max = Math.min(input.length - position, MAX_MATCH_RUN);
+            int max = Math.min(inputLength - position, MAX_MATCH_RUN);
             while (length < max && input[candidate + length] == input[position + length]) {
                 length++;
             }
@@ -189,8 +197,8 @@ public final class AfmaMiniLzCodec {
         return bestLength >= MIN_MATCH ? new Match(bestLength, bestDistance) : Match.NONE;
     }
 
-    private static void link(byte[] input, int position, int[] head, int[] prev) {
-        if ((position + MIN_MATCH) > input.length) {
+    private static void link(byte[] input, int position, int inputLength, int[] head, int[] prev) {
+        if ((position + MIN_MATCH) > inputLength) {
             return;
         }
         int hash = hash(input, position);
