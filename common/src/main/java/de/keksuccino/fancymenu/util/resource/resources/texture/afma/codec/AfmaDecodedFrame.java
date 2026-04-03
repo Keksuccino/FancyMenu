@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 
 /**
- * Decoded frame payload used by the AFMA production codec.
+ * Immutable decoded frame payload used by the AFMA production codec.
  */
 public record AfmaDecodedFrame(int width, int height, @NotNull int[] argbPixels) {
 
@@ -16,6 +16,7 @@ public record AfmaDecodedFrame(int width, int height, @NotNull int[] argbPixels)
         if (argbPixels.length != (width * height)) {
             throw new IllegalArgumentException("Decoded frame pixel buffer size does not match the dimensions");
         }
+        argbPixels = Arrays.copyOf(argbPixels, argbPixels.length);
     }
 
     /**

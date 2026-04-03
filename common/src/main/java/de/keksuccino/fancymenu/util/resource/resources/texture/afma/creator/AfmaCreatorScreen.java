@@ -22,6 +22,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,11 +39,13 @@ public class AfmaCreatorScreen extends Screen {
     private static final int FIELD_HEIGHT = 20;
     private static final int ROW_GAP = 24;
     private static final int SECTION_GAP = 46;
+    private static final int PREVIEW_CONTROLS_HEIGHT = 24;
     private static final int SOURCE_MAIN_ROW_Y = 54;
     private static final int SOURCE_ROW_GAP = 28;
 
     private final @NotNull Screen parentScreen;
     private final @NotNull AfmaCreatorState state = new AfmaCreatorState();
+    private final @NotNull AfmaPreviewController previewController = new AfmaPreviewController();
     private final @NotNull List<PiPWindow> childWindows = new ArrayList<>();
     private boolean syncingWidgets = false;
     private @Nullable AfmaEncodeJob handledTerminalJob = null;
@@ -61,15 +64,21 @@ public class AfmaCreatorScreen extends Screen {
     private @Nullable ExtendedButton browseIntroFramesButton;
     private @Nullable ExtendedButton clearIntroFramesButton;
     private @Nullable ExtendedButton browseOutputButton;
+    private @Nullable ExtendedButton analyzeButton;
     private @Nullable ExtendedButton exportButton;
     private @Nullable ExtendedButton cancelJobButton;
     private @Nullable ExtendedButton closeButton;
+    private @Nullable ExtendedButton previewPlayPauseButton;
+    private @Nullable ExtendedButton previewPreviousButton;
+    private @Nullable ExtendedButton previewNextButton;
 
     private @Nullable CycleButton<AfmaOptimizationPreset> presetCycleButton;
     private @Nullable CycleButton<CommonCycles.CycleEnabledDisabled> rectCopyCycleButton;
     private @Nullable CycleButton<CommonCycles.CycleEnabledDisabled> duplicateCycleButton;
     private @Nullable CycleButton<CommonCycles.CycleEnabledDisabled> nearLosslessCycleButton;
     private @Nullable CycleButton<CommonCycles.CycleEnabledDisabled> thumbnailCycleButton;
+
+    private boolean timelineDragging = false;
 
     public AfmaCreatorScreen(@NotNull Screen parentScreen) {
         super(Component.translatable("fancymenu.afma.creator.title"));
@@ -162,9 +171,14 @@ public class AfmaCreatorScreen extends Screen {
         this.nearLosslessCycleButton = this.addToggleButton("fancymenu.afma.creator.near_lossless", this.state.isNearLosslessEnabled(), value -> this.state.setNearLosslessEnabled(value));
         this.thumbnailCycleButton = this.addToggleButton("fancymenu.afma.creator.thumbnail", this.state.isGenerateThumbnail(), value -> this.state.setGenerateThumbnail(value));
 
+        this.analyzeButton = this.addStyledButton(Component.translatable("fancymenu.afma.creator.analyze"), button -> this.startAnalysis());
         this.exportButton = this.addStyledButton(Component.translatable("fancymenu.afma.creator.export"), button -> this.startExport());
         this.cancelJobButton = this.addStyledButton(Component.translatable("fancymenu.common_components.cancel"), button -> this.state.cancelCurrentJob());
         this.closeButton = this.addStyledButton(Component.translatable("fancymenu.common.close"), button -> this.onClose());
+
+        this.previewPlayPauseButton = this.addStyledButton(Component.translatable("fancymenu.afma.creator.preview.play"), button -> this.previewController.togglePlaying());
+        this.previewPreviousButton = this.addStyledButton(Component.translatable("fancymenu.afma.creator.preview.prev"), button -> this.previewController.stepPrevious());
+        this.previewNextButton = this.addStyledButton(Component.translatable("fancymenu.afma.creator.preview.next"), button -> this.previewController.stepNext());
 
         this.syncWidgetsFromState();
         this.repositionWidgets();
@@ -174,12 +188,15 @@ public class AfmaCreatorScreen extends Screen {
     public void tick() {
         super.tick();
 
-        this.handleCompletedJobIfNeeded();
+        this.previewController.tick();
+        this.syncPreviewFromAnalysisIfNeeded();
         this.updateButtonStates();
         this.repositionWidgets();
     }
 
-    protected void handleCompletedJobIfNeeded() {
+    protected void syncPreviewFromAnalysisIfNeeded() {
+        AfmaCreatorAnalysisResult result = this.state.getAnalysisResult();
+        this.previewController.setAnalysisContext(result, this.state.getPreviewPlan());
         AfmaEncodeJob job = this.state.getCurrentJob();
         if ((job != null) && !job.isRunning() && (job != this.handledTerminalJob)) {
             this.handledTerminalJob = job;
@@ -188,6 +205,15 @@ public class AfmaCreatorScreen extends Screen {
             } else if ((job.getStatus() == AfmaEncodeJob.Status.SUCCEEDED) && (job.getKind() == AfmaEncodeJob.Kind.EXPORT) && (job.getOutputFile() != null)) {
                 Dialogs.openMessage(Component.translatable("fancymenu.afma.creator.export.success", fileToPath(job.getOutputFile())), MessageDialogStyle.INFO);
             }
+        }
+    }
+
+    protected void startAnalysis() {
+        try {
+            this.syncStateFromWidgets();
+            this.state.startAnalysis();
+        } catch (Exception ex) {
+            Dialogs.openMessage(Component.literal(ex.getMessage() != null ? ex.getMessage() : "AFMA analysis failed to start."), MessageDialogStyle.ERROR);
         }
     }
 
@@ -202,11 +228,20 @@ public class AfmaCreatorScreen extends Screen {
 
     protected void updateButtonStates() {
         boolean jobRunning = this.state.isJobRunning();
+        boolean hasAnalysis = this.state.getAnalysisResult() != null;
+        boolean analysisFresh = hasAnalysis && !this.state.isAnalysisDirty();
+        if (this.analyzeButton != null) this.analyzeButton.active = !jobRunning;
         if (this.exportButton != null) this.exportButton.active = !jobRunning;
         if (this.cancelJobButton != null) {
             this.cancelJobButton.active = jobRunning;
             this.cancelJobButton.visible = jobRunning;
         }
+        if (this.previewPlayPauseButton != null) {
+            this.previewPlayPauseButton.active = analysisFresh;
+            this.previewPlayPauseButton.setMessage(Component.translatable(this.previewController.isPlaying() ? "fancymenu.afma.creator.preview.pause" : "fancymenu.afma.creator.preview.play"));
+        }
+        if (this.previewPreviousButton != null) this.previewPreviousButton.active = analysisFresh;
+        if (this.previewNextButton != null) this.previewNextButton.active = analysisFresh;
         if (this.clearIntroFramesButton != null) this.clearIntroFramesButton.active = !this.state.getIntroFramesInputText().isBlank() && !jobRunning;
     }
 
@@ -347,9 +382,15 @@ public class AfmaCreatorScreen extends Screen {
         this.layoutWidget(this.thumbnailCycleButton, leftX + halfWidth + 8, y, halfWidth, FIELD_HEIGHT);
 
         int bottomY = this.height - OUTER_PADDING - FIELD_HEIGHT;
-        this.layoutWidget(this.exportButton, leftX, bottomY, 120, FIELD_HEIGHT);
-        this.layoutWidget(this.cancelJobButton, leftX + 128, bottomY, 120, FIELD_HEIGHT);
+        this.layoutWidget(this.analyzeButton, leftX, bottomY, 120, FIELD_HEIGHT);
+        this.layoutWidget(this.exportButton, leftX + 128, bottomY, 120, FIELD_HEIGHT);
+        this.layoutWidget(this.cancelJobButton, leftX + 256, bottomY, 120, FIELD_HEIGHT);
         this.layoutWidget(this.closeButton, this.width - OUTER_PADDING - 120, bottomY, 120, FIELD_HEIGHT);
+
+        int previewControlsY = this.height - OUTER_PADDING - FIELD_HEIGHT - 110;
+        this.layoutWidget(this.previewPreviousButton, rightPanelX, previewControlsY, 90, FIELD_HEIGHT);
+        this.layoutWidget(this.previewPlayPauseButton, rightPanelX + 98, previewControlsY, 110, FIELD_HEIGHT);
+        this.layoutWidget(this.previewNextButton, rightPanelX + 216, previewControlsY, 90, FIELD_HEIGHT);
     }
 
     protected int layoutPathRow(int x, int y, int fieldWidth, int buttonWidth, @Nullable AbstractWidget field, @Nullable AbstractWidget button) {
@@ -419,6 +460,36 @@ public class AfmaCreatorScreen extends Screen {
         graphics.fill(rightPanelX - 8, panelTop, rightPanelX + rightWidth + 8, panelBottom, UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt());
 
         UIBase.renderText(graphics, this.title, OUTER_PADDING, 16, 0xFFFFFFFF, UIBase.getUITextSizeNormal());
+
+        int previewX = rightPanelX;
+        int previewY = 58;
+        int previewWidth = rightWidth;
+        int previewHeight = Math.max(180, this.height - previewY - 220);
+        graphics.fill(previewX, previewY, previewX + previewWidth, previewY + previewHeight, UIBase.getUITheme().ui_interface_background_color.getColorInt());
+
+        ResourceLocation previewTexture = this.previewController.getTextureLocation();
+        if (previewTexture != null) {
+            int canvasWidth = Math.max(1, this.previewController.getCanvasWidth());
+            int canvasHeight = Math.max(1, this.previewController.getCanvasHeight());
+            float scale = Math.min((float) previewWidth / canvasWidth, (float) previewHeight / canvasHeight);
+            int renderWidth = Math.max(1, Math.round(canvasWidth * scale));
+            int renderHeight = Math.max(1, Math.round(canvasHeight * scale));
+            int renderX = previewX + ((previewWidth - renderWidth) / 2);
+            int renderY = previewY + ((previewHeight - renderHeight) / 2);
+            graphics.blit(previewTexture, renderX, renderY, 0.0F, 0.0F, renderWidth, renderHeight, canvasWidth, canvasHeight);
+        } else {
+            this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.preview.empty"), previewX + 8, previewY + 8, previewWidth - 16, 0xFFA0A0A0);
+        }
+
+        int timelineY = previewY + previewHeight + 14;
+        int timelineX = previewX;
+        int timelineWidth = previewWidth;
+        graphics.fill(timelineX, timelineY, timelineX + timelineWidth, timelineY + 6, 0xFF202020);
+        if (this.previewController.getTimelineSize() > 0 && this.previewController.getCurrentTimelineIndex() >= 0) {
+            float progress = this.previewController.getTimelineSize() <= 1 ? 0.0F : (float) this.previewController.getCurrentTimelineIndex() / (float) (this.previewController.getTimelineSize() - 1);
+            int fillWidth = Math.max(4, Math.round(progress * timelineWidth));
+            graphics.fill(timelineX, timelineY, timelineX + fillWidth, timelineY + 6, UIBase.getUITheme().warning_color.getColorInt());
+        }
     }
 
     protected void renderFieldLabels(@NotNull GuiGraphics graphics) {
@@ -436,6 +507,9 @@ public class AfmaCreatorScreen extends Screen {
         this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.source"), leftX, sourceHeaderY, true);
         this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.playback"), leftX, playbackHeaderY, true);
         this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.optimization"), leftX, optimizationHeaderY, true);
+
+        int rightX = (this.width / 2) + 8;
+        this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.preview"), rightX, 28, true);
     }
 
     protected void drawFieldLabel(@NotNull GuiGraphics graphics, @NotNull Component component, int x, int y, boolean header) {
@@ -445,33 +519,61 @@ public class AfmaCreatorScreen extends Screen {
     protected void renderDiagnostics(@NotNull GuiGraphics graphics) {
         int rightPanelX = (this.width / 2) + 8;
         int rightWidth = this.width - rightPanelX - OUTER_PADDING;
-        int textY = 58;
+        int textY = this.height - OUTER_PADDING - 180;
         int normalTextColor = 0xFFFFFFFF;
+        int dimTextColor = 0xFFA0A0A0;
+        int warningColor = UIBase.getUITheme().warning_color.getColorInt();
 
         AfmaEncodeJob job = this.state.getCurrentJob();
-        if (job == null) {
+        if (job != null) {
+            AfmaEncodeProgress progress = job.getProgress();
+            textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.job_status", progress.task()), rightPanelX, textY, rightWidth, normalTextColor);
+            if (progress.detail() != null && !progress.detail().isBlank()) {
+                textY = this.renderWrappedUiText(graphics, Component.literal(progress.detail()), rightPanelX, textY, rightWidth, 0xFFD0D0D0);
+            }
+            int barWidth = rightWidth;
+            graphics.fill(rightPanelX, textY, rightPanelX + barWidth, textY + 8, 0xFF202020);
+            graphics.fill(rightPanelX, textY, rightPanelX + Math.round(barWidth * (float) progress.progress()), textY + 8, UIBase.getUITheme().success_color.getColorInt());
+            textY += 18;
+        }
+
+        AfmaCreatorAnalysisResult result = this.state.getAnalysisResult();
+        if (result == null) {
+            this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.analysis.pending"), rightPanelX, textY, rightWidth, dimTextColor);
             return;
         }
 
-        AfmaEncodeProgress progress = job.getProgress();
-        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.job_status", progress.task()), rightPanelX, textY, rightWidth, normalTextColor);
-        if (progress.detail() != null && !progress.detail().isBlank()) {
-            textY = this.renderWrappedUiText(graphics, Component.literal(progress.detail()), rightPanelX, textY, rightWidth, 0xFFD0D0D0);
+        if (this.state.isAnalysisDirty()) {
+            textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.analysis.stale"), rightPanelX, textY, rightWidth, warningColor);
         }
-        textY = this.renderWrappedUiText(graphics,
-                Component.translatable("fancymenu.afma.creator.job_progress", formatPercent(progress.progress())),
-                rightPanelX, textY, rightWidth, 0xFFD0D0D0);
-        textY = this.renderWrappedUiText(graphics,
-                Component.translatable("fancymenu.afma.creator.job_elapsed", formatDuration(job.getElapsedMillis())),
-                rightPanelX, textY, rightWidth, 0xFFD0D0D0);
-        Long remainingMillis = job.getEstimatedRemainingMillis();
-        Component remainingText = (remainingMillis != null)
-                ? Component.translatable("fancymenu.afma.creator.job_remaining", formatDuration(remainingMillis))
-                : Component.translatable("fancymenu.afma.creator.job_remaining.calculating");
-        textY = this.renderWrappedUiText(graphics, remainingText, rightPanelX, textY, rightWidth, 0xFFD0D0D0);
-        int barWidth = rightWidth;
-        graphics.fill(rightPanelX, textY, rightPanelX + barWidth, textY + 8, 0xFF202020);
-        graphics.fill(rightPanelX, textY, rightPanelX + Math.round(barWidth * (float) progress.progress()), textY + 8, UIBase.getUITheme().success_color.getColorInt());
+
+        if (this.previewController.getLastFailureMessage() != null) {
+            textY = this.renderWrappedUiText(graphics, Component.literal("Preview Error: " + this.previewController.getLastFailureMessage()), rightPanelX, textY, rightWidth, warningColor);
+            textY += 4;
+        }
+
+        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.summary.canvas", result.plan().getMetadata().getCanvasWidth(), result.plan().getMetadata().getCanvasHeight()), rightPanelX, textY, rightWidth, normalTextColor);
+        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.summary.frames", result.summary().mainFrameCount(), result.summary().introFrameCount()), rightPanelX, textY, rightWidth, normalTextColor);
+        String codecName = "unknown";
+        if ((result.plan().getMetadata().getEncoding() != null) && (result.plan().getMetadata().getEncoding().getIntraPayloadCodec() != null)) {
+            codecName = result.plan().getMetadata().getEncoding().getIntraPayloadCodec();
+        }
+        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.summary.codec", codecName), rightPanelX, textY, rightWidth, normalTextColor);
+        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.summary.estimated_size", humanReadableBytes(result.estimatedArchiveBytes())), rightPanelX, textY, rightWidth, normalTextColor);
+        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.summary.alpha", result.alphaUsed() ? Component.translatable("fancymenu.afma.creator.summary.alpha.yes") : Component.translatable("fancymenu.afma.creator.summary.alpha.no")), rightPanelX, textY, rightWidth, normalTextColor);
+        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.summary.near_lossless",
+                Component.translatable(this.state.isNearLosslessEnabled()
+                        ? "fancymenu.general.cycle.enabled_disabled.enabled"
+                        : "fancymenu.general.cycle.enabled_disabled.disabled")), rightPanelX, textY, rightWidth, normalTextColor);
+        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.preview.current_frame", this.previewController.getCurrentFrameLabel(), this.previewController.getCurrentFrameDurationMs()), rightPanelX, textY, rightWidth, normalTextColor);
+        textY += 4;
+
+        for (String warning : result.warnings()) {
+            textY = this.renderWrappedUiText(graphics, Component.literal("- " + warning), rightPanelX, textY, rightWidth, warningColor);
+            if (textY > (this.height - OUTER_PADDING - 12)) {
+                break;
+            }
+        }
     }
 
     protected int renderWrappedUiText(@NotNull GuiGraphics graphics, @NotNull Component text, int x, int y, int maxWidth, int color) {
@@ -484,19 +586,51 @@ public class AfmaCreatorScreen extends Screen {
         return y;
     }
 
-    protected static @NotNull String formatPercent(double progress) {
-        return String.format(Locale.ROOT, "%.1f%%", Math.max(0.0D, Math.min(1.0D, progress)) * 100.0D);
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (super.mouseClicked(mouseX, mouseY, button)) {
+            return true;
+        }
+        if ((button == 0) && this.isOverTimeline(mouseX, mouseY)) {
+            this.timelineDragging = true;
+            this.seekPreviewFromTimeline(mouseX);
+            return true;
+        }
+        return false;
     }
 
-    protected static @NotNull String formatDuration(long millis) {
-        long totalSeconds = Math.max(0L, millis / 1000L);
-        long hours = totalSeconds / 3600L;
-        long minutes = (totalSeconds % 3600L) / 60L;
-        long seconds = totalSeconds % 60L;
-        if (hours > 0L) {
-            return String.format(Locale.ROOT, "%d:%02d:%02d", hours, minutes, seconds);
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (this.timelineDragging && button == 0) {
+            this.seekPreviewFromTimeline(mouseX);
+            return true;
         }
-        return String.format(Locale.ROOT, "%d:%02d", minutes, seconds);
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        this.timelineDragging = false;
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    protected boolean isOverTimeline(double mouseX, double mouseY) {
+        if (this.state.isAnalysisDirty() || (this.state.getAnalysisResult() == null)) {
+            return false;
+        }
+        int rightPanelX = (this.width / 2) + 8;
+        int rightWidth = this.width - rightPanelX - OUTER_PADDING;
+        int previewY = 58;
+        int previewHeight = Math.max(180, this.height - previewY - 220);
+        int timelineY = previewY + previewHeight + 14;
+        return mouseX >= rightPanelX && mouseX <= (rightPanelX + rightWidth) && mouseY >= timelineY && mouseY <= (timelineY + 10);
+    }
+
+    protected void seekPreviewFromTimeline(double mouseX) {
+        int rightPanelX = (this.width / 2) + 8;
+        int rightWidth = this.width - rightPanelX - OUTER_PADDING;
+        double progress = (mouseX - rightPanelX) / Math.max(1, rightWidth);
+        this.previewController.seekToProgress(progress);
     }
 
     @Override
@@ -544,6 +678,7 @@ public class AfmaCreatorScreen extends Screen {
     public void removed() {
         this.state.cancelCurrentJob();
         this.state.close();
+        this.previewController.close();
         for (PiPWindow window : List.copyOf(this.childWindows)) {
             if (window != null) {
                 try {
@@ -588,6 +723,16 @@ public class AfmaCreatorScreen extends Screen {
     protected static long parseLongOrDefault(@Nullable String value, long fallback) {
         if (!isInteger(value)) return fallback;
         return Long.parseLong(value.trim());
+    }
+
+    protected static @NotNull String humanReadableBytes(long bytes) {
+        if (bytes < 1024L) return bytes + " B";
+        double value = bytes / 1024.0D;
+        if (value < 1024.0D) return String.format(Locale.ROOT, "%.1f KiB", value);
+        value /= 1024.0D;
+        if (value < 1024.0D) return String.format(Locale.ROOT, "%.1f MiB", value);
+        value /= 1024.0D;
+        return String.format(Locale.ROOT, "%.2f GiB", value);
     }
 
 }

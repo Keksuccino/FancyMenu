@@ -1,28 +1,16 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.afma.codec;
 
-import org.jetbrains.annotations.Nullable;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.IntStream;
 
 /**
  * Native AFMA animation codec based on atlas reuse, regional placement programs,
@@ -46,7 +34,6 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
     private static final int PATCH_TRANSFORM_MAX_COLORS = 4;
     private static final double RUN_VALUE = 6.0D;
     private static final double OCCURRENCE_VALUE = 0.25D;
-    private static final int MIN_PARALLEL_WORK = 32;
 
     private final int tileSize;
     private final int maxAtlasCount;
@@ -1071,15 +1058,9 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
      * Compresses a fully decoded animation into the atlas/program stream.
      */
     @Override
-    public void compress(AfmaDecodedAnimation animation, OutputStream output) throws IOException {
-        this.compress(animation, output, null);
-    }
-
-    public void compress(AfmaDecodedAnimation animation, OutputStream output, @Nullable ProgressListener progressListener) throws IOException {
-        reportProgress(progressListener, "Preparing animation tiles...", 0.02D);
+    public byte[] compress(AfmaDecodedAnimation animation) throws IOException {
         PreparedData prepared = prepare(animation, this.tileSize);
-        reportProgress(progressListener, "Building regularized atlases...", 0.10D);
-        Map<TileBlock, Integer> payloadCostCache = new ConcurrentHashMap<>();
+        LinkedHashMap<TileBlock, Integer> payloadCostCache = new LinkedHashMap<>();
         TileBlock[][] atlasTiles = buildRegularizedAtlases(
                 prepared.tilesByPositionFrame,
                 prepared.baseTiles,
@@ -1089,12 +1070,9 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                 this.maxAtlasCount,
                 this.regularizedTileBudget,
                 this.localCandidateLimit,
-                payloadCostCache,
-                (detail, progress) -> reportProgress(progressListener, detail, 0.10D + (0.08D * progress))
+                payloadCostCache
         );
-        List<PatchSource> globalAtlasWindowPatchSources = buildGlobalAtlasWindowPatchSources(atlasTiles);
 
-        reportProgress(progressListener, "Building atlas lookup tables...", 0.18D);
         @SuppressWarnings("unchecked")
         LinkedHashMap<TileBlock, Integer>[] atlasLookups = new LinkedHashMap[atlasTiles.length];
         LinkedHashMap<TileBlock, Integer> structuralTileFrequencies = new LinkedHashMap<>();
@@ -1110,44 +1088,31 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
             }
             atlasLookups[atlasIndex] = atlasLookup;
         }
-        reportProgress(progressListener, "Building atlas images...", 0.24D);
         AtlasImage[] atlasImages = buildAtlasImages(atlasTiles, prepared.width, prepared.height, this.tileSize, prepared.columns, prepared.rows);
-        Map<TileBlock, int[]> paletteCache = new ConcurrentHashMap<>();
-        Map<RemapKey, Integer> remapCostCache = new ConcurrentHashMap<>();
-        final LinkedHashMap<TileBlock, Integer>[] atlasLookupsView = atlasLookups;
-        final AtlasImage[] atlasImagesView = atlasImages;
-        final Map<TileBlock, int[]> paletteCacheView = paletteCache;
-        final Map<RemapKey, Integer> remapCostCacheView = remapCostCache;
-        final List<PatchSource> globalAtlasWindowPatchSourcesView = globalAtlasWindowPatchSources;
 
-        reportProgress(progressListener, "Scanning atlas and literal candidates...", 0.28D);
+        @SuppressWarnings("unchecked")
+        List<PatchSource>[] patchSourcesByPosition = new List[prepared.positionCount];
+        for (int positionIndex = 0; positionIndex < prepared.positionCount; positionIndex++) {
+            patchSourcesByPosition[positionIndex] = buildPatchSources(positionIndex, prepared.baseTiles, atlasTiles);
+        }
+        LinkedHashMap<TileBlock, int[]> paletteCache = new LinkedHashMap<>();
+        LinkedHashMap<RemapKey, Integer> remapCostCache = new LinkedHashMap<>();
+
         LinkedHashMap<TileBlock, Integer> tentativeLiteralFrequencies = new LinkedHashMap<>();
         @SuppressWarnings("unchecked")
         LinkedHashMap<TileBlock, EventState>[] stateCacheByPosition = new LinkedHashMap[prepared.positionCount];
-        @SuppressWarnings("unchecked")
-        LinkedHashMap<TileBlock, Integer>[] tentativeLiteralFrequenciesByPosition = new LinkedHashMap[prepared.positionCount];
-        final LinkedHashMap<TileBlock, EventState>[] stateCacheByPositionBuildView = stateCacheByPosition;
-        final LinkedHashMap<TileBlock, Integer>[] tentativeLiteralFrequenciesByPositionView = tentativeLiteralFrequenciesByPosition;
-        parallelForIndexed(prepared.positionCount, progressListener, "Scanning atlas and literal candidates...", 0.28D, 0.08D, positionIndex -> {
-            LinkedHashMap<TileBlock, EventState> stateCache = new LinkedHashMap<>();
-            LinkedHashMap<TileBlock, Integer> localLiteralFrequencies = new LinkedHashMap<>();
+        for (int positionIndex = 0; positionIndex < prepared.positionCount; positionIndex++) {
+            stateCacheByPosition[positionIndex] = new LinkedHashMap<>();
             TileBlock baseTile = prepared.baseTiles[positionIndex];
             for (int frameIndex = 0; frameIndex < prepared.totalFrames; frameIndex++) {
                 TileBlock tile = prepared.tilesByPositionFrame[positionIndex][frameIndex];
                 if (tile.equals(baseTile)) {
                     continue;
                 }
-                AtlasMatch exactMatch = findAtlasMatch(tile, positionIndex, atlasTiles, atlasLookupsView);
-                if (exactMatch == null && findHorizontalSamplerMatch(tile, positionIndex, atlasImagesView, prepared.width, this.tileSize, prepared.columns) == null) {
-                    localLiteralFrequencies.merge(tile, 1, Integer::sum);
+                AtlasMatch exactMatch = findAtlasMatch(tile, positionIndex, atlasTiles, atlasLookups);
+                if (exactMatch == null && findHorizontalSamplerMatch(tile, positionIndex, atlasImages, prepared.width, this.tileSize, prepared.columns) == null) {
+                    tentativeLiteralFrequencies.merge(tile, 1, Integer::sum);
                 }
-            }
-            stateCacheByPositionBuildView[positionIndex] = stateCache;
-            tentativeLiteralFrequenciesByPositionView[positionIndex] = localLiteralFrequencies;
-        });
-        for (LinkedHashMap<TileBlock, Integer> localLiteralFrequencies : tentativeLiteralFrequenciesByPosition) {
-            for (Map.Entry<TileBlock, Integer> entry : localLiteralFrequencies.entrySet()) {
-                tentativeLiteralFrequencies.merge(entry.getKey(), entry.getValue(), Integer::sum);
             }
         }
 
@@ -1156,46 +1121,38 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
             tentativeTileFrequencies.merge(entry.getKey(), entry.getValue(), Integer::sum);
         }
         LinkedHashMap<TileBlock, Integer> tentativeTileDictionaryIds = buildTileDictionary(tentativeTileFrequencies, this.minRepeatCount);
-        final LinkedHashMap<TileBlock, Integer> tentativeTileDictionaryIdsView = tentativeTileDictionaryIds;
-        final LinkedHashMap<TileBlock, EventState>[] stateCacheByPositionView = stateCacheByPosition;
 
-        reportProgress(progressListener, "Resolving provisional patch and transform states...", 0.36D);
         LinkedHashMap<TileTransform, Integer> provisionalTransformFrequencies = new LinkedHashMap<>();
         LinkedHashMap<PatchShapeKey, Integer> provisionalPatchShapeFrequencies = new LinkedHashMap<>();
         @SuppressWarnings("unchecked")
-        LinkedHashMap<TileTransform, Integer>[] provisionalTransformFrequenciesByPosition = new LinkedHashMap[prepared.positionCount];
-        @SuppressWarnings("unchecked")
-        LinkedHashMap<PatchShapeKey, Integer>[] provisionalPatchShapeFrequenciesByPosition = new LinkedHashMap[prepared.positionCount];
-        parallelForIndexed(prepared.positionCount, progressListener, "Resolving provisional patch and transform states...", 0.36D, 0.22D, positionIndex -> {
-            List<PatchSource> patchSources = buildPatchSources(positionIndex, prepared.baseTiles, atlasTiles, globalAtlasWindowPatchSourcesView);
-            LinkedHashMap<TileBlock, EventState> positionStateCache = new LinkedHashMap<>();
-            LinkedHashMap<TileTransform, Integer> localTransformFrequencies = new LinkedHashMap<>();
-            LinkedHashMap<PatchShapeKey, Integer> localPatchShapeFrequencies = new LinkedHashMap<>();
+        LinkedHashMap<TileBlock, EventState>[] provisionalStateCacheByPosition = new LinkedHashMap[prepared.positionCount];
+        for (int positionIndex = 0; positionIndex < prepared.positionCount; positionIndex++) {
+            provisionalStateCacheByPosition[positionIndex] = new LinkedHashMap<>();
             TileBlock baseTile = prepared.baseTiles[positionIndex];
             for (int frameIndex = 0; frameIndex < prepared.totalFrames; frameIndex++) {
                 TileBlock tile = prepared.tilesByPositionFrame[positionIndex][frameIndex];
                 if (tile.equals(baseTile)) {
                     continue;
                 }
-                EventState cached = positionStateCache.get(tile);
+                EventState cached = provisionalStateCacheByPosition[positionIndex].get(tile);
                 if (cached == null) {
-                    AtlasMatch exactMatch = findAtlasMatch(tile, positionIndex, atlasTiles, atlasLookupsView);
+                    AtlasMatch exactMatch = findAtlasMatch(tile, positionIndex, atlasTiles, atlasLookups);
                     if (exactMatch != null) {
                         cached = exactMatch.samePosition
                                 ? EventState.samePositionAtlas(exactMatch.atlasIndex)
                                 : EventState.windowAtlas(exactMatch.atlasIndex, exactMatch.sourcePosition);
                     } else {
-                        HorizontalSamplerMatch samplerMatch = findHorizontalSamplerMatch(tile, positionIndex, atlasImagesView, prepared.width, this.tileSize, prepared.columns);
+                        HorizontalSamplerMatch samplerMatch = findHorizontalSamplerMatch(tile, positionIndex, atlasImages, prepared.width, this.tileSize, prepared.columns);
                         if (samplerMatch != null) {
                             cached = EventState.horizontalSampler(samplerMatch.atlasIndex, samplerMatch.deltaX);
                         } else {
                             cached = resolveEventState(
                                     tile,
-                                    tentativeTileDictionaryIdsView,
-                                    patchSources,
+                                    tentativeTileDictionaryIds,
+                                    patchSourcesByPosition[positionIndex],
                                     payloadCostCache,
-                                    remapCostCacheView,
-                                    paletteCacheView,
+                                    remapCostCache,
+                                    paletteCache,
                                     new LinkedHashMap<>(),
                                     Map.of(),
                                     this.maxPatchPixels,
@@ -1203,35 +1160,21 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                             );
                         }
                     }
-                    positionStateCache.put(tile, cached);
+                    provisionalStateCacheByPosition[positionIndex].put(tile, cached);
                 }
                 if (cached.patch != null) {
-                    localPatchShapeFrequencies.merge(PatchShapeKey.from(cached.patch, tile.width, tile.height), 1, Integer::sum);
+                    provisionalPatchShapeFrequencies.merge(PatchShapeKey.from(cached.patch, tile.width, tile.height), 1, Integer::sum);
                 }
                 if (cached.transform != null) {
-                    localTransformFrequencies.merge(cached.transform, 1, Integer::sum);
+                    provisionalTransformFrequencies.merge(cached.transform, 1, Integer::sum);
                 }
-            }
-            provisionalTransformFrequenciesByPosition[positionIndex] = localTransformFrequencies;
-            provisionalPatchShapeFrequenciesByPosition[positionIndex] = localPatchShapeFrequencies;
-        });
-        for (int positionIndex = 0; positionIndex < prepared.positionCount; positionIndex++) {
-            for (Map.Entry<TileTransform, Integer> entry : provisionalTransformFrequenciesByPosition[positionIndex].entrySet()) {
-                provisionalTransformFrequencies.merge(entry.getKey(), entry.getValue(), Integer::sum);
-            }
-            for (Map.Entry<PatchShapeKey, Integer> entry : provisionalPatchShapeFrequenciesByPosition[positionIndex].entrySet()) {
-                provisionalPatchShapeFrequencies.merge(entry.getKey(), entry.getValue(), Integer::sum);
             }
         }
         LinkedHashMap<TileTransform, Integer> provisionalTransformDictionaryIds = buildTransformDictionary(provisionalTransformFrequencies, 2);
         LinkedHashMap<PatchShapeKey, Integer> provisionalPatchShapeDictionaryIds = buildPatchShapeDictionary(provisionalPatchShapeFrequencies);
-        final LinkedHashMap<TileTransform, Integer> provisionalTransformDictionaryIdsView = provisionalTransformDictionaryIds;
-        final LinkedHashMap<PatchShapeKey, Integer> provisionalPatchShapeDictionaryIdsView = provisionalPatchShapeDictionaryIds;
 
-        reportProgress(progressListener, "Building position programs...", 0.58D);
-        PositionProgram[] programArray = new PositionProgram[prepared.positionCount];
-        parallelForIndexed(prepared.positionCount, progressListener, "Building position programs...", 0.58D, 0.18D, positionIndex -> {
-            List<PatchSource> patchSources = buildPatchSources(positionIndex, prepared.baseTiles, atlasTiles, globalAtlasWindowPatchSourcesView);
+        ArrayList<PositionProgram> programs = new ArrayList<>(prepared.positionCount);
+        for (int positionIndex = 0; positionIndex < prepared.positionCount; positionIndex++) {
             TileBlock baseTile = prepared.baseTiles[positionIndex];
             EventState[] states = new EventState[prepared.totalFrames];
             for (int frameIndex = 0; frameIndex < prepared.totalFrames; frameIndex++) {
@@ -1240,33 +1183,33 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                     states[frameIndex] = null;
                     continue;
                 }
-                EventState cached = stateCacheByPositionView[positionIndex].get(tile);
+                EventState cached = stateCacheByPosition[positionIndex].get(tile);
                 if (cached == null) {
-                    AtlasMatch exactMatch = findAtlasMatch(tile, positionIndex, atlasTiles, atlasLookupsView);
+                    AtlasMatch exactMatch = findAtlasMatch(tile, positionIndex, atlasTiles, atlasLookups);
                     if (exactMatch != null) {
                         cached = exactMatch.samePosition
                                 ? EventState.samePositionAtlas(exactMatch.atlasIndex)
                                 : EventState.windowAtlas(exactMatch.atlasIndex, exactMatch.sourcePosition);
                     } else {
-                        HorizontalSamplerMatch samplerMatch = findHorizontalSamplerMatch(tile, positionIndex, atlasImagesView, prepared.width, this.tileSize, prepared.columns);
+                        HorizontalSamplerMatch samplerMatch = findHorizontalSamplerMatch(tile, positionIndex, atlasImages, prepared.width, this.tileSize, prepared.columns);
                         if (samplerMatch != null) {
                             cached = EventState.horizontalSampler(samplerMatch.atlasIndex, samplerMatch.deltaX);
                         } else {
                             cached = resolveEventState(
                                     tile,
-                                    tentativeTileDictionaryIdsView,
-                                    patchSources,
+                                    tentativeTileDictionaryIds,
+                                    patchSourcesByPosition[positionIndex],
                                     payloadCostCache,
-                                    remapCostCacheView,
-                                    paletteCacheView,
-                                    provisionalTransformDictionaryIdsView,
-                                    provisionalPatchShapeDictionaryIdsView,
+                                    remapCostCache,
+                                    paletteCache,
+                                    provisionalTransformDictionaryIds,
+                                    provisionalPatchShapeDictionaryIds,
                                     this.maxPatchPixels,
                                     this.maxRemapColors
                             );
                         }
                     }
-                    stateCacheByPositionView[positionIndex].put(tile, cached);
+                    stateCacheByPosition[positionIndex].put(tile, cached);
                 }
                 states[frameIndex] = cached;
             }
@@ -1288,20 +1231,11 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
             }
 
             PositionProgram program = new PositionProgram(baseTile, events);
-            programArray[positionIndex] = program;
-        });
-        ArrayList<PositionProgram> programs = new ArrayList<>(prepared.positionCount);
-        for (PositionProgram program : programArray) {
             programs.add(program);
         }
-        atlasImages = null;
-        atlasLookups = null;
-        stateCacheByPosition = null;
 
-        reportProgress(progressListener, "Selecting placement programs...", 0.76D);
         PlacementSelection placementSelection = selectPlacementPrograms(programs, prepared.columns, prepared.rows, this.minPlacementArea, this.tileSize);
 
-        reportProgress(progressListener, "Building tile and timing dictionaries...", 0.80D);
         LinkedHashMap<TileBlock, Integer> finalTileFrequencies = new LinkedHashMap<>(structuralTileFrequencies);
         LinkedHashMap<TimePatternKey, Integer> timePatternFrequencies = new LinkedHashMap<>();
         LinkedHashMap<TileBlock, Integer> tileDictionaryIds = buildTileDictionary(finalTileFrequencies, this.minRepeatCount);
@@ -1332,30 +1266,28 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
         LinkedHashMap<TileTransform, Integer> transformDictionaryIds = buildTransformDictionary(transformFrequencies, 2);
         LinkedHashMap<PatchShapeKey, Integer> patchShapeDictionaryIds = buildPatchShapeDictionary(patchShapeFrequencies);
 
-        reportProgress(progressListener, "Serializing tile dictionaries...", 0.84D);
-        SectionBuffer tileDictionaryMeta = new SectionBuffer();
-        SectionBuffer tileDictionaryPayload = new SectionBuffer();
+        ByteArrayOutputStream tileDictionaryMeta = new ByteArrayOutputStream();
+        ByteArrayOutputStream tileDictionaryPayload = new ByteArrayOutputStream();
         for (TileBlock tile : tileDictionaryIds.keySet()) {
             AfmaVarInts.writeUnsigned(tileDictionaryMeta, tile.width);
             AfmaVarInts.writeUnsigned(tileDictionaryMeta, tile.height);
             writeTilePayload(tileDictionaryPayload, tile);
         }
 
-        SectionBuffer transformDictionaryMeta = new SectionBuffer();
-        SectionBuffer transformDictionaryPayload = new SectionBuffer();
+        ByteArrayOutputStream transformDictionaryMeta = new ByteArrayOutputStream();
+        ByteArrayOutputStream transformDictionaryPayload = new ByteArrayOutputStream();
         for (TileTransform transform : transformDictionaryIds.keySet()) {
             writeDictionaryTileTransform(transformDictionaryMeta, transformDictionaryPayload, transform);
         }
 
-        SectionBuffer patchShapeDictionaryPayload = new SectionBuffer();
+        ByteArrayOutputStream patchShapeDictionaryPayload = new ByteArrayOutputStream();
         for (PatchShapeKey patchShape : patchShapeDictionaryIds.keySet()) {
             writePatchShape(patchShapeDictionaryPayload, patchShape);
         }
 
-        reportProgress(progressListener, "Serializing base and atlas predictors...", 0.88D);
-        SectionBuffer baseMeta = new SectionBuffer();
-        SectionBuffer baseRefs = new SectionBuffer();
-        SectionBuffer baseInlinePayload = new SectionBuffer();
+        ByteArrayOutputStream baseMeta = new ByteArrayOutputStream();
+        ByteArrayOutputStream baseRefs = new ByteArrayOutputStream();
+        ByteArrayOutputStream baseInlinePayload = new ByteArrayOutputStream();
         for (int row = 0; row < prepared.rows; row++) {
             TileBlock leftTile = null;
             for (int column = 0; column < prepared.columns; column++) {
@@ -1366,9 +1298,9 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
             }
         }
 
-        SectionBuffer atlasMeta = new SectionBuffer();
-        SectionBuffer atlasRefs = new SectionBuffer();
-        SectionBuffer atlasInlinePayload = new SectionBuffer();
+        ByteArrayOutputStream atlasMeta = new ByteArrayOutputStream();
+        ByteArrayOutputStream atlasRefs = new ByteArrayOutputStream();
+        ByteArrayOutputStream atlasInlinePayload = new ByteArrayOutputStream();
         for (int atlasIndex = 0; atlasIndex < atlasTiles.length; atlasIndex++) {
             for (int row = 0; row < prepared.rows; row++) {
                 TileBlock leftTile = null;
@@ -1383,7 +1315,7 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
             }
         }
 
-        SectionBuffer placementPrograms = new SectionBuffer();
+        ByteArrayOutputStream placementPrograms = new ByteArrayOutputStream();
         AfmaVarInts.writeUnsigned(placementPrograms, placementSelection.templates.size());
         for (PlacementTemplateSelection templateSelection : placementSelection.templates) {
             writeTimePattern(templateSelection.template.pattern, placementPrograms);
@@ -1401,26 +1333,25 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
             }
         }
 
-        SectionBuffer timePatternDictionaryMeta = new SectionBuffer();
+        ByteArrayOutputStream timePatternDictionaryMeta = new ByteArrayOutputStream();
         for (TimePatternKey pattern : timePatternIds.keySet()) {
             writeTimePattern(pattern, timePatternDictionaryMeta);
         }
 
-        reportProgress(progressListener, "Serializing event programs...", 0.92D);
-        SectionBuffer timePatternDispatch = new SectionBuffer();
-        SectionBuffer timePatternRefs = new SectionBuffer();
-        SectionBuffer timePatternInlineMeta = new SectionBuffer();
-        SectionBuffer eventStateMeta = new SectionBuffer();
-        SectionBuffer eventAtlasRefs = new SectionBuffer();
-        SectionBuffer eventLiteralMeta = new SectionBuffer();
-        SectionBuffer eventLiteralRefs = new SectionBuffer();
-        SectionBuffer eventLiteralInlinePayload = new SectionBuffer();
-        SectionBuffer eventPatchMeta = new SectionBuffer();
-        SectionBuffer eventPatchRefs = new SectionBuffer();
-        SectionBuffer eventPatchPayload = new SectionBuffer();
-        SectionBuffer eventTransformMeta = new SectionBuffer();
-        SectionBuffer eventTransformRefs = new SectionBuffer();
-        SectionBuffer eventTransformPayload = new SectionBuffer();
+        ByteArrayOutputStream timePatternDispatch = new ByteArrayOutputStream();
+        ByteArrayOutputStream timePatternRefs = new ByteArrayOutputStream();
+        ByteArrayOutputStream timePatternInlineMeta = new ByteArrayOutputStream();
+        ByteArrayOutputStream eventStateMeta = new ByteArrayOutputStream();
+        ByteArrayOutputStream eventAtlasRefs = new ByteArrayOutputStream();
+        ByteArrayOutputStream eventLiteralMeta = new ByteArrayOutputStream();
+        ByteArrayOutputStream eventLiteralRefs = new ByteArrayOutputStream();
+        ByteArrayOutputStream eventLiteralInlinePayload = new ByteArrayOutputStream();
+        ByteArrayOutputStream eventPatchMeta = new ByteArrayOutputStream();
+        ByteArrayOutputStream eventPatchRefs = new ByteArrayOutputStream();
+        ByteArrayOutputStream eventPatchPayload = new ByteArrayOutputStream();
+        ByteArrayOutputStream eventTransformMeta = new ByteArrayOutputStream();
+        ByteArrayOutputStream eventTransformRefs = new ByteArrayOutputStream();
+        ByteArrayOutputStream eventTransformPayload = new ByteArrayOutputStream();
         for (int row = 0; row < prepared.rows; row++) {
             TimePatternKey leftPattern = null;
             for (int column = 0; column < prepared.columns; column++) {
@@ -1513,54 +1444,53 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                     }
                 }
             }
-            reportLoopProgress(progressListener, "Serializing event programs...", 0.92D, 0.04D, row, prepared.rows);
         }
 
-        reportProgress(progressListener, "Packing animation sections...", 0.96D);
-        DataOutputStream dataOut = new DataOutputStream(output);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        DataOutputStream dataOut = new DataOutputStream(out);
         dataOut.writeInt(MAGIC);
         dataOut.writeByte(VERSION);
-        AfmaVarInts.writeUnsigned(output, prepared.width);
-        AfmaVarInts.writeUnsigned(output, prepared.height);
-        AfmaVarInts.writeUnsigned(output, animation.introFrames().size());
-        AfmaVarInts.writeUnsigned(output, animation.mainFrames().size());
-        AfmaVarInts.writeUnsigned(output, this.tileSize);
-        AfmaVarInts.writeUnsigned(output, prepared.columns);
-        AfmaVarInts.writeUnsigned(output, prepared.rows);
-        AfmaVarInts.writeUnsigned(output, tileDictionaryIds.size());
-        AfmaVarInts.writeUnsigned(output, atlasTiles.length);
-        AfmaVarInts.writeUnsigned(output, timePatternIds.size());
-        AfmaVarInts.writeUnsigned(output, transformDictionaryIds.size());
-        AfmaVarInts.writeUnsigned(output, patchShapeDictionaryIds.size());
-        writePackedSection(output, tileDictionaryMeta);
-        writePackedSection(output, tileDictionaryPayload);
-        writePackedSection(output, transformDictionaryMeta);
-        writePackedSection(output, transformDictionaryPayload);
-        writePackedSection(output, patchShapeDictionaryPayload);
-        writePackedSection(output, baseMeta);
-        writePackedSection(output, baseRefs);
-        writePackedSection(output, baseInlinePayload);
-        writePackedSection(output, atlasMeta);
-        writePackedSection(output, atlasRefs);
-        writePackedSection(output, atlasInlinePayload);
-        writePackedSection(output, placementPrograms);
-        writePackedSection(output, timePatternDictionaryMeta);
-        writePackedSection(output, timePatternDispatch);
-        writePackedSection(output, timePatternRefs);
-        writePackedSection(output, timePatternInlineMeta);
-        writePackedSection(output, eventStateMeta);
-        writePackedSection(output, eventAtlasRefs);
-        writePackedSection(output, eventLiteralMeta);
-        writePackedSection(output, eventLiteralRefs);
-        writePackedSection(output, eventLiteralInlinePayload);
-        writePackedSection(output, eventPatchMeta);
-        writePackedSection(output, eventPatchRefs);
-        writePackedSection(output, eventPatchPayload);
-        writePackedSection(output, eventTransformMeta);
-        writePackedSection(output, eventTransformRefs);
-        writePackedSection(output, eventTransformPayload);
+        AfmaVarInts.writeUnsigned(out, prepared.width);
+        AfmaVarInts.writeUnsigned(out, prepared.height);
+        AfmaVarInts.writeUnsigned(out, animation.introFrames().size());
+        AfmaVarInts.writeUnsigned(out, animation.mainFrames().size());
+        AfmaVarInts.writeUnsigned(out, this.tileSize);
+        AfmaVarInts.writeUnsigned(out, prepared.columns);
+        AfmaVarInts.writeUnsigned(out, prepared.rows);
+        AfmaVarInts.writeUnsigned(out, tileDictionaryIds.size());
+        AfmaVarInts.writeUnsigned(out, atlasTiles.length);
+        AfmaVarInts.writeUnsigned(out, timePatternIds.size());
+        AfmaVarInts.writeUnsigned(out, transformDictionaryIds.size());
+        AfmaVarInts.writeUnsigned(out, patchShapeDictionaryIds.size());
+        writePackedSection(out, tileDictionaryMeta.toByteArray());
+        writePackedSection(out, tileDictionaryPayload.toByteArray());
+        writePackedSection(out, transformDictionaryMeta.toByteArray());
+        writePackedSection(out, transformDictionaryPayload.toByteArray());
+        writePackedSection(out, patchShapeDictionaryPayload.toByteArray());
+        writePackedSection(out, baseMeta.toByteArray());
+        writePackedSection(out, baseRefs.toByteArray());
+        writePackedSection(out, baseInlinePayload.toByteArray());
+        writePackedSection(out, atlasMeta.toByteArray());
+        writePackedSection(out, atlasRefs.toByteArray());
+        writePackedSection(out, atlasInlinePayload.toByteArray());
+        writePackedSection(out, placementPrograms.toByteArray());
+        writePackedSection(out, timePatternDictionaryMeta.toByteArray());
+        writePackedSection(out, timePatternDispatch.toByteArray());
+        writePackedSection(out, timePatternRefs.toByteArray());
+        writePackedSection(out, timePatternInlineMeta.toByteArray());
+        writePackedSection(out, eventStateMeta.toByteArray());
+        writePackedSection(out, eventAtlasRefs.toByteArray());
+        writePackedSection(out, eventLiteralMeta.toByteArray());
+        writePackedSection(out, eventLiteralRefs.toByteArray());
+        writePackedSection(out, eventLiteralInlinePayload.toByteArray());
+        writePackedSection(out, eventPatchMeta.toByteArray());
+        writePackedSection(out, eventPatchRefs.toByteArray());
+        writePackedSection(out, eventPatchPayload.toByteArray());
+        writePackedSection(out, eventTransformMeta.toByteArray());
+        writePackedSection(out, eventTransformRefs.toByteArray());
+        writePackedSection(out, eventTransformPayload.toByteArray());
         dataOut.flush();
-        reportProgress(progressListener, "Animation stream encoded.", 1.0D);
+        return out.toByteArray();
     }
 
     /**
@@ -1928,20 +1858,15 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                 int tileX = column * tileSize;
                 int tileWidth = Math.min(tileSize, width - tileX);
                 int positionIndex = row * columns + column;
-                LinkedHashMap<TileBlock, Integer> frequencies = new LinkedHashMap<>();
-                TileBlock baseTile = null;
-                int baseFrequency = 0;
+                List<TileBlock> sequence = new ArrayList<>(totalFrames);
                 for (int frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
                     TileBlock tile = internTile(tilePool, extractTile(frames.get(frameIndex).argbPixels(), width, tileX, tileY, tileWidth, tileHeight));
                     tilesByPositionFrame[positionIndex][frameIndex] = tile;
-                    int frequency = frequencies.merge(tile, 1, Integer::sum);
-                    if (frequency > baseFrequency) {
-                        baseTile = tile;
-                        baseFrequency = frequency;
-                    }
+                    sequence.add(tile);
                 }
+                TileBlock baseTile = dominantTile(sequence);
                 baseTiles[positionIndex] = baseTile;
-                for (TileBlock tile : tilesByPositionFrame[positionIndex]) {
+                for (TileBlock tile : sequence) {
                     if (tile.equals(baseTile)) {
                         baseCoveredOccurrences++;
                     }
@@ -1978,45 +1903,21 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                                                          int totalFrames, int columns, int rows, int maxAtlasCount,
                                                          int regularizedTileBudget, int localCandidateLimit,
                                                          Map<TileBlock, Integer> payloadCostCache) throws IOException {
-        return buildRegularizedAtlases(tilesByPositionFrame, baseTiles, totalFrames, columns, rows, maxAtlasCount,
-                regularizedTileBudget, localCandidateLimit, payloadCostCache, null);
-    }
-
-    private static TileBlock[][] buildRegularizedAtlases(TileBlock[][] tilesByPositionFrame, TileBlock[] baseTiles,
-                                                         int totalFrames, int columns, int rows, int maxAtlasCount,
-                                                         int regularizedTileBudget, int localCandidateLimit,
-                                                         Map<TileBlock, Integer> payloadCostCache,
-                                                         @Nullable ProgressListener progressListener) throws IOException {
         int positionCount = columns * rows;
         boolean[][] uncovered = initialUncovered(tilesByPositionFrame, baseTiles, positionCount, totalFrames);
         ArrayList<TileBlock[]> atlases = new ArrayList<>(maxAtlasCount);
         for (int step = 0; step < maxAtlasCount; step++) {
-            double atlasStepStart = (double) step / Math.max(1, maxAtlasCount);
-            double atlasStepSpan = 1.0D / Math.max(1, maxAtlasCount);
-            reportProgress(progressListener,
-                    "Building regularized atlases... atlas " + (step + 1) + "/" + maxAtlasCount + " - scoring positions",
-                    atlasStepStart + (atlasStepSpan * 0.02D));
             @SuppressWarnings("unchecked")
             List<LocalTileScore>[] localScoresByPosition = new List[positionCount];
             LinkedHashMap<TileBlock, Double> globalScores = new LinkedHashMap<>();
-            parallelForIndexed(positionCount, progressListener,
-                    "Building regularized atlases... atlas " + (step + 1) + "/" + maxAtlasCount + " - scoring positions",
-                    atlasStepStart + (atlasStepSpan * 0.04D),
-                    atlasStepSpan * 0.36D,
-                    positionIndex -> localScoresByPosition[positionIndex] = computeLocalTileScores(
-                            tilesByPositionFrame[positionIndex],
-                            uncovered[positionIndex],
-                            payloadCostCache
-                    ));
-            for (List<LocalTileScore> localScores : localScoresByPosition) {
+            for (int positionIndex = 0; positionIndex < positionCount; positionIndex++) {
+                List<LocalTileScore> localScores = computeLocalTileScores(tilesByPositionFrame[positionIndex], uncovered[positionIndex], payloadCostCache);
+                localScoresByPosition[positionIndex] = localScores;
                 for (LocalTileScore score : localScores) {
                     globalScores.merge(score.tile, score.score, Double::sum);
                 }
             }
 
-            reportProgress(progressListener,
-                    "Building regularized atlases... atlas " + (step + 1) + "/" + maxAtlasCount + " - ranking tiles",
-                    atlasStepStart + (atlasStepSpan * 0.42D));
             ArrayList<Map.Entry<TileBlock, Double>> scoredTiles = new ArrayList<>();
             for (Map.Entry<TileBlock, Double> entry : globalScores.entrySet()) {
                 double netScore = entry.getValue() - estimateTilePayloadSize(entry.getKey(), payloadCostCache);
@@ -2034,84 +1935,57 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                 }
             }
             if (allowedTiles.isEmpty()) {
-                reportProgress(progressListener, "Building regularized atlases... no more useful atlas tiles found.", 1.0D);
                 break;
             }
 
-            reportProgress(progressListener,
-                    "Building regularized atlases... atlas " + (step + 1) + "/" + maxAtlasCount + " - selecting row layouts",
-                    atlasStepStart + (atlasStepSpan * 0.52D));
             TileBlock[] atlas = new TileBlock[positionCount];
-            RowCandidate[][] rowSelections = new RowCandidate[rows][];
-            parallelForIndexed(rows, progressListener,
-                    "Building regularized atlases... atlas " + (step + 1) + "/" + maxAtlasCount + " - selecting row layouts",
-                    atlasStepStart + (atlasStepSpan * 0.54D),
-                    atlasStepSpan * 0.22D,
-                    row -> {
-                        @SuppressWarnings("unchecked")
-                        List<RowCandidate>[] candidatesByColumn = new List[columns];
-                        for (int column = 0; column < columns; column++) {
-                            int positionIndex = row * columns + column;
-                            ArrayList<RowCandidate> candidates = new ArrayList<>();
-                            TileBlock baseTile = baseTiles[positionIndex];
-                            candidates.add(new RowCandidate(baseTile, 0.0D));
-                            int added = 0;
-                            for (LocalTileScore score : localScoresByPosition[positionIndex]) {
-                                if (!allowedTiles.containsKey(score.tile) || score.tile.equals(baseTile)) {
-                                    continue;
-                                }
-                                candidates.add(new RowCandidate(score.tile, score.score));
-                                added++;
-                                if (added >= localCandidateLimit) {
-                                    break;
-                                }
-                            }
-                            candidatesByColumn[column] = candidates;
-                        }
-                        rowSelections[row] = selectBestRow(candidatesByColumn, baseTiles, row, columns);
-                    });
             for (int row = 0; row < rows; row++) {
-                RowCandidate[] selection = rowSelections[row];
+                @SuppressWarnings("unchecked")
+                List<RowCandidate>[] candidatesByColumn = new List[columns];
+                for (int column = 0; column < columns; column++) {
+                    int positionIndex = row * columns + column;
+                    ArrayList<RowCandidate> candidates = new ArrayList<>();
+                    TileBlock baseTile = baseTiles[positionIndex];
+                    candidates.add(new RowCandidate(baseTile, 0.0D));
+                    int added = 0;
+                    for (LocalTileScore score : localScoresByPosition[positionIndex]) {
+                        if (!allowedTiles.containsKey(score.tile) || score.tile.equals(baseTile)) {
+                            continue;
+                        }
+                        candidates.add(new RowCandidate(score.tile, score.score));
+                        added++;
+                        if (added >= localCandidateLimit) {
+                            break;
+                        }
+                    }
+                    candidatesByColumn[column] = candidates;
+                }
+
+                RowCandidate[] selection = selectBestRow(candidatesByColumn, baseTiles, row, columns);
                 for (int column = 0; column < columns; column++) {
                     int positionIndex = row * columns + column;
                     atlas[positionIndex] = selection[column].tile;
                 }
             }
 
-            reportProgress(progressListener,
-                    "Building regularized atlases... atlas " + (step + 1) + "/" + maxAtlasCount + " - applying coverage",
-                    atlasStepStart + (atlasStepSpan * 0.78D));
-            long[] coveredOccurrencesByPosition = new long[positionCount];
-            parallelForIndexed(positionCount, progressListener,
-                    "Building regularized atlases... atlas " + (step + 1) + "/" + maxAtlasCount + " - applying coverage",
-                    atlasStepStart + (atlasStepSpan * 0.80D),
-                    atlasStepSpan * 0.18D,
-                    positionIndex -> {
-                        TileBlock tile = atlas[positionIndex];
-                        if (tile.equals(baseTiles[positionIndex])) {
-                            coveredOccurrencesByPosition[positionIndex] = 0L;
-                            return;
-                        }
-                        long coveredHere = 0L;
-                        for (int frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
-                            if (uncovered[positionIndex][frameIndex] && tile.equals(tilesByPositionFrame[positionIndex][frameIndex])) {
-                                uncovered[positionIndex][frameIndex] = false;
-                                coveredHere++;
-                            }
-                        }
-                        coveredOccurrencesByPosition[positionIndex] = coveredHere;
-                    });
             long coveredOccurrences = 0L;
-            for (long coveredHere : coveredOccurrencesByPosition) {
-                coveredOccurrences += coveredHere;
+            for (int positionIndex = 0; positionIndex < positionCount; positionIndex++) {
+                TileBlock tile = atlas[positionIndex];
+                if (tile.equals(baseTiles[positionIndex])) {
+                    continue;
+                }
+                for (int frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
+                    if (uncovered[positionIndex][frameIndex] && tile.equals(tilesByPositionFrame[positionIndex][frameIndex])) {
+                        uncovered[positionIndex][frameIndex] = false;
+                        coveredOccurrences++;
+                    }
+                }
             }
             if (coveredOccurrences <= 0L) {
-                reportProgress(progressListener, "Building regularized atlases... no additional frame coverage found.", 1.0D);
                 break;
             }
             atlases.add(atlas);
         }
-        reportProgress(progressListener, "Building regularized atlases... complete.", 1.0D);
         return atlases.toArray(new TileBlock[0][]);
     }
 
@@ -2415,42 +2289,15 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
     }
 
     private static int estimateTilePayloadSize(TileBlock tile, Map<TileBlock, Integer> payloadCostCache) throws IOException {
-        if (payloadCostCache instanceof ConcurrentMap<?, ?>) {
-            @SuppressWarnings("unchecked")
-            ConcurrentMap<TileBlock, Integer> concurrentPayloadCostCache = (ConcurrentMap<TileBlock, Integer>) payloadCostCache;
-            try {
-                return concurrentPayloadCostCache.computeIfAbsent(tile, ignored -> {
-                    try {
-                        return computeTilePayloadSize(tile);
-                    } catch (IOException exception) {
-                        throw new ParallelIoRuntimeException(exception);
-                    }
-                });
-            } catch (RuntimeException exception) {
-                IOException ioException = unwrapParallelIoException(exception);
-                if (ioException != null) {
-                    throw ioException;
-                }
-                throw exception;
-            }
+        Integer cached = payloadCostCache.get(tile);
+        if (cached != null) {
+            return cached;
         }
-
-        synchronized (payloadCostCache) {
-            Integer cached = payloadCostCache.get(tile);
-            if (cached != null) {
-                return cached;
-            }
-        }
-
-        int size = computeTilePayloadSize(tile);
-        synchronized (payloadCostCache) {
-            Integer cached = payloadCostCache.get(tile);
-            if (cached != null) {
-                return cached;
-            }
-            payloadCostCache.put(tile, size);
-            return size;
-        }
+        ByteArrayOutputStream payload = new ByteArrayOutputStream();
+        writeTilePayload(payload, tile);
+        int size = SectionPacker.pack(payload.toByteArray()).length;
+        payloadCostCache.put(tile, size);
+        return size;
     }
 
     private static EventState resolveEventState(TileBlock tile, Map<TileBlock, Integer> tileDictionaryIds,
@@ -2459,108 +2306,60 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                                                 Map<TileTransform, Integer> transformDictionaryIds,
                                                 Map<PatchShapeKey, Integer> patchShapeDictionaryIds,
                                                 int maxPatchPixels, int maxRemapColors) throws IOException {
-        int literalCost = estimateTileReferenceCost(tile, tileDictionaryIds, payloadCostCache);
-        int bestCost = literalCost;
-        int bestPriority = Integer.MAX_VALUE;
-        EventState bestState = EventState.literal(tile);
-        LinkedHashMap<SparsePatchKey, Integer> patchCostCache = new LinkedHashMap<>();
-
-        for (PatchSource source : patchSources) {
-            if (source.tile.equals(tile)) {
-                continue;
-            }
-
-            SparsePatch patch = createSparsePatch(source.tile, tile, maxPatchPixels);
-            if (patch != null) {
-                int patchCost = estimatePatchStateCost(source, patch, patchCostCache, patchShapeDictionaryIds, tile.width, tile.height);
-                if (isBetterEventStateCandidate(patchCost, 0, bestCost, bestPriority, literalCost)) {
-                    bestCost = patchCost;
-                    bestPriority = 0;
-                    bestState = new PatchMatch(source, patch, patchCost).toEventState();
-                }
-
-                TileTransform sparseDeltaTransform = createSparseArgbDeltaTransform(source.tile, patch);
-                if (sparseDeltaTransform != null) {
-                    int patchTransformCost = estimatePatchTransformStateCost(
-                            source,
-                            patch,
-                            sparseDeltaTransform,
-                            patchShapeDictionaryIds,
-                            remapCostCache,
-                            transformDictionaryIds,
-                            tile.width,
-                            tile.height
-                    );
-                    if (isBetterEventStateCandidate(patchTransformCost, 1, bestCost, bestPriority, literalCost)) {
-                        bestCost = patchTransformCost;
-                        bestPriority = 1;
-                        bestState = new PatchTransformMatch(source, patch, sparseDeltaTransform, patchTransformCost).toEventState();
-                    }
-                }
-
-                TileTransform sparseRemapTransform = createSparsePaletteRemapTransform(source.tile, patch, PATCH_TRANSFORM_MAX_COLORS);
-                if (sparseRemapTransform != null) {
-                    int patchTransformCost = estimatePatchTransformStateCost(
-                            source,
-                            patch,
-                            sparseRemapTransform,
-                            patchShapeDictionaryIds,
-                            remapCostCache,
-                            transformDictionaryIds,
-                            tile.width,
-                            tile.height
-                    );
-                    if (isBetterEventStateCandidate(patchTransformCost, 1, bestCost, bestPriority, literalCost)) {
-                        bestCost = patchTransformCost;
-                        bestPriority = 1;
-                        bestState = new PatchTransformMatch(source, patch, sparseRemapTransform, patchTransformCost).toEventState();
-                    }
-                }
-            }
-
-            TileTransform deltaTransform = createArgbDeltaTransform(source.tile, tile);
-            if (deltaTransform != null) {
-                int transformCost = estimateTransformStateCost(source, deltaTransform, remapCostCache, transformDictionaryIds);
-                if (isBetterEventStateCandidate(transformCost, 2, bestCost, bestPriority, literalCost)) {
-                    bestCost = transformCost;
-                    bestPriority = 2;
-                    bestState = new TransformMatch(source, deltaTransform, transformCost).toEventState();
-                }
-            }
-
-            TileTransform remapTransform = createPaletteRemapTransform(source.tile, tile, maxRemapColors, paletteCache);
-            if (remapTransform != null) {
-                int transformCost = estimateTransformStateCost(source, remapTransform, remapCostCache, transformDictionaryIds);
-                if (isBetterEventStateCandidate(transformCost, 2, bestCost, bestPriority, literalCost)) {
-                    bestCost = transformCost;
-                    bestPriority = 2;
-                    bestState = new TransformMatch(source, remapTransform, transformCost).toEventState();
-                }
-            }
+        PatchMatch patchMatch = findBestPatchMatch(
+                tile,
+                patchSources,
+                payloadCostCache,
+                tileDictionaryIds,
+                patchShapeDictionaryIds,
+                new LinkedHashMap<>(),
+                maxPatchPixels
+        );
+        PatchTransformMatch patchTransformMatch = findBestPatchTransformMatch(
+                tile,
+                patchSources,
+                payloadCostCache,
+                tileDictionaryIds,
+                remapCostCache,
+                transformDictionaryIds,
+                patchShapeDictionaryIds,
+                maxPatchPixels,
+                PATCH_TRANSFORM_MAX_COLORS
+        );
+        TransformMatch transformMatch = findBestTransformMatch(
+                tile,
+                patchSources,
+                payloadCostCache,
+                tileDictionaryIds,
+                remapCostCache,
+                transformDictionaryIds,
+                maxRemapColors,
+                paletteCache
+        );
+        if (patchMatch == null && transformMatch == null) {
+            return (patchTransformMatch == null) ? EventState.literal(tile) : patchTransformMatch.toEventState();
         }
-        return bestState;
+        int bestPatchCost = (patchMatch != null) ? patchMatch.estimatedCost : Integer.MAX_VALUE;
+        int bestPatchTransformCost = (patchTransformMatch != null) ? patchTransformMatch.estimatedCost : Integer.MAX_VALUE;
+        int bestTransformCost = (transformMatch != null) ? transformMatch.estimatedCost : Integer.MAX_VALUE;
+        if (bestPatchCost <= bestPatchTransformCost && bestPatchCost <= bestTransformCost) {
+            return patchMatch.toEventState();
+        }
+        if (bestPatchTransformCost <= bestTransformCost) {
+            return patchTransformMatch.toEventState();
+        }
+        return transformMatch.toEventState();
     }
 
     private static List<PatchSource> buildPatchSources(int positionIndex, TileBlock[] baseTiles, TileBlock[][] atlasTiles) {
-        return buildPatchSources(positionIndex, baseTiles, atlasTiles, null);
-    }
-
-    private static List<PatchSource> buildPatchSources(int positionIndex, TileBlock[] baseTiles, TileBlock[][] atlasTiles,
-                                                       @Nullable List<PatchSource> globalAtlasWindowPatchSources) {
         LinkedHashMap<TileBlock, PatchSource> uniqueSources = new LinkedHashMap<>();
         putPatchSource(uniqueSources, PatchSource.base(baseTiles[positionIndex]));
         for (int atlasIndex = 0; atlasIndex < atlasTiles.length; atlasIndex++) {
             putPatchSource(uniqueSources, PatchSource.samePositionAtlas(atlasIndex, atlasTiles[atlasIndex][positionIndex]));
         }
-        if (globalAtlasWindowPatchSources != null) {
-            for (PatchSource candidate : globalAtlasWindowPatchSources) {
-                putPatchSource(uniqueSources, candidate);
-            }
-        } else {
-            for (int atlasIndex = 0; atlasIndex < atlasTiles.length; atlasIndex++) {
-                for (int sourcePosition = 0; sourcePosition < atlasTiles[atlasIndex].length; sourcePosition++) {
-                    putPatchSource(uniqueSources, PatchSource.windowAtlas(atlasIndex, sourcePosition, atlasTiles[atlasIndex][sourcePosition]));
-                }
+        for (int atlasIndex = 0; atlasIndex < atlasTiles.length; atlasIndex++) {
+            for (int sourcePosition = 0; sourcePosition < atlasTiles[atlasIndex].length; sourcePosition++) {
+                putPatchSource(uniqueSources, PatchSource.windowAtlas(atlasIndex, sourcePosition, atlasTiles[atlasIndex][sourcePosition]));
             }
         }
         return new ArrayList<>(uniqueSources.values());
@@ -2571,23 +2370,6 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
         if (existing == null || candidate.referenceCostEstimate < existing.referenceCostEstimate) {
             uniqueSources.put(candidate.tile, candidate);
         }
-    }
-
-    private static List<PatchSource> buildGlobalAtlasWindowPatchSources(TileBlock[][] atlasTiles) {
-        LinkedHashMap<TileBlock, PatchSource> uniqueSources = new LinkedHashMap<>();
-        for (int atlasIndex = 0; atlasIndex < atlasTiles.length; atlasIndex++) {
-            for (int sourcePosition = 0; sourcePosition < atlasTiles[atlasIndex].length; sourcePosition++) {
-                putPatchSource(uniqueSources, PatchSource.windowAtlas(atlasIndex, sourcePosition, atlasTiles[atlasIndex][sourcePosition]));
-            }
-        }
-        return new ArrayList<>(uniqueSources.values());
-    }
-
-    private static boolean isBetterEventStateCandidate(int candidateCost, int candidatePriority, int bestCost, int bestPriority, int literalCost) {
-        if (candidateCost < bestCost) {
-            return true;
-        }
-        return candidateCost == bestCost && candidateCost < literalCost && candidatePriority < bestPriority;
     }
 
     private static PatchMatch findBestPatchMatch(TileBlock targetTile, List<PatchSource> patchSources,
@@ -3855,28 +3637,10 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
         throw new IOException("Unsupported time-pattern dispatch mode: " + mode);
     }
 
-    private static void writePackedSection(OutputStream out, SectionBuffer rawBytes) throws IOException {
-        Path packedSectionFile = null;
-        try {
-            packedSectionFile = Files.createTempFile("fancymenu_afma_packed_section_", ".tmp");
-            try (OutputStream packedOut = new BufferedOutputStream(Files.newOutputStream(packedSectionFile))) {
-                AfmaSectionPacker.packTo(packedOut, rawBytes.buffer(), rawBytes.length());
-                packedOut.flush();
-            }
-            long packedLength = Files.size(packedSectionFile);
-            if (packedLength > Integer.MAX_VALUE) {
-                throw new IOException("Packed AFMA section exceeds supported length: " + packedLength);
-            }
-            AfmaVarInts.writeUnsigned(out, (int) packedLength);
-            try (InputStream packedIn = new BufferedInputStream(Files.newInputStream(packedSectionFile))) {
-                packedIn.transferTo(out);
-            }
-        } finally {
-            if (packedSectionFile != null) {
-                Files.deleteIfExists(packedSectionFile);
-            }
-            rawBytes.release();
-        }
+    private static void writePackedSection(ByteArrayOutputStream out, byte[] rawBytes) throws IOException {
+        byte[] packed = SectionPacker.pack(rawBytes);
+        AfmaVarInts.writeUnsigned(out, packed.length);
+        out.write(packed);
     }
 
     private static ByteArrayInputStream readPackedSection(ByteArrayInputStream in) throws IOException {
@@ -3885,7 +3649,7 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
         if (packed.length != length) {
             throw new IOException("Packed section ended early");
         }
-        return new ByteArrayInputStream(AfmaSectionPacker.unpack(new ByteArrayInputStream(packed)));
+        return new ByteArrayInputStream(SectionPacker.unpack(new ByteArrayInputStream(packed)));
     }
 
     private static void writeTilePayload(ByteArrayOutputStream out, TileBlock tile) throws IOException {
@@ -4021,6 +3785,20 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
         return frames;
     }
 
+    private static TileBlock dominantTile(List<TileBlock> tiles) {
+        LinkedHashMap<TileBlock, Integer> frequencies = new LinkedHashMap<>();
+        TileBlock bestTile = tiles.get(0);
+        int bestFrequency = 0;
+        for (TileBlock tile : tiles) {
+            int frequency = frequencies.merge(tile, 1, Integer::sum);
+            if (frequency > bestFrequency) {
+                bestTile = tile;
+                bestFrequency = frequency;
+            }
+        }
+        return bestTile;
+    }
+
     private static TileBlock extractTile(int[] framePixels, int frameWidth, int tileX, int tileY, int tileWidth, int tileHeight) {
         int[] tilePixels = new int[tileWidth * tileHeight];
         int writeOffset = 0;
@@ -4050,116 +3828,8 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
         return tile;
     }
 
-    private static int computeTilePayloadSize(TileBlock tile) throws IOException {
-        SectionBuffer payload = new SectionBuffer();
-        try {
-            writeTilePayload(payload, tile);
-            return AfmaSectionPacker.measurePackedLength(payload.buffer(), payload.length());
-        } finally {
-            payload.release();
-        }
-    }
-
     private static int ceilDiv(int numerator, int denominator) {
         return (numerator + denominator - 1) / denominator;
-    }
-
-    private static void parallelForIndexed(int count, @Nullable ProgressListener progressListener, String detail, double start, double span,
-                                           IndexedIoTask task) throws IOException {
-        if (count <= 0) {
-            return;
-        }
-        if (!shouldParallelize(count)) {
-            for (int index = 0; index < count; index++) {
-                task.run(index);
-                reportLoopProgress(progressListener, detail, start, span, index, count);
-            }
-            return;
-        }
-
-        AtomicInteger completed = new AtomicInteger();
-        try {
-            IntStream.range(0, count).parallel().forEach(index -> {
-                try {
-                    task.run(index);
-                    reportCompletedLoopProgress(progressListener, detail, start, span, completed.incrementAndGet(), count);
-                } catch (IOException exception) {
-                    throw new ParallelIoRuntimeException(exception);
-                }
-            });
-        } catch (RuntimeException exception) {
-            IOException ioException = unwrapParallelIoException(exception);
-            if (ioException != null) {
-                throw ioException;
-            }
-            throw exception;
-        }
-    }
-
-    private static boolean shouldParallelize(int workItems) {
-        return workItems >= MIN_PARALLEL_WORK && Runtime.getRuntime().availableProcessors() > 1;
-    }
-
-    private static @Nullable IOException unwrapParallelIoException(Throwable throwable) {
-        Throwable current = throwable;
-        while (current != null) {
-            if (current instanceof ParallelIoRuntimeException exception) {
-                return exception.ioException();
-            }
-            current = current.getCause();
-        }
-        return null;
-    }
-
-    private static void reportProgress(@Nullable ProgressListener progressListener, String detail, double progress) {
-        if (progressListener != null) {
-            progressListener.update(detail, Math.max(0.0D, Math.min(1.0D, progress)));
-        }
-    }
-
-    private static void reportLoopProgress(@Nullable ProgressListener progressListener, String detail, double start, double span, int index, int total) {
-        if (progressListener == null || total <= 0) {
-            return;
-        }
-        if ((index != (total - 1)) && ((index & 15) != 0)) {
-            return;
-        }
-        double normalized = (double) (index + 1) / (double) total;
-        reportProgress(progressListener, detail, start + (span * normalized));
-    }
-
-    private static void reportCompletedLoopProgress(@Nullable ProgressListener progressListener, String detail, double start, double span, int completed, int total) {
-        if (progressListener == null || total <= 0) {
-            return;
-        }
-        if ((completed != total) && ((completed & 15) != 0)) {
-            return;
-        }
-        double normalized = (double) completed / (double) total;
-        reportProgress(progressListener, detail, start + (span * normalized));
-    }
-
-    @FunctionalInterface
-    public interface ProgressListener {
-        void update(String detail, double progress);
-    }
-
-    @FunctionalInterface
-    private interface IndexedIoTask {
-        void run(int index) throws IOException;
-    }
-
-    private static final class ParallelIoRuntimeException extends RuntimeException {
-        private final IOException ioException;
-
-        private ParallelIoRuntimeException(IOException ioException) {
-            super(ioException);
-            this.ioException = ioException;
-        }
-
-        private IOException ioException() {
-            return this.ioException;
-        }
     }
 
     public record WindowStats(
@@ -5076,7 +4746,7 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
         private TileBlock(int width, int height, int[] pixels) {
             this.width = width;
             this.height = height;
-            this.pixels = pixels;
+            this.pixels = Arrays.copyOf(pixels, pixels.length);
             int hash = 31 * width + height;
             hash = 31 * hash + Arrays.hashCode(this.pixels);
             this.hashCode = hash;
@@ -5098,21 +4768,6 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
         @Override
         public int hashCode() {
             return this.hashCode;
-        }
-    }
-
-    private static final class SectionBuffer extends ByteArrayOutputStream {
-        private byte[] buffer() {
-            return this.buf;
-        }
-
-        private int length() {
-            return this.count;
-        }
-
-        private void release() {
-            this.reset();
-            this.buf = new byte[32];
         }
     }
 }

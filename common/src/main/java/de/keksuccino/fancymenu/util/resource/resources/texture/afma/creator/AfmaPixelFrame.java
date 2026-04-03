@@ -61,10 +61,6 @@ public class AfmaPixelFrame implements AutoCloseable {
         return Arrays.copyOf(this.pixels, this.pixels.length);
     }
 
-    @NotNull int[] borrowPixels() {
-        return this.pixels;
-    }
-
     public @NotNull byte[] asByteArray() throws IOException {
         return AfmaBinIntraPayloadHelper.encodePayload(this.width, this.height, this.pixels);
     }
