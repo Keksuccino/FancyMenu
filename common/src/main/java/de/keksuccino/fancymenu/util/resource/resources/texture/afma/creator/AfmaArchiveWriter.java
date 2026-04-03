@@ -66,11 +66,11 @@ public class AfmaArchiveWriter {
             out.writeInt(MAGIC);
             out.writeByte(CONTAINER_VERSION);
             writeSection(out, stagedStream.metadataSection());
-            reportProgress(progressListener, "metadata", 0.84D);
+            reportProgress(progressListener, "Writing metadata section...", 0.92D);
             writeSection(out, stagedStream.animationSection());
-            reportProgress(progressListener, "animation", 0.96D);
+            reportProgress(progressListener, "Writing animation section...", 0.98D);
             writeSection(out, stagedStream.thumbnailSection());
-            reportProgress(progressListener, "thumbnail", 1.0D);
+            reportProgress(progressListener, "Writing thumbnail section...", 1.0D);
             out.flush();
         }
     }
@@ -112,13 +112,15 @@ public class AfmaArchiveWriter {
             metadataSection = writeTempSection(outputDirectory, "metadata", GSON.toJson(metadata).getBytes(StandardCharsets.UTF_8));
 
             checkCancelled(cancellationRequested);
+            reportProgress(progressListener, "Loading source frames...", 0.04D);
             AfmaDecodedAnimation animation = this.loadDecodedAnimation(mainSequence, introSequence, cancellationRequested, progressListener);
             checkCancelled(cancellationRequested);
-            reportProgress(progressListener, "animation", 0.72D);
+            reportProgress(progressListener, "Encoding animation stream...", 0.62D);
             animationSection = writeTempSection(outputDirectory, "animation", out -> CODEC.compress(animation, out));
             checkCancelled(cancellationRequested);
 
             checkCancelled(cancellationRequested);
+            reportProgress(progressListener, (thumbnailBytes != null) ? "Writing thumbnail section..." : "Finalizing archive sections...", 0.99D);
             thumbnailSection = writeTempSection(outputDirectory, "thumbnail", (thumbnailBytes != null) ? thumbnailBytes : new byte[0]);
             success = true;
             return new StagedAfmaStream(metadataSection, animationSection, thumbnailSection);
@@ -180,18 +182,19 @@ public class AfmaArchiveWriter {
         int[] expectedHeight = {-1};
         int[] loadedFrames = {0};
 
-        List<AfmaDecodedFrame> decodedIntro = this.loadSequenceFrames(introFiles, normalizer, expectedWidth, expectedHeight, loadedFrames, totalFrames, cancellationRequested, progressListener);
-        List<AfmaDecodedFrame> decodedMain = this.loadSequenceFrames(mainFiles, normalizer, expectedWidth, expectedHeight, loadedFrames, totalFrames, cancellationRequested, progressListener);
+        List<AfmaDecodedFrame> decodedIntro = this.loadSequenceFrames(introFiles, "intro", normalizer, expectedWidth, expectedHeight, loadedFrames, totalFrames, cancellationRequested, progressListener);
+        List<AfmaDecodedFrame> decodedMain = this.loadSequenceFrames(mainFiles, "main", normalizer, expectedWidth, expectedHeight, loadedFrames, totalFrames, cancellationRequested, progressListener);
 
         return new AfmaDecodedAnimation(expectedWidth[0], expectedHeight[0], decodedIntro, decodedMain);
     }
 
-    protected @NotNull List<AfmaDecodedFrame> loadSequenceFrames(@NotNull List<File> files, @NotNull AfmaFrameNormalizer normalizer,
+    protected @NotNull List<AfmaDecodedFrame> loadSequenceFrames(@NotNull List<File> files, @NotNull String sequenceName, @NotNull AfmaFrameNormalizer normalizer,
                                                                  int[] expectedWidth, int[] expectedHeight, int[] loadedFrames, int totalFrames,
                                                                  @Nullable BooleanSupplier cancellationRequested,
                                                                  @Nullable ProgressListener progressListener) throws IOException {
         ArrayList<AfmaDecodedFrame> result = new ArrayList<>(files.size());
-        for (File file : files) {
+        for (int index = 0; index < files.size(); index++) {
+            File file = files.get(index);
             checkCancelled(cancellationRequested);
             try (AfmaPixelFrame frame = normalizer.loadFrame(file)) {
                 if (expectedWidth[0] < 0) {
@@ -203,7 +206,9 @@ public class AfmaArchiveWriter {
                 result.add(new AfmaDecodedFrame(frame.getWidth(), frame.getHeight(), frame.borrowPixels()));
             }
             loadedFrames[0]++;
-            reportProgress(progressListener, file.getName(), (0.70D * loadedFrames[0]) / Math.max(1, totalFrames));
+            reportProgress(progressListener,
+                    "Loading " + sequenceName + " frame " + (index + 1) + "/" + files.size() + ": " + file.getName(),
+                    0.08D + (0.48D * loadedFrames[0]) / Math.max(1, totalFrames));
         }
         return result;
     }

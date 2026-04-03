@@ -334,7 +334,7 @@ public class AfmaCreatorState {
     protected void runExportJob(@NotNull AfmaEncodeJob job, @NotNull PreparedInputs prepared) {
         File tempFile = null;
         try {
-            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.VALIDATING_SOURCES, "Validating AFMA creator input...", null, 0.10D));
+            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.VALIDATING_SOURCES, "Validating AFMA creator input...", null, 0.02D));
             checkCancelled(job);
 
             AfmaMetadata exportMetadata = this.resolveExportMetadata(prepared, job);
@@ -342,19 +342,19 @@ public class AfmaCreatorState {
 
             byte[] thumbnailBytes = null;
             if (prepared.generateThumbnail) {
-                job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Generating AFMA thumbnail...", null, 0.68D));
+                job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Generating AFMA thumbnail...", null, 0.10D));
                 thumbnailBytes = this.buildThumbnailBytes(prepared.mainSequence, prepared.introSequence);
             }
             checkCancelled(job);
 
-            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Writing AFMA file...", prepared.outputFile.getName(), 0.82D));
+            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Writing AFMA file...", "Preparing temporary archive sections...", 0.12D));
             tempFile = new File(prepared.outputFile.getParentFile(), prepared.outputFile.getName() + ".tmp");
             org.apache.commons.io.FileUtils.deleteQuietly(tempFile);
             this.archiveWriter.write(exportMetadata, prepared.mainSequence, prepared.introSequence, thumbnailBytes, tempFile, job::isCancellationRequested,
-                    (detail, progress) -> job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Writing AFMA file...", detail, 0.82D + (0.16D * progress))));
+                    (detail, progress) -> job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Writing AFMA file...", detail, 0.12D + (0.84D * progress))));
             checkCancelled(job);
 
-            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Validating AFMA file...", prepared.outputFile.getName(), 0.985D));
+            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Validating AFMA file...", prepared.outputFile.getName(), 0.97D));
             this.validateWrittenArchive(tempFile);
             checkCancelled(job);
 
@@ -374,17 +374,17 @@ public class AfmaCreatorState {
     protected @NotNull AfmaMetadata resolveExportMetadata(@NotNull PreparedInputs prepared, @NotNull AfmaEncodeJob job) throws IOException {
         CachedPlan cachedPlan = this.cachedPlan;
         if ((cachedPlan != null) && (cachedPlan.configurationVersion == prepared.configurationVersion)) {
-            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Reusing analyzed AFMA export metadata...", null, 0.55D));
+            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Reusing analyzed AFMA export metadata...", null, 0.05D));
             return cachedPlan.summaryPlan().getMetadata();
         }
 
         AfmaCreatorAnalysisResult analysisResult = this.analysisResult;
         if ((analysisResult != null) && (this.successfulAnalysisVersion == prepared.configurationVersion)) {
-            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Reusing analyzed AFMA export metadata...", null, 0.55D));
+            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Reusing analyzed AFMA export metadata...", null, 0.05D));
             return analysisResult.plan().getMetadata();
         }
 
-        job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Preparing AFMA export metadata...", null, 0.20D));
+        job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Preparing AFMA export metadata...", null, 0.06D));
         File sourceFile = !prepared.mainSequence.isEmpty() ? prepared.mainSequence.getFrame(0) : prepared.introSequence.getFrame(0);
         if (sourceFile == null) {
             throw new IOException("AFMA encoding requires at least one source frame");

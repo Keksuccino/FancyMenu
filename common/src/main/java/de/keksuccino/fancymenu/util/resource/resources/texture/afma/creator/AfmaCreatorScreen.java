@@ -458,6 +458,17 @@ public class AfmaCreatorScreen extends Screen {
         if (progress.detail() != null && !progress.detail().isBlank()) {
             textY = this.renderWrappedUiText(graphics, Component.literal(progress.detail()), rightPanelX, textY, rightWidth, 0xFFD0D0D0);
         }
+        textY = this.renderWrappedUiText(graphics,
+                Component.translatable("fancymenu.afma.creator.job_progress", formatPercent(progress.progress())),
+                rightPanelX, textY, rightWidth, 0xFFD0D0D0);
+        textY = this.renderWrappedUiText(graphics,
+                Component.translatable("fancymenu.afma.creator.job_elapsed", formatDuration(job.getElapsedMillis())),
+                rightPanelX, textY, rightWidth, 0xFFD0D0D0);
+        Long remainingMillis = job.getEstimatedRemainingMillis();
+        Component remainingText = (remainingMillis != null)
+                ? Component.translatable("fancymenu.afma.creator.job_remaining", formatDuration(remainingMillis))
+                : Component.translatable("fancymenu.afma.creator.job_remaining.calculating");
+        textY = this.renderWrappedUiText(graphics, remainingText, rightPanelX, textY, rightWidth, 0xFFD0D0D0);
         int barWidth = rightWidth;
         graphics.fill(rightPanelX, textY, rightPanelX + barWidth, textY + 8, 0xFF202020);
         graphics.fill(rightPanelX, textY, rightPanelX + Math.round(barWidth * (float) progress.progress()), textY + 8, UIBase.getUITheme().success_color.getColorInt());
@@ -471,6 +482,21 @@ public class AfmaCreatorScreen extends Screen {
             y += lineHeight + 2;
         }
         return y;
+    }
+
+    protected static @NotNull String formatPercent(double progress) {
+        return String.format(Locale.ROOT, "%.1f%%", Math.max(0.0D, Math.min(1.0D, progress)) * 100.0D);
+    }
+
+    protected static @NotNull String formatDuration(long millis) {
+        long totalSeconds = Math.max(0L, millis / 1000L);
+        long hours = totalSeconds / 3600L;
+        long minutes = (totalSeconds % 3600L) / 60L;
+        long seconds = totalSeconds % 60L;
+        if (hours > 0L) {
+            return String.format(Locale.ROOT, "%d:%02d:%02d", hours, minutes, seconds);
+        }
+        return String.format(Locale.ROOT, "%d:%02d", minutes, seconds);
     }
 
     @Override

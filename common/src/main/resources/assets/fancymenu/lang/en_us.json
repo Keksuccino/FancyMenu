@@ -3329,5 +3329,9 @@
   "fancymenu.afma.creator.export": "Export",
   "fancymenu.afma.creator.export.success": "AFMA export finished:\n%s",
   "fancymenu.afma.creator.job_status": "Job: %s",
-  "fancymenu.afma.creator.near_lossless": "Near-Lossless Temporal Merge: %s"
+  "fancymenu.afma.creator.near_lossless": "Near-Lossless Temporal Merge: %s",
+  "fancymenu.afma.creator.job_progress": "Progress: %s",
+  "fancymenu.afma.creator.job_elapsed": "Time Passed: %s",
+  "fancymenu.afma.creator.job_remaining": "Estimated Time Remaining: %s",
+  "fancymenu.afma.creator.job_remaining.calculating": "Estimated Time Remaining: Calculating..."
 }
