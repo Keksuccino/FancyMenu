@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -1058,7 +1059,7 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
      * Compresses a fully decoded animation into the atlas/program stream.
      */
     @Override
-    public byte[] compress(AfmaDecodedAnimation animation) throws IOException {
+    public void compress(AfmaDecodedAnimation animation, OutputStream output) throws IOException {
         PreparedData prepared = prepare(animation, this.tileSize);
         LinkedHashMap<TileBlock, Integer> payloadCostCache = new LinkedHashMap<>();
         TileBlock[][] atlasTiles = buildRegularizedAtlases(
@@ -1089,12 +1090,6 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
             atlasLookups[atlasIndex] = atlasLookup;
         }
         AtlasImage[] atlasImages = buildAtlasImages(atlasTiles, prepared.width, prepared.height, this.tileSize, prepared.columns, prepared.rows);
-
-        @SuppressWarnings("unchecked")
-        List<PatchSource>[] patchSourcesByPosition = new List[prepared.positionCount];
-        for (int positionIndex = 0; positionIndex < prepared.positionCount; positionIndex++) {
-            patchSourcesByPosition[positionIndex] = buildPatchSources(positionIndex, prepared.baseTiles, atlasTiles);
-        }
         LinkedHashMap<TileBlock, int[]> paletteCache = new LinkedHashMap<>();
         LinkedHashMap<RemapKey, Integer> remapCostCache = new LinkedHashMap<>();
 
@@ -1127,6 +1122,7 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
         @SuppressWarnings("unchecked")
         LinkedHashMap<TileBlock, EventState>[] provisionalStateCacheByPosition = new LinkedHashMap[prepared.positionCount];
         for (int positionIndex = 0; positionIndex < prepared.positionCount; positionIndex++) {
+            List<PatchSource> patchSources = buildPatchSources(positionIndex, prepared.baseTiles, atlasTiles);
             provisionalStateCacheByPosition[positionIndex] = new LinkedHashMap<>();
             TileBlock baseTile = prepared.baseTiles[positionIndex];
             for (int frameIndex = 0; frameIndex < prepared.totalFrames; frameIndex++) {
@@ -1149,7 +1145,7 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                             cached = resolveEventState(
                                     tile,
                                     tentativeTileDictionaryIds,
-                                    patchSourcesByPosition[positionIndex],
+                                    patchSources,
                                     payloadCostCache,
                                     remapCostCache,
                                     paletteCache,
@@ -1172,9 +1168,11 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
         }
         LinkedHashMap<TileTransform, Integer> provisionalTransformDictionaryIds = buildTransformDictionary(provisionalTransformFrequencies, 2);
         LinkedHashMap<PatchShapeKey, Integer> provisionalPatchShapeDictionaryIds = buildPatchShapeDictionary(provisionalPatchShapeFrequencies);
+        provisionalStateCacheByPosition = null;
 
         ArrayList<PositionProgram> programs = new ArrayList<>(prepared.positionCount);
         for (int positionIndex = 0; positionIndex < prepared.positionCount; positionIndex++) {
+            List<PatchSource> patchSources = buildPatchSources(positionIndex, prepared.baseTiles, atlasTiles);
             TileBlock baseTile = prepared.baseTiles[positionIndex];
             EventState[] states = new EventState[prepared.totalFrames];
             for (int frameIndex = 0; frameIndex < prepared.totalFrames; frameIndex++) {
@@ -1198,7 +1196,7 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                             cached = resolveEventState(
                                     tile,
                                     tentativeTileDictionaryIds,
-                                    patchSourcesByPosition[positionIndex],
+                                    patchSources,
                                     payloadCostCache,
                                     remapCostCache,
                                     paletteCache,
@@ -1233,6 +1231,9 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
             PositionProgram program = new PositionProgram(baseTile, events);
             programs.add(program);
         }
+        atlasImages = null;
+        atlasLookups = null;
+        stateCacheByPosition = null;
 
         PlacementSelection placementSelection = selectPlacementPrograms(programs, prepared.columns, prepared.rows, this.minPlacementArea, this.tileSize);
 
@@ -1266,28 +1267,28 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
         LinkedHashMap<TileTransform, Integer> transformDictionaryIds = buildTransformDictionary(transformFrequencies, 2);
         LinkedHashMap<PatchShapeKey, Integer> patchShapeDictionaryIds = buildPatchShapeDictionary(patchShapeFrequencies);
 
-        ByteArrayOutputStream tileDictionaryMeta = new ByteArrayOutputStream();
-        ByteArrayOutputStream tileDictionaryPayload = new ByteArrayOutputStream();
+        SectionBuffer tileDictionaryMeta = new SectionBuffer();
+        SectionBuffer tileDictionaryPayload = new SectionBuffer();
         for (TileBlock tile : tileDictionaryIds.keySet()) {
             AfmaVarInts.writeUnsigned(tileDictionaryMeta, tile.width);
             AfmaVarInts.writeUnsigned(tileDictionaryMeta, tile.height);
             writeTilePayload(tileDictionaryPayload, tile);
         }
 
-        ByteArrayOutputStream transformDictionaryMeta = new ByteArrayOutputStream();
-        ByteArrayOutputStream transformDictionaryPayload = new ByteArrayOutputStream();
+        SectionBuffer transformDictionaryMeta = new SectionBuffer();
+        SectionBuffer transformDictionaryPayload = new SectionBuffer();
         for (TileTransform transform : transformDictionaryIds.keySet()) {
             writeDictionaryTileTransform(transformDictionaryMeta, transformDictionaryPayload, transform);
         }
 
-        ByteArrayOutputStream patchShapeDictionaryPayload = new ByteArrayOutputStream();
+        SectionBuffer patchShapeDictionaryPayload = new SectionBuffer();
         for (PatchShapeKey patchShape : patchShapeDictionaryIds.keySet()) {
             writePatchShape(patchShapeDictionaryPayload, patchShape);
         }
 
-        ByteArrayOutputStream baseMeta = new ByteArrayOutputStream();
-        ByteArrayOutputStream baseRefs = new ByteArrayOutputStream();
-        ByteArrayOutputStream baseInlinePayload = new ByteArrayOutputStream();
+        SectionBuffer baseMeta = new SectionBuffer();
+        SectionBuffer baseRefs = new SectionBuffer();
+        SectionBuffer baseInlinePayload = new SectionBuffer();
         for (int row = 0; row < prepared.rows; row++) {
             TileBlock leftTile = null;
             for (int column = 0; column < prepared.columns; column++) {
@@ -1298,9 +1299,9 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
             }
         }
 
-        ByteArrayOutputStream atlasMeta = new ByteArrayOutputStream();
-        ByteArrayOutputStream atlasRefs = new ByteArrayOutputStream();
-        ByteArrayOutputStream atlasInlinePayload = new ByteArrayOutputStream();
+        SectionBuffer atlasMeta = new SectionBuffer();
+        SectionBuffer atlasRefs = new SectionBuffer();
+        SectionBuffer atlasInlinePayload = new SectionBuffer();
         for (int atlasIndex = 0; atlasIndex < atlasTiles.length; atlasIndex++) {
             for (int row = 0; row < prepared.rows; row++) {
                 TileBlock leftTile = null;
@@ -1315,7 +1316,7 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
             }
         }
 
-        ByteArrayOutputStream placementPrograms = new ByteArrayOutputStream();
+        SectionBuffer placementPrograms = new SectionBuffer();
         AfmaVarInts.writeUnsigned(placementPrograms, placementSelection.templates.size());
         for (PlacementTemplateSelection templateSelection : placementSelection.templates) {
             writeTimePattern(templateSelection.template.pattern, placementPrograms);
@@ -1333,25 +1334,25 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
             }
         }
 
-        ByteArrayOutputStream timePatternDictionaryMeta = new ByteArrayOutputStream();
+        SectionBuffer timePatternDictionaryMeta = new SectionBuffer();
         for (TimePatternKey pattern : timePatternIds.keySet()) {
             writeTimePattern(pattern, timePatternDictionaryMeta);
         }
 
-        ByteArrayOutputStream timePatternDispatch = new ByteArrayOutputStream();
-        ByteArrayOutputStream timePatternRefs = new ByteArrayOutputStream();
-        ByteArrayOutputStream timePatternInlineMeta = new ByteArrayOutputStream();
-        ByteArrayOutputStream eventStateMeta = new ByteArrayOutputStream();
-        ByteArrayOutputStream eventAtlasRefs = new ByteArrayOutputStream();
-        ByteArrayOutputStream eventLiteralMeta = new ByteArrayOutputStream();
-        ByteArrayOutputStream eventLiteralRefs = new ByteArrayOutputStream();
-        ByteArrayOutputStream eventLiteralInlinePayload = new ByteArrayOutputStream();
-        ByteArrayOutputStream eventPatchMeta = new ByteArrayOutputStream();
-        ByteArrayOutputStream eventPatchRefs = new ByteArrayOutputStream();
-        ByteArrayOutputStream eventPatchPayload = new ByteArrayOutputStream();
-        ByteArrayOutputStream eventTransformMeta = new ByteArrayOutputStream();
-        ByteArrayOutputStream eventTransformRefs = new ByteArrayOutputStream();
-        ByteArrayOutputStream eventTransformPayload = new ByteArrayOutputStream();
+        SectionBuffer timePatternDispatch = new SectionBuffer();
+        SectionBuffer timePatternRefs = new SectionBuffer();
+        SectionBuffer timePatternInlineMeta = new SectionBuffer();
+        SectionBuffer eventStateMeta = new SectionBuffer();
+        SectionBuffer eventAtlasRefs = new SectionBuffer();
+        SectionBuffer eventLiteralMeta = new SectionBuffer();
+        SectionBuffer eventLiteralRefs = new SectionBuffer();
+        SectionBuffer eventLiteralInlinePayload = new SectionBuffer();
+        SectionBuffer eventPatchMeta = new SectionBuffer();
+        SectionBuffer eventPatchRefs = new SectionBuffer();
+        SectionBuffer eventPatchPayload = new SectionBuffer();
+        SectionBuffer eventTransformMeta = new SectionBuffer();
+        SectionBuffer eventTransformRefs = new SectionBuffer();
+        SectionBuffer eventTransformPayload = new SectionBuffer();
         for (int row = 0; row < prepared.rows; row++) {
             TimePatternKey leftPattern = null;
             for (int column = 0; column < prepared.columns; column++) {
@@ -1446,51 +1447,49 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
             }
         }
 
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        DataOutputStream dataOut = new DataOutputStream(out);
+        DataOutputStream dataOut = new DataOutputStream(output);
         dataOut.writeInt(MAGIC);
         dataOut.writeByte(VERSION);
-        AfmaVarInts.writeUnsigned(out, prepared.width);
-        AfmaVarInts.writeUnsigned(out, prepared.height);
-        AfmaVarInts.writeUnsigned(out, animation.introFrames().size());
-        AfmaVarInts.writeUnsigned(out, animation.mainFrames().size());
-        AfmaVarInts.writeUnsigned(out, this.tileSize);
-        AfmaVarInts.writeUnsigned(out, prepared.columns);
-        AfmaVarInts.writeUnsigned(out, prepared.rows);
-        AfmaVarInts.writeUnsigned(out, tileDictionaryIds.size());
-        AfmaVarInts.writeUnsigned(out, atlasTiles.length);
-        AfmaVarInts.writeUnsigned(out, timePatternIds.size());
-        AfmaVarInts.writeUnsigned(out, transformDictionaryIds.size());
-        AfmaVarInts.writeUnsigned(out, patchShapeDictionaryIds.size());
-        writePackedSection(out, tileDictionaryMeta.toByteArray());
-        writePackedSection(out, tileDictionaryPayload.toByteArray());
-        writePackedSection(out, transformDictionaryMeta.toByteArray());
-        writePackedSection(out, transformDictionaryPayload.toByteArray());
-        writePackedSection(out, patchShapeDictionaryPayload.toByteArray());
-        writePackedSection(out, baseMeta.toByteArray());
-        writePackedSection(out, baseRefs.toByteArray());
-        writePackedSection(out, baseInlinePayload.toByteArray());
-        writePackedSection(out, atlasMeta.toByteArray());
-        writePackedSection(out, atlasRefs.toByteArray());
-        writePackedSection(out, atlasInlinePayload.toByteArray());
-        writePackedSection(out, placementPrograms.toByteArray());
-        writePackedSection(out, timePatternDictionaryMeta.toByteArray());
-        writePackedSection(out, timePatternDispatch.toByteArray());
-        writePackedSection(out, timePatternRefs.toByteArray());
-        writePackedSection(out, timePatternInlineMeta.toByteArray());
-        writePackedSection(out, eventStateMeta.toByteArray());
-        writePackedSection(out, eventAtlasRefs.toByteArray());
-        writePackedSection(out, eventLiteralMeta.toByteArray());
-        writePackedSection(out, eventLiteralRefs.toByteArray());
-        writePackedSection(out, eventLiteralInlinePayload.toByteArray());
-        writePackedSection(out, eventPatchMeta.toByteArray());
-        writePackedSection(out, eventPatchRefs.toByteArray());
-        writePackedSection(out, eventPatchPayload.toByteArray());
-        writePackedSection(out, eventTransformMeta.toByteArray());
-        writePackedSection(out, eventTransformRefs.toByteArray());
-        writePackedSection(out, eventTransformPayload.toByteArray());
+        AfmaVarInts.writeUnsigned(output, prepared.width);
+        AfmaVarInts.writeUnsigned(output, prepared.height);
+        AfmaVarInts.writeUnsigned(output, animation.introFrames().size());
+        AfmaVarInts.writeUnsigned(output, animation.mainFrames().size());
+        AfmaVarInts.writeUnsigned(output, this.tileSize);
+        AfmaVarInts.writeUnsigned(output, prepared.columns);
+        AfmaVarInts.writeUnsigned(output, prepared.rows);
+        AfmaVarInts.writeUnsigned(output, tileDictionaryIds.size());
+        AfmaVarInts.writeUnsigned(output, atlasTiles.length);
+        AfmaVarInts.writeUnsigned(output, timePatternIds.size());
+        AfmaVarInts.writeUnsigned(output, transformDictionaryIds.size());
+        AfmaVarInts.writeUnsigned(output, patchShapeDictionaryIds.size());
+        writePackedSection(output, tileDictionaryMeta);
+        writePackedSection(output, tileDictionaryPayload);
+        writePackedSection(output, transformDictionaryMeta);
+        writePackedSection(output, transformDictionaryPayload);
+        writePackedSection(output, patchShapeDictionaryPayload);
+        writePackedSection(output, baseMeta);
+        writePackedSection(output, baseRefs);
+        writePackedSection(output, baseInlinePayload);
+        writePackedSection(output, atlasMeta);
+        writePackedSection(output, atlasRefs);
+        writePackedSection(output, atlasInlinePayload);
+        writePackedSection(output, placementPrograms);
+        writePackedSection(output, timePatternDictionaryMeta);
+        writePackedSection(output, timePatternDispatch);
+        writePackedSection(output, timePatternRefs);
+        writePackedSection(output, timePatternInlineMeta);
+        writePackedSection(output, eventStateMeta);
+        writePackedSection(output, eventAtlasRefs);
+        writePackedSection(output, eventLiteralMeta);
+        writePackedSection(output, eventLiteralRefs);
+        writePackedSection(output, eventLiteralInlinePayload);
+        writePackedSection(output, eventPatchMeta);
+        writePackedSection(output, eventPatchRefs);
+        writePackedSection(output, eventPatchPayload);
+        writePackedSection(output, eventTransformMeta);
+        writePackedSection(output, eventTransformRefs);
+        writePackedSection(output, eventTransformPayload);
         dataOut.flush();
-        return out.toByteArray();
     }
 
     /**
@@ -1858,15 +1857,20 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
                 int tileX = column * tileSize;
                 int tileWidth = Math.min(tileSize, width - tileX);
                 int positionIndex = row * columns + column;
-                List<TileBlock> sequence = new ArrayList<>(totalFrames);
+                LinkedHashMap<TileBlock, Integer> frequencies = new LinkedHashMap<>();
+                TileBlock baseTile = null;
+                int baseFrequency = 0;
                 for (int frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
                     TileBlock tile = internTile(tilePool, extractTile(frames.get(frameIndex).argbPixels(), width, tileX, tileY, tileWidth, tileHeight));
                     tilesByPositionFrame[positionIndex][frameIndex] = tile;
-                    sequence.add(tile);
+                    int frequency = frequencies.merge(tile, 1, Integer::sum);
+                    if (frequency > baseFrequency) {
+                        baseTile = tile;
+                        baseFrequency = frequency;
+                    }
                 }
-                TileBlock baseTile = dominantTile(sequence);
                 baseTiles[positionIndex] = baseTile;
-                for (TileBlock tile : sequence) {
+                for (TileBlock tile : tilesByPositionFrame[positionIndex]) {
                     if (tile.equals(baseTile)) {
                         baseCoveredOccurrences++;
                     }
@@ -3637,10 +3641,15 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
         throw new IOException("Unsupported time-pattern dispatch mode: " + mode);
     }
 
-    private static void writePackedSection(ByteArrayOutputStream out, byte[] rawBytes) throws IOException {
-        byte[] packed = AfmaSectionPacker.pack(rawBytes);
-        AfmaVarInts.writeUnsigned(out, packed.length);
-        out.write(packed);
+    private static void writePackedSection(OutputStream out, SectionBuffer rawBytes) throws IOException {
+        try {
+            AfmaSectionPacker.Analysis analysis = AfmaSectionPacker.analyze(rawBytes.buffer(), rawBytes.length());
+            byte[] packedBytes = analysis.packedBytes();
+            AfmaVarInts.writeUnsigned(out, packedBytes.length);
+            out.write(packedBytes);
+        } finally {
+            rawBytes.release();
+        }
     }
 
     private static ByteArrayInputStream readPackedSection(ByteArrayInputStream in) throws IOException {
@@ -3783,20 +3792,6 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
             frames.add(new AfmaDecodedFrame(width, height, framePixels[index]));
         }
         return frames;
-    }
-
-    private static TileBlock dominantTile(List<TileBlock> tiles) {
-        LinkedHashMap<TileBlock, Integer> frequencies = new LinkedHashMap<>();
-        TileBlock bestTile = tiles.get(0);
-        int bestFrequency = 0;
-        for (TileBlock tile : tiles) {
-            int frequency = frequencies.merge(tile, 1, Integer::sum);
-            if (frequency > bestFrequency) {
-                bestTile = tile;
-                bestFrequency = frequency;
-            }
-        }
-        return bestTile;
     }
 
     private static TileBlock extractTile(int[] framePixels, int frameWidth, int tileX, int tileY, int tileWidth, int tileHeight) {
@@ -4746,7 +4741,7 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
         private TileBlock(int width, int height, int[] pixels) {
             this.width = width;
             this.height = height;
-            this.pixels = Arrays.copyOf(pixels, pixels.length);
+            this.pixels = pixels;
             int hash = 31 * width + height;
             hash = 31 * hash + Arrays.hashCode(this.pixels);
             this.hashCode = hash;
@@ -4768,6 +4763,21 @@ public final class AfmaAtlasPixelOffsetPlacementProgramCodec implements AfmaAnim
         @Override
         public int hashCode() {
             return this.hashCode;
+        }
+    }
+
+    private static final class SectionBuffer extends ByteArrayOutputStream {
+        private byte[] buffer() {
+            return this.buf;
+        }
+
+        private int length() {
+            return this.count;
+        }
+
+        private void release() {
+            this.reset();
+            this.buf = new byte[32];
         }
     }
 }

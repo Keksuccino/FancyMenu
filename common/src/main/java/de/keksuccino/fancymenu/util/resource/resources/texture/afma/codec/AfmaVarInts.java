@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * Compact unsigned and zig-zag integer encoding used by the AFMA atlas/program
@@ -16,6 +17,15 @@ public final class AfmaVarInts {
     }
 
     public static void writeUnsigned(@NotNull ByteArrayOutputStream out, int value) {
+        long remaining = Integer.toUnsignedLong(value);
+        while ((remaining & ~0x7FL) != 0L) {
+            out.write((int) ((remaining & 0x7FL) | 0x80L));
+            remaining >>>= 7;
+        }
+        out.write((int) remaining);
+    }
+
+    public static void writeUnsigned(@NotNull OutputStream out, int value) throws IOException {
         long remaining = Integer.toUnsignedLong(value);
         while ((remaining & ~0x7FL) != 0L) {
             out.write((int) ((remaining & 0x7FL) | 0x80L));

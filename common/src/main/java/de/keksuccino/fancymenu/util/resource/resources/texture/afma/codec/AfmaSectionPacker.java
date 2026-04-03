@@ -5,6 +5,8 @@ import org.jetbrains.annotations.NotNull;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Arrays;
 
 /**
  * Packs AFMA codec sub-sections with a small method header and the cheapest of
@@ -16,48 +18,24 @@ public final class AfmaSectionPacker {
     }
 
     public static byte[] pack(byte[] originalBytes) throws IOException {
-        return analyze(originalBytes).packedBytes();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        writePacked(out, findBestCandidate(originalBytes, originalBytes.length), originalBytes.length);
+        return out.toByteArray();
+    }
+
+    public static void packTo(@NotNull OutputStream out, byte[] originalBytes, int originalLength) throws IOException {
+        writePacked(out, findBestCandidate(originalBytes, originalLength), originalLength);
     }
 
     public static @NotNull Analysis analyze(byte[] originalBytes) throws IOException {
-        Candidate best = new Candidate(Method.RAW, originalBytes);
+        return analyze(originalBytes, originalBytes.length);
+    }
 
-        byte[] zeroRun = AfmaZeroRunCodec.compress(originalBytes);
-        if (zeroRun.length < best.bytes.length) {
-            best = new Candidate(Method.ZERO_RLE, zeroRun);
-        }
-
-        byte[] miniLz = AfmaMiniLzCodec.compress(originalBytes);
-        if (miniLz.length < best.bytes.length) {
-            best = new Candidate(Method.MINILZ, miniLz);
-        }
-
-        byte[] rice = AfmaRiceCodec.compress(originalBytes);
-        if (rice.length < best.bytes.length) {
-            best = new Candidate(Method.RICE, rice);
-        }
-
-        byte[] zeroRunHuffman = AfmaHuffmanCodec.compress(zeroRun);
-        if (zeroRunHuffman.length < best.bytes.length) {
-            best = new Candidate(Method.ZERO_RLE_HUFFMAN, zeroRunHuffman);
-        }
-
-        byte[] huffman = AfmaHuffmanCodec.compress(originalBytes);
-        if (huffman.length < best.bytes.length) {
-            best = new Candidate(Method.HUFFMAN, huffman);
-        }
-
-        byte[] miniLzHuffman = AfmaHuffmanCodec.compress(miniLz);
-        if (miniLzHuffman.length < best.bytes.length) {
-            best = new Candidate(Method.MINILZ_HUFFMAN, miniLzHuffman);
-        }
-
+    public static @NotNull Analysis analyze(byte[] originalBytes, int originalLength) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        out.write(best.method.id);
-        AfmaVarInts.writeUnsigned(out, originalBytes.length);
-        AfmaVarInts.writeUnsigned(out, best.bytes.length);
-        out.write(best.bytes);
-        return new Analysis(best.method.name(), originalBytes.length, best.bytes.length, out.toByteArray());
+        Candidate best = findBestCandidate(originalBytes, originalLength);
+        writePacked(out, best, originalLength);
+        return new Analysis(best.method.name(), originalLength, best.length, out.toByteArray());
     }
 
     public static byte[] unpack(@NotNull ByteArrayInputStream in) throws IOException {
@@ -88,7 +66,50 @@ public final class AfmaSectionPacker {
         return unpacked;
     }
 
-    private record Candidate(@NotNull Method method, byte @NotNull [] bytes) {
+    private static @NotNull Candidate findBestCandidate(byte[] originalBytes, int originalLength) throws IOException {
+        byte[] sourceBytes = (originalLength == originalBytes.length)
+                ? originalBytes
+                : Arrays.copyOf(originalBytes, originalLength);
+        Candidate best = new Candidate(Method.RAW, sourceBytes, originalLength);
+
+        byte[] zeroRun = AfmaZeroRunCodec.compress(sourceBytes);
+        best = chooseBetter(best, Method.ZERO_RLE, zeroRun);
+
+        byte[] zeroRunHuffman = AfmaHuffmanCodec.compress(zeroRun);
+        best = chooseBetter(best, Method.ZERO_RLE_HUFFMAN, zeroRunHuffman);
+        zeroRun = null;
+        zeroRunHuffman = null;
+
+        byte[] miniLz = AfmaMiniLzCodec.compress(sourceBytes);
+        best = chooseBetter(best, Method.MINILZ, miniLz);
+
+        byte[] miniLzHuffman = AfmaHuffmanCodec.compress(miniLz);
+        best = chooseBetter(best, Method.MINILZ_HUFFMAN, miniLzHuffman);
+        miniLz = null;
+        miniLzHuffman = null;
+
+        byte[] rice = AfmaRiceCodec.compress(sourceBytes);
+        best = chooseBetter(best, Method.RICE, rice);
+        rice = null;
+
+        byte[] huffman = AfmaHuffmanCodec.compress(sourceBytes);
+        best = chooseBetter(best, Method.HUFFMAN, huffman);
+
+        return best;
+    }
+
+    private static @NotNull Candidate chooseBetter(@NotNull Candidate best, @NotNull Method method, byte[] bytes) {
+        return (bytes.length < best.length) ? new Candidate(method, bytes, bytes.length) : best;
+    }
+
+    private static void writePacked(@NotNull OutputStream out, @NotNull Candidate best, int originalLength) throws IOException {
+        out.write(best.method.id);
+        AfmaVarInts.writeUnsigned(out, originalLength);
+        AfmaVarInts.writeUnsigned(out, best.length);
+        out.write(best.bytes, 0, best.length);
+    }
+
+    private record Candidate(@NotNull Method method, byte @NotNull [] bytes, int length) {
     }
 
     public record Analysis(@NotNull String methodName, int originalLength, int payloadLength, byte @NotNull [] packedBytes) {

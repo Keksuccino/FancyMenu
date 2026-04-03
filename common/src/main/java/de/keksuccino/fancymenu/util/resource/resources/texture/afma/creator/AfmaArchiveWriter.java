@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -114,7 +115,7 @@ public class AfmaArchiveWriter {
             AfmaDecodedAnimation animation = this.loadDecodedAnimation(mainSequence, introSequence, cancellationRequested, progressListener);
             checkCancelled(cancellationRequested);
             reportProgress(progressListener, "animation", 0.72D);
-            animationSection = writeTempSection(outputDirectory, "animation", CODEC.compress(animation));
+            animationSection = writeTempSection(outputDirectory, "animation", out -> CODEC.compress(animation, out));
             checkCancelled(cancellationRequested);
 
             checkCancelled(cancellationRequested);
@@ -137,6 +138,22 @@ public class AfmaArchiveWriter {
             Files.write(tempFile, bytes);
             success = true;
             return new TempSection(tempFile, bytes.length);
+        } finally {
+            if (!success) {
+                Files.deleteIfExists(tempFile);
+            }
+        }
+    }
+
+    protected static @NotNull TempSection writeTempSection(@NotNull Path outputDirectory, @NotNull String sectionName,
+                                                           @NotNull SectionWriter writer) throws IOException {
+        Path tempFile = Files.createTempFile(outputDirectory, "fancymenu_afma_" + sectionName + "_", ".tmp");
+        boolean success = false;
+        try (OutputStream out = new BufferedOutputStream(Files.newOutputStream(tempFile))) {
+            writer.write(out);
+            out.flush();
+            success = true;
+            return new TempSection(tempFile, Files.size(tempFile));
         } finally {
             if (!success) {
                 Files.deleteIfExists(tempFile);
@@ -183,7 +200,7 @@ public class AfmaArchiveWriter {
                 } else if ((expectedWidth[0] != frame.getWidth()) || (expectedHeight[0] != frame.getHeight())) {
                     throw new IOException("AFMA source frame dimensions do not match the expected canvas size: " + file.getAbsolutePath());
                 }
-                result.add(new AfmaDecodedFrame(frame.getWidth(), frame.getHeight(), frame.copyPixels()));
+                result.add(new AfmaDecodedFrame(frame.getWidth(), frame.getHeight(), frame.borrowPixels()));
             }
             loadedFrames[0]++;
             reportProgress(progressListener, file.getName(), (0.70D * loadedFrames[0]) / Math.max(1, totalFrames));
@@ -244,6 +261,11 @@ public class AfmaArchiveWriter {
     @FunctionalInterface
     public interface ProgressListener {
         void update(@NotNull String detail, double progress);
+    }
+
+    @FunctionalInterface
+    protected interface SectionWriter {
+        void write(@NotNull OutputStream out) throws IOException;
     }
 
     protected record TempSection(@NotNull Path path, long length) implements AutoCloseable {

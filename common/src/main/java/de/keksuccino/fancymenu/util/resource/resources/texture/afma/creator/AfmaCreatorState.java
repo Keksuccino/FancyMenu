@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator;
 
 import de.keksuccino.fancymenu.util.file.FilenameComparator;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaDecoder;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaMetadata;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -336,7 +337,7 @@ public class AfmaCreatorState {
             job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.VALIDATING_SOURCES, "Validating AFMA creator input...", null, 0.10D));
             checkCancelled(job);
 
-            AfmaEncodePlan exportPlan = this.resolveExportPlan(prepared, job);
+            AfmaMetadata exportMetadata = this.resolveExportMetadata(prepared, job);
             checkCancelled(job);
 
             byte[] thumbnailBytes = null;
@@ -349,7 +350,7 @@ public class AfmaCreatorState {
             job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Writing AFMA file...", prepared.outputFile.getName(), 0.82D));
             tempFile = new File(prepared.outputFile.getParentFile(), prepared.outputFile.getName() + ".tmp");
             org.apache.commons.io.FileUtils.deleteQuietly(tempFile);
-            this.archiveWriter.write(exportPlan.getMetadata(), prepared.mainSequence, prepared.introSequence, thumbnailBytes, tempFile, job::isCancellationRequested,
+            this.archiveWriter.write(exportMetadata, prepared.mainSequence, prepared.introSequence, thumbnailBytes, tempFile, job::isCancellationRequested,
                     (detail, progress) -> job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Writing AFMA file...", detail, 0.82D + (0.16D * progress))));
             checkCancelled(job);
 
@@ -370,16 +371,40 @@ public class AfmaCreatorState {
         }
     }
 
-    protected @NotNull AfmaEncodePlan resolveExportPlan(@NotNull PreparedInputs prepared, @NotNull AfmaEncodeJob job) throws IOException {
+    protected @NotNull AfmaMetadata resolveExportMetadata(@NotNull PreparedInputs prepared, @NotNull AfmaEncodeJob job) throws IOException {
         CachedPlan cachedPlan = this.cachedPlan;
         if ((cachedPlan != null) && (cachedPlan.configurationVersion == prepared.configurationVersion)) {
-            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Reusing analyzed AFMA export plan...", null, 0.55D));
-            return cachedPlan.openPlan();
+            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Reusing analyzed AFMA export metadata...", null, 0.55D));
+            return cachedPlan.summaryPlan().getMetadata();
         }
 
-        job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Analyzing AFMA frames for export...", null, 0.15D));
-        return this.planner.plan(prepared.mainSequence, prepared.introSequence, prepared.options, job::isCancellationRequested,
-                (detail, progress) -> job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Analyzing AFMA frames for export...", detail, 0.15D + (0.50D * progress))));
+        AfmaCreatorAnalysisResult analysisResult = this.analysisResult;
+        if ((analysisResult != null) && (this.successfulAnalysisVersion == prepared.configurationVersion)) {
+            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Reusing analyzed AFMA export metadata...", null, 0.55D));
+            return analysisResult.plan().getMetadata();
+        }
+
+        job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Preparing AFMA export metadata...", null, 0.20D));
+        File sourceFile = !prepared.mainSequence.isEmpty() ? prepared.mainSequence.getFrame(0) : prepared.introSequence.getFrame(0);
+        if (sourceFile == null) {
+            throw new IOException("AFMA encoding requires at least one source frame");
+        }
+
+        AfmaFrameNormalizer normalizer = new AfmaFrameNormalizer();
+        try (AfmaPixelFrame source = normalizer.loadFrame(sourceFile)) {
+            return AfmaMetadata.create(
+                    source.getWidth(),
+                    source.getHeight(),
+                    prepared.options.getLoopCount(),
+                    prepared.options.getFrameTimeMs(),
+                    prepared.options.getIntroFrameTimeMs(),
+                    prepared.options.getCustomFrameTimes(),
+                    prepared.options.getCustomIntroFrameTimes(),
+                    prepared.options.getKeyframeInterval(),
+                    prepared.options.isRectCopyEnabled(),
+                    prepared.options.isDuplicateFrameElision()
+            );
+        }
     }
 
     protected @NotNull PreparedInputs prepare(boolean requireOutput) {
