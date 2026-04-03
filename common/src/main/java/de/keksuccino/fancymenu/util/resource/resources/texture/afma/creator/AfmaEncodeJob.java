@@ -10,20 +10,13 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class AfmaEncodeJob {
 
-    private final @NotNull Kind kind;
     private final @NotNull AtomicBoolean cancelled = new AtomicBoolean(false);
     private final @NotNull AtomicReference<AfmaEncodeProgress> progress = new AtomicReference<>(AfmaEncodeProgress.idle());
     private volatile @NotNull Status status = Status.RUNNING;
     private volatile @Nullable Throwable failure;
-    private volatile @Nullable AfmaCreatorAnalysisResult analysisResult;
     private volatile @Nullable File outputFile;
 
-    public AfmaEncodeJob(@NotNull Kind kind) {
-        this.kind = Objects.requireNonNull(kind);
-    }
-
-    public @NotNull Kind getKind() {
-        return this.kind;
+    public AfmaEncodeJob() {
     }
 
     public void cancel() {
@@ -55,16 +48,11 @@ public class AfmaEncodeJob {
         return this.failure;
     }
 
-    public @Nullable AfmaCreatorAnalysisResult getAnalysisResult() {
-        return this.analysisResult;
-    }
-
     public @Nullable File getOutputFile() {
         return this.outputFile;
     }
 
-    public void completeSuccess(@Nullable AfmaCreatorAnalysisResult analysisResult, @Nullable File outputFile) {
-        this.analysisResult = analysisResult;
+    public void completeSuccess(@Nullable File outputFile) {
         this.outputFile = outputFile;
         this.status = Status.SUCCEEDED;
         this.progress.set(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.COMPLETE, "AFMA job finished.", null, 1.0D));
@@ -79,11 +67,6 @@ public class AfmaEncodeJob {
         this.failure = Objects.requireNonNull(throwable);
         this.status = Status.FAILED;
         this.progress.set(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.FAILED, "AFMA job failed.", throwable.getMessage(), this.progress.get().progress()));
-    }
-
-    public enum Kind {
-        ANALYZE,
-        EXPORT
     }
 
     public enum Status {
