@@ -275,7 +275,7 @@ public final class AfmaSectionPacker {
 
     private static final class CandidateExceededException extends IOException {
         private CandidateExceededException() {
-            super(null, null, false, false);
+            super("Packed section candidate exceeded current best size");
         }
     }
 
