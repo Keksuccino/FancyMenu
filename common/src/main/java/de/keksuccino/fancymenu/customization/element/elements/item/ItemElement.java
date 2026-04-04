@@ -79,8 +79,8 @@ public class ItemElement extends AbstractElement {
         try {
             if ((this.cachedStack == null) || !keyFinal.equals(this.lastItemKey) || (this.enchanted != this.lastEnchanted) || !Objects.equals(loreFinal, this.lastLore) || !Objects.equals(nameFinal, this.lastItemName) || !Objects.equals(nbtFinal, this.lastNbtData)) {
                 Optional<Holder.Reference<Item>> optional = BuiltInRegistries.ITEM.get(Identifier.parse(keyFinal));
-                Item item = optional.isPresent() ? Objects.requireNonNullElse(optional.get().value(), Items.AIR) : Items.AIR;
-                this.cachedStack = new ItemStack(item);
+                Holder<Item> itemHolder = optional.<Holder<Item>>map(holder -> holder).orElseGet(() -> BuiltInRegistries.ITEM.wrapAsHolder(Items.AIR));
+                this.cachedStack = new ItemStack(itemHolder);
                 this.cachedStack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, this.enchanted);
 
                 if ((loreFinal != null) && !loreFinal.isBlank()) {
@@ -105,7 +105,7 @@ public class ItemElement extends AbstractElement {
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to create ItemStack instance for 'Item' element!", ex);
-            this.cachedStack = new ItemStack(Items.BARRIER);
+            this.cachedStack = new ItemStack(BuiltInRegistries.ITEM.wrapAsHolder(Items.BARRIER));
         }
 
         this.lastItemKey = keyFinal;

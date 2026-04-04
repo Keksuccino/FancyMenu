@@ -27,9 +27,13 @@ public class MixinTabNavigationBar {
 
     @Shadow @Final private static int HEIGHT;
     @Shadow private int width;
+    @Unique private boolean suppressHeaderSeparator_FancyMenu;
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V"))
-    private boolean wrapHeaderSeparatorRenderingInRender_FancyMenu(GuiGraphicsExtractor instance, RenderPipeline $$0, Identifier $$1, int $$2, int $$3, float $$4, float $$5, int $$6, int $$7, int $$8, int $$9) {
+    @WrapWithCondition(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V"))
+    private boolean wrapHeaderSeparatorRenderingInExtractRenderState_FancyMenu(GuiGraphicsExtractor instance, RenderPipeline $$0, Identifier $$1, int $$2, int $$3, float $$4, float $$5, int $$6, int $$7, int $$8, int $$9) {
+        if (this.suppressHeaderSeparator_FancyMenu) {
+            return false;
+        }
         if (this.isBarPartOfCurrentScreen_FancyMenu()) {
             if (ScreenCustomization.isCustomizationEnabledForScreen(Minecraft.getInstance().screen)) {
                 ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(Minecraft.getInstance().screen);
@@ -41,13 +45,16 @@ public class MixinTabNavigationBar {
         return true;
     }
 
-    @Inject(method = "render", at = @At("HEAD"))
-    private void head_render_FancyMenu(GuiGraphicsExtractor graphics, int $$1, int $$2, float $$3, CallbackInfo info) {
-        EventHandler.INSTANCE.postEvent(new RenderTabNavigationBarHeaderBackgroundEvent.Pre(this.getBar_FancyMenu(), graphics, this.width, HEIGHT));
+    @Inject(method = "extractRenderState", at = @At("HEAD"))
+    private void head_extractRenderState_FancyMenu(GuiGraphicsExtractor graphics, int $$1, int $$2, float $$3, CallbackInfo info) {
+        RenderTabNavigationBarHeaderBackgroundEvent.Pre event = new RenderTabNavigationBarHeaderBackgroundEvent.Pre(this.getBar_FancyMenu(), graphics, this.width, HEIGHT);
+        EventHandler.INSTANCE.postEvent(event);
+        this.suppressHeaderSeparator_FancyMenu = event.isCanceled();
     }
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/ImmutableList;iterator()Lcom/google/common/collect/UnmodifiableIterator;", remap = false, shift = At.Shift.AFTER))
-    private void after_disableBlend_in_render_FancyMenu(GuiGraphicsExtractor graphics, int $$1, int $$2, float $$3, CallbackInfo info) {
+    @Inject(method = "extractRenderState", at = @At("RETURN"))
+    private void after_extractRenderState_FancyMenu(GuiGraphicsExtractor graphics, int $$1, int $$2, float $$3, CallbackInfo info) {
+        this.suppressHeaderSeparator_FancyMenu = false;
         EventHandler.INSTANCE.postEvent(new RenderTabNavigationBarHeaderBackgroundEvent.Post(this.getBar_FancyMenu(), graphics, this.width, HEIGHT));
     }
 

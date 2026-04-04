@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import org.spongepowered.asm.mixin.Mixin;
@@ -21,8 +22,8 @@ public abstract class MixinCreativeModeInventoryScreen extends Screen {
     /**
      * @reason Fix FM's menu bar not working without resizing the screen once.
      */
-    @Inject(method = "render", at = @At("HEAD"))
-    private void before_render_FancyMenu(CallbackInfo info) {
+    @Inject(method = "extractRenderState", at = @At("HEAD"))
+    private void before_extractRenderState_FancyMenu(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick, CallbackInfo info) {
         if (!this.resized_FancyMenu) {
             this.resized_FancyMenu = true;
             ScreenCustomization.reInitCurrentScreen();

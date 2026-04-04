@@ -63,8 +63,8 @@ public class MixinCreateWorldScreen extends Screen {
 
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V"))
-    private boolean wrapFooterSeparatorRenderingInRender_FancyMenu(GuiGraphicsExtractor instance, RenderPipeline $$0, Identifier $$1, int $$2, int $$3, float $$4, float $$5, int $$6, int $$7, int $$8, int $$9) {
+    @WrapWithCondition(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V"))
+    private boolean wrapFooterSeparatorRenderingInExtractRenderState_FancyMenu(GuiGraphicsExtractor instance, RenderPipeline $$0, Identifier $$1, int $$2, int $$3, float $$4, float $$5, int $$6, int $$7, int $$8, int $$9) {
         if (ScreenCustomization.isCustomizationEnabledForScreen(this)) {
             ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(this);
             if (layer != null) {
@@ -77,8 +77,8 @@ public class MixinCreateWorldScreen extends Screen {
     /**
      * @reason This fixes FM's menu bar not being clickable until you resize the window in this screen. Yes, it's hacky af, but works.
      */
-    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
-    private void head_render_FancyMenu(CallbackInfo info) {
+    @Inject(method = "extractRenderState", at = @At("HEAD"), cancellable = true)
+    private void head_extractRenderState_FancyMenu(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick, CallbackInfo info) {
         if (!this.reInitialized_FancyMenu) {
             this.reInitialized_FancyMenu = true;
             Minecraft.getInstance().resizeGui();

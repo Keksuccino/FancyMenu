@@ -10,12 +10,6 @@ public interface IMixinRealmsNotificationsScreen {
 
     @Accessor("numberOfPendingInvites") int get_numberOfPendingInvites_FancyMenu();
 
-    @Accessor("trialAvailable") boolean get_trialAvailable_FancyMenu();
-
-    @Accessor("hasUnreadNews") boolean get_hasUnreadNews_FancyMenu();
-
-    @Accessor("hasUnseenNotifications") boolean get_hasUnseenNotifications();
-
     @Accessor("validClient") CompletableFuture<Boolean> get_validClient_FancyMenu();
 
 }

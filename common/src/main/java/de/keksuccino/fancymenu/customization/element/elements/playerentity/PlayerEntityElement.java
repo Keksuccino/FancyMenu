@@ -359,7 +359,7 @@ public class PlayerEntityElement extends AbstractElement {
         public String itemKey;
         public boolean enchanted;
         @NotNull
-        public ItemStack cachedStack = new ItemStack(Items.AIR);
+        public ItemStack cachedStack = ItemStack.EMPTY;
         @Nullable
         protected String lastFinalKey = null;
         protected boolean lastEnchanted = false;
@@ -386,7 +386,7 @@ public class PlayerEntityElement extends AbstractElement {
                     this.lastEnchanted = enchanted;
 
                     Item item = BuiltInRegistries.ITEM.getValue(Identifier.parse(keyFinal));
-                    this.cachedStack = new ItemStack(item);
+                    this.cachedStack = new ItemStack(BuiltInRegistries.ITEM.wrapAsHolder(item));
                     this.cachedStack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, this.enchanted);
 
                 }

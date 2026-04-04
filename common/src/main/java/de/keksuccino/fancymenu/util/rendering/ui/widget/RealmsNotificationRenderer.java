@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
+import de.keksuccino.fancymenu.accessor.client.IRealmsNotificationsScreenStatics;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinRealmsNotificationsScreen;
 import com.mojang.realmsclient.gui.screens.RealmsNotificationsScreen;
@@ -24,6 +25,7 @@ public class RealmsNotificationRenderer {
     private static final Identifier TRIAL_AVAILABLE_SPRITE = Identifier.withDefaultNamespace("icon/trial_available");
 
     private final IMixinRealmsNotificationsScreen screenAccess;
+    private final IRealmsNotificationsScreenStatics screenStatics;
     private final Minecraft minecraft;
     private final int screenWidth;
     private final int screenHeight;
@@ -35,6 +37,7 @@ public class RealmsNotificationRenderer {
      */
     public RealmsNotificationRenderer(@NotNull RealmsNotificationsScreen screen, int screenWidth, int screenHeight) {
         this.screenAccess = (IMixinRealmsNotificationsScreen)screen;
+        this.screenStatics = (IRealmsNotificationsScreenStatics)screen;
         this.minecraft = Minecraft.getInstance();
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
@@ -183,7 +186,7 @@ public class RealmsNotificationRenderer {
      */
     public boolean hasUnseenNotifications() {
         if (isEditor()) return true;
-        return this.screenAccess.get_hasUnseenNotifications();
+        return this.screenStatics.fancymenu$hasUnseenNotifications();
     }
 
     /**
@@ -191,7 +194,7 @@ public class RealmsNotificationRenderer {
      */
     public boolean hasUnreadNews() {
         if (isEditor()) return true;
-        return this.screenAccess.get_hasUnreadNews_FancyMenu();
+        return this.screenStatics.fancymenu$hasUnreadNews();
     }
 
     /**
@@ -199,7 +202,7 @@ public class RealmsNotificationRenderer {
      */
     public boolean isTrialAvailable() {
         if (isEditor()) return true;
-        return this.screenAccess.get_trialAvailable_FancyMenu();
+        return this.screenStatics.fancymenu$trialAvailable();
     }
 
     protected static boolean isEditor() {

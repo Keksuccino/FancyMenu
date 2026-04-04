@@ -7,6 +7,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Pose;
@@ -232,7 +233,7 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
     }
 
     public WrappedFancyPlayerWidget setRightHandItem(@Nullable Item item) {
-        this.rightHandItem = item == null ? null : new ItemStack(item);
+        this.rightHandItem = item == null ? null : new ItemStack(BuiltInRegistries.ITEM.wrapAsHolder(item));
         return this;
     }
 
@@ -242,7 +243,7 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
     }
 
     public WrappedFancyPlayerWidget setLeftHandItem(@Nullable Item item) {
-        this.leftHandItem = item == null ? null : new ItemStack(item);
+        this.leftHandItem = item == null ? null : new ItemStack(BuiltInRegistries.ITEM.wrapAsHolder(item));
         return this;
     }
 
@@ -272,22 +273,22 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
     }
 
     public WrappedFancyPlayerWidget setHeadWearable(@Nullable Item item) {
-        this.headWearable = item == null ? null : new ItemStack(item);
+        this.headWearable = item == null ? null : new ItemStack(BuiltInRegistries.ITEM.wrapAsHolder(item));
         return this;
     }
 
     public WrappedFancyPlayerWidget setChestWearable(@Nullable Item item) {
-        this.chestWearable = item == null ? null : new ItemStack(item);
+        this.chestWearable = item == null ? null : new ItemStack(BuiltInRegistries.ITEM.wrapAsHolder(item));
         return this;
     }
 
     public WrappedFancyPlayerWidget setLegsWearable(@Nullable Item item) {
-        this.legsWearable = item == null ? null : new ItemStack(item);
+        this.legsWearable = item == null ? null : new ItemStack(BuiltInRegistries.ITEM.wrapAsHolder(item));
         return this;
     }
 
     public WrappedFancyPlayerWidget setFeetWearable(@Nullable Item item) {
-        this.feetWearable = item == null ? null : new ItemStack(item);
+        this.feetWearable = item == null ? null : new ItemStack(BuiltInRegistries.ITEM.wrapAsHolder(item));
         return this;
     }
 
