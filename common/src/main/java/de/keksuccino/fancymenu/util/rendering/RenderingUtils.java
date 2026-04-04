@@ -6,7 +6,7 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.textures.GpuTextureView;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphics;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphicsExtractor;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScissorStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -388,9 +388,9 @@ public class RenderingUtils {
     }
 
     private static void submitColoredRectangle(@NotNull GuiGraphicsExtractor graphics, RenderPipeline pipeline, TextureSetup textureSetup, float minX, float minY, float maxX, float maxY, int color, @Nullable Integer endColor) {
-        IMixinGuiGraphics extractor = (IMixinGuiGraphics)(Object) graphics;
-        ScreenRectangle scissorStackPeek = extractor.fancymenu$getScissorStack().invoke_peek_FancyMenu();
-        extractor.fancymenu$getGuiRenderState().addGuiElement(
+        IMixinGuiGraphicsExtractor extractor = (IMixinGuiGraphicsExtractor)(Object) graphics;
+        ScreenRectangle scissorStackPeek = ((IMixinScissorStack)extractor.get_scissorStack_FancyMenu()).invoke_peek_FancyMenu();
+        extractor.get_guiRenderState_FancyMenu().addGuiElement(
                 new FloatColoredRectangleRenderState(pipeline, textureSetup, new Matrix3x2f(graphics.pose()), minX, minY, maxX, maxY, color, endColor != null ? endColor : color, scissorStackPeek)
         );
     }
@@ -430,9 +430,9 @@ public class RenderingUtils {
     }
 
     private static void submitBlit(@NotNull GuiGraphicsExtractor graphics, RenderPipeline pipeline, GpuTextureView textureView, GpuSampler gpuSampler, float minX, float minY, float maxX, float maxY, float minU, float maxU, float minV, float maxV, int color) {
-        IMixinGuiGraphics extractor = (IMixinGuiGraphics)(Object) graphics;
-        ScreenRectangle scissorStackPeek = extractor.fancymenu$getScissorStack().invoke_peek_FancyMenu();
-        extractor.fancymenu$getGuiRenderState().addGuiElement(
+        IMixinGuiGraphicsExtractor extractor = (IMixinGuiGraphicsExtractor)(Object) graphics;
+        ScreenRectangle scissorStackPeek = ((IMixinScissorStack)extractor.get_scissorStack_FancyMenu()).invoke_peek_FancyMenu();
+        extractor.get_guiRenderState_FancyMenu().addGuiElement(
                 new FloatBlitRenderState(
                         pipeline, TextureSetup.singleTexture(textureView, gpuSampler), new Matrix3x2f(graphics.pose()), minX, minY, maxX, maxY, minU, maxU, minV, maxV, color, scissorStackPeek
                 )

@@ -6,10 +6,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(GuiGraphicsExtractor.class)
-public interface IMixinGuiGraphics {
+public interface IMixinGuiGraphicsExtractor {
 
-    @Accessor("guiRenderState") GuiRenderState fancymenu$getGuiRenderState();
+    @Accessor("guiRenderState") GuiRenderState get_guiRenderState_FancyMenu();
 
-    @Accessor("scissorStack") IMixinScissorStack fancymenu$getScissorStack();
+    @Accessor("scissorStack") GuiGraphicsExtractor.ScissorStack get_scissorStack_FancyMenu();
 
 }

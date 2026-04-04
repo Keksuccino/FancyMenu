@@ -6,6 +6,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
 import net.minecraft.resources.Identifier;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -13,15 +14,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 
 @Mixin(GuiGraphicsExtractor.class)
-public class MixinGuiGraphics {
+public class MixinGuiGraphicsExtractor {
 
     @Inject(method = "setTooltipForNextFrameInternal", at = @At("HEAD"), cancellable = true)
-    private void head_setTooltipForNextFrameInternal_FancyMenu(Font font, List<ClientTooltipComponent> components, int x, int y, ClientTooltipPositioner positioner, Identifier background, boolean focused, CallbackInfo info) {
+    private void head_setTooltipForNextFrameInternal_FancyMenu(Font font, List<ClientTooltipComponent> lines, int xo, int yo, ClientTooltipPositioner positioner, @Nullable Identifier style, boolean replaceExisting, CallbackInfo info) {
         if (RenderingUtils.isTooltipRenderingBlocked()) info.cancel();
     }
 
-    @Inject(method = "renderTooltip", at = @At("HEAD"), cancellable = true)
-    private void head_renderTooltip_FancyMenu(Font font, List<ClientTooltipComponent> components, int x, int y, ClientTooltipPositioner positioner, Identifier background, CallbackInfo info) {
+    @Inject(method = "tooltip", at = @At("HEAD"), cancellable = true)
+    private void head_tooltip_FancyMenu(Font font, List<ClientTooltipComponent> lines, int xo, int yo, ClientTooltipPositioner positioner, @Nullable Identifier style, CallbackInfo info) {
         if (RenderingUtils.isTooltipRenderingBlocked()) info.cancel();
     }
 
