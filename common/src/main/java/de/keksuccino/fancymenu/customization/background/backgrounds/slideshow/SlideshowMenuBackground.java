@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowR
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 
 import net.minecraft.resources.Identifier;
@@ -27,7 +27,7 @@ public class SlideshowMenuBackground extends MenuBackground {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (this.slideshowName != null) {
             if ((this.lastSlideshowName == null) || !this.lastSlideshowName.equals(this.slideshowName)) {
@@ -71,7 +71,7 @@ public class SlideshowMenuBackground extends MenuBackground {
 
             this.slideshow.slideshowOpacity = this.opacity;
 
-            this.slideshow.render(graphics);
+            this.slideshow.extractRenderState(graphics);
 
             this.slideshow.slideshowOpacity = 1.0F;
 

@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy.gui;
 
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.FoodItem;
@@ -10,7 +11,6 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.renderer.RenderPipelines;
 
@@ -252,7 +252,7 @@ public class BuddyStatusScreen implements Renderable {
      * Renders the GUI if it's visible
      */
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (!isVisible) return;
 
@@ -280,7 +280,7 @@ public class BuddyStatusScreen implements Renderable {
 
         // Render close button
         for (BuddyGuiButton button : buttons) {
-            button.render(graphics, mouseX, mouseY, partial);
+            button.extractRenderState(graphics, mouseX, mouseY, partial);
         }
 
         // Pop pose stack
@@ -291,7 +291,7 @@ public class BuddyStatusScreen implements Renderable {
     /**
      * Renders the tabs at the top of the screen
      */
-    private void renderTabs(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    private void renderTabs(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         Font font = Minecraft.getInstance().font;
         int tabWidth = 80;
         int tabHeight = 20;
@@ -314,21 +314,21 @@ public class BuddyStatusScreen implements Renderable {
             int textColor = isSelected ? 0xFFFFFF : 0xAAAAAA;
             int textX = tabX + (tabWidth - font.width(tabNames[i])) / 2;
             int textY = tabY + (tabHeight - font.lineHeight) / 2;
-            graphics.drawString(font, tabNames[i], textX, textY, textColor);
+            graphics.text(font, tabNames[i], textX, textY, textColor);
         }
     }
 
     /**
      * Renders the stats tab content
      */
-    private void renderStatsTab(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    private void renderStatsTab(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         Font font = Minecraft.getInstance().font;
         int contentStartX = guiX + 20;
         int contentStartY = guiY + 30;
 
         // Draw title
         String title = "Status & Stats";
-        graphics.drawString(font, title, guiX + (SCREEN_WIDTH - font.width(title)) / 2, contentStartY, 0xFFFFFF);
+        graphics.text(font, title, guiX + (SCREEN_WIDTH - font.width(title)) / 2, contentStartY, 0xFFFFFF);
 
         // Draw status bars (moved from BuddyGui)
         renderStatusBars(graphics, contentStartX, contentStartY + 20);
@@ -342,7 +342,7 @@ public class BuddyStatusScreen implements Renderable {
         for (BuddyGuiButton button : actionButtons) {
             // Update button active state before rendering
             button.updateActiveState();
-            button.render(graphics, mouseX, mouseY, partial);
+            button.extractRenderState(graphics, mouseX, mouseY, partial);
         }
         
         // Draw separator line - moved further down to avoid overlapping with status bars
@@ -350,7 +350,7 @@ public class BuddyStatusScreen implements Renderable {
 
         // Draw level and XP - moved further down
         String levelText = "Level: " + levelingManager.getCurrentLevel();
-        graphics.drawString(font, levelText, contentStartX, contentStartY + 140, 0xFFFFFF);
+        graphics.text(font, levelText, contentStartX, contentStartY + 140, 0xFFFFFF);
 
         // Draw XP bar - moved further down
         int xpBarX = contentStartX + 80;
@@ -375,7 +375,7 @@ public class BuddyStatusScreen implements Renderable {
         } else {
             xpText += " (Max Level)";
         }
-        graphics.drawString(font, xpText, contentStartX, contentStartY + 155, 0xFFFFFF);
+        graphics.text(font, xpText, contentStartX, contentStartY + 155, 0xFFFFFF);
 
         // Removed attribute points, titles and buttons
     }
@@ -383,14 +383,14 @@ public class BuddyStatusScreen implements Renderable {
     /**
      * Renders the achievements tab content
      */
-    private void renderAchievementsTab(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    private void renderAchievementsTab(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         Font font = Minecraft.getInstance().font;
         int contentStartX = guiX + 20;
         int contentStartY = guiY + 30;
 
         // Draw title
         String title = "Achievements";
-        graphics.drawString(font, title, guiX + (SCREEN_WIDTH - font.width(title)) / 2, contentStartY, 0xFFFFFF);
+        graphics.text(font, title, guiX + (SCREEN_WIDTH - font.width(title)) / 2, contentStartY, 0xFFFFFF);
 
         // Create a scrollable list of achievements
         int listStartY = contentStartY + 20;
@@ -468,7 +468,7 @@ public class BuddyStatusScreen implements Renderable {
             // Draw reward info if unlocked
             if (isUnlocked && achievement.getExperienceReward() > 0) {
                 String rewardText = "+" + achievement.getExperienceReward() + " XP";
-                graphics.drawString(font, rewardText, contentStartX + listWidth - font.width(rewardText) - 5, itemY + 5, 0xFFFF00);
+                graphics.text(font, rewardText, contentStartX + listWidth - font.width(rewardText) - 5, itemY + 5, 0xFFFF00);
             }
         }
 
@@ -480,10 +480,10 @@ public class BuddyStatusScreen implements Renderable {
         boolean canScrollDown = achievementsScrollOffset < maxScrollOffset;
 
         if (canScrollUp) {
-            graphics.drawString(font, "▲", guiX + SCREEN_WIDTH - 20, listStartY - 5, 0xFFFFFF);
+            graphics.text(font, "▲", guiX + SCREEN_WIDTH - 20, listStartY - 5, 0xFFFFFF);
         }
         if (canScrollDown) {
-            graphics.drawString(font, "▼", guiX + SCREEN_WIDTH - 20, listStartY + (maxVisibleItems * listItemHeight) + 5, 0xFFFFFF);
+            graphics.text(font, "▼", guiX + SCREEN_WIDTH - 20, listStartY + (maxVisibleItems * listItemHeight) + 5, 0xFFFFFF);
         }
     }
 
@@ -617,7 +617,7 @@ public class BuddyStatusScreen implements Renderable {
      * Renders a scrolling string when it's too long to fit in the given bounds.
      * Adapted from AbstractWidget.renderScrollingString()
      */
-    private static void renderScrollingString(GuiGraphics graphics, Font font, String text, int minX, int minY, int maxX, int maxY, int color) {
+    private static void renderScrollingString(GuiGraphicsExtractor graphics, Font font, String text, int minX, int minY, int maxX, int maxY, int color) {
         int textWidth = font.width(text);
         int availableWidth = maxX - minX;
         
@@ -631,11 +631,11 @@ public class BuddyStatusScreen implements Renderable {
             
             // Enable scissor to clip the text
             graphics.enableScissor(minX, minY, maxX, maxY);
-            graphics.drawString(font, text, minX - (int)scrollOffset, minY, color);
+            graphics.text(font, text, minX - (int)scrollOffset, minY, color);
             graphics.disableScissor();
         } else {
             // Text fits, just draw it normally
-            graphics.drawString(font, text, minX, minY, color);
+            graphics.text(font, text, minX, minY, color);
         }
     }
 
@@ -647,7 +647,7 @@ public class BuddyStatusScreen implements Renderable {
      * Renders the buddy's status bars in the stats screen
      * Adapted from BuddyGui.renderStatusBars()
      */
-    private void renderStatusBars(GuiGraphics graphics, int startX, int startY) {
+    private void renderStatusBars(GuiGraphicsExtractor graphics, int startX, int startY) {
         int barWidth = 150;
         int barHeight = 10;
         Font font = Minecraft.getInstance().font;
@@ -687,7 +687,7 @@ public class BuddyStatusScreen implements Renderable {
                     color = 0xFFFFFFFF;
             }
 
-            graphics.drawString(font, label, startX, currentY, color);
+            graphics.text(font, label, startX, currentY, color);
 
             // Draw the bar below its label
             int barY = currentY + labelHeight + 2;

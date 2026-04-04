@@ -1,4 +1,3 @@
-
 package de.keksuccino.fancymenu.customization.placeholder.placeholders.player;
 
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;

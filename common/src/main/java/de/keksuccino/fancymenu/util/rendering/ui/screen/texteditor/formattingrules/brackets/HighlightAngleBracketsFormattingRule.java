@@ -1,4 +1,3 @@
-
 package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.formattingrules.brackets;
 
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;

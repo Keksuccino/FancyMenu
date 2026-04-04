@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
@@ -53,7 +53,7 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
     }
 
     @Override
-    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void extractWidgetRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         double drawX = this.getRenderX();
         double drawY = this.getRenderY();
         float currentScale = this.scale;
@@ -63,7 +63,7 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
             drawX /= currentScale;
             drawY /= currentScale;
         }
-        graphics.drawString(this.font, this.getMessage(), Mth.floor(drawX), Mth.floor(drawY), this.baseColor.getColorInt(), this.shadow);
+        graphics.text(this.font, this.getMessage(), Mth.floor(drawX), Mth.floor(drawY), this.baseColor.getColorInt(), this.shadow);
         graphics.pose().popMatrix();
     }
 

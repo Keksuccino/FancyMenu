@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -28,7 +28,7 @@ public class PanoramaMenuBackground extends MenuBackground {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (this.panoramaName != null) {
             if ((this.lastPanoramaName == null) || !this.lastPanoramaName.equals(this.panoramaName)) {
@@ -41,7 +41,7 @@ public class PanoramaMenuBackground extends MenuBackground {
 
         if (this.panorama != null) {
             this.panorama.opacity = this.opacity;
-            this.panorama.render(graphics, mouseX, mouseY, partial);
+            this.panorama.extractRenderState(graphics, mouseX, mouseY, partial);
             this.panorama.opacity = 1.0F;
         } else {
             graphics.blit(RenderPipelines.GUI_TEXTURED, MISSING, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());

@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
-
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Renderable;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
@@ -25,18 +24,18 @@ public class MarkdownTextLine implements Renderable {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         this.onRender(graphics, mouseX, mouseY, partial, true);
     }
 
-    protected void onRender(GuiGraphics graphics, int mouseX, int mouseY, float partial, boolean shouldRender) {
+    protected void onRender(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial, boolean shouldRender) {
 
         float textX = this.parent.x + this.offsetX;
         for (MarkdownTextFragment f : this.fragments) {
             f.x = textX;
             f.y = this.parent.y + this.offsetY;
             if (shouldRender) {
-                f.render(graphics, mouseX, mouseY, partial);
+                f.extractRenderState(graphics, mouseX, mouseY, partial);
             }
             textX += f.getRenderWidth();
         }
@@ -132,3 +131,4 @@ public class MarkdownTextLine implements Renderable {
     }
 
 }
+

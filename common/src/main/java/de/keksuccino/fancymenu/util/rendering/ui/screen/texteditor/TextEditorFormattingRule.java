@@ -1,4 +1,3 @@
-
 package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 
 import net.minecraft.network.chat.Style;

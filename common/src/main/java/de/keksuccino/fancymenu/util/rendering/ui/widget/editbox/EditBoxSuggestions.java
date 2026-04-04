@@ -15,7 +15,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.CommandSuggestions;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -101,17 +101,17 @@ public class EditBoxSuggestions extends CommandSuggestions {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         if (!this.input.isFocused()) {
             this.setSuggestions(null);
         }
-        super.render(graphics, mouseX, mouseY);
+        super.extractRenderState(graphics, mouseX, mouseY);
     }
 
     @Override
-    public void renderUsage(@NotNull GuiGraphics graphics) {
+    public void extractUsage(@NotNull GuiGraphicsExtractor graphics) {
         if (!this.isAllowRenderUsage()) return;
-        super.renderUsage(graphics);
+        super.extractUsage(graphics);
     }
 
     @Override
@@ -159,7 +159,7 @@ public class EditBoxSuggestions extends CommandSuggestions {
             int lastWordIndex = getLastWordIndex(editBoxSubValue);
             Collection<String> suggestionStringList = new ArrayList<>(this.customSuggestionsList);
             if (suggestionStringList.isEmpty() && (this.minecraft.player != null)) {
-                suggestionStringList = this.minecraft.player.connection.getSuggestionsProvider().getCustomTabSugggestions();
+                suggestionStringList = this.minecraft.player.connection.getSuggestionsProvider().getCustomTabSuggestions();
             }
             this.setPendingSuggestions(SharedSuggestionProvider.suggest(suggestionStringList, new SuggestionsBuilder(editBoxSubValue, lastWordIndex)));
             //Always show suggestions without pressing TAB
@@ -373,7 +373,7 @@ public class EditBoxSuggestions extends CommandSuggestions {
         }
 
         @Override
-        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
+        public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
             Message message;
             int suggestionLineCount = Math.min(this.suggestionList.size(), EditBoxSuggestions.this.suggestionLineLimit);
             boolean bl = this.getOffset() > 0;
@@ -410,11 +410,10 @@ public class EditBoxSuggestions extends CommandSuggestions {
                     }
                     bl52 = true;
                 }
-                graphics.drawString(EditBoxSuggestions.this.font, suggestion.getText(), (this.getRect().getX() + 1), (this.getRect().getY() + 2 + 12 * n), ((n + this.getOffset()) == this.getCurrent()) ? EditBoxSuggestions.this.selectedTextColor.getColorInt() : EditBoxSuggestions.this.normalTextColor.getColorInt(), EditBoxSuggestions.this.textShadow);
+                graphics.text(EditBoxSuggestions.this.font, suggestion.getText(), (this.getRect().getX() + 1), (this.getRect().getY() + 2 + 12 * n), ((n + this.getOffset()) == this.getCurrent()) ? EditBoxSuggestions.this.selectedTextColor.getColorInt() : EditBoxSuggestions.this.normalTextColor.getColorInt(), EditBoxSuggestions.this.textShadow);
             }
             if (bl52 && (message = this.suggestionList.get(this.getCurrent()).getTooltip()) != null) {
-                ClientTooltipComponent tooltipComponent = ClientTooltipComponent.create(ComponentUtils.fromMessage(message).getVisualOrderText());
-                graphics.renderTooltip(EditBoxSuggestions.this.font, List.of(tooltipComponent), mouseX, mouseY, DefaultTooltipPositioner.INSTANCE, null);
+                graphics.setTooltipForNextFrame(EditBoxSuggestions.this.font, ComponentUtils.fromMessage(message), mouseX, mouseY);
             }
         }
 

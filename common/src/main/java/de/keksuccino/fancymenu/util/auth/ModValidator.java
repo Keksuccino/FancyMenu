@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.mod.UniversalModContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.*;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
@@ -72,7 +72,7 @@ public class ModValidator {
 
     }
 
-    public static void renderInvalidError(GuiGraphics graphics) {
+    public static void renderInvalidError(GuiGraphicsExtractor graphics) {
 
         Screen current = Minecraft.getInstance().screen;
         if (current == null) return;
@@ -84,8 +84,8 @@ public class ModValidator {
 
         graphics.fill(0, 0, current.width, current.height, DrawableColor.BLACK.getColorInt());
 
-        graphics.drawCenteredString(Minecraft.getInstance().font, "MODIFIED FANCYMENU JAR FOUND!", current.width / 2, (current.height / 2) - 10, INVALID_COLOR.getColorInt());
-        graphics.drawCenteredString(Minecraft.getInstance().font, "PLEASE DOWNLOAD A VALID BUILD FROM CURSEFORGE OR MODRINTH!", current.width / 2, (current.height / 2) + 5, INVALID_COLOR.getColorInt());
+        graphics.centeredText(Minecraft.getInstance().font, "MODIFIED FANCYMENU JAR FOUND!", current.width / 2, (current.height / 2) - 10, INVALID_COLOR.getColorInt());
+        graphics.centeredText(Minecraft.getInstance().font, "PLEASE DOWNLOAD A VALID BUILD FROM CURSEFORGE OR MODRINTH!", current.width / 2, (current.height / 2) + 5, INVALID_COLOR.getColorInt());
 
         graphics.pose().popMatrix();
 

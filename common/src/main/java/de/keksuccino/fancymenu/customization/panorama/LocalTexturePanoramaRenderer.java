@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.panorama;
 
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,10 +19,10 @@ import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
-import net.minecraft.client.renderer.CachedPerspectiveProjectionMatrixBuffer;
 import net.minecraft.client.renderer.CubeMap;
+import net.minecraft.client.renderer.Projection;
+import net.minecraft.client.renderer.ProjectionMatrixBuffer;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.Identifier;
@@ -60,7 +61,8 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 	@Nullable
 	private Identifier cubeMapLocation = null;
 	@Nullable
-	private CachedPerspectiveProjectionMatrixBuffer projectionMatrixBuffer = null;
+	private ProjectionMatrixBuffer projectionMatrixBuffer = null;
+	private final Projection projection = new Projection();
 	private final String uniqueId = UUID.randomUUID().toString();
 
 	@Nullable
@@ -152,7 +154,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 		this.cubeMap = new CubeMap(this.cubeMapLocation);
 		
 		// Create projection matrix buffer
-		this.projectionMatrixBuffer = new CachedPerspectiveProjectionMatrixBuffer("fancymenu_panorama_" + this.uniqueId, 0.05F, 10.0F);
+		this.projectionMatrixBuffer = new ProjectionMatrixBuffer("fancymenu_panorama_" + this.uniqueId);
 	}
 
 	@SuppressWarnings("all")
@@ -185,7 +187,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 	}
 
 	@Override
-	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+	public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
 		this.lastRenderCall = System.currentTimeMillis();
 		this.startTickerThreadIfNeeded();
@@ -207,7 +209,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 
 	}
 
-	private void _render(@NotNull GuiGraphics graphics, Minecraft mc, float alpha) {
+	private void _render(@NotNull GuiGraphicsExtractor graphics, Minecraft mc, float alpha) {
 
 		int screenW = ScreenUtils.getScreenWidth();
 		int screenH = ScreenUtils.getScreenHeight();
@@ -240,8 +242,9 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 			RenderSystem.backupProjectionMatrix();
 			
 			// Set our custom projection matrix with desired FOV
+			this.projection.setupPerspective(0.05F, 10.0F, (float)this.fov, mc.getWindow().getWidth(), mc.getWindow().getHeight());
 			RenderSystem.setProjectionMatrix(
-				this.projectionMatrixBuffer.getBuffer(mc.getWindow().getWidth(), mc.getWindow().getHeight(), (float)this.fov), 
+				this.projectionMatrixBuffer.getBuffer(this.projection), 
 				ProjectionType.PERSPECTIVE
 			);
 			
@@ -249,7 +252,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 //			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha);
 			
 			// Use vanilla cube map render
-			this.cubeMap.render(mc, pitch, yaw);
+			this.cubeMap.render(pitch, yaw);
 			
 			// Reset shader color
 //			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -302,3 +305,4 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 	}
 
 }
+

@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
@@ -54,7 +54,7 @@ public class CreditsScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (!this.textSet) {
             IText text = this.creditsTextSupplier.get();
@@ -77,12 +77,12 @@ public class CreditsScreen extends Screen {
         //Footer
         graphics.fill(0, this.height - this.footerHeight, this.width, this.height, UIBase.getUIColorTheme().area_background_color.getColorInt());
 
-        super.render(graphics, mouseX, mouseY, partial);
+        super.extractRenderState(graphics, mouseX, mouseY, partial);
 
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics graphics, int $$1, int $$2, float $$3) {
+    public void extractBackground(@NotNull GuiGraphicsExtractor graphics, int $$1, int $$2, float $$3) {
     }
 
     @Override
@@ -106,3 +106,7 @@ public class CreditsScreen extends Screen {
     }
 
 }
+
+
+
+

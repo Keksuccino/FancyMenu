@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.client.gui.ComponentPath;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.input.MouseButtonInfo;
@@ -93,8 +93,8 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Unique
 	private final List<Runnable> resetCustomizationsListenersFancyMenu = new ArrayList<>();
 	
-	@Inject(method = "render", at = @At(value = "HEAD"), cancellable = true)
-	private void beforeRenderFancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
+	@Inject(method = "extractRenderState", at = @At(value = "HEAD"), cancellable = true)
+	private void beforeRenderFancyMenu(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
 
 		if (!this.widgetInitializedFancyMenu) this.initWidgetFancyMenu();
 		this.widgetInitializedFancyMenu = true;
@@ -138,8 +138,8 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 
 	}
 	
-	@Inject(method = "render", at = @At(value = "RETURN"))
-	private void afterRenderFancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
+	@Inject(method = "extractRenderState", at = @At(value = "RETURN"))
+	private void afterRenderFancyMenu(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
 
 		if (this.hiddenFancyMenu) return;
 

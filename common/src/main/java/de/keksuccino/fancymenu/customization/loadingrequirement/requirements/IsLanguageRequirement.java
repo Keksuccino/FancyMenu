@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFor
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -118,9 +118,9 @@ public class IsLanguageRequirement extends LoadingRequirement {
         }
 
         @Override
-        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            super.render(graphics, mouseX, mouseY, partial);
-            this.langIdSuggestions.render(graphics, mouseX, mouseY);
+        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
+            super.extractRenderState(graphics, mouseX, mouseY, partial);
+            this.langIdSuggestions.extractRenderState(graphics, mouseX, mouseY);
         }
 
         @Override

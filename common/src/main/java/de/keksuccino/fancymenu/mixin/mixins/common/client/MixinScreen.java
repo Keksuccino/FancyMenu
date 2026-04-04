@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -42,25 +42,25 @@ public abstract class MixinScreen implements CustomizableScreen {
 
 	@Shadow @Final private List<GuiEventListener> children;
 
-    @WrapOperation(method = "renderWithTooltipAndSubtitles", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
-    private void wrap_render_in_renderWithTooltip_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {
+    @WrapOperation(method = "extractRenderStateWithTooltipAndSubtitles", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V"))
+    private void wrap_render_in_renderWithTooltip_FancyMenu(Screen instance, GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {
         EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(instance, graphics, mouseX, mouseY, partial));
         original.call(instance, graphics, mouseX, mouseY, partial);
         EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(instance, graphics, mouseX, mouseY, partial));
     }
 
-    @Inject(method = "renderWithTooltipAndSubtitles", at = @At("RETURN"))
-    private void return_renderWithTooltip_FancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
+    @Inject(method = "extractRenderStateWithTooltipAndSubtitles", at = @At("RETURN"))
+    private void return_renderWithTooltip_FancyMenu(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
         RenderingUtils.executeAndClearDeferredScreenRenderingTasks(graphics, mouseX, mouseY, partial);
     }
 
-    @Inject(method = "renderBlurredBackground", at = @At("HEAD"), cancellable = true)
-    private void head_renderBlurredBackground_FancyMenu(GuiGraphics guiGraphics, CallbackInfo info) {
+    @Inject(method = "extractBlurredBackground", at = @At("HEAD"), cancellable = true)
+    private void head_renderBlurredBackground_FancyMenu(GuiGraphicsExtractor GuiGraphicsExtractor, CallbackInfo info) {
         if (RenderingUtils.isMenuBlurringBlocked()) info.cancel();
     }
 
-	@WrapOperation(method = "renderWithTooltipAndSubtitles", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderBackground(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
-	private void wrap_renderBackground_in_renderWithTooltip_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {
+	@WrapOperation(method = "extractRenderStateWithTooltipAndSubtitles", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;extractBackground(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V"))
+	private void wrap_renderBackground_in_renderWithTooltip_FancyMenu(Screen instance, GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {
 		//Don't fire the event in the TitleScreen, because it gets handled differently there
 		if (instance instanceof TitleScreen) {
 			original.call(instance, graphics, mouseX, mouseY, partial);

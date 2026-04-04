@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy;
 
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.animation.AnimationState;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.animation.AnimationStates;
@@ -12,7 +13,6 @@ import de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling.Leveli
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -189,7 +189,7 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
 
         // Log disabled changes
         if (wasDisabled != isDisabled) {
@@ -236,7 +236,7 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
 
         // Render the play ball if it exists (non-dragged balls render before buddy)
         if (playBall != null && !playBall.isBeingDragged()) {
-            playBall.render(graphics);
+            playBall.extractRenderState(graphics);
         }
 
         if (isHopping && !isExcited) {
@@ -300,33 +300,33 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
 
         // Render dragged play ball (after buddy, so it appears on top)
         if (playBall != null && playBall.isBeingDragged()) {
-            playBall.render(graphics);
+            playBall.extractRenderState(graphics);
         }
 
         // Render any dropped food (always render on top when dragged)
         if (droppedFood != null) {
-            droppedFood.render(graphics);
+            droppedFood.extractRenderState(graphics);
         }
         
         // Render the status screen if visible
         if (statusScreen.isVisible()) {
-            statusScreen.render(graphics, mouseX, mouseY, partialTick);
+            statusScreen.extractRenderState(graphics, mouseX, mouseY, partialTick);
         }
     }
 
     /**
      * Renders all poops in the world
      */
-    public void renderPoops(GuiGraphics graphics) {
+    public void renderPoops(GuiGraphicsExtractor graphics) {
         for (Poop poop : new ArrayList<>(poops)) {
-            poop.render(graphics);
+            poop.extractRenderState(graphics);
         }
     }
 
     /**
      * Renders an indicator above the buddy's head showing its current need
      */
-    public void renderNeedsIndicator(GuiGraphics graphics) {
+    public void renderNeedsIndicator(GuiGraphicsExtractor graphics) {
 
         // Don't render thought bubble if any of these conditions are true
         if (isEating || isBeingPet || isPlaying || isSleeping) return;

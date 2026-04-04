@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.util.Util;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -42,14 +42,6 @@ public class TextEditorLine extends ExtendedEditBox {
         this.setBordered(false);
     }
 
-    @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        if (this.isInEditorArea()) {
-            super.render(graphics, mouseX, mouseY, partial);
-        }
-        this.lastTickValue = this.getValue();
-    }
-
     /**
      * Creates a formatted component from a plain string, applying formatting rules.
      *
@@ -75,7 +67,7 @@ public class TextEditorLine extends ExtendedEditBox {
     }
 
     @Override
-    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         if (!this.isVisible() || !this.isInEditorArea()) {
             return;
         }
@@ -121,8 +113,8 @@ public class TextEditorLine extends ExtendedEditBox {
         int cursorRenderX = textAfterCursorX;
 
         // 3. Render the text parts
-        graphics.drawString(this.font2, textBeforeCursorComp, textX, textY, textColorInt, false);
-        graphics.drawString(this.font2, textAfterCursorComp, textAfterCursorX, textY, textColorInt, false);
+        graphics.text(this.font2, textBeforeCursorComp, textX, textY, textColorInt, false);
+        graphics.text(this.font2, textAfterCursorComp, textAfterCursorX, textY, textColorInt, false);
 
         // Update the total character count for the parent editor
         this.parent.currentRenderCharacterIndexTotal += visibleText.length();
@@ -155,12 +147,14 @@ public class TextEditorLine extends ExtendedEditBox {
             boolean isCursorAtEnd = this.getCursorPosition() >= this.getValue().length();
             if (isCursorAtEnd) {
                 // Render underscore cursor at the end
-                graphics.drawString(this.font2, "_", cursorRenderX, textY, textColorInt, false);
+                graphics.text(this.font2, "_", cursorRenderX, textY, textColorInt, false);
             } else {
                 // Render vertical bar cursor
                 graphics.fill(cursorRenderX, textY - 1, cursorRenderX + 1, textY + this.font2.lineHeight, textColorInt);
             }
         }
+
+        this.lastTickValue = this.getValue();
     }
 
     public boolean isInEditorArea() {

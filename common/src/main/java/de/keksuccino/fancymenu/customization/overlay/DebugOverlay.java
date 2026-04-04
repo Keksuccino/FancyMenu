@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.overlay;
 
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
@@ -18,7 +19,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -64,7 +64,7 @@ public class DebugOverlay implements FancyMenuUiComponent, Renderable, Narratabl
     public boolean allowRender = false;
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (!this.allowRender) return;
 
@@ -105,7 +105,7 @@ public class DebugOverlay implements FancyMenuUiComponent, Renderable, Narratabl
 
                 this.renderLineBackground(graphics, x, y, width, height);
 
-                graphics.drawString(this.font, text, x + this.lineBorderWidth, y + this.lineSpacerHeight, this.lineTextColor.getColorInt(), this.lineTextShadow);
+                graphics.text(this.font, text, x + this.lineBorderWidth, y + this.lineSpacerHeight, this.lineTextColor.getColorInt(), this.lineTextShadow);
 
             }
 
@@ -127,13 +127,13 @@ public class DebugOverlay implements FancyMenuUiComponent, Renderable, Narratabl
         if (this.rightClickMenu != null) {
 
             graphics.pose().pushMatrix();
-            this.rightClickMenu.render(graphics, mouseX, mouseY, partial);
+            this.rightClickMenu.extractRenderState(graphics, mouseX, mouseY, partial);
             graphics.pose().popMatrix();
         }
 
     }
 
-    protected void renderWidgetOverlays(@NotNull GuiGraphics graphics, @NotNull Screen current, int mouseX, int mouseY, float partial) {
+    protected void renderWidgetOverlays(@NotNull GuiGraphicsExtractor graphics, @NotNull Screen current, int mouseX, int mouseY, float partial) {
 
         ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(current);
         if (layer == null) return;
@@ -151,7 +151,7 @@ public class DebugOverlay implements FancyMenuUiComponent, Renderable, Narratabl
 
     }
 
-    protected void renderLineBackground(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
+    protected void renderLineBackground(@NotNull GuiGraphicsExtractor graphics, int x, int y, int width, int height) {
         graphics.fill(x, y, x + width, y + height, this.lineBackgroundColor.getColorInt());
     }
 
@@ -497,3 +497,4 @@ public class DebugOverlay implements FancyMenuUiComponent, Renderable, Narratabl
     }
 
 }
+

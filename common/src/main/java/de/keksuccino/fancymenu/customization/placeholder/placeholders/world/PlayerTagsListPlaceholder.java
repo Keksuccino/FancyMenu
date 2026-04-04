@@ -38,7 +38,7 @@ public class PlayerTagsListPlaceholder extends Placeholder {
             for (AbstractClientPlayer player : level.players()) {
                 if (player.getName().getString().equals(playerName)) {
                     // Get all tags and join them with the separator
-                    return player.getTags().stream()
+                    return player.entityTags().stream()
                             .sorted()
                             .collect(Collectors.joining(separator));
                 }

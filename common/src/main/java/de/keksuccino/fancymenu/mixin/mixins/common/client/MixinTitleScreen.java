@@ -13,7 +13,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -90,15 +90,15 @@ public abstract class MixinTitleScreen extends Screen {
         this.addRenderableWidget(new RendererWidget(branding.getDefaultPositionX(), branding.getDefaultPositionY() + 1, branding.getTotalWidth(), branding.getTotalHeight(),
                         (graphics, mouseX, mouseY, partial, x, y, width, height, renderer) -> {
                             branding.setOpacity(renderer.getAlpha());
-                            branding.render(graphics, x, y);
+                            branding.extractRenderState(graphics, x, y);
                         }))
                 .setWidgetIdentifierFancyMenu("minecraft_branding_widget")
                 .setMessage(Component.translatable("fancymenu.widgetified_screens.title_screen.branding"));
 
     }
 
-    @Inject(method = "render", at = @At("HEAD"))
-    private void before_render_FancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
+    @Inject(method = "extractRenderState", at = @At("HEAD"))
+    private void before_render_FancyMenu(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
         this.cached_mouseX_FancyMenu = mouseX;
         this.cached_mouseY_FancyMenu = mouseY;
         this.cached_partial_FancyMenu = partial;
@@ -111,8 +111,8 @@ public abstract class MixinTitleScreen extends Screen {
     /**
      * @reason Manually fire FancyMenu's {@link RenderedScreenBackgroundEvent} in {@link TitleScreen}, because normal event doesn't work correctly here.
      */
-    @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/TitleScreen;renderPanorama(Lnet/minecraft/client/gui/GuiGraphics;F)V"))
-    private void wrap_renderPanorama_FancyMenu(TitleScreen instance, GuiGraphics graphics, float f, Operation<Void> original) {
+    @WrapOperation(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/TitleScreen;extractPanorama(Lnet/minecraft/client/gui/GuiGraphicsExtractor;F)V"))
+    private void wrap_renderPanorama_FancyMenu(TitleScreen instance, GuiGraphicsExtractor graphics, float f, Operation<Void> original) {
         ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen(this);
         if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this)) {
             if (!l.layoutBase.menuBackgrounds.isEmpty()) {
@@ -127,18 +127,18 @@ public abstract class MixinTitleScreen extends Screen {
         EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, graphics, this.cached_mouseX_FancyMenu, this.cached_mouseY_FancyMenu, this.cached_partial_FancyMenu));
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/realmsclient/gui/screens/RealmsNotificationsScreen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
-    private boolean cancel_VanillaRealmsNotificationRendering_FancyMenu(RealmsNotificationsScreen instance, GuiGraphics $$0, int $$1, int $$2, float $$3) {
+    @WrapWithCondition(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lcom/mojang/realmsclient/gui/screens/RealmsNotificationsScreen;extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V"))
+    private boolean cancel_VanillaRealmsNotificationRendering_FancyMenu(RealmsNotificationsScreen instance, GuiGraphicsExtractor $$0, int $$1, int $$2, float $$3) {
         return false;
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/LogoRenderer;renderLogo(Lnet/minecraft/client/gui/GuiGraphics;IF)V"))
-    private boolean cancel_VanillaLogoRendering_FancyMenu(LogoRenderer instance, GuiGraphics $$0, int $$1, float $$2) {
+    @WrapWithCondition(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/LogoRenderer;extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IF)V"))
+    private boolean cancel_VanillaLogoRendering_FancyMenu(LogoRenderer instance, GuiGraphicsExtractor $$0, int $$1, float $$2) {
         return false;
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/SplashRenderer;render(Lnet/minecraft/client/gui/GuiGraphics;ILnet/minecraft/client/gui/Font;F)V"))
-    private boolean cancel_VanillaSplashRendering_FancyMenu(SplashRenderer instance, GuiGraphics $$0, int $$1, Font $$2, float $$3) {
+    @WrapWithCondition(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/SplashRenderer;extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;ILnet/minecraft/client/gui/Font;F)V"))
+    private boolean cancel_VanillaSplashRendering_FancyMenu(SplashRenderer instance, GuiGraphicsExtractor $$0, int $$1, Font $$2, float $$3) {
         return false;
     }
 

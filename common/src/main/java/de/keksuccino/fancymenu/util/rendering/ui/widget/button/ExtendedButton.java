@@ -15,7 +15,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -88,7 +88,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void extractContents(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         this.updateIsActive();
         this.updateLabel();
         Tooltip tooltip = this.getTooltipFancyMenu();
@@ -98,16 +98,11 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
             }
             TooltipHandler.INSTANCE.addTooltip(tooltip, () -> true, false, true);
         }
-        super.render(graphics, mouseX, mouseY, partial);
-    }
-
-    @Override
-    public void renderContents(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.renderBackground(graphics);
         this.renderLabelText(graphics);
     }
 
-    protected void renderBackground(@NotNull GuiGraphics graphics) {
+    protected void renderBackground(@NotNull GuiGraphicsExtractor graphics) {
         //Renders the custom widget background if one is present or the Vanilla background if no custom background is present
         if (this.getExtendedAsCustomizableWidget().renderCustomBackgroundFancyMenu(this, graphics, this.getX(), this.getY(), this.getWidth(), this.getHeight())) {
             if (this.renderColorBackground(graphics)) {
@@ -119,7 +114,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     /**
      * Returns if the button should render its Vanilla background (true) or not (false).
      */
-    protected boolean renderColorBackground(@NotNull GuiGraphics graphics) {
+    protected boolean renderColorBackground(@NotNull GuiGraphicsExtractor graphics) {
         if (this.active) {
             if (this.isHoveredOrFocused()) {
                 if (this.backgroundColorHover != null) {
@@ -150,7 +145,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         return true;
     }
 
-    protected void renderLabelText(@NotNull GuiGraphics graphics) {
+    protected void renderLabelText(@NotNull GuiGraphicsExtractor graphics) {
         if (this.enableLabel) {
             int k = this.active ? this.labelBaseColorNormal.getColorIntWithAlpha(this.alpha) : this.labelBaseColorInactive.getColorIntWithAlpha(this.alpha);
             this.renderScrollingLabel(this, graphics, mc.font, 2, this.labelShadow, k);

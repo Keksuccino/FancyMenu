@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
@@ -22,9 +23,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -371,29 +371,29 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         this.updateSelectedCell();
 
         graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.text(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         if (this.descriptionAreaEnabled && (this.descriptionScrollArea != null)) {
-            this.descriptionScrollArea.render(graphics, mouseX, mouseY, partial);
+            this.descriptionScrollArea.extractRenderState(graphics, mouseX, mouseY, partial);
         }
 
-        this.scrollArea.render(graphics, mouseX, mouseY, partial);
+        this.scrollArea.extractRenderState(graphics, mouseX, mouseY, partial);
 
-        super.render(graphics, mouseX, mouseY, partial);
+        super.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.performInitialWidgetFocusActionInRender();
 
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractBackground(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
     }
 
     @Override
@@ -592,7 +592,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         }
 
         @Override
-        public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void renderEntry(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
             this.cell.updateSize(this);
             this.setWidth(this.cell.getWidth() + 40);
             if (this.getWidth() < this.parent.getInnerWidth()) this.setWidth(this.parent.getInnerWidth());
@@ -603,7 +603,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
             if ((cell.isSelectable() && cell.isHovered()) || (cell == CellScreen.this.selectedCell)) {
                 graphics.fill((int) this.getX(), (int) this.getY(), (int) (this.getX() + this.parent.getInnerWidth()), (int) (this.getY() + this.getHeight()), this.cell.hoverColorSupplier.get().getColorInt());
             }
-            this.cell.render(graphics, mouseX, mouseY, partial);
+            this.cell.extractRenderState(graphics, mouseX, mouseY, partial);
         }
 
         @Override
@@ -631,7 +631,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         }
 
         @Override
-        public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void renderCell(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
             int centerY = this.getY() + (this.getHeight() / 2);
             int halfThickness = Math.max(1, this.separatorThickness / 2);
             graphics.fill(this.getX(), centerY - ((halfThickness > 1) ? halfThickness : 0), this.getX() + this.getWidth(), centerY + halfThickness, this.separatorColorSupplier.get().getColorInt());
@@ -686,7 +686,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         }
 
         @Override
-        public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void renderCell(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         }
 
         @Override
@@ -707,7 +707,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         }
 
         @Override
-        public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void renderCell(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
             this.widget.setX(this.getX());
             this.widget.setY(this.getY());
             this.widget.setWidth(this.getWidth());
@@ -732,7 +732,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         }
 
         @Override
-        public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void renderCell(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
             UIBase.drawElementLabel(graphics, Minecraft.getInstance().font, this.text, this.getX(), this.getY());
         }
 
@@ -803,7 +803,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         }
 
         @Override
-        public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void renderCell(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
             if (!this.widgetSizesSet) {
                 this.setWidgetSizes();
@@ -894,10 +894,10 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         protected final Map<String, String> memory = new HashMap<>();
         protected boolean ignoreSearch = false;
 
-        public abstract void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
+        public abstract void renderCell(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial);
 
         @Override
-        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
             if (!this.selectable) this.selected = false;
 
@@ -905,7 +905,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
             for (GuiEventListener l : this.children) {
                 if (l instanceof Renderable r) {
-                    r.render(graphics, mouseX, mouseY, partial);
+                    r.extractRenderState(graphics, mouseX, mouseY, partial);
                 }
             }
 
@@ -1109,7 +1109,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         }
 
         @Override
-        public void renderWidget(GuiGraphics graphics, int var2, int var3, float var4) {
+        protected void extractWidgetRenderState(GuiGraphicsExtractor graphics, int var2, int var3, float var4) {
         }
 
         @Override
@@ -1146,3 +1146,6 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
     }
 
 }
+
+
+

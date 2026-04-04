@@ -14,7 +14,7 @@ import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 
 import net.minecraft.resources.Identifier;
@@ -154,7 +154,7 @@ public class ExternalTextureSlideshowRenderer {
 
 	}
 
-	public void render(GuiGraphics graphics) {
+	public void extractRenderState(GuiGraphicsExtractor graphics) {
 		try {
 			if (!this.images.isEmpty()) {
 				this.tick();
@@ -221,7 +221,7 @@ public class ExternalTextureSlideshowRenderer {
 
 	}
 
-	protected void renderPrevious(GuiGraphics graphics) {
+	protected void renderPrevious(GuiGraphicsExtractor graphics) {
 		if ((this.previous != null) && (this.current != this.previous)) {
 			float o = this.opacity;
 			if (o > this.slideshowOpacity) {
@@ -235,7 +235,7 @@ public class ExternalTextureSlideshowRenderer {
 		}
 	}
 
-	protected void renderCurrent(GuiGraphics graphics) {
+	protected void renderCurrent(GuiGraphicsExtractor graphics) {
 		if (this.current != null) {
 			ITexture t = this.current.get();
 			Identifier loc = (t != null) ? t.getIdentifier() : null;
@@ -245,7 +245,7 @@ public class ExternalTextureSlideshowRenderer {
 		}
 	}
 
-	protected void renderOverlay(GuiGraphics graphics) {
+	protected void renderOverlay(GuiGraphicsExtractor graphics) {
 		if (this.overlayTexture != null) {
 			ITexture t = this.overlayTexture.get();
 			Identifier loc = (t != null) ? t.getIdentifier() : null;

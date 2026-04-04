@@ -17,7 +17,7 @@ import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
@@ -55,7 +55,7 @@ public class GameIntroOverlay extends Overlay {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
         this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
@@ -83,7 +83,7 @@ public class GameIntroOverlay extends Overlay {
         if (this.endOfIntroReached()) {
             ScreenRenderUtils.executeAllPreRenderTasks(graphics, mouseX, mouseY, partial);
             EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(this.fadeTo, graphics, mouseX, mouseY, partial));
-            this.fadeTo.render(graphics, mouseX, mouseY, partial);
+            this.fadeTo.extractRenderState(graphics, mouseX, mouseY, partial);
             EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(this.fadeTo, graphics, mouseX, mouseY, partial));
             ScreenRenderUtils.executeAllPostRenderTasks(graphics, mouseX, mouseY, partial);
         } else {
@@ -96,7 +96,7 @@ public class GameIntroOverlay extends Overlay {
 
     }
 
-    protected void renderIntro(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void renderIntro(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (this.intro instanceof RenderableResource r) {
 
@@ -117,7 +117,7 @@ public class GameIntroOverlay extends Overlay {
 
     }
 
-    protected void renderSkipText(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void renderSkipText(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         if (FancyMenu.getOptions().gameIntroAllowSkip.getValue()) {
             float scale = 1.3F;
             String customSkipText = FancyMenu.getOptions().gameIntroCustomSkipText.getValue();
@@ -132,7 +132,7 @@ public class GameIntroOverlay extends Overlay {
             int normalizedHeight = (int)(this.height / scale);
             int textX = (normalizedWidth / 2) - (this.font.width(skipComp) / 2);
             int textY = normalizedHeight - 40;
-            graphics.drawString(this.font, skipComp, textX, textY, DrawableColor.WHITE.getColorIntWithAlpha(Math.max(0.1F, 0.6F * this.opacity)), false);
+            graphics.text(this.font, skipComp, textX, textY, DrawableColor.WHITE.getColorIntWithAlpha(Math.max(0.1F, 0.6F * this.opacity)), false);
             graphics.pose().popMatrix();
         }
     }

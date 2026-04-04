@@ -3,7 +3,7 @@ plugins {
     id 'java'
     id 'idea'
     id 'maven-publish'
-    id "fabric-loom" version "$fabric_loom_version"
+    id "net.fabricmc.fabric-loom" version "$fabric_loom_version"
 }
 
 base {
@@ -12,10 +12,7 @@ base {
 
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
-    mappings loom.layered() {
-        officialMojangMappings()
-        parchment("org.parchmentmc.data:parchment-${parchment_mc_version}:${parchment_version}@zip")
-    }
+    compileOnly "net.fabricmc:fabric-loader:${fabric_loader_version}"
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
     implementation group: 'org.ow2.asm', name: 'asm-tree', version: '9.7'
 	annotationProcessor group: 'org.ow2.asm', name: 'asm-util', version: '9.7'
@@ -23,19 +20,16 @@ dependencies {
     compileOnly group:'org.spongepowered', name:'mixin', version:'0.8.5'
     compileOnly "com.github.Keksuccino:japng:0.5.3"
     compileOnly "com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7"
-    modCompileOnly "maven.modrinth:melody:1.0.15-1.21.11-fabric"
-    modCompileOnly "maven.modrinth:konkrete:1.9.18-1.21.11-fabric"
-    modCompileOnly "de.keksuccino:mcef-fabric:2.1.7-1.21.10"
+    implementation "net.objecthunter:exp4j:0.4.8"
+    compileOnly "maven.modrinth:melody:1.0.16-26.1.1-fabric"
+    compileOnly "maven.modrinth:konkrete:1.9.19-26.1.1-fabric"
+    compileOnly "de.keksuccino:mcef-fabric:2.1.7-1.21.10"
     compileOnly "it.crystalnest:fancy-entity-renderer-common:$fer_mc_version-$fer_version"
 }
 
 loom {
     if (file("src/main/resources/${mod_id}.accesswidener").exists()) {
         accessWidenerPath.set(file("src/main/resources/${mod_id}.accesswidener"))
-    }
-    mixin {
-        useLegacyMixinAp = true
-        defaultRefmapName.set("${mod_id}.refmap.json")
     }
 }
 

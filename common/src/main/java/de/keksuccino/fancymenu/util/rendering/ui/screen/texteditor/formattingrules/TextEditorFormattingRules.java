@@ -1,4 +1,3 @@
-
 package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.formattingrules;
 
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;

@@ -11,7 +11,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.Scro
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -86,24 +86,24 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if ((this.forcedFileExtension != null) && !this.fileNameEditBox.getValue().toLowerCase().endsWith("." + this.forcedFileExtension.toLowerCase())) {
             this.fileNameEditBox.setValue(this.defaultFileName);
         }
 
-        super.render(graphics, mouseX, mouseY, partial);
+        super.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.renderFileNameEditBox(graphics, mouseX, mouseY, partial);
 
     }
 
-    protected void renderFileNameEditBox(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void renderFileNameEditBox(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         this.fileNameEditBox.setWidth(this.getBelowFileScrollAreaElementWidth() - 2);
         this.fileNameEditBox.setX(this.fileListScrollArea.getXWithBorder() + this.fileListScrollArea.getWidthWithBorder() - this.fileNameEditBox.getWidth() - 1);
         this.fileNameEditBox.setY(this.fileListScrollArea.getYWithBorder() + this.fileListScrollArea.getHeightWithBorder() + 5 + 1);
-        this.fileNameEditBox.render(graphics, mouseX, mouseY, partial);
-        graphics.drawString(this.font, FILE_NAME_PREFIX_TEXT, this.fileNameEditBox.getX() - 1 - Minecraft.getInstance().font.width(FILE_NAME_PREFIX_TEXT) - 5, this.fileNameEditBox.getY() - 1 + (this.fileNameEditBox.getHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2), UIBase.getUIColorTheme().element_label_color_normal.getColorInt(), false);
+        this.fileNameEditBox.extractRenderState(graphics, mouseX, mouseY, partial);
+        graphics.text(this.font, FILE_NAME_PREFIX_TEXT, this.fileNameEditBox.getX() - 1 - Minecraft.getInstance().font.width(FILE_NAME_PREFIX_TEXT) - 5, this.fileNameEditBox.getY() - 1 + (this.fileNameEditBox.getHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2), UIBase.getUIColorTheme().element_label_color_normal.getColorInt(), false);
     }
 
     @Override
@@ -118,10 +118,9 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
             this.trySave();
         }) {
             @Override
-            public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-                AbstractFileScrollAreaEntry selected = getSelectedEntry();
+            protected void extractContents(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
                 this.active = canSave();
-                super.render(graphics, mouseX, mouseY, partial);
+                super.extractContents(graphics, mouseX, mouseY, partial);
             }
         };
     }

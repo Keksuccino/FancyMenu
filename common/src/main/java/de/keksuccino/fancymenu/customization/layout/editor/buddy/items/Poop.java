@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy.items;
 
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 
 import net.minecraft.resources.Identifier;
@@ -53,7 +53,7 @@ public class Poop {
         this.relativeY = (float)this.y / screenHeight;
     }
 
-    public void render(GuiGraphics graphics) {
+    public void extractRenderState(GuiGraphicsExtractor graphics) {
         if (isBeingCleaned) {
             // Fade out during cleaning animation
             float alpha = 1.0f - (cleaningAnimation / (float)CLEANING_DURATION);

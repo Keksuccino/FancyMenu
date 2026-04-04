@@ -13,7 +13,7 @@ import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoPlayer;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
@@ -88,13 +88,13 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         this.lastParallaxIntensity = SerializationUtils.deserializeNumber(Float.class, 0.02F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityString));
 
         if (!MCEFUtil.isMCEFLoaded() || !MCEFUtil.MCEF_initialized) {
             graphics.fill(0, 0, getScreenWidth(), getScreenHeight(), MISSING_MCEF_COLOR.getColorInt());
-            graphics.drawCenteredString(Minecraft.getInstance().font, "§lMCEF IS NOT INSTALLED! PLEASE DOWNLOAD FROM CURSEFORGE!", getScreenWidth() / 2, getScreenHeight() / 2, -1);
+            graphics.centeredText(Minecraft.getInstance().font, "§lMCEF IS NOT INSTALLED! PLEASE DOWNLOAD FROM CURSEFORGE!", getScreenWidth() / 2, getScreenHeight() / 2, -1);
             return;
         }
 
@@ -197,7 +197,7 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
         this.videoPlayer.setOpacity(this.opacity);
 
         if (finalVideoUrl != null) {
-            this.videoPlayer.render(graphics, mouseX, mouseY, partial);
+            this.videoPlayer.extractRenderState(graphics, mouseX, mouseY, partial);
         }
 
     }

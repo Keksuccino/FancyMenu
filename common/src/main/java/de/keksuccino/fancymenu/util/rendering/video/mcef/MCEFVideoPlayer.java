@@ -1,10 +1,10 @@
 package de.keksuccino.fancymenu.util.rendering.video.mcef;
 
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.ObjectHolder;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -178,9 +178,9 @@ public class MCEFVideoPlayer implements Renderable {
      * @param mouseY The mouse Y position
      * @param partialTick The partial tick time
      */
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         if (browser != null && initialized) {
-            browser.render(graphics, mouseX, mouseY, partialTick);
+            browser.extractRenderState(graphics, mouseX, mouseY, partialTick);
         }
     }
     

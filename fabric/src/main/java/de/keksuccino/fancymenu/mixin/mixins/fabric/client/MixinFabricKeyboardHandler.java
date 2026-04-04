@@ -89,7 +89,7 @@ public class MixinFabricKeyboardHandler {
                         b = listener.charTyped(event);
                     } else {
                         for (char c : Character.toChars(event.codepoint())) {
-                            b = !b ? listener.charTyped(new CharacterEvent(c, event.modifiers())) : true;
+                            b = !b ? listener.charTyped(new CharacterEvent(c)) : true;
                         }
                     }
                     if (b) {

@@ -38,7 +38,7 @@ public class DisplayInChatClientSideAction extends Action {
             return;
         }
         Component message = this.deserializeComponent(value.trim());
-        minecraft.gui.getChat().addMessage(message);
+        minecraft.gui.getChat().addClientSystemMessage(message);
     }
 
     @Override

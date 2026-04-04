@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
@@ -8,12 +8,12 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 import javax.annotation.Nullable;
 
 /**
- * Mixin invoker for the private inner class GuiGraphics.ScissorStack.
+ * Mixin invoker for the private inner class GuiGraphicsExtractor.ScissorStack.
  * <p>
  * This allows invoking the {@code peek()} method on an instance of the ScissorStack.
  * The mixin targets the class using its fully qualified string name because it is private.
  */
-@Mixin(GuiGraphics.ScissorStack.class)
+@Mixin(targets = "net.minecraft.client.gui.GuiGraphicsExtractor$ScissorStack")
 public interface IMixinScissorStack {
 
     /**

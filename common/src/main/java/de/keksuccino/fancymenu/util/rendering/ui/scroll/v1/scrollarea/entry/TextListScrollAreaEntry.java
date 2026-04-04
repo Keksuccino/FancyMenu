@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.awt.*;
@@ -26,15 +26,15 @@ public class TextListScrollAreaEntry extends ScrollAreaEntry {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
-        super.render(graphics, mouseX, mouseY, partial);
+        super.extractRenderState(graphics, mouseX, mouseY, partial);
 
         int centerY = this.getY() + (this.getHeight() / 2);
 
         renderListingDot(graphics, this.getX() + 5, centerY - 2, this.listDotColor);
 
-        graphics.drawString(this.font, this.text, (this.getX() + 5 + 4 + 3), (centerY - (this.font.lineHeight / 2)), UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.text(this.font, this.text, (this.getX() + 5 + 4 + 3), (centerY - (this.font.lineHeight / 2)), UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
     }
 

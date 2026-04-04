@@ -19,7 +19,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -296,7 +296,7 @@ public class TextEditorScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         //Reset scrolls if content fits editor area
         if (this.currentLineWidth <= this.getEditorAreaWidth()) {
@@ -319,7 +319,7 @@ public class TextEditorScreen extends Screen {
 
         // Render indentation guides if enabled
         if (this.showIndentationGuides) {
-            this.indentGuideRenderer.render(graphics);
+            this.indentGuideRenderer.extractRenderState(graphics);
         }
 
         //Don't render parts of lines outside editor area
@@ -333,7 +333,7 @@ public class TextEditorScreen extends Screen {
             if (line.isInEditorArea()) {
                 this.lineNumberRenderQueue.add(() -> this.renderLineNumber(graphics, line));
             }
-            line.render(graphics, mouseX, mouseY, partial);
+            line.extractRenderState(graphics, mouseX, mouseY, partial);
         });
 
         graphics.disableScissor();
@@ -354,49 +354,49 @@ public class TextEditorScreen extends Screen {
 
         UIBase.renderBorder(graphics, this.borderLeft-1, this.headerHeight-1, this.getEditorAreaX() + this.getEditorAreaWidth(), this.height - this.footerHeight + 1, 1, this.editorAreaBorderColor, true, true, true, true);
 
-        this.verticalScrollBar.render(graphics);
-        this.horizontalScrollBar.render(graphics);
+        this.verticalScrollBar.extractRenderState(graphics);
+        this.horizontalScrollBar.extractRenderState(graphics);
 
         this.renderPlaceholderMenu(graphics, mouseX, mouseY, partial);
 
-        this.cancelButton.render(graphics, mouseX, mouseY, partial);
+        this.cancelButton.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.doneButton.active = this.isTextValid();
         this.doneButton.setTooltip(this.textValidatorFeedbackTooltip);
-        this.doneButton.render(graphics, mouseX, mouseY, partial);
+        this.doneButton.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.renderMultilineNotSupportedNotification(graphics, mouseX, mouseY, partial);
 
-        this.rightClickContextMenu.render(graphics, mouseX, mouseY, partial);
+        this.rightClickContextMenu.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.tickMouseHighlighting();
 
         MutableComponent t = this.title.copy();
         t.setStyle(t.getStyle().withBold(this.boldTitle));
-        graphics.drawString(this.font, t, this.borderLeft, (this.headerHeight / 2) - (this.font.lineHeight / 2), UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.text(this.font, t, this.borderLeft, (this.headerHeight / 2) - (this.font.lineHeight / 2), UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        super.render(graphics, mouseX, mouseY, partial);
+        super.extractRenderState(graphics, mouseX, mouseY, partial);
 
     }
 
     @Override
-    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
     }
 
-    protected void renderMultilineNotSupportedNotification(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void renderMultilineNotSupportedNotification(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         if (!this.multilineMode) {
             MutableComponent indicator = Component.translatable("fancymenu.editor.text_editor.single_line_warning.indicator").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())).append(Component.literal(" [?]").withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
             int indicatorX = this.getEditorAreaX();
             int indicatorY = this.getEditorAreaY() - this.font.lineHeight - 5;
             int indicatorWidth = this.font.width(indicator);
-            graphics.drawString(this.font, indicator, indicatorX, indicatorY, -1, false);
+            graphics.text(this.font, indicator, indicatorX, indicatorY, -1, false);
             if (UIBase.isXYInArea(mouseX, mouseY, indicatorX, indicatorY, indicatorWidth, this.font.lineHeight)) {
                 TooltipHandler.INSTANCE.addTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.text_editor.single_line_warning")).setDefaultStyle().setTextBaseColor(UIBase.getUIColorTheme().error_text_color), () -> true, true, true);
             }
         }
     }
 
-    protected void renderPlaceholderMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void renderPlaceholderMenu(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (extendedPlaceholderMenu) {
 
@@ -419,7 +419,7 @@ public class TextEditorScreen extends Screen {
             for (PlaceholderMenuEntry e : entries) {
                 e.x = (this.width - this.borderRight - this.getPlaceholderAreaWidth()) + this.getPlaceholderEntriesRenderOffsetX();
                 e.y = (this.getPlaceholderAreaY()) + (this.placeholderMenuEntryHeight * index) + this.getPlaceholderEntriesRenderOffsetY();
-                e.render(graphics, mouseX, mouseY, partial);
+                e.extractRenderState(graphics, mouseX, mouseY, partial);
                 index++;
             }
 
@@ -429,13 +429,13 @@ public class TextEditorScreen extends Screen {
             UIBase.renderBorder(graphics, this.width - this.borderRight - this.getPlaceholderAreaWidth() - 1, this.headerHeight - 1 + 25, this.width - this.borderRight, this.height - this.footerHeight + 1, 1, this.editorAreaBorderColor, true, true, true, true);
 
             //Render placeholder menu scroll bars
-            this.verticalScrollBarPlaceholderMenu.render(graphics);
-            this.horizontalScrollBarPlaceholderMenu.render(graphics);
+            this.verticalScrollBarPlaceholderMenu.extractRenderState(graphics);
+            this.horizontalScrollBarPlaceholderMenu.extractRenderState(graphics);
 
         }
 
         if (this.placeholderButton != null) {
-            this.placeholderButton.render(graphics, mouseX, mouseY, partial);
+            this.placeholderButton.extractRenderState(graphics, mouseX, mouseY, partial);
         }
 
     }
@@ -629,21 +629,21 @@ public class TextEditorScreen extends Screen {
         return sortedCategories;
     }
 
-    protected void renderLineNumberBackground(GuiGraphics graphics, int width) {
+    protected void renderLineNumberBackground(GuiGraphicsExtractor graphics, int width) {
         graphics.fill(this.getEditorAreaX(), this.getEditorAreaY() - 1, this.getEditorAreaX() - width - 1, this.getEditorAreaY() + this.getEditorAreaHeight() + 1, this.sideBarColor.getRGB());
     }
 
-    protected void renderLineNumber(GuiGraphics graphics, TextEditorLine line) {
+    protected void renderLineNumber(GuiGraphicsExtractor graphics, TextEditorLine line) {
         String lineNumberString = "" + (line.lineIndex+1);
         int lineNumberWidth = this.font.width(lineNumberString);
-        graphics.drawString(this.font, lineNumberString, this.getEditorAreaX() - 3 - lineNumberWidth, line.getY() + (line.getHeight() / 2) - (this.font.lineHeight / 2), line.isFocused() ? this.lineNumberTextColorFocused.getRGB() : this.lineNumberTextColorNormal.getRGB(), false);
+        graphics.text(this.font, lineNumberString, this.getEditorAreaX() - 3 - lineNumberWidth, line.getY() + (line.getHeight() / 2) - (this.font.lineHeight / 2), line.isFocused() ? this.lineNumberTextColorFocused.getRGB() : this.lineNumberTextColorNormal.getRGB(), false);
     }
 
-    protected void renderEditorAreaBackground(GuiGraphics graphics) {
+    protected void renderEditorAreaBackground(GuiGraphicsExtractor graphics) {
         graphics.fill(this.getEditorAreaX(), this.getEditorAreaY(), this.getEditorAreaX() + this.getEditorAreaWidth(), this.getEditorAreaY() + this.getEditorAreaHeight(), this.editorAreaBackgroundColor.getRGB());
     }
 
-    protected void renderScreenBackground(GuiGraphics graphics) {
+    protected void renderScreenBackground(GuiGraphicsExtractor graphics) {
         graphics.fill(0, 0, this.width, this.height, this.screenBackgroundColor.getColorInt());
     }
 
@@ -1828,16 +1828,16 @@ public class TextEditorScreen extends Screen {
                     super.onClick(event, isDoubleClick);
                 }
                 @Override
-                public void render(@NotNull GuiGraphics graphics, int p_93658_, int p_93659_, float p_93660_) {
+                protected void extractContents(@NotNull GuiGraphicsExtractor graphics, int p_93658_, int p_93659_, float p_93660_) {
                     if (PlaceholderMenuEntry.this.parent.isMouseInteractingWithPlaceholderGrabbers()) {
                         this.isHovered = false;
                     }
-                    super.render(graphics, p_93658_, p_93659_, p_93660_);
+                    super.extractContents(graphics, p_93658_, p_93659_, p_93660_);
                 }
             };
         }
 
-        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
             //Update the button colors
             this.buttonBase.setBackgroundColor(
                     DrawableColor.of(this.backgroundColorIdle),
@@ -1852,11 +1852,11 @@ public class TextEditorScreen extends Screen {
             this.buttonBase.setY(this.y);
             int yCenter = this.y + (this.getHeight() / 2);
             //Render the button
-            this.buttonBase.render(graphics, mouseX, mouseY, partial);
+            this.buttonBase.extractRenderState(graphics, mouseX, mouseY, partial);
             //Render dot
             renderListingDot(graphics, this.x + 5, yCenter - 2, this.dotColor);
             //Render label
-            graphics.drawString(this.font, this.label, this.x + 5 + 4 + 3, yCenter - (this.font.lineHeight / 2), this.entryLabelColor.getRGB(), false);
+            graphics.text(this.font, this.label, this.x + 5 + 4 + 3, yCenter - (this.font.lineHeight / 2), this.entryLabelColor.getRGB(), false);
         }
 
         public int getWidth() {
@@ -1878,3 +1878,6 @@ public class TextEditorScreen extends Screen {
     }
 
 }
+
+
+

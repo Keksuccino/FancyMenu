@@ -1,11 +1,11 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -96,11 +96,11 @@ public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHan
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         this.tick();
 
-        this.scrollArea.render(graphics, mouseX, mouseY, partial);
+        this.scrollArea.extractRenderState(graphics, mouseX, mouseY, partial);
 
     }
 
@@ -206,13 +206,13 @@ public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHan
         }
 
         @Override
-        public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void renderEntry(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
             this.markdownRenderer.setOptimalWidth(this.parent.getInnerWidth());
             this.markdownRenderer.setX(this.x);
             this.markdownRenderer.setY(this.y);
             this.setWidth(this.markdownRenderer.getRealWidth());
             this.setHeight(this.markdownRenderer.getRealHeight());
-            this.markdownRenderer.render(graphics, mouseX, mouseY, partial);
+            this.markdownRenderer.extractRenderState(graphics, mouseX, mouseY, partial);
         }
 
         @Override
@@ -222,3 +222,4 @@ public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHan
     }
 
 }
+

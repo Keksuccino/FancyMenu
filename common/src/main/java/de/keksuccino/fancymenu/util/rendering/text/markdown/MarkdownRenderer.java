@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -8,7 +9,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.FocuslessContainerEventHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -105,12 +105,12 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected final List<ConsumingSupplier<MarkdownTextLine, Boolean>> lineRenderValidators = new ArrayList<>();
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         this.tick();
         this.onRender(graphics, mouseX, mouseY, partial, true);
     }
 
-    protected void onRender(GuiGraphics graphics, int mouseX, int mouseY, float partial, boolean shouldRender) {
+    protected void onRender(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial, boolean shouldRender) {
 
         float lineOffsetY = this.border;
         for (MarkdownTextLine line : this.lines) {
@@ -128,7 +128,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
             line.offsetX = this.border + lineAlignmentOffsetX;
             line.offsetY = lineOffsetY;
             if (shouldRender && this.isLineRenderingAllowedByValidators(line)) {
-                line.render(graphics, mouseX, mouseY, partial);
+                line.extractRenderState(graphics, mouseX, mouseY, partial);
             }
             lineOffsetY += line.getLineHeight() + this.lineSpacing;
         }
@@ -770,3 +770,4 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
 }
+

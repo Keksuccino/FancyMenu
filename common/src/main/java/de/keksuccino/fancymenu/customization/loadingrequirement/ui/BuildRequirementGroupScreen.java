@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -68,13 +68,13 @@ public class BuildRequirementGroupScreen extends Screen {
             }
         }) {
             @Override
-            public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            protected void extractContents(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
                 if (BuildRequirementGroupScreen.this.group.mode == LoadingRequirementGroup.GroupMode.AND) {
                     this.setLabel(I18n.get("fancymenu.requirements.screens.build_group_screen.mode.and"));
                 } else {
                     this.setLabel(I18n.get("fancymenu.requirements.screens.build_group_screen.mode.or"));
                 }
-                super.render(graphics, mouseX, mouseY, partial);
+                super.extractContents(graphics, mouseX, mouseY, partial);
             }
         };
         this.addWidget(this.groupModeButton);
@@ -106,7 +106,7 @@ public class BuildRequirementGroupScreen extends Screen {
             }
         }) {
             @Override
-            public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            protected void extractContents(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
                 if (BuildRequirementGroupScreen.this.getSelectedInstance() == null) {
                     this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.no_requirement_selected")));
                     this.active = false;
@@ -114,7 +114,7 @@ public class BuildRequirementGroupScreen extends Screen {
                     this.setTooltip((Tooltip) null);
                     this.active = true;
                 }
-                super.render(graphics, mouseX, mouseY, partial);
+                super.extractContents(graphics, mouseX, mouseY, partial);
             }
         };
         this.addWidget(this.editRequirementButton);
@@ -134,7 +134,7 @@ public class BuildRequirementGroupScreen extends Screen {
             }
         }) {
             @Override
-            public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            protected void extractContents(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
                 if (BuildRequirementGroupScreen.this.getSelectedInstance() == null) {
                     this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.no_requirement_selected")));
                     this.active = false;
@@ -142,7 +142,7 @@ public class BuildRequirementGroupScreen extends Screen {
                     this.setTooltip((Tooltip) null);
                     this.active = true;
                 }
-                super.render(graphics, mouseX, mouseY, partial);
+                super.extractContents(graphics, mouseX, mouseY, partial);
             }
         };
         this.addWidget(this.removeRequirementButton);
@@ -154,7 +154,7 @@ public class BuildRequirementGroupScreen extends Screen {
             this.callback.accept(this.group);
         }) {
             @Override
-            public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+            protected void extractContents(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
                 BuildRequirementGroupScreen s = BuildRequirementGroupScreen.this;
                 if (s.group.getInstances().isEmpty()) {
                     this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.build_group_screen.finish.no_requirements_added")));
@@ -169,7 +169,7 @@ public class BuildRequirementGroupScreen extends Screen {
                     this.setTooltip((Tooltip) null);
                     this.active = true;
                 }
-                super.renderWidget(graphics, mouseX, mouseY, partialTicks);
+                super.extractContents(graphics, mouseX, mouseY, partialTicks);
             }
         };
         this.addWidget(this.doneButton);
@@ -189,8 +189,8 @@ public class BuildRequirementGroupScreen extends Screen {
         String oldIdentifierVal = (this.groupIdentifierTextField != null) ? this.groupIdentifierTextField.getValue() : null;
         this.groupIdentifierTextField = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 150, 20, Component.empty()) {
             @Override
-            public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-                super.render(graphics, mouseX, mouseY, partial);
+            public void extractWidgetRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
+                super.extractWidgetRenderState(graphics, mouseX, mouseY, partial);
                 BuildRequirementGroupScreen.this.group.identifier = this.getValue();
             }
         };
@@ -216,63 +216,63 @@ public class BuildRequirementGroupScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.text(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        graphics.drawString(this.font, I18n.get("fancymenu.requirements.screens.build_group_screen.group_requirements"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.text(this.font, I18n.get("fancymenu.requirements.screens.build_group_screen.group_requirements"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         this.requirementsScrollArea.setWidth(this.width - 20 - 150 - 20 - 20, true);
         this.requirementsScrollArea.setHeight(this.height - 85, true);
         this.requirementsScrollArea.setX(20, true);
         this.requirementsScrollArea.setY(50 + 15, true);
-        this.requirementsScrollArea.render(graphics, mouseX, mouseY, partial);
+        this.requirementsScrollArea.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
         this.doneButton.setY(this.height - 20 - 20);
-        this.doneButton.render(graphics, mouseX, mouseY, partial);
+        this.doneButton.extractRenderState(graphics, mouseX, mouseY, partial);
 
         if (!this.isEdit) {
             this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
             this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
-            this.cancelButton.render(graphics, mouseX, mouseY, partial);
+            this.cancelButton.extractRenderState(graphics, mouseX, mouseY, partial);
         } else {
             this.cancelButton.active = false;
         }
 
         this.removeRequirementButton.setX(this.width - 20 - this.removeRequirementButton.getWidth());
         this.removeRequirementButton.setY(((this.isEdit) ? this.doneButton.getY() : this.cancelButton.getY()) - 15 - 20);
-        this.removeRequirementButton.render(graphics, mouseX, mouseY, partial);
+        this.removeRequirementButton.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.editRequirementButton.setX(this.width - 20 - this.editRequirementButton.getWidth());
         this.editRequirementButton.setY(this.removeRequirementButton.getY() - 5 - 20);
-        this.editRequirementButton.render(graphics, mouseX, mouseY, partial);
+        this.editRequirementButton.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.addRequirementButton.setX(this.width - 20 - this.addRequirementButton.getWidth());
         this.addRequirementButton.setY(this.editRequirementButton.getY() - 5 - 20);
-        this.addRequirementButton.render(graphics, mouseX, mouseY, partial);
+        this.addRequirementButton.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.groupModeButton.setX(this.width - 20 - this.groupModeButton.getWidth());
         this.groupModeButton.setY(this.addRequirementButton.getY() - 5 - 20);
-        this.groupModeButton.render(graphics, mouseX, mouseY, partial);
+        this.groupModeButton.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.groupIdentifierTextField.setX(this.width - 20 - this.groupIdentifierTextField.getWidth());
         this.groupIdentifierTextField.setY(this.groupModeButton.getY() - 15 - 20);
-        this.groupIdentifierTextField.render(graphics, mouseX, mouseY, partial);
+        this.groupIdentifierTextField.extractRenderState(graphics, mouseX, mouseY, partial);
 
         String idLabel = I18n.get("fancymenu.requirements.screens.build_group_screen.group_identifier");
         int idLabelWidth = this.font.width(idLabel);
-        graphics.drawString(this.font, idLabel, this.width - 20 - idLabelWidth, this.groupIdentifierTextField.getY() - 15, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.text(this.font, idLabel, this.width - 20 - idLabelWidth, this.groupIdentifierTextField.getY() - 15, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        super.render(graphics, mouseX, mouseY, partial);
+        super.extractRenderState(graphics, mouseX, mouseY, partial);
 
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
+    public void extractBackground(@NotNull GuiGraphicsExtractor $$0, int $$1, int $$2, float $$3) {
     }
 
     @Nullable
@@ -296,3 +296,7 @@ public class BuildRequirementGroupScreen extends Screen {
     }
 
 }
+
+
+
+

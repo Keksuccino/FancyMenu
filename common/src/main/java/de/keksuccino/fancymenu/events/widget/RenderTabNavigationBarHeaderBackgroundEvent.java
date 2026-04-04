@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.events.widget;
 
 import de.keksuccino.fancymenu.util.event.acara.EventBase;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.tabs.TabNavigationBar;
 import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
@@ -9,11 +9,11 @@ import java.util.Objects;
 public class RenderTabNavigationBarHeaderBackgroundEvent extends EventBase {
 
     private final TabNavigationBar tabNavigationBar;
-    private final GuiGraphics graphics;
+    private final GuiGraphicsExtractor graphics;
     private final int headerWidth;
     private final int headerHeight;
 
-    protected RenderTabNavigationBarHeaderBackgroundEvent(@NotNull TabNavigationBar tabNavigationBar, @NotNull GuiGraphics graphics, int headerWidth, int headerHeight) {
+    protected RenderTabNavigationBarHeaderBackgroundEvent(@NotNull TabNavigationBar tabNavigationBar, @NotNull GuiGraphicsExtractor graphics, int headerWidth, int headerHeight) {
         this.tabNavigationBar = Objects.requireNonNull(tabNavigationBar);
         this.graphics = Objects.requireNonNull(graphics);
         this.headerWidth = headerWidth;
@@ -24,7 +24,7 @@ public class RenderTabNavigationBarHeaderBackgroundEvent extends EventBase {
         return tabNavigationBar;
     }
 
-    public GuiGraphics getGraphics() {
+    public GuiGraphicsExtractor getGraphics() {
         return graphics;
     }
 
@@ -43,7 +43,7 @@ public class RenderTabNavigationBarHeaderBackgroundEvent extends EventBase {
 
     public static class Pre extends RenderTabNavigationBarHeaderBackgroundEvent {
 
-        public Pre(@NotNull TabNavigationBar tabNavigationBar, @NotNull GuiGraphics graphics, int headerWidth, int headerHeight) {
+        public Pre(@NotNull TabNavigationBar tabNavigationBar, @NotNull GuiGraphicsExtractor graphics, int headerWidth, int headerHeight) {
             super(tabNavigationBar, graphics, headerWidth, headerHeight);
         }
 
@@ -56,7 +56,7 @@ public class RenderTabNavigationBarHeaderBackgroundEvent extends EventBase {
 
     public static class Post extends RenderTabNavigationBarHeaderBackgroundEvent {
 
-        public Post(@NotNull TabNavigationBar tabNavigationBar, @NotNull GuiGraphics graphics, int headerWidth, int headerHeight) {
+        public Post(@NotNull TabNavigationBar tabNavigationBar, @NotNull GuiGraphicsExtractor graphics, int headerWidth, int headerHeight) {
             super(tabNavigationBar, graphics, headerWidth, headerHeight);
         }
 

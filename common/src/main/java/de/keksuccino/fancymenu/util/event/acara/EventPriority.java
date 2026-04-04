@@ -1,4 +1,3 @@
-
 //Acara - Simple Java Event System
 
 //Copyright (c) 2023 Keksuccino.

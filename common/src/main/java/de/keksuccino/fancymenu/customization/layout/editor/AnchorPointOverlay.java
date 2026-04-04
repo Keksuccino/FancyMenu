@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
@@ -15,7 +16,6 @@ import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.input.KeyEvent;
@@ -152,7 +152,7 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (!this.isOverlayVisible()) {
             this.resetOverlay();
@@ -174,46 +174,46 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
 
     }
 
-    protected void renderAreas(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void renderAreas(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         int menuBarHeight = ((this.editor.menuBar != null) ? (int)((float)this.editor.menuBar.getHeight() * UIBase.calculateFixedScale(this.editor.menuBar.getScale())) : 0);
         if ((this.editor.menuBar != null) && !this.editor.menuBar.isExpanded()) menuBarHeight = 0;
 
         this.topLeftArea.x = -1;
         this.topLeftArea.y = -1 + menuBarHeight;
-        this.topLeftArea.render(graphics, mouseX, mouseY, partial);
+        this.topLeftArea.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.midLeftArea.x = -1;
         this.midLeftArea.y = (ScreenUtils.getScreenHeight() / 2) - (this.midLeftArea.getHeight() / 2);
-        this.midLeftArea.render(graphics, mouseX, mouseY, partial);
+        this.midLeftArea.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.bottomLeftArea.x = -1;
         this.bottomLeftArea.y = ScreenUtils.getScreenHeight() - this.bottomLeftArea.getHeight() + 1;
-        this.bottomLeftArea.render(graphics, mouseX, mouseY, partial);
+        this.bottomLeftArea.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.topCenteredArea.x = (ScreenUtils.getScreenWidth() / 2) - (this.topCenteredArea.getWidth() / 2);
         this.topCenteredArea.y = -1 + menuBarHeight;
-        this.topCenteredArea.render(graphics, mouseX, mouseY, partial);
+        this.topCenteredArea.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.midCenteredArea.x = (ScreenUtils.getScreenWidth() / 2) - (this.midCenteredArea.getWidth() / 2);
         this.midCenteredArea.y = (ScreenUtils.getScreenHeight() / 2) - (this.midCenteredArea.getHeight() / 2);
-        this.midCenteredArea.render(graphics, mouseX, mouseY, partial);
+        this.midCenteredArea.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.bottomCenteredArea.x = (ScreenUtils.getScreenWidth() / 2) - (this.bottomCenteredArea.getWidth() / 2);
         this.bottomCenteredArea.y = ScreenUtils.getScreenHeight() - this.bottomCenteredArea.getHeight() + 1;
-        this.bottomCenteredArea.render(graphics, mouseX, mouseY, partial);
+        this.bottomCenteredArea.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.topRightArea.x = ScreenUtils.getScreenWidth() - this.topRightArea.getWidth() + 1;
         this.topRightArea.y = -1 + menuBarHeight;
-        this.topRightArea.render(graphics, mouseX, mouseY, partial);
+        this.topRightArea.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.midRightArea.x = ScreenUtils.getScreenWidth() - this.midRightArea.getWidth() + 1;
         this.midRightArea.y = (ScreenUtils.getScreenHeight() / 2) - (this.midRightArea.getHeight() / 2);
-        this.midRightArea.render(graphics, mouseX, mouseY, partial);
+        this.midRightArea.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.bottomRightArea.x = ScreenUtils.getScreenWidth() - this.bottomRightArea.getWidth() + 1;
         this.bottomRightArea.y = ScreenUtils.getScreenHeight() - this.bottomRightArea.getHeight() + 1;
-        this.bottomRightArea.render(graphics, mouseX, mouseY, partial);
+        this.bottomRightArea.extractRenderState(graphics, mouseX, mouseY, partial);
 
         if (this.currentlyHoveredArea != null) {
             this.currentlyHoveredArea.renderMouseOverProgress(graphics, this.calculateMouseOverProgress());
@@ -234,7 +234,7 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
         return 0.0F;
     }
 
-    protected void renderConnectionLines(@NotNull GuiGraphics graphics) {
+    protected void renderConnectionLines(@NotNull GuiGraphicsExtractor graphics) {
         List<AbstractEditorElement> elements = FancyMenu.getOptions().showAllAnchorOverlayConnections.getValue() ? this.editor.getAllElements() : this.editor.getCurrentlyDraggedElements();
         for (AbstractEditorElement e : elements) {
             boolean hidden = (e instanceof HideableElement h) && h.isHidden();
@@ -242,7 +242,7 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
         }
     }
 
-    protected void renderConnectionLineFor(@NotNull GuiGraphics graphics, @NotNull AbstractEditorElement e) {
+    protected void renderConnectionLineFor(@NotNull GuiGraphicsExtractor graphics, @NotNull AbstractEditorElement e) {
         AnchorPointArea a = this.getParentAreaOfElement(e);
         if (a != null) {
             int xElement = e.getX() + (e.getWidth() / 2);
@@ -254,7 +254,7 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
     }
 
     @SuppressWarnings("all")
-    protected void renderSquareLine(@NotNull GuiGraphics graphics, int xElement, int yElement, int xArea, int yArea, int lineThickness, int color) {
+    protected void renderSquareLine(@NotNull GuiGraphicsExtractor graphics, int xElement, int yElement, int xArea, int yArea, int lineThickness, int color) {
 
         int horizontalWidth = Math.max(xElement, xArea) - Math.min(xElement, xArea);
         int verticalHeight = Math.max(yElement, yArea) - Math.min(yElement, yArea);
@@ -541,14 +541,14 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
         }
 
         @Override
-        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
             int endX = this.getX() + this.getWidth();
             int endY = this.getY() + this.getHeight();
             graphics.fill(this.getX(), this.getY(), endX, endY, RenderingUtils.replaceAlphaInColor(getOverlayColorBase().getColorInt(), getOverlayOpacity()));
             UIBase.renderBorder(graphics, this.getX(), this.getY(), endX, endY, 1, RenderingUtils.replaceAlphaInColor(getOverlayColorBorder().getColorInt(), getOverlayOpacity()), true, true, true, true);
         }
 
-        protected void renderMouseOverProgress(@NotNull GuiGraphics graphics, float progress) {
+        protected void renderMouseOverProgress(@NotNull GuiGraphicsExtractor graphics, float progress) {
             int progressWidth = (int) ((float)this.getWidth() * progress);
             int progressHeight = (int) ((float)this.getHeight() * progress);
             int startX = this.getX();
@@ -656,3 +656,4 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
     }
 
 }
+

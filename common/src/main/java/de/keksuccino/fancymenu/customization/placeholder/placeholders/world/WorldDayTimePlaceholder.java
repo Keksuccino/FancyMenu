@@ -31,7 +31,7 @@ public class WorldDayTimePlaceholder extends Placeholder {
         try {
             ClientLevel level = Minecraft.getInstance().level;
             if (level != null) {
-                return "" + level.getDayTime();
+                return "" + level.getDefaultClockTime();
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to get replacement for '" + this.getIdentifier() + "' placeholder.", ex);

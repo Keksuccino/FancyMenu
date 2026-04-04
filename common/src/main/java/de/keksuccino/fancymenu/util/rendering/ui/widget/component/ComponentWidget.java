@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -71,29 +71,23 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void extractWidgetRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         this.width = this.getWidth();
         this.height = this.getHeight();
-        super.render(graphics, mouseX, mouseY, partial);
-    }
-
-    @Override
-    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.handleComponentHover();
 
         MutableComponent text = this.getText();
         this.endX = this.getX() + this.font.width(text);
 
-        graphics.drawString(this.font, text, this.getX(), this.getY(), this.getBaseColor().getColorInt(), this.shadow);
+        graphics.text(this.font, text, this.getX(), this.getY(), this.getBaseColor().getColorInt(), this.shadow);
 
         for (ComponentWidget c : this.children) {
             c.setX(this.endX);
             c.setY(this.getY());
-            c.render(graphics, mouseX, mouseY, partial);
+            c.extractRenderState(graphics, mouseX, mouseY, partial);
             this.endX = c.endX;
         }
-
     }
 
     public ComponentWidget append(@NotNull ComponentWidget child) {

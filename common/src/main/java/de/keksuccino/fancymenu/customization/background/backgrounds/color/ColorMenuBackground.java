@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.color;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 
@@ -17,7 +17,7 @@ public class ColorMenuBackground extends MenuBackground {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         graphics.fill(0, 0, getScreenWidth(), getScreenHeight(), this.color.getColorIntWithAlpha(this.opacity));
 

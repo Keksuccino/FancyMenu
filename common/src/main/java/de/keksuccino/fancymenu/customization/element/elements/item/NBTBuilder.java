@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.elements.item;
 
 import com.mojang.brigadier.StringReader;
+import net.minecraft.commands.arguments.item.ItemInput;
 import net.minecraft.commands.arguments.item.ItemParser;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.RegistryAccess;
@@ -27,9 +28,9 @@ public class NBTBuilder {
             ItemParser parser = new ItemParser(HolderLookup.Provider.create(lookup));
 
             Identifier itemKey = BuiltInRegistries.ITEM.getKey(target.getItem());
-            String dummyCommand = itemKey + nbtJson + " 1";
+            String dummyCommand = itemKey + nbtJson;
 
-            ItemParser.ItemResult result = parser.parse(new StringReader(dummyCommand));
+            ItemInput result = parser.parse(new StringReader(dummyCommand));
 
             return result.components();
 

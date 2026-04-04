@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 
 import net.minecraft.resources.Identifier;
@@ -50,44 +50,44 @@ public class MinecraftLogoRenderer {
 
     /**
      * Renders the logo with the default height offset.
-     * @param guiGraphics The graphics context to render with.
+     * @param GuiGraphicsExtractor The graphics context to render with.
      * @param screenWidth The width of the screen.
      * @param transparency The transparency value for the logo.
      */
-    public void renderLogo(GuiGraphics guiGraphics, int screenWidth, float transparency) {
-        this.renderLogo(guiGraphics, screenWidth, transparency, DEFAULT_HEIGHT_OFFSET);
+    public void renderLogo(GuiGraphicsExtractor GuiGraphicsExtractor, int screenWidth, float transparency) {
+        this.renderLogo(GuiGraphicsExtractor, screenWidth, transparency, DEFAULT_HEIGHT_OFFSET);
     }
 
     /**
      * Renders the logo at the specified height.
-     * @param guiGraphics The graphics context to render with.
+     * @param GuiGraphicsExtractor The graphics context to render with.
      * @param screenWidth The width of the screen.
      * @param transparency The transparency value for the logo.
      * @param height The vertical position of the logo from the top of the screen.
      */
-    public void renderLogo(GuiGraphics guiGraphics, int screenWidth, float transparency, int height) {
+    public void renderLogo(GuiGraphicsExtractor GuiGraphicsExtractor, int screenWidth, float transparency, int height) {
         int i = screenWidth / 2 - 128;
         float f = this.keepLogoThroughFade ? 1.0F : transparency;
         int j = ARGB.white(f);
-        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, this.showEasterEgg ? EASTER_EGG_LOGO : MINECRAFT_LOGO, i, height, 0.0F, 0.0F, 256, 44, 256, 64, j);
+        GuiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, this.showEasterEgg ? EASTER_EGG_LOGO : MINECRAFT_LOGO, i, height, 0.0F, 0.0F, 256, 44, 256, 64, j);
         int k = screenWidth / 2 - 64;
         int l = height + 44 - 7;
-        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, MINECRAFT_EDITION, k, l, 0.0F, 0.0F, 128, 14, 128, 16, j);
+        GuiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, MINECRAFT_EDITION, k, l, 0.0F, 0.0F, 128, 14, 128, 16, j);
     }
 
     /**
      * Renders the logo with its top-left corner at the specified position.
-     * @param guiGraphics The graphics context to render with.
+     * @param GuiGraphicsExtractor The graphics context to render with.
      * @param x The x-coordinate for the top-left corner of the logo.
      * @param y The y-coordinate for the top-left corner of the logo.
      * @param transparency The transparency value for the logo.
      */
-    public void renderLogoAtPosition(GuiGraphics guiGraphics, int x, int y, float transparency) {
+    public void renderLogoAtPosition(GuiGraphicsExtractor GuiGraphicsExtractor, int x, int y, float transparency) {
         float f = this.keepLogoThroughFade ? 1.0F : transparency;
         int color = ARGB.white(f);
 
         // Render main logo with top-left corner at (x,y)
-        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, this.showEasterEgg ? EASTER_EGG_LOGO : MINECRAFT_LOGO,
+        GuiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, this.showEasterEgg ? EASTER_EGG_LOGO : MINECRAFT_LOGO,
                 x, y, 0.0F, 0.0F, LOGO_WIDTH, LOGO_HEIGHT, LOGO_TEXTURE_WIDTH, LOGO_TEXTURE_HEIGHT, color);
 
         // Calculate edition logo position
@@ -96,7 +96,7 @@ public class MinecraftLogoRenderer {
         int editionY = y + LOGO_HEIGHT - EDITION_LOGO_OVERLAP;
 
         // Render edition logo
-        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, MINECRAFT_EDITION,
+        GuiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, MINECRAFT_EDITION,
                 editionX, editionY, 0.0F, 0.0F, EDITION_WIDTH, EDITION_HEIGHT, EDITION_TEXTURE_WIDTH, EDITION_TEXTURE_HEIGHT, color);
     }
 

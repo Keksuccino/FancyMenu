@@ -14,7 +14,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtend
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -132,23 +132,23 @@ public class UIBase extends RenderingUtils {
         return (float)(1.0D * (1.0D / guiScale) * fixedScale);
     }
 
-	public static void renderListingDot(GuiGraphics graphics, float x, float y, int color) {
+	public static void renderListingDot(GuiGraphicsExtractor graphics, float x, float y, int color) {
 		fillF(graphics, x, y, x + 4, y + 4, color);
 	}
 
-	public static void renderListingDot(GuiGraphics graphics, int x, int y, Color color) {
+	public static void renderListingDot(GuiGraphicsExtractor graphics, int x, int y, Color color) {
 		graphics.fill(x, y, x + 4, y + 4, color.getRGB());
 	}
 
-	public static void renderBorder(GuiGraphics graphics, int xMin, int yMin, int xMax, int yMax, int borderThickness, DrawableColor borderColor, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {
+	public static void renderBorder(GuiGraphicsExtractor graphics, int xMin, int yMin, int xMax, int yMax, int borderThickness, DrawableColor borderColor, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {
 		renderBorder(graphics, xMin, yMin, xMax, yMax, borderThickness, borderColor.getColorInt(), renderTop, renderLeft, renderRight, renderBottom);
 	}
 
-	public static void renderBorder(GuiGraphics graphics, int xMin, int yMin, int xMax, int yMax, int borderThickness, Color borderColor, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {
+	public static void renderBorder(GuiGraphicsExtractor graphics, int xMin, int yMin, int xMax, int yMax, int borderThickness, Color borderColor, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {
 		renderBorder(graphics, xMin, yMin, xMax, yMax, borderThickness, borderColor.getRGB(), renderTop, renderLeft, renderRight, renderBottom);
 	}
 
-	public static void renderBorder(GuiGraphics graphics, float xMin, float yMin, float xMax, float yMax, float borderThickness, int borderColor, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {
+	public static void renderBorder(GuiGraphicsExtractor graphics, float xMin, float yMin, float xMax, float yMax, float borderThickness, int borderColor, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {
 		if (renderTop) {
 			RenderingUtils.fillF(graphics, xMin, yMin, xMax, yMin + borderThickness, borderColor);
 		}
@@ -163,19 +163,19 @@ public class UIBase extends RenderingUtils {
 		}
 	}
 
-	public static void drawElementLabel(GuiGraphics graphics, Font font, Component text, int x, int y) {
+	public static void drawElementLabel(GuiGraphicsExtractor graphics, Font font, Component text, int x, int y) {
 		drawElementLabel(graphics, font, text, x, y, getUIColorTheme().element_label_color_normal.getColorInt());
 	}
 
-	public static void drawElementLabel(GuiGraphics graphics, Font font, String text, int x, int y) {
+	public static void drawElementLabel(GuiGraphicsExtractor graphics, Font font, String text, int x, int y) {
 		drawElementLabel(graphics, font, Component.literal(text), x, y, getUIColorTheme().element_label_color_normal.getColorInt());
 	}
 
-	public static void drawElementLabel(GuiGraphics graphics, Font font, Component text, int x, int y, int baseColor) {
-		graphics.drawString(font, text, x, y, baseColor, FancyMenu.getOptions().enableUiTextShadow.getValue());
+	public static void drawElementLabel(GuiGraphicsExtractor graphics, Font font, Component text, int x, int y, int baseColor) {
+		graphics.text(font, text, x, y, baseColor, FancyMenu.getOptions().enableUiTextShadow.getValue());
 	}
 
-	public static void drawElementLabel(GuiGraphics graphics, Font font, String text, int x, int y, int baseColor) {
+	public static void drawElementLabel(GuiGraphicsExtractor graphics, Font font, String text, int x, int y, int baseColor) {
 		drawElementLabel(graphics, font, Component.literal(text), x, y, baseColor);
 	}
 

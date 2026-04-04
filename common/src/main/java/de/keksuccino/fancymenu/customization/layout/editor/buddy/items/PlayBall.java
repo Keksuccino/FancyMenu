@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.layout.editor.buddy.items;
 
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
 import de.keksuccino.konkrete.input.MouseInput;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 
 import net.minecraft.resources.Identifier;
@@ -78,7 +78,7 @@ public class PlayBall {
         inactivityTimer = 0; // Also reset the regular timer
     }
 
-    public void render(GuiGraphics graphics) {
+    public void extractRenderState(GuiGraphicsExtractor graphics) {
         // If ball is grabbed, position it relative to buddy
         if (isGrabbedByBuddy) {
             // Position ball above buddy's head during play animation

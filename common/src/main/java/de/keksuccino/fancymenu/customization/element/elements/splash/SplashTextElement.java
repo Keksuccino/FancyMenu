@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.SplashRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.ARGB;
@@ -45,7 +45,7 @@ public class SplashTextElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         if (this.shouldRender()) {
             this.updateSplash();
             this.renderSplash(graphics);
@@ -114,11 +114,11 @@ public class SplashTextElement extends AbstractElement {
     }
 
     /**
-     * Renders the splash text using the modern GuiGraphics transformation stack.
+     * Renders the splash text using the modern GuiGraphicsExtractor transformation stack.
      *
-     * @param graphics The GuiGraphics instance.
+     * @param graphics The GuiGraphicsExtractor instance.
      */
-    protected void renderSplash(GuiGraphics graphics) {
+    protected void renderSplash(GuiGraphicsExtractor graphics) {
         if (this.renderText == null) {
             if (isEditor()) {
                 this.renderText = new RenderText(Component.literal("< empty splash element >"), null);
@@ -158,7 +158,7 @@ public class SplashTextElement extends AbstractElement {
         // 4. Draw the string. We use drawString to respect the 'shadow' property.
         //    We center it manually around the new (0,0) origin.
         int textWidth = font.width(renderTextComponent);
-        graphics.drawString(font, renderTextComponent, -textWidth / 2, -font.lineHeight / 2, finalColor, this.shadow);
+        graphics.text(font, renderTextComponent, -textWidth / 2, -font.lineHeight / 2, finalColor, this.shadow);
 
         graphics.pose().popMatrix();
     }

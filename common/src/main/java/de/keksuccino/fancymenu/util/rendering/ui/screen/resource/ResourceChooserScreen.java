@@ -30,7 +30,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 
 import net.minecraft.network.chat.Component;
@@ -246,12 +246,12 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         this.updateLegacyLocalWarning();
         this.updateNoExtensionWarning();
 
-        super.render(graphics, mouseX, mouseY, partial);
+        super.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.renderWarning(graphics, mouseX, mouseY, partial);
 
@@ -280,7 +280,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
         }
     }
 
-    protected void renderWarning(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void renderWarning(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         if ((this.showWarningLegacyLocal || this.showWarningNoExtension) && (this.editBox != null)) {
             Identifier loc = WARNING_TEXTURE.getIdentifier();
             if (loc != null) {

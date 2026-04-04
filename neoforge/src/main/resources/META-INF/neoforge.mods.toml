@@ -30,14 +30,14 @@ file="META-INF/accesstransformer.cfg"
 modId="konkrete"
 type="required"
 ordering="NONE"
-versionRange="[1.9.18,)"
+versionRange="[1.9.19,)"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
 modId="melody"
 type="required"
 ordering="NONE"
-versionRange="[1.0.6,)"
+versionRange="[1.0.16,)"
 side="CLIENT"
 
 [[dependencies.${mod_id}]]

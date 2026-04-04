@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.queueable;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -16,9 +16,9 @@ public class QueueableScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         assertQueueableSetUpCorrectly();
-        super.render(graphics, mouseX, mouseY, partial);
+        super.extractRenderState(graphics, mouseX, mouseY, partial);
     }
 
     @Override
@@ -59,3 +59,6 @@ public class QueueableScreen extends Screen {
     }
 
 }
+
+
+

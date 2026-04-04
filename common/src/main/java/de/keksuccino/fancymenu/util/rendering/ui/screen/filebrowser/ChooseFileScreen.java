@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -34,10 +34,10 @@ public class ChooseFileScreen extends AbstractFileBrowserScreen {
             }
         }) {
             @Override
-            public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            protected void extractContents(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
                 AbstractFileScrollAreaEntry e = ChooseFileScreen.this.getSelectedEntry();
                 this.active = (e != null) && !e.resourceUnfriendlyFileName && (e.file.isFile());
-                super.render(graphics, mouseX, mouseY, partial);
+                super.extractContents(graphics, mouseX, mouseY, partial);
             }
         };
     }

@@ -11,7 +11,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.TextWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
@@ -151,20 +151,20 @@ public class DualTextInputScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         MutableComponent t = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         int titleWidth = Minecraft.getInstance().font.width(t);
-        graphics.drawString(this.font, t, (this.width / 2) - (titleWidth / 2), 30, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.text(this.font, t, (this.width / 2) - (titleWidth / 2), 30, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        super.render(graphics, mouseX, mouseY, partial);
+        super.extractRenderState(graphics, mouseX, mouseY, partial);
 
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractBackground(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
     }
 
     @Override
@@ -247,3 +247,6 @@ public class DualTextInputScreen extends Screen {
     }
 
 }
+
+
+

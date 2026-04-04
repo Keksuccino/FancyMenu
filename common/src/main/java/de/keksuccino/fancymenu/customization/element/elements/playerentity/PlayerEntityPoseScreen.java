@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v1.RangeSliderButton;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -247,15 +247,15 @@ public class PlayerEntityPoseScreen extends CellScreen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
-        super.render(graphics, mouseX, mouseY, partial);
+        super.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.renderEntity(graphics, mouseX, mouseY, partial);
 
     }
 
-    protected void renderEntity(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void renderEntity(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (this.cancelButton == null) return;
 
@@ -326,7 +326,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
         this.element.stayOnScreen = false;
         this.element.stickyAnchor = false;
 
-        this.element.render(graphics, mouseX, mouseY, partial);
+        this.element.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.element.bodyXRot = cachedBodyXRot;
         this.element.bodyYRot = cachedBodyYRot;
@@ -490,7 +490,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
         }
 
         @Override
-        public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void renderCell(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
             int toggleModeButtonWidth = Minecraft.getInstance().font.width(this.toggleModeButton.getLabelSupplier().get(this.toggleModeButton)) + 6;
 

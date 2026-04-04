@@ -45,7 +45,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.GenericMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -253,7 +253,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	}
 
 	@Override
-	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+	public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
 		//Clear active element context menu if not open
 		if ((this.activeElementContextMenu != null) && !this.activeElementContextMenu.isOpen()) {
@@ -264,32 +264,32 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		this.renderMouseSelectionRectangle(graphics, mouseX, mouseY);
 
-		this.anchorPointOverlay.render(graphics, mouseX, mouseY, partial);
+		this.anchorPointOverlay.extractRenderState(graphics, mouseX, mouseY, partial);
 
 		this.renderLayoutEditorWidgets(graphics, mouseX, mouseY, partial);
 
 		if (FancyMenu.getOptions().enableBuddy.getValue() && !FORCE_DISABLE_BUDDY) {
-			this.buddyWidget.render(graphics, mouseX, mouseY, partial);
+			this.buddyWidget.extractRenderState(graphics, mouseX, mouseY, partial);
 		}
 
-		this.menuBar.render(graphics, mouseX, mouseY, partial);
+		this.menuBar.extractRenderState(graphics, mouseX, mouseY, partial);
 
-		this.rightClickMenu.render(graphics, mouseX, mouseY, partial);
+		this.rightClickMenu.extractRenderState(graphics, mouseX, mouseY, partial);
 
 		//Render active element context menu
 		if (this.activeElementContextMenu != null) {
-			this.activeElementContextMenu.render(graphics, mouseX, mouseY, partial);
+			this.activeElementContextMenu.extractRenderState(graphics, mouseX, mouseY, partial);
 		}
 
 	}
 
-	protected void renderLayoutEditorWidgets(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+	protected void renderLayoutEditorWidgets(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 		for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
-			if (w.isVisible()) w.render(graphics, mouseX, mouseY, partial);
+			if (w.isVisible()) w.extractRenderState(graphics, mouseX, mouseY, partial);
 		}
 	}
 
-	protected void renderMouseSelectionRectangle(GuiGraphics graphics, int mouseX, int mouseY) {
+	protected void renderMouseSelectionRectangle(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
 		if (this.isMouseSelection) {
 			int startX = Math.min(this.mouseSelectionStartX, mouseX);
 			int startY = Math.min(this.mouseSelectionStartY, mouseY);
@@ -300,35 +300,35 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		}
 	}
 
-	protected void renderElements(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+	protected void renderElements(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
 		//Render normal elements behind vanilla if renderBehindVanilla
 		if (this.layout.renderElementsBehindVanilla) {
 			for (AbstractEditorElement e : new ArrayList<>(this.normalEditorElements)) {
-				if (!e.isSelected()) e.render(graphics, mouseX, mouseY, partial);
+				if (!e.isSelected()) e.extractRenderState(graphics, mouseX, mouseY, partial);
 			}
 		}
 		//Render vanilla button elements
 		for (VanillaWidgetEditorElement e : new ArrayList<>(this.vanillaWidgetEditorElements)) {
-			if (!e.isSelected() && !e.isHidden()) e.render(graphics, mouseX, mouseY, partial);
+			if (!e.isSelected() && !e.isHidden()) e.extractRenderState(graphics, mouseX, mouseY, partial);
 		}
 		//Render normal elements before vanilla if NOT renderBehindVanilla
 		if (!this.layout.renderElementsBehindVanilla) {
 			for (AbstractEditorElement e : new ArrayList<>(this.normalEditorElements)) {
-				if (!e.isSelected()) e.render(graphics, mouseX, mouseY, partial);
+				if (!e.isSelected()) e.extractRenderState(graphics, mouseX, mouseY, partial);
 			}
 		}
 
 		//Render selected elements last, so they're always visible
 		List<AbstractEditorElement> selected = this.getSelectedElements();
 		for (AbstractEditorElement e : selected) {
-			e.render(graphics, mouseX, mouseY, partial);
+			e.extractRenderState(graphics, mouseX, mouseY, partial);
 		}
 
 	}
 
 	@Override
-	public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+	public void extractBackground(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
 		// Avoid a batched solid fill covering the panorama preview in the editor.
 		boolean hasPanoramaBackground = this.layout.menuBackgrounds.stream().anyMatch(background -> background instanceof PanoramaMenuBackground);
@@ -340,7 +340,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 			menuBackground.keepBackgroundAspectRatio = this.layout.preserveBackgroundAspectRatio;
 			menuBackground.opacity = 1.0F;
-			menuBackground.render(graphics, mouseX, mouseY, partial);
+			menuBackground.extractRenderState(graphics, mouseX, mouseY, partial);
 
 		});
 
@@ -364,7 +364,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	}
 
 	@SuppressWarnings("unused")
-	protected void renderScrollListHeaderFooterPreview(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+	protected void renderScrollListHeaderFooterPreview(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
 		if (this.layout.showScrollListHeaderFooterPreviewInEditor) {
 
@@ -428,7 +428,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	}
 
 	@SuppressWarnings("all")
-	public static void renderGrid(@NotNull GuiGraphics graphics, int screenWidth, int screenHeight) {
+	public static void renderGrid(@NotNull GuiGraphicsExtractor graphics, int screenWidth, int screenHeight) {
 
 		if (FancyMenu.getOptions().showLayoutEditorGrid.getValue()) {
 
@@ -1376,3 +1376,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	}
 
 }
+
+
+
+

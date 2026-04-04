@@ -13,7 +13,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import net.minecraft.util.Util;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -80,8 +80,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         this.font = font;
     }
 
-    @Override
-    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void renderEditBox(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         IMixinEditBox access = ((IMixinEditBox)this);
         boolean bordered = access.getBorderedFancyMenu();
@@ -91,7 +90,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, this.backgroundColor.getColorInt());
             if (bordered) {
                 int borderColor = this.isFocused() ? this.borderFocusedColor.getColorInt() : this.borderNormalColor.getColorInt();
-                // Assuming UIBase.renderBorder is compatible with GuiGraphics
+                // Assuming UIBase.renderBorder is compatible with GuiGraphicsExtractor
                 UIBase.renderBorder(graphics, this.getX() - 1, this.getY() - 1, this.getX() + this.width + 1, this.getY() + this.height + 1, 1, borderColor, true, true, true, true);
             }
 
@@ -125,7 +124,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
                     }
                 }
 
-                graphics.drawString(this.font, beforeCursorComp, textX, textY, textColor, this.textShadow);
+                graphics.text(this.font, beforeCursorComp, textX, textY, textColor, this.textShadow);
                 textXAfterCursor = textX + this.font.width(beforeCursorComp);
 
             }
@@ -155,7 +154,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
                         textCharacterRenderIndex++;
                     }
                 }
-                graphics.drawString(this.font, afterCursorComp, textXAfterCursor, textY, textColor, this.textShadow);
+                graphics.text(this.font, afterCursorComp, textXAfterCursor, textY, textColor, this.textShadow);
             }
 
             // Vanilla Hint
@@ -163,7 +162,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             boolean vanillaHintRendered = false;
             if ((hint != null) && text.isEmpty() && !this.isFocused()) {
                 graphics.enableScissor(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight());
-                graphics.drawString(this.font, hint, textXAfterCursor, textY, textColor, this.textShadow);
+                graphics.text(this.font, hint, textXAfterCursor, textY, textColor, this.textShadow);
                 graphics.disableScissor();
                 vanillaHintRendered = true;
             }
@@ -172,13 +171,13 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             Component hintFm = this.getHintFancyMenu();
             if (!vanillaHintRendered && (hintFm != null) && text.isEmpty()) {
                 graphics.enableScissor(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight());
-                graphics.drawString(this.font, hintFm, this.getX() + 4, this.getY() + (this.getHeight() / 2) - (this.font.lineHeight / 2), -1, false);
+                graphics.text(this.font, hintFm, this.getX() + 4, this.getY() + (this.getHeight() / 2) - (this.font.lineHeight / 2), -1, false);
                 graphics.disableScissor();
             }
 
             // Render suggestion text
             if (!renderSmallCursor && access.getSuggestionFancyMenu() != null) {
-                graphics.drawString(this.font, access.getSuggestionFancyMenu(), (finalTextXAfterCursor - 1), textY, this.suggestionTextColor.getColorInt(), this.textShadow);
+                graphics.text(this.font, access.getSuggestionFancyMenu(), (finalTextXAfterCursor - 1), textY, this.suggestionTextColor.getColorInt(), this.textShadow);
             }
 
             // Render the cursor
@@ -187,7 +186,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
                     graphics.fill(finalTextXAfterCursor, textY - 1, finalTextXAfterCursor + 1, textY + 1 + 9, textColor);
                 } else {
                     // This is the underscore-style cursor at the end
-                    graphics.drawString(this.font, "_", finalTextXAfterCursor, textY, textColor, this.textShadow);
+                    graphics.text(this.font, "_", finalTextXAfterCursor, textY, textColor, this.textShadow);
                 }
             }
 
@@ -202,10 +201,10 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractWidgetRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         if (this.isActiveSupplier != null) this.active = this.isActiveSupplier.get(this);
         if (this.isVisibleSupplier != null) this.visible = this.isVisibleSupplier.get(this);
-        super.render(graphics, mouseX, mouseY, partial);
+        this.renderEditBox(graphics, mouseX, mouseY, partial);
 
         if ((this.customTooltip != null) && this.visible && this.isHovered()) {
             Tooltip tt = this.customTooltip.get();

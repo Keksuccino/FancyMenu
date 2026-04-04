@@ -1,4 +1,3 @@
-
 //Copyright (c) 2022-2023 Keksuccino.
 //This code is licensed under DSMSLv2.
 //For more information about the license, see this: https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md

@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 
@@ -120,32 +120,32 @@ public class ConfirmationScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         int y = (this.height / 2) - ((this.renderTextLines.size() * 14) / 2);
         for (Component c : this.renderTextLines) {
             int textWidth = this.font.width(c);
-            graphics.drawString(this.font, c, ((this.width / 2) - (textWidth / 2)), y, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+            graphics.text(this.font, c, ((this.width / 2) - (textWidth / 2)), y, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
             y += 14;
         }
 
         this.confirmButton.active = this.delayEnd <= System.currentTimeMillis();
         this.confirmButton.setX((this.width / 2) - this.confirmButton.getWidth() - 5);
         this.confirmButton.setY(this.height - 40);
-        this.confirmButton.render(graphics, mouseX, mouseY, partial);
+        this.confirmButton.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.cancelButton.setX((this.width / 2) + 5);
         this.cancelButton.setY(this.height - 40);
-        this.cancelButton.render(graphics, mouseX, mouseY, partial);
+        this.cancelButton.extractRenderState(graphics, mouseX, mouseY, partial);
 
-        super.render(graphics, mouseX, mouseY, partial);
+        super.extractRenderState(graphics, mouseX, mouseY, partial);
 
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractBackground(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
     }
 
     public ConfirmationScreen setDelay(long delay) {
@@ -191,3 +191,6 @@ public class ConfirmationScreen extends Screen {
     }
 
 }
+
+
+

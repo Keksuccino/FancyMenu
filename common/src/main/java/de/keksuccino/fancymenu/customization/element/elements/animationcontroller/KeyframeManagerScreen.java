@@ -24,7 +24,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
@@ -319,12 +319,12 @@ public class KeyframeManagerScreen extends Screen {
         // Smoothing input box
         this.smoothingDistanceInput = new ExtendedEditBox(Minecraft.getInstance().font, (this.width / 2) - 50, this.stickyButton.getY() - 40, 100, 20, Component.empty()) {
             @Override
-            public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            public void extractWidgetRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
                 MutableComponent c = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.smoothing.input");
                 int cW = Minecraft.getInstance().font.width(c);
-                graphics.drawString(Minecraft.getInstance().font, c,
+                graphics.text(Minecraft.getInstance().font, c,
                         this.getX() + (this.getWidth() / 2) - (cW / 2), this.getY() - Minecraft.getInstance().font.lineHeight - 5, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
-                super.renderWidget(graphics, mouseX, mouseY, partial);
+                super.extractWidgetRenderState(graphics, mouseX, mouseY, partial);
             }
         };
         this.smoothingDistanceInput.setCharacterFilter(CharacterFilter.buildIntegerFiler());
@@ -338,12 +338,12 @@ public class KeyframeManagerScreen extends Screen {
         // Timestamp input box
         this.timestampInput = new ExtendedEditBox(Minecraft.getInstance().font, (this.width / 2) - 50, this.stickyButton.getY() - 40, 100, 20, Component.empty()) {
             @Override
-            public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            public void extractWidgetRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
                 MutableComponent c = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.timestamp_edit.input");
                 int cW = Minecraft.getInstance().font.width(c);
-                graphics.drawString(Minecraft.getInstance().font, c,
+                graphics.text(Minecraft.getInstance().font, c,
                         this.getX() + (this.getWidth() / 2) - (cW / 2), this.getY() - Minecraft.getInstance().font.lineHeight - 5, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
-                super.renderWidget(graphics, mouseX, mouseY, partial);
+                super.extractWidgetRenderState(graphics, mouseX, mouseY, partial);
             }
         };
         this.timestampInput.setCharacterFilter(CharacterFilter.buildIntegerFiler());
@@ -407,7 +407,7 @@ public class KeyframeManagerScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
 
         if (this.isShowingSmoothingInput) {
@@ -485,7 +485,7 @@ public class KeyframeManagerScreen extends Screen {
 
         this.renderNotifications(graphics, mouseX, mouseY, partial);
 
-        super.render(graphics, mouseX, mouseY, partial);
+        super.extractRenderState(graphics, mouseX, mouseY, partial);
 
     }
 
@@ -529,7 +529,7 @@ public class KeyframeManagerScreen extends Screen {
         }
     }
 
-    protected void renderOffsetModeCrosshair(@NotNull GuiGraphics graphics) {
+    protected void renderOffsetModeCrosshair(@NotNull GuiGraphicsExtractor graphics) {
         if (!this.isOffsetMode) return;
         int centerX = this.width / 2;
         int centerY = this.height / 2;
@@ -539,7 +539,7 @@ public class KeyframeManagerScreen extends Screen {
         graphics.fill(centerX - 1, centerY - 10, centerX + 1, centerY + 10, OFFSET_MODE_CROSSHAIR_COLOR.getColorInt());
     }
 
-    protected void renderTimelineBackground(@NotNull GuiGraphics graphics, long actualEndTime) {
+    protected void renderTimelineBackground(@NotNull GuiGraphicsExtractor graphics, long actualEndTime) {
 
         // Calculate what portion of the timeline width to use based on duration
         float usableWidth = timelineWidth * ((float)Math.max(actualEndTime + TIMELINE_PADDING_DURATION, MIN_TIMELINE_DURATION) / timelineDuration);
@@ -561,7 +561,7 @@ public class KeyframeManagerScreen extends Screen {
 
     }
 
-    protected void renderKeyframeLines(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial, long actualDuration) {
+    protected void renderKeyframeLines(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial, long actualDuration) {
         // Draw keyframe lines
         for (int i = 0; i < workingKeyframes.size(); i++) {
             AnimationKeyframe keyframe = workingKeyframes.get(i);
@@ -654,12 +654,12 @@ public class KeyframeManagerScreen extends Screen {
         }
     }
 
-    protected void renderPreview(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void renderPreview(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         // Render preview
         if (!isPlaying && ((this.selectedKeyframes.size() == 1) || isRecording)) {
             // Render full preview element for resizing and moving when recording or when a keyframe is selected
-            previewEditorElement.render(graphics, mouseX, mouseY, partial);
+            previewEditorElement.extractRenderState(graphics, mouseX, mouseY, partial);
         } else {
             // Otherwise only render body to prevent the user from interacting with the preview element
             this.previewEditorElement.renderPreviewBody(graphics, mouseX, mouseY, partial);
@@ -667,7 +667,7 @@ public class KeyframeManagerScreen extends Screen {
 
     }
 
-    protected void renderProgressLine(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial, long actualDuration) {
+    protected void renderProgressLine(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial, long actualDuration) {
 
         // Draw progress line
         float playProgress = (float) currentPlayOrRecordPosition / timelineDuration;
@@ -700,7 +700,7 @@ public class KeyframeManagerScreen extends Screen {
 
     }
 
-    protected void renderTimeText(@NotNull GuiGraphics graphics, long actualEndTime) {
+    protected void renderTimeText(@NotNull GuiGraphicsExtractor graphics, long actualEndTime) {
 
         // Format both times
         String currentTimeStr = formatTime(currentPlayOrRecordPosition);
@@ -715,12 +715,12 @@ public class KeyframeManagerScreen extends Screen {
         MutableComponent totalTimeComp = Component.literal(totalTimeStr);
         MutableComponent baseComp = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.time", currentTimeComp, totalTimeComp);
 
-        graphics.drawString(Minecraft.getInstance().font, baseComp, timelineX, timelineY + TIMELINE_HEIGHT + 5,
+        graphics.text(Minecraft.getInstance().font, baseComp, timelineX, timelineY + TIMELINE_HEIGHT + 5,
                 UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
     }
 
-    protected void renderKeyframeInfo(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void renderKeyframeInfo(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (this.selectedKeyframes.size() == 1) {
 
@@ -739,7 +739,7 @@ public class KeyframeManagerScreen extends Screen {
 
             int yOffset = 10 + 20 + 10;
             for (Component line : lines) {
-                graphics.drawString(Minecraft.getInstance().font, line, 10, yOffset, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+                graphics.text(Minecraft.getInstance().font, line, 10, yOffset, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
                 yOffset += 10;
             }
 
@@ -747,7 +747,7 @@ public class KeyframeManagerScreen extends Screen {
 
     }
 
-    protected void renderRecordingIndicator(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void renderRecordingIndicator(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (isRecording) {
 
@@ -776,11 +776,11 @@ public class KeyframeManagerScreen extends Screen {
             int recordingTextOffsetY = !isRecordingPaused ? (rectSize / 2) - (Minecraft.getInstance().font.lineHeight / 2) : 0;
 
             // Draw "Recording" text
-            graphics.drawString(Minecraft.getInstance().font, recordingText, recordingTextX, yOffset + recordingTextOffsetY, -1, false);
+            graphics.text(Minecraft.getInstance().font, recordingText, recordingTextX, yOffset + recordingTextOffsetY, -1, false);
 
             // Draw manual mode text
             if (this.isRecordingPaused) {
-                graphics.drawString(Minecraft.getInstance().font, manualModeText, manualModeTextX, yOffset + rectSize - Minecraft.getInstance().font.lineHeight, -1, false);
+                graphics.text(Minecraft.getInstance().font, manualModeText, manualModeTextX, yOffset + rectSize - Minecraft.getInstance().font.lineHeight, -1, false);
             }
 
             // Draw indicator rectangle
@@ -793,7 +793,7 @@ public class KeyframeManagerScreen extends Screen {
 
     }
 
-    protected void renderNotifications(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void renderNotifications(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         // Handle notifications
         Iterator<Notification> iterator = activeNotifications.iterator();
@@ -810,7 +810,7 @@ public class KeyframeManagerScreen extends Screen {
             }
             notification.updateOpacity();
             int textColor = UIBase.getUIColorTheme().generic_text_base_color.getColorIntWithAlpha(notification.opacity); // Base color with fade
-            graphics.drawString(
+            graphics.text(
                     Minecraft.getInstance().font,
                     notification.message,
                     width - Minecraft.getInstance().font.width(notification.message) - NOTIFICATION_PADDING,
@@ -853,7 +853,7 @@ public class KeyframeManagerScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractBackground(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
     }
 
     @Override
@@ -1549,7 +1549,7 @@ public class KeyframeManagerScreen extends Screen {
         }
 
         @Override
-        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         }
 
     }
@@ -1588,14 +1588,14 @@ public class KeyframeManagerScreen extends Screen {
         }
 
         @Override
-        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
             // Render preview rectangle
             this.renderPreviewBody(graphics, mouseX, mouseY, partial);
             // Render resize border and grabbers
-            super.render(graphics, mouseX, mouseY, partial);
+            super.extractRenderState(graphics, mouseX, mouseY, partial);
         }
 
-        public void renderPreviewBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void renderPreviewBody(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
             DrawableColor c = PREVIEW_COLOR_NORMAL;
             if (KeyframeManagerScreen.this.isRecording) c = RECORDING_COLOR;
             if (KeyframeManagerScreen.this.selectedKeyframes.size() == 1) c = KEYFRAME_COLOR_SELECTED;
@@ -1671,3 +1671,6 @@ public class KeyframeManagerScreen extends Screen {
     }
 
 }
+
+
+

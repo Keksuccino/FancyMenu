@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.Scro
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollbar.ScrollBar;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -51,7 +51,7 @@ public class ScrollArea extends UIBase {
         this.updateScrollArea();
     }
 
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         this.updateScrollArea();
 
@@ -66,23 +66,23 @@ public class ScrollArea extends UIBase {
         this.renderBorder(graphics, mouseX, mouseY, partial);
 
         if (this.verticalScrollBar.active) {
-            this.verticalScrollBar.render(graphics);
+            this.verticalScrollBar.extractRenderState(graphics);
         }
         if (this.horizontalScrollBar.active) {
-            this.horizontalScrollBar.render(graphics);
+            this.horizontalScrollBar.extractRenderState(graphics);
         }
 
     }
 
-    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         graphics.fill(this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight(), this.backgroundColor.getRGB());
     }
 
-    public void renderBorder(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBorder(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         renderBorder(graphics, this.getXWithBorder(), this.getYWithBorder(), this.getXWithBorder() + this.getWidthWithBorder(), this.getYWithBorder() + this.getHeightWithBorder(), this.getBorderThickness(), this.borderColor, true, true, true, true);
     }
 
-    public void renderEntries(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderEntries(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         graphics.enableScissor(this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight());
 
@@ -94,7 +94,7 @@ public class ScrollArea extends UIBase {
                     entry.setWidth(this.getInnerWidth());
                 }
             }
-            entry.render(graphics, mouseX, mouseY, partial);
+            entry.extractRenderState(graphics, mouseX, mouseY, partial);
             if (cachedWidth != -1) {
                 entry.setWidth(cachedWidth);
             }

@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.CharacterEvent;
@@ -150,7 +150,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     }
 
     @Override
-    protected void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void extractWidgetRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         try {
 
@@ -228,7 +228,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     public boolean charTyped(CharacterEvent event) {
         if (this.interactable && this.browserFocused) {
             if (event.codepoint() == (char) 0) return true;
-            this.browser.sendKeyTyped((char) event.codepoint(), event.modifiers());
+            this.browser.sendKeyTyped((char) event.codepoint(), 0);
             this.browser.setFocus(true);
         }
         return false;

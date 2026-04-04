@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 
@@ -70,7 +70,7 @@ public class TextInputScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
          
         graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
@@ -78,27 +78,27 @@ public class TextInputScreen extends Screen {
          
         MutableComponent t = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         int titleWidth = Minecraft.getInstance().font.width(t);
-        graphics.drawString(this.font, t, (int)(this.width / 2) - (int)(titleWidth / 2), (int)(this.height / 2) - 30, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.text(this.font, t, (int)(this.width / 2) - (int)(titleWidth / 2), (int)(this.height / 2) - 30, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         this.input.setX((this.width / 2) - (this.input.getWidth() / 2));
         this.input.setY((this.height / 2) - (this.input.getHeight() / 2));
-        this.input.render(graphics, mouseX, mouseY, partial);
+        this.input.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.cancelButton.setX((this.width / 2) - 5 - this.cancelButton.getWidth());
         this.cancelButton.setY(this.height - 40);
-        this.cancelButton.render(graphics, mouseX, mouseY, partial);
+        this.cancelButton.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.doneButton.active = this.isTextValid();
         if (this.textValidatorFeedbackTooltip != null) this.textValidatorFeedbackTooltip.setDefaultStyle();
         this.doneButton.setTooltip(this.textValidatorFeedbackTooltip);
         this.doneButton.setX((this.width / 2) + 5);
         this.doneButton.setY(this.height - 40);
-        this.doneButton.render(graphics, mouseX, mouseY, partial);
+        this.doneButton.extractRenderState(graphics, mouseX, mouseY, partial);
 
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractBackground(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
     }
 
     @Override
@@ -144,3 +144,6 @@ public class TextInputScreen extends Screen {
     }
 
 }
+
+
+

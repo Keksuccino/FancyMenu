@@ -1,16 +1,16 @@
 package de.keksuccino.fancymenu.events.widget;
 
 import de.keksuccino.fancymenu.util.event.acara.EventBase;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 
 public class RenderWidgetEvent extends EventBase {
 	
 	protected AbstractWidget widget;
 	protected float alpha;
-	protected GuiGraphics graphics;
+	protected GuiGraphicsExtractor graphics;
 	
-	public RenderWidgetEvent(GuiGraphics graphics, AbstractWidget widget, float alpha) {
+	public RenderWidgetEvent(GuiGraphicsExtractor graphics, AbstractWidget widget, float alpha) {
 		this.widget = widget;
 		this.alpha = alpha;
 		this.graphics = graphics;
@@ -29,13 +29,13 @@ public class RenderWidgetEvent extends EventBase {
 		return this.alpha;
 	}
 
-	public GuiGraphics getGraphics() {
+	public GuiGraphicsExtractor getGraphics() {
 		return graphics;
 	}
 
 	public static class Pre extends RenderWidgetEvent {
 
-		public Pre(GuiGraphics graphics, AbstractWidget widget, float alpha) {
+		public Pre(GuiGraphicsExtractor graphics, AbstractWidget widget, float alpha) {
 			super(graphics, widget, alpha);
 		}
 		
@@ -47,7 +47,7 @@ public class RenderWidgetEvent extends EventBase {
 	
 	public static class Post extends RenderWidgetEvent {
 
-		public Post(GuiGraphics graphics, AbstractWidget widget, float alpha) {
+		public Post(GuiGraphicsExtractor graphics, AbstractWidget widget, float alpha) {
 			super(graphics, widget, alpha);
 		}
 		

@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 
 import net.minecraft.network.chat.Component;
@@ -38,25 +38,23 @@ public class CheckboxButton extends ExtendedButton {
     }
 
     @Override
-    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-
-        super.renderWidget(graphics, mouseX, mouseY, partial);
+    protected void extractContents(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
+        super.extractContents(graphics, mouseX, mouseY, partial);
 
         if (this.checkboxState && this.isActive()) {
             graphics.blit(RenderPipelines.GUI_TEXTURED, this.getCheckboxCheckmarkTexture(), this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
         }
-
     }
 
     @Override
-    protected void renderBackground(@NotNull GuiGraphics graphics) {
+    protected void renderBackground(@NotNull GuiGraphicsExtractor graphics) {
 
         graphics.blit(RenderPipelines.GUI_TEXTURED, this.getCheckboxBackground(), this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
 
     }
 
     @Override
-    protected void renderLabelText(@NotNull GuiGraphics graphics) {
+    protected void renderLabelText(@NotNull GuiGraphicsExtractor graphics) {
         // do nothing
     }
 

@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
@@ -48,7 +48,7 @@ public class TooltipHandler {
             }
         }
         if (renderTooltip != null) {
-            renderTooltip.tooltip.render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
+            renderTooltip.tooltip.extractRenderState(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
         } else if (this.vanillaTooltip != null) {
             this.vanillaTooltip.run();
             this.vanillaTooltip = null;
@@ -62,10 +62,10 @@ public class TooltipHandler {
         }
     }
 
-    public void setVanillaTooltip(@NotNull GuiGraphics graphics, @NotNull List<Component> lines, @NotNull Optional<TooltipComponent> tooltipImage, int x, int y, @Nullable Identifier background) {
+    public void setVanillaTooltip(@NotNull GuiGraphicsExtractor graphics, @NotNull List<Component> lines, @NotNull Optional<TooltipComponent> tooltipImage, int x, int y, @Nullable Identifier background) {
         List<ClientTooltipComponent> tooltipLines = lines.stream().map(Component::getVisualOrderText).map(ClientTooltipComponent::create).collect(Util.toMutableList());
         tooltipImage.ifPresent(component -> tooltipLines.add(tooltipLines.isEmpty() ? 0 : 1, ClientTooltipComponent.create(component)));
-        this.vanillaTooltip = () -> graphics.renderTooltip(Minecraft.getInstance().font, tooltipLines, x, y, DefaultTooltipPositioner.INSTANCE, background);
+        this.vanillaTooltip = () -> graphics.tooltip(Minecraft.getInstance().font, tooltipLines, x, y, DefaultTooltipPositioner.INSTANCE, background);
     }
 
     public HandledTooltip addWidgetTooltip(@NotNull AbstractWidget widget, @NotNull Tooltip tooltip, boolean removeOnScreenInitOrResize, boolean removeAfterScreenRender) {

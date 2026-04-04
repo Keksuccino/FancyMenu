@@ -29,8 +29,8 @@ public class PacketsFabric {
 
     private static void registerFabricBridgePacket() {
 
-        PayloadTypeRegistry.playC2S().register(BridgePacketPayloadFabric.TYPE, BridgePacketPayloadFabric.CODEC);
-        PayloadTypeRegistry.playS2C().register(BridgePacketPayloadFabric.TYPE, BridgePacketPayloadFabric.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(BridgePacketPayloadFabric.TYPE, BridgePacketPayloadFabric.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(BridgePacketPayloadFabric.TYPE, BridgePacketPayloadFabric.CODEC);
 
         //ON SERVER
         ServerPlayNetworking.registerGlobalReceiver(BridgePacketPayloadFabric.TYPE, (payload, context) -> {

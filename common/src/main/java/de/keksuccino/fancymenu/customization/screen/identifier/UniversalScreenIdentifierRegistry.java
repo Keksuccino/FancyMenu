@@ -74,7 +74,7 @@ public class UniversalScreenIdentifierRegistry {
         register("datapack_load_failure_screen", DatapackLoadFailureScreen.class.getName());
         register("death_screen", DeathScreen.class.getName());
         register("title_confirm_screen", DeathScreen.TitleConfirmScreen.class.getName());
-        register("demo_intro_screen", DemoIntroScreen.class.getName());
+        register("demo_intro_screen", "net.minecraft.client.gui.screens.DemoIntroScreen");
         register("direct_join_server_screen", DirectJoinServerScreen.class.getName());
         register("disconnected_screen", DisconnectedScreen.class.getName());
         register("error_screen", ErrorScreen.class.getName());
@@ -144,7 +144,8 @@ public class UniversalScreenIdentifierRegistry {
         register("telemetry_info_screen", TelemetryInfoScreen.class.getName());
         register("confirm_experimental_features_screen", ConfirmExperimentalFeaturesScreen.class.getName());
         register("create_world_screen", CreateWorldScreen.class.getName());
-        register("edit_game_rules_screen", EditGameRulesScreen.class.getName());
+        register("edit_game_rules_screen", WorldCreationGameRulesScreen.class.getName());
+        register("in_world_game_rules_screen", InWorldGameRulesScreen.class.getName());
         register("edit_world_screen", EditWorldScreen.class.getName());
         register("experiments_screen", ExperimentsScreen.class.getName());
         register("optimize_world_screen", OptimizeWorldScreen.class.getName());

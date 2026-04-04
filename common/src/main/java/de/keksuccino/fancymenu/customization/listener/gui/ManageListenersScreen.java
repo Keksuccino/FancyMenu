@@ -24,7 +24,7 @@ import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -205,11 +205,11 @@ public class ManageListenersScreen extends CellScreen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         this.updateSelectedInstance();
 
-        super.render(graphics, mouseX, mouseY, partial);
+        super.extractRenderState(graphics, mouseX, mouseY, partial);
 
         if (this.descriptionScrollArea != null) {
             int descW = (int) this.descriptionScrollArea.getWidthWithBorder();
@@ -221,14 +221,14 @@ public class ManageListenersScreen extends CellScreen {
             for (FormattedCharSequence line : renameTip) {
                 int lineWidth = this.font.width(line);
                 int lineX = descEndX - lineWidth;
-                graphics.drawString(this.font, line, lineX, lineY, -1, false);
+                graphics.text(this.font, line, lineX, lineY, -1, false);
                 lineY += this.font.lineHeight + 2;
             }
             lineY += 2;
             for (FormattedCharSequence line : quickEditTip) {
                 int lineWidth = this.font.width(line);
                 int lineX = descEndX - lineWidth;
-                graphics.drawString(this.font, line, lineX, lineY, -1, false);
+                graphics.text(this.font, line, lineX, lineY, -1, false);
                 lineY += this.font.lineHeight + 2;
             }
         }
@@ -470,14 +470,14 @@ public class ManageListenersScreen extends CellScreen {
         }
 
         @Override
-        public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void renderCell(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
             if (this.editMode && this.editBox != null) {
                 // Render edit box
                 this.editBox.setX(this.getX());
                 this.editBox.setY(this.getY() + TOP_DOWN_CELL_BORDER);
                 this.editBox.setWidth(Math.min(this.getWidth(), 200));
                 this.editBox.setHeight(Minecraft.getInstance().font.lineHeight + 1);
-                this.editBox.render(graphics, mouseX, mouseY, partial);
+                this.editBox.extractRenderState(graphics, mouseX, mouseY, partial);
 
                 // Check if user clicked outside or pressed enter
                 if (MouseInput.isLeftMouseDown() && !this.editBox.isHovered()) {

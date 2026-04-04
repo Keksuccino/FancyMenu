@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
@@ -116,7 +116,7 @@ public class ItemElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         if (this.shouldRender()) {
             this.updateCachedItem();
 
@@ -134,7 +134,7 @@ public class ItemElement extends AbstractElement {
      * Main rendering logic for the item, its count, and its tooltip.
      * The tooltip logic is now handled by the modern deferred tooltip system.
      */
-    protected void renderItem(GuiGraphics graphics, int x, int y, int width, int height, int mouseX, int mouseY, @NotNull ItemStack itemStack) {
+    protected void renderItem(GuiGraphicsExtractor graphics, int x, int y, int width, int height, int mouseX, int mouseY, @NotNull ItemStack itemStack) {
 
         int count = SerializationUtils.deserializeNumber(Integer.class, 1, PlaceholderParser.replacePlaceholders(this.itemCount));
 
@@ -157,14 +157,14 @@ public class ItemElement extends AbstractElement {
         return itemStack.getTooltipLines(Item.TooltipContext.EMPTY, null, TooltipFlag.NORMAL);
     }
 
-    protected void renderItemTooltip(@NotNull GuiGraphics graphics, int mouseX, int mouseY, @NotNull ItemStack itemStack) {
+    protected void renderItemTooltip(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, @NotNull ItemStack itemStack) {
         graphics.setTooltipForNextFrame(this.font, Screen.getTooltipFromItem(Minecraft.getInstance(), itemStack), itemStack.getTooltipImage(), mouseX, mouseY);
     }
 
     /**
-     * Renders a scaled item using the modern GuiGraphics transformation stack.
+     * Renders a scaled item using the modern GuiGraphicsExtractor transformation stack.
      */
-    protected void renderScaledItem(@NotNull GuiGraphics graphics, @NotNull ItemStack stack, int x, int y, int width, int height) {
+    protected void renderScaledItem(@NotNull GuiGraphicsExtractor graphics, @NotNull ItemStack stack, int x, int y, int width, int height) {
         graphics.pose().pushMatrix();
 
         // Translate to the item's position.
@@ -176,7 +176,7 @@ public class ItemElement extends AbstractElement {
         graphics.pose().scale(scale, scale);
 
         // Render the item at (0,0) in the new transformed and scaled space.
-        graphics.renderItem(stack, 0, 0);
+        graphics.item(stack, 0, 0);
 
         graphics.pose().popMatrix();
     }
@@ -185,7 +185,7 @@ public class ItemElement extends AbstractElement {
      * Renders the item count, scaled proportionally to the item itself.
      * This implementation is now much cleaner using transformations.
      */
-    protected void renderItemCount(@NotNull GuiGraphics graphics, @NotNull Font font, int x, int y, int size, int count) {
+    protected void renderItemCount(@NotNull GuiGraphicsExtractor graphics, @NotNull Font font, int x, int y, int size, int count) {
         String text = String.valueOf(count);
         // The scale factor is relative to the standard 16x16 item size.
         float scaleFactor = (float) size / 16.0F;
@@ -204,7 +204,7 @@ public class ItemElement extends AbstractElement {
 
         // 3. Draw the string at the pre-calculated *unscaled* position.
         // The transformations will handle placing and scaling it correctly on screen.
-        graphics.drawString(font, text, (int) textX, (int) textY, -1, true);
+        graphics.text(font, text, (int) textX, (int) textY, -1, true);
 
         graphics.pose().popMatrix();
     }

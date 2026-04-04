@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinRealmsNotificationsScreen;
 import com.mojang.realmsclient.gui.screens.RealmsNotificationsScreen;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.renderer.RenderPipelines;
 
@@ -101,11 +101,11 @@ public class RealmsNotificationRenderer {
      * Renders the notification icons at the specified position.
      * Icons are rendered from left to right.
      *
-     * @param guiGraphics The GuiGraphics instance to render with
+     * @param GuiGraphicsExtractor The GuiGraphicsExtractor instance to render with
      * @param x The x position to render at (leftmost edge of icon area)
      * @param y The y position to render at (top edge of icon area)
      */
-    public void renderIcons(GuiGraphics guiGraphics, int x, int y, int color) {
+    public void renderIcons(GuiGraphicsExtractor GuiGraphicsExtractor, int x, int y, int color) {
 
         // Get current state from the screen
         boolean hasUnseenNotifications = this.hasUnseenNotifications();
@@ -118,22 +118,22 @@ public class RealmsNotificationRenderer {
 
         // Render icons in order from left to right
         if (trialAvailable && showOldNotifications) {
-            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, TRIAL_AVAILABLE_SPRITE, currentX, y + 4, 8, 8, color);
+            GuiGraphicsExtractor.blitSprite(RenderPipelines.GUI_TEXTURED, TRIAL_AVAILABLE_SPRITE, currentX, y + 4, 8, 8, color);
             currentX += 16;
         }
 
         if (pendingInvites > 0 && showOldNotifications) {
-            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, INVITE_SPRITE, currentX, y + 1, 14, 14, color);
+            GuiGraphicsExtractor.blitSprite(RenderPipelines.GUI_TEXTURED, INVITE_SPRITE, currentX, y + 1, 14, 14, color);
             currentX += 16;
         }
 
         if (hasUnreadNews && showOldNotifications) {
-            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, NEWS_SPRITE, currentX, y + 1, 14, 14, color);
+            GuiGraphicsExtractor.blitSprite(RenderPipelines.GUI_TEXTURED, NEWS_SPRITE, currentX, y + 1, 14, 14, color);
             currentX += 16;
         }
 
         if (hasUnseenNotifications) {
-            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, UNSEEN_NOTIFICATION_SPRITE, currentX, y + 3, 10, 10, color);
+            GuiGraphicsExtractor.blitSprite(RenderPipelines.GUI_TEXTURED, UNSEEN_NOTIFICATION_SPRITE, currentX, y + 3, 10, 10, color);
         }
 
     }
@@ -141,13 +141,13 @@ public class RealmsNotificationRenderer {
     /**
      * Renders the notification icons at the default position.
      *
-     * @param guiGraphics The GuiGraphics instance to render with
+     * @param GuiGraphicsExtractor The GuiGraphicsExtractor instance to render with
      */
-    public void renderIcons(GuiGraphics guiGraphics, int color) {
+    public void renderIcons(GuiGraphicsExtractor GuiGraphicsExtractor, int color) {
         // Check if client is valid before rendering
         boolean isValidClient = this.screenAccess.get_validClient_FancyMenu().getNow(false);
         if (isValidClient) {
-            renderIcons(guiGraphics, getDefaultPositionX(), getDefaultPositionY(), color);
+            renderIcons(GuiGraphicsExtractor, getDefaultPositionX(), getDefaultPositionY(), color);
         }
     }
 

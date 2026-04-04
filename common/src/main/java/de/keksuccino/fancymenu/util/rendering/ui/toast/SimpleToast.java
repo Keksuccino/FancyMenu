@@ -4,7 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastManager;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -58,7 +58,7 @@ public class SimpleToast implements Toast {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, @NotNull Font font, long visibilityTime) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, @NotNull Font font, long visibilityTime) {
 
         Identifier customBack = this.getCustomBackground();
         if (customBack == null) {
@@ -67,13 +67,13 @@ public class SimpleToast implements Toast {
             graphics.blit(RenderPipelines.GUI_TEXTURED, customBack, 0, 0, 0.0F, 0.0F, this.width(), this.height(), this.width(), this.height());
         }
 
-        this.icon.render(graphics, 6, 6);
+        this.icon.extractRenderState(graphics, 6, 6);
 
         if (this.message == null) {
-            graphics.drawString(font, this.title, 30, 12, -11534256, false);
+            graphics.text(font, this.title, 30, 12, -11534256, false);
         } else {
-            graphics.drawString(font, this.title, 30, 7, -11534256, false);
-            graphics.drawString(font, this.message, 30, 18, -16777216, false);
+            graphics.text(font, this.title, 30, 7, -11534256, false);
+            graphics.text(font, this.message, 30, 18, -16777216, false);
         }
 
         if (this.progressable) {
@@ -158,7 +158,7 @@ public class SimpleToast implements Toast {
             this.supplier = textureSupplier;
         }
 
-        public void render(GuiGraphics graphics, int x, int y) {
+        public void extractRenderState(GuiGraphicsExtractor graphics, int x, int y) {
             Identifier icon = this.getIcon();
             if (icon != null) {
                 graphics.blit(RenderPipelines.GUI_TEXTURED, icon, x, y, 0.0F, 0.0F, 20, 20, 20, 20);

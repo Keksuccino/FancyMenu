@@ -1,12 +1,12 @@
 package de.keksuccino.fancymenu.customization.element.editor;
 
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -39,7 +39,7 @@ public class EditorElementBorderDisplay implements Renderable {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         this.updateDisplay();
 
@@ -47,7 +47,7 @@ public class EditorElementBorderDisplay implements Renderable {
 
     }
 
-    protected void renderDisplayLines(GuiGraphics graphics) {
+    protected void renderDisplayLines(GuiGraphicsExtractor graphics) {
 
         int x = this.editorElement.getX();
         int y = this.editorElement.getY() - this.getHeight() - 2;
@@ -99,7 +99,7 @@ public class EditorElementBorderDisplay implements Renderable {
             int backgroundRight = scaledLineX + lineWidth + LINE_BACKGROUND_HORIZONTAL_PADDING_FANCYMENU;
             int backgroundBottom = scaledLineY + this.font.lineHeight + LINE_BACKGROUND_VERTICAL_PADDING_FANCYMENU;
             graphics.fill(backgroundLeft, backgroundTop, backgroundRight, backgroundBottom, backgroundColor);
-            graphics.drawString(this.font, c, scaledLineX, scaledLineY, textColor, false);
+            graphics.text(this.font, c, scaledLineX, scaledLineY, textColor, false);
             lineY += (this.font.lineHeight + 2) * scale;
         }
         graphics.pose().popMatrix();
@@ -205,3 +205,4 @@ public class EditorElementBorderDisplay implements Renderable {
     }
 
 }
+

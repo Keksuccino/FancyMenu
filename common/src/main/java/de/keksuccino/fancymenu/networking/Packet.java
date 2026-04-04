@@ -22,7 +22,7 @@ public abstract class Packet {
         try {
             if ((Minecraft.getInstance().player != null) && (Minecraft.getInstance().level != null)) {
                 if (failure) message = message.withStyle(ChatFormatting.RED);
-                Minecraft.getInstance().player.displayClientMessage(message, false);
+                Minecraft.getInstance().gui.getChat().addClientSystemMessage(message);
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to send packet chat feedback!", ex);

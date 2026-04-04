@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.AbstractWidget;
 
@@ -52,8 +52,8 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
         super($$0, $$1, $$2, $$3, $$4);
     }
 
-    @Inject(method = "renderWidget", at = @At("HEAD"))
-    private void beforeRenderWidgetFancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo ci) {
+    @Inject(method = "extractWidgetRenderState", at = @At("HEAD"))
+    private void beforeRenderWidgetFancyMenu(GuiGraphicsExtractor graphics, int $$1, int $$2, float $$3, CallbackInfo ci) {
         if (!this.sliderInitializedFancyMenu) this.initializeSliderFancyMenu();
         this.sliderInitializedFancyMenu = true;
     }
@@ -61,8 +61,8 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
     /**
      * @reason This is to add support for custom textures to the slider.
      */
-    @WrapWithCondition(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIII)V"))
-    private boolean wrap_blitSprite_FancyMenu(GuiGraphics graphics, RenderPipeline renderTypeGetter, Identifier sprite, int x, int y, int width, int height, int color) {
+    @WrapWithCondition(method = "extractWidgetRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIII)V"))
+    private boolean wrap_blitSprite_FancyMenu(GuiGraphicsExtractor graphics, RenderPipeline renderTypeGetter, Identifier sprite, int x, int y, int width, int height, int color) {
         CustomizableWidget cus = this.getAsCustomizableWidgetFancyMenu();
         boolean isHandle = (width == 8);
         boolean renderVanilla;

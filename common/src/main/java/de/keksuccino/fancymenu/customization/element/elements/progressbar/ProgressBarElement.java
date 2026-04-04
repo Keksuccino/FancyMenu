@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.math.MathUtils;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 
 import net.minecraft.network.chat.Style;
@@ -59,7 +59,7 @@ public class ProgressBarElement extends AbstractElement {
      * Render the progress bar element.
      */
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (!this.shouldRender()) return;
 
@@ -73,7 +73,7 @@ public class ProgressBarElement extends AbstractElement {
     /**
      * Renders the progress (filled) portion of the bar.
      */
-    protected void renderProgress(@NotNull GuiGraphics graphics) {
+    protected void renderProgress(@NotNull GuiGraphicsExtractor graphics) {
 
         // Clamp the actual progress between 0.0 and 1.0.
         float targetProgress = Math.max(0.0F, Math.min(1.0F, getCurrentProgress()));
@@ -162,7 +162,7 @@ public class ProgressBarElement extends AbstractElement {
     /**
      * Renders the background of the progress bar element.
      */
-    protected void renderBackground(@NotNull GuiGraphics graphics) {
+    protected void renderBackground(@NotNull GuiGraphicsExtractor graphics) {
          
         if (backgroundTextureSupplier != null) {
             backgroundTextureSupplier.forRenderable((texture, location) -> {

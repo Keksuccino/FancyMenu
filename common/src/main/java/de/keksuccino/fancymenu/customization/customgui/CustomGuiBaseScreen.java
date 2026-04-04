@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -64,25 +64,25 @@ public class CustomGuiBaseScreen extends Screen {
 	}
 
     @Override
-	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+	public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
-		super.render(graphics, mouseX, mouseY, partial);
+		super.extractRenderState(graphics, mouseX, mouseY, partial);
 
 		String title = PlaceholderParser.replacePlaceholders(this.getTitleString());
 		Component titleComp = LocalizationUtils.isLocalizationKey(title) ? Component.translatable(title) : Component.literal(title);
-		graphics.drawCenteredString(this.font, titleComp, this.width / 2, 8, -1);
+		graphics.centeredText(this.font, titleComp, this.width / 2, 8, -1);
 
 	}
 
 	@Override
-	public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+	public void extractBackground(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         boolean popup = this.gui.popupMode && (this.parentScreen != null);
         boolean popupOverlay = popup && this.gui.popupModeBackgroundOverlay;
 		if (popup) {
             this.renderPopupMenuBackgroundScreen(graphics, mouseX, mouseY, partial);
         } else {
             if ((Minecraft.getInstance().level == null) || !this.gui.worldBackground) {
-                this.renderPanorama(graphics, partial);
+                this.extractPanorama(graphics, partial);
             }
         }
         if (popup) {
@@ -91,18 +91,18 @@ public class CustomGuiBaseScreen extends Screen {
 		try {
             if (!popup || popupOverlay) {
                 graphics.nextStratum();
-                this.renderBlurredBackground(graphics);
+                this.extractBlurredBackground(graphics);
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Error while rendering background blur in Custom GUI!", ex);
         }
         RenderingUtils.resetOverrideBackgroundBlurRadius();
 		if (!popup) {
-            this.renderMenuBackground(graphics);
+            this.extractMenuBackground(graphics);
         }
 	}
 
-    protected void renderPopupMenuBackgroundScreen(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void renderPopupMenuBackgroundScreen(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         if (this.gui.popupModeBackgroundOverlay) RenderingUtils.setMenuBlurringBlocked(true);
         RenderingUtils.setTooltipRenderingBlocked(true);
         Screen current = Minecraft.getInstance().screen;
@@ -110,7 +110,7 @@ public class CustomGuiBaseScreen extends Screen {
         try {
             Minecraft.getInstance().screen = this.parentScreen;
             // FancyMenu's render events get fired in renderWithTooltip, so they should fire here automatically
-            this.parentScreen.renderWithTooltipAndSubtitles(graphics, -500, -500, partial);
+            this.parentScreen.extractRenderStateWithTooltipAndSubtitles(graphics, -500, -500, partial);
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to render popup menu background screen of Custom GUI!", ex);
         }
@@ -146,3 +146,7 @@ public class CustomGuiBaseScreen extends Screen {
     }
 
 }
+
+
+
+

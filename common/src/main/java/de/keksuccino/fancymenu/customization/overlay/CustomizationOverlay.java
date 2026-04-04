@@ -114,12 +114,12 @@ public class CustomizationOverlay implements FancyMenuUiComponent {
 		if (!ScreenCustomization.isScreenBlacklisted(e.getScreen().getClass().getName()) && (overlayMenuBar != null) && (debugOverlay != null) && isOverlayVisible(e.getScreen())) {
 			if (FancyMenu.getOptions().showDebugOverlay.getValue()) {
 				debugOverlay.allowRender = true;
-				debugOverlay.render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
+				debugOverlay.extractRenderState(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 				debugOverlay.allowRender = false;
 			}
 			if (FancyMenu.getOptions().showCustomizationOverlay.getValue()) {
 				overlayMenuBar.allowRender = true;
-				overlayMenuBar.render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
+				overlayMenuBar.extractRenderState(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 				overlayMenuBar.allowRender = false;
 			}
 		}

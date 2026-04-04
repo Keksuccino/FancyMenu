@@ -38,7 +38,7 @@ import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -735,7 +735,7 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         this.renderTickDragHoveredEntry = this.getDragHoveredEntry();
         this.renderTickDraggedEntry = this.getDraggedEntry();
@@ -755,8 +755,8 @@ public class ActionScriptEditorScreen extends Screen {
         graphics.fill(0, 0, this.width, this.height, theme.screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, theme.generic_text_base_color.getColorInt(), false);
-        graphics.drawString(this.font, Component.translatable("fancymenu.actions.screens.manage_screen.actions"), 20, 50, theme.generic_text_base_color.getColorInt(), false);
+        graphics.text(this.font, titleComp, 20, 20, theme.generic_text_base_color.getColorInt(), false);
+        graphics.text(this.font, Component.translatable("fancymenu.actions.screens.manage_screen.actions"), 20, 50, theme.generic_text_base_color.getColorInt(), false);
 
         int scrollAreaWidth = Math.max(120, this.width - LEFT_MARGIN - RIGHT_MARGIN - MINIMAP_WIDTH - MINIMAP_GAP);
         this.scriptEntriesScrollArea.setWidth(scrollAreaWidth, true);
@@ -788,14 +788,14 @@ public class ActionScriptEditorScreen extends Screen {
         this.cancelButton.setX(Math.max(LEFT_MARGIN, this.doneButton.getX() - ACTION_BUTTON_GAP - this.cancelButton.getWidth()));
         this.cancelButton.setY(buttonY);
 
-        this.scriptEntriesScrollArea.render(graphics, mouseX, mouseY, partial);
+        this.scriptEntriesScrollArea.extractRenderState(graphics, mouseX, mouseY, partial);
         if (this.scriptEntriesScrollArea.getEntries().isEmpty()) {
             // Hint overlay when no actions exist
             Component hint = Component.translatable("fancymenu.actions.script_editor.empty_hint");
             int hintWidth = this.font.width(hint);
             int hintX = this.scriptEntriesScrollArea.getInnerX() + (this.scriptEntriesScrollArea.getInnerWidth() / 2) - (hintWidth / 2);
             int hintY = this.scriptEntriesScrollArea.getInnerY() + (this.scriptEntriesScrollArea.getInnerHeight() / 2) - (this.font.lineHeight / 2);
-            graphics.drawString(this.font, hint, hintX, hintY, theme.element_label_color_inactive.getColorInt(), false);
+            graphics.text(this.font, hint, hintX, hintY, theme.element_label_color_inactive.getColorInt(), false);
         }
         this.renderInlineEditors(graphics, mouseX, mouseY, partial);
         this.updateCursor(mouseX, mouseY);
@@ -816,10 +816,10 @@ public class ActionScriptEditorScreen extends Screen {
 
         this.renderChainMinimap(graphics);
 
-        this.doneButton.render(graphics, mouseX, mouseY, partial);
-        this.cancelButton.render(graphics, mouseX, mouseY, partial);
+        this.doneButton.extractRenderState(graphics, mouseX, mouseY, partial);
+        this.cancelButton.extractRenderState(graphics, mouseX, mouseY, partial);
 
-        super.render(graphics, mouseX, mouseY, partial);
+        super.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.renderIllegalActionIndicator(graphics);
 
@@ -827,22 +827,22 @@ public class ActionScriptEditorScreen extends Screen {
         this.renderMinimapEntryTooltip(graphics, mouseX, mouseY);
 
         // Needs to render after everything else
-        this.rightClickContextMenu.render(graphics, mouseX, mouseY, partial);
+        this.rightClickContextMenu.extractRenderState(graphics, mouseX, mouseY, partial);
 
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractBackground(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
     }
 
-    protected void renderInlineEditors(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void renderInlineEditors(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         if (this.isInlineValueEditing()) {
             if (!this.scriptEntriesScrollArea.getEntries().contains(this.inlineValueEntry)) {
                 this.finishInlineValueEditing(false);
             } else {
                 this.updateInlineValueEditorBounds();
                 if (this.inlineValueEditBox != null) {
-                    this.inlineValueEditBox.render(graphics, mouseX, mouseY, partial);
+                    this.inlineValueEditBox.extractRenderState(graphics, mouseX, mouseY, partial);
                 }
             }
         }
@@ -852,13 +852,13 @@ public class ActionScriptEditorScreen extends Screen {
             } else {
                 this.updateInlineNameEditorBounds();
                 if (this.inlineNameEditBox != null) {
-                    this.inlineNameEditBox.render(graphics, mouseX, mouseY, partial);
+                    this.inlineNameEditBox.extractRenderState(graphics, mouseX, mouseY, partial);
                 }
             }
         }
     }
 
-    protected void renderIllegalActionIndicator(@NotNull GuiGraphics graphics) {
+    protected void renderIllegalActionIndicator(@NotNull GuiGraphicsExtractor graphics) {
 
         if (this.illegalActionIndicatorStartTime <= 0L) {
             return;
@@ -894,7 +894,7 @@ public class ActionScriptEditorScreen extends Screen {
         this.illegalActionIndicatorStartTime = System.currentTimeMillis();
     }
 
-    protected void renderChainMinimap(@NotNull GuiGraphics graphics) {
+    protected void renderChainMinimap(@NotNull GuiGraphicsExtractor graphics) {
 
         if (this.minimapHeight <= 0) {
             return;
@@ -921,7 +921,7 @@ public class ActionScriptEditorScreen extends Screen {
         this.renderMinimapViewport(graphics, theme);
     }
 
-    protected void renderMinimapEntryTooltip(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
+    protected void renderMinimapEntryTooltip(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         if (this.minimapHoveredEntry == null) {
             return;
         }
@@ -970,7 +970,7 @@ public class ActionScriptEditorScreen extends Screen {
 
     }
 
-    protected void renderChainMinimapBorder(@NotNull GuiGraphics graphics, @NotNull List<ExecutableEntry> chainEntries, int color) {
+    protected void renderChainMinimapBorder(@NotNull GuiGraphicsExtractor graphics, @NotNull List<ExecutableEntry> chainEntries, int color) {
         int minX = Integer.MAX_VALUE;
         int maxX = Integer.MIN_VALUE;
         int minY = Integer.MAX_VALUE;
@@ -994,7 +994,7 @@ public class ActionScriptEditorScreen extends Screen {
         UIBase.renderBorder(graphics, minX, minY, maxX, maxY, 1, color, true, true, true, true);
     }
 
-    protected void renderMinimapViewport(@NotNull GuiGraphics graphics, @NotNull UIColorTheme theme) {
+    protected void renderMinimapViewport(@NotNull GuiGraphicsExtractor graphics, @NotNull UIColorTheme theme) {
         if (this.minimapTotalEntriesHeight <= 0 || this.minimapContentHeight <= 0) {
             return;
         }
@@ -2967,24 +2967,24 @@ public class ActionScriptEditorScreen extends Screen {
         }
 
         @Override
-        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
             this.renderInternal(graphics, mouseX, mouseY, partial, true);
         }
 
-        public void renderThumbnail(@NotNull GuiGraphics graphics) {
+        public void renderThumbnail(@NotNull GuiGraphicsExtractor graphics) {
             this.renderInternal(graphics, Integer.MIN_VALUE, Integer.MIN_VALUE, 0.0F, false);
         }
 
-        private void renderInternal(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial, boolean interactive) {
+        private void renderInternal(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial, boolean interactive) {
             this.applyThemeBackground(false);
             if (interactive) {
                 this.handleDragging();
             }
-            super.render(graphics, mouseX, mouseY, partial);
+            super.extractRenderState(graphics, mouseX, mouseY, partial);
             this.renderEntryDecorations(graphics);
         }
 
-        private void renderEntryDecorations(@NotNull GuiGraphics graphics) {
+        private void renderEntryDecorations(@NotNull GuiGraphicsExtractor graphics) {
             List<ExecutableEntry> chainAnchors = ActionScriptEditorScreen.this.getChainAnchorsFor(this);
             for (ExecutableEntry anchorEntry : chainAnchors) {
                 List<ExecutableEntry> chainEntries = ActionScriptEditorScreen.this.getStatementChainOf(anchorEntry);
@@ -3008,14 +3008,14 @@ public class ActionScriptEditorScreen extends Screen {
                 int textX = toggleX + COLLAPSE_TOGGLE_SIZE + 3;
                 int textY = centerYLine1 - (this.font.lineHeight / 2);
                 if (ActionScriptEditorScreen.this.inlineNameEntry != this) {
-                    graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
+                    graphics.text(this.font, this.displayNameComponent, textX, textY, -1, false);
                 } else {
                     if (this.folderLabelComponent != null) {
-                        graphics.drawString(this.font, this.folderLabelComponent, textX, textY, -1, false);
+                        graphics.text(this.font, this.folderLabelComponent, textX, textY, -1, false);
                     }
                     if ((ActionScriptEditorScreen.this.inlineNameEditBox != null) && (this.folderCollapsedSuffixComponent != null)) {
                         int suffixX = ActionScriptEditorScreen.this.inlineNameEditBox.getX() + ActionScriptEditorScreen.this.inlineNameEditBox.getWidth() + 2;
-                        graphics.drawString(this.font, this.folderCollapsedSuffixComponent, suffixX, textY, -1, false);
+                        graphics.text(this.font, this.folderCollapsedSuffixComponent, suffixX, textY, -1, false);
                     }
                 }
             } else if (this.executable instanceof IfExecutableBlock ifBlock) {
@@ -3024,46 +3024,46 @@ public class ActionScriptEditorScreen extends Screen {
                 this.renderCollapseToggle(graphics, toggleX, toggleY, ifBlock.isCollapsed());
                 int textX = toggleX + COLLAPSE_TOGGLE_SIZE + 3;
                 int textY = centerYLine1 - (this.font.lineHeight / 2);
-                graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
+                graphics.text(this.font, this.displayNameComponent, textX, textY, -1, false);
             } else if (this.executable instanceof WhileExecutableBlock whileBlock) {
                 int toggleX = renderX + 5;
                 int toggleY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
                 this.renderCollapseToggle(graphics, toggleX, toggleY, whileBlock.isCollapsed());
                 int textX = toggleX + COLLAPSE_TOGGLE_SIZE + 3;
                 int textY = centerYLine1 - (this.font.lineHeight / 2);
-                graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
+                graphics.text(this.font, this.displayNameComponent, textX, textY, -1, false);
             } else if (this.executable instanceof ElseIfExecutableBlock) {
                 int indicatorX = renderX + 5;
                 int indicatorY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
                 this.renderStatementBadge(graphics, indicatorX, indicatorY, theme.listing_dot_color_2.getColor());
                 int textX = indicatorX + COLLAPSE_TOGGLE_SIZE + 3;
                 int textY = centerYLine1 - (this.font.lineHeight / 2);
-                graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
+                graphics.text(this.font, this.displayNameComponent, textX, textY, -1, false);
             } else if (this.executable instanceof ElseExecutableBlock) {
                 int indicatorX = renderX + 5;
                 int indicatorY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
                 this.renderStatementBadge(graphics, indicatorX, indicatorY, theme.listing_dot_color_2.getColor());
                 int textX = indicatorX + COLLAPSE_TOGGLE_SIZE + 3;
                 int textY = centerYLine1 - (this.font.lineHeight / 2);
-                graphics.drawString(this.font, this.displayNameComponent, textX, textY, -1, false);
+                graphics.text(this.font, this.displayNameComponent, textX, textY, -1, false);
             } else if (this.executable instanceof ActionInstance) {
                 UIBase.renderListingDot(graphics, renderX + 5, centerYLine1 - 2, theme.listing_dot_color_2.getColor());
-                graphics.drawString(this.font, this.displayNameComponent, (renderX + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
+                graphics.text(this.font, this.displayNameComponent, (renderX + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
 
                 UIBase.renderListingDot(graphics, renderX + 5 + 4 + 3, centerYLine2 - 2, theme.listing_dot_color_1.getColor());
                 int valueTextX = renderX + 5 + 4 + 3 + 4 + 3;
                 int valueTextY = centerYLine2 - (this.font.lineHeight / 2);
                 if (ActionScriptEditorScreen.this.inlineValueEntry != this) {
-                    graphics.drawString(this.font, this.valueComponent, valueTextX, valueTextY, -1, false);
+                    graphics.text(this.font, this.valueComponent, valueTextX, valueTextY, -1, false);
                 } else if (this.valueLabelComponent != null) {
-                    graphics.drawString(this.font, this.valueLabelComponent, valueTextX, valueTextY, -1, false);
+                    graphics.text(this.font, this.valueLabelComponent, valueTextX, valueTextY, -1, false);
                 }
             } else {
                 UIBase.renderListingDot(graphics, renderX + 5, centerYLine1 - 2, theme.warning_text_color.getColor());
-                graphics.drawString(this.font, this.displayNameComponent, (renderX + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
+                graphics.text(this.font, this.displayNameComponent, (renderX + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
             }
         }
-        private void renderChainColumn(@NotNull GuiGraphics graphics, @NotNull Color color, @NotNull ExecutableEntry anchorEntry) {
+        private void renderChainColumn(@NotNull GuiGraphicsExtractor graphics, @NotNull Color color, @NotNull ExecutableEntry anchorEntry) {
             int barX = ActionScriptEditorScreen.this.getChainBarX(anchorEntry);
             int barTop = this.getY() + 1;
             int barBottom = this.getY() + this.getHeight() - 1;
@@ -3277,7 +3277,7 @@ public class ActionScriptEditorScreen extends Screen {
             }
         }
 
-        private void renderCollapseToggle(@NotNull GuiGraphics graphics, int x, int y, boolean collapsed) {
+        private void renderCollapseToggle(@NotNull GuiGraphicsExtractor graphics, int x, int y, boolean collapsed) {
             UIColorTheme theme = UIBase.getUIColorTheme();
             int size = COLLAPSE_TOGGLE_SIZE;
             Color background = theme.actions_entry_background_color_generic_block.getColor();
@@ -3291,7 +3291,7 @@ public class ActionScriptEditorScreen extends Screen {
             }
         }
 
-        private void renderStatementBadge(@NotNull GuiGraphics graphics, int x, int y, @NotNull Color fillColor) {
+        private void renderStatementBadge(@NotNull GuiGraphicsExtractor graphics, int x, int y, @NotNull Color fillColor) {
             UIColorTheme theme = UIBase.getUIColorTheme();
             int size = COLLAPSE_TOGGLE_SIZE;
             Color background = theme.actions_entry_background_color_generic_block.getColor();
@@ -3415,3 +3415,6 @@ public class ActionScriptEditorScreen extends Screen {
     }
 
 }
+
+
+

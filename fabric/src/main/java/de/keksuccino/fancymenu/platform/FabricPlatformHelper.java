@@ -4,7 +4,6 @@ import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.platform.services.IPlatformHelper;
 import de.keksuccino.fancymenu.util.mod.UniversalModContainer;
 import net.fabricmc.api.EnvType;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.ModMetadata;
@@ -82,7 +81,7 @@ public class FabricPlatformHelper implements IPlatformHelper {
 
     @Override
     public InputConstants.Key getKeyMappingKey(KeyMapping keyMapping) {
-        return KeyBindingHelper.getBoundKeyOf(keyMapping);
+        return InputConstants.getKey(keyMapping.saveString());
     }
 
     @Override

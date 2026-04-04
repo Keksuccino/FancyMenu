@@ -13,7 +13,7 @@ import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoPlayer;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
@@ -81,7 +81,7 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (this.shouldRender()) {
 
@@ -89,7 +89,7 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
                 graphics.fill(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), MISSING_MCEF_COLOR.getColorInt());
                 int xCenter = this.getAbsoluteX() + (this.getAbsoluteWidth() / 2);
                 int yCenter = this.getAbsoluteY() + (this.getAbsoluteHeight() / 2);
-                graphics.drawCenteredString(Minecraft.getInstance().font, "§lMCEF IS NOT INSTALLED! PLEASE DOWNLOAD FROM CURSEFORGE!", xCenter, yCenter, -1);
+                graphics.centeredText(Minecraft.getInstance().font, "§lMCEF IS NOT INSTALLED! PLEASE DOWNLOAD FROM CURSEFORGE!", xCenter, yCenter, -1);
                 return;
             }
 
@@ -188,7 +188,7 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
             this.videoPlayer.setOpacity(this.opacity);
 
             if (finalVideoUrl != null) {
-                this.videoPlayer.render(graphics, mouseX, mouseY, partial);
+                this.videoPlayer.extractRenderState(graphics, mouseX, mouseY, partial);
             }
 
         }

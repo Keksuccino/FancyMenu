@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.util.rendering.ui;
 
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import de.keksuccino.fancymenu.util.VanillaEvents;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -26,10 +26,10 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
      * Make sure to render everything here at X=0 and Y=0!<br>
      * The {@link UIComponent} gets translated to the correct position!
      */
-    public abstract void renderComponent(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial);
+    public abstract void renderComponent(@NotNull GuiGraphicsExtractor graphics, double mouseX, double mouseY, float partial);
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int ignoredMouseX, int ignoredMouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int ignoredMouseX, int ignoredMouseY, float partial) {
 
         if (!this.isVisible()) return;
 
@@ -143,7 +143,7 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
     /**
      * Scissor with automatic scale handling.
      */
-    protected void enableComponentScissor(GuiGraphics graphics, int x, int y, int width, int height, boolean isRealPosition) {
+    protected void enableComponentScissor(GuiGraphicsExtractor graphics, int x, int y, int width, int height, boolean isRealPosition) {
         if (isRealPosition) {
             x += this.getTranslatedX();
             y += this.getTranslatedY();
@@ -155,7 +155,7 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
         graphics.enableScissor(scissorX, scissorY, scissorX + scissorWidth, scissorY + scissorHeight);
     }
 
-    protected void disableComponentScissor(GuiGraphics graphics) {
+    protected void disableComponentScissor(GuiGraphicsExtractor graphics) {
         graphics.disableScissor();
     }
 

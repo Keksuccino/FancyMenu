@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.layout.editor.buddy.items;
 
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
 import de.keksuccino.konkrete.input.MouseInput;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import net.minecraft.resources.Identifier;
 
@@ -30,7 +30,7 @@ public class FoodItem {
         this.buddy = buddy;
     }
 
-    public void render(GuiGraphics graphics) {
+    public void extractRenderState(GuiGraphicsExtractor graphics) {
         graphics.blit(
                 TEXTURE_FOOD,
                 x - size/2, y - size/2,

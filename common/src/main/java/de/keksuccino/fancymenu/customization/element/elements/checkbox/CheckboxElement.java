@@ -15,7 +15,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.input.StringUtils;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -77,7 +77,7 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         
         if (this.checkbox == null) return;
         
@@ -89,7 +89,7 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
         if (this.checkbox.getHeight() <= 0) return;
         if (this.checkbox.getWidth() <= 0) return;
 
-        this.checkbox.render(graphics, mouseX, mouseY, partial);
+        this.checkbox.extractRenderState(graphics, mouseX, mouseY, partial);
         
     }
 

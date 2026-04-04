@@ -26,11 +26,11 @@
   ],
   "depends": {
     "fabricloader": ">=${fabric_loader_version}",
-    "fabric": ">=${fabric_short_version}",
-    "konkrete": ">=1.9.18",
-    "melody": ">=1.0.6",
+    "fabric-api": ">=${fabric_short_version}",
+    "konkrete": ">=1.9.19",
+    "melody": ">=1.0.16",
     "minecraft": ">=${minecraft_version}",
-    "java": ">=17"
+    "java": ">=${java_version}"
   },
   "suggests": {
     "fancy_entity_renderer": ">=${fer_version}"

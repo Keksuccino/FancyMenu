@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -156,9 +156,9 @@ public class IsMenuTitleRequirement extends LoadingRequirement {
         }
 
         @Override
-        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            super.render(graphics, mouseX, mouseY, partial);
-            this.localizationKeySuggestions.render(graphics, mouseX, mouseY);
+        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
+            super.extractRenderState(graphics, mouseX, mouseY, partial);
+            this.localizationKeySuggestions.extractRenderState(graphics, mouseX, mouseY);
         }
 
         @Override

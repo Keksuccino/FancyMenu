@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.events.screen;
 
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.event.acara.EventBase;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -14,12 +14,12 @@ import java.util.Objects;
 public class RenderScreenEvent extends EventBase {
 
     private final Screen screen;
-    private final GuiGraphics graphics;
+    private final GuiGraphicsExtractor graphics;
     private final int mouseX;
     private final int mouseY;
     private final float partial;
 
-    protected RenderScreenEvent(@NotNull Screen screen, @NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected RenderScreenEvent(@NotNull Screen screen, @NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         this.screen = Objects.requireNonNull(screen);
         this.graphics = Objects.requireNonNull(graphics);
         this.mouseX = mouseX;
@@ -32,7 +32,7 @@ public class RenderScreenEvent extends EventBase {
     }
 
     @NotNull
-    public GuiGraphics getGraphics() {
+    public GuiGraphicsExtractor getGraphics() {
         return graphics;
     }
 
@@ -77,7 +77,7 @@ public class RenderScreenEvent extends EventBase {
 
     public static class Pre extends RenderScreenEvent {
 
-        public Pre(Screen screen, GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public Pre(Screen screen, GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
             super(screen, graphics, mouseX, mouseY, partial);
         }
 
@@ -85,7 +85,7 @@ public class RenderScreenEvent extends EventBase {
 
     public static class Post extends RenderScreenEvent {
 
-        public Post(Screen screen, GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public Post(Screen screen, GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
             super(screen, graphics, mouseX, mouseY, partial);
         }
 

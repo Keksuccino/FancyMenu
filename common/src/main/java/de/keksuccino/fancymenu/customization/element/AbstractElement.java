@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.element;
 
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.mojang.blaze3d.platform.Window;
@@ -23,7 +24,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -49,7 +49,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	/** The {@link AbstractElement#builder} field is NULL for this element! Keep that in mind when using it as placeholder! **/
 	@SuppressWarnings("all")
-	public static final AbstractElement EMPTY_ELEMENT = new AbstractElement(null){public void render(@NotNull GuiGraphics g, int i1, int i2, float f){}};
+	public static final AbstractElement EMPTY_ELEMENT = new AbstractElement(null){public void extractRenderState(@NotNull GuiGraphicsExtractor g, int i1, int i2, float f){}};
 	public static final int STAY_ON_SCREEN_EDGE_ZONE_SIZE = 2;
 
 	public final ElementBuilder<?,?> builder;
@@ -242,13 +242,13 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	}
 
 	@Override
-	public abstract void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
+	public abstract void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial);
 
 	/**
 	 * This is the internal render method that should only get overridden if there's really no other way around it.<br>
-	 * The normal element rendering logic should be in {@link AbstractElement#render(GuiGraphics, int, int, float)}.
+	 * The normal element rendering logic should be in {@link AbstractElement#extractRenderState(GuiGraphicsExtractor, int, int, float)}.
 	 */
-	public void renderInternal(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+	public void renderInternal(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
 		if (this.allowDepthTestManipulation) {
 			RenderingUtils.setDepthTestLocked(true);
@@ -324,7 +324,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		if (this.shouldRender()) {
 			//Render the actual element
-			this.render(graphics, mouseX, mouseY, partial);
+			this.extractRenderState(graphics, mouseX, mouseY, partial);
 		}
 
 		this.renderTick_Tail();
@@ -1265,3 +1265,4 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	}
 
 }
+

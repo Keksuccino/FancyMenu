@@ -15,7 +15,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -104,7 +104,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     }
 
     @Override
-    protected void renderBody(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial) {
+    protected void renderBody(@NotNull GuiGraphicsExtractor graphics, double mouseX, double mouseY, float partial) {
         fillF(graphics, this.getRealBodyX(), this.getRealBodyY(), this.getRealBodyX() + this.getBodyWidth(), this.getRealBodyY() + this.getBodyHeight(), UIBase.getUIColorTheme().area_background_color.getColorInt());
 
         this.scrollArea.setX(this.getRealBodyX());
@@ -120,7 +120,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         graphics.pose().pushMatrix();
 
-        this.scrollArea.render(graphics, (int) mouseX, (int) mouseY, partial);
+        this.scrollArea.extractRenderState(graphics, (int) mouseX, (int) mouseY, partial);
 
         // Render the drop indicator if currently dragging
         if (isDragging && dragTargetIndex >= 0 && dragTargetIndex <= this.scrollArea.getEntries().size()) {
@@ -678,7 +678,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         @Override
-        public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void renderEntry(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
             this.moveUpButtonHovered = this.isMoveUpButtonMouseOver(mouseX, mouseY);
             this.moveDownButtonHovered = this.isMoveDownButtonMouseOver(mouseX, mouseY);
@@ -708,7 +708,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                     this.editLayerNameBox.setDisplayPosition(0);
                 }
                 ((IMixinAbstractWidget)this.editLayerNameBox).setHeightFancyMenu(this.font.lineHeight + 2);
-                this.editLayerNameBox.render(graphics, mouseX, mouseY, partial);
+                this.editLayerNameBox.extractRenderState(graphics, mouseX, mouseY, partial);
             }
 
         }
@@ -956,7 +956,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         @Override
-        public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void renderEntry(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
             this.moveTopBottomButtonHovered = this.isMoveTopBottomButtonHovered(mouseX, mouseY);
 
@@ -1010,7 +1010,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         @Override
-        public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void renderEntry(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
              
             fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
         }

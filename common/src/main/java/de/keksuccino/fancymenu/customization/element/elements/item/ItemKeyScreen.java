@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.item;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -46,9 +46,9 @@ public class ItemKeyScreen extends StringBuilderScreen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        super.render(graphics, mouseX, mouseY, partial);
-        this.itemKeySuggestions.render(graphics, mouseX, mouseY);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
+        super.extractRenderState(graphics, mouseX, mouseY, partial);
+        this.itemKeySuggestions.extractRenderState(graphics, mouseX, mouseY);
     }
 
     @Override

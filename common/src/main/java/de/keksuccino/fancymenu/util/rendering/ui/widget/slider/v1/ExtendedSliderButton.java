@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -79,8 +79,7 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         return !this.isHovered && !((IMixinAbstractSliderButton)this).getCanChangeValueFancyMenu() ? SLIDER_HANDLE_SPRITE : SLIDER_HANDLE_HIGHLIGHTED_SPRITE;
     }
 
-    @Override
-    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void renderSliderWidget(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         this.renderBackground(graphics);
         this.renderHandle(graphics);
         int labelColorInt = this.active ? this.labelColorNormal.getColorInt() : this.labelColorInactive.getColorInt();
@@ -90,7 +89,7 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         }
     }
 
-    protected void renderHandle(@NotNull GuiGraphics graphics) {
+    protected void renderHandle(@NotNull GuiGraphicsExtractor graphics) {
         int handleX = this.getX() + (int)(this.value * (double)(this.width - 8));
         DrawableColor c = this.getHandleRenderColor();
         if (c == null) {
@@ -106,7 +105,7 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         return this.handleColorNormal;
     }
 
-    protected void renderBackground(@NotNull GuiGraphics graphics) {
+    protected void renderBackground(@NotNull GuiGraphicsExtractor graphics) {
         if (this.backgroundColor == null) {
             graphics.blitSprite(RenderPipelines.GUI_TEXTURED, this.getSprite(), this.getX(), this.getY(), this.getWidth(), this.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.alpha));
         } else {
@@ -119,7 +118,7 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractWidgetRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (this.visible) {
 
@@ -156,17 +155,17 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
 
         }
 
-        super.render(graphics, mouseX, mouseY, partial);
+        this.renderSliderWidget(graphics, mouseX, mouseY, partial);
 
     }
 
-    protected void renderScrollingLabel(@NotNull GuiGraphics graphics, @NotNull Font font, int spaceLeftRight, int textColor) {
+    protected void renderScrollingLabel(@NotNull GuiGraphicsExtractor graphics, @NotNull Font font, int spaceLeftRight, int textColor) {
         int xMin = this.getX() + spaceLeftRight;
         int xMax = this.getX() + this.getWidth() - spaceLeftRight;
         this.renderScrollingLabelInternal(graphics, font, this.getMessage(), xMin, this.getY(), xMax, this.getY() + this.getHeight(), textColor);
     }
 
-    protected void renderScrollingLabelInternal(@NotNull GuiGraphics graphics, Font font, @NotNull Component text, int xMin, int yMin, int xMax, int yMax, int textColor) {
+    protected void renderScrollingLabelInternal(@NotNull GuiGraphicsExtractor graphics, Font font, @NotNull Component text, int xMin, int yMin, int xMax, int yMax, int textColor) {
         int textWidth = font.width(text);
         int textPosY = (yMin + yMax - 9) / 2 + 1;
         int maxTextWidth = xMax - xMin;
@@ -177,10 +176,10 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
             double $$14 = Math.sin((Math.PI / 2D) * Math.cos((Math.PI * 2D) * scrollTime / $$13)) / 2.0D + 0.5D;
             double textPosX = Mth.lerp($$14, 0.0D, diffTextWidth);
             graphics.enableScissor(xMin, yMin, xMax, yMax);
-            graphics.drawString(font, text, xMin - (int)textPosX, textPosY, textColor, this.labelShadow);
+            graphics.text(font, text, xMin - (int)textPosX, textPosY, textColor, this.labelShadow);
             graphics.disableScissor();
         } else {
-            graphics.drawString(font, text, (int)(((xMin + xMax) / 2F) - (font.width(text) / 2F)), textPosY, textColor, this.labelShadow);
+            graphics.text(font, text, (int)(((xMin + xMax) / 2F) - (font.width(text) / 2F)), textPosY, textColor, this.labelShadow);
         }
     }
 

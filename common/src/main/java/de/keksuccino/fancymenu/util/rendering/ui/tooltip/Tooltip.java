@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.tooltip;
 
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -9,7 +10,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
@@ -80,7 +80,7 @@ public class Tooltip implements Renderable {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (RenderingUtils.isTooltipRenderingBlocked()) return;
 
@@ -109,7 +109,7 @@ public class Tooltip implements Renderable {
         }
     }
 
-    protected void renderTextLines(GuiGraphics graphics, int x, int y) {
+    protected void renderTextLines(GuiGraphicsExtractor graphics, int x, int y) {
         int yLine = y;
         for (Component c : this.textLines) {
             int w = this.font.width(c);
@@ -122,12 +122,12 @@ public class Tooltip implements Renderable {
             if (this.textAlignment == TooltipTextAlignment.CENTERED) {
                 x2 = x + Math.max(0, (this.getWidth() / 2) - (w / 2));
             }
-            graphics.drawString(this.font, c, x2, y2, (this.textBaseColor != null) ? this.textBaseColor.getColorInt() : -1, this.hasTextShadow());
+            graphics.text(this.font, c, x2, y2, (this.textBaseColor != null) ? this.textBaseColor.getColorInt() : -1, this.hasTextShadow());
             yLine += this.font.lineHeight + 2;
         }
     }
 
-    protected void renderBackground(GuiGraphics graphics, int x, int y) {
+    protected void renderBackground(GuiGraphicsExtractor graphics, int x, int y) {
         if (this.vanillaLike || ((this.backgroundTexture == null) && (this.backgroundColor == null))) {
             this.renderVanillaLikeBackground(graphics, x, y, this.getWidth(), this.getHeight());
         } else if (this.backgroundTexture != null) {
@@ -153,11 +153,11 @@ public class Tooltip implements Renderable {
         }
     }
 
-    protected void renderVanillaLikeBackground(GuiGraphics graphics, int x, int y, int width, int height) {
+    protected void renderVanillaLikeBackground(GuiGraphicsExtractor graphics, int x, int y, int width, int height) {
 
         graphics.pose().pushMatrix();
 
-        TooltipRenderUtil.renderTooltipBackground(graphics, x, y, width, height, null);
+        TooltipRenderUtil.extractTooltipBackground(graphics, x, y, width, height, null);
 
         graphics.pose().popMatrix();
 
@@ -456,3 +456,4 @@ public class Tooltip implements Renderable {
     }
 
 }
+

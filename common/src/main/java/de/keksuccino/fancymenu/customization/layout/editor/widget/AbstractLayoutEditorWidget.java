@@ -14,7 +14,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -94,7 +94,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     }
 
     @Override
-    public void renderComponent(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial) {
+    public void renderComponent(@NotNull GuiGraphicsExtractor graphics, double mouseX, double mouseY, float partial) {
 
         float x = this.getRealX();
         float y = this.getRealY();
@@ -118,9 +118,9 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
     }
 
-    protected abstract void renderBody(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial);
+    protected abstract void renderBody(@NotNull GuiGraphicsExtractor graphics, double mouseX, double mouseY, float partial);
 
-    protected void renderFrame(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
+    protected void renderFrame(@NotNull GuiGraphicsExtractor graphics, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
 
         this.renderHeader(graphics, mouseX, mouseY, partial, x, y, width, height);
 
@@ -142,7 +142,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
     }
 
-    protected void renderHeader(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
+    protected void renderHeader(@NotNull GuiGraphicsExtractor graphics, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
 
         //Background
         fillF(graphics, x + this.getBorderThickness(), y + this.getBorderThickness(), x + this.getBorderThickness() + this.getBodyWidth(), y + this.getBorderThickness() + this.getHeaderHeight(), UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
@@ -153,14 +153,14 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
             buttonX -= b.width;
             b.x = buttonX;
             b.y = y + this.getBorderThickness();
-            b.render(graphics, partial);
+            b.extractRenderState(graphics, partial);
         }
 
         this.renderLabel(graphics, mouseX, mouseY, partial, x, y, width, height);
 
     }
 
-    protected void renderLabel(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
+    protected void renderLabel(@NotNull GuiGraphicsExtractor graphics, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
         float headerX = x + this.getBorderThickness();
         float headerY = y + this.getBorderThickness();
         float labelDisplayWidth = Math.max(1, this.getBodyWidth() - this.getCombinedHeaderButtonWidth() - 3);
@@ -481,7 +481,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
             this.clickAction = clickAction;
         }
 
-        public void render(@NotNull GuiGraphics graphics, float partial) {
+        public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, float partial) {
 
             this.hovered = this.isMouseOver();
 
@@ -497,7 +497,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
         }
 
-        protected void renderHoverBackground(GuiGraphics graphics) {
+        protected void renderHoverBackground(GuiGraphicsExtractor graphics) {
             if (this.isMouseOver()) {
                 fillF(graphics, this.x, this.y, this.x + this.width, this.y + this.parent.getHeaderHeight(), UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
             }

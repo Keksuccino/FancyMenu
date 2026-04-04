@@ -36,7 +36,7 @@ public class PlayerHasTagPlaceholder extends Placeholder {
             for (AbstractClientPlayer player : level.players()) {
                 if (player.getName().getString().equals(playerName)) {
                     // Check if player has the specified tag
-                    return String.valueOf(player.getTags().contains(tagName));
+                    return String.valueOf(player.entityTags().contains(tagName));
                 }
             }
         }

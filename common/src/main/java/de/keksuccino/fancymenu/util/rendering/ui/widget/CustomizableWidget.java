@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.renderer.RenderPipelines;
 
@@ -46,7 +46,7 @@ public interface CustomizableWidget {
     /**
      * Returns if the widget should render its Vanilla background (true) or not (false).
      */
-    default boolean renderCustomBackgroundFancyMenu(@NotNull AbstractWidget widget, @NotNull GuiGraphics graphics, int x, int y, int width, int height) {
+    default boolean renderCustomBackgroundFancyMenu(@NotNull AbstractWidget widget, @NotNull GuiGraphicsExtractor graphics, int x, int y, int width, int height) {
         RenderableResource customBackground;
         RenderableResource customBackgroundNormal = this.getCustomBackgroundNormalFancyMenu();
         RenderableResource customBackgroundHover = this.getCustomBackgroundHoverFancyMenu();
@@ -83,7 +83,7 @@ public interface CustomizableWidget {
         return renderVanilla;
     }
 
-    default void renderScrollingLabel(GuiGraphics guiGraphics, Component text, int centerX, int minX, int minY, int maxX, int maxY, int color) {
+    default void renderScrollingLabel(GuiGraphicsExtractor GuiGraphicsExtractor, Component text, int centerX, int minX, int minY, int maxX, int maxY, int color) {
         Font font = Minecraft.getInstance().font;
         int i = font.width(text);
         int j = (minY + maxY - 9) / 2 + 1;
@@ -94,28 +94,28 @@ public interface CustomizableWidget {
             double e = Math.max(l * 0.5, 3.0);
             double f = Math.sin((Math.PI / 2) * Math.cos((Math.PI * 2) * d / e)) / 2.0 + 0.5;
             double g = Mth.lerp(f, 0.0, (double)l);
-            guiGraphics.enableScissor(minX, minY, maxX, maxY);
-            guiGraphics.drawString(font, text, minX - (int)g, j, color);
-            guiGraphics.disableScissor();
+            GuiGraphicsExtractor.enableScissor(minX, minY, maxX, maxY);
+            GuiGraphicsExtractor.text(font, text, minX - (int)g, j, color);
+            GuiGraphicsExtractor.disableScissor();
         } else {
             int l = Mth.clamp(centerX, minX + i / 2, maxX - i / 2);
-            guiGraphics.drawCenteredString(font, text, l, j, color);
+            GuiGraphicsExtractor.centeredText(font, text, l, j, color);
         }
     }
 
-    default void renderScrollingLabel(GuiGraphics guiGraphics, Component text, int minX, int minY, int maxX, int maxY, int color) {
-        renderScrollingLabel(guiGraphics, text, (minX + maxX) / 2, minX, minY, maxX, maxY, color);
+    default void renderScrollingLabel(GuiGraphicsExtractor GuiGraphicsExtractor, Component text, int minX, int minY, int maxX, int maxY, int color) {
+        renderScrollingLabel(GuiGraphicsExtractor, text, (minX + maxX) / 2, minX, minY, maxX, maxY, color);
     }
 
-    default void renderScrollingWidgetLabel(@NotNull AbstractWidget widget, @NotNull Component label, GuiGraphics guiGraphics, int color) {
+    default void renderScrollingWidgetLabel(@NotNull AbstractWidget widget, @NotNull Component label, GuiGraphicsExtractor GuiGraphicsExtractor, int color) {
         int padding = 2;
         int i = widget.getX() + padding;
         int j = widget.getX() + widget.getWidth() - padding;
-        renderScrollingLabel(guiGraphics, label, i, widget.getY(), j, widget.getY() + widget.getHeight(), color);
+        renderScrollingLabel(GuiGraphicsExtractor, label, i, widget.getY(), j, widget.getY() + widget.getHeight(), color);
     }
 
-    default void renderScrollingWidgetLabel(@NotNull AbstractWidget widget, GuiGraphics guiGraphics, int color) {
-        renderScrollingWidgetLabel(widget, widget.getMessage(), guiGraphics, color);
+    default void renderScrollingWidgetLabel(@NotNull AbstractWidget widget, GuiGraphicsExtractor GuiGraphicsExtractor, int color) {
+        renderScrollingWidgetLabel(widget, widget.getMessage(), GuiGraphicsExtractor, color);
     }
 
     void resetWidgetCustomizationsFancyMenu();

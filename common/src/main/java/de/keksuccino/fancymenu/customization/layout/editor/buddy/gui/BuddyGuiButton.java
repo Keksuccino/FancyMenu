@@ -1,9 +1,9 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy.gui;
 
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.renderer.RenderPipelines;
 
@@ -68,7 +68,7 @@ public class BuddyGuiButton implements Renderable {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         boolean hovered = isMouseOver(mouseX, mouseY) && active;
         Identifier backgroundTexture = active ? (hovered ? this.hoverTexture : this.normalTexture) : this.inactiveTexture;
         int backgroundColor = active ? (hovered ? 0xFF909090 : 0xFF606060) : 0xFF404040;
@@ -80,14 +80,14 @@ public class BuddyGuiButton implements Renderable {
             graphics.blit(RenderPipelines.GUI_TEXTURED, backgroundTexture, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
         } else {
             graphics.fill(x, y, x + this.width, y + this.height, backgroundColor);
-            graphics.renderOutline(x, y, this.width, this.height, 0xFF000000);
+            graphics.outline(x, y, this.width, this.height, 0xFF000000);
         }
 
         // Draw button text
         String name = nameSupplier.name(this.buddy);
         int textX = x + (this.width - font.width(name)) / 2;
         int textY = y + (this.height - 8) / 2;
-        graphics.drawString(font, name, textX, textY, textColor);
+        graphics.text(font, name, textX, textY, textColor);
     }
 
     public void onClick() {

@@ -5,12 +5,13 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.WidgetifiedScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.TextWidget;
 import net.minecraft.client.gui.ActiveTextCollector;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.DeathScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -73,8 +74,8 @@ public abstract class MixinDeathScreen extends Screen {
         }
     }
 
-    @Inject(method = "render", at = @At("RETURN"))
-    private void after_render_FancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partialTick, CallbackInfo info) {
+    @Inject(method = "extractRenderState", at = @At("RETURN"))
+    private void after_render_FancyMenu(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick, CallbackInfo info) {
         if (!this.isCustomizableFancyMenu()) {
             return;
         }
@@ -101,7 +102,7 @@ public abstract class MixinDeathScreen extends Screen {
     }
 
     @Unique
-    private void renderCauseOfDeathTooltipFancyMenu(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
+    private void renderCauseOfDeathTooltipFancyMenu(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         if (this.causeOfDeathTextFancyMenu == null || this.causeOfDeath == null) {
             return;
         }
@@ -112,8 +113,17 @@ public abstract class MixinDeathScreen extends Screen {
             return;
         }
         Style style = this.causeOfDeathTextFancyMenu.getStyleAtMouseX(mouseX);
-        if (style != null) {
-            graphics.renderComponentHoverEffect(this.font, style, mouseX, mouseY);
+        if (style != null && style.getHoverEvent() != null) {
+            HoverEvent hoverEvent = style.getHoverEvent();
+            if (hoverEvent instanceof HoverEvent.ShowItem showItem) {
+                graphics.setTooltipForNextFrame(this.font, showItem.item().create(), mouseX, mouseY);
+            } else if (hoverEvent instanceof HoverEvent.ShowEntity showEntity) {
+                if (this.minecraft.options.advancedItemTooltips) {
+                    graphics.setComponentTooltipForNextFrame(this.font, showEntity.entity().getTooltipLines(), mouseX, mouseY);
+                }
+            } else if (hoverEvent instanceof HoverEvent.ShowText showText) {
+                graphics.setTooltipForNextFrame(this.font, this.font.split(showText.value(), Math.max(graphics.guiWidth() / 2, 200)), mouseX, mouseY);
+            }
         }
     }
 

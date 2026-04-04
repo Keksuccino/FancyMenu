@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.input.StringUtils;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Style;
@@ -71,7 +71,7 @@ public class TooltipElement extends AbstractElement {
     }
 
     @Override
-    public void renderInternal(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderInternal(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (RenderingUtils.isTooltipRenderingBlocked()) return;
 
@@ -84,7 +84,7 @@ public class TooltipElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (!this.shouldRender()) return;
 
@@ -139,7 +139,7 @@ public class TooltipElement extends AbstractElement {
             // Render markdown content with padding
             this.markdownRenderer.setX(x + paddingX);
             this.markdownRenderer.setY(y + paddingY);
-            this.markdownRenderer.render(graphics, mouseX, mouseY, partial);
+            this.markdownRenderer.extractRenderState(graphics, mouseX, mouseY, partial);
 
             if (!isEditor()) graphics.pose().popMatrix();
             
@@ -149,9 +149,9 @@ public class TooltipElement extends AbstractElement {
 
     }
     
-    private void renderVanillaTooltipBackground(GuiGraphics graphics, int x, int y, int width, int height) {
+    private void renderVanillaTooltipBackground(GuiGraphicsExtractor graphics, int x, int y, int width, int height) {
         // Use vanilla tooltip background rendering
-        TooltipRenderUtil.renderTooltipBackground(graphics, x, y, width, height, null);
+        TooltipRenderUtil.extractTooltipBackground(graphics, x, y, width, height, null);
     }
 
     protected void renderTick() {

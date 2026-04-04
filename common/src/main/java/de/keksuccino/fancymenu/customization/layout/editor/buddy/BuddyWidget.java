@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy;
 
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.Poop;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -72,9 +72,9 @@ public class BuddyWidget extends AbstractContainerEventHandler implements Render
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         // Render the buddy (including radial menu when active)
-        buddy.render(graphics, mouseX, mouseY, partialTick);
+        buddy.extractRenderState(graphics, mouseX, mouseY, partialTick);
     }
 
     // Auto-save timer

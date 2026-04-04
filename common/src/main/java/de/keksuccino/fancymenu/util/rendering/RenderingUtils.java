@@ -9,7 +9,7 @@ import com.mojang.blaze3d.textures.GpuTextureView;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphics;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScissorStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -39,7 +39,7 @@ public class RenderingUtils {
     private static boolean tooltipRenderingBlocked = false;
     private static int overrideBackgroundBlurRadius = -1000;
 
-    public static void renderMissing(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
+    public static void renderMissing(@NotNull GuiGraphicsExtractor graphics, int x, int y, int width, int height) {
         int partW = width / 2;
         int partH = height / 2;
         //Top-left
@@ -101,10 +101,10 @@ public class RenderingUtils {
         return new ArrayList<>(DEFERRED_SCREEN_RENDERING_TASKS);
     }
 
-    public static void executeAndClearDeferredScreenRenderingTasks(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public static void executeAndClearDeferredScreenRenderingTasks(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         List<DeferredScreenRenderingTask> tasks = getDeferredScreenRenderingTasks();
         DEFERRED_SCREEN_RENDERING_TASKS.clear();
-        tasks.forEach(task -> task.render(graphics, mouseX, mouseY, partial));
+        tasks.forEach(task -> task.extractRenderState(graphics, mouseX, mouseY, partial));
     }
 
     /**
@@ -112,7 +112,7 @@ public class RenderingUtils {
      * <p>
      * This is achieved by applying a negative horizontal scale to the transformation matrix before drawing.
      *
-     * @param graphics      The GuiGraphics context, which manages transformations and rendering.
+     * @param graphics      The GuiGraphicsExtractor context, which manages transformations and rendering.
      * @param atlasLocation The texture resource location.
      * @param x             The x coordinate on screen.
      * @param y             The y coordinate on screen.
@@ -123,7 +123,7 @@ public class RenderingUtils {
      * @param textureWidth  The total width of the texture atlas.
      * @param textureHeight The total height of the texture atlas.
      */
-    public static void blitMirrored(@NotNull GuiGraphics graphics, Identifier atlasLocation, int x, int y, int u, int v, int spriteWidth, int spriteHeight, int textureWidth, int textureHeight) {
+    public static void blitMirrored(@NotNull GuiGraphicsExtractor graphics, Identifier atlasLocation, int x, int y, int u, int v, int spriteWidth, int spriteHeight, int textureWidth, int textureHeight) {
         // Delegate to the scaled version with a default white tint (-1)
         blitMirroredScaled(graphics, atlasLocation, x, y, u, v, spriteWidth, spriteHeight, spriteWidth, spriteHeight, textureWidth, textureHeight, -1);
     }
@@ -133,7 +133,7 @@ public class RenderingUtils {
      * <p>
      * This is achieved by applying a negative horizontal scale to the transformation matrix before drawing.
      *
-     * @param graphics      The GuiGraphics context, which manages transformations and rendering.
+     * @param graphics      The GuiGraphicsExtractor context, which manages transformations and rendering.
      * @param atlasLocation The texture resource location.
      * @param x             The x coordinate on screen.
      * @param y             The y coordinate on screen.
@@ -145,19 +145,19 @@ public class RenderingUtils {
      * @param textureHeight The total height of the texture atlas.
      * @param colorTint     The color tint to apply (ARGB format).
      */
-    public static void blitMirrored(@NotNull GuiGraphics graphics, Identifier atlasLocation, int x, int y, int u, int v, int spriteWidth, int spriteHeight, int textureWidth, int textureHeight, int colorTint) {
+    public static void blitMirrored(@NotNull GuiGraphicsExtractor graphics, Identifier atlasLocation, int x, int y, int u, int v, int spriteWidth, int spriteHeight, int textureWidth, int textureHeight, int colorTint) {
         blitMirroredScaled(graphics, atlasLocation, x, y, u, v, spriteWidth, spriteHeight, spriteWidth, spriteHeight, textureWidth, textureHeight, colorTint);
     }
 
     /**
      * Draws a textured quad scaled to a specific render size, mirrored horizontally.
      * <p>
-     * The mirroring is performed by manipulating the transformation stack within {@link GuiGraphics}.
+     * The mirroring is performed by manipulating the transformation stack within {@link GuiGraphicsExtractor}.
      * The context is translated to the right edge of the target location, scaled by -1 on the X-axis,
      * and then the texture is drawn normally at the new, mirrored origin. This correctly uses the
      * 2D transformation methods from JOML's {@link Matrix3x2f}.
      *
-     * @param graphics      The GuiGraphics context.
+     * @param graphics      The GuiGraphicsExtractor context.
      * @param atlasLocation The texture resource location.
      * @param x             The x coordinate on screen (top-left of the rendered quad).
      * @param y             The y coordinate on screen (top-left of the rendered quad).
@@ -171,7 +171,7 @@ public class RenderingUtils {
      * @param textureHeight The total height of the texture atlas.
      * @param color         The color tint to apply (ARGB format, -1 for white/no tint).
      */
-    public static void blitMirroredScaled(@NotNull GuiGraphics graphics, Identifier atlasLocation, int x, int y, int u, int v, int spriteWidth, int spriteHeight, int renderWidth, int renderHeight, int textureWidth, int textureHeight, int color) {
+    public static void blitMirroredScaled(@NotNull GuiGraphicsExtractor graphics, Identifier atlasLocation, int x, int y, int u, int v, int spriteWidth, int spriteHeight, int renderWidth, int renderHeight, int textureWidth, int textureHeight, int color) {
 
         // Push the current transformation matrix onto the stack to isolate our changes.
         graphics.pose().pushMatrix();
@@ -209,7 +209,7 @@ public class RenderingUtils {
     /**
      * Repeatedly renders a tileable (seamless) texture inside an area. Fills the area with the texture.
      *
-     * @param graphics The {@link GuiGraphics} instance.
+     * @param graphics The {@link GuiGraphicsExtractor} instance.
      * @param location The {@link Identifier} of the texture.
      * @param x The X position the area should get rendered at.
      * @param y The Y position the area should get rendered at.
@@ -218,14 +218,14 @@ public class RenderingUtils {
      * @param texWidth The full width (in pixels) of the texture.
      * @param texHeight The full height (in pixels) of the texture.
      */
-    public static void blitRepeat(@NotNull GuiGraphics graphics, @NotNull Identifier location, int x, int y, int areaRenderWidth, int areaRenderHeight, int texWidth, int texHeight, int color) {
+    public static void blitRepeat(@NotNull GuiGraphicsExtractor graphics, @NotNull Identifier location, int x, int y, int areaRenderWidth, int areaRenderHeight, int texWidth, int texHeight, int color) {
         blitRepeat(graphics, RenderPipelines.GUI_TEXTURED, location, x, y, areaRenderWidth, areaRenderHeight, texWidth, texHeight, color);
     }
 
     /**
      * Repeatedly renders a tileable (seamless) texture inside an area. Fills the area with the texture.
      *
-     * @param graphics The {@link GuiGraphics} instance.
+     * @param graphics The {@link GuiGraphicsExtractor} instance.
      * @param renderType The render type.
      * @param location The {@link Identifier} of the texture.
      * @param x The X position the area should get rendered at.
@@ -235,14 +235,14 @@ public class RenderingUtils {
      * @param texWidth The full width (in pixels) of the texture.
      * @param texHeight The full height (in pixels) of the texture.
      */
-    public static void blitRepeat(@NotNull GuiGraphics graphics, @NotNull RenderPipeline renderType, @NotNull Identifier location, int x, int y, int areaRenderWidth, int areaRenderHeight, int texWidth, int texHeight, int color) {
+    public static void blitRepeat(@NotNull GuiGraphicsExtractor graphics, @NotNull RenderPipeline renderType, @NotNull Identifier location, int x, int y, int areaRenderWidth, int areaRenderHeight, int texWidth, int texHeight, int color) {
         graphics.blit(renderType, location, x, y, 0.0F, 0.0F, areaRenderWidth, areaRenderHeight, texWidth, texHeight, color);
     }
 
     /**
      * Renders a texture using nine-slice scaling with tiled edges and center.
      *
-     * @param graphics The GuiGraphics instance to use for rendering
+     * @param graphics The GuiGraphicsExtractor instance to use for rendering
      * @param texture The texture Identifier to render
      * @param x The x position to render at
      * @param y The y position to render at
@@ -256,7 +256,7 @@ public class RenderingUtils {
      * @param borderLeft The size of the left border
      * @param color The color to tint the texture with
      */
-    public static void blitNineSlicedTexture(GuiGraphics graphics, Identifier texture, int x, int y, int width, int height,
+    public static void blitNineSlicedTexture(GuiGraphicsExtractor graphics, Identifier texture, int x, int y, int width, int height,
                                              int textureWidth, int textureHeight,
                                              int borderTop, int borderRight, int borderBottom, int borderLeft, int color) {
 
@@ -267,7 +267,7 @@ public class RenderingUtils {
     /**
      * Renders a texture using nine-slice scaling with tiled edges and center.
      *
-     * @param graphics The GuiGraphics instance to use for rendering
+     * @param graphics The GuiGraphicsExtractor instance to use for rendering
      * @param renderType The render type.
      * @param texture The texture Identifier to render
      * @param x The x position to render at
@@ -282,7 +282,7 @@ public class RenderingUtils {
      * @param borderLeft The size of the left border
      * @param color The color to tint the texture with
      */
-    public static void blitNineSlicedTexture(GuiGraphics graphics, @NotNull RenderPipeline renderType, Identifier texture, int x, int y, int width, int height,
+    public static void blitNineSlicedTexture(GuiGraphicsExtractor graphics, @NotNull RenderPipeline renderType, Identifier texture, int x, int y, int width, int height,
                                              int textureWidth, int textureHeight,
                                              int borderTop, int borderRight, int borderBottom, int borderLeft, int color) {
 
@@ -383,30 +383,31 @@ public class RenderingUtils {
         return replaceAlphaInColor(color, (int)(newAlpha * 255.0F));
     }
 
-    public static void fillF(@NotNull GuiGraphics graphics, float minX, float minY, float maxX, float maxY, int color) {
+    public static void fillF(@NotNull GuiGraphicsExtractor graphics, float minX, float minY, float maxX, float maxY, int color) {
         submitColoredRectangle(graphics, RenderPipelines.GUI, TextureSetup.noTexture(), minX, minY, maxX, maxY, color, null);
     }
 
-    private static void submitColoredRectangle(@NotNull GuiGraphics graphics, RenderPipeline pipeline, TextureSetup textureSetup, float minX, float minY, float maxX, float maxY, int color, @Nullable Integer endColor) {
-        ScreenRectangle scissorStackPeek = ((IMixinScissorStack)((IMixinGuiGraphics)graphics).get_scissorStack_FancyMenu()).invoke_peek_FancyMenu();
-        ((IMixinGuiGraphics)graphics).get_guiRenderState_FancyMenu().submitGuiElement(
+    private static void submitColoredRectangle(@NotNull GuiGraphicsExtractor graphics, RenderPipeline pipeline, TextureSetup textureSetup, float minX, float minY, float maxX, float maxY, int color, @Nullable Integer endColor) {
+        IMixinGuiGraphics extractor = (IMixinGuiGraphics)(Object) graphics;
+        ScreenRectangle scissorStackPeek = extractor.fancymenu$getScissorStack().invoke_peek_FancyMenu();
+        extractor.fancymenu$getGuiRenderState().addGuiElement(
                 new FloatColoredRectangleRenderState(pipeline, textureSetup, new Matrix3x2f(graphics.pose()), minX, minY, maxX, maxY, color, endColor != null ? endColor : color, scissorStackPeek)
         );
     }
 
-    public static void blitF(@NotNull GuiGraphics graphics, RenderPipeline renderTypeFunc, Identifier location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, int color) {
+    public static void blitF(@NotNull GuiGraphicsExtractor graphics, RenderPipeline renderTypeFunc, Identifier location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, int color) {
         blitF(graphics, renderTypeFunc, location, $$2, $$3, $$4, $$5, $$6, $$7, $$6, $$7, $$8, $$9, color);
     }
 
-    public static void blitF(@NotNull GuiGraphics graphics, RenderPipeline renderTypeFunc, Identifier location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9) {
+    public static void blitF(@NotNull GuiGraphicsExtractor graphics, RenderPipeline renderTypeFunc, Identifier location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9) {
         blitF(graphics, renderTypeFunc, location, $$2, $$3, $$4, $$5, $$6, $$7, $$6, $$7, $$8, $$9);
     }
 
-    public static void blitF(@NotNull GuiGraphics graphics, RenderPipeline renderTypeFunc, Identifier location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10, float $$11) {
+    public static void blitF(@NotNull GuiGraphicsExtractor graphics, RenderPipeline renderTypeFunc, Identifier location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10, float $$11) {
         blitF(graphics, renderTypeFunc, location, $$2, $$3, $$4, $$5, $$6, $$7, $$8, $$9, $$10, $$11, -1);
     }
 
-    public static void blitF(@NotNull GuiGraphics graphics, RenderPipeline renderTypeFunc, Identifier location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10, float $$11, int color) {
+    public static void blitF(@NotNull GuiGraphicsExtractor graphics, RenderPipeline renderTypeFunc, Identifier location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10, float $$11, int color) {
         innerBlit(
                 graphics,
                 renderTypeFunc,
@@ -423,14 +424,15 @@ public class RenderingUtils {
         );
     }
 
-    private static void innerBlit(@NotNull GuiGraphics graphics, RenderPipeline pipeline, Identifier texture, float minX, float maxX, float minY, float maxY, float minU, float maxU, float minV, float maxV, int color) {
+    private static void innerBlit(@NotNull GuiGraphicsExtractor graphics, RenderPipeline pipeline, Identifier texture, float minX, float maxX, float minY, float maxY, float minU, float maxU, float minV, float maxV, int color) {
         AbstractTexture absTex = Minecraft.getInstance().getTextureManager().getTexture(texture);
         submitBlit(graphics, pipeline, absTex.getTextureView(), absTex.getSampler(), minX, minY, maxX, maxY, minU, maxU, minV, maxV, color);
     }
 
-    private static void submitBlit(@NotNull GuiGraphics graphics, RenderPipeline pipeline, GpuTextureView textureView, GpuSampler gpuSampler, float minX, float minY, float maxX, float maxY, float minU, float maxU, float minV, float maxV, int color) {
-        ScreenRectangle scissorStackPeek = ((IMixinScissorStack)((IMixinGuiGraphics)graphics).get_scissorStack_FancyMenu()).invoke_peek_FancyMenu();
-        ((IMixinGuiGraphics)graphics).get_guiRenderState_FancyMenu().submitGuiElement(
+    private static void submitBlit(@NotNull GuiGraphicsExtractor graphics, RenderPipeline pipeline, GpuTextureView textureView, GpuSampler gpuSampler, float minX, float minY, float maxX, float maxY, float minU, float maxU, float minV, float maxV, int color) {
+        IMixinGuiGraphics extractor = (IMixinGuiGraphics)(Object) graphics;
+        ScreenRectangle scissorStackPeek = extractor.fancymenu$getScissorStack().invoke_peek_FancyMenu();
+        extractor.fancymenu$getGuiRenderState().addGuiElement(
                 new FloatBlitRenderState(
                         pipeline, TextureSetup.singleTexture(textureView, gpuSampler), new Matrix3x2f(graphics.pose()), minX, minY, maxX, maxY, minU, maxU, minV, maxV, color, scissorStackPeek
                 )
@@ -495,7 +497,7 @@ public class RenderingUtils {
 
     @FunctionalInterface
     public interface DeferredScreenRenderingTask {
-        void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
+        void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial);
     }
 
 }

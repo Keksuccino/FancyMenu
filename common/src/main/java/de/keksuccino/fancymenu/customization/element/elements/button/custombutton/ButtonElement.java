@@ -19,7 +19,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Tooltip;
@@ -100,7 +100,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (this.getWidget() == null) return;
 
@@ -132,12 +132,12 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         if (this.getWidget() != null) this.updateWidget();
     }
 
-    protected void renderElementWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void renderElementWidget(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         if ((this.getWidget() != null) && (!this.isTemplate || isEditor())) {
             //Prevents crashes related to dividing by zero
             if (this.getWidget().getHeight() <= 0) return;
             if (this.getWidget().getWidth() <= 0) return;
-            this.getWidget().render(graphics, mouseX, mouseY, partial);
+            this.getWidget().extractRenderState(graphics, mouseX, mouseY, partial);
         }
     }
 

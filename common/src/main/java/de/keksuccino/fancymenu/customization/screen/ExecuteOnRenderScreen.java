@@ -1,12 +1,12 @@
 package de.keksuccino.fancymenu.customization.screen;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * This screen basically does nothing but execute a {@link Runnable} in its {@link Screen#render(GuiGraphics, int, int, float)} method.<br>
+ * This screen basically does nothing but execute a {@link Runnable} in its {@link Screen#render(GuiGraphicsExtractor, int, int, float)} method.<br>
  * Please don't ask.
  */
 public class ExecuteOnRenderScreen extends Screen {
@@ -17,7 +17,7 @@ public class ExecuteOnRenderScreen extends Screen {
     protected boolean executed = false;
 
     /**
-     * @param action The {@link Runnable} to execute in the screen's {@link Screen#render(GuiGraphics, int, int, float)} method.
+     * @param action The {@link Runnable} to execute in the screen's {@link Screen#render(GuiGraphicsExtractor, int, int, float)} method.
      * @param executeOnlyOnce If the action should get executed only one render tick.
      */
     protected ExecuteOnRenderScreen(@NotNull Runnable action, boolean executeOnlyOnce) {
@@ -27,10 +27,14 @@ public class ExecuteOnRenderScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor $$0, int $$1, int $$2, float $$3) {
         if (this.executeOnlyOnce && this.executed) return;
         this.executed = true;
         this.action.run();
     }
 
 }
+
+
+
+

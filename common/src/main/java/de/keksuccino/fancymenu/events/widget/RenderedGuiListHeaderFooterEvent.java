@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.events.widget;
 
 import de.keksuccino.fancymenu.util.event.acara.EventBase;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
@@ -9,9 +9,9 @@ import java.util.Objects;
 public class RenderedGuiListHeaderFooterEvent extends EventBase {
 
     protected AbstractSelectionList<?> list;
-    protected GuiGraphics graphics;
+    protected GuiGraphicsExtractor graphics;
 
-    public RenderedGuiListHeaderFooterEvent(@NotNull GuiGraphics graphics, @NotNull AbstractSelectionList<?> list) {
+    public RenderedGuiListHeaderFooterEvent(@NotNull GuiGraphicsExtractor graphics, @NotNull AbstractSelectionList<?> list) {
         this.list = Objects.requireNonNull(list);
         this.graphics = Objects.requireNonNull(graphics);
     }
@@ -27,7 +27,7 @@ public class RenderedGuiListHeaderFooterEvent extends EventBase {
     }
 
     @NotNull
-    public GuiGraphics getGraphics() {
+    public GuiGraphicsExtractor getGraphics() {
         return graphics;
     }
 

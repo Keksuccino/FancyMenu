@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2;
 
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.VanillaEvents;
@@ -16,7 +17,6 @@ import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -69,7 +69,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     private float displayHeight = 0; // Adjusted height when scrollable
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         if (!this.isOpen()) return;
 
         if (this.forceUIScale) this.scale = UIBase.getUIScale();
@@ -203,7 +203,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
             // Only render if visible
             if (isVisible) {
-                e.render(graphics, (int) scaledMouseX, (int) scaledMouseY, partial);
+                e.extractRenderState(graphics, (int) scaledMouseX, (int) scaledMouseY, partial);
             }
 
             entryY += e.getHeight(); //don't scale this, because already scaled via graphics.pose().scale()
@@ -296,7 +296,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 s.subContextMenu.shadow = this.shadow;
                 s.subContextMenu.scale = this.scale;
                 s.subContextMenu.forceUIScale = this.forceUIScale;
-                s.subContextMenu.render(graphics, mouseX, mouseY, partial);
+                s.subContextMenu.extractRenderState(graphics, mouseX, mouseY, partial);
             }
         }
     }
@@ -1157,7 +1157,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         @Override
-        public abstract void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
+        public abstract void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial);
 
         @NotNull
         public String getIdentifier() {
@@ -1328,7 +1328,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         @Override
-        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
             this.renderBackground(graphics);
 
@@ -1355,13 +1355,13 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         }
 
-        protected void renderIcon(GuiGraphics graphics) {
+        protected void renderIcon(GuiGraphicsExtractor graphics) {
             if (this.icon != null) {
                 graphics.blit(RenderPipelines.GUI_TEXTURED, this.icon, (int) (this.x + 10), (int) (this.y + (this.getHeight() / 2) - (ICON_WIDTH_HEIGHT / 2)), 0.0F, 0.0F, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, UIBase.getUIColorTheme().ui_texture_color.getColorInt());
             }
         }
 
-        protected void renderTooltipIconAndRegisterTooltip(GuiGraphics graphics, int mouseX, int mouseY, int offsetX) {
+        protected void renderTooltipIconAndRegisterTooltip(GuiGraphicsExtractor graphics, int mouseX, int mouseY, int offsetX) {
 
             Tooltip tooltip = this.getTooltip();
 
@@ -1406,7 +1406,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return (int) (this.y + 5);
         }
 
-        protected void renderBackground(@NotNull GuiGraphics graphics) {
+        protected void renderBackground(@NotNull GuiGraphicsExtractor graphics) {
             if (this.isChangeBackgroundColorOnHover() && this.isHovered() && this.isActive()) {
                 RenderingUtils.fillF(graphics, (float) this.x, (float) this.y, (float) (this.x + this.width), (float) (this.y + this.height), UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
             }
@@ -1584,17 +1584,17 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         @Override
-        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
             this.tickEntry();
 
-            super.render(graphics, mouseX, mouseY, partial);
+            super.extractRenderState(graphics, mouseX, mouseY, partial);
 
             this.renderSubMenuArrow(graphics);
 
         }
 
-        protected void renderSubMenuArrow(GuiGraphics graphics) {
+        protected void renderSubMenuArrow(GuiGraphicsExtractor graphics) {
             graphics.blit(RenderPipelines.GUI_TEXTURED, SUB_CONTEXT_MENU_ARROW_ICON, (int) (this.x + this.width - 20), (int) (this.y + 5), 0.0F, 0.0F, 10, 10, 10, 10, UIBase.getUIColorTheme().ui_texture_color.getColorInt());
         }
 
@@ -1604,7 +1604,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         @Override
-        protected void renderBackground(@NotNull GuiGraphics graphics) {
+        protected void renderBackground(@NotNull GuiGraphicsExtractor graphics) {
             boolean hover = this.hovered;
             this.hovered = this.hovered || this.subContextMenu.isOpen();
             super.renderBackground(graphics);
@@ -1765,7 +1765,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         @Override
-        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
             RenderingUtils.fillF(graphics, (float) (this.x + 10), (float) (this.y + 4), (float) (this.x + this.width - 10), (float) (this.y + 5), UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
         }
 
@@ -1805,7 +1805,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         @Override
-        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         }
 
         @Override

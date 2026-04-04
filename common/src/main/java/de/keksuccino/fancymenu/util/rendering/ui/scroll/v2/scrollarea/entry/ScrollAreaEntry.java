@@ -1,12 +1,12 @@
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry;
 
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import org.jetbrains.annotations.NotNull;
@@ -42,17 +42,17 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
         this.height = height;
     }
 
-    public abstract void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
+    public abstract void renderEntry(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial);
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         this.hovered = this.isMouseOver(mouseX, mouseY);
         if (this.hovered && (this.tooltip != null)) TooltipHandler.INSTANCE.addTooltip(this.tooltip, () -> true, false, true);
         this.renderBackground(graphics, mouseX, mouseY, partial);
         this.renderEntry(graphics, mouseX, mouseY, partial);
     }
 
-    protected void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void renderBackground(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         if (!this.isHovered() && !this.isSelected()) {
             if (this.backgroundColorNormal != null) {
                 DrawableColor c = this.backgroundColorNormal.get();
@@ -187,3 +187,4 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
     }
 
 }
+

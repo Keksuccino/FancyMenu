@@ -40,7 +40,7 @@ public class LevelData {
         data.experimental = summary.isExperimental();
         data.icon_path = summary.getIcon().toAbsolutePath().toString();
         data.game_type = summary.getGameMode().getSerializedName();
-        data.difficulty = summary.getSettings().difficulty().getSerializedName();
+        data.difficulty = summary.getSettings().difficultySettings().difficulty().getSerializedName();
         data.allow_commands = summary.getSettings().allowCommands();
         data.settings_level_name = summary.getSettings().levelName();
         data.last_played = summary.getLastPlayed();

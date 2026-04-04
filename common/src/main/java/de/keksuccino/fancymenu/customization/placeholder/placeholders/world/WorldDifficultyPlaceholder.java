@@ -31,7 +31,7 @@ public class WorldDifficultyPlaceholder extends Placeholder {
         try {
             ClientLevel level = Minecraft.getInstance().level;
             if (level != null) {
-                return level.getDifficulty().getKey();
+                return level.getDifficulty().getSerializedName();
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to get replacement for '" + this.getIdentifier() + "' placeholder.", ex);

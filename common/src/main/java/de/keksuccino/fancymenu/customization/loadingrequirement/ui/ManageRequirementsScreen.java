@@ -11,7 +11,7 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.internal.Loading
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -92,7 +92,7 @@ public class ManageRequirementsScreen extends Screen {
             }
         }) {
             @Override
-            public void render(@NotNull GuiGraphics graphics, int p_93658_, int p_93659_, float p_93660_) {
+            protected void extractContents(@NotNull GuiGraphicsExtractor graphics, int p_93658_, int p_93659_, float p_93660_) {
                 ManageRequirementsScreen s = ManageRequirementsScreen.this;
                 if (!s.isInstanceSelected() && !s.isGroupSelected()) {
                     this.setLabel(I18n.get("fancymenu.requirements.screens.manage_screen.edit.generic"));
@@ -107,7 +107,7 @@ public class ManageRequirementsScreen extends Screen {
                     this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.edit.desc")).setDefaultStyle());
                     this.active = true;
                 }
-                super.render(graphics, p_93658_, p_93659_, p_93660_);
+                super.extractContents(graphics, p_93658_, p_93659_, p_93660_);
             }
         };
         this.addWidget(this.editButton);
@@ -139,7 +139,7 @@ public class ManageRequirementsScreen extends Screen {
             }
         }) {
             @Override
-            public void render(@NotNull GuiGraphics graphics, int p_93658_, int p_93659_, float p_93660_) {
+            protected void extractContents(@NotNull GuiGraphicsExtractor graphics, int p_93658_, int p_93659_, float p_93660_) {
                 ManageRequirementsScreen s = ManageRequirementsScreen.this;
                 if (!s.isInstanceSelected() && !s.isGroupSelected()) {
                     this.setLabel(I18n.get("fancymenu.requirements.screens.manage_screen.remove.generic"));
@@ -154,7 +154,7 @@ public class ManageRequirementsScreen extends Screen {
                     this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.requirements.screens.manage_screen.remove.desc")).setDefaultStyle());
                     this.active = true;
                 }
-                super.render(graphics, p_93658_, p_93659_, p_93660_);
+                super.extractContents(graphics, p_93658_, p_93659_, p_93660_);
             }
         };
         this.addWidget(this.removeButton);
@@ -180,51 +180,51 @@ public class ManageRequirementsScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.text(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        graphics.drawString(this.font, I18n.get("fancymenu.requirements.screens.manage_screen.requirements_and_groups"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.text(this.font, I18n.get("fancymenu.requirements.screens.manage_screen.requirements_and_groups"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         this.requirementsScrollArea.setWidth(this.width - 20 - 150 - 20 - 20, true);
         this.requirementsScrollArea.setHeight(this.height - 85, true);
         this.requirementsScrollArea.setX(20, true);
         this.requirementsScrollArea.setY(50 + 15, true);
-        this.requirementsScrollArea.render(graphics, mouseX, mouseY, partial);
+        this.requirementsScrollArea.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
         this.doneButton.setY(this.height - 20 - 20);
-        this.doneButton.render(graphics, mouseX, mouseY, partial);
+        this.doneButton.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
         this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
-        this.cancelButton.render(graphics, mouseX, mouseY, partial);
+        this.cancelButton.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.removeButton.setX(this.width - 20 - this.removeButton.getWidth());
         this.removeButton.setY(this.cancelButton.getY() - 15 - 20);
-        this.removeButton.render(graphics, mouseX, mouseY, partial);
+        this.removeButton.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.editButton.setX(this.width - 20 - this.editButton.getWidth());
         this.editButton.setY(this.removeButton.getY() - 5 - 20);
-        this.editButton.render(graphics, mouseX, mouseY, partial);
+        this.editButton.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.addGroupButton.setX(this.width - 20 - this.addGroupButton.getWidth());
         this.addGroupButton.setY(this.editButton.getY() - 5 - 20);
-        this.addGroupButton.render(graphics, mouseX, mouseY, partial);
+        this.addGroupButton.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.addRequirementButton.setX(this.width - 20 - this.addRequirementButton.getWidth());
         this.addRequirementButton.setY(this.addGroupButton.getY() - 5 - 20);
-        this.addRequirementButton.render(graphics, mouseX, mouseY, partial);
+        this.addRequirementButton.extractRenderState(graphics, mouseX, mouseY, partial);
 
-        super.render(graphics, mouseX, mouseY, partial);
+        super.extractRenderState(graphics, mouseX, mouseY, partial);
 
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
+    public void extractBackground(@NotNull GuiGraphicsExtractor $$0, int $$1, int $$2, float $$3) {
     }
 
     @Nullable
@@ -313,22 +313,22 @@ public class ManageRequirementsScreen extends Screen {
         }
 
         @Override
-        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
-            super.render(graphics, mouseX, mouseY, partial);
+            super.extractRenderState(graphics, mouseX, mouseY, partial);
 
             int centerYLine1 = this.getY() + HEADER_FOOTER_HEIGHT + (this.lineHeight / 2);
             int centerYLine2 = this.getY() + HEADER_FOOTER_HEIGHT + ((this.lineHeight / 2) * 3);
             int centerYLine3 = this.getY() + HEADER_FOOTER_HEIGHT + ((this.lineHeight / 2) * 5);
 
             renderListingDot(graphics, this.getX() + 5, centerYLine1 - 2, UIBase.getUIColorTheme().listing_dot_color_2.getColor());
-            graphics.drawString(this.font, this.displayNameComponent, (this.getX() + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
+            graphics.text(this.font, this.displayNameComponent, (this.getX() + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
 
             renderListingDot(graphics, this.getX() + 5 + 4 + 3, centerYLine2 - 2, UIBase.getUIColorTheme().listing_dot_color_1.getColor());
-            graphics.drawString(this.font, this.modeComponent, (this.getX() + 5 + 4 + 3 + 4 + 3), (centerYLine2 - (this.font.lineHeight / 2)), -1, false);
+            graphics.text(this.font, this.modeComponent, (this.getX() + 5 + 4 + 3 + 4 + 3), (centerYLine2 - (this.font.lineHeight / 2)), -1, false);
 
             renderListingDot(graphics, this.getX() + 5 + 4 + 3, centerYLine3 - 2, UIBase.getUIColorTheme().listing_dot_color_1.getColor());
-            graphics.drawString(this.font, this.valueComponent, (this.getX() + 5 + 4 + 3 + 4 + 3), (centerYLine3 - (this.font.lineHeight / 2)), -1, false);
+            graphics.text(this.font, this.valueComponent, (this.getX() + 5 + 4 + 3 + 4 + 3), (centerYLine3 - (this.font.lineHeight / 2)), -1, false);
 
         }
 
@@ -351,3 +351,7 @@ public class ManageRequirementsScreen extends Screen {
     }
 
 }
+
+
+
+

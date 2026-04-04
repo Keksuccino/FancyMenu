@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.sounds.SoundManager;
@@ -22,8 +22,8 @@ public class RendererWidget extends AbstractWidget implements UniqueWidget, Navi
     }
 
     @Override
-    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        this.body.render(graphics, mouseX, mouseY, partial, this.getX(), this.getY(), this.getWidth(), this.getHeight(), this);
+    protected void extractWidgetRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
+        this.body.extractRenderState(graphics, mouseX, mouseY, partial, this.getX(), this.getY(), this.getWidth(), this.getHeight(), this);
     }
 
     @Override
@@ -78,7 +78,7 @@ public class RendererWidget extends AbstractWidget implements UniqueWidget, Navi
 
     @FunctionalInterface
     public interface RendererWidgetBody {
-        void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial, int x, int y, int width, int height, @NotNull RendererWidget renderer);
+        void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial, int x, int y, int width, int height, @NotNull RendererWidget renderer);
     }
 
 }

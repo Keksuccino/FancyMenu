@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.RendererWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.TextWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.LevelLoadTracker;
@@ -41,7 +41,7 @@ public abstract class MixinLevelLoadingScreen extends Screen {
     }
 
     @Shadow
-    protected abstract void drawProgressBar(GuiGraphics p_433901_, int p_433815_, int p_434324_, int p_433974_, int p_433800_, float p_433827_);
+    protected abstract void drawProgressBar(GuiGraphicsExtractor p_433901_, int p_433815_, int p_434324_, int p_433974_, int p_433800_, float p_433827_);
 
     @Override
     protected void init() {
@@ -96,25 +96,25 @@ public abstract class MixinLevelLoadingScreen extends Screen {
         }
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/LevelLoadingScreen;renderChunks(Lnet/minecraft/client/gui/GuiGraphics;IIIILnet/minecraft/server/level/progress/ChunkLoadStatusView;)V"))
-    private boolean wrap_renderChunks_in_render_FancyMenu(GuiGraphics j1, int chunkstatus, int l1, int i2, int k1, ChunkLoadStatusView j2) {
+    @WrapWithCondition(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/LevelLoadingScreen;extractChunksForRendering(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIIILnet/minecraft/server/level/progress/ChunkLoadStatusView;)V"))
+    private boolean wrap_renderChunks_in_render_FancyMenu(GuiGraphicsExtractor j1, int chunkstatus, int l1, int i2, int k1, ChunkLoadStatusView j2) {
         return !this.isCustomizableFancyMenu();
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;drawCenteredString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
-    private boolean wrap_drawCenteredString_in_render_FancyMenu(GuiGraphics instance, Font p_282901_, Component p_282456_, int p_283083_, int p_282276_, int p_281457_) {
+    @WrapWithCondition(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;centeredText(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
+    private boolean wrap_drawCenteredString_in_render_FancyMenu(GuiGraphicsExtractor instance, Font p_282901_, Component p_282456_, int p_283083_, int p_282276_, int p_281457_) {
         return !this.isCustomizableFancyMenu();
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/LevelLoadingScreen;drawProgressBar(Lnet/minecraft/client/gui/GuiGraphics;IIIIF)V"))
-    private boolean wrap_drawProgressBar_in_render_FancyMenu(LevelLoadingScreen instance, GuiGraphics p_433901_, int p_433815_, int p_434324_, int p_433974_, int p_433800_, float p_433827_) {
+    @WrapWithCondition(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/LevelLoadingScreen;drawProgressBar(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIIIF)V"))
+    private boolean wrap_drawProgressBar_in_render_FancyMenu(LevelLoadingScreen instance, GuiGraphicsExtractor p_433901_, int p_433815_, int p_434324_, int p_433974_, int p_433800_, float p_433827_) {
         return !this.isCustomizableFancyMenu();
     }
 
     @Unique
-    private void renderChunkBox_FancyMenu(@NotNull GuiGraphics graphics, int xCenter, int yCenter) {
+    private void renderChunkBox_FancyMenu(@NotNull GuiGraphicsExtractor graphics, int xCenter, int yCenter) {
         if ((this.loadTracker == null) || (this.loadTracker.statusView() == null)) return;
-        LevelLoadingScreen.renderChunks(graphics, xCenter, yCenter, 2, 0, this.loadTracker.statusView());
+        LevelLoadingScreen.extractChunksForRendering(graphics, xCenter, yCenter, 2, 0, this.loadTracker.statusView());
     }
 
     @Unique

@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.menubar.v2;
 
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
@@ -19,7 +20,6 @@ import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -64,7 +64,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (this.forceUIScale) this.scale = UIBase.getUIScale();
 
@@ -101,7 +101,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
                 e.height = this.height;
                 e.hovered = e.isMouseOver(scaledMouseX, scaledMouseY);
                 if (e.isVisible()) {
-                    e.render(graphics, scaledMouseX, scaledMouseY, partial);
+                    e.extractRenderState(graphics, scaledMouseX, scaledMouseY, partial);
                 }
                 leftX += e.getWidth();
             }
@@ -112,12 +112,12 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
                 e.height = this.height;
                 e.hovered = e.isMouseOver(scaledMouseX, scaledMouseY);
                 if (e.isVisible()) {
-                    e.render(graphics, scaledMouseX, scaledMouseY, partial);
+                    e.extractRenderState(graphics, scaledMouseX, scaledMouseY, partial);
                 }
                 rightX -= e.getWidth();
             }
         } else {
-            this.collapseOrExpandEntry.render(graphics, scaledMouseX, scaledMouseY, partial);
+            this.collapseOrExpandEntry.extractRenderState(graphics, scaledMouseX, scaledMouseY, partial);
         }
 
         if (this.expanded) {
@@ -133,7 +133,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         //Render context menus of ContextMenuBarEntries
         for (MenuBarEntry e : ListUtils.mergeLists(this.leftEntries, this.rightEntries)) {
             if (e instanceof ContextMenuBarEntry c) {
-                c.contextMenu.render(graphics, mouseX, mouseY, partial);
+                c.contextMenu.extractRenderState(graphics, mouseX, mouseY, partial);
             }
         }
 
@@ -141,15 +141,15 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
     }
 
-    protected void renderBackground(GuiGraphics graphics, int xMin, int yMin, int xMax, int yMax) {
+    protected void renderBackground(GuiGraphicsExtractor graphics, int xMin, int yMin, int xMax, int yMax) {
         graphics.fill(xMin, yMin, xMax, yMax, UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
     }
 
-    protected void renderBottomLine(GuiGraphics graphics, int width, int height) {
+    protected void renderBottomLine(GuiGraphicsExtractor graphics, int width, int height) {
         graphics.fill(0, height - this.getBottomLineThickness(), width, height, UIBase.getUIColorTheme().menu_bar_bottom_line_color.getColorInt());
     }
 
-    protected void renderExpandEntryBorder(GuiGraphics graphics, int width, int height) {
+    protected void renderExpandEntryBorder(GuiGraphicsExtractor graphics, int width, int height) {
         //bottom line
         graphics.fill(this.collapseOrExpandEntry.x, height - this.getBottomLineThickness(), width, height, UIBase.getUIColorTheme().menu_bar_bottom_line_color.getColorInt());
         //left side line
@@ -560,7 +560,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         }
 
         @Override
-        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
             this.renderEntry(graphics, mouseX, mouseY, partial);
             if (this.hovered && (this.tooltipSupplier != null)) {
                 Tooltip tooltip = this.tooltipSupplier.get(this);
@@ -575,7 +575,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
             }
         }
 
-        protected abstract void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
+        protected abstract void renderEntry(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial);
 
         protected int getWidth() {
             return 20;
@@ -673,16 +673,16 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         }
 
         @Override
-        protected void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        protected void renderEntry(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
             this.renderBackground(graphics);
             this.renderLabelOrIcon(graphics);
         }
 
-        protected void renderBackground(GuiGraphics graphics) {
+        protected void renderBackground(GuiGraphicsExtractor graphics) {
             graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + this.height, this.getBackgroundColor().getColorInt());
         }
 
-        protected void renderLabelOrIcon(GuiGraphics graphics) {
+        protected void renderLabelOrIcon(GuiGraphicsExtractor graphics) {
             Component label = this.getLabel();
             ITexture iconTexture = this.getIconTexture();
             if (iconTexture != null) {
@@ -850,10 +850,10 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         }
 
         @Override
-        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
             this.contextMenu.setScale(this.parent.scale);
             this.handleOpenOnHover();
-            super.render(graphics, mouseX, mouseY, partial);
+            super.extractRenderState(graphics, mouseX, mouseY, partial);
         }
 
         protected void handleOpenOnHover() {
@@ -947,11 +947,11 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         }
 
         @Override
-        protected void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        protected void renderEntry(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
             this.renderBackground(graphics);
         }
 
-        protected void renderBackground(GuiGraphics graphics) {
+        protected void renderBackground(GuiGraphicsExtractor graphics) {
             graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + this.height, UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
         }
 
@@ -997,7 +997,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         }
 
         @Override
-        protected void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        protected void renderEntry(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
             graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + this.height, color.getColorInt());
         }
 
@@ -1044,3 +1044,4 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
     }
 
 }
+

@@ -41,7 +41,7 @@ public class WorldDayTimeMinutePlaceholder extends Placeholder {
     private static long getDayTime() {
         ClientLevel w = Minecraft.getInstance().level;
         if (w != null) {
-            return w.getDayTime();
+            return w.getDefaultClockTime();
         }
         return 0L;
     }

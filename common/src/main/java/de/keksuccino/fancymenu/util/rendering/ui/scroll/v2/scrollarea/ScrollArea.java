@@ -1,11 +1,11 @@
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea;
 
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollbar.ScrollBar;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -59,7 +59,7 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         this.hovered = this.isMouseOver(mouseX, mouseY);
         this.innerAreaHovered = this.isMouseOverInnerArea(mouseX, mouseY);
@@ -75,23 +75,23 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
         this.renderBorder(graphics, mouseX, mouseY, partial);
 
         if (this.verticalScrollBar.active) {
-            this.verticalScrollBar.render(graphics, mouseX, mouseY, partial);
+            this.verticalScrollBar.extractRenderState(graphics, mouseX, mouseY, partial);
         }
         if (this.horizontalScrollBar.active) {
-            this.horizontalScrollBar.render(graphics, mouseX, mouseY, partial);
+            this.horizontalScrollBar.extractRenderState(graphics, mouseX, mouseY, partial);
         }
 
     }
 
-    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         fillF(graphics, this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight(), this.backgroundColor.get().getColorInt());
     }
 
-    public void renderBorder(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBorder(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         renderBorder(graphics, this.getXWithBorder(), this.getYWithBorder(), this.getXWithBorder() + this.getWidthWithBorder(), this.getYWithBorder() + this.getHeightWithBorder(), this.getBorderThickness(), this.borderColor.get().getColorInt(), true, true, true, true);
     }
 
-    public void renderEntries(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderEntries(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (this.isApplyScissor()) {
             //TODO renderScale (not used by default) is probably broken if actually used (leftover from old scissor stuff)
@@ -109,7 +109,7 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
             if (this.minimumEntryWidthIsAreaWidth && (entry.getWidth() < this.getInnerWidth())) {
                 entry.setWidth(this.getInnerWidth());
             }
-            entry.render(graphics, mouseX, mouseY, partial);
+            entry.extractRenderState(graphics, mouseX, mouseY, partial);
         });
 
         if (this.isApplyScissor()) graphics.disableScissor();
@@ -507,3 +507,4 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
     }
 
 }
+

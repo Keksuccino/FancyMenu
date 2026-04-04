@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
@@ -29,7 +29,7 @@ public class AnimationControllerElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (isEditor()) {
 
@@ -41,7 +41,7 @@ public class AnimationControllerElement extends AbstractElement {
                 int h = this.getAbsoluteHeight();
                 graphics.fill(x, y, x + w, y + h, this.inEditorColor.getColorInt());
                 graphics.enableScissor(x, y, x + w, y + h);
-                graphics.drawCenteredString(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
+                graphics.centeredText(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
                 graphics.disableScissor();
 
             }

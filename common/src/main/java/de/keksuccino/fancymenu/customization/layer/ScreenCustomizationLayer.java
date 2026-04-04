@@ -38,7 +38,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -436,7 +436,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	@EventListener
 	public void onRenderListHeaderFooterPre(RenderedGuiListHeaderFooterEvent e) {
 
-		GuiGraphics graphics = e.getGraphics();
+		GuiGraphicsExtractor graphics = e.getGraphics();
 
 		if (this.shouldCustomize(Minecraft.getInstance().screen)) {
 
@@ -501,7 +501,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	@EventListener
 	public void onRenderTabNavigationBarHeaderBackgroundPre(RenderTabNavigationBarHeaderBackgroundEvent.Pre e) {
 
-		GuiGraphics graphics = e.getGraphics();
+		GuiGraphicsExtractor graphics = e.getGraphics();
 
 		if (this.shouldCustomize(Minecraft.getInstance().screen)) {
 
@@ -532,7 +532,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	}
 
-	protected void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial, Screen screen) {
+	protected void renderBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial, Screen screen) {
 
 		if (!this.shouldCustomize(screen)) return;
 
@@ -540,7 +540,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 			menuBackground.keepBackgroundAspectRatio = this.layoutBase.preserveBackgroundAspectRatio;
 			menuBackground.opacity = this.backgroundOpacity;
-			menuBackground.render(graphics, mouseX, mouseY, partial);
+			menuBackground.extractRenderState(graphics, mouseX, mouseY, partial);
 			menuBackground.opacity = 1.0F;
 
 		});
@@ -569,11 +569,11 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	}
 
-	protected void _renderBackgroundOverlay(GuiGraphics graphics, int x, int y, int width, int height) {
+	protected void _renderBackgroundOverlay(GuiGraphicsExtractor graphics, int x, int y, int width, int height) {
 		renderBackgroundOverlay(graphics, x, y, width, height);
 	}
 
-	public static void renderBackgroundOverlay(GuiGraphics graphics, int x, int y, int width, int height) {
+	public static void renderBackgroundOverlay(GuiGraphicsExtractor graphics, int x, int y, int width, int height) {
 		Identifier location = (Minecraft.getInstance().level == null) ? MENU_BACKGROUND : INWORLD_MENU_BACKGROUND;
 		graphics.blit(RenderPipelines.GUI_TEXTURED, location, x, y, 0, 0.0F, 0, width, height, 32, 32);
 	}

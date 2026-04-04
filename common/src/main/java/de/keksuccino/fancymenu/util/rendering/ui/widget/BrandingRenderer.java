@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
@@ -85,19 +85,19 @@ public class BrandingRenderer {
 
     /**
      * Renders the branding text at the default position.
-     * @param graphics The GuiGraphics to render with
+     * @param graphics The GuiGraphicsExtractor to render with
      */
-    public void render(@NotNull GuiGraphics graphics) {
-        render(graphics, getDefaultPositionX(), getDefaultPositionY());
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics) {
+        extractRenderState(graphics, getDefaultPositionX(), getDefaultPositionY());
     }
 
     /**
      * Renders the branding text at the specified position.
-     * @param graphics The GuiGraphics to render with
+     * @param graphics The GuiGraphicsExtractor to render with
      * @param x The x-coordinate to render at
      * @param y The y-coordinate of the top-most line of text
      */
-    public void render(@NotNull GuiGraphics graphics, int x, int y) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int x, int y) {
 
          
 
@@ -107,7 +107,7 @@ public class BrandingRenderer {
 
         int currentY = y;
         for (Component line : lines) {
-            graphics.drawString(font, line, x, currentY, DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
+            graphics.text(font, line, x, currentY, DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
             currentY += font.lineHeight + 1;
         }
 

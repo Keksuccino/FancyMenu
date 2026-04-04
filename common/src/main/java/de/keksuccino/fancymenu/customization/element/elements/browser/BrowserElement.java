@@ -13,7 +13,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 
@@ -77,7 +77,7 @@ public class BrowserElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (this.shouldRender()) {
 
@@ -123,7 +123,7 @@ public class BrowserElement extends AbstractElement {
 
                 this.browser.setInteractable(this.interactable && !isEditor());
 
-                this.browser.render(graphics, mouseX, mouseY, partial);
+                this.browser.extractRenderState(graphics, mouseX, mouseY, partial);
 
                 //Render warning when trying to click browser in editor
                 if (isEditor()) {
@@ -132,15 +132,15 @@ public class BrowserElement extends AbstractElement {
                     }
                     if ((this.lastLeftClickTime + 5000) > System.currentTimeMillis()) {
                         graphics.fill(x, y, x + w, y + h, ERROR_BACKGROUND_COLOR.getColorIntWithAlpha(0.4F));
-                        graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.elements.browser.disabled_in_editor").setStyle(Style.EMPTY.withBold(true)), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
+                        graphics.centeredText(Minecraft.getInstance().font, Component.translatable("fancymenu.elements.browser.disabled_in_editor").setStyle(Style.EMPTY.withBold(true)), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
                     }
                 }
 
             } else {
 
                 graphics.fill(x, y, x + w, y + h, ERROR_BACKGROUND_COLOR.getColorInt());
-                graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.elements.browser.mcef_not_loaded.line_1").setStyle(Style.EMPTY.withBold(true)), x + (w / 2), y + (h / 2) - Minecraft.getInstance().font.lineHeight - 2, -1);
-                graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.elements.browser.mcef_not_loaded.line_2").setStyle(Style.EMPTY.withBold(true)), x + (w / 2), y + (h / 2) + 2, -1);
+                graphics.centeredText(Minecraft.getInstance().font, Component.translatable("fancymenu.elements.browser.mcef_not_loaded.line_1").setStyle(Style.EMPTY.withBold(true)), x + (w / 2), y + (h / 2) - Minecraft.getInstance().font.lineHeight - 2, -1);
+                graphics.centeredText(Minecraft.getInstance().font, Component.translatable("fancymenu.elements.browser.mcef_not_loaded.line_2").setStyle(Style.EMPTY.withBold(true)), x + (w / 2), y + (h / 2) + 2, -1);
 
             }
 

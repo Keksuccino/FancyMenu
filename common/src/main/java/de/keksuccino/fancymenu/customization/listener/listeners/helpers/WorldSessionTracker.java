@@ -80,7 +80,7 @@ public final class WorldSessionTracker {
 
         ClientLevel level = minecraft.level;
         if (level != null) {
-            session.lastDifficultyKey = level.getDifficulty().getKey();
+            session.lastDifficultyKey = level.getDifficulty().getSerializedName();
         }
 
         IntegratedServer server = minecraft.getSingleplayerServer();
@@ -93,7 +93,7 @@ public final class WorldSessionTracker {
         if (iconPath != null && !iconPath.isBlank()) {
             return iconPath;
         }
-        return Path.of(worldSavePath, LevelResource.ICON_FILE.getId()).toString();
+        return Path.of(worldSavePath, LevelResource.ICON_FILE.id()).toString();
     }
 
     private static final class SessionData {

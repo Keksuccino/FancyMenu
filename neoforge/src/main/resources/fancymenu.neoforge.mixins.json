@@ -14,7 +14,6 @@
   "injectors": {
     "defaultRequire": 1
   },
-  "refmap": "fancymenu.refmap.json",
   "plugin": "de.keksuccino.fancymenu.mixin.FMMixinPlugin",
   "minVersion": "0.8"
 }

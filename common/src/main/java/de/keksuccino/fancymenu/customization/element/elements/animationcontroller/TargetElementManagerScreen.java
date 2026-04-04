@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -147,7 +147,7 @@ public class TargetElementManagerScreen extends CellScreen {
         }
 
         @Override
-        public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void renderCell(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
             int buttonWidth = Minecraft.getInstance().font.width(this.removeButton.getMessage()) + 10;
             if (buttonWidth < 80) buttonWidth = 80;
             this.removeButton.setWidth(buttonWidth);

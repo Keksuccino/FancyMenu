@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestio
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -149,9 +149,9 @@ public class IsModLoadedRequirement extends LoadingRequirement {
         }
 
         @Override
-        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            super.render(graphics, mouseX, mouseY, partial);
-            this.modIdSuggestions.render(graphics, mouseX, mouseY);
+        public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
+            super.extractRenderState(graphics, mouseX, mouseY, partial);
+            this.modIdSuggestions.extractRenderState(graphics, mouseX, mouseY);
         }
 
         @Override

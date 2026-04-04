@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry;
 
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import de.keksuccino.fancymenu.util.VanillaEvents;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -7,7 +8,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.konkrete.input.MouseInput;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.sounds.SoundManager;
@@ -53,11 +53,11 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
                 }
             }
             @Override
-            public void render(@NotNull GuiGraphics graphics, int p_93658_, int p_93659_, float p_93660_) {
+            protected void extractContents(@NotNull GuiGraphicsExtractor graphics, int p_93658_, int p_93659_, float p_93660_) {
                 if (ScrollAreaEntry.this.parent.isMouseInteractingWithGrabbers() || !ScrollAreaEntry.this.parent.isMouseInsideArea()) {
                     this.isHovered = false;
                 }
-                super.render(graphics, p_93658_, p_93659_, p_93660_);
+                super.extractContents(graphics, p_93658_, p_93659_, p_93660_);
             }
             @Override
             public boolean isHoveredOrFocused() {
@@ -78,11 +78,11 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         this.updateEntry();
 
-        this.buttonBase.render(graphics, mouseX, mouseY, partial);
+        this.buttonBase.extractRenderState(graphics, mouseX, mouseY, partial);
 
         if (MouseInput.isLeftMouseDown() && !leftMouseDown && this.isHovered()) {
             leftMouseDown = true;
@@ -228,3 +228,4 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
     }
 
 }
+

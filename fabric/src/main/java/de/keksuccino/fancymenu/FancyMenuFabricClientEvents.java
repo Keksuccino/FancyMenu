@@ -28,7 +28,7 @@ public class FancyMenuFabricClientEvents {
         });
 
         LOGGER.info("[FANCYMENU] Registering FancyMenu's resource reload listener via Fabric API..");
-        ResourceLoader.get(PackType.CLIENT_RESOURCES).registerReloader(FancyMenuResourceReload.FANCYMENU_RELOAD_LISTENER_ID, FancyMenuResourceReload.createMinecraftPreparableReloadListener());
+        ResourceLoader.get(PackType.CLIENT_RESOURCES).registerReloadListener(FancyMenuResourceReload.FANCYMENU_RELOAD_LISTENER_ID, FancyMenuResourceReload.createMinecraftPreparableReloadListener());
 
     }
 

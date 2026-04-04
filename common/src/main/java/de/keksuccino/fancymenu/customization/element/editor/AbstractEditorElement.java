@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.editor;
 
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
@@ -41,7 +42,6 @@ import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -816,7 +816,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	}
 
 	@Override
-	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+	public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
 		if (this.element.layerHiddenInEditor) {
 			if (this.rightClickMenu.isOpen()) {
@@ -888,7 +888,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		}
 	}
 
-	protected void renderDraggingNotAllowedOverlay(GuiGraphics graphics) {
+	protected void renderDraggingNotAllowedOverlay(GuiGraphicsExtractor graphics) {
 		if (this.renderMovingNotAllowedTime >= System.currentTimeMillis()) {
 			graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), UIBase.getUIColorTheme().layout_editor_element_dragging_not_allowed_color.getColorInt());
 			AspectRatio ratio = new AspectRatio(32, 32);
@@ -901,7 +901,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		}
 	}
 
-	protected void renderDeprecatedIndicator(GuiGraphics graphics) {
+	protected void renderDeprecatedIndicator(GuiGraphicsExtractor graphics) {
 		if (this.element.builder.isDeprecated()) {
 			AspectRatio ratio = new AspectRatio(32, 32);
 			int[] size = ratio.getAspectRatioSizeByMaximumSize(this.getWidth() / 3, this.getHeight() / 3);
@@ -913,7 +913,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		}
 	}
 
-	protected void renderBorder(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+	protected void renderBorder(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
 		RenderingUtils.setDepthTestLocked(true);
 
@@ -929,7 +929,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			graphics.fill(this.getX() + this.getWidth() - 1, this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), BORDER_COLOR.get(this));
 
 			for (ResizeGrabber g : this.resizeGrabbers) {
-				g.render(graphics, mouseX, mouseY, partial);
+				g.extractRenderState(graphics, mouseX, mouseY, partial);
 			}
 
 			// Render rotation circle and grabber
@@ -945,15 +945,15 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		}
 
 		if (this.isSelected()) {
-			this.topLeftDisplay.render(graphics, mouseX, mouseY, partial);
-			this.bottomRightDisplay.render(graphics, mouseX, mouseY, partial);
+			this.topLeftDisplay.extractRenderState(graphics, mouseX, mouseY, partial);
+			this.bottomRightDisplay.extractRenderState(graphics, mouseX, mouseY, partial);
 		}
 
 		RenderingUtils.setDepthTestLocked(false);
 
 	}
 
-	protected void renderRotationControls(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+	protected void renderRotationControls(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
 		if (!FancyMenu.getOptions().enableElementRotationControls.getValue()) return;
 
@@ -981,11 +981,11 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			graphics.fill(x, y, x + 1, y + 1, circleColor);
 		}
 
-		this.rotationGrabber.render(graphics, mouseX, mouseY, partial);
+		this.rotationGrabber.extractRenderState(graphics, mouseX, mouseY, partial);
 
 	}
 
-	protected void renderTiltControls(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+	protected void renderTiltControls(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
 		if (!FancyMenu.getOptions().enableElementTiltingControls.getValue()) return;
 
@@ -1013,10 +1013,10 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		// Render tilt grabbers
 		if (!this.element.advancedVerticalTiltMode) {
-			this.verticalTiltGrabber.render(graphics, mouseX, mouseY, partial);
+			this.verticalTiltGrabber.extractRenderState(graphics, mouseX, mouseY, partial);
 		}
 		if (!this.element.advancedVerticalTiltMode) {
-			this.horizontalTiltGrabber.render(graphics, mouseX, mouseY, partial);
+			this.horizontalTiltGrabber.extractRenderState(graphics, mouseX, mouseY, partial);
 		}
 
 	}
@@ -2124,7 +2124,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		}
 
 		@Override
-		public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+		public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 			this.hovered = AbstractEditorElement.this.isSelected() && this.isGrabberEnabled() && this.isMouseOver(mouseX, mouseY);
 			if (AbstractEditorElement.this.isSelected() && this.isGrabberEnabled()) {
 				graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, BORDER_COLOR.get(AbstractEditorElement.this));
@@ -2193,7 +2193,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		protected boolean hovered = false;
 
 		@Override
-		public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+		public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 			this.hovered = AbstractEditorElement.this.isSelected() && this.isGrabberEnabled() && this.isMouseOver(mouseX, mouseY);
 			if (AbstractEditorElement.this.isSelected() && this.isGrabberEnabled()) {
 				// Draw the grabber as a filled circle at the rotation position
@@ -2260,7 +2260,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		protected boolean hovered = false;
 
 		@Override
-		public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+		public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 			this.hovered = AbstractEditorElement.this.isSelected() && this.isGrabberEnabled() && this.isMouseOver(mouseX, mouseY);
 			if (AbstractEditorElement.this.isSelected() && this.isGrabberEnabled()) {
 				// Draw the grabber as a filled square at the tilt position
@@ -2319,7 +2319,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		protected boolean hovered = false;
 
 		@Override
-		public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+		public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 			this.hovered = AbstractEditorElement.this.isSelected() && this.isGrabberEnabled() && this.isMouseOver(mouseX, mouseY);
 			if (AbstractEditorElement.this.isSelected() && this.isGrabberEnabled()) {
 				// Draw the grabber as a filled square at the tilt position
@@ -2373,3 +2373,4 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	}
 
 }
+

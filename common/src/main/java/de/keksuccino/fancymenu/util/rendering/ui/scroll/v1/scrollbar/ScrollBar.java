@@ -4,7 +4,7 @@ import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.events.screen.ScreenMouseScrollEvent;
 import de.keksuccino.konkrete.input.MouseInput;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 
 import net.minecraft.resources.Identifier;
@@ -74,7 +74,7 @@ public class ScrollBar {
         this.scrollAreaEndY = scrollAreaEndY;
     }
 
-    public void render(GuiGraphics graphics) {
+    public void extractRenderState(GuiGraphicsExtractor graphics) {
 
         int x = this.scrollAreaEndX - this.grabberWidth;
         int y = this.scrollAreaEndY - this.grabberHeight;

@@ -495,7 +495,7 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
         }
 
         if (!tagFilters.isEmpty()) {
-            Set<String> tags = entity.getTags();
+            Set<String> tags = entity.entityTags();
             for (Filter<String> filter : tagFilters) {
                 boolean matches = tags.contains(filter.value());
                 if (filter.inverted() == matches) {

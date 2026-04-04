@@ -15,7 +15,7 @@ import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.resources.language.I18n;
@@ -110,7 +110,7 @@ public class TextElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (this.shouldRender()) {
 
@@ -124,7 +124,7 @@ public class TextElement extends AbstractElement {
                 this.scrollArea.setY(this.getAbsoluteY(), true);
                 this.scrollArea.setWidth(this.getAbsoluteWidth(), true);
                 this.scrollArea.setHeight(this.getAbsoluteHeight(), true);
-                this.scrollArea.render(graphics, mouseX, mouseY, partial);
+                this.scrollArea.extractRenderState(graphics, mouseX, mouseY, partial);
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -135,7 +135,7 @@ public class TextElement extends AbstractElement {
     }
 
     @Override
-    public void renderInternal(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderInternal(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         super.renderInternal(graphics, mouseX, mouseY, partial);
 
@@ -357,13 +357,13 @@ public class TextElement extends AbstractElement {
         }
 
         @Override
-        public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void renderEntry(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
             this.markdownRenderer.setOptimalWidth(this.parent.getInnerWidth());
             this.markdownRenderer.setX(this.x);
             this.markdownRenderer.setY(this.y);
             this.setWidth(this.markdownRenderer.getRealWidth());
             this.setHeight(this.markdownRenderer.getRealHeight());
-            this.markdownRenderer.render(graphics, mouseX, mouseY, partial);
+            this.markdownRenderer.extractRenderState(graphics, mouseX, mouseY, partial);
         }
 
         @Override

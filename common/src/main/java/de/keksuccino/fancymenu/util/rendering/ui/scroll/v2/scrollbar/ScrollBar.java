@@ -1,9 +1,9 @@
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollbar;
 
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -72,7 +72,7 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         this.grabberHovered = this.isMouseOverGrabber(mouseX, mouseY);
 
@@ -293,3 +293,4 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
     }
 
 }
+

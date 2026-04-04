@@ -19,7 +19,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.math.MathUtils;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
@@ -145,7 +145,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (this.slider == null) return;
 
@@ -163,7 +163,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
 
         this.updateWidget();
 
-        this.slider.render(graphics, mouseX, mouseY, partial);
+        this.slider.extractRenderState(graphics, mouseX, mouseY, partial);
 
     }
 
