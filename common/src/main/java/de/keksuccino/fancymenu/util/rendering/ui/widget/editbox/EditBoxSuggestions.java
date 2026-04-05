@@ -146,10 +146,12 @@ public class EditBoxSuggestions extends CommandSuggestions {
                 }
                 int readerCursorPos = this.onlyShowIfCursorPastError ? valueReader.getCursor() : 1;
                 if ((editBoxCursorPos >= readerCursorPos) && ((this.getSuggestions() == null) || !this.isKeepSuggestions())) {
-                    this.setPendingSuggestions(commands.getCompletionSuggestions(this.getCurrentParse(), editBoxCursorPos));
-                    this.getPendingSuggestions().thenRun(() -> {
-                        if (this.getPendingSuggestions().isDone()) {
-                            this.updateUsageInfo();
+                    ParseResults<ClientSuggestionProvider> currentParse = this.getCurrentParse();
+                    CompletableFuture<Suggestions> pendingSuggestions = commands.getCompletionSuggestions(currentParse, editBoxCursorPos);
+                    this.setPendingSuggestions(pendingSuggestions);
+                    pendingSuggestions.thenAccept(suggestionResult -> {
+                        if (this.getPendingSuggestions() == pendingSuggestions) {
+                            this.updateUsageInfo(currentParse, suggestionResult);
                         }
                     });
                 }
@@ -225,8 +227,8 @@ public class EditBoxSuggestions extends CommandSuggestions {
         return super.mouseScrolled($$0);
     }
 
-    protected void updateUsageInfo() {
-        this.getAccessor().invokeUpdateUsageInfoFancyMenu();
+    protected void updateUsageInfo(ParseResults<ClientSuggestionProvider> currentParse, Suggestions suggestions) {
+        this.getAccessor().invokeUpdateUsageInfoFancyMenu(currentParse, suggestions);
     }
 
     protected List<Suggestion> sortSuggestions(Suggestions suggestions) {

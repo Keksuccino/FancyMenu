@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.textures.CapeResourceSupplier;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.textures.SkinResourceSupplier;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.ItemStackUtils;
 import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.rendering.entity.WrappedFancyPlayerWidget;
@@ -386,7 +387,7 @@ public class PlayerEntityElement extends AbstractElement {
                     this.lastEnchanted = enchanted;
 
                     Item item = BuiltInRegistries.ITEM.getValue(Identifier.parse(keyFinal));
-                    this.cachedStack = new ItemStack(BuiltInRegistries.ITEM.wrapAsHolder(item));
+                    this.cachedStack = ItemStackUtils.createDisplayStack(item);
                     this.cachedStack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, this.enchanted);
 
                 }

@@ -48,24 +48,26 @@ public class ItemKeyScreen extends StringBuilderScreen {
     @Override
     public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         super.extractRenderState(graphics, mouseX, mouseY, partial);
-        this.itemKeySuggestions.extractRenderState(graphics, mouseX, mouseY);
+        if (this.itemKeySuggestions != null) {
+            this.itemKeySuggestions.extractRenderState(graphics, mouseX, mouseY);
+        }
     }
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        if (this.itemKeySuggestions.keyPressed(event)) return true;
+        if ((this.itemKeySuggestions != null) && this.itemKeySuggestions.keyPressed(event)) return true;
         return super.keyPressed(event);
     }
 
     @Override
     public boolean mouseScrolled(double $$0, double $$1, double scrollDeltaX, double scrollDeltaY) {
-        if (this.itemKeySuggestions.mouseScrolled(scrollDeltaY)) return true;
+        if ((this.itemKeySuggestions != null) && this.itemKeySuggestions.mouseScrolled(scrollDeltaY)) return true;
         return super.mouseScrolled($$0, $$1, scrollDeltaX, scrollDeltaY);
     }
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
-        if (this.itemKeySuggestions.mouseClicked(event)) return true;
+        if ((this.itemKeySuggestions != null) && this.itemKeySuggestions.mouseClicked(event)) return true;
         return super.mouseClicked(event, isDoubleClick);
     }
 

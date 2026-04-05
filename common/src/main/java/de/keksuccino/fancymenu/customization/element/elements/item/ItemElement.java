@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.item;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.ItemStackUtils;
 import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -79,8 +80,8 @@ public class ItemElement extends AbstractElement {
         try {
             if ((this.cachedStack == null) || !keyFinal.equals(this.lastItemKey) || (this.enchanted != this.lastEnchanted) || !Objects.equals(loreFinal, this.lastLore) || !Objects.equals(nameFinal, this.lastItemName) || !Objects.equals(nbtFinal, this.lastNbtData)) {
                 Optional<Holder.Reference<Item>> optional = BuiltInRegistries.ITEM.get(Identifier.parse(keyFinal));
-                Holder<Item> itemHolder = optional.<Holder<Item>>map(holder -> holder).orElseGet(() -> BuiltInRegistries.ITEM.wrapAsHolder(Items.AIR));
-                this.cachedStack = new ItemStack(itemHolder);
+                Item item = optional.isPresent() ? Objects.requireNonNullElse(optional.get().value(), Items.AIR) : Items.AIR;
+                this.cachedStack = ItemStackUtils.createDisplayStack(item);
                 this.cachedStack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, this.enchanted);
 
                 if ((loreFinal != null) && !loreFinal.isBlank()) {
@@ -105,7 +106,7 @@ public class ItemElement extends AbstractElement {
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to create ItemStack instance for 'Item' element!", ex);
-            this.cachedStack = new ItemStack(BuiltInRegistries.ITEM.wrapAsHolder(Items.BARRIER));
+            this.cachedStack = ItemStackUtils.createDisplayStack(Items.BARRIER);
         }
 
         this.lastItemKey = keyFinal;

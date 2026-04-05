@@ -34,7 +34,7 @@ public interface IMixinCommandSuggestions {
     @Accessor("suggestions") CommandSuggestions.SuggestionsList getSuggestionsFancyMenu();
     @Accessor("suggestions") void setSuggestionsFancyMenu(CommandSuggestions.SuggestionsList suggestions);
 
-    @Invoker("updateUsageInfo") void invokeUpdateUsageInfoFancyMenu();
+    @Invoker("updateUsageInfo") void invokeUpdateUsageInfoFancyMenu(ParseResults<ClientSuggestionProvider> currentParse, Suggestions suggestions);
 
     @Invoker("sortSuggestions") List<Suggestion> invokeSortSuggestionsFancyMenu(Suggestions suggestions);
 
