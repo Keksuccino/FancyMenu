@@ -11,14 +11,10 @@ import de.keksuccino.fancymenu.util.window.FancyWindow;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.GuiRenderer;
-import net.minecraft.client.gui.render.pip.PictureInPictureRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.Projection;
 import net.minecraft.client.renderer.ProjectionMatrixBuffer;
-import net.minecraft.client.renderer.SubmitNodeCollector;
-import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.client.renderer.state.gui.GuiRenderState;
-import net.minecraft.client.renderer.state.gui.pip.PictureInPictureRenderState;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -26,8 +22,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.List;
 
 @Mixin(GuiRenderer.class)
 public class MixinGuiRenderer {
@@ -39,18 +33,24 @@ public class MixinGuiRenderer {
     @Shadow @Final private GuiRenderState renderState;
 
     @Inject(method = "<init>", at = @At("TAIL"))
-    private void after_init_FancyMenu(GuiRenderState renderState, MultiBufferSource.BufferSource bufferSource, SubmitNodeCollector submitNodeCollector, FeatureRenderDispatcher featureRenderDispatcher, List<PictureInPictureRenderer<?>> pictureInPictureRenderers, CallbackInfo info) {
+    private void after_init_FancyMenu(CallbackInfo info) {
         this.panoramaPictureInPictureRenderer_FancyMenu = new FancyMenuPanoramaPictureInPictureRenderer(this.bufferSource);
     }
 
-    /** @reason Prepare FancyMenu panoramas as their own GUI picture-in-picture render state. */
-    @Inject(method = "preparePictureInPictureState", at = @At("HEAD"), cancellable = true)
-    private void before_preparePictureInPictureState_FancyMenu(PictureInPictureRenderState picturesInPictureState, int guiScale, CallbackInfo info) {
-        if ((picturesInPictureState instanceof FancyMenuPanoramaRenderState panoramaRenderState) && (this.panoramaPictureInPictureRenderer_FancyMenu != null)) {
-            this.panoramaPictureInPictureRenderer_FancyMenu.prepare(panoramaRenderState, this.renderState, guiScale);
-            info.cancel();
-        }
-    }
+	/** @reason Prepare FancyMenu panoramas after vanilla picture-in-picture extraction on both loaders. */
+	@Inject(method = "preparePictureInPicture", at = @At("RETURN"))
+	private void after_preparePictureInPicture_FancyMenu(CallbackInfo info) {
+		if (this.panoramaPictureInPictureRenderer_FancyMenu == null) {
+			return;
+		}
+
+		int guiScale = Minecraft.getInstance().gameRenderer.getGameRenderState().windowRenderState.guiScale;
+		this.renderState.forEachPictureInPicture(picturesInPictureState -> {
+			if (picturesInPictureState instanceof FancyMenuPanoramaRenderState panoramaRenderState) {
+				this.panoramaPictureInPictureRenderer_FancyMenu.prepare(panoramaRenderState, this.renderState, guiScale);
+			}
+		});
+	}
 
     @WrapOperation(method = "draw", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ProjectionMatrixBuffer;getBuffer(Lnet/minecraft/client/renderer/Projection;)Lcom/mojang/blaze3d/buffers/GpuBufferSlice;"))
     private GpuBufferSlice wrap_getBuffer_FancyMenu(ProjectionMatrixBuffer instance, Projection projection, Operation<GpuBufferSlice> original) {
