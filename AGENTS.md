@@ -1,10 +1,16 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-FancyMenu is a Minecraft 26.1.1 mod that uses the MultiLoader layout with shared logic under `common` and loader-specific wrappers under `fabric` and `neoforge`. Place shared Java sources in `common/src/main/java` and assets such as menu JSON, translations, or textures in `common/src/main/resources` so they ship with every loader build. Loader-only hooks belong inside each module's `src/main/java` tree; keep local run directories like `run_client` and `run_server` for iterative testing but never depend on them for assets.
+- FancyMenu is a Minecraft Java 26.1.1 mod (the version number is not a typo) that uses the MultiLoader layout with shared logic under `common` and loader-specific wrappers under `fabric` and `neoforge`.
+- Place shared Java sources in `common/src/main/java` and assets such as menu JSON, translations, or textures in `common/src/main/resources` so they ship with every loader build.
+- Loader-only hooks belong inside each module's `src/main/java` tree; keep local run directories like `run_client` and `run_server` for iterative testing but never depend on them for assets.
 
 ## Coding Style & Naming Conventions
-Target Java 25 with 4-space indentation and UTF-8 encoding (WITHOUT BOM), matching the Gradle toolchain configuration. Follow existing packages under `de.keksuccino.fancymenu`, mirroring existing sub-packages like `customization`, `events`, and `platform` to keep cross-loader boundaries clear. Name resources with the `fancymenu` prefix (e.g., `fancymenu.mixins.json`, `fancymenu.accesswidener`) so Gradle and the loaders resolve them consistently. Prefer explicit nullability annotations from `jsr305`, keep Mixin classes lightweight, and document multi-step flows with concise comments.
+- Target Java 25 with 4-space indentation and UTF-8 encoding (WITHOUT BOM), matching the Gradle toolchain configuration.
+- Follow existing packages under `de.keksuccino.fancymenu`, mirroring existing sub-packages like `customization`, `events`, and `platform` to keep cross-loader boundaries clear.
+- Name resources with the `fancymenu` prefix (e.g., `fancymenu.mixins.json`, `fancymenu.accesswidener`) so Gradle and the loaders resolve them consistently.
+- Prefer explicit nullability annotations from `jsr305`.
+- Keep Mixin classes lightweight.
 
 ## Mixin Structurization
 - Place shared mixins under `common/src/main/java/de/keksuccino/fancymenu/mixin/mixins/common/<side>` and mirror the existing folder depth when adding new targets.
@@ -24,8 +30,12 @@ Target Java 25 with 4-space indentation and UTF-8 encoding (WITHOUT BOM), matchi
 - Always read and write en_us.json with an explicit UTF-8-without-BOM encoding.
 
 ## Networking & Packets
-FancyMenu uses its own custom packet system. If you need to add packets for a feature, make sure to analyze the `de.keksuccino.fancymenu.networking` package in the `common` module first, to understand how packets get implemented and registered.
+- FancyMenu uses its own custom packet system.
+- If you need to add packets for a feature, make sure to analyze the `de.keksuccino.fancymenu.networking` package in the `common` module first, to understand how packets get implemented and registered.
 
 ## Minecraft Sources
-You have access to the full Minecraft 26.1.1 sources in `/library_sources/minecraft_26.1.1/`. Use them for research.
-You have access to the full Minecraft 1.21.11 sources in `/library_sources/minecraft_1.21.11/`. Use them to compare what changed from the last obfuscated version.
+- You have access to the full Minecraft 26.1.1 sources for both `fabric` and `neoforge` in `/library_sources/minecraft_26.1.1/`. Use them for research when working with Minecraft-related code.
+- You have access to the full Minecraft 1.21.11 sources for both `fabric` and `neoforge` in `/library_sources/minecraft_1.21.11/`. Use them for research when working with Minecraft-related code. Minecraft 1.21.11 is the version before 26.1.1.
+
+## Run/Compile
+- NEVER try to run/compile the project!

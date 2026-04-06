@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.textures.CapeResourceSupplier;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.textures.SkinResourceSupplier;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.ItemStackUtils;
 import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -377,7 +378,7 @@ public class PlayerEntityElement extends AbstractElement {
         public String itemKey;
         public boolean enchanted;
         @NotNull
-        public ItemStack cachedStack = new ItemStack(Items.AIR);
+        public ItemStack cachedStack = ItemStack.EMPTY;
         @Nullable
         protected String lastFinalKey = null;
         protected boolean lastEnchanted = false;
@@ -404,8 +405,10 @@ public class PlayerEntityElement extends AbstractElement {
                     this.lastEnchanted = enchanted;
 
                     Item item = BuiltInRegistries.ITEM.getValue(Identifier.parse(keyFinal));
-                    this.cachedStack = new ItemStack(item);
-                    this.cachedStack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, this.enchanted);
+                    this.cachedStack = ItemStackUtils.createGuiItemStack(item);
+                    if (!this.cachedStack.isEmpty()) {
+                        this.cachedStack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, this.enchanted);
+                    }
 
                 }
 

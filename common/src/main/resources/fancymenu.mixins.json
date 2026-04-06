@@ -14,6 +14,7 @@
     "client.IMixinEditBox",
     "client.IMixinGui",
     "client.IMixinGuiGraphicsExtractor",
+    "client.IMixinHolderSetNamed",
     "client.IMixinLevelLoadingScreen",
     "client.IMixinMinecraft",
     "client.IMixinMusicManager",
