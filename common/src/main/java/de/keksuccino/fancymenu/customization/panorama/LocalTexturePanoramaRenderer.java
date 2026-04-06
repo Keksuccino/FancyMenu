@@ -1,29 +1,21 @@
 package de.keksuccino.fancymenu.customization.panorama;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
-
-import com.mojang.blaze3d.ProjectionType;
-import com.mojang.blaze3d.systems.RenderSystem;
-import de.keksuccino.fancymenu.util.ScreenUtils;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphicsExtractor;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScissorStack;
+import de.keksuccino.fancymenu.util.properties.PropertiesParser;
+import de.keksuccino.fancymenu.util.properties.PropertyContainer;
+import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.fancymenu.util.properties.PropertyContainer;
-import de.keksuccino.fancymenu.util.properties.PropertiesParser;
-import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Renderable;
-import net.minecraft.client.renderer.CubeMap;
-import net.minecraft.client.renderer.Projection;
-import net.minecraft.client.renderer.ProjectionMatrixBuffer;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.state.gui.GuiRenderState;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
@@ -31,6 +23,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3x2f;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 @SuppressWarnings("unused")
 public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
@@ -55,14 +54,11 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 	protected volatile float currentRotation = 0.0F; //0 - 360
 	protected volatile long lastRenderCall = -1L;
 	@Nullable
-	private CubeMap cubeMap = null;
+	private FlexibleCubeMap cubeMap = null;
 	@Nullable
 	private PanoramaCubeMapTexture panoramaCubeMapTexture = null;
 	@Nullable
 	private Identifier cubeMapLocation = null;
-	@Nullable
-	private ProjectionMatrixBuffer projectionMatrixBuffer = null;
-	private final Projection projection = new Projection();
 	private final String uniqueId = UUID.randomUUID().toString();
 
 	@Nullable
@@ -142,19 +138,11 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 	}
 
 	protected void initialize() {
-		// Create custom cube map texture
 		this.panoramaCubeMapTexture = new PanoramaCubeMapTexture(this.name != null ? this.name : "unnamed", this.panoramaImageSuppliers);
-		
-		// Register the texture with a unique Identifier
 		this.cubeMapLocation = Identifier.fromNamespaceAndPath("fancymenu", "panorama_" + this.uniqueId);
 		TextureManager textureManager = Minecraft.getInstance().getTextureManager();
 		textureManager.register(this.cubeMapLocation, this.panoramaCubeMapTexture);
-		
-		// Create CubeMap instance for rendering
-		this.cubeMap = new CubeMap(this.cubeMapLocation);
-		
-		// Create projection matrix buffer
-		this.projectionMatrixBuffer = new ProjectionMatrixBuffer("fancymenu_panorama_" + this.uniqueId);
+		this.cubeMap = new FlexibleCubeMap(this.cubeMapLocation, "fancymenu_panorama_" + this.uniqueId);
 	}
 
 	@SuppressWarnings("all")
@@ -191,36 +179,45 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 
 		this.lastRenderCall = System.currentTimeMillis();
 		this.startTickerThreadIfNeeded();
+		int screenW = graphics.guiWidth();
+		int screenH = graphics.guiHeight();
 
-		// Check if cube map texture is loaded
-		if ((this.panoramaCubeMapTexture == null) || this.panoramaCubeMapTexture.isLoadFailed()) {
-			graphics.blit(RenderPipelines.GUI_TEXTURED, ITexture.MISSING_TEXTURE_LOCATION, 0, 0, 0.0F, 0.0F, ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight(), ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight());
+		if ((this.panoramaCubeMapTexture == null) || (this.cubeMap == null) || this.panoramaCubeMapTexture.isLoadFailed()) {
+			graphics.blit(RenderPipelines.GUI_TEXTURED, ITexture.MISSING_TEXTURE_LOCATION, 0, 0, 0.0F, 0.0F, screenW, screenH, screenW, screenH);
 			return;
 		}
 
 		if (!this.panoramaCubeMapTexture.isLoaded()) {
-			// Trigger loading by trying to get the texture view
 			this.panoramaCubeMapTexture.getTextureView();
-			// Show loading screen or previous frame while loading
 			return;
 		}
 
-		this._render(graphics, Minecraft.getInstance(), this.opacity);
+		this.submitPanoramaRenderState(graphics, screenW, screenH);
+		this.extractOverlayRenderState(graphics, screenW, screenH);
 
 	}
 
-	private void _render(@NotNull GuiGraphicsExtractor graphics, Minecraft mc, float alpha) {
+	private void submitPanoramaRenderState(@NotNull GuiGraphicsExtractor graphics, int screenW, int screenH) {
+		IMixinGuiGraphicsExtractor extractor = (IMixinGuiGraphicsExtractor)(Object)graphics;
+		GuiRenderState guiRenderState = extractor.get_guiRenderState_FancyMenu();
+		ScreenRectangle scissorStackPeek = ((IMixinScissorStack)extractor.get_scissorStack_FancyMenu()).invoke_peek_FancyMenu();
+		guiRenderState.addPicturesInPictureState(
+			new FancyMenuPanoramaRenderState(
+				this,
+				new Matrix3x2f(graphics.pose()),
+				this.angle,
+				-this.currentRotation,
+				0,
+				0,
+				screenW,
+				screenH,
+				ARGB.white(this.opacity),
+				scissorStackPeek
+			)
+		);
+	}
 
-		int screenW = ScreenUtils.getScreenWidth();
-		int screenH = ScreenUtils.getScreenHeight();
-
-		float pitch = this.angle;
-		float yaw = -this.currentRotation;
-		
-		// Render the cube map using vanilla's approach with custom alpha support
-		this.renderCubeMapWithAlpha(mc, pitch, yaw, alpha);
-
-		// Render overlay if present
+	private void extractOverlayRenderState(@NotNull GuiGraphicsExtractor graphics, int screenW, int screenH) {
 		if (this.overlayTextureSupplier != null) {
 			ITexture texture = this.overlayTextureSupplier.get();
 			if (texture != null) {
@@ -230,35 +227,11 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 				}
 			}
 		}
-
 	}
 
-	private void renderCubeMapWithAlpha(Minecraft mc, float pitch, float yaw, float alpha) {
-		// We can't use CubeMap.render() directly because it doesn't support custom FOV and alpha
-		// So we need to set our own projection matrix with custom FOV before rendering
-		
-		if (this.cubeMap != null && this.projectionMatrixBuffer != null) {
-			// Backup current projection matrix
-			RenderSystem.backupProjectionMatrix();
-			
-			// Set our custom projection matrix with desired FOV
-			this.projection.setupPerspective(0.05F, 10.0F, (float)this.fov, mc.getWindow().getWidth(), mc.getWindow().getHeight());
-			RenderSystem.setProjectionMatrix(
-				this.projectionMatrixBuffer.getBuffer(this.projection), 
-				ProjectionType.PERSPECTIVE
-			);
-			
-			// Apply alpha by modifying shader color
-//			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha);
-			
-			// Use vanilla cube map render
-			this.cubeMap.render(pitch, yaw);
-			
-			// Reset shader color
-//			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-			
-			// Restore original projection matrix
-			RenderSystem.restoreProjectionMatrix();
+	void renderToCurrentOutput_FancyMenu(float pitch, float yaw, int targetWidth, int targetHeight) {
+		if ((this.cubeMap != null) && (targetWidth > 0) && (targetHeight > 0)) {
+			this.cubeMap.render(pitch, yaw, (float)this.fov, targetWidth, targetHeight);
 		}
 	}
 
@@ -294,10 +267,6 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 			this.panoramaCubeMapTexture.close();
 			this.panoramaCubeMapTexture = null;
 		}
-		if (this.projectionMatrixBuffer != null) {
-			this.projectionMatrixBuffer.close();
-			this.projectionMatrixBuffer = null;
-		}
 		if (this.cubeMapLocation != null) {
 			Minecraft.getInstance().getTextureManager().release(this.cubeMapLocation);
 			this.cubeMapLocation = null;
@@ -305,4 +274,3 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 	}
 
 }
-
