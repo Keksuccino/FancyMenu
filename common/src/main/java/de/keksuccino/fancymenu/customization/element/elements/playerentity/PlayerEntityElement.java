@@ -116,6 +116,9 @@ public class PlayerEntityElement extends AbstractElement {
         super.afterConstruction();
         if (FancyEntityRendererUtils.isFerLoaded()) {
             this.widget = WrappedFancyPlayerWidget.build(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+            if ((this.widget != null) && !this.widget.isAvailable()) {
+                this.widget = null;
+            }
         }
     }
 
@@ -124,7 +127,7 @@ public class PlayerEntityElement extends AbstractElement {
 
         if (this.shouldRender()) {
 
-            if (this.widget == null) {
+            if ((this.widget == null) || !this.widget.isAvailable()) {
 
                 graphics.fill(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), MISSING_FER_COLOR.getColorInt());
                 int xCenter = this.getAbsoluteX() + (this.getAbsoluteWidth() / 2);
