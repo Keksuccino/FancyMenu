@@ -1,4 +1,13 @@
 
+CHANGELOG | FANCYMENU v3.8.5
+
+- Ported the mod to Minecraft 26.1.1
+
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.8.4
 
 - Minimum required Konkrete version is now v1.9.18
