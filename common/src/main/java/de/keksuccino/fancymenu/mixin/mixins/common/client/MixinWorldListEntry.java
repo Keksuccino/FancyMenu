@@ -12,16 +12,16 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(WorldSelectionList.WorldListEntry.class)
 public class MixinWorldListEntry {
 
-    @WrapWithCondition(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V"), method = "renderContent")
-    private boolean wrapBlitInRenderFancyMenu(GuiGraphicsExtractor instance, RenderPipeline $$0, Identifier $$1, int $$2, int $$3, float $$4, float $$5, int $$6, int $$7, int $$8, int i) {
-        if (i == 32) {
+    @WrapWithCondition(method = "extractContent", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V"))
+    private boolean wrapBlitInExtractContent_FancyMenu(GuiGraphicsExtractor instance, RenderPipeline $$0, Identifier $$1, int $$2, int $$3, float $$4, float $$5, int $$6, int $$7, int $$8, int iconHeight) {
+        if (iconHeight == 32) {
             return FancyMenu.getOptions().showSingleplayerScreenWorldIcons.getValue();
         }
         return true;
     }
 
-    @WrapWithCondition(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fill(IIIII)V"), method = "renderContent")
-    private boolean wrapFillInRenderFancyMenu(GuiGraphicsExtractor graphics, int p_93174_, int p_93175_, int p_93176_, int p_93177_, int p_93178_) {
+    @WrapWithCondition(method = "extractContent", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fill(IIIII)V"))
+    private boolean wrapFillInExtractContent_FancyMenu(GuiGraphicsExtractor graphics, int $$0, int $$1, int $$2, int $$3, int $$4) {
         return FancyMenu.getOptions().showSingleplayerScreenWorldIcons.getValue();
     }
 
