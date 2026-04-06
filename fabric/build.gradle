@@ -10,6 +10,12 @@ base {
     archivesName = "${mod_id}"
 }
 
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
+
 dependencies {
 
     minecraft "com.mojang:minecraft:${minecraft_version}"
@@ -24,7 +30,8 @@ dependencies {
     implementation "maven.modrinth:melody:1.0.16-26.1.1-fabric"
     implementation "maven.modrinth:konkrete:1.9.19-26.1.1-fabric"
     implementation "maven.modrinth:modmenu:18.0.0-alpha.8"
-    compileOnly "it.crystalnest:fancy-entity-renderer-fabric:$fer_mc_version-$fer_version"
+    // implementation "it.crystalnest:fancy-entity-renderer-fabric:$fer_mc_version-$fer_version"
+    implementation "flatdir:fer:0.5.4"
     compileOnly "de.keksuccino:mcef-fabric:2.1.7-1.21.10"
 
 }
