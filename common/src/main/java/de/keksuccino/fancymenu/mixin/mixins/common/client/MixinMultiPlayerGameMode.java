@@ -152,22 +152,10 @@ public class MixinMultiPlayerGameMode {
     }
 
     /** @reason Fire FancyMenu listener when the local player interacts with an entity. */
-    @WrapOperation(method = "interact", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;interactOn(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;"))
-    private InteractionResult wrap_interactWithEntity_FancyMenu(Player player, Entity target, InteractionHand hand, Operation<InteractionResult> original) {
+    @WrapOperation(method = "interact", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;interactOn(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/InteractionResult;"))
+    private InteractionResult wrap_interactWithEntity_FancyMenu(Player player, Entity target, InteractionHand hand, Vec3 hitVec, Operation<InteractionResult> original) {
         String itemKey = this.resolveItemKeyFromHand_FancyMenu(player, hand);
-        InteractionResult result = original.call(player, target, hand);
-        if (itemKey == null) {
-            itemKey = this.resolveItemKeyFromHand_FancyMenu(player, hand);
-        }
-        this.handleEntityInteractionResult_FancyMenu(player, target, result, itemKey);
-        return result;
-    }
-
-    /** @reason Fire FancyMenu listener when the local player interacts with an entity at a precise location. */
-    @WrapOperation(method = "interactAt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;interactAt(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;"))
-    private InteractionResult wrap_interactAtWithEntity_FancyMenu(Entity target, Player player, Vec3 hitVec, InteractionHand hand, Operation<InteractionResult> original) {
-        String itemKey = this.resolveItemKeyFromHand_FancyMenu(player, hand);
-        InteractionResult result = original.call(target, player, hitVec, hand);
+        InteractionResult result = original.call(player, target, hand, hitVec);
         if (itemKey == null) {
             itemKey = this.resolveItemKeyFromHand_FancyMenu(player, hand);
         }
