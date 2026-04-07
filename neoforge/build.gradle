@@ -38,6 +38,12 @@ runs {
     }
 }
 
+tasks.withType(JavaExec).configureEach {
+    if (name == "runClient" || name == "runServer") {
+        standardInput = System.in
+    }
+}
+
 //Temporarily disabled tests so compiling doesn't fail until I figure out why tf neoforge:test fails
 test {
     exclude '**/*'
