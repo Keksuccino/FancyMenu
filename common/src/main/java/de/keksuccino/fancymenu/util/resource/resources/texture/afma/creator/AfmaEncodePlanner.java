@@ -1201,7 +1201,7 @@ public class AfmaEncodePlanner {
             MotionSearchSeed seed = initialSeed;
             int centerDx = seed.motionVector().dx();
             int centerDy = seed.motionVector().dy();
-            for (int pass = 0; pass < BLOCK_INTER_MAX_REFINEMENT_PASSES; pass++) {
+            for (int pass = 0; pass < BLOCK_INTER_LOCAL_REFINEMENT_PASSES; pass++) {
                 MotionSearchSeed bestSeedThisPass = seed;
                 boolean improved = false;
                 for (int candidateDy = centerDy - BLOCK_INTER_LOCAL_REFINEMENT_RADIUS; candidateDy <= centerDy + BLOCK_INTER_LOCAL_REFINEMENT_RADIUS; candidateDy++) {
