@@ -80,27 +80,35 @@ public class AfmaEncodePlanner {
         LinkedHashMap<String, byte[]> payloads = new LinkedHashMap<>();
         Map<String, String> payloadPathsByFingerprint = new LinkedHashMap<>();
         try {
-            List<AfmaFrameDescriptor> plannedIntroFrames = this.planSequence(intro, true, dimension, options, copyDetector, payloads, payloadPathsByFingerprint,
+            PlannedSequence plannedIntroFrames = this.planSequence(intro, true, dimension, options, copyDetector, payloads, payloadPathsByFingerprint,
                     cancellationRequested, progressListener, 0, totalFrameCount, preloadedIntroFrame);
             preloadedIntroFrame = null;
-            List<AfmaFrameDescriptor> plannedMainFrames = this.planSequence(mainSequence, false, dimension, options, copyDetector, payloads, payloadPathsByFingerprint,
+            PlannedSequence plannedMainFrames = this.planSequence(mainSequence, false, dimension, options, copyDetector, payloads, payloadPathsByFingerprint,
                     cancellationRequested, progressListener, intro.size(), totalFrameCount, preloadedMainFrame);
             preloadedMainFrame = null;
+
+            long mainFrameTime = plannedMainFrames.defaultDelayMs();
+            long introFrameTime = plannedIntroFrames.defaultDelayMs();
+            if (plannedMainFrames.frames().isEmpty() && !plannedIntroFrames.frames().isEmpty()) {
+                mainFrameTime = introFrameTime;
+            } else if (plannedIntroFrames.frames().isEmpty()) {
+                introFrameTime = mainFrameTime;
+            }
 
             AfmaMetadata metadata = AfmaMetadata.create(
                     dimension.width(),
                     dimension.height(),
                     options.getLoopCount(),
-                    options.getFrameTimeMs(),
-                    options.getIntroFrameTimeMs(),
-                    options.getCustomFrameTimes(),
-                    options.getCustomIntroFrameTimes(),
+                    mainFrameTime,
+                    introFrameTime,
+                    plannedMainFrames.customFrameTimes(),
+                    plannedIntroFrames.customFrameTimes(),
                     options.getKeyframeInterval(),
                     options.isRectCopyEnabled(),
                     options.isDuplicateFrameElision()
             );
 
-            return new AfmaEncodePlan(metadata, new AfmaFrameIndex(plannedMainFrames, plannedIntroFrames), payloads);
+            return new AfmaEncodePlan(metadata, new AfmaFrameIndex(plannedMainFrames.frames(), plannedIntroFrames.frames()), payloads);
         } finally {
             CloseableUtils.closeQuietly(preloadedIntroFrame);
             CloseableUtils.closeQuietly(preloadedMainFrame);
@@ -108,15 +116,15 @@ public class AfmaEncodePlanner {
     }
 
     @NotNull
-    protected List<AfmaFrameDescriptor> planSequence(@NotNull AfmaSourceSequence sequence, boolean introSequence, @NotNull Dimension dimension,
-                                                     @NotNull AfmaEncodeOptions options, @NotNull AfmaRectCopyDetector copyDetector,
-                                                     @NotNull LinkedHashMap<String, byte[]> payloads,
-                                                     @NotNull Map<String, String> payloadPathsByFingerprint,
-                                                     @Nullable BooleanSupplier cancellationRequested, @Nullable ProgressListener progressListener,
-                                                     int startOffset, int totalFrameCount, @Nullable AfmaPixelFrame firstFrameOverride) throws IOException {
-        List<AfmaFrameDescriptor> plannedFrames = new ArrayList<>();
+    protected PlannedSequence planSequence(@NotNull AfmaSourceSequence sequence, boolean introSequence, @NotNull Dimension dimension,
+                                           @NotNull AfmaEncodeOptions options, @NotNull AfmaRectCopyDetector copyDetector,
+                                           @NotNull LinkedHashMap<String, byte[]> payloads,
+                                           @NotNull Map<String, String> payloadPathsByFingerprint,
+                                           @Nullable BooleanSupplier cancellationRequested, @Nullable ProgressListener progressListener,
+                                           int startOffset, int totalFrameCount, @Nullable AfmaPixelFrame firstFrameOverride) throws IOException {
+        List<PlannedTimedFrame> plannedFrames = new ArrayList<>();
         if (sequence.isEmpty()) {
-            return plannedFrames;
+            return this.buildPlannedSequence(plannedFrames, this.resolveSequenceDefaultDelay(options, introSequence));
         }
 
         AfmaPixelFrame previousFrame = null;
@@ -141,6 +149,7 @@ public class AfmaEncodePlanner {
                         throw new IOException("AFMA source frame dimensions do not match the expected canvas size: " + frameFile.getAbsolutePath());
                     }
 
+                    long frameDelayMs = this.resolveSourceFrameDelay(options, introSequence, frameIndex);
                     if ((previousFrame != null) && options.isNearLosslessEnabled() && ((framesSinceKeyframe + 1) < options.getKeyframeInterval())) {
                         currentFrame = this.applyNearLosslessTemporalMerge(previousFrame, currentFrame, options.getNearLosslessMaxChannelDelta());
                     }
@@ -149,14 +158,16 @@ public class AfmaEncodePlanner {
                     if (previousFrame == null) {
                         selectedCandidate = this.createFullCandidate(currentFrame, introSequence, frameIndex);
                     } else if (options.isDuplicateFrameElision() && AfmaPixelFrameHelper.isIdentical(previousFrame, currentFrame)) {
-                        selectedCandidate = PlannedCandidate.same();
+                        // Keep the previous emitted frame on screen longer instead of emitting a SAME opcode.
+                        this.extendPlannedFrameDelay(plannedFrames, frameDelayMs);
+                        continue;
                     } else if ((framesSinceKeyframe + 1) >= options.getKeyframeInterval()) {
                         selectedCandidate = this.createFullCandidate(currentFrame, introSequence, frameIndex);
                     } else {
                         selectedCandidate = this.chooseBestCandidate(previousFrame, currentFrame, introSequence, frameIndex, options, copyDetector, payloadPathsByFingerprint);
                     }
                     PlannedCandidate finalizedCandidate = selectedCandidate.internPayloads(payloads, payloadPathsByFingerprint);
-                    plannedFrames.add(finalizedCandidate.descriptor());
+                    plannedFrames.add(new PlannedTimedFrame(finalizedCandidate.descriptor(), frameDelayMs));
                     framesSinceKeyframe = finalizedCandidate.descriptor().isKeyframe() ? 0 : (framesSinceKeyframe + 1);
                 } finally {
                     CloseableUtils.closeQuietly(previousFrame);
@@ -168,7 +179,126 @@ public class AfmaEncodePlanner {
             CloseableUtils.closeQuietly(preloadedFrame);
         }
 
-        return plannedFrames;
+        return this.buildPlannedSequence(plannedFrames, this.resolveSequenceDefaultDelay(options, introSequence));
+    }
+
+    protected long resolveSourceFrameDelay(@NotNull AfmaEncodeOptions options, boolean introSequence, int frameIndex) {
+        Map<Integer, Long> customFrameTimes = introSequence ? options.getCustomIntroFrameTimes() : options.getCustomFrameTimes();
+        Long customDelay = customFrameTimes.get(frameIndex);
+        if ((customDelay != null) && (customDelay > 0L)) {
+            return customDelay;
+        }
+        return this.resolveSequenceDefaultDelay(options, introSequence);
+    }
+
+    protected long resolveSequenceDefaultDelay(@NotNull AfmaEncodeOptions options, boolean introSequence) {
+        return introSequence ? options.getIntroFrameTimeMs() : options.getFrameTimeMs();
+    }
+
+    protected void extendPlannedFrameDelay(@NotNull List<PlannedTimedFrame> plannedFrames, long additionalDelayMs) {
+        if (plannedFrames.isEmpty()) {
+            throw new IllegalStateException("AFMA temporal frame collapsing requires at least one emitted frame");
+        }
+
+        int lastIndex = plannedFrames.size() - 1;
+        plannedFrames.set(lastIndex, plannedFrames.get(lastIndex).withAdditionalDelay(additionalDelayMs));
+    }
+
+    @NotNull
+    protected PlannedSequence buildPlannedSequence(@NotNull List<PlannedTimedFrame> plannedFrames, long fallbackDefaultDelayMs) {
+        List<AfmaFrameDescriptor> descriptors = new ArrayList<>(plannedFrames.size());
+        List<Long> frameDelays = new ArrayList<>(plannedFrames.size());
+        for (PlannedTimedFrame plannedFrame : plannedFrames) {
+            descriptors.add(plannedFrame.descriptor());
+            frameDelays.add(plannedFrame.delayMs());
+        }
+
+        AdaptiveTiming adaptiveTiming = this.buildAdaptiveTiming(frameDelays, fallbackDefaultDelayMs);
+        return new PlannedSequence(descriptors, adaptiveTiming.defaultDelayMs(), adaptiveTiming.customFrameTimes());
+    }
+
+    @NotNull
+    protected AdaptiveTiming buildAdaptiveTiming(@NotNull List<Long> frameDelays, long fallbackDefaultDelayMs) {
+        long normalizedFallbackDelay = Math.max(1L, fallbackDefaultDelayMs);
+        if (frameDelays.isEmpty()) {
+            return new AdaptiveTiming(normalizedFallbackDelay, new LinkedHashMap<>());
+        }
+
+        // Pick the most metadata-efficient default delay and only keep emitted-frame overrides.
+        List<Long> normalizedFrameDelays = new ArrayList<>(frameDelays.size());
+        java.util.LinkedHashSet<Long> candidateDefaultDelays = new java.util.LinkedHashSet<>();
+        candidateDefaultDelays.add(normalizedFallbackDelay);
+        for (Long frameDelay : frameDelays) {
+            long normalizedDelay = Math.max(1L, Objects.requireNonNull(frameDelay));
+            normalizedFrameDelays.add(normalizedDelay);
+            candidateDefaultDelays.add(normalizedDelay);
+        }
+
+        long bestDefaultDelay = normalizedFallbackDelay;
+        long bestCost = Long.MAX_VALUE;
+        int bestOverrideCount = Integer.MAX_VALUE;
+        for (Long candidateDefaultDelay : candidateDefaultDelays) {
+            long candidateDelay = Objects.requireNonNull(candidateDefaultDelay);
+            long cost = this.estimateTimingMetadataBytes(normalizedFrameDelays, candidateDelay);
+            int overrideCount = this.countTimingOverrides(normalizedFrameDelays, candidateDelay);
+            if ((cost < bestCost)
+                    || ((cost == bestCost) && (overrideCount < bestOverrideCount))
+                    || ((cost == bestCost) && (overrideCount == bestOverrideCount)
+                    && (candidateDelay == normalizedFallbackDelay) && (bestDefaultDelay != normalizedFallbackDelay))) {
+                bestDefaultDelay = candidateDelay;
+                bestCost = cost;
+                bestOverrideCount = overrideCount;
+            }
+        }
+
+        LinkedHashMap<Integer, Long> customFrameTimes = new LinkedHashMap<>();
+        for (int frameIndex = 0; frameIndex < normalizedFrameDelays.size(); frameIndex++) {
+            long frameDelay = normalizedFrameDelays.get(frameIndex);
+            if (frameDelay != bestDefaultDelay) {
+                customFrameTimes.put(frameIndex, frameDelay);
+            }
+        }
+
+        return new AdaptiveTiming(bestDefaultDelay, customFrameTimes);
+    }
+
+    protected long estimateTimingMetadataBytes(@NotNull List<Long> frameDelays, long defaultDelayMs) {
+        long bytes = decimalLength(defaultDelayMs);
+        boolean hasCustomFrameTimes = false;
+        for (int frameIndex = 0; frameIndex < frameDelays.size(); frameIndex++) {
+            long frameDelay = frameDelays.get(frameIndex);
+            if (frameDelay == defaultDelayMs) {
+                continue;
+            }
+
+            hasCustomFrameTimes = true;
+            bytes += decimalLength(frameIndex) + decimalLength(frameDelay) + 4L;
+        }
+        if (hasCustomFrameTimes) {
+            bytes += 2L;
+        }
+        return bytes;
+    }
+
+    protected int countTimingOverrides(@NotNull List<Long> frameDelays, long defaultDelayMs) {
+        int count = 0;
+        for (Long frameDelay : frameDelays) {
+            if (Objects.requireNonNull(frameDelay) != defaultDelayMs) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    protected static int decimalLength(long value) {
+        return Long.toString(Math.max(0L, value)).length();
+    }
+
+    protected static long addDelaysSaturating(long left, long right) {
+        if ((Long.MAX_VALUE - left) < right) {
+            return Long.MAX_VALUE;
+        }
+        return left + right;
     }
 
     @NotNull
@@ -1418,6 +1548,22 @@ public class AfmaEncodePlanner {
     }
 
     protected record LoadedDimensionFrame(@NotNull Dimension dimension, @NotNull AfmaPixelFrame frame) {
+    }
+
+    protected record PlannedSequence(@NotNull List<AfmaFrameDescriptor> frames, long defaultDelayMs,
+                                     @NotNull Map<Integer, Long> customFrameTimes) {
+    }
+
+    protected record PlannedTimedFrame(@NotNull AfmaFrameDescriptor descriptor, long delayMs) {
+
+        @NotNull
+        public PlannedTimedFrame withAdditionalDelay(long additionalDelayMs) {
+            return new PlannedTimedFrame(this.descriptor, addDelaysSaturating(this.delayMs, Math.max(1L, additionalDelayMs)));
+        }
+
+    }
+
+    protected record AdaptiveTiming(long defaultDelayMs, @NotNull LinkedHashMap<Integer, Long> customFrameTimes) {
     }
 
     protected record ResidualPayloadData(@NotNull byte[] payloadBytes, int channels) {
