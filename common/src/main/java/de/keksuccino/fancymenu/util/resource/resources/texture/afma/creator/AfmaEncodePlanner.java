@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameInd
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameOperationType;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaMetadata;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaPatchRegion;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaPayloadMetricsHelper;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaRect;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaResidualPayload;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaResidualPayloadHelper;
@@ -18,8 +19,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -28,13 +27,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CancellationException;
 import java.util.function.BooleanSupplier;
-import java.util.zip.Deflater;
+import java.util.stream.IntStream;
 
 public class AfmaEncodePlanner {
 
     protected static final int MIN_SPARSE_DELTA_CHANGED_PIXELS = 4096;
     protected static final double MAX_SPARSE_DELTA_CHANGED_DENSITY = 0.30D;
     protected static final int BLOCK_INTER_TILE_SIZE = 16;
+    protected static final int MIN_PARALLEL_BLOCK_INTER_TILES = 32;
 
     @NotNull
     protected final AfmaFrameNormalizer frameNormalizer;
@@ -70,35 +70,41 @@ public class AfmaEncodePlanner {
 
         checkCancelled(cancellationRequested);
         AfmaSourceSequence dimensionSource = !mainSequence.isEmpty() ? mainSequence : intro;
-        Dimension dimension = this.readDimension(dimensionSource);
+        LoadedDimensionFrame loadedDimension = this.loadDimensionFrame(dimensionSource, cancellationRequested, progressListener);
+        Dimension dimension = loadedDimension.dimension();
+        AfmaPixelFrame preloadedMainFrame = (dimensionSource == mainSequence) ? loadedDimension.frame() : null;
+        AfmaPixelFrame preloadedIntroFrame = (dimensionSource == intro) ? loadedDimension.frame() : null;
         int totalFrameCount = Math.max(1, mainSequence.size() + intro.size());
-        if (!mainSequence.isEmpty()) {
-            this.validateSequenceDimensions(mainSequence, dimension, "main", cancellationRequested, progressListener, 0, totalFrameCount);
-        }
-        if (!intro.isEmpty()) {
-            this.validateSequenceDimensions(intro, dimension, "intro", cancellationRequested, progressListener, mainSequence.size(), totalFrameCount);
-        }
 
         AfmaRectCopyDetector copyDetector = new AfmaRectCopyDetector(options.getMaxCopySearchDistance(), options.getMaxCandidateAxisOffsets());
         LinkedHashMap<String, byte[]> payloads = new LinkedHashMap<>();
         Map<String, String> payloadPathsByFingerprint = new LinkedHashMap<>();
-        List<AfmaFrameDescriptor> plannedIntroFrames = this.planSequence(intro, true, dimension, options, copyDetector, payloads, payloadPathsByFingerprint, cancellationRequested, progressListener, 0, totalFrameCount);
-        List<AfmaFrameDescriptor> plannedMainFrames = this.planSequence(mainSequence, false, dimension, options, copyDetector, payloads, payloadPathsByFingerprint, cancellationRequested, progressListener, intro.size(), totalFrameCount);
+        try {
+            List<AfmaFrameDescriptor> plannedIntroFrames = this.planSequence(intro, true, dimension, options, copyDetector, payloads, payloadPathsByFingerprint,
+                    cancellationRequested, progressListener, 0, totalFrameCount, preloadedIntroFrame);
+            preloadedIntroFrame = null;
+            List<AfmaFrameDescriptor> plannedMainFrames = this.planSequence(mainSequence, false, dimension, options, copyDetector, payloads, payloadPathsByFingerprint,
+                    cancellationRequested, progressListener, intro.size(), totalFrameCount, preloadedMainFrame);
+            preloadedMainFrame = null;
 
-        AfmaMetadata metadata = AfmaMetadata.create(
-                dimension.width(),
-                dimension.height(),
-                options.getLoopCount(),
-                options.getFrameTimeMs(),
-                options.getIntroFrameTimeMs(),
-                options.getCustomFrameTimes(),
-                options.getCustomIntroFrameTimes(),
-                options.getKeyframeInterval(),
-                options.isRectCopyEnabled(),
-                options.isDuplicateFrameElision()
-        );
+            AfmaMetadata metadata = AfmaMetadata.create(
+                    dimension.width(),
+                    dimension.height(),
+                    options.getLoopCount(),
+                    options.getFrameTimeMs(),
+                    options.getIntroFrameTimeMs(),
+                    options.getCustomFrameTimes(),
+                    options.getCustomIntroFrameTimes(),
+                    options.getKeyframeInterval(),
+                    options.isRectCopyEnabled(),
+                    options.isDuplicateFrameElision()
+            );
 
-        return new AfmaEncodePlan(metadata, new AfmaFrameIndex(plannedMainFrames, plannedIntroFrames), payloads);
+            return new AfmaEncodePlan(metadata, new AfmaFrameIndex(plannedMainFrames, plannedIntroFrames), payloads);
+        } finally {
+            CloseableUtils.closeQuietly(preloadedIntroFrame);
+            CloseableUtils.closeQuietly(preloadedMainFrame);
+        }
     }
 
     @NotNull
@@ -107,22 +113,29 @@ public class AfmaEncodePlanner {
                                                      @NotNull LinkedHashMap<String, byte[]> payloads,
                                                      @NotNull Map<String, String> payloadPathsByFingerprint,
                                                      @Nullable BooleanSupplier cancellationRequested, @Nullable ProgressListener progressListener,
-                                                     int startOffset, int totalFrameCount) throws IOException {
+                                                     int startOffset, int totalFrameCount, @Nullable AfmaPixelFrame firstFrameOverride) throws IOException {
         List<AfmaFrameDescriptor> plannedFrames = new ArrayList<>();
         if (sequence.isEmpty()) {
             return plannedFrames;
         }
 
         AfmaPixelFrame previousFrame = null;
+        AfmaPixelFrame preloadedFrame = firstFrameOverride;
         int framesSinceKeyframe = 0;
         try {
             for (int frameIndex = 0; frameIndex < sequence.size(); frameIndex++) {
                 checkCancelled(cancellationRequested);
                 reportProgress(progressListener,
                         "Planning " + (introSequence ? "intro" : "main") + " frame " + (frameIndex + 1) + "/" + sequence.size(),
-                        0.25D + (0.65D * ((double) (startOffset + frameIndex + 1) / Math.max(1, totalFrameCount))));
+                        0.08D + (0.92D * ((double) (startOffset + frameIndex + 1) / Math.max(1, totalFrameCount))));
                 File frameFile = Objects.requireNonNull(sequence.getFrame(frameIndex));
-                AfmaPixelFrame currentFrame = this.frameNormalizer.loadFrame(frameFile);
+                AfmaPixelFrame currentFrame;
+                if ((frameIndex == 0) && (preloadedFrame != null)) {
+                    currentFrame = preloadedFrame;
+                    preloadedFrame = null;
+                } else {
+                    currentFrame = this.frameNormalizer.loadFrame(frameFile);
+                }
                 try {
                     if ((currentFrame.getWidth() != dimension.width()) || (currentFrame.getHeight() != dimension.height())) {
                         throw new IOException("AFMA source frame dimensions do not match the expected canvas size: " + frameFile.getAbsolutePath());
@@ -152,6 +165,7 @@ public class AfmaEncodePlanner {
             }
         } finally {
             CloseableUtils.closeQuietly(previousFrame);
+            CloseableUtils.closeQuietly(preloadedFrame);
         }
 
         return plannedFrames;
@@ -761,21 +775,19 @@ public class AfmaEncodePlanner {
             return null;
         }
 
-        List<AfmaBlockInterPayloadHelper.TileOperation> tileOperations = new ArrayList<>(tileCountX * tileCountY);
-        for (int tileY = 0; tileY < tileCountY; tileY++) {
-            int localY = tileY * BLOCK_INTER_TILE_SIZE;
-            int dstY = regionBounds.y() + localY;
-            int tileHeight = AfmaBlockInterPayloadHelper.tileDimension(tileY, tileCountY, BLOCK_INTER_TILE_SIZE, regionBounds.height());
-            for (int tileX = 0; tileX < tileCountX; tileX++) {
-                int localX = tileX * BLOCK_INTER_TILE_SIZE;
-                int dstX = regionBounds.x() + localX;
-                int tileWidth = AfmaBlockInterPayloadHelper.tileDimension(tileX, tileCountX, BLOCK_INTER_TILE_SIZE, regionBounds.width());
-                tileOperations.add(this.chooseBestBlockInterTile(previousFrame, currentFrame, dstX, dstY, tileWidth, tileHeight, motionVectors));
+        int totalTileCount = tileCountX * tileCountY;
+        AfmaBlockInterPayloadHelper.TileOperation[] tileOperations = new AfmaBlockInterPayloadHelper.TileOperation[totalTileCount];
+        if (totalTileCount >= MIN_PARALLEL_BLOCK_INTER_TILES) {
+            IntStream.range(0, totalTileCount).parallel().forEach(tileIndex ->
+                    tileOperations[tileIndex] = this.buildBlockInterTileOperation(previousFrame, currentFrame, motionVectors, regionBounds, tileCountX, tileCountY, tileIndex));
+        } else {
+            for (int tileIndex = 0; tileIndex < totalTileCount; tileIndex++) {
+                tileOperations[tileIndex] = this.buildBlockInterTileOperation(previousFrame, currentFrame, motionVectors, regionBounds, tileCountX, tileCountY, tileIndex);
             }
         }
 
         String payloadPath = this.buildRawPayloadPath(introSequence, frameIndex, "bi");
-        byte[] payloadBytes = AfmaBlockInterPayloadHelper.writePayload(BLOCK_INTER_TILE_SIZE, regionBounds.width(), regionBounds.height(), tileOperations);
+        byte[] payloadBytes = AfmaBlockInterPayloadHelper.writePayload(BLOCK_INTER_TILE_SIZE, regionBounds.width(), regionBounds.height(), Arrays.asList(tileOperations));
         return new PlannedCandidate(
                 AfmaFrameDescriptor.blockInter(payloadPath, regionBounds.x(), regionBounds.y(), regionBounds.width(), regionBounds.height(), new AfmaBlockInter(BLOCK_INTER_TILE_SIZE)),
                 payloadPath,
@@ -789,6 +801,22 @@ public class AfmaEncodePlanner {
                 DecodeCost.BLOCK_INTER,
                 7
         );
+    }
+
+    @NotNull
+    protected AfmaBlockInterPayloadHelper.TileOperation buildBlockInterTileOperation(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
+                                                                                     @NotNull List<AfmaRectCopyDetector.MotionVector> motionVectors,
+                                                                                     @NotNull AfmaRect regionBounds, int tileCountX, int tileCountY,
+                                                                                     int tileIndex) {
+        int tileY = tileIndex / tileCountX;
+        int tileX = tileIndex % tileCountX;
+        int localY = tileY * BLOCK_INTER_TILE_SIZE;
+        int localX = tileX * BLOCK_INTER_TILE_SIZE;
+        int dstY = regionBounds.y() + localY;
+        int dstX = regionBounds.x() + localX;
+        int tileHeight = AfmaBlockInterPayloadHelper.tileDimension(tileY, tileCountY, BLOCK_INTER_TILE_SIZE, regionBounds.height());
+        int tileWidth = AfmaBlockInterPayloadHelper.tileDimension(tileX, tileCountX, BLOCK_INTER_TILE_SIZE, regionBounds.width());
+        return this.chooseBestBlockInterTile(previousFrame, currentFrame, dstX, dstY, tileWidth, tileHeight, motionVectors);
     }
 
     @NotNull
@@ -1114,33 +1142,17 @@ public class AfmaEncodePlanner {
     }
 
     @NotNull
-    protected Dimension readDimension(@NotNull AfmaSourceSequence sequence) throws IOException {
+    protected LoadedDimensionFrame loadDimensionFrame(@NotNull AfmaSourceSequence sequence, @Nullable BooleanSupplier cancellationRequested,
+                                                     @Nullable ProgressListener progressListener) throws IOException {
         if (sequence.isEmpty()) {
             throw new IOException("AFMA encoding requires at least one source frame");
         }
 
+        reportProgress(progressListener, "Reading source frame dimensions...", 0.02D);
+        checkCancelled(cancellationRequested);
         File firstFrame = Objects.requireNonNull(sequence.getFrame(0));
-        try (AfmaPixelFrame firstImage = this.frameNormalizer.loadFrame(firstFrame)) {
-            return new Dimension(firstImage.getWidth(), firstImage.getHeight());
-        }
-    }
-
-    protected void validateSequenceDimensions(@NotNull AfmaSourceSequence sequence, @NotNull Dimension dimension,
-                                              @NotNull String sequenceName, @Nullable BooleanSupplier cancellationRequested,
-                                              @Nullable ProgressListener progressListener, int startOffset, int totalFrameCount) throws IOException {
-        List<File> frames = sequence.getFrames();
-        for (int i = 0; i < frames.size(); i++) {
-            checkCancelled(cancellationRequested);
-            File frame = frames.get(i);
-            reportProgress(progressListener,
-                    "Validating " + sequenceName + " frame " + (i + 1) + "/" + frames.size(),
-                    0.25D * ((double) (startOffset + i + 1) / Math.max(1, totalFrameCount)));
-            try (AfmaPixelFrame image = this.frameNormalizer.loadFrame(frame)) {
-                if ((image.getWidth() != dimension.width()) || (image.getHeight() != dimension.height())) {
-                    throw new IOException("AFMA " + sequenceName + " frame dimensions do not match: " + frame.getAbsolutePath());
-                }
-            }
-        }
+        AfmaPixelFrame firstImage = this.frameNormalizer.loadFrame(firstFrame);
+        return new LoadedDimensionFrame(new Dimension(firstImage.getWidth(), firstImage.getHeight()), firstImage);
     }
 
     protected static void reportProgress(@Nullable ProgressListener progressListener, @NotNull String detail, double progress) {
@@ -1264,7 +1276,7 @@ public class AfmaEncodePlanner {
             if ((path == null) || (payload == null)) {
                 return 0L;
             }
-            String fingerprint = fingerprintPayload(payload);
+            String fingerprint = AfmaPayloadMetricsHelper.fingerprintPayload(payload);
             String existingPath = payloadPathsByFingerprint.get(fingerprint);
             if ((existingPath != null) && !existingPath.equals(path)) {
                 return 0L;
@@ -1346,7 +1358,7 @@ public class AfmaEncodePlanner {
                 return this;
             }
 
-            String fingerprint = fingerprintPayload(this.primaryPayload);
+            String fingerprint = AfmaPayloadMetricsHelper.fingerprintPayload(this.primaryPayload);
             String existingPath = payloadPathsByFingerprint.get(fingerprint);
             if ((existingPath != null) && !existingPath.equals(this.primaryPayloadPath)) {
                 return new PlannedCandidate(
@@ -1374,7 +1386,7 @@ public class AfmaEncodePlanner {
                 return this;
             }
 
-            String fingerprint = fingerprintPayload(this.patchPayload);
+            String fingerprint = AfmaPayloadMetricsHelper.fingerprintPayload(this.patchPayload);
             String existingPath = payloadPathsByFingerprint.get(fingerprint);
             if ((existingPath != null) && !existingPath.equals(this.patchPayloadPath)) {
                 return new PlannedCandidate(
@@ -1396,47 +1408,16 @@ public class AfmaEncodePlanner {
             return this;
         }
 
-        @NotNull
-        protected static String fingerprintPayload(@NotNull byte[] payload) {
-            try {
-                byte[] digest = MessageDigest.getInstance("SHA-256").digest(payload);
-                StringBuilder builder = new StringBuilder(digest.length * 2);
-                for (byte digestByte : digest) {
-                    builder.append(Character.forDigit((digestByte >>> 4) & 0xF, 16));
-                    builder.append(Character.forDigit(digestByte & 0xF, 16));
-                }
-                return builder.toString();
-            } catch (NoSuchAlgorithmException ex) {
-                return payload.length + ":" + Arrays.hashCode(payload);
-            }
-        }
-
         protected static long estimatePayloadArchiveBytes(@Nullable byte[] payload, @Nullable PayloadKind payloadKind) {
-            if (payload == null) {
-                return 0L;
-            }
-            if (payload.length < 1024) {
-                return payload.length;
-            }
-
-            Deflater deflater = new Deflater(9, true);
-            byte[] buffer = new byte[8192];
-            long compressedBytes = 0L;
-            try {
-                deflater.setInput(payload);
-                deflater.finish();
-                while (!deflater.finished()) {
-                    compressedBytes += deflater.deflate(buffer);
-                }
-            } finally {
-                deflater.end();
-            }
-            return Math.max(1L, compressedBytes);
+            return AfmaPayloadMetricsHelper.estimateArchiveBytes(payload);
         }
 
     }
 
     protected record Dimension(int width, int height) {
+    }
+
+    protected record LoadedDimensionFrame(@NotNull Dimension dimension, @NotNull AfmaPixelFrame frame) {
     }
 
     protected record ResidualPayloadData(@NotNull byte[] payloadBytes, int channels) {

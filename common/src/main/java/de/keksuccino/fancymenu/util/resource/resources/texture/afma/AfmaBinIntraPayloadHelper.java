@@ -14,7 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.zip.Deflater;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 public final class AfmaBinIntraPayloadHelper {
 
@@ -23,6 +24,7 @@ public final class AfmaBinIntraPayloadHelper {
     public static final int MAX_PALETTE_COLORS = 256;
     public static final int RGB_CHANNELS = 3;
     public static final int RGBA_CHANNELS = 4;
+    protected static final int MIN_PARALLEL_MODE_SELECTION_PIXELS = 65536;
 
     private AfmaBinIntraPayloadHelper() {
     }
@@ -32,30 +34,22 @@ public final class AfmaBinIntraPayloadHelper {
         validateDimensions(width, height);
         validatePixelBuffer(width, height, pixels);
 
-        List<EncodedPayloadCandidate> candidates = new ArrayList<>(6);
-
-        EncodedPayloadCandidate solidCandidate = buildSolidCandidate(width, height, pixels);
-        if (solidCandidate != null) {
-            candidates.add(solidCandidate);
-        }
-
-        EncodedPayloadCandidate indexedCandidate = buildIndexedCandidate(width, height, pixels);
-        if (indexedCandidate != null) {
-            candidates.add(indexedCandidate);
-        }
+        List<PayloadCandidateBuilder> candidateBuilders = new ArrayList<>(6);
+        candidateBuilders.add(() -> buildSolidCandidate(width, height, pixels));
+        candidateBuilders.add(() -> buildIndexedCandidate(width, height, pixels));
 
         boolean hasAlpha = hasAlpha(pixels);
         if (hasAlpha) {
-            candidates.add(buildFilteredCandidate(width, height, pixels, Mode.RGBA_FILTERED));
-            candidates.add(buildSplitAlphaCandidate(width, height, pixels));
-
-            EncodedPayloadCandidate colorMaskCandidate = buildColorPlusAlphaMaskCandidate(width, height, pixels);
-            if (colorMaskCandidate != null) {
-                candidates.add(colorMaskCandidate);
-            }
+            candidateBuilders.add(() -> buildFilteredCandidate(width, height, pixels, Mode.RGBA_FILTERED));
+            candidateBuilders.add(() -> buildSplitAlphaCandidate(width, height, pixels));
+            candidateBuilders.add(() -> buildColorPlusAlphaMaskCandidate(width, height, pixels));
         } else {
-            candidates.add(buildFilteredCandidate(width, height, pixels, Mode.RGB_FILTERED));
+            candidateBuilders.add(() -> buildFilteredCandidate(width, height, pixels, Mode.RGB_FILTERED));
         }
+
+        List<EncodedPayloadCandidate> candidates = shouldParallelizeModeSelection(width, height, candidateBuilders.size())
+                ? buildCandidatesInParallel(candidateBuilders)
+                : buildCandidatesSequential(candidateBuilders);
 
         EncodedPayloadCandidate bestCandidate = null;
         for (EncodedPayloadCandidate candidate : candidates) {
@@ -463,6 +457,64 @@ public final class AfmaBinIntraPayloadHelper {
         return encoded;
     }
 
+    protected static boolean shouldParallelizeModeSelection(int width, int height, int candidateCount) {
+        return candidateCount > 1 && ((long) width * height) >= MIN_PARALLEL_MODE_SELECTION_PIXELS;
+    }
+
+    @NotNull
+    protected static List<EncodedPayloadCandidate> buildCandidatesSequential(@NotNull List<PayloadCandidateBuilder> candidateBuilders) throws IOException {
+        List<EncodedPayloadCandidate> candidates = new ArrayList<>(candidateBuilders.size());
+        for (PayloadCandidateBuilder candidateBuilder : candidateBuilders) {
+            EncodedPayloadCandidate candidate = candidateBuilder.build();
+            if (candidate != null) {
+                candidates.add(candidate);
+            }
+        }
+        return candidates;
+    }
+
+    @NotNull
+    protected static List<EncodedPayloadCandidate> buildCandidatesInParallel(@NotNull List<PayloadCandidateBuilder> candidateBuilders) throws IOException {
+        List<CompletableFuture<EncodedPayloadCandidate>> candidateFutures = new ArrayList<>(candidateBuilders.size());
+        for (PayloadCandidateBuilder candidateBuilder : candidateBuilders) {
+            candidateFutures.add(CompletableFuture.supplyAsync(() -> {
+                try {
+                    return candidateBuilder.build();
+                } catch (IOException ex) {
+                    throw new CompletionException(ex);
+                }
+            }));
+        }
+
+        List<EncodedPayloadCandidate> candidates = new ArrayList<>(candidateBuilders.size());
+        for (CompletableFuture<EncodedPayloadCandidate> candidateFuture : candidateFutures) {
+            EncodedPayloadCandidate candidate = joinCandidate(candidateFuture);
+            if (candidate != null) {
+                candidates.add(candidate);
+            }
+        }
+        return candidates;
+    }
+
+    @Nullable
+    protected static EncodedPayloadCandidate joinCandidate(@NotNull CompletableFuture<EncodedPayloadCandidate> candidateFuture) throws IOException {
+        try {
+            return candidateFuture.join();
+        } catch (CompletionException ex) {
+            Throwable cause = ex.getCause();
+            if (cause instanceof IOException ioEx) {
+                throw ioEx;
+            }
+            if (cause instanceof RuntimeException runtimeEx) {
+                throw runtimeEx;
+            }
+            if (cause instanceof Error error) {
+                throw error;
+            }
+            throw new IOException("Failed to build an AFMA BIN_INTRA payload candidate", cause);
+        }
+    }
+
     @NotNull
     protected static FilterSelection selectBestFilter(@NotNull byte[] rawBytes, int rowOffset, int rowBytes,
                                                       @NotNull byte[] previousRow, int bytesPerPixel,
@@ -662,26 +714,6 @@ public final class AfmaBinIntraPayloadHelper {
         }
     }
 
-    protected static long estimateArchiveBytes(@NotNull byte[] payloadBytes) {
-        if (payloadBytes.length < 1024) {
-            return payloadBytes.length;
-        }
-
-        Deflater deflater = new Deflater(9, true);
-        byte[] buffer = new byte[8192];
-        long compressedBytes = 0L;
-        try {
-            deflater.setInput(payloadBytes);
-            deflater.finish();
-            while (!deflater.finished()) {
-                compressedBytes += deflater.deflate(buffer);
-            }
-        } finally {
-            deflater.end();
-        }
-        return Math.max(1L, compressedBytes);
-    }
-
     public record PayloadHeader(int width, int height, @NotNull Mode mode) {
     }
 
@@ -691,7 +723,7 @@ public final class AfmaBinIntraPayloadHelper {
     protected record EncodedPayloadCandidate(@NotNull Mode mode, @NotNull byte[] payloadBytes, long estimatedArchiveBytes) {
 
         protected EncodedPayloadCandidate(@NotNull Mode mode, @NotNull byte[] payloadBytes) {
-            this(mode, payloadBytes, estimateArchiveBytes(payloadBytes));
+            this(mode, payloadBytes, AfmaPayloadMetricsHelper.estimateArchiveBytes(payloadBytes));
         }
 
         protected boolean isBetterThan(@NotNull EncodedPayloadCandidate other) {
@@ -706,6 +738,11 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     protected record FilterSelection(@NotNull Filter filter, long score) {
+    }
+
+    @FunctionalInterface
+    protected interface PayloadCandidateBuilder {
+        @Nullable EncodedPayloadCandidate build() throws IOException;
     }
 
     public enum Mode {
