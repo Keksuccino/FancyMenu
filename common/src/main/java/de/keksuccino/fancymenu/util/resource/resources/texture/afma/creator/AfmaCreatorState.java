@@ -350,6 +350,7 @@ public class AfmaCreatorState {
                 .setMaxCandidateAxisOffsets(this.maxCandidateAxisOffsets)
                 .setCustomFrameTimes(parseCustomFrameTimes(this.customFrameTimesText))
                 .setCustomIntroFrameTimes(parseCustomFrameTimes(this.customIntroFrameTimesText));
+        this.applyAdvancedCompressionDefaults(options);
 
         return new PreparedInputs(
                 main.sequence,
@@ -358,6 +359,50 @@ public class AfmaCreatorState {
                 options,
                 this.generateThumbnail
         );
+    }
+
+    protected void applyAdvancedCompressionDefaults(@NotNull AfmaEncodeOptions options) {
+        int preferredKeyframeInterval = Math.max(1, options.getKeyframeInterval());
+        switch (this.optimizationPreset) {
+            case SMALLEST_FILE -> options
+                    .setAdaptiveKeyframePlacement(true)
+                    .setAdaptiveMaxKeyframeInterval(Math.max(preferredKeyframeInterval * 4, preferredKeyframeInterval + 180))
+                    .setAdaptiveContinuationMinSavingsBytes(128L)
+                    .setAdaptiveContinuationMinSavingsRatio(0.0025D);
+            case BALANCED -> options
+                    .setAdaptiveKeyframePlacement(true)
+                    .setAdaptiveMaxKeyframeInterval(Math.max(preferredKeyframeInterval * 2, preferredKeyframeInterval + 36))
+                    .setAdaptiveContinuationMinSavingsBytes(768L)
+                    .setAdaptiveContinuationMinSavingsRatio(0.0075D);
+            case FASTEST_DECODE -> options
+                    .setAdaptiveKeyframePlacement(false)
+                    .setAdaptiveMaxKeyframeInterval(preferredKeyframeInterval)
+                    .setAdaptiveContinuationMinSavingsBytes(0L)
+                    .setAdaptiveContinuationMinSavingsRatio(0D);
+        }
+
+        if (!this.nearLosslessEnabled) {
+            options
+                    .setPerceptualBinIntraMaxVisibleColorDelta(0)
+                    .setPerceptualBinIntraMaxAlphaDelta(0)
+                    .setPerceptualBinIntraMaxAverageError(0D);
+            return;
+        }
+
+        switch (this.optimizationPreset) {
+            case SMALLEST_FILE -> options
+                    .setPerceptualBinIntraMaxVisibleColorDelta(16)
+                    .setPerceptualBinIntraMaxAlphaDelta(32)
+                    .setPerceptualBinIntraMaxAverageError(7.5D);
+            case BALANCED -> options
+                    .setPerceptualBinIntraMaxVisibleColorDelta(10)
+                    .setPerceptualBinIntraMaxAlphaDelta(20)
+                    .setPerceptualBinIntraMaxAverageError(4.0D);
+            case FASTEST_DECODE -> options
+                    .setPerceptualBinIntraMaxVisibleColorDelta(8)
+                    .setPerceptualBinIntraMaxAlphaDelta(16)
+                    .setPerceptualBinIntraMaxAverageError(3.0D);
+        }
     }
 
     protected @Nullable byte[] buildThumbnailBytes(@NotNull AfmaSourceSequence mainSequence, @NotNull AfmaSourceSequence introSequence) throws IOException {

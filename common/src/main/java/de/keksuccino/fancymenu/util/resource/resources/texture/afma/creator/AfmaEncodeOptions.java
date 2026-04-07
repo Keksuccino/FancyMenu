@@ -30,6 +30,13 @@ public class AfmaEncodeOptions {
     protected double minComplexCandidateSavingsRatio = 0.015D;
     protected double minStrongComplexCandidateSavingsRatio = 0.06D;
     protected int nearLosslessMaxChannelDelta = 0;
+    protected boolean adaptiveKeyframePlacement = false;
+    protected int adaptiveMaxKeyframeInterval = AfmaMetadata.DEFAULT_KEYFRAME_INTERVAL;
+    protected long adaptiveContinuationMinSavingsBytes = 512L;
+    protected double adaptiveContinuationMinSavingsRatio = 0.005D;
+    protected int perceptualBinIntraMaxVisibleColorDelta = 0;
+    protected int perceptualBinIntraMaxAlphaDelta = 0;
+    protected double perceptualBinIntraMaxAverageError = 0D;
 
     @NotNull
     public static AfmaEncodeOptions balanced() {
@@ -89,6 +96,9 @@ public class AfmaEncodeOptions {
 
     public AfmaEncodeOptions setKeyframeInterval(int keyframeInterval) {
         this.keyframeInterval = keyframeInterval;
+        if (this.adaptiveMaxKeyframeInterval < keyframeInterval) {
+            this.adaptiveMaxKeyframeInterval = keyframeInterval;
+        }
         return this;
     }
 
@@ -165,6 +175,75 @@ public class AfmaEncodeOptions {
         return this;
     }
 
+    public boolean isAdaptiveKeyframePlacementEnabled() {
+        return this.adaptiveKeyframePlacement;
+    }
+
+    public AfmaEncodeOptions setAdaptiveKeyframePlacement(boolean adaptiveKeyframePlacement) {
+        this.adaptiveKeyframePlacement = adaptiveKeyframePlacement;
+        return this;
+    }
+
+    public int getAdaptiveMaxKeyframeInterval() {
+        return this.adaptiveMaxKeyframeInterval;
+    }
+
+    public AfmaEncodeOptions setAdaptiveMaxKeyframeInterval(int adaptiveMaxKeyframeInterval) {
+        this.adaptiveMaxKeyframeInterval = adaptiveMaxKeyframeInterval;
+        return this;
+    }
+
+    public long getAdaptiveContinuationMinSavingsBytes() {
+        return this.adaptiveContinuationMinSavingsBytes;
+    }
+
+    public AfmaEncodeOptions setAdaptiveContinuationMinSavingsBytes(long adaptiveContinuationMinSavingsBytes) {
+        this.adaptiveContinuationMinSavingsBytes = adaptiveContinuationMinSavingsBytes;
+        return this;
+    }
+
+    public double getAdaptiveContinuationMinSavingsRatio() {
+        return this.adaptiveContinuationMinSavingsRatio;
+    }
+
+    public AfmaEncodeOptions setAdaptiveContinuationMinSavingsRatio(double adaptiveContinuationMinSavingsRatio) {
+        this.adaptiveContinuationMinSavingsRatio = adaptiveContinuationMinSavingsRatio;
+        return this;
+    }
+
+    public int getPerceptualBinIntraMaxVisibleColorDelta() {
+        return this.perceptualBinIntraMaxVisibleColorDelta;
+    }
+
+    public AfmaEncodeOptions setPerceptualBinIntraMaxVisibleColorDelta(int perceptualBinIntraMaxVisibleColorDelta) {
+        this.perceptualBinIntraMaxVisibleColorDelta = perceptualBinIntraMaxVisibleColorDelta;
+        return this;
+    }
+
+    public int getPerceptualBinIntraMaxAlphaDelta() {
+        return this.perceptualBinIntraMaxAlphaDelta;
+    }
+
+    public AfmaEncodeOptions setPerceptualBinIntraMaxAlphaDelta(int perceptualBinIntraMaxAlphaDelta) {
+        this.perceptualBinIntraMaxAlphaDelta = perceptualBinIntraMaxAlphaDelta;
+        return this;
+    }
+
+    public double getPerceptualBinIntraMaxAverageError() {
+        return this.perceptualBinIntraMaxAverageError;
+    }
+
+    public boolean isPerceptualBinIntraEnabled() {
+        return this.perceptualBinIntraMaxAverageError > 0D
+                && this.perceptualBinIntraMaxVisibleColorDelta > 0
+                && this.perceptualBinIntraMaxAlphaDelta >= 0;
+    }
+
+    public AfmaEncodeOptions setPerceptualBinIntraMaxAverageError(double perceptualBinIntraMaxAverageError) {
+        this.perceptualBinIntraMaxAverageError = perceptualBinIntraMaxAverageError;
+        return this;
+    }
+
     public void validateForCounts(int mainFrameCount, int introFrameCount) {
         if (mainFrameCount <= 0 && introFrameCount <= 0) {
             throw new IllegalArgumentException("AFMA encoding requires at least one main or intro frame");
@@ -174,6 +253,9 @@ public class AfmaEncodeOptions {
         }
         if (this.keyframeInterval <= 0) {
             throw new IllegalArgumentException("AFMA keyframe interval must be greater than 0");
+        }
+        if (this.adaptiveMaxKeyframeInterval <= 0 || this.adaptiveMaxKeyframeInterval < this.keyframeInterval) {
+            throw new IllegalArgumentException("AFMA adaptive keyframe interval must be greater than or equal to the preferred keyframe interval");
         }
         if (this.maxCopySearchDistance < 0) {
             throw new IllegalArgumentException("AFMA copy search distance cannot be negative");
@@ -195,6 +277,16 @@ public class AfmaEncodeOptions {
         }
         if (this.nearLosslessMaxChannelDelta < 0 || this.nearLosslessMaxChannelDelta > 255) {
             throw new IllegalArgumentException("AFMA near-lossless channel delta must stay within [0, 255]");
+        }
+        if (this.adaptiveContinuationMinSavingsBytes < 0L || this.adaptiveContinuationMinSavingsRatio < 0D) {
+            throw new IllegalArgumentException("AFMA adaptive GOP continuation thresholds cannot be negative");
+        }
+        if (this.perceptualBinIntraMaxVisibleColorDelta < 0 || this.perceptualBinIntraMaxVisibleColorDelta > 255
+                || this.perceptualBinIntraMaxAlphaDelta < 0 || this.perceptualBinIntraMaxAlphaDelta > 255) {
+            throw new IllegalArgumentException("AFMA perceptual BIN_INTRA deltas must stay within [0, 255]");
+        }
+        if (this.perceptualBinIntraMaxAverageError < 0D) {
+            throw new IllegalArgumentException("AFMA perceptual BIN_INTRA average error cannot be negative");
         }
 
         validateCustomFrameTimes(this.customFrameTimes, mainFrameCount, "main");

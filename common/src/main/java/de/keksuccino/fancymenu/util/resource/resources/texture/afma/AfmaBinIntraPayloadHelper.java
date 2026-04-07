@@ -31,20 +31,24 @@ public final class AfmaBinIntraPayloadHelper {
 
     @NotNull
     public static byte[] encodePayload(int width, int height, @NotNull int[] pixels) throws IOException {
+        return encodePayloadDetailed(width, height, pixels).payloadBytes();
+    }
+
+    @NotNull
+    public static EncodedPayloadResult encodePayloadDetailed(int width, int height, @NotNull int[] pixels) throws IOException {
+        return encodePayloadDetailed(width, height, pixels, EncodePreferences.lossless());
+    }
+
+    @NotNull
+    public static EncodedPayloadResult encodePayloadDetailed(int width, int height, @NotNull int[] pixels, @Nullable EncodePreferences preferences) throws IOException {
         validateDimensions(width, height);
         validatePixelBuffer(width, height, pixels);
 
-        List<PayloadCandidateBuilder> candidateBuilders = new ArrayList<>(6);
-        candidateBuilders.add(() -> buildSolidCandidate(width, height, pixels));
-        candidateBuilders.add(() -> buildIndexedCandidate(width, height, pixels));
-
-        boolean hasAlpha = hasAlpha(pixels);
-        if (hasAlpha) {
-            candidateBuilders.add(() -> buildFilteredCandidate(width, height, pixels, Mode.RGBA_FILTERED));
-            candidateBuilders.add(() -> buildSplitAlphaCandidate(width, height, pixels));
-            candidateBuilders.add(() -> buildColorPlusAlphaMaskCandidate(width, height, pixels));
-        } else {
-            candidateBuilders.add(() -> buildFilteredCandidate(width, height, pixels, Mode.RGB_FILTERED));
+        EncodePreferences normalizedPreferences = (preferences != null) ? preferences : EncodePreferences.lossless();
+        List<PixelCandidate> pixelCandidates = collectPixelCandidates(width, height, pixels, normalizedPreferences);
+        List<PayloadCandidateBuilder> candidateBuilders = new ArrayList<>(pixelCandidates.size() * 5);
+        for (PixelCandidate pixelCandidate : pixelCandidates) {
+            addCandidateBuilders(candidateBuilders, width, height, pixelCandidate);
         }
 
         List<EncodedPayloadCandidate> candidates = shouldParallelizeModeSelection(width, height, candidateBuilders.size())
@@ -61,7 +65,7 @@ public final class AfmaBinIntraPayloadHelper {
         if (bestCandidate == null) {
             throw new IOException("Failed to build an AFMA BIN_INTRA payload");
         }
-        return bestCandidate.payloadBytes();
+        return new EncodedPayloadResult(bestCandidate.payloadBytes(), bestCandidate.reconstructedPixels(), bestCandidate.lossless(), bestCandidate.mode());
     }
 
     @NotNull
@@ -139,7 +143,8 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     @Nullable
-    protected static EncodedPayloadCandidate buildSolidCandidate(int width, int height, @NotNull int[] pixels) throws IOException {
+    protected static EncodedPayloadCandidate buildSolidCandidate(int width, int height, @NotNull PixelCandidate pixelCandidate) throws IOException {
+        int[] pixels = pixelCandidate.pixels();
         int firstColor = pixels[0];
         for (int i = 1; i < pixels.length; i++) {
             if (pixels[i] != firstColor) {
@@ -152,12 +157,13 @@ public final class AfmaBinIntraPayloadHelper {
             writeHeader(out, Mode.SOLID, width, height);
             out.writeInt(firstColor);
             out.flush();
-            return new EncodedPayloadCandidate(Mode.SOLID, byteStream.toByteArray());
+            return new EncodedPayloadCandidate(Mode.SOLID, byteStream.toByteArray(), pixelCandidate.pixels(), pixelCandidate.lossless());
         }
     }
 
     @Nullable
-    protected static EncodedPayloadCandidate buildIndexedCandidate(int width, int height, @NotNull int[] pixels) throws IOException {
+    protected static EncodedPayloadCandidate buildIndexedCandidate(int width, int height, @NotNull PixelCandidate pixelCandidate) throws IOException {
+        int[] pixels = pixelCandidate.pixels();
         Map<Integer, Integer> colorCounts = new HashMap<>();
         for (int color : pixels) {
             colorCounts.merge(color, 1, Integer::sum);
@@ -217,12 +223,13 @@ public final class AfmaBinIntraPayloadHelper {
             }
             out.write(filteredRows);
             out.flush();
-            return new EncodedPayloadCandidate(Mode.INDEXED, byteStream.toByteArray());
+            return new EncodedPayloadCandidate(Mode.INDEXED, byteStream.toByteArray(), pixelCandidate.pixels(), pixelCandidate.lossless());
         }
     }
 
     @NotNull
-    protected static EncodedPayloadCandidate buildFilteredCandidate(int width, int height, @NotNull int[] pixels, @NotNull Mode mode) throws IOException {
+    protected static EncodedPayloadCandidate buildFilteredCandidate(int width, int height, @NotNull PixelCandidate pixelCandidate, @NotNull Mode mode) throws IOException {
+        int[] pixels = pixelCandidate.pixels();
         int channels = switch (mode) {
             case RGB_FILTERED -> RGB_CHANNELS;
             case RGBA_FILTERED -> RGBA_CHANNELS;
@@ -235,12 +242,13 @@ public final class AfmaBinIntraPayloadHelper {
             writeHeader(out, mode, width, height);
             out.write(filteredRows);
             out.flush();
-            return new EncodedPayloadCandidate(mode, byteStream.toByteArray());
+            return new EncodedPayloadCandidate(mode, byteStream.toByteArray(), pixelCandidate.pixels(), pixelCandidate.lossless());
         }
     }
 
     @NotNull
-    protected static EncodedPayloadCandidate buildSplitAlphaCandidate(int width, int height, @NotNull int[] pixels) throws IOException {
+    protected static EncodedPayloadCandidate buildSplitAlphaCandidate(int width, int height, @NotNull PixelCandidate pixelCandidate) throws IOException {
+        int[] pixels = pixelCandidate.pixels();
         byte[] rgbBytes = new byte[width * height * RGB_CHANNELS];
         byte[] alphaBytes = new byte[width * height];
         int rgbOffset = 0;
@@ -260,12 +268,13 @@ public final class AfmaBinIntraPayloadHelper {
             out.write(filteredRgb);
             out.write(filteredAlpha);
             out.flush();
-            return new EncodedPayloadCandidate(Mode.RGB_PLUS_ALPHA_SPLIT, byteStream.toByteArray());
+            return new EncodedPayloadCandidate(Mode.RGB_PLUS_ALPHA_SPLIT, byteStream.toByteArray(), pixelCandidate.pixels(), pixelCandidate.lossless());
         }
     }
 
     @Nullable
-    protected static EncodedPayloadCandidate buildColorPlusAlphaMaskCandidate(int width, int height, @NotNull int[] pixels) throws IOException {
+    protected static EncodedPayloadCandidate buildColorPlusAlphaMaskCandidate(int width, int height, @NotNull PixelCandidate pixelCandidate) throws IOException {
+        int[] pixels = pixelCandidate.pixels();
         int firstColor = pixels[0];
         int red = (firstColor >> 16) & 0xFF;
         int green = (firstColor >> 8) & 0xFF;
@@ -314,7 +323,7 @@ public final class AfmaBinIntraPayloadHelper {
             out.writeByte(alphaMode);
             out.write(encodedAlpha);
             out.flush();
-            return new EncodedPayloadCandidate(Mode.COLOR_PLUS_ALPHA_MASK, byteStream.toByteArray());
+            return new EncodedPayloadCandidate(Mode.COLOR_PLUS_ALPHA_MASK, byteStream.toByteArray(), pixelCandidate.pixels(), pixelCandidate.lossless());
         }
     }
 
@@ -475,6 +484,238 @@ public final class AfmaBinIntraPayloadHelper {
             rowOffset += rowBytes;
         }
         return encoded;
+    }
+
+    protected static void addCandidateBuilders(@NotNull List<PayloadCandidateBuilder> candidateBuilders, int width, int height, @NotNull PixelCandidate pixelCandidate) {
+        candidateBuilders.add(() -> buildSolidCandidate(width, height, pixelCandidate));
+        candidateBuilders.add(() -> buildIndexedCandidate(width, height, pixelCandidate));
+
+        if (hasAlpha(pixelCandidate.pixels())) {
+            candidateBuilders.add(() -> buildFilteredCandidate(width, height, pixelCandidate, Mode.RGBA_FILTERED));
+            candidateBuilders.add(() -> buildSplitAlphaCandidate(width, height, pixelCandidate));
+            candidateBuilders.add(() -> buildColorPlusAlphaMaskCandidate(width, height, pixelCandidate));
+        } else {
+            candidateBuilders.add(() -> buildFilteredCandidate(width, height, pixelCandidate, Mode.RGB_FILTERED));
+        }
+    }
+
+    @NotNull
+    protected static List<PixelCandidate> collectPixelCandidates(int width, int height, @NotNull int[] pixels, @NotNull EncodePreferences preferences) {
+        List<PixelCandidate> pixelCandidates = new ArrayList<>(4);
+        addPixelCandidate(pixelCandidates, pixels, true);
+
+        if (!preferences.perceptualCandidatesEnabled()) {
+            return pixelCandidates;
+        }
+
+        addPixelCandidate(pixelCandidates, normalizeHiddenTransparentPixels(pixels), false);
+        for (PerceptualProfile profile : PerceptualProfile.values()) {
+            int[] quantizedPixels = buildPerceptualPaletteCandidate(width, height, pixels, profile, preferences);
+            if (quantizedPixels != null) {
+                addPixelCandidate(pixelCandidates, quantizedPixels, false);
+            }
+        }
+        return pixelCandidates;
+    }
+
+    protected static void addPixelCandidate(@NotNull List<PixelCandidate> pixelCandidates, @NotNull int[] pixels, boolean lossless) {
+        for (int i = 0; i < pixelCandidates.size(); i++) {
+            PixelCandidate existingCandidate = pixelCandidates.get(i);
+            if (!Arrays.equals(existingCandidate.pixels(), pixels)) {
+                continue;
+            }
+            if (lossless && !existingCandidate.lossless()) {
+                pixelCandidates.set(i, new PixelCandidate(existingCandidate.pixels(), true));
+            }
+            return;
+        }
+        pixelCandidates.add(new PixelCandidate(pixels, lossless));
+    }
+
+    @NotNull
+    protected static int[] normalizeHiddenTransparentPixels(@NotNull int[] pixels) {
+        int[] normalizedPixels = null;
+        for (int i = 0; i < pixels.length; i++) {
+            int color = pixels[i];
+            if ((color >>> 24) != 0) {
+                continue;
+            }
+            if ((color & 0x00FFFFFF) == 0) {
+                continue;
+            }
+            if (normalizedPixels == null) {
+                normalizedPixels = Arrays.copyOf(pixels, pixels.length);
+            }
+            normalizedPixels[i] = 0;
+        }
+        return (normalizedPixels != null) ? normalizedPixels : pixels;
+    }
+
+    @Nullable
+    protected static int[] buildPerceptualPaletteCandidate(int width, int height, @NotNull int[] pixels,
+                                                           @NotNull PerceptualProfile profile, @NotNull EncodePreferences preferences) {
+        BucketAccumulator[] paletteBuckets = new BucketAccumulator[0];
+        Map<Integer, BucketAccumulator> buckets = new HashMap<>();
+        int[] bucketColors = new int[pixels.length];
+        for (int i = 0; i < pixels.length; i++) {
+            int sourceColor = pixels[i];
+            int bucketColor = quantizeBucketColor(sourceColor, profile);
+            bucketColors[i] = bucketColor;
+            BucketAccumulator accumulator = buckets.computeIfAbsent(bucketColor, ignored -> new BucketAccumulator(bucketColor));
+            accumulator.add(normalizeColorForRepresentative(sourceColor, profile));
+        }
+
+        if (buckets.isEmpty()) {
+            return null;
+        }
+
+        List<BucketAccumulator> sortedBuckets = new ArrayList<>(buckets.values());
+        sortedBuckets.sort((first, second) -> {
+            int countCompare = Integer.compare(second.count, first.count);
+            if (countCompare != 0) {
+                return countCompare;
+            }
+            return Integer.compareUnsigned(first.bucketColor, second.bucketColor);
+        });
+
+        int paletteSize = Math.min(MAX_PALETTE_COLORS, sortedBuckets.size());
+        paletteBuckets = new BucketAccumulator[paletteSize];
+        Map<Integer, Integer> paletteMapping = new HashMap<>(sortedBuckets.size() * 2);
+        for (int i = 0; i < paletteSize; i++) {
+            BucketAccumulator accumulator = sortedBuckets.get(i);
+            paletteBuckets[i] = accumulator;
+            paletteMapping.put(accumulator.bucketColor, i);
+        }
+
+        for (int i = paletteSize; i < sortedBuckets.size(); i++) {
+            BucketAccumulator accumulator = sortedBuckets.get(i);
+            paletteMapping.put(accumulator.bucketColor, findNearestPaletteBucket(accumulator.representativeColor(), paletteBuckets));
+        }
+
+        int[] quantizedPixels = new int[pixels.length];
+        for (int i = 0; i < bucketColors.length; i++) {
+            Integer paletteIndex = paletteMapping.get(bucketColors[i]);
+            if (paletteIndex == null) {
+                return null;
+            }
+            quantizedPixels[i] = paletteBuckets[paletteIndex].representativeColor();
+        }
+
+        PerceptualErrorStats errorStats = measurePerceptualError(pixels, quantizedPixels);
+        if (!errorStats.isWithin(preferences)) {
+            return null;
+        }
+        return quantizedPixels;
+    }
+
+    protected static int quantizeBucketColor(int sourceColor, @NotNull PerceptualProfile profile) {
+        int alpha = (sourceColor >>> 24) & 0xFF;
+        if (alpha <= profile.transparentSnapThreshold()) {
+            return 0;
+        }
+
+        int normalizedAlpha = (alpha >= (0xFF - profile.opaqueSnapThreshold()))
+                ? 0xFF
+                : quantizeChannel(alpha, profile.alphaBits());
+        if (normalizedAlpha == 0) {
+            return 0;
+        }
+
+        int red = quantizeChannel((sourceColor >> 16) & 0xFF, profile.redBits());
+        int green = quantizeChannel((sourceColor >> 8) & 0xFF, profile.greenBits());
+        int blue = quantizeChannel(sourceColor & 0xFF, profile.blueBits());
+        return (normalizedAlpha << 24) | (red << 16) | (green << 8) | blue;
+    }
+
+    protected static int normalizeColorForRepresentative(int sourceColor, @NotNull PerceptualProfile profile) {
+        int alpha = (sourceColor >>> 24) & 0xFF;
+        if (alpha <= profile.transparentSnapThreshold()) {
+            return 0;
+        }
+
+        int normalizedAlpha = (alpha >= (0xFF - profile.opaqueSnapThreshold())) ? 0xFF : alpha;
+        if (normalizedAlpha == 0) {
+            return 0;
+        }
+        return (normalizedAlpha << 24) | (sourceColor & 0x00FFFFFF);
+    }
+
+    protected static int quantizeChannel(int value, int bits) {
+        if (bits >= 8) {
+            return value & 0xFF;
+        }
+        if (bits <= 0) {
+            return 0;
+        }
+        int levels = (1 << bits) - 1;
+        if (levels <= 0) {
+            return 0;
+        }
+        int quantizedLevel = (int) Math.round((value & 0xFF) * (levels / 255.0D));
+        return Math.min(0xFF, (int) Math.round(quantizedLevel * (255.0D / levels)));
+    }
+
+    protected static int findNearestPaletteBucket(int color, @NotNull BucketAccumulator[] paletteBuckets) {
+        int bestIndex = 0;
+        long bestDistance = Long.MAX_VALUE;
+        for (int i = 0; i < paletteBuckets.length; i++) {
+            long distance = perceptualDistance(color, paletteBuckets[i].representativeColor());
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                bestIndex = i;
+            }
+        }
+        return bestIndex;
+    }
+
+    @NotNull
+    protected static PerceptualErrorStats measurePerceptualError(@NotNull int[] sourcePixels, @NotNull int[] candidatePixels) {
+        double totalError = 0D;
+        int maxVisibleColorDelta = 0;
+        int maxAlphaDelta = 0;
+        for (int i = 0; i < sourcePixels.length; i++) {
+            int sourceColor = sourcePixels[i];
+            int candidateColor = candidatePixels[i];
+            int sourceAlpha = (sourceColor >>> 24) & 0xFF;
+            int candidateAlpha = (candidateColor >>> 24) & 0xFF;
+            int alphaDelta = Math.abs(sourceAlpha - candidateAlpha);
+            if (alphaDelta > maxAlphaDelta) {
+                maxAlphaDelta = alphaDelta;
+            }
+
+            int visibilityAlpha = Math.max(sourceAlpha, candidateAlpha);
+            if (visibilityAlpha <= 0) {
+                continue;
+            }
+
+            int redDelta = Math.abs(((sourceColor >> 16) & 0xFF) - ((candidateColor >> 16) & 0xFF));
+            int greenDelta = Math.abs(((sourceColor >> 8) & 0xFF) - ((candidateColor >> 8) & 0xFF));
+            int blueDelta = Math.abs((sourceColor & 0xFF) - (candidateColor & 0xFF));
+            int visibleColorDelta = Math.max(redDelta, Math.max(greenDelta, blueDelta));
+            if (visibleColorDelta > maxVisibleColorDelta) {
+                maxVisibleColorDelta = visibleColorDelta;
+            }
+
+            double visibilityWeight = visibilityAlpha / 255.0D;
+            totalError += (alphaDelta * 2.0D) + ((redDelta + greenDelta + blueDelta) * visibilityWeight);
+        }
+        return new PerceptualErrorStats(totalError / Math.max(1, sourcePixels.length), maxVisibleColorDelta, maxAlphaDelta);
+    }
+
+    protected static long perceptualDistance(int firstColor, int secondColor) {
+        int firstAlpha = (firstColor >>> 24) & 0xFF;
+        int secondAlpha = (secondColor >>> 24) & 0xFF;
+        int alphaDelta = Math.abs(firstAlpha - secondAlpha);
+        int visibilityAlpha = Math.max(firstAlpha, secondAlpha);
+        if (visibilityAlpha <= 0) {
+            return (long) alphaDelta * 4L;
+        }
+
+        int redDelta = Math.abs(((firstColor >> 16) & 0xFF) - ((secondColor >> 16) & 0xFF));
+        int greenDelta = Math.abs(((firstColor >> 8) & 0xFF) - ((secondColor >> 8) & 0xFF));
+        int blueDelta = Math.abs((firstColor & 0xFF) - (secondColor & 0xFF));
+        long visibilityWeight = Math.max(1L, visibilityAlpha);
+        return ((long) alphaDelta * 512L) + (((long) redDelta + greenDelta + blueDelta) * visibilityWeight);
     }
 
     protected static boolean shouldParallelizeModeSelection(int width, int height, int candidateCount) {
@@ -734,21 +975,55 @@ public final class AfmaBinIntraPayloadHelper {
         }
     }
 
+    public record EncodePreferences(boolean perceptualCandidatesEnabled, int maxVisibleColorDelta, int maxAlphaDelta, double maxAverageError) {
+
+        @NotNull
+        public static EncodePreferences lossless() {
+            return new EncodePreferences(false, 0, 0, 0D);
+        }
+
+        @NotNull
+        public static EncodePreferences perceptual(int maxVisibleColorDelta, int maxAlphaDelta, double maxAverageError) {
+            return new EncodePreferences(true, Math.max(0, maxVisibleColorDelta), Math.max(0, maxAlphaDelta), Math.max(0D, maxAverageError));
+        }
+    }
+
+    public record EncodedPayloadResult(@NotNull byte[] payloadBytes, @NotNull int[] reconstructedPixels, boolean lossless, @NotNull Mode mode) {
+    }
+
     public record PayloadHeader(int width, int height, @NotNull Mode mode) {
     }
 
     public record DecodedFrame(int width, int height, @NotNull int[] pixels) {
     }
 
-    protected record EncodedPayloadCandidate(@NotNull Mode mode, @NotNull byte[] payloadBytes, long estimatedArchiveBytes) {
+    protected record PixelCandidate(@NotNull int[] pixels, boolean lossless) {
+    }
 
-        protected EncodedPayloadCandidate(@NotNull Mode mode, @NotNull byte[] payloadBytes) {
-            this(mode, payloadBytes, AfmaPayloadMetricsHelper.estimateArchiveBytes(payloadBytes));
+    protected record PerceptualErrorStats(double averageError, int maxVisibleColorDelta, int maxAlphaDelta) {
+
+        protected boolean isWithin(@NotNull EncodePreferences preferences) {
+            return this.averageError <= preferences.maxAverageError()
+                    && this.maxVisibleColorDelta <= preferences.maxVisibleColorDelta()
+                    && this.maxAlphaDelta <= preferences.maxAlphaDelta();
+        }
+    }
+
+    protected record EncodedPayloadCandidate(@NotNull Mode mode, @NotNull byte[] payloadBytes,
+                                             @NotNull int[] reconstructedPixels, boolean lossless,
+                                             long estimatedArchiveBytes) {
+
+        protected EncodedPayloadCandidate(@NotNull Mode mode, @NotNull byte[] payloadBytes,
+                                          @NotNull int[] reconstructedPixels, boolean lossless) {
+            this(mode, payloadBytes, reconstructedPixels, lossless, AfmaPayloadMetricsHelper.estimateArchiveBytes(payloadBytes));
         }
 
         protected boolean isBetterThan(@NotNull EncodedPayloadCandidate other) {
             if (this.estimatedArchiveBytes != other.estimatedArchiveBytes) {
                 return this.estimatedArchiveBytes < other.estimatedArchiveBytes;
+            }
+            if (this.lossless != other.lossless) {
+                return this.lossless;
             }
             if (this.payloadBytes.length != other.payloadBytes.length) {
                 return this.payloadBytes.length < other.payloadBytes.length;
@@ -850,6 +1125,93 @@ public final class AfmaBinIntraPayloadHelper {
                 }
             }
             throw new IOException("Unsupported AFMA BIN_INTRA alpha mask mode: " + id);
+        }
+    }
+
+    protected enum PerceptualProfile {
+        LIGHT(5, 5, 5, 5, 4, 4),
+        MEDIUM(4, 4, 4, 4, 8, 8);
+
+        private final int redBits;
+        private final int greenBits;
+        private final int blueBits;
+        private final int alphaBits;
+        private final int transparentSnapThreshold;
+        private final int opaqueSnapThreshold;
+
+        PerceptualProfile(int redBits, int greenBits, int blueBits, int alphaBits,
+                          int transparentSnapThreshold, int opaqueSnapThreshold) {
+            this.redBits = redBits;
+            this.greenBits = greenBits;
+            this.blueBits = blueBits;
+            this.alphaBits = alphaBits;
+            this.transparentSnapThreshold = transparentSnapThreshold;
+            this.opaqueSnapThreshold = opaqueSnapThreshold;
+        }
+
+        public int redBits() {
+            return this.redBits;
+        }
+
+        public int greenBits() {
+            return this.greenBits;
+        }
+
+        public int blueBits() {
+            return this.blueBits;
+        }
+
+        public int alphaBits() {
+            return this.alphaBits;
+        }
+
+        public int transparentSnapThreshold() {
+            return this.transparentSnapThreshold;
+        }
+
+        public int opaqueSnapThreshold() {
+            return this.opaqueSnapThreshold;
+        }
+    }
+
+    protected static final class BucketAccumulator {
+
+        private final int bucketColor;
+        private int count;
+        private long redSum;
+        private long greenSum;
+        private long blueSum;
+        private long alphaSum;
+
+        protected BucketAccumulator(int bucketColor) {
+            this.bucketColor = bucketColor;
+        }
+
+        protected void add(int color) {
+            this.count++;
+            this.redSum += (color >> 16) & 0xFF;
+            this.greenSum += (color >> 8) & 0xFF;
+            this.blueSum += color & 0xFF;
+            this.alphaSum += (color >>> 24) & 0xFF;
+        }
+
+        protected int representativeColor() {
+            if (this.count <= 0) {
+                return this.bucketColor;
+            }
+
+            int alpha = (int) Math.round((double) this.alphaSum / this.count);
+            if (alpha <= 0) {
+                return 0;
+            }
+
+            int red = (int) Math.round((double) this.redSum / this.count);
+            int green = (int) Math.round((double) this.greenSum / this.count);
+            int blue = (int) Math.round((double) this.blueSum / this.count);
+            return (Math.min(0xFF, alpha) << 24)
+                    | (Math.min(0xFF, red) << 16)
+                    | (Math.min(0xFF, green) << 8)
+                    | Math.min(0xFF, blue);
         }
     }
 

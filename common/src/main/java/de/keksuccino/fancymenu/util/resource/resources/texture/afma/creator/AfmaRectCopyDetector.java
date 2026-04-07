@@ -104,7 +104,13 @@ public class AfmaRectCopyDetector {
                 vectors.add(new MotionVector(dx, dy));
             }
         }
-        return List.copyOf(vectors);
+
+        List<MotionVector> sortedVectors = new ArrayList<>(vectors);
+        sortedVectors.sort((first, second) -> Double.compare(
+                this.scoreMotionVector(previous, next, second.dx(), second.dy()),
+                this.scoreMotionVector(previous, next, first.dx(), first.dy())
+        ));
+        return List.copyOf(sortedVectors);
     }
 
     @NotNull
@@ -193,6 +199,24 @@ public class AfmaRectCopyDetector {
         }
 
         return (samples > 0) ? ((double)matches / samples) : 0D;
+    }
+
+    protected double scoreMotionVector(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next, int dx, int dy) {
+        int overlapWidth = previous.getWidth() - Math.abs(dx);
+        int overlapHeight = previous.getHeight() - Math.abs(dy);
+        if (overlapWidth <= 0 || overlapHeight <= 0) {
+            return 0D;
+        }
+        return this.sampleMatchRatio(
+                previous,
+                next,
+                Math.max(0, -dx),
+                Math.max(0, -dy),
+                Math.max(0, dx),
+                Math.max(0, dy),
+                overlapWidth,
+                overlapHeight
+        );
     }
 
     protected record AxisCandidate(int offset, double score) {

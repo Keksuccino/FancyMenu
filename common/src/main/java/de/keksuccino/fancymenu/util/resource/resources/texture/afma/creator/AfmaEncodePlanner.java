@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator;
 
 import de.keksuccino.fancymenu.util.CloseableUtils;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaBinIntraPayloadHelper;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaBlockInter;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaBlockInterPayloadHelper;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaCopyRect;
@@ -21,10 +22,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.function.BooleanSupplier;
 import java.util.stream.IntStream;
@@ -35,6 +38,9 @@ public class AfmaEncodePlanner {
     protected static final double MAX_SPARSE_DELTA_CHANGED_DENSITY = 0.30D;
     protected static final int BLOCK_INTER_TILE_SIZE = 16;
     protected static final int MIN_PARALLEL_BLOCK_INTER_TILES = 32;
+    protected static final int BLOCK_INTER_LOCAL_REFINEMENT_RADIUS = 2;
+    protected static final int BLOCK_INTER_LOCAL_REFINEMENT_SEEDS = 3;
+    protected static final int BLOCK_INTER_LOCAL_REFINEMENT_PASSES = 2;
 
     @NotNull
     protected final AfmaFrameNormalizer frameNormalizer;
@@ -103,7 +109,7 @@ public class AfmaEncodePlanner {
                     introFrameTime,
                     plannedMainFrames.customFrameTimes(),
                     plannedIntroFrames.customFrameTimes(),
-                    options.getKeyframeInterval(),
+                    options.isAdaptiveKeyframePlacementEnabled() ? options.getAdaptiveMaxKeyframeInterval() : options.getKeyframeInterval(),
                     options.isRectCopyEnabled(),
                     options.isDuplicateFrameElision()
             );
@@ -137,42 +143,60 @@ public class AfmaEncodePlanner {
                         "Planning " + (introSequence ? "intro" : "main") + " frame " + (frameIndex + 1) + "/" + sequence.size(),
                         0.08D + (0.92D * ((double) (startOffset + frameIndex + 1) / Math.max(1, totalFrameCount))));
                 File frameFile = Objects.requireNonNull(sequence.getFrame(frameIndex));
-                AfmaPixelFrame currentFrame;
+                AfmaPixelFrame sourceFrame;
                 if ((frameIndex == 0) && (preloadedFrame != null)) {
-                    currentFrame = preloadedFrame;
+                    sourceFrame = preloadedFrame;
                     preloadedFrame = null;
                 } else {
-                    currentFrame = this.frameNormalizer.loadFrame(frameFile);
+                    sourceFrame = this.frameNormalizer.loadFrame(frameFile);
                 }
-                try {
-                    if ((currentFrame.getWidth() != dimension.width()) || (currentFrame.getHeight() != dimension.height())) {
-                        throw new IOException("AFMA source frame dimensions do not match the expected canvas size: " + frameFile.getAbsolutePath());
-                    }
+                if ((sourceFrame.getWidth() != dimension.width()) || (sourceFrame.getHeight() != dimension.height())) {
+                    throw new IOException("AFMA source frame dimensions do not match the expected canvas size: " + frameFile.getAbsolutePath());
+                }
 
-                    long frameDelayMs = this.resolveSourceFrameDelay(options, introSequence, frameIndex);
-                    if ((previousFrame != null) && options.isNearLosslessEnabled() && ((framesSinceKeyframe + 1) < options.getKeyframeInterval())) {
-                        currentFrame = this.applyNearLosslessTemporalMerge(previousFrame, currentFrame, options.getNearLosslessMaxChannelDelta());
-                    }
+                long frameDelayMs = this.resolveSourceFrameDelay(options, introSequence, frameIndex);
+                AfmaPixelFrame workingFrame = sourceFrame;
+                if ((previousFrame != null) && options.isNearLosslessEnabled()
+                        && this.shouldAllowPerceptualContinuation(framesSinceKeyframe, options)) {
+                    workingFrame = this.applyNearLosslessTemporalMerge(previousFrame, sourceFrame, options.getNearLosslessMaxChannelDelta());
+                }
 
-                    PlannedCandidate selectedCandidate;
-                    if (previousFrame == null) {
-                        selectedCandidate = this.createFullCandidate(currentFrame, introSequence, frameIndex);
-                    } else if (options.isDuplicateFrameElision() && AfmaPixelFrameHelper.isIdentical(previousFrame, currentFrame)) {
-                        // Keep the previous emitted frame on screen longer instead of emitting a SAME opcode.
-                        this.extendPlannedFrameDelay(plannedFrames, frameDelayMs);
-                        continue;
-                    } else if ((framesSinceKeyframe + 1) >= options.getKeyframeInterval()) {
-                        selectedCandidate = this.createFullCandidate(currentFrame, introSequence, frameIndex);
+                PlannedCandidate selectedCandidate;
+                if (previousFrame == null) {
+                    selectedCandidate = this.createFullCandidate(workingFrame, introSequence, frameIndex, options, true, ReferenceBase.WORKING_FRAME);
+                } else if (options.isDuplicateFrameElision() && AfmaPixelFrameHelper.isIdentical(previousFrame, workingFrame)) {
+                    // Keep the previous emitted frame on screen longer instead of emitting a SAME opcode.
+                    this.extendPlannedFrameDelay(plannedFrames, frameDelayMs);
+                    continue;
+                } else if (options.isAdaptiveKeyframePlacementEnabled() && ((framesSinceKeyframe + 1) >= options.getAdaptiveMaxKeyframeInterval())) {
+                    selectedCandidate = this.createExactFullCandidate(sourceFrame, introSequence, frameIndex, options);
+                } else {
+                    PlannedCandidate fullCandidate = this.createFullCandidate(workingFrame, introSequence, frameIndex, options, true, ReferenceBase.WORKING_FRAME);
+                    if (!options.isAdaptiveKeyframePlacementEnabled() && ((framesSinceKeyframe + 1) >= options.getKeyframeInterval())) {
+                        selectedCandidate = fullCandidate;
                     } else {
-                        selectedCandidate = this.chooseBestCandidate(previousFrame, currentFrame, introSequence, frameIndex, options, copyDetector, payloadPathsByFingerprint);
+                        selectedCandidate = this.chooseBestCandidate(previousFrame, workingFrame, introSequence, frameIndex, options, copyDetector, payloadPathsByFingerprint, fullCandidate);
+                        if (options.isAdaptiveKeyframePlacementEnabled()) {
+                            selectedCandidate = this.applyAdaptiveKeyframeDecision(
+                                    selectedCandidate,
+                                    fullCandidate,
+                                    sourceFrame,
+                                    workingFrame,
+                                    introSequence,
+                                    frameIndex,
+                                    framesSinceKeyframe,
+                                    options,
+                                    payloadPathsByFingerprint
+                            );
+                        }
                     }
-                    PlannedCandidate finalizedCandidate = selectedCandidate.internPayloads(payloads, payloadPathsByFingerprint);
-                    plannedFrames.add(new PlannedTimedFrame(finalizedCandidate.descriptor(), frameDelayMs));
-                    framesSinceKeyframe = finalizedCandidate.descriptor().isKeyframe() ? 0 : (framesSinceKeyframe + 1);
-                } finally {
-                    CloseableUtils.closeQuietly(previousFrame);
-                    previousFrame = currentFrame;
                 }
+
+                PlannedCandidate finalizedCandidate = selectedCandidate.internPayloads(payloads, payloadPathsByFingerprint);
+                plannedFrames.add(new PlannedTimedFrame(finalizedCandidate.descriptor(), frameDelayMs));
+                CloseableUtils.closeQuietly(previousFrame);
+                previousFrame = finalizedCandidate.materializeReferenceFrame(sourceFrame, workingFrame);
+                framesSinceKeyframe = finalizedCandidate.descriptor().isKeyframe() ? 0 : (framesSinceKeyframe + 1);
             }
         } finally {
             CloseableUtils.closeQuietly(previousFrame);
@@ -305,14 +329,14 @@ public class AfmaEncodePlanner {
     protected PlannedCandidate chooseBestCandidate(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
                                                    boolean introSequence, int frameIndex, @NotNull AfmaEncodeOptions options,
                                                    @NotNull AfmaRectCopyDetector copyDetector,
-                                                   @NotNull Map<String, String> payloadPathsByFingerprint) throws IOException {
+                                                   @NotNull Map<String, String> payloadPathsByFingerprint,
+                                                   @NotNull PlannedCandidate fullCandidate) throws IOException {
         List<PlannedCandidate> candidates = new ArrayList<>();
-        PlannedCandidate fullCandidate = this.createFullCandidate(currentFrame, introSequence, frameIndex);
         candidates.add(fullCandidate);
 
         AfmaRect deltaBounds = AfmaPixelFrameHelper.findDifferenceBounds(previousFrame, currentFrame);
         if (deltaBounds != null) {
-            PlannedCandidate deltaCandidate = this.createDeltaCandidate(currentFrame, introSequence, frameIndex, deltaBounds);
+            PlannedCandidate deltaCandidate = this.createDeltaCandidate(currentFrame, introSequence, frameIndex, deltaBounds, options);
             if ((deltaCandidate != null) && this.shouldKeepComplexCandidate(deltaCandidate, fullCandidate,
                     deltaBounds.area(), currentFrame.getWidth(), currentFrame.getHeight(),
                     options.getMaxDeltaAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
@@ -337,7 +361,7 @@ public class AfmaEncodePlanner {
         if (options.isRectCopyEnabled()) {
             AfmaRectCopyDetector.Detection detection = copyDetector.detect(previousFrame, currentFrame);
             if (detection != null) {
-                PlannedCandidate copyCandidate = this.createCopyCandidate(currentFrame, introSequence, frameIndex, detection);
+                PlannedCandidate copyCandidate = this.createCopyCandidate(currentFrame, introSequence, frameIndex, detection, options);
                 long patchArea = (detection.patchBounds() != null) ? detection.patchBounds().area() : 0L;
                 if ((copyCandidate != null) && this.shouldKeepComplexCandidate(copyCandidate, fullCandidate,
                         patchArea, currentFrame.getWidth(), currentFrame.getHeight(),
@@ -379,6 +403,86 @@ public class AfmaEncodePlanner {
         }
 
         return Objects.requireNonNull(bestCandidate, "Failed to choose an AFMA encode candidate");
+    }
+
+    @NotNull
+    protected PlannedCandidate applyAdaptiveKeyframeDecision(@NotNull PlannedCandidate selectedCandidate,
+                                                             @NotNull PlannedCandidate fullCandidate,
+                                                             @NotNull AfmaPixelFrame sourceFrame,
+                                                             @NotNull AfmaPixelFrame workingFrame,
+                                                             boolean introSequence, int frameIndex, int framesSinceKeyframe,
+                                                             @NotNull AfmaEncodeOptions options,
+                                                             @NotNull Map<String, String> payloadPathsByFingerprint) throws IOException {
+        if (!selectedCandidate.descriptor().isKeyframe() && ((framesSinceKeyframe + 1) >= options.getKeyframeInterval())) {
+            long fullArchiveBytes = fullCandidate.estimatedArchiveBytes(payloadPathsByFingerprint);
+            long candidateArchiveBytes = selectedCandidate.estimatedArchiveBytes(payloadPathsByFingerprint);
+            long byteSavings = fullArchiveBytes - candidateArchiveBytes;
+            long requiredSavings = this.computeRequiredComplexCandidateSavings(
+                    fullArchiveBytes,
+                    options.getAdaptiveContinuationMinSavingsBytes(),
+                    options.getAdaptiveContinuationMinSavingsRatio()
+            );
+            if (byteSavings < requiredSavings) {
+                selectedCandidate = fullCandidate;
+            }
+        }
+
+        if (!options.isPerceptualBinIntraEnabled()) {
+            return selectedCandidate;
+        }
+
+        AfmaPixelFrame reconstructedFrame = selectedCandidate.materializeReferenceFrame(sourceFrame, workingFrame);
+        try {
+            PerceptualDriftStats driftStats = this.measurePerceptualDrift(sourceFrame, reconstructedFrame);
+            if (driftStats.averageError() <= options.getPerceptualBinIntraMaxAverageError()
+                    && driftStats.maxVisibleColorDelta() <= options.getPerceptualBinIntraMaxVisibleColorDelta()
+                    && driftStats.maxAlphaDelta() <= options.getPerceptualBinIntraMaxAlphaDelta()) {
+                return selectedCandidate;
+            }
+        } finally {
+            CloseableUtils.closeQuietly(reconstructedFrame);
+        }
+
+        return this.createExactFullCandidate(sourceFrame, introSequence, frameIndex, options);
+    }
+
+    @NotNull
+    protected PerceptualDriftStats measurePerceptualDrift(@NotNull AfmaPixelFrame sourceFrame, @NotNull AfmaPixelFrame reconstructedFrame) {
+        AfmaPixelFrameHelper.ensureSameSize(sourceFrame, reconstructedFrame);
+        double totalError = 0D;
+        int maxVisibleColorDelta = 0;
+        int maxAlphaDelta = 0;
+        int width = sourceFrame.getWidth();
+        int height = sourceFrame.getHeight();
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int sourceColor = sourceFrame.getPixelRGBA(x, y);
+                int reconstructedColor = reconstructedFrame.getPixelRGBA(x, y);
+                int sourceAlpha = (sourceColor >>> 24) & 0xFF;
+                int reconstructedAlpha = (reconstructedColor >>> 24) & 0xFF;
+                int alphaDelta = Math.abs(sourceAlpha - reconstructedAlpha);
+                if (alphaDelta > maxAlphaDelta) {
+                    maxAlphaDelta = alphaDelta;
+                }
+
+                int visibilityAlpha = Math.max(sourceAlpha, reconstructedAlpha);
+                if (visibilityAlpha <= 0) {
+                    continue;
+                }
+
+                int redDelta = channelDifference(sourceColor >> 16, reconstructedColor >> 16);
+                int greenDelta = channelDifference(sourceColor >> 8, reconstructedColor >> 8);
+                int blueDelta = channelDifference(sourceColor, reconstructedColor);
+                int visibleColorDelta = Math.max(redDelta, Math.max(greenDelta, blueDelta));
+                if (visibleColorDelta > maxVisibleColorDelta) {
+                    maxVisibleColorDelta = visibleColorDelta;
+                }
+
+                double visibilityWeight = visibilityAlpha / 255.0D;
+                totalError += (alphaDelta * 2.0D) + ((redDelta + greenDelta + blueDelta) * visibilityWeight);
+            }
+        }
+        return new PerceptualDriftStats(totalError / Math.max(1, width * height), maxVisibleColorDelta, maxAlphaDelta);
     }
 
     @NotNull
@@ -430,26 +534,61 @@ public class AfmaEncodePlanner {
         return Math.abs((first & 0xFF) - (second & 0xFF));
     }
 
+    protected boolean shouldAllowPerceptualContinuation(int framesSinceKeyframe, @NotNull AfmaEncodeOptions options) {
+        int maxInterval = options.isAdaptiveKeyframePlacementEnabled()
+                ? options.getAdaptiveMaxKeyframeInterval()
+                : options.getKeyframeInterval();
+        return (framesSinceKeyframe + 1) < maxInterval;
+    }
+
     @NotNull
-    protected PlannedCandidate createFullCandidate(@NotNull AfmaPixelFrame currentFrame, boolean introSequence, int frameIndex) throws IOException {
+    protected PlannedCandidate createExactFullCandidate(@NotNull AfmaPixelFrame sourceFrame, boolean introSequence, int frameIndex,
+                                                        @NotNull AfmaEncodeOptions options) throws IOException {
+        return this.createFullCandidate(sourceFrame, introSequence, frameIndex, options, false, ReferenceBase.SOURCE_FRAME);
+    }
+
+    @NotNull
+    protected AfmaBinIntraPayloadHelper.EncodedPayloadResult encodeBinIntraPayload(@NotNull AfmaPixelFrame frame,
+                                                                                    @NotNull AfmaEncodeOptions options,
+                                                                                    boolean allowPerceptual) throws IOException {
+        AfmaBinIntraPayloadHelper.EncodePreferences preferences = (allowPerceptual && options.isPerceptualBinIntraEnabled())
+                ? AfmaBinIntraPayloadHelper.EncodePreferences.perceptual(
+                options.getPerceptualBinIntraMaxVisibleColorDelta(),
+                options.getPerceptualBinIntraMaxAlphaDelta(),
+                options.getPerceptualBinIntraMaxAverageError()
+        )
+                : AfmaBinIntraPayloadHelper.EncodePreferences.lossless();
+        return AfmaBinIntraPayloadHelper.encodePayloadDetailed(frame.getWidth(), frame.getHeight(), frame.copyPixels(), preferences);
+    }
+
+    @NotNull
+    protected PlannedCandidate createFullCandidate(@NotNull AfmaPixelFrame currentFrame, boolean introSequence, int frameIndex,
+                                                   @NotNull AfmaEncodeOptions options, boolean allowPerceptual,
+                                                   @NotNull ReferenceBase referenceBase) throws IOException {
         String payloadPath = this.buildPayloadPath(introSequence, frameIndex);
+        AfmaBinIntraPayloadHelper.EncodedPayloadResult encodedPayload = this.encodeBinIntraPayload(currentFrame, options, allowPerceptual);
+        AfmaRect referencePatchBounds = encodedPayload.lossless() ? null : new AfmaRect(0, 0, currentFrame.getWidth(), currentFrame.getHeight());
         return new PlannedCandidate(
                 AfmaFrameDescriptor.full(payloadPath),
                 payloadPath,
-                currentFrame.asByteArray(),
+                encodedPayload.payloadBytes(),
                 PayloadKind.BIN_INTRA,
                 false,
                 null,
                 null,
                 null,
                 false,
+                referenceBase,
+                referencePatchBounds,
+                encodedPayload.lossless() ? null : encodedPayload.reconstructedPixels(),
                 DecodeCost.FULL,
                 1
         );
     }
 
     @Nullable
-    protected PlannedCandidate createDeltaCandidate(@NotNull AfmaPixelFrame currentFrame, boolean introSequence, int frameIndex, @NotNull AfmaRect deltaBounds) throws IOException {
+    protected PlannedCandidate createDeltaCandidate(@NotNull AfmaPixelFrame currentFrame, boolean introSequence, int frameIndex,
+                                                    @NotNull AfmaRect deltaBounds, @NotNull AfmaEncodeOptions options) throws IOException {
         if (deltaBounds.area() >= ((long) currentFrame.getWidth() * currentFrame.getHeight())) {
             return null;
         }
@@ -457,16 +596,20 @@ public class AfmaEncodePlanner {
         AfmaPixelFrame patchImage = this.frameNormalizer.extractPatch(currentFrame, deltaBounds.x(), deltaBounds.y(), deltaBounds.width(), deltaBounds.height());
         try {
             String payloadPath = this.buildPayloadPath(introSequence, frameIndex);
+            AfmaBinIntraPayloadHelper.EncodedPayloadResult encodedPayload = this.encodeBinIntraPayload(patchImage, options, true);
             return new PlannedCandidate(
                     AfmaFrameDescriptor.deltaRect(payloadPath, deltaBounds.x(), deltaBounds.y(), deltaBounds.width(), deltaBounds.height()),
                     payloadPath,
-                    patchImage.asByteArray(),
+                    encodedPayload.payloadBytes(),
                     PayloadKind.BIN_INTRA,
                     false,
                     null,
                     null,
                     null,
                     false,
+                    ReferenceBase.WORKING_FRAME,
+                    encodedPayload.lossless() ? null : deltaBounds,
+                    encodedPayload.lossless() ? null : encodedPayload.reconstructedPixels(),
                     DecodeCost.DELTA,
                     2
             );
@@ -505,6 +648,9 @@ public class AfmaEncodePlanner {
                 null,
                 null,
                 false,
+                ReferenceBase.WORKING_FRAME,
+                null,
+                null,
                 DecodeCost.RESIDUAL_DELTA_RECT,
                 3
         );
@@ -541,6 +687,9 @@ public class AfmaEncodePlanner {
                 sparsePayload.residualPayload(),
                 PayloadKind.RAW,
                 false,
+                ReferenceBase.WORKING_FRAME,
+                null,
+                null,
                 DecodeCost.SPARSE_DELTA_RECT,
                 4
         );
@@ -579,6 +728,9 @@ public class AfmaEncodePlanner {
                 null,
                 null,
                 false,
+                ReferenceBase.WORKING_FRAME,
+                null,
+                null,
                 DecodeCost.COPY_RECT_RESIDUAL_PATCH,
                 5
         );
@@ -618,6 +770,9 @@ public class AfmaEncodePlanner {
                 sparsePayload.residualPayload(),
                 PayloadKind.RAW,
                 false,
+                ReferenceBase.WORKING_FRAME,
+                null,
+                null,
                 DecodeCost.COPY_RECT_SPARSE_PATCH,
                 6
         );
@@ -854,7 +1009,8 @@ public class AfmaEncodePlanner {
 
     @Nullable
     protected PlannedCandidate createCopyCandidate(@NotNull AfmaPixelFrame currentFrame, boolean introSequence, int frameIndex,
-                                                   @NotNull AfmaRectCopyDetector.Detection detection) throws IOException {
+                                                   @NotNull AfmaRectCopyDetector.Detection detection,
+                                                   @NotNull AfmaEncodeOptions options) throws IOException {
         AfmaCopyRect copyRect = detection.copyRect();
         AfmaRect patchBounds = detection.patchBounds();
         if ((patchBounds != null) && (patchBounds.area() >= ((long)currentFrame.getWidth() * currentFrame.getHeight()))) {
@@ -864,11 +1020,14 @@ public class AfmaEncodePlanner {
         String payloadPath = (patchBounds != null) ? this.buildPayloadPath(introSequence, frameIndex) : null;
         AfmaPatchRegion patchRegion = (patchBounds != null) ? patchBounds.toPatchRegion(payloadPath) : null;
         byte[] payloadBytes = null;
+        int[] referencePatchPixels = null;
 
         if (patchBounds != null) {
             AfmaPixelFrame patchImage = this.frameNormalizer.extractPatch(currentFrame, patchBounds.x(), patchBounds.y(), patchBounds.width(), patchBounds.height());
             try {
-                payloadBytes = patchImage.asByteArray();
+                AfmaBinIntraPayloadHelper.EncodedPayloadResult encodedPayload = this.encodeBinIntraPayload(patchImage, options, true);
+                payloadBytes = encodedPayload.payloadBytes();
+                referencePatchPixels = encodedPayload.lossless() ? null : encodedPayload.reconstructedPixels();
             } finally {
                 patchImage.close();
             }
@@ -884,6 +1043,9 @@ public class AfmaEncodePlanner {
                 payloadBytes,
                 PayloadKind.BIN_INTRA,
                 false,
+                ReferenceBase.WORKING_FRAME,
+                referencePatchPixels != null ? patchBounds : null,
+                referencePatchPixels,
                 DecodeCost.COPY_RECT_PATCH,
                 3
         );
@@ -928,6 +1090,9 @@ public class AfmaEncodePlanner {
                 null,
                 null,
                 false,
+                ReferenceBase.WORKING_FRAME,
+                null,
+                null,
                 DecodeCost.BLOCK_INTER,
                 7
         );
@@ -962,54 +1127,154 @@ public class AfmaEncodePlanner {
                 new AfmaBlockInterPayloadHelper.TileOperation(AfmaBlockInterPayloadHelper.TileMode.RAW, 0, 0, rawTile.channels(), 0, rawTile.payloadBytes(), null),
                 this.estimateBlockInterTileBytes(AfmaBlockInterPayloadHelper.TileMode.RAW, rawTile.payloadBytes().length, 0)
         );
+        List<MotionSearchSeed> refinementSeeds = new ArrayList<>(BLOCK_INTER_LOCAL_REFINEMENT_SEEDS);
+        Set<Long> testedVectors = new HashSet<>(motionVectors.size() * 2);
 
         for (AfmaRectCopyDetector.MotionVector motionVector : motionVectors) {
-            int srcX = dstX + motionVector.dx();
-            int srcY = dstY + motionVector.dy();
-            if (!this.isMotionTileInBounds(previousFrame, srcX, srcY, width, height)) {
+            testedVectors.add(packMotionVector(motionVector.dx(), motionVector.dy()));
+            BlockInterTileCandidate motionCandidate = this.evaluateBlockInterMotionCandidate(previousFrame, currentFrame, dstX, dstY, width, height,
+                    motionVector.dx(), motionVector.dy());
+            if (motionCandidate == null) {
                 continue;
             }
+            bestCandidate = this.selectBetterBlockInterCandidate(bestCandidate, motionCandidate);
+            this.addMotionSearchSeed(refinementSeeds, motionVector, motionCandidate);
+        }
 
-            MotionTileStats tileStats = this.scanMotionTile(previousFrame, currentFrame, dstX, dstY, srcX, srcY, width, height);
-            if (tileStats.changedPixelCount() <= 0) {
-                BlockInterTileCandidate copyCandidate = new BlockInterTileCandidate(
-                        new AfmaBlockInterPayloadHelper.TileOperation(AfmaBlockInterPayloadHelper.TileMode.COPY, motionVector.dx(), motionVector.dy(), 0, 0, null, null),
-                        this.estimateBlockInterTileBytes(AfmaBlockInterPayloadHelper.TileMode.COPY, 0, 0)
-                );
-                if (copyCandidate.estimatedBytes() < bestCandidate.estimatedBytes()) {
-                    bestCandidate = copyCandidate;
-                }
-                continue;
-            }
-
-            ResidualPayloadData denseResidual = this.buildMotionResidualPayload(previousFrame, currentFrame, dstX, dstY, srcX, srcY, width, height, tileStats.includeAlpha());
-            if (denseResidual != null) {
-                BlockInterTileCandidate denseCandidate = new BlockInterTileCandidate(
-                        new AfmaBlockInterPayloadHelper.TileOperation(AfmaBlockInterPayloadHelper.TileMode.COPY_DENSE,
-                                motionVector.dx(), motionVector.dy(), denseResidual.channels(), 0, denseResidual.payloadBytes(), null),
-                        this.estimateBlockInterTileBytes(AfmaBlockInterPayloadHelper.TileMode.COPY_DENSE, denseResidual.payloadBytes().length, 0)
-                );
-                if (denseCandidate.estimatedBytes() < bestCandidate.estimatedBytes()) {
-                    bestCandidate = denseCandidate;
-                }
-            }
-
-            SparseResidualPayloadData sparseResidual = this.buildMotionSparseResidualPayload(previousFrame, currentFrame, dstX, dstY, srcX, srcY, width, height, tileStats);
-            if (sparseResidual != null) {
-                BlockInterTileCandidate sparseCandidate = new BlockInterTileCandidate(
-                        new AfmaBlockInterPayloadHelper.TileOperation(AfmaBlockInterPayloadHelper.TileMode.COPY_SPARSE,
-                                motionVector.dx(), motionVector.dy(), sparseResidual.channels(), sparseResidual.changedPixelCount(),
-                                sparseResidual.maskPayload(), sparseResidual.residualPayload()),
-                        this.estimateBlockInterTileBytes(AfmaBlockInterPayloadHelper.TileMode.COPY_SPARSE,
-                                sparseResidual.maskPayload().length, sparseResidual.residualPayload().length)
-                );
-                if (sparseCandidate.estimatedBytes() < bestCandidate.estimatedBytes()) {
-                    bestCandidate = sparseCandidate;
-                }
-            }
+        if (!refinementSeeds.isEmpty()) {
+            bestCandidate = this.refineBlockInterTileMotion(previousFrame, currentFrame, dstX, dstY, width, height,
+                    bestCandidate, refinementSeeds, testedVectors);
         }
 
         return bestCandidate.operation();
+    }
+
+    @Nullable
+    protected BlockInterTileCandidate evaluateBlockInterMotionCandidate(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
+                                                                        int dstX, int dstY, int width, int height, int dx, int dy) {
+        int srcX = dstX + dx;
+        int srcY = dstY + dy;
+        if (!this.isMotionTileInBounds(previousFrame, srcX, srcY, width, height)) {
+            return null;
+        }
+
+        MotionTileStats tileStats = this.scanMotionTile(previousFrame, currentFrame, dstX, dstY, srcX, srcY, width, height);
+        if (tileStats.changedPixelCount() <= 0) {
+            return new BlockInterTileCandidate(
+                    new AfmaBlockInterPayloadHelper.TileOperation(AfmaBlockInterPayloadHelper.TileMode.COPY, dx, dy, 0, 0, null, null),
+                    this.estimateBlockInterTileBytes(AfmaBlockInterPayloadHelper.TileMode.COPY, 0, 0)
+            );
+        }
+
+        BlockInterTileCandidate bestCandidate = null;
+        ResidualPayloadData denseResidual = this.buildMotionResidualPayload(previousFrame, currentFrame, dstX, dstY, srcX, srcY, width, height, tileStats.includeAlpha());
+        if (denseResidual != null) {
+            bestCandidate = new BlockInterTileCandidate(
+                    new AfmaBlockInterPayloadHelper.TileOperation(AfmaBlockInterPayloadHelper.TileMode.COPY_DENSE,
+                            dx, dy, denseResidual.channels(), 0, denseResidual.payloadBytes(), null),
+                    this.estimateBlockInterTileBytes(AfmaBlockInterPayloadHelper.TileMode.COPY_DENSE, denseResidual.payloadBytes().length, 0)
+            );
+        }
+
+        SparseResidualPayloadData sparseResidual = this.buildMotionSparseResidualPayload(previousFrame, currentFrame, dstX, dstY, srcX, srcY, width, height, tileStats);
+        if (sparseResidual != null) {
+            BlockInterTileCandidate sparseCandidate = new BlockInterTileCandidate(
+                    new AfmaBlockInterPayloadHelper.TileOperation(AfmaBlockInterPayloadHelper.TileMode.COPY_SPARSE,
+                            dx, dy, sparseResidual.channels(), sparseResidual.changedPixelCount(),
+                            sparseResidual.maskPayload(), sparseResidual.residualPayload()),
+                    this.estimateBlockInterTileBytes(AfmaBlockInterPayloadHelper.TileMode.COPY_SPARSE,
+                            sparseResidual.maskPayload().length, sparseResidual.residualPayload().length)
+            );
+            bestCandidate = this.selectBetterBlockInterCandidate(bestCandidate, sparseCandidate);
+        }
+        return bestCandidate;
+    }
+
+    @NotNull
+    protected BlockInterTileCandidate refineBlockInterTileMotion(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
+                                                                 int dstX, int dstY, int width, int height,
+                                                                 @NotNull BlockInterTileCandidate bestCandidate,
+                                                                 @NotNull List<MotionSearchSeed> refinementSeeds,
+                                                                 @NotNull Set<Long> testedVectors) {
+        BlockInterTileCandidate bestMotionCandidate = bestCandidate;
+        for (MotionSearchSeed initialSeed : refinementSeeds) {
+            MotionSearchSeed seed = initialSeed;
+            int centerDx = seed.motionVector().dx();
+            int centerDy = seed.motionVector().dy();
+            for (int pass = 0; pass < BLOCK_INTER_MAX_REFINEMENT_PASSES; pass++) {
+                MotionSearchSeed bestSeedThisPass = seed;
+                boolean improved = false;
+                for (int candidateDy = centerDy - BLOCK_INTER_LOCAL_REFINEMENT_RADIUS; candidateDy <= centerDy + BLOCK_INTER_LOCAL_REFINEMENT_RADIUS; candidateDy++) {
+                    for (int candidateDx = centerDx - BLOCK_INTER_LOCAL_REFINEMENT_RADIUS; candidateDx <= centerDx + BLOCK_INTER_LOCAL_REFINEMENT_RADIUS; candidateDx++) {
+                        if ((candidateDx == centerDx) && (candidateDy == centerDy)) {
+                            continue;
+                        }
+
+                        long packedVector = packMotionVector(candidateDx, candidateDy);
+                        if (!testedVectors.add(packedVector)) {
+                            continue;
+                        }
+
+                        BlockInterTileCandidate refinedCandidate = this.evaluateBlockInterMotionCandidate(previousFrame, currentFrame, dstX, dstY, width, height, candidateDx, candidateDy);
+                        if (refinedCandidate == null) {
+                            continue;
+                        }
+
+                        bestMotionCandidate = this.selectBetterBlockInterCandidate(bestMotionCandidate, refinedCandidate);
+                        if (this.isBetterBlockInterCandidate(refinedCandidate, bestSeedThisPass.candidate())) {
+                            bestSeedThisPass = new MotionSearchSeed(new AfmaRectCopyDetector.MotionVector(candidateDx, candidateDy), refinedCandidate);
+                            improved = true;
+                        }
+                    }
+                }
+
+                if (!improved) {
+                    break;
+                }
+                seed = bestSeedThisPass;
+                centerDx = seed.motionVector().dx();
+                centerDy = seed.motionVector().dy();
+            }
+        }
+        return bestMotionCandidate;
+    }
+
+    protected void addMotionSearchSeed(@NotNull List<MotionSearchSeed> refinementSeeds,
+                                       @NotNull AfmaRectCopyDetector.MotionVector motionVector,
+                                       @NotNull BlockInterTileCandidate candidate) {
+        refinementSeeds.add(new MotionSearchSeed(motionVector, candidate));
+        refinementSeeds.sort((first, second) -> {
+            int byteCompare = Long.compare(first.candidate().estimatedBytes(), second.candidate().estimatedBytes());
+            if (byteCompare != 0) {
+                return byteCompare;
+            }
+            return Integer.compare(first.candidate().operation().mode().ordinal(), second.candidate().operation().mode().ordinal());
+        });
+        if (refinementSeeds.size() > BLOCK_INTER_LOCAL_REFINEMENT_SEEDS) {
+            refinementSeeds.remove(refinementSeeds.size() - 1);
+        }
+    }
+
+    protected BlockInterTileCandidate selectBetterBlockInterCandidate(@Nullable BlockInterTileCandidate currentBest,
+                                                                      @Nullable BlockInterTileCandidate candidate) {
+        if (candidate == null) {
+            return Objects.requireNonNull(currentBest);
+        }
+        if ((currentBest == null) || this.isBetterBlockInterCandidate(candidate, currentBest)) {
+            return candidate;
+        }
+        return currentBest;
+    }
+
+    protected boolean isBetterBlockInterCandidate(@NotNull BlockInterTileCandidate candidate, @NotNull BlockInterTileCandidate currentBest) {
+        if (candidate.estimatedBytes() != currentBest.estimatedBytes()) {
+            return candidate.estimatedBytes() < currentBest.estimatedBytes();
+        }
+        return candidate.operation().mode().ordinal() < currentBest.operation().mode().ordinal();
+    }
+
+    protected static long packMotionVector(int dx, int dy) {
+        return (((long) dx) << 32) ^ (dy & 0xFFFFFFFFL);
     }
 
     protected boolean isTileIdentical(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
@@ -1314,6 +1579,11 @@ public class AfmaEncodePlanner {
         RAW
     }
 
+    protected enum ReferenceBase {
+        SOURCE_FRAME,
+        WORKING_FRAME
+    }
+
     protected static class PlannedCandidate {
 
         @NotNull
@@ -1335,12 +1605,19 @@ public class AfmaEncodePlanner {
         protected final boolean patchPayloadReusedFromSource;
         protected final long estimatedPatchArchiveBytes;
         @NotNull
+        protected final ReferenceBase referenceBase;
+        @Nullable
+        protected final AfmaRect referencePatchBounds;
+        @Nullable
+        protected final int[] referencePatchPixels;
+        @NotNull
         protected final DecodeCost decodeCost;
         protected final int complexityScore;
 
         protected PlannedCandidate(@NotNull AfmaFrameDescriptor descriptor,
                                    @Nullable String primaryPayloadPath, @Nullable byte[] primaryPayload, @Nullable PayloadKind primaryPayloadKind, boolean primaryPayloadReusedFromSource,
                                    @Nullable String patchPayloadPath, @Nullable byte[] patchPayload, @Nullable PayloadKind patchPayloadKind, boolean patchPayloadReusedFromSource,
+                                   @NotNull ReferenceBase referenceBase, @Nullable AfmaRect referencePatchBounds, @Nullable int[] referencePatchPixels,
                                    @NotNull DecodeCost decodeCost, int complexityScore) {
             this.descriptor = descriptor;
             this.primaryPayloadPath = primaryPayloadPath;
@@ -1353,13 +1630,17 @@ public class AfmaEncodePlanner {
             this.patchPayloadKind = patchPayloadKind;
             this.patchPayloadReusedFromSource = patchPayloadReusedFromSource;
             this.estimatedPatchArchiveBytes = estimatePayloadArchiveBytes(patchPayload, patchPayloadKind);
+            this.referenceBase = referenceBase;
+            this.referencePatchBounds = referencePatchBounds;
+            this.referencePatchPixels = referencePatchPixels;
             this.decodeCost = decodeCost;
             this.complexityScore = complexityScore;
         }
 
         @NotNull
         public static PlannedCandidate same() {
-            return new PlannedCandidate(AfmaFrameDescriptor.same(), null, null, null, false, null, null, null, false, DecodeCost.SAME, 0);
+            return new PlannedCandidate(AfmaFrameDescriptor.same(), null, null, null, false, null, null, null, false,
+                    ReferenceBase.WORKING_FRAME, null, null, DecodeCost.SAME, 0);
         }
 
         @NotNull
@@ -1386,9 +1667,36 @@ public class AfmaEncodePlanner {
                     patchPayload,
                     this.patchPayloadKind,
                     this.patchPayloadReusedFromSource && patchPayload == this.patchPayload,
+                    this.referenceBase,
+                    this.referencePatchBounds,
+                    this.referencePatchPixels,
                     this.decodeCost,
                     this.complexityScore
             );
+        }
+
+        @NotNull
+        public AfmaPixelFrame materializeReferenceFrame(@NotNull AfmaPixelFrame sourceFrame, @NotNull AfmaPixelFrame workingFrame) {
+            AfmaPixelFrame baseFrame = (this.referenceBase == ReferenceBase.SOURCE_FRAME) ? sourceFrame : workingFrame;
+            if ((this.referencePatchBounds == null) || (this.referencePatchPixels == null)) {
+                return baseFrame;
+            }
+
+            AfmaRect patchBounds = this.referencePatchBounds;
+            if ((patchBounds.x() == 0) && (patchBounds.y() == 0)
+                    && (patchBounds.width() == baseFrame.getWidth()) && (patchBounds.height() == baseFrame.getHeight())) {
+                return new AfmaPixelFrame(baseFrame.getWidth(), baseFrame.getHeight(), Arrays.copyOf(this.referencePatchPixels, this.referencePatchPixels.length));
+            }
+
+            int[] referencePixels = baseFrame.copyPixels();
+            int patchOffset = 0;
+            for (int localY = 0; localY < patchBounds.height(); localY++) {
+                int rowOffset = (patchBounds.y() + localY) * baseFrame.getWidth();
+                for (int localX = 0; localX < patchBounds.width(); localX++) {
+                    referencePixels[rowOffset + patchBounds.x() + localX] = this.referencePatchPixels[patchOffset++];
+                }
+            }
+            return new AfmaPixelFrame(baseFrame.getWidth(), baseFrame.getHeight(), referencePixels);
         }
 
         public long estimatedArchiveBytes(@NotNull Map<String, String> payloadPathsByFingerprint) {
@@ -1562,6 +1870,9 @@ public class AfmaEncodePlanner {
                         this.patchPayload,
                         this.patchPayloadKind,
                         this.patchPayloadReusedFromSource,
+                        this.referenceBase,
+                        this.referencePatchBounds,
+                        this.referencePatchPixels,
                         this.decodeCost,
                         this.complexityScore
                 );
@@ -1590,6 +1901,9 @@ public class AfmaEncodePlanner {
                         null,
                         this.patchPayloadKind,
                         false,
+                        this.referenceBase,
+                        this.referencePatchBounds,
+                        this.referencePatchPixels,
                         this.decodeCost,
                         this.complexityScore
                 );
@@ -1627,6 +1941,9 @@ public class AfmaEncodePlanner {
     protected record AdaptiveTiming(long defaultDelayMs, @NotNull LinkedHashMap<Integer, Long> customFrameTimes) {
     }
 
+    protected record PerceptualDriftStats(double averageError, int maxVisibleColorDelta, int maxAlphaDelta) {
+    }
+
     protected record ResidualPayloadData(@NotNull byte[] payloadBytes, int channels) {
     }
 
@@ -1640,6 +1957,10 @@ public class AfmaEncodePlanner {
     }
 
     protected record BlockInterTileCandidate(@NotNull AfmaBlockInterPayloadHelper.TileOperation operation, long estimatedBytes) {
+    }
+
+    protected record MotionSearchSeed(@NotNull AfmaRectCopyDetector.MotionVector motionVector,
+                                      @NotNull BlockInterTileCandidate candidate) {
     }
 
     @FunctionalInterface
