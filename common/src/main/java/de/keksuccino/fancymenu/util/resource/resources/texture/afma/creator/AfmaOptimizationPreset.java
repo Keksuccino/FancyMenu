@@ -9,26 +9,28 @@ import java.util.function.Supplier;
 
 public enum AfmaOptimizationPreset implements LocalizedEnum<AfmaOptimizationPreset> {
 
-    BALANCED("balanced", 30, true, true, 512, 5, false, LocalizedEnum.SUCCESS_TEXT_STYLE),
-    SMALLEST_FILE("smallest_file", 90, true, true, 2048, 12, false, LocalizedEnum.WARNING_TEXT_STYLE),
-    FASTEST_DECODE("fastest_decode", 18, false, true, 96, 2, false, () -> Style.EMPTY);
+    BALANCED("balanced", 30, true, true, false, 512, 5, false, LocalizedEnum.SUCCESS_TEXT_STYLE),
+    SMALLEST_FILE("smallest_file", 90, true, true, true, 2048, 12, false, LocalizedEnum.WARNING_TEXT_STYLE),
+    FASTEST_DECODE("fastest_decode", 18, false, true, false, 96, 2, false, () -> Style.EMPTY);
 
     private final @NotNull String name;
     private final int keyframeInterval;
     private final boolean rectCopyEnabled;
     private final boolean duplicateFrameElision;
+    private final boolean nearLosslessEnabledByDefault;
     private final int maxCopySearchDistance;
     private final int maxCandidateAxisOffsets;
     private final boolean thumbnailEnabledByDefault;
     private final @NotNull Supplier<Style> style;
 
     AfmaOptimizationPreset(@NotNull String name, int keyframeInterval, boolean rectCopyEnabled,
-                           boolean duplicateFrameElision, int maxCopySearchDistance, int maxCandidateAxisOffsets,
+                           boolean duplicateFrameElision, boolean nearLosslessEnabledByDefault, int maxCopySearchDistance, int maxCandidateAxisOffsets,
                            boolean thumbnailEnabledByDefault, @NotNull Supplier<Style> style) {
         this.name = name;
         this.keyframeInterval = keyframeInterval;
         this.rectCopyEnabled = rectCopyEnabled;
         this.duplicateFrameElision = duplicateFrameElision;
+        this.nearLosslessEnabledByDefault = nearLosslessEnabledByDefault;
         this.maxCopySearchDistance = maxCopySearchDistance;
         this.maxCandidateAxisOffsets = maxCandidateAxisOffsets;
         this.thumbnailEnabledByDefault = thumbnailEnabledByDefault;
@@ -73,6 +75,10 @@ public enum AfmaOptimizationPreset implements LocalizedEnum<AfmaOptimizationPres
 
     public boolean isDuplicateFrameElision() {
         return this.duplicateFrameElision;
+    }
+
+    public boolean isNearLosslessEnabledByDefault() {
+        return this.nearLosslessEnabledByDefault;
     }
 
     public int getMaxCopySearchDistance() {

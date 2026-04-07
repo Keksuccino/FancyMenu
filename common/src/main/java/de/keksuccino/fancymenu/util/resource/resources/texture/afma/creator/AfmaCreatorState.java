@@ -210,6 +210,7 @@ public class AfmaCreatorState {
         this.keyframeInterval = preset.getKeyframeInterval();
         this.rectCopyEnabled = preset.isRectCopyEnabled();
         this.duplicateFrameElision = preset.isDuplicateFrameElision();
+        this.nearLosslessEnabled = preset.isNearLosslessEnabledByDefault();
         this.maxCopySearchDistance = preset.getMaxCopySearchDistance();
         this.maxCandidateAxisOffsets = preset.getMaxCandidateAxisOffsets();
         this.generateThumbnail = preset.isThumbnailEnabledByDefault();
