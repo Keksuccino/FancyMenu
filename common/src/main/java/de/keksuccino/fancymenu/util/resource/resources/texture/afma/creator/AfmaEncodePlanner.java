@@ -1421,36 +1421,97 @@ public class AfmaEncodePlanner {
         }
 
         protected int estimateDescriptorBytes() {
-            int bytes = 16;
-            if (this.descriptor.getType() != null) {
-                bytes += this.descriptor.getType().name().length();
+            AfmaFrameOperationType type = this.descriptor.getType();
+            if (type == null) {
+                return 1;
             }
-            if (this.primaryPayloadPath != null) {
-                bytes += this.primaryPayloadPath.length();
-            } else if (this.descriptor.getPath() != null) {
-                bytes += this.descriptor.getPath().length();
-            }
-            if (this.patchPayloadPath != null) {
-                bytes += this.patchPayloadPath.length();
-            } else if (this.descriptor.getSecondaryPayloadPath() != null) {
-                bytes += Objects.requireNonNull(this.descriptor.getSecondaryPayloadPath()).length();
-            }
-            if (this.descriptor.getType() == AfmaFrameOperationType.DELTA_RECT) {
-                bytes += 20;
-            } else if (this.descriptor.getType() == AfmaFrameOperationType.RESIDUAL_DELTA_RECT) {
-                bytes += 24;
-            } else if (this.descriptor.getType() == AfmaFrameOperationType.COPY_RECT_PATCH) {
-                bytes += 32;
-            } else if (this.descriptor.getType() == AfmaFrameOperationType.COPY_RECT_RESIDUAL_PATCH) {
-                bytes += 36;
-            } else if (this.descriptor.getType() == AfmaFrameOperationType.SPARSE_DELTA_RECT) {
-                bytes += 28;
-            } else if (this.descriptor.getType() == AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH) {
-                bytes += 40;
-            } else if (this.descriptor.getType() == AfmaFrameOperationType.BLOCK_INTER) {
-                bytes += 28;
-            }
+
+            int bytes = 1;
+            bytes += switch (type) {
+                case FULL -> estimatedPayloadIdBytes();
+                case DELTA_RECT -> estimatedPayloadIdBytes()
+                        + estimateVarIntBytes(this.descriptor.getX())
+                        + estimateVarIntBytes(this.descriptor.getY())
+                        + estimateVarIntBytes(this.descriptor.getWidth())
+                        + estimateVarIntBytes(this.descriptor.getHeight());
+                case RESIDUAL_DELTA_RECT -> estimatedPayloadIdBytes()
+                        + estimateVarIntBytes(this.descriptor.getX())
+                        + estimateVarIntBytes(this.descriptor.getY())
+                        + estimateVarIntBytes(this.descriptor.getWidth())
+                        + estimateVarIntBytes(this.descriptor.getHeight())
+                        + 1;
+                case SPARSE_DELTA_RECT -> (2 * estimatedPayloadIdBytes())
+                        + estimateVarIntBytes(this.descriptor.getX())
+                        + estimateVarIntBytes(this.descriptor.getY())
+                        + estimateVarIntBytes(this.descriptor.getWidth())
+                        + estimateVarIntBytes(this.descriptor.getHeight())
+                        + estimateVarIntBytes(Objects.requireNonNull(this.descriptor.getSparse()).getChangedPixelCount())
+                        + 1;
+                case SAME -> 0;
+                case COPY_RECT_PATCH -> {
+                    int copyBytes = estimateCopyRectBytes(Objects.requireNonNull(this.descriptor.getCopy()));
+                    AfmaPatchRegion patch = this.descriptor.getPatch();
+                    if (patch == null) {
+                        yield copyBytes + 1;
+                    }
+                    yield copyBytes + 1 + estimatedPayloadIdBytes()
+                            + estimateVarIntBytes(patch.getX())
+                            + estimateVarIntBytes(patch.getY())
+                            + estimateVarIntBytes(patch.getWidth())
+                            + estimateVarIntBytes(patch.getHeight());
+                }
+                case COPY_RECT_RESIDUAL_PATCH -> estimateCopyRectBytes(Objects.requireNonNull(this.descriptor.getCopy()))
+                        + estimatedPayloadIdBytes()
+                        + estimateVarIntBytes(this.descriptor.getX())
+                        + estimateVarIntBytes(this.descriptor.getY())
+                        + estimateVarIntBytes(this.descriptor.getWidth())
+                        + estimateVarIntBytes(this.descriptor.getHeight())
+                        + 1;
+                case COPY_RECT_SPARSE_PATCH -> estimateCopyRectBytes(Objects.requireNonNull(this.descriptor.getCopy()))
+                        + (2 * estimatedPayloadIdBytes())
+                        + estimateVarIntBytes(this.descriptor.getX())
+                        + estimateVarIntBytes(this.descriptor.getY())
+                        + estimateVarIntBytes(this.descriptor.getWidth())
+                        + estimateVarIntBytes(this.descriptor.getHeight())
+                        + estimateVarIntBytes(Objects.requireNonNull(this.descriptor.getSparse()).getChangedPixelCount())
+                        + 1;
+                case BLOCK_INTER -> estimatedPayloadIdBytes()
+                        + estimateVarIntBytes(this.descriptor.getX())
+                        + estimateVarIntBytes(this.descriptor.getY())
+                        + estimateVarIntBytes(this.descriptor.getWidth())
+                        + estimateVarIntBytes(this.descriptor.getHeight())
+                        + estimateVarIntBytes(Objects.requireNonNull(this.descriptor.getBlockInter()).getTileSize());
+            };
             return bytes;
+        }
+
+        protected int estimatedPayloadIdBytes() {
+            return 2;
+        }
+
+        protected int estimateCopyRectBytes(@NotNull AfmaCopyRect copyRect) {
+            return estimateVarIntBytes(copyRect.getSrcX())
+                    + estimateVarIntBytes(copyRect.getSrcY())
+                    + estimateVarIntBytes(copyRect.getDstX())
+                    + estimateVarIntBytes(copyRect.getDstY())
+                    + estimateVarIntBytes(copyRect.getWidth())
+                    + estimateVarIntBytes(copyRect.getHeight());
+        }
+
+        protected int estimateVarIntBytes(int value) {
+            if ((value & ~0x7F) == 0) {
+                return 1;
+            }
+            if ((value & ~0x3FFF) == 0) {
+                return 2;
+            }
+            if ((value & ~0x1FFFFF) == 0) {
+                return 3;
+            }
+            if ((value & ~0xFFFFFFF) == 0) {
+                return 4;
+            }
+            return 5;
         }
 
         public boolean isBetterThan(@NotNull PlannedCandidate other, @NotNull Map<String, String> payloadPathsByFingerprint) {

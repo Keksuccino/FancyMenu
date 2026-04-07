@@ -23,9 +23,6 @@ public final class AfmaPayloadMetricsHelper {
         if (payloadBytes == null) {
             return 0L;
         }
-        if (payloadBytes.length < 1024) {
-            return payloadBytes.length;
-        }
 
         Long cachedValue = ESTIMATED_ARCHIVE_BYTES.get(payloadBytes);
         if (cachedValue != null) {

@@ -100,13 +100,23 @@ public final class AfmaBlockInterPayloadHelper {
                                    @NotNull TileConsumer consumer) throws IOException {
         Objects.requireNonNull(payloadBytes);
         Objects.requireNonNull(consumer);
+        walkPayload(payloadBytes, 0, payloadBytes.length, tileSize, regionWidth, regionHeight, consumer);
+    }
+
+    public static void walkPayload(@NotNull byte[] payloadBytes, int offset, int length, int tileSize, int regionWidth, int regionHeight,
+                                   @NotNull TileConsumer consumer) throws IOException {
+        Objects.requireNonNull(payloadBytes);
+        Objects.requireNonNull(consumer);
+        if (offset < 0 || length < 0 || ((long) offset + (long) length) > payloadBytes.length) {
+            throw new IOException("AFMA block inter payload slice is invalid");
+        }
         if (tileSize <= 0 || regionWidth <= 0 || regionHeight <= 0) {
             throw new IOException("AFMA block inter payload dimensions are invalid");
         }
 
         int expectedTileCountX = tileCount(regionWidth, tileSize);
         int expectedTileCountY = tileCount(regionHeight, tileSize);
-        try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(payloadBytes))) {
+        try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(payloadBytes, offset, length))) {
             int magic = in.readInt();
             if (magic != PAYLOAD_MAGIC) {
                 throw new IOException("AFMA block inter payload is missing its magic header");
@@ -182,7 +192,12 @@ public final class AfmaBlockInterPayloadHelper {
 
     public static void validatePayload(@NotNull byte[] payloadBytes, int tileSize, int regionX, int regionY, int regionWidth, int regionHeight,
                                        int canvasWidth, int canvasHeight) throws IOException {
-        walkPayload(payloadBytes, tileSize, regionWidth, regionHeight, (localX, localY, tileWidth, tileHeight, mode, dx, dy, channels, changedPixelCount, primaryBytes, secondaryBytes) -> {
+        validatePayload(payloadBytes, 0, Objects.requireNonNull(payloadBytes).length, tileSize, regionX, regionY, regionWidth, regionHeight, canvasWidth, canvasHeight);
+    }
+
+    public static void validatePayload(@NotNull byte[] payloadBytes, int offset, int length, int tileSize, int regionX, int regionY, int regionWidth, int regionHeight,
+                                       int canvasWidth, int canvasHeight) throws IOException {
+        walkPayload(payloadBytes, offset, length, tileSize, regionWidth, regionHeight, (localX, localY, tileWidth, tileHeight, mode, dx, dy, channels, changedPixelCount, primaryBytes, secondaryBytes) -> {
             int dstX = regionX + localX;
             int dstY = regionY + localY;
             if (dstX < 0 || dstY < 0 || (dstX + tileWidth) > canvasWidth || (dstY + tileHeight) > canvasHeight) {

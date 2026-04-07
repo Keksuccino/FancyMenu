@@ -20,7 +20,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayDeque;
@@ -497,25 +496,15 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
     @NotNull
     protected PixelPayload readBinIntraPayload(@NotNull AfmaDecoder activeDecoder, @NotNull String payloadPath) throws IOException {
-        InputStream payloadInput = activeDecoder.openPayload(payloadPath);
-        if (payloadInput == null) {
-            throw new FileNotFoundException("AFMA payload input stream was NULL: " + payloadPath);
-        }
-        try (InputStream closeableInput = payloadInput) {
-            AfmaBinIntraPayloadHelper.DecodedFrame decodedFrame = AfmaBinIntraPayloadHelper.decodePayload(closeableInput.readAllBytes());
-            return new PixelPayload(decodedFrame.width(), decodedFrame.height(), decodedFrame.pixels(), 0, decodedFrame.width(), false);
-        }
+        AfmaDecoder.PayloadBytes payloadBytes = activeDecoder.readPayloadBytes(payloadPath);
+        AfmaBinIntraPayloadHelper.DecodedFrame decodedFrame = AfmaBinIntraPayloadHelper.decodePayload(payloadBytes.bytes(), payloadBytes.offset(), payloadBytes.length());
+        return new PixelPayload(decodedFrame.width(), decodedFrame.height(), decodedFrame.pixels(), 0, decodedFrame.width(), false);
     }
 
     @NotNull
     protected RawPayload readRawPayload(@NotNull AfmaDecoder activeDecoder, @NotNull String payloadPath) throws IOException {
-        InputStream payloadInput = activeDecoder.openPayload(payloadPath);
-        if (payloadInput == null) {
-            throw new FileNotFoundException("AFMA payload input stream was NULL: " + payloadPath);
-        }
-        try (InputStream closeableInput = payloadInput) {
-            return new RawPayload(closeableInput.readAllBytes());
-        }
+        AfmaDecoder.PayloadBytes payloadBytes = activeDecoder.readPayloadBytes(payloadPath);
+        return new RawPayload(payloadBytes.bytes(), payloadBytes.offset(), payloadBytes.length());
     }
 
     protected long resolveFrameDelay(boolean intro, int index) {
@@ -811,7 +800,8 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
     protected void applyResidualPayload(@NotNull RawPayload residualPayload, @NotNull NativeImage canvas,
                                         int dstX, int dstY, int width, int height, @NotNull AfmaResidualPayload residualMetadata) {
-        AfmaNativeImageHelper.applyResidualBytes(canvas, dstX, dstY, width, height, residualPayload.bytes, residualMetadata.getChannels());
+        AfmaNativeImageHelper.applyResidualBytes(canvas, dstX, dstY, width, height,
+                residualPayload.bytes, residualPayload.offset, residualPayload.length, residualMetadata.getChannels());
     }
 
     protected void applySparseResidualPayload(@NotNull RawPayload maskPayload, @NotNull RawPayload residualPayload,
@@ -824,7 +814,11 @@ public class AfmaTexture implements ITexture, PlayableResource {
                 width,
                 height,
                 maskPayload.bytes,
+                maskPayload.offset,
+                maskPayload.length,
                 residualPayload.bytes,
+                residualPayload.offset,
+                residualPayload.length,
                 sparsePayload.getChangedPixelCount(),
                 sparsePayload.getChannels()
         );
@@ -834,7 +828,8 @@ public class AfmaTexture implements ITexture, PlayableResource {
                                           int regionX, int regionY, int regionWidth, int regionHeight,
                                           @NotNull AfmaBlockInter blockInter) throws IOException {
         NativeImage referenceCanvas = this.ensureBlockInterReferenceCanvas(canvas);
-        AfmaBlockInterPayloadHelper.walkPayload(blockPayload.bytes, blockInter.getTileSize(), regionWidth, regionHeight,
+        AfmaBlockInterPayloadHelper.walkPayload(blockPayload.bytes, blockPayload.offset, blockPayload.length,
+                blockInter.getTileSize(), regionWidth, regionHeight,
                 (localX, localY, tileWidth, tileHeight, mode, dx, dy, channels, changedPixelCount, primaryBytes, secondaryBytes) -> {
                     int dstX = regionX + localX;
                     int dstY = regionY + localY;
@@ -1336,9 +1331,17 @@ public class AfmaTexture implements ITexture, PlayableResource {
     protected static class RawPayload implements FramePayload {
         @NotNull
         protected final byte[] bytes;
+        protected final int offset;
+        protected final int length;
 
         protected RawPayload(@NotNull byte[] bytes) {
+            this(bytes, 0, bytes.length);
+        }
+
+        protected RawPayload(@NotNull byte[] bytes, int offset, int length) {
             this.bytes = bytes;
+            this.offset = Math.max(0, offset);
+            this.length = Math.max(0, Math.min(length, bytes.length - this.offset));
         }
     }
 

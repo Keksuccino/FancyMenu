@@ -66,8 +66,16 @@ public final class AfmaBinIntraPayloadHelper {
 
     @NotNull
     public static DecodedFrame decodePayload(@NotNull byte[] payloadBytes) throws IOException {
+        return decodePayload(payloadBytes, 0, Objects.requireNonNull(payloadBytes).length);
+    }
+
+    @NotNull
+    public static DecodedFrame decodePayload(@NotNull byte[] payloadBytes, int offset, int length) throws IOException {
         Objects.requireNonNull(payloadBytes);
-        try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(payloadBytes))) {
+        if (offset < 0 || length < 0 || ((long) offset + (long) length) > payloadBytes.length) {
+            throw new IOException("AFMA BIN_INTRA payload slice is invalid");
+        }
+        try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(payloadBytes, offset, length))) {
             PayloadHeader header = readHeader(in);
             int[] pixels = switch (header.mode()) {
                 case SOLID -> decodeSolid(in, header.width(), header.height());
@@ -86,14 +94,26 @@ public final class AfmaBinIntraPayloadHelper {
 
     @NotNull
     public static PayloadHeader readHeader(@NotNull byte[] payloadBytes) throws IOException {
+        return readHeader(payloadBytes, 0, Objects.requireNonNull(payloadBytes).length);
+    }
+
+    @NotNull
+    public static PayloadHeader readHeader(@NotNull byte[] payloadBytes, int offset, int length) throws IOException {
         Objects.requireNonNull(payloadBytes);
-        try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(payloadBytes))) {
+        if (offset < 0 || length < 0 || ((long) offset + (long) length) > payloadBytes.length) {
+            throw new IOException("AFMA BIN_INTRA payload slice is invalid");
+        }
+        try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(payloadBytes, offset, length))) {
             return readHeader(in);
         }
     }
 
     public static void validatePayload(@NotNull byte[] payloadBytes, int expectedWidth, int expectedHeight) throws IOException {
-        DecodedFrame frame = decodePayload(payloadBytes);
+        validatePayload(payloadBytes, 0, Objects.requireNonNull(payloadBytes).length, expectedWidth, expectedHeight);
+    }
+
+    public static void validatePayload(@NotNull byte[] payloadBytes, int offset, int length, int expectedWidth, int expectedHeight) throws IOException {
+        DecodedFrame frame = decodePayload(payloadBytes, offset, length);
         if ((frame.width() != expectedWidth) || (frame.height() != expectedHeight)) {
             throw new IOException("AFMA BIN_INTRA payload dimensions do not match the descriptor");
         }
