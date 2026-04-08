@@ -1838,7 +1838,7 @@ public class AfmaEncodePlanner {
                 payloadOffset = AfmaResidualPayloadHelper.writeResidual(payloadBytes, payloadOffset, predictedColor, currentColor, includeAlpha);
             }
         }
-        return new ResidualPayloadData(payloadBytes, channels);
+        return new ResidualPayloadData(payloadBytes, new AfmaResidualPayload(channels), 0);
     }
 
     @Nullable
@@ -1876,7 +1876,17 @@ public class AfmaEncodePlanner {
                 residualOffset = AfmaResidualPayloadHelper.writeResidual(residualPayload, residualOffset, predictedColor, currentColor, tileStats.includeAlpha());
             }
         }
-        return new SparseResidualPayloadData(maskPayload, residualPayload, tileStats.changedPixelCount(), channels);
+        return new SparseResidualPayloadData(
+                maskPayload,
+                residualPayload,
+                tileStats.changedPixelCount(),
+                AfmaSparseLayoutCodec.BITMASK,
+                channels,
+                AfmaResidualCodec.INTERLEAVED,
+                tileStats.includeAlpha() ? AfmaAlphaResidualMode.FULL : AfmaAlphaResidualMode.NONE,
+                0,
+                0
+        );
     }
 
     @NotNull
