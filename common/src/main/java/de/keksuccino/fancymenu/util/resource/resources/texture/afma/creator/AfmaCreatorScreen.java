@@ -34,11 +34,16 @@ import java.util.Locale;
 public class AfmaCreatorScreen extends Screen {
 
     private static final int OUTER_PADDING = 20;
+    private static final int PANEL_PADDING = 12;
     private static final int FIELD_HEIGHT = 20;
     private static final int ROW_GAP = 24;
     private static final int SECTION_GAP = 46;
-    private static final int SOURCE_MAIN_ROW_Y = 54;
-    private static final int SOURCE_ROW_GAP = 28;
+    private static final int PANEL_TOP = 40;
+    private static final int INLINE_LABEL_GAP = 8;
+    private static final int COLUMN_GAP = 14;
+    private static final int FIELD_BUTTON_GAP = 8;
+    private static final int BUTTON_GROUP_GAP = 4;
+    private static final int MIN_INPUT_WIDTH = 120;
 
     private final @NotNull Screen parentScreen;
     private final @NotNull AfmaCreatorState state = new AfmaCreatorState();
@@ -53,8 +58,6 @@ public class AfmaCreatorScreen extends Screen {
     private @Nullable ExtendedEditBox introFrameTimeEditBox;
     private @Nullable ExtendedEditBox loopCountEditBox;
     private @Nullable ExtendedEditBox keyframeIntervalEditBox;
-    private @Nullable ExtendedEditBox customFrameTimesEditBox;
-    private @Nullable ExtendedEditBox customIntroFrameTimesEditBox;
 
     private @Nullable ExtendedButton browseMainFramesButton;
     private @Nullable ExtendedButton browseIntroFramesButton;
@@ -120,18 +123,6 @@ public class AfmaCreatorScreen extends Screen {
         this.keyframeIntervalEditBox.setResponder(value -> {
             if (this.syncingWidgets) return;
             if (isInteger(value)) this.state.setKeyframeInterval(Integer.parseInt(value));
-        });
-
-        this.customFrameTimesEditBox = this.addStyledEditBox(Component.translatable("fancymenu.afma.creator.custom_frame_times"));
-        this.customFrameTimesEditBox.setResponder(value -> {
-            if (this.syncingWidgets) return;
-            this.state.setCustomFrameTimesText(value);
-        });
-
-        this.customIntroFrameTimesEditBox = this.addStyledEditBox(Component.translatable("fancymenu.afma.creator.custom_intro_frame_times"));
-        this.customIntroFrameTimesEditBox.setResponder(value -> {
-            if (this.syncingWidgets) return;
-            this.state.setCustomIntroFrameTimesText(value);
         });
 
         this.browseMainFramesButton = this.addStyledButton(Component.translatable("fancymenu.afma.creator.browse"), button -> this.openDirectoryChooser(this.state.getMainFramesDirectory(), this.state::setMainFramesDirectory));
@@ -244,8 +235,6 @@ public class AfmaCreatorScreen extends Screen {
             if (this.introFrameTimeEditBox != null) this.introFrameTimeEditBox.setValue(String.valueOf(this.state.getIntroFrameTimeMs()));
             if (this.loopCountEditBox != null) this.loopCountEditBox.setValue(String.valueOf(this.state.getLoopCount()));
             if (this.keyframeIntervalEditBox != null) this.keyframeIntervalEditBox.setValue(String.valueOf(this.state.getKeyframeInterval()));
-            if (this.customFrameTimesEditBox != null) this.customFrameTimesEditBox.setValue(this.state.getCustomFrameTimesText());
-            if (this.customIntroFrameTimesEditBox != null) this.customIntroFrameTimesEditBox.setValue(this.state.getCustomIntroFrameTimesText());
             if (this.presetCycleButton != null) this.presetCycleButton.setSelectedValue(this.state.getOptimizationPreset(), false);
             if (this.rectCopyCycleButton != null) this.rectCopyCycleButton.setSelectedValue(CommonCycles.CycleEnabledDisabled.getByBoolean(this.state.isRectCopyEnabled()), false);
             if (this.duplicateCycleButton != null) this.duplicateCycleButton.setSelectedValue(CommonCycles.CycleEnabledDisabled.getByBoolean(this.state.isDuplicateFrameElision()), false);
@@ -283,77 +272,92 @@ public class AfmaCreatorScreen extends Screen {
             int value = (int) parseLongOrDefault(this.keyframeIntervalEditBox.getValue(), 0L);
             if (value != this.state.getKeyframeInterval()) this.state.setKeyframeInterval(value);
         }
-        if (this.customFrameTimesEditBox != null && !this.state.getCustomFrameTimesText().equals(this.customFrameTimesEditBox.getValue())) {
-            this.state.setCustomFrameTimesText(this.customFrameTimesEditBox.getValue());
-        }
-        if (this.customIntroFrameTimesEditBox != null && !this.state.getCustomIntroFrameTimesText().equals(this.customIntroFrameTimesEditBox.getValue())) {
-            this.state.setCustomIntroFrameTimesText(this.customIntroFrameTimesEditBox.getValue());
-        }
     }
 
     protected void repositionWidgets() {
-        int leftX = OUTER_PADDING;
-        int rightPanelX = (this.width / 2) + 8;
-        int leftWidth = Math.max(320, (this.width / 2) - OUTER_PADDING - 12);
+        int contentX = this.getContentLeft();
+        int contentWidth = this.getContentWidth();
+        int inlineLabelWidth = this.getInlineLabelWidth();
         int browseWidth = 84;
         int clearWidth = 64;
-        int pathFieldWidth = leftWidth - browseWidth - 8;
-        int introPathFieldWidth = leftWidth - browseWidth - clearWidth - 12;
-
-        int y = SOURCE_MAIN_ROW_Y;
-        y = this.layoutPathRow(leftX, y, pathFieldWidth, browseWidth, this.mainFramesPathEditBox, this.browseMainFramesButton);
-        y += SOURCE_ROW_GAP;
-        if (this.introFramesPathEditBox != null) {
-            this.introFramesPathEditBox.setX(leftX);
-            this.introFramesPathEditBox.setY(y);
-            this.introFramesPathEditBox.setWidth(introPathFieldWidth);
-            this.introFramesPathEditBox.setHeight(FIELD_HEIGHT);
-        }
-        if (this.browseIntroFramesButton != null) {
-            this.browseIntroFramesButton.setX(leftX + introPathFieldWidth + 4);
-            this.browseIntroFramesButton.setY(y);
-            this.browseIntroFramesButton.setWidth(browseWidth);
-        }
-        if (this.clearIntroFramesButton != null) {
-            this.clearIntroFramesButton.setX(leftX + introPathFieldWidth + browseWidth + 8);
-            this.clearIntroFramesButton.setY(y);
-            this.clearIntroFramesButton.setWidth(clearWidth);
-        }
+        int y = this.getContentStartY();
+        y = this.layoutLabeledPathRow(contentX, y, contentWidth, inlineLabelWidth, this.mainFramesPathEditBox, this.browseMainFramesButton, browseWidth, null, 0);
+        y += ROW_GAP;
+        y = this.layoutLabeledPathRow(contentX, y, contentWidth, inlineLabelWidth, this.introFramesPathEditBox, this.browseIntroFramesButton, browseWidth, this.clearIntroFramesButton, clearWidth);
+        y += ROW_GAP;
+        y = this.layoutLabeledPathRow(contentX, y, contentWidth, inlineLabelWidth, this.outputPathEditBox, this.browseOutputButton, browseWidth, null, 0);
         y += SECTION_GAP;
 
-        y = this.layoutPathRow(leftX, y, pathFieldWidth, browseWidth, this.outputPathEditBox, this.browseOutputButton);
-        y += SECTION_GAP;
+        int columnWidth = (contentWidth - COLUMN_GAP) / 2;
+        boolean useSingleColumnNumericLayout = this.useSingleColumnNumericLayout(columnWidth, inlineLabelWidth);
+        if (useSingleColumnNumericLayout) {
+            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.frameTimeEditBox);
+            y += ROW_GAP;
+            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.introFrameTimeEditBox);
+            y += ROW_GAP;
+            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.loopCountEditBox);
+            y += SECTION_GAP;
+        } else {
+            y = this.layoutLabeledFieldRow(contentX, y, columnWidth, inlineLabelWidth, this.frameTimeEditBox);
+            this.layoutLabeledFieldRow(contentX + columnWidth + COLUMN_GAP, y, columnWidth, inlineLabelWidth, this.introFrameTimeEditBox);
+            y += ROW_GAP;
+            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.loopCountEditBox);
+            y += SECTION_GAP;
+        }
 
-        int halfWidth = (leftWidth - 8) / 2;
-        this.layoutWidget(this.frameTimeEditBox, leftX, y, halfWidth, FIELD_HEIGHT);
-        this.layoutWidget(this.introFrameTimeEditBox, leftX + halfWidth + 8, y, halfWidth, FIELD_HEIGHT);
-        y += ROW_GAP + 10;
-        this.layoutWidget(this.loopCountEditBox, leftX, y, halfWidth, FIELD_HEIGHT);
-        this.layoutWidget(this.keyframeIntervalEditBox, leftX + halfWidth + 8, y, halfWidth, FIELD_HEIGHT);
-        y += ROW_GAP + 10;
+        y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.keyframeIntervalEditBox);
+        y += ROW_GAP;
+        this.layoutWidget(this.presetCycleButton, contentX, y, contentWidth, FIELD_HEIGHT);
+        y += ROW_GAP;
 
-        this.layoutWidget(this.customFrameTimesEditBox, leftX, y, leftWidth, FIELD_HEIGHT);
-        y += ROW_GAP + 10;
-        this.layoutWidget(this.customIntroFrameTimesEditBox, leftX, y, leftWidth, FIELD_HEIGHT);
-        y += SECTION_GAP;
+        int toggleWidth = (contentWidth - COLUMN_GAP) / 2;
+        boolean useSingleColumnToggleLayout = toggleWidth < 220;
+        if (useSingleColumnToggleLayout) {
+            this.layoutWidget(this.rectCopyCycleButton, contentX, y, contentWidth, FIELD_HEIGHT);
+            y += ROW_GAP;
+            this.layoutWidget(this.duplicateCycleButton, contentX, y, contentWidth, FIELD_HEIGHT);
+            y += ROW_GAP;
+            this.layoutWidget(this.nearLosslessCycleButton, contentX, y, contentWidth, FIELD_HEIGHT);
+            y += ROW_GAP;
+            this.layoutWidget(this.thumbnailCycleButton, contentX, y, contentWidth, FIELD_HEIGHT);
+        } else {
+            this.layoutWidget(this.rectCopyCycleButton, contentX, y, toggleWidth, FIELD_HEIGHT);
+            this.layoutWidget(this.duplicateCycleButton, contentX + toggleWidth + COLUMN_GAP, y, toggleWidth, FIELD_HEIGHT);
+            y += ROW_GAP;
+            this.layoutWidget(this.nearLosslessCycleButton, contentX, y, toggleWidth, FIELD_HEIGHT);
+            this.layoutWidget(this.thumbnailCycleButton, contentX + toggleWidth + COLUMN_GAP, y, toggleWidth, FIELD_HEIGHT);
+        }
 
-        this.layoutWidget(this.presetCycleButton, leftX, y, leftWidth, FIELD_HEIGHT);
-        y += ROW_GAP + 10;
-        this.layoutWidget(this.rectCopyCycleButton, leftX, y, halfWidth, FIELD_HEIGHT);
-        this.layoutWidget(this.duplicateCycleButton, leftX + halfWidth + 8, y, halfWidth, FIELD_HEIGHT);
-        y += ROW_GAP + 10;
-        this.layoutWidget(this.nearLosslessCycleButton, leftX, y, halfWidth, FIELD_HEIGHT);
-        this.layoutWidget(this.thumbnailCycleButton, leftX + halfWidth + 8, y, halfWidth, FIELD_HEIGHT);
-
-        int bottomY = this.height - OUTER_PADDING - FIELD_HEIGHT;
-        this.layoutWidget(this.exportButton, leftX, bottomY, 120, FIELD_HEIGHT);
-        this.layoutWidget(this.cancelJobButton, leftX + 128, bottomY, 120, FIELD_HEIGHT);
-        this.layoutWidget(this.closeButton, this.width - OUTER_PADDING - 120, bottomY, 120, FIELD_HEIGHT);
+        int bottomY = this.getBottomButtonY();
+        this.layoutWidget(this.exportButton, contentX, bottomY, 120, FIELD_HEIGHT);
+        this.layoutWidget(this.cancelJobButton, contentX + 128, bottomY, 120, FIELD_HEIGHT);
+        this.layoutWidget(this.closeButton, contentX + contentWidth - 120, bottomY, 120, FIELD_HEIGHT);
     }
 
-    protected int layoutPathRow(int x, int y, int fieldWidth, int buttonWidth, @Nullable AbstractWidget field, @Nullable AbstractWidget button) {
-        this.layoutWidget(field, x, y, fieldWidth, FIELD_HEIGHT);
-        this.layoutWidget(button, x + fieldWidth + 8, y, buttonWidth, FIELD_HEIGHT);
+    protected int layoutLabeledPathRow(int x, int y, int rowWidth, int labelWidth, @Nullable AbstractWidget field, @Nullable AbstractWidget primaryButton, int primaryButtonWidth, @Nullable AbstractWidget secondaryButton, int secondaryButtonWidth) {
+        int buttonWidth = 0;
+        if (primaryButton != null) buttonWidth += primaryButtonWidth + FIELD_BUTTON_GAP;
+        if (secondaryButton != null) buttonWidth += secondaryButtonWidth + ((primaryButton != null) ? BUTTON_GROUP_GAP : 0);
+
+        int fieldX = x + labelWidth + INLINE_LABEL_GAP;
+        int fieldWidth = Math.max(MIN_INPUT_WIDTH, rowWidth - labelWidth - INLINE_LABEL_GAP - buttonWidth);
+        this.layoutWidget(field, fieldX, y, fieldWidth, FIELD_HEIGHT);
+
+        int buttonX = fieldX + fieldWidth + FIELD_BUTTON_GAP;
+        if (primaryButton != null) {
+            this.layoutWidget(primaryButton, buttonX, y, primaryButtonWidth, FIELD_HEIGHT);
+            buttonX += primaryButtonWidth + BUTTON_GROUP_GAP;
+        }
+        if (secondaryButton != null) {
+            this.layoutWidget(secondaryButton, buttonX, y, secondaryButtonWidth, FIELD_HEIGHT);
+        }
+        return y;
+    }
+
+    protected int layoutLabeledFieldRow(int x, int y, int rowWidth, int labelWidth, @Nullable AbstractWidget field) {
+        int fieldX = x + labelWidth + INLINE_LABEL_GAP;
+        int fieldWidth = Math.max(MIN_INPUT_WIDTH, rowWidth - labelWidth - INLINE_LABEL_GAP);
+        this.layoutWidget(field, fieldX, y, fieldWidth, FIELD_HEIGHT);
         return y;
     }
 
@@ -365,16 +369,15 @@ public class AfmaCreatorScreen extends Screen {
         widget.setHeight(height);
     }
 
-    protected @NotNull ExtendedEditBox addStyledEditBox(@NotNull Component hint) {
-        ExtendedEditBox editBox = new ExtendedEditBox(this.font, 0, 0, 100, FIELD_HEIGHT, Component.empty());
-        editBox.setHintFancyMenu(consumes -> hint);
+    protected @NotNull ExtendedEditBox addStyledEditBox(@NotNull Component narrationMessage) {
+        ExtendedEditBox editBox = new ExtendedEditBox(this.font, 0, 0, 100, FIELD_HEIGHT, narrationMessage);
         editBox.setMaxLength(100000);
         UIBase.applyDefaultWidgetSkinTo(editBox, UIBase.shouldBlur());
         return this.addRenderableWidget(editBox);
     }
 
-    protected @NotNull ExtendedEditBox addStyledNumberEditBox(@NotNull Component hint) {
-        ExtendedEditBox editBox = this.addStyledEditBox(hint);
+    protected @NotNull ExtendedEditBox addStyledNumberEditBox(@NotNull Component narrationMessage) {
+        ExtendedEditBox editBox = this.addStyledEditBox(narrationMessage);
         editBox.setCharacterFilter(CharacterFilter.buildIntegerFilter());
         return editBox;
     }
@@ -407,57 +410,57 @@ public class AfmaCreatorScreen extends Screen {
     }
 
     protected void renderCreatorPanels(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        int leftX = OUTER_PADDING;
-        int rightPanelX = (this.width / 2) + 8;
-        int leftWidth = Math.max(320, (this.width / 2) - OUTER_PADDING - 12);
-        int rightWidth = this.width - rightPanelX - OUTER_PADDING;
-        int panelTop = 40;
-        int panelBottom = this.height - OUTER_PADDING - 40;
-
-        graphics.fill(leftX - 8, panelTop, leftX + leftWidth + 8, panelBottom, UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt());
-        graphics.fill(rightPanelX - 8, panelTop, rightPanelX + rightWidth + 8, panelBottom, UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt());
+        graphics.fill(this.getPanelLeft(), this.getPanelTop(), this.getPanelRight(), this.getPanelBottom(), UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt());
 
         UIBase.renderText(graphics, this.title, OUTER_PADDING, 16, 0xFFFFFFFF, UIBase.getUITextSizeNormal());
     }
 
     protected void renderFieldLabels(@NotNull GuiGraphics graphics) {
-        int leftX = OUTER_PADDING;
-        int sourceHeaderY = 28;
-        int introRowY = SOURCE_MAIN_ROW_Y + SOURCE_ROW_GAP;
-        int outputRowY = introRowY + SECTION_GAP;
-        int playbackHeaderY = outputRowY + FIELD_HEIGHT + 8;
-        int playbackRowY = outputRowY + SECTION_GAP;
-        int secondPlaybackRowY = playbackRowY + ROW_GAP + 10;
-        int customMainRowY = secondPlaybackRowY + ROW_GAP + 10;
-        int customIntroRowY = customMainRowY + ROW_GAP + 10;
-        int optimizationHeaderY = customIntroRowY + FIELD_HEIGHT + 8;
+        int inlineLabelWidth = this.getInlineLabelWidth();
 
-        this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.source"), leftX, sourceHeaderY, true);
-        this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.playback"), leftX, playbackHeaderY, true);
-        this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.optimization"), leftX, optimizationHeaderY, true);
+        this.drawInlineLabel(graphics, this.mainFramesPathEditBox, Component.translatable("fancymenu.afma.creator.main_frames"), inlineLabelWidth);
+        this.drawInlineLabel(graphics, this.introFramesPathEditBox, Component.translatable("fancymenu.afma.creator.intro_frames"), inlineLabelWidth);
+        this.drawInlineLabel(graphics, this.outputPathEditBox, Component.translatable("fancymenu.afma.creator.output_file"), inlineLabelWidth);
+
+        if (this.frameTimeEditBox != null) {
+            this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.playback"), this.getContentLeft(), this.frameTimeEditBox.getY() - 18, true);
+        }
+        this.drawInlineLabel(graphics, this.frameTimeEditBox, Component.translatable("fancymenu.afma.creator.frame_time"), inlineLabelWidth);
+        this.drawInlineLabel(graphics, this.introFrameTimeEditBox, Component.translatable("fancymenu.afma.creator.intro_frame_time"), inlineLabelWidth);
+        this.drawInlineLabel(graphics, this.loopCountEditBox, Component.translatable("fancymenu.afma.creator.loop_count"), inlineLabelWidth);
+
+        if (this.keyframeIntervalEditBox != null) {
+            this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.optimization"), this.getContentLeft(), this.keyframeIntervalEditBox.getY() - 18, true);
+        }
+        this.drawInlineLabel(graphics, this.keyframeIntervalEditBox, Component.translatable("fancymenu.afma.creator.keyframe_interval"), inlineLabelWidth);
     }
 
     protected void drawFieldLabel(@NotNull GuiGraphics graphics, @NotNull Component component, int x, int y, boolean header) {
         UIBase.renderText(graphics, component, x, y, header ? 0xFFFFFFFF : 0xFFD0D0D0, UIBase.getUITextSizeNormal());
     }
 
-    protected void renderDiagnostics(@NotNull GuiGraphics graphics) {
-        int rightPanelX = (this.width / 2) + 8;
-        int rightWidth = this.width - rightPanelX - OUTER_PADDING;
-        int textY = 58;
+    protected void drawInlineLabel(@NotNull GuiGraphics graphics, @Nullable AbstractWidget widget, @NotNull Component component, int labelWidth) {
+        if (widget == null) return;
+        float textWidth = UIBase.getUITextWidthNormal(component);
+        float labelX = widget.getX() - INLINE_LABEL_GAP - labelWidth + Math.max(0.0F, labelWidth - textWidth);
+        float labelY = widget.getY() + ((FIELD_HEIGHT - UIBase.getUITextHeightNormal()) / 2.0F);
+        UIBase.renderText(graphics, component, labelX, labelY, 0xFFD0D0D0, UIBase.getUITextSizeNormal());
+    }
 
+    protected void renderDiagnostics(@NotNull GuiGraphics graphics) {
         AfmaEncodeJob job = this.state.getCurrentJob();
-        if (job != null) {
-            AfmaEncodeProgress progress = job.getProgress();
-            textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.job_status", progress.task()), rightPanelX, textY, rightWidth, 0xFFFFFFFF);
-            if (progress.detail() != null && !progress.detail().isBlank()) {
-                textY = this.renderWrappedUiText(graphics, Component.literal(progress.detail()), rightPanelX, textY, rightWidth, 0xFFD0D0D0);
-            }
-            int barWidth = rightWidth;
-            graphics.fill(rightPanelX, textY, rightPanelX + barWidth, textY + 8, 0xFF202020);
-            graphics.fill(rightPanelX, textY, rightPanelX + Math.round(barWidth * (float) progress.progress()), textY + 8, UIBase.getUITheme().success_color.getColorInt());
-            textY += 18;
+        if (job == null) return;
+
+        int contentX = this.getContentLeft();
+        int contentWidth = this.getContentWidth();
+        int textY = this.getDiagnosticsStartY();
+        AfmaEncodeProgress progress = job.getProgress();
+        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.job_status", progress.task()), contentX, textY, contentWidth, 0xFFFFFFFF);
+        if (progress.detail() != null && !progress.detail().isBlank()) {
+            textY = this.renderWrappedUiText(graphics, Component.literal(progress.detail()), contentX, textY, contentWidth, 0xFFD0D0D0);
         }
+        graphics.fill(contentX, textY, contentX + contentWidth, textY + 8, 0xFF202020);
+        graphics.fill(contentX, textY, contentX + Math.round(contentWidth * (float) progress.progress()), textY + 8, UIBase.getUITheme().success_color.getColorInt());
     }
 
     protected int renderWrappedUiText(@NotNull GuiGraphics graphics, @NotNull Component text, int x, int y, int maxWidth, int color) {
@@ -468,6 +471,70 @@ public class AfmaCreatorScreen extends Screen {
             y += lineHeight + 2;
         }
         return y;
+    }
+
+    protected int getPanelLeft() {
+        return OUTER_PADDING;
+    }
+
+    protected int getPanelTop() {
+        return PANEL_TOP;
+    }
+
+    protected int getPanelRight() {
+        return this.width - OUTER_PADDING;
+    }
+
+    protected int getPanelBottom() {
+        return this.getBottomButtonY() - PANEL_PADDING;
+    }
+
+    protected int getBottomButtonY() {
+        return this.height - OUTER_PADDING - FIELD_HEIGHT;
+    }
+
+    protected int getContentLeft() {
+        return this.getPanelLeft() + PANEL_PADDING;
+    }
+
+    protected int getContentWidth() {
+        return Math.max(0, (this.getPanelRight() - this.getPanelLeft()) - (PANEL_PADDING * 2));
+    }
+
+    protected int getContentStartY() {
+        return this.getPanelTop() + PANEL_PADDING;
+    }
+
+    protected int getInlineLabelWidth() {
+        float widestLabel = 0.0F;
+        widestLabel = Math.max(widestLabel, UIBase.getUITextWidthNormal(Component.translatable("fancymenu.afma.creator.main_frames")));
+        widestLabel = Math.max(widestLabel, UIBase.getUITextWidthNormal(Component.translatable("fancymenu.afma.creator.intro_frames")));
+        widestLabel = Math.max(widestLabel, UIBase.getUITextWidthNormal(Component.translatable("fancymenu.afma.creator.output_file")));
+        widestLabel = Math.max(widestLabel, UIBase.getUITextWidthNormal(Component.translatable("fancymenu.afma.creator.frame_time")));
+        widestLabel = Math.max(widestLabel, UIBase.getUITextWidthNormal(Component.translatable("fancymenu.afma.creator.intro_frame_time")));
+        widestLabel = Math.max(widestLabel, UIBase.getUITextWidthNormal(Component.translatable("fancymenu.afma.creator.loop_count")));
+        widestLabel = Math.max(widestLabel, UIBase.getUITextWidthNormal(Component.translatable("fancymenu.afma.creator.keyframe_interval")));
+        return Math.min(190, Math.max(118, Math.round(widestLabel) + 8));
+    }
+
+    protected boolean useSingleColumnNumericLayout(int columnWidth, int labelWidth) {
+        return (columnWidth - labelWidth - INLINE_LABEL_GAP) < 150;
+    }
+
+    protected int getDiagnosticsStartY() {
+        int contentStartY = this.getContentStartY();
+        int widgetsBottom = Math.max(
+                Math.max(this.getWidgetBottom(this.keyframeIntervalEditBox), this.getWidgetBottom(this.presetCycleButton)),
+                Math.max(
+                        Math.max(this.getWidgetBottom(this.rectCopyCycleButton), this.getWidgetBottom(this.duplicateCycleButton)),
+                        Math.max(this.getWidgetBottom(this.nearLosslessCycleButton), this.getWidgetBottom(this.thumbnailCycleButton))
+                )
+        );
+        return Math.max(contentStartY, widgetsBottom + 18);
+    }
+
+    protected int getWidgetBottom(@Nullable AbstractWidget widget) {
+        return (widget != null) ? (widget.getY() + widget.getHeight()) : 0;
     }
 
     @Override
