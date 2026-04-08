@@ -1,4 +1,13 @@
 
+CHANGELOG | FANCYMENU v3.8.6
+
+- Fixed incompatibility with "Jade" in MC 26.1.1
+
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.8.5
 
 - Ported the mod to Minecraft 26.1.1
