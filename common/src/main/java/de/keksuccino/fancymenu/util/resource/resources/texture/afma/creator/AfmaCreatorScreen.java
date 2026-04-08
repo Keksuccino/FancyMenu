@@ -63,6 +63,14 @@ public class AfmaCreatorScreen extends Screen {
     private @Nullable ExtendedEditBox introFrameTimeEditBox;
     private @Nullable ExtendedEditBox loopCountEditBox;
     private @Nullable ExtendedEditBox keyframeIntervalEditBox;
+    private @Nullable ExtendedEditBox adaptiveMaxKeyframeIntervalEditBox;
+    private @Nullable ExtendedEditBox adaptiveContinuationMinSavingsBytesEditBox;
+    private @Nullable ExtendedEditBox adaptiveContinuationMinSavingsRatioEditBox;
+    private @Nullable ExtendedEditBox perceptualVisibleColorDeltaEditBox;
+    private @Nullable ExtendedEditBox perceptualAlphaDeltaEditBox;
+    private @Nullable ExtendedEditBox perceptualAverageErrorEditBox;
+    private @Nullable ExtendedEditBox maxCopySearchDistanceEditBox;
+    private @Nullable ExtendedEditBox maxCandidateAxisOffsetsEditBox;
 
     private @Nullable ExtendedButton browseMainFramesButton;
     private @Nullable ExtendedButton browseIntroFramesButton;
@@ -76,6 +84,7 @@ public class AfmaCreatorScreen extends Screen {
     private @Nullable CycleButton<CommonCycles.CycleEnabledDisabled> rectCopyCycleButton;
     private @Nullable CycleButton<CommonCycles.CycleEnabledDisabled> duplicateCycleButton;
     private @Nullable CycleButton<CommonCycles.CycleEnabledDisabled> nearLosslessCycleButton;
+    private @Nullable CycleButton<CommonCycles.CycleEnabledDisabled> adaptiveKeyframeCycleButton;
 
     public AfmaCreatorScreen(@NotNull Screen parentScreen) {
         super(Component.translatable("fancymenu.afma.creator.title"));
@@ -129,6 +138,56 @@ public class AfmaCreatorScreen extends Screen {
             if (isInteger(value)) this.state.setKeyframeInterval(Integer.parseInt(value));
         });
 
+        this.adaptiveMaxKeyframeIntervalEditBox = this.addStyledNumberEditBox(Component.translatable("fancymenu.afma.creator.adaptive_max_keyframe_interval"));
+        this.adaptiveMaxKeyframeIntervalEditBox.setResponder(value -> {
+            if (this.syncingWidgets) return;
+            if (isInteger(value)) this.state.setAdaptiveMaxKeyframeInterval(Integer.parseInt(value));
+        });
+
+        this.adaptiveContinuationMinSavingsBytesEditBox = this.addStyledNumberEditBox(Component.translatable("fancymenu.afma.creator.adaptive_continuation_min_savings_bytes"));
+        this.adaptiveContinuationMinSavingsBytesEditBox.setResponder(value -> {
+            if (this.syncingWidgets) return;
+            if (isInteger(value)) this.state.setAdaptiveContinuationMinSavingsBytes(Long.parseLong(value));
+        });
+
+        this.adaptiveContinuationMinSavingsRatioEditBox = this.addStyledDecimalEditBox(Component.translatable("fancymenu.afma.creator.adaptive_continuation_min_savings_ratio"));
+        this.adaptiveContinuationMinSavingsRatioEditBox.setResponder(value -> {
+            if (this.syncingWidgets) return;
+            double parsedValue = parseDoubleOrDefault(value, Double.NaN);
+            if (Double.isFinite(parsedValue)) this.state.setAdaptiveContinuationMinSavingsRatio(parsedValue);
+        });
+
+        this.perceptualVisibleColorDeltaEditBox = this.addStyledNumberEditBox(Component.translatable("fancymenu.afma.creator.perceptual_visible_color_delta"));
+        this.perceptualVisibleColorDeltaEditBox.setResponder(value -> {
+            if (this.syncingWidgets) return;
+            if (isInteger(value)) this.state.setPerceptualBinIntraMaxVisibleColorDelta(Integer.parseInt(value));
+        });
+
+        this.perceptualAlphaDeltaEditBox = this.addStyledNumberEditBox(Component.translatable("fancymenu.afma.creator.perceptual_alpha_delta"));
+        this.perceptualAlphaDeltaEditBox.setResponder(value -> {
+            if (this.syncingWidgets) return;
+            if (isInteger(value)) this.state.setPerceptualBinIntraMaxAlphaDelta(Integer.parseInt(value));
+        });
+
+        this.perceptualAverageErrorEditBox = this.addStyledDecimalEditBox(Component.translatable("fancymenu.afma.creator.perceptual_average_error"));
+        this.perceptualAverageErrorEditBox.setResponder(value -> {
+            if (this.syncingWidgets) return;
+            double parsedValue = parseDoubleOrDefault(value, Double.NaN);
+            if (Double.isFinite(parsedValue)) this.state.setPerceptualBinIntraMaxAverageError(parsedValue);
+        });
+
+        this.maxCopySearchDistanceEditBox = this.addStyledNumberEditBox(Component.translatable("fancymenu.afma.creator.max_copy_search_distance"));
+        this.maxCopySearchDistanceEditBox.setResponder(value -> {
+            if (this.syncingWidgets) return;
+            if (isInteger(value)) this.state.setMaxCopySearchDistance(Integer.parseInt(value));
+        });
+
+        this.maxCandidateAxisOffsetsEditBox = this.addStyledNumberEditBox(Component.translatable("fancymenu.afma.creator.max_candidate_axis_offsets"));
+        this.maxCandidateAxisOffsetsEditBox.setResponder(value -> {
+            if (this.syncingWidgets) return;
+            if (isInteger(value)) this.state.setMaxCandidateAxisOffsets(Integer.parseInt(value));
+        });
+
         this.browseMainFramesButton = this.addStyledButton(Component.translatable("fancymenu.afma.creator.browse"), button -> this.openDirectoryChooser(this.state.getMainFramesDirectory(), this.state::setMainFramesDirectory));
         this.browseIntroFramesButton = this.addStyledButton(Component.translatable("fancymenu.afma.creator.browse"), button -> this.openDirectoryChooser(this.state.getIntroFramesDirectory(), this.state::setIntroFramesDirectory));
         this.clearIntroFramesButton = this.addStyledButton(Component.translatable("fancymenu.afma.creator.clear"), button -> {
@@ -154,6 +213,7 @@ public class AfmaCreatorScreen extends Screen {
         this.rectCopyCycleButton = this.addToggleButton("fancymenu.afma.creator.rect_copy", this.state.isRectCopyEnabled(), value -> this.state.setRectCopyEnabled(value));
         this.duplicateCycleButton = this.addToggleButton("fancymenu.afma.creator.duplicate_elision", this.state.isDuplicateFrameElision(), value -> this.state.setDuplicateFrameElision(value));
         this.nearLosslessCycleButton = this.addToggleButton("fancymenu.afma.creator.near_lossless", this.state.isNearLosslessEnabled(), value -> this.state.setNearLosslessEnabled(value));
+        this.adaptiveKeyframeCycleButton = this.addToggleButton("fancymenu.afma.creator.adaptive_keyframes", this.state.isAdaptiveKeyframePlacement(), value -> this.state.setAdaptiveKeyframePlacement(value));
 
         this.exportButton = this.addStyledButton(Component.translatable("fancymenu.afma.creator.export"), button -> this.startExport());
         this.cancelJobButton = this.addStyledButton(Component.translatable("fancymenu.common_components.cancel"), button -> this.state.cancelCurrentJob());
@@ -202,6 +262,35 @@ public class AfmaCreatorScreen extends Screen {
             this.cancelJobButton.visible = jobRunning;
         }
         if (this.clearIntroFramesButton != null) this.clearIntroFramesButton.active = !this.state.getIntroFramesInputText().isBlank() && !jobRunning;
+
+        boolean adaptiveKeyframesEnabled = this.state.isAdaptiveKeyframePlacement() && !jobRunning;
+        this.setWidgetActive(this.adaptiveMaxKeyframeIntervalEditBox, adaptiveKeyframesEnabled);
+        this.setWidgetActive(this.adaptiveContinuationMinSavingsBytesEditBox, adaptiveKeyframesEnabled);
+        this.setWidgetActive(this.adaptiveContinuationMinSavingsRatioEditBox, adaptiveKeyframesEnabled);
+
+        boolean perceptualControlsEnabled = this.state.isNearLosslessEnabled() && !jobRunning;
+        this.setWidgetActive(this.perceptualVisibleColorDeltaEditBox, perceptualControlsEnabled);
+        this.setWidgetActive(this.perceptualAlphaDeltaEditBox, perceptualControlsEnabled);
+        this.setWidgetActive(this.perceptualAverageErrorEditBox, perceptualControlsEnabled);
+
+        boolean generalAdvancedControlsEnabled = !jobRunning;
+        this.setWidgetActive(this.mainFramesPathEditBox, generalAdvancedControlsEnabled);
+        this.setWidgetActive(this.introFramesPathEditBox, generalAdvancedControlsEnabled);
+        this.setWidgetActive(this.outputPathEditBox, generalAdvancedControlsEnabled);
+        this.setWidgetActive(this.frameTimeEditBox, generalAdvancedControlsEnabled);
+        this.setWidgetActive(this.introFrameTimeEditBox, generalAdvancedControlsEnabled);
+        this.setWidgetActive(this.loopCountEditBox, generalAdvancedControlsEnabled);
+        this.setWidgetActive(this.keyframeIntervalEditBox, generalAdvancedControlsEnabled);
+        this.setWidgetActive(this.maxCopySearchDistanceEditBox, generalAdvancedControlsEnabled);
+        this.setWidgetActive(this.maxCandidateAxisOffsetsEditBox, generalAdvancedControlsEnabled);
+        this.setWidgetActive(this.presetCycleButton, generalAdvancedControlsEnabled);
+        this.setWidgetActive(this.rectCopyCycleButton, generalAdvancedControlsEnabled);
+        this.setWidgetActive(this.duplicateCycleButton, generalAdvancedControlsEnabled);
+        this.setWidgetActive(this.nearLosslessCycleButton, generalAdvancedControlsEnabled);
+        this.setWidgetActive(this.adaptiveKeyframeCycleButton, generalAdvancedControlsEnabled);
+        this.setWidgetActive(this.browseMainFramesButton, generalAdvancedControlsEnabled);
+        this.setWidgetActive(this.browseIntroFramesButton, generalAdvancedControlsEnabled);
+        this.setWidgetActive(this.browseOutputButton, generalAdvancedControlsEnabled);
     }
 
     protected void openDirectoryChooser(@Nullable File initialDirectory, @NotNull java.util.function.Consumer<File> callback) {
@@ -239,10 +328,19 @@ public class AfmaCreatorScreen extends Screen {
             if (this.introFrameTimeEditBox != null) this.introFrameTimeEditBox.setValue(String.valueOf(this.state.getIntroFrameTimeMs()));
             if (this.loopCountEditBox != null) this.loopCountEditBox.setValue(String.valueOf(this.state.getLoopCount()));
             if (this.keyframeIntervalEditBox != null) this.keyframeIntervalEditBox.setValue(String.valueOf(this.state.getKeyframeInterval()));
+            if (this.adaptiveMaxKeyframeIntervalEditBox != null) this.adaptiveMaxKeyframeIntervalEditBox.setValue(String.valueOf(this.state.getAdaptiveMaxKeyframeInterval()));
+            if (this.adaptiveContinuationMinSavingsBytesEditBox != null) this.adaptiveContinuationMinSavingsBytesEditBox.setValue(String.valueOf(this.state.getAdaptiveContinuationMinSavingsBytes()));
+            if (this.adaptiveContinuationMinSavingsRatioEditBox != null) this.adaptiveContinuationMinSavingsRatioEditBox.setValue(Double.toString(this.state.getAdaptiveContinuationMinSavingsRatio()));
+            if (this.perceptualVisibleColorDeltaEditBox != null) this.perceptualVisibleColorDeltaEditBox.setValue(String.valueOf(this.state.getPerceptualBinIntraMaxVisibleColorDelta()));
+            if (this.perceptualAlphaDeltaEditBox != null) this.perceptualAlphaDeltaEditBox.setValue(String.valueOf(this.state.getPerceptualBinIntraMaxAlphaDelta()));
+            if (this.perceptualAverageErrorEditBox != null) this.perceptualAverageErrorEditBox.setValue(Double.toString(this.state.getPerceptualBinIntraMaxAverageError()));
+            if (this.maxCopySearchDistanceEditBox != null) this.maxCopySearchDistanceEditBox.setValue(String.valueOf(this.state.getMaxCopySearchDistance()));
+            if (this.maxCandidateAxisOffsetsEditBox != null) this.maxCandidateAxisOffsetsEditBox.setValue(String.valueOf(this.state.getMaxCandidateAxisOffsets()));
             if (this.presetCycleButton != null) this.presetCycleButton.setSelectedValue(this.state.getOptimizationPreset(), false);
             if (this.rectCopyCycleButton != null) this.rectCopyCycleButton.setSelectedValue(CommonCycles.CycleEnabledDisabled.getByBoolean(this.state.isRectCopyEnabled()), false);
             if (this.duplicateCycleButton != null) this.duplicateCycleButton.setSelectedValue(CommonCycles.CycleEnabledDisabled.getByBoolean(this.state.isDuplicateFrameElision()), false);
             if (this.nearLosslessCycleButton != null) this.nearLosslessCycleButton.setSelectedValue(CommonCycles.CycleEnabledDisabled.getByBoolean(this.state.isNearLosslessEnabled()), false);
+            if (this.adaptiveKeyframeCycleButton != null) this.adaptiveKeyframeCycleButton.setSelectedValue(CommonCycles.CycleEnabledDisabled.getByBoolean(this.state.isAdaptiveKeyframePlacement()), false);
         } finally {
             this.syncingWidgets = false;
         }
@@ -274,6 +372,42 @@ public class AfmaCreatorScreen extends Screen {
         if (this.keyframeIntervalEditBox != null) {
             int value = (int) parseLongOrDefault(this.keyframeIntervalEditBox.getValue(), 0L);
             if (value != this.state.getKeyframeInterval()) this.state.setKeyframeInterval(value);
+        }
+        if (this.adaptiveMaxKeyframeIntervalEditBox != null) {
+            int value = (int) parseLongOrDefault(this.adaptiveMaxKeyframeIntervalEditBox.getValue(), 0L);
+            if (value != this.state.getAdaptiveMaxKeyframeInterval()) this.state.setAdaptiveMaxKeyframeInterval(value);
+        }
+        if (this.adaptiveContinuationMinSavingsBytesEditBox != null) {
+            long value = parseLongOrDefault(this.adaptiveContinuationMinSavingsBytesEditBox.getValue(), 0L);
+            if (value != this.state.getAdaptiveContinuationMinSavingsBytes()) this.state.setAdaptiveContinuationMinSavingsBytes(value);
+        }
+        if (this.adaptiveContinuationMinSavingsRatioEditBox != null) {
+            double value = parseDoubleOrDefault(this.adaptiveContinuationMinSavingsRatioEditBox.getValue(), Double.NaN);
+            if (Double.isFinite(value) && (Double.compare(value, this.state.getAdaptiveContinuationMinSavingsRatio()) != 0)) {
+                this.state.setAdaptiveContinuationMinSavingsRatio(value);
+            }
+        }
+        if (this.perceptualVisibleColorDeltaEditBox != null) {
+            int value = (int) parseLongOrDefault(this.perceptualVisibleColorDeltaEditBox.getValue(), 0L);
+            if (value != this.state.getPerceptualBinIntraMaxVisibleColorDelta()) this.state.setPerceptualBinIntraMaxVisibleColorDelta(value);
+        }
+        if (this.perceptualAlphaDeltaEditBox != null) {
+            int value = (int) parseLongOrDefault(this.perceptualAlphaDeltaEditBox.getValue(), 0L);
+            if (value != this.state.getPerceptualBinIntraMaxAlphaDelta()) this.state.setPerceptualBinIntraMaxAlphaDelta(value);
+        }
+        if (this.perceptualAverageErrorEditBox != null) {
+            double value = parseDoubleOrDefault(this.perceptualAverageErrorEditBox.getValue(), Double.NaN);
+            if (Double.isFinite(value) && (Double.compare(value, this.state.getPerceptualBinIntraMaxAverageError()) != 0)) {
+                this.state.setPerceptualBinIntraMaxAverageError(value);
+            }
+        }
+        if (this.maxCopySearchDistanceEditBox != null) {
+            int value = (int) parseLongOrDefault(this.maxCopySearchDistanceEditBox.getValue(), 0L);
+            if (value != this.state.getMaxCopySearchDistance()) this.state.setMaxCopySearchDistance(value);
+        }
+        if (this.maxCandidateAxisOffsetsEditBox != null) {
+            int value = (int) parseLongOrDefault(this.maxCandidateAxisOffsetsEditBox.getValue(), 0L);
+            if (value != this.state.getMaxCandidateAxisOffsets()) this.state.setMaxCandidateAxisOffsets(value);
         }
     }
 
@@ -328,6 +462,42 @@ public class AfmaCreatorScreen extends Screen {
             this.layoutWidget(this.nearLosslessCycleButton, contentX, y, contentWidth, FIELD_HEIGHT);
         }
 
+        y += SECTION_GAP;
+        this.layoutWidget(this.adaptiveKeyframeCycleButton, contentX, y, contentWidth, FIELD_HEIGHT);
+        y += ROW_GAP;
+
+        int advancedColumnWidth = (contentWidth - COLUMN_GAP) / 2;
+        boolean useSingleColumnAdvancedLayout = this.useSingleColumnNumericLayout(advancedColumnWidth, inlineLabelWidth);
+        if (useSingleColumnAdvancedLayout) {
+            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.adaptiveMaxKeyframeIntervalEditBox);
+            y += ROW_GAP;
+            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.adaptiveContinuationMinSavingsBytesEditBox);
+            y += ROW_GAP;
+            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.adaptiveContinuationMinSavingsRatioEditBox);
+            y += ROW_GAP;
+            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.maxCopySearchDistanceEditBox);
+            y += ROW_GAP;
+            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.maxCandidateAxisOffsetsEditBox);
+            y += ROW_GAP;
+            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.perceptualVisibleColorDeltaEditBox);
+            y += ROW_GAP;
+            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.perceptualAlphaDeltaEditBox);
+            y += ROW_GAP;
+            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.perceptualAverageErrorEditBox);
+        } else {
+            y = this.layoutLabeledFieldRow(contentX, y, advancedColumnWidth, inlineLabelWidth, this.adaptiveMaxKeyframeIntervalEditBox);
+            this.layoutLabeledFieldRow(contentX + advancedColumnWidth + COLUMN_GAP, y, advancedColumnWidth, inlineLabelWidth, this.adaptiveContinuationMinSavingsBytesEditBox);
+            y += ROW_GAP;
+            y = this.layoutLabeledFieldRow(contentX, y, advancedColumnWidth, inlineLabelWidth, this.adaptiveContinuationMinSavingsRatioEditBox);
+            this.layoutLabeledFieldRow(contentX + advancedColumnWidth + COLUMN_GAP, y, advancedColumnWidth, inlineLabelWidth, this.maxCopySearchDistanceEditBox);
+            y += ROW_GAP;
+            y = this.layoutLabeledFieldRow(contentX, y, advancedColumnWidth, inlineLabelWidth, this.maxCandidateAxisOffsetsEditBox);
+            this.layoutLabeledFieldRow(contentX + advancedColumnWidth + COLUMN_GAP, y, advancedColumnWidth, inlineLabelWidth, this.perceptualVisibleColorDeltaEditBox);
+            y += ROW_GAP;
+            y = this.layoutLabeledFieldRow(contentX, y, advancedColumnWidth, inlineLabelWidth, this.perceptualAlphaDeltaEditBox);
+            this.layoutLabeledFieldRow(contentX + advancedColumnWidth + COLUMN_GAP, y, advancedColumnWidth, inlineLabelWidth, this.perceptualAverageErrorEditBox);
+        }
+
         int bottomY = this.getBottomButtonY();
         this.layoutWidget(this.exportButton, contentX, bottomY, 120, FIELD_HEIGHT);
         this.layoutWidget(this.cancelJobButton, contentX + 128, bottomY, 120, FIELD_HEIGHT);
@@ -369,6 +539,12 @@ public class AfmaCreatorScreen extends Screen {
         widget.setHeight(height);
     }
 
+    protected void setWidgetActive(@Nullable AbstractWidget widget, boolean active) {
+        if (widget != null) {
+            widget.active = active;
+        }
+    }
+
     protected @NotNull ExtendedEditBox addStyledEditBox(@NotNull Component narrationMessage) {
         ExtendedEditBox editBox = new ExtendedEditBox(this.font, 0, 0, 100, FIELD_HEIGHT, narrationMessage);
         editBox.setMaxLength(100000);
@@ -379,6 +555,12 @@ public class AfmaCreatorScreen extends Screen {
     protected @NotNull ExtendedEditBox addStyledNumberEditBox(@NotNull Component narrationMessage) {
         ExtendedEditBox editBox = this.addStyledEditBox(narrationMessage);
         editBox.setCharacterFilter(CharacterFilter.buildIntegerFilter());
+        return editBox;
+    }
+
+    protected @NotNull ExtendedEditBox addStyledDecimalEditBox(@NotNull Component narrationMessage) {
+        ExtendedEditBox editBox = this.addStyledEditBox(narrationMessage);
+        editBox.setCharacterFilter(CharacterFilter.buildDecimalFiler());
         return editBox;
     }
 
@@ -403,6 +585,14 @@ public class AfmaCreatorScreen extends Screen {
         this.setEditBoxTooltip(this.introFrameTimeEditBox, "fancymenu.afma.creator.intro_frame_time.desc");
         this.setEditBoxTooltip(this.loopCountEditBox, "fancymenu.afma.creator.loop_count.desc");
         this.setEditBoxTooltip(this.keyframeIntervalEditBox, "fancymenu.afma.creator.keyframe_interval.desc");
+        this.setEditBoxTooltip(this.adaptiveMaxKeyframeIntervalEditBox, "fancymenu.afma.creator.adaptive_max_keyframe_interval.desc");
+        this.setEditBoxTooltip(this.adaptiveContinuationMinSavingsBytesEditBox, "fancymenu.afma.creator.adaptive_continuation_min_savings_bytes.desc");
+        this.setEditBoxTooltip(this.adaptiveContinuationMinSavingsRatioEditBox, "fancymenu.afma.creator.adaptive_continuation_min_savings_ratio.desc");
+        this.setEditBoxTooltip(this.maxCopySearchDistanceEditBox, "fancymenu.afma.creator.max_copy_search_distance.desc");
+        this.setEditBoxTooltip(this.maxCandidateAxisOffsetsEditBox, "fancymenu.afma.creator.max_candidate_axis_offsets.desc");
+        this.setEditBoxTooltip(this.perceptualVisibleColorDeltaEditBox, "fancymenu.afma.creator.perceptual_visible_color_delta.desc");
+        this.setEditBoxTooltip(this.perceptualAlphaDeltaEditBox, "fancymenu.afma.creator.perceptual_alpha_delta.desc");
+        this.setEditBoxTooltip(this.perceptualAverageErrorEditBox, "fancymenu.afma.creator.perceptual_average_error.desc");
 
         this.setButtonTooltip(this.browseMainFramesButton, "fancymenu.afma.creator.browse_main_frames.desc");
         this.setButtonTooltip(this.browseIntroFramesButton, "fancymenu.afma.creator.browse_intro_frames.desc");
@@ -416,6 +606,7 @@ public class AfmaCreatorScreen extends Screen {
         this.setButtonTooltip(this.rectCopyCycleButton, "fancymenu.afma.creator.rect_copy.desc");
         this.setButtonTooltip(this.duplicateCycleButton, "fancymenu.afma.creator.duplicate_elision.desc");
         this.setButtonTooltip(this.nearLosslessCycleButton, "fancymenu.afma.creator.near_lossless.desc");
+        this.setButtonTooltip(this.adaptiveKeyframeCycleButton, "fancymenu.afma.creator.adaptive_keyframes.desc");
     }
 
     protected void setEditBoxTooltip(@Nullable ExtendedEditBox editBox, @NotNull String localizationKey) {
@@ -493,6 +684,17 @@ public class AfmaCreatorScreen extends Screen {
             this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.optimization"), this.getContentLeft(), this.presetCycleButton.getY() - 18, true);
         }
         this.drawInlineLabel(graphics, this.keyframeIntervalEditBox, Component.translatable("fancymenu.afma.creator.keyframe_interval"), inlineLabelWidth);
+        if (this.adaptiveKeyframeCycleButton != null) {
+            this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.advanced"), this.getContentLeft(), this.adaptiveKeyframeCycleButton.getY() - 18, true);
+        }
+        this.drawInlineLabel(graphics, this.adaptiveMaxKeyframeIntervalEditBox, Component.translatable("fancymenu.afma.creator.adaptive_max_keyframe_interval"), inlineLabelWidth);
+        this.drawInlineLabel(graphics, this.adaptiveContinuationMinSavingsBytesEditBox, Component.translatable("fancymenu.afma.creator.adaptive_continuation_min_savings_bytes"), inlineLabelWidth);
+        this.drawInlineLabel(graphics, this.adaptiveContinuationMinSavingsRatioEditBox, Component.translatable("fancymenu.afma.creator.adaptive_continuation_min_savings_ratio"), inlineLabelWidth);
+        this.drawInlineLabel(graphics, this.maxCopySearchDistanceEditBox, Component.translatable("fancymenu.afma.creator.max_copy_search_distance"), inlineLabelWidth);
+        this.drawInlineLabel(graphics, this.maxCandidateAxisOffsetsEditBox, Component.translatable("fancymenu.afma.creator.max_candidate_axis_offsets"), inlineLabelWidth);
+        this.drawInlineLabel(graphics, this.perceptualVisibleColorDeltaEditBox, Component.translatable("fancymenu.afma.creator.perceptual_visible_color_delta"), inlineLabelWidth);
+        this.drawInlineLabel(graphics, this.perceptualAlphaDeltaEditBox, Component.translatable("fancymenu.afma.creator.perceptual_alpha_delta"), inlineLabelWidth);
+        this.drawInlineLabel(graphics, this.perceptualAverageErrorEditBox, Component.translatable("fancymenu.afma.creator.perceptual_average_error"), inlineLabelWidth);
     }
 
     protected void drawFieldLabel(@NotNull GuiGraphics graphics, @NotNull Component component, int x, int y, boolean header) {
@@ -574,6 +776,14 @@ public class AfmaCreatorScreen extends Screen {
         widestLabel = Math.max(widestLabel, UIBase.getUITextWidthNormal(Component.translatable("fancymenu.afma.creator.intro_frame_time")));
         widestLabel = Math.max(widestLabel, UIBase.getUITextWidthNormal(Component.translatable("fancymenu.afma.creator.loop_count")));
         widestLabel = Math.max(widestLabel, UIBase.getUITextWidthNormal(Component.translatable("fancymenu.afma.creator.keyframe_interval")));
+        widestLabel = Math.max(widestLabel, UIBase.getUITextWidthNormal(Component.translatable("fancymenu.afma.creator.adaptive_max_keyframe_interval")));
+        widestLabel = Math.max(widestLabel, UIBase.getUITextWidthNormal(Component.translatable("fancymenu.afma.creator.adaptive_continuation_min_savings_bytes")));
+        widestLabel = Math.max(widestLabel, UIBase.getUITextWidthNormal(Component.translatable("fancymenu.afma.creator.adaptive_continuation_min_savings_ratio")));
+        widestLabel = Math.max(widestLabel, UIBase.getUITextWidthNormal(Component.translatable("fancymenu.afma.creator.max_copy_search_distance")));
+        widestLabel = Math.max(widestLabel, UIBase.getUITextWidthNormal(Component.translatable("fancymenu.afma.creator.max_candidate_axis_offsets")));
+        widestLabel = Math.max(widestLabel, UIBase.getUITextWidthNormal(Component.translatable("fancymenu.afma.creator.perceptual_visible_color_delta")));
+        widestLabel = Math.max(widestLabel, UIBase.getUITextWidthNormal(Component.translatable("fancymenu.afma.creator.perceptual_alpha_delta")));
+        widestLabel = Math.max(widestLabel, UIBase.getUITextWidthNormal(Component.translatable("fancymenu.afma.creator.perceptual_average_error")));
         return Math.min(190, Math.max(118, Math.round(widestLabel) + 8));
     }
 
@@ -584,10 +794,25 @@ public class AfmaCreatorScreen extends Screen {
     protected int getDiagnosticsStartY() {
         int contentStartY = this.getContentStartY();
         int widgetsBottom = Math.max(
-                Math.max(this.getWidgetBottom(this.keyframeIntervalEditBox), this.getWidgetBottom(this.presetCycleButton)),
                 Math.max(
-                        Math.max(this.getWidgetBottom(this.rectCopyCycleButton), this.getWidgetBottom(this.duplicateCycleButton)),
-                        this.getWidgetBottom(this.nearLosslessCycleButton)
+                        Math.max(this.getWidgetBottom(this.keyframeIntervalEditBox), this.getWidgetBottom(this.presetCycleButton)),
+                        this.getWidgetBottom(this.adaptiveKeyframeCycleButton)
+                ),
+                Math.max(
+                        Math.max(
+                                Math.max(this.getWidgetBottom(this.rectCopyCycleButton), this.getWidgetBottom(this.duplicateCycleButton)),
+                                this.getWidgetBottom(this.nearLosslessCycleButton)
+                        ),
+                        Math.max(
+                                Math.max(this.getWidgetBottom(this.adaptiveMaxKeyframeIntervalEditBox), this.getWidgetBottom(this.adaptiveContinuationMinSavingsBytesEditBox)),
+                                Math.max(
+                                        Math.max(this.getWidgetBottom(this.adaptiveContinuationMinSavingsRatioEditBox), this.getWidgetBottom(this.maxCopySearchDistanceEditBox)),
+                                        Math.max(
+                                                Math.max(this.getWidgetBottom(this.maxCandidateAxisOffsetsEditBox), this.getWidgetBottom(this.perceptualVisibleColorDeltaEditBox)),
+                                                Math.max(this.getWidgetBottom(this.perceptualAlphaDeltaEditBox), this.getWidgetBottom(this.perceptualAverageErrorEditBox))
+                                        )
+                                )
+                        )
                 )
         );
         return Math.max(contentStartY, widgetsBottom + 18);
@@ -698,6 +923,15 @@ public class AfmaCreatorScreen extends Screen {
     protected static long parseLongOrDefault(@Nullable String value, long fallback) {
         if (!isInteger(value)) return fallback;
         return Long.parseLong(value.trim());
+    }
+
+    protected static double parseDoubleOrDefault(@Nullable String value, double fallback) {
+        if ((value == null) || value.isBlank()) return fallback;
+        try {
+            return Double.parseDouble(value.trim());
+        } catch (Exception ignored) {
+            return fallback;
+        }
     }
 
 }

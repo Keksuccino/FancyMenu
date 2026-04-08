@@ -818,15 +818,15 @@ public class AfmaTexture implements ITexture, PlayableResource {
     }
 
     protected void applyResidualPayload(@NotNull RawPayload residualPayload, @NotNull NativeImage canvas,
-                                        int dstX, int dstY, int width, int height, @NotNull AfmaResidualPayload residualMetadata) {
-        AfmaNativeImageHelper.applyResidualBytes(canvas, dstX, dstY, width, height,
-                residualPayload.bytes, residualPayload.offset, residualPayload.length, residualMetadata.getChannels());
+                                        int dstX, int dstY, int width, int height, @NotNull AfmaResidualPayload residualMetadata) throws IOException {
+        AfmaNativeImageHelper.applyResidualPayload(canvas, dstX, dstY, width, height,
+                residualPayload.bytes, residualPayload.offset, residualPayload.length, residualMetadata);
     }
 
     protected void applySparseResidualPayload(@NotNull RawPayload maskPayload, @NotNull RawPayload residualPayload,
                                               @NotNull NativeImage canvas, int dstX, int dstY, int width, int height,
-                                              @NotNull AfmaSparsePayload sparsePayload) {
-        AfmaNativeImageHelper.applySparseResidualBytes(
+                                              @NotNull AfmaSparsePayload sparsePayload) throws IOException {
+        AfmaNativeImageHelper.applySparseResidualPayload(
                 canvas,
                 dstX,
                 dstY,
@@ -838,8 +838,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
                 residualPayload.bytes,
                 residualPayload.offset,
                 residualPayload.length,
-                sparsePayload.getChangedPixelCount(),
-                sparsePayload.getChannels()
+                sparsePayload
         );
     }
 

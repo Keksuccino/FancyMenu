@@ -48,6 +48,13 @@ public class AfmaCreatorState {
     private volatile boolean nearLosslessEnabled = DEFAULT_PRESET.isNearLosslessEnabledByDefault();
     private volatile int maxCopySearchDistance = DEFAULT_PRESET.getMaxCopySearchDistance();
     private volatile int maxCandidateAxisOffsets = DEFAULT_PRESET.getMaxCandidateAxisOffsets();
+    private volatile boolean adaptiveKeyframePlacement = defaultAdaptiveKeyframePlacement(DEFAULT_PRESET);
+    private volatile int adaptiveMaxKeyframeInterval = defaultAdaptiveMaxKeyframeInterval(DEFAULT_PRESET);
+    private volatile long adaptiveContinuationMinSavingsBytes = defaultAdaptiveContinuationMinSavingsBytes(DEFAULT_PRESET);
+    private volatile double adaptiveContinuationMinSavingsRatio = defaultAdaptiveContinuationMinSavingsRatio(DEFAULT_PRESET);
+    private volatile int perceptualBinIntraMaxVisibleColorDelta = defaultPerceptualVisibleColorDelta(DEFAULT_PRESET);
+    private volatile int perceptualBinIntraMaxAlphaDelta = defaultPerceptualAlphaDelta(DEFAULT_PRESET);
+    private volatile double perceptualBinIntraMaxAverageError = defaultPerceptualAverageError(DEFAULT_PRESET);
     private volatile @NotNull AfmaOptimizationPreset optimizationPreset = DEFAULT_PRESET;
     private volatile @Nullable AfmaEncodeJob currentJob;
 
@@ -167,6 +174,87 @@ public class AfmaCreatorState {
         this.markDirty();
     }
 
+    public int getMaxCopySearchDistance() {
+        return this.maxCopySearchDistance;
+    }
+
+    public void setMaxCopySearchDistance(int maxCopySearchDistance) {
+        this.maxCopySearchDistance = maxCopySearchDistance;
+        this.markDirty();
+    }
+
+    public int getMaxCandidateAxisOffsets() {
+        return this.maxCandidateAxisOffsets;
+    }
+
+    public void setMaxCandidateAxisOffsets(int maxCandidateAxisOffsets) {
+        this.maxCandidateAxisOffsets = maxCandidateAxisOffsets;
+        this.markDirty();
+    }
+
+    public boolean isAdaptiveKeyframePlacement() {
+        return this.adaptiveKeyframePlacement;
+    }
+
+    public void setAdaptiveKeyframePlacement(boolean adaptiveKeyframePlacement) {
+        this.adaptiveKeyframePlacement = adaptiveKeyframePlacement;
+        this.markDirty();
+    }
+
+    public int getAdaptiveMaxKeyframeInterval() {
+        return this.adaptiveMaxKeyframeInterval;
+    }
+
+    public void setAdaptiveMaxKeyframeInterval(int adaptiveMaxKeyframeInterval) {
+        this.adaptiveMaxKeyframeInterval = adaptiveMaxKeyframeInterval;
+        this.markDirty();
+    }
+
+    public long getAdaptiveContinuationMinSavingsBytes() {
+        return this.adaptiveContinuationMinSavingsBytes;
+    }
+
+    public void setAdaptiveContinuationMinSavingsBytes(long adaptiveContinuationMinSavingsBytes) {
+        this.adaptiveContinuationMinSavingsBytes = adaptiveContinuationMinSavingsBytes;
+        this.markDirty();
+    }
+
+    public double getAdaptiveContinuationMinSavingsRatio() {
+        return this.adaptiveContinuationMinSavingsRatio;
+    }
+
+    public void setAdaptiveContinuationMinSavingsRatio(double adaptiveContinuationMinSavingsRatio) {
+        this.adaptiveContinuationMinSavingsRatio = adaptiveContinuationMinSavingsRatio;
+        this.markDirty();
+    }
+
+    public int getPerceptualBinIntraMaxVisibleColorDelta() {
+        return this.perceptualBinIntraMaxVisibleColorDelta;
+    }
+
+    public void setPerceptualBinIntraMaxVisibleColorDelta(int perceptualBinIntraMaxVisibleColorDelta) {
+        this.perceptualBinIntraMaxVisibleColorDelta = perceptualBinIntraMaxVisibleColorDelta;
+        this.markDirty();
+    }
+
+    public int getPerceptualBinIntraMaxAlphaDelta() {
+        return this.perceptualBinIntraMaxAlphaDelta;
+    }
+
+    public void setPerceptualBinIntraMaxAlphaDelta(int perceptualBinIntraMaxAlphaDelta) {
+        this.perceptualBinIntraMaxAlphaDelta = perceptualBinIntraMaxAlphaDelta;
+        this.markDirty();
+    }
+
+    public double getPerceptualBinIntraMaxAverageError() {
+        return this.perceptualBinIntraMaxAverageError;
+    }
+
+    public void setPerceptualBinIntraMaxAverageError(double perceptualBinIntraMaxAverageError) {
+        this.perceptualBinIntraMaxAverageError = perceptualBinIntraMaxAverageError;
+        this.markDirty();
+    }
+
     public @NotNull AfmaOptimizationPreset getOptimizationPreset() {
         return this.optimizationPreset;
     }
@@ -179,6 +267,13 @@ public class AfmaCreatorState {
         this.nearLosslessEnabled = preset.isNearLosslessEnabledByDefault();
         this.maxCopySearchDistance = preset.getMaxCopySearchDistance();
         this.maxCandidateAxisOffsets = preset.getMaxCandidateAxisOffsets();
+        this.adaptiveKeyframePlacement = defaultAdaptiveKeyframePlacement(preset);
+        this.adaptiveMaxKeyframeInterval = defaultAdaptiveMaxKeyframeInterval(preset);
+        this.adaptiveContinuationMinSavingsBytes = defaultAdaptiveContinuationMinSavingsBytes(preset);
+        this.adaptiveContinuationMinSavingsRatio = defaultAdaptiveContinuationMinSavingsRatio(preset);
+        this.perceptualBinIntraMaxVisibleColorDelta = defaultPerceptualVisibleColorDelta(preset);
+        this.perceptualBinIntraMaxAlphaDelta = defaultPerceptualAlphaDelta(preset);
+        this.perceptualBinIntraMaxAverageError = defaultPerceptualAverageError(preset);
         this.markDirty();
     }
 
@@ -316,10 +411,6 @@ public class AfmaCreatorState {
         int preferredKeyframeInterval = Math.max(1, options.getKeyframeInterval());
         switch (this.optimizationPreset) {
             case SMALLEST_FILE -> options
-                    .setAdaptiveKeyframePlacement(true)
-                    .setAdaptiveMaxKeyframeInterval(Math.max(preferredKeyframeInterval * 4, preferredKeyframeInterval + 180))
-                    .setAdaptiveContinuationMinSavingsBytes(128L)
-                    .setAdaptiveContinuationMinSavingsRatio(0.0025D)
                     .setPlannerSearchWindowFrames(24)
                     .setPlannerBeamWidth(14)
                     .setPlannerDecodeCostPenaltyBytes(80L)
@@ -330,10 +421,6 @@ public class AfmaCreatorState {
                     .setPlannerLossyContinuationPenaltyBytes(40L)
                     .setPlannerKeyframeDistancePenaltyBytes(96L);
             case BALANCED -> options
-                    .setAdaptiveKeyframePlacement(true)
-                    .setAdaptiveMaxKeyframeInterval(Math.max(preferredKeyframeInterval * 2, preferredKeyframeInterval + 36))
-                    .setAdaptiveContinuationMinSavingsBytes(768L)
-                    .setAdaptiveContinuationMinSavingsRatio(0.0075D)
                     .setPlannerSearchWindowFrames(16)
                     .setPlannerBeamWidth(10)
                     .setPlannerDecodeCostPenaltyBytes(144L)
@@ -344,10 +431,6 @@ public class AfmaCreatorState {
                     .setPlannerLossyContinuationPenaltyBytes(80L)
                     .setPlannerKeyframeDistancePenaltyBytes(160L);
             case FASTEST_DECODE -> options
-                    .setAdaptiveKeyframePlacement(false)
-                    .setAdaptiveMaxKeyframeInterval(preferredKeyframeInterval)
-                    .setAdaptiveContinuationMinSavingsBytes(0L)
-                    .setAdaptiveContinuationMinSavingsRatio(0D)
                     .setPlannerSearchWindowFrames(8)
                     .setPlannerBeamWidth(4)
                     .setPlannerDecodeCostPenaltyBytes(288L)
@@ -358,6 +441,12 @@ public class AfmaCreatorState {
                     .setPlannerLossyContinuationPenaltyBytes(160L)
                     .setPlannerKeyframeDistancePenaltyBytes(256L);
         }
+
+        options
+                .setAdaptiveKeyframePlacement(this.adaptiveKeyframePlacement)
+                .setAdaptiveMaxKeyframeInterval(Math.max(preferredKeyframeInterval, parsePositiveInt(this.adaptiveMaxKeyframeInterval, "adaptive max keyframe interval")))
+                .setAdaptiveContinuationMinSavingsBytes(parseNonNegativeLong(this.adaptiveContinuationMinSavingsBytes, "adaptive continuation savings bytes"))
+                .setAdaptiveContinuationMinSavingsRatio(parseNonNegativeDouble(this.adaptiveContinuationMinSavingsRatio, "adaptive continuation savings ratio"));
 
         if (!this.nearLosslessEnabled) {
             options
@@ -373,17 +462,17 @@ public class AfmaCreatorState {
 
         switch (this.optimizationPreset) {
             case SMALLEST_FILE -> options
-                    .setPerceptualBinIntraMaxVisibleColorDelta(16)
-                    .setPerceptualBinIntraMaxAlphaDelta(32)
-                    .setPerceptualBinIntraMaxAverageError(7.5D);
+                    .setPerceptualBinIntraMaxVisibleColorDelta(parseNonNegativeInt(this.perceptualBinIntraMaxVisibleColorDelta, "perceptual BIN_INTRA visible color delta"))
+                    .setPerceptualBinIntraMaxAlphaDelta(parseNonNegativeInt(this.perceptualBinIntraMaxAlphaDelta, "perceptual BIN_INTRA alpha delta"))
+                    .setPerceptualBinIntraMaxAverageError(parseNonNegativeDouble(this.perceptualBinIntraMaxAverageError, "perceptual BIN_INTRA average error"));
             case BALANCED -> options
-                    .setPerceptualBinIntraMaxVisibleColorDelta(10)
-                    .setPerceptualBinIntraMaxAlphaDelta(20)
-                    .setPerceptualBinIntraMaxAverageError(4.0D);
+                    .setPerceptualBinIntraMaxVisibleColorDelta(parseNonNegativeInt(this.perceptualBinIntraMaxVisibleColorDelta, "perceptual BIN_INTRA visible color delta"))
+                    .setPerceptualBinIntraMaxAlphaDelta(parseNonNegativeInt(this.perceptualBinIntraMaxAlphaDelta, "perceptual BIN_INTRA alpha delta"))
+                    .setPerceptualBinIntraMaxAverageError(parseNonNegativeDouble(this.perceptualBinIntraMaxAverageError, "perceptual BIN_INTRA average error"));
             case FASTEST_DECODE -> options
-                    .setPerceptualBinIntraMaxVisibleColorDelta(8)
-                    .setPerceptualBinIntraMaxAlphaDelta(16)
-                    .setPerceptualBinIntraMaxAverageError(3.0D);
+                    .setPerceptualBinIntraMaxVisibleColorDelta(parseNonNegativeInt(this.perceptualBinIntraMaxVisibleColorDelta, "perceptual BIN_INTRA visible color delta"))
+                    .setPerceptualBinIntraMaxAlphaDelta(parseNonNegativeInt(this.perceptualBinIntraMaxAlphaDelta, "perceptual BIN_INTRA alpha delta"))
+                    .setPerceptualBinIntraMaxAverageError(parseNonNegativeDouble(this.perceptualBinIntraMaxAverageError, "perceptual BIN_INTRA average error"));
         }
 
         switch (this.optimizationPreset) {
@@ -440,9 +529,30 @@ public class AfmaCreatorState {
         return value;
     }
 
+    protected static int parseNonNegativeInt(int value, @NotNull String label) {
+        if (value < 0) {
+            throw new IllegalArgumentException("Invalid " + label + ": expected a value greater than or equal to 0.");
+        }
+        return value;
+    }
+
     protected static long parsePositiveLong(long value, @NotNull String label) {
         if (value <= 0L) {
             throw new IllegalArgumentException("Invalid " + label + ": expected a value greater than 0.");
+        }
+        return value;
+    }
+
+    protected static long parseNonNegativeLong(long value, @NotNull String label) {
+        if (value < 0L) {
+            throw new IllegalArgumentException("Invalid " + label + ": expected a value greater than or equal to 0.");
+        }
+        return value;
+    }
+
+    protected static double parseNonNegativeDouble(double value, @NotNull String label) {
+        if (!Double.isFinite(value) || (value < 0D)) {
+            throw new IllegalArgumentException("Invalid " + label + ": expected a finite value greater than or equal to 0.");
         }
         return value;
     }
@@ -456,6 +566,59 @@ public class AfmaCreatorState {
     protected static @Nullable File normalizeFile(@Nullable File file) {
         if (file == null) return null;
         return new File(file.getPath().replace("\\", "/"));
+    }
+
+    protected static boolean defaultAdaptiveKeyframePlacement(@NotNull AfmaOptimizationPreset preset) {
+        return preset != AfmaOptimizationPreset.FASTEST_DECODE;
+    }
+
+    protected static int defaultAdaptiveMaxKeyframeInterval(@NotNull AfmaOptimizationPreset preset) {
+        int preferredKeyframeInterval = Math.max(1, preset.getKeyframeInterval());
+        return switch (preset) {
+            case SMALLEST_FILE -> Math.max(preferredKeyframeInterval * 4, preferredKeyframeInterval + 180);
+            case BALANCED -> Math.max(preferredKeyframeInterval * 2, preferredKeyframeInterval + 36);
+            case FASTEST_DECODE -> preferredKeyframeInterval;
+        };
+    }
+
+    protected static long defaultAdaptiveContinuationMinSavingsBytes(@NotNull AfmaOptimizationPreset preset) {
+        return switch (preset) {
+            case SMALLEST_FILE -> 128L;
+            case BALANCED -> 768L;
+            case FASTEST_DECODE -> 0L;
+        };
+    }
+
+    protected static double defaultAdaptiveContinuationMinSavingsRatio(@NotNull AfmaOptimizationPreset preset) {
+        return switch (preset) {
+            case SMALLEST_FILE -> 0.0025D;
+            case BALANCED -> 0.0075D;
+            case FASTEST_DECODE -> 0D;
+        };
+    }
+
+    protected static int defaultPerceptualVisibleColorDelta(@NotNull AfmaOptimizationPreset preset) {
+        return switch (preset) {
+            case SMALLEST_FILE -> 16;
+            case BALANCED -> 10;
+            case FASTEST_DECODE -> 8;
+        };
+    }
+
+    protected static int defaultPerceptualAlphaDelta(@NotNull AfmaOptimizationPreset preset) {
+        return switch (preset) {
+            case SMALLEST_FILE -> 32;
+            case BALANCED -> 20;
+            case FASTEST_DECODE -> 16;
+        };
+    }
+
+    protected static double defaultPerceptualAverageError(@NotNull AfmaOptimizationPreset preset) {
+        return switch (preset) {
+            case SMALLEST_FILE -> 7.5D;
+            case BALANCED -> 4.0D;
+            case FASTEST_DECODE -> 3.0D;
+        };
     }
 
     protected static @NotNull String summarizeSourceList(@NotNull String label, @NotNull List<File> frames) {

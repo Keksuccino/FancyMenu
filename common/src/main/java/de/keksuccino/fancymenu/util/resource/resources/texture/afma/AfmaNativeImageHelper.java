@@ -6,6 +6,8 @@ import net.minecraft.util.FastColor;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.system.MemoryUtil;
 
+import java.io.IOException;
+
 public final class AfmaNativeImageHelper {
 
     private static final int RGBA_BYTES_PER_PIXEL = 4;
@@ -106,6 +108,61 @@ public final class AfmaNativeImageHelper {
         }
     }
 
+    public static void applyResidualPayload(@NotNull NativeImage target, int dstX, int dstY, int width, int height,
+                                            @NotNull byte[] residualBytes, int residualOffset, int residualLength,
+                                            @NotNull AfmaResidualPayload residualMetadata) throws IOException {
+        AfmaResidualPayloadHelper.validateDensePayload(residualBytes, residualOffset, residualLength, width, height, residualMetadata);
+        int sampleCount = width * height;
+        int primaryChannels = (residualMetadata.getAlphaMode() == AfmaAlphaResidualMode.FULL)
+                ? residualMetadata.getChannels()
+                : AfmaResidualPayloadHelper.RGB_CHANNELS;
+        int primaryLength = AfmaResidualPayloadHelper.resolvePrimaryStreamLength(sampleCount, residualMetadata.getChannels(), residualMetadata.getAlphaMode());
+        AfmaResidualPayloadHelper.ResidualSampleReader primaryReader = AfmaResidualPayloadHelper.openReader(
+                residualBytes,
+                residualOffset,
+                primaryLength,
+                sampleCount,
+                primaryChannels,
+                residualMetadata.getCodec()
+        );
+
+        int alphaMaskOffset = AfmaResidualPayloadHelper.resolveAlphaMaskOffset(residualOffset, sampleCount, residualMetadata.getChannels(), residualMetadata.getAlphaMode());
+        int alphaMaskLength = AfmaResidualPayloadHelper.resolveAlphaMaskLength(sampleCount, residualMetadata.getAlphaMode());
+        int alphaStreamOffset = AfmaResidualPayloadHelper.resolveAlphaStreamOffset(residualOffset, sampleCount, residualMetadata.getChannels(), residualMetadata.getAlphaMode());
+        AfmaResidualPayloadHelper.ResidualSampleReader alphaReader = (residualMetadata.getAlphaMode() == AfmaAlphaResidualMode.SPARSE)
+                ? AfmaResidualPayloadHelper.openReader(
+                residualBytes,
+                alphaStreamOffset,
+                residualMetadata.getAlphaChangedPixelCount(),
+                residualMetadata.getAlphaChangedPixelCount(),
+                AfmaResidualPayloadHelper.ALPHA_ONLY_CHANNELS,
+                residualMetadata.getCodec()
+        )
+                : null;
+
+        long targetPixels = pixels(target);
+        int targetWidth = target.getWidth();
+        int sequenceIndex = 0;
+        for (int row = 0; row < height; row++) {
+            long targetOffset = offset(targetPixels, targetWidth, dstX, dstY + row);
+            for (int column = 0; column < width; column++, sequenceIndex++) {
+                long pixelOffset = targetOffset + ((long) column * RGBA_BYTES_PER_PIXEL);
+                int predictedAbgr = MemoryUtil.memGetInt(pixelOffset);
+                int updatedAbgr = (residualMetadata.getAlphaMode() == AfmaAlphaResidualMode.FULL)
+                        ? primaryReader.readNextRgbaIntoAbgr(predictedAbgr)
+                        : primaryReader.readNextRgbIntoAbgr(predictedAbgr);
+                if ((alphaReader != null)
+                        && ((residualBytes[alphaMaskOffset + (sequenceIndex >>> 3)] & (1 << (7 - (sequenceIndex & 7)))) != 0)) {
+                    updatedAbgr = alphaReader.readNextAlphaIntoAbgr(updatedAbgr);
+                }
+                MemoryUtil.memPutInt(pixelOffset, updatedAbgr);
+            }
+        }
+        if ((alphaMaskLength == 0) && (alphaReader != null)) {
+            throw new IOException("AFMA sparse alpha mask metadata is inconsistent");
+        }
+    }
+
     public static void applySparseResidualBytes(@NotNull NativeImage target, int dstX, int dstY, int width, int height, @NotNull byte[] maskBytes, int maskOffset, int maskLength, @NotNull byte[] residualBytes, int residualOffset, int residualLength, int changedPixelCount, int channels) {
         int expectedMaskBytes = AfmaResidualPayloadHelper.expectedSparseMaskBytes(width, height);
         if ((expectedMaskBytes <= 0) || (maskLength != expectedMaskBytes) || maskOffset < 0
@@ -144,6 +201,60 @@ public final class AfmaNativeImageHelper {
         if (residualIndex != (residualOffset + expectedResidualBytes)) {
             throw new IllegalStateException("AFMA sparse residual payload ended before the mask data");
         }
+    }
+
+    public static void applySparseResidualPayload(@NotNull NativeImage target, int dstX, int dstY, int width, int height,
+                                                  @NotNull byte[] layoutBytes, int layoutOffset, int layoutLength,
+                                                  @NotNull byte[] residualBytes, int residualOffset, int residualLength,
+                                                  @NotNull AfmaSparsePayload sparsePayload) throws IOException {
+        AfmaSparsePayloadHelper.validateLayout(layoutBytes, layoutOffset, layoutLength, width, height,
+                sparsePayload.getLayoutCodec(), sparsePayload.getChangedPixelCount());
+        AfmaResidualPayloadHelper.validateSparsePayload(residualBytes, residualOffset, residualLength, sparsePayload.getChangedPixelCount(), sparsePayload);
+
+        int sampleCount = sparsePayload.getChangedPixelCount();
+        int primaryChannels = (sparsePayload.getAlphaMode() == AfmaAlphaResidualMode.FULL)
+                ? sparsePayload.getChannels()
+                : AfmaResidualPayloadHelper.RGB_CHANNELS;
+        int primaryLength = AfmaResidualPayloadHelper.resolvePrimaryStreamLength(sampleCount, sparsePayload.getChannels(), sparsePayload.getAlphaMode());
+        AfmaResidualPayloadHelper.ResidualSampleReader primaryReader = AfmaResidualPayloadHelper.openReader(
+                residualBytes,
+                residualOffset,
+                primaryLength,
+                sampleCount,
+                primaryChannels,
+                sparsePayload.getResidualCodec()
+        );
+
+        int alphaMaskOffset = AfmaResidualPayloadHelper.resolveAlphaMaskOffset(residualOffset, sampleCount, sparsePayload.getChannels(), sparsePayload.getAlphaMode());
+        int alphaStreamOffset = AfmaResidualPayloadHelper.resolveAlphaStreamOffset(residualOffset, sampleCount, sparsePayload.getChannels(), sparsePayload.getAlphaMode());
+        AfmaResidualPayloadHelper.ResidualSampleReader alphaReader = (sparsePayload.getAlphaMode() == AfmaAlphaResidualMode.SPARSE)
+                ? AfmaResidualPayloadHelper.openReader(
+                residualBytes,
+                alphaStreamOffset,
+                sparsePayload.getAlphaChangedPixelCount(),
+                sparsePayload.getAlphaChangedPixelCount(),
+                AfmaResidualPayloadHelper.ALPHA_ONLY_CHANNELS,
+                sparsePayload.getResidualCodec()
+        )
+                : null;
+
+        long targetPixels = pixels(target);
+        int targetWidth = target.getWidth();
+        AfmaSparsePayloadHelper.walkChangedPixels(layoutBytes, layoutOffset, layoutLength, width, height,
+                sparsePayload.getLayoutCodec(), sparsePayload.getChangedPixelCount(), (localIndex, sequenceIndex) -> {
+                    int localX = localIndex % width;
+                    int localY = localIndex / width;
+                    long pixelOffset = offset(targetPixels, targetWidth, dstX + localX, dstY + localY);
+                    int predictedAbgr = MemoryUtil.memGetInt(pixelOffset);
+                    int updatedAbgr = (sparsePayload.getAlphaMode() == AfmaAlphaResidualMode.FULL)
+                            ? primaryReader.readNextRgbaIntoAbgr(predictedAbgr)
+                            : primaryReader.readNextRgbIntoAbgr(predictedAbgr);
+                    if ((alphaReader != null)
+                            && ((residualBytes[alphaMaskOffset + (sequenceIndex >>> 3)] & (1 << (7 - (sequenceIndex & 7)))) != 0)) {
+                        updatedAbgr = alphaReader.readNextAlphaIntoAbgr(updatedAbgr);
+                    }
+                    MemoryUtil.memPutInt(pixelOffset, updatedAbgr);
+                });
     }
 
     public static void copyRectMemmove(@NotNull NativeImage image, @NotNull AfmaCopyRect copyRect) {

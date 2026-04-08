@@ -267,25 +267,17 @@ public class AfmaDecoder implements Closeable {
         } else if (descriptor.getType() == AfmaFrameOperationType.DELTA_RECT) {
             this.validateBinIntraPayload(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), descriptor.getWidth(), descriptor.getHeight());
         } else if (descriptor.getType() == AfmaFrameOperationType.RESIDUAL_DELTA_RECT) {
-            AfmaResidualPayload residual = Objects.requireNonNull(descriptor.getResidual());
-            this.validateRawPayloadSize(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
-                    AfmaResidualPayloadHelper.expectedDenseResidualBytes(descriptor.getWidth(), descriptor.getHeight(), residual.getChannels()));
+            this.validateResidualPayload(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
+                    descriptor.getWidth(), descriptor.getHeight(), Objects.requireNonNull(descriptor.getResidual()));
         } else if (descriptor.getType() == AfmaFrameOperationType.SPARSE_DELTA_RECT) {
-            AfmaSparsePayload sparse = Objects.requireNonNull(descriptor.getSparse());
-            this.validateRawPayloadSize(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
-                    AfmaResidualPayloadHelper.expectedSparseMaskBytes(descriptor.getWidth(), descriptor.getHeight()));
-            this.validateRawPayloadSize(context, Objects.requireNonNull(sparse.getPixelsPath()),
-                    AfmaResidualPayloadHelper.expectedSparseResidualBytes(sparse.getChangedPixelCount(), sparse.getChannels()));
+            this.validateSparsePayload(context, descriptor.getWidth(), descriptor.getHeight(), Objects.requireNonNull(descriptor.getSparse()),
+                    Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), Objects.requireNonNull(Objects.requireNonNull(descriptor.getSparse()).getPixelsPath()));
         } else if (descriptor.getType() == AfmaFrameOperationType.COPY_RECT_RESIDUAL_PATCH) {
-            AfmaResidualPayload residual = Objects.requireNonNull(descriptor.getResidual());
-            this.validateRawPayloadSize(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
-                    AfmaResidualPayloadHelper.expectedDenseResidualBytes(descriptor.getWidth(), descriptor.getHeight(), residual.getChannels()));
+            this.validateResidualPayload(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
+                    descriptor.getWidth(), descriptor.getHeight(), Objects.requireNonNull(descriptor.getResidual()));
         } else if (descriptor.getType() == AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH) {
-            AfmaSparsePayload sparse = Objects.requireNonNull(descriptor.getSparse());
-            this.validateRawPayloadSize(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
-                    AfmaResidualPayloadHelper.expectedSparseMaskBytes(descriptor.getWidth(), descriptor.getHeight()));
-            this.validateRawPayloadSize(context, Objects.requireNonNull(sparse.getPixelsPath()),
-                    AfmaResidualPayloadHelper.expectedSparseResidualBytes(sparse.getChangedPixelCount(), sparse.getChannels()));
+            this.validateSparsePayload(context, descriptor.getWidth(), descriptor.getHeight(), Objects.requireNonNull(descriptor.getSparse()),
+                    Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), Objects.requireNonNull(Objects.requireNonNull(descriptor.getSparse()).getPixelsPath()));
         } else if ((descriptor.getType() == AfmaFrameOperationType.COPY_RECT_PATCH) && descriptor.requiresPatchPayload()) {
             AfmaPatchRegion patch = Objects.requireNonNull(descriptor.getPatch());
             this.validateBinIntraPayload(context, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()), patch.getWidth(), patch.getHeight());
@@ -348,31 +340,55 @@ public class AfmaDecoder implements Closeable {
             } else if (descriptor.getType() == AfmaFrameOperationType.DELTA_RECT) {
                 this.validateBinIntraPayload(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), descriptor.getWidth(), descriptor.getHeight());
             } else if (descriptor.getType() == AfmaFrameOperationType.RESIDUAL_DELTA_RECT) {
-                AfmaResidualPayload residual = Objects.requireNonNull(descriptor.getResidual());
-                this.validateRawPayloadSize(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
-                        AfmaResidualPayloadHelper.expectedDenseResidualBytes(descriptor.getWidth(), descriptor.getHeight(), residual.getChannels()));
+                this.validateResidualPayload(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
+                        descriptor.getWidth(), descriptor.getHeight(), Objects.requireNonNull(descriptor.getResidual()));
             } else if (descriptor.getType() == AfmaFrameOperationType.SPARSE_DELTA_RECT) {
-                AfmaSparsePayload sparse = Objects.requireNonNull(descriptor.getSparse());
-                this.validateRawPayloadSize(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
-                        AfmaResidualPayloadHelper.expectedSparseMaskBytes(descriptor.getWidth(), descriptor.getHeight()));
-                this.validateRawPayloadSize(context, Objects.requireNonNull(sparse.getPixelsPath()),
-                        AfmaResidualPayloadHelper.expectedSparseResidualBytes(sparse.getChangedPixelCount(), sparse.getChannels()));
+                this.validateSparsePayload(context, descriptor.getWidth(), descriptor.getHeight(), Objects.requireNonNull(descriptor.getSparse()),
+                        Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), Objects.requireNonNull(Objects.requireNonNull(descriptor.getSparse()).getPixelsPath()));
             } else if (descriptor.getType() == AfmaFrameOperationType.COPY_RECT_RESIDUAL_PATCH) {
-                AfmaResidualPayload residual = Objects.requireNonNull(descriptor.getResidual());
-                this.validateRawPayloadSize(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
-                        AfmaResidualPayloadHelper.expectedDenseResidualBytes(descriptor.getWidth(), descriptor.getHeight(), residual.getChannels()));
+                this.validateResidualPayload(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
+                        descriptor.getWidth(), descriptor.getHeight(), Objects.requireNonNull(descriptor.getResidual()));
             } else if (descriptor.getType() == AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH) {
-                AfmaSparsePayload sparse = Objects.requireNonNull(descriptor.getSparse());
-                this.validateRawPayloadSize(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
-                        AfmaResidualPayloadHelper.expectedSparseMaskBytes(descriptor.getWidth(), descriptor.getHeight()));
-                this.validateRawPayloadSize(context, Objects.requireNonNull(sparse.getPixelsPath()),
-                        AfmaResidualPayloadHelper.expectedSparseResidualBytes(sparse.getChangedPixelCount(), sparse.getChannels()));
+                this.validateSparsePayload(context, descriptor.getWidth(), descriptor.getHeight(), Objects.requireNonNull(descriptor.getSparse()),
+                        Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), Objects.requireNonNull(Objects.requireNonNull(descriptor.getSparse()).getPixelsPath()));
             } else if ((descriptor.getType() == AfmaFrameOperationType.COPY_RECT_PATCH) && descriptor.requiresPatchPayload()) {
                 AfmaPatchRegion patch = Objects.requireNonNull(descriptor.getPatch());
                 this.validateBinIntraPayload(context, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()), patch.getWidth(), patch.getHeight());
             } else if (descriptor.getType() == AfmaFrameOperationType.BLOCK_INTER) {
                 this.validateBlockInterPayload(context, descriptor);
             }
+        }
+    }
+
+    protected void validateResidualPayload(@NotNull String context, @NotNull String path, int width, int height,
+                                           @NotNull AfmaResidualPayload residualPayload) throws IOException {
+        PayloadBytes payloadBytes = this.readPayloadBytes(path);
+        try {
+            residualPayload.validate(context + " residual descriptor");
+            AfmaResidualPayloadHelper.validateDensePayload(payloadBytes.bytes(), payloadBytes.offset(), payloadBytes.length(),
+                    width, height, residualPayload);
+            AfmaResidualPayloadHelper.validateSparseAlphaMaskPopulation(payloadBytes.bytes(), payloadBytes.offset(),
+                    width * height, residualPayload.getChannels(), residualPayload.getAlphaMode(), residualPayload.getAlphaChangedPixelCount());
+        } catch (IllegalStateException | IllegalArgumentException ex) {
+            throw new IOException(context + " residual payload does not match the descriptor for " + path, ex);
+        }
+    }
+
+    protected void validateSparsePayload(@NotNull String context, int width, int height, @NotNull AfmaSparsePayload sparsePayload,
+                                         @NotNull String layoutPath, @NotNull String residualPath) throws IOException {
+        PayloadBytes layoutPayload = this.readPayloadBytes(layoutPath);
+        PayloadBytes residualPayload = this.readPayloadBytes(residualPath);
+        try {
+            sparsePayload.validate(context + " sparse descriptor");
+            AfmaSparsePayloadHelper.validateLayout(layoutPayload.bytes(), layoutPayload.offset(), layoutPayload.length(),
+                    width, height, sparsePayload.getLayoutCodec(), sparsePayload.getChangedPixelCount());
+            AfmaResidualPayloadHelper.validateSparsePayload(residualPayload.bytes(), residualPayload.offset(), residualPayload.length(),
+                    sparsePayload.getChangedPixelCount(), sparsePayload);
+            AfmaResidualPayloadHelper.validateSparseAlphaMaskPopulation(residualPayload.bytes(), residualPayload.offset(),
+                    sparsePayload.getChangedPixelCount(), sparsePayload.getChannels(),
+                    sparsePayload.getAlphaMode(), sparsePayload.getAlphaChangedPixelCount());
+        } catch (IllegalStateException | IllegalArgumentException ex) {
+            throw new IOException(context + " sparse payload does not match the descriptor", ex);
         }
     }
 

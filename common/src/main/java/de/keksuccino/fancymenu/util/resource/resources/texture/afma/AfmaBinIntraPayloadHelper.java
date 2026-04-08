@@ -20,7 +20,7 @@ import java.util.concurrent.CompletionException;
 public final class AfmaBinIntraPayloadHelper {
 
     public static final int PAYLOAD_MAGIC = 0x4146424E; // AFBN
-    public static final int PAYLOAD_VERSION = 1;
+    public static final int PAYLOAD_VERSION = 2;
     public static final int MAX_PALETTE_COLORS = 256;
     public static final int RGB_CHANNELS = 3;
     public static final int RGBA_CHANNELS = 4;
@@ -170,7 +170,10 @@ public final class AfmaBinIntraPayloadHelper {
             case INDEXED -> decodeIndexedIntoArgbBuffer(in, header.width(), header.height(), targetPixels, targetOffset, scanlineStride, scratch);
             case RGB_FILTERED -> decodeFilteredTruecolorIntoArgbBuffer(in, header.width(), header.height(), RGB_CHANNELS, targetPixels, targetOffset, scanlineStride, scratch);
             case RGBA_FILTERED -> decodeFilteredTruecolorIntoArgbBuffer(in, header.width(), header.height(), RGBA_CHANNELS, targetPixels, targetOffset, scanlineStride, scratch);
+            case RGB_PLANAR_FILTERED -> decodePlanarTruecolorIntoArgbBuffer(in, header.width(), header.height(), RGB_CHANNELS, targetPixels, targetOffset, scanlineStride, scratch);
+            case RGBA_PLANAR_FILTERED -> decodePlanarTruecolorIntoArgbBuffer(in, header.width(), header.height(), RGBA_CHANNELS, targetPixels, targetOffset, scanlineStride, scratch);
             case RGB_PLUS_ALPHA_SPLIT -> decodeSplitAlphaIntoArgbBuffer(in, header.width(), header.height(), targetPixels, targetOffset, scanlineStride, scratch);
+            case INDEXED_COLOR_PLUS_ALPHA -> decodeIndexedColorPlusAlphaIntoArgbBuffer(in, header.width(), header.height(), targetPixels, targetOffset, scanlineStride, scratch);
             case COLOR_PLUS_ALPHA_MASK -> decodeColorPlusAlphaMaskIntoArgbBuffer(in, header.width(), header.height(), targetPixels, targetOffset, scanlineStride, scratch);
         }
     }
@@ -196,6 +199,12 @@ public final class AfmaBinIntraPayloadHelper {
 
     @Nullable
     protected static EncodedPayloadCandidate buildIndexedCandidate(int width, int height, @NotNull PixelCandidate pixelCandidate) throws IOException {
+        return buildIndexedCandidate(width, height, pixelCandidate, PaletteOrdering.FREQUENCY);
+    }
+
+    @Nullable
+    protected static EncodedPayloadCandidate buildIndexedCandidate(int width, int height, @NotNull PixelCandidate pixelCandidate,
+                                                                   @NotNull PaletteOrdering paletteOrdering) throws IOException {
         int[] pixels = pixelCandidate.pixels();
         Map<Integer, Integer> colorCounts = new HashMap<>();
         for (int color : pixels) {
@@ -206,13 +215,7 @@ public final class AfmaBinIntraPayloadHelper {
         }
 
         List<Map.Entry<Integer, Integer>> paletteEntries = new ArrayList<>(colorCounts.entrySet());
-        paletteEntries.sort((first, second) -> {
-            int countCompare = Integer.compare(second.getValue(), first.getValue());
-            if (countCompare != 0) {
-                return countCompare;
-            }
-            return Integer.compareUnsigned(first.getKey(), second.getKey());
-        });
+        sortPaletteEntries(paletteEntries, paletteOrdering);
 
         int[] palette = new int[paletteEntries.size()];
         Map<Integer, Integer> colorToIndex = new HashMap<>(paletteEntries.size() * 2);
@@ -256,7 +259,8 @@ public final class AfmaBinIntraPayloadHelper {
             }
             out.write(filteredRows);
             out.flush();
-            return new EncodedPayloadCandidate(Mode.INDEXED, byteStream.toByteArray(), pixelCandidate.pixels(), pixelCandidate.lossless());
+            return new EncodedPayloadCandidate(Mode.INDEXED, byteStream.toByteArray(), pixelCandidate.pixels(), pixelCandidate.lossless(),
+                    paletteOrdering == PaletteOrdering.STABLE_COLOR ? 0 : 1);
         }
     }
 
@@ -276,6 +280,24 @@ public final class AfmaBinIntraPayloadHelper {
             out.write(filteredRows);
             out.flush();
             return new EncodedPayloadCandidate(mode, byteStream.toByteArray(), pixelCandidate.pixels(), pixelCandidate.lossless());
+        }
+    }
+
+    @NotNull
+    protected static EncodedPayloadCandidate buildPlanarFilteredCandidate(int width, int height, @NotNull PixelCandidate pixelCandidate,
+                                                                          @NotNull Mode mode) throws IOException {
+        int channels = switch (mode) {
+            case RGB_PLANAR_FILTERED -> RGB_CHANNELS;
+            case RGBA_PLANAR_FILTERED -> RGBA_CHANNELS;
+            default -> throw new IllegalArgumentException("Unsupported AFMA BIN_INTRA planar mode: " + mode);
+        };
+        byte[] planarBytes = toPlanarBytes(pixelCandidate.pixels(), channels);
+        try (ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+             DataOutputStream out = new DataOutputStream(byteStream)) {
+            writeHeader(out, mode, width, height);
+            writePlanarFiltered(out, planarBytes, width, height, channels);
+            out.flush();
+            return new EncodedPayloadCandidate(mode, byteStream.toByteArray(), pixelCandidate.pixels(), pixelCandidate.lossless(), 1);
         }
     }
 
@@ -302,6 +324,79 @@ public final class AfmaBinIntraPayloadHelper {
             out.write(filteredAlpha);
             out.flush();
             return new EncodedPayloadCandidate(Mode.RGB_PLUS_ALPHA_SPLIT, byteStream.toByteArray(), pixelCandidate.pixels(), pixelCandidate.lossless());
+        }
+    }
+
+    @Nullable
+    protected static EncodedPayloadCandidate buildIndexedColorPlusAlphaCandidate(int width, int height, @NotNull PixelCandidate pixelCandidate,
+                                                                                 @NotNull PaletteOrdering paletteOrdering) throws IOException {
+        int[] pixels = pixelCandidate.pixels();
+        Map<Integer, Integer> rgbCounts = new HashMap<>();
+        boolean binaryAlpha = true;
+        for (int color : pixels) {
+            rgbCounts.merge(color & 0x00FFFFFF, 1, Integer::sum);
+            if (rgbCounts.size() > MAX_PALETTE_COLORS) {
+                return null;
+            }
+            int alpha = (color >>> 24) & 0xFF;
+            if ((alpha != 0) && (alpha != 0xFF)) {
+                binaryAlpha = false;
+            }
+        }
+
+        List<Map.Entry<Integer, Integer>> paletteEntries = new ArrayList<>(rgbCounts.entrySet());
+        sortPaletteEntries(paletteEntries, paletteOrdering);
+
+        int[] palette = new int[paletteEntries.size()];
+        Map<Integer, Integer> colorToIndex = new HashMap<>(paletteEntries.size() * 2);
+        for (int i = 0; i < paletteEntries.size(); i++) {
+            int rgb = paletteEntries.get(i).getKey() & 0x00FFFFFF;
+            palette[i] = rgb;
+            colorToIndex.put(rgb, i);
+        }
+
+        int bitsPerIndex = paletteBits(palette.length);
+        int[] indices = new int[pixels.length];
+        byte[] alphaBytes = new byte[pixels.length];
+        for (int i = 0; i < pixels.length; i++) {
+            int color = pixels[i];
+            Integer paletteIndex = colorToIndex.get(color & 0x00FFFFFF);
+            if (paletteIndex == null) {
+                throw new IOException("AFMA BIN_INTRA indexed-color palette index lookup failed");
+            }
+            indices[i] = paletteIndex;
+            alphaBytes[i] = (byte) ((color >>> 24) & 0xFF);
+        }
+
+        int packedRowBytes = packedRowBytes(width, bitsPerIndex);
+        byte[] packedIndices = packIndices(indices, width, height, bitsPerIndex);
+        byte[] filteredIndices = encodeFilteredRows(packedIndices, packedRowBytes, height, 1);
+        int alphaMode;
+        byte[] encodedAlpha;
+        if (binaryAlpha) {
+            alphaMode = AlphaMaskMode.BINARY.id();
+            encodedAlpha = encodeFilteredRows(packBinaryAlpha(alphaBytes, width, height), packedRowBytes(width, 1), height, 1);
+        } else {
+            alphaMode = AlphaMaskMode.FULL.id();
+            encodedAlpha = encodeFilteredRows(alphaBytes, width, height, 1);
+        }
+
+        try (ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+             DataOutputStream out = new DataOutputStream(byteStream)) {
+            writeHeader(out, Mode.INDEXED_COLOR_PLUS_ALPHA, width, height);
+            out.writeByte(alphaMode);
+            out.writeByte(bitsPerIndex);
+            out.writeShort(palette.length);
+            for (int rgb : palette) {
+                out.writeByte((rgb >> 16) & 0xFF);
+                out.writeByte((rgb >> 8) & 0xFF);
+                out.writeByte(rgb & 0xFF);
+            }
+            out.write(filteredIndices);
+            out.write(encodedAlpha);
+            out.flush();
+            return new EncodedPayloadCandidate(Mode.INDEXED_COLOR_PLUS_ALPHA, byteStream.toByteArray(), pixelCandidate.pixels(),
+                    pixelCandidate.lossless(), paletteOrdering == PaletteOrdering.STABLE_COLOR ? 0 : 1);
         }
     }
 
@@ -420,6 +515,37 @@ public final class AfmaBinIntraPayloadHelper {
         });
     }
 
+    protected static void decodePlanarTruecolorIntoArgbBuffer(@NotNull DataInputStream in, int width, int height, int channels,
+                                                              @NotNull int[] targetPixels, int targetOffset, int scanlineStride,
+                                                              @Nullable AfmaDecodeScratch scratch) throws IOException {
+        decodeFilteredRows(in, width, height, 1, scratch, (rowIndex, decodedRow, ignoredRowBytes) -> {
+            int pixelOffset = targetOffset + (rowIndex * scanlineStride);
+            for (int x = 0; x < width; x++) {
+                targetPixels[pixelOffset + x] = 0xFF000000 | ((decodedRow[x] & 0xFF) << 16);
+            }
+        });
+        decodeFilteredRows(in, width, height, 1, scratch, (rowIndex, decodedRow, ignoredRowBytes) -> {
+            int pixelOffset = targetOffset + (rowIndex * scanlineStride);
+            for (int x = 0; x < width; x++) {
+                targetPixels[pixelOffset + x] = (targetPixels[pixelOffset + x] & 0xFFFF00FF) | ((decodedRow[x] & 0xFF) << 8);
+            }
+        });
+        decodeFilteredRows(in, width, height, 1, scratch, (rowIndex, decodedRow, ignoredRowBytes) -> {
+            int pixelOffset = targetOffset + (rowIndex * scanlineStride);
+            for (int x = 0; x < width; x++) {
+                targetPixels[pixelOffset + x] = (targetPixels[pixelOffset + x] & 0xFFFFFF00) | (decodedRow[x] & 0xFF);
+            }
+        });
+        if (channels == RGBA_CHANNELS) {
+            decodeFilteredRows(in, width, height, 1, scratch, (rowIndex, decodedRow, ignoredRowBytes) -> {
+                int pixelOffset = targetOffset + (rowIndex * scanlineStride);
+                for (int x = 0; x < width; x++) {
+                    targetPixels[pixelOffset + x] = (targetPixels[pixelOffset + x] & 0x00FFFFFF) | ((decodedRow[x] & 0xFF) << 24);
+                }
+            });
+        }
+    }
+
     protected static void decodeSplitAlphaIntoArgbBuffer(@NotNull DataInputStream in, int width, int height,
                                                          @NotNull int[] targetPixels, int targetOffset, int scanlineStride,
                                                          @Nullable AfmaDecodeScratch scratch) throws IOException {
@@ -438,6 +564,58 @@ public final class AfmaBinIntraPayloadHelper {
             for (int x = 0; x < width; x++) {
                 int alpha = alphaRow[x] & 0xFF;
                 targetPixels[pixelOffset + x] = (alpha << 24) | (targetPixels[pixelOffset + x] & 0x00FFFFFF);
+            }
+        });
+    }
+
+    protected static void decodeIndexedColorPlusAlphaIntoArgbBuffer(@NotNull DataInputStream in, int width, int height,
+                                                                    @NotNull int[] targetPixels, int targetOffset, int scanlineStride,
+                                                                    @Nullable AfmaDecodeScratch scratch) throws IOException {
+        AlphaMaskMode alphaMode = AlphaMaskMode.byId(in.readUnsignedByte());
+        int bitsPerIndex = in.readUnsignedByte();
+        validatePaletteBits(bitsPerIndex);
+
+        int paletteSize = in.readUnsignedShort();
+        if ((paletteSize <= 0) || (paletteSize > MAX_PALETTE_COLORS)) {
+            throw new IOException("AFMA BIN_INTRA indexed-color payload palette size is invalid");
+        }
+
+        int[] palette = new int[paletteSize];
+        for (int i = 0; i < paletteSize; i++) {
+            int red = in.readUnsignedByte();
+            int green = in.readUnsignedByte();
+            int blue = in.readUnsignedByte();
+            palette[i] = 0xFF000000 | (red << 16) | (green << 8) | blue;
+        }
+
+        int rowBytes = packedRowBytes(width, bitsPerIndex);
+        decodeFilteredRows(in, rowBytes, height, 1, scratch, (rowIndex, packedRow, ignoredRowBytes) -> {
+            int pixelOffset = targetOffset + (rowIndex * scanlineStride);
+            for (int x = 0; x < width; x++) {
+                int paletteIndex = unpackPackedValue(packedRow, 0, x, bitsPerIndex);
+                if ((paletteIndex < 0) || (paletteIndex >= palette.length)) {
+                    throw new IOException("AFMA BIN_INTRA indexed-color payload references an invalid palette index");
+                }
+                targetPixels[pixelOffset + x] = palette[paletteIndex];
+            }
+        });
+
+        if (alphaMode == AlphaMaskMode.BINARY) {
+            int binaryRowBytes = packedRowBytes(width, 1);
+            decodeFilteredRows(in, binaryRowBytes, height, 1, scratch, (rowIndex, packedMaskRow, ignoredRowBytes) -> {
+                int pixelOffset = targetOffset + (rowIndex * scanlineStride);
+                for (int x = 0; x < width; x++) {
+                    int alpha = unpackPackedValue(packedMaskRow, 0, x, 1) != 0 ? 0xFF : 0x00;
+                    targetPixels[pixelOffset + x] = (targetPixels[pixelOffset + x] & 0x00FFFFFF) | (alpha << 24);
+                }
+            });
+            return;
+        }
+
+        decodeFilteredRows(in, width, height, 1, scratch, (rowIndex, alphaRow, ignoredRowBytes) -> {
+            int pixelOffset = targetOffset + (rowIndex * scanlineStride);
+            for (int x = 0; x < width; x++) {
+                targetPixels[pixelOffset + x] = (targetPixels[pixelOffset + x] & 0x00FFFFFF) | ((alphaRow[x] & 0xFF) << 24);
             }
         });
     }
@@ -498,6 +676,47 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     @NotNull
+    protected static byte[] toPlanarBytes(@NotNull int[] pixels, int channels) {
+        int[] normalizedPixels = Objects.requireNonNull(pixels);
+        byte[] planarBytes = new byte[normalizedPixels.length * channels];
+        int sampleCount = normalizedPixels.length;
+        for (int sampleIndex = 0; sampleIndex < sampleCount; sampleIndex++) {
+            int color = normalizedPixels[sampleIndex];
+            planarBytes[sampleIndex] = (byte) ((color >> 16) & 0xFF);
+            planarBytes[sampleCount + sampleIndex] = (byte) ((color >> 8) & 0xFF);
+            planarBytes[(sampleCount * 2) + sampleIndex] = (byte) (color & 0xFF);
+            if (channels == RGBA_CHANNELS) {
+                planarBytes[(sampleCount * 3) + sampleIndex] = (byte) ((color >>> 24) & 0xFF);
+            }
+        }
+        return planarBytes;
+    }
+
+    protected static void writePlanarFiltered(@NotNull DataOutputStream out, @NotNull byte[] planarBytes,
+                                              int width, int height, int channels) throws IOException {
+        int sampleCount = width * height;
+        for (int channelIndex = 0; channelIndex < channels; channelIndex++) {
+            int planeOffset = channelIndex * sampleCount;
+            byte[] planeBytes = new byte[sampleCount];
+            System.arraycopy(planarBytes, planeOffset, planeBytes, 0, sampleCount);
+            out.write(encodeFilteredRows(planeBytes, width, height, 1));
+        }
+    }
+
+    protected static void sortPaletteEntries(@NotNull List<Map.Entry<Integer, Integer>> paletteEntries, @NotNull PaletteOrdering ordering) {
+        paletteEntries.sort((first, second) -> switch (ordering) {
+            case FREQUENCY -> {
+                int countCompare = Integer.compare(second.getValue(), first.getValue());
+                if (countCompare != 0) {
+                    yield countCompare;
+                }
+                yield Integer.compareUnsigned(first.getKey(), second.getKey());
+            }
+            case STABLE_COLOR -> Integer.compareUnsigned(first.getKey(), second.getKey());
+        });
+    }
+
+    @NotNull
     protected static byte[] encodeFilteredRows(@NotNull byte[] rawBytes, int rowBytes, int height, int bytesPerPixel) {
         if (rowBytes < 0 || height <= 0 || bytesPerPixel <= 0) {
             throw new IllegalArgumentException("AFMA BIN_INTRA filter row dimensions are invalid");
@@ -522,14 +741,19 @@ public final class AfmaBinIntraPayloadHelper {
 
     protected static void addCandidateBuilders(@NotNull List<PayloadCandidateBuilder> candidateBuilders, int width, int height, @NotNull PixelCandidate pixelCandidate) {
         candidateBuilders.add(() -> buildSolidCandidate(width, height, pixelCandidate));
-        candidateBuilders.add(() -> buildIndexedCandidate(width, height, pixelCandidate));
+        candidateBuilders.add(() -> buildIndexedCandidate(width, height, pixelCandidate, PaletteOrdering.FREQUENCY));
+        candidateBuilders.add(() -> buildIndexedCandidate(width, height, pixelCandidate, PaletteOrdering.STABLE_COLOR));
 
         if (hasAlpha(pixelCandidate.pixels())) {
             candidateBuilders.add(() -> buildFilteredCandidate(width, height, pixelCandidate, Mode.RGBA_FILTERED));
+            candidateBuilders.add(() -> buildPlanarFilteredCandidate(width, height, pixelCandidate, Mode.RGBA_PLANAR_FILTERED));
+            candidateBuilders.add(() -> buildIndexedColorPlusAlphaCandidate(width, height, pixelCandidate, PaletteOrdering.FREQUENCY));
+            candidateBuilders.add(() -> buildIndexedColorPlusAlphaCandidate(width, height, pixelCandidate, PaletteOrdering.STABLE_COLOR));
             candidateBuilders.add(() -> buildSplitAlphaCandidate(width, height, pixelCandidate));
             candidateBuilders.add(() -> buildColorPlusAlphaMaskCandidate(width, height, pixelCandidate));
         } else {
             candidateBuilders.add(() -> buildFilteredCandidate(width, height, pixelCandidate, Mode.RGB_FILTERED));
+            candidateBuilders.add(() -> buildPlanarFilteredCandidate(width, height, pixelCandidate, Mode.RGB_PLANAR_FILTERED));
         }
     }
 
@@ -1059,11 +1283,19 @@ public final class AfmaBinIntraPayloadHelper {
 
     protected record EncodedPayloadCandidate(@NotNull Mode mode, @NotNull byte[] payloadBytes,
                                              @NotNull int[] reconstructedPixels, boolean lossless,
-                                             long estimatedArchiveBytes) {
+                                             long estimatedArchiveBytes,
+                                             int stabilityPriority) {
 
         protected EncodedPayloadCandidate(@NotNull Mode mode, @NotNull byte[] payloadBytes,
                                           @NotNull int[] reconstructedPixels, boolean lossless) {
-            this(mode, payloadBytes, reconstructedPixels, lossless, AfmaPayloadMetricsHelper.estimateArchiveBytes(payloadBytes));
+            this(mode, payloadBytes, reconstructedPixels, lossless, AfmaPayloadMetricsHelper.estimateArchiveBytes(payloadBytes), 1);
+        }
+
+        protected EncodedPayloadCandidate(@NotNull Mode mode, @NotNull byte[] payloadBytes,
+                                          @NotNull int[] reconstructedPixels, boolean lossless,
+                                          int stabilityPriority) {
+            this(mode, payloadBytes, reconstructedPixels, lossless,
+                    AfmaPayloadMetricsHelper.estimateArchiveBytes(payloadBytes), stabilityPriority);
         }
 
         protected boolean isBetterThan(@NotNull EncodedPayloadCandidate other) {
@@ -1075,6 +1307,9 @@ public final class AfmaBinIntraPayloadHelper {
             }
             if (this.payloadBytes.length != other.payloadBytes.length) {
                 return this.payloadBytes.length < other.payloadBytes.length;
+            }
+            if (this.stabilityPriority != other.stabilityPriority) {
+                return this.stabilityPriority < other.stabilityPriority;
             }
             return this.mode.priority() < other.mode.priority();
         }
@@ -1099,7 +1334,10 @@ public final class AfmaBinIntraPayloadHelper {
         RGB_FILTERED(2, 1),
         RGBA_FILTERED(3, 4),
         RGB_PLUS_ALPHA_SPLIT(4, 3),
-        COLOR_PLUS_ALPHA_MASK(5, 1);
+        COLOR_PLUS_ALPHA_MASK(5, 1),
+        RGB_PLANAR_FILTERED(6, 2),
+        RGBA_PLANAR_FILTERED(7, 5),
+        INDEXED_COLOR_PLUS_ALPHA(8, 4);
 
         private final int id;
         private final int priority;
@@ -1179,6 +1417,11 @@ public final class AfmaBinIntraPayloadHelper {
             }
             throw new IOException("Unsupported AFMA BIN_INTRA alpha mask mode: " + id);
         }
+    }
+
+    protected enum PaletteOrdering {
+        FREQUENCY,
+        STABLE_COLOR
     }
 
     protected enum PerceptualProfile {

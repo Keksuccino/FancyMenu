@@ -17,7 +17,7 @@ public final class AfmaBinaryFrameIndexHelper {
 
     public static final String FRAME_INDEX_ENTRY_PATH = "frame_index.bin";
     public static final int FRAME_INDEX_MAGIC = 0x41464958; // AFIX
-    public static final int FRAME_INDEX_VERSION = 1;
+    public static final int FRAME_INDEX_VERSION = 2;
 
     private AfmaBinaryFrameIndexHelper() {
     }
@@ -93,7 +93,11 @@ public final class AfmaBinaryFrameIndexHelper {
             case RESIDUAL_DELTA_RECT -> {
                 writePayloadId(out, descriptor.getPrimaryPayloadPath(), payloadIdsByPath);
                 writePatchBounds(out, descriptor);
-                writeVarInt(out, Objects.requireNonNull(descriptor.getResidual()).getChannels());
+                AfmaResidualPayload residualPayload = Objects.requireNonNull(descriptor.getResidual());
+                writeVarInt(out, residualPayload.getChannels());
+                out.writeByte(residualPayload.getCodec().getId());
+                out.writeByte(residualPayload.getAlphaMode().getId());
+                writeVarInt(out, residualPayload.getAlphaChangedPixelCount());
             }
             case SPARSE_DELTA_RECT -> {
                 writePayloadId(out, descriptor.getPrimaryPayloadPath(), payloadIdsByPath);
@@ -102,6 +106,10 @@ public final class AfmaBinaryFrameIndexHelper {
                 AfmaSparsePayload sparsePayload = Objects.requireNonNull(descriptor.getSparse());
                 writeVarInt(out, sparsePayload.getChangedPixelCount());
                 writeVarInt(out, sparsePayload.getChannels());
+                out.writeByte(sparsePayload.getLayoutCodec().getId());
+                out.writeByte(sparsePayload.getResidualCodec().getId());
+                out.writeByte(sparsePayload.getAlphaMode().getId());
+                writeVarInt(out, sparsePayload.getAlphaChangedPixelCount());
             }
             case SAME -> {
             }
@@ -118,7 +126,11 @@ public final class AfmaBinaryFrameIndexHelper {
                 writeCopyRect(out, Objects.requireNonNull(descriptor.getCopy()));
                 writePayloadId(out, descriptor.getPrimaryPayloadPath(), payloadIdsByPath);
                 writePatchBounds(out, descriptor);
-                writeVarInt(out, Objects.requireNonNull(descriptor.getResidual()).getChannels());
+                AfmaResidualPayload residualPayload = Objects.requireNonNull(descriptor.getResidual());
+                writeVarInt(out, residualPayload.getChannels());
+                out.writeByte(residualPayload.getCodec().getId());
+                out.writeByte(residualPayload.getAlphaMode().getId());
+                writeVarInt(out, residualPayload.getAlphaChangedPixelCount());
             }
             case COPY_RECT_SPARSE_PATCH -> {
                 writeCopyRect(out, Objects.requireNonNull(descriptor.getCopy()));
@@ -128,6 +140,10 @@ public final class AfmaBinaryFrameIndexHelper {
                 AfmaSparsePayload sparsePayload = Objects.requireNonNull(descriptor.getSparse());
                 writeVarInt(out, sparsePayload.getChangedPixelCount());
                 writeVarInt(out, sparsePayload.getChannels());
+                out.writeByte(sparsePayload.getLayoutCodec().getId());
+                out.writeByte(sparsePayload.getResidualCodec().getId());
+                out.writeByte(sparsePayload.getAlphaMode().getId());
+                writeVarInt(out, sparsePayload.getAlphaChangedPixelCount());
             }
             case BLOCK_INTER -> {
                 writePayloadId(out, descriptor.getPrimaryPayloadPath(), payloadIdsByPath);
@@ -148,7 +164,8 @@ public final class AfmaBinaryFrameIndexHelper {
                     readVarInt(in),
                     readVarInt(in),
                     readVarInt(in),
-                    new AfmaResidualPayload(readVarInt(in))
+                    new AfmaResidualPayload(readVarInt(in), AfmaResidualCodec.byId(in.readUnsignedByte()),
+                            AfmaAlphaResidualMode.byId(in.readUnsignedByte()), readVarInt(in))
             );
             case SPARSE_DELTA_RECT -> {
                 String maskPath = readPayloadPath(in);
@@ -159,7 +176,12 @@ public final class AfmaBinaryFrameIndexHelper {
                 int height = readVarInt(in);
                 int pixelCount = readVarInt(in);
                 int channels = readVarInt(in);
-                yield AfmaFrameDescriptor.sparseDeltaRect(maskPath, x, y, width, height, new AfmaSparsePayload(pixelsPath, pixelCount, channels));
+                AfmaSparseLayoutCodec layoutCodec = AfmaSparseLayoutCodec.byId(in.readUnsignedByte());
+                AfmaResidualCodec residualCodec = AfmaResidualCodec.byId(in.readUnsignedByte());
+                AfmaAlphaResidualMode alphaMode = AfmaAlphaResidualMode.byId(in.readUnsignedByte());
+                int alphaChangedPixelCount = readVarInt(in);
+                yield AfmaFrameDescriptor.sparseDeltaRect(maskPath, x, y, width, height,
+                        new AfmaSparsePayload(pixelsPath, pixelCount, channels, layoutCodec, residualCodec, alphaMode, alphaChangedPixelCount));
             }
             case SAME -> AfmaFrameDescriptor.same();
             case COPY_RECT_PATCH -> {
@@ -184,7 +206,11 @@ public final class AfmaBinaryFrameIndexHelper {
                 int width = readVarInt(in);
                 int height = readVarInt(in);
                 int channels = readVarInt(in);
-                yield AfmaFrameDescriptor.copyRectResidualPatch(copyRect, payloadPath, x, y, width, height, new AfmaResidualPayload(channels));
+                AfmaResidualCodec residualCodec = AfmaResidualCodec.byId(in.readUnsignedByte());
+                AfmaAlphaResidualMode alphaMode = AfmaAlphaResidualMode.byId(in.readUnsignedByte());
+                int alphaChangedPixelCount = readVarInt(in);
+                yield AfmaFrameDescriptor.copyRectResidualPatch(copyRect, payloadPath, x, y, width, height,
+                        new AfmaResidualPayload(channels, residualCodec, alphaMode, alphaChangedPixelCount));
             }
             case COPY_RECT_SPARSE_PATCH -> {
                 AfmaCopyRect copyRect = readCopyRect(in);
@@ -196,7 +222,12 @@ public final class AfmaBinaryFrameIndexHelper {
                 int height = readVarInt(in);
                 int pixelCount = readVarInt(in);
                 int channels = readVarInt(in);
-                yield AfmaFrameDescriptor.copyRectSparsePatch(copyRect, maskPath, x, y, width, height, new AfmaSparsePayload(pixelsPath, pixelCount, channels));
+                AfmaSparseLayoutCodec layoutCodec = AfmaSparseLayoutCodec.byId(in.readUnsignedByte());
+                AfmaResidualCodec residualCodec = AfmaResidualCodec.byId(in.readUnsignedByte());
+                AfmaAlphaResidualMode alphaMode = AfmaAlphaResidualMode.byId(in.readUnsignedByte());
+                int alphaChangedPixelCount = readVarInt(in);
+                yield AfmaFrameDescriptor.copyRectSparsePatch(copyRect, maskPath, x, y, width, height,
+                        new AfmaSparsePayload(pixelsPath, pixelCount, channels, layoutCodec, residualCodec, alphaMode, alphaChangedPixelCount));
             }
             case BLOCK_INTER -> AfmaFrameDescriptor.blockInter(
                     readPayloadPath(in),
