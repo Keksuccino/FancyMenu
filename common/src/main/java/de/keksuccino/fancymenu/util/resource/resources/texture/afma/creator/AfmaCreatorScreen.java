@@ -71,7 +71,6 @@ public class AfmaCreatorScreen extends Screen {
     private @Nullable CycleButton<CommonCycles.CycleEnabledDisabled> rectCopyCycleButton;
     private @Nullable CycleButton<CommonCycles.CycleEnabledDisabled> duplicateCycleButton;
     private @Nullable CycleButton<CommonCycles.CycleEnabledDisabled> nearLosslessCycleButton;
-    private @Nullable CycleButton<CommonCycles.CycleEnabledDisabled> thumbnailCycleButton;
 
     public AfmaCreatorScreen(@NotNull Screen parentScreen) {
         super(Component.translatable("fancymenu.afma.creator.title"));
@@ -150,7 +149,6 @@ public class AfmaCreatorScreen extends Screen {
         this.rectCopyCycleButton = this.addToggleButton("fancymenu.afma.creator.rect_copy", this.state.isRectCopyEnabled(), value -> this.state.setRectCopyEnabled(value));
         this.duplicateCycleButton = this.addToggleButton("fancymenu.afma.creator.duplicate_elision", this.state.isDuplicateFrameElision(), value -> this.state.setDuplicateFrameElision(value));
         this.nearLosslessCycleButton = this.addToggleButton("fancymenu.afma.creator.near_lossless", this.state.isNearLosslessEnabled(), value -> this.state.setNearLosslessEnabled(value));
-        this.thumbnailCycleButton = this.addToggleButton("fancymenu.afma.creator.thumbnail", this.state.isGenerateThumbnail(), value -> this.state.setGenerateThumbnail(value));
 
         this.exportButton = this.addStyledButton(Component.translatable("fancymenu.afma.creator.export"), button -> this.startExport());
         this.cancelJobButton = this.addStyledButton(Component.translatable("fancymenu.common_components.cancel"), button -> this.state.cancelCurrentJob());
@@ -239,7 +237,6 @@ public class AfmaCreatorScreen extends Screen {
             if (this.rectCopyCycleButton != null) this.rectCopyCycleButton.setSelectedValue(CommonCycles.CycleEnabledDisabled.getByBoolean(this.state.isRectCopyEnabled()), false);
             if (this.duplicateCycleButton != null) this.duplicateCycleButton.setSelectedValue(CommonCycles.CycleEnabledDisabled.getByBoolean(this.state.isDuplicateFrameElision()), false);
             if (this.nearLosslessCycleButton != null) this.nearLosslessCycleButton.setSelectedValue(CommonCycles.CycleEnabledDisabled.getByBoolean(this.state.isNearLosslessEnabled()), false);
-            if (this.thumbnailCycleButton != null) this.thumbnailCycleButton.setSelectedValue(CommonCycles.CycleEnabledDisabled.getByBoolean(this.state.isGenerateThumbnail()), false);
         } finally {
             this.syncingWidgets = false;
         }
@@ -318,14 +315,11 @@ public class AfmaCreatorScreen extends Screen {
             this.layoutWidget(this.duplicateCycleButton, contentX, y, contentWidth, FIELD_HEIGHT);
             y += ROW_GAP;
             this.layoutWidget(this.nearLosslessCycleButton, contentX, y, contentWidth, FIELD_HEIGHT);
-            y += ROW_GAP;
-            this.layoutWidget(this.thumbnailCycleButton, contentX, y, contentWidth, FIELD_HEIGHT);
         } else {
             this.layoutWidget(this.rectCopyCycleButton, contentX, y, toggleWidth, FIELD_HEIGHT);
             this.layoutWidget(this.duplicateCycleButton, contentX + toggleWidth + COLUMN_GAP, y, toggleWidth, FIELD_HEIGHT);
             y += ROW_GAP;
-            this.layoutWidget(this.nearLosslessCycleButton, contentX, y, toggleWidth, FIELD_HEIGHT);
-            this.layoutWidget(this.thumbnailCycleButton, contentX + toggleWidth + COLUMN_GAP, y, toggleWidth, FIELD_HEIGHT);
+            this.layoutWidget(this.nearLosslessCycleButton, contentX, y, contentWidth, FIELD_HEIGHT);
         }
 
         int bottomY = this.getBottomButtonY();
@@ -527,7 +521,7 @@ public class AfmaCreatorScreen extends Screen {
                 Math.max(this.getWidgetBottom(this.keyframeIntervalEditBox), this.getWidgetBottom(this.presetCycleButton)),
                 Math.max(
                         Math.max(this.getWidgetBottom(this.rectCopyCycleButton), this.getWidgetBottom(this.duplicateCycleButton)),
-                        Math.max(this.getWidgetBottom(this.nearLosslessCycleButton), this.getWidgetBottom(this.thumbnailCycleButton))
+                        this.getWidgetBottom(this.nearLosslessCycleButton)
                 )
         );
         return Math.max(contentStartY, widgetsBottom + 18);

@@ -48,7 +48,7 @@ public class AfmaCreatorState {
     private volatile boolean nearLosslessEnabled = false;
     private volatile int maxCopySearchDistance = AfmaOptimizationPreset.BALANCED.getMaxCopySearchDistance();
     private volatile int maxCandidateAxisOffsets = AfmaOptimizationPreset.BALANCED.getMaxCandidateAxisOffsets();
-    private volatile boolean generateThumbnail = AfmaOptimizationPreset.BALANCED.isThumbnailEnabledByDefault();
+    private volatile boolean generateThumbnail = false;
     private volatile @NotNull String customFrameTimesText = "";
     private volatile @NotNull String customIntroFrameTimesText = "";
     private volatile @NotNull AfmaOptimizationPreset optimizationPreset = AfmaOptimizationPreset.BALANCED;
@@ -170,15 +170,6 @@ public class AfmaCreatorState {
         this.markDirty();
     }
 
-    public boolean isGenerateThumbnail() {
-        return this.generateThumbnail;
-    }
-
-    public void setGenerateThumbnail(boolean generateThumbnail) {
-        this.generateThumbnail = generateThumbnail;
-        this.markDirty();
-    }
-
     public @NotNull String getCustomFrameTimesText() {
         return this.customFrameTimesText;
     }
@@ -213,7 +204,7 @@ public class AfmaCreatorState {
         this.nearLosslessEnabled = preset.isNearLosslessEnabledByDefault();
         this.maxCopySearchDistance = preset.getMaxCopySearchDistance();
         this.maxCandidateAxisOffsets = preset.getMaxCandidateAxisOffsets();
-        this.generateThumbnail = preset.isThumbnailEnabledByDefault();
+        this.generateThumbnail = false;
         this.markDirty();
     }
 
