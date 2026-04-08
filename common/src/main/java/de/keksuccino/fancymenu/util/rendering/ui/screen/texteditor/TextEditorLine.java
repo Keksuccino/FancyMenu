@@ -8,7 +8,6 @@ import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.util.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
@@ -16,7 +15,6 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class TextEditorLine extends ExtendedEditBox {
@@ -85,7 +83,7 @@ public class TextEditorLine extends ExtendedEditBox {
             graphics.fill(0, this.getY(), this.parent.width, this.getY() + this.height, this.parent.focusedLineColor.getRGB());
         }
 
-        int textColorInt = this.isEditable() ? this.getAsAccessor().getTextColorFancyMenu() : this.getAsAccessor().getTextColorUneditableFancyMenu();
+        int textColorInt = this.isEditable_FancyMenu() ? this.getAsAccessor().getTextColorFancyMenu() : this.getAsAccessor().getTextColorUneditableFancyMenu();
         int displayPos = this.getAsAccessor().getDisplayPosFancyMenu();
         int cursorPos = this.getCursorPosition() - displayPos;
         int highlightPos = this.getAsAccessor().getHighlightPosFancyMenu() - displayPos;

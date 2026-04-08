@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.editbox;
 
-import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
@@ -95,7 +94,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             }
 
             // Text and Cursor Rendering
-            int textColor = access.getIsEditableFancyMenu() ? this.textColor.getColorInt() : this.textColorUneditable.getColorInt();
+            int textColor = access.get_isEditable_FancyMenu() ? this.textColor.getColorInt() : this.textColorUneditable.getColorInt();
             int cursorPos = this.getCursorPosition() - access.getDisplayPosFancyMenu();
             int highlightPos = access.getHighlightPosFancyMenu() - access.getDisplayPosFancyMenu();
             String text = this.font.plainSubstrByWidth(this.getValue().substring(access.getDisplayPosFancyMenu()), this.getInnerWidth());
@@ -385,8 +384,8 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         this.isVisibleSupplier = isVisibleSupplier;
     }
 
-    public boolean isEditable() {
-        return ((IMixinEditBox)this).getIsEditableFancyMenu();
+    public boolean isEditable_FancyMenu() {
+        return ((IMixinEditBox)this).get_isEditable_FancyMenu();
     }
 
     @Deprecated

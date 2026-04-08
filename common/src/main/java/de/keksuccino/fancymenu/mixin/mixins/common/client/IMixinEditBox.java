@@ -10,7 +10,8 @@ import java.util.List;
 @Mixin(EditBox.class)
 public interface IMixinEditBox {
 
-    @Accessor("isEditable") boolean getIsEditableFancyMenu();
+    @Accessor("isEditable") boolean get_isEditable_FancyMenu();
+    @Accessor("isEditable") void set_isEditable_FancyMenu(boolean isEditable);
 
     @Accessor("displayPos") int getDisplayPosFancyMenu();
 
