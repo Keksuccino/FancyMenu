@@ -31,6 +31,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.ScreenTitleUtils;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -560,6 +561,10 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	protected void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial, Screen screen) {
 
 		if (!this.shouldCustomize(screen)) return;
+
+        if (!this.layoutBase.menuBackgrounds.isEmpty()) {
+            graphics.fill(0, 0, screen.width, screen.height, DrawableColor.BLACK.getColorInt());
+        }
 
 		this.layoutBase.menuBackgrounds.forEach(background -> {
 
