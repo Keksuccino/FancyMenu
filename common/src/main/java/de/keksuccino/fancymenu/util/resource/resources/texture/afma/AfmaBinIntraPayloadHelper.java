@@ -94,24 +94,45 @@ public final class AfmaBinIntraPayloadHelper {
 
     @NotNull
     public static DecodedFrame decodePayload(@NotNull byte[] payloadBytes, int offset, int length) throws IOException {
+        return decodePayload(payloadBytes, offset, length, null);
+    }
+
+    @NotNull
+    public static DecodedFrame decodePayload(@NotNull byte[] payloadBytes, int offset, int length,
+                                             @Nullable AfmaDecodeScratch scratch) throws IOException {
         Objects.requireNonNull(payloadBytes);
         if (offset < 0 || length < 0 || ((long) offset + (long) length) > payloadBytes.length) {
             throw new IOException("AFMA BIN_INTRA payload slice is invalid");
         }
         try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(payloadBytes, offset, length))) {
             PayloadHeader header = readHeader(in);
-            int[] pixels = switch (header.mode()) {
-                case SOLID -> decodeSolid(in, header.width(), header.height());
-                case INDEXED -> decodeIndexed(in, header.width(), header.height());
-                case RGB_FILTERED -> decodeFilteredTruecolor(in, header.width(), header.height(), RGB_CHANNELS);
-                case RGBA_FILTERED -> decodeFilteredTruecolor(in, header.width(), header.height(), RGBA_CHANNELS);
-                case RGB_PLUS_ALPHA_SPLIT -> decodeSplitAlpha(in, header.width(), header.height());
-                case COLOR_PLUS_ALPHA_MASK -> decodeColorPlusAlphaMask(in, header.width(), header.height());
-            };
+            int[] pixels = new int[header.width() * header.height()];
+            decodePayloadBodyIntoArgbBuffer(in, header, pixels, 0, header.width(), scratch);
             if (in.available() > 0) {
                 throw new IOException("AFMA BIN_INTRA payload contains trailing data");
             }
             return new DecodedFrame(header.width(), header.height(), pixels);
+        }
+    }
+
+    @NotNull
+    public static PayloadHeader decodePayloadIntoArgbBuffer(@NotNull byte[] payloadBytes, int offset, int length,
+                                                            @NotNull int[] targetPixels, int targetOffset, int scanlineStride,
+                                                            @Nullable AfmaDecodeScratch scratch) throws IOException {
+        Objects.requireNonNull(payloadBytes);
+        Objects.requireNonNull(targetPixels);
+        if (offset < 0 || length < 0 || ((long) offset + (long) length) > payloadBytes.length) {
+            throw new IOException("AFMA BIN_INTRA payload slice is invalid");
+        }
+
+        try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(payloadBytes, offset, length))) {
+            PayloadHeader header = readHeader(in);
+            validatePixelBufferView(header.width(), header.height(), targetPixels, targetOffset, scanlineStride);
+            decodePayloadBodyIntoArgbBuffer(in, header, targetPixels, targetOffset, scanlineStride, scratch);
+            if (in.available() > 0) {
+                throw new IOException("AFMA BIN_INTRA payload contains trailing data");
+            }
+            return header;
         }
     }
 
@@ -139,6 +160,19 @@ public final class AfmaBinIntraPayloadHelper {
         int height = in.readUnsignedShort();
         validateDecodedDimensions(width, height);
         return new PayloadHeader(width, height, mode);
+    }
+
+    protected static void decodePayloadBodyIntoArgbBuffer(@NotNull DataInputStream in, @NotNull PayloadHeader header,
+                                                          @NotNull int[] targetPixels, int targetOffset, int scanlineStride,
+                                                          @Nullable AfmaDecodeScratch scratch) throws IOException {
+        switch (header.mode()) {
+            case SOLID -> decodeSolidIntoArgbBuffer(in, header.width(), header.height(), targetPixels, targetOffset, scanlineStride);
+            case INDEXED -> decodeIndexedIntoArgbBuffer(in, header.width(), header.height(), targetPixels, targetOffset, scanlineStride, scratch);
+            case RGB_FILTERED -> decodeFilteredTruecolorIntoArgbBuffer(in, header.width(), header.height(), RGB_CHANNELS, targetPixels, targetOffset, scanlineStride, scratch);
+            case RGBA_FILTERED -> decodeFilteredTruecolorIntoArgbBuffer(in, header.width(), header.height(), RGBA_CHANNELS, targetPixels, targetOffset, scanlineStride, scratch);
+            case RGB_PLUS_ALPHA_SPLIT -> decodeSplitAlphaIntoArgbBuffer(in, header.width(), header.height(), targetPixels, targetOffset, scanlineStride, scratch);
+            case COLOR_PLUS_ALPHA_MASK -> decodeColorPlusAlphaMaskIntoArgbBuffer(in, header.width(), header.height(), targetPixels, targetOffset, scanlineStride, scratch);
+        }
     }
 
     @Nullable
@@ -326,15 +360,18 @@ public final class AfmaBinIntraPayloadHelper {
         }
     }
 
-    @NotNull
-    protected static int[] decodeSolid(@NotNull DataInputStream in, int width, int height) throws IOException {
-        int[] pixels = new int[width * height];
-        Arrays.fill(pixels, in.readInt());
-        return pixels;
+    protected static void decodeSolidIntoArgbBuffer(@NotNull DataInputStream in, int width, int height,
+                                                    @NotNull int[] targetPixels, int targetOffset, int scanlineStride) throws IOException {
+        int color = in.readInt();
+        for (int row = 0; row < height; row++) {
+            int rowOffset = targetOffset + (row * scanlineStride);
+            Arrays.fill(targetPixels, rowOffset, rowOffset + width, color);
+        }
     }
 
-    @NotNull
-    protected static int[] decodeIndexed(@NotNull DataInputStream in, int width, int height) throws IOException {
+    protected static void decodeIndexedIntoArgbBuffer(@NotNull DataInputStream in, int width, int height,
+                                                      @NotNull int[] targetPixels, int targetOffset, int scanlineStride,
+                                                      @Nullable AfmaDecodeScratch scratch) throws IOException {
         boolean paletteHasAlpha = (in.readUnsignedByte() & 1) != 0;
         int bitsPerIndex = in.readUnsignedByte();
         validatePaletteBits(bitsPerIndex);
@@ -354,87 +391,85 @@ public final class AfmaBinIntraPayloadHelper {
         }
 
         int rowBytes = packedRowBytes(width, bitsPerIndex);
-        byte[] packedRows = decodeFilteredRows(in, rowBytes, height, 1);
-        int[] pixels = new int[width * height];
-        int rowOffset = 0;
-        int pixelOffset = 0;
-        for (int y = 0; y < height; y++) {
+        decodeFilteredRows(in, rowBytes, height, 1, scratch, (rowIndex, packedRow, ignoredRowBytes) -> {
+            int pixelOffset = targetOffset + (rowIndex * scanlineStride);
             for (int x = 0; x < width; x++) {
-                int paletteIndex = unpackPackedValue(packedRows, rowOffset, x, bitsPerIndex);
+                int paletteIndex = unpackPackedValue(packedRow, 0, x, bitsPerIndex);
                 if ((paletteIndex < 0) || (paletteIndex >= palette.length)) {
                     throw new IOException("AFMA BIN_INTRA indexed payload references an invalid palette index");
                 }
-                pixels[pixelOffset++] = palette[paletteIndex];
+                targetPixels[pixelOffset + x] = palette[paletteIndex];
             }
-            rowOffset += rowBytes;
-        }
-        return pixels;
+        });
     }
 
-    @NotNull
-    protected static int[] decodeFilteredTruecolor(@NotNull DataInputStream in, int width, int height, int channels) throws IOException {
+    protected static void decodeFilteredTruecolorIntoArgbBuffer(@NotNull DataInputStream in, int width, int height, int channels,
+                                                                @NotNull int[] targetPixels, int targetOffset, int scanlineStride,
+                                                                @Nullable AfmaDecodeScratch scratch) throws IOException {
         int rowBytes = width * channels;
-        byte[] decodedBytes = decodeFilteredRows(in, rowBytes, height, channels);
-        int[] pixels = new int[width * height];
-        int byteOffset = 0;
-        for (int i = 0; i < pixels.length; i++) {
-            int red = decodedBytes[byteOffset++] & 0xFF;
-            int green = decodedBytes[byteOffset++] & 0xFF;
-            int blue = decodedBytes[byteOffset++] & 0xFF;
-            int alpha = (channels == RGBA_CHANNELS) ? (decodedBytes[byteOffset++] & 0xFF) : 0xFF;
-            pixels[i] = (alpha << 24) | (red << 16) | (green << 8) | blue;
-        }
-        return pixels;
+        decodeFilteredRows(in, rowBytes, height, channels, scratch, (rowIndex, decodedRow, ignoredRowBytes) -> {
+            int byteOffset = 0;
+            int pixelOffset = targetOffset + (rowIndex * scanlineStride);
+            for (int x = 0; x < width; x++) {
+                int red = decodedRow[byteOffset++] & 0xFF;
+                int green = decodedRow[byteOffset++] & 0xFF;
+                int blue = decodedRow[byteOffset++] & 0xFF;
+                int alpha = (channels == RGBA_CHANNELS) ? (decodedRow[byteOffset++] & 0xFF) : 0xFF;
+                targetPixels[pixelOffset + x] = (alpha << 24) | (red << 16) | (green << 8) | blue;
+            }
+        });
     }
 
-    @NotNull
-    protected static int[] decodeSplitAlpha(@NotNull DataInputStream in, int width, int height) throws IOException {
-        byte[] rgbBytes = decodeFilteredRows(in, width * RGB_CHANNELS, height, RGB_CHANNELS);
-        byte[] alphaBytes = decodeFilteredRows(in, width, height, 1);
-
-        int[] pixels = new int[width * height];
-        int rgbOffset = 0;
-        int alphaOffset = 0;
-        for (int i = 0; i < pixels.length; i++) {
-            int red = rgbBytes[rgbOffset++] & 0xFF;
-            int green = rgbBytes[rgbOffset++] & 0xFF;
-            int blue = rgbBytes[rgbOffset++] & 0xFF;
-            int alpha = alphaBytes[alphaOffset++] & 0xFF;
-            pixels[i] = (alpha << 24) | (red << 16) | (green << 8) | blue;
-        }
-        return pixels;
+    protected static void decodeSplitAlphaIntoArgbBuffer(@NotNull DataInputStream in, int width, int height,
+                                                         @NotNull int[] targetPixels, int targetOffset, int scanlineStride,
+                                                         @Nullable AfmaDecodeScratch scratch) throws IOException {
+        decodeFilteredRows(in, width * RGB_CHANNELS, height, RGB_CHANNELS, scratch, (rowIndex, rgbRow, ignoredRowBytes) -> {
+            int rgbOffset = 0;
+            int pixelOffset = targetOffset + (rowIndex * scanlineStride);
+            for (int x = 0; x < width; x++) {
+                int red = rgbRow[rgbOffset++] & 0xFF;
+                int green = rgbRow[rgbOffset++] & 0xFF;
+                int blue = rgbRow[rgbOffset++] & 0xFF;
+                targetPixels[pixelOffset + x] = 0xFF000000 | (red << 16) | (green << 8) | blue;
+            }
+        });
+        decodeFilteredRows(in, width, height, 1, scratch, (rowIndex, alphaRow, ignoredRowBytes) -> {
+            int pixelOffset = targetOffset + (rowIndex * scanlineStride);
+            for (int x = 0; x < width; x++) {
+                int alpha = alphaRow[x] & 0xFF;
+                targetPixels[pixelOffset + x] = (alpha << 24) | (targetPixels[pixelOffset + x] & 0x00FFFFFF);
+            }
+        });
     }
 
-    @NotNull
-    protected static int[] decodeColorPlusAlphaMask(@NotNull DataInputStream in, int width, int height) throws IOException {
+    protected static void decodeColorPlusAlphaMaskIntoArgbBuffer(@NotNull DataInputStream in, int width, int height,
+                                                                 @NotNull int[] targetPixels, int targetOffset, int scanlineStride,
+                                                                 @Nullable AfmaDecodeScratch scratch) throws IOException {
         int red = in.readUnsignedByte();
         int green = in.readUnsignedByte();
         int blue = in.readUnsignedByte();
         AlphaMaskMode alphaMode = AlphaMaskMode.byId(in.readUnsignedByte());
 
-        int[] pixels = new int[width * height];
         int baseRgb = (red << 16) | (green << 8) | blue;
         if (alphaMode == AlphaMaskMode.BINARY) {
             int rowBytes = packedRowBytes(width, 1);
-            byte[] packedMask = decodeFilteredRows(in, rowBytes, height, 1);
-            int rowOffset = 0;
-            int pixelOffset = 0;
-            for (int y = 0; y < height; y++) {
+            decodeFilteredRows(in, rowBytes, height, 1, scratch, (rowIndex, packedMaskRow, ignoredRowBytes) -> {
+                int pixelOffset = targetOffset + (rowIndex * scanlineStride);
                 for (int x = 0; x < width; x++) {
-                    int alpha = unpackPackedValue(packedMask, rowOffset, x, 1) != 0 ? 0xFF : 0x00;
-                    pixels[pixelOffset++] = (alpha << 24) | baseRgb;
+                    int alpha = unpackPackedValue(packedMaskRow, 0, x, 1) != 0 ? 0xFF : 0x00;
+                    targetPixels[pixelOffset + x] = (alpha << 24) | baseRgb;
                 }
-                rowOffset += rowBytes;
-            }
-            return pixels;
+            });
+            return;
         }
 
-        byte[] alphaBytes = decodeFilteredRows(in, width, height, 1);
-        for (int i = 0; i < pixels.length; i++) {
-            int alpha = alphaBytes[i] & 0xFF;
-            pixels[i] = (alpha << 24) | baseRgb;
-        }
-        return pixels;
+        decodeFilteredRows(in, width, height, 1, scratch, (rowIndex, alphaRow, ignoredRowBytes) -> {
+            int pixelOffset = targetOffset + (rowIndex * scanlineStride);
+            for (int x = 0; x < width; x++) {
+                int alpha = alphaRow[x] & 0xFF;
+                targetPixels[pixelOffset + x] = (alpha << 24) | baseRgb;
+            }
+        });
     }
 
     protected static void writeHeader(@NotNull DataOutputStream out, @NotNull Mode mode, int width, int height) throws IOException {
@@ -819,35 +854,32 @@ public final class AfmaBinIntraPayloadHelper {
         return score;
     }
 
-    @NotNull
-    protected static byte[] decodeFilteredRows(@NotNull DataInputStream in, int rowBytes, int height, int bytesPerPixel) throws IOException {
+    protected static void decodeFilteredRows(@NotNull DataInputStream in, int rowBytes, int height, int bytesPerPixel,
+                                             @Nullable AfmaDecodeScratch scratch, @NotNull DecodedRowConsumer consumer) throws IOException {
         if (rowBytes < 0 || height <= 0 || bytesPerPixel <= 0) {
             throw new IOException("AFMA BIN_INTRA filter row dimensions are invalid");
         }
 
-        byte[] decoded = new byte[rowBytes * height];
-        byte[] previousRow = new byte[rowBytes];
-        byte[] filteredRow = new byte[rowBytes];
-        byte[] decodedRow = new byte[rowBytes];
-        int decodedOffset = 0;
+        byte[] previousRow = (scratch != null) ? scratch.borrowPreviousRow(rowBytes) : new byte[rowBytes];
+        byte[] filteredRow = (scratch != null) ? scratch.borrowFilteredRow(rowBytes) : new byte[rowBytes];
+        byte[] decodedRow = (scratch != null) ? scratch.borrowDecodedRow(rowBytes) : new byte[rowBytes];
+        if (scratch != null) {
+            scratch.clearPreviousRow(rowBytes);
+        } else if (rowBytes > 0) {
+            Arrays.fill(previousRow, 0, rowBytes, (byte) 0);
+        }
         for (int row = 0; row < height; row++) {
             Filter filter = Filter.byId(in.readUnsignedByte());
-            byte[] rowBytesArray = in.readNBytes(rowBytes);
-            if (rowBytesArray.length != rowBytes) {
-                throw new IOException("AFMA BIN_INTRA row payload ended early");
-            }
-            System.arraycopy(rowBytesArray, 0, filteredRow, 0, rowBytes);
-            inverseFilter(filter, filteredRow, previousRow, bytesPerPixel, decodedRow);
-            System.arraycopy(decodedRow, 0, decoded, decodedOffset, rowBytes);
+            in.readFully(filteredRow, 0, rowBytes);
+            inverseFilter(filter, filteredRow, previousRow, bytesPerPixel, decodedRow, rowBytes);
+            consumer.accept(row, decodedRow, rowBytes);
             System.arraycopy(decodedRow, 0, previousRow, 0, rowBytes);
-            decodedOffset += rowBytes;
         }
-        return decoded;
     }
 
     protected static void inverseFilter(@NotNull Filter filter, @NotNull byte[] filteredRow, @NotNull byte[] previousRow,
-                                        int bytesPerPixel, @NotNull byte[] output) {
-        for (int i = 0; i < filteredRow.length; i++) {
+                                        int bytesPerPixel, @NotNull byte[] output, int rowBytes) {
+        for (int i = 0; i < rowBytes; i++) {
             int left = (i >= bytesPerPixel) ? (output[i - bytesPerPixel] & 0xFF) : 0;
             int up = previousRow[i] & 0xFF;
             int upLeft = (i >= bytesPerPixel) ? (previousRow[i - bytesPerPixel] & 0xFF) : 0;
@@ -1049,6 +1081,11 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     protected record FilterSelection(@NotNull Filter filter, long score) {
+    }
+
+    @FunctionalInterface
+    protected interface DecodedRowConsumer {
+        void accept(int rowIndex, @NotNull byte[] decodedRow, int rowBytes) throws IOException;
     }
 
     @FunctionalInterface

@@ -3,9 +3,7 @@ package de.keksuccino.fancymenu.util.resource.resources.texture.afma;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.List;
@@ -116,77 +114,87 @@ public final class AfmaBlockInterPayloadHelper {
 
         int expectedTileCountX = tileCount(regionWidth, tileSize);
         int expectedTileCountY = tileCount(regionHeight, tileSize);
-        try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(payloadBytes, offset, length))) {
-            int magic = in.readInt();
-            if (magic != PAYLOAD_MAGIC) {
-                throw new IOException("AFMA block inter payload is missing its magic header");
-            }
+        PayloadReader reader = new PayloadReader(payloadBytes, offset, length);
+        int magic = reader.readInt();
+        if (magic != PAYLOAD_MAGIC) {
+            throw new IOException("AFMA block inter payload is missing its magic header");
+        }
 
-            int version = in.readUnsignedByte();
-            if (version != PAYLOAD_VERSION) {
-                throw new IOException("Unsupported AFMA block inter payload version: " + version);
-            }
+        int version = reader.readUnsignedByte();
+        if (version != PAYLOAD_VERSION) {
+            throw new IOException("Unsupported AFMA block inter payload version: " + version);
+        }
 
-            int tileCountX = in.readUnsignedShort();
-            int tileCountY = in.readUnsignedShort();
-            if ((tileCountX != expectedTileCountX) || (tileCountY != expectedTileCountY)) {
-                throw new IOException("AFMA block inter payload tile layout does not match the descriptor");
-            }
+        int tileCountX = reader.readUnsignedShort();
+        int tileCountY = reader.readUnsignedShort();
+        if ((tileCountX != expectedTileCountX) || (tileCountY != expectedTileCountY)) {
+            throw new IOException("AFMA block inter payload tile layout does not match the descriptor");
+        }
 
-            for (int tileY = 0; tileY < tileCountY; tileY++) {
-                int localY = tileY * tileSize;
-                int tileHeight = tileDimension(tileY, tileCountY, tileSize, regionHeight);
-                for (int tileX = 0; tileX < tileCountX; tileX++) {
-                    int localX = tileX * tileSize;
-                    int tileWidth = tileDimension(tileX, tileCountX, tileSize, regionWidth);
-                    TileMode mode = TileMode.byId(in.readUnsignedByte());
-                    int dx = 0;
-                    int dy = 0;
-                    int channels = 0;
-                    int changedPixelCount = 0;
-                    byte[] primaryBytes = null;
-                    byte[] secondaryBytes = null;
-                    switch (mode) {
-                        case SKIP -> {
-                        }
-                        case COPY -> {
-                            dx = in.readShort();
-                            dy = in.readShort();
-                        }
-                        case COPY_DENSE -> {
-                            dx = in.readShort();
-                            dy = in.readShort();
-                            channels = in.readUnsignedByte();
-                            validateChannels(channels);
-                            primaryBytes = in.readNBytes(expectedDenseResidualBytes(tileWidth, tileHeight, channels));
-                            validateLength(expectedDenseResidualBytes(tileWidth, tileHeight, channels), primaryBytes.length, "AFMA block inter dense residual payload");
-                        }
-                        case COPY_SPARSE -> {
-                            dx = in.readShort();
-                            dy = in.readShort();
-                            channels = in.readUnsignedByte();
-                            changedPixelCount = in.readUnsignedShort();
-                            validateChannels(channels);
-                            primaryBytes = in.readNBytes(AfmaResidualPayloadHelper.expectedSparseMaskBytes(tileWidth, tileHeight));
-                            validateLength(AfmaResidualPayloadHelper.expectedSparseMaskBytes(tileWidth, tileHeight), primaryBytes.length, "AFMA block inter sparse mask payload");
-                            secondaryBytes = in.readNBytes(AfmaResidualPayloadHelper.expectedSparseResidualBytes(changedPixelCount, channels));
-                            validateLength(AfmaResidualPayloadHelper.expectedSparseResidualBytes(changedPixelCount, channels), secondaryBytes.length, "AFMA block inter sparse residual payload");
-                        }
-                        case RAW -> {
-                            channels = in.readUnsignedByte();
-                            validateChannels(channels);
-                            primaryBytes = in.readNBytes(expectedRawTileBytes(tileWidth, tileHeight, channels));
-                            validateLength(expectedRawTileBytes(tileWidth, tileHeight, channels), primaryBytes.length, "AFMA block inter raw tile payload");
-                        }
+        for (int tileY = 0; tileY < tileCountY; tileY++) {
+            int localY = tileY * tileSize;
+            int tileHeight = tileDimension(tileY, tileCountY, tileSize, regionHeight);
+            for (int tileX = 0; tileX < tileCountX; tileX++) {
+                int localX = tileX * tileSize;
+                int tileWidth = tileDimension(tileX, tileCountX, tileSize, regionWidth);
+                TileMode mode = TileMode.byId(reader.readUnsignedByte());
+                int dx = 0;
+                int dy = 0;
+                int channels = 0;
+                int changedPixelCount = 0;
+                int primaryOffset = -1;
+                int primaryLength = 0;
+                int secondaryOffset = -1;
+                int secondaryLength = 0;
+                switch (mode) {
+                    case SKIP -> {
                     }
-
-                    consumer.accept(localX, localY, tileWidth, tileHeight, mode, dx, dy, channels, changedPixelCount, primaryBytes, secondaryBytes);
+                    case COPY -> {
+                        dx = reader.readShort();
+                        dy = reader.readShort();
+                    }
+                    case COPY_DENSE -> {
+                        dx = reader.readShort();
+                        dy = reader.readShort();
+                        channels = reader.readUnsignedByte();
+                        validateChannels(channels);
+                        primaryLength = expectedDenseResidualBytes(tileWidth, tileHeight, channels);
+                        validateExpectedLength(primaryLength, "AFMA block inter dense residual payload");
+                        primaryOffset = reader.position();
+                        reader.skip(primaryLength);
+                    }
+                    case COPY_SPARSE -> {
+                        dx = reader.readShort();
+                        dy = reader.readShort();
+                        channels = reader.readUnsignedByte();
+                        changedPixelCount = reader.readUnsignedShort();
+                        validateChannels(channels);
+                        primaryLength = AfmaResidualPayloadHelper.expectedSparseMaskBytes(tileWidth, tileHeight);
+                        validateExpectedLength(primaryLength, "AFMA block inter sparse mask payload");
+                        primaryOffset = reader.position();
+                        reader.skip(primaryLength);
+                        secondaryLength = AfmaResidualPayloadHelper.expectedSparseResidualBytes(changedPixelCount, channels);
+                        validateExpectedLength(secondaryLength, "AFMA block inter sparse residual payload");
+                        secondaryOffset = reader.position();
+                        reader.skip(secondaryLength);
+                    }
+                    case RAW -> {
+                        channels = reader.readUnsignedByte();
+                        validateChannels(channels);
+                        primaryLength = expectedRawTileBytes(tileWidth, tileHeight, channels);
+                        validateExpectedLength(primaryLength, "AFMA block inter raw tile payload");
+                        primaryOffset = reader.position();
+                        reader.skip(primaryLength);
+                    }
                 }
-            }
 
-            if (in.available() > 0) {
-                throw new IOException("AFMA block inter payload contains trailing data");
+                consumer.accept(localX, localY, tileWidth, tileHeight, mode, dx, dy, channels, changedPixelCount,
+                        payloadBytes, primaryOffset, primaryLength, secondaryOffset, secondaryLength);
             }
+        }
+
+        if (reader.remaining() > 0) {
+            throw new IOException("AFMA block inter payload contains trailing data");
         }
     }
 
@@ -197,7 +205,7 @@ public final class AfmaBlockInterPayloadHelper {
 
     public static void validatePayload(@NotNull byte[] payloadBytes, int offset, int length, int tileSize, int regionX, int regionY, int regionWidth, int regionHeight,
                                        int canvasWidth, int canvasHeight) throws IOException {
-        walkPayload(payloadBytes, offset, length, tileSize, regionWidth, regionHeight, (localX, localY, tileWidth, tileHeight, mode, dx, dy, channels, changedPixelCount, primaryBytes, secondaryBytes) -> {
+        walkPayload(payloadBytes, offset, length, tileSize, regionWidth, regionHeight, (localX, localY, tileWidth, tileHeight, mode, dx, dy, channels, changedPixelCount, tilePayloadBytes, primaryOffset, primaryLength, secondaryOffset, secondaryLength) -> {
             int dstX = regionX + localX;
             int dstY = regionY + localY;
             if (dstX < 0 || dstY < 0 || (dstX + tileWidth) > canvasWidth || (dstY + tileHeight) > canvasHeight) {
@@ -262,6 +270,12 @@ public final class AfmaBlockInterPayloadHelper {
         }
     }
 
+    protected static void validateExpectedLength(int expectedLength, @NotNull String context) throws IOException {
+        if (expectedLength <= 0) {
+            throw new IOException(context + " size is invalid");
+        }
+    }
+
     public enum TileMode {
         SKIP(0),
         COPY(1),
@@ -297,7 +311,68 @@ public final class AfmaBlockInterPayloadHelper {
     @FunctionalInterface
     public interface TileConsumer {
         void accept(int localX, int localY, int tileWidth, int tileHeight, @NotNull TileMode mode, int dx, int dy,
-                    int channels, int changedPixelCount, @Nullable byte[] primaryBytes, @Nullable byte[] secondaryBytes) throws IOException;
+                    int channels, int changedPixelCount, @NotNull byte[] payloadBytes,
+                    int primaryOffset, int primaryLength, int secondaryOffset, int secondaryLength) throws IOException;
+    }
+
+    protected static final class PayloadReader {
+
+        @NotNull
+        private final byte[] payloadBytes;
+        private final int endOffset;
+        private int offset;
+
+        protected PayloadReader(@NotNull byte[] payloadBytes, int offset, int length) {
+            this.payloadBytes = payloadBytes;
+            this.offset = offset;
+            this.endOffset = offset + length;
+        }
+
+        protected int readInt() throws IOException {
+            this.ensureAvailable(4);
+            int value = ((this.payloadBytes[this.offset] & 0xFF) << 24)
+                    | ((this.payloadBytes[this.offset + 1] & 0xFF) << 16)
+                    | ((this.payloadBytes[this.offset + 2] & 0xFF) << 8)
+                    | (this.payloadBytes[this.offset + 3] & 0xFF);
+            this.offset += 4;
+            return value;
+        }
+
+        protected int readUnsignedByte() throws IOException {
+            this.ensureAvailable(1);
+            return this.payloadBytes[this.offset++] & 0xFF;
+        }
+
+        protected int readUnsignedShort() throws IOException {
+            this.ensureAvailable(2);
+            int value = ((this.payloadBytes[this.offset] & 0xFF) << 8)
+                    | (this.payloadBytes[this.offset + 1] & 0xFF);
+            this.offset += 2;
+            return value;
+        }
+
+        protected int readShort() throws IOException {
+            return (short) this.readUnsignedShort();
+        }
+
+        protected int position() {
+            return this.offset;
+        }
+
+        protected int remaining() {
+            return this.endOffset - this.offset;
+        }
+
+        protected void skip(int length) throws IOException {
+            this.ensureAvailable(length);
+            this.offset += length;
+        }
+
+        protected void ensureAvailable(int length) throws IOException {
+            if (length < 0 || (this.offset + length) > this.endOffset) {
+                throw new IOException("AFMA block inter payload ended early");
+            }
+        }
     }
 
 }

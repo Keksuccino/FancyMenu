@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -32,6 +33,7 @@ import java.util.Set;
 
 public class AfmaDecoder implements Closeable {
 
+    protected static final int MAX_CACHED_PAYLOAD_CHUNKS = 2;
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson GSON = new GsonBuilder().create();
     private static final File TEMP_DIR = FileUtils.createDirectory(new File(FancyMenu.TEMP_DATA_DIR, "/decoded_afma_images"));
@@ -48,8 +50,12 @@ public class AfmaDecoder implements Closeable {
     @NotNull
     protected int[] payloadChunkLengths = new int[0];
     protected final Object payloadChunkCacheLock = new Object();
-    @Nullable
-    protected LoadedPayloadChunk loadedPayloadChunk = null;
+    @NotNull
+    protected final LinkedHashMap<Integer, LoadedPayloadChunk> payloadChunkCache = new LinkedHashMap<>(MAX_CACHED_PAYLOAD_CHUNKS, 0.75F, true);
+    protected long payloadChunkCacheHits = 0L;
+    protected long payloadChunkCacheMisses = 0L;
+    protected long payloadChunkArchiveReads = 0L;
+    protected long payloadChunkCacheEvictions = 0L;
 
     @Nullable
     protected File tempArchiveFile = null;
@@ -162,7 +168,13 @@ public class AfmaDecoder implements Closeable {
         Objects.requireNonNull(this.zipFile);
         this.payloadLocatorsByNormalizedPath.clear();
         this.payloadChunkLengths = new int[0];
-        this.loadedPayloadChunk = null;
+        synchronized (this.payloadChunkCacheLock) {
+            this.payloadChunkCache.clear();
+            this.payloadChunkCacheHits = 0L;
+            this.payloadChunkCacheMisses = 0L;
+            this.payloadChunkArchiveReads = 0L;
+            this.payloadChunkCacheEvictions = 0L;
+        }
 
         ZipArchiveEntry payloadIndexEntry = this.findEntry(AfmaChunkedPayloadHelper.PAYLOAD_INDEX_ENTRY_PATH);
         if (payloadIndexEntry == null) {
@@ -467,19 +479,31 @@ public class AfmaDecoder implements Closeable {
     @NotNull
     protected byte[] loadPayloadChunk(int chunkId) throws IOException {
         synchronized (this.payloadChunkCacheLock) {
-            LoadedPayloadChunk cachedChunk = this.loadedPayloadChunk;
-            if ((cachedChunk != null) && (cachedChunk.chunkId() == chunkId)) {
+            LoadedPayloadChunk cachedChunk = this.payloadChunkCache.get(chunkId);
+            if (cachedChunk != null) {
+                this.payloadChunkCacheHits++;
                 return cachedChunk.bytes();
             }
+            this.payloadChunkCacheMisses++;
         }
 
         byte[] chunkBytes = this.readWholeChunk(chunkId);
         synchronized (this.payloadChunkCacheLock) {
-            LoadedPayloadChunk cachedChunk = this.loadedPayloadChunk;
-            if ((cachedChunk != null) && (cachedChunk.chunkId() == chunkId)) {
+            LoadedPayloadChunk cachedChunk = this.payloadChunkCache.get(chunkId);
+            if (cachedChunk != null) {
+                this.payloadChunkCacheHits++;
                 return cachedChunk.bytes();
             }
-            this.loadedPayloadChunk = new LoadedPayloadChunk(chunkId, chunkBytes);
+
+            if (this.payloadChunkCache.size() >= MAX_CACHED_PAYLOAD_CHUNKS) {
+                var chunkIterator = this.payloadChunkCache.entrySet().iterator();
+                if (chunkIterator.hasNext()) {
+                    chunkIterator.next();
+                    chunkIterator.remove();
+                    this.payloadChunkCacheEvictions++;
+                }
+            }
+            this.payloadChunkCache.put(chunkId, new LoadedPayloadChunk(chunkId, chunkBytes));
             return chunkBytes;
         }
     }
@@ -497,9 +521,25 @@ public class AfmaDecoder implements Closeable {
             if ((expectedLength >= 0) && (chunkBytes.length != expectedLength)) {
                 throw new IOException("AFMA payload chunk size does not match the payload index: " + chunkEntry.getName());
             }
+            synchronized (this.payloadChunkCacheLock) {
+                this.payloadChunkArchiveReads++;
+            }
             return chunkBytes;
         } catch (Exception ex) {
             throw new IOException(ex);
+        }
+    }
+
+    @NotNull
+    public PayloadChunkCacheMetrics getPayloadChunkCacheMetrics() {
+        synchronized (this.payloadChunkCacheLock) {
+            return new PayloadChunkCacheMetrics(
+                    this.payloadChunkCacheHits,
+                    this.payloadChunkCacheMisses,
+                    this.payloadChunkArchiveReads,
+                    this.payloadChunkCacheEvictions,
+                    this.payloadChunkCache.size()
+            );
         }
     }
 
@@ -522,7 +562,13 @@ public class AfmaDecoder implements Closeable {
         this.entriesByNormalizedPath.clear();
         this.payloadLocatorsByNormalizedPath.clear();
         this.payloadChunkLengths = new int[0];
-        this.loadedPayloadChunk = null;
+        synchronized (this.payloadChunkCacheLock) {
+            this.payloadChunkCache.clear();
+            this.payloadChunkCacheHits = 0L;
+            this.payloadChunkCacheMisses = 0L;
+            this.payloadChunkArchiveReads = 0L;
+            this.payloadChunkCacheEvictions = 0L;
+        }
 
         if (this.zipFile != null) {
             try {
@@ -544,6 +590,9 @@ public class AfmaDecoder implements Closeable {
     }
 
     public record PayloadBytes(@NotNull byte[] bytes, int offset, int length) {
+    }
+
+    public record PayloadChunkCacheMetrics(long cacheHits, long cacheMisses, long archiveReads, long evictions, int cachedChunkCount) {
     }
 
     protected record LoadedPayloadChunk(int chunkId, @NotNull byte[] bytes) {

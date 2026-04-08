@@ -52,6 +52,33 @@ public final class AfmaNativeImageHelper {
         }
     }
 
+    public static void blitInterleavedBytes(@NotNull NativeImage target, int dstX, int dstY, int width, int height,
+                                            @NotNull byte[] rawBytes, int rawOffset, int rawLength, int channels) {
+        int expectedBytes = AfmaBlockInterPayloadHelper.expectedRawTileBytes(width, height, channels);
+        if ((expectedBytes <= 0) || (rawLength != expectedBytes) || rawOffset < 0
+                || ((long) rawOffset + (long) rawLength) > rawBytes.length) {
+            throw new IllegalStateException("AFMA raw pixel payload size does not match the descriptor");
+        }
+
+        long targetPixels = pixels(target);
+        int targetWidth = target.getWidth();
+        int rawIndex = rawOffset;
+        for (int row = 0; row < height; row++) {
+            long targetOffset = offset(targetPixels, targetWidth, dstX, dstY + row);
+            for (int column = 0; column < width; column++) {
+                int red = rawBytes[rawIndex++] & 0xFF;
+                int green = rawBytes[rawIndex++] & 0xFF;
+                int blue = rawBytes[rawIndex++] & 0xFF;
+                int alpha = (channels == AfmaResidualPayloadHelper.RGBA_CHANNELS) ? (rawBytes[rawIndex++] & 0xFF) : 0xFF;
+                MemoryUtil.memPutInt(targetOffset + ((long) column * RGBA_BYTES_PER_PIXEL), FastColor.ABGR32.color(alpha, blue, green, red));
+            }
+        }
+
+        if (rawIndex != (rawOffset + expectedBytes)) {
+            throw new IllegalStateException("AFMA raw pixel payload ended early");
+        }
+    }
+
     public static void applyResidualBytes(@NotNull NativeImage target, int dstX, int dstY, int width, int height, @NotNull byte[] residualBytes, int residualOffset, int residualLength, int channels) {
         int expectedBytes = AfmaResidualPayloadHelper.expectedDenseResidualBytes(width, height, channels);
         if ((expectedBytes <= 0) || (residualLength != expectedBytes) || residualOffset < 0
