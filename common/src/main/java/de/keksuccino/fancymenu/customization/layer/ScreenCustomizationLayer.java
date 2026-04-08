@@ -571,7 +571,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
                 }
             }
             if (show) {
-                graphics.fill(0, 0, screen.width, screen.height, DrawableColor.BLACK.getColorInt());
+                RenderSystem.enableBlend();
+                graphics.fill(0, 0, screen.width, screen.height, DrawableColor.BLACK.getColorIntWithAlpha(this.backgroundOpacity));
             }
         }
 
