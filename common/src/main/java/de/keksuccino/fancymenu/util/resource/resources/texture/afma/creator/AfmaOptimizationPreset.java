@@ -9,9 +9,9 @@ import java.util.function.Supplier;
 
 public enum AfmaOptimizationPreset implements LocalizedEnum<AfmaOptimizationPreset> {
 
-    BALANCED("balanced", 30, true, true, false, 512, 5, false, LocalizedEnum.WARNING_TEXT_STYLE),
-    SMALLEST_FILE("smallest_file", 90, true, true, true, 2048, 12, false, LocalizedEnum.WARNING_TEXT_STYLE),
-    FASTEST_DECODE("fastest_decode", 18, false, true, false, 96, 2, false, LocalizedEnum.WARNING_TEXT_STYLE);
+    BALANCED("balanced", 30, true, true, false, 512, 5, LocalizedEnum.WARNING_TEXT_STYLE),
+    SMALLEST_FILE("smallest_file", 90, true, true, true, 2048, 12, LocalizedEnum.WARNING_TEXT_STYLE),
+    FASTEST_DECODE("fastest_decode", 18, false, true, false, 96, 2, LocalizedEnum.WARNING_TEXT_STYLE);
 
     private final @NotNull String name;
     private final int keyframeInterval;
@@ -20,12 +20,11 @@ public enum AfmaOptimizationPreset implements LocalizedEnum<AfmaOptimizationPres
     private final boolean nearLosslessEnabledByDefault;
     private final int maxCopySearchDistance;
     private final int maxCandidateAxisOffsets;
-    private final boolean thumbnailEnabledByDefault;
     private final @NotNull Supplier<Style> style;
 
     AfmaOptimizationPreset(@NotNull String name, int keyframeInterval, boolean rectCopyEnabled,
                            boolean duplicateFrameElision, boolean nearLosslessEnabledByDefault, int maxCopySearchDistance, int maxCandidateAxisOffsets,
-                           boolean thumbnailEnabledByDefault, @NotNull Supplier<Style> style) {
+                           @NotNull Supplier<Style> style) {
         this.name = name;
         this.keyframeInterval = keyframeInterval;
         this.rectCopyEnabled = rectCopyEnabled;
@@ -33,7 +32,6 @@ public enum AfmaOptimizationPreset implements LocalizedEnum<AfmaOptimizationPres
         this.nearLosslessEnabledByDefault = nearLosslessEnabledByDefault;
         this.maxCopySearchDistance = maxCopySearchDistance;
         this.maxCandidateAxisOffsets = maxCandidateAxisOffsets;
-        this.thumbnailEnabledByDefault = thumbnailEnabledByDefault;
         this.style = style;
     }
 
@@ -87,10 +85,6 @@ public enum AfmaOptimizationPreset implements LocalizedEnum<AfmaOptimizationPres
 
     public int getMaxCandidateAxisOffsets() {
         return this.maxCandidateAxisOffsets;
-    }
-
-    public boolean isThumbnailEnabledByDefault() {
-        return this.thumbnailEnabledByDefault;
     }
 
 }

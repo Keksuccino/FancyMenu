@@ -38,11 +38,6 @@ public class AfmaEncodeOptions {
     protected int perceptualBinIntraMaxAlphaDelta = 0;
     protected double perceptualBinIntraMaxAverageError = 0D;
 
-    @NotNull
-    public static AfmaEncodeOptions balanced() {
-        return new AfmaEncodeOptions();
-    }
-
     public int getLoopCount() {
         return this.loopCount;
     }

@@ -4,8 +4,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -22,19 +20,6 @@ public class AfmaSourceSequence {
     @NotNull
     public static AfmaSourceSequence ofFiles(@NotNull List<File> frames) {
         return new AfmaSourceSequence(frames);
-    }
-
-    @NotNull
-    public static AfmaSourceSequence fromDirectory(@NotNull File directory) {
-        Objects.requireNonNull(directory);
-        File[] children = directory.listFiles(File::isFile);
-        if (children == null) {
-            return new AfmaSourceSequence(List.of());
-        }
-
-        List<File> orderedFiles = new ArrayList<>(List.of(children));
-        orderedFiles.sort(Comparator.comparing(file -> file.getName().toLowerCase()));
-        return new AfmaSourceSequence(orderedFiles);
     }
 
     @NotNull

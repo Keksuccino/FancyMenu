@@ -4,21 +4,9 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameInd
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameOperationType;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaMetadata;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.io.IOException;
-import java.util.AbstractMap;
-import java.util.AbstractSet;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 public class AfmaEncodePlan {
 
@@ -47,13 +35,6 @@ public class AfmaEncodePlan {
     }
 
     @NotNull
-    public static AfmaEncodePlan lazy(@NotNull AfmaMetadata metadata, @NotNull AfmaFrameIndex frameIndex,
-                                      @NotNull List<String> payloadPaths, long totalPayloadBytes,
-                                      @NotNull PayloadLoader payloadLoader) {
-        return new AfmaEncodePlan(metadata, frameIndex, new LazyPayloadMap(payloadPaths, payloadLoader), totalPayloadBytes, false);
-    }
-
-    @NotNull
     public AfmaMetadata getMetadata() {
         return this.metadata;
     }
@@ -70,10 +51,6 @@ public class AfmaEncodePlan {
 
     public long getTotalPayloadBytes() {
         return this.totalPayloadBytes;
-    }
-
-    public @NotNull AfmaEncodePlan withoutPayloads() {
-        return new AfmaEncodePlan(this.metadata, this.frameIndex, new LinkedHashMap<>(), this.totalPayloadBytes);
     }
 
     public int countFrames(@NotNull AfmaFrameOperationType type) {
@@ -101,114 +78,6 @@ public class AfmaEncodePlan {
             }
         }
         return total;
-    }
-
-    @FunctionalInterface
-    public interface PayloadLoader {
-        @NotNull byte[] load(@NotNull String path) throws IOException;
-    }
-
-    protected static final class LazyPayloadMap extends LinkedHashMap<String, byte[]> {
-
-        private final @NotNull List<String> payloadPaths;
-        private final @NotNull PayloadLoader payloadLoader;
-
-        protected LazyPayloadMap(@NotNull List<String> payloadPaths, @NotNull PayloadLoader payloadLoader) {
-            this.payloadPaths = List.copyOf(payloadPaths);
-            this.payloadLoader = Objects.requireNonNull(payloadLoader);
-        }
-
-        @Override
-        public byte[] get(Object key) {
-            if (!(key instanceof String path) || !this.containsKey(path)) {
-                return null;
-            }
-            return this.loadPayload(path);
-        }
-
-        @Override
-        public boolean containsKey(Object key) {
-            return (key instanceof String path) && this.payloadPaths.contains(path);
-        }
-
-        @Override
-        public int size() {
-            return this.payloadPaths.size();
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return this.payloadPaths.isEmpty();
-        }
-
-        @Override
-        public @NotNull Set<String> keySet() {
-            return Collections.unmodifiableSet(new LinkedHashSet<>(this.payloadPaths));
-        }
-
-        @Override
-        public @NotNull Collection<byte[]> values() {
-            List<byte[]> values = new ArrayList<>(this.payloadPaths.size());
-            for (String payloadPath : this.payloadPaths) {
-                values.add(this.loadPayload(payloadPath));
-            }
-            return values;
-        }
-
-        @Override
-        public @NotNull Set<Map.Entry<String, byte[]>> entrySet() {
-            return new AbstractSet<>() {
-                @Override
-                public @NotNull Iterator<Map.Entry<String, byte[]>> iterator() {
-                    Iterator<String> iterator = LazyPayloadMap.this.payloadPaths.iterator();
-                    return new Iterator<>() {
-                        @Override
-                        public boolean hasNext() {
-                            return iterator.hasNext();
-                        }
-
-                        @Override
-                        public Map.Entry<String, byte[]> next() {
-                            String payloadPath = iterator.next();
-                            return new AbstractMap.SimpleImmutableEntry<>(payloadPath, LazyPayloadMap.this.loadPayload(payloadPath));
-                        }
-                    };
-                }
-
-                @Override
-                public int size() {
-                    return LazyPayloadMap.this.payloadPaths.size();
-                }
-            };
-        }
-
-        @Override
-        public byte[] put(String key, byte[] value) {
-            throw new UnsupportedOperationException("Lazy AFMA payload maps are read-only");
-        }
-
-        @Override
-        public void putAll(@NotNull Map<? extends String, ? extends byte[]> m) {
-            throw new UnsupportedOperationException("Lazy AFMA payload maps are read-only");
-        }
-
-        @Override
-        public byte[] remove(Object key) {
-            throw new UnsupportedOperationException("Lazy AFMA payload maps are read-only");
-        }
-
-        @Override
-        public void clear() {
-            throw new UnsupportedOperationException("Lazy AFMA payload maps are read-only");
-        }
-
-        private byte[] loadPayload(@NotNull String path) {
-            try {
-                return this.payloadLoader.load(path);
-            } catch (IOException ex) {
-                throw new IllegalStateException("Failed to load cached AFMA payload: " + path, ex);
-            }
-        }
     }
 
 }

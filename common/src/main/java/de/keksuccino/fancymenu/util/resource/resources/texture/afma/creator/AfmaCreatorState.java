@@ -13,7 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -49,9 +48,6 @@ public class AfmaCreatorState {
     private volatile boolean nearLosslessEnabled = DEFAULT_PRESET.isNearLosslessEnabledByDefault();
     private volatile int maxCopySearchDistance = DEFAULT_PRESET.getMaxCopySearchDistance();
     private volatile int maxCandidateAxisOffsets = DEFAULT_PRESET.getMaxCandidateAxisOffsets();
-    private volatile boolean generateThumbnail = false;
-    private volatile @NotNull String customFrameTimesText = "";
-    private volatile @NotNull String customIntroFrameTimesText = "";
     private volatile @NotNull AfmaOptimizationPreset optimizationPreset = DEFAULT_PRESET;
     private volatile @Nullable AfmaEncodeJob currentJob;
 
@@ -171,30 +167,8 @@ public class AfmaCreatorState {
         this.markDirty();
     }
 
-    public @NotNull String getCustomFrameTimesText() {
-        return this.customFrameTimesText;
-    }
-
-    public void setCustomFrameTimesText(@Nullable String customFrameTimesText) {
-        this.customFrameTimesText = (customFrameTimesText != null) ? customFrameTimesText : "";
-        this.markDirty();
-    }
-
-    public @NotNull String getCustomIntroFrameTimesText() {
-        return this.customIntroFrameTimesText;
-    }
-
-    public void setCustomIntroFrameTimesText(@Nullable String customIntroFrameTimesText) {
-        this.customIntroFrameTimesText = (customIntroFrameTimesText != null) ? customIntroFrameTimesText : "";
-        this.markDirty();
-    }
-
     public @NotNull AfmaOptimizationPreset getOptimizationPreset() {
         return this.optimizationPreset;
-    }
-
-    public void setOptimizationPreset(@NotNull AfmaOptimizationPreset optimizationPreset) {
-        this.applyPreset(optimizationPreset);
     }
 
     public void applyPreset(@NotNull AfmaOptimizationPreset preset) {
@@ -205,7 +179,6 @@ public class AfmaCreatorState {
         this.nearLosslessEnabled = preset.isNearLosslessEnabledByDefault();
         this.maxCopySearchDistance = preset.getMaxCopySearchDistance();
         this.maxCandidateAxisOffsets = preset.getMaxCandidateAxisOffsets();
-        this.generateThumbnail = false;
         this.markDirty();
     }
 
@@ -256,17 +229,6 @@ public class AfmaCreatorState {
             AfmaEncodePlan exportPlan = this.planner.plan(prepared.mainSequence, prepared.introSequence, prepared.options, job::isCancellationRequested,
                     (detail, progress) -> job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Analyzing AFMA frames for export...", detail, 0.15D + (0.63D * progress))));
             checkCancelled(job);
-
-            LinkedHashMap<String, byte[]> exportPayloads = new LinkedHashMap<>(exportPlan.getPayloads());
-            if (prepared.generateThumbnail) {
-                job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Generating AFMA thumbnail...", null, 0.78D));
-                byte[] thumbnail = this.buildThumbnailBytes(prepared.mainSequence, prepared.introSequence);
-                if (thumbnail != null) {
-                    exportPayloads.put("thumbnail.bin", thumbnail);
-                }
-            }
-
-            exportPlan = new AfmaEncodePlan(exportPlan.getMetadata(), exportPlan.getFrameIndex(), exportPayloads, exportPlan.getTotalPayloadBytes());
 
             job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Packing AFMA archive...", prepared.outputFile.getName(), 0.82D));
             tempFile = new File(prepared.outputFile.getParentFile(), prepared.outputFile.getName() + ".tmp");
@@ -339,17 +301,14 @@ public class AfmaCreatorState {
                 .setDuplicateFrameElision(this.duplicateFrameElision)
                 .setNearLosslessMaxChannelDelta(this.nearLosslessEnabled ? AfmaEncodeOptions.DEFAULT_NEAR_LOSSLESS_MAX_CHANNEL_DELTA : 0)
                 .setMaxCopySearchDistance(this.maxCopySearchDistance)
-                .setMaxCandidateAxisOffsets(this.maxCandidateAxisOffsets)
-                .setCustomFrameTimes(parseCustomFrameTimes(this.customFrameTimesText))
-                .setCustomIntroFrameTimes(parseCustomFrameTimes(this.customIntroFrameTimesText));
+                .setMaxCandidateAxisOffsets(this.maxCandidateAxisOffsets);
         this.applyAdvancedCompressionDefaults(options);
 
         return new PreparedInputs(
                 main.sequence,
                 intro.sequence,
                 output,
-                options,
-                this.generateThumbnail
+                options
         );
     }
 
@@ -397,36 +356,6 @@ public class AfmaCreatorState {
         }
     }
 
-    protected @Nullable byte[] buildThumbnailBytes(@NotNull AfmaSourceSequence mainSequence, @NotNull AfmaSourceSequence introSequence) throws IOException {
-        File sourceFile = !introSequence.isEmpty() ? introSequence.getFrame(0) : mainSequence.getFrame(0);
-        if (sourceFile == null) {
-            return null;
-        }
-
-        AfmaFrameNormalizer normalizer = new AfmaFrameNormalizer();
-        try (AfmaPixelFrame source = normalizer.loadFrame(sourceFile)) {
-            int maxWidth = 320;
-            int maxHeight = 180;
-            double scale = Math.min((double) maxWidth / source.getWidth(), (double) maxHeight / source.getHeight());
-            scale = Math.min(1.0D, scale);
-            int outWidth = Math.max(1, (int) Math.round(source.getWidth() * scale));
-            int outHeight = Math.max(1, (int) Math.round(source.getHeight() * scale));
-
-            int[] thumbnailPixels = new int[outWidth * outHeight];
-            for (int y = 0; y < outHeight; y++) {
-                int srcY = Math.min(source.getHeight() - 1, (int) (((double) y / Math.max(1, outHeight - 1)) * Math.max(0, source.getHeight() - 1)));
-                for (int x = 0; x < outWidth; x++) {
-                    int srcX = Math.min(source.getWidth() - 1, (int) (((double) x / Math.max(1, outWidth - 1)) * Math.max(0, source.getWidth() - 1)));
-                    thumbnailPixels[(y * outWidth) + x] = source.getPixelRGBA(srcX, srcY);
-                }
-            }
-
-            try (AfmaPixelFrame thumbnail = new AfmaPixelFrame(outWidth, outHeight, thumbnailPixels)) {
-                return thumbnail.asByteArray();
-            }
-        }
-    }
-
     protected void validateWrittenArchive(@NotNull File archiveFile) throws IOException {
         try (AfmaDecoder decoder = new AfmaDecoder()) {
             decoder.read(archiveFile);
@@ -469,39 +398,6 @@ public class AfmaCreatorState {
         return value;
     }
 
-    protected static @NotNull LinkedHashMap<Integer, Long> parseCustomFrameTimes(@Nullable String value) {
-        LinkedHashMap<Integer, Long> result = new LinkedHashMap<>();
-        if ((value == null) || value.isBlank()) {
-            return result;
-        }
-
-        String[] parts = value.split("[,;\\n]+");
-        for (String rawPart : parts) {
-            String part = rawPart.trim();
-            if (part.isEmpty()) continue;
-
-            String[] pair = part.split("=");
-            if (pair.length != 2) {
-                throw new IllegalArgumentException("Invalid custom frame timing entry: '" + part + "'. Use index=milliseconds.");
-            }
-
-            int frameIndex;
-            long delay;
-            try {
-                frameIndex = Integer.parseInt(pair[0].trim());
-                delay = Long.parseLong(pair[1].trim());
-            } catch (NumberFormatException ex) {
-                throw new IllegalArgumentException("Invalid custom frame timing entry: '" + part + "'. Use index=milliseconds.");
-            }
-
-            if (frameIndex < 0 || delay <= 0L) {
-                throw new IllegalArgumentException("Invalid custom frame timing entry: '" + part + "'. Frame index must be >= 0 and delay must be > 0.");
-            }
-            result.put(frameIndex, delay);
-        }
-        return result;
-    }
-
     protected static void checkCancelled(@Nullable AfmaEncodeJob job) {
         if ((job != null) && job.isCancellationRequested()) {
             throw new CancellationException("AFMA creator job was cancelled");
@@ -525,8 +421,7 @@ public class AfmaCreatorState {
             @NotNull AfmaSourceSequence mainSequence,
             @NotNull AfmaSourceSequence introSequence,
             @Nullable File outputFile,
-            @NotNull AfmaEncodeOptions options,
-            boolean generateThumbnail
+            @NotNull AfmaEncodeOptions options
     ) {
     }
 

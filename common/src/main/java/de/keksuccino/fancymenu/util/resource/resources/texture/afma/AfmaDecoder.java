@@ -426,13 +426,6 @@ public class AfmaDecoder implements Closeable {
         return new ByteArrayInputStream(payloadBytes.bytes(), payloadBytes.offset(), payloadBytes.length());
     }
 
-    @Nullable
-    public InputStream openThumbnail() throws IOException {
-        Objects.requireNonNull(this.zipFile);
-        ZipArchiveEntry entry = this.findEntry("thumbnail.bin");
-        return (entry != null) ? this.zipFile.getInputStream(entry) : null;
-    }
-
     @NotNull
     public PayloadBytes readPayloadBytes(@NotNull String path) throws IOException {
         Objects.requireNonNull(this.zipFile);
