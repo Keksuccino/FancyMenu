@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
+import java.util.List;
 
 public final class AfmaPixelFrameHelper {
 
@@ -103,6 +104,29 @@ public final class AfmaPixelFrameHelper {
             return null;
         }
         return new AfmaRect(minX, minY, (maxX - minX) + 1, (maxY - minY) + 1);
+    }
+
+    public static void applyCopyRect(@NotNull int[] pixels, int frameWidth, @NotNull AfmaCopyRect copyRect) {
+        int startRow = 0;
+        int endRow = copyRect.getHeight();
+        int rowStep = 1;
+        if (copyRect.getDstY() > copyRect.getSrcY()) {
+            startRow = copyRect.getHeight() - 1;
+            endRow = -1;
+            rowStep = -1;
+        }
+
+        for (int row = startRow; row != endRow; row += rowStep) {
+            int sourceOffset = ((copyRect.getSrcY() + row) * frameWidth) + copyRect.getSrcX();
+            int targetOffset = ((copyRect.getDstY() + row) * frameWidth) + copyRect.getDstX();
+            System.arraycopy(pixels, sourceOffset, pixels, targetOffset, copyRect.getWidth());
+        }
+    }
+
+    public static void applyCopyRects(@NotNull int[] pixels, int frameWidth, @NotNull List<AfmaCopyRect> copyRects) {
+        for (AfmaCopyRect copyRect : copyRects) {
+            applyCopyRect(pixels, frameWidth, copyRect);
+        }
     }
 
 }

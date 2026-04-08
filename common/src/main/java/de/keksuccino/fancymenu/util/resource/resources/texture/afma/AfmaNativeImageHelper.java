@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.lwjgl.system.MemoryUtil;
 
 import java.io.IOException;
+import java.util.List;
 
 public final class AfmaNativeImageHelper {
 
@@ -283,6 +284,12 @@ public final class AfmaNativeImageHelper {
             }
         } finally {
             MemoryUtil.nmemFree(scratchRow);
+        }
+    }
+
+    public static void copyRectsMemmove(@NotNull NativeImage image, @NotNull List<AfmaCopyRect> copyRects) {
+        for (AfmaCopyRect copyRect : copyRects) {
+            copyRectMemmove(image, copyRect);
         }
     }
 

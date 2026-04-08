@@ -481,10 +481,10 @@ public class AfmaTexture implements ITexture, PlayableResource {
         AfmaFrameOperationType type = Objects.requireNonNull(descriptor.getType(), "AFMA frame descriptor type was NULL");
         return switch (type) {
             case FULL, DELTA_RECT -> AfmaPayloadCodec.BIN_INTRA;
-            case RESIDUAL_DELTA_RECT, COPY_RECT_RESIDUAL_PATCH -> AfmaPayloadCodec.RAW_RESIDUAL;
-            case SPARSE_DELTA_RECT, COPY_RECT_SPARSE_PATCH -> AfmaPayloadCodec.RAW_SPARSE_MASK;
+            case RESIDUAL_DELTA_RECT, COPY_RECT_RESIDUAL_PATCH, MULTI_COPY_RESIDUAL_PATCH -> AfmaPayloadCodec.RAW_RESIDUAL;
+            case SPARSE_DELTA_RECT, COPY_RECT_SPARSE_PATCH, MULTI_COPY_SPARSE_PATCH -> AfmaPayloadCodec.RAW_SPARSE_MASK;
             case BLOCK_INTER -> AfmaPayloadCodec.INTER_FRAME;
-            case SAME, COPY_RECT_PATCH -> AfmaPayloadCodec.NONE;
+            case SAME, COPY_RECT_PATCH, MULTI_COPY_PATCH -> AfmaPayloadCodec.NONE;
         };
     }
 
@@ -492,9 +492,9 @@ public class AfmaTexture implements ITexture, PlayableResource {
     protected AfmaPayloadCodec resolveSecondaryPayloadCodec(@NotNull AfmaFrameDescriptor descriptor) {
         AfmaFrameOperationType type = Objects.requireNonNull(descriptor.getType(), "AFMA frame descriptor type was NULL");
         return switch (type) {
-            case SPARSE_DELTA_RECT, COPY_RECT_SPARSE_PATCH -> AfmaPayloadCodec.RAW_SPARSE_RESIDUAL;
-            case COPY_RECT_PATCH -> descriptor.requiresPatchPayload() ? AfmaPayloadCodec.BIN_INTRA : AfmaPayloadCodec.NONE;
-            case FULL, DELTA_RECT, RESIDUAL_DELTA_RECT, SAME, COPY_RECT_RESIDUAL_PATCH, BLOCK_INTER -> AfmaPayloadCodec.NONE;
+            case SPARSE_DELTA_RECT, COPY_RECT_SPARSE_PATCH, MULTI_COPY_SPARSE_PATCH -> AfmaPayloadCodec.RAW_SPARSE_RESIDUAL;
+            case COPY_RECT_PATCH, MULTI_COPY_PATCH -> descriptor.requiresPatchPayload() ? AfmaPayloadCodec.BIN_INTRA : AfmaPayloadCodec.NONE;
+            case FULL, DELTA_RECT, RESIDUAL_DELTA_RECT, SAME, COPY_RECT_RESIDUAL_PATCH, MULTI_COPY_RESIDUAL_PATCH, BLOCK_INTER -> AfmaPayloadCodec.NONE;
         };
     }
 
@@ -768,6 +768,23 @@ public class AfmaTexture implements ITexture, PlayableResource {
                     }
                     this.uploadDirtyRect(currentTexture, canvas, dirtyRect);
                 }
+                case MULTI_COPY_PATCH -> {
+                    AfmaMultiCopy multiCopy = Objects.requireNonNull(descriptor.getMultiCopy(), "AFMA multi_copy_patch is missing its multi-copy section");
+                    AfmaNativeImageHelper.copyRectsMemmove(canvas, multiCopy.getCopyRects());
+
+                    AfmaRect dirtyRect = null;
+                    for (AfmaCopyRect copyRect : multiCopy.getCopyRects()) {
+                        dirtyRect = AfmaRect.union(dirtyRect, new AfmaRect(copyRect.getDstX(), copyRect.getDstY(), copyRect.getWidth(), copyRect.getHeight()));
+                    }
+
+                    AfmaPatchRegion patch = descriptor.getPatch();
+                    if (patch != null) {
+                        this.copyPayloadIntoCanvas(this.requirePixelPayload(preparedFrame.patchPayload, "AFMA multi_copy_patch patch payload was NULL"),
+                                canvas, patch.getX(), patch.getY());
+                        dirtyRect = AfmaRect.union(dirtyRect, new AfmaRect(patch.getX(), patch.getY(), patch.getWidth(), patch.getHeight()));
+                    }
+                    this.uploadDirtyRect(currentTexture, canvas, Objects.requireNonNull(dirtyRect, "AFMA multi_copy_patch did not mark any dirty pixels"));
+                }
                 case COPY_RECT_RESIDUAL_PATCH -> {
                     AfmaCopyRect copyRect = Objects.requireNonNull(descriptor.getCopy(), "AFMA copy_rect_residual_patch is missing its copy section");
                     AfmaNativeImageHelper.copyRectMemmove(canvas, copyRect);
@@ -785,6 +802,47 @@ public class AfmaTexture implements ITexture, PlayableResource {
                             new AfmaRect(descriptor.getX(), descriptor.getY(), descriptor.getWidth(), descriptor.getHeight())
                     );
                     this.uploadDirtyRect(currentTexture, canvas, dirtyRect);
+                }
+                case MULTI_COPY_RESIDUAL_PATCH -> {
+                    AfmaMultiCopy multiCopy = Objects.requireNonNull(descriptor.getMultiCopy(), "AFMA multi_copy_residual_patch is missing its multi-copy section");
+                    AfmaNativeImageHelper.copyRectsMemmove(canvas, multiCopy.getCopyRects());
+                    this.applyResidualPayload(
+                            this.requireRawPayload(preparedFrame.primaryPayload, "AFMA multi_copy_residual_patch payload was NULL"),
+                            canvas,
+                            descriptor.getX(),
+                            descriptor.getY(),
+                            descriptor.getWidth(),
+                            descriptor.getHeight(),
+                            Objects.requireNonNull(descriptor.getResidual(), "AFMA multi_copy_residual_patch metadata was NULL")
+                    );
+
+                    AfmaRect dirtyRect = null;
+                    for (AfmaCopyRect copyRect : multiCopy.getCopyRects()) {
+                        dirtyRect = AfmaRect.union(dirtyRect, new AfmaRect(copyRect.getDstX(), copyRect.getDstY(), copyRect.getWidth(), copyRect.getHeight()));
+                    }
+                    dirtyRect = AfmaRect.union(dirtyRect, new AfmaRect(descriptor.getX(), descriptor.getY(), descriptor.getWidth(), descriptor.getHeight()));
+                    this.uploadDirtyRect(currentTexture, canvas, Objects.requireNonNull(dirtyRect, "AFMA multi_copy_residual_patch did not mark any dirty pixels"));
+                }
+                case MULTI_COPY_SPARSE_PATCH -> {
+                    AfmaMultiCopy multiCopy = Objects.requireNonNull(descriptor.getMultiCopy(), "AFMA multi_copy_sparse_patch is missing its multi-copy section");
+                    AfmaNativeImageHelper.copyRectsMemmove(canvas, multiCopy.getCopyRects());
+                    this.applySparseResidualPayload(
+                            this.requireRawPayload(preparedFrame.primaryPayload, "AFMA multi_copy_sparse_patch mask payload was NULL"),
+                            this.requireRawPayload(preparedFrame.patchPayload, "AFMA multi_copy_sparse_patch residual payload was NULL"),
+                            canvas,
+                            descriptor.getX(),
+                            descriptor.getY(),
+                            descriptor.getWidth(),
+                            descriptor.getHeight(),
+                            Objects.requireNonNull(descriptor.getSparse(), "AFMA multi_copy_sparse_patch metadata was NULL")
+                    );
+
+                    AfmaRect dirtyRect = null;
+                    for (AfmaCopyRect copyRect : multiCopy.getCopyRects()) {
+                        dirtyRect = AfmaRect.union(dirtyRect, new AfmaRect(copyRect.getDstX(), copyRect.getDstY(), copyRect.getWidth(), copyRect.getHeight()));
+                    }
+                    dirtyRect = AfmaRect.union(dirtyRect, new AfmaRect(descriptor.getX(), descriptor.getY(), descriptor.getWidth(), descriptor.getHeight()));
+                    this.uploadDirtyRect(currentTexture, canvas, Objects.requireNonNull(dirtyRect, "AFMA multi_copy_sparse_patch did not mark any dirty pixels"));
                 }
                 case BLOCK_INTER -> {
                     this.applyBlockInterPayload(

@@ -22,6 +22,8 @@ public class AfmaFrameDescriptor {
     @Nullable
     protected AfmaCopyRect copy;
     @Nullable
+    protected AfmaMultiCopy multi_copy;
+    @Nullable
     protected AfmaPatchRegion patch;
     @Nullable
     protected AfmaSparsePayload sparse;
@@ -86,6 +88,45 @@ public class AfmaFrameDescriptor {
         AfmaFrameDescriptor descriptor = new AfmaFrameDescriptor();
         descriptor.type = AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH;
         descriptor.copy = copyRect;
+        descriptor.path = maskPath;
+        descriptor.x = x;
+        descriptor.y = y;
+        descriptor.width = width;
+        descriptor.height = height;
+        descriptor.sparse = Objects.requireNonNull(sparsePayload);
+        return descriptor;
+    }
+
+    @NotNull
+    public static AfmaFrameDescriptor multiCopyPatch(@NotNull AfmaMultiCopy multiCopy, @Nullable AfmaPatchRegion patch) {
+        AfmaFrameDescriptor descriptor = new AfmaFrameDescriptor();
+        descriptor.type = AfmaFrameOperationType.MULTI_COPY_PATCH;
+        descriptor.multi_copy = Objects.requireNonNull(multiCopy);
+        descriptor.patch = patch;
+        return descriptor;
+    }
+
+    @NotNull
+    public static AfmaFrameDescriptor multiCopyResidualPatch(@NotNull AfmaMultiCopy multiCopy, @NotNull String path,
+                                                             int x, int y, int width, int height, @NotNull AfmaResidualPayload residualPayload) {
+        AfmaFrameDescriptor descriptor = new AfmaFrameDescriptor();
+        descriptor.type = AfmaFrameOperationType.MULTI_COPY_RESIDUAL_PATCH;
+        descriptor.multi_copy = Objects.requireNonNull(multiCopy);
+        descriptor.path = path;
+        descriptor.x = x;
+        descriptor.y = y;
+        descriptor.width = width;
+        descriptor.height = height;
+        descriptor.residual = Objects.requireNonNull(residualPayload);
+        return descriptor;
+    }
+
+    @NotNull
+    public static AfmaFrameDescriptor multiCopySparsePatch(@NotNull AfmaMultiCopy multiCopy, @NotNull String maskPath,
+                                                           int x, int y, int width, int height, @NotNull AfmaSparsePayload sparsePayload) {
+        AfmaFrameDescriptor descriptor = new AfmaFrameDescriptor();
+        descriptor.type = AfmaFrameOperationType.MULTI_COPY_SPARSE_PATCH;
+        descriptor.multi_copy = Objects.requireNonNull(multiCopy);
         descriptor.path = maskPath;
         descriptor.x = x;
         descriptor.y = y;
@@ -171,6 +212,11 @@ public class AfmaFrameDescriptor {
     }
 
     @Nullable
+    public AfmaMultiCopy getMultiCopy() {
+        return this.multi_copy;
+    }
+
+    @Nullable
     public AfmaPatchRegion getPatch() {
         return this.patch;
     }
@@ -201,14 +247,19 @@ public class AfmaFrameDescriptor {
                 || (this.type == AfmaFrameOperationType.SPARSE_DELTA_RECT)
                 || (this.type == AfmaFrameOperationType.COPY_RECT_RESIDUAL_PATCH)
                 || (this.type == AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH)
+                || (this.type == AfmaFrameOperationType.MULTI_COPY_RESIDUAL_PATCH)
+                || (this.type == AfmaFrameOperationType.MULTI_COPY_SPARSE_PATCH)
                 || (this.type == AfmaFrameOperationType.BLOCK_INTER);
     }
 
     public boolean requiresPatchPayload() {
-        if ((this.type == AfmaFrameOperationType.COPY_RECT_PATCH) && (this.patch != null)) {
+        if (((this.type == AfmaFrameOperationType.COPY_RECT_PATCH) || (this.type == AfmaFrameOperationType.MULTI_COPY_PATCH))
+                && (this.patch != null)) {
             return (this.patch.getPath() != null) && !this.patch.getPath().isBlank();
         }
-        if (((this.type == AfmaFrameOperationType.SPARSE_DELTA_RECT) || (this.type == AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH))
+        if (((this.type == AfmaFrameOperationType.SPARSE_DELTA_RECT)
+                || (this.type == AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH)
+                || (this.type == AfmaFrameOperationType.MULTI_COPY_SPARSE_PATCH))
                 && (this.sparse != null)) {
             return (this.sparse.getPixelsPath() != null) && !this.sparse.getPixelsPath().isBlank();
         }
@@ -222,10 +273,13 @@ public class AfmaFrameDescriptor {
 
     @Nullable
     public String getSecondaryPayloadPath() {
-        if ((this.type == AfmaFrameOperationType.COPY_RECT_PATCH) && (this.patch != null)) {
+        if (((this.type == AfmaFrameOperationType.COPY_RECT_PATCH) || (this.type == AfmaFrameOperationType.MULTI_COPY_PATCH))
+                && (this.patch != null)) {
             return this.patch.getPath();
         }
-        if (((this.type == AfmaFrameOperationType.SPARSE_DELTA_RECT) || (this.type == AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH))
+        if (((this.type == AfmaFrameOperationType.SPARSE_DELTA_RECT)
+                || (this.type == AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH)
+                || (this.type == AfmaFrameOperationType.MULTI_COPY_SPARSE_PATCH))
                 && (this.sparse != null)) {
             return this.sparse.getPixelsPath();
         }
@@ -253,6 +307,14 @@ public class AfmaFrameDescriptor {
         if (this.type == AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH) {
             return copyRectSparsePatch(Objects.requireNonNull(this.copy), newPath, this.getX(), this.getY(), this.getWidth(), this.getHeight(), Objects.requireNonNull(this.sparse));
         }
+        if (this.type == AfmaFrameOperationType.MULTI_COPY_RESIDUAL_PATCH) {
+            return multiCopyResidualPatch(Objects.requireNonNull(this.multi_copy), newPath,
+                    this.getX(), this.getY(), this.getWidth(), this.getHeight(), Objects.requireNonNull(this.residual));
+        }
+        if (this.type == AfmaFrameOperationType.MULTI_COPY_SPARSE_PATCH) {
+            return multiCopySparsePatch(Objects.requireNonNull(this.multi_copy), newPath,
+                    this.getX(), this.getY(), this.getWidth(), this.getHeight(), Objects.requireNonNull(this.sparse));
+        }
         if (this.type == AfmaFrameOperationType.BLOCK_INTER) {
             return blockInter(newPath, this.getX(), this.getY(), this.getWidth(), this.getHeight(), Objects.requireNonNull(this.block_inter));
         }
@@ -279,6 +341,20 @@ public class AfmaFrameDescriptor {
                 throw new IllegalStateException("AFMA copy_rect_sparse_patch frame does not contain sparse payload metadata");
             }
             return copyRectSparsePatch(Objects.requireNonNull(this.copy), Objects.requireNonNull(this.path),
+                    this.getX(), this.getY(), this.getWidth(), this.getHeight(), this.sparse.withPixelsPath(newPath));
+        }
+        if (this.type == AfmaFrameOperationType.MULTI_COPY_PATCH) {
+            if (this.patch == null) {
+                throw new IllegalStateException("AFMA multi_copy_patch frame does not contain a patch section");
+            }
+            AfmaPatchRegion patchRegion = new AfmaPatchRegion(newPath, this.patch.getX(), this.patch.getY(), this.patch.getWidth(), this.patch.getHeight());
+            return multiCopyPatch(Objects.requireNonNull(this.multi_copy), patchRegion);
+        }
+        if (this.type == AfmaFrameOperationType.MULTI_COPY_SPARSE_PATCH) {
+            if (this.sparse == null) {
+                throw new IllegalStateException("AFMA multi_copy_sparse_patch frame does not contain sparse payload metadata");
+            }
+            return multiCopySparsePatch(Objects.requireNonNull(this.multi_copy), Objects.requireNonNull(this.path),
                     this.getX(), this.getY(), this.getWidth(), this.getHeight(), this.sparse.withPixelsPath(newPath));
         }
         throw new IllegalStateException("AFMA frame type does not support a secondary payload path override: " + this.type);
@@ -344,6 +420,23 @@ public class AfmaFrameDescriptor {
                 }
                 this.sparse.validate(context + " sparse payload");
             }
+            case MULTI_COPY_SPARSE_PATCH -> {
+                if (requireFullFrame) {
+                    throw new IllegalArgumentException(context + " must be a full frame");
+                }
+                if (this.multi_copy == null) {
+                    throw new IllegalArgumentException(context + " multi_copy_sparse_patch frame is missing its multi-copy section");
+                }
+                this.multi_copy.validate(context, canvasWidth, canvasHeight);
+                if ((this.path == null) || this.path.isBlank()) {
+                    throw new IllegalArgumentException(context + " multi_copy_sparse_patch frame is missing its mask payload path");
+                }
+                new AfmaPatchRegion(this.path, this.getX(), this.getY(), this.getWidth(), this.getHeight()).validate(context, canvasWidth, canvasHeight, true);
+                if (this.sparse == null) {
+                    throw new IllegalArgumentException(context + " multi_copy_sparse_patch frame is missing its sparse payload metadata");
+                }
+                this.sparse.validate(context + " sparse payload");
+            }
             case SAME -> {
                 if (requireFullFrame) {
                     throw new IllegalArgumentException(context + " must be a full frame");
@@ -357,6 +450,18 @@ public class AfmaFrameDescriptor {
                     throw new IllegalArgumentException(context + " copy_rect_patch frame is missing its copy section");
                 }
                 this.copy.validate(context, canvasWidth, canvasHeight);
+                if (this.patch != null) {
+                    this.patch.validate(context, canvasWidth, canvasHeight, true);
+                }
+            }
+            case MULTI_COPY_PATCH -> {
+                if (requireFullFrame) {
+                    throw new IllegalArgumentException(context + " must be a full frame");
+                }
+                if (this.multi_copy == null) {
+                    throw new IllegalArgumentException(context + " multi_copy_patch frame is missing its multi-copy section");
+                }
+                this.multi_copy.validate(context, canvasWidth, canvasHeight);
                 if (this.patch != null) {
                     this.patch.validate(context, canvasWidth, canvasHeight, true);
                 }
@@ -375,6 +480,23 @@ public class AfmaFrameDescriptor {
                 new AfmaPatchRegion(this.path, this.getX(), this.getY(), this.getWidth(), this.getHeight()).validate(context, canvasWidth, canvasHeight, true);
                 if (this.residual == null) {
                     throw new IllegalArgumentException(context + " copy_rect_residual_patch frame is missing its residual payload metadata");
+                }
+                this.residual.validate(context + " residual payload");
+            }
+            case MULTI_COPY_RESIDUAL_PATCH -> {
+                if (requireFullFrame) {
+                    throw new IllegalArgumentException(context + " must be a full frame");
+                }
+                if (this.multi_copy == null) {
+                    throw new IllegalArgumentException(context + " multi_copy_residual_patch frame is missing its multi-copy section");
+                }
+                this.multi_copy.validate(context, canvasWidth, canvasHeight);
+                if ((this.path == null) || this.path.isBlank()) {
+                    throw new IllegalArgumentException(context + " multi_copy_residual_patch frame is missing its residual payload path");
+                }
+                new AfmaPatchRegion(this.path, this.getX(), this.getY(), this.getWidth(), this.getHeight()).validate(context, canvasWidth, canvasHeight, true);
+                if (this.residual == null) {
+                    throw new IllegalArgumentException(context + " multi_copy_residual_patch frame is missing its residual payload metadata");
                 }
                 this.residual.validate(context + " residual payload");
             }

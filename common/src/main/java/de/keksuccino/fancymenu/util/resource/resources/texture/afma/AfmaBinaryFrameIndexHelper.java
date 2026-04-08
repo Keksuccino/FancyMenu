@@ -17,7 +17,9 @@ public final class AfmaBinaryFrameIndexHelper {
 
     public static final String FRAME_INDEX_ENTRY_PATH = "frame_index.bin";
     public static final int FRAME_INDEX_MAGIC = 0x41464958; // AFIX
-    public static final int FRAME_INDEX_VERSION = 2;
+    public static final int FRAME_INDEX_VERSION = 3;
+    protected static final int MULTI_COPY_SHARED_WIDTH_FLAG = 1;
+    protected static final int MULTI_COPY_SHARED_HEIGHT_FLAG = 1 << 1;
 
     private AfmaBinaryFrameIndexHelper() {
     }
@@ -145,6 +147,38 @@ public final class AfmaBinaryFrameIndexHelper {
                 out.writeByte(sparsePayload.getAlphaMode().getId());
                 writeVarInt(out, sparsePayload.getAlphaChangedPixelCount());
             }
+            case MULTI_COPY_PATCH -> {
+                writeMultiCopy(out, Objects.requireNonNull(descriptor.getMultiCopy()));
+                AfmaPatchRegion patchRegion = descriptor.getPatch();
+                out.writeBoolean(patchRegion != null);
+                if (patchRegion != null) {
+                    writePayloadId(out, patchRegion.getPath(), payloadIdsByPath);
+                    writePatchRegion(out, patchRegion);
+                }
+            }
+            case MULTI_COPY_RESIDUAL_PATCH -> {
+                writeMultiCopy(out, Objects.requireNonNull(descriptor.getMultiCopy()));
+                writePayloadId(out, descriptor.getPrimaryPayloadPath(), payloadIdsByPath);
+                writePatchBounds(out, descriptor);
+                AfmaResidualPayload residualPayload = Objects.requireNonNull(descriptor.getResidual());
+                writeVarInt(out, residualPayload.getChannels());
+                out.writeByte(residualPayload.getCodec().getId());
+                out.writeByte(residualPayload.getAlphaMode().getId());
+                writeVarInt(out, residualPayload.getAlphaChangedPixelCount());
+            }
+            case MULTI_COPY_SPARSE_PATCH -> {
+                writeMultiCopy(out, Objects.requireNonNull(descriptor.getMultiCopy()));
+                writePayloadId(out, descriptor.getPrimaryPayloadPath(), payloadIdsByPath);
+                writePayloadId(out, descriptor.getSecondaryPayloadPath(), payloadIdsByPath);
+                writePatchBounds(out, descriptor);
+                AfmaSparsePayload sparsePayload = Objects.requireNonNull(descriptor.getSparse());
+                writeVarInt(out, sparsePayload.getChangedPixelCount());
+                writeVarInt(out, sparsePayload.getChannels());
+                out.writeByte(sparsePayload.getLayoutCodec().getId());
+                out.writeByte(sparsePayload.getResidualCodec().getId());
+                out.writeByte(sparsePayload.getAlphaMode().getId());
+                writeVarInt(out, sparsePayload.getAlphaChangedPixelCount());
+            }
             case BLOCK_INTER -> {
                 writePayloadId(out, descriptor.getPrimaryPayloadPath(), payloadIdsByPath);
                 writePatchBounds(out, descriptor);
@@ -229,6 +263,51 @@ public final class AfmaBinaryFrameIndexHelper {
                 yield AfmaFrameDescriptor.copyRectSparsePatch(copyRect, maskPath, x, y, width, height,
                         new AfmaSparsePayload(pixelsPath, pixelCount, channels, layoutCodec, residualCodec, alphaMode, alphaChangedPixelCount));
             }
+            case MULTI_COPY_PATCH -> {
+                AfmaMultiCopy multiCopy = readMultiCopy(in);
+                boolean hasPatch = in.readBoolean();
+                if (!hasPatch) {
+                    yield AfmaFrameDescriptor.multiCopyPatch(multiCopy, null);
+                }
+
+                String patchPath = readPayloadPath(in);
+                int patchX = readVarInt(in);
+                int patchY = readVarInt(in);
+                int patchWidth = readVarInt(in);
+                int patchHeight = readVarInt(in);
+                yield AfmaFrameDescriptor.multiCopyPatch(multiCopy, new AfmaPatchRegion(patchPath, patchX, patchY, patchWidth, patchHeight));
+            }
+            case MULTI_COPY_RESIDUAL_PATCH -> {
+                AfmaMultiCopy multiCopy = readMultiCopy(in);
+                String payloadPath = readPayloadPath(in);
+                int x = readVarInt(in);
+                int y = readVarInt(in);
+                int width = readVarInt(in);
+                int height = readVarInt(in);
+                int channels = readVarInt(in);
+                AfmaResidualCodec residualCodec = AfmaResidualCodec.byId(in.readUnsignedByte());
+                AfmaAlphaResidualMode alphaMode = AfmaAlphaResidualMode.byId(in.readUnsignedByte());
+                int alphaChangedPixelCount = readVarInt(in);
+                yield AfmaFrameDescriptor.multiCopyResidualPatch(multiCopy, payloadPath, x, y, width, height,
+                        new AfmaResidualPayload(channels, residualCodec, alphaMode, alphaChangedPixelCount));
+            }
+            case MULTI_COPY_SPARSE_PATCH -> {
+                AfmaMultiCopy multiCopy = readMultiCopy(in);
+                String maskPath = readPayloadPath(in);
+                String pixelsPath = readPayloadPath(in);
+                int x = readVarInt(in);
+                int y = readVarInt(in);
+                int width = readVarInt(in);
+                int height = readVarInt(in);
+                int pixelCount = readVarInt(in);
+                int channels = readVarInt(in);
+                AfmaSparseLayoutCodec layoutCodec = AfmaSparseLayoutCodec.byId(in.readUnsignedByte());
+                AfmaResidualCodec residualCodec = AfmaResidualCodec.byId(in.readUnsignedByte());
+                AfmaAlphaResidualMode alphaMode = AfmaAlphaResidualMode.byId(in.readUnsignedByte());
+                int alphaChangedPixelCount = readVarInt(in);
+                yield AfmaFrameDescriptor.multiCopySparsePatch(multiCopy, maskPath, x, y, width, height,
+                        new AfmaSparsePayload(pixelsPath, pixelCount, channels, layoutCodec, residualCodec, alphaMode, alphaChangedPixelCount));
+            }
             case BLOCK_INTER -> AfmaFrameDescriptor.blockInter(
                     readPayloadPath(in),
                     readVarInt(in),
@@ -251,6 +330,71 @@ public final class AfmaBinaryFrameIndexHelper {
 
     protected static @NotNull AfmaCopyRect readCopyRect(@NotNull DataInputStream in) throws IOException {
         return new AfmaCopyRect(readVarInt(in), readVarInt(in), readVarInt(in), readVarInt(in), readVarInt(in), readVarInt(in));
+    }
+
+    protected static void writeMultiCopy(@NotNull DataOutputStream out, @NotNull AfmaMultiCopy multiCopy) throws IOException {
+        List<AfmaCopyRect> copyRects = multiCopy.getCopyRects();
+        if (copyRects.size() < 2) {
+            throw new IOException("AFMA multi-copy frames require at least 2 copy rectangles");
+        }
+
+        writeVarInt(out, copyRects.size() - 1);
+        AfmaCopyRect previousRect = null;
+        for (AfmaCopyRect copyRect : copyRects) {
+            AfmaCopyRect currentRect = Objects.requireNonNull(copyRect, "AFMA multi-copy rectangle was NULL");
+            int flags = 0;
+            if ((previousRect != null) && (currentRect.getWidth() == previousRect.getWidth())) {
+                flags |= MULTI_COPY_SHARED_WIDTH_FLAG;
+            }
+            if ((previousRect != null) && (currentRect.getHeight() == previousRect.getHeight())) {
+                flags |= MULTI_COPY_SHARED_HEIGHT_FLAG;
+            }
+            out.writeByte(flags);
+
+            if (previousRect == null) {
+                writeCopyRect(out, currentRect);
+            } else {
+                writeSignedVarInt(out, currentRect.getSrcX() - previousRect.getSrcX());
+                writeSignedVarInt(out, currentRect.getSrcY() - previousRect.getSrcY());
+                writeSignedVarInt(out, currentRect.getDstX() - previousRect.getDstX());
+                writeSignedVarInt(out, currentRect.getDstY() - previousRect.getDstY());
+                if ((flags & MULTI_COPY_SHARED_WIDTH_FLAG) == 0) {
+                    writeVarInt(out, currentRect.getWidth());
+                }
+                if ((flags & MULTI_COPY_SHARED_HEIGHT_FLAG) == 0) {
+                    writeVarInt(out, currentRect.getHeight());
+                }
+            }
+            previousRect = currentRect;
+        }
+    }
+
+    protected static @NotNull AfmaMultiCopy readMultiCopy(@NotNull DataInputStream in) throws IOException {
+        int rectCount = readVarInt(in) + 1;
+        if (rectCount < 2) {
+            throw new IOException("AFMA multi-copy frame count is invalid");
+        }
+
+        ArrayList<AfmaCopyRect> copyRects = new ArrayList<>(rectCount);
+        AfmaCopyRect previousRect = null;
+        for (int rectIndex = 0; rectIndex < rectCount; rectIndex++) {
+            int flags = in.readUnsignedByte();
+            AfmaCopyRect currentRect;
+            if (previousRect == null) {
+                currentRect = readCopyRect(in);
+            } else {
+                int srcX = previousRect.getSrcX() + readSignedVarInt(in);
+                int srcY = previousRect.getSrcY() + readSignedVarInt(in);
+                int dstX = previousRect.getDstX() + readSignedVarInt(in);
+                int dstY = previousRect.getDstY() + readSignedVarInt(in);
+                int width = ((flags & MULTI_COPY_SHARED_WIDTH_FLAG) != 0) ? previousRect.getWidth() : readVarInt(in);
+                int height = ((flags & MULTI_COPY_SHARED_HEIGHT_FLAG) != 0) ? previousRect.getHeight() : readVarInt(in);
+                currentRect = new AfmaCopyRect(srcX, srcY, dstX, dstY, width, height);
+            }
+            copyRects.add(currentRect);
+            previousRect = currentRect;
+        }
+        return new AfmaMultiCopy(copyRects);
     }
 
     protected static void writePatchBounds(@NotNull DataOutputStream out, @NotNull AfmaFrameDescriptor descriptor) throws IOException {
@@ -294,6 +438,9 @@ public final class AfmaBinaryFrameIndexHelper {
             case COPY_RECT_RESIDUAL_PATCH -> 6;
             case COPY_RECT_SPARSE_PATCH -> 7;
             case BLOCK_INTER -> 8;
+            case MULTI_COPY_PATCH -> 9;
+            case MULTI_COPY_RESIDUAL_PATCH -> 10;
+            case MULTI_COPY_SPARSE_PATCH -> 11;
         };
     }
 
@@ -308,8 +455,15 @@ public final class AfmaBinaryFrameIndexHelper {
             case 6 -> AfmaFrameOperationType.COPY_RECT_RESIDUAL_PATCH;
             case 7 -> AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH;
             case 8 -> AfmaFrameOperationType.BLOCK_INTER;
+            case 9 -> AfmaFrameOperationType.MULTI_COPY_PATCH;
+            case 10 -> AfmaFrameOperationType.MULTI_COPY_RESIDUAL_PATCH;
+            case 11 -> AfmaFrameOperationType.MULTI_COPY_SPARSE_PATCH;
             default -> throw new IOException("AFMA binary frame index contains an unknown frame opcode: " + typeId);
         };
+    }
+
+    protected static void writeSignedVarInt(@NotNull DataOutputStream out, int value) throws IOException {
+        writeVarInt(out, (value << 1) ^ (value >> 31));
     }
 
     protected static void writeVarInt(@NotNull DataOutputStream out, int value) throws IOException {
@@ -333,6 +487,11 @@ public final class AfmaBinaryFrameIndexHelper {
             position += 7;
         }
         throw new IOException("AFMA binary frame index varint is too large");
+    }
+
+    protected static int readSignedVarInt(@NotNull DataInputStream in) throws IOException {
+        int zigZag = readVarInt(in);
+        return (zigZag >>> 1) ^ -(zigZag & 1);
     }
 
 }

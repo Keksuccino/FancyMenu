@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameDes
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameIndex;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameOperationType;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaMetadata;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaMultiCopy;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaPatchRegion;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaAlphaResidualMode;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaPayloadMetricsHelper;
@@ -433,6 +434,34 @@ public class AfmaEncodePlanner {
                     candidates.add(copySparseCandidate);
                 }
             }
+
+            AfmaRectCopyDetector.MultiDetection multiDetection = copyDetector.detectMulti(previousFrame, workingFrame);
+            if (multiDetection != null) {
+                AfmaPixelFrame multiCopyReferenceFrame = this.buildMultiCopyReferenceFrame(previousFrame, multiDetection.multiCopy());
+                PlannedCandidate multiCopyCandidate = this.createMultiCopyCandidate(workingFrame, introSequence, frameIndex, multiDetection, options);
+                long patchArea = multiDetection.patchArea();
+                if ((multiCopyCandidate != null) && this.shouldKeepComplexCandidate(multiCopyCandidate, fullCandidate,
+                        patchArea, workingFrame.getWidth(), workingFrame.getHeight(),
+                        options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, archiveState, introSequence)) {
+                    candidates.add(multiCopyCandidate);
+                }
+
+                PlannedCandidate multiCopyResidualCandidate = this.createMultiCopyResidualCandidate(multiCopyReferenceFrame, workingFrame,
+                        introSequence, frameIndex, multiDetection);
+                if ((multiCopyResidualCandidate != null) && this.shouldKeepResidualCandidate(multiCopyResidualCandidate, fullCandidate,
+                        patchArea, workingFrame.getWidth(), workingFrame.getHeight(),
+                        options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, archiveState, introSequence)) {
+                    candidates.add(multiCopyResidualCandidate);
+                }
+
+                PlannedCandidate multiCopySparseCandidate = this.createMultiCopySparseCandidate(multiCopyReferenceFrame, workingFrame,
+                        introSequence, frameIndex, multiDetection);
+                if ((multiCopySparseCandidate != null) && this.shouldKeepSparseCandidate(multiCopySparseCandidate, fullCandidate,
+                        patchArea, workingFrame.getWidth(), workingFrame.getHeight(),
+                        options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, archiveState, introSequence)) {
+                    candidates.add(multiCopySparseCandidate);
+                }
+            }
         }
 
         if (options.isRectCopyEnabled() && (deltaBounds != null)) {
@@ -700,6 +729,34 @@ public class AfmaEncodePlanner {
                         patchArea, currentFrame.getWidth(), currentFrame.getHeight(),
                         options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
                     candidates.add(copySparseCandidate);
+                }
+            }
+
+            AfmaRectCopyDetector.MultiDetection multiDetection = copyDetector.detectMulti(previousFrame, currentFrame);
+            if (multiDetection != null) {
+                AfmaPixelFrame multiCopyReferenceFrame = this.buildMultiCopyReferenceFrame(previousFrame, multiDetection.multiCopy());
+                PlannedCandidate multiCopyCandidate = this.createMultiCopyCandidate(currentFrame, introSequence, frameIndex, multiDetection, options);
+                long patchArea = multiDetection.patchArea();
+                if ((multiCopyCandidate != null) && this.shouldKeepComplexCandidate(multiCopyCandidate, fullCandidate,
+                        patchArea, currentFrame.getWidth(), currentFrame.getHeight(),
+                        options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
+                    candidates.add(multiCopyCandidate);
+                }
+
+                PlannedCandidate multiCopyResidualCandidate = this.createMultiCopyResidualCandidate(multiCopyReferenceFrame, currentFrame,
+                        introSequence, frameIndex, multiDetection);
+                if ((multiCopyResidualCandidate != null) && this.shouldKeepResidualCandidate(multiCopyResidualCandidate, fullCandidate,
+                        patchArea, currentFrame.getWidth(), currentFrame.getHeight(),
+                        options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
+                    candidates.add(multiCopyResidualCandidate);
+                }
+
+                PlannedCandidate multiCopySparseCandidate = this.createMultiCopySparseCandidate(multiCopyReferenceFrame, currentFrame,
+                        introSequence, frameIndex, multiDetection);
+                if ((multiCopySparseCandidate != null) && this.shouldKeepSparseCandidate(multiCopySparseCandidate, fullCandidate,
+                        patchArea, currentFrame.getWidth(), currentFrame.getHeight(),
+                        options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
+                    candidates.add(multiCopySparseCandidate);
                 }
             }
         }
@@ -1116,6 +1173,98 @@ public class AfmaEncodePlanner {
         );
     }
 
+    @NotNull
+    protected AfmaPixelFrame buildMultiCopyReferenceFrame(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaMultiCopy multiCopy) {
+        int[] copiedPixels = previousFrame.copyPixels();
+        AfmaPixelFrameHelper.applyCopyRects(copiedPixels, previousFrame.getWidth(), multiCopy.getCopyRects());
+        return new AfmaPixelFrame(previousFrame.getWidth(), previousFrame.getHeight(), copiedPixels);
+    }
+
+    @Nullable
+    protected PlannedCandidate createMultiCopyResidualCandidate(@NotNull AfmaPixelFrame copiedReferenceFrame, @NotNull AfmaPixelFrame currentFrame,
+                                                                boolean introSequence, int frameIndex,
+                                                                @NotNull AfmaRectCopyDetector.MultiDetection detection) {
+        AfmaRect patchBounds = detection.patchBounds();
+        if ((patchBounds == null) || (patchBounds.area() <= 0L)) {
+            return null;
+        }
+
+        ResidualPayloadData residualPayload = this.buildResidualPayload(copiedReferenceFrame, currentFrame, patchBounds);
+        if (residualPayload == null) {
+            return null;
+        }
+
+        String payloadPath = this.buildRawPayloadPath(introSequence, frameIndex, "mr");
+        int copyCount = detection.multiCopy().getCopyRectCount();
+        return new PlannedCandidate(
+                AfmaFrameDescriptor.multiCopyResidualPatch(
+                        detection.multiCopy(),
+                        payloadPath,
+                        patchBounds.x(),
+                        patchBounds.y(),
+                        patchBounds.width(),
+                        patchBounds.height(),
+                        residualPayload.metadata()
+                ),
+                payloadPath,
+                residualPayload.payloadBytes(),
+                PayloadKind.RAW,
+                false,
+                null,
+                null,
+                null,
+                false,
+                ReferenceBase.WORKING_FRAME,
+                null,
+                null,
+                DecodeCost.MULTI_COPY_RESIDUAL_PATCH,
+                4 + copyCount + residualPayload.complexityScore()
+        );
+    }
+
+    @Nullable
+    protected PlannedCandidate createMultiCopySparseCandidate(@NotNull AfmaPixelFrame copiedReferenceFrame, @NotNull AfmaPixelFrame currentFrame,
+                                                              boolean introSequence, int frameIndex,
+                                                              @NotNull AfmaRectCopyDetector.MultiDetection detection) throws IOException {
+        AfmaRect patchBounds = detection.patchBounds();
+        if ((patchBounds == null) || (patchBounds.area() <= 0L)) {
+            return null;
+        }
+
+        SparseResidualPayloadData sparsePayload = this.buildSparseDeltaPayload(copiedReferenceFrame, currentFrame, patchBounds);
+        if (sparsePayload == null) {
+            return null;
+        }
+
+        String maskPayloadPath = this.buildRawPayloadPath(introSequence, frameIndex, "mm");
+        String residualPayloadPath = this.buildRawPayloadPath(introSequence, frameIndex, "ms");
+        int copyCount = detection.multiCopy().getCopyRectCount();
+        return new PlannedCandidate(
+                AfmaFrameDescriptor.multiCopySparsePatch(
+                        detection.multiCopy(),
+                        maskPayloadPath,
+                        patchBounds.x(),
+                        patchBounds.y(),
+                        patchBounds.width(),
+                        patchBounds.height(),
+                        sparsePayload.toMetadata(residualPayloadPath)
+                ),
+                maskPayloadPath,
+                sparsePayload.layoutPayload(),
+                PayloadKind.RAW,
+                false,
+                residualPayloadPath,
+                sparsePayload.residualPayload(),
+                PayloadKind.RAW,
+                false,
+                ReferenceBase.WORKING_FRAME,
+                null,
+                null,
+                DecodeCost.MULTI_COPY_SPARSE_PATCH,
+                5 + copyCount + sparsePayload.complexityScore()
+        );
+    }
+
     @Nullable
     protected ResidualPayloadData buildResidualPayload(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
                                                        @NotNull AfmaRect deltaBounds) {
@@ -1482,6 +1631,53 @@ public class AfmaEncodePlanner {
                 referencePatchPixels,
                 DecodeCost.COPY_RECT_PATCH,
                 3
+        );
+    }
+
+    @Nullable
+    protected PlannedCandidate createMultiCopyCandidate(@NotNull AfmaPixelFrame currentFrame, boolean introSequence, int frameIndex,
+                                                        @NotNull AfmaRectCopyDetector.MultiDetection detection,
+                                                        @NotNull AfmaEncodeOptions options) throws IOException {
+        AfmaRect patchBounds = detection.patchBounds();
+        if ((patchBounds != null) && (patchBounds.area() >= ((long) currentFrame.getWidth() * currentFrame.getHeight()))) {
+            return null;
+        }
+
+        String payloadPath = (patchBounds != null) ? this.buildPayloadPath(introSequence, frameIndex) : null;
+        AfmaPatchRegion patchRegion = (patchBounds != null) ? patchBounds.toPatchRegion(payloadPath) : null;
+        byte[] payloadBytes = null;
+        int[] referencePatchPixels = null;
+
+        if (patchBounds != null) {
+            AfmaBinIntraPayloadHelper.EncodedPayloadResult encodedPayload = this.encodeBinIntraPayloadRegion(
+                    currentFrame,
+                    patchBounds.x(),
+                    patchBounds.y(),
+                    patchBounds.width(),
+                    patchBounds.height(),
+                    options,
+                    true
+            );
+            payloadBytes = encodedPayload.payloadBytes();
+            referencePatchPixels = encodedPayload.lossless() ? null : encodedPayload.reconstructedPixels();
+        }
+
+        int copyCount = detection.multiCopy().getCopyRectCount();
+        return new PlannedCandidate(
+                AfmaFrameDescriptor.multiCopyPatch(detection.multiCopy(), patchRegion),
+                null,
+                null,
+                null,
+                false,
+                payloadPath,
+                payloadBytes,
+                PayloadKind.BIN_INTRA,
+                false,
+                ReferenceBase.WORKING_FRAME,
+                referencePatchPixels != null ? patchBounds : null,
+                referencePatchPixels,
+                DecodeCost.MULTI_COPY_PATCH,
+                2 + copyCount
         );
     }
 
@@ -2241,10 +2437,13 @@ public class AfmaEncodePlanner {
         FULL,
         DELTA,
         COPY_RECT_PATCH,
+        MULTI_COPY_PATCH,
         RESIDUAL_DELTA_RECT,
         COPY_RECT_RESIDUAL_PATCH,
+        MULTI_COPY_RESIDUAL_PATCH,
         SPARSE_DELTA_RECT,
         COPY_RECT_SPARSE_PATCH,
+        MULTI_COPY_SPARSE_PATCH,
         BLOCK_INTER
     }
 
@@ -2456,6 +2655,18 @@ public class AfmaEncodePlanner {
                             + estimateVarIntBytes(patch.getWidth())
                             + estimateVarIntBytes(patch.getHeight());
                 }
+                case MULTI_COPY_PATCH -> {
+                    int copyBytes = estimateMultiCopyBytes(Objects.requireNonNull(this.descriptor.getMultiCopy()));
+                    AfmaPatchRegion patch = this.descriptor.getPatch();
+                    if (patch == null) {
+                        yield copyBytes + 1;
+                    }
+                    yield copyBytes + 1 + estimatedPayloadIdBytes()
+                            + estimateVarIntBytes(patch.getX())
+                            + estimateVarIntBytes(patch.getY())
+                            + estimateVarIntBytes(patch.getWidth())
+                            + estimateVarIntBytes(patch.getHeight());
+                }
                 case COPY_RECT_RESIDUAL_PATCH -> estimateCopyRectBytes(Objects.requireNonNull(this.descriptor.getCopy()))
                         + estimatedPayloadIdBytes()
                         + estimateVarIntBytes(this.descriptor.getX())
@@ -2465,7 +2676,26 @@ public class AfmaEncodePlanner {
                         + estimateVarIntBytes(Objects.requireNonNull(this.descriptor.getResidual()).getChannels())
                         + 2
                         + estimateVarIntBytes(Objects.requireNonNull(this.descriptor.getResidual()).getAlphaChangedPixelCount());
+                case MULTI_COPY_RESIDUAL_PATCH -> estimateMultiCopyBytes(Objects.requireNonNull(this.descriptor.getMultiCopy()))
+                        + estimatedPayloadIdBytes()
+                        + estimateVarIntBytes(this.descriptor.getX())
+                        + estimateVarIntBytes(this.descriptor.getY())
+                        + estimateVarIntBytes(this.descriptor.getWidth())
+                        + estimateVarIntBytes(this.descriptor.getHeight())
+                        + estimateVarIntBytes(Objects.requireNonNull(this.descriptor.getResidual()).getChannels())
+                        + 2
+                        + estimateVarIntBytes(Objects.requireNonNull(this.descriptor.getResidual()).getAlphaChangedPixelCount());
                 case COPY_RECT_SPARSE_PATCH -> estimateCopyRectBytes(Objects.requireNonNull(this.descriptor.getCopy()))
+                        + (2 * estimatedPayloadIdBytes())
+                        + estimateVarIntBytes(this.descriptor.getX())
+                        + estimateVarIntBytes(this.descriptor.getY())
+                        + estimateVarIntBytes(this.descriptor.getWidth())
+                        + estimateVarIntBytes(this.descriptor.getHeight())
+                        + estimateVarIntBytes(Objects.requireNonNull(this.descriptor.getSparse()).getChangedPixelCount())
+                        + estimateVarIntBytes(Objects.requireNonNull(this.descriptor.getSparse()).getChannels())
+                        + 3
+                        + estimateVarIntBytes(Objects.requireNonNull(this.descriptor.getSparse()).getAlphaChangedPixelCount());
+                case MULTI_COPY_SPARSE_PATCH -> estimateMultiCopyBytes(Objects.requireNonNull(this.descriptor.getMultiCopy()))
                         + (2 * estimatedPayloadIdBytes())
                         + estimateVarIntBytes(this.descriptor.getX())
                         + estimateVarIntBytes(this.descriptor.getY())
@@ -2498,6 +2728,32 @@ public class AfmaEncodePlanner {
                     + estimateVarIntBytes(copyRect.getHeight());
         }
 
+        protected int estimateMultiCopyBytes(@NotNull AfmaMultiCopy multiCopy) {
+            List<AfmaCopyRect> copyRects = multiCopy.getCopyRects();
+            int bytes = estimateVarIntBytes(copyRects.size() - 1);
+            AfmaCopyRect previousRect = null;
+            for (AfmaCopyRect copyRect : copyRects) {
+                AfmaCopyRect currentRect = Objects.requireNonNull(copyRect);
+                bytes += 1;
+                if (previousRect == null) {
+                    bytes += estimateCopyRectBytes(currentRect);
+                } else {
+                    bytes += estimateSignedVarIntBytes(currentRect.getSrcX() - previousRect.getSrcX());
+                    bytes += estimateSignedVarIntBytes(currentRect.getSrcY() - previousRect.getSrcY());
+                    bytes += estimateSignedVarIntBytes(currentRect.getDstX() - previousRect.getDstX());
+                    bytes += estimateSignedVarIntBytes(currentRect.getDstY() - previousRect.getDstY());
+                    if (currentRect.getWidth() != previousRect.getWidth()) {
+                        bytes += estimateVarIntBytes(currentRect.getWidth());
+                    }
+                    if (currentRect.getHeight() != previousRect.getHeight()) {
+                        bytes += estimateVarIntBytes(currentRect.getHeight());
+                    }
+                }
+                previousRect = currentRect;
+            }
+            return bytes;
+        }
+
         protected int estimateVarIntBytes(int value) {
             if ((value & ~0x7F) == 0) {
                 return 1;
@@ -2512,6 +2768,11 @@ public class AfmaEncodePlanner {
                 return 4;
             }
             return 5;
+        }
+
+        protected int estimateSignedVarIntBytes(int value) {
+            int zigZag = (value << 1) ^ (value >> 31);
+            return estimateVarIntBytes(zigZag);
         }
 
         public boolean isBetterThan(@NotNull PlannedCandidate other, @NotNull Map<String, String> payloadPathsByFingerprint) {

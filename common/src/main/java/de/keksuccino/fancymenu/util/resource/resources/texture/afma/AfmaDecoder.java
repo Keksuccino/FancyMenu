@@ -278,7 +278,16 @@ public class AfmaDecoder implements Closeable {
         } else if (descriptor.getType() == AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH) {
             this.validateSparsePayload(context, descriptor.getWidth(), descriptor.getHeight(), Objects.requireNonNull(descriptor.getSparse()),
                     Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), Objects.requireNonNull(Objects.requireNonNull(descriptor.getSparse()).getPixelsPath()));
+        } else if (descriptor.getType() == AfmaFrameOperationType.MULTI_COPY_RESIDUAL_PATCH) {
+            this.validateResidualPayload(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
+                    descriptor.getWidth(), descriptor.getHeight(), Objects.requireNonNull(descriptor.getResidual()));
+        } else if (descriptor.getType() == AfmaFrameOperationType.MULTI_COPY_SPARSE_PATCH) {
+            this.validateSparsePayload(context, descriptor.getWidth(), descriptor.getHeight(), Objects.requireNonNull(descriptor.getSparse()),
+                    Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), Objects.requireNonNull(Objects.requireNonNull(descriptor.getSparse()).getPixelsPath()));
         } else if ((descriptor.getType() == AfmaFrameOperationType.COPY_RECT_PATCH) && descriptor.requiresPatchPayload()) {
+            AfmaPatchRegion patch = Objects.requireNonNull(descriptor.getPatch());
+            this.validateBinIntraPayload(context, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()), patch.getWidth(), patch.getHeight());
+        } else if ((descriptor.getType() == AfmaFrameOperationType.MULTI_COPY_PATCH) && descriptor.requiresPatchPayload()) {
             AfmaPatchRegion patch = Objects.requireNonNull(descriptor.getPatch());
             this.validateBinIntraPayload(context, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()), patch.getWidth(), patch.getHeight());
         } else if (descriptor.getType() == AfmaFrameOperationType.BLOCK_INTER) {
@@ -351,7 +360,16 @@ public class AfmaDecoder implements Closeable {
             } else if (descriptor.getType() == AfmaFrameOperationType.COPY_RECT_SPARSE_PATCH) {
                 this.validateSparsePayload(context, descriptor.getWidth(), descriptor.getHeight(), Objects.requireNonNull(descriptor.getSparse()),
                         Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), Objects.requireNonNull(Objects.requireNonNull(descriptor.getSparse()).getPixelsPath()));
+            } else if (descriptor.getType() == AfmaFrameOperationType.MULTI_COPY_RESIDUAL_PATCH) {
+                this.validateResidualPayload(context, Objects.requireNonNull(descriptor.getPrimaryPayloadPath()),
+                        descriptor.getWidth(), descriptor.getHeight(), Objects.requireNonNull(descriptor.getResidual()));
+            } else if (descriptor.getType() == AfmaFrameOperationType.MULTI_COPY_SPARSE_PATCH) {
+                this.validateSparsePayload(context, descriptor.getWidth(), descriptor.getHeight(), Objects.requireNonNull(descriptor.getSparse()),
+                        Objects.requireNonNull(descriptor.getPrimaryPayloadPath()), Objects.requireNonNull(Objects.requireNonNull(descriptor.getSparse()).getPixelsPath()));
             } else if ((descriptor.getType() == AfmaFrameOperationType.COPY_RECT_PATCH) && descriptor.requiresPatchPayload()) {
+                AfmaPatchRegion patch = Objects.requireNonNull(descriptor.getPatch());
+                this.validateBinIntraPayload(context, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()), patch.getWidth(), patch.getHeight());
+            } else if ((descriptor.getType() == AfmaFrameOperationType.MULTI_COPY_PATCH) && descriptor.requiresPatchPayload()) {
                 AfmaPatchRegion patch = Objects.requireNonNull(descriptor.getPatch());
                 this.validateBinIntraPayload(context, Objects.requireNonNull(descriptor.getSecondaryPayloadPath()), patch.getWidth(), patch.getHeight());
             } else if (descriptor.getType() == AfmaFrameOperationType.BLOCK_INTER) {
