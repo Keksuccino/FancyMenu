@@ -46,6 +46,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     private float dragTargetIndicatorY = Float.NaN;
     @Nullable
     private Layout.LayerGroup dragTargetGroup = null;
+    private boolean dragTargetIsGroupHeader = false;
     private boolean isDragging = false;
     private static final int DROP_INDICATOR_THICKNESS = 3;
     private static final int TITLE_BAR_ICON_BASE_SIZE = 8;
@@ -185,6 +186,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         this.dragTargetUiIndex = -1;
         this.dragTargetIndicatorY = Float.NaN;
         this.dragTargetGroup = null;
+        this.dragTargetIsGroupHeader = false;
         this.isDragging = false;
     }
 
@@ -263,6 +265,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         dragTargetUiIndex = -1;
         dragTargetIndicatorY = Float.NaN;
         dragTargetGroup = null;
+        dragTargetIsGroupHeader = false;
 
         for (ScrollAreaEntry e : this.scrollArea.getEntries()) {
             if (e instanceof LayerElementEntry l) {
@@ -312,11 +315,13 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         this.dragTargetUiIndex = -1;
         this.dragTargetIndicatorY = Float.NaN;
         this.dragTargetGroup = null;
+        this.dragTargetIsGroupHeader = false;
 
         if (!(draggedEntry instanceof LayerGroupEntry)) {
             LayerGroupEntry hoveredGroup = this.getHoveredGroupEntry(mouseX, mouseY);
             if (hoveredGroup != null) {
                 this.dragTargetGroup = hoveredGroup.group;
+                this.dragTargetIsGroupHeader = true;
                 this.dragTargetUiIndex = this.getGroupInsertionIndex(hoveredGroup.group, dragEntries);
                 this.dragTargetIndicatorY = this.getIndicatorYForUiIndex(dragEntries, this.dragTargetUiIndex);
                 return;
@@ -472,6 +477,63 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             return lastEntry.getY() + lastEntry.getHeight();
         }
         return entries.get(uiIndex).getY();
+    }
+
+    private int getFlatInsertionIndexForUiTarget(@NotNull List<AbstractEditorElement<?, ?>> remaining, @NotNull List<LayerElementEntry> dragEntries, int uiIndex) {
+        if (remaining.isEmpty()) {
+            return 0;
+        }
+        if (dragEntries.isEmpty()) {
+            return 0;
+        }
+
+        int clampedUiIndex = Math.min(Math.max(uiIndex, 0), dragEntries.size());
+        if (clampedUiIndex <= 0) {
+            int anchorIndex = remaining.indexOf(dragEntries.get(0).element);
+            if (anchorIndex >= 0) {
+                return Math.min(anchorIndex + 1, remaining.size());
+            }
+            return remaining.size();
+        }
+        if (clampedUiIndex >= dragEntries.size()) {
+            int anchorIndex = remaining.indexOf(dragEntries.get(dragEntries.size() - 1).element);
+            if (anchorIndex >= 0) {
+                return Math.max(anchorIndex, 0);
+            }
+            return 0;
+        }
+
+        int anchorIndex = remaining.indexOf(dragEntries.get(clampedUiIndex - 1).element);
+        if (anchorIndex >= 0) {
+            return anchorIndex;
+        }
+
+        // Fall back to the legacy conversion if the UI anchor can't be resolved.
+        return Math.min(Math.max(remaining.size() - clampedUiIndex, 0), remaining.size());
+    }
+
+    private int getFlatInsertionIndexForGroupHeader(@NotNull Layout.LayerGroup group, @NotNull List<AbstractEditorElement<?, ?>> remaining) {
+        // Group headers stay visible even while the group contents are collapsed, so anchor to the
+        // group's real flat position instead of the visible layer list to keep the group contiguous.
+        for (int i = 0; i < remaining.size(); i++) {
+            if (this.editor.getLayerGroupForElement(remaining.get(i)) == group) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private int resolveFlatInsertionIndex(@NotNull List<AbstractEditorElement<?, ?>> remaining, @NotNull List<LayerElementEntry> dragEntries) {
+        if (remaining.isEmpty()) {
+            return 0;
+        }
+        if (this.dragTargetIsGroupHeader && this.dragTargetGroup != null) {
+            int groupTargetIndex = this.getFlatInsertionIndexForGroupHeader(this.dragTargetGroup, remaining);
+            if (groupTargetIndex >= 0) {
+                return groupTargetIndex;
+            }
+        }
+        return this.getFlatInsertionIndexForUiTarget(remaining, dragEntries, this.dragTargetUiIndex);
     }
 
     @Nullable
@@ -663,10 +725,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         List<AbstractEditorElement<?, ?>> remaining = new ArrayList<>(this.editor.normalEditorElements);
         remaining.removeAll(movingElements);
 
-        int remainingCount = remaining.size();
-        int targetUiIndex = Math.min(Math.max(this.dragTargetUiIndex, 0), remainingCount);
-        int targetIndex = remainingCount - targetUiIndex;
-        targetIndex = Math.min(Math.max(targetIndex, 0), remainingCount);
+        List<LayerElementEntry> dragEntries = this.getLayerEntriesInUiOrderExcluding(movingElements);
+        int targetIndex = this.resolveFlatInsertionIndex(remaining, dragEntries);
+        targetIndex = Math.min(Math.max(targetIndex, 0), remaining.size());
 
         List<AbstractEditorElement<?, ?>> reordered = new ArrayList<>(remaining);
         reordered.addAll(targetIndex, movingElements);
