@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator;
 
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
 import de.keksuccino.fancymenu.util.file.FilenameComparator;
@@ -14,6 +15,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseDirectoryWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
@@ -32,6 +34,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Supplier;
 
 public class AfmaCreatorScreen extends Screen {
 
@@ -156,6 +159,7 @@ public class AfmaCreatorScreen extends Screen {
         this.cancelJobButton = this.addStyledButton(Component.translatable("fancymenu.common_components.cancel"), button -> this.state.cancelCurrentJob());
         this.closeButton = this.addStyledButton(Component.translatable("fancymenu.common.close"), button -> this.onClose());
 
+        this.configureTooltips();
         this.syncWidgetsFromState();
         this.repositionWidgets();
     }
@@ -389,6 +393,50 @@ public class AfmaCreatorScreen extends Screen {
         UIBase.applyDefaultWidgetSkinTo(button, UIBase.shouldBlur());
         this.addRenderableWidget(button);
         return button;
+    }
+
+    protected void configureTooltips() {
+        this.setEditBoxTooltip(this.mainFramesPathEditBox, "fancymenu.afma.creator.main_frames.desc");
+        this.setEditBoxTooltip(this.introFramesPathEditBox, "fancymenu.afma.creator.intro_frames.desc");
+        this.setEditBoxTooltip(this.outputPathEditBox, "fancymenu.afma.creator.output_file.desc");
+        this.setEditBoxTooltip(this.frameTimeEditBox, "fancymenu.afma.creator.frame_time.desc");
+        this.setEditBoxTooltip(this.introFrameTimeEditBox, "fancymenu.afma.creator.intro_frame_time.desc");
+        this.setEditBoxTooltip(this.loopCountEditBox, "fancymenu.afma.creator.loop_count.desc");
+        this.setEditBoxTooltip(this.keyframeIntervalEditBox, "fancymenu.afma.creator.keyframe_interval.desc");
+
+        this.setButtonTooltip(this.browseMainFramesButton, "fancymenu.afma.creator.browse_main_frames.desc");
+        this.setButtonTooltip(this.browseIntroFramesButton, "fancymenu.afma.creator.browse_intro_frames.desc");
+        this.setButtonTooltip(this.clearIntroFramesButton, "fancymenu.afma.creator.clear_intro_frames.desc");
+        this.setButtonTooltip(this.browseOutputButton, "fancymenu.afma.creator.browse_output.desc");
+        this.setButtonTooltip(this.exportButton, "fancymenu.afma.creator.export.desc");
+        this.setButtonTooltip(this.cancelJobButton, "fancymenu.afma.creator.cancel.desc");
+        this.setButtonTooltip(this.closeButton, "fancymenu.afma.creator.close.desc");
+
+        this.setButtonTooltip(this.presetCycleButton, "fancymenu.afma.creator.optimization_preset.desc");
+        this.setButtonTooltip(this.rectCopyCycleButton, "fancymenu.afma.creator.rect_copy.desc");
+        this.setButtonTooltip(this.duplicateCycleButton, "fancymenu.afma.creator.duplicate_elision.desc");
+        this.setButtonTooltip(this.nearLosslessCycleButton, "fancymenu.afma.creator.near_lossless.desc");
+    }
+
+    protected void setEditBoxTooltip(@Nullable ExtendedEditBox editBox, @NotNull String localizationKey) {
+        if (editBox != null) {
+            editBox.setUITooltip(this.createTooltipSupplier(localizationKey));
+        }
+    }
+
+    protected void setButtonTooltip(@Nullable ExtendedButton button, @NotNull String localizationKey) {
+        if (button != null) {
+            button.setUITooltip(this.createTooltip(localizationKey));
+        }
+    }
+
+    protected @NotNull Supplier<UITooltip> createTooltipSupplier(@NotNull String localizationKey) {
+        UITooltip tooltip = this.createTooltip(localizationKey);
+        return () -> tooltip;
+    }
+
+    protected @NotNull UITooltip createTooltip(@NotNull String localizationKey) {
+        return UITooltip.of(LocalizationUtils.splitLocalizedLines(localizationKey));
     }
 
     @Override
