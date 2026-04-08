@@ -1,9 +1,12 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator;
 
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaChunkedPayloadHelper;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaDecoder;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameIndex;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameOperationType;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaMetadata;
 import org.jetbrains.annotations.NotNull;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -16,6 +19,8 @@ public class AfmaEncodePlan {
     protected final AfmaFrameIndex frameIndex;
     @NotNull
     protected final LinkedHashMap<String, byte[]> payloads;
+    @NotNull
+    protected final AfmaChunkedPayloadHelper.PackedPayloadArchive payloadArchive;
     protected final long totalPayloadBytes;
 
     public AfmaEncodePlan(@NotNull AfmaMetadata metadata, @NotNull AfmaFrameIndex frameIndex, @NotNull LinkedHashMap<String, byte[]> payloads) {
@@ -31,6 +36,7 @@ public class AfmaEncodePlan {
         this.metadata = Objects.requireNonNull(metadata);
         this.frameIndex = Objects.requireNonNull(frameIndex);
         this.payloads = copyPayloads ? new LinkedHashMap<>(Objects.requireNonNull(payloads)) : Objects.requireNonNull(payloads);
+        this.payloadArchive = buildPayloadArchive(this.payloads, this.frameIndex, this.metadata);
         this.totalPayloadBytes = Math.max(0L, totalPayloadBytes);
     }
 
@@ -46,7 +52,12 @@ public class AfmaEncodePlan {
 
     @NotNull
     public LinkedHashMap<String, byte[]> getPayloads() {
-        return this.payloads;
+        return new LinkedHashMap<>(this.payloads);
+    }
+
+    @NotNull
+    public AfmaChunkedPayloadHelper.PackedPayloadArchive getPayloadArchive() {
+        return this.payloadArchive;
     }
 
     public long getTotalPayloadBytes() {
@@ -78,6 +89,21 @@ public class AfmaEncodePlan {
             }
         }
         return total;
+    }
+
+    @NotNull
+    private static AfmaChunkedPayloadHelper.PackedPayloadArchive buildPayloadArchive(@NotNull Map<String, byte[]> payloads,
+                                                                                     @NotNull AfmaFrameIndex frameIndex,
+                                                                                     @NotNull AfmaMetadata metadata) {
+        LinkedHashMap<String, byte[]> chunkedPayloads = new LinkedHashMap<>();
+        for (Map.Entry<String, byte[]> entry : payloads.entrySet()) {
+            String normalizedPath = AfmaDecoder.normalizeEntryPath(entry.getKey());
+            if ("thumbnail.bin".equalsIgnoreCase(normalizedPath)) {
+                continue;
+            }
+            chunkedPayloads.put(entry.getKey(), entry.getValue());
+        }
+        return AfmaChunkedPayloadHelper.buildArchiveLayout(chunkedPayloads, AfmaChunkedPayloadHelper.buildPackingHints(frameIndex, metadata.getLoopCount()));
     }
 
 }

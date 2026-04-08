@@ -60,7 +60,7 @@ public class AfmaArchiveWriter {
                 chunkedPayloads.put(entry.getKey(), entry.getValue());
             }
 
-            AfmaChunkedPayloadHelper.PackedPayloadArchive payloadArchive = AfmaChunkedPayloadHelper.buildArchiveLayout(chunkedPayloads);
+            AfmaChunkedPayloadHelper.PackedPayloadArchive payloadArchive = plan.getPayloadArchive();
             byte[] frameIndexBytes = AfmaBinaryFrameIndexHelper.encodeFrameIndex(plan.getFrameIndex(), payloadArchive.payloadIdsByPath());
             byte[] payloadIndexBytes = AfmaChunkedPayloadHelper.encodePayloadIndex(payloadArchive);
 
