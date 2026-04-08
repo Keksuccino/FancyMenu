@@ -61,6 +61,13 @@ public class AfmaPixelFrame implements AutoCloseable {
         return Arrays.copyOf(this.pixels, this.pixels.length);
     }
 
+    /**
+     * Exposes the backing pixels for read-only hot paths that need to avoid extra copies.
+     */
+    public @NotNull int[] getPixelsUnsafe() {
+        return this.pixels;
+    }
+
     public @NotNull byte[] asByteArray() throws IOException {
         return AfmaBinIntraPayloadHelper.encodePayload(this.width, this.height, this.pixels);
     }

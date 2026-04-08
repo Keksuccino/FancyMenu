@@ -31,21 +31,37 @@ public final class AfmaBinIntraPayloadHelper {
 
     @NotNull
     public static byte[] encodePayload(int width, int height, @NotNull int[] pixels) throws IOException {
-        return encodePayloadDetailed(width, height, pixels).payloadBytes();
+        return encodePayload(width, height, pixels, 0, width);
+    }
+
+    @NotNull
+    public static byte[] encodePayload(int width, int height, @NotNull int[] pixels, int offset, int scanlineStride) throws IOException {
+        return encodePayloadDetailed(width, height, pixels, offset, scanlineStride).payloadBytes();
     }
 
     @NotNull
     public static EncodedPayloadResult encodePayloadDetailed(int width, int height, @NotNull int[] pixels) throws IOException {
-        return encodePayloadDetailed(width, height, pixels, EncodePreferences.lossless());
+        return encodePayloadDetailed(width, height, pixels, 0, width);
+    }
+
+    @NotNull
+    public static EncodedPayloadResult encodePayloadDetailed(int width, int height, @NotNull int[] pixels, int offset, int scanlineStride) throws IOException {
+        return encodePayloadDetailed(width, height, pixels, offset, scanlineStride, EncodePreferences.lossless());
     }
 
     @NotNull
     public static EncodedPayloadResult encodePayloadDetailed(int width, int height, @NotNull int[] pixels, @Nullable EncodePreferences preferences) throws IOException {
+        return encodePayloadDetailed(width, height, pixels, 0, width, preferences);
+    }
+
+    @NotNull
+    public static EncodedPayloadResult encodePayloadDetailed(int width, int height, @NotNull int[] pixels, int offset,
+                                                             int scanlineStride, @Nullable EncodePreferences preferences) throws IOException {
         validateDimensions(width, height);
-        validatePixelBuffer(width, height, pixels);
+        int[] sourcePixels = materializeDensePixels(width, height, pixels, offset, scanlineStride);
 
         EncodePreferences normalizedPreferences = (preferences != null) ? preferences : EncodePreferences.lossless();
-        List<PixelCandidate> pixelCandidates = collectPixelCandidates(width, height, pixels, normalizedPreferences);
+        List<PixelCandidate> pixelCandidates = collectPixelCandidates(width, height, sourcePixels, normalizedPreferences);
         List<PayloadCandidateBuilder> candidateBuilders = new ArrayList<>(pixelCandidates.size() * 5);
         for (PixelCandidate pixelCandidate : pixelCandidates) {
             addCandidateBuilders(candidateBuilders, width, height, pixelCandidate);
@@ -66,6 +82,24 @@ public final class AfmaBinIntraPayloadHelper {
             throw new IOException("Failed to build an AFMA BIN_INTRA payload");
         }
         return new EncodedPayloadResult(bestCandidate.payloadBytes(), bestCandidate.reconstructedPixels(), bestCandidate.lossless(), bestCandidate.mode());
+    }
+
+    @NotNull
+    protected static int[] materializeDensePixels(int width, int height, @NotNull int[] pixels, int offset, int scanlineStride) {
+        validatePixelBufferView(width, height, pixels, offset, scanlineStride);
+        if ((offset == 0) && (scanlineStride == width) && (pixels.length == (width * height))) {
+            return pixels;
+        }
+
+        int[] densePixels = new int[width * height];
+        int sourceOffset = offset;
+        int denseOffset = 0;
+        for (int row = 0; row < height; row++) {
+            System.arraycopy(pixels, sourceOffset, densePixels, denseOffset, width);
+            sourceOffset += scanlineStride;
+            denseOffset += width;
+        }
+        return densePixels;
     }
 
     @NotNull
@@ -972,6 +1006,23 @@ public final class AfmaBinIntraPayloadHelper {
         long expectedPixels = (long) width * (long) height;
         if ((expectedPixels <= 0L) || (expectedPixels > Integer.MAX_VALUE) || (pixels.length != (int) expectedPixels)) {
             throw new IllegalArgumentException("AFMA BIN_INTRA pixel buffer size does not match dimensions");
+        }
+    }
+
+    protected static void validatePixelBufferView(int width, int height, @NotNull int[] pixels, int offset, int scanlineStride) {
+        Objects.requireNonNull(pixels);
+        if (offset < 0 || scanlineStride < width) {
+            throw new IllegalArgumentException("AFMA BIN_INTRA pixel buffer view is invalid");
+        }
+
+        long expectedPixels = (long) width * (long) height;
+        if ((expectedPixels <= 0L) || (expectedPixels > Integer.MAX_VALUE)) {
+            throw new IllegalArgumentException("AFMA BIN_INTRA pixel buffer size does not match dimensions");
+        }
+
+        long requiredLength = (long) offset + ((long) (height - 1) * (long) scanlineStride) + width;
+        if (requiredLength > pixels.length) {
+            throw new IllegalArgumentException("AFMA BIN_INTRA pixel buffer view does not contain the requested region");
         }
     }
 

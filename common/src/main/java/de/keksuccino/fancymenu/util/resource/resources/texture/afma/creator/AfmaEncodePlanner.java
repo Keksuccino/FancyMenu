@@ -554,6 +554,22 @@ public class AfmaEncodePlanner {
     protected AfmaBinIntraPayloadHelper.EncodedPayloadResult encodeBinIntraPayload(@NotNull AfmaPixelFrame frame,
                                                                                     @NotNull AfmaEncodeOptions options,
                                                                                     boolean allowPerceptual) throws IOException {
+        return this.encodeBinIntraPayload(frame.getWidth(), frame.getHeight(), frame.getPixelsUnsafe(), 0, frame.getWidth(), options, allowPerceptual);
+    }
+
+    @NotNull
+    protected AfmaBinIntraPayloadHelper.EncodedPayloadResult encodeBinIntraPayloadRegion(@NotNull AfmaPixelFrame frame,
+                                                                                          int x, int y, int width, int height,
+                                                                                          @NotNull AfmaEncodeOptions options,
+                                                                                          boolean allowPerceptual) throws IOException {
+        return this.encodeBinIntraPayload(width, height, frame.getPixelsUnsafe(), (y * frame.getWidth()) + x, frame.getWidth(), options, allowPerceptual);
+    }
+
+    @NotNull
+    protected AfmaBinIntraPayloadHelper.EncodedPayloadResult encodeBinIntraPayload(int width, int height,
+                                                                                    @NotNull int[] pixels, int offset, int scanlineStride,
+                                                                                    @NotNull AfmaEncodeOptions options,
+                                                                                    boolean allowPerceptual) throws IOException {
         AfmaBinIntraPayloadHelper.EncodePreferences preferences = (allowPerceptual && options.isPerceptualBinIntraEnabled())
                 ? AfmaBinIntraPayloadHelper.EncodePreferences.perceptual(
                 options.getPerceptualBinIntraMaxVisibleColorDelta(),
@@ -561,7 +577,7 @@ public class AfmaEncodePlanner {
                 options.getPerceptualBinIntraMaxAverageError()
         )
                 : AfmaBinIntraPayloadHelper.EncodePreferences.lossless();
-        return AfmaBinIntraPayloadHelper.encodePayloadDetailed(frame.getWidth(), frame.getHeight(), frame.copyPixels(), preferences);
+        return AfmaBinIntraPayloadHelper.encodePayloadDetailed(width, height, pixels, offset, scanlineStride, preferences);
     }
 
     @NotNull
@@ -596,29 +612,32 @@ public class AfmaEncodePlanner {
             return null;
         }
 
-        AfmaPixelFrame patchImage = this.frameNormalizer.extractPatch(currentFrame, deltaBounds.x(), deltaBounds.y(), deltaBounds.width(), deltaBounds.height());
-        try {
-            String payloadPath = this.buildPayloadPath(introSequence, frameIndex);
-            AfmaBinIntraPayloadHelper.EncodedPayloadResult encodedPayload = this.encodeBinIntraPayload(patchImage, options, true);
-            return new PlannedCandidate(
-                    AfmaFrameDescriptor.deltaRect(payloadPath, deltaBounds.x(), deltaBounds.y(), deltaBounds.width(), deltaBounds.height()),
-                    payloadPath,
-                    encodedPayload.payloadBytes(),
-                    PayloadKind.BIN_INTRA,
-                    false,
-                    null,
-                    null,
-                    null,
-                    false,
-                    ReferenceBase.WORKING_FRAME,
-                    encodedPayload.lossless() ? null : deltaBounds,
-                    encodedPayload.lossless() ? null : encodedPayload.reconstructedPixels(),
-                    DecodeCost.DELTA,
-                    2
-            );
-        } finally {
-            patchImage.close();
-        }
+        String payloadPath = this.buildPayloadPath(introSequence, frameIndex);
+        AfmaBinIntraPayloadHelper.EncodedPayloadResult encodedPayload = this.encodeBinIntraPayloadRegion(
+                currentFrame,
+                deltaBounds.x(),
+                deltaBounds.y(),
+                deltaBounds.width(),
+                deltaBounds.height(),
+                options,
+                true
+        );
+        return new PlannedCandidate(
+                AfmaFrameDescriptor.deltaRect(payloadPath, deltaBounds.x(), deltaBounds.y(), deltaBounds.width(), deltaBounds.height()),
+                payloadPath,
+                encodedPayload.payloadBytes(),
+                PayloadKind.BIN_INTRA,
+                false,
+                null,
+                null,
+                null,
+                false,
+                ReferenceBase.WORKING_FRAME,
+                encodedPayload.lossless() ? null : deltaBounds,
+                encodedPayload.lossless() ? null : encodedPayload.reconstructedPixels(),
+                DecodeCost.DELTA,
+                2
+        );
     }
 
     @Nullable
@@ -1026,14 +1045,17 @@ public class AfmaEncodePlanner {
         int[] referencePatchPixels = null;
 
         if (patchBounds != null) {
-            AfmaPixelFrame patchImage = this.frameNormalizer.extractPatch(currentFrame, patchBounds.x(), patchBounds.y(), patchBounds.width(), patchBounds.height());
-            try {
-                AfmaBinIntraPayloadHelper.EncodedPayloadResult encodedPayload = this.encodeBinIntraPayload(patchImage, options, true);
-                payloadBytes = encodedPayload.payloadBytes();
-                referencePatchPixels = encodedPayload.lossless() ? null : encodedPayload.reconstructedPixels();
-            } finally {
-                patchImage.close();
-            }
+            AfmaBinIntraPayloadHelper.EncodedPayloadResult encodedPayload = this.encodeBinIntraPayloadRegion(
+                    currentFrame,
+                    patchBounds.x(),
+                    patchBounds.y(),
+                    patchBounds.width(),
+                    patchBounds.height(),
+                    options,
+                    true
+            );
+            payloadBytes = encodedPayload.payloadBytes();
+            referencePatchPixels = encodedPayload.lossless() ? null : encodedPayload.reconstructedPixels();
         }
 
         return new PlannedCandidate(
