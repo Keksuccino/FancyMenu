@@ -1,87 +1,5 @@
 # AFMA Compression and Codec Improvement TO-DO
 
-## Phase 0: Baseline, Safety Nets, and Decision Framework
-
-Purpose:
-- Create the measurement and validation foundation before changing codec behavior.
-- Make later compression decisions based on real AFMA data instead of intuition.
-
-### 0.1 Create a fixed AFMA benchmark corpus
-- Gather representative source sequences for:
-  - Mostly static UI animations.
-  - Scroll and pan motion.
-  - Fade and alpha-heavy content.
-  - Particle-like sparse motion.
-  - Full-screen scene changes.
-  - Repeating loops with long steady periods.
-  - Intro + looping main sequence combinations.
-- Store the corpus outside distributable assets if needed, but make its location stable and documented.
-- Include both small and large resolutions.
-- Include cases that are known to favor:
-  - full BIN_INTRA,
-  - delta rect,
-  - sparse residual,
-  - copy rect,
-  - block inter.
-
-### 0.2 Add a repeatable AFMA analysis report tool
-- Implement an offline report generator that can print, export, or save:
-  - Final archive bytes.
-  - Total uncompressed payload bytes.
-  - Bytes by frame opcode.
-  - Bytes by payload type.
-  - Chunk count and chunk fill ratios.
-  - Payload dedup hit rate.
-  - Keyframe interval distribution.
-  - Estimated decode cost by frame and by sequence.
-  - Intro and main sequence stats separately.
-- Make the report work on:
-  - source PNG folders before encoding,
-  - generated AFMA archives after encoding.
-
-### 0.3 Add correctness fixtures and golden archives
-- Create a set of small golden AFMA archives with known decoded output.
-- Add decode validation checks for:
-  - exact reconstructed pixels for lossless modes,
-  - allowed drift windows for near-lossless modes,
-  - correct intro-to-main transitions,
-  - custom frame time handling,
-  - loop behavior,
-  - payload dedup correctness,
-  - payload chunk index correctness.
-- Add backward compatibility fixtures for current AFMA version 5.
-
-### 0.4 Add decode-side performance and allocation instrumentation
-- Add optional debug counters for:
-  - payload reads,
-  - chunk reads,
-  - chunk cache hits and misses,
-  - per-frame decode time,
-  - per-frame upload time,
-  - block inter tile counts and mode counts,
-  - allocation hot spots during playback.
-- Track:
-  - streaming thread decode time,
-  - client-thread apply time,
-  - memory churn caused by temporary arrays.
-
-### 0.5 Define format evolution rules before changing the bitstream
-- Decide how AFMA version 6+ should be introduced.
-- Define:
-  - feature flags in metadata,
-  - version compatibility behavior,
-  - fallback behavior for unsupported archives,
-  - whether multiple payload codecs can coexist in one archive,
-  - whether ZIP remains part of the format or becomes a legacy container.
-- Write the versioning rules down before implementing new opcodes.
-
-Acceptance criteria for Phase 0:
-- You can compare old and new encoder changes against the same corpus.
-- You can prove whether a change improves size, hurts speed, or changes memory.
-- You have stable fixtures for backward compatibility.
-
----
-
 ## Phase 1: Decoder Infrastructure Refactor Without Changing Compression Semantics
 
 Purpose:
@@ -564,17 +482,16 @@ Acceptance criteria for Phase 10:
 
 Implement in this order:
 
-1. Phase 0: baseline corpus, validation, instrumentation, and versioning rules.
-2. Phase 1: decoder refactor and allocation removal.
-3. Phase 2: planner and cost-model overhaul.
-4. Phase 3: low-risk compression wins within the current AFMA model.
-5. Phase 4: chunk layout optimization.
-6. Phase 5: multi-region motion reuse.
-7. Phase 6: sparse codec family expansion.
-8. Phase 7: block inter v2.
-9. Phase 8: native AFMA container and stream-friendly paging.
-10. Phase 9: advanced drift budgeting and content-aware quality policy.
-11. Phase 10: creator UX, analysis UX, migration, and comparison tooling.
+1. Phase 1: decoder refactor and allocation removal.
+2. Phase 2: planner and cost-model overhaul.
+3. Phase 3: low-risk compression wins within the current AFMA model.
+4. Phase 4: chunk layout optimization.
+5. Phase 5: multi-region motion reuse.
+6. Phase 6: sparse codec family expansion.
+7. Phase 7: block inter v2.
+8. Phase 8: native AFMA container and stream-friendly paging.
+9. Phase 9: advanced drift budgeting and content-aware quality policy.
+10. Phase 10: creator UX, analysis UX, migration, and comparison tooling.
 
 This order is intended to:
 - avoid redesigning the decoder twice,
