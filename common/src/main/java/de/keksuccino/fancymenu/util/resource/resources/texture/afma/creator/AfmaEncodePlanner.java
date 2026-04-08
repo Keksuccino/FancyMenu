@@ -1221,11 +1221,14 @@ public class AfmaEncodePlanner {
         for (AfmaRectCopyDetector.MotionVector motionVector : motionVectors) {
             testedVectors.add(packMotionVector(motionVector.dx(), motionVector.dy()));
             BlockInterTileCandidate motionCandidate = this.evaluateBlockInterMotionCandidate(previousFrame, currentFrame, dstX, dstY, width, height,
-                    motionVector.dx(), motionVector.dy());
+                    motionVector.dx(), motionVector.dy(), bestCandidate);
             if (motionCandidate == null) {
                 continue;
             }
             bestCandidate = this.selectBetterBlockInterCandidate(bestCandidate, motionCandidate);
+            if (this.isOptimalBlockInterTileCandidate(bestCandidate)) {
+                return bestCandidate.operation();
+            }
             this.addMotionSearchSeed(refinementSeeds, motionVector, motionCandidate);
         }
 
@@ -1239,14 +1242,18 @@ public class AfmaEncodePlanner {
 
     @Nullable
     protected BlockInterTileCandidate evaluateBlockInterMotionCandidate(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
-                                                                        int dstX, int dstY, int width, int height, int dx, int dy) {
+                                                                        int dstX, int dstY, int width, int height, int dx, int dy,
+                                                                        @NotNull BlockInterTileCandidate currentBestCandidate) {
         int srcX = dstX + dx;
         int srcY = dstY + dy;
         if (!this.isMotionTileInBounds(previousFrame, srcX, srcY, width, height)) {
             return null;
         }
 
-        MotionTileStats tileStats = this.scanMotionTile(previousFrame, currentFrame, dstX, dstY, srcX, srcY, width, height);
+        MotionTileStats tileStats = this.scanMotionTile(previousFrame, currentFrame, dstX, dstY, srcX, srcY, width, height, currentBestCandidate);
+        if (tileStats == null) {
+            return null;
+        }
         if (tileStats.changedPixelCount() <= 0) {
             return new BlockInterTileCandidate(
                     new AfmaBlockInterPayloadHelper.TileOperation(AfmaBlockInterPayloadHelper.TileMode.COPY, dx, dy, 0, 0, null, null),
@@ -1286,6 +1293,9 @@ public class AfmaEncodePlanner {
                                                                  @NotNull Set<Long> testedVectors) {
         BlockInterTileCandidate bestMotionCandidate = bestCandidate;
         for (MotionSearchSeed initialSeed : refinementSeeds) {
+            if (this.isOptimalBlockInterTileCandidate(bestMotionCandidate)) {
+                break;
+            }
             MotionSearchSeed seed = initialSeed;
             int centerDx = seed.motionVector().dx();
             int centerDy = seed.motionVector().dy();
@@ -1303,12 +1313,16 @@ public class AfmaEncodePlanner {
                             continue;
                         }
 
-                        BlockInterTileCandidate refinedCandidate = this.evaluateBlockInterMotionCandidate(previousFrame, currentFrame, dstX, dstY, width, height, candidateDx, candidateDy);
+                        BlockInterTileCandidate refinedCandidate = this.evaluateBlockInterMotionCandidate(previousFrame, currentFrame, dstX, dstY, width, height,
+                                candidateDx, candidateDy, bestMotionCandidate);
                         if (refinedCandidate == null) {
                             continue;
                         }
 
                         bestMotionCandidate = this.selectBetterBlockInterCandidate(bestMotionCandidate, refinedCandidate);
+                        if (this.isOptimalBlockInterTileCandidate(bestMotionCandidate)) {
+                            return bestMotionCandidate;
+                        }
                         if (this.isBetterBlockInterCandidate(refinedCandidate, bestSeedThisPass.candidate())) {
                             bestSeedThisPass = new MotionSearchSeed(new AfmaRectCopyDetector.MotionVector(candidateDx, candidateDy), refinedCandidate);
                             improved = true;
@@ -1361,6 +1375,35 @@ public class AfmaEncodePlanner {
         return candidate.operation().mode().ordinal() < currentBest.operation().mode().ordinal();
     }
 
+    protected boolean isOptimalBlockInterTileCandidate(@NotNull BlockInterTileCandidate candidate) {
+        return candidate.operation().mode() == AfmaBlockInterPayloadHelper.TileMode.COPY;
+    }
+
+    protected boolean canPotentialBlockInterModeBeat(@NotNull BlockInterTileCandidate currentBestCandidate,
+                                                     @NotNull AfmaBlockInterPayloadHelper.TileMode candidateMode,
+                                                     long optimisticEstimatedBytes) {
+        if (optimisticEstimatedBytes != currentBestCandidate.estimatedBytes()) {
+            return optimisticEstimatedBytes < currentBestCandidate.estimatedBytes();
+        }
+        return candidateMode.ordinal() < currentBestCandidate.operation().mode().ordinal();
+    }
+
+    protected long estimateOptimisticBlockInterDenseBytes(int width, int height) {
+        return this.estimateBlockInterTileBytes(
+                AfmaBlockInterPayloadHelper.TileMode.COPY_DENSE,
+                AfmaBlockInterPayloadHelper.expectedDenseResidualBytes(width, height, AfmaResidualPayloadHelper.RGB_CHANNELS),
+                0
+        );
+    }
+
+    protected long estimateOptimisticBlockInterSparseBytes(int width, int height, int changedPixelCount) {
+        return this.estimateBlockInterTileBytes(
+                AfmaBlockInterPayloadHelper.TileMode.COPY_SPARSE,
+                AfmaResidualPayloadHelper.expectedSparseMaskBytes(width, height),
+                AfmaResidualPayloadHelper.expectedSparseResidualBytes(changedPixelCount, AfmaResidualPayloadHelper.RGB_CHANNELS)
+        );
+    }
+
     protected static long packMotionVector(int dx, int dy) {
         return (((long) dx) << 32) ^ (dy & 0xFFFFFFFFL);
     }
@@ -1386,14 +1429,17 @@ public class AfmaEncodePlanner {
                 && (srcY + height) <= previousFrame.getHeight();
     }
 
-    @NotNull
+    @Nullable
     protected MotionTileStats scanMotionTile(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
-                                             int dstX, int dstY, int srcX, int srcY, int width, int height) {
+                                             int dstX, int dstY, int srcX, int srcY, int width, int height,
+                                             @NotNull BlockInterTileCandidate currentBestCandidate) {
         int frameWidth = currentFrame.getWidth();
         int[] previousPixels = previousFrame.getPixelsUnsafe();
         int[] currentPixels = currentFrame.getPixelsUnsafe();
         int changedPixelCount = 0;
         boolean includeAlpha = false;
+        long optimisticDenseBytes = this.estimateOptimisticBlockInterDenseBytes(width, height);
+        int totalPixels = width * height;
         for (int localY = 0; localY < height; localY++) {
             int previousRowOffset = ((srcY + localY) * frameWidth) + srcX;
             int currentRowOffset = ((dstY + localY) * frameWidth) + dstX;
@@ -1406,6 +1452,22 @@ public class AfmaEncodePlanner {
                 changedPixelCount++;
                 if (((predictedColor ^ currentColor) & 0xFF000000) != 0) {
                     includeAlpha = true;
+                }
+
+                boolean denseCanStillWin = this.canPotentialBlockInterModeBeat(
+                        currentBestCandidate,
+                        AfmaBlockInterPayloadHelper.TileMode.COPY_DENSE,
+                        optimisticDenseBytes
+                );
+                boolean sparseCanStillWin = (changedPixelCount < totalPixels)
+                        && this.canPotentialBlockInterModeBeat(
+                        currentBestCandidate,
+                        AfmaBlockInterPayloadHelper.TileMode.COPY_SPARSE,
+                        this.estimateOptimisticBlockInterSparseBytes(width, height, changedPixelCount)
+                );
+                // After the first mismatch, COPY is impossible; stop once even the optimistic residual bounds cannot win.
+                if (!denseCanStillWin && !sparseCanStillWin) {
+                    return null;
                 }
             }
         }
