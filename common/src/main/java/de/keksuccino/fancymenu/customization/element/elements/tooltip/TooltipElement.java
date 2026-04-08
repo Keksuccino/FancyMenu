@@ -234,6 +234,25 @@ public class TooltipElement extends AbstractElement {
     }
 
     @Override
+    public int getAbsoluteXWithoutParallax() {
+        if (this.mouseFollowing && !isEditor()) {
+            int x = this.cachedMouseX;
+            int tooltipWidth = this.getAbsoluteWidth();
+            int screenWidth = getScreenWidth();
+
+            if (x + tooltipWidth > screenWidth) {
+                x = screenWidth - tooltipWidth;
+            }
+            if (x < 0) {
+                x = 0;
+            }
+
+            return x;
+        }
+        return super.getAbsoluteXWithoutParallax();
+    }
+
+    @Override
     public int getAbsoluteY() {
         if (this.mouseFollowing && !isEditor()) {
             int y = this.cachedMouseY;
@@ -252,6 +271,25 @@ public class TooltipElement extends AbstractElement {
             return y;
         }
         return super.getAbsoluteY();
+    }
+
+    @Override
+    public int getAbsoluteYWithoutParallax() {
+        if (this.mouseFollowing && !isEditor()) {
+            int y = this.cachedMouseY;
+            int tooltipHeight = this.getAbsoluteHeight();
+            int screenHeight = getScreenHeight();
+
+            if (y + tooltipHeight > screenHeight) {
+                y = screenHeight - tooltipHeight;
+            }
+            if (y < 0) {
+                y = 0;
+            }
+
+            return y;
+        }
+        return super.getAbsoluteYWithoutParallax();
     }
 
     @Override

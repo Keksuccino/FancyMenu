@@ -145,6 +145,20 @@ public class DraggerElement extends AbstractElement {
         return i;
     }
 
+    @Override
+    public int getAbsoluteXWithoutParallax() {
+        int i = super.getAbsoluteXWithoutParallax() + ((!isEditor()) ? this.userDragOffsetX : 0);
+        if (this.stayOnScreen) {
+            if (i < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
+                i = STAY_ON_SCREEN_EDGE_ZONE_SIZE;
+            }
+            if (i > (getScreenWidth() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteWidth())) {
+                i = getScreenWidth() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteWidth();
+            }
+        }
+        return i;
+    }
+
     protected int _getAbsoluteX() {
         return super.getAbsoluteX() + ((!isEditor()) ? this.userDragOffsetX : 0);
     }
@@ -152,6 +166,20 @@ public class DraggerElement extends AbstractElement {
     @Override
     public int getAbsoluteY() {
         int i = this._getAbsoluteY();
+        if (this.stayOnScreen) {
+            if (i < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
+                i = STAY_ON_SCREEN_EDGE_ZONE_SIZE;
+            }
+            if (i > (getScreenHeight() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteHeight())) {
+                i = getScreenHeight() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteHeight();
+            }
+        }
+        return i;
+    }
+
+    @Override
+    public int getAbsoluteYWithoutParallax() {
+        int i = super.getAbsoluteYWithoutParallax() + ((!isEditor()) ? this.userDragOffsetY : 0);
         if (this.stayOnScreen) {
             if (i < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
                 i = STAY_ON_SCREEN_EDGE_ZONE_SIZE;

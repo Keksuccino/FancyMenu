@@ -340,12 +340,30 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     }
 
     @Override
+    public int getAbsoluteXWithoutParallax() {
+        if (this.isTemplateActive()) {
+            ButtonElement template = this.getPropertySource();
+            if ((template != null) && template.templateApplyPosX) return template.getAbsoluteXWithoutParallax();
+        }
+        return super.getAbsoluteXWithoutParallax();
+    }
+
+    @Override
     public int getAbsoluteY() {
         if (this.isTemplateActive()) {
             ButtonElement template = this.getPropertySource();
             if ((template != null) && template.templateApplyPosY) return template.getAbsoluteY();
         }
         return super.getAbsoluteY();
+    }
+
+    @Override
+    public int getAbsoluteYWithoutParallax() {
+        if (this.isTemplateActive()) {
+            ButtonElement template = this.getPropertySource();
+            if ((template != null) && template.templateApplyPosY) return template.getAbsoluteYWithoutParallax();
+        }
+        return super.getAbsoluteYWithoutParallax();
     }
 
     @Override

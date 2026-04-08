@@ -191,12 +191,30 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     }
 
     @Override
+    public int getAbsoluteXWithoutParallax() {
+        if (!this.isTemplate && this.isTemplateActive()) {
+            ButtonElement template = getTopActiveTemplateElement(this.isSlider());
+            if ((template != null) && template.templateApplyPosX) return template.getAbsoluteXWithoutParallax();
+        }
+        return super.getAbsoluteXWithoutParallax();
+    }
+
+    @Override
     public int getAbsoluteY() {
         if (!this.isTemplate && this.isTemplateActive()) {
             ButtonElement template = getTopActiveTemplateElement(this.isSlider());
             if ((template != null) && template.templateApplyPosY) return template.getAbsoluteY();
         }
         return super.getAbsoluteY();
+    }
+
+    @Override
+    public int getAbsoluteYWithoutParallax() {
+        if (!this.isTemplate && this.isTemplateActive()) {
+            ButtonElement template = getTopActiveTemplateElement(this.isSlider());
+            if ((template != null) && template.templateApplyPosY) return template.getAbsoluteYWithoutParallax();
+        }
+        return super.getAbsoluteYWithoutParallax();
     }
 
     @Override

@@ -693,6 +693,14 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 * Returns the actual/final X position the element will have when it gets rendered.
 	 */
 	public int getAbsoluteX() {
+		return this.getAbsoluteX(true);
+	}
+
+	public int getAbsoluteXWithoutParallax() {
+		return this.getAbsoluteX(false);
+	}
+
+	protected int getAbsoluteX(boolean includeParallax) {
 
 		int x = 0;
 		if (this.anchorPoint != null) {
@@ -705,7 +713,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		x += this.animatedOffsetX;
 
-		boolean applyParallax = this.enableParallax && !isEditor();
+		boolean applyParallax = includeParallax && this.enableParallax && !isEditor();
 
 		// Apply parallax effect if enabled and not in editor
 		if (applyParallax) {
@@ -737,6 +745,14 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 * Returns the actual/final Y position the element will have when it gets rendered.
 	 */
 	public int getAbsoluteY() {
+		return this.getAbsoluteY(true);
+	}
+
+	public int getAbsoluteYWithoutParallax() {
+		return this.getAbsoluteY(false);
+	}
+
+	protected int getAbsoluteY(boolean includeParallax) {
 
 		int y = 0;
 		if (this.anchorPoint != null) {
@@ -749,7 +765,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		y += this.animatedOffsetY;
 
-		boolean applyParallax = this.enableParallax && !isEditor();
+		boolean applyParallax = includeParallax && this.enableParallax && !isEditor();
 
 		// Apply parallax effect if enabled and not in editor
 		if (applyParallax) {

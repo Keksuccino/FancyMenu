@@ -209,7 +209,7 @@ public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOver
             if (!e.shouldRender()) return null;
             if ((e instanceof HideableElement h) && h.isHidden()) return null;
             if (!e.shouldBeAffectedByDecorationOverlays.tryGetNonNull()) return null;
-            return new CollisionBox(e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteWidth(), e.getAbsoluteHeight());
+            return new CollisionBox(e.getAbsoluteXWithoutParallax(), e.getAbsoluteYWithoutParallax(), e.getAbsoluteWidth(), e.getAbsoluteHeight());
         }
         if (o instanceof PlainTextButton) return null;
         if (o instanceof AbstractButton b) return new CollisionBox(b.getX(), b.getY(), b.getWidth(), b.getHeight());
