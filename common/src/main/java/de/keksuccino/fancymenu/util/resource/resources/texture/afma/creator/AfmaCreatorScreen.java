@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogSty
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseDirectoryWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
@@ -423,7 +424,7 @@ public class AfmaCreatorScreen extends Screen {
                 partialTick
         );
 
-        UIBase.renderText(graphics, this.title, OUTER_PADDING, 16, 0xFFFFFFFF, UIBase.getUITextSizeNormal());
+        UIBase.renderText(graphics, this.title, OUTER_PADDING, 16, this.getThemeLabelColor(false), UIBase.getUITextSizeNormal());
     }
 
     protected void renderFieldLabels(@NotNull GuiGraphics graphics) {
@@ -447,7 +448,7 @@ public class AfmaCreatorScreen extends Screen {
     }
 
     protected void drawFieldLabel(@NotNull GuiGraphics graphics, @NotNull Component component, int x, int y, boolean header) {
-        UIBase.renderText(graphics, component, x, y, header ? 0xFFFFFFFF : 0xFFD0D0D0, UIBase.getUITextSizeNormal());
+        UIBase.renderText(graphics, component, x, y, this.getThemeLabelColor(!header), UIBase.getUITextSizeNormal());
     }
 
     protected void drawInlineLabel(@NotNull GuiGraphics graphics, @Nullable AbstractWidget widget, @NotNull Component component, int labelWidth) {
@@ -455,7 +456,7 @@ public class AfmaCreatorScreen extends Screen {
         float textWidth = UIBase.getUITextWidthNormal(component);
         float labelX = widget.getX() - INLINE_LABEL_GAP - labelWidth + Math.max(0.0F, labelWidth - textWidth);
         float labelY = widget.getY() + ((FIELD_HEIGHT - UIBase.getUITextHeightNormal()) / 2.0F);
-        UIBase.renderText(graphics, component, labelX, labelY, 0xFFD0D0D0, UIBase.getUITextSizeNormal());
+        UIBase.renderText(graphics, component, labelX, labelY, this.getThemeLabelColor(true), UIBase.getUITextSizeNormal());
     }
 
     protected void renderDiagnostics(@NotNull GuiGraphics graphics) {
@@ -466,9 +467,9 @@ public class AfmaCreatorScreen extends Screen {
         int contentWidth = this.getContentWidth();
         int textY = this.getDiagnosticsStartY();
         AfmaEncodeProgress progress = job.getProgress();
-        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.job_status", progress.task()), contentX, textY, contentWidth, 0xFFFFFFFF);
+        textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.job_status", progress.task()), contentX, textY, contentWidth, this.getThemeLabelColor(false));
         if (progress.detail() != null && !progress.detail().isBlank()) {
-            textY = this.renderWrappedUiText(graphics, Component.literal(progress.detail()), contentX, textY, contentWidth, 0xFFD0D0D0);
+            textY = this.renderWrappedUiText(graphics, Component.literal(progress.detail()), contentX, textY, contentWidth, this.getThemeLabelColor(true));
         }
         graphics.fill(contentX, textY, contentX + contentWidth, textY + 8, 0xFF202020);
         graphics.fill(contentX, textY, contentX + Math.round(contentWidth * (float) progress.progress()), textY + 8, UIBase.getUITheme().success_color.getColorInt());
@@ -546,6 +547,18 @@ public class AfmaCreatorScreen extends Screen {
 
     protected int getWidgetBottom(@Nullable AbstractWidget widget) {
         return (widget != null) ? (widget.getY() + widget.getHeight()) : 0;
+    }
+
+    protected int getThemeLabelColor(boolean inactive) {
+        UITheme theme = UIBase.getUITheme();
+        if (UIBase.shouldBlur()) {
+            return inactive
+                    ? theme.ui_blur_interface_widget_label_color_inactive.getColorInt()
+                    : theme.ui_blur_interface_widget_label_color_normal.getColorInt();
+        }
+        return inactive
+                ? theme.ui_interface_widget_label_color_inactive.getColorInt()
+                : theme.ui_interface_widget_label_color_normal.getColorInt();
     }
 
     @Override
