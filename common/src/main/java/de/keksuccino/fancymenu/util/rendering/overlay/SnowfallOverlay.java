@@ -10,9 +10,12 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SnowfallOverlay extends AbstractWidget implements NavigatableWidget {
 
@@ -155,6 +158,28 @@ public class SnowfallOverlay extends AbstractWidget implements NavigatableWidget
 
     public void clearCollisionAreas() {
         this.collisionAreas.clear();
+    }
+
+    public void syncCollisionAreas(@NotNull List<CollisionAreaBounds> collisionAreas) {
+        Map<CollisionAreaBounds, ArrayDeque<AccumulationArea>> remainingAreas = bucketCollisionAreas(this.collisionAreas);
+        List<AccumulationArea> updatedAreas = new ArrayList<>(collisionAreas.size());
+        for (CollisionAreaBounds collisionArea : collisionAreas) {
+            if (collisionArea.width() <= 0 || collisionArea.height() < 0) {
+                continue;
+            }
+            ArrayDeque<AccumulationArea> matchingAreas = remainingAreas.get(collisionArea);
+            AccumulationArea area = matchingAreas != null ? matchingAreas.pollFirst() : null;
+            if (area == null) {
+                area = new AccumulationArea(collisionArea.x(), collisionArea.y(), collisionArea.width(), collisionArea.height(), MAX_ACCUMULATION_HEIGHT);
+                area.ensureHeights();
+            }
+            updatedAreas.add(area);
+            if (matchingAreas != null && matchingAreas.isEmpty()) {
+                remainingAreas.remove(collisionArea);
+            }
+        }
+        this.collisionAreas.clear();
+        this.collisionAreas.addAll(updatedAreas);
     }
 
     public void setAccumulationEnabled(boolean accumulationEnabled) {
@@ -354,6 +379,18 @@ public class SnowfallOverlay extends AbstractWidget implements NavigatableWidget
 
     private float nextRange(float min, float max) {
         return min + this.random.nextFloat() * (max - min);
+    }
+
+    private Map<CollisionAreaBounds, ArrayDeque<AccumulationArea>> bucketCollisionAreas(@NotNull List<AccumulationArea> collisionAreas) {
+        Map<CollisionAreaBounds, ArrayDeque<AccumulationArea>> buckets = new LinkedHashMap<>();
+        for (AccumulationArea area : collisionAreas) {
+            buckets.computeIfAbsent(getCollisionAreaBounds(area), key -> new ArrayDeque<>()).add(area);
+        }
+        return buckets;
+    }
+
+    private CollisionAreaBounds getCollisionAreaBounds(@NotNull AccumulationArea area) {
+        return new CollisionAreaBounds(area.x, area.y, area.width, area.height);
     }
 
     private int nextInt(int min, int max) {

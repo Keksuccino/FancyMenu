@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.properties.PropertyHolder;
+import de.keksuccino.fancymenu.util.rendering.overlay.CollisionAreaBounds;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -24,7 +25,6 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
-import java.util.function.Consumer;
 
 public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOverlay<?>> implements Renderable, ContainerEventHandler, NarratableEntry, PropertyHolder, ContextMenuBuilder<O>, FancyMenuUiComponent {
 
@@ -98,6 +98,12 @@ public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOver
      * Gets called when the current {@link Screen} is about to close.
      */
     public void onCloseScreen(@Nullable Screen closedScreen, @Nullable Screen newScreen) {
+    }
+
+    /**
+     * Gets called every {@link Screen} tick after all {@link AbstractElement}s got ticked.
+     */
+    public void tick(@NotNull Screen screen, @NotNull List<AbstractElement> elements) {
     }
 
     @Override
@@ -204,31 +210,32 @@ public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOver
     }
 
     @Nullable
-    protected static CollisionBox getAsCollisionBox(@NotNull Object o) {
+    protected static CollisionAreaBounds getAsCollisionBox(@NotNull Object o) {
         if (o instanceof AbstractElement e) {
             if (!e.shouldRender()) return null;
             if ((e instanceof HideableElement h) && h.isHidden()) return null;
             if (!e.shouldBeAffectedByDecorationOverlays.tryGetNonNull()) return null;
-            return new CollisionBox(e.getAbsoluteXWithoutParallax(), e.getAbsoluteYWithoutParallax(), e.getAbsoluteWidth(), e.getAbsoluteHeight());
+            return new CollisionAreaBounds(e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteWidth(), e.getAbsoluteHeight());
         }
         if (o instanceof PlainTextButton) return null;
-        if (o instanceof AbstractButton b) return new CollisionBox(b.getX(), b.getY(), b.getWidth(), b.getHeight());
-        if (o instanceof EditBox b) return new CollisionBox(b.getX(), b.getY(), b.getWidth(), b.getHeight());
-        if (o instanceof AbstractSliderButton s) return new CollisionBox(s.getX(), s.getY(), s.getWidth(), s.getHeight());
+        if (o instanceof AbstractButton b) return new CollisionAreaBounds(b.getX(), b.getY(), b.getWidth(), b.getHeight());
+        if (o instanceof EditBox b) return new CollisionAreaBounds(b.getX(), b.getY(), b.getWidth(), b.getHeight());
+        if (o instanceof AbstractSliderButton s) return new CollisionAreaBounds(s.getX(), s.getY(), s.getWidth(), s.getHeight());
         return null;
     }
 
-    protected static void visitCollisionBoxes(@NotNull Screen screen, @NotNull List<AbstractElement> elements, @NotNull Consumer<CollisionBox> consumer) {
-        if (isEditor()) return;
+    protected static @NotNull List<CollisionAreaBounds> collectCollisionBoxes(@NotNull Screen screen, @NotNull List<AbstractElement> elements) {
+        if (isEditor()) {
+            return List.of();
+        }
+        List<CollisionAreaBounds> collisionBoxes = new ArrayList<>();
         elements.forEach(element -> {
             var c = getAsCollisionBox(element);
             if (c != null) {
-                consumer.accept(c);
+                collisionBoxes.add(c);
             }
         });
-    }
-
-    public record CollisionBox(int x, int y, int width, int height) {
+        return collisionBoxes;
     }
 
 }

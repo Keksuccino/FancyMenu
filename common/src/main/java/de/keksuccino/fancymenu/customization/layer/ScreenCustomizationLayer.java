@@ -401,6 +401,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			element.tick();
 		}
 
+		this.layoutBase.decorationOverlays.forEach(pair -> pair.getSecond().tick(e.getScreen(), this.allElements));
+
 	}
 
 	@EventListener(priority = EventPriority.VERY_HIGH)

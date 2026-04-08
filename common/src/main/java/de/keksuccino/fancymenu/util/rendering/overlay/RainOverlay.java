@@ -10,9 +10,12 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class RainOverlay extends AbstractWidget implements NavigatableWidget {
 
@@ -237,6 +240,28 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
         this.collisionAreas.clear();
         this.puddles.clear();
         this.drips.clear();
+    }
+
+    public void syncCollisionAreas(@NotNull List<CollisionAreaBounds> collisionAreas) {
+        Map<CollisionAreaBounds, ArrayDeque<SurfaceArea>> remainingAreas = bucketCollisionAreas(this.collisionAreas);
+        List<SurfaceArea> updatedAreas = new ArrayList<>(collisionAreas.size());
+        for (CollisionAreaBounds collisionArea : collisionAreas) {
+            if (collisionArea.width() <= 0 || collisionArea.height() < 0) {
+                continue;
+            }
+            ArrayDeque<SurfaceArea> matchingAreas = remainingAreas.get(collisionArea);
+            SurfaceArea area = matchingAreas != null ? matchingAreas.pollFirst() : null;
+            if (area == null) {
+                area = new SurfaceArea(collisionArea.x(), collisionArea.y(), collisionArea.width(), collisionArea.height());
+            }
+            updatedAreas.add(area);
+            if (matchingAreas != null && matchingAreas.isEmpty()) {
+                remainingAreas.remove(collisionArea);
+            }
+        }
+        remainingAreas.values().forEach(queue -> queue.forEach(this::removeSurfaceArea));
+        this.collisionAreas.clear();
+        this.collisionAreas.addAll(updatedAreas);
     }
 
     public void setPuddlesEnabled(boolean enabled) {
@@ -642,6 +667,7 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
         puddle.age = 0.0F;
         puddle.lifeTime = nextRange(PUDDLE_MIN_LIFE, PUDDLE_MAX_LIFE);
         puddle.baseAlpha = nextInt(PUDDLE_MIN_ALPHA, PUDDLE_MAX_ALPHA);
+        puddle.area = area;
         this.puddles.add(puddle);
 
         if (allowDrip && area != this.bottomArea) {
@@ -669,11 +695,29 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
         drip.lifeTime = nextRange(DRIP_MIN_LIFE, DRIP_MAX_LIFE);
         drip.alpha = nextInt(DRIP_MIN_ALPHA, DRIP_MAX_ALPHA);
         drip.age = 0.0F;
+        drip.area = area;
         this.drips.add(drip);
     }
 
     private float nextRange(float min, float max) {
         return min + this.random.nextFloat() * (max - min);
+    }
+
+    private Map<CollisionAreaBounds, ArrayDeque<SurfaceArea>> bucketCollisionAreas(@NotNull List<SurfaceArea> collisionAreas) {
+        Map<CollisionAreaBounds, ArrayDeque<SurfaceArea>> buckets = new LinkedHashMap<>();
+        for (SurfaceArea area : collisionAreas) {
+            buckets.computeIfAbsent(getCollisionAreaBounds(area), key -> new ArrayDeque<>()).add(area);
+        }
+        return buckets;
+    }
+
+    private CollisionAreaBounds getCollisionAreaBounds(@NotNull SurfaceArea area) {
+        return new CollisionAreaBounds(area.x, area.y, area.width, area.height);
+    }
+
+    private void removeSurfaceArea(@NotNull SurfaceArea area) {
+        this.puddles.removeIf(puddle -> puddle.area == area);
+        this.drips.removeIf(drip -> drip.area == area);
     }
 
     private int nextInt(int min, int max) {
@@ -760,6 +804,7 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
         private float age;
         private float lifeTime;
         private int baseAlpha;
+        private SurfaceArea area;
     }
 
     private static final class Drip {
@@ -770,6 +815,7 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
         private float age;
         private float lifeTime;
         private int alpha;
+        private SurfaceArea area;
     }
 
     private static final class SurfaceArea {

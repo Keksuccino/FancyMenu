@@ -10,8 +10,11 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
 
@@ -164,6 +167,28 @@ public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
 
     public void clearCollisionAreas() {
         this.collisionAreas.clear();
+    }
+
+    public void syncCollisionAreas(@NotNull List<CollisionAreaBounds> collisionAreas) {
+        Map<CollisionAreaBounds, ArrayDeque<LandingArea>> remainingAreas = bucketCollisionAreas(this.collisionAreas);
+        List<LandingArea> updatedAreas = new ArrayList<>(collisionAreas.size());
+        for (CollisionAreaBounds collisionArea : collisionAreas) {
+            if (collisionArea.width() <= 0 || collisionArea.height() < 0) {
+                continue;
+            }
+            ArrayDeque<LandingArea> matchingAreas = remainingAreas.get(collisionArea);
+            LandingArea area = matchingAreas != null ? matchingAreas.pollFirst() : null;
+            if (area == null) {
+                area = new LandingArea(collisionArea.x(), collisionArea.y(), collisionArea.width(), collisionArea.height());
+            }
+            updatedAreas.add(area);
+            if (matchingAreas != null && matchingAreas.isEmpty()) {
+                remainingAreas.remove(collisionArea);
+            }
+        }
+        remainingAreas.values().forEach(queue -> queue.forEach(this::releaseLeavesFromArea));
+        this.collisionAreas.clear();
+        this.collisionAreas.addAll(updatedAreas);
     }
 
     private boolean ensureLeaves(int width, int height, boolean scaleChanged) {
@@ -322,6 +347,7 @@ public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
 
     private void landLeaf(Leaf leaf, LandingArea area, float effectiveX, float surfaceY) {
         leaf.landed = true;
+        leaf.landedArea = area;
         leaf.landTime = 0.0F;
         leaf.landDuration = nextRange(LAND_MIN_TIME, LAND_MAX_TIME);
         leaf.fadeDuration = nextRange(FADE_MIN_TIME, FADE_MAX_TIME);
@@ -343,6 +369,14 @@ public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
         leaf.y = Math.max(-leaf.height, leaf.y - nextRange(6.0F, 18.0F) * this.scale);
         resetLeafMotion(leaf);
         applyGustKick(leaf, gustWind, gustPower, 1.35F);
+    }
+
+    private void releaseLeavesFromArea(@NotNull LandingArea area) {
+        for (Leaf leaf : this.leaves) {
+            if (leaf.landedArea == area) {
+                resetLeafMotion(leaf);
+            }
+        }
     }
 
     private void updateGustKick(Leaf leaf, float deltaSeconds) {
@@ -594,6 +628,7 @@ public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
         leaf.gustSwirlTime = 0.0F;
         leaf.gustSwirlDuration = 0.0F;
         leaf.landed = false;
+        leaf.landedArea = null;
         leaf.landTime = 0.0F;
         leaf.landDuration = 0.0F;
         leaf.fadeDuration = 0.0F;
@@ -601,6 +636,18 @@ public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
 
     private float nextRange(float min, float max) {
         return min + this.random.nextFloat() * (max - min);
+    }
+
+    private Map<CollisionAreaBounds, ArrayDeque<LandingArea>> bucketCollisionAreas(@NotNull List<LandingArea> collisionAreas) {
+        Map<CollisionAreaBounds, ArrayDeque<LandingArea>> buckets = new LinkedHashMap<>();
+        for (LandingArea area : collisionAreas) {
+            buckets.computeIfAbsent(getCollisionAreaBounds(area), key -> new ArrayDeque<>()).add(area);
+        }
+        return buckets;
+    }
+
+    private CollisionAreaBounds getCollisionAreaBounds(@NotNull LandingArea area) {
+        return new CollisionAreaBounds(area.x, area.y, area.width, area.height);
     }
 
     private int resolveLeafColor(float t) {
@@ -695,6 +742,7 @@ public class LeavesOverlay extends AbstractWidget implements NavigatableWidget {
         private float colorFactor;
         private boolean flip;
         private boolean landed;
+        private LandingArea landedArea;
         private LeafShape shape;
         private int lastGustId;
     }

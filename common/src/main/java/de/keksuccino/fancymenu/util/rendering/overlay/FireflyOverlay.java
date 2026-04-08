@@ -10,8 +10,11 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class FireflyOverlay extends AbstractWidget implements NavigatableWidget {
 
@@ -142,6 +145,28 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
 
     public void clearCollisionAreas() {
         this.collisionAreas.clear();
+    }
+
+    public void syncCollisionAreas(@NotNull List<CollisionAreaBounds> collisionAreas) {
+        Map<CollisionAreaBounds, ArrayDeque<LandingArea>> remainingAreas = bucketCollisionAreas(this.collisionAreas);
+        List<LandingArea> updatedAreas = new ArrayList<>(collisionAreas.size());
+        for (CollisionAreaBounds collisionArea : collisionAreas) {
+            if (collisionArea.width() <= 0 || collisionArea.height() < 0) {
+                continue;
+            }
+            ArrayDeque<LandingArea> matchingAreas = remainingAreas.get(collisionArea);
+            LandingArea area = matchingAreas != null ? matchingAreas.pollFirst() : null;
+            if (area == null) {
+                area = new LandingArea(collisionArea.x(), collisionArea.y(), collisionArea.width(), collisionArea.height());
+            }
+            updatedAreas.add(area);
+            if (matchingAreas != null && matchingAreas.isEmpty()) {
+                remainingAreas.remove(collisionArea);
+            }
+        }
+        remainingAreas.values().forEach(queue -> queue.forEach(this::releaseFirefliesFromArea));
+        this.collisionAreas.clear();
+        this.collisionAreas.addAll(updatedAreas);
     }
 
     @Override
@@ -402,6 +427,7 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
 
     private void beginTakeoff(FireflyGroup group, Firefly firefly) {
         firefly.state = FireflyState.TAKEOFF;
+        firefly.landingArea = null;
         firefly.takeoffSpeed = nextRange(FIREFLY_TAKEOFF_SPEED_MIN, FIREFLY_TAKEOFF_SPEED_MAX);
         float radius = group.radius * 0.85F;
         float angle = this.random.nextFloat() * ((float)Math.PI * 2.0F);
@@ -468,6 +494,7 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
         firefly.worldX = group.x + firefly.offsetX;
         firefly.worldY = group.y + firefly.offsetY;
         firefly.landingSpeed = nextRange(FIREFLY_LANDING_SPEED_MIN, FIREFLY_LANDING_SPEED_MAX);
+        firefly.landingArea = area;
     }
 
     private void clampFireflySpeed(Firefly firefly) {
@@ -623,6 +650,33 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
         return min + this.random.nextFloat() * (max - min);
     }
 
+    private Map<CollisionAreaBounds, ArrayDeque<LandingArea>> bucketCollisionAreas(@NotNull List<LandingArea> collisionAreas) {
+        Map<CollisionAreaBounds, ArrayDeque<LandingArea>> buckets = new LinkedHashMap<>();
+        for (LandingArea area : collisionAreas) {
+            buckets.computeIfAbsent(getCollisionAreaBounds(area), key -> new ArrayDeque<>()).add(area);
+        }
+        return buckets;
+    }
+
+    private CollisionAreaBounds getCollisionAreaBounds(@NotNull LandingArea area) {
+        return new CollisionAreaBounds(area.x, area.y, area.width, area.height);
+    }
+
+    private void releaseFirefliesFromArea(@NotNull LandingArea area) {
+        for (FireflyGroup group : this.groups) {
+            for (Firefly firefly : group.fireflies) {
+                if (firefly.landingArea != area) {
+                    continue;
+                }
+                if (firefly.state == FireflyState.LANDING || firefly.state == FireflyState.LANDED) {
+                    beginTakeoff(group, firefly);
+                } else {
+                    firefly.landingArea = null;
+                }
+            }
+        }
+    }
+
     private float resolveAlphaScale(int color) {
         int alpha = FastColor.ARGB32.alpha(color);
         if (alpha <= 0) {
@@ -722,6 +776,7 @@ public class FireflyOverlay extends AbstractWidget implements NavigatableWidget 
         private float landingCooldown;
         private float takeoffOffsetX;
         private float takeoffOffsetY;
+        private LandingArea landingArea;
     }
 
 }

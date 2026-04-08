@@ -91,11 +91,12 @@ public class LeavesDecorationOverlay extends AbstractDecorationOverlay<LeavesDec
 
     @Override
     public void onScreenInitializedOrResized(@NotNull Screen screen, @NotNull List<AbstractElement> elements) {
+        this.overlay.syncCollisionAreas(collectCollisionBoxes(screen, elements));
+    }
 
-        this.overlay.clearCollisionAreas();
-
-        visitCollisionBoxes(screen, elements, c -> this.overlay.addCollisionArea(c.x(), c.y(), c.width(), c.height()));
-
+    @Override
+    public void tick(@NotNull Screen screen, @NotNull List<AbstractElement> elements) {
+        this.overlay.syncCollisionAreas(collectCollisionBoxes(screen, elements));
     }
 
 }

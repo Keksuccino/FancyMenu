@@ -10,9 +10,12 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ConfettiOverlay extends AbstractWidget implements NavigatableWidget {
 
@@ -175,6 +178,34 @@ public class ConfettiOverlay extends AbstractWidget implements NavigatableWidget
 
     public void clearCollisionAreas() {
         this.collisionAreas.clear();
+    }
+
+    public void syncCollisionAreas(@NotNull List<CollisionAreaBounds> collisionAreas) {
+        Map<CollisionAreaBounds, ArrayDeque<LandingArea>> remainingAreas = bucketCollisionAreas(this.collisionAreas);
+        List<LandingArea> updatedAreas = new ArrayList<>(collisionAreas.size());
+        for (CollisionAreaBounds collisionArea : collisionAreas) {
+            if (collisionArea.width() <= 0 || collisionArea.height() < 0) {
+                continue;
+            }
+            ArrayDeque<LandingArea> matchingAreas = remainingAreas.get(collisionArea);
+            LandingArea area = matchingAreas != null ? matchingAreas.pollFirst() : null;
+            if (area == null) {
+                area = new LandingArea(collisionArea.x(), collisionArea.y(), collisionArea.width(), collisionArea.height());
+            }
+            updatedAreas.add(area);
+            if (matchingAreas != null && matchingAreas.isEmpty()) {
+                remainingAreas.remove(collisionArea);
+            }
+        }
+        this.collisionAreas.clear();
+        this.collisionAreas.addAll(updatedAreas);
+
+        int width = this.getWidth();
+        int height = this.getHeight();
+        if (width > 0 && height > 0) {
+            ensureLandingAreas(width, height);
+            updateSettled(width, height);
+        }
     }
 
     @Override
@@ -584,20 +615,37 @@ public class ConfettiOverlay extends AbstractWidget implements NavigatableWidget
         if (this.settledPieces.isEmpty()) {
             return;
         }
-        Iterator<ConfettiPiece> iterator = this.settledPieces.iterator();
-        while (iterator.hasNext()) {
-            ConfettiPiece piece = iterator.next();
-            if (!isPieceSupported(piece, width, height)) {
-                iterator.remove();
-                piece.vx = 0.0F;
-                piece.vy = 0.0F;
-                this.activePieces.add(piece);
+        boolean releasedPiece;
+        do {
+            releasedPiece = false;
+            Iterator<ConfettiPiece> iterator = this.settledPieces.iterator();
+            while (iterator.hasNext()) {
+                ConfettiPiece piece = iterator.next();
+                if (!isPieceSupported(piece, width, height)) {
+                    iterator.remove();
+                    piece.vx = 0.0F;
+                    piece.vy = 0.0F;
+                    this.activePieces.add(piece);
+                    releasedPiece = true;
+                }
             }
-        }
+        } while (releasedPiece);
     }
 
     private float nextRange(float min, float max) {
         return min + this.random.nextFloat() * (max - min);
+    }
+
+    private Map<CollisionAreaBounds, ArrayDeque<LandingArea>> bucketCollisionAreas(@NotNull List<LandingArea> collisionAreas) {
+        Map<CollisionAreaBounds, ArrayDeque<LandingArea>> buckets = new LinkedHashMap<>();
+        for (LandingArea area : collisionAreas) {
+            buckets.computeIfAbsent(getCollisionAreaBounds(area), key -> new ArrayDeque<>()).add(area);
+        }
+        return buckets;
+    }
+
+    private CollisionAreaBounds getCollisionAreaBounds(@NotNull LandingArea area) {
+        return new CollisionAreaBounds(area.x, area.y, area.width, area.height);
     }
 
     private int nextInt(int min, int max) {
