@@ -1607,7 +1607,7 @@ public class AfmaEncodePlanner {
         if (denseResidual != null) {
             bestCandidate = new BlockInterTileCandidate(
                     new AfmaBlockInterPayloadHelper.TileOperation(AfmaBlockInterPayloadHelper.TileMode.COPY_DENSE,
-                            dx, dy, denseResidual.channels(), 0, denseResidual.payloadBytes(), null),
+                            dx, dy, denseResidual.metadata().getChannels(), 0, denseResidual.payloadBytes(), null),
                     this.estimateBlockInterTileBytes(AfmaBlockInterPayloadHelper.TileMode.COPY_DENSE, denseResidual.payloadBytes().length, 0)
             );
         }
@@ -1617,9 +1617,9 @@ public class AfmaEncodePlanner {
             BlockInterTileCandidate sparseCandidate = new BlockInterTileCandidate(
                     new AfmaBlockInterPayloadHelper.TileOperation(AfmaBlockInterPayloadHelper.TileMode.COPY_SPARSE,
                             dx, dy, sparseResidual.channels(), sparseResidual.changedPixelCount(),
-                            sparseResidual.maskPayload(), sparseResidual.residualPayload()),
+                            sparseResidual.layoutPayload(), sparseResidual.residualPayload()),
                     this.estimateBlockInterTileBytes(AfmaBlockInterPayloadHelper.TileMode.COPY_SPARSE,
-                            sparseResidual.maskPayload().length, sparseResidual.residualPayload().length)
+                            sparseResidual.layoutPayload().length, sparseResidual.residualPayload().length)
             );
             bestCandidate = this.selectBetterBlockInterCandidate(bestCandidate, sparseCandidate);
         }
