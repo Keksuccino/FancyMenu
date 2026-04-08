@@ -4,63 +4,13 @@ import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinNativeImage;
 import net.minecraft.util.FastColor;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.lwjgl.system.MemoryUtil;
-
-import java.util.Objects;
 
 public final class AfmaNativeImageHelper {
 
     private static final int RGBA_BYTES_PER_PIXEL = 4;
 
     private AfmaNativeImageHelper() {
-    }
-
-    public static void ensureSameSize(@NotNull NativeImage first, @NotNull NativeImage second) {
-        if ((first.getWidth() != second.getWidth()) || (first.getHeight() != second.getHeight())) {
-            throw new IllegalArgumentException("NativeImage dimensions do not match");
-        }
-    }
-
-    public static boolean isIdentical(@NotNull NativeImage previous, @NotNull NativeImage next) {
-        ensureSameSize(previous, next);
-        int width = previous.getWidth();
-        int height = previous.getHeight();
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                if (previous.getPixelRGBA(x, y) != next.getPixelRGBA(x, y)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    @Nullable
-    public static AfmaRect findDifferenceBounds(@NotNull NativeImage previous, @NotNull NativeImage next) {
-        ensureSameSize(previous, next);
-
-        int width = previous.getWidth();
-        int height = previous.getHeight();
-        int minX = width;
-        int minY = height;
-        int maxX = -1;
-        int maxY = -1;
-
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                if (previous.getPixelRGBA(x, y) == next.getPixelRGBA(x, y)) continue;
-                if (x < minX) minX = x;
-                if (y < minY) minY = y;
-                if (x > maxX) maxX = x;
-                if (y > maxY) maxY = y;
-            }
-        }
-
-        if (maxX < minX || maxY < minY) {
-            return null;
-        }
-        return new AfmaRect(minX, minY, (maxX - minX) + 1, (maxY - minY) + 1);
     }
 
     @NotNull
@@ -85,8 +35,7 @@ public final class AfmaNativeImageHelper {
         }
     }
 
-    public static void blitPixels(@NotNull NativeImage target, int dstX, int dstY, int width, int height,
-                                  @NotNull int[] pixels, int offset, int stride, boolean forceOpaqueAlpha) {
+    public static void blitPixels(@NotNull NativeImage target, int dstX, int dstY, int width, int height, @NotNull int[] pixels, int offset, int stride, boolean forceOpaqueAlpha) {
         long targetPixels = pixels(target);
         int targetWidth = target.getWidth();
 
@@ -103,46 +52,7 @@ public final class AfmaNativeImageHelper {
         }
     }
 
-    public static void blitSparsePixels(@NotNull NativeImage target, int dstX, int dstY, int width, int height,
-                                        @NotNull int[] maskPixels, int maskOffset, int maskStride,
-                                        @NotNull int[] packedPixels, int packedOffset, int packedStride,
-                                        int packedWidth, int packedHeight, boolean forceOpaqueAlpha) {
-        long targetPixels = pixels(target);
-        int targetWidth = target.getWidth();
-        int packedIndex = 0;
-        int packedCapacity = packedWidth * packedHeight;
-
-        for (int row = 0; row < height; row++) {
-            long targetOffset = offset(targetPixels, targetWidth, dstX, dstY + row);
-            int maskRowStart = maskOffset + (row * maskStride);
-            for (int column = 0; column < width; column++) {
-                int maskColor = maskPixels[maskRowStart + column];
-                if ((maskColor & 0x00FFFFFF) == 0) {
-                    continue;
-                }
-                if (packedIndex >= packedCapacity) {
-                    throw new IllegalStateException("AFMA sparse delta packed payload ended before the mask data");
-                }
-
-                int packedRow = packedIndex / packedWidth;
-                int packedColumn = packedIndex % packedWidth;
-                int color = packedPixels[packedOffset + (packedRow * packedStride) + packedColumn];
-                if (forceOpaqueAlpha) {
-                    color |= 0xFF000000;
-                }
-                MemoryUtil.memPutInt(targetOffset + ((long) column * RGBA_BYTES_PER_PIXEL), FastColor.ABGR32.fromArgb32(color));
-                packedIndex++;
-            }
-        }
-    }
-
-    public static void applyResidualBytes(@NotNull NativeImage target, int dstX, int dstY, int width, int height,
-                                          @NotNull byte[] residualBytes, int channels) {
-        applyResidualBytes(target, dstX, dstY, width, height, residualBytes, 0, Objects.requireNonNull(residualBytes).length, channels);
-    }
-
-    public static void applyResidualBytes(@NotNull NativeImage target, int dstX, int dstY, int width, int height,
-                                          @NotNull byte[] residualBytes, int residualOffset, int residualLength, int channels) {
+    public static void applyResidualBytes(@NotNull NativeImage target, int dstX, int dstY, int width, int height, @NotNull byte[] residualBytes, int residualOffset, int residualLength, int channels) {
         int expectedBytes = AfmaResidualPayloadHelper.expectedDenseResidualBytes(width, height, channels);
         if ((expectedBytes <= 0) || (residualLength != expectedBytes) || residualOffset < 0
                 || ((long) residualOffset + (long) residualLength) > residualBytes.length) {
@@ -169,17 +79,7 @@ public final class AfmaNativeImageHelper {
         }
     }
 
-    public static void applySparseResidualBytes(@NotNull NativeImage target, int dstX, int dstY, int width, int height,
-                                                @NotNull byte[] maskBytes, @NotNull byte[] residualBytes,
-                                                int changedPixelCount, int channels) {
-        applySparseResidualBytes(target, dstX, dstY, width, height, maskBytes, 0, Objects.requireNonNull(maskBytes).length,
-                residualBytes, 0, Objects.requireNonNull(residualBytes).length, changedPixelCount, channels);
-    }
-
-    public static void applySparseResidualBytes(@NotNull NativeImage target, int dstX, int dstY, int width, int height,
-                                                @NotNull byte[] maskBytes, int maskOffset, int maskLength,
-                                                @NotNull byte[] residualBytes, int residualOffset, int residualLength,
-                                                int changedPixelCount, int channels) {
+    public static void applySparseResidualBytes(@NotNull NativeImage target, int dstX, int dstY, int width, int height, @NotNull byte[] maskBytes, int maskOffset, int maskLength, @NotNull byte[] residualBytes, int residualOffset, int residualLength, int changedPixelCount, int channels) {
         int expectedMaskBytes = AfmaResidualPayloadHelper.expectedSparseMaskBytes(width, height);
         if ((expectedMaskBytes <= 0) || (maskLength != expectedMaskBytes) || maskOffset < 0
                 || ((long) maskOffset + (long) maskLength) > maskBytes.length) {
@@ -246,44 +146,6 @@ public final class AfmaNativeImageHelper {
         } finally {
             MemoryUtil.nmemFree(scratchRow);
         }
-    }
-
-    @Nullable
-    public static AfmaRect findDirtyBoundsAfterCopy(@NotNull NativeImage previous, @NotNull NativeImage next, @NotNull AfmaCopyRect copyRect) {
-        ensureSameSize(previous, next);
-
-        int width = previous.getWidth();
-        int height = previous.getHeight();
-        int minX = width;
-        int minY = height;
-        int maxX = -1;
-        int maxY = -1;
-
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                int expected = previous.getPixelRGBA(x, y);
-                if (inside(x, y, copyRect.getDstX(), copyRect.getDstY(), copyRect.getWidth(), copyRect.getHeight())) {
-                    int srcX = copyRect.getSrcX() + (x - copyRect.getDstX());
-                    int srcY = copyRect.getSrcY() + (y - copyRect.getDstY());
-                    expected = previous.getPixelRGBA(srcX, srcY);
-                }
-
-                if (expected == next.getPixelRGBA(x, y)) continue;
-                if (x < minX) minX = x;
-                if (y < minY) minY = y;
-                if (x > maxX) maxX = x;
-                if (y > maxY) maxY = y;
-            }
-        }
-
-        if (maxX < minX || maxY < minY) {
-            return null;
-        }
-        return new AfmaRect(minX, minY, (maxX - minX) + 1, (maxY - minY) + 1);
-    }
-
-    private static boolean inside(int x, int y, int left, int top, int width, int height) {
-        return x >= left && y >= top && x < (left + width) && y < (top + height);
     }
 
     private static long pixels(@NotNull NativeImage image) {

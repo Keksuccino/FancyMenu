@@ -40,18 +40,8 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     @NotNull
-    public static EncodedPayloadResult encodePayloadDetailed(int width, int height, @NotNull int[] pixels) throws IOException {
-        return encodePayloadDetailed(width, height, pixels, 0, width);
-    }
-
-    @NotNull
     public static EncodedPayloadResult encodePayloadDetailed(int width, int height, @NotNull int[] pixels, int offset, int scanlineStride) throws IOException {
         return encodePayloadDetailed(width, height, pixels, offset, scanlineStride, EncodePreferences.lossless());
-    }
-
-    @NotNull
-    public static EncodedPayloadResult encodePayloadDetailed(int width, int height, @NotNull int[] pixels, @Nullable EncodePreferences preferences) throws IOException {
-        return encodePayloadDetailed(width, height, pixels, 0, width, preferences);
     }
 
     @NotNull
@@ -103,11 +93,6 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     @NotNull
-    public static DecodedFrame decodePayload(@NotNull byte[] payloadBytes) throws IOException {
-        return decodePayload(payloadBytes, 0, Objects.requireNonNull(payloadBytes).length);
-    }
-
-    @NotNull
     public static DecodedFrame decodePayload(@NotNull byte[] payloadBytes, int offset, int length) throws IOException {
         Objects.requireNonNull(payloadBytes);
         if (offset < 0 || length < 0 || ((long) offset + (long) length) > payloadBytes.length) {
@@ -128,26 +113,6 @@ public final class AfmaBinIntraPayloadHelper {
             }
             return new DecodedFrame(header.width(), header.height(), pixels);
         }
-    }
-
-    @NotNull
-    public static PayloadHeader readHeader(@NotNull byte[] payloadBytes) throws IOException {
-        return readHeader(payloadBytes, 0, Objects.requireNonNull(payloadBytes).length);
-    }
-
-    @NotNull
-    public static PayloadHeader readHeader(@NotNull byte[] payloadBytes, int offset, int length) throws IOException {
-        Objects.requireNonNull(payloadBytes);
-        if (offset < 0 || length < 0 || ((long) offset + (long) length) > payloadBytes.length) {
-            throw new IOException("AFMA BIN_INTRA payload slice is invalid");
-        }
-        try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(payloadBytes, offset, length))) {
-            return readHeader(in);
-        }
-    }
-
-    public static void validatePayload(@NotNull byte[] payloadBytes, int expectedWidth, int expectedHeight) throws IOException {
-        validatePayload(payloadBytes, 0, Objects.requireNonNull(payloadBytes).length, expectedWidth, expectedHeight);
     }
 
     public static void validatePayload(@NotNull byte[] payloadBytes, int offset, int length, int expectedWidth, int expectedHeight) throws IOException {
