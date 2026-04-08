@@ -151,9 +151,11 @@ public class AfmaEncodePlanner {
             for (int windowStart = 0; windowStart < sequence.size(); windowStart += plannerWindowFrames) {
                 checkCancelled(cancellationRequested);
                 int windowEnd = Math.min(sequence.size(), windowStart + plannerWindowFrames);
-                List<AfmaPixelFrame> windowFrames = this.loadPlanningWindowFrames(sequence, windowStart, windowEnd, dimension, preloadedFrame, cancellationRequested);
+                List<AfmaPixelFrame> windowFrames = this.loadPlanningWindowFrames(sequence, windowStart, windowEnd, dimension, preloadedFrame,
+                        cancellationRequested, progressListener, introSequence, startOffset, totalFrameCount);
                 preloadedFrame = null;
-                BeamPlanningState bestWindowState = this.planWindow(windowFrames, windowStart, introSequence, options, copyDetector, baseState, cancellationRequested);
+                BeamPlanningState bestWindowState = this.planWindow(windowFrames, windowStart, introSequence, options, copyDetector, baseState,
+                        cancellationRequested, progressListener, startOffset, totalFrameCount, sequence.size());
                 this.commitPlannedWindow(bestWindowState, plannedFrames, payloads, payloadPathsByFingerprint);
                 baseState = bestWindowState.toCommittedBaseState();
                 reportProgress(progressListener,
@@ -290,11 +292,15 @@ public class AfmaEncodePlanner {
     @NotNull
     protected List<AfmaPixelFrame> loadPlanningWindowFrames(@NotNull AfmaSourceSequence sequence, int windowStart, int windowEnd,
                                                             @NotNull Dimension dimension, @Nullable AfmaPixelFrame firstFrameOverride,
-                                                            @Nullable BooleanSupplier cancellationRequested) throws IOException {
+                                                            @Nullable BooleanSupplier cancellationRequested,
+                                                            @Nullable ProgressListener progressListener, boolean introSequence,
+                                                            int startOffset, int totalFrameCount) throws IOException {
         ArrayList<AfmaPixelFrame> windowFrames = new ArrayList<>(Math.max(0, windowEnd - windowStart));
         AfmaPixelFrame preloadedFrame = firstFrameOverride;
         for (int frameIndex = windowStart; frameIndex < windowEnd; frameIndex++) {
             checkCancelled(cancellationRequested);
+            this.reportPlanningFrameProgress(progressListener, "Loading", introSequence,
+                    frameIndex + 1, sequence.size(), startOffset + frameIndex, totalFrameCount);
             File frameFile = Objects.requireNonNull(sequence.getFrame(frameIndex));
             AfmaPixelFrame sourceFrame;
             if ((frameIndex == 0) && (preloadedFrame != null)) {
@@ -315,13 +321,17 @@ public class AfmaEncodePlanner {
     protected BeamPlanningState planWindow(@NotNull List<AfmaPixelFrame> windowFrames, int windowStartFrameIndex,
                                            boolean introSequence, @NotNull AfmaEncodeOptions options,
                                            @NotNull AfmaRectCopyDetector copyDetector, @NotNull BeamPlanningState baseState,
-                                           @Nullable BooleanSupplier cancellationRequested) throws IOException {
+                                           @Nullable BooleanSupplier cancellationRequested,
+                                           @Nullable ProgressListener progressListener,
+                                           int startOffset, int totalFrameCount, int sequenceFrameCount) throws IOException {
         List<BeamPlanningState> beam = new ArrayList<>();
         beam.add(baseState.toCommittedBaseState());
         for (int localFrameIndex = 0; localFrameIndex < windowFrames.size(); localFrameIndex++) {
             checkCancelled(cancellationRequested);
             AfmaPixelFrame sourceFrame = windowFrames.get(localFrameIndex);
             int absoluteFrameIndex = windowStartFrameIndex + localFrameIndex;
+            this.reportPlanningFrameProgress(progressListener, "Planning", introSequence,
+                    absoluteFrameIndex + 1, sequenceFrameCount, startOffset + absoluteFrameIndex + 0.5D, totalFrameCount);
             long frameDelayMs = this.resolveSourceFrameDelay(options, introSequence, absoluteFrameIndex);
             ArrayList<BeamPlanningState> expandedBeam = new ArrayList<>();
             for (BeamPlanningState state : beam) {
@@ -2429,6 +2439,24 @@ public class AfmaEncodePlanner {
         if (progressListener != null) {
             progressListener.update(detail, progress);
         }
+    }
+
+    protected void reportPlanningFrameProgress(@Nullable ProgressListener progressListener, @NotNull String action, boolean introSequence,
+                                               int sequenceFrameNumber, int sequenceFrameCount,
+                                               double absoluteFrameProgress, int totalFrameCount) {
+        if (sequenceFrameCount <= 0) {
+            return;
+        }
+
+        int clampedSequenceFrameNumber = Math.max(1, Math.min(sequenceFrameCount, sequenceFrameNumber));
+        reportProgress(progressListener,
+                action + " " + (introSequence ? "intro" : "main") + " frame " + clampedSequenceFrameNumber + "/" + sequenceFrameCount,
+                this.computePlanningProgress(absoluteFrameProgress, totalFrameCount));
+    }
+
+    protected double computePlanningProgress(double absoluteFrameProgress, int totalFrameCount) {
+        double clampedFrameProgress = Math.max(0D, Math.min(Math.max(1, totalFrameCount), absoluteFrameProgress));
+        return 0.08D + (0.92D * (clampedFrameProgress / Math.max(1D, (double) totalFrameCount)));
     }
 
     protected static void checkCancelled(@Nullable BooleanSupplier cancellationRequested) {
