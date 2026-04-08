@@ -430,6 +430,9 @@ public class AfmaEncodePlanner {
         if (!options.isPerceptualBinIntraEnabled()) {
             return selectedCandidate;
         }
+        if (selectedCandidate.isExactRelativeToSourceFrame(sourceFrame, workingFrame)) {
+            return selectedCandidate;
+        }
 
         AfmaPixelFrame reconstructedFrame = selectedCandidate.materializeReferenceFrame(sourceFrame, workingFrame);
         try {
@@ -1697,6 +1700,16 @@ public class AfmaEncodePlanner {
                 }
             }
             return new AfmaPixelFrame(baseFrame.getWidth(), baseFrame.getHeight(), referencePixels);
+        }
+
+        public boolean isExactRelativeToSourceFrame(@NotNull AfmaPixelFrame sourceFrame, @NotNull AfmaPixelFrame workingFrame) {
+            if ((this.referencePatchBounds != null) || (this.referencePatchPixels != null)) {
+                return false;
+            }
+            if (this.referenceBase == ReferenceBase.SOURCE_FRAME) {
+                return true;
+            }
+            return sourceFrame == workingFrame;
         }
 
         public long estimatedArchiveBytes(@NotNull Map<String, String> payloadPathsByFingerprint) {
