@@ -817,7 +817,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
     @Override
     public void editorElementOrderChanged(@NotNull AbstractEditorElement element, boolean movedUp) {
-        this.updateList(false);
+        this.updateList(true);
     }
 
     @Nullable
