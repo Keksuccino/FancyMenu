@@ -2088,7 +2088,11 @@ public class AfmaEncodePlanner {
                 changedOffset++;
             }
         }
-        return this.buildSparseResidualPayload(width, height, changedIndices, predictedColors, changedColors, changedPixelCount, tileStats.includeAlpha());
+        try {
+            return this.buildSparseResidualPayload(width, height, changedIndices, predictedColors, changedColors, changedPixelCount, tileStats.includeAlpha());
+        } catch (IOException ex) {
+            throw new IllegalStateException("Failed to encode AFMA block_inter sparse tile payload", ex);
+        }
     }
 
     @NotNull
