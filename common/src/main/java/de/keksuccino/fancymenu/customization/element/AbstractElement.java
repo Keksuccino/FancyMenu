@@ -22,6 +22,7 @@ import de.keksuccino.fancymenu.util.properties.PropertyHolder;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -1110,6 +1111,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 */
 	@NotNull
 	public static Component buildComponent(@NotNull String serializedComponentOrPlainText) {
+        serializedComponentOrPlainText = TextFormattingUtils.replaceFormattingCodes(serializedComponentOrPlainText, "&", "§");
 		serializedComponentOrPlainText = PlaceholderParser.replacePlaceholders(serializedComponentOrPlainText);
 		if (!serializedComponentOrPlainText.startsWith("{") && !serializedComponentOrPlainText.startsWith("[")) return Component.literal(serializedComponentOrPlainText);
 		try {
