@@ -24,6 +24,7 @@ import java.util.concurrent.Executors;
 public class AfmaCreatorState {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final @NotNull AfmaOptimizationPreset DEFAULT_PRESET = AfmaOptimizationPreset.SMALLEST_FILE;
     private final ExecutorService executor = Executors.newSingleThreadExecutor(runnable -> {
         Thread thread = new Thread(runnable, "FancyMenu-AFMA-Creator");
         thread.setDaemon(true);
@@ -42,16 +43,16 @@ public class AfmaCreatorState {
     private volatile long frameTimeMs = 41L;
     private volatile long introFrameTimeMs = 41L;
     private volatile int loopCount = 0;
-    private volatile int keyframeInterval = AfmaOptimizationPreset.BALANCED.getKeyframeInterval();
-    private volatile boolean rectCopyEnabled = AfmaOptimizationPreset.BALANCED.isRectCopyEnabled();
-    private volatile boolean duplicateFrameElision = AfmaOptimizationPreset.BALANCED.isDuplicateFrameElision();
-    private volatile boolean nearLosslessEnabled = false;
-    private volatile int maxCopySearchDistance = AfmaOptimizationPreset.BALANCED.getMaxCopySearchDistance();
-    private volatile int maxCandidateAxisOffsets = AfmaOptimizationPreset.BALANCED.getMaxCandidateAxisOffsets();
+    private volatile int keyframeInterval = DEFAULT_PRESET.getKeyframeInterval();
+    private volatile boolean rectCopyEnabled = DEFAULT_PRESET.isRectCopyEnabled();
+    private volatile boolean duplicateFrameElision = DEFAULT_PRESET.isDuplicateFrameElision();
+    private volatile boolean nearLosslessEnabled = DEFAULT_PRESET.isNearLosslessEnabledByDefault();
+    private volatile int maxCopySearchDistance = DEFAULT_PRESET.getMaxCopySearchDistance();
+    private volatile int maxCandidateAxisOffsets = DEFAULT_PRESET.getMaxCandidateAxisOffsets();
     private volatile boolean generateThumbnail = false;
     private volatile @NotNull String customFrameTimesText = "";
     private volatile @NotNull String customIntroFrameTimesText = "";
-    private volatile @NotNull AfmaOptimizationPreset optimizationPreset = AfmaOptimizationPreset.BALANCED;
+    private volatile @NotNull AfmaOptimizationPreset optimizationPreset = DEFAULT_PRESET;
     private volatile @Nullable AfmaEncodeJob currentJob;
 
     public @Nullable File getMainFramesDirectory() {
