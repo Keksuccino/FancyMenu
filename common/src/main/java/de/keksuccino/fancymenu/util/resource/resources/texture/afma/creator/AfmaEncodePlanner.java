@@ -452,40 +452,38 @@ public class AfmaEncodePlanner {
     @NotNull
     protected PerceptualDriftStats measurePerceptualDrift(@NotNull AfmaPixelFrame sourceFrame, @NotNull AfmaPixelFrame reconstructedFrame) {
         AfmaPixelFrameHelper.ensureSameSize(sourceFrame, reconstructedFrame);
+        int[] sourcePixels = sourceFrame.getPixelsUnsafe();
+        int[] reconstructedPixels = reconstructedFrame.getPixelsUnsafe();
         double totalError = 0D;
         int maxVisibleColorDelta = 0;
         int maxAlphaDelta = 0;
-        int width = sourceFrame.getWidth();
-        int height = sourceFrame.getHeight();
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                int sourceColor = sourceFrame.getPixelRGBA(x, y);
-                int reconstructedColor = reconstructedFrame.getPixelRGBA(x, y);
-                int sourceAlpha = (sourceColor >>> 24) & 0xFF;
-                int reconstructedAlpha = (reconstructedColor >>> 24) & 0xFF;
-                int alphaDelta = Math.abs(sourceAlpha - reconstructedAlpha);
-                if (alphaDelta > maxAlphaDelta) {
-                    maxAlphaDelta = alphaDelta;
-                }
-
-                int visibilityAlpha = Math.max(sourceAlpha, reconstructedAlpha);
-                if (visibilityAlpha <= 0) {
-                    continue;
-                }
-
-                int redDelta = channelDifference(sourceColor >> 16, reconstructedColor >> 16);
-                int greenDelta = channelDifference(sourceColor >> 8, reconstructedColor >> 8);
-                int blueDelta = channelDifference(sourceColor, reconstructedColor);
-                int visibleColorDelta = Math.max(redDelta, Math.max(greenDelta, blueDelta));
-                if (visibleColorDelta > maxVisibleColorDelta) {
-                    maxVisibleColorDelta = visibleColorDelta;
-                }
-
-                double visibilityWeight = visibilityAlpha / 255.0D;
-                totalError += (alphaDelta * 2.0D) + ((redDelta + greenDelta + blueDelta) * visibilityWeight);
+        for (int pixelIndex = 0; pixelIndex < sourcePixels.length; pixelIndex++) {
+            int sourceColor = sourcePixels[pixelIndex];
+            int reconstructedColor = reconstructedPixels[pixelIndex];
+            int sourceAlpha = (sourceColor >>> 24) & 0xFF;
+            int reconstructedAlpha = (reconstructedColor >>> 24) & 0xFF;
+            int alphaDelta = Math.abs(sourceAlpha - reconstructedAlpha);
+            if (alphaDelta > maxAlphaDelta) {
+                maxAlphaDelta = alphaDelta;
             }
+
+            int visibilityAlpha = Math.max(sourceAlpha, reconstructedAlpha);
+            if (visibilityAlpha <= 0) {
+                continue;
+            }
+
+            int redDelta = channelDifference(sourceColor >> 16, reconstructedColor >> 16);
+            int greenDelta = channelDifference(sourceColor >> 8, reconstructedColor >> 8);
+            int blueDelta = channelDifference(sourceColor, reconstructedColor);
+            int visibleColorDelta = Math.max(redDelta, Math.max(greenDelta, blueDelta));
+            if (visibleColorDelta > maxVisibleColorDelta) {
+                maxVisibleColorDelta = visibleColorDelta;
+            }
+
+            double visibilityWeight = visibilityAlpha / 255.0D;
+            totalError += (alphaDelta * 2.0D) + ((redDelta + greenDelta + blueDelta) * visibilityWeight);
         }
-        return new PerceptualDriftStats(totalError / Math.max(1, width * height), maxVisibleColorDelta, maxAlphaDelta);
+        return new PerceptualDriftStats(totalError / Math.max(1, sourcePixels.length), maxVisibleColorDelta, maxAlphaDelta);
     }
 
     @NotNull
@@ -495,23 +493,22 @@ public class AfmaEncodePlanner {
             return currentFrame;
         }
 
+        int[] previousPixels = previousFrame.getPixelsUnsafe();
+        int[] currentPixels = currentFrame.getPixelsUnsafe();
         int width = currentFrame.getWidth();
         int height = currentFrame.getHeight();
         int[] mergedPixels = null;
-        for (int y = 0; y < height; y++) {
-            int rowOffset = y * width;
-            for (int x = 0; x < width; x++) {
-                int previousColor = previousFrame.getPixelRGBA(x, y);
-                int currentColor = currentFrame.getPixelRGBA(x, y);
-                if (!shouldMergeNearLossless(previousColor, currentColor, maxChannelDelta)) {
-                    continue;
-                }
-
-                if (mergedPixels == null) {
-                    mergedPixels = currentFrame.copyPixels();
-                }
-                mergedPixels[rowOffset + x] = previousColor;
+        for (int pixelIndex = 0; pixelIndex < currentPixels.length; pixelIndex++) {
+            int previousColor = previousPixels[pixelIndex];
+            int currentColor = currentPixels[pixelIndex];
+            if (!shouldMergeNearLossless(previousColor, currentColor, maxChannelDelta)) {
+                continue;
             }
+
+            if (mergedPixels == null) {
+                mergedPixels = Arrays.copyOf(currentPixels, currentPixels.length);
+            }
+            mergedPixels[pixelIndex] = previousColor;
         }
 
         if (mergedPixels == null) {
@@ -809,6 +806,11 @@ public class AfmaEncodePlanner {
             return null;
         }
 
+        int frameWidth = currentFrame.getWidth();
+        int[] previousPixels = previousFrame.getPixelsUnsafe();
+        int[] currentPixels = currentFrame.getPixelsUnsafe();
+        int startX = deltaBounds.x();
+        int startY = deltaBounds.y();
         boolean includeAlpha = this.hasAlphaResidual(previousFrame, currentFrame, deltaBounds);
         int channels = AfmaResidualPayloadHelper.channelCount(includeAlpha);
         int expectedBytes = AfmaResidualPayloadHelper.expectedDenseResidualBytes(width, height, channels);
@@ -819,11 +821,11 @@ public class AfmaEncodePlanner {
         byte[] payloadBytes = new byte[expectedBytes];
         int payloadOffset = 0;
         for (int localY = 0; localY < height; localY++) {
-            int sourceY = deltaBounds.y() + localY;
+            int rowOffset = ((startY + localY) * frameWidth) + startX;
             for (int localX = 0; localX < width; localX++) {
-                int sourceX = deltaBounds.x() + localX;
-                int predictedColor = previousFrame.getPixelRGBA(sourceX, sourceY);
-                int currentColor = currentFrame.getPixelRGBA(sourceX, sourceY);
+                int pixelIndex = rowOffset + localX;
+                int predictedColor = previousPixels[pixelIndex];
+                int currentColor = currentPixels[pixelIndex];
                 payloadOffset = AfmaResidualPayloadHelper.writeResidual(payloadBytes, payloadOffset, predictedColor, currentColor, includeAlpha);
             }
         }
@@ -840,14 +842,19 @@ public class AfmaEncodePlanner {
             return null;
         }
 
+        int frameWidth = currentFrame.getWidth();
+        int[] previousPixels = previousFrame.getPixelsUnsafe();
+        int[] currentPixels = currentFrame.getPixelsUnsafe();
+        int startX = deltaBounds.x();
+        int startY = deltaBounds.y();
         int changedPixelCount = 0;
         boolean includeAlpha = false;
         for (int localY = 0; localY < height; localY++) {
-            int sourceY = deltaBounds.y() + localY;
+            int rowOffset = ((startY + localY) * frameWidth) + startX;
             for (int localX = 0; localX < width; localX++) {
-                int sourceX = deltaBounds.x() + localX;
-                int previousColor = previousFrame.getPixelRGBA(sourceX, sourceY);
-                int currentColor = currentFrame.getPixelRGBA(sourceX, sourceY);
+                int pixelIndex = rowOffset + localX;
+                int previousColor = previousPixels[pixelIndex];
+                int currentColor = currentPixels[pixelIndex];
                 if (previousColor == currentColor) {
                     continue;
                 }
@@ -878,11 +885,11 @@ public class AfmaEncodePlanner {
         int residualOffset = 0;
         int bitIndex = 0;
         for (int localY = 0; localY < height; localY++) {
-            int sourceY = deltaBounds.y() + localY;
+            int rowOffset = ((startY + localY) * frameWidth) + startX;
             for (int localX = 0; localX < width; localX++, bitIndex++) {
-                int sourceX = deltaBounds.x() + localX;
-                int previousColor = previousFrame.getPixelRGBA(sourceX, sourceY);
-                int currentColor = currentFrame.getPixelRGBA(sourceX, sourceY);
+                int pixelIndex = rowOffset + localX;
+                int previousColor = previousPixels[pixelIndex];
+                int currentColor = currentPixels[pixelIndex];
                 if (previousColor == currentColor) {
                     continue;
                 }
@@ -903,6 +910,17 @@ public class AfmaEncodePlanner {
             return null;
         }
 
+        int frameWidth = currentFrame.getWidth();
+        int[] previousPixels = previousFrame.getPixelsUnsafe();
+        int[] currentPixels = currentFrame.getPixelsUnsafe();
+        int dstLeft = copyRect.getDstX();
+        int dstTop = copyRect.getDstY();
+        int dstRight = dstLeft + copyRect.getWidth();
+        int dstBottom = dstTop + copyRect.getHeight();
+        int srcLeft = copyRect.getSrcX();
+        int srcTop = copyRect.getSrcY();
+        int startX = patchBounds.x();
+        int startY = patchBounds.y();
         boolean includeAlpha = this.hasCopyAlphaResidual(previousFrame, currentFrame, copyRect, patchBounds);
         int channels = AfmaResidualPayloadHelper.channelCount(includeAlpha);
         int expectedBytes = AfmaResidualPayloadHelper.expectedDenseResidualBytes(width, height, channels);
@@ -913,11 +931,18 @@ public class AfmaEncodePlanner {
         byte[] payloadBytes = new byte[expectedBytes];
         int payloadOffset = 0;
         for (int localY = 0; localY < height; localY++) {
-            int sourceY = patchBounds.y() + localY;
+            int y = startY + localY;
+            int rowOffset = y * frameWidth;
+            boolean copiedRow = (y >= dstTop) && (y < dstBottom);
+            int copiedSourceRowOffset = copiedRow ? ((srcTop + (y - dstTop)) * frameWidth) : 0;
             for (int localX = 0; localX < width; localX++) {
-                int sourceX = patchBounds.x() + localX;
-                int predictedColor = this.getExpectedColorAfterCopy(previousFrame, copyRect, sourceX, sourceY);
-                int currentColor = currentFrame.getPixelRGBA(sourceX, sourceY);
+                int x = startX + localX;
+                int pixelIndex = rowOffset + x;
+                int predictedColor = previousPixels[pixelIndex];
+                if (copiedRow && (x >= dstLeft) && (x < dstRight)) {
+                    predictedColor = previousPixels[copiedSourceRowOffset + srcLeft + (x - dstLeft)];
+                }
+                int currentColor = currentPixels[pixelIndex];
                 payloadOffset = AfmaResidualPayloadHelper.writeResidual(payloadBytes, payloadOffset, predictedColor, currentColor, includeAlpha);
             }
         }
@@ -934,14 +959,32 @@ public class AfmaEncodePlanner {
             return null;
         }
 
+        int frameWidth = currentFrame.getWidth();
+        int[] previousPixels = previousFrame.getPixelsUnsafe();
+        int[] currentPixels = currentFrame.getPixelsUnsafe();
+        int dstLeft = copyRect.getDstX();
+        int dstTop = copyRect.getDstY();
+        int dstRight = dstLeft + copyRect.getWidth();
+        int dstBottom = dstTop + copyRect.getHeight();
+        int srcLeft = copyRect.getSrcX();
+        int srcTop = copyRect.getSrcY();
+        int startX = patchBounds.x();
+        int startY = patchBounds.y();
         int changedPixelCount = 0;
         boolean includeAlpha = false;
         for (int localY = 0; localY < height; localY++) {
-            int sourceY = patchBounds.y() + localY;
+            int y = startY + localY;
+            int rowOffset = y * frameWidth;
+            boolean copiedRow = (y >= dstTop) && (y < dstBottom);
+            int copiedSourceRowOffset = copiedRow ? ((srcTop + (y - dstTop)) * frameWidth) : 0;
             for (int localX = 0; localX < width; localX++) {
-                int sourceX = patchBounds.x() + localX;
-                int predictedColor = this.getExpectedColorAfterCopy(previousFrame, copyRect, sourceX, sourceY);
-                int currentColor = currentFrame.getPixelRGBA(sourceX, sourceY);
+                int x = startX + localX;
+                int pixelIndex = rowOffset + x;
+                int predictedColor = previousPixels[pixelIndex];
+                if (copiedRow && (x >= dstLeft) && (x < dstRight)) {
+                    predictedColor = previousPixels[copiedSourceRowOffset + srcLeft + (x - dstLeft)];
+                }
+                int currentColor = currentPixels[pixelIndex];
                 if (predictedColor == currentColor) {
                     continue;
                 }
@@ -972,11 +1015,18 @@ public class AfmaEncodePlanner {
         int residualOffset = 0;
         int bitIndex = 0;
         for (int localY = 0; localY < height; localY++) {
-            int sourceY = patchBounds.y() + localY;
+            int y = startY + localY;
+            int rowOffset = y * frameWidth;
+            boolean copiedRow = (y >= dstTop) && (y < dstBottom);
+            int copiedSourceRowOffset = copiedRow ? ((srcTop + (y - dstTop)) * frameWidth) : 0;
             for (int localX = 0; localX < width; localX++, bitIndex++) {
-                int sourceX = patchBounds.x() + localX;
-                int predictedColor = this.getExpectedColorAfterCopy(previousFrame, copyRect, sourceX, sourceY);
-                int currentColor = currentFrame.getPixelRGBA(sourceX, sourceY);
+                int x = startX + localX;
+                int pixelIndex = rowOffset + x;
+                int predictedColor = previousPixels[pixelIndex];
+                if (copiedRow && (x >= dstLeft) && (x < dstRight)) {
+                    predictedColor = previousPixels[copiedSourceRowOffset + srcLeft + (x - dstLeft)];
+                }
+                int currentColor = currentPixels[pixelIndex];
                 if (predictedColor == currentColor) {
                     continue;
                 }
@@ -989,12 +1039,17 @@ public class AfmaEncodePlanner {
     }
 
     protected boolean hasAlphaResidual(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame, @NotNull AfmaRect bounds) {
+        int frameWidth = currentFrame.getWidth();
+        int[] previousPixels = previousFrame.getPixelsUnsafe();
+        int[] currentPixels = currentFrame.getPixelsUnsafe();
+        int startX = bounds.x();
+        int startY = bounds.y();
         for (int localY = 0; localY < bounds.height(); localY++) {
-            int sourceY = bounds.y() + localY;
+            int rowOffset = ((startY + localY) * frameWidth) + startX;
             for (int localX = 0; localX < bounds.width(); localX++) {
-                int sourceX = bounds.x() + localX;
-                int previousColor = previousFrame.getPixelRGBA(sourceX, sourceY);
-                int currentColor = currentFrame.getPixelRGBA(sourceX, sourceY);
+                int pixelIndex = rowOffset + localX;
+                int previousColor = previousPixels[pixelIndex];
+                int currentColor = currentPixels[pixelIndex];
                 if (((previousColor ^ currentColor) & 0xFF000000) != 0) {
                     return true;
                 }
@@ -1005,28 +1060,36 @@ public class AfmaEncodePlanner {
 
     protected boolean hasCopyAlphaResidual(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
                                            @NotNull AfmaCopyRect copyRect, @NotNull AfmaRect bounds) {
+        int frameWidth = currentFrame.getWidth();
+        int[] previousPixels = previousFrame.getPixelsUnsafe();
+        int[] currentPixels = currentFrame.getPixelsUnsafe();
+        int dstLeft = copyRect.getDstX();
+        int dstTop = copyRect.getDstY();
+        int dstRight = dstLeft + copyRect.getWidth();
+        int dstBottom = dstTop + copyRect.getHeight();
+        int srcLeft = copyRect.getSrcX();
+        int srcTop = copyRect.getSrcY();
+        int startX = bounds.x();
+        int startY = bounds.y();
         for (int localY = 0; localY < bounds.height(); localY++) {
-            int sourceY = bounds.y() + localY;
+            int y = startY + localY;
+            int rowOffset = y * frameWidth;
+            boolean copiedRow = (y >= dstTop) && (y < dstBottom);
+            int copiedSourceRowOffset = copiedRow ? ((srcTop + (y - dstTop)) * frameWidth) : 0;
             for (int localX = 0; localX < bounds.width(); localX++) {
-                int sourceX = bounds.x() + localX;
-                int predictedColor = this.getExpectedColorAfterCopy(previousFrame, copyRect, sourceX, sourceY);
-                int currentColor = currentFrame.getPixelRGBA(sourceX, sourceY);
+                int x = startX + localX;
+                int pixelIndex = rowOffset + x;
+                int predictedColor = previousPixels[pixelIndex];
+                if (copiedRow && (x >= dstLeft) && (x < dstRight)) {
+                    predictedColor = previousPixels[copiedSourceRowOffset + srcLeft + (x - dstLeft)];
+                }
+                int currentColor = currentPixels[pixelIndex];
                 if (((predictedColor ^ currentColor) & 0xFF000000) != 0) {
                     return true;
                 }
             }
         }
         return false;
-    }
-
-    protected int getExpectedColorAfterCopy(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaCopyRect copyRect, int x, int y) {
-        if ((x >= copyRect.getDstX()) && (x < (copyRect.getDstX() + copyRect.getWidth()))
-                && (y >= copyRect.getDstY()) && (y < (copyRect.getDstY() + copyRect.getHeight()))) {
-            int srcX = copyRect.getSrcX() + (x - copyRect.getDstX());
-            int srcY = copyRect.getSrcY() + (y - copyRect.getDstY());
-            return previousFrame.getPixelRGBA(srcX, srcY);
-        }
-        return previousFrame.getPixelRGBA(x, y);
     }
 
     @Nullable
@@ -1304,13 +1367,13 @@ public class AfmaEncodePlanner {
 
     protected boolean isTileIdentical(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
                                       int dstX, int dstY, int width, int height) {
+        int frameWidth = currentFrame.getWidth();
+        int[] previousPixels = previousFrame.getPixelsUnsafe();
+        int[] currentPixels = currentFrame.getPixelsUnsafe();
         for (int localY = 0; localY < height; localY++) {
-            int sourceY = dstY + localY;
-            for (int localX = 0; localX < width; localX++) {
-                int sourceX = dstX + localX;
-                if (previousFrame.getPixelRGBA(sourceX, sourceY) != currentFrame.getPixelRGBA(sourceX, sourceY)) {
-                    return false;
-                }
+            int rowOffset = ((dstY + localY) * frameWidth) + dstX;
+            if (Arrays.mismatch(previousPixels, rowOffset, rowOffset + width, currentPixels, rowOffset, rowOffset + width) != -1) {
+                return false;
             }
         }
         return true;
@@ -1326,12 +1389,17 @@ public class AfmaEncodePlanner {
     @NotNull
     protected MotionTileStats scanMotionTile(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
                                              int dstX, int dstY, int srcX, int srcY, int width, int height) {
+        int frameWidth = currentFrame.getWidth();
+        int[] previousPixels = previousFrame.getPixelsUnsafe();
+        int[] currentPixels = currentFrame.getPixelsUnsafe();
         int changedPixelCount = 0;
         boolean includeAlpha = false;
         for (int localY = 0; localY < height; localY++) {
+            int previousRowOffset = ((srcY + localY) * frameWidth) + srcX;
+            int currentRowOffset = ((dstY + localY) * frameWidth) + dstX;
             for (int localX = 0; localX < width; localX++) {
-                int predictedColor = previousFrame.getPixelRGBA(srcX + localX, srcY + localY);
-                int currentColor = currentFrame.getPixelRGBA(dstX + localX, dstY + localY);
+                int predictedColor = previousPixels[previousRowOffset + localX];
+                int currentColor = currentPixels[currentRowOffset + localX];
                 if (predictedColor == currentColor) {
                     continue;
                 }
@@ -1353,12 +1421,17 @@ public class AfmaEncodePlanner {
             return null;
         }
 
+        int frameWidth = currentFrame.getWidth();
+        int[] previousPixels = previousFrame.getPixelsUnsafe();
+        int[] currentPixels = currentFrame.getPixelsUnsafe();
         byte[] payloadBytes = new byte[expectedBytes];
         int payloadOffset = 0;
         for (int localY = 0; localY < height; localY++) {
+            int previousRowOffset = ((srcY + localY) * frameWidth) + srcX;
+            int currentRowOffset = ((dstY + localY) * frameWidth) + dstX;
             for (int localX = 0; localX < width; localX++) {
-                int predictedColor = previousFrame.getPixelRGBA(srcX + localX, srcY + localY);
-                int currentColor = currentFrame.getPixelRGBA(dstX + localX, dstY + localY);
+                int predictedColor = previousPixels[previousRowOffset + localX];
+                int currentColor = currentPixels[currentRowOffset + localX];
                 payloadOffset = AfmaResidualPayloadHelper.writeResidual(payloadBytes, payloadOffset, predictedColor, currentColor, includeAlpha);
             }
         }
@@ -1380,14 +1453,19 @@ public class AfmaEncodePlanner {
             return null;
         }
 
+        int frameWidth = currentFrame.getWidth();
+        int[] previousPixels = previousFrame.getPixelsUnsafe();
+        int[] currentPixels = currentFrame.getPixelsUnsafe();
         byte[] maskPayload = new byte[maskByteCount];
         byte[] residualPayload = new byte[residualByteCount];
         int residualOffset = 0;
         int bitIndex = 0;
         for (int localY = 0; localY < height; localY++) {
+            int previousRowOffset = ((srcY + localY) * frameWidth) + srcX;
+            int currentRowOffset = ((dstY + localY) * frameWidth) + dstX;
             for (int localX = 0; localX < width; localX++, bitIndex++) {
-                int predictedColor = previousFrame.getPixelRGBA(srcX + localX, srcY + localY);
-                int currentColor = currentFrame.getPixelRGBA(dstX + localX, dstY + localY);
+                int predictedColor = previousPixels[previousRowOffset + localX];
+                int currentColor = currentPixels[currentRowOffset + localX];
                 if (predictedColor == currentColor) {
                     continue;
                 }
@@ -1400,10 +1478,13 @@ public class AfmaEncodePlanner {
 
     @NotNull
     protected RawTileData buildRawTileBytes(@NotNull AfmaPixelFrame currentFrame, int dstX, int dstY, int width, int height) {
+        int frameWidth = currentFrame.getWidth();
+        int[] currentPixels = currentFrame.getPixelsUnsafe();
         boolean includeAlpha = false;
         for (int localY = 0; localY < height && !includeAlpha; localY++) {
+            int rowOffset = ((dstY + localY) * frameWidth) + dstX;
             for (int localX = 0; localX < width; localX++) {
-                if (((currentFrame.getPixelRGBA(dstX + localX, dstY + localY) >>> 24) & 0xFF) != 0xFF) {
+                if (((currentPixels[rowOffset + localX] >>> 24) & 0xFF) != 0xFF) {
                     includeAlpha = true;
                     break;
                 }
@@ -1414,8 +1495,9 @@ public class AfmaEncodePlanner {
         byte[] payloadBytes = new byte[AfmaBlockInterPayloadHelper.expectedRawTileBytes(width, height, channels)];
         int payloadOffset = 0;
         for (int localY = 0; localY < height; localY++) {
+            int rowOffset = ((dstY + localY) * frameWidth) + dstX;
             for (int localX = 0; localX < width; localX++) {
-                int color = currentFrame.getPixelRGBA(dstX + localX, dstY + localY);
+                int color = currentPixels[rowOffset + localX];
                 payloadBytes[payloadOffset++] = (byte) ((color >> 16) & 0xFF);
                 payloadBytes[payloadOffset++] = (byte) ((color >> 8) & 0xFF);
                 payloadBytes[payloadOffset++] = (byte) (color & 0xFF);

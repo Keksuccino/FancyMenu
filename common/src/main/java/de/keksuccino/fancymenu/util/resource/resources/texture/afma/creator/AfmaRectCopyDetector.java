@@ -184,15 +184,20 @@ public class AfmaRectCopyDetector {
 
     protected double sampleMatchRatio(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next,
                                       int srcX, int srcY, int dstX, int dstY, int sampleWidth, int sampleHeight) {
+        int frameWidth = previous.getWidth();
+        int[] previousPixels = previous.getPixelsUnsafe();
+        int[] nextPixels = next.getPixelsUnsafe();
         int stepX = Math.max(1, sampleWidth / 48);
         int stepY = Math.max(1, sampleHeight / 16);
         int matches = 0;
         int samples = 0;
 
         for (int y = 0; y < sampleHeight; y += stepY) {
+            int previousRowOffset = ((srcY + y) * frameWidth) + srcX;
+            int nextRowOffset = ((dstY + y) * frameWidth) + dstX;
             for (int x = 0; x < sampleWidth; x += stepX) {
                 samples++;
-                if (previous.getPixelRGBA(srcX + x, srcY + y) == next.getPixelRGBA(dstX + x, dstY + y)) {
+                if (previousPixels[previousRowOffset + x] == nextPixels[nextRowOffset + x]) {
                     matches++;
                 }
             }
