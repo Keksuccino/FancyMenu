@@ -563,7 +563,16 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		if (!this.shouldCustomize(screen)) return;
 
         if (!this.layoutBase.menuBackgrounds.isEmpty()) {
-            graphics.fill(0, 0, screen.width, screen.height, DrawableColor.BLACK.getColorInt());
+            boolean show = false;
+            for (MenuBackground<?> background : this.layoutBase.menuBackgrounds) {
+                if (background.showBackground.tryGetNonNull()) {
+                    show = true;
+                    break;
+                }
+            }
+            if (show) {
+                graphics.fill(0, 0, screen.width, screen.height, DrawableColor.BLACK.getColorInt());
+            }
         }
 
 		this.layoutBase.menuBackgrounds.forEach(background -> {
