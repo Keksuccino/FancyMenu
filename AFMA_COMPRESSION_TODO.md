@@ -1,27 +1,5 @@
 # AFMA Compression and Codec Improvement TO-DO
 
-This document turns the AFMA system analysis into an implementation roadmap.
-
-Goal:
-- Reduce AFMA archive size as much as possible.
-- Do not make steady-state memory usage worse.
-- Do not make decode or playback speed worse.
-- Encoding may become much slower if it helps compression quality.
-
-Working constraints:
-- Keep the runtime streaming model lean.
-- Prefer moving complexity into the encoder and file format.
-- Treat format evolution as deliberate, versioned work.
-- Every phase below is ordered to reduce rework in later phases.
-
-Current AFMA guardrails to preserve:
-- One streaming texture at runtime.
-- Small prefetch queue.
-- Minimal persistent decode caches.
-- Optional extra reference canvas only when a codec feature truly needs it.
-
----
-
 ## Phase 0: Baseline, Safety Nets, and Decision Framework
 
 Purpose:
@@ -603,22 +581,3 @@ This order is intended to:
 - avoid adding new opcodes before the planner can choose them well,
 - avoid locking the container too early,
 - keep the runtime memory model stable throughout the project.
-
----
-
-## Nice-to-Have Side Tasks
-
-- Add thumbnail generation and storage rules if AFMA preview speed becomes important.
-- Add a seek/reset benchmark if future interactive scrubbing is planned.
-- Consider optional external tooling for large offline corpus analysis if the in-project tools become too heavy.
-
----
-
-## Definition of Done for the Whole Roadmap
-
-The AFMA improvement effort is done when:
-- The benchmark corpus shows meaningful archive size reduction across most content classes.
-- Decode and playback timing do not regress.
-- Steady-state runtime memory does not regress.
-- Existing AFMA archives remain supported.
-- New encoder behaviors are measurable, explainable, and user-accessible.
