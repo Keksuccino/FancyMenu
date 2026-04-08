@@ -319,24 +319,55 @@ public class AfmaCreatorState {
                     .setAdaptiveKeyframePlacement(true)
                     .setAdaptiveMaxKeyframeInterval(Math.max(preferredKeyframeInterval * 4, preferredKeyframeInterval + 180))
                     .setAdaptiveContinuationMinSavingsBytes(128L)
-                    .setAdaptiveContinuationMinSavingsRatio(0.0025D);
+                    .setAdaptiveContinuationMinSavingsRatio(0.0025D)
+                    .setPlannerSearchWindowFrames(24)
+                    .setPlannerBeamWidth(14)
+                    .setPlannerDecodeCostPenaltyBytes(80L)
+                    .setPlannerComplexityPenaltyBytes(8L)
+                    .setPlannerAverageDriftPenaltyBytes(24D)
+                    .setPlannerVisibleColorDriftPenaltyBytes(8L)
+                    .setPlannerAlphaDriftPenaltyBytes(8L)
+                    .setPlannerLossyContinuationPenaltyBytes(40L)
+                    .setPlannerKeyframeDistancePenaltyBytes(96L);
             case BALANCED -> options
                     .setAdaptiveKeyframePlacement(true)
                     .setAdaptiveMaxKeyframeInterval(Math.max(preferredKeyframeInterval * 2, preferredKeyframeInterval + 36))
                     .setAdaptiveContinuationMinSavingsBytes(768L)
-                    .setAdaptiveContinuationMinSavingsRatio(0.0075D);
+                    .setAdaptiveContinuationMinSavingsRatio(0.0075D)
+                    .setPlannerSearchWindowFrames(16)
+                    .setPlannerBeamWidth(10)
+                    .setPlannerDecodeCostPenaltyBytes(144L)
+                    .setPlannerComplexityPenaltyBytes(12L)
+                    .setPlannerAverageDriftPenaltyBytes(40D)
+                    .setPlannerVisibleColorDriftPenaltyBytes(10L)
+                    .setPlannerAlphaDriftPenaltyBytes(10L)
+                    .setPlannerLossyContinuationPenaltyBytes(80L)
+                    .setPlannerKeyframeDistancePenaltyBytes(160L);
             case FASTEST_DECODE -> options
                     .setAdaptiveKeyframePlacement(false)
                     .setAdaptiveMaxKeyframeInterval(preferredKeyframeInterval)
                     .setAdaptiveContinuationMinSavingsBytes(0L)
-                    .setAdaptiveContinuationMinSavingsRatio(0D);
+                    .setAdaptiveContinuationMinSavingsRatio(0D)
+                    .setPlannerSearchWindowFrames(8)
+                    .setPlannerBeamWidth(4)
+                    .setPlannerDecodeCostPenaltyBytes(288L)
+                    .setPlannerComplexityPenaltyBytes(32L)
+                    .setPlannerAverageDriftPenaltyBytes(72D)
+                    .setPlannerVisibleColorDriftPenaltyBytes(16L)
+                    .setPlannerAlphaDriftPenaltyBytes(16L)
+                    .setPlannerLossyContinuationPenaltyBytes(160L)
+                    .setPlannerKeyframeDistancePenaltyBytes(256L);
         }
 
         if (!this.nearLosslessEnabled) {
             options
                     .setPerceptualBinIntraMaxVisibleColorDelta(0)
                     .setPerceptualBinIntraMaxAlphaDelta(0)
-                    .setPerceptualBinIntraMaxAverageError(0D);
+                    .setPerceptualBinIntraMaxAverageError(0D)
+                    .setPlannerMaxCumulativeAverageError(0D)
+                    .setPlannerMaxCumulativeVisibleColorDelta(0)
+                    .setPlannerMaxCumulativeAlphaDelta(0)
+                    .setPlannerMaxConsecutiveLossyFrames(0);
             return;
         }
 
@@ -353,6 +384,24 @@ public class AfmaCreatorState {
                     .setPerceptualBinIntraMaxVisibleColorDelta(8)
                     .setPerceptualBinIntraMaxAlphaDelta(16)
                     .setPerceptualBinIntraMaxAverageError(3.0D);
+        }
+
+        switch (this.optimizationPreset) {
+            case SMALLEST_FILE -> options
+                    .setPlannerMaxCumulativeAverageError(Math.max(18D, options.getPerceptualBinIntraMaxAverageError() * 4.0D))
+                    .setPlannerMaxCumulativeVisibleColorDelta(Math.max(48, options.getPerceptualBinIntraMaxVisibleColorDelta() * 4))
+                    .setPlannerMaxCumulativeAlphaDelta(Math.max(80, options.getPerceptualBinIntraMaxAlphaDelta() * 3))
+                    .setPlannerMaxConsecutiveLossyFrames(10);
+            case BALANCED -> options
+                    .setPlannerMaxCumulativeAverageError(Math.max(10D, options.getPerceptualBinIntraMaxAverageError() * 2.75D))
+                    .setPlannerMaxCumulativeVisibleColorDelta(Math.max(24, options.getPerceptualBinIntraMaxVisibleColorDelta() * 3))
+                    .setPlannerMaxCumulativeAlphaDelta(Math.max(48, options.getPerceptualBinIntraMaxAlphaDelta() * 2))
+                    .setPlannerMaxConsecutiveLossyFrames(6);
+            case FASTEST_DECODE -> options
+                    .setPlannerMaxCumulativeAverageError(Math.max(6D, options.getPerceptualBinIntraMaxAverageError() * 2.0D))
+                    .setPlannerMaxCumulativeVisibleColorDelta(Math.max(16, options.getPerceptualBinIntraMaxVisibleColorDelta() * 2))
+                    .setPlannerMaxCumulativeAlphaDelta(Math.max(32, options.getPerceptualBinIntraMaxAlphaDelta() * 2))
+                    .setPlannerMaxConsecutiveLossyFrames(3);
         }
     }
 

@@ -37,6 +37,19 @@ public class AfmaEncodeOptions {
     protected int perceptualBinIntraMaxVisibleColorDelta = 0;
     protected int perceptualBinIntraMaxAlphaDelta = 0;
     protected double perceptualBinIntraMaxAverageError = 0D;
+    protected int plannerSearchWindowFrames = 12;
+    protected int plannerBeamWidth = 8;
+    protected long plannerDecodeCostPenaltyBytes = 160L;
+    protected long plannerComplexityPenaltyBytes = 16L;
+    protected double plannerAverageDriftPenaltyBytes = 48D;
+    protected long plannerVisibleColorDriftPenaltyBytes = 12L;
+    protected long plannerAlphaDriftPenaltyBytes = 12L;
+    protected long plannerLossyContinuationPenaltyBytes = 96L;
+    protected long plannerKeyframeDistancePenaltyBytes = 160L;
+    protected double plannerMaxCumulativeAverageError = 0D;
+    protected int plannerMaxCumulativeVisibleColorDelta = 0;
+    protected int plannerMaxCumulativeAlphaDelta = 0;
+    protected int plannerMaxConsecutiveLossyFrames = 0;
 
     public int getLoopCount() {
         return this.loopCount;
@@ -239,6 +252,123 @@ public class AfmaEncodeOptions {
         return this;
     }
 
+    public int getPlannerSearchWindowFrames() {
+        return this.plannerSearchWindowFrames;
+    }
+
+    public AfmaEncodeOptions setPlannerSearchWindowFrames(int plannerSearchWindowFrames) {
+        this.plannerSearchWindowFrames = plannerSearchWindowFrames;
+        return this;
+    }
+
+    public int getPlannerBeamWidth() {
+        return this.plannerBeamWidth;
+    }
+
+    public AfmaEncodeOptions setPlannerBeamWidth(int plannerBeamWidth) {
+        this.plannerBeamWidth = plannerBeamWidth;
+        return this;
+    }
+
+    public long getPlannerDecodeCostPenaltyBytes() {
+        return this.plannerDecodeCostPenaltyBytes;
+    }
+
+    public AfmaEncodeOptions setPlannerDecodeCostPenaltyBytes(long plannerDecodeCostPenaltyBytes) {
+        this.plannerDecodeCostPenaltyBytes = plannerDecodeCostPenaltyBytes;
+        return this;
+    }
+
+    public long getPlannerComplexityPenaltyBytes() {
+        return this.plannerComplexityPenaltyBytes;
+    }
+
+    public AfmaEncodeOptions setPlannerComplexityPenaltyBytes(long plannerComplexityPenaltyBytes) {
+        this.plannerComplexityPenaltyBytes = plannerComplexityPenaltyBytes;
+        return this;
+    }
+
+    public double getPlannerAverageDriftPenaltyBytes() {
+        return this.plannerAverageDriftPenaltyBytes;
+    }
+
+    public AfmaEncodeOptions setPlannerAverageDriftPenaltyBytes(double plannerAverageDriftPenaltyBytes) {
+        this.plannerAverageDriftPenaltyBytes = plannerAverageDriftPenaltyBytes;
+        return this;
+    }
+
+    public long getPlannerVisibleColorDriftPenaltyBytes() {
+        return this.plannerVisibleColorDriftPenaltyBytes;
+    }
+
+    public AfmaEncodeOptions setPlannerVisibleColorDriftPenaltyBytes(long plannerVisibleColorDriftPenaltyBytes) {
+        this.plannerVisibleColorDriftPenaltyBytes = plannerVisibleColorDriftPenaltyBytes;
+        return this;
+    }
+
+    public long getPlannerAlphaDriftPenaltyBytes() {
+        return this.plannerAlphaDriftPenaltyBytes;
+    }
+
+    public AfmaEncodeOptions setPlannerAlphaDriftPenaltyBytes(long plannerAlphaDriftPenaltyBytes) {
+        this.plannerAlphaDriftPenaltyBytes = plannerAlphaDriftPenaltyBytes;
+        return this;
+    }
+
+    public long getPlannerLossyContinuationPenaltyBytes() {
+        return this.plannerLossyContinuationPenaltyBytes;
+    }
+
+    public AfmaEncodeOptions setPlannerLossyContinuationPenaltyBytes(long plannerLossyContinuationPenaltyBytes) {
+        this.plannerLossyContinuationPenaltyBytes = plannerLossyContinuationPenaltyBytes;
+        return this;
+    }
+
+    public long getPlannerKeyframeDistancePenaltyBytes() {
+        return this.plannerKeyframeDistancePenaltyBytes;
+    }
+
+    public AfmaEncodeOptions setPlannerKeyframeDistancePenaltyBytes(long plannerKeyframeDistancePenaltyBytes) {
+        this.plannerKeyframeDistancePenaltyBytes = plannerKeyframeDistancePenaltyBytes;
+        return this;
+    }
+
+    public double getPlannerMaxCumulativeAverageError() {
+        return this.plannerMaxCumulativeAverageError;
+    }
+
+    public AfmaEncodeOptions setPlannerMaxCumulativeAverageError(double plannerMaxCumulativeAverageError) {
+        this.plannerMaxCumulativeAverageError = plannerMaxCumulativeAverageError;
+        return this;
+    }
+
+    public int getPlannerMaxCumulativeVisibleColorDelta() {
+        return this.plannerMaxCumulativeVisibleColorDelta;
+    }
+
+    public AfmaEncodeOptions setPlannerMaxCumulativeVisibleColorDelta(int plannerMaxCumulativeVisibleColorDelta) {
+        this.plannerMaxCumulativeVisibleColorDelta = plannerMaxCumulativeVisibleColorDelta;
+        return this;
+    }
+
+    public int getPlannerMaxCumulativeAlphaDelta() {
+        return this.plannerMaxCumulativeAlphaDelta;
+    }
+
+    public AfmaEncodeOptions setPlannerMaxCumulativeAlphaDelta(int plannerMaxCumulativeAlphaDelta) {
+        this.plannerMaxCumulativeAlphaDelta = plannerMaxCumulativeAlphaDelta;
+        return this;
+    }
+
+    public int getPlannerMaxConsecutiveLossyFrames() {
+        return this.plannerMaxConsecutiveLossyFrames;
+    }
+
+    public AfmaEncodeOptions setPlannerMaxConsecutiveLossyFrames(int plannerMaxConsecutiveLossyFrames) {
+        this.plannerMaxConsecutiveLossyFrames = plannerMaxConsecutiveLossyFrames;
+        return this;
+    }
+
     public void validateForCounts(int mainFrameCount, int introFrameCount) {
         if (mainFrameCount <= 0 && introFrameCount <= 0) {
             throw new IllegalArgumentException("AFMA encoding requires at least one main or intro frame");
@@ -282,6 +412,29 @@ public class AfmaEncodeOptions {
         }
         if (this.perceptualBinIntraMaxAverageError < 0D) {
             throw new IllegalArgumentException("AFMA perceptual BIN_INTRA average error cannot be negative");
+        }
+        if (this.plannerSearchWindowFrames <= 0) {
+            throw new IllegalArgumentException("AFMA planner search window must be greater than 0");
+        }
+        if (this.plannerBeamWidth <= 0) {
+            throw new IllegalArgumentException("AFMA planner beam width must be greater than 0");
+        }
+        if (this.plannerDecodeCostPenaltyBytes < 0L
+                || this.plannerComplexityPenaltyBytes < 0L
+                || this.plannerVisibleColorDriftPenaltyBytes < 0L
+                || this.plannerAlphaDriftPenaltyBytes < 0L
+                || this.plannerLossyContinuationPenaltyBytes < 0L
+                || this.plannerKeyframeDistancePenaltyBytes < 0L) {
+            throw new IllegalArgumentException("AFMA planner penalty values cannot be negative");
+        }
+        if (this.plannerAverageDriftPenaltyBytes < 0D) {
+            throw new IllegalArgumentException("AFMA planner drift penalty cannot be negative");
+        }
+        if (this.plannerMaxCumulativeAverageError < 0D
+                || this.plannerMaxCumulativeVisibleColorDelta < 0
+                || this.plannerMaxCumulativeAlphaDelta < 0
+                || this.plannerMaxConsecutiveLossyFrames < 0) {
+            throw new IllegalArgumentException("AFMA planner cumulative drift limits cannot be negative");
         }
 
         validateCustomFrameTimes(this.customFrameTimes, mainFrameCount, "main");
