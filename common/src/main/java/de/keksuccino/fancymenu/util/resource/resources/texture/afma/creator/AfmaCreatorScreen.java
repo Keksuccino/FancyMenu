@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.util.file.FilenameComparator;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
@@ -404,7 +405,23 @@ public class AfmaCreatorScreen extends Screen {
     }
 
     protected void renderCreatorPanels(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        graphics.fill(this.getPanelLeft(), this.getPanelTop(), this.getPanelRight(), this.getPanelBottom(), UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt());
+        float radius = UIBase.getInterfaceCornerRoundingRadius();
+        int panelColor = UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_area_background_color_type_1.getColorInt()
+                : UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt();
+        SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+                graphics,
+                this.getPanelLeft(),
+                this.getPanelTop(),
+                this.getPanelRight() - this.getPanelLeft(),
+                this.getPanelBottom() - this.getPanelTop(),
+                radius,
+                radius,
+                radius,
+                radius,
+                panelColor,
+                partialTick
+        );
 
         UIBase.renderText(graphics, this.title, OUTER_PADDING, 16, 0xFFFFFFFF, UIBase.getUITextSizeNormal());
     }
