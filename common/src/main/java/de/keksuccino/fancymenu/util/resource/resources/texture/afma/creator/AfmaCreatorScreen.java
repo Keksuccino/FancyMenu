@@ -305,9 +305,9 @@ public class AfmaCreatorScreen extends Screen {
             y += SECTION_GAP;
         }
 
-        y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.keyframeIntervalEditBox);
-        y += ROW_GAP;
         this.layoutWidget(this.presetCycleButton, contentX, y, contentWidth, FIELD_HEIGHT);
+        y += ROW_GAP;
+        y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.keyframeIntervalEditBox);
         y += ROW_GAP;
 
         int toggleWidth = (contentWidth - COLUMN_GAP) / 2;
@@ -429,8 +429,8 @@ public class AfmaCreatorScreen extends Screen {
         this.drawInlineLabel(graphics, this.introFrameTimeEditBox, Component.translatable("fancymenu.afma.creator.intro_frame_time"), inlineLabelWidth);
         this.drawInlineLabel(graphics, this.loopCountEditBox, Component.translatable("fancymenu.afma.creator.loop_count"), inlineLabelWidth);
 
-        if (this.keyframeIntervalEditBox != null) {
-            this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.optimization"), this.getContentLeft(), this.keyframeIntervalEditBox.getY() - 18, true);
+        if (this.presetCycleButton != null) {
+            this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.optimization"), this.getContentLeft(), this.presetCycleButton.getY() - 18, true);
         }
         this.drawInlineLabel(graphics, this.keyframeIntervalEditBox, Component.translatable("fancymenu.afma.creator.keyframe_interval"), inlineLabelWidth);
     }
