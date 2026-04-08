@@ -382,7 +382,7 @@ public class AfmaFrameDescriptor {
                     throw new IllegalArgumentException(context + " must be a full frame");
                 }
                 if ((this.path == null) || this.path.isBlank()) {
-                    throw new IllegalArgumentException(context + " sparse delta frame is missing its mask payload path");
+                    throw new IllegalArgumentException(context + " sparse delta frame is missing its layout payload path");
                 }
                 new AfmaPatchRegion(this.path, this.getX(), this.getY(), this.getWidth(), this.getHeight()).validate(context, canvasWidth, canvasHeight, true);
                 if (this.sparse == null) {
@@ -412,7 +412,7 @@ public class AfmaFrameDescriptor {
                 }
                 this.copy.validate(context, canvasWidth, canvasHeight);
                 if ((this.path == null) || this.path.isBlank()) {
-                    throw new IllegalArgumentException(context + " copy_rect_sparse_patch frame is missing its mask payload path");
+                    throw new IllegalArgumentException(context + " copy_rect_sparse_patch frame is missing its layout payload path");
                 }
                 new AfmaPatchRegion(this.path, this.getX(), this.getY(), this.getWidth(), this.getHeight()).validate(context, canvasWidth, canvasHeight, true);
                 if (this.sparse == null) {
@@ -429,7 +429,7 @@ public class AfmaFrameDescriptor {
                 }
                 this.multi_copy.validate(context, canvasWidth, canvasHeight);
                 if ((this.path == null) || this.path.isBlank()) {
-                    throw new IllegalArgumentException(context + " multi_copy_sparse_patch frame is missing its mask payload path");
+                    throw new IllegalArgumentException(context + " multi_copy_sparse_patch frame is missing its layout payload path");
                 }
                 new AfmaPatchRegion(this.path, this.getX(), this.getY(), this.getWidth(), this.getHeight()).validate(context, canvasWidth, canvasHeight, true);
                 if (this.sparse == null) {

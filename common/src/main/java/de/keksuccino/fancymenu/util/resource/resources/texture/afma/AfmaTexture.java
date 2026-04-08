@@ -482,7 +482,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
         return switch (type) {
             case FULL, DELTA_RECT -> AfmaPayloadCodec.BIN_INTRA;
             case RESIDUAL_DELTA_RECT, COPY_RECT_RESIDUAL_PATCH, MULTI_COPY_RESIDUAL_PATCH -> AfmaPayloadCodec.RAW_RESIDUAL;
-            case SPARSE_DELTA_RECT, COPY_RECT_SPARSE_PATCH, MULTI_COPY_SPARSE_PATCH -> AfmaPayloadCodec.RAW_SPARSE_MASK;
+            case SPARSE_DELTA_RECT, COPY_RECT_SPARSE_PATCH, MULTI_COPY_SPARSE_PATCH -> AfmaPayloadCodec.RAW_SPARSE_LAYOUT;
             case BLOCK_INTER -> AfmaPayloadCodec.INTER_FRAME;
             case SAME, COPY_RECT_PATCH, MULTI_COPY_PATCH -> AfmaPayloadCodec.NONE;
         };
@@ -503,7 +503,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
         return switch (codec) {
             case NONE -> null;
             case BIN_INTRA -> this.readBinIntraPayload(activeDecoder, Objects.requireNonNull(payloadPath));
-            case RAW_RESIDUAL, RAW_SPARSE_MASK, RAW_SPARSE_RESIDUAL, INTER_FRAME, TILE_INTRA ->
+            case RAW_RESIDUAL, RAW_SPARSE_LAYOUT, RAW_SPARSE_RESIDUAL, INTER_FRAME, TILE_INTRA ->
                     this.readRawPayload(activeDecoder, Objects.requireNonNull(payloadPath));
         };
     }
@@ -725,7 +725,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
                 }
                 case SPARSE_DELTA_RECT -> {
                     this.applySparseResidualPayload(
-                            this.requireRawPayload(preparedFrame.primaryPayload, "AFMA sparse delta mask payload was NULL"),
+                            this.requireRawPayload(preparedFrame.primaryPayload, "AFMA sparse delta layout payload was NULL"),
                             this.requireRawPayload(preparedFrame.patchPayload, "AFMA sparse delta residual payload was NULL"),
                             canvas,
                             descriptor.getX(),
@@ -740,7 +740,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
                     AfmaCopyRect copyRect = Objects.requireNonNull(descriptor.getCopy(), "AFMA copy_rect_sparse_patch is missing its copy section");
                     AfmaNativeImageHelper.copyRectMemmove(canvas, copyRect);
                     this.applySparseResidualPayload(
-                            this.requireRawPayload(preparedFrame.primaryPayload, "AFMA copy_rect_sparse_patch mask payload was NULL"),
+                            this.requireRawPayload(preparedFrame.primaryPayload, "AFMA copy_rect_sparse_patch layout payload was NULL"),
                             this.requireRawPayload(preparedFrame.patchPayload, "AFMA copy_rect_sparse_patch residual payload was NULL"),
                             canvas,
                             descriptor.getX(),
@@ -827,7 +827,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
                     AfmaMultiCopy multiCopy = Objects.requireNonNull(descriptor.getMultiCopy(), "AFMA multi_copy_sparse_patch is missing its multi-copy section");
                     AfmaNativeImageHelper.copyRectsMemmove(canvas, multiCopy.getCopyRects());
                     this.applySparseResidualPayload(
-                            this.requireRawPayload(preparedFrame.primaryPayload, "AFMA multi_copy_sparse_patch mask payload was NULL"),
+                            this.requireRawPayload(preparedFrame.primaryPayload, "AFMA multi_copy_sparse_patch layout payload was NULL"),
                             this.requireRawPayload(preparedFrame.patchPayload, "AFMA multi_copy_sparse_patch residual payload was NULL"),
                             canvas,
                             descriptor.getX(),
@@ -881,7 +881,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
                 residualPayload.bytes, residualPayload.offset, residualPayload.length, residualMetadata);
     }
 
-    protected void applySparseResidualPayload(@NotNull RawPayload maskPayload, @NotNull RawPayload residualPayload,
+    protected void applySparseResidualPayload(@NotNull RawPayload layoutPayload, @NotNull RawPayload residualPayload,
                                               @NotNull NativeImage canvas, int dstX, int dstY, int width, int height,
                                               @NotNull AfmaSparsePayload sparsePayload) throws IOException {
         AfmaNativeImageHelper.applySparseResidualPayload(
@@ -890,9 +890,9 @@ public class AfmaTexture implements ITexture, PlayableResource {
                 dstY,
                 width,
                 height,
-                maskPayload.bytes,
-                maskPayload.offset,
-                maskPayload.length,
+                layoutPayload.bytes,
+                layoutPayload.offset,
+                layoutPayload.length,
                 residualPayload.bytes,
                 residualPayload.offset,
                 residualPayload.length,
@@ -906,7 +906,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
         NativeImage referenceCanvas = this.ensureBlockInterReferenceCanvas(canvas);
         AfmaBlockInterPayloadHelper.walkPayload(blockPayload.bytes, blockPayload.offset, blockPayload.length,
                 blockInter.getTileSize(), regionWidth, regionHeight,
-                (localX, localY, tileWidth, tileHeight, mode, dx, dy, channels, changedPixelCount, payloadBytes, primaryOffset, primaryLength, secondaryOffset, secondaryLength) -> {
+                (localX, localY, tileWidth, tileHeight, mode, dx, dy, channels, changedPixelCount, sparsePayload, payloadBytes, primaryOffset, primaryLength, secondaryOffset, secondaryLength) -> {
                     int dstX = regionX + localX;
                     int dstY = regionY + localY;
                     switch (mode) {
@@ -920,7 +920,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
                         }
                         case COPY_SPARSE -> {
                             AfmaNativeImageHelper.copyRect(referenceCanvas, dstX + dx, dstY + dy, canvas, dstX, dstY, tileWidth, tileHeight);
-                            AfmaNativeImageHelper.applySparseResidualBytes(
+                            AfmaNativeImageHelper.applySparseResidualPayloadUnchecked(
                                     canvas,
                                     dstX,
                                     dstY,
@@ -932,8 +932,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
                                     payloadBytes,
                                     secondaryOffset,
                                     secondaryLength,
-                                    changedPixelCount,
-                                    channels
+                                    Objects.requireNonNull(sparsePayload, "AFMA block inter sparse tile metadata was NULL")
                             );
                         }
                         case RAW -> this.applyRawTilePayload(payloadBytes, primaryOffset, primaryLength, channels, canvas, dstX, dstY, tileWidth, tileHeight);

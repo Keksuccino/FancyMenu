@@ -1749,13 +1749,14 @@ public class AfmaEncodePlanner {
                                                                                  int dstX, int dstY, int width, int height,
                                                                                  @NotNull List<AfmaRectCopyDetector.MotionVector> motionVectors) {
         if (this.isTileIdentical(previousFrame, currentFrame, dstX, dstY, width, height)) {
-            return new AfmaBlockInterPayloadHelper.TileOperation(AfmaBlockInterPayloadHelper.TileMode.SKIP, 0, 0, 0, 0, null, null);
+            return new AfmaBlockInterPayloadHelper.TileOperation(AfmaBlockInterPayloadHelper.TileMode.SKIP, 0, 0, 0, 0, null, null, null);
         }
 
         RawTileData rawTile = this.buildRawTileBytes(currentFrame, dstX, dstY, width, height);
         BlockInterTileCandidate bestCandidate = new BlockInterTileCandidate(
-                new AfmaBlockInterPayloadHelper.TileOperation(AfmaBlockInterPayloadHelper.TileMode.RAW, 0, 0, rawTile.channels(), 0, rawTile.payloadBytes(), null),
-                this.estimateBlockInterTileBytes(AfmaBlockInterPayloadHelper.TileMode.RAW, rawTile.payloadBytes().length, 0)
+                new AfmaBlockInterPayloadHelper.TileOperation(AfmaBlockInterPayloadHelper.TileMode.RAW, 0, 0, rawTile.channels(), 0, rawTile.payloadBytes(), null, null),
+                this.estimateBlockInterTileBytes(AfmaBlockInterPayloadHelper.TileMode.RAW, rawTile.payloadBytes().length, 0),
+                0
         );
         List<MotionSearchSeed> refinementSeeds = new ArrayList<>(BLOCK_INTER_LOCAL_REFINEMENT_SEEDS);
         Set<Long> testedVectors = new HashSet<>(motionVectors.size() * 2);
@@ -1798,8 +1799,9 @@ public class AfmaEncodePlanner {
         }
         if (tileStats.changedPixelCount() <= 0) {
             return new BlockInterTileCandidate(
-                    new AfmaBlockInterPayloadHelper.TileOperation(AfmaBlockInterPayloadHelper.TileMode.COPY, dx, dy, 0, 0, null, null),
-                    this.estimateBlockInterTileBytes(AfmaBlockInterPayloadHelper.TileMode.COPY, 0, 0)
+                    new AfmaBlockInterPayloadHelper.TileOperation(AfmaBlockInterPayloadHelper.TileMode.COPY, dx, dy, 0, 0, null, null, null),
+                    this.estimateBlockInterTileBytes(AfmaBlockInterPayloadHelper.TileMode.COPY, 0, 0),
+                    0
             );
         }
 
@@ -1808,8 +1810,9 @@ public class AfmaEncodePlanner {
         if (denseResidual != null) {
             bestCandidate = new BlockInterTileCandidate(
                     new AfmaBlockInterPayloadHelper.TileOperation(AfmaBlockInterPayloadHelper.TileMode.COPY_DENSE,
-                            dx, dy, denseResidual.metadata().getChannels(), 0, denseResidual.payloadBytes(), null),
-                    this.estimateBlockInterTileBytes(AfmaBlockInterPayloadHelper.TileMode.COPY_DENSE, denseResidual.payloadBytes().length, 0)
+                            dx, dy, denseResidual.metadata().getChannels(), 0, denseResidual.payloadBytes(), null, null),
+                    this.estimateBlockInterTileBytes(AfmaBlockInterPayloadHelper.TileMode.COPY_DENSE, denseResidual.payloadBytes().length, 0),
+                    denseResidual.complexityScore()
             );
         }
 
@@ -1818,9 +1821,10 @@ public class AfmaEncodePlanner {
             BlockInterTileCandidate sparseCandidate = new BlockInterTileCandidate(
                     new AfmaBlockInterPayloadHelper.TileOperation(AfmaBlockInterPayloadHelper.TileMode.COPY_SPARSE,
                             dx, dy, sparseResidual.channels(), sparseResidual.changedPixelCount(),
-                            sparseResidual.layoutPayload(), sparseResidual.residualPayload()),
+                            sparseResidual.layoutPayload(), sparseResidual.residualPayload(), sparseResidual.toMetadata(null)),
                     this.estimateBlockInterTileBytes(AfmaBlockInterPayloadHelper.TileMode.COPY_SPARSE,
-                            sparseResidual.layoutPayload().length, sparseResidual.residualPayload().length)
+                            sparseResidual.layoutPayload().length, sparseResidual.residualPayload().length),
+                    sparseResidual.complexityScore()
             );
             bestCandidate = this.selectBetterBlockInterCandidate(bestCandidate, sparseCandidate);
         }
@@ -1892,6 +1896,10 @@ public class AfmaEncodePlanner {
             if (byteCompare != 0) {
                 return byteCompare;
             }
+            int complexityCompare = Integer.compare(first.candidate().complexityScore(), second.candidate().complexityScore());
+            if (complexityCompare != 0) {
+                return complexityCompare;
+            }
             return Integer.compare(first.candidate().operation().mode().ordinal(), second.candidate().operation().mode().ordinal());
         });
         if (refinementSeeds.size() > BLOCK_INTER_LOCAL_REFINEMENT_SEEDS) {
@@ -1913,6 +1921,9 @@ public class AfmaEncodePlanner {
     protected boolean isBetterBlockInterCandidate(@NotNull BlockInterTileCandidate candidate, @NotNull BlockInterTileCandidate currentBest) {
         if (candidate.estimatedBytes() != currentBest.estimatedBytes()) {
             return candidate.estimatedBytes() < currentBest.estimatedBytes();
+        }
+        if (candidate.complexityScore() != currentBest.complexityScore()) {
+            return candidate.complexityScore() < currentBest.complexityScore();
         }
         return candidate.operation().mode().ordinal() < currentBest.operation().mode().ordinal();
     }
@@ -1939,9 +1950,13 @@ public class AfmaEncodePlanner {
     }
 
     protected long estimateOptimisticBlockInterSparseBytes(int width, int height, int changedPixelCount) {
+        int optimisticLayoutBytes = Math.min(
+                AfmaResidualPayloadHelper.expectedSparseMaskBytes(width, height),
+                changedPixelCount
+        );
         return this.estimateBlockInterTileBytes(
                 AfmaBlockInterPayloadHelper.TileMode.COPY_SPARSE,
-                AfmaResidualPayloadHelper.expectedSparseMaskBytes(width, height),
+                optimisticLayoutBytes,
                 AfmaResidualPayloadHelper.expectedSparseResidualBytes(changedPixelCount, AfmaResidualPayloadHelper.RGB_CHANNELS)
         );
     }
@@ -2050,44 +2065,30 @@ public class AfmaEncodePlanner {
             return null;
         }
 
-        int channels = AfmaResidualPayloadHelper.channelCount(tileStats.includeAlpha());
-        int maskByteCount = AfmaResidualPayloadHelper.expectedSparseMaskBytes(width, height);
-        int residualByteCount = AfmaResidualPayloadHelper.expectedSparseResidualBytes(tileStats.changedPixelCount(), channels);
-        if ((maskByteCount <= 0) || (residualByteCount <= 0)) {
-            return null;
-        }
-
         int frameWidth = currentFrame.getWidth();
         int[] previousPixels = previousFrame.getPixelsUnsafe();
         int[] currentPixels = currentFrame.getPixelsUnsafe();
-        byte[] maskPayload = new byte[maskByteCount];
-        byte[] residualPayload = new byte[residualByteCount];
-        int residualOffset = 0;
-        int bitIndex = 0;
+        int changedPixelCount = tileStats.changedPixelCount();
+        int[] changedIndices = new int[changedPixelCount];
+        int[] predictedColors = new int[changedPixelCount];
+        int[] changedColors = new int[changedPixelCount];
+        int changedOffset = 0;
         for (int localY = 0; localY < height; localY++) {
             int previousRowOffset = ((srcY + localY) * frameWidth) + srcX;
             int currentRowOffset = ((dstY + localY) * frameWidth) + dstX;
-            for (int localX = 0; localX < width; localX++, bitIndex++) {
+            for (int localX = 0; localX < width; localX++) {
                 int predictedColor = previousPixels[previousRowOffset + localX];
                 int currentColor = currentPixels[currentRowOffset + localX];
                 if (predictedColor == currentColor) {
                     continue;
                 }
-                AfmaResidualPayloadHelper.setMaskBit(maskPayload, bitIndex);
-                residualOffset = AfmaResidualPayloadHelper.writeResidual(residualPayload, residualOffset, predictedColor, currentColor, tileStats.includeAlpha());
+                changedIndices[changedOffset] = (localY * width) + localX;
+                predictedColors[changedOffset] = predictedColor;
+                changedColors[changedOffset] = currentColor;
+                changedOffset++;
             }
         }
-        return new SparseResidualPayloadData(
-                maskPayload,
-                residualPayload,
-                tileStats.changedPixelCount(),
-                AfmaSparseLayoutCodec.BITMASK,
-                channels,
-                AfmaResidualCodec.INTERLEAVED,
-                tileStats.includeAlpha() ? AfmaAlphaResidualMode.FULL : AfmaAlphaResidualMode.NONE,
-                0,
-                0
-        );
+        return this.buildSparseResidualPayload(width, height, changedIndices, predictedColors, changedColors, changedPixelCount, tileStats.includeAlpha());
     }
 
     @NotNull
@@ -2128,7 +2129,7 @@ public class AfmaEncodePlanner {
             case SKIP -> 1L;
             case COPY -> 5L;
             case COPY_DENSE -> 6L + primaryBytes;
-            case COPY_SPARSE -> 8L + primaryBytes + secondaryBytes;
+            case COPY_SPARSE -> 15L + primaryBytes + secondaryBytes;
             case RAW -> 2L + primaryBytes;
         };
     }
@@ -3289,7 +3290,7 @@ public class AfmaEncodePlanner {
                                                int complexityScore) {
 
         @NotNull
-        public AfmaSparsePayload toMetadata(@NotNull String residualPayloadPath) {
+        public AfmaSparsePayload toMetadata(@Nullable String residualPayloadPath) {
             return new AfmaSparsePayload(residualPayloadPath, this.changedPixelCount, this.channels,
                     this.layoutCodec, this.residualCodec, this.alphaMode, this.alphaChangedPixelCount);
         }
@@ -3319,7 +3320,8 @@ public class AfmaEncodePlanner {
     protected record RawTileData(@NotNull byte[] payloadBytes, int channels) {
     }
 
-    protected record BlockInterTileCandidate(@NotNull AfmaBlockInterPayloadHelper.TileOperation operation, long estimatedBytes) {
+    protected record BlockInterTileCandidate(@NotNull AfmaBlockInterPayloadHelper.TileOperation operation, long estimatedBytes,
+                                             int complexityScore) {
     }
 
     protected record MotionSearchSeed(@NotNull AfmaRectCopyDetector.MotionVector motionVector,

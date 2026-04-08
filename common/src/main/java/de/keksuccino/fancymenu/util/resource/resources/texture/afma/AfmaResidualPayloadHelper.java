@@ -120,7 +120,7 @@ public final class AfmaResidualPayloadHelper {
 
     public static void validateSparsePayload(@NotNull byte[] payloadBytes, int offset, int length,
                                              int changedPixelCount, @NotNull AfmaSparsePayload sparsePayload) {
-        sparsePayload.validate("AFMA sparse payload descriptor");
+        sparsePayload.validateMetadata("AFMA sparse payload descriptor");
         validateResidualPayload(payloadBytes, offset, length, changedPixelCount,
                 sparsePayload.getChannels(), sparsePayload.getAlphaMode(), sparsePayload.getAlphaChangedPixelCount());
     }

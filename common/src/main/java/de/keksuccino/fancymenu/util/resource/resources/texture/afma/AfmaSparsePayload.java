@@ -70,7 +70,15 @@ public class AfmaSparsePayload {
     }
 
     public void validate(@NotNull String context) {
-        if ((this.pixels_path == null) || this.pixels_path.isBlank()) {
+        this.validate(context, true);
+    }
+
+    public void validateMetadata(@NotNull String context) {
+        this.validate(context, false);
+    }
+
+    protected void validate(@NotNull String context, boolean requirePixelsPath) {
+        if (requirePixelsPath && ((this.pixels_path == null) || this.pixels_path.isBlank())) {
             throw new IllegalArgumentException(context + " is missing its sparse residual payload path");
         }
         if (this.pixel_count <= 0) {

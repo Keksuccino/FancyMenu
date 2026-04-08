@@ -12,7 +12,7 @@ import java.util.Objects;
 public final class AfmaBlockInterPayloadHelper {
 
     public static final int PAYLOAD_MAGIC = 0x41464249; // AFBI
-    public static final int PAYLOAD_VERSION = 1;
+    public static final int PAYLOAD_VERSION = 2;
 
     private AfmaBlockInterPayloadHelper() {
     }
@@ -69,18 +69,31 @@ public final class AfmaBlockInterPayloadHelper {
                 out.write(residualBytes);
             }
             case COPY_SPARSE -> {
-                int channels = operation.channels();
-                int changedPixelCount = operation.changedPixelCount();
-                byte[] maskBytes = Objects.requireNonNull(operation.primaryBytes(), "AFMA block inter sparse mask bytes were NULL");
+                AfmaSparsePayload sparsePayload = Objects.requireNonNull(operation.sparsePayload(), "AFMA block inter sparse tile metadata was NULL");
+                byte[] layoutBytes = Objects.requireNonNull(operation.primaryBytes(), "AFMA block inter sparse layout bytes were NULL");
                 byte[] residualBytes = Objects.requireNonNull(operation.secondaryBytes(), "AFMA block inter sparse residual bytes were NULL");
-                validateChannels(channels);
-                validateLength(AfmaResidualPayloadHelper.expectedSparseMaskBytes(tileWidth, tileHeight), maskBytes.length, "AFMA block inter sparse mask payload");
-                validateLength(AfmaResidualPayloadHelper.expectedSparseResidualBytes(changedPixelCount, channels), residualBytes.length, "AFMA block inter sparse residual payload");
+                sparsePayload.validateMetadata("AFMA block inter sparse tile metadata");
+                validateChannels(sparsePayload.getChannels());
+                validateUnsignedShortLength(sparsePayload.getChangedPixelCount(), "AFMA block inter sparse changed-pixel count");
+                validateUnsignedShortLength(layoutBytes.length, "AFMA block inter sparse layout payload");
+                validateUnsignedShortLength(sparsePayload.getAlphaChangedPixelCount(), "AFMA block inter sparse alpha-change count");
+                AfmaSparsePayloadHelper.validateLayout(layoutBytes, 0, layoutBytes.length, tileWidth, tileHeight,
+                        sparsePayload.getLayoutCodec(), sparsePayload.getChangedPixelCount());
+                validateLength(
+                        AfmaResidualPayloadHelper.expectedSparseResidualBytes(sparsePayload.getChangedPixelCount(), sparsePayload),
+                        residualBytes.length,
+                        "AFMA block inter sparse residual payload"
+                );
                 out.writeShort(operation.dx());
                 out.writeShort(operation.dy());
-                out.writeByte(channels);
-                out.writeShort(changedPixelCount);
-                out.write(maskBytes);
+                out.writeByte(sparsePayload.getChannels());
+                out.writeShort(sparsePayload.getChangedPixelCount());
+                out.writeByte(sparsePayload.getLayoutCodec().getId());
+                out.writeByte(sparsePayload.getResidualCodec().getId());
+                out.writeByte(sparsePayload.getAlphaMode().getId());
+                out.writeShort(sparsePayload.getAlphaChangedPixelCount());
+                out.writeShort(layoutBytes.length);
+                out.write(layoutBytes);
                 out.write(residualBytes);
             }
             case RAW -> {
@@ -121,7 +134,7 @@ public final class AfmaBlockInterPayloadHelper {
         }
 
         int version = reader.readUnsignedByte();
-        if (version != PAYLOAD_VERSION) {
+        if ((version != 1) && (version != PAYLOAD_VERSION)) {
             throw new IOException("Unsupported AFMA block inter payload version: " + version);
         }
 
@@ -142,6 +155,7 @@ public final class AfmaBlockInterPayloadHelper {
                 int dy = 0;
                 int channels = 0;
                 int changedPixelCount = 0;
+                AfmaSparsePayload sparsePayload = null;
                 int primaryOffset = -1;
                 int primaryLength = 0;
                 int secondaryOffset = -1;
@@ -169,11 +183,36 @@ public final class AfmaBlockInterPayloadHelper {
                         channels = reader.readUnsignedByte();
                         changedPixelCount = reader.readUnsignedShort();
                         validateChannels(channels);
-                        primaryLength = AfmaResidualPayloadHelper.expectedSparseMaskBytes(tileWidth, tileHeight);
-                        validateExpectedLength(primaryLength, "AFMA block inter sparse mask payload");
+                        if (version >= 2) {
+                            AfmaSparseLayoutCodec layoutCodec = AfmaSparseLayoutCodec.byId(reader.readUnsignedByte());
+                            AfmaResidualCodec residualCodec = AfmaResidualCodec.byId(reader.readUnsignedByte());
+                            AfmaAlphaResidualMode alphaMode = AfmaAlphaResidualMode.byId(reader.readUnsignedByte());
+                            int alphaChangedPixelCount = reader.readUnsignedShort();
+                            primaryLength = reader.readUnsignedShort();
+                            validateExpectedLength(primaryLength, "AFMA block inter sparse layout payload");
+                            sparsePayload = new AfmaSparsePayload(null, changedPixelCount, channels,
+                                    layoutCodec, residualCodec, alphaMode, alphaChangedPixelCount);
+                            try {
+                                sparsePayload.validateMetadata("AFMA block inter sparse tile metadata");
+                            } catch (IllegalArgumentException ex) {
+                                throw new IOException(ex.getMessage(), ex);
+                            }
+                        } else {
+                            primaryLength = AfmaResidualPayloadHelper.expectedSparseMaskBytes(tileWidth, tileHeight);
+                            validateExpectedLength(primaryLength, "AFMA block inter sparse mask payload");
+                            sparsePayload = new AfmaSparsePayload(
+                                    null,
+                                    changedPixelCount,
+                                    channels,
+                                    AfmaSparseLayoutCodec.BITMASK,
+                                    AfmaResidualCodec.INTERLEAVED,
+                                    (channels == AfmaResidualPayloadHelper.RGBA_CHANNELS) ? AfmaAlphaResidualMode.FULL : AfmaAlphaResidualMode.NONE,
+                                    0
+                            );
+                        }
                         primaryOffset = reader.position();
                         reader.skip(primaryLength);
-                        secondaryLength = AfmaResidualPayloadHelper.expectedSparseResidualBytes(changedPixelCount, channels);
+                        secondaryLength = AfmaResidualPayloadHelper.expectedSparseResidualBytes(changedPixelCount, Objects.requireNonNull(sparsePayload));
                         validateExpectedLength(secondaryLength, "AFMA block inter sparse residual payload");
                         secondaryOffset = reader.position();
                         reader.skip(secondaryLength);
@@ -188,7 +227,7 @@ public final class AfmaBlockInterPayloadHelper {
                     }
                 }
 
-                consumer.accept(localX, localY, tileWidth, tileHeight, mode, dx, dy, channels, changedPixelCount,
+                consumer.accept(localX, localY, tileWidth, tileHeight, mode, dx, dy, channels, changedPixelCount, sparsePayload,
                         payloadBytes, primaryOffset, primaryLength, secondaryOffset, secondaryLength);
             }
         }
@@ -205,7 +244,7 @@ public final class AfmaBlockInterPayloadHelper {
 
     public static void validatePayload(@NotNull byte[] payloadBytes, int offset, int length, int tileSize, int regionX, int regionY, int regionWidth, int regionHeight,
                                        int canvasWidth, int canvasHeight) throws IOException {
-        walkPayload(payloadBytes, offset, length, tileSize, regionWidth, regionHeight, (localX, localY, tileWidth, tileHeight, mode, dx, dy, channels, changedPixelCount, tilePayloadBytes, primaryOffset, primaryLength, secondaryOffset, secondaryLength) -> {
+        walkPayload(payloadBytes, offset, length, tileSize, regionWidth, regionHeight, (localX, localY, tileWidth, tileHeight, mode, dx, dy, channels, changedPixelCount, sparsePayload, tilePayloadBytes, primaryOffset, primaryLength, secondaryOffset, secondaryLength) -> {
             int dstX = regionX + localX;
             int dstY = regionY + localY;
             if (dstX < 0 || dstY < 0 || (dstX + tileWidth) > canvasWidth || (dstY + tileHeight) > canvasHeight) {
@@ -224,6 +263,18 @@ public final class AfmaBlockInterPayloadHelper {
                 int maxPixels = tileWidth * tileHeight;
                 if (changedPixelCount <= 0 || changedPixelCount > maxPixels) {
                     throw new IOException("AFMA block inter sparse tile has an invalid changed pixel count");
+                }
+                AfmaSparsePayload resolvedSparsePayload = Objects.requireNonNull(sparsePayload, "AFMA block inter sparse tile metadata was NULL");
+                try {
+                    AfmaSparsePayloadHelper.validateLayout(tilePayloadBytes, primaryOffset, primaryLength, tileWidth, tileHeight,
+                            resolvedSparsePayload.getLayoutCodec(), resolvedSparsePayload.getChangedPixelCount());
+                    AfmaResidualPayloadHelper.validateSparsePayload(tilePayloadBytes, secondaryOffset, secondaryLength,
+                            resolvedSparsePayload.getChangedPixelCount(), resolvedSparsePayload);
+                    AfmaResidualPayloadHelper.validateSparseAlphaMaskPopulation(tilePayloadBytes, secondaryOffset,
+                            resolvedSparsePayload.getChangedPixelCount(), resolvedSparsePayload.getChannels(),
+                            resolvedSparsePayload.getAlphaMode(), resolvedSparsePayload.getAlphaChangedPixelCount());
+                } catch (IllegalStateException | IllegalArgumentException ex) {
+                    throw new IOException("AFMA block inter sparse tile metadata does not match its payload", ex);
                 }
             }
         });
@@ -276,6 +327,12 @@ public final class AfmaBlockInterPayloadHelper {
         }
     }
 
+    protected static void validateUnsignedShortLength(int value, @NotNull String context) throws IOException {
+        if ((value < 0) || (value > 0xFFFF)) {
+            throw new IOException(context + " size is invalid");
+        }
+    }
+
     public enum TileMode {
         SKIP(0),
         COPY(1),
@@ -305,13 +362,30 @@ public final class AfmaBlockInterPayloadHelper {
     }
 
     public record TileOperation(@NotNull TileMode mode, int dx, int dy, int channels, int changedPixelCount,
-                                @Nullable byte[] primaryBytes, @Nullable byte[] secondaryBytes) {
+                                @Nullable byte[] primaryBytes, @Nullable byte[] secondaryBytes,
+                                @Nullable AfmaSparsePayload sparsePayload) {
+
+        public TileOperation {
+            Objects.requireNonNull(mode);
+            if (mode == TileMode.COPY_SPARSE) {
+                AfmaSparsePayload resolvedSparsePayload = Objects.requireNonNull(sparsePayload, "AFMA block inter sparse tile metadata was NULL");
+                resolvedSparsePayload.validateMetadata("AFMA block inter sparse tile metadata");
+                if (channels != resolvedSparsePayload.getChannels()) {
+                    throw new IllegalArgumentException("AFMA block inter sparse tile channels do not match their metadata");
+                }
+                if (changedPixelCount != resolvedSparsePayload.getChangedPixelCount()) {
+                    throw new IllegalArgumentException("AFMA block inter sparse tile changed-pixel count does not match its metadata");
+                }
+            } else if (sparsePayload != null) {
+                throw new IllegalArgumentException("AFMA block inter tile metadata is only valid for sparse tiles");
+            }
+        }
     }
 
     @FunctionalInterface
     public interface TileConsumer {
         void accept(int localX, int localY, int tileWidth, int tileHeight, @NotNull TileMode mode, int dx, int dy,
-                    int channels, int changedPixelCount, @NotNull byte[] payloadBytes,
+                    int channels, int changedPixelCount, @Nullable AfmaSparsePayload sparsePayload, @NotNull byte[] payloadBytes,
                     int primaryOffset, int primaryLength, int secondaryOffset, int secondaryLength) throws IOException;
     }
 

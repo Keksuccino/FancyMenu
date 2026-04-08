@@ -208,9 +208,32 @@ public final class AfmaNativeImageHelper {
                                                   @NotNull byte[] layoutBytes, int layoutOffset, int layoutLength,
                                                   @NotNull byte[] residualBytes, int residualOffset, int residualLength,
                                                   @NotNull AfmaSparsePayload sparsePayload) throws IOException {
-        AfmaSparsePayloadHelper.validateLayout(layoutBytes, layoutOffset, layoutLength, width, height,
-                sparsePayload.getLayoutCodec(), sparsePayload.getChangedPixelCount());
-        AfmaResidualPayloadHelper.validateSparsePayload(residualBytes, residualOffset, residualLength, sparsePayload.getChangedPixelCount(), sparsePayload);
+        applySparseResidualPayload(target, dstX, dstY, width, height,
+                layoutBytes, layoutOffset, layoutLength,
+                residualBytes, residualOffset, residualLength,
+                sparsePayload, true);
+    }
+
+    public static void applySparseResidualPayloadUnchecked(@NotNull NativeImage target, int dstX, int dstY, int width, int height,
+                                                           @NotNull byte[] layoutBytes, int layoutOffset, int layoutLength,
+                                                           @NotNull byte[] residualBytes, int residualOffset, int residualLength,
+                                                           @NotNull AfmaSparsePayload sparsePayload) throws IOException {
+        applySparseResidualPayload(target, dstX, dstY, width, height,
+                layoutBytes, layoutOffset, layoutLength,
+                residualBytes, residualOffset, residualLength,
+                sparsePayload, false);
+    }
+
+    protected static void applySparseResidualPayload(@NotNull NativeImage target, int dstX, int dstY, int width, int height,
+                                                     @NotNull byte[] layoutBytes, int layoutOffset, int layoutLength,
+                                                     @NotNull byte[] residualBytes, int residualOffset, int residualLength,
+                                                     @NotNull AfmaSparsePayload sparsePayload,
+                                                     boolean validatePayload) throws IOException {
+        if (validatePayload) {
+            AfmaSparsePayloadHelper.validateLayout(layoutBytes, layoutOffset, layoutLength, width, height,
+                    sparsePayload.getLayoutCodec(), sparsePayload.getChangedPixelCount());
+            AfmaResidualPayloadHelper.validateSparsePayload(residualBytes, residualOffset, residualLength, sparsePayload.getChangedPixelCount(), sparsePayload);
+        }
 
         int sampleCount = sparsePayload.getChangedPixelCount();
         int primaryChannels = (sparsePayload.getAlphaMode() == AfmaAlphaResidualMode.FULL)
