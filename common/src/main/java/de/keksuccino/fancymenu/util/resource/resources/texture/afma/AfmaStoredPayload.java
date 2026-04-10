@@ -70,6 +70,17 @@ public final class AfmaStoredPayload implements AutoCloseable {
     }
 
     @NotNull
+    public static PayloadSummary summarize(@NotNull byte[] payloadBytes) {
+        Objects.requireNonNull(payloadBytes);
+        return new PayloadSummary(
+                payloadBytes.length,
+                AfmaPayloadMetricsHelper.estimateArchiveBytes(payloadBytes),
+                AfmaPayloadMetricsHelper.fingerprintPayload(payloadBytes),
+                tailBytes(payloadBytes)
+        );
+    }
+
+    @NotNull
     public static AfmaStoredPayload write(@NotNull Writer writer) throws IOException {
         Objects.requireNonNull(writer);
         File tempFile = createTempFile();
@@ -92,6 +103,21 @@ public final class AfmaStoredPayload implements AutoCloseable {
         }
     }
 
+    @NotNull
+    public static PayloadSummary summarize(@NotNull Writer writer) throws IOException {
+        Objects.requireNonNull(writer);
+        try (PayloadAnalysisOutputStream out = new PayloadAnalysisOutputStream(OutputStream.nullOutputStream())) {
+            writer.write(out);
+            PayloadAnalysis analysis = out.finishAnalysis();
+            return new PayloadSummary(
+                    analysis.length(),
+                    analysis.estimatedArchiveBytes(),
+                    analysis.fingerprint(),
+                    analysis.tailBytes()
+            );
+        }
+    }
+
     public int length() {
         this.ensureOpen();
         return this.length;
@@ -110,6 +136,12 @@ public final class AfmaStoredPayload implements AutoCloseable {
     public String fingerprint() {
         this.ensureOpen();
         return this.fingerprint;
+    }
+
+    @NotNull
+    public PayloadSummary summarize() {
+        this.ensureOpen();
+        return new PayloadSummary(this.length, this.estimatedArchiveBytes, this.fingerprint, this.tailBytes);
     }
 
     @NotNull
@@ -190,6 +222,20 @@ public final class AfmaStoredPayload implements AutoCloseable {
     @FunctionalInterface
     public interface Writer {
         void write(@NotNull OutputStream out) throws IOException;
+    }
+
+    public record PayloadSummary(int length, long estimatedArchiveBytes, @NotNull String fingerprint, @NotNull byte[] tailBytes) {
+
+        public PayloadSummary {
+            fingerprint = Objects.requireNonNull(fingerprint);
+            tailBytes = Objects.requireNonNull(tailBytes).clone();
+        }
+
+        @Override
+        @NotNull
+        public byte[] tailBytes() {
+            return this.tailBytes.clone();
+        }
     }
 
     protected record PayloadAnalysis(int length, long estimatedArchiveBytes, @NotNull String fingerprint, @NotNull byte[] tailBytes) {

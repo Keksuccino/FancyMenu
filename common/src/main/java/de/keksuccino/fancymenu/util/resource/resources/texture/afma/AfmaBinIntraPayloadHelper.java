@@ -7,7 +7,6 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -67,6 +66,20 @@ public final class AfmaBinIntraPayloadHelper {
     @NotNull
     public static StoredEncodedPayloadResult encodePayloadStoredDetailed(int width, int height, @NotNull int[] pixels, int offset,
                                                                          int scanlineStride, @Nullable EncodePreferences preferences) throws IOException {
+        ScoredPayloadResult scoredResult = scorePayloadDetailed(width, height, pixels, offset, scanlineStride, preferences);
+        AfmaStoredPayload payload = scoredResult.materializePayload();
+        if ((payload.length() != scoredResult.payloadSummary().length())
+                || (payload.estimatedArchiveBytes() != scoredResult.payloadSummary().estimatedArchiveBytes())
+                || !payload.fingerprint().equals(scoredResult.payloadSummary().fingerprint())) {
+            payload.close();
+            throw new IOException("AFMA BIN_INTRA payload metrics changed between scoring and materialization");
+        }
+        return new StoredEncodedPayloadResult(payload, scoredResult.reconstructedPixels(), scoredResult.lossless(), scoredResult.mode());
+    }
+
+    @NotNull
+    public static ScoredPayloadResult scorePayloadDetailed(int width, int height, @NotNull int[] pixels, int offset,
+                                                           int scanlineStride, @Nullable EncodePreferences preferences) throws IOException {
         validateDimensions(width, height);
         int[] sourcePixels = materializeDensePixels(width, height, pixels, offset, scanlineStride);
 
@@ -79,12 +92,13 @@ public final class AfmaBinIntraPayloadHelper {
         if (bestCandidate == null) {
             throw new IOException("Failed to build an AFMA BIN_INTRA payload");
         }
-        AfmaStoredPayload payload = writePayload(bestCandidate.payloadWriter());
-        if ((payload.length() != bestCandidate.payloadLength()) || (payload.estimatedArchiveBytes() != bestCandidate.estimatedArchiveBytes())) {
-            payload.close();
-            throw new IOException("AFMA BIN_INTRA payload metrics changed between scoring and materialization");
-        }
-        return new StoredEncodedPayloadResult(payload, bestCandidate.reconstructedPixels(), bestCandidate.lossless(), bestCandidate.mode());
+        return new ScoredPayloadResult(
+                bestCandidate.payloadSummary(),
+                bestCandidate.payloadWriter(),
+                bestCandidate.reconstructedPixels(),
+                bestCandidate.lossless(),
+                bestCandidate.mode()
+        );
     }
 
     @NotNull
@@ -635,17 +649,14 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     @NotNull
-    protected static PayloadMetrics measurePayload(@NotNull PayloadWriter writer) throws IOException {
+    protected static AfmaStoredPayload.PayloadSummary measurePayload(@NotNull PayloadWriter writer) throws IOException {
         Objects.requireNonNull(writer);
         // Score candidate payloads without materializing them so loser modes never hit disk or heap buffers.
-        try (AfmaStoredPayload.PayloadAnalysisOutputStream out =
-                     new AfmaStoredPayload.PayloadAnalysisOutputStream(OutputStream.nullOutputStream())) {
+        return AfmaStoredPayload.summarize(out -> {
             DataOutputStream dataOut = new DataOutputStream(out);
             writer.write(dataOut);
             dataOut.flush();
-            AfmaStoredPayload.PayloadAnalysis analysis = out.finishAnalysis();
-            return new PayloadMetrics(analysis.length(), analysis.estimatedArchiveBytes());
-        }
+        });
     }
 
     protected static void writeFilteredRows(@NotNull DataOutputStream out, int rowBytes, int height, int bytesPerPixel,
@@ -1355,33 +1366,42 @@ public final class AfmaBinIntraPayloadHelper {
     protected static ScoredPayloadCandidate scoreCandidate(@NotNull Mode mode, @NotNull int[] reconstructedPixels,
                                                            boolean lossless, int stabilityPriority,
                                                            @NotNull PayloadWriter payloadWriter) throws IOException {
-        PayloadMetrics payloadMetrics = measurePayload(payloadWriter);
+        AfmaStoredPayload.PayloadSummary payloadSummary = measurePayload(payloadWriter);
         return new ScoredPayloadCandidate(mode, payloadWriter, reconstructedPixels, lossless,
-                payloadMetrics.estimatedArchiveBytes(), payloadMetrics.length(), stabilityPriority);
-    }
-
-    protected record PayloadMetrics(int length, long estimatedArchiveBytes) {
+                payloadSummary, stabilityPriority);
     }
 
     protected record ScoredPayloadCandidate(@NotNull Mode mode, @NotNull PayloadWriter payloadWriter,
                                             @NotNull int[] reconstructedPixels, boolean lossless,
-                                            long estimatedArchiveBytes, int payloadLength,
+                                            @NotNull AfmaStoredPayload.PayloadSummary payloadSummary,
                                             int stabilityPriority) {
 
         protected boolean isBetterThan(@NotNull ScoredPayloadCandidate other) {
-            if (this.estimatedArchiveBytes != other.estimatedArchiveBytes) {
-                return this.estimatedArchiveBytes < other.estimatedArchiveBytes;
+            if (this.payloadSummary.estimatedArchiveBytes() != other.payloadSummary.estimatedArchiveBytes()) {
+                return this.payloadSummary.estimatedArchiveBytes() < other.payloadSummary.estimatedArchiveBytes();
             }
             if (this.lossless != other.lossless) {
                 return this.lossless;
             }
-            if (this.payloadLength != other.payloadLength) {
-                return this.payloadLength < other.payloadLength;
+            if (this.payloadSummary.length() != other.payloadSummary.length()) {
+                return this.payloadSummary.length() < other.payloadSummary.length();
             }
             if (this.stabilityPriority != other.stabilityPriority) {
                 return this.stabilityPriority < other.stabilityPriority;
             }
             return this.mode.priority() < other.mode.priority();
+        }
+    }
+
+    public record ScoredPayloadResult(@NotNull AfmaStoredPayload.PayloadSummary payloadSummary,
+                                      @NotNull PayloadWriter payloadWriter,
+                                      @NotNull int[] reconstructedPixels,
+                                      boolean lossless,
+                                      @NotNull Mode mode) {
+
+        @NotNull
+        public AfmaStoredPayload materializePayload() throws IOException {
+            return writePayload(this.payloadWriter);
         }
     }
 
@@ -1394,7 +1414,7 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     @FunctionalInterface
-    protected interface PayloadWriter {
+    public interface PayloadWriter {
         void write(@NotNull DataOutputStream out) throws IOException;
     }
 

@@ -9,6 +9,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -167,6 +168,106 @@ public final class AfmaChunkedPayloadHelper {
         return Math.max(0L, combinedEstimate - tailEstimate);
     }
 
+    public static long estimateChunkCompressionDelta(@NotNull byte[] previousTail,
+                                                     @NotNull AfmaStoredPayload.PayloadSummary payloadSummary,
+                                                     @NotNull AfmaStoredPayload.Writer payloadWriter) {
+        Objects.requireNonNull(previousTail);
+        Objects.requireNonNull(payloadSummary);
+        Objects.requireNonNull(payloadWriter);
+        if (payloadSummary.length() <= 0) {
+            return 0L;
+        }
+        if (previousTail.length == 0) {
+            return payloadSummary.estimatedArchiveBytes();
+        }
+
+        Deflater deflater = new Deflater(9, true);
+        byte[] deflateBuffer = new byte[8192];
+        long[] combinedEstimateHolder = {0L};
+        try {
+            deflater.setInput(previousTail);
+            while (!deflater.needsInput()) {
+                combinedEstimateHolder[0] += deflater.deflate(deflateBuffer);
+            }
+
+            OutputStream deflaterOut = new OutputStream() {
+                @NotNull
+                private final byte[] writeBuffer = new byte[8192];
+                private int writeBufferLength = 0;
+
+                @Override
+                public void write(int value) {
+                    if (this.writeBufferLength >= this.writeBuffer.length) {
+                        this.flushBuffer();
+                    }
+                    this.writeBuffer[this.writeBufferLength++] = (byte) value;
+                }
+
+                @Override
+                public void write(@NotNull byte[] source, int offset, int count) {
+                    if (count <= 0) {
+                        return;
+                    }
+
+                    int remaining = count;
+                    int nextOffset = offset;
+                    while (remaining > 0) {
+                        if (this.writeBufferLength == 0 && remaining >= this.writeBuffer.length) {
+                            this.deflate(source, nextOffset, this.writeBuffer.length);
+                            nextOffset += this.writeBuffer.length;
+                            remaining -= this.writeBuffer.length;
+                            continue;
+                        }
+
+                        if (this.writeBufferLength >= this.writeBuffer.length) {
+                            this.flushBuffer();
+                        }
+
+                        int bytesToCopy = Math.min(remaining, this.writeBuffer.length - this.writeBufferLength);
+                        System.arraycopy(source, nextOffset, this.writeBuffer, this.writeBufferLength, bytesToCopy);
+                        this.writeBufferLength += bytesToCopy;
+                        nextOffset += bytesToCopy;
+                        remaining -= bytesToCopy;
+                    }
+                }
+
+                @Override
+                public void flush() {
+                    this.flushBuffer();
+                }
+
+                private void flushBuffer() {
+                    if (this.writeBufferLength <= 0) {
+                        return;
+                    }
+                    this.deflate(this.writeBuffer, 0, this.writeBufferLength);
+                    this.writeBufferLength = 0;
+                }
+
+                private void deflate(@NotNull byte[] source, int offset, int count) {
+                    deflater.setInput(source, offset, count);
+                    while (!deflater.needsInput()) {
+                        combinedEstimateHolder[0] += deflater.deflate(deflateBuffer);
+                    }
+                }
+            };
+            payloadWriter.write(deflaterOut);
+            deflaterOut.flush();
+
+            deflater.finish();
+            while (!deflater.finished()) {
+                combinedEstimateHolder[0] += deflater.deflate(deflateBuffer);
+            }
+        } catch (IOException ex) {
+            throw new IllegalStateException("Failed to estimate AFMA payload chunk compression delta", ex);
+        } finally {
+            deflater.end();
+        }
+
+        long tailEstimate = AfmaPayloadMetricsHelper.estimateArchiveBytes(previousTail);
+        return Math.max(0L, combinedEstimateHolder[0] - tailEstimate);
+    }
+
     @NotNull
     public static byte[] appendDeflateTail(@NotNull byte[] currentTail, @NotNull byte[] payloadBytes) {
         Objects.requireNonNull(currentTail);
@@ -197,6 +298,27 @@ public final class AfmaChunkedPayloadHelper {
         int resultLength = Math.min(PLANNER_DEFLATE_TAIL_BYTES, currentTail.length + payloadLength);
         byte[] resultTail = new byte[resultLength];
         byte[] payloadTail = payload.tailBytesUnsafe();
+        int payloadBytesInTail = Math.min(payloadTail.length, resultLength);
+        System.arraycopy(payloadTail, payloadTail.length - payloadBytesInTail, resultTail, resultLength - payloadBytesInTail, payloadBytesInTail);
+        int carriedPrefixBytes = resultLength - payloadBytesInTail;
+        if (carriedPrefixBytes > 0) {
+            System.arraycopy(currentTail, currentTail.length - carriedPrefixBytes, resultTail, 0, carriedPrefixBytes);
+        }
+        return resultTail;
+    }
+
+    @NotNull
+    public static byte[] appendDeflateTail(@NotNull byte[] currentTail, @NotNull AfmaStoredPayload.PayloadSummary payloadSummary) {
+        Objects.requireNonNull(currentTail);
+        Objects.requireNonNull(payloadSummary);
+        if (payloadSummary.length() <= 0) {
+            return currentTail;
+        }
+
+        int payloadLength = payloadSummary.length();
+        int resultLength = Math.min(PLANNER_DEFLATE_TAIL_BYTES, currentTail.length + payloadLength);
+        byte[] resultTail = new byte[resultLength];
+        byte[] payloadTail = payloadSummary.tailBytes();
         int payloadBytesInTail = Math.min(payloadTail.length, resultLength);
         System.arraycopy(payloadTail, payloadTail.length - payloadBytesInTail, resultTail, resultLength - payloadBytesInTail, payloadBytesInTail);
         int carriedPrefixBytes = resultLength - payloadBytesInTail;
