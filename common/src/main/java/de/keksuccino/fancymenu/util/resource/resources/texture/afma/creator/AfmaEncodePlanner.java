@@ -813,7 +813,7 @@ public class AfmaEncodePlanner {
                 }
             }
 
-            AfmaRectCopyDetector.MultiDetection multiDetection = copyDetector.detectMulti(pairAnalysis);
+            AfmaRectCopyDetector.MultiDetection multiDetection = copyDetector.detectMulti(pairAnalysis, detection);
             if (multiDetection != null) {
                 AfmaPixelFrame multiCopyReferenceFrame = this.buildMultiCopyReferenceFrame(previousFrame, multiDetection.multiCopy());
                 PlannedCandidate multiCopyCandidate = this.createMultiCopyCandidate(currentFrame, introSequence, frameIndex, multiDetection, options);
@@ -2603,7 +2603,7 @@ public class AfmaEncodePlanner {
                     copySparseCandidate = AfmaEncodePlanner.this.createCopySparseCandidate(previousFrame, workingFrame, introSequence, frameIndex, copyDetection);
                 }
 
-                multiDetection = copyDetector.detectMulti(pairAnalysis);
+                multiDetection = copyDetector.detectMulti(pairAnalysis, copyDetection);
                 if (multiDetection != null) {
                     AfmaPixelFrame multiCopyReferenceFrame = AfmaEncodePlanner.this.buildMultiCopyReferenceFrame(previousFrame, multiDetection.multiCopy());
                     multiCopyCandidate = AfmaEncodePlanner.this.createMultiCopyCandidate(workingFrame, introSequence, frameIndex, multiDetection, options);

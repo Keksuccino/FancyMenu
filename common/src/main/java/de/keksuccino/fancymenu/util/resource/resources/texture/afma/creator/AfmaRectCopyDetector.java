@@ -23,6 +23,9 @@ public class AfmaRectCopyDetector {
     protected static final int MIN_MULTI_COPY_RECT_AREA = 64;
     protected static final int MIN_MULTI_COPY_DIRTY_PIXELS = 48;
     protected static final double MIN_MULTI_COPY_DIRTY_DENSITY = 0.35D;
+    protected static final double MAX_MULTI_COPY_DIRTY_DENSITY_WITHOUT_SINGLE_EVIDENCE = 0.80D;
+    protected static final double MIN_MULTI_COPY_REMAINING_DIRTY_RATIO_AFTER_SINGLE = 0.20D;
+    protected static final double MIN_MULTI_COPY_REMAINING_PATCH_RATIO_AFTER_SINGLE = 0.25D;
 
     protected final int maxSearchDistance;
     protected final int maxCandidateAxisOffsets;
@@ -63,13 +66,14 @@ public class AfmaRectCopyDetector {
                         overlapHeight
                 );
 
-                AfmaRect patchBounds = pairAnalysis.findDirtyBoundsAfterCopy(copyRect);
+                var dirtyAfterCopy = pairAnalysis.analyzeDirtyAfterCopy(copyRect);
+                AfmaRect patchBounds = dirtyAfterCopy.bounds();
                 long patchArea = (patchBounds != null) ? patchBounds.area() : 0L;
                 long copyArea = copyRect.getArea();
                 long usefulness = copyArea - patchArea;
                 if (usefulness <= 0L) continue;
 
-                Detection detection = new Detection(copyRect, patchBounds, usefulness);
+                Detection detection = new Detection(copyRect, patchBounds, usefulness, dirtyAfterCopy.dirtyPixelCount());
                 if ((bestDetection == null) || (detection.usefulness() > bestDetection.usefulness())
                         || ((detection.usefulness() == bestDetection.usefulness()) && (patchArea < bestDetection.patchArea()))) {
                     bestDetection = detection;
@@ -87,14 +91,20 @@ public class AfmaRectCopyDetector {
 
     @Nullable
     public MultiDetection detectMulti(@NotNull AfmaFramePairAnalysis pairAnalysis) {
+        return this.detectMulti(pairAnalysis, null);
+    }
+
+    @Nullable
+    public MultiDetection detectMulti(@NotNull AfmaFramePairAnalysis pairAnalysis, @Nullable Detection singleDetection) {
         AfmaPixelFrame previous = pairAnalysis.previousFrame();
         AfmaPixelFrame next = pairAnalysis.nextFrame();
 
         AfmaRect initialDirtyBounds = pairAnalysis.differenceBounds();
-        if (initialDirtyBounds == null) {
+        if ((initialDirtyBounds == null) || !this.shouldAttemptMultiCopy(pairAnalysis, singleDetection, initialDirtyBounds)) {
             return null;
         }
 
+        long initialDirtyPixelCount = pairAnalysis.changedPixelCount();
         int width = previous.getWidth();
         int height = previous.getHeight();
         int[] predictedPixels = previous.copyPixels();
@@ -111,6 +121,9 @@ public class AfmaRectCopyDetector {
             AfmaPixelFrameHelper.applyCopyRect(predictedPixels, width, nextCandidate.copyRect());
             copyRects.add(nextCandidate.copyRect());
             totalDirtyCoverage += nextCandidate.dirtyPixels();
+            if ((initialDirtyPixelCount - totalDirtyCoverage) < MIN_MULTI_COPY_DIRTY_PIXELS) {
+                break;
+            }
             motionSearchPairAnalysis = null;
         }
 
@@ -127,6 +140,33 @@ public class AfmaRectCopyDetector {
         }
 
         return new MultiDetection(new AfmaMultiCopy(copyRects), patchBounds, patchReduction + totalDirtyCoverage);
+    }
+
+    protected boolean shouldAttemptMultiCopy(@NotNull AfmaFramePairAnalysis pairAnalysis,
+                                             @Nullable Detection singleDetection, @NotNull AfmaRect initialDirtyBounds) {
+        long initialDirtyPixelCount = pairAnalysis.changedPixelCount();
+        if (initialDirtyPixelCount < ((long) MIN_MULTI_COPY_DIRTY_PIXELS * 2L)) {
+            return false;
+        }
+
+        long dirtyBoundsArea = initialDirtyBounds.area();
+        if (dirtyBoundsArea <= 0L) {
+            return false;
+        }
+
+        if (singleDetection == null) {
+            return ((double) initialDirtyPixelCount / (double) dirtyBoundsArea) <= MAX_MULTI_COPY_DIRTY_DENSITY_WITHOUT_SINGLE_EVIDENCE;
+        }
+
+        if (singleDetection.patchArea() <= 0L) {
+            return false;
+        }
+
+        // Skip multi-copy when the best single-copy already collapses almost all remaining work.
+        double remainingDirtyRatio = (double) singleDetection.remainingDirtyPixelCount() / (double) initialDirtyPixelCount;
+        double remainingPatchRatio = (double) singleDetection.patchArea() / (double) dirtyBoundsArea;
+        return (remainingDirtyRatio >= MIN_MULTI_COPY_REMAINING_DIRTY_RATIO_AFTER_SINGLE)
+                || (remainingPatchRatio >= MIN_MULTI_COPY_REMAINING_PATCH_RATIO_AFTER_SINGLE);
     }
 
     @NotNull
@@ -509,7 +549,8 @@ public class AfmaRectCopyDetector {
     protected record ScoredMotionVector(@NotNull MotionVector vector, double score) {
     }
 
-    public record Detection(@NotNull AfmaCopyRect copyRect, @Nullable AfmaRect patchBounds, long usefulness) {
+    public record Detection(@NotNull AfmaCopyRect copyRect, @Nullable AfmaRect patchBounds, long usefulness,
+                            int remainingDirtyPixelCount) {
         public long patchArea() {
             return (this.patchBounds != null) ? this.patchBounds.area() : 0L;
         }

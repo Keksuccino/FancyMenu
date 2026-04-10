@@ -23,6 +23,7 @@ public final class AfmaFramePairAnalysis {
     protected final int[] nextPixels;
     protected boolean differenceBoundsComputed;
     protected boolean identical;
+    protected int changedPixelCount;
     @Nullable
     protected AfmaRect differenceBounds;
     @Nullable
@@ -65,20 +66,30 @@ public final class AfmaFramePairAnalysis {
         return this.differenceBounds;
     }
 
+    public int changedPixelCount() {
+        this.ensureDifferenceBounds();
+        return this.changedPixelCount;
+    }
+
     public @Nullable AfmaRect findDirtyBoundsAfterCopy(@NotNull AfmaCopyRect copyRect) {
+        return this.analyzeDirtyAfterCopy(copyRect).bounds();
+    }
+
+    @NotNull
+    DirtyBoundsAfterCopyResult analyzeDirtyAfterCopy(@NotNull AfmaCopyRect copyRect) {
         CopyRectKey cacheKey = CopyRectKey.of(copyRect);
         if (this.dirtyBoundsAfterCopyByKey == null) {
             this.dirtyBoundsAfterCopyByKey = new LinkedHashMap<>();
         } else {
             DirtyBoundsAfterCopyResult cachedResult = this.dirtyBoundsAfterCopyByKey.get(cacheKey);
             if (cachedResult != null) {
-                return cachedResult.bounds();
+                return cachedResult;
             }
         }
 
-        AfmaRect dirtyBounds = this.scanDirtyBoundsAfterCopy(copyRect);
-        this.dirtyBoundsAfterCopyByKey.put(cacheKey, new DirtyBoundsAfterCopyResult(dirtyBounds));
-        return dirtyBounds;
+        DirtyBoundsAfterCopyResult dirtyAfterCopy = this.scanDirtyBoundsAfterCopy(copyRect);
+        this.dirtyBoundsAfterCopyByKey.put(cacheKey, dirtyAfterCopy);
+        return dirtyAfterCopy;
     }
 
     @Nullable
@@ -151,12 +162,14 @@ public final class AfmaFramePairAnalysis {
         int minY = this.height;
         int maxX = -1;
         int maxY = -1;
+        int changedPixelCount = 0;
         for (int y = 0; y < this.height; y++) {
             int rowOffset = y * this.width;
             for (int x = 0; x < this.width; x++) {
                 if (this.previousPixels[rowOffset + x] == this.nextPixels[rowOffset + x]) {
                     continue;
                 }
+                changedPixelCount++;
                 if (x < minX) minX = x;
                 if (y < minY) minY = y;
                 if (x > maxX) maxX = x;
@@ -164,12 +177,13 @@ public final class AfmaFramePairAnalysis {
             }
         }
 
+        this.changedPixelCount = changedPixelCount;
         this.identical = (maxX < minX) || (maxY < minY);
         this.differenceBounds = this.identical ? null : new AfmaRect(minX, minY, (maxX - minX) + 1, (maxY - minY) + 1);
         this.differenceBoundsComputed = true;
     }
 
-    protected @Nullable AfmaRect scanDirtyBoundsAfterCopy(@NotNull AfmaCopyRect copyRect) {
+    protected @NotNull DirtyBoundsAfterCopyResult scanDirtyBoundsAfterCopy(@NotNull AfmaCopyRect copyRect) {
         int dstLeft = copyRect.getDstX();
         int dstTop = copyRect.getDstY();
         int dstRight = dstLeft + copyRect.getWidth();
@@ -180,6 +194,7 @@ public final class AfmaFramePairAnalysis {
         int minY = this.height;
         int maxX = -1;
         int maxY = -1;
+        int dirtyPixelCount = 0;
 
         for (int y = 0; y < this.height; y++) {
             int rowOffset = y * this.width;
@@ -195,6 +210,7 @@ public final class AfmaFramePairAnalysis {
                 if (expected == this.nextPixels[pixelIndex]) {
                     continue;
                 }
+                dirtyPixelCount++;
                 if (x < minX) minX = x;
                 if (y < minY) minY = y;
                 if (x > maxX) maxX = x;
@@ -203,9 +219,12 @@ public final class AfmaFramePairAnalysis {
         }
 
         if ((maxX < minX) || (maxY < minY)) {
-            return null;
+            return new DirtyBoundsAfterCopyResult(null, dirtyPixelCount);
         }
-        return new AfmaRect(minX, minY, (maxX - minX) + 1, (maxY - minY) + 1);
+        return new DirtyBoundsAfterCopyResult(
+                new AfmaRect(minX, minY, (maxX - minX) + 1, (maxY - minY) + 1),
+                dirtyPixelCount
+        );
     }
 
     protected static int channelDifference(int first, int second) {
@@ -234,7 +253,7 @@ public final class AfmaFramePairAnalysis {
     protected record MotionSearchKey(int maxSearchDistance, int maxCandidateAxisOffsets) {
     }
 
-    protected record DirtyBoundsAfterCopyResult(@Nullable AfmaRect bounds) {
+    protected record DirtyBoundsAfterCopyResult(@Nullable AfmaRect bounds, int dirtyPixelCount) {
     }
 
 }
