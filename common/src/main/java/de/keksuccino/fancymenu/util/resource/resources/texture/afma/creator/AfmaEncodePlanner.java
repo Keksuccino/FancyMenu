@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -331,6 +332,7 @@ public class AfmaEncodePlanner {
                                            int startOffset, int totalFrameCount, int sequenceFrameCount) throws IOException {
         List<BeamPlanningState> beam = new ArrayList<>();
         beam.add(baseState.toCommittedBaseState());
+        WindowCandidateCache windowCandidateCache = new WindowCandidateCache();
         for (int localFrameIndex = 0; localFrameIndex < windowFrames.size(); localFrameIndex++) {
             checkCancelled(cancellationRequested);
             AfmaPixelFrame sourceFrame = windowFrames.get(localFrameIndex);
@@ -358,7 +360,7 @@ public class AfmaEncodePlanner {
 
                 List<PlannedCandidate> candidates = this.collectWindowCandidates(previousFrame, sourceFrame, workingFrame,
                         introSequence, absoluteFrameIndex, state.framesSinceKeyframe(), state.decodeComplexitySinceKeyframe(),
-                        options, copyDetector, state.archiveState());
+                        options, copyDetector, state.archiveState(), windowCandidateCache);
                 for (PlannedCandidate candidate : candidates) {
                     BeamPlanningState candidateState = this.evaluateCandidateTransition(state, candidate, sourceFrame, workingFrame,
                             frameDelayMs, introSequence, options);
@@ -385,11 +387,26 @@ public class AfmaEncodePlanner {
                                                              int decodeComplexitySinceKeyframe,
                                                              @NotNull AfmaEncodeOptions options,
                                                              @NotNull AfmaRectCopyDetector copyDetector,
-                                                             @NotNull ArchivePlanningState archiveState) throws IOException {
-        PlannedCandidate fullCandidate = this.createFullCandidate(workingFrame, introSequence, frameIndex, options, true, ReferenceBase.WORKING_FRAME);
+                                                             @NotNull ArchivePlanningState archiveState,
+                                                             @NotNull WindowCandidateCache windowCandidateCache) throws IOException {
+        PlannedCandidate fullCandidate = windowCandidateCache.getFullCandidate(
+                workingFrame,
+                introSequence,
+                frameIndex,
+                options,
+                true,
+                ReferenceBase.WORKING_FRAME
+        );
         PlannedCandidate exactFullCandidate = fullCandidate.isExactRelativeToSourceFrame(sourceFrame, workingFrame)
                 ? fullCandidate
-                : this.createExactFullCandidate(sourceFrame, introSequence, frameIndex, options);
+                : windowCandidateCache.getFullCandidate(
+                sourceFrame,
+                introSequence,
+                frameIndex,
+                options,
+                false,
+                ReferenceBase.SOURCE_FRAME
+        );
         ArrayList<PlannedCandidate> candidates = new ArrayList<>();
         if ((previousFrame == null) || this.isHardKeyframeRefreshRequired(framesSinceKeyframe, decodeComplexitySinceKeyframe, options)) {
             candidates.add(exactFullCandidate);
@@ -401,23 +418,31 @@ public class AfmaEncodePlanner {
             candidates.add(exactFullCandidate);
         }
 
-        AfmaRect deltaBounds = AfmaPixelFrameHelper.findDifferenceBounds(previousFrame, workingFrame);
+        PairCandidateSet pairCandidateSet = windowCandidateCache.getPairCandidateSet(
+                previousFrame,
+                workingFrame,
+                introSequence,
+                frameIndex,
+                options,
+                copyDetector
+        );
+        AfmaRect deltaBounds = pairCandidateSet.deltaBounds();
         if (deltaBounds != null) {
-            PlannedCandidate deltaCandidate = this.createDeltaCandidate(workingFrame, introSequence, frameIndex, deltaBounds, options);
+            PlannedCandidate deltaCandidate = pairCandidateSet.deltaCandidate();
             if ((deltaCandidate != null) && this.shouldKeepComplexCandidate(deltaCandidate, fullCandidate,
                     deltaBounds.area(), workingFrame.getWidth(), workingFrame.getHeight(),
                     options.getMaxDeltaAreaRatioWithoutStrongSavings(), options, archiveState, introSequence)) {
                 candidates.add(deltaCandidate);
             }
 
-            PlannedCandidate residualDeltaCandidate = this.createResidualDeltaCandidate(previousFrame, workingFrame, introSequence, frameIndex, deltaBounds);
+            PlannedCandidate residualDeltaCandidate = pairCandidateSet.residualDeltaCandidate();
             if ((residualDeltaCandidate != null) && this.shouldKeepResidualCandidate(residualDeltaCandidate, fullCandidate,
                     deltaBounds.area(), workingFrame.getWidth(), workingFrame.getHeight(),
                     options.getMaxDeltaAreaRatioWithoutStrongSavings(), options, archiveState, introSequence)) {
                 candidates.add(residualDeltaCandidate);
             }
 
-            PlannedCandidate sparseDeltaCandidate = this.createSparseDeltaCandidate(previousFrame, workingFrame, introSequence, frameIndex, deltaBounds);
+            PlannedCandidate sparseDeltaCandidate = pairCandidateSet.sparseDeltaCandidate();
             if ((sparseDeltaCandidate != null) && this.shouldKeepSparseCandidate(sparseDeltaCandidate, fullCandidate,
                     deltaBounds.area(), workingFrame.getWidth(), workingFrame.getHeight(),
                     options.getMaxDeltaAreaRatioWithoutStrongSavings(), options, archiveState, introSequence)) {
@@ -426,9 +451,9 @@ public class AfmaEncodePlanner {
         }
 
         if (options.isRectCopyEnabled()) {
-            AfmaRectCopyDetector.Detection detection = copyDetector.detect(previousFrame, workingFrame);
+            AfmaRectCopyDetector.Detection detection = pairCandidateSet.copyDetection();
             if (detection != null) {
-                PlannedCandidate copyCandidate = this.createCopyCandidate(workingFrame, introSequence, frameIndex, detection, options);
+                PlannedCandidate copyCandidate = pairCandidateSet.copyCandidate();
                 long patchArea = (detection.patchBounds() != null) ? detection.patchBounds().area() : 0L;
                 if ((copyCandidate != null) && this.shouldKeepComplexCandidate(copyCandidate, fullCandidate,
                         patchArea, workingFrame.getWidth(), workingFrame.getHeight(),
@@ -436,14 +461,14 @@ public class AfmaEncodePlanner {
                     candidates.add(copyCandidate);
                 }
 
-                PlannedCandidate copyResidualCandidate = this.createCopyResidualCandidate(previousFrame, workingFrame, introSequence, frameIndex, detection);
+                PlannedCandidate copyResidualCandidate = pairCandidateSet.copyResidualCandidate();
                 if ((copyResidualCandidate != null) && this.shouldKeepResidualCandidate(copyResidualCandidate, fullCandidate,
                         patchArea, workingFrame.getWidth(), workingFrame.getHeight(),
                         options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, archiveState, introSequence)) {
                     candidates.add(copyResidualCandidate);
                 }
 
-                PlannedCandidate copySparseCandidate = this.createCopySparseCandidate(previousFrame, workingFrame, introSequence, frameIndex, detection);
+                PlannedCandidate copySparseCandidate = pairCandidateSet.copySparseCandidate();
                 if ((copySparseCandidate != null) && this.shouldKeepSparseCandidate(copySparseCandidate, fullCandidate,
                         patchArea, workingFrame.getWidth(), workingFrame.getHeight(),
                         options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, archiveState, introSequence)) {
@@ -451,10 +476,9 @@ public class AfmaEncodePlanner {
                 }
             }
 
-            AfmaRectCopyDetector.MultiDetection multiDetection = copyDetector.detectMulti(previousFrame, workingFrame);
+            AfmaRectCopyDetector.MultiDetection multiDetection = pairCandidateSet.multiDetection();
             if (multiDetection != null) {
-                AfmaPixelFrame multiCopyReferenceFrame = this.buildMultiCopyReferenceFrame(previousFrame, multiDetection.multiCopy());
-                PlannedCandidate multiCopyCandidate = this.createMultiCopyCandidate(workingFrame, introSequence, frameIndex, multiDetection, options);
+                PlannedCandidate multiCopyCandidate = pairCandidateSet.multiCopyCandidate();
                 long patchArea = multiDetection.patchArea();
                 if ((multiCopyCandidate != null) && this.shouldKeepComplexCandidate(multiCopyCandidate, fullCandidate,
                         patchArea, workingFrame.getWidth(), workingFrame.getHeight(),
@@ -462,16 +486,14 @@ public class AfmaEncodePlanner {
                     candidates.add(multiCopyCandidate);
                 }
 
-                PlannedCandidate multiCopyResidualCandidate = this.createMultiCopyResidualCandidate(multiCopyReferenceFrame, workingFrame,
-                        introSequence, frameIndex, multiDetection);
+                PlannedCandidate multiCopyResidualCandidate = pairCandidateSet.multiCopyResidualCandidate();
                 if ((multiCopyResidualCandidate != null) && this.shouldKeepResidualCandidate(multiCopyResidualCandidate, fullCandidate,
                         patchArea, workingFrame.getWidth(), workingFrame.getHeight(),
                         options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, archiveState, introSequence)) {
                     candidates.add(multiCopyResidualCandidate);
                 }
 
-                PlannedCandidate multiCopySparseCandidate = this.createMultiCopySparseCandidate(multiCopyReferenceFrame, workingFrame,
-                        introSequence, frameIndex, multiDetection);
+                PlannedCandidate multiCopySparseCandidate = pairCandidateSet.multiCopySparseCandidate();
                 if ((multiCopySparseCandidate != null) && this.shouldKeepSparseCandidate(multiCopySparseCandidate, fullCandidate,
                         patchArea, workingFrame.getWidth(), workingFrame.getHeight(),
                         options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, archiveState, introSequence)) {
@@ -481,7 +503,7 @@ public class AfmaEncodePlanner {
         }
 
         if (options.isRectCopyEnabled() && (deltaBounds != null)) {
-            PlannedCandidate blockInterCandidate = this.createBlockInterCandidate(previousFrame, workingFrame, introSequence, frameIndex, deltaBounds, copyDetector);
+            PlannedCandidate blockInterCandidate = pairCandidateSet.blockInterCandidate();
             if ((blockInterCandidate != null) && this.shouldKeepComplexCandidate(blockInterCandidate, fullCandidate,
                     (long) blockInterCandidate.descriptor().getWidth() * blockInterCandidate.descriptor().getHeight(),
                     workingFrame.getWidth(), workingFrame.getHeight(),
@@ -2489,6 +2511,190 @@ public class AfmaEncodePlanner {
         if ((cancellationRequested != null) && cancellationRequested.getAsBoolean()) {
             throw new CancellationException("AFMA encode planning was cancelled");
         }
+    }
+
+    // Candidate generation only depends on frame content inside a planner window; archive-state filtering still happens outside.
+    protected final class WindowCandidateCache {
+
+        @NotNull
+        protected final IdentityHashMap<AfmaPixelFrame, FrameContentKey> frameKeysByIdentity = new IdentityHashMap<>();
+        @NotNull
+        protected final Map<FullCandidateKey, PlannedCandidate> fullCandidatesByKey = new LinkedHashMap<>();
+        @NotNull
+        protected final Map<PairCandidateKey, PairCandidateSet> pairCandidatesByKey = new LinkedHashMap<>();
+
+        @NotNull
+        public PlannedCandidate getFullCandidate(@NotNull AfmaPixelFrame frame, boolean introSequence, int frameIndex,
+                                                 @NotNull AfmaEncodeOptions options, boolean allowPerceptual,
+                                                 @NotNull ReferenceBase referenceBase) throws IOException {
+            FullCandidateKey cacheKey = new FullCandidateKey(
+                    this.frameKey(frame),
+                    introSequence,
+                    frameIndex,
+                    allowPerceptual,
+                    referenceBase
+            );
+            PlannedCandidate cachedCandidate = this.fullCandidatesByKey.get(cacheKey);
+            if (cachedCandidate != null) {
+                return cachedCandidate;
+            }
+
+            PlannedCandidate candidate = AfmaEncodePlanner.this.createFullCandidate(
+                    frame,
+                    introSequence,
+                    frameIndex,
+                    options,
+                    allowPerceptual,
+                    referenceBase
+            );
+            this.fullCandidatesByKey.put(cacheKey, candidate);
+            return candidate;
+        }
+
+        @NotNull
+        public PairCandidateSet getPairCandidateSet(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame workingFrame,
+                                                    boolean introSequence, int frameIndex,
+                                                    @NotNull AfmaEncodeOptions options,
+                                                    @NotNull AfmaRectCopyDetector copyDetector) throws IOException {
+            PairCandidateKey cacheKey = new PairCandidateKey(
+                    this.frameKey(previousFrame),
+                    this.frameKey(workingFrame),
+                    introSequence,
+                    frameIndex
+            );
+            PairCandidateSet cachedCandidateSet = this.pairCandidatesByKey.get(cacheKey);
+            if (cachedCandidateSet != null) {
+                return cachedCandidateSet;
+            }
+
+            AfmaRect deltaBounds = AfmaPixelFrameHelper.findDifferenceBounds(previousFrame, workingFrame);
+            PlannedCandidate deltaCandidate = (deltaBounds != null)
+                    ? AfmaEncodePlanner.this.createDeltaCandidate(workingFrame, introSequence, frameIndex, deltaBounds, options)
+                    : null;
+            PlannedCandidate residualDeltaCandidate = (deltaBounds != null)
+                    ? AfmaEncodePlanner.this.createResidualDeltaCandidate(previousFrame, workingFrame, introSequence, frameIndex, deltaBounds)
+                    : null;
+            PlannedCandidate sparseDeltaCandidate = (deltaBounds != null)
+                    ? AfmaEncodePlanner.this.createSparseDeltaCandidate(previousFrame, workingFrame, introSequence, frameIndex, deltaBounds)
+                    : null;
+
+            AfmaRectCopyDetector.Detection copyDetection = null;
+            PlannedCandidate copyCandidate = null;
+            PlannedCandidate copyResidualCandidate = null;
+            PlannedCandidate copySparseCandidate = null;
+            AfmaRectCopyDetector.MultiDetection multiDetection = null;
+            PlannedCandidate multiCopyCandidate = null;
+            PlannedCandidate multiCopyResidualCandidate = null;
+            PlannedCandidate multiCopySparseCandidate = null;
+            PlannedCandidate blockInterCandidate = null;
+            if (options.isRectCopyEnabled()) {
+                copyDetection = copyDetector.detect(previousFrame, workingFrame);
+                if (copyDetection != null) {
+                    copyCandidate = AfmaEncodePlanner.this.createCopyCandidate(workingFrame, introSequence, frameIndex, copyDetection, options);
+                    copyResidualCandidate = AfmaEncodePlanner.this.createCopyResidualCandidate(previousFrame, workingFrame, introSequence, frameIndex, copyDetection);
+                    copySparseCandidate = AfmaEncodePlanner.this.createCopySparseCandidate(previousFrame, workingFrame, introSequence, frameIndex, copyDetection);
+                }
+
+                multiDetection = copyDetector.detectMulti(previousFrame, workingFrame);
+                if (multiDetection != null) {
+                    AfmaPixelFrame multiCopyReferenceFrame = AfmaEncodePlanner.this.buildMultiCopyReferenceFrame(previousFrame, multiDetection.multiCopy());
+                    multiCopyCandidate = AfmaEncodePlanner.this.createMultiCopyCandidate(workingFrame, introSequence, frameIndex, multiDetection, options);
+                    multiCopyResidualCandidate = AfmaEncodePlanner.this.createMultiCopyResidualCandidate(multiCopyReferenceFrame, workingFrame, introSequence, frameIndex, multiDetection);
+                    multiCopySparseCandidate = AfmaEncodePlanner.this.createMultiCopySparseCandidate(multiCopyReferenceFrame, workingFrame, introSequence, frameIndex, multiDetection);
+                }
+
+                if (deltaBounds != null) {
+                    blockInterCandidate = AfmaEncodePlanner.this.createBlockInterCandidate(previousFrame, workingFrame, introSequence, frameIndex, deltaBounds, copyDetector);
+                }
+            }
+
+            PairCandidateSet candidateSet = new PairCandidateSet(
+                    deltaBounds,
+                    deltaCandidate,
+                    residualDeltaCandidate,
+                    sparseDeltaCandidate,
+                    copyDetection,
+                    copyCandidate,
+                    copyResidualCandidate,
+                    copySparseCandidate,
+                    multiDetection,
+                    multiCopyCandidate,
+                    multiCopyResidualCandidate,
+                    multiCopySparseCandidate,
+                    blockInterCandidate
+            );
+            this.pairCandidatesByKey.put(cacheKey, candidateSet);
+            return candidateSet;
+        }
+
+        @NotNull
+        protected FrameContentKey frameKey(@NotNull AfmaPixelFrame frame) {
+            return this.frameKeysByIdentity.computeIfAbsent(frame, FrameContentKey::new);
+        }
+
+    }
+
+    protected static final class FrameContentKey {
+
+        protected final int width;
+        protected final int height;
+        @NotNull
+        protected final int[] pixels;
+        protected final int pixelHash;
+
+        protected FrameContentKey(@NotNull AfmaPixelFrame frame) {
+            Objects.requireNonNull(frame);
+            this.width = frame.getWidth();
+            this.height = frame.getHeight();
+            this.pixels = frame.getPixelsUnsafe();
+            this.pixelHash = Arrays.hashCode(this.pixels);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = Integer.hashCode(this.width);
+            result = (31 * result) + Integer.hashCode(this.height);
+            result = (31 * result) + this.pixelHash;
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (!(obj instanceof FrameContentKey other)) {
+                return false;
+            }
+            return this.width == other.width
+                    && this.height == other.height
+                    && this.pixelHash == other.pixelHash
+                    && Arrays.equals(this.pixels, other.pixels);
+        }
+
+    }
+
+    protected record FullCandidateKey(@NotNull FrameContentKey frameKey, boolean introSequence, int frameIndex,
+                                      boolean allowPerceptual, @NotNull ReferenceBase referenceBase) {
+    }
+
+    protected record PairCandidateKey(@NotNull FrameContentKey previousFrameKey, @NotNull FrameContentKey workingFrameKey,
+                                      boolean introSequence, int frameIndex) {
+    }
+
+    protected record PairCandidateSet(@Nullable AfmaRect deltaBounds,
+                                      @Nullable PlannedCandidate deltaCandidate,
+                                      @Nullable PlannedCandidate residualDeltaCandidate,
+                                      @Nullable PlannedCandidate sparseDeltaCandidate,
+                                      @Nullable AfmaRectCopyDetector.Detection copyDetection,
+                                      @Nullable PlannedCandidate copyCandidate,
+                                      @Nullable PlannedCandidate copyResidualCandidate,
+                                      @Nullable PlannedCandidate copySparseCandidate,
+                                      @Nullable AfmaRectCopyDetector.MultiDetection multiDetection,
+                                      @Nullable PlannedCandidate multiCopyCandidate,
+                                      @Nullable PlannedCandidate multiCopyResidualCandidate,
+                                      @Nullable PlannedCandidate multiCopySparseCandidate,
+                                      @Nullable PlannedCandidate blockInterCandidate) {
     }
 
     protected enum DecodeCost {
