@@ -1726,16 +1726,6 @@ public class AfmaEncodePlanner {
         return estimateVarIntBytes(changedRowCount) + totalBytes;
     }
 
-    protected static int estimateVarIntBytes(int value) {
-        int remaining = Math.max(0, value);
-        int totalBytes = 1;
-        while ((remaining & ~0x7F) != 0) {
-            totalBytes++;
-            remaining >>>= 7;
-        }
-        return totalBytes;
-    }
-
     @NotNull
     protected SparseLayoutCandidate buildSparseLayoutCandidate(@NotNull AfmaSparseLayoutCodec layoutCodec, int width, int height,
                                                                @NotNull int[] changedIndices, int changedPixelCount) throws IOException {
