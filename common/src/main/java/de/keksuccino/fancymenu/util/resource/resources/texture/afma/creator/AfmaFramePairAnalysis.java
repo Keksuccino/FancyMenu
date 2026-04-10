@@ -27,6 +27,8 @@ public final class AfmaFramePairAnalysis {
     protected AfmaRect differenceBounds;
     @Nullable
     protected Map<CopyRectKey, DirtyBoundsAfterCopyResult> dirtyBoundsAfterCopyByKey;
+    @Nullable
+    protected Map<MotionSearchKey, AfmaRectCopyDetector.MotionSearchAnalysis> motionSearchAnalysesByKey;
     protected boolean perceptualDriftComputed;
     @NotNull
     protected PerceptualDriftMetrics perceptualDriftMetrics = new PerceptualDriftMetrics(0D, 0, 0);
@@ -77,6 +79,22 @@ public final class AfmaFramePairAnalysis {
         AfmaRect dirtyBounds = this.scanDirtyBoundsAfterCopy(copyRect);
         this.dirtyBoundsAfterCopyByKey.put(cacheKey, new DirtyBoundsAfterCopyResult(dirtyBounds));
         return dirtyBounds;
+    }
+
+    @Nullable
+    AfmaRectCopyDetector.MotionSearchAnalysis getMotionSearchAnalysis(int maxSearchDistance, int maxCandidateAxisOffsets) {
+        if (this.motionSearchAnalysesByKey == null) {
+            return null;
+        }
+        return this.motionSearchAnalysesByKey.get(new MotionSearchKey(maxSearchDistance, maxCandidateAxisOffsets));
+    }
+
+    void cacheMotionSearchAnalysis(int maxSearchDistance, int maxCandidateAxisOffsets,
+                                   @NotNull AfmaRectCopyDetector.MotionSearchAnalysis motionSearchAnalysis) {
+        if (this.motionSearchAnalysesByKey == null) {
+            this.motionSearchAnalysesByKey = new LinkedHashMap<>();
+        }
+        this.motionSearchAnalysesByKey.put(new MotionSearchKey(maxSearchDistance, maxCandidateAxisOffsets), motionSearchAnalysis);
     }
 
     @NotNull
@@ -211,6 +229,9 @@ public final class AfmaFramePairAnalysis {
             );
         }
 
+    }
+
+    protected record MotionSearchKey(int maxSearchDistance, int maxCandidateAxisOffsets) {
     }
 
     protected record DirtyBoundsAfterCopyResult(@Nullable AfmaRect bounds) {

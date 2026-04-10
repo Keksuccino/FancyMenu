@@ -843,7 +843,7 @@ public class AfmaEncodePlanner {
         }
 
         if (options.isRectCopyEnabled() && (deltaBounds != null)) {
-            PlannedCandidate blockInterCandidate = this.createBlockInterCandidate(previousFrame, currentFrame, introSequence, frameIndex, deltaBounds, copyDetector);
+            PlannedCandidate blockInterCandidate = this.createBlockInterCandidate(pairAnalysis, introSequence, frameIndex, deltaBounds, copyDetector);
             if ((blockInterCandidate != null) && this.shouldKeepComplexCandidate(blockInterCandidate, fullCandidate,
                     (long) blockInterCandidate.descriptor().getWidth() * blockInterCandidate.descriptor().getHeight(),
                     currentFrame.getWidth(), currentFrame.getHeight(),
@@ -1741,11 +1741,13 @@ public class AfmaEncodePlanner {
     }
 
     @Nullable
-    protected PlannedCandidate createBlockInterCandidate(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
+    protected PlannedCandidate createBlockInterCandidate(@NotNull AfmaFramePairAnalysis pairAnalysis,
                                                          boolean introSequence, int frameIndex, @NotNull AfmaRect deltaBounds,
                                                          @NotNull AfmaRectCopyDetector copyDetector) throws IOException {
+        AfmaPixelFrame previousFrame = pairAnalysis.previousFrame();
+        AfmaPixelFrame currentFrame = pairAnalysis.nextFrame();
         AfmaRect regionBounds = this.alignBoundsToTileGrid(deltaBounds, BLOCK_INTER_TILE_SIZE, currentFrame.getWidth(), currentFrame.getHeight());
-        List<AfmaRectCopyDetector.MotionVector> motionVectors = copyDetector.collectMotionVectors(previousFrame, currentFrame, true);
+        List<AfmaRectCopyDetector.MotionVector> motionVectors = copyDetector.collectMotionVectors(pairAnalysis, true);
         if (motionVectors.isEmpty()) {
             return null;
         }
@@ -2610,7 +2612,7 @@ public class AfmaEncodePlanner {
                 }
 
                 if (deltaBounds != null) {
-                    blockInterCandidate = AfmaEncodePlanner.this.createBlockInterCandidate(previousFrame, workingFrame, introSequence, frameIndex, deltaBounds, copyDetector);
+                    blockInterCandidate = AfmaEncodePlanner.this.createBlockInterCandidate(pairAnalysis, introSequence, frameIndex, deltaBounds, copyDetector);
                 }
             }
 
