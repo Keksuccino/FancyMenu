@@ -676,6 +676,8 @@ public final class AfmaChunkedPayloadHelper {
             while (!deflater.finished()) {
                 compressedBytes += deflater.deflate(deflateBuffer);
             }
+        } catch (IOException ex) {
+            throw new IllegalStateException("Failed to estimate AFMA chunk compression from stored payload data", ex);
         } finally {
             deflater.end();
         }
