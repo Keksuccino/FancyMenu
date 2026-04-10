@@ -51,22 +51,10 @@ public final class AfmaBinIntraPayloadHelper {
         int[] sourcePixels = materializeDensePixels(width, height, pixels, offset, scanlineStride);
 
         EncodePreferences normalizedPreferences = (preferences != null) ? preferences : EncodePreferences.lossless();
-        List<PixelCandidate> pixelCandidates = collectPixelCandidates(width, height, sourcePixels, normalizedPreferences);
-        List<PayloadCandidateBuilder> candidateBuilders = new ArrayList<>(pixelCandidates.size() * 5);
-        for (PixelCandidate pixelCandidate : pixelCandidates) {
-            addCandidateBuilders(candidateBuilders, width, height, pixelCandidate);
-        }
-
-        List<EncodedPayloadCandidate> candidates = shouldParallelizeModeSelection(width, height, candidateBuilders.size())
-                ? buildCandidatesInParallel(candidateBuilders)
-                : buildCandidatesSequential(candidateBuilders);
-
-        EncodedPayloadCandidate bestCandidate = null;
-        for (EncodedPayloadCandidate candidate : candidates) {
-            if ((bestCandidate == null) || candidate.isBetterThan(bestCandidate)) {
-                bestCandidate = candidate;
-            }
-        }
+        List<PixelCandidateContext> pixelCandidates = collectPixelCandidates(width, height, sourcePixels, normalizedPreferences);
+        EncodedPayloadCandidate bestCandidate = shouldParallelizeModeSelection(width, height, pixelCandidates.size())
+                ? selectBestCandidateInParallel(width, height, pixelCandidates)
+                : selectBestCandidateSequential(width, height, pixelCandidates);
 
         if (bestCandidate == null) {
             throw new IOException("Failed to build an AFMA BIN_INTRA payload");
@@ -179,14 +167,11 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     @Nullable
-    protected static EncodedPayloadCandidate buildSolidCandidate(int width, int height, @NotNull PixelCandidate pixelCandidate) throws IOException {
-        int[] pixels = pixelCandidate.pixels();
-        int firstColor = pixels[0];
-        for (int i = 1; i < pixels.length; i++) {
-            if (pixels[i] != firstColor) {
-                return null;
-            }
+    protected static EncodedPayloadCandidate buildSolidCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate) throws IOException {
+        if (!pixelCandidate.isSolidColor()) {
+            return null;
         }
+        int firstColor = pixelCandidate.firstColor();
 
         try (ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
              DataOutputStream out = new DataOutputStream(byteStream)) {
@@ -198,35 +183,29 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     @Nullable
-    protected static EncodedPayloadCandidate buildIndexedCandidate(int width, int height, @NotNull PixelCandidate pixelCandidate) throws IOException {
+    protected static EncodedPayloadCandidate buildIndexedCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate) throws IOException {
         return buildIndexedCandidate(width, height, pixelCandidate, PaletteOrdering.FREQUENCY);
     }
 
     @Nullable
-    protected static EncodedPayloadCandidate buildIndexedCandidate(int width, int height, @NotNull PixelCandidate pixelCandidate,
+    protected static EncodedPayloadCandidate buildIndexedCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate,
                                                                    @NotNull PaletteOrdering paletteOrdering) throws IOException {
-        int[] pixels = pixelCandidate.pixels();
-        Map<Integer, Integer> colorCounts = new HashMap<>();
-        for (int color : pixels) {
-            colorCounts.merge(color, 1, Integer::sum);
-            if (colorCounts.size() > MAX_PALETTE_COLORS) {
-                return null;
-            }
+        Map<Integer, Integer> colorCounts = pixelCandidate.fullColorCounts();
+        if (colorCounts == null) {
+            return null;
         }
 
+        int[] pixels = pixelCandidate.pixels();
         List<Map.Entry<Integer, Integer>> paletteEntries = new ArrayList<>(colorCounts.entrySet());
         sortPaletteEntries(paletteEntries, paletteOrdering);
 
         int[] palette = new int[paletteEntries.size()];
         Map<Integer, Integer> colorToIndex = new HashMap<>(paletteEntries.size() * 2);
-        boolean paletteHasAlpha = false;
+        boolean paletteHasAlpha = pixelCandidate.hasAlpha();
         for (int i = 0; i < paletteEntries.size(); i++) {
             int color = paletteEntries.get(i).getKey();
             palette[i] = color;
             colorToIndex.put(color, i);
-            if (((color >>> 24) & 0xFF) != 0xFF) {
-                paletteHasAlpha = true;
-            }
         }
 
         int bitsPerIndex = paletteBits(palette.length);
@@ -265,14 +244,14 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     @NotNull
-    protected static EncodedPayloadCandidate buildFilteredCandidate(int width, int height, @NotNull PixelCandidate pixelCandidate, @NotNull Mode mode) throws IOException {
-        int[] pixels = pixelCandidate.pixels();
+    protected static EncodedPayloadCandidate buildFilteredCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate,
+                                                                    @NotNull Mode mode) throws IOException {
         int channels = switch (mode) {
             case RGB_FILTERED -> RGB_CHANNELS;
             case RGBA_FILTERED -> RGBA_CHANNELS;
             default -> throw new IllegalArgumentException("Unsupported AFMA BIN_INTRA filtered mode: " + mode);
         };
-        byte[] rawBytes = toInterleavedBytes(pixels, channels);
+        byte[] rawBytes = pixelCandidate.interleavedBytes(channels);
         byte[] filteredRows = encodeFilteredRows(rawBytes, width * channels, height, channels);
         try (ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
              DataOutputStream out = new DataOutputStream(byteStream)) {
@@ -284,14 +263,14 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     @NotNull
-    protected static EncodedPayloadCandidate buildPlanarFilteredCandidate(int width, int height, @NotNull PixelCandidate pixelCandidate,
+    protected static EncodedPayloadCandidate buildPlanarFilteredCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate,
                                                                           @NotNull Mode mode) throws IOException {
         int channels = switch (mode) {
             case RGB_PLANAR_FILTERED -> RGB_CHANNELS;
             case RGBA_PLANAR_FILTERED -> RGBA_CHANNELS;
             default -> throw new IllegalArgumentException("Unsupported AFMA BIN_INTRA planar mode: " + mode);
         };
-        byte[] planarBytes = toPlanarBytes(pixelCandidate.pixels(), channels);
+        byte[] planarBytes = pixelCandidate.planarBytes(channels);
         try (ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
              DataOutputStream out = new DataOutputStream(byteStream)) {
             writeHeader(out, mode, width, height);
@@ -302,19 +281,9 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     @NotNull
-    protected static EncodedPayloadCandidate buildSplitAlphaCandidate(int width, int height, @NotNull PixelCandidate pixelCandidate) throws IOException {
-        int[] pixels = pixelCandidate.pixels();
-        byte[] rgbBytes = new byte[width * height * RGB_CHANNELS];
-        byte[] alphaBytes = new byte[width * height];
-        int rgbOffset = 0;
-        int alphaOffset = 0;
-        for (int color : pixels) {
-            rgbBytes[rgbOffset++] = (byte) ((color >> 16) & 0xFF);
-            rgbBytes[rgbOffset++] = (byte) ((color >> 8) & 0xFF);
-            rgbBytes[rgbOffset++] = (byte) (color & 0xFF);
-            alphaBytes[alphaOffset++] = (byte) ((color >>> 24) & 0xFF);
-        }
-
+    protected static EncodedPayloadCandidate buildSplitAlphaCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate) throws IOException {
+        byte[] rgbBytes = pixelCandidate.interleavedBytes(RGB_CHANNELS);
+        byte[] alphaBytes = pixelCandidate.alphaBytes();
         byte[] filteredRgb = encodeFilteredRows(rgbBytes, width * RGB_CHANNELS, height, RGB_CHANNELS);
         byte[] filteredAlpha = encodeFilteredRows(alphaBytes, width, height, 1);
         try (ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
@@ -328,22 +297,14 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     @Nullable
-    protected static EncodedPayloadCandidate buildIndexedColorPlusAlphaCandidate(int width, int height, @NotNull PixelCandidate pixelCandidate,
+    protected static EncodedPayloadCandidate buildIndexedColorPlusAlphaCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate,
                                                                                  @NotNull PaletteOrdering paletteOrdering) throws IOException {
-        int[] pixels = pixelCandidate.pixels();
-        Map<Integer, Integer> rgbCounts = new HashMap<>();
-        boolean binaryAlpha = true;
-        for (int color : pixels) {
-            rgbCounts.merge(color & 0x00FFFFFF, 1, Integer::sum);
-            if (rgbCounts.size() > MAX_PALETTE_COLORS) {
-                return null;
-            }
-            int alpha = (color >>> 24) & 0xFF;
-            if ((alpha != 0) && (alpha != 0xFF)) {
-                binaryAlpha = false;
-            }
+        Map<Integer, Integer> rgbCounts = pixelCandidate.rgbColorCounts();
+        if (rgbCounts == null) {
+            return null;
         }
 
+        int[] pixels = pixelCandidate.pixels();
         List<Map.Entry<Integer, Integer>> paletteEntries = new ArrayList<>(rgbCounts.entrySet());
         sortPaletteEntries(paletteEntries, paletteOrdering);
 
@@ -357,7 +318,7 @@ public final class AfmaBinIntraPayloadHelper {
 
         int bitsPerIndex = paletteBits(palette.length);
         int[] indices = new int[pixels.length];
-        byte[] alphaBytes = new byte[pixels.length];
+        byte[] alphaBytes = pixelCandidate.alphaBytes();
         for (int i = 0; i < pixels.length; i++) {
             int color = pixels[i];
             Integer paletteIndex = colorToIndex.get(color & 0x00FFFFFF);
@@ -365,7 +326,6 @@ public final class AfmaBinIntraPayloadHelper {
                 throw new IOException("AFMA BIN_INTRA indexed-color palette index lookup failed");
             }
             indices[i] = paletteIndex;
-            alphaBytes[i] = (byte) ((color >>> 24) & 0xFF);
         }
 
         int packedRowBytes = packedRowBytes(width, bitsPerIndex);
@@ -373,7 +333,7 @@ public final class AfmaBinIntraPayloadHelper {
         byte[] filteredIndices = encodeFilteredRows(packedIndices, packedRowBytes, height, 1);
         int alphaMode;
         byte[] encodedAlpha;
-        if (binaryAlpha) {
+        if (pixelCandidate.binaryAlpha()) {
             alphaMode = AlphaMaskMode.BINARY.id();
             encodedAlpha = encodeFilteredRows(packBinaryAlpha(alphaBytes, width, height), packedRowBytes(width, 1), height, 1);
         } else {
@@ -401,39 +361,20 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     @Nullable
-    protected static EncodedPayloadCandidate buildColorPlusAlphaMaskCandidate(int width, int height, @NotNull PixelCandidate pixelCandidate) throws IOException {
-        int[] pixels = pixelCandidate.pixels();
-        int firstColor = pixels[0];
-        int red = (firstColor >> 16) & 0xFF;
-        int green = (firstColor >> 8) & 0xFF;
-        int blue = firstColor & 0xFF;
-
-        boolean binaryAlpha = true;
-        boolean alphaVaries = false;
-        byte[] alphaBytes = new byte[pixels.length];
-        for (int i = 0; i < pixels.length; i++) {
-            int color = pixels[i];
-            if (((color >> 16) & 0xFF) != red || ((color >> 8) & 0xFF) != green || (color & 0xFF) != blue) {
-                return null;
-            }
-
-            int alpha = (color >>> 24) & 0xFF;
-            alphaBytes[i] = (byte) alpha;
-            if (alpha != ((firstColor >>> 24) & 0xFF)) {
-                alphaVaries = true;
-            }
-            if ((alpha != 0) && (alpha != 0xFF)) {
-                binaryAlpha = false;
-            }
-        }
-
-        if (!alphaVaries) {
+    protected static EncodedPayloadCandidate buildColorPlusAlphaMaskCandidate(int width, int height,
+                                                                              @NotNull PixelCandidateContext pixelCandidate) throws IOException {
+        if (!pixelCandidate.hasUniformRgb() || !pixelCandidate.alphaVaries()) {
             return null;
         }
+        int baseRgb = pixelCandidate.uniformRgbColor();
+        int red = (baseRgb >> 16) & 0xFF;
+        int green = (baseRgb >> 8) & 0xFF;
+        int blue = baseRgb & 0xFF;
 
+        byte[] alphaBytes = pixelCandidate.alphaBytes();
         byte[] encodedAlpha;
         int alphaMode;
-        if (binaryAlpha) {
+        if (pixelCandidate.binaryAlpha()) {
             alphaMode = AlphaMaskMode.BINARY.id();
             byte[] packedMask = packBinaryAlpha(alphaBytes, width, height);
             encodedAlpha = encodeFilteredRows(packedMask, packedRowBytes(width, 1), height, 1);
@@ -696,10 +637,7 @@ public final class AfmaBinIntraPayloadHelper {
                                               int width, int height, int channels) throws IOException {
         int sampleCount = width * height;
         for (int channelIndex = 0; channelIndex < channels; channelIndex++) {
-            int planeOffset = channelIndex * sampleCount;
-            byte[] planeBytes = new byte[sampleCount];
-            System.arraycopy(planarBytes, planeOffset, planeBytes, 0, sampleCount);
-            out.write(encodeFilteredRows(planeBytes, width, height, 1));
+            out.write(encodeFilteredRows(planarBytes, channelIndex * sampleCount, width, height, 1));
         }
     }
 
@@ -718,7 +656,16 @@ public final class AfmaBinIntraPayloadHelper {
 
     @NotNull
     protected static byte[] encodeFilteredRows(@NotNull byte[] rawBytes, int rowBytes, int height, int bytesPerPixel) {
-        if (rowBytes < 0 || height <= 0 || bytesPerPixel <= 0) {
+        return encodeFilteredRows(rawBytes, 0, rowBytes, height, bytesPerPixel);
+    }
+
+    @NotNull
+    protected static byte[] encodeFilteredRows(@NotNull byte[] rawBytes, int rawOffset, int rowBytes, int height, int bytesPerPixel) {
+        if (rawOffset < 0 || rowBytes < 0 || height <= 0 || bytesPerPixel <= 0) {
+            throw new IllegalArgumentException("AFMA BIN_INTRA filter row dimensions are invalid");
+        }
+        long requiredLength = (long) rawOffset + ((long) rowBytes * (long) height);
+        if (requiredLength > rawBytes.length) {
             throw new IllegalArgumentException("AFMA BIN_INTRA filter row dimensions are invalid");
         }
 
@@ -727,7 +674,7 @@ public final class AfmaBinIntraPayloadHelper {
         byte[] bestRow = new byte[rowBytes];
         byte[] candidateRow = new byte[rowBytes];
         int encodedOffset = 0;
-        int rowOffset = 0;
+        int rowOffset = rawOffset;
         for (int row = 0; row < height; row++) {
             FilterSelection selection = selectBestFilter(rawBytes, rowOffset, rowBytes, previousRow, bytesPerPixel, bestRow, candidateRow);
             encoded[encodedOffset++] = (byte) selection.filter().id();
@@ -739,34 +686,51 @@ public final class AfmaBinIntraPayloadHelper {
         return encoded;
     }
 
-    protected static void addCandidateBuilders(@NotNull List<PayloadCandidateBuilder> candidateBuilders, int width, int height, @NotNull PixelCandidate pixelCandidate) {
-        candidateBuilders.add(() -> buildSolidCandidate(width, height, pixelCandidate));
-        candidateBuilders.add(() -> buildIndexedCandidate(width, height, pixelCandidate, PaletteOrdering.FREQUENCY));
-        candidateBuilders.add(() -> buildIndexedCandidate(width, height, pixelCandidate, PaletteOrdering.STABLE_COLOR));
+    @Nullable
+    protected static EncodedPayloadCandidate buildBestCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate) throws IOException {
+        EncodedPayloadCandidate bestCandidate = null;
+        bestCandidate = pickBetterCandidate(bestCandidate, buildSolidCandidate(width, height, pixelCandidate));
+        bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedCandidate(width, height, pixelCandidate, PaletteOrdering.FREQUENCY));
+        bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedCandidate(width, height, pixelCandidate, PaletteOrdering.STABLE_COLOR));
 
-        if (hasAlpha(pixelCandidate.pixels())) {
-            candidateBuilders.add(() -> buildFilteredCandidate(width, height, pixelCandidate, Mode.RGBA_FILTERED));
-            candidateBuilders.add(() -> buildPlanarFilteredCandidate(width, height, pixelCandidate, Mode.RGBA_PLANAR_FILTERED));
-            candidateBuilders.add(() -> buildIndexedColorPlusAlphaCandidate(width, height, pixelCandidate, PaletteOrdering.FREQUENCY));
-            candidateBuilders.add(() -> buildIndexedColorPlusAlphaCandidate(width, height, pixelCandidate, PaletteOrdering.STABLE_COLOR));
-            candidateBuilders.add(() -> buildSplitAlphaCandidate(width, height, pixelCandidate));
-            candidateBuilders.add(() -> buildColorPlusAlphaMaskCandidate(width, height, pixelCandidate));
+        if (pixelCandidate.hasAlpha()) {
+            bestCandidate = pickBetterCandidate(bestCandidate, buildFilteredCandidate(width, height, pixelCandidate, Mode.RGBA_FILTERED));
+            bestCandidate = pickBetterCandidate(bestCandidate, buildPlanarFilteredCandidate(width, height, pixelCandidate, Mode.RGBA_PLANAR_FILTERED));
+            bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedColorPlusAlphaCandidate(width, height, pixelCandidate, PaletteOrdering.FREQUENCY));
+            bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedColorPlusAlphaCandidate(width, height, pixelCandidate, PaletteOrdering.STABLE_COLOR));
+            bestCandidate = pickBetterCandidate(bestCandidate, buildSplitAlphaCandidate(width, height, pixelCandidate));
+            bestCandidate = pickBetterCandidate(bestCandidate, buildColorPlusAlphaMaskCandidate(width, height, pixelCandidate));
         } else {
-            candidateBuilders.add(() -> buildFilteredCandidate(width, height, pixelCandidate, Mode.RGB_FILTERED));
-            candidateBuilders.add(() -> buildPlanarFilteredCandidate(width, height, pixelCandidate, Mode.RGB_PLANAR_FILTERED));
+            bestCandidate = pickBetterCandidate(bestCandidate, buildFilteredCandidate(width, height, pixelCandidate, Mode.RGB_FILTERED));
+            bestCandidate = pickBetterCandidate(bestCandidate, buildPlanarFilteredCandidate(width, height, pixelCandidate, Mode.RGB_PLANAR_FILTERED));
         }
+        return bestCandidate;
+    }
+
+    @Nullable
+    protected static EncodedPayloadCandidate pickBetterCandidate(@Nullable EncodedPayloadCandidate currentBest,
+                                                                 @Nullable EncodedPayloadCandidate candidate) {
+        if (candidate == null) {
+            return currentBest;
+        }
+        if ((currentBest == null) || candidate.isBetterThan(currentBest)) {
+            return candidate;
+        }
+        return currentBest;
     }
 
     @NotNull
-    protected static List<PixelCandidate> collectPixelCandidates(int width, int height, @NotNull int[] pixels, @NotNull EncodePreferences preferences) {
-        List<PixelCandidate> pixelCandidates = new ArrayList<>(4);
-        addPixelCandidate(pixelCandidates, pixels, true);
+    protected static List<PixelCandidateContext> collectPixelCandidates(int width, int height, @NotNull int[] pixels, @NotNull EncodePreferences preferences) {
+        List<PixelCandidateContext> pixelCandidates = new ArrayList<>(4);
+        PixelCandidateContext sourceCandidate = addPixelCandidate(pixelCandidates, pixels, true);
 
         if (!preferences.perceptualCandidatesEnabled()) {
             return pixelCandidates;
         }
 
-        addPixelCandidate(pixelCandidates, normalizeHiddenTransparentPixels(pixels), false);
+        if (sourceCandidate.hasHiddenTransparentRgb()) {
+            addPixelCandidate(pixelCandidates, normalizeHiddenTransparentPixels(pixels), false);
+        }
         for (PerceptualProfile profile : PerceptualProfile.values()) {
             int[] quantizedPixels = buildPerceptualPaletteCandidate(width, height, pixels, profile, preferences);
             if (quantizedPixels != null) {
@@ -776,18 +740,23 @@ public final class AfmaBinIntraPayloadHelper {
         return pixelCandidates;
     }
 
-    protected static void addPixelCandidate(@NotNull List<PixelCandidate> pixelCandidates, @NotNull int[] pixels, boolean lossless) {
+    @NotNull
+    protected static PixelCandidateContext addPixelCandidate(@NotNull List<PixelCandidateContext> pixelCandidates, @NotNull int[] pixels, boolean lossless) {
         for (int i = 0; i < pixelCandidates.size(); i++) {
-            PixelCandidate existingCandidate = pixelCandidates.get(i);
+            PixelCandidateContext existingCandidate = pixelCandidates.get(i);
             if (!Arrays.equals(existingCandidate.pixels(), pixels)) {
                 continue;
             }
             if (lossless && !existingCandidate.lossless()) {
-                pixelCandidates.set(i, new PixelCandidate(existingCandidate.pixels(), true));
+                PixelCandidateContext upgradedCandidate = new PixelCandidateContext(existingCandidate.pixels(), true);
+                pixelCandidates.set(i, upgradedCandidate);
+                return upgradedCandidate;
             }
-            return;
+            return existingCandidate;
         }
-        pixelCandidates.add(new PixelCandidate(pixels, lossless));
+        PixelCandidateContext candidate = new PixelCandidateContext(pixels, lossless);
+        pixelCandidates.add(candidate);
+        return candidate;
     }
 
     @NotNull
@@ -980,39 +949,36 @@ public final class AfmaBinIntraPayloadHelper {
         return candidateCount > 1 && ((long) width * height) >= MIN_PARALLEL_MODE_SELECTION_PIXELS;
     }
 
-    @NotNull
-    protected static List<EncodedPayloadCandidate> buildCandidatesSequential(@NotNull List<PayloadCandidateBuilder> candidateBuilders) throws IOException {
-        List<EncodedPayloadCandidate> candidates = new ArrayList<>(candidateBuilders.size());
-        for (PayloadCandidateBuilder candidateBuilder : candidateBuilders) {
-            EncodedPayloadCandidate candidate = candidateBuilder.build();
-            if (candidate != null) {
-                candidates.add(candidate);
-            }
+    @Nullable
+    protected static EncodedPayloadCandidate selectBestCandidateSequential(int width, int height,
+                                                                           @NotNull List<PixelCandidateContext> pixelCandidates) throws IOException {
+        EncodedPayloadCandidate bestCandidate = null;
+        for (PixelCandidateContext pixelCandidate : pixelCandidates) {
+            bestCandidate = pickBetterCandidate(bestCandidate, buildBestCandidate(width, height, pixelCandidate));
         }
-        return candidates;
+        return bestCandidate;
     }
 
-    @NotNull
-    protected static List<EncodedPayloadCandidate> buildCandidatesInParallel(@NotNull List<PayloadCandidateBuilder> candidateBuilders) throws IOException {
-        List<CompletableFuture<EncodedPayloadCandidate>> candidateFutures = new ArrayList<>(candidateBuilders.size());
-        for (PayloadCandidateBuilder candidateBuilder : candidateBuilders) {
+    @Nullable
+    protected static EncodedPayloadCandidate selectBestCandidateInParallel(int width, int height,
+                                                                           @NotNull List<PixelCandidateContext> pixelCandidates) throws IOException {
+        // Keep parallel work coarse-grained so each task can reuse its pixel analysis across all BIN_INTRA modes.
+        List<CompletableFuture<EncodedPayloadCandidate>> candidateFutures = new ArrayList<>(pixelCandidates.size());
+        for (PixelCandidateContext pixelCandidate : pixelCandidates) {
             candidateFutures.add(CompletableFuture.supplyAsync(() -> {
                 try {
-                    return candidateBuilder.build();
+                    return buildBestCandidate(width, height, pixelCandidate);
                 } catch (IOException ex) {
                     throw new CompletionException(ex);
                 }
             }));
         }
 
-        List<EncodedPayloadCandidate> candidates = new ArrayList<>(candidateBuilders.size());
+        EncodedPayloadCandidate bestCandidate = null;
         for (CompletableFuture<EncodedPayloadCandidate> candidateFuture : candidateFutures) {
-            EncodedPayloadCandidate candidate = joinCandidate(candidateFuture);
-            if (candidate != null) {
-                candidates.add(candidate);
-            }
+            bestCandidate = pickBetterCandidate(bestCandidate, joinCandidate(candidateFuture));
         }
-        return candidates;
+        return bestCandidate;
     }
 
     @Nullable
@@ -1201,15 +1167,6 @@ public final class AfmaBinIntraPayloadHelper {
         }
     }
 
-    protected static boolean hasAlpha(@NotNull int[] pixels) {
-        for (int color : pixels) {
-            if (((color >>> 24) & 0xFF) != 0xFF) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     protected static void validateDimensions(int width, int height) {
         if ((width <= 0) || (height <= 0) || (width > 0xFFFF) || (height > 0xFFFF)) {
             throw new IllegalArgumentException("AFMA BIN_INTRA payload dimensions are invalid");
@@ -1269,9 +1226,6 @@ public final class AfmaBinIntraPayloadHelper {
     public record DecodedFrame(int width, int height, @NotNull int[] pixels) {
     }
 
-    protected record PixelCandidate(@NotNull int[] pixels, boolean lossless) {
-    }
-
     protected record PerceptualErrorStats(double averageError, int maxVisibleColorDelta, int maxAlphaDelta) {
 
         protected boolean isWithin(@NotNull EncodePreferences preferences) {
@@ -1321,11 +1275,6 @@ public final class AfmaBinIntraPayloadHelper {
     @FunctionalInterface
     protected interface DecodedRowConsumer {
         void accept(int rowIndex, @NotNull byte[] decodedRow, int rowBytes) throws IOException;
-    }
-
-    @FunctionalInterface
-    protected interface PayloadCandidateBuilder {
-        @Nullable EncodedPayloadCandidate build() throws IOException;
     }
 
     public enum Mode {
@@ -1508,6 +1457,222 @@ public final class AfmaBinIntraPayloadHelper {
                     | (Math.min(0xFF, red) << 16)
                     | (Math.min(0xFF, green) << 8)
                     | Math.min(0xFF, blue);
+        }
+    }
+
+    protected static final class PixelCandidateContext {
+
+        @NotNull
+        protected final int[] pixels;
+        protected final boolean lossless;
+        protected boolean scanSummaryComputed;
+        protected int firstColor;
+        protected boolean solidColor;
+        protected boolean uniformRgb;
+        protected boolean hasAlpha;
+        protected boolean binaryAlpha;
+        protected boolean alphaVaries;
+        protected boolean hiddenTransparentRgb;
+        protected boolean fullColorCountsComputed;
+        @Nullable
+        protected Map<Integer, Integer> fullColorCounts;
+        protected boolean rgbColorCountsComputed;
+        @Nullable
+        protected Map<Integer, Integer> rgbColorCounts;
+        @Nullable
+        protected byte[] interleavedRgbBytes;
+        @Nullable
+        protected byte[] interleavedRgbaBytes;
+        @Nullable
+        protected byte[] planarRgbBytes;
+        @Nullable
+        protected byte[] planarRgbaBytes;
+        @Nullable
+        protected byte[] alphaBytes;
+
+        protected PixelCandidateContext(@NotNull int[] pixels, boolean lossless) {
+            this.pixels = pixels;
+            this.lossless = lossless;
+        }
+
+        @NotNull
+        public int[] pixels() {
+            return this.pixels;
+        }
+
+        public boolean lossless() {
+            return this.lossless;
+        }
+
+        public int firstColor() {
+            this.ensureScanSummary();
+            return this.firstColor;
+        }
+
+        public boolean isSolidColor() {
+            this.ensureScanSummary();
+            return this.solidColor;
+        }
+
+        public boolean hasUniformRgb() {
+            this.ensureScanSummary();
+            return this.uniformRgb;
+        }
+
+        public int uniformRgbColor() {
+            this.ensureScanSummary();
+            return this.firstColor & 0x00FFFFFF;
+        }
+
+        public boolean hasAlpha() {
+            this.ensureScanSummary();
+            return this.hasAlpha;
+        }
+
+        public boolean binaryAlpha() {
+            this.ensureScanSummary();
+            return this.binaryAlpha;
+        }
+
+        public boolean alphaVaries() {
+            this.ensureScanSummary();
+            return this.alphaVaries;
+        }
+
+        public boolean hasHiddenTransparentRgb() {
+            this.ensureScanSummary();
+            return this.hiddenTransparentRgb;
+        }
+
+        @Nullable
+        public Map<Integer, Integer> fullColorCounts() {
+            if (this.fullColorCountsComputed) {
+                return this.fullColorCounts;
+            }
+            this.fullColorCounts = collectColorCounts(this.pixels, false);
+            this.fullColorCountsComputed = true;
+            return this.fullColorCounts;
+        }
+
+        @Nullable
+        public Map<Integer, Integer> rgbColorCounts() {
+            if (this.rgbColorCountsComputed) {
+                return this.rgbColorCounts;
+            }
+            this.rgbColorCounts = collectColorCounts(this.pixels, true);
+            this.rgbColorCountsComputed = true;
+            return this.rgbColorCounts;
+        }
+
+        @NotNull
+        public byte[] interleavedBytes(int channels) {
+            if (channels == RGB_CHANNELS) {
+                if (this.interleavedRgbBytes == null) {
+                    this.interleavedRgbBytes = toInterleavedBytes(this.pixels, RGB_CHANNELS);
+                }
+                return this.interleavedRgbBytes;
+            }
+            if (channels == RGBA_CHANNELS) {
+                if (this.interleavedRgbaBytes == null) {
+                    this.interleavedRgbaBytes = toInterleavedBytes(this.pixels, RGBA_CHANNELS);
+                }
+                return this.interleavedRgbaBytes;
+            }
+            throw new IllegalArgumentException("Unsupported AFMA BIN_INTRA interleaved channel count: " + channels);
+        }
+
+        @NotNull
+        public byte[] planarBytes(int channels) {
+            if (channels == RGB_CHANNELS) {
+                if (this.planarRgbBytes == null) {
+                    this.planarRgbBytes = toPlanarBytes(this.pixels, RGB_CHANNELS);
+                }
+                return this.planarRgbBytes;
+            }
+            if (channels == RGBA_CHANNELS) {
+                if (this.planarRgbaBytes == null) {
+                    this.planarRgbaBytes = toPlanarBytes(this.pixels, RGBA_CHANNELS);
+                }
+                return this.planarRgbaBytes;
+            }
+            throw new IllegalArgumentException("Unsupported AFMA BIN_INTRA planar channel count: " + channels);
+        }
+
+        @NotNull
+        public byte[] alphaBytes() {
+            if (this.alphaBytes != null) {
+                return this.alphaBytes;
+            }
+
+            byte[] extractedAlphaBytes = new byte[this.pixels.length];
+            for (int i = 0; i < this.pixels.length; i++) {
+                extractedAlphaBytes[i] = (byte) ((this.pixels[i] >>> 24) & 0xFF);
+            }
+            this.alphaBytes = extractedAlphaBytes;
+            return extractedAlphaBytes;
+        }
+
+        protected void ensureScanSummary() {
+            if (this.scanSummaryComputed) {
+                return;
+            }
+
+            int[] candidatePixels = this.pixels;
+            int firstCandidateColor = candidatePixels[0];
+            int firstAlpha = (firstCandidateColor >>> 24) & 0xFF;
+            int firstRgb = firstCandidateColor & 0x00FFFFFF;
+            boolean solidCandidate = true;
+            boolean uniformRgbCandidate = true;
+            boolean hasAlphaCandidate = firstAlpha != 0xFF;
+            boolean binaryAlphaCandidate = (firstAlpha == 0) || (firstAlpha == 0xFF);
+            boolean alphaVariesCandidate = false;
+            boolean hiddenTransparentRgbCandidate = (firstAlpha == 0) && (firstRgb != 0);
+
+            for (int i = 1; i < candidatePixels.length; i++) {
+                int color = candidatePixels[i];
+                int alpha = (color >>> 24) & 0xFF;
+                int rgb = color & 0x00FFFFFF;
+                if (color != firstCandidateColor) {
+                    solidCandidate = false;
+                }
+                if (rgb != firstRgb) {
+                    uniformRgbCandidate = false;
+                }
+                if (alpha != firstAlpha) {
+                    alphaVariesCandidate = true;
+                }
+                if (alpha != 0xFF) {
+                    hasAlphaCandidate = true;
+                }
+                if ((alpha != 0) && (alpha != 0xFF)) {
+                    binaryAlphaCandidate = false;
+                }
+                if ((alpha == 0) && (rgb != 0)) {
+                    hiddenTransparentRgbCandidate = true;
+                }
+            }
+
+            this.firstColor = firstCandidateColor;
+            this.solidColor = solidCandidate;
+            this.uniformRgb = uniformRgbCandidate;
+            this.hasAlpha = hasAlphaCandidate;
+            this.binaryAlpha = binaryAlphaCandidate;
+            this.alphaVaries = alphaVariesCandidate;
+            this.hiddenTransparentRgb = hiddenTransparentRgbCandidate;
+            this.scanSummaryComputed = true;
+        }
+
+        @Nullable
+        protected static Map<Integer, Integer> collectColorCounts(@NotNull int[] pixels, boolean ignoreAlpha) {
+            Map<Integer, Integer> colorCounts = new HashMap<>(Math.min(MAX_PALETTE_COLORS, Math.max(4, pixels.length)) * 2);
+            for (int color : pixels) {
+                int colorKey = ignoreAlpha ? (color & 0x00FFFFFF) : color;
+                colorCounts.merge(colorKey, 1, Integer::sum);
+                if (colorCounts.size() > MAX_PALETTE_COLORS) {
+                    return null;
+                }
+            }
+            return colorCounts;
         }
     }
 
