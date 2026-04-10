@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -73,28 +74,21 @@ public final class AfmaStoredPayload implements AutoCloseable {
         Objects.requireNonNull(writer);
         File tempFile = createTempFile();
         boolean success = false;
-        try (BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(tempFile))) {
+        try (PayloadAnalysisOutputStream out = new PayloadAnalysisOutputStream(new BufferedOutputStream(new FileOutputStream(tempFile)))) {
             writer.write(out);
-            out.flush();
+            PayloadAnalysis analysis = out.finishAnalysis();
             success = true;
+            return new AfmaStoredPayload(
+                    tempFile,
+                    analysis.length(),
+                    analysis.estimatedArchiveBytes(),
+                    analysis.fingerprint(),
+                    analysis.tailBytes()
+            );
         } finally {
             if (!success) {
                 org.apache.commons.io.FileUtils.deleteQuietly(tempFile);
             }
-        }
-
-        long fileLength = tempFile.length();
-        if (fileLength > Integer.MAX_VALUE) {
-            org.apache.commons.io.FileUtils.deleteQuietly(tempFile);
-            throw new IOException("AFMA payload exceeds the supported size limit: " + fileLength);
-        }
-
-        try {
-            PayloadAnalysis analysis = analyze(tempFile);
-            return new AfmaStoredPayload(tempFile, (int) fileLength, analysis.estimatedArchiveBytes(), analysis.fingerprint(), analysis.tailBytes());
-        } catch (IOException ex) {
-            org.apache.commons.io.FileUtils.deleteQuietly(tempFile);
-            throw ex;
         }
     }
 
@@ -177,48 +171,6 @@ public final class AfmaStoredPayload implements AutoCloseable {
     }
 
     @NotNull
-    protected static PayloadAnalysis analyze(@NotNull File tempFile) throws IOException {
-        MessageDigest digest;
-        try {
-            digest = MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException ex) {
-            throw new IOException("Failed to create AFMA payload fingerprint digest", ex);
-        }
-
-        Deflater deflater = new Deflater(9, true);
-        byte[] readBuffer = new byte[ANALYSIS_BUFFER_BYTES];
-        byte[] deflateBuffer = new byte[ANALYSIS_BUFFER_BYTES];
-        TailAccumulator tailAccumulator = new TailAccumulator(AfmaChunkedPayloadHelper.PLANNER_DEFLATE_TAIL_BYTES);
-        long compressedBytes = 0L;
-        try (InputStream in = new BufferedInputStream(new FileInputStream(tempFile))) {
-            int read;
-            while ((read = in.read(readBuffer)) >= 0) {
-                if (read == 0) {
-                    continue;
-                }
-                digest.update(readBuffer, 0, read);
-                tailAccumulator.append(readBuffer, 0, read);
-                deflater.setInput(readBuffer, 0, read);
-                while (!deflater.needsInput()) {
-                    compressedBytes += deflater.deflate(deflateBuffer);
-                }
-            }
-            deflater.finish();
-            while (!deflater.finished()) {
-                compressedBytes += deflater.deflate(deflateBuffer);
-            }
-        } finally {
-            deflater.end();
-        }
-
-        return new PayloadAnalysis(
-                Math.max(1L, compressedBytes),
-                hexDigest(digest.digest()),
-                tailAccumulator.toByteArray()
-        );
-    }
-
-    @NotNull
     protected static byte[] tailBytes(@NotNull byte[] payloadBytes) {
         Objects.requireNonNull(payloadBytes);
         int tailLength = Math.min(payloadBytes.length, AfmaChunkedPayloadHelper.PLANNER_DEFLATE_TAIL_BYTES);
@@ -240,7 +192,163 @@ public final class AfmaStoredPayload implements AutoCloseable {
         void write(@NotNull OutputStream out) throws IOException;
     }
 
-    protected record PayloadAnalysis(long estimatedArchiveBytes, @NotNull String fingerprint, @NotNull byte[] tailBytes) {
+    protected record PayloadAnalysis(int length, long estimatedArchiveBytes, @NotNull String fingerprint, @NotNull byte[] tailBytes) {
+    }
+
+    // Capture payload metrics while bytes are being written so the encoder does not need a second temp-file read.
+    protected static final class PayloadAnalysisOutputStream extends OutputStream {
+
+        @NotNull
+        protected final OutputStream delegate;
+        @NotNull
+        protected final MessageDigest digest;
+        @NotNull
+        protected final Deflater deflater = new Deflater(9, true);
+        @NotNull
+        protected final byte[] analysisBuffer = new byte[ANALYSIS_BUFFER_BYTES];
+        @NotNull
+        protected final byte[] deflateBuffer = new byte[ANALYSIS_BUFFER_BYTES];
+        @NotNull
+        protected final TailAccumulator tailAccumulator = new TailAccumulator(AfmaChunkedPayloadHelper.PLANNER_DEFLATE_TAIL_BYTES);
+        protected int analysisBufferLength = 0;
+        protected int length = 0;
+        protected long compressedBytes = 0L;
+        protected boolean closed = false;
+        @Nullable
+        protected PayloadAnalysis finishedAnalysis = null;
+
+        protected PayloadAnalysisOutputStream(@NotNull OutputStream delegate) throws IOException {
+            this.delegate = Objects.requireNonNull(delegate);
+            try {
+                this.digest = MessageDigest.getInstance("SHA-256");
+            } catch (NoSuchAlgorithmException ex) {
+                throw new IOException("Failed to create AFMA payload fingerprint digest", ex);
+            }
+        }
+
+        @Override
+        public void write(int value) throws IOException {
+            this.ensureWritable(1);
+            this.delegate.write(value);
+            this.length++;
+            this.analysisBuffer[this.analysisBufferLength++] = (byte) value;
+            if (this.analysisBufferLength >= this.analysisBuffer.length) {
+                this.flushAnalysisBuffer();
+            }
+        }
+
+        @Override
+        public void write(@NotNull byte[] source, int offset, int count) throws IOException {
+            Objects.requireNonNull(source);
+            if (offset < 0 || count < 0 || count > source.length - offset) {
+                throw new IndexOutOfBoundsException();
+            }
+            if (count <= 0) {
+                return;
+            }
+
+            this.ensureWritable(count);
+            this.delegate.write(source, offset, count);
+            this.length += count;
+            this.bufferAnalysis(source, offset, count);
+        }
+
+        @Override
+        public void flush() throws IOException {
+            this.delegate.flush();
+        }
+
+        @Override
+        public void close() throws IOException {
+            if (this.closed) {
+                return;
+            }
+            this.closed = true;
+            try {
+                this.delegate.close();
+            } finally {
+                this.deflater.end();
+            }
+        }
+
+        @NotNull
+        public PayloadAnalysis finishAnalysis() throws IOException {
+            if (this.finishedAnalysis != null) {
+                return this.finishedAnalysis;
+            }
+            if (this.closed) {
+                throw new IOException("AFMA payload output has already been closed");
+            }
+
+            this.flushAnalysisBuffer();
+            this.delegate.flush();
+            this.deflater.finish();
+            while (!this.deflater.finished()) {
+                this.compressedBytes += this.deflater.deflate(this.deflateBuffer);
+            }
+
+            this.finishedAnalysis = new PayloadAnalysis(
+                    this.length,
+                    Math.max(1L, this.compressedBytes),
+                    hexDigest(this.digest.digest()),
+                    this.tailAccumulator.toByteArray()
+            );
+            return this.finishedAnalysis;
+        }
+
+        protected void ensureWritable(int additionalBytes) throws IOException {
+            if (this.closed) {
+                throw new IOException("AFMA payload output has already been closed");
+            }
+            if (this.finishedAnalysis != null) {
+                throw new IOException("AFMA payload output analysis has already been finalized");
+            }
+            if (additionalBytes > Integer.MAX_VALUE - this.length) {
+                throw new IOException("AFMA payload exceeds the supported size limit: " + (((long) this.length) + additionalBytes));
+            }
+        }
+
+        protected void bufferAnalysis(@NotNull byte[] source, int offset, int count) {
+            int remaining = count;
+            int nextOffset = offset;
+            if (this.analysisBufferLength > 0) {
+                int bytesToCopy = Math.min(remaining, this.analysisBuffer.length - this.analysisBufferLength);
+                System.arraycopy(source, nextOffset, this.analysisBuffer, this.analysisBufferLength, bytesToCopy);
+                this.analysisBufferLength += bytesToCopy;
+                nextOffset += bytesToCopy;
+                remaining -= bytesToCopy;
+                if (this.analysisBufferLength >= this.analysisBuffer.length) {
+                    this.flushAnalysisBuffer();
+                }
+            }
+
+            if (remaining >= this.analysisBuffer.length) {
+                this.analyzeChunk(source, nextOffset, remaining);
+                return;
+            }
+
+            if (remaining > 0) {
+                System.arraycopy(source, nextOffset, this.analysisBuffer, this.analysisBufferLength, remaining);
+                this.analysisBufferLength += remaining;
+            }
+        }
+
+        protected void flushAnalysisBuffer() {
+            if (this.analysisBufferLength <= 0) {
+                return;
+            }
+            this.analyzeChunk(this.analysisBuffer, 0, this.analysisBufferLength);
+            this.analysisBufferLength = 0;
+        }
+
+        protected void analyzeChunk(@NotNull byte[] source, int offset, int count) {
+            this.digest.update(source, offset, count);
+            this.tailAccumulator.append(source, offset, count);
+            this.deflater.setInput(source, offset, count);
+            while (!this.deflater.needsInput()) {
+                this.compressedBytes += this.deflater.deflate(this.deflateBuffer);
+            }
+        }
     }
 
     protected static final class TailAccumulator {
