@@ -5,34 +5,35 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaDecoder;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameIndex;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameOperationType;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaMetadata;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaStoredPayload;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class AfmaEncodePlan {
+public class AfmaEncodePlan implements AutoCloseable {
 
     @NotNull
     protected final AfmaMetadata metadata;
     @NotNull
     protected final AfmaFrameIndex frameIndex;
     @NotNull
-    protected final LinkedHashMap<String, byte[]> payloads;
+    protected final LinkedHashMap<String, AfmaStoredPayload> payloads;
     @NotNull
     protected final AfmaChunkedPayloadHelper.PackedPayloadArchive payloadArchive;
     protected final long totalPayloadBytes;
 
-    public AfmaEncodePlan(@NotNull AfmaMetadata metadata, @NotNull AfmaFrameIndex frameIndex, @NotNull LinkedHashMap<String, byte[]> payloads) {
+    public AfmaEncodePlan(@NotNull AfmaMetadata metadata, @NotNull AfmaFrameIndex frameIndex, @NotNull LinkedHashMap<String, AfmaStoredPayload> payloads) {
         this(metadata, frameIndex, payloads, calculateTotalPayloadBytes(Objects.requireNonNull(payloads)), true);
     }
 
-    public AfmaEncodePlan(@NotNull AfmaMetadata metadata, @NotNull AfmaFrameIndex frameIndex, @NotNull LinkedHashMap<String, byte[]> payloads, long totalPayloadBytes) {
+    public AfmaEncodePlan(@NotNull AfmaMetadata metadata, @NotNull AfmaFrameIndex frameIndex, @NotNull LinkedHashMap<String, AfmaStoredPayload> payloads, long totalPayloadBytes) {
         this(metadata, frameIndex, payloads, totalPayloadBytes, true);
     }
 
     protected AfmaEncodePlan(@NotNull AfmaMetadata metadata, @NotNull AfmaFrameIndex frameIndex,
-                             @NotNull LinkedHashMap<String, byte[]> payloads, long totalPayloadBytes, boolean copyPayloads) {
+                             @NotNull LinkedHashMap<String, AfmaStoredPayload> payloads, long totalPayloadBytes, boolean copyPayloads) {
         this.metadata = Objects.requireNonNull(metadata);
         this.frameIndex = Objects.requireNonNull(frameIndex);
         this.payloads = copyPayloads ? new LinkedHashMap<>(Objects.requireNonNull(payloads)) : Objects.requireNonNull(payloads);
@@ -51,7 +52,7 @@ public class AfmaEncodePlan {
     }
 
     @NotNull
-    public LinkedHashMap<String, byte[]> getPayloads() {
+    public LinkedHashMap<String, AfmaStoredPayload> getPayloads() {
         return new LinkedHashMap<>(this.payloads);
     }
 
@@ -81,22 +82,22 @@ public class AfmaEncodePlan {
         return count;
     }
 
-    private static long calculateTotalPayloadBytes(@NotNull Map<String, byte[]> payloads) {
+    private static long calculateTotalPayloadBytes(@NotNull Map<String, AfmaStoredPayload> payloads) {
         long total = 0L;
-        for (byte[] payload : payloads.values()) {
+        for (AfmaStoredPayload payload : payloads.values()) {
             if (payload != null) {
-                total += payload.length;
+                total += payload.length();
             }
         }
         return total;
     }
 
     @NotNull
-    private static AfmaChunkedPayloadHelper.PackedPayloadArchive buildPayloadArchive(@NotNull Map<String, byte[]> payloads,
+    private static AfmaChunkedPayloadHelper.PackedPayloadArchive buildPayloadArchive(@NotNull Map<String, AfmaStoredPayload> payloads,
                                                                                      @NotNull AfmaFrameIndex frameIndex,
                                                                                      @NotNull AfmaMetadata metadata) {
-        LinkedHashMap<String, byte[]> chunkedPayloads = new LinkedHashMap<>();
-        for (Map.Entry<String, byte[]> entry : payloads.entrySet()) {
+        LinkedHashMap<String, AfmaStoredPayload> chunkedPayloads = new LinkedHashMap<>();
+        for (Map.Entry<String, AfmaStoredPayload> entry : payloads.entrySet()) {
             String normalizedPath = AfmaDecoder.normalizeEntryPath(entry.getKey());
             if ("thumbnail.bin".equalsIgnoreCase(normalizedPath)) {
                 continue;
@@ -104,6 +105,15 @@ public class AfmaEncodePlan {
             chunkedPayloads.put(entry.getKey(), entry.getValue());
         }
         return AfmaChunkedPayloadHelper.buildArchiveLayout(chunkedPayloads, AfmaChunkedPayloadHelper.buildPackingHints(frameIndex, metadata.getLoopCount()));
+    }
+
+    @Override
+    public void close() {
+        for (AfmaStoredPayload payload : this.payloads.values()) {
+            if (payload != null) {
+                payload.close();
+            }
+        }
     }
 
 }

@@ -321,20 +321,21 @@ public class AfmaCreatorState {
             checkCancelled(job);
 
             job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Analyzing AFMA frames for export...", null, 0.15D));
-            AfmaEncodePlan exportPlan = this.planner.plan(prepared.mainSequence, prepared.introSequence, prepared.options, job::isCancellationRequested,
-                    (detail, progress) -> job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Analyzing AFMA frames for export...", detail, 0.15D + (0.63D * progress))));
-            checkCancelled(job);
+            try (AfmaEncodePlan exportPlan = this.planner.plan(prepared.mainSequence, prepared.introSequence, prepared.options, job::isCancellationRequested,
+                    (detail, progress) -> job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.ANALYZING_FRAMES, "Analyzing AFMA frames for export...", detail, 0.15D + (0.63D * progress))))) {
+                checkCancelled(job);
 
-            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Packing AFMA archive...", prepared.outputFile.getName(), 0.82D));
-            tempFile = new File(prepared.outputFile.getParentFile(), prepared.outputFile.getName() + ".tmp");
-            org.apache.commons.io.FileUtils.deleteQuietly(tempFile);
-            this.archiveWriter.write(exportPlan, tempFile, job::isCancellationRequested,
-                    (path, progress) -> job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Packing AFMA archive...", path, 0.82D + (0.16D * progress))));
-            checkCancelled(job);
+                job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Packing AFMA archive...", prepared.outputFile.getName(), 0.82D));
+                tempFile = new File(prepared.outputFile.getParentFile(), prepared.outputFile.getName() + ".tmp");
+                org.apache.commons.io.FileUtils.deleteQuietly(tempFile);
+                this.archiveWriter.write(exportPlan, tempFile, job::isCancellationRequested,
+                        (path, progress) -> job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Packing AFMA archive...", path, 0.82D + (0.16D * progress))));
+                checkCancelled(job);
 
-            job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Validating AFMA archive...", prepared.outputFile.getName(), 0.985D));
-            this.validateWrittenArchive(tempFile);
-            checkCancelled(job);
+                job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Validating AFMA archive...", prepared.outputFile.getName(), 0.985D));
+                this.validateWrittenArchive(tempFile);
+                checkCancelled(job);
+            }
 
             Files.move(tempFile.toPath(), prepared.outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             tempFile = null;

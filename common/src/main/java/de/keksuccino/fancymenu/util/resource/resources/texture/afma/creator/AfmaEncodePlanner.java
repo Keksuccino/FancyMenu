@@ -21,6 +21,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaResidual
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaSparseLayoutCodec;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaSparsePayload;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaSparsePayloadHelper;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaStoredPayload;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -110,7 +111,7 @@ public class AfmaEncodePlanner {
         int totalFrameCount = Math.max(1, mainSequence.size() + intro.size());
 
         AfmaRectCopyDetector copyDetector = new AfmaRectCopyDetector(options.getMaxCopySearchDistance(), options.getMaxCandidateAxisOffsets());
-        LinkedHashMap<String, byte[]> payloads = new LinkedHashMap<>();
+        LinkedHashMap<String, AfmaStoredPayload> payloads = new LinkedHashMap<>();
         Map<String, String> payloadPathsByFingerprint = new LinkedHashMap<>();
         try {
             PlannedSequence plannedIntroFrames = this.planSequence(intro, true, dimension, options, copyDetector, ArchivePlanningState.empty(), payloads, payloadPathsByFingerprint,
@@ -152,7 +153,7 @@ public class AfmaEncodePlanner {
     protected PlannedSequence planSequence(@NotNull AfmaSourceSequence sequence, boolean introSequence, @NotNull Dimension dimension,
                                            @NotNull AfmaEncodeOptions options, @NotNull AfmaRectCopyDetector copyDetector,
                                            @NotNull ArchivePlanningState initialArchiveState,
-                                           @NotNull LinkedHashMap<String, byte[]> payloads,
+                                           @NotNull LinkedHashMap<String, AfmaStoredPayload> payloads,
                                            @NotNull Map<String, String> payloadPathsByFingerprint,
                                            @Nullable BooleanSupplier cancellationRequested, @Nullable ProgressListener progressListener,
                                            int startOffset, int totalFrameCount, @Nullable AfmaPixelFrame firstFrameOverride) throws IOException {
@@ -344,64 +345,73 @@ public class AfmaEncodePlanner {
         List<BeamPlanningState> beam = new ArrayList<>();
         beam.add(baseState.toCommittedBaseState());
         WindowCandidateCache windowCandidateCache = new WindowCandidateCache();
-        for (int localFrameIndex = 0; localFrameIndex < windowFrames.size(); localFrameIndex++) {
-            checkCancelled(cancellationRequested);
-            AfmaPixelFrame sourceFrame = windowFrames.get(localFrameIndex);
-            int absoluteFrameIndex = windowStartFrameIndex + localFrameIndex;
-            this.reportPlanningFrameProgress(progressListener, "Planning", introSequence,
-                    absoluteFrameIndex + 1, sequenceFrameCount, startOffset + absoluteFrameIndex + 0.5D, totalFrameCount);
-            long frameDelayMs = this.resolveSourceFrameDelay(options, introSequence, absoluteFrameIndex);
-            ArrayList<BeamPlanningState> expandedBeam = new ArrayList<>();
-            for (BeamPlanningState state : beam) {
-                AfmaPixelFrame previousFrame = state.previousFrame();
-                AfmaPixelFrame workingFrame = sourceFrame;
-                if ((previousFrame != null) && options.isNearLosslessEnabled()
-                        && this.shouldAllowPerceptualContinuation(state.framesSinceKeyframe(), options)) {
-                    workingFrame = this.applyNearLosslessTemporalMerge(previousFrame, sourceFrame, options.getNearLosslessMaxChannelDelta());
-                }
+        BeamPlanningState bestState = null;
+        try {
+            for (int localFrameIndex = 0; localFrameIndex < windowFrames.size(); localFrameIndex++) {
+                checkCancelled(cancellationRequested);
+                AfmaPixelFrame sourceFrame = windowFrames.get(localFrameIndex);
+                int absoluteFrameIndex = windowStartFrameIndex + localFrameIndex;
+                this.reportPlanningFrameProgress(progressListener, "Planning", introSequence,
+                        absoluteFrameIndex + 1, sequenceFrameCount, startOffset + absoluteFrameIndex + 0.5D, totalFrameCount);
+                long frameDelayMs = this.resolveSourceFrameDelay(options, introSequence, absoluteFrameIndex);
+                ArrayList<BeamPlanningState> expandedBeam = new ArrayList<>();
+                for (BeamPlanningState state : beam) {
+                    AfmaPixelFrame previousFrame = state.previousFrame();
+                    AfmaPixelFrame workingFrame = sourceFrame;
+                    if ((previousFrame != null) && options.isNearLosslessEnabled()
+                            && this.shouldAllowPerceptualContinuation(state.framesSinceKeyframe(), options)) {
+                        workingFrame = this.applyNearLosslessTemporalMerge(previousFrame, sourceFrame, options.getNearLosslessMaxChannelDelta());
+                    }
 
-                AfmaFramePairAnalysis workingPairAnalysis = (previousFrame != null)
-                        ? windowCandidateCache.getFramePairAnalysis(previousFrame, workingFrame)
-                        : null;
-                if ((workingPairAnalysis != null) && state.emittedFrameAvailable()
-                        && options.isDuplicateFrameElision()
-                        && workingPairAnalysis.isIdentical()) {
-                    BeamPlanningState duplicateState = this.evaluateDuplicateContinuation(
-                            state,
-                            windowCandidateCache.getFramePairAnalysis(sourceFrame, previousFrame),
-                            frameDelayMs,
-                            options
-                    );
-                    if (duplicateState != null) {
-                        expandedBeam.add(duplicateState);
+                    AfmaFramePairAnalysis workingPairAnalysis = (previousFrame != null)
+                            ? windowCandidateCache.getFramePairAnalysis(previousFrame, workingFrame)
+                            : null;
+                    if ((workingPairAnalysis != null) && state.emittedFrameAvailable()
+                            && options.isDuplicateFrameElision()
+                            && workingPairAnalysis.isIdentical()) {
+                        BeamPlanningState duplicateState = this.evaluateDuplicateContinuation(
+                                state,
+                                windowCandidateCache.getFramePairAnalysis(sourceFrame, previousFrame),
+                                frameDelayMs,
+                                options
+                        );
+                        if (duplicateState != null) {
+                            expandedBeam.add(duplicateState);
+                        }
+                    }
+
+                    List<PlannedCandidate> candidates = this.collectWindowCandidates(previousFrame, sourceFrame, workingFrame,
+                            introSequence, absoluteFrameIndex, state.framesSinceKeyframe(), state.decodeComplexitySinceKeyframe(),
+                            options, copyDetector, state.archiveState(), windowCandidateCache);
+                    for (PlannedCandidate candidate : candidates) {
+                        BeamPlanningState candidateState = this.evaluateCandidateTransition(
+                                state,
+                                candidate,
+                                windowCandidateCache.getCandidateReferenceFrameAnalysis(candidate, sourceFrame, workingFrame),
+                                frameDelayMs,
+                                introSequence,
+                                options
+                        );
+                        if (candidateState != null) {
+                            expandedBeam.add(candidateState);
+                        }
                     }
                 }
 
-                List<PlannedCandidate> candidates = this.collectWindowCandidates(previousFrame, sourceFrame, workingFrame,
-                        introSequence, absoluteFrameIndex, state.framesSinceKeyframe(), state.decodeComplexitySinceKeyframe(),
-                        options, copyDetector, state.archiveState(), windowCandidateCache);
-                for (PlannedCandidate candidate : candidates) {
-                    BeamPlanningState candidateState = this.evaluateCandidateTransition(
-                            state,
-                            candidate,
-                            windowCandidateCache.getCandidateReferenceFrameAnalysis(candidate, sourceFrame, workingFrame),
-                            frameDelayMs,
-                            introSequence,
-                            options
-                    );
-                    if (candidateState != null) {
-                        expandedBeam.add(candidateState);
-                    }
+                beam = this.prunePlanningBeam(expandedBeam, options.getPlannerBeamWidth());
+                beam = this.refinePlanningBeamArchiveScores(beam);
+                if (beam.isEmpty()) {
+                    throw new IOException("AFMA planner failed to find a valid candidate for source frame " + (absoluteFrameIndex + 1));
                 }
             }
-
-            beam = this.prunePlanningBeam(expandedBeam, options.getPlannerBeamWidth());
-            beam = this.refinePlanningBeamArchiveScores(beam);
-            if (beam.isEmpty()) {
-                throw new IOException("AFMA planner failed to find a valid candidate for source frame " + (absoluteFrameIndex + 1));
+            bestState = beam.get(0);
+            windowCandidateCache.closeUnusedCandidates(bestState);
+            return bestState;
+        } finally {
+            if (bestState == null) {
+                windowCandidateCache.closeAllCandidates();
             }
         }
-        return beam.get(0);
     }
 
     @NotNull
@@ -586,15 +596,15 @@ public class AfmaEncodePlanner {
     }
 
     protected void commitPlannedWindow(@NotNull BeamPlanningState bestWindowState, @NotNull List<PlannedTimedFrame> plannedFrames,
-                                       @NotNull Map<String, byte[]> payloads, @NotNull Map<String, String> payloadPathsByFingerprint) {
+                                       @NotNull Map<String, AfmaStoredPayload> payloads, @NotNull Map<String, String> payloadPathsByFingerprint) {
         for (PlanningStep planningStep : bestWindowState.stepsInOrder()) {
             if (planningStep.isDelayExtension()) {
                 this.extendPlannedFrameDelay(plannedFrames, planningStep.delayMs());
                 continue;
             }
 
-            PlannedCandidate finalizedCandidate = Objects.requireNonNull(planningStep.candidate()).internPayloads(payloads, payloadPathsByFingerprint);
-            plannedFrames.add(new PlannedTimedFrame(finalizedCandidate.descriptor(), planningStep.delayMs()));
+            AfmaFrameDescriptor finalizedDescriptor = Objects.requireNonNull(planningStep.candidate()).internPayloads(payloads, payloadPathsByFingerprint);
+            plannedFrames.add(new PlannedTimedFrame(finalizedDescriptor, planningStep.delayMs()));
         }
     }
 
@@ -1026,25 +1036,25 @@ public class AfmaEncodePlanner {
     }
 
     @NotNull
-    protected AfmaBinIntraPayloadHelper.EncodedPayloadResult encodeBinIntraPayload(@NotNull AfmaPixelFrame frame,
-                                                                                    @NotNull AfmaEncodeOptions options,
-                                                                                    boolean allowPerceptual) throws IOException {
+    protected AfmaBinIntraPayloadHelper.StoredEncodedPayloadResult encodeBinIntraPayload(@NotNull AfmaPixelFrame frame,
+                                                                                         @NotNull AfmaEncodeOptions options,
+                                                                                         boolean allowPerceptual) throws IOException {
         return this.encodeBinIntraPayload(frame.getWidth(), frame.getHeight(), frame.getPixelsUnsafe(), 0, frame.getWidth(), options, allowPerceptual);
     }
 
     @NotNull
-    protected AfmaBinIntraPayloadHelper.EncodedPayloadResult encodeBinIntraPayloadRegion(@NotNull AfmaPixelFrame frame,
-                                                                                          int x, int y, int width, int height,
-                                                                                          @NotNull AfmaEncodeOptions options,
-                                                                                          boolean allowPerceptual) throws IOException {
+    protected AfmaBinIntraPayloadHelper.StoredEncodedPayloadResult encodeBinIntraPayloadRegion(@NotNull AfmaPixelFrame frame,
+                                                                                                int x, int y, int width, int height,
+                                                                                                @NotNull AfmaEncodeOptions options,
+                                                                                                boolean allowPerceptual) throws IOException {
         return this.encodeBinIntraPayload(width, height, frame.getPixelsUnsafe(), (y * frame.getWidth()) + x, frame.getWidth(), options, allowPerceptual);
     }
 
     @NotNull
-    protected AfmaBinIntraPayloadHelper.EncodedPayloadResult encodeBinIntraPayload(int width, int height,
-                                                                                    @NotNull int[] pixels, int offset, int scanlineStride,
-                                                                                    @NotNull AfmaEncodeOptions options,
-                                                                                    boolean allowPerceptual) throws IOException {
+    protected AfmaBinIntraPayloadHelper.StoredEncodedPayloadResult encodeBinIntraPayload(int width, int height,
+                                                                                         @NotNull int[] pixels, int offset, int scanlineStride,
+                                                                                         @NotNull AfmaEncodeOptions options,
+                                                                                         boolean allowPerceptual) throws IOException {
         AfmaBinIntraPayloadHelper.EncodePreferences preferences = (allowPerceptual && options.isPerceptualBinIntraEnabled())
                 ? AfmaBinIntraPayloadHelper.EncodePreferences.perceptual(
                 options.getPerceptualBinIntraMaxVisibleColorDelta(),
@@ -1052,7 +1062,12 @@ public class AfmaEncodePlanner {
                 options.getPerceptualBinIntraMaxAverageError()
         )
                 : AfmaBinIntraPayloadHelper.EncodePreferences.lossless();
-        return AfmaBinIntraPayloadHelper.encodePayloadDetailed(width, height, pixels, offset, scanlineStride, preferences);
+        return AfmaBinIntraPayloadHelper.encodePayloadStoredDetailed(width, height, pixels, offset, scanlineStride, preferences);
+    }
+
+    @NotNull
+    protected AfmaStoredPayload storePayload(@NotNull byte[] payloadBytes) throws IOException {
+        return AfmaStoredPayload.fromBytes(payloadBytes);
     }
 
     @NotNull
@@ -1060,12 +1075,12 @@ public class AfmaEncodePlanner {
                                                    @NotNull AfmaEncodeOptions options, boolean allowPerceptual,
                                                    @NotNull ReferenceBase referenceBase) throws IOException {
         String payloadPath = this.buildPayloadPath(introSequence, frameIndex);
-        AfmaBinIntraPayloadHelper.EncodedPayloadResult encodedPayload = this.encodeBinIntraPayload(currentFrame, options, allowPerceptual);
+        AfmaBinIntraPayloadHelper.StoredEncodedPayloadResult encodedPayload = this.encodeBinIntraPayload(currentFrame, options, allowPerceptual);
         AfmaRect referencePatchBounds = encodedPayload.lossless() ? null : new AfmaRect(0, 0, currentFrame.getWidth(), currentFrame.getHeight());
         return new PlannedCandidate(
                 AfmaFrameDescriptor.full(payloadPath),
                 payloadPath,
-                encodedPayload.payloadBytes(),
+                encodedPayload.payload(),
                 PayloadKind.BIN_INTRA,
                 false,
                 null,
@@ -1088,7 +1103,7 @@ public class AfmaEncodePlanner {
         }
 
         String payloadPath = this.buildPayloadPath(introSequence, frameIndex);
-        AfmaBinIntraPayloadHelper.EncodedPayloadResult encodedPayload = this.encodeBinIntraPayloadRegion(
+        AfmaBinIntraPayloadHelper.StoredEncodedPayloadResult encodedPayload = this.encodeBinIntraPayloadRegion(
                 currentFrame,
                 deltaBounds.x(),
                 deltaBounds.y(),
@@ -1100,7 +1115,7 @@ public class AfmaEncodePlanner {
         return new PlannedCandidate(
                 AfmaFrameDescriptor.deltaRect(payloadPath, deltaBounds.x(), deltaBounds.y(), deltaBounds.width(), deltaBounds.height()),
                 payloadPath,
-                encodedPayload.payloadBytes(),
+                encodedPayload.payload(),
                 PayloadKind.BIN_INTRA,
                 false,
                 null,
@@ -1117,7 +1132,7 @@ public class AfmaEncodePlanner {
 
     @Nullable
     protected PlannedCandidate createResidualDeltaCandidate(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
-                                                            boolean introSequence, int frameIndex, @NotNull AfmaRect deltaBounds) {
+                                                            boolean introSequence, int frameIndex, @NotNull AfmaRect deltaBounds) throws IOException {
         if (deltaBounds.area() <= 0L) {
             return null;
         }
@@ -1138,7 +1153,7 @@ public class AfmaEncodePlanner {
                         residualPayload.metadata()
                 ),
                 payloadPath,
-                residualPayload.payloadBytes(),
+                this.storePayload(residualPayload.payloadBytes()),
                 PayloadKind.RAW,
                 false,
                 null,
@@ -1177,11 +1192,11 @@ public class AfmaEncodePlanner {
                         sparsePayload.toMetadata(residualPayloadPath)
                 ),
                 maskPayloadPath,
-                sparsePayload.layoutPayload(),
+                this.storePayload(sparsePayload.layoutPayload()),
                 PayloadKind.RAW,
                 false,
                 residualPayloadPath,
-                sparsePayload.residualPayload(),
+                this.storePayload(sparsePayload.residualPayload()),
                 PayloadKind.RAW,
                 false,
                 ReferenceBase.WORKING_FRAME,
@@ -1195,7 +1210,7 @@ public class AfmaEncodePlanner {
     @Nullable
     protected PlannedCandidate createCopyResidualCandidate(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
                                                            boolean introSequence, int frameIndex,
-                                                           @NotNull AfmaRectCopyDetector.Detection detection) {
+                                                           @NotNull AfmaRectCopyDetector.Detection detection) throws IOException {
         AfmaRect patchBounds = detection.patchBounds();
         if ((patchBounds == null) || (patchBounds.area() <= 0L)) {
             return null;
@@ -1218,7 +1233,7 @@ public class AfmaEncodePlanner {
                         residualPayload.metadata()
                 ),
                 payloadPath,
-                residualPayload.payloadBytes(),
+                this.storePayload(residualPayload.payloadBytes()),
                 PayloadKind.RAW,
                 false,
                 null,
@@ -1260,11 +1275,11 @@ public class AfmaEncodePlanner {
                         sparsePayload.toMetadata(residualPayloadPath)
                 ),
                 maskPayloadPath,
-                sparsePayload.layoutPayload(),
+                this.storePayload(sparsePayload.layoutPayload()),
                 PayloadKind.RAW,
                 false,
                 residualPayloadPath,
-                sparsePayload.residualPayload(),
+                this.storePayload(sparsePayload.residualPayload()),
                 PayloadKind.RAW,
                 false,
                 ReferenceBase.WORKING_FRAME,
@@ -1285,7 +1300,7 @@ public class AfmaEncodePlanner {
     @Nullable
     protected PlannedCandidate createMultiCopyResidualCandidate(@NotNull AfmaPixelFrame copiedReferenceFrame, @NotNull AfmaPixelFrame currentFrame,
                                                                 boolean introSequence, int frameIndex,
-                                                                @NotNull AfmaRectCopyDetector.MultiDetection detection) {
+                                                                @NotNull AfmaRectCopyDetector.MultiDetection detection) throws IOException {
         AfmaRect patchBounds = detection.patchBounds();
         if ((patchBounds == null) || (patchBounds.area() <= 0L)) {
             return null;
@@ -1309,7 +1324,7 @@ public class AfmaEncodePlanner {
                         residualPayload.metadata()
                 ),
                 payloadPath,
-                residualPayload.payloadBytes(),
+                this.storePayload(residualPayload.payloadBytes()),
                 PayloadKind.RAW,
                 false,
                 null,
@@ -1352,11 +1367,11 @@ public class AfmaEncodePlanner {
                         sparsePayload.toMetadata(residualPayloadPath)
                 ),
                 maskPayloadPath,
-                sparsePayload.layoutPayload(),
+                this.storePayload(sparsePayload.layoutPayload()),
                 PayloadKind.RAW,
                 false,
                 residualPayloadPath,
-                sparsePayload.residualPayload(),
+                this.storePayload(sparsePayload.residualPayload()),
                 PayloadKind.RAW,
                 false,
                 ReferenceBase.WORKING_FRAME,
@@ -1819,11 +1834,11 @@ public class AfmaEncodePlanner {
 
         String payloadPath = (patchBounds != null) ? this.buildPayloadPath(introSequence, frameIndex) : null;
         AfmaPatchRegion patchRegion = (patchBounds != null) ? patchBounds.toPatchRegion(payloadPath) : null;
-        byte[] payloadBytes = null;
+        AfmaStoredPayload payload = null;
         int[] referencePatchPixels = null;
 
         if (patchBounds != null) {
-            AfmaBinIntraPayloadHelper.EncodedPayloadResult encodedPayload = this.encodeBinIntraPayloadRegion(
+            AfmaBinIntraPayloadHelper.StoredEncodedPayloadResult encodedPayload = this.encodeBinIntraPayloadRegion(
                     currentFrame,
                     patchBounds.x(),
                     patchBounds.y(),
@@ -1832,7 +1847,7 @@ public class AfmaEncodePlanner {
                     options,
                     true
             );
-            payloadBytes = encodedPayload.payloadBytes();
+            payload = encodedPayload.payload();
             referencePatchPixels = encodedPayload.lossless() ? null : encodedPayload.reconstructedPixels();
         }
 
@@ -1843,7 +1858,7 @@ public class AfmaEncodePlanner {
                 null,
                 false,
                 payloadPath,
-                payloadBytes,
+                payload,
                 PayloadKind.BIN_INTRA,
                 false,
                 ReferenceBase.WORKING_FRAME,
@@ -1865,11 +1880,11 @@ public class AfmaEncodePlanner {
 
         String payloadPath = (patchBounds != null) ? this.buildPayloadPath(introSequence, frameIndex) : null;
         AfmaPatchRegion patchRegion = (patchBounds != null) ? patchBounds.toPatchRegion(payloadPath) : null;
-        byte[] payloadBytes = null;
+        AfmaStoredPayload payload = null;
         int[] referencePatchPixels = null;
 
         if (patchBounds != null) {
-            AfmaBinIntraPayloadHelper.EncodedPayloadResult encodedPayload = this.encodeBinIntraPayloadRegion(
+            AfmaBinIntraPayloadHelper.StoredEncodedPayloadResult encodedPayload = this.encodeBinIntraPayloadRegion(
                     currentFrame,
                     patchBounds.x(),
                     patchBounds.y(),
@@ -1878,7 +1893,7 @@ public class AfmaEncodePlanner {
                     options,
                     true
             );
-            payloadBytes = encodedPayload.payloadBytes();
+            payload = encodedPayload.payload();
             referencePatchPixels = encodedPayload.lossless() ? null : encodedPayload.reconstructedPixels();
         }
 
@@ -1890,7 +1905,7 @@ public class AfmaEncodePlanner {
                 null,
                 false,
                 payloadPath,
-                payloadBytes,
+                payload,
                 PayloadKind.BIN_INTRA,
                 false,
                 ReferenceBase.WORKING_FRAME,
@@ -1943,11 +1958,16 @@ public class AfmaEncodePlanner {
         }
 
         String payloadPath = this.buildRawPayloadPath(introSequence, frameIndex, "bi");
-        byte[] payloadBytes = AfmaBlockInterPayloadHelper.writePayload(BLOCK_INTER_TILE_SIZE, regionBounds.width(), regionBounds.height(), Arrays.asList(tileOperations));
+        AfmaStoredPayload payload = this.storePayload(AfmaBlockInterPayloadHelper.writePayload(
+                BLOCK_INTER_TILE_SIZE,
+                regionBounds.width(),
+                regionBounds.height(),
+                Arrays.asList(tileOperations)
+        ));
         return new PlannedCandidate(
                 AfmaFrameDescriptor.blockInter(payloadPath, regionBounds.x(), regionBounds.y(), regionBounds.width(), regionBounds.height(), new AfmaBlockInter(BLOCK_INTER_TILE_SIZE)),
                 payloadPath,
-                payloadBytes,
+                payload,
                 PayloadKind.RAW,
                 false,
                 null,
@@ -2759,41 +2779,9 @@ public class AfmaEncodePlanner {
         return 5;
     }
 
-    protected static long estimateChunkCompressionDelta(@NotNull byte[] previousTail, @NotNull byte[] payloadBytes) {
-        if (payloadBytes.length == 0) {
-            return 0L;
-        }
-        if (previousTail.length == 0) {
-            return AfmaPayloadMetricsHelper.estimateArchiveBytes(payloadBytes);
-        }
-
-        byte[] combinedBytes = new byte[previousTail.length + payloadBytes.length];
-        System.arraycopy(previousTail, 0, combinedBytes, 0, previousTail.length);
-        System.arraycopy(payloadBytes, 0, combinedBytes, previousTail.length, payloadBytes.length);
-        long combinedEstimate = AfmaPayloadMetricsHelper.estimateArchiveBytes(combinedBytes);
-        long tailEstimate = AfmaPayloadMetricsHelper.estimateArchiveBytes(previousTail);
-        return Math.max(0L, combinedEstimate - tailEstimate);
-    }
-
-    @NotNull
-    protected static byte[] appendDeflateTail(@NotNull byte[] currentTail, @NotNull byte[] payloadBytes) {
-        if (payloadBytes.length == 0) {
-            return currentTail;
-        }
-        int resultLength = Math.min(PLANNER_DEFLATE_TAIL_BYTES, currentTail.length + payloadBytes.length);
-        byte[] resultTail = new byte[resultLength];
-        int payloadBytesInTail = Math.min(payloadBytes.length, resultLength);
-        System.arraycopy(payloadBytes, payloadBytes.length - payloadBytesInTail, resultTail, resultLength - payloadBytesInTail, payloadBytesInTail);
-        int carriedPrefixBytes = resultLength - payloadBytesInTail;
-        if (carriedPrefixBytes > 0) {
-            System.arraycopy(currentTail, currentTail.length - carriedPrefixBytes, resultTail, 0, carriedPrefixBytes);
-        }
-        return resultTail;
-    }
-
     @NotNull
     protected LoadedDimensionFrame loadDimensionFrame(@NotNull AfmaSourceSequence sequence, @Nullable BooleanSupplier cancellationRequested,
-                                                     @Nullable ProgressListener progressListener) throws IOException {
+                                                      @Nullable ProgressListener progressListener) throws IOException {
         if (sequence.isEmpty()) {
             throw new IOException("AFMA encoding requires at least one source frame");
         }
@@ -3025,6 +3013,48 @@ public class AfmaEncodePlanner {
             return this.frameKeysByIdentity.computeIfAbsent(frame, FrameContentKey::new);
         }
 
+        public void closeUnusedCandidates(@NotNull BeamPlanningState retainedState) {
+            Set<PlannedCandidate> retainedCandidates = Collections.newSetFromMap(new IdentityHashMap<>());
+            for (PlanningStep planningStep : retainedState.stepsInOrder()) {
+                PlannedCandidate candidate = planningStep.candidate();
+                if (candidate != null) {
+                    retainedCandidates.add(candidate);
+                }
+            }
+            this.closeCandidates(retainedCandidates);
+        }
+
+        public void closeAllCandidates() {
+            this.closeCandidates(Collections.emptySet());
+        }
+
+        protected void closeCandidates(@NotNull Set<PlannedCandidate> retainedCandidates) {
+            Set<PlannedCandidate> closedCandidates = Collections.newSetFromMap(new IdentityHashMap<>());
+            for (PlannedCandidate candidate : this.fullCandidatesByKey.values()) {
+                closeCandidateIfUnused(candidate, retainedCandidates, closedCandidates);
+            }
+            for (PairCandidateSet candidateSet : this.pairCandidatesByKey.values()) {
+                closeCandidateIfUnused(candidateSet.deltaCandidate(), retainedCandidates, closedCandidates);
+                closeCandidateIfUnused(candidateSet.residualDeltaCandidate(), retainedCandidates, closedCandidates);
+                closeCandidateIfUnused(candidateSet.sparseDeltaCandidate(), retainedCandidates, closedCandidates);
+                closeCandidateIfUnused(candidateSet.copyCandidate(), retainedCandidates, closedCandidates);
+                closeCandidateIfUnused(candidateSet.copyResidualCandidate(), retainedCandidates, closedCandidates);
+                closeCandidateIfUnused(candidateSet.copySparseCandidate(), retainedCandidates, closedCandidates);
+                closeCandidateIfUnused(candidateSet.multiCopyCandidate(), retainedCandidates, closedCandidates);
+                closeCandidateIfUnused(candidateSet.multiCopyResidualCandidate(), retainedCandidates, closedCandidates);
+                closeCandidateIfUnused(candidateSet.multiCopySparseCandidate(), retainedCandidates, closedCandidates);
+                closeCandidateIfUnused(candidateSet.blockInterCandidate(), retainedCandidates, closedCandidates);
+            }
+        }
+
+        protected void closeCandidateIfUnused(@Nullable PlannedCandidate candidate, @NotNull Set<PlannedCandidate> retainedCandidates,
+                                              @NotNull Set<PlannedCandidate> closedCandidates) {
+            if ((candidate == null) || retainedCandidates.contains(candidate) || !closedCandidates.add(candidate)) {
+                return;
+            }
+            candidate.closePayloads();
+        }
+
     }
 
     protected static final class FrameContentKey {
@@ -3134,7 +3164,7 @@ public class AfmaEncodePlanner {
         @Nullable
         protected final String primaryPayloadPath;
         @Nullable
-        protected final byte[] primaryPayload;
+        protected final AfmaStoredPayload primaryPayload;
         @Nullable
         protected final PayloadKind primaryPayloadKind;
         protected final boolean primaryPayloadReusedFromSource;
@@ -3142,7 +3172,7 @@ public class AfmaEncodePlanner {
         @Nullable
         protected final String patchPayloadPath;
         @Nullable
-        protected final byte[] patchPayload;
+        protected final AfmaStoredPayload patchPayload;
         @Nullable
         protected final PayloadKind patchPayloadKind;
         protected final boolean patchPayloadReusedFromSource;
@@ -3158,8 +3188,8 @@ public class AfmaEncodePlanner {
         protected final int complexityScore;
 
         protected PlannedCandidate(@NotNull AfmaFrameDescriptor descriptor,
-                                   @Nullable String primaryPayloadPath, @Nullable byte[] primaryPayload, @Nullable PayloadKind primaryPayloadKind, boolean primaryPayloadReusedFromSource,
-                                   @Nullable String patchPayloadPath, @Nullable byte[] patchPayload, @Nullable PayloadKind patchPayloadKind, boolean patchPayloadReusedFromSource,
+                                   @Nullable String primaryPayloadPath, @Nullable AfmaStoredPayload primaryPayload, @Nullable PayloadKind primaryPayloadKind, boolean primaryPayloadReusedFromSource,
+                                   @Nullable String patchPayloadPath, @Nullable AfmaStoredPayload patchPayload, @Nullable PayloadKind patchPayloadKind, boolean patchPayloadReusedFromSource,
                                    @NotNull ReferenceBase referenceBase, @Nullable AfmaRect referencePatchBounds, @Nullable int[] referencePatchPixels,
                                    @NotNull DecodeCost decodeCost, int complexityScore) {
             this.descriptor = descriptor;
@@ -3193,13 +3223,13 @@ public class AfmaEncodePlanner {
 
         public long totalBytes() {
             long total = 0L;
-            if (this.primaryPayload != null) total += this.primaryPayload.length;
-            if (this.patchPayload != null) total += this.patchPayload.length;
+            if (this.primaryPayload != null) total += this.primaryPayload.length();
+            if (this.patchPayload != null) total += this.patchPayload.length();
             return total;
         }
 
         @NotNull
-        public PlannedCandidate withPayloads(@Nullable byte[] primaryPayload, @Nullable byte[] patchPayload) {
+        public PlannedCandidate withPayloads(@Nullable AfmaStoredPayload primaryPayload, @Nullable AfmaStoredPayload patchPayload) {
             return new PlannedCandidate(
                     this.descriptor,
                     this.primaryPayloadPath,
@@ -3263,11 +3293,11 @@ public class AfmaEncodePlanner {
             return total;
         }
 
-        protected long estimatedPayloadBytes(@Nullable String path, @Nullable byte[] payload, @NotNull Map<String, String> payloadPathsByFingerprint) {
+        protected long estimatedPayloadBytes(@Nullable String path, @Nullable AfmaStoredPayload payload, @NotNull Map<String, String> payloadPathsByFingerprint) {
             if ((path == null) || (payload == null)) {
                 return 0L;
             }
-            String fingerprint = AfmaPayloadMetricsHelper.fingerprintPayload(payload);
+            String fingerprint = payload.fingerprint();
             String existingPath = payloadPathsByFingerprint.get(fingerprint);
             if ((existingPath != null) && !existingPath.equals(path)) {
                 return 0L;
@@ -3457,87 +3487,54 @@ public class AfmaEncodePlanner {
             return this.complexityScore < other.complexityScore;
         }
 
-        public void writePayloads(@NotNull Map<String, byte[]> payloads) {
-            if ((this.primaryPayloadPath != null) && (this.primaryPayload != null)) {
-                payloads.put(this.primaryPayloadPath, this.primaryPayload);
+        @NotNull
+        public AfmaFrameDescriptor internPayloads(@NotNull Map<String, AfmaStoredPayload> payloads, @NotNull Map<String, String> payloadPathsByFingerprint) {
+            String resolvedPrimaryPath = this.internPayload(this.primaryPayloadPath, this.primaryPayload, payloads, payloadPathsByFingerprint);
+            String resolvedPatchPath = this.internPayload(this.patchPayloadPath, this.patchPayload, payloads, payloadPathsByFingerprint);
+
+            AfmaFrameDescriptor finalizedDescriptor = this.descriptor;
+            if (!Objects.equals(resolvedPrimaryPath, this.primaryPayloadPath)) {
+                finalizedDescriptor = finalizedDescriptor.withPrimaryPath(resolvedPrimaryPath);
             }
-            if ((this.patchPayloadPath != null) && (this.patchPayload != null)) {
-                payloads.put(this.patchPayloadPath, this.patchPayload);
+            if (!Objects.equals(resolvedPatchPath, this.patchPayloadPath)) {
+                finalizedDescriptor = finalizedDescriptor.withPatchPath(resolvedPatchPath);
             }
+            return finalizedDescriptor;
         }
 
-        @NotNull
-        public PlannedCandidate internPayloads(@NotNull Map<String, byte[]> payloads, @NotNull Map<String, String> payloadPathsByFingerprint) {
-            PlannedCandidate candidate = this.internPrimaryPayload(payloadPathsByFingerprint);
-            candidate = candidate.internPatchPayload(payloadPathsByFingerprint);
-            candidate.writePayloads(payloads);
-            return candidate;
-        }
-
-        @NotNull
-        protected PlannedCandidate internPrimaryPayload(@NotNull Map<String, String> payloadPathsByFingerprint) {
-            if ((this.primaryPayloadPath == null) || (this.primaryPayload == null)) {
-                return this;
+        @Nullable
+        protected String internPayload(@Nullable String payloadPath, @Nullable AfmaStoredPayload payload,
+                                       @NotNull Map<String, AfmaStoredPayload> payloads,
+                                       @NotNull Map<String, String> payloadPathsByFingerprint) {
+            if ((payloadPath == null) || (payload == null)) {
+                return payloadPath;
             }
 
-            String fingerprint = AfmaPayloadMetricsHelper.fingerprintPayload(this.primaryPayload);
+            String fingerprint = payload.fingerprint();
             String existingPath = payloadPathsByFingerprint.get(fingerprint);
-            if ((existingPath != null) && !existingPath.equals(this.primaryPayloadPath)) {
-                return new PlannedCandidate(
-                        this.descriptor.withPrimaryPath(existingPath),
-                        existingPath,
-                        null,
-                        this.primaryPayloadKind,
-                        false,
-                        this.patchPayloadPath,
-                        this.patchPayload,
-                        this.patchPayloadKind,
-                        this.patchPayloadReusedFromSource,
-                        this.referenceBase,
-                        this.referencePatchBounds,
-                        this.referencePatchPixels,
-                        this.decodeCost,
-                        this.complexityScore
-                );
+            if ((existingPath != null) && !existingPath.equals(payloadPath)) {
+                if (payloads.get(existingPath) != payload) {
+                    payload.close();
+                }
+                return existingPath;
             }
 
-            payloadPathsByFingerprint.put(fingerprint, this.primaryPayloadPath);
-            return this;
+            payloads.put(payloadPath, payload);
+            payloadPathsByFingerprint.put(fingerprint, payloadPath);
+            return payloadPath;
         }
 
-        @NotNull
-        protected PlannedCandidate internPatchPayload(@NotNull Map<String, String> payloadPathsByFingerprint) {
-            if ((this.patchPayloadPath == null) || (this.patchPayload == null)) {
-                return this;
+        public void closePayloads() {
+            if (this.primaryPayload != null) {
+                this.primaryPayload.close();
             }
-
-            String fingerprint = AfmaPayloadMetricsHelper.fingerprintPayload(this.patchPayload);
-            String existingPath = payloadPathsByFingerprint.get(fingerprint);
-            if ((existingPath != null) && !existingPath.equals(this.patchPayloadPath)) {
-                return new PlannedCandidate(
-                        this.descriptor.withPatchPath(existingPath),
-                        this.primaryPayloadPath,
-                        this.primaryPayload,
-                        this.primaryPayloadKind,
-                        this.primaryPayloadReusedFromSource,
-                        existingPath,
-                        null,
-                        this.patchPayloadKind,
-                        false,
-                        this.referenceBase,
-                        this.referencePatchBounds,
-                        this.referencePatchPixels,
-                        this.decodeCost,
-                        this.complexityScore
-                );
+            if (this.patchPayload != null) {
+                this.patchPayload.close();
             }
-
-            payloadPathsByFingerprint.put(fingerprint, this.patchPayloadPath);
-            return this;
         }
 
-        protected static long estimatePayloadArchiveBytes(@Nullable byte[] payload, @Nullable PayloadKind payloadKind) {
-            return AfmaPayloadMetricsHelper.estimateArchiveBytes(payload);
+        protected static long estimatePayloadArchiveBytes(@Nullable AfmaStoredPayload payload, @Nullable PayloadKind payloadKind) {
+            return (payload != null) ? payload.estimatedArchiveBytes() : 0L;
         }
 
     }
@@ -3808,7 +3805,7 @@ public class AfmaEncodePlanner {
         }
 
         @NotNull
-        public static IncrementalArchiveScoreState fromExactArchive(@NotNull Map<String, byte[]> payloadsByPath,
+        public static IncrementalArchiveScoreState fromExactArchive(@NotNull Map<String, AfmaStoredPayload> payloadsByPath,
                                                                     @NotNull AfmaChunkedPayloadHelper.ArchivePackingHints packingHints,
                                                                     @NotNull AfmaChunkedPayloadHelper.PackedPayloadArchive archive) {
             Objects.requireNonNull(payloadsByPath);
@@ -3861,18 +3858,18 @@ public class AfmaEncodePlanner {
         }
 
         @NotNull
-        public IncrementalArchiveScoreState appendPayload(@NotNull String payloadPath, @NotNull byte[] payloadBytes) {
+        public IncrementalArchiveScoreState appendPayload(@NotNull String payloadPath, @NotNull AfmaStoredPayload payload) {
             Objects.requireNonNull(payloadPath);
-            Objects.requireNonNull(payloadBytes);
-            if (payloadBytes.length <= 0) {
+            Objects.requireNonNull(payload);
+            if (payload.isEmpty()) {
                 return this;
             }
 
             boolean startNewChunk = (this.chunkCount == 0)
-                    || (((long) this.currentChunkLength + payloadBytes.length) > PLANNER_TARGET_CHUNK_BYTES);
+                    || (((long) this.currentChunkLength + payload.length()) > PLANNER_TARGET_CHUNK_BYTES);
             int nextChunkId = startNewChunk ? this.chunkCount : this.currentChunkId;
             int chunkOffset = startNewChunk ? 0 : this.currentChunkLength;
-            int nextChunkLength = startNewChunk ? payloadBytes.length : (this.currentChunkLength + payloadBytes.length);
+            int nextChunkLength = startNewChunk ? payload.length() : (this.currentChunkLength + payload.length());
             byte[] previousTail = startNewChunk ? EMPTY_BYTES : this.currentChunkTail;
 
             long nextChunkLengthBytes = this.chunkLengthBytes;
@@ -3884,19 +3881,19 @@ public class AfmaEncodePlanner {
             }
 
             LinkedHashMap<String, AfmaChunkedPayloadHelper.PayloadLocator> nextLocatorsByPath = new LinkedHashMap<>(this.payloadLocatorsByPath);
-            nextLocatorsByPath.put(payloadPath, new AfmaChunkedPayloadHelper.PayloadLocator(nextChunkId, chunkOffset, payloadBytes.length));
+            nextLocatorsByPath.put(payloadPath, new AfmaChunkedPayloadHelper.PayloadLocator(nextChunkId, chunkOffset, payload.length()));
             return new IncrementalArchiveScoreState(
                     Collections.unmodifiableMap(nextLocatorsByPath),
                     nextChunkId,
                     nextChunkLength,
-                    AfmaChunkedPayloadHelper.appendDeflateTail(previousTail, payloadBytes),
+                    AfmaChunkedPayloadHelper.appendDeflateTail(previousTail, payload),
                     startNewChunk ? (this.chunkCount + 1) : this.chunkCount,
                     this.payloadCount + 1,
-                    this.estimatedCompressedPayloadBytes + AfmaChunkedPayloadHelper.estimateChunkCompressionDelta(previousTail, payloadBytes),
+                    this.estimatedCompressedPayloadBytes + AfmaChunkedPayloadHelper.estimateChunkCompressionDelta(previousTail, payload),
                     this.payloadLocatorBytes
                             + AfmaChunkedPayloadHelper.estimateVarIntBytes(nextChunkId)
                             + AfmaChunkedPayloadHelper.estimateVarIntBytes(chunkOffset)
-                            + AfmaChunkedPayloadHelper.estimateVarIntBytes(payloadBytes.length),
+                            + AfmaChunkedPayloadHelper.estimateVarIntBytes(payload.length()),
                     nextChunkLengthBytes,
                     this.cachedChunkIds,
                     this.archiveReads,
@@ -3978,12 +3975,12 @@ public class AfmaEncodePlanner {
         }
 
         @NotNull
-        protected static byte[] buildChunkTail(@NotNull List<String> chunkPayloadPaths, @NotNull Map<String, byte[]> payloadsByPath) {
+        protected static byte[] buildChunkTail(@NotNull List<String> chunkPayloadPaths, @NotNull Map<String, AfmaStoredPayload> payloadsByPath) {
             byte[] tail = EMPTY_BYTES;
             for (String payloadPath : chunkPayloadPaths) {
-                byte[] payloadBytes = payloadsByPath.get(payloadPath);
-                if (payloadBytes != null) {
-                    tail = appendDeflateTail(tail, payloadBytes);
+                AfmaStoredPayload payload = payloadsByPath.get(payloadPath);
+                if (payload != null) {
+                    tail = AfmaChunkedPayloadHelper.appendDeflateTail(tail, payload);
                 }
             }
             return tail;
@@ -4019,7 +4016,7 @@ public class AfmaEncodePlanner {
     protected static final class ArchivePlanningState {
 
         @NotNull
-        protected final LinkedHashMap<String, byte[]> payloadsByPath;
+        protected final LinkedHashMap<String, AfmaStoredPayload> payloadsByPath;
         @NotNull
         protected final Map<String, String> payloadPathsByFingerprint;
         @NotNull
@@ -4034,7 +4031,7 @@ public class AfmaEncodePlanner {
         protected final long estimatedArchiveBytes;
         protected final long scoredArchiveBytes;
 
-        protected ArchivePlanningState(@NotNull LinkedHashMap<String, byte[]> payloadsByPath,
+        protected ArchivePlanningState(@NotNull LinkedHashMap<String, AfmaStoredPayload> payloadsByPath,
                                        @NotNull Map<String, String> payloadPathsByFingerprint,
                                        @NotNull AfmaChunkedPayloadHelper.ArchivePackingHints packingHints,
                                        int nextSyntheticPayloadId, int nextKeyframeRegionId,
@@ -4095,21 +4092,21 @@ public class AfmaEncodePlanner {
         }
 
         @NotNull
-        protected ArchivePayloadAppendResult appendPayload(@Nullable byte[] payloadBytes) {
-            if ((payloadBytes == null) || (payloadBytes.length == 0)) {
+        protected ArchivePayloadAppendResult appendPayload(@Nullable AfmaStoredPayload payload) {
+            if (payload == null || payload.isEmpty()) {
                 return new ArchivePayloadAppendResult(this, null);
             }
 
-            String fingerprint = AfmaPayloadMetricsHelper.fingerprintPayload(payloadBytes);
+            String fingerprint = payload.fingerprint();
             String existingPath = this.payloadPathsByFingerprint.get(fingerprint);
             if (existingPath != null) {
                 return new ArchivePayloadAppendResult(this, existingPath);
             }
 
-            LinkedHashMap<String, byte[]> nextPayloadsByPath = new LinkedHashMap<>(this.payloadsByPath);
+            LinkedHashMap<String, AfmaStoredPayload> nextPayloadsByPath = new LinkedHashMap<>(this.payloadsByPath);
             LinkedHashMap<String, String> nextPayloadPathsByFingerprint = new LinkedHashMap<>(this.payloadPathsByFingerprint);
             String syntheticPath = AfmaChunkedPayloadHelper.syntheticPayloadPath(this.nextSyntheticPayloadId);
-            nextPayloadsByPath.put(syntheticPath, payloadBytes);
+            nextPayloadsByPath.put(syntheticPath, payload);
             nextPayloadPathsByFingerprint.put(fingerprint, syntheticPath);
             return new ArchivePayloadAppendResult(
                     this.advancePlanningState(
@@ -4120,7 +4117,7 @@ public class AfmaEncodePlanner {
                             this.nextKeyframeRegionId,
                             this.currentIntroKeyframeRegionId,
                             this.currentMainKeyframeRegionId,
-                            this.plannerScoreState.appendPayload(syntheticPath, payloadBytes)
+                            this.plannerScoreState.appendPayload(syntheticPath, payload)
                     ),
                     syntheticPath
             );
@@ -4171,7 +4168,7 @@ public class AfmaEncodePlanner {
         }
 
         @NotNull
-        protected ArchivePlanningState advancePlanningState(@NotNull LinkedHashMap<String, byte[]> payloadsByPath,
+        protected ArchivePlanningState advancePlanningState(@NotNull LinkedHashMap<String, AfmaStoredPayload> payloadsByPath,
                                                             @NotNull Map<String, String> payloadPathsByFingerprint,
                                                             @NotNull AfmaChunkedPayloadHelper.ArchivePackingHints packingHints,
                                                             int nextSyntheticPayloadId, int nextKeyframeRegionId,

@@ -8,6 +8,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -51,17 +52,17 @@ public final class AfmaChunkedPayloadHelper {
     }
 
     @NotNull
-    public static PackedPayloadArchive buildArchiveLayout(@NotNull Map<String, byte[]> payloads) {
+    public static PackedPayloadArchive buildArchiveLayout(@NotNull Map<String, AfmaStoredPayload> payloads) {
         return buildArchiveLayout(payloads, ArchivePackingHints.empty());
     }
 
     @NotNull
-    public static PackedPayloadArchive buildArchiveLayout(@NotNull Map<String, byte[]> payloads, @Nullable ArchivePackingHints packingHints) {
+    public static PackedPayloadArchive buildArchiveLayout(@NotNull Map<String, AfmaStoredPayload> payloads, @Nullable ArchivePackingHints packingHints) {
         return buildArchiveLayoutInternal(payloads, packingHints, false);
     }
 
     @NotNull
-    public static PackedPayloadArchive simulateArchiveLayout(@NotNull Map<String, byte[]> payloads, @Nullable ArchivePackingHints packingHints) {
+    public static PackedPayloadArchive simulateArchiveLayout(@NotNull Map<String, AfmaStoredPayload> payloads, @Nullable ArchivePackingHints packingHints) {
         return buildArchiveLayoutInternal(payloads, packingHints, true);
     }
 
@@ -121,6 +122,51 @@ public final class AfmaChunkedPayloadHelper {
         return Math.max(0L, combinedEstimate - tailEstimate);
     }
 
+    public static long estimateChunkCompressionDelta(@NotNull byte[] previousTail, @NotNull AfmaStoredPayload payload) {
+        Objects.requireNonNull(previousTail);
+        Objects.requireNonNull(payload);
+        if (payload.isEmpty()) {
+            return 0L;
+        }
+        if (previousTail.length == 0) {
+            return payload.estimatedArchiveBytes();
+        }
+
+        Deflater deflater = new Deflater(9, true);
+        byte[] readBuffer = new byte[8192];
+        byte[] deflateBuffer = new byte[8192];
+        long combinedEstimate = 0L;
+        try (InputStream in = payload.openStream()) {
+            deflater.setInput(previousTail);
+            while (!deflater.needsInput()) {
+                combinedEstimate += deflater.deflate(deflateBuffer);
+            }
+
+            int read;
+            while ((read = in.read(readBuffer)) >= 0) {
+                if (read <= 0) {
+                    continue;
+                }
+                deflater.setInput(readBuffer, 0, read);
+                while (!deflater.needsInput()) {
+                    combinedEstimate += deflater.deflate(deflateBuffer);
+                }
+            }
+
+            deflater.finish();
+            while (!deflater.finished()) {
+                combinedEstimate += deflater.deflate(deflateBuffer);
+            }
+        } catch (IOException ex) {
+            throw new IllegalStateException("Failed to estimate AFMA payload chunk compression delta", ex);
+        } finally {
+            deflater.end();
+        }
+
+        long tailEstimate = AfmaPayloadMetricsHelper.estimateArchiveBytes(previousTail);
+        return Math.max(0L, combinedEstimate - tailEstimate);
+    }
+
     @NotNull
     public static byte[] appendDeflateTail(@NotNull byte[] currentTail, @NotNull byte[] payloadBytes) {
         Objects.requireNonNull(currentTail);
@@ -140,16 +186,37 @@ public final class AfmaChunkedPayloadHelper {
     }
 
     @NotNull
-    protected static PackedPayloadArchive buildArchiveLayoutInternal(@NotNull Map<String, byte[]> payloads,
+    public static byte[] appendDeflateTail(@NotNull byte[] currentTail, @NotNull AfmaStoredPayload payload) {
+        Objects.requireNonNull(currentTail);
+        Objects.requireNonNull(payload);
+        if (payload.isEmpty()) {
+            return currentTail;
+        }
+
+        int payloadLength = payload.length();
+        int resultLength = Math.min(PLANNER_DEFLATE_TAIL_BYTES, currentTail.length + payloadLength);
+        byte[] resultTail = new byte[resultLength];
+        byte[] payloadTail = payload.tailBytesUnsafe();
+        int payloadBytesInTail = Math.min(payloadTail.length, resultLength);
+        System.arraycopy(payloadTail, payloadTail.length - payloadBytesInTail, resultTail, resultLength - payloadBytesInTail, payloadBytesInTail);
+        int carriedPrefixBytes = resultLength - payloadBytesInTail;
+        if (carriedPrefixBytes > 0) {
+            System.arraycopy(currentTail, currentTail.length - carriedPrefixBytes, resultTail, 0, carriedPrefixBytes);
+        }
+        return resultTail;
+    }
+
+    @NotNull
+    protected static PackedPayloadArchive buildArchiveLayoutInternal(@NotNull Map<String, AfmaStoredPayload> payloads,
                                                                     @Nullable ArchivePackingHints packingHints,
                                                                     boolean approximateCompression) {
         Objects.requireNonNull(payloads);
         LinkedHashMap<String, PayloadData> payloadDataByPath = new LinkedHashMap<>();
         int insertionOrder = 0;
-        for (Map.Entry<String, byte[]> entry : payloads.entrySet()) {
+        for (Map.Entry<String, AfmaStoredPayload> entry : payloads.entrySet()) {
             String payloadPath = Objects.requireNonNull(entry.getKey());
-            byte[] payloadBytes = Objects.requireNonNull(entry.getValue(), "AFMA payload bytes were NULL for " + payloadPath);
-            payloadDataByPath.put(payloadPath, new PayloadData(payloadPath, payloadBytes, insertionOrder++));
+            AfmaStoredPayload payload = Objects.requireNonNull(entry.getValue(), "AFMA payload was NULL for " + payloadPath);
+            payloadDataByPath.put(payloadPath, new PayloadData(payloadPath, payload, insertionOrder++));
         }
 
         if (payloadDataByPath.isEmpty()) {
@@ -416,7 +483,7 @@ public final class AfmaChunkedPayloadHelper {
             ChunkPlanBuilder chunkBuilder = new ChunkPlanBuilder();
             chunkBuilder.add(seedPayloadPath, seedPayload, seedStats);
 
-            if (seedPayload.bytes().length < targetChunkBytes) {
+            if (seedPayload.payload().length() < targetChunkBytes) {
                 while (true) {
                     String nextPayloadPath = chooseNextChunkPayload(chunkBuilder, remainingPayloadPaths, payloadDataByPath, packingModel, targetChunkBytes);
                     if (nextPayloadPath == null) {
@@ -448,14 +515,14 @@ public final class AfmaChunkedPayloadHelper {
             ArrayList<String> chunkPayloadPaths = new ArrayList<>(chunkBuilder.payloadPaths());
             for (String payloadPath : chunkPayloadPaths) {
                 PayloadData payloadData = Objects.requireNonNull(payloadDataByPath.get(payloadPath));
-                PayloadLocator locator = new PayloadLocator(chunkId, offset, payloadData.bytes().length);
+                PayloadLocator locator = new PayloadLocator(chunkId, offset, payloadData.payload().length());
                 payloadIdsByPath.put(payloadPath, payloadIdsByPath.size());
                 payloadLocators.add(locator);
                 payloadLocatorsByPath.put(payloadPath, locator);
                 payloadIndexBodyBytes += estimateVarIntBytes(chunkId)
                         + estimateVarIntBytes(offset)
-                        + estimateVarIntBytes(payloadData.bytes().length);
-                offset += payloadData.bytes().length;
+                        + estimateVarIntBytes(payloadData.payload().length());
+                offset += payloadData.payload().length();
             }
 
             chunkPlans.add(new ChunkPlan(chunkEntryPath(chunkId), chunkPayloadPaths, chunkBuilder.uncompressedLength()));
@@ -509,7 +576,7 @@ public final class AfmaChunkedPayloadHelper {
         double bestScore = Double.NEGATIVE_INFINITY;
         for (String payloadPath : remainingPayloadPaths) {
             PayloadData payloadData = Objects.requireNonNull(payloadDataByPath.get(payloadPath));
-            if (payloadData.bytes().length > remainingCapacity) {
+            if (payloadData.payload().length() > remainingCapacity) {
                 continue;
             }
 
@@ -553,10 +620,10 @@ public final class AfmaChunkedPayloadHelper {
             score -= 64D;
         }
 
-        double fillRatio = (double) (chunkBuilder.uncompressedLength() + payloadData.bytes().length) / Math.max(1, targetChunkBytes);
+        double fillRatio = (double) (chunkBuilder.uncompressedLength() + payloadData.payload().length()) / Math.max(1, targetChunkBytes);
         score += fillRatio * 128D;
-        score -= Math.max(0D, (targetChunkBytes - (chunkBuilder.uncompressedLength() + payloadData.bytes().length)) / 1024D);
-        if ((chunkBuilder.uncompressedLength() + payloadData.bytes().length) == targetChunkBytes) {
+        score -= Math.max(0D, (targetChunkBytes - (chunkBuilder.uncompressedLength() + payloadData.payload().length())) / 1024D);
+        if ((chunkBuilder.uncompressedLength() + payloadData.payload().length()) == targetChunkBytes) {
             score += 64D;
         }
         return score;
@@ -573,32 +640,41 @@ public final class AfmaChunkedPayloadHelper {
             byte[] tail = EMPTY_BYTES;
             long compressedBytes = 0L;
             for (String payloadPath : chunkPayloadPaths) {
-                byte[] payloadBytes = Objects.requireNonNull(payloadDataByPath.get(payloadPath)).bytes();
-                compressedBytes += estimateChunkCompressionDelta(tail, payloadBytes);
-                tail = appendDeflateTail(tail, payloadBytes);
+                AfmaStoredPayload payload = Objects.requireNonNull(payloadDataByPath.get(payloadPath)).payload();
+                compressedBytes += estimateChunkCompressionDelta(tail, payload);
+                tail = appendDeflateTail(tail, payload);
             }
             return Math.max(1L, compressedBytes);
         }
 
         Deflater deflater = new Deflater(9, true);
-        byte[] buffer = new byte[8192];
+        byte[] readBuffer = new byte[8192];
+        byte[] deflateBuffer = new byte[8192];
         long compressedBytes = 0L;
         try {
             for (String payloadPath : chunkPayloadPaths) {
-                byte[] payloadBytes = Objects.requireNonNull(payloadDataByPath.get(payloadPath)).bytes();
-                if (payloadBytes.length <= 0) {
+                AfmaStoredPayload payload = Objects.requireNonNull(payloadDataByPath.get(payloadPath)).payload();
+                if (payload.isEmpty()) {
                     continue;
                 }
 
-                deflater.setInput(payloadBytes);
-                while (!deflater.needsInput()) {
-                    compressedBytes += deflater.deflate(buffer);
+                try (InputStream in = payload.openStream()) {
+                    int read;
+                    while ((read = in.read(readBuffer)) >= 0) {
+                        if (read <= 0) {
+                            continue;
+                        }
+                        deflater.setInput(readBuffer, 0, read);
+                        while (!deflater.needsInput()) {
+                            compressedBytes += deflater.deflate(deflateBuffer);
+                        }
+                    }
                 }
             }
 
             deflater.finish();
             while (!deflater.finished()) {
-                compressedBytes += deflater.deflate(buffer);
+                compressedBytes += deflater.deflate(deflateBuffer);
             }
         } finally {
             deflater.end();
@@ -770,7 +846,7 @@ public final class AfmaChunkedPayloadHelper {
         }
     }
 
-    protected record PayloadData(@NotNull String path, @NotNull byte[] bytes, int insertionOrder) {
+    protected record PayloadData(@NotNull String path, @NotNull AfmaStoredPayload payload, int insertionOrder) {
     }
 
     protected record PackingModel(@NotNull List<PayloadAccessFrame> accessFrames,
@@ -849,7 +925,7 @@ public final class AfmaChunkedPayloadHelper {
 
         public void add(@NotNull String payloadPath, @NotNull PayloadData payloadData, @NotNull PayloadPackingStats stats) {
             this.payloadPaths.add(payloadPath);
-            this.uncompressedLength += payloadData.bytes().length;
+            this.uncompressedLength += payloadData.payload().length();
             this.centerSum += stats.center();
             this.centerCount++;
             if (stats.wasAccessed()) {

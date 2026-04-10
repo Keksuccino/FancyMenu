@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaBinaryFrameIndexHelper;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaChunkedPayloadHelper;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaDecoder;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaStoredPayload;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.archivers.zip.UnixStat;
@@ -49,12 +50,12 @@ public class AfmaArchiveWriter {
         try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile)))) {
             out.setEncoding(StandardCharsets.UTF_8.name());
             out.setLevel(9);
-            LinkedHashMap<String, byte[]> chunkedPayloads = new LinkedHashMap<>();
-            byte[] thumbnailBytes = null;
-            for (Map.Entry<String, byte[]> entry : plan.getPayloads().entrySet()) {
+            LinkedHashMap<String, AfmaStoredPayload> chunkedPayloads = new LinkedHashMap<>();
+            AfmaStoredPayload thumbnailPayload = null;
+            for (Map.Entry<String, AfmaStoredPayload> entry : plan.getPayloads().entrySet()) {
                 String normalizedPath = AfmaDecoder.normalizeEntryPath(entry.getKey());
                 if ("thumbnail.bin".equalsIgnoreCase(normalizedPath)) {
-                    thumbnailBytes = entry.getValue();
+                    thumbnailPayload = entry.getValue();
                     continue;
                 }
                 chunkedPayloads.put(entry.getKey(), entry.getValue());
@@ -64,7 +65,7 @@ public class AfmaArchiveWriter {
             byte[] frameIndexBytes = AfmaBinaryFrameIndexHelper.encodeFrameIndex(plan.getFrameIndex(), payloadArchive.payloadIdsByPath());
             byte[] payloadIndexBytes = AfmaChunkedPayloadHelper.encodePayloadIndex(payloadArchive);
 
-            int totalEntries = payloadArchive.chunkPlans().size() + 3 + ((thumbnailBytes != null) ? 1 : 0);
+            int totalEntries = payloadArchive.chunkPlans().size() + 3 + ((thumbnailPayload != null) ? 1 : 0);
             int writtenEntries = 0;
 
             checkCancelled(cancellationRequested);
@@ -85,9 +86,9 @@ public class AfmaArchiveWriter {
                 writtenEntries++;
                 reportProgress(progressListener, chunkPlan.entryPath(), writtenEntries, totalEntries);
             }
-            if (thumbnailBytes != null) {
+            if (thumbnailPayload != null) {
                 checkCancelled(cancellationRequested);
-                this.writeBinaryEntry(out, "thumbnail.bin", thumbnailBytes);
+                this.writeBinaryEntry(out, "thumbnail.bin", thumbnailPayload);
                 writtenEntries++;
                 reportProgress(progressListener, "thumbnail.bin", writtenEntries, totalEntries);
             }
@@ -112,8 +113,24 @@ public class AfmaArchiveWriter {
         out.closeArchiveEntry();
     }
 
+    protected void writeBinaryEntry(@NotNull ZipArchiveOutputStream out, @NotNull String path, @NotNull AfmaStoredPayload payload) throws IOException {
+        ZipArchiveEntry entry = new ZipArchiveEntry(path);
+        entry.setSize(payload.length());
+        entry.setTime(0L);
+        entry.setCreationTime(ZIP_EPOCH);
+        entry.setLastModifiedTime(ZIP_EPOCH);
+        entry.setLastAccessTime(ZIP_EPOCH);
+        entry.setUnixMode(UnixStat.FILE_FLAG | 0644);
+        out.putArchiveEntry(entry);
+        try {
+            payload.writeTo(out);
+        } finally {
+            out.closeArchiveEntry();
+        }
+    }
+
     protected void writePayloadChunkEntry(@NotNull ZipArchiveOutputStream out, @NotNull AfmaChunkedPayloadHelper.ChunkPlan chunkPlan,
-                                          @NotNull Map<String, byte[]> payloads, @Nullable BooleanSupplier cancellationRequested) throws IOException {
+                                          @NotNull Map<String, AfmaStoredPayload> payloads, @Nullable BooleanSupplier cancellationRequested) throws IOException {
         ZipArchiveEntry entry = new ZipArchiveEntry(chunkPlan.entryPath());
         entry.setSize(chunkPlan.uncompressedLength());
         entry.setTime(0L);
@@ -125,8 +142,8 @@ public class AfmaArchiveWriter {
         try {
             for (String payloadPath : chunkPlan.payloadPaths()) {
                 checkCancelled(cancellationRequested);
-                byte[] payloadBytes = Objects.requireNonNull(payloads.get(payloadPath), "AFMA payload bytes were NULL for " + payloadPath);
-                out.write(payloadBytes);
+                AfmaStoredPayload payload = Objects.requireNonNull(payloads.get(payloadPath), "AFMA payload was NULL for " + payloadPath);
+                payload.writeTo(out);
             }
         } finally {
             out.closeArchiveEntry();
