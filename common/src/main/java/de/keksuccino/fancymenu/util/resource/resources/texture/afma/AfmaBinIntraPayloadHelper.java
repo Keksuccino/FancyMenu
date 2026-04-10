@@ -7,6 +7,7 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -71,14 +72,19 @@ public final class AfmaBinIntraPayloadHelper {
 
         EncodePreferences normalizedPreferences = (preferences != null) ? preferences : EncodePreferences.lossless();
         List<PixelCandidateContext> pixelCandidates = collectPixelCandidates(width, height, sourcePixels, normalizedPreferences);
-        EncodedPayloadCandidate bestCandidate = shouldParallelizeModeSelection(width, height, pixelCandidates.size())
+        ScoredPayloadCandidate bestCandidate = shouldParallelizeModeSelection(width, height, pixelCandidates.size())
                 ? selectBestCandidateInParallel(width, height, pixelCandidates)
                 : selectBestCandidateSequential(width, height, pixelCandidates);
 
         if (bestCandidate == null) {
             throw new IOException("Failed to build an AFMA BIN_INTRA payload");
         }
-        return new StoredEncodedPayloadResult(bestCandidate.payload(), bestCandidate.reconstructedPixels(), bestCandidate.lossless(), bestCandidate.mode());
+        AfmaStoredPayload payload = writePayload(bestCandidate.payloadWriter());
+        if ((payload.length() != bestCandidate.payloadLength()) || (payload.estimatedArchiveBytes() != bestCandidate.estimatedArchiveBytes())) {
+            payload.close();
+            throw new IOException("AFMA BIN_INTRA payload metrics changed between scoring and materialization");
+        }
+        return new StoredEncodedPayloadResult(payload, bestCandidate.reconstructedPixels(), bestCandidate.lossless(), bestCandidate.mode());
     }
 
     @NotNull
@@ -186,26 +192,25 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     @Nullable
-    protected static EncodedPayloadCandidate buildSolidCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate) throws IOException {
+    protected static ScoredPayloadCandidate buildSolidCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate) throws IOException {
         if (!pixelCandidate.isSolidColor()) {
             return null;
         }
         int firstColor = pixelCandidate.firstColor();
-        AfmaStoredPayload payload = writePayload(out -> {
+        return scoreCandidate(Mode.SOLID, pixelCandidate.pixels(), pixelCandidate.lossless(), 1, out -> {
             writeHeader(out, Mode.SOLID, width, height);
             out.writeInt(firstColor);
         });
-        return new EncodedPayloadCandidate(Mode.SOLID, payload, pixelCandidate.pixels(), pixelCandidate.lossless());
     }
 
     @Nullable
-    protected static EncodedPayloadCandidate buildIndexedCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate) throws IOException {
+    protected static ScoredPayloadCandidate buildIndexedCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate) throws IOException {
         return buildIndexedCandidate(width, height, pixelCandidate, PaletteOrdering.FREQUENCY);
     }
 
     @Nullable
-    protected static EncodedPayloadCandidate buildIndexedCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate,
-                                                                   @NotNull PaletteOrdering paletteOrdering) throws IOException {
+    protected static ScoredPayloadCandidate buildIndexedCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate,
+                                                                  @NotNull PaletteOrdering paletteOrdering) throws IOException {
         Map<Integer, Integer> colorCounts = pixelCandidate.fullColorCounts();
         if (colorCounts == null) {
             return null;
@@ -233,7 +238,8 @@ public final class AfmaBinIntraPayloadHelper {
         }
 
         int packedRowBytes = packedRowBytes(width, bitsPerIndex);
-        AfmaStoredPayload payload = writePayload(out -> {
+        return scoreCandidate(Mode.INDEXED, pixelCandidate.pixels(), pixelCandidate.lossless(),
+                paletteOrdering == PaletteOrdering.STABLE_COLOR ? 0 : 1, out -> {
             writeHeader(out, Mode.INDEXED, width, height);
             out.writeByte(paletteHasAlpha ? 1 : 0);
             out.writeByte(bitsPerIndex);
@@ -256,59 +262,54 @@ public final class AfmaBinIntraPayloadHelper {
                     rowBuffer
             ));
         });
-        return new EncodedPayloadCandidate(Mode.INDEXED, payload, pixelCandidate.pixels(), pixelCandidate.lossless(),
-                paletteOrdering == PaletteOrdering.STABLE_COLOR ? 0 : 1);
     }
 
     @NotNull
-    protected static EncodedPayloadCandidate buildFilteredCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate,
-                                                                    @NotNull Mode mode) throws IOException {
+    protected static ScoredPayloadCandidate buildFilteredCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate,
+                                                                   @NotNull Mode mode) throws IOException {
         int channels = switch (mode) {
             case RGB_FILTERED -> RGB_CHANNELS;
             case RGBA_FILTERED -> RGBA_CHANNELS;
             default -> throw new IllegalArgumentException("Unsupported AFMA BIN_INTRA filtered mode: " + mode);
         };
         int[] pixels = pixelCandidate.pixels();
-        AfmaStoredPayload payload = writePayload(out -> {
+        return scoreCandidate(mode, pixelCandidate.pixels(), pixelCandidate.lossless(), 1, out -> {
             writeHeader(out, mode, width, height);
             writeFilteredRows(out, width * channels, height, channels, (rowIndex, rowBuffer) ->
                     fillInterleavedColorRow(pixels, width, rowIndex, channels, rowBuffer));
         });
-        return new EncodedPayloadCandidate(mode, payload, pixelCandidate.pixels(), pixelCandidate.lossless());
     }
 
     @NotNull
-    protected static EncodedPayloadCandidate buildPlanarFilteredCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate,
-                                                                          @NotNull Mode mode) throws IOException {
+    protected static ScoredPayloadCandidate buildPlanarFilteredCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate,
+                                                                         @NotNull Mode mode) throws IOException {
         int channels = switch (mode) {
             case RGB_PLANAR_FILTERED -> RGB_CHANNELS;
             case RGBA_PLANAR_FILTERED -> RGBA_CHANNELS;
             default -> throw new IllegalArgumentException("Unsupported AFMA BIN_INTRA planar mode: " + mode);
         };
         int[] pixels = pixelCandidate.pixels();
-        AfmaStoredPayload payload = writePayload(out -> {
+        return scoreCandidate(mode, pixelCandidate.pixels(), pixelCandidate.lossless(), 1, out -> {
             writeHeader(out, mode, width, height);
             writePlanarFiltered(out, pixels, width, height, channels);
         });
-        return new EncodedPayloadCandidate(mode, payload, pixelCandidate.pixels(), pixelCandidate.lossless(), 1);
     }
 
     @NotNull
-    protected static EncodedPayloadCandidate buildSplitAlphaCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate) throws IOException {
+    protected static ScoredPayloadCandidate buildSplitAlphaCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate) throws IOException {
         int[] pixels = pixelCandidate.pixels();
-        AfmaStoredPayload payload = writePayload(out -> {
+        return scoreCandidate(Mode.RGB_PLUS_ALPHA_SPLIT, pixelCandidate.pixels(), pixelCandidate.lossless(), 1, out -> {
             writeHeader(out, Mode.RGB_PLUS_ALPHA_SPLIT, width, height);
             writeFilteredRows(out, width * RGB_CHANNELS, height, RGB_CHANNELS, (rowIndex, rowBuffer) ->
                     fillInterleavedColorRow(pixels, width, rowIndex, RGB_CHANNELS, rowBuffer));
             writeFilteredRows(out, width, height, 1, (rowIndex, rowBuffer) ->
                     fillFullAlphaRow(pixels, width, rowIndex, rowBuffer));
         });
-        return new EncodedPayloadCandidate(Mode.RGB_PLUS_ALPHA_SPLIT, payload, pixelCandidate.pixels(), pixelCandidate.lossless());
     }
 
     @Nullable
-    protected static EncodedPayloadCandidate buildIndexedColorPlusAlphaCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate,
-                                                                                 @NotNull PaletteOrdering paletteOrdering) throws IOException {
+    protected static ScoredPayloadCandidate buildIndexedColorPlusAlphaCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate,
+                                                                                @NotNull PaletteOrdering paletteOrdering) throws IOException {
         Map<Integer, Integer> rgbCounts = pixelCandidate.rgbColorCounts();
         if (rgbCounts == null) {
             return null;
@@ -343,7 +344,8 @@ public final class AfmaBinIntraPayloadHelper {
             alphaMode = AlphaMaskMode.FULL.id();
         }
 
-        AfmaStoredPayload payload = writePayload(out -> {
+        return scoreCandidate(Mode.INDEXED_COLOR_PLUS_ALPHA, pixelCandidate.pixels(), pixelCandidate.lossless(),
+                paletteOrdering == PaletteOrdering.STABLE_COLOR ? 0 : 1, out -> {
             writeHeader(out, Mode.INDEXED_COLOR_PLUS_ALPHA, width, height);
             out.writeByte(alphaMode);
             out.writeByte(bitsPerIndex);
@@ -371,13 +373,11 @@ public final class AfmaBinIntraPayloadHelper {
                         fillFullAlphaRow(pixels, width, rowIndex, rowBuffer));
             }
         });
-        return new EncodedPayloadCandidate(Mode.INDEXED_COLOR_PLUS_ALPHA, payload, pixelCandidate.pixels(),
-                pixelCandidate.lossless(), paletteOrdering == PaletteOrdering.STABLE_COLOR ? 0 : 1);
     }
 
     @Nullable
-    protected static EncodedPayloadCandidate buildColorPlusAlphaMaskCandidate(int width, int height,
-                                                                              @NotNull PixelCandidateContext pixelCandidate) throws IOException {
+    protected static ScoredPayloadCandidate buildColorPlusAlphaMaskCandidate(int width, int height,
+                                                                             @NotNull PixelCandidateContext pixelCandidate) throws IOException {
         if (!pixelCandidate.hasUniformRgb() || !pixelCandidate.alphaVaries()) {
             return null;
         }
@@ -394,7 +394,7 @@ public final class AfmaBinIntraPayloadHelper {
         }
 
         int[] pixels = pixelCandidate.pixels();
-        AfmaStoredPayload payload = writePayload(out -> {
+        return scoreCandidate(Mode.COLOR_PLUS_ALPHA_MASK, pixelCandidate.pixels(), pixelCandidate.lossless(), 1, out -> {
             writeHeader(out, Mode.COLOR_PLUS_ALPHA_MASK, width, height);
             out.writeByte(red);
             out.writeByte(green);
@@ -409,7 +409,6 @@ public final class AfmaBinIntraPayloadHelper {
                         fillFullAlphaRow(pixels, width, rowIndex, rowBuffer));
             }
         });
-        return new EncodedPayloadCandidate(Mode.COLOR_PLUS_ALPHA_MASK, payload, pixelCandidate.pixels(), pixelCandidate.lossless());
     }
 
     protected static void decodeSolidIntoArgbBuffer(@NotNull DataInputStream in, int width, int height,
@@ -635,6 +634,20 @@ public final class AfmaBinIntraPayloadHelper {
         });
     }
 
+    @NotNull
+    protected static PayloadMetrics measurePayload(@NotNull PayloadWriter writer) throws IOException {
+        Objects.requireNonNull(writer);
+        // Score candidate payloads without materializing them so loser modes never hit disk or heap buffers.
+        try (AfmaStoredPayload.PayloadAnalysisOutputStream out =
+                     new AfmaStoredPayload.PayloadAnalysisOutputStream(OutputStream.nullOutputStream())) {
+            DataOutputStream dataOut = new DataOutputStream(out);
+            writer.write(dataOut);
+            dataOut.flush();
+            AfmaStoredPayload.PayloadAnalysis analysis = out.finishAnalysis();
+            return new PayloadMetrics(analysis.length(), analysis.estimatedArchiveBytes());
+        }
+    }
+
     protected static void writeFilteredRows(@NotNull DataOutputStream out, int rowBytes, int height, int bytesPerPixel,
                                             @NotNull RowWriter rowWriter) throws IOException {
         if (rowBytes < 0 || height <= 0 || bytesPerPixel <= 0) {
@@ -759,36 +772,29 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     @Nullable
-    protected static EncodedPayloadCandidate buildBestCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate) throws IOException {
-        EncodedPayloadCandidate bestCandidate = null;
-        try {
-            bestCandidate = pickBetterCandidate(bestCandidate, buildSolidCandidate(width, height, pixelCandidate));
-            bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedCandidate(width, height, pixelCandidate, PaletteOrdering.FREQUENCY));
-            bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedCandidate(width, height, pixelCandidate, PaletteOrdering.STABLE_COLOR));
+    protected static ScoredPayloadCandidate buildBestCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate) throws IOException {
+        ScoredPayloadCandidate bestCandidate = null;
+        bestCandidate = pickBetterCandidate(bestCandidate, buildSolidCandidate(width, height, pixelCandidate));
+        bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedCandidate(width, height, pixelCandidate, PaletteOrdering.FREQUENCY));
+        bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedCandidate(width, height, pixelCandidate, PaletteOrdering.STABLE_COLOR));
 
-            if (pixelCandidate.hasAlpha()) {
-                bestCandidate = pickBetterCandidate(bestCandidate, buildFilteredCandidate(width, height, pixelCandidate, Mode.RGBA_FILTERED));
-                bestCandidate = pickBetterCandidate(bestCandidate, buildPlanarFilteredCandidate(width, height, pixelCandidate, Mode.RGBA_PLANAR_FILTERED));
-                bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedColorPlusAlphaCandidate(width, height, pixelCandidate, PaletteOrdering.FREQUENCY));
-                bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedColorPlusAlphaCandidate(width, height, pixelCandidate, PaletteOrdering.STABLE_COLOR));
-                bestCandidate = pickBetterCandidate(bestCandidate, buildSplitAlphaCandidate(width, height, pixelCandidate));
-                bestCandidate = pickBetterCandidate(bestCandidate, buildColorPlusAlphaMaskCandidate(width, height, pixelCandidate));
-            } else {
-                bestCandidate = pickBetterCandidate(bestCandidate, buildFilteredCandidate(width, height, pixelCandidate, Mode.RGB_FILTERED));
-                bestCandidate = pickBetterCandidate(bestCandidate, buildPlanarFilteredCandidate(width, height, pixelCandidate, Mode.RGB_PLANAR_FILTERED));
-            }
-            return bestCandidate;
-        } catch (Throwable throwable) {
-            if (bestCandidate != null) {
-                bestCandidate.close();
-            }
-            throw throwable;
+        if (pixelCandidate.hasAlpha()) {
+            bestCandidate = pickBetterCandidate(bestCandidate, buildFilteredCandidate(width, height, pixelCandidate, Mode.RGBA_FILTERED));
+            bestCandidate = pickBetterCandidate(bestCandidate, buildPlanarFilteredCandidate(width, height, pixelCandidate, Mode.RGBA_PLANAR_FILTERED));
+            bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedColorPlusAlphaCandidate(width, height, pixelCandidate, PaletteOrdering.FREQUENCY));
+            bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedColorPlusAlphaCandidate(width, height, pixelCandidate, PaletteOrdering.STABLE_COLOR));
+            bestCandidate = pickBetterCandidate(bestCandidate, buildSplitAlphaCandidate(width, height, pixelCandidate));
+            bestCandidate = pickBetterCandidate(bestCandidate, buildColorPlusAlphaMaskCandidate(width, height, pixelCandidate));
+        } else {
+            bestCandidate = pickBetterCandidate(bestCandidate, buildFilteredCandidate(width, height, pixelCandidate, Mode.RGB_FILTERED));
+            bestCandidate = pickBetterCandidate(bestCandidate, buildPlanarFilteredCandidate(width, height, pixelCandidate, Mode.RGB_PLANAR_FILTERED));
         }
+        return bestCandidate;
     }
 
     @Nullable
-    protected static EncodedPayloadCandidate pickBetterCandidate(@Nullable EncodedPayloadCandidate currentBest,
-                                                                 @Nullable EncodedPayloadCandidate candidate) {
+    protected static ScoredPayloadCandidate pickBetterCandidate(@Nullable ScoredPayloadCandidate currentBest,
+                                                                @Nullable ScoredPayloadCandidate candidate) {
         if (candidate == null) {
             return currentBest;
         }
@@ -796,10 +802,8 @@ public final class AfmaBinIntraPayloadHelper {
             return candidate;
         }
         if (candidate.isBetterThan(currentBest)) {
-            currentBest.close();
             return candidate;
         }
-        candidate.close();
         return currentBest;
     }
 
@@ -1054,27 +1058,20 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     @Nullable
-    protected static EncodedPayloadCandidate selectBestCandidateSequential(int width, int height,
-                                                                           @NotNull List<PixelCandidateContext> pixelCandidates) throws IOException {
-        EncodedPayloadCandidate bestCandidate = null;
-        try {
-            for (PixelCandidateContext pixelCandidate : pixelCandidates) {
-                bestCandidate = pickBetterCandidate(bestCandidate, buildBestCandidate(width, height, pixelCandidate));
-            }
-            return bestCandidate;
-        } catch (Throwable throwable) {
-            if (bestCandidate != null) {
-                bestCandidate.close();
-            }
-            throw throwable;
+    protected static ScoredPayloadCandidate selectBestCandidateSequential(int width, int height,
+                                                                          @NotNull List<PixelCandidateContext> pixelCandidates) throws IOException {
+        ScoredPayloadCandidate bestCandidate = null;
+        for (PixelCandidateContext pixelCandidate : pixelCandidates) {
+            bestCandidate = pickBetterCandidate(bestCandidate, buildBestCandidate(width, height, pixelCandidate));
         }
+        return bestCandidate;
     }
 
     @Nullable
-    protected static EncodedPayloadCandidate selectBestCandidateInParallel(int width, int height,
-                                                                           @NotNull List<PixelCandidateContext> pixelCandidates) throws IOException {
+    protected static ScoredPayloadCandidate selectBestCandidateInParallel(int width, int height,
+                                                                          @NotNull List<PixelCandidateContext> pixelCandidates) throws IOException {
         // Keep parallel work coarse-grained so each task can reuse its pixel analysis across all BIN_INTRA modes.
-        List<CompletableFuture<EncodedPayloadCandidate>> candidateFutures = new ArrayList<>(pixelCandidates.size());
+        List<CompletableFuture<ScoredPayloadCandidate>> candidateFutures = new ArrayList<>(pixelCandidates.size());
         for (PixelCandidateContext pixelCandidate : pixelCandidates) {
             candidateFutures.add(CompletableFuture.supplyAsync(() -> {
                 try {
@@ -1085,23 +1082,15 @@ public final class AfmaBinIntraPayloadHelper {
             }));
         }
 
-        EncodedPayloadCandidate bestCandidate = null;
-        try {
-            for (CompletableFuture<EncodedPayloadCandidate> candidateFuture : candidateFutures) {
-                bestCandidate = pickBetterCandidate(bestCandidate, joinCandidate(candidateFuture));
-            }
-        } catch (Throwable throwable) {
-            closeCompletedCandidates(candidateFutures);
-            if (bestCandidate != null) {
-                bestCandidate.close();
-            }
-            throw throwable;
+        ScoredPayloadCandidate bestCandidate = null;
+        for (CompletableFuture<ScoredPayloadCandidate> candidateFuture : candidateFutures) {
+            bestCandidate = pickBetterCandidate(bestCandidate, joinCandidate(candidateFuture));
         }
         return bestCandidate;
     }
 
     @Nullable
-    protected static EncodedPayloadCandidate joinCandidate(@NotNull CompletableFuture<EncodedPayloadCandidate> candidateFuture) throws IOException {
+    protected static ScoredPayloadCandidate joinCandidate(@NotNull CompletableFuture<ScoredPayloadCandidate> candidateFuture) throws IOException {
         try {
             return candidateFuture.join();
         } catch (CompletionException ex) {
@@ -1116,19 +1105,6 @@ public final class AfmaBinIntraPayloadHelper {
                 throw error;
             }
             throw new IOException("Failed to build an AFMA BIN_INTRA payload candidate", cause);
-        }
-    }
-
-    protected static void closeCompletedCandidates(@NotNull List<CompletableFuture<EncodedPayloadCandidate>> candidateFutures) {
-        for (CompletableFuture<EncodedPayloadCandidate> candidateFuture : candidateFutures) {
-            if (!candidateFuture.isDone() || candidateFuture.isCompletedExceptionally() || candidateFuture.isCancelled()) {
-                continue;
-            }
-
-            EncodedPayloadCandidate candidate = candidateFuture.getNow(null);
-            if (candidate != null) {
-                candidate.close();
-            }
         }
     }
 
@@ -1376,40 +1352,36 @@ public final class AfmaBinIntraPayloadHelper {
         }
     }
 
-    protected record EncodedPayloadCandidate(@NotNull Mode mode, @NotNull AfmaStoredPayload payload,
-                                             @NotNull int[] reconstructedPixels, boolean lossless,
-                                             long estimatedArchiveBytes,
-                                             int stabilityPriority) {
+    protected static ScoredPayloadCandidate scoreCandidate(@NotNull Mode mode, @NotNull int[] reconstructedPixels,
+                                                           boolean lossless, int stabilityPriority,
+                                                           @NotNull PayloadWriter payloadWriter) throws IOException {
+        PayloadMetrics payloadMetrics = measurePayload(payloadWriter);
+        return new ScoredPayloadCandidate(mode, payloadWriter, reconstructedPixels, lossless,
+                payloadMetrics.estimatedArchiveBytes(), payloadMetrics.length(), stabilityPriority);
+    }
 
-        protected EncodedPayloadCandidate(@NotNull Mode mode, @NotNull AfmaStoredPayload payload,
-                                          @NotNull int[] reconstructedPixels, boolean lossless) {
-            this(mode, payload, reconstructedPixels, lossless, payload.estimatedArchiveBytes(), 1);
-        }
+    protected record PayloadMetrics(int length, long estimatedArchiveBytes) {
+    }
 
-        protected EncodedPayloadCandidate(@NotNull Mode mode, @NotNull AfmaStoredPayload payload,
-                                          @NotNull int[] reconstructedPixels, boolean lossless,
-                                          int stabilityPriority) {
-            this(mode, payload, reconstructedPixels, lossless, payload.estimatedArchiveBytes(), stabilityPriority);
-        }
+    protected record ScoredPayloadCandidate(@NotNull Mode mode, @NotNull PayloadWriter payloadWriter,
+                                            @NotNull int[] reconstructedPixels, boolean lossless,
+                                            long estimatedArchiveBytes, int payloadLength,
+                                            int stabilityPriority) {
 
-        protected boolean isBetterThan(@NotNull EncodedPayloadCandidate other) {
+        protected boolean isBetterThan(@NotNull ScoredPayloadCandidate other) {
             if (this.estimatedArchiveBytes != other.estimatedArchiveBytes) {
                 return this.estimatedArchiveBytes < other.estimatedArchiveBytes;
             }
             if (this.lossless != other.lossless) {
                 return this.lossless;
             }
-            if (this.payload.length() != other.payload.length()) {
-                return this.payload.length() < other.payload.length();
+            if (this.payloadLength != other.payloadLength) {
+                return this.payloadLength < other.payloadLength;
             }
             if (this.stabilityPriority != other.stabilityPriority) {
                 return this.stabilityPriority < other.stabilityPriority;
             }
             return this.mode.priority() < other.mode.priority();
-        }
-
-        public void close() {
-            this.payload.close();
         }
     }
 
