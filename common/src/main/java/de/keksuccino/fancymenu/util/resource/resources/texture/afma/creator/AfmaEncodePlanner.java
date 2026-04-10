@@ -60,6 +60,11 @@ public class AfmaEncodePlanner {
     protected static final int PLANNER_CHUNK_CACHE_MISS_PENALTY_BYTES = 1024;
     protected static final int PLANNER_MULTI_CHUNK_FRAME_PENALTY_BYTES = 768;
     protected static final int ESTIMATED_ZIP_CHUNK_OVERHEAD_BYTES = 96;
+    protected static final int FULL_SPARSE_LAYOUT_EVALUATION_MAX_CHANGED_PIXELS = 24;
+    protected static final int FULL_SPARSE_LAYOUT_EVALUATION_MAX_AREA = 512;
+    protected static final int MIN_SHORTLISTED_SPARSE_LAYOUTS = 2;
+    protected static final int SPARSE_LAYOUT_SHORTLIST_MARGIN_BYTES = 24;
+    protected static final double SPARSE_LAYOUT_SHORTLIST_MARGIN_RATIO = 0.15D;
     protected static final byte[] EMPTY_BYTES = new byte[0];
     @NotNull
     protected static final Map<String, String> EMPTY_PAYLOAD_PATHS_BY_FINGERPRINT = Collections.emptyMap();
@@ -1599,35 +1604,163 @@ public class AfmaEncodePlanner {
 
     @NotNull
     protected SparseLayoutCandidate chooseBestSparseLayout(int width, int height, @NotNull int[] changedIndices, int changedPixelCount) throws IOException {
-        ArrayList<SparseLayoutCandidate> candidates = new ArrayList<>(4);
-        candidates.add(new SparseLayoutCandidate(
-                AfmaSparseLayoutCodec.BITMASK,
-                AfmaSparsePayloadHelper.buildBitmaskLayout(width, height, changedIndices, changedPixelCount),
-                AfmaSparseLayoutCodec.BITMASK.getComplexityScore()
-        ));
-        candidates.add(new SparseLayoutCandidate(
-                AfmaSparseLayoutCodec.ROW_SPANS,
-                AfmaSparsePayloadHelper.buildRowSpanLayout(width, changedIndices, changedPixelCount),
-                AfmaSparseLayoutCodec.ROW_SPANS.getComplexityScore()
-        ));
-        candidates.add(new SparseLayoutCandidate(
-                AfmaSparseLayoutCodec.TILE_MASK,
-                AfmaSparsePayloadHelper.buildTileMaskLayout(width, height, changedIndices, changedPixelCount),
-                AfmaSparseLayoutCodec.TILE_MASK.getComplexityScore()
-        ));
-        candidates.add(new SparseLayoutCandidate(
-                AfmaSparseLayoutCodec.COORD_LIST,
-                AfmaSparsePayloadHelper.buildCoordListLayout(changedIndices, changedPixelCount),
-                AfmaSparseLayoutCodec.COORD_LIST.getComplexityScore()
-        ));
-
         SparseLayoutCandidate bestCandidate = null;
-        for (SparseLayoutCandidate candidate : candidates) {
+        for (SparseLayoutPlan layoutPlan : this.selectSparseLayoutPlans(width, height, changedIndices, changedPixelCount)) {
+            SparseLayoutCandidate candidate = this.buildSparseLayoutCandidate(layoutPlan.layoutCodec(), width, height, changedIndices, changedPixelCount);
             if ((bestCandidate == null) || candidate.isBetterThan(bestCandidate)) {
                 bestCandidate = candidate;
             }
         }
         return Objects.requireNonNull(bestCandidate, "Failed to choose an AFMA sparse layout");
+    }
+
+    @NotNull
+    protected ArrayList<SparseLayoutPlan> selectSparseLayoutPlans(int width, int height, @NotNull int[] changedIndices, int changedPixelCount) {
+        ArrayList<SparseLayoutPlan> layoutPlans = new ArrayList<>(4);
+        SparseLayoutEstimate layoutEstimate = this.estimateSparseLayoutBytes(width, height, changedIndices, changedPixelCount);
+        layoutPlans.add(new SparseLayoutPlan(AfmaSparseLayoutCodec.BITMASK, layoutEstimate.bitmaskBytes()));
+        layoutPlans.add(new SparseLayoutPlan(AfmaSparseLayoutCodec.ROW_SPANS, layoutEstimate.rowSpanBytes()));
+        layoutPlans.add(new SparseLayoutPlan(AfmaSparseLayoutCodec.TILE_MASK, layoutEstimate.tileMaskBytes()));
+        layoutPlans.add(new SparseLayoutPlan(AfmaSparseLayoutCodec.COORD_LIST, layoutEstimate.coordListBytes()));
+
+        // Small sparse regions can still swing a lot after ZIP, so keep those exhaustive and only
+        // short-list materially larger layouts once the region is big enough to matter.
+        if ((changedPixelCount <= FULL_SPARSE_LAYOUT_EVALUATION_MAX_CHANGED_PIXELS) || (((long) width * height) <= FULL_SPARSE_LAYOUT_EVALUATION_MAX_AREA)) {
+            return layoutPlans;
+        }
+
+        layoutPlans.sort((first, second) -> {
+            int sizeCompare = Long.compare(first.estimatedRawBytes(), second.estimatedRawBytes());
+            if (sizeCompare != 0) {
+                return sizeCompare;
+            }
+            int complexityCompare = Integer.compare(first.layoutCodec().getComplexityScore(), second.layoutCodec().getComplexityScore());
+            if (complexityCompare != 0) {
+                return complexityCompare;
+            }
+            return Integer.compare(first.layoutCodec().getId(), second.layoutCodec().getId());
+        });
+
+        long bestEstimatedBytes = layoutPlans.get(0).estimatedRawBytes();
+        long maxEstimatedBytes = bestEstimatedBytes
+                + Math.max(SPARSE_LAYOUT_SHORTLIST_MARGIN_BYTES, Math.round(bestEstimatedBytes * SPARSE_LAYOUT_SHORTLIST_MARGIN_RATIO));
+        ArrayList<SparseLayoutPlan> shortlistedPlans = new ArrayList<>(4);
+        for (SparseLayoutPlan layoutPlan : layoutPlans) {
+            if ((shortlistedPlans.size() < MIN_SHORTLISTED_SPARSE_LAYOUTS) || (layoutPlan.estimatedRawBytes() <= maxEstimatedBytes)) {
+                shortlistedPlans.add(layoutPlan);
+            }
+        }
+        return shortlistedPlans;
+    }
+
+    @NotNull
+    protected SparseLayoutEstimate estimateSparseLayoutBytes(int width, int height, @NotNull int[] changedIndices, int changedPixelCount) {
+        long bitmaskBytes = AfmaResidualPayloadHelper.expectedSparseMaskBytes(width, height);
+        long coordListBytes = 0L;
+        int previousIndex = -1;
+
+        int tileSize = AfmaSparsePayloadHelper.TILE_MASK_TILE_SIZE;
+        int tileCountX = (width + tileSize - 1) / tileSize;
+        int tileCountY = (height + tileSize - 1) / tileSize;
+        int tileCount = tileCountX * tileCountY;
+        long tileMaskBytes = AfmaResidualPayloadHelper.expectedSparseBitsetBytes(tileCount);
+        boolean[] activeTiles = new boolean[Math.max(0, tileCount)];
+
+        for (int i = 0; i < changedPixelCount; i++) {
+            int changedIndex = changedIndices[i];
+            coordListBytes += estimateVarIntBytes(changedIndex - previousIndex - 1);
+            previousIndex = changedIndex;
+
+            int x = changedIndex % width;
+            int y = changedIndex / width;
+            int tileX = x / tileSize;
+            int tileY = y / tileSize;
+            int tileIndex = (tileY * tileCountX) + tileX;
+            if (!activeTiles[tileIndex]) {
+                activeTiles[tileIndex] = true;
+                int tileWidth = Math.min(tileSize, width - (tileX * tileSize));
+                int tileHeight = Math.min(tileSize, height - (tileY * tileSize));
+                tileMaskBytes += AfmaResidualPayloadHelper.expectedSparseMaskBytes(tileWidth, tileHeight);
+            }
+        }
+
+        return new SparseLayoutEstimate(bitmaskBytes, this.estimateRowSpanLayoutBytes(width, changedIndices, changedPixelCount),
+                tileMaskBytes, coordListBytes);
+    }
+
+    protected long estimateRowSpanLayoutBytes(int width, @NotNull int[] changedIndices, int changedPixelCount) {
+        if (changedPixelCount <= 0) {
+            return 0L;
+        }
+
+        long totalBytes = 0L;
+        int changedRowCount = 0;
+        int cursor = 0;
+        int previousRow = -1;
+        while (cursor < changedPixelCount) {
+            changedRowCount++;
+            int row = changedIndices[cursor] / width;
+            totalBytes += estimateVarIntBytes(row - previousRow - 1);
+            previousRow = row;
+
+            int previousEndX = 0;
+            int spanCount = 0;
+            long rowSpanBytes = 0L;
+            while ((cursor < changedPixelCount) && ((changedIndices[cursor] / width) == row)) {
+                int startX = changedIndices[cursor] % width;
+                int endX = startX + 1;
+                cursor++;
+                while ((cursor < changedPixelCount)
+                        && ((changedIndices[cursor] / width) == row)
+                        && ((changedIndices[cursor] % width) == endX)) {
+                    endX++;
+                    cursor++;
+                }
+                spanCount++;
+                rowSpanBytes += estimateVarIntBytes(startX - previousEndX);
+                rowSpanBytes += estimateVarIntBytes(endX - startX - 1);
+                previousEndX = endX;
+            }
+            totalBytes += estimateVarIntBytes(spanCount) + rowSpanBytes;
+        }
+        return estimateVarIntBytes(changedRowCount) + totalBytes;
+    }
+
+    protected static int estimateVarIntBytes(int value) {
+        int remaining = Math.max(0, value);
+        int totalBytes = 1;
+        while ((remaining & ~0x7F) != 0) {
+            totalBytes++;
+            remaining >>>= 7;
+        }
+        return totalBytes;
+    }
+
+    @NotNull
+    protected SparseLayoutCandidate buildSparseLayoutCandidate(@NotNull AfmaSparseLayoutCodec layoutCodec, int width, int height,
+                                                               @NotNull int[] changedIndices, int changedPixelCount) throws IOException {
+        return switch (layoutCodec) {
+            case BITMASK -> new SparseLayoutCandidate(
+                    layoutCodec,
+                    AfmaSparsePayloadHelper.buildBitmaskLayout(width, height, changedIndices, changedPixelCount),
+                    layoutCodec.getComplexityScore()
+            );
+            case ROW_SPANS -> new SparseLayoutCandidate(
+                    layoutCodec,
+                    AfmaSparsePayloadHelper.buildRowSpanLayout(width, changedIndices, changedPixelCount),
+                    layoutCodec.getComplexityScore()
+            );
+            case TILE_MASK -> new SparseLayoutCandidate(
+                    layoutCodec,
+                    AfmaSparsePayloadHelper.buildTileMaskLayout(width, height, changedIndices, changedPixelCount),
+                    layoutCodec.getComplexityScore()
+            );
+            case COORD_LIST -> new SparseLayoutCandidate(
+                    layoutCodec,
+                    AfmaSparsePayloadHelper.buildCoordListLayout(changedIndices, changedPixelCount),
+                    layoutCodec.getComplexityScore()
+            );
+        };
     }
 
     protected boolean hasAlphaResidual(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame, @NotNull AfmaRect bounds) {
@@ -4161,6 +4294,12 @@ public class AfmaEncodePlanner {
             }
             return this.layoutPayload.length < other.layoutPayload.length;
         }
+    }
+
+    protected record SparseLayoutEstimate(long bitmaskBytes, long rowSpanBytes, long tileMaskBytes, long coordListBytes) {
+    }
+
+    protected record SparseLayoutPlan(@NotNull AfmaSparseLayoutCodec layoutCodec, long estimatedRawBytes) {
     }
 
     protected record MotionTileStats(int changedPixelCount, boolean includeAlpha) {
