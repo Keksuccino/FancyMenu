@@ -6,6 +6,7 @@ import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.ByteArrayOutputStream;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -114,6 +115,25 @@ public final class AfmaStoredPayload implements AutoCloseable {
                     analysis.estimatedArchiveBytes(),
                     analysis.fingerprint(),
                     analysis.tailBytes()
+            );
+        }
+    }
+
+    @NotNull
+    public static BufferedPayload capture(@NotNull Writer writer) throws IOException {
+        Objects.requireNonNull(writer);
+        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+        try (PayloadAnalysisOutputStream out = new PayloadAnalysisOutputStream(byteOut)) {
+            writer.write(out);
+            PayloadAnalysis analysis = out.finishAnalysis();
+            return new BufferedPayload(
+                    byteOut.toByteArray(),
+                    new PayloadSummary(
+                            analysis.length(),
+                            analysis.estimatedArchiveBytes(),
+                            analysis.fingerprint(),
+                            analysis.tailBytes()
+                    )
             );
         }
     }
@@ -235,6 +255,14 @@ public final class AfmaStoredPayload implements AutoCloseable {
         @NotNull
         public byte[] tailBytes() {
             return this.tailBytes.clone();
+        }
+    }
+
+    public record BufferedPayload(@NotNull byte[] payloadBytes, @NotNull PayloadSummary payloadSummary) {
+
+        public BufferedPayload {
+            payloadBytes = Objects.requireNonNull(payloadBytes);
+            payloadSummary = Objects.requireNonNull(payloadSummary);
         }
     }
 

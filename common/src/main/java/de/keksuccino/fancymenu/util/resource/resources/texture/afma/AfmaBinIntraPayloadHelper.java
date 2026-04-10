@@ -47,14 +47,13 @@ public final class AfmaBinIntraPayloadHelper {
     @NotNull
     public static EncodedPayloadResult encodePayloadDetailed(int width, int height, @NotNull int[] pixels, int offset,
                                                              int scanlineStride, @Nullable EncodePreferences preferences) throws IOException {
-        try (StoredEncodedPayloadResult storedResult = encodePayloadStoredDetailed(width, height, pixels, offset, scanlineStride, preferences)) {
-            return new EncodedPayloadResult(
-                    storedResult.payload().readAllBytes(),
-                    storedResult.reconstructedPixels(),
-                    storedResult.lossless(),
-                    storedResult.mode()
-            );
-        }
+        ScoredPayloadResult scoredResult = scorePayloadDetailed(width, height, pixels, offset, scanlineStride, preferences);
+        return new EncodedPayloadResult(
+                scoredResult.payloadBytes(),
+                scoredResult.reconstructedPixels(),
+                scoredResult.lossless(),
+                scoredResult.mode()
+        );
     }
 
     @NotNull
@@ -94,7 +93,7 @@ public final class AfmaBinIntraPayloadHelper {
         }
         return new ScoredPayloadResult(
                 bestCandidate.payloadSummary(),
-                bestCandidate.payloadWriter(),
+                bestCandidate.payloadBytes(),
                 bestCandidate.reconstructedPixels(),
                 bestCandidate.lossless(),
                 bestCandidate.mode()
@@ -639,20 +638,9 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     @NotNull
-    protected static AfmaStoredPayload writePayload(@NotNull PayloadWriter writer) throws IOException {
+    protected static AfmaStoredPayload.BufferedPayload capturePayload(@NotNull PayloadWriter writer) throws IOException {
         Objects.requireNonNull(writer);
-        return AfmaStoredPayload.write(out -> {
-            DataOutputStream dataOut = new DataOutputStream(out);
-            writer.write(dataOut);
-            dataOut.flush();
-        });
-    }
-
-    @NotNull
-    protected static AfmaStoredPayload.PayloadSummary measurePayload(@NotNull PayloadWriter writer) throws IOException {
-        Objects.requireNonNull(writer);
-        // Score candidate payloads without materializing them so loser modes never hit disk or heap buffers.
-        return AfmaStoredPayload.summarize(out -> {
+        return AfmaStoredPayload.capture(out -> {
             DataOutputStream dataOut = new DataOutputStream(out);
             writer.write(dataOut);
             dataOut.flush();
@@ -1139,19 +1127,42 @@ public final class AfmaBinIntraPayloadHelper {
 
     protected static void applyFilter(@NotNull Filter filter, @NotNull byte[] rawBytes, int rowOffset, int rowBytes,
                                       @NotNull byte[] previousRow, int bytesPerPixel, @NotNull byte[] output) {
-        for (int i = 0; i < rowBytes; i++) {
-            int current = rawBytes[rowOffset + i] & 0xFF;
-            int left = (i >= bytesPerPixel) ? (rawBytes[rowOffset + i - bytesPerPixel] & 0xFF) : 0;
-            int up = previousRow[i] & 0xFF;
-            int upLeft = (i >= bytesPerPixel) ? (previousRow[i - bytesPerPixel] & 0xFF) : 0;
-            int filtered = switch (filter) {
-                case NONE -> current;
-                case SUB -> current - left;
-                case UP -> current - up;
-                case AVERAGE -> current - ((left + up) >>> 1);
-                case PAETH -> current - paethPredictor(left, up, upLeft);
-            };
-            output[i] = (byte) filtered;
+        int prefixBytes = Math.min(rowBytes, bytesPerPixel);
+        switch (filter) {
+            case NONE -> System.arraycopy(rawBytes, rowOffset, output, 0, rowBytes);
+            case SUB -> {
+                for (int i = 0; i < prefixBytes; i++) {
+                    output[i] = rawBytes[rowOffset + i];
+                }
+                for (int i = prefixBytes; i < rowBytes; i++) {
+                    output[i] = (byte) ((rawBytes[rowOffset + i] & 0xFF) - (rawBytes[rowOffset + i - bytesPerPixel] & 0xFF));
+                }
+            }
+            case UP -> {
+                for (int i = 0; i < rowBytes; i++) {
+                    output[i] = (byte) ((rawBytes[rowOffset + i] & 0xFF) - (previousRow[i] & 0xFF));
+                }
+            }
+            case AVERAGE -> {
+                for (int i = 0; i < prefixBytes; i++) {
+                    output[i] = (byte) ((rawBytes[rowOffset + i] & 0xFF) - ((previousRow[i] & 0xFF) >>> 1));
+                }
+                for (int i = prefixBytes; i < rowBytes; i++) {
+                    output[i] = (byte) ((rawBytes[rowOffset + i] & 0xFF)
+                            - (((rawBytes[rowOffset + i - bytesPerPixel] & 0xFF) + (previousRow[i] & 0xFF)) >>> 1));
+                }
+            }
+            case PAETH -> {
+                for (int i = 0; i < prefixBytes; i++) {
+                    output[i] = (byte) ((rawBytes[rowOffset + i] & 0xFF) - paethPredictor(0, previousRow[i] & 0xFF, 0));
+                }
+                for (int i = prefixBytes; i < rowBytes; i++) {
+                    output[i] = (byte) ((rawBytes[rowOffset + i] & 0xFF)
+                            - paethPredictor(rawBytes[rowOffset + i - bytesPerPixel] & 0xFF,
+                            previousRow[i] & 0xFF,
+                            previousRow[i - bytesPerPixel] & 0xFF));
+                }
+            }
         }
     }
 
@@ -1188,18 +1199,42 @@ public final class AfmaBinIntraPayloadHelper {
 
     protected static void inverseFilter(@NotNull Filter filter, @NotNull byte[] filteredRow, @NotNull byte[] previousRow,
                                         int bytesPerPixel, @NotNull byte[] output, int rowBytes) {
-        for (int i = 0; i < rowBytes; i++) {
-            int left = (i >= bytesPerPixel) ? (output[i - bytesPerPixel] & 0xFF) : 0;
-            int up = previousRow[i] & 0xFF;
-            int upLeft = (i >= bytesPerPixel) ? (previousRow[i - bytesPerPixel] & 0xFF) : 0;
-            int value = switch (filter) {
-                case NONE -> filteredRow[i];
-                case SUB -> (filteredRow[i] & 0xFF) + left;
-                case UP -> (filteredRow[i] & 0xFF) + up;
-                case AVERAGE -> (filteredRow[i] & 0xFF) + ((left + up) >>> 1);
-                case PAETH -> (filteredRow[i] & 0xFF) + paethPredictor(left, up, upLeft);
-            };
-            output[i] = (byte) value;
+        int prefixBytes = Math.min(rowBytes, bytesPerPixel);
+        switch (filter) {
+            case NONE -> System.arraycopy(filteredRow, 0, output, 0, rowBytes);
+            case SUB -> {
+                for (int i = 0; i < prefixBytes; i++) {
+                    output[i] = filteredRow[i];
+                }
+                for (int i = prefixBytes; i < rowBytes; i++) {
+                    output[i] = (byte) ((filteredRow[i] & 0xFF) + (output[i - bytesPerPixel] & 0xFF));
+                }
+            }
+            case UP -> {
+                for (int i = 0; i < rowBytes; i++) {
+                    output[i] = (byte) ((filteredRow[i] & 0xFF) + (previousRow[i] & 0xFF));
+                }
+            }
+            case AVERAGE -> {
+                for (int i = 0; i < prefixBytes; i++) {
+                    output[i] = (byte) ((filteredRow[i] & 0xFF) + ((previousRow[i] & 0xFF) >>> 1));
+                }
+                for (int i = prefixBytes; i < rowBytes; i++) {
+                    output[i] = (byte) ((filteredRow[i] & 0xFF)
+                            + (((output[i - bytesPerPixel] & 0xFF) + (previousRow[i] & 0xFF)) >>> 1));
+                }
+            }
+            case PAETH -> {
+                for (int i = 0; i < prefixBytes; i++) {
+                    output[i] = (byte) ((filteredRow[i] & 0xFF) + paethPredictor(0, previousRow[i] & 0xFF, 0));
+                }
+                for (int i = prefixBytes; i < rowBytes; i++) {
+                    output[i] = (byte) ((filteredRow[i] & 0xFF)
+                            + paethPredictor(output[i - bytesPerPixel] & 0xFF,
+                            previousRow[i] & 0xFF,
+                            previousRow[i - bytesPerPixel] & 0xFF));
+                }
+            }
         }
     }
 
@@ -1366,12 +1401,12 @@ public final class AfmaBinIntraPayloadHelper {
     protected static ScoredPayloadCandidate scoreCandidate(@NotNull Mode mode, @NotNull int[] reconstructedPixels,
                                                            boolean lossless, int stabilityPriority,
                                                            @NotNull PayloadWriter payloadWriter) throws IOException {
-        AfmaStoredPayload.PayloadSummary payloadSummary = measurePayload(payloadWriter);
-        return new ScoredPayloadCandidate(mode, payloadWriter, reconstructedPixels, lossless,
-                payloadSummary, stabilityPriority);
+        AfmaStoredPayload.BufferedPayload bufferedPayload = capturePayload(payloadWriter);
+        return new ScoredPayloadCandidate(mode, bufferedPayload.payloadBytes(), reconstructedPixels, lossless,
+                bufferedPayload.payloadSummary(), stabilityPriority);
     }
 
-    protected record ScoredPayloadCandidate(@NotNull Mode mode, @NotNull PayloadWriter payloadWriter,
+    protected record ScoredPayloadCandidate(@NotNull Mode mode, @NotNull byte[] payloadBytes,
                                             @NotNull int[] reconstructedPixels, boolean lossless,
                                             @NotNull AfmaStoredPayload.PayloadSummary payloadSummary,
                                             int stabilityPriority) {
@@ -1394,14 +1429,14 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     public record ScoredPayloadResult(@NotNull AfmaStoredPayload.PayloadSummary payloadSummary,
-                                      @NotNull PayloadWriter payloadWriter,
+                                      @NotNull byte[] payloadBytes,
                                       @NotNull int[] reconstructedPixels,
                                       boolean lossless,
                                       @NotNull Mode mode) {
 
         @NotNull
         public AfmaStoredPayload materializePayload() throws IOException {
-            return writePayload(this.payloadWriter);
+            return AfmaStoredPayload.fromBytes(this.payloadBytes);
         }
     }
 
@@ -1414,7 +1449,7 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     @FunctionalInterface
-    public interface PayloadWriter {
+    protected interface PayloadWriter {
         void write(@NotNull DataOutputStream out) throws IOException;
     }
 

@@ -1212,6 +1212,11 @@ public class AfmaEncodePlanner {
     }
 
     @NotNull
+    protected DeferredPayload storePayload(@NotNull AfmaStoredPayload.PayloadSummary payloadSummary, @NotNull byte[] payloadBytes) {
+        return DeferredPayload.fromBytes(payloadSummary, payloadBytes);
+    }
+
+    @NotNull
     protected PlannedCandidate createFullCandidate(@NotNull AfmaPixelFrame currentFrame, boolean introSequence, int frameIndex,
                                                    @NotNull AfmaEncodeOptions options, boolean allowPerceptual,
                                                    @NotNull ReferenceBase referenceBase) throws IOException {
@@ -1221,7 +1226,7 @@ public class AfmaEncodePlanner {
         return new PlannedCandidate(
                 AfmaFrameDescriptor.full(payloadPath),
                 payloadPath,
-                DeferredPayload.fromWriter(encodedPayload.payloadSummary(), out -> encodedPayload.payloadWriter().write(new java.io.DataOutputStream(out))),
+                this.storePayload(encodedPayload.payloadSummary(), encodedPayload.payloadBytes()),
                 PayloadKind.BIN_INTRA,
                 false,
                 null,
@@ -1256,7 +1261,7 @@ public class AfmaEncodePlanner {
         return new PlannedCandidate(
                 AfmaFrameDescriptor.deltaRect(payloadPath, deltaBounds.x(), deltaBounds.y(), deltaBounds.width(), deltaBounds.height()),
                 payloadPath,
-                DeferredPayload.fromWriter(encodedPayload.payloadSummary(), out -> encodedPayload.payloadWriter().write(new java.io.DataOutputStream(out))),
+                this.storePayload(encodedPayload.payloadSummary(), encodedPayload.payloadBytes()),
                 PayloadKind.BIN_INTRA,
                 false,
                 null,
@@ -1988,7 +1993,7 @@ public class AfmaEncodePlanner {
                     options,
                     true
             );
-            payload = DeferredPayload.fromWriter(encodedPayload.payloadSummary(), out -> encodedPayload.payloadWriter().write(new java.io.DataOutputStream(out)));
+            payload = this.storePayload(encodedPayload.payloadSummary(), encodedPayload.payloadBytes());
             referencePatchPixels = encodedPayload.lossless() ? null : encodedPayload.reconstructedPixels();
         }
 
@@ -2034,7 +2039,7 @@ public class AfmaEncodePlanner {
                     options,
                     true
             );
-            payload = DeferredPayload.fromWriter(encodedPayload.payloadSummary(), out -> encodedPayload.payloadWriter().write(new java.io.DataOutputStream(out)));
+            payload = this.storePayload(encodedPayload.payloadSummary(), encodedPayload.payloadBytes());
             referencePatchPixels = encodedPayload.lossless() ? null : encodedPayload.reconstructedPixels();
         }
 
@@ -3730,6 +3735,16 @@ public class AfmaEncodePlanner {
         }
 
         @NotNull
+        public static DeferredPayload fromBytes(@NotNull AfmaStoredPayload.PayloadSummary payloadSummary, @NotNull byte[] payloadBytes) {
+            Objects.requireNonNull(payloadSummary);
+            Objects.requireNonNull(payloadBytes);
+            if (payloadSummary.length() != payloadBytes.length) {
+                throw new IllegalArgumentException("AFMA deferred payload summary length does not match payload bytes");
+            }
+            return new DeferredPayload(payloadSummary, null, payloadBytes, null);
+        }
+
+        @NotNull
         public static DeferredPayload fromWriter(@NotNull AfmaStoredPayload.PayloadSummary payloadSummary,
                                                  @NotNull AfmaStoredPayload.Writer payloadWriter) {
             return new DeferredPayload(payloadSummary, null, null, payloadWriter);
@@ -3757,6 +3772,12 @@ public class AfmaEncodePlanner {
 
         public long estimateChunkCompressionDelta(@NotNull byte[] previousTail) {
             this.ensureOpen();
+            if (this.payloadSummary.length() <= 0) {
+                return 0L;
+            }
+            if (previousTail.length == 0) {
+                return this.payloadSummary.estimatedArchiveBytes();
+            }
             if (this.materializedPayload != null) {
                 return AfmaChunkedPayloadHelper.estimateChunkCompressionDelta(previousTail, this.materializedPayload);
             }
