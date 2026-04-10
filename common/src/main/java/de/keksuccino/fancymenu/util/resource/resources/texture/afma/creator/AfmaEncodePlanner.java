@@ -47,9 +47,13 @@ public class AfmaEncodePlanner {
     protected static final double MAX_SPARSE_DELTA_CHANGED_DENSITY = 0.75D;
     protected static final int BLOCK_INTER_TILE_SIZE = 16;
     protected static final int MIN_PARALLEL_BLOCK_INTER_TILES = 32;
+    protected static final int BLOCK_INTER_MIN_NON_ZERO_MOTION_VECTORS = 8;
+    protected static final int BLOCK_INTER_MAX_NON_ZERO_MOTION_VECTORS = 64;
+    protected static final int BLOCK_INTER_NON_ZERO_MOTION_VECTORS_PER_CHANGED_TILE = 4;
     protected static final int BLOCK_INTER_LOCAL_REFINEMENT_RADIUS = 2;
     protected static final int BLOCK_INTER_LOCAL_REFINEMENT_SEEDS = 3;
     protected static final int BLOCK_INTER_LOCAL_REFINEMENT_PASSES = 2;
+    protected static final int BLOCK_INTER_PAYLOAD_HEADER_BYTES = 9;
     protected static final int PLANNER_TARGET_CHUNK_BYTES = 256 * 1024;
     protected static final int PLANNER_DEFLATE_TAIL_BYTES = 32 * 1024;
     protected static final int PLANNER_MAX_CACHED_PAYLOAD_CHUNKS = 2;
@@ -57,6 +61,8 @@ public class AfmaEncodePlanner {
     protected static final int PLANNER_MULTI_CHUNK_FRAME_PENALTY_BYTES = 768;
     protected static final int ESTIMATED_ZIP_CHUNK_OVERHEAD_BYTES = 96;
     protected static final byte[] EMPTY_BYTES = new byte[0];
+    @NotNull
+    protected static final Map<String, String> EMPTY_PAYLOAD_PATHS_BY_FINGERPRINT = Collections.emptyMap();
 
     @NotNull
     protected final AfmaFrameNormalizer frameNormalizer;
@@ -764,22 +770,25 @@ public class AfmaEncodePlanner {
 
         AfmaFramePairAnalysis pairAnalysis = new AfmaFramePairAnalysis(previousFrame, currentFrame);
         AfmaRect deltaBounds = pairAnalysis.differenceBounds();
+        PlannedCandidate deltaCandidate = null;
+        PlannedCandidate residualDeltaCandidate = null;
+        PlannedCandidate sparseDeltaCandidate = null;
         if (deltaBounds != null) {
-            PlannedCandidate deltaCandidate = this.createDeltaCandidate(currentFrame, introSequence, frameIndex, deltaBounds, options);
+            deltaCandidate = this.createDeltaCandidate(currentFrame, introSequence, frameIndex, deltaBounds, options);
             if ((deltaCandidate != null) && this.shouldKeepComplexCandidate(deltaCandidate, fullCandidate,
                     deltaBounds.area(), currentFrame.getWidth(), currentFrame.getHeight(),
                     options.getMaxDeltaAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
                 candidates.add(deltaCandidate);
             }
 
-            PlannedCandidate residualDeltaCandidate = this.createResidualDeltaCandidate(previousFrame, currentFrame, introSequence, frameIndex, deltaBounds);
+            residualDeltaCandidate = this.createResidualDeltaCandidate(previousFrame, currentFrame, introSequence, frameIndex, deltaBounds);
             if ((residualDeltaCandidate != null) && this.shouldKeepResidualCandidate(residualDeltaCandidate, fullCandidate,
                     deltaBounds.area(), currentFrame.getWidth(), currentFrame.getHeight(),
                     options.getMaxDeltaAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
                 candidates.add(residualDeltaCandidate);
             }
 
-            PlannedCandidate sparseDeltaCandidate = this.createSparseDeltaCandidate(previousFrame, currentFrame, introSequence, frameIndex, deltaBounds);
+            sparseDeltaCandidate = this.createSparseDeltaCandidate(previousFrame, currentFrame, introSequence, frameIndex, deltaBounds);
             if ((sparseDeltaCandidate != null) && this.shouldKeepSparseCandidate(sparseDeltaCandidate, fullCandidate,
                     deltaBounds.area(), currentFrame.getWidth(), currentFrame.getHeight(),
                     options.getMaxDeltaAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
@@ -787,10 +796,18 @@ public class AfmaEncodePlanner {
             }
         }
 
+        AfmaRectCopyDetector.Detection detection = null;
+        PlannedCandidate copyCandidate = null;
+        PlannedCandidate copyResidualCandidate = null;
+        PlannedCandidate copySparseCandidate = null;
+        AfmaRectCopyDetector.MultiDetection multiDetection = null;
+        PlannedCandidate multiCopyCandidate = null;
+        PlannedCandidate multiCopyResidualCandidate = null;
+        PlannedCandidate multiCopySparseCandidate = null;
         if (options.isRectCopyEnabled()) {
-            AfmaRectCopyDetector.Detection detection = copyDetector.detect(pairAnalysis);
+            detection = copyDetector.detect(pairAnalysis);
             if (detection != null) {
-                PlannedCandidate copyCandidate = this.createCopyCandidate(currentFrame, introSequence, frameIndex, detection, options);
+                copyCandidate = this.createCopyCandidate(currentFrame, introSequence, frameIndex, detection, options);
                 long patchArea = (detection.patchBounds() != null) ? detection.patchBounds().area() : 0L;
                 if ((copyCandidate != null) && this.shouldKeepComplexCandidate(copyCandidate, fullCandidate,
                         patchArea, currentFrame.getWidth(), currentFrame.getHeight(),
@@ -798,14 +815,14 @@ public class AfmaEncodePlanner {
                     candidates.add(copyCandidate);
                 }
 
-                PlannedCandidate copyResidualCandidate = this.createCopyResidualCandidate(previousFrame, currentFrame, introSequence, frameIndex, detection);
+                copyResidualCandidate = this.createCopyResidualCandidate(previousFrame, currentFrame, introSequence, frameIndex, detection);
                 if ((copyResidualCandidate != null) && this.shouldKeepResidualCandidate(copyResidualCandidate, fullCandidate,
                         patchArea, currentFrame.getWidth(), currentFrame.getHeight(),
                         options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
                     candidates.add(copyResidualCandidate);
                 }
 
-                PlannedCandidate copySparseCandidate = this.createCopySparseCandidate(previousFrame, currentFrame, introSequence, frameIndex, detection);
+                copySparseCandidate = this.createCopySparseCandidate(previousFrame, currentFrame, introSequence, frameIndex, detection);
                 if ((copySparseCandidate != null) && this.shouldKeepSparseCandidate(copySparseCandidate, fullCandidate,
                         patchArea, currentFrame.getWidth(), currentFrame.getHeight(),
                         options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, payloadPathsByFingerprint)) {
@@ -813,10 +830,10 @@ public class AfmaEncodePlanner {
                 }
             }
 
-            AfmaRectCopyDetector.MultiDetection multiDetection = copyDetector.detectMulti(pairAnalysis, detection);
+            multiDetection = copyDetector.detectMulti(pairAnalysis, detection);
             if (multiDetection != null) {
                 AfmaPixelFrame multiCopyReferenceFrame = this.buildMultiCopyReferenceFrame(previousFrame, multiDetection.multiCopy());
-                PlannedCandidate multiCopyCandidate = this.createMultiCopyCandidate(currentFrame, introSequence, frameIndex, multiDetection, options);
+                multiCopyCandidate = this.createMultiCopyCandidate(currentFrame, introSequence, frameIndex, multiDetection, options);
                 long patchArea = multiDetection.patchArea();
                 if ((multiCopyCandidate != null) && this.shouldKeepComplexCandidate(multiCopyCandidate, fullCandidate,
                         patchArea, currentFrame.getWidth(), currentFrame.getHeight(),
@@ -824,7 +841,7 @@ public class AfmaEncodePlanner {
                     candidates.add(multiCopyCandidate);
                 }
 
-                PlannedCandidate multiCopyResidualCandidate = this.createMultiCopyResidualCandidate(multiCopyReferenceFrame, currentFrame,
+                multiCopyResidualCandidate = this.createMultiCopyResidualCandidate(multiCopyReferenceFrame, currentFrame,
                         introSequence, frameIndex, multiDetection);
                 if ((multiCopyResidualCandidate != null) && this.shouldKeepResidualCandidate(multiCopyResidualCandidate, fullCandidate,
                         patchArea, currentFrame.getWidth(), currentFrame.getHeight(),
@@ -832,7 +849,7 @@ public class AfmaEncodePlanner {
                     candidates.add(multiCopyResidualCandidate);
                 }
 
-                PlannedCandidate multiCopySparseCandidate = this.createMultiCopySparseCandidate(multiCopyReferenceFrame, currentFrame,
+                multiCopySparseCandidate = this.createMultiCopySparseCandidate(multiCopyReferenceFrame, currentFrame,
                         introSequence, frameIndex, multiDetection);
                 if ((multiCopySparseCandidate != null) && this.shouldKeepSparseCandidate(multiCopySparseCandidate, fullCandidate,
                         patchArea, currentFrame.getWidth(), currentFrame.getHeight(),
@@ -843,7 +860,28 @@ public class AfmaEncodePlanner {
         }
 
         if (options.isRectCopyEnabled() && (deltaBounds != null)) {
-            PlannedCandidate blockInterCandidate = this.createBlockInterCandidate(pairAnalysis, introSequence, frameIndex, deltaBounds, copyDetector);
+            PlannedCandidate blockInterBaselineCandidate = this.selectBestEstimatedArchiveCandidate(
+                    fullCandidate,
+                    deltaCandidate,
+                    residualDeltaCandidate,
+                    sparseDeltaCandidate,
+                    copyCandidate,
+                    copyResidualCandidate,
+                    copySparseCandidate,
+                    multiCopyCandidate,
+                    multiCopyResidualCandidate,
+                    multiCopySparseCandidate
+            );
+            PlannedCandidate blockInterCandidate = this.createBlockInterCandidate(
+                    pairAnalysis,
+                    introSequence,
+                    frameIndex,
+                    deltaBounds,
+                    copyDetector,
+                    detection,
+                    multiDetection,
+                    blockInterBaselineCandidate
+            );
             if ((blockInterCandidate != null) && this.shouldKeepComplexCandidate(blockInterCandidate, fullCandidate,
                     (long) blockInterCandidate.descriptor().getWidth() * blockInterCandidate.descriptor().getHeight(),
                     currentFrame.getWidth(), currentFrame.getHeight(),
@@ -1743,15 +1781,13 @@ public class AfmaEncodePlanner {
     @Nullable
     protected PlannedCandidate createBlockInterCandidate(@NotNull AfmaFramePairAnalysis pairAnalysis,
                                                          boolean introSequence, int frameIndex, @NotNull AfmaRect deltaBounds,
-                                                         @NotNull AfmaRectCopyDetector copyDetector) throws IOException {
+                                                         @NotNull AfmaRectCopyDetector copyDetector,
+                                                         @Nullable AfmaRectCopyDetector.Detection copyDetection,
+                                                         @Nullable AfmaRectCopyDetector.MultiDetection multiDetection,
+                                                         @Nullable PlannedCandidate bestBaselineCandidate) throws IOException {
         AfmaPixelFrame previousFrame = pairAnalysis.previousFrame();
         AfmaPixelFrame currentFrame = pairAnalysis.nextFrame();
         AfmaRect regionBounds = this.alignBoundsToTileGrid(deltaBounds, BLOCK_INTER_TILE_SIZE, currentFrame.getWidth(), currentFrame.getHeight());
-        List<AfmaRectCopyDetector.MotionVector> motionVectors = copyDetector.collectMotionVectors(pairAnalysis, true);
-        if (motionVectors.isEmpty()) {
-            return null;
-        }
-
         int tileCountX = AfmaBlockInterPayloadHelper.tileCount(regionBounds.width(), BLOCK_INTER_TILE_SIZE);
         int tileCountY = AfmaBlockInterPayloadHelper.tileCount(regionBounds.height(), BLOCK_INTER_TILE_SIZE);
         if ((tileCountX <= 0) || (tileCountY <= 0)) {
@@ -1759,13 +1795,27 @@ public class AfmaEncodePlanner {
         }
 
         int totalTileCount = tileCountX * tileCountY;
+        BlockInterRegionAnalysis regionAnalysis = this.analyzeBlockInterRegion(previousFrame, currentFrame, regionBounds, tileCountX, tileCountY);
+        if (!this.shouldAttemptBlockInter(regionBounds, regionAnalysis, bestBaselineCandidate)) {
+            return null;
+        }
+
+        List<AfmaRectCopyDetector.MotionVector> motionVectors = this.collectBlockInterMotionVectors(
+                pairAnalysis,
+                copyDetection,
+                multiDetection,
+                copyDetector,
+                regionAnalysis
+        );
         AfmaBlockInterPayloadHelper.TileOperation[] tileOperations = new AfmaBlockInterPayloadHelper.TileOperation[totalTileCount];
         if (totalTileCount >= MIN_PARALLEL_BLOCK_INTER_TILES) {
             IntStream.range(0, totalTileCount).parallel().forEach(tileIndex ->
-                    tileOperations[tileIndex] = this.buildBlockInterTileOperation(previousFrame, currentFrame, motionVectors, regionBounds, tileCountX, tileCountY, tileIndex));
+                    tileOperations[tileIndex] = this.buildBlockInterTileOperation(previousFrame, currentFrame, motionVectors,
+                            regionBounds, tileCountX, tileCountY, regionAnalysis, tileIndex));
         } else {
             for (int tileIndex = 0; tileIndex < totalTileCount; tileIndex++) {
-                tileOperations[tileIndex] = this.buildBlockInterTileOperation(previousFrame, currentFrame, motionVectors, regionBounds, tileCountX, tileCountY, tileIndex);
+                tileOperations[tileIndex] = this.buildBlockInterTileOperation(previousFrame, currentFrame, motionVectors,
+                        regionBounds, tileCountX, tileCountY, regionAnalysis, tileIndex);
             }
         }
 
@@ -1793,7 +1843,12 @@ public class AfmaEncodePlanner {
     protected AfmaBlockInterPayloadHelper.TileOperation buildBlockInterTileOperation(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
                                                                                      @NotNull List<AfmaRectCopyDetector.MotionVector> motionVectors,
                                                                                      @NotNull AfmaRect regionBounds, int tileCountX, int tileCountY,
+                                                                                     @NotNull BlockInterRegionAnalysis regionAnalysis,
                                                                                      int tileIndex) {
+        if (!regionAnalysis.isTileChanged(tileIndex)) {
+            return new AfmaBlockInterPayloadHelper.TileOperation(AfmaBlockInterPayloadHelper.TileMode.SKIP, 0, 0, 0, 0, null, null, null);
+        }
+
         int tileY = tileIndex / tileCountX;
         int tileX = tileIndex % tileCountX;
         int localY = tileY * BLOCK_INTER_TILE_SIZE;
@@ -1809,10 +1864,6 @@ public class AfmaEncodePlanner {
     protected AfmaBlockInterPayloadHelper.TileOperation chooseBestBlockInterTile(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
                                                                                  int dstX, int dstY, int width, int height,
                                                                                  @NotNull List<AfmaRectCopyDetector.MotionVector> motionVectors) {
-        if (this.isTileIdentical(previousFrame, currentFrame, dstX, dstY, width, height)) {
-            return new AfmaBlockInterPayloadHelper.TileOperation(AfmaBlockInterPayloadHelper.TileMode.SKIP, 0, 0, 0, 0, null, null, null);
-        }
-
         RawTileData rawTile = this.buildRawTileBytes(currentFrame, dstX, dstY, width, height);
         BlockInterTileCandidate bestCandidate = new BlockInterTileCandidate(
                 new AfmaBlockInterPayloadHelper.TileOperation(AfmaBlockInterPayloadHelper.TileMode.RAW, 0, 0, rawTile.channels(), 0, rawTile.payloadBytes(), null, null),
@@ -2020,6 +2071,137 @@ public class AfmaEncodePlanner {
                 optimisticLayoutBytes,
                 AfmaResidualPayloadHelper.expectedSparseResidualBytes(changedPixelCount, AfmaResidualPayloadHelper.RGB_CHANNELS)
         );
+    }
+
+    @NotNull
+    protected BlockInterRegionAnalysis analyzeBlockInterRegion(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
+                                                               @NotNull AfmaRect regionBounds, int tileCountX, int tileCountY) {
+        int totalTileCount = tileCountX * tileCountY;
+        boolean[] changedTiles = new boolean[totalTileCount];
+        int changedTileCount = 0;
+        int tileIndex = 0;
+        for (int tileY = 0; tileY < tileCountY; tileY++) {
+            int dstY = regionBounds.y() + (tileY * BLOCK_INTER_TILE_SIZE);
+            int tileHeight = AfmaBlockInterPayloadHelper.tileDimension(tileY, tileCountY, BLOCK_INTER_TILE_SIZE, regionBounds.height());
+            for (int tileX = 0; tileX < tileCountX; tileX++, tileIndex++) {
+                int dstX = regionBounds.x() + (tileX * BLOCK_INTER_TILE_SIZE);
+                int tileWidth = AfmaBlockInterPayloadHelper.tileDimension(tileX, tileCountX, BLOCK_INTER_TILE_SIZE, regionBounds.width());
+                boolean tileChanged = !this.isTileIdentical(previousFrame, currentFrame, dstX, dstY, tileWidth, tileHeight);
+                changedTiles[tileIndex] = tileChanged;
+                if (tileChanged) {
+                    changedTileCount++;
+                }
+            }
+        }
+        return new BlockInterRegionAnalysis(totalTileCount, changedTileCount, changedTiles);
+    }
+
+    protected boolean shouldAttemptBlockInter(@NotNull AfmaRect regionBounds, @NotNull BlockInterRegionAnalysis regionAnalysis,
+                                              @Nullable PlannedCandidate bestBaselineCandidate) {
+        if (regionAnalysis.changedTileCount() <= 0) {
+            return false;
+        }
+        if (bestBaselineCandidate == null) {
+            return true;
+        }
+
+        // If even an all-copy lower bound cannot beat the best simpler candidate, skip the expensive tile search entirely.
+        long optimisticCandidateBytes = this.estimateOptimisticBlockInterCandidateBytes(regionBounds, regionAnalysis);
+        long baselineCandidateBytes = bestBaselineCandidate.estimatedArchiveBytes(EMPTY_PAYLOAD_PATHS_BY_FINGERPRINT);
+        return optimisticCandidateBytes < baselineCandidateBytes;
+    }
+
+    protected long estimateOptimisticBlockInterCandidateBytes(@NotNull AfmaRect regionBounds, @NotNull BlockInterRegionAnalysis regionAnalysis) {
+        return this.estimateBlockInterDescriptorBytes(regionBounds)
+                + BLOCK_INTER_PAYLOAD_HEADER_BYTES
+                + regionAnalysis.identicalTileCount()
+                + (regionAnalysis.changedTileCount() * 5L);
+    }
+
+    protected int estimateBlockInterDescriptorBytes(@NotNull AfmaRect regionBounds) {
+        return 1
+                + 2
+                + this.estimateArchiveVarIntBytes(regionBounds.x())
+                + this.estimateArchiveVarIntBytes(regionBounds.y())
+                + this.estimateArchiveVarIntBytes(regionBounds.width())
+                + this.estimateArchiveVarIntBytes(regionBounds.height())
+                + this.estimateArchiveVarIntBytes(BLOCK_INTER_TILE_SIZE);
+    }
+
+    @NotNull
+    protected List<AfmaRectCopyDetector.MotionVector> collectBlockInterMotionVectors(@NotNull AfmaFramePairAnalysis pairAnalysis,
+                                                                                     @Nullable AfmaRectCopyDetector.Detection copyDetection,
+                                                                                     @Nullable AfmaRectCopyDetector.MultiDetection multiDetection,
+                                                                                     @NotNull AfmaRectCopyDetector copyDetector,
+                                                                                     @NotNull BlockInterRegionAnalysis regionAnalysis) {
+        LinkedHashMap<Long, AfmaRectCopyDetector.MotionVector> motionVectorsByKey = new LinkedHashMap<>();
+        this.addBlockInterMotionVector(motionVectorsByKey, 0, 0);
+        if (copyDetection != null) {
+            this.addBlockInterMotionVector(motionVectorsByKey,
+                    copyDetection.copyRect().getSrcX() - copyDetection.copyRect().getDstX(),
+                    copyDetection.copyRect().getSrcY() - copyDetection.copyRect().getDstY());
+        }
+        if (multiDetection != null) {
+            for (AfmaCopyRect copyRect : multiDetection.multiCopy().getCopyRects()) {
+                this.addBlockInterMotionVector(motionVectorsByKey,
+                        copyRect.getSrcX() - copyRect.getDstX(),
+                        copyRect.getSrcY() - copyRect.getDstY());
+            }
+        }
+
+        int nonZeroSeedCount = Math.max(0, motionVectorsByKey.size() - 1);
+        if (this.shouldUseSeededBlockInterMotionVectorsOnly(regionAnalysis, nonZeroSeedCount)) {
+            return List.copyOf(motionVectorsByKey.values());
+        }
+
+        int maxNonZeroVectors = this.computeMaxBlockInterNonZeroMotionVectors(regionAnalysis.changedTileCount());
+        if (nonZeroSeedCount < maxNonZeroVectors) {
+            // Copy detections are cheap to reuse. Only pull the globally ranked list when the seeded frontier is still too small.
+            for (AfmaRectCopyDetector.MotionVector motionVector : copyDetector.collectMotionVectors(pairAnalysis, false)) {
+                this.addBlockInterMotionVector(motionVectorsByKey, motionVector.dx(), motionVector.dy());
+                if ((motionVectorsByKey.size() - 1) >= maxNonZeroVectors) {
+                    break;
+                }
+            }
+        }
+        return List.copyOf(motionVectorsByKey.values());
+    }
+
+    protected void addBlockInterMotionVector(@NotNull Map<Long, AfmaRectCopyDetector.MotionVector> motionVectorsByKey, int dx, int dy) {
+        motionVectorsByKey.putIfAbsent(packMotionVector(dx, dy), new AfmaRectCopyDetector.MotionVector(dx, dy));
+    }
+
+    protected boolean shouldUseSeededBlockInterMotionVectorsOnly(@NotNull BlockInterRegionAnalysis regionAnalysis, int nonZeroSeedCount) {
+        return nonZeroSeedCount > 0
+                && regionAnalysis.changedTileCount() <= Math.max(2, nonZeroSeedCount * 2);
+    }
+
+    protected int computeMaxBlockInterNonZeroMotionVectors(int changedTileCount) {
+        if (changedTileCount <= 0) {
+            return 0;
+        }
+
+        int scaledVectorCount = changedTileCount * BLOCK_INTER_NON_ZERO_MOTION_VECTORS_PER_CHANGED_TILE;
+        return Math.max(
+                BLOCK_INTER_MIN_NON_ZERO_MOTION_VECTORS,
+                Math.min(BLOCK_INTER_MAX_NON_ZERO_MOTION_VECTORS, scaledVectorCount)
+        );
+    }
+
+    protected int estimateArchiveVarIntBytes(int value) {
+        if ((value & ~0x7F) == 0) {
+            return 1;
+        }
+        if ((value & ~0x3FFF) == 0) {
+            return 2;
+        }
+        if ((value & ~0x1FFFFF) == 0) {
+            return 3;
+        }
+        if ((value & ~0xFFFFFFF) == 0) {
+            return 4;
+        }
+        return 5;
     }
 
     protected static long packMotionVector(int dx, int dy) {
@@ -2306,6 +2488,20 @@ public class AfmaEncodePlanner {
         return byteSavings >= requiredSavings;
     }
 
+    @Nullable
+    protected PlannedCandidate selectBestEstimatedArchiveCandidate(@Nullable PlannedCandidate... candidates) {
+        PlannedCandidate bestCandidate = null;
+        for (PlannedCandidate candidate : candidates) {
+            if (candidate == null) {
+                continue;
+            }
+            if ((bestCandidate == null) || candidate.isBetterThan(bestCandidate, EMPTY_PAYLOAD_PATHS_BY_FINGERPRINT)) {
+                bestCandidate = candidate;
+            }
+        }
+        return bestCandidate;
+    }
+
     protected boolean shouldKeepComplexCandidate(@NotNull PlannedCandidate candidate, @NotNull PlannedCandidate fullCandidate,
                                                  long patchArea, int frameWidth, int frameHeight, double maxAreaRatioWithoutStrongSavings,
                                                  @NotNull AfmaEncodeOptions options, @NotNull ArchivePlanningState archiveState,
@@ -2586,6 +2782,15 @@ public class AfmaEncodePlanner {
                     ? AfmaEncodePlanner.this.createSparseDeltaCandidate(previousFrame, workingFrame, introSequence, frameIndex, deltaBounds)
                     : null;
 
+            PlannedCandidate fullCandidate = this.getFullCandidate(
+                    workingFrame,
+                    introSequence,
+                    frameIndex,
+                    options,
+                    true,
+                    ReferenceBase.WORKING_FRAME
+            );
+
             AfmaRectCopyDetector.Detection copyDetection = null;
             PlannedCandidate copyCandidate = null;
             PlannedCandidate copyResidualCandidate = null;
@@ -2612,7 +2817,28 @@ public class AfmaEncodePlanner {
                 }
 
                 if (deltaBounds != null) {
-                    blockInterCandidate = AfmaEncodePlanner.this.createBlockInterCandidate(pairAnalysis, introSequence, frameIndex, deltaBounds, copyDetector);
+                    PlannedCandidate blockInterBaselineCandidate = AfmaEncodePlanner.this.selectBestEstimatedArchiveCandidate(
+                            fullCandidate,
+                            deltaCandidate,
+                            residualDeltaCandidate,
+                            sparseDeltaCandidate,
+                            copyCandidate,
+                            copyResidualCandidate,
+                            copySparseCandidate,
+                            multiCopyCandidate,
+                            multiCopyResidualCandidate,
+                            multiCopySparseCandidate
+                    );
+                    blockInterCandidate = AfmaEncodePlanner.this.createBlockInterCandidate(
+                            pairAnalysis,
+                            introSequence,
+                            frameIndex,
+                            deltaBounds,
+                            copyDetector,
+                            copyDetection,
+                            multiDetection,
+                            blockInterBaselineCandidate
+                    );
                 }
             }
 
@@ -3949,6 +4175,18 @@ public class AfmaEncodePlanner {
 
     protected record MotionSearchSeed(@NotNull AfmaRectCopyDetector.MotionVector motionVector,
                                       @NotNull BlockInterTileCandidate candidate) {
+    }
+
+    protected record BlockInterRegionAnalysis(int totalTileCount, int changedTileCount, @NotNull boolean[] changedTiles) {
+
+        public int identicalTileCount() {
+            return this.totalTileCount - this.changedTileCount;
+        }
+
+        public boolean isTileChanged(int tileIndex) {
+            return this.changedTiles[tileIndex];
+        }
+
     }
 
     @FunctionalInterface
