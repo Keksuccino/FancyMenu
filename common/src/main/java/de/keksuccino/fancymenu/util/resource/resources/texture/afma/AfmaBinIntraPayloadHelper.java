@@ -1612,16 +1612,6 @@ public final class AfmaBinIntraPayloadHelper {
         protected boolean rgbColorCountsComputed;
         @Nullable
         protected Map<Integer, Integer> rgbColorCounts;
-        @Nullable
-        protected byte[] interleavedRgbBytes;
-        @Nullable
-        protected byte[] interleavedRgbaBytes;
-        @Nullable
-        protected byte[] planarRgbBytes;
-        @Nullable
-        protected byte[] planarRgbaBytes;
-        @Nullable
-        protected byte[] alphaBytes;
 
         protected PixelCandidateContext(@NotNull int[] pixels, boolean lossless) {
             this.pixels = pixels;
@@ -1695,54 +1685,6 @@ public final class AfmaBinIntraPayloadHelper {
             this.rgbColorCounts = collectColorCounts(this.pixels, true);
             this.rgbColorCountsComputed = true;
             return this.rgbColorCounts;
-        }
-
-        @NotNull
-        public byte[] interleavedBytes(int channels) {
-            if (channels == RGB_CHANNELS) {
-                if (this.interleavedRgbBytes == null) {
-                    this.interleavedRgbBytes = toInterleavedBytes(this.pixels, RGB_CHANNELS);
-                }
-                return this.interleavedRgbBytes;
-            }
-            if (channels == RGBA_CHANNELS) {
-                if (this.interleavedRgbaBytes == null) {
-                    this.interleavedRgbaBytes = toInterleavedBytes(this.pixels, RGBA_CHANNELS);
-                }
-                return this.interleavedRgbaBytes;
-            }
-            throw new IllegalArgumentException("Unsupported AFMA BIN_INTRA interleaved channel count: " + channels);
-        }
-
-        @NotNull
-        public byte[] planarBytes(int channels) {
-            if (channels == RGB_CHANNELS) {
-                if (this.planarRgbBytes == null) {
-                    this.planarRgbBytes = toPlanarBytes(this.pixels, RGB_CHANNELS);
-                }
-                return this.planarRgbBytes;
-            }
-            if (channels == RGBA_CHANNELS) {
-                if (this.planarRgbaBytes == null) {
-                    this.planarRgbaBytes = toPlanarBytes(this.pixels, RGBA_CHANNELS);
-                }
-                return this.planarRgbaBytes;
-            }
-            throw new IllegalArgumentException("Unsupported AFMA BIN_INTRA planar channel count: " + channels);
-        }
-
-        @NotNull
-        public byte[] alphaBytes() {
-            if (this.alphaBytes != null) {
-                return this.alphaBytes;
-            }
-
-            byte[] extractedAlphaBytes = new byte[this.pixels.length];
-            for (int i = 0; i < this.pixels.length; i++) {
-                extractedAlphaBytes[i] = (byte) ((this.pixels[i] >>> 24) & 0xFF);
-            }
-            this.alphaBytes = extractedAlphaBytes;
-            return extractedAlphaBytes;
         }
 
         protected void ensureScanSummary() {
