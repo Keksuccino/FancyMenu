@@ -11,7 +11,6 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class AfmaRectCopyDetector {
@@ -35,7 +34,13 @@ public class AfmaRectCopyDetector {
 
     @Nullable
     public Detection detect(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next) {
-        AfmaPixelFrameHelper.ensureSameSize(previous, next);
+        return this.detect(new AfmaFramePairAnalysis(previous, next));
+    }
+
+    @Nullable
+    public Detection detect(@NotNull AfmaFramePairAnalysis pairAnalysis) {
+        AfmaPixelFrame previous = pairAnalysis.previousFrame();
+        AfmaPixelFrame next = pairAnalysis.nextFrame();
 
         int width = previous.getWidth();
         int height = previous.getHeight();
@@ -63,7 +68,7 @@ public class AfmaRectCopyDetector {
                         overlapHeight
                 );
 
-                AfmaRect patchBounds = AfmaPixelFrameHelper.findDirtyBoundsAfterCopy(previous, next, copyRect);
+                AfmaRect patchBounds = pairAnalysis.findDirtyBoundsAfterCopy(copyRect);
                 long patchArea = (patchBounds != null) ? patchBounds.area() : 0L;
                 long copyArea = copyRect.getArea();
                 long usefulness = copyArea - patchArea;
@@ -82,9 +87,15 @@ public class AfmaRectCopyDetector {
 
     @Nullable
     public MultiDetection detectMulti(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next) {
-        AfmaPixelFrameHelper.ensureSameSize(previous, next);
+        return this.detectMulti(new AfmaFramePairAnalysis(previous, next));
+    }
 
-        AfmaRect initialDirtyBounds = AfmaPixelFrameHelper.findDifferenceBounds(previous, next);
+    @Nullable
+    public MultiDetection detectMulti(@NotNull AfmaFramePairAnalysis pairAnalysis) {
+        AfmaPixelFrame previous = pairAnalysis.previousFrame();
+        AfmaPixelFrame next = pairAnalysis.nextFrame();
+
+        AfmaRect initialDirtyBounds = pairAnalysis.differenceBounds();
         if (initialDirtyBounds == null) {
             return null;
         }
@@ -111,7 +122,7 @@ public class AfmaRectCopyDetector {
         }
 
         AfmaPixelFrame predictedFrame = new AfmaPixelFrame(width, height, predictedPixels);
-        AfmaRect patchBounds = AfmaPixelFrameHelper.findDifferenceBounds(predictedFrame, next);
+        AfmaRect patchBounds = new AfmaFramePairAnalysis(predictedFrame, next).differenceBounds();
         long remainingPatchArea = (patchBounds != null) ? patchBounds.area() : 0L;
         long patchReduction = initialDirtyBounds.area() - remainingPatchArea;
         if (patchReduction <= 0L) {
@@ -123,7 +134,13 @@ public class AfmaRectCopyDetector {
 
     @NotNull
     public List<MotionVector> collectMotionVectors(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next, boolean includeZeroVector) {
-        AfmaPixelFrameHelper.ensureSameSize(previous, next);
+        return this.collectMotionVectors(new AfmaFramePairAnalysis(previous, next), includeZeroVector);
+    }
+
+    @NotNull
+    public List<MotionVector> collectMotionVectors(@NotNull AfmaFramePairAnalysis pairAnalysis, boolean includeZeroVector) {
+        AfmaPixelFrame previous = pairAnalysis.previousFrame();
+        AfmaPixelFrame next = pairAnalysis.nextFrame();
 
         int width = previous.getWidth();
         int height = previous.getHeight();

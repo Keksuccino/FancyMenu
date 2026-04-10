@@ -349,10 +349,18 @@ public class AfmaEncodePlanner {
                     workingFrame = this.applyNearLosslessTemporalMerge(previousFrame, sourceFrame, options.getNearLosslessMaxChannelDelta());
                 }
 
-                if ((previousFrame != null) && state.emittedFrameAvailable()
+                AfmaFramePairAnalysis workingPairAnalysis = (previousFrame != null)
+                        ? windowCandidateCache.getFramePairAnalysis(previousFrame, workingFrame)
+                        : null;
+                if ((workingPairAnalysis != null) && state.emittedFrameAvailable()
                         && options.isDuplicateFrameElision()
-                        && AfmaPixelFrameHelper.isIdentical(previousFrame, workingFrame)) {
-                    BeamPlanningState duplicateState = this.evaluateDuplicateContinuation(state, sourceFrame, frameDelayMs, options);
+                        && workingPairAnalysis.isIdentical()) {
+                    BeamPlanningState duplicateState = this.evaluateDuplicateContinuation(
+                            state,
+                            windowCandidateCache.getFramePairAnalysis(sourceFrame, previousFrame),
+                            frameDelayMs,
+                            options
+                    );
                     if (duplicateState != null) {
                         expandedBeam.add(duplicateState);
                     }
@@ -362,8 +370,14 @@ public class AfmaEncodePlanner {
                         introSequence, absoluteFrameIndex, state.framesSinceKeyframe(), state.decodeComplexitySinceKeyframe(),
                         options, copyDetector, state.archiveState(), windowCandidateCache);
                 for (PlannedCandidate candidate : candidates) {
-                    BeamPlanningState candidateState = this.evaluateCandidateTransition(state, candidate, sourceFrame, workingFrame,
-                            frameDelayMs, introSequence, options);
+                    BeamPlanningState candidateState = this.evaluateCandidateTransition(
+                            state,
+                            candidate,
+                            windowCandidateCache.getCandidateReferenceFrameAnalysis(candidate, sourceFrame, workingFrame),
+                            frameDelayMs,
+                            introSequence,
+                            options
+                    );
                     if (candidateState != null) {
                         expandedBeam.add(candidateState);
                     }
@@ -516,14 +530,15 @@ public class AfmaEncodePlanner {
     }
 
     @Nullable
-    protected BeamPlanningState evaluateDuplicateContinuation(@NotNull BeamPlanningState state, @NotNull AfmaPixelFrame sourceFrame,
+    protected BeamPlanningState evaluateDuplicateContinuation(@NotNull BeamPlanningState state,
+                                                              @NotNull AfmaFramePairAnalysis sourcePairAnalysis,
                                                               long frameDelayMs, @NotNull AfmaEncodeOptions options) {
         AfmaPixelFrame previousFrame = state.previousFrame();
         if (previousFrame == null) {
             return null;
         }
 
-        DriftTransition driftTransition = this.evaluateDriftTransition(state.driftState(), sourceFrame, previousFrame, options);
+        DriftTransition driftTransition = this.evaluateDriftTransition(state.driftState(), sourcePairAnalysis, options);
         if (driftTransition == null) {
             return null;
         }
@@ -532,10 +547,10 @@ public class AfmaEncodePlanner {
 
     @Nullable
     protected BeamPlanningState evaluateCandidateTransition(@NotNull BeamPlanningState state, @NotNull PlannedCandidate candidate,
-                                                            @NotNull AfmaPixelFrame sourceFrame, @NotNull AfmaPixelFrame workingFrame,
+                                                            @NotNull CandidateReferenceFrameAnalysis referenceFrameAnalysis,
                                                             long frameDelayMs, boolean introSequence, @NotNull AfmaEncodeOptions options) {
-        AfmaPixelFrame reconstructedFrame = candidate.materializeReferenceFrame(sourceFrame, workingFrame);
-        DriftTransition driftTransition = this.evaluateDriftTransition(state.driftState(), sourceFrame, reconstructedFrame, options);
+        AfmaPixelFrame reconstructedFrame = referenceFrameAnalysis.reconstructedFrame();
+        DriftTransition driftTransition = this.evaluateDriftTransition(state.driftState(), referenceFrameAnalysis.sourcePairAnalysis(), options);
         if (driftTransition == null) {
             return null;
         }
@@ -626,10 +641,9 @@ public class AfmaEncodePlanner {
 
     @Nullable
     protected DriftTransition evaluateDriftTransition(@NotNull DriftState currentDriftState,
-                                                      @NotNull AfmaPixelFrame sourceFrame,
-                                                      @NotNull AfmaPixelFrame reconstructedFrame,
+                                                      @NotNull AfmaFramePairAnalysis pairAnalysis,
                                                       @NotNull AfmaEncodeOptions options) {
-        PerceptualDriftStats driftStats = this.measurePerceptualDrift(sourceFrame, reconstructedFrame);
+        PerceptualDriftStats driftStats = this.measurePerceptualDrift(pairAnalysis);
         if (!driftStats.isExact()) {
             if (!options.isPerceptualBinIntraEnabled()) {
                 return null;
@@ -664,6 +678,14 @@ public class AfmaEncodePlanner {
         }
 
         return new DriftTransition(nextDriftState, driftStats, this.computeDriftPenalty(driftStats, nextDriftState, options));
+    }
+
+    @Nullable
+    protected DriftTransition evaluateDriftTransition(@NotNull DriftState currentDriftState,
+                                                      @NotNull AfmaPixelFrame sourceFrame,
+                                                      @NotNull AfmaPixelFrame reconstructedFrame,
+                                                      @NotNull AfmaEncodeOptions options) {
+        return this.evaluateDriftTransition(currentDriftState, new AfmaFramePairAnalysis(sourceFrame, reconstructedFrame), options);
     }
 
     protected double computeDriftPenalty(@NotNull PerceptualDriftStats driftStats, @NotNull DriftState nextDriftState,
@@ -740,7 +762,8 @@ public class AfmaEncodePlanner {
         List<PlannedCandidate> candidates = new ArrayList<>();
         candidates.add(fullCandidate);
 
-        AfmaRect deltaBounds = AfmaPixelFrameHelper.findDifferenceBounds(previousFrame, currentFrame);
+        AfmaFramePairAnalysis pairAnalysis = new AfmaFramePairAnalysis(previousFrame, currentFrame);
+        AfmaRect deltaBounds = pairAnalysis.differenceBounds();
         if (deltaBounds != null) {
             PlannedCandidate deltaCandidate = this.createDeltaCandidate(currentFrame, introSequence, frameIndex, deltaBounds, options);
             if ((deltaCandidate != null) && this.shouldKeepComplexCandidate(deltaCandidate, fullCandidate,
@@ -765,7 +788,7 @@ public class AfmaEncodePlanner {
         }
 
         if (options.isRectCopyEnabled()) {
-            AfmaRectCopyDetector.Detection detection = copyDetector.detect(previousFrame, currentFrame);
+            AfmaRectCopyDetector.Detection detection = copyDetector.detect(pairAnalysis);
             if (detection != null) {
                 PlannedCandidate copyCandidate = this.createCopyCandidate(currentFrame, introSequence, frameIndex, detection, options);
                 long patchArea = (detection.patchBounds() != null) ? detection.patchBounds().area() : 0L;
@@ -790,7 +813,7 @@ public class AfmaEncodePlanner {
                 }
             }
 
-            AfmaRectCopyDetector.MultiDetection multiDetection = copyDetector.detectMulti(previousFrame, currentFrame);
+            AfmaRectCopyDetector.MultiDetection multiDetection = copyDetector.detectMulti(pairAnalysis);
             if (multiDetection != null) {
                 AfmaPixelFrame multiCopyReferenceFrame = this.buildMultiCopyReferenceFrame(previousFrame, multiDetection.multiCopy());
                 PlannedCandidate multiCopyCandidate = this.createMultiCopyCandidate(currentFrame, introSequence, frameIndex, multiDetection, options);
@@ -884,40 +907,18 @@ public class AfmaEncodePlanner {
     }
 
     @NotNull
+    protected PerceptualDriftStats measurePerceptualDrift(@NotNull AfmaFramePairAnalysis pairAnalysis) {
+        AfmaFramePairAnalysis.PerceptualDriftMetrics driftMetrics = pairAnalysis.perceptualDriftMetrics();
+        return new PerceptualDriftStats(
+                driftMetrics.averageError(),
+                driftMetrics.maxVisibleColorDelta(),
+                driftMetrics.maxAlphaDelta()
+        );
+    }
+
+    @NotNull
     protected PerceptualDriftStats measurePerceptualDrift(@NotNull AfmaPixelFrame sourceFrame, @NotNull AfmaPixelFrame reconstructedFrame) {
-        AfmaPixelFrameHelper.ensureSameSize(sourceFrame, reconstructedFrame);
-        int[] sourcePixels = sourceFrame.getPixelsUnsafe();
-        int[] reconstructedPixels = reconstructedFrame.getPixelsUnsafe();
-        double totalError = 0D;
-        int maxVisibleColorDelta = 0;
-        int maxAlphaDelta = 0;
-        for (int pixelIndex = 0; pixelIndex < sourcePixels.length; pixelIndex++) {
-            int sourceColor = sourcePixels[pixelIndex];
-            int reconstructedColor = reconstructedPixels[pixelIndex];
-            int sourceAlpha = (sourceColor >>> 24) & 0xFF;
-            int reconstructedAlpha = (reconstructedColor >>> 24) & 0xFF;
-            int alphaDelta = Math.abs(sourceAlpha - reconstructedAlpha);
-            if (alphaDelta > maxAlphaDelta) {
-                maxAlphaDelta = alphaDelta;
-            }
-
-            int visibilityAlpha = Math.max(sourceAlpha, reconstructedAlpha);
-            if (visibilityAlpha <= 0) {
-                continue;
-            }
-
-            int redDelta = channelDifference(sourceColor >> 16, reconstructedColor >> 16);
-            int greenDelta = channelDifference(sourceColor >> 8, reconstructedColor >> 8);
-            int blueDelta = channelDifference(sourceColor, reconstructedColor);
-            int visibleColorDelta = Math.max(redDelta, Math.max(greenDelta, blueDelta));
-            if (visibleColorDelta > maxVisibleColorDelta) {
-                maxVisibleColorDelta = visibleColorDelta;
-            }
-
-            double visibilityWeight = visibilityAlpha / 255.0D;
-            totalError += (alphaDelta * 2.0D) + ((redDelta + greenDelta + blueDelta) * visibilityWeight);
-        }
-        return new PerceptualDriftStats(totalError / Math.max(1, sourcePixels.length), maxVisibleColorDelta, maxAlphaDelta);
+        return this.measurePerceptualDrift(new AfmaFramePairAnalysis(sourceFrame, reconstructedFrame));
     }
 
     @NotNull
@@ -2519,9 +2520,13 @@ public class AfmaEncodePlanner {
         @NotNull
         protected final IdentityHashMap<AfmaPixelFrame, FrameContentKey> frameKeysByIdentity = new IdentityHashMap<>();
         @NotNull
+        protected final Map<FramePairKey, AfmaFramePairAnalysis> framePairAnalysesByKey = new LinkedHashMap<>();
+        @NotNull
         protected final Map<FullCandidateKey, PlannedCandidate> fullCandidatesByKey = new LinkedHashMap<>();
         @NotNull
         protected final Map<PairCandidateKey, PairCandidateSet> pairCandidatesByKey = new LinkedHashMap<>();
+        @NotNull
+        protected final Map<CandidateReferenceFrameAnalysisKey, CandidateReferenceFrameAnalysis> candidateReferenceFrameAnalysesByKey = new LinkedHashMap<>();
 
         @NotNull
         public PlannedCandidate getFullCandidate(@NotNull AfmaPixelFrame frame, boolean introSequence, int frameIndex,
@@ -2567,7 +2572,8 @@ public class AfmaEncodePlanner {
                 return cachedCandidateSet;
             }
 
-            AfmaRect deltaBounds = AfmaPixelFrameHelper.findDifferenceBounds(previousFrame, workingFrame);
+            AfmaFramePairAnalysis pairAnalysis = this.getFramePairAnalysis(previousFrame, workingFrame);
+            AfmaRect deltaBounds = pairAnalysis.differenceBounds();
             PlannedCandidate deltaCandidate = (deltaBounds != null)
                     ? AfmaEncodePlanner.this.createDeltaCandidate(workingFrame, introSequence, frameIndex, deltaBounds, options)
                     : null;
@@ -2588,14 +2594,14 @@ public class AfmaEncodePlanner {
             PlannedCandidate multiCopySparseCandidate = null;
             PlannedCandidate blockInterCandidate = null;
             if (options.isRectCopyEnabled()) {
-                copyDetection = copyDetector.detect(previousFrame, workingFrame);
+                copyDetection = copyDetector.detect(pairAnalysis);
                 if (copyDetection != null) {
                     copyCandidate = AfmaEncodePlanner.this.createCopyCandidate(workingFrame, introSequence, frameIndex, copyDetection, options);
                     copyResidualCandidate = AfmaEncodePlanner.this.createCopyResidualCandidate(previousFrame, workingFrame, introSequence, frameIndex, copyDetection);
                     copySparseCandidate = AfmaEncodePlanner.this.createCopySparseCandidate(previousFrame, workingFrame, introSequence, frameIndex, copyDetection);
                 }
 
-                multiDetection = copyDetector.detectMulti(previousFrame, workingFrame);
+                multiDetection = copyDetector.detectMulti(pairAnalysis);
                 if (multiDetection != null) {
                     AfmaPixelFrame multiCopyReferenceFrame = AfmaEncodePlanner.this.buildMultiCopyReferenceFrame(previousFrame, multiDetection.multiCopy());
                     multiCopyCandidate = AfmaEncodePlanner.this.createMultiCopyCandidate(workingFrame, introSequence, frameIndex, multiDetection, options);
@@ -2625,6 +2631,42 @@ public class AfmaEncodePlanner {
             );
             this.pairCandidatesByKey.put(cacheKey, candidateSet);
             return candidateSet;
+        }
+
+        @NotNull
+        public AfmaFramePairAnalysis getFramePairAnalysis(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame nextFrame) {
+            FramePairKey cacheKey = new FramePairKey(this.frameKey(previousFrame), this.frameKey(nextFrame));
+            AfmaFramePairAnalysis cachedAnalysis = this.framePairAnalysesByKey.get(cacheKey);
+            if (cachedAnalysis != null) {
+                return cachedAnalysis;
+            }
+
+            AfmaFramePairAnalysis pairAnalysis = new AfmaFramePairAnalysis(previousFrame, nextFrame);
+            this.framePairAnalysesByKey.put(cacheKey, pairAnalysis);
+            return pairAnalysis;
+        }
+
+        @NotNull
+        public CandidateReferenceFrameAnalysis getCandidateReferenceFrameAnalysis(@NotNull PlannedCandidate candidate,
+                                                                                  @NotNull AfmaPixelFrame sourceFrame,
+                                                                                  @NotNull AfmaPixelFrame workingFrame) {
+            CandidateReferenceFrameAnalysisKey cacheKey = new CandidateReferenceFrameAnalysisKey(
+                    candidate,
+                    this.frameKey(sourceFrame),
+                    this.frameKey(workingFrame)
+            );
+            CandidateReferenceFrameAnalysis cachedAnalysis = this.candidateReferenceFrameAnalysesByKey.get(cacheKey);
+            if (cachedAnalysis != null) {
+                return cachedAnalysis;
+            }
+
+            AfmaPixelFrame reconstructedFrame = candidate.materializeReferenceFrame(sourceFrame, workingFrame);
+            CandidateReferenceFrameAnalysis referenceAnalysis = new CandidateReferenceFrameAnalysis(
+                    reconstructedFrame,
+                    this.getFramePairAnalysis(sourceFrame, reconstructedFrame)
+            );
+            this.candidateReferenceFrameAnalysesByKey.put(cacheKey, referenceAnalysis);
+            return referenceAnalysis;
         }
 
         @NotNull
@@ -2678,6 +2720,9 @@ public class AfmaEncodePlanner {
                                       boolean allowPerceptual, @NotNull ReferenceBase referenceBase) {
     }
 
+    protected record FramePairKey(@NotNull FrameContentKey previousFrameKey, @NotNull FrameContentKey nextFrameKey) {
+    }
+
     protected record PairCandidateKey(@NotNull FrameContentKey previousFrameKey, @NotNull FrameContentKey workingFrameKey,
                                       boolean introSequence, int frameIndex) {
     }
@@ -2695,6 +2740,15 @@ public class AfmaEncodePlanner {
                                       @Nullable PlannedCandidate multiCopyResidualCandidate,
                                       @Nullable PlannedCandidate multiCopySparseCandidate,
                                       @Nullable PlannedCandidate blockInterCandidate) {
+    }
+
+    protected record CandidateReferenceFrameAnalysis(@NotNull AfmaPixelFrame reconstructedFrame,
+                                                     @NotNull AfmaFramePairAnalysis sourcePairAnalysis) {
+    }
+
+    protected record CandidateReferenceFrameAnalysisKey(@NotNull PlannedCandidate candidate,
+                                                        @NotNull FrameContentKey sourceFrameKey,
+                                                        @NotNull FrameContentKey workingFrameKey) {
     }
 
     protected enum DecodeCost {

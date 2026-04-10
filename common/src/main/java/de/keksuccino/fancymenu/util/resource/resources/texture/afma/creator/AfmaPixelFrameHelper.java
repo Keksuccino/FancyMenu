@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaRect;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.List;
 
 public final class AfmaPixelFrameHelper {
@@ -20,37 +19,11 @@ public final class AfmaPixelFrameHelper {
     }
 
     public static boolean isIdentical(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next) {
-        ensureSameSize(previous, next);
-        return Arrays.equals(previous.getPixelsUnsafe(), next.getPixelsUnsafe());
+        return new AfmaFramePairAnalysis(previous, next).isIdentical();
     }
 
     public static @Nullable AfmaRect findDifferenceBounds(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next) {
-        ensureSameSize(previous, next);
-
-        int width = previous.getWidth();
-        int height = previous.getHeight();
-        int[] previousPixels = previous.getPixelsUnsafe();
-        int[] nextPixels = next.getPixelsUnsafe();
-        int minX = width;
-        int minY = height;
-        int maxX = -1;
-        int maxY = -1;
-
-        for (int y = 0; y < height; y++) {
-            int rowOffset = y * width;
-            for (int x = 0; x < width; x++) {
-                if (previousPixels[rowOffset + x] == nextPixels[rowOffset + x]) continue;
-                if (x < minX) minX = x;
-                if (y < minY) minY = y;
-                if (x > maxX) maxX = x;
-                if (y > maxY) maxY = y;
-            }
-        }
-
-        if (maxX < minX || maxY < minY) {
-            return null;
-        }
-        return new AfmaRect(minX, minY, (maxX - minX) + 1, (maxY - minY) + 1);
+        return new AfmaFramePairAnalysis(previous, next).differenceBounds();
     }
 
     public static @NotNull AfmaPixelFrame crop(@NotNull AfmaPixelFrame source, int x, int y, int width, int height) {
@@ -64,46 +37,7 @@ public final class AfmaPixelFrameHelper {
     }
 
     public static @Nullable AfmaRect findDirtyBoundsAfterCopy(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next, @NotNull AfmaCopyRect copyRect) {
-        ensureSameSize(previous, next);
-
-        int width = previous.getWidth();
-        int height = previous.getHeight();
-        int[] previousPixels = previous.getPixelsUnsafe();
-        int[] nextPixels = next.getPixelsUnsafe();
-        int dstLeft = copyRect.getDstX();
-        int dstTop = copyRect.getDstY();
-        int dstRight = dstLeft + copyRect.getWidth();
-        int dstBottom = dstTop + copyRect.getHeight();
-        int srcLeft = copyRect.getSrcX();
-        int srcTop = copyRect.getSrcY();
-        int minX = width;
-        int minY = height;
-        int maxX = -1;
-        int maxY = -1;
-
-        for (int y = 0; y < height; y++) {
-            int rowOffset = y * width;
-            boolean copiedRow = (y >= dstTop) && (y < dstBottom);
-            int copiedSourceRowOffset = copiedRow ? ((srcTop + (y - dstTop)) * width) : 0;
-            for (int x = 0; x < width; x++) {
-                int pixelIndex = rowOffset + x;
-                int expected = previousPixels[pixelIndex];
-                if (copiedRow && (x >= dstLeft) && (x < dstRight)) {
-                    expected = previousPixels[copiedSourceRowOffset + srcLeft + (x - dstLeft)];
-                }
-
-                if (expected == nextPixels[pixelIndex]) continue;
-                if (x < minX) minX = x;
-                if (y < minY) minY = y;
-                if (x > maxX) maxX = x;
-                if (y > maxY) maxY = y;
-            }
-        }
-
-        if (maxX < minX || maxY < minY) {
-            return null;
-        }
-        return new AfmaRect(minX, minY, (maxX - minX) + 1, (maxY - minY) + 1);
+        return new AfmaFramePairAnalysis(previous, next).findDirtyBoundsAfterCopy(copyRect);
     }
 
     public static void applyCopyRect(@NotNull int[] pixels, int frameWidth, @NotNull AfmaCopyRect copyRect) {
