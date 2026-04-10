@@ -66,6 +66,7 @@ public class AfmaEncodePlanner {
     protected static final int MIN_SHORTLISTED_SPARSE_LAYOUTS = 2;
     protected static final int SPARSE_LAYOUT_SHORTLIST_MARGIN_BYTES = 24;
     protected static final double SPARSE_LAYOUT_SHORTLIST_MARGIN_RATIO = 0.15D;
+    protected static final long MEMORY_SAFETY_RESERVE_BYTES = 192L * 1024L * 1024L;
     protected static final byte[] EMPTY_BYTES = new byte[0];
     @NotNull
     protected static final Map<String, String> EMPTY_PAYLOAD_PATHS_BY_FINGERPRINT = Collections.emptyMap();
@@ -164,16 +165,14 @@ public class AfmaEncodePlanner {
 
         BeamPlanningState baseState = BeamPlanningState.root(initialArchiveState);
         AfmaPixelFrame preloadedFrame = firstFrameOverride;
-        int plannerWindowFrames = Math.max(1, options.getPlannerSearchWindowFrames());
+        int plannerWindowFrames = this.resolveEffectivePlannerWindowFrames(options, dimension);
         try {
             for (int windowStart = 0; windowStart < sequence.size(); windowStart += plannerWindowFrames) {
                 checkCancelled(cancellationRequested);
                 int windowEnd = Math.min(sequence.size(), windowStart + plannerWindowFrames);
-                List<AfmaPixelFrame> windowFrames = this.loadPlanningWindowFrames(sequence, windowStart, windowEnd, dimension, preloadedFrame,
-                        cancellationRequested, progressListener, introSequence, startOffset, totalFrameCount);
+                BeamPlanningState bestWindowState = this.planWindow(sequence, windowStart, windowEnd, dimension, preloadedFrame, introSequence,
+                        options, copyDetector, baseState, cancellationRequested, progressListener, startOffset, totalFrameCount, sequence.size());
                 preloadedFrame = null;
-                BeamPlanningState bestWindowState = this.planWindow(windowFrames, windowStart, introSequence, options, copyDetector, baseState,
-                        cancellationRequested, progressListener, startOffset, totalFrameCount, sequence.size());
                 this.commitPlannedWindow(bestWindowState, plannedFrames, payloads, payloadPathsByFingerprint);
                 baseState = bestWindowState.toCommittedBaseState();
                 reportProgress(progressListener,
@@ -307,36 +306,77 @@ public class AfmaEncodePlanner {
         return left + right;
     }
 
-    @NotNull
-    protected List<AfmaPixelFrame> loadPlanningWindowFrames(@NotNull AfmaSourceSequence sequence, int windowStart, int windowEnd,
-                                                            @NotNull Dimension dimension, @Nullable AfmaPixelFrame firstFrameOverride,
-                                                            @Nullable BooleanSupplier cancellationRequested,
-                                                            @Nullable ProgressListener progressListener, boolean introSequence,
-                                                            int startOffset, int totalFrameCount) throws IOException {
-        ArrayList<AfmaPixelFrame> windowFrames = new ArrayList<>(Math.max(0, windowEnd - windowStart));
-        AfmaPixelFrame preloadedFrame = firstFrameOverride;
-        for (int frameIndex = windowStart; frameIndex < windowEnd; frameIndex++) {
-            checkCancelled(cancellationRequested);
-            this.reportPlanningFrameProgress(progressListener, "Loading", introSequence,
-                    frameIndex + 1, sequence.size(), startOffset + frameIndex, totalFrameCount);
-            File frameFile = Objects.requireNonNull(sequence.getFrame(frameIndex));
-            AfmaPixelFrame sourceFrame;
-            if ((frameIndex == 0) && (preloadedFrame != null)) {
-                sourceFrame = preloadedFrame;
-                preloadedFrame = null;
-            } else {
-                sourceFrame = this.frameNormalizer.loadFrame(frameFile);
-            }
-            if ((sourceFrame.getWidth() != dimension.width()) || (sourceFrame.getHeight() != dimension.height())) {
-                throw new IOException("AFMA source frame dimensions do not match the expected canvas size: " + frameFile.getAbsolutePath());
-            }
-            windowFrames.add(sourceFrame);
+    protected int resolveEffectivePlannerWindowFrames(@NotNull AfmaEncodeOptions options, @NotNull Dimension dimension) {
+        int configuredWindowFrames = Math.max(1, options.getPlannerSearchWindowFrames());
+        long frameBytes = estimateFrameBytes(dimension);
+        long maxMemory = Runtime.getRuntime().maxMemory();
+        if (frameBytes <= 0L || maxMemory <= 0L) {
+            return configuredWindowFrames;
         }
-        return windowFrames;
+
+        long memoryBudget = Math.max(frameBytes, Math.max(1L, (maxMemory - MEMORY_SAFETY_RESERVE_BYTES) / 12L));
+        int memorySafeWindowFrames = (int) Math.max(1L, memoryBudget / Math.max(1L, frameBytes));
+        return Math.min(configuredWindowFrames, memorySafeWindowFrames);
+    }
+
+    protected int resolveEffectivePlannerBeamWidth(@NotNull AfmaEncodeOptions options, @NotNull Dimension dimension) {
+        int configuredBeamWidth = Math.max(1, options.getPlannerBeamWidth());
+        long frameBytes = estimateFrameBytes(dimension);
+        long maxMemory = Runtime.getRuntime().maxMemory();
+        if (frameBytes <= 0L || maxMemory <= 0L) {
+            return configuredBeamWidth;
+        }
+
+        long memoryBudget = Math.max(frameBytes, Math.max(1L, (maxMemory - MEMORY_SAFETY_RESERVE_BYTES) / 6L));
+        long estimatedStateBytes = frameBytes + Math.max(frameBytes / 2L, 64L * 1024L);
+        int memorySafeBeamWidth = (int) Math.max(1L, memoryBudget / Math.max(1L, estimatedStateBytes));
+        return Math.min(configuredBeamWidth, memorySafeBeamWidth);
+    }
+
+    protected static long estimateFrameBytes(@NotNull Dimension dimension) {
+        return Math.max(0L, (long) dimension.width() * (long) dimension.height() * Integer.BYTES);
+    }
+
+    protected boolean shouldParallelizeBlockInterTiles(int totalTileCount, @NotNull AfmaRect regionBounds) {
+        if ((totalTileCount < MIN_PARALLEL_BLOCK_INTER_TILES) || (Runtime.getRuntime().availableProcessors() <= 1)) {
+            return false;
+        }
+
+        Runtime runtime = Runtime.getRuntime();
+        long maxMemory = runtime.maxMemory();
+        if (maxMemory <= 0L) {
+            return false;
+        }
+
+        long usedMemory = Math.max(0L, runtime.totalMemory() - runtime.freeMemory());
+        long headroomBytes = Math.max(0L, maxMemory - usedMemory);
+        long regionBytes = Math.max(0L, regionBounds.area()) * Integer.BYTES;
+        long requiredHeadroomBytes = Math.max(MEMORY_SAFETY_RESERVE_BYTES, Math.max(regionBytes, 32L * 1024L * 1024L));
+        return headroomBytes >= requiredHeadroomBytes;
     }
 
     @NotNull
-    protected BeamPlanningState planWindow(@NotNull List<AfmaPixelFrame> windowFrames, int windowStartFrameIndex,
+    protected AfmaPixelFrame loadPlanningFrame(@NotNull AfmaSourceSequence sequence, int frameIndex,
+                                               @NotNull Dimension dimension, @Nullable AfmaPixelFrame firstFrameOverride,
+                                               @Nullable BooleanSupplier cancellationRequested,
+                                               @Nullable ProgressListener progressListener, boolean introSequence,
+                                               int startOffset, int totalFrameCount) throws IOException {
+        checkCancelled(cancellationRequested);
+        this.reportPlanningFrameProgress(progressListener, "Loading", introSequence,
+                frameIndex + 1, sequence.size(), startOffset + frameIndex, totalFrameCount);
+        File frameFile = Objects.requireNonNull(sequence.getFrame(frameIndex));
+        AfmaPixelFrame sourceFrame = ((firstFrameOverride != null) && (frameIndex == 0))
+                ? firstFrameOverride
+                : this.frameNormalizer.loadFrame(frameFile);
+        if ((sourceFrame.getWidth() != dimension.width()) || (sourceFrame.getHeight() != dimension.height())) {
+            throw new IOException("AFMA source frame dimensions do not match the expected canvas size: " + frameFile.getAbsolutePath());
+        }
+        return sourceFrame;
+    }
+
+    @NotNull
+    protected BeamPlanningState planWindow(@NotNull AfmaSourceSequence sequence, int windowStartFrameIndex, int windowEndFrameIndex,
+                                           @NotNull Dimension dimension, @Nullable AfmaPixelFrame firstFrameOverride,
                                            boolean introSequence, @NotNull AfmaEncodeOptions options,
                                            @NotNull AfmaRectCopyDetector copyDetector, @NotNull BeamPlanningState baseState,
                                            @Nullable BooleanSupplier cancellationRequested,
@@ -344,73 +384,140 @@ public class AfmaEncodePlanner {
                                            int startOffset, int totalFrameCount, int sequenceFrameCount) throws IOException {
         List<BeamPlanningState> beam = new ArrayList<>();
         beam.add(baseState.toCommittedBaseState());
-        WindowCandidateCache windowCandidateCache = new WindowCandidateCache();
         BeamPlanningState bestState = null;
+        AfmaPixelFrame preloadedFrame = firstFrameOverride;
+        int plannerBeamWidth = this.resolveEffectivePlannerBeamWidth(options, dimension);
+        ArrayList<BeamPlanningState> expandedBeam = null;
         try {
-            for (int localFrameIndex = 0; localFrameIndex < windowFrames.size(); localFrameIndex++) {
+            for (int absoluteFrameIndex = windowStartFrameIndex; absoluteFrameIndex < windowEndFrameIndex; absoluteFrameIndex++) {
                 checkCancelled(cancellationRequested);
-                AfmaPixelFrame sourceFrame = windowFrames.get(localFrameIndex);
-                int absoluteFrameIndex = windowStartFrameIndex + localFrameIndex;
+                AfmaPixelFrame sourceFrame = this.loadPlanningFrame(sequence, absoluteFrameIndex, dimension, preloadedFrame,
+                        cancellationRequested, progressListener, introSequence, startOffset, totalFrameCount);
+                preloadedFrame = null;
                 this.reportPlanningFrameProgress(progressListener, "Planning", introSequence,
                         absoluteFrameIndex + 1, sequenceFrameCount, startOffset + absoluteFrameIndex + 0.5D, totalFrameCount);
                 long frameDelayMs = this.resolveSourceFrameDelay(options, introSequence, absoluteFrameIndex);
-                ArrayList<BeamPlanningState> expandedBeam = new ArrayList<>();
-                for (BeamPlanningState state : beam) {
-                    AfmaPixelFrame previousFrame = state.previousFrame();
-                    AfmaPixelFrame workingFrame = sourceFrame;
-                    if ((previousFrame != null) && options.isNearLosslessEnabled()
-                            && this.shouldAllowPerceptualContinuation(state.framesSinceKeyframe(), options)) {
-                        workingFrame = this.applyNearLosslessTemporalMerge(previousFrame, sourceFrame, options.getNearLosslessMaxChannelDelta());
-                    }
+                WindowCandidateCache windowCandidateCache = new WindowCandidateCache();
+                try {
+                    expandedBeam = new ArrayList<>();
+                    for (BeamPlanningState state : beam) {
+                        AfmaPixelFrame previousFrame = state.previousFrame();
+                        AfmaPixelFrame workingFrame = sourceFrame;
+                        if ((previousFrame != null) && options.isNearLosslessEnabled()
+                                && this.shouldAllowPerceptualContinuation(state.framesSinceKeyframe(), options)) {
+                            workingFrame = this.applyNearLosslessTemporalMerge(previousFrame, sourceFrame, options.getNearLosslessMaxChannelDelta());
+                        }
 
-                    AfmaFramePairAnalysis workingPairAnalysis = (previousFrame != null)
-                            ? windowCandidateCache.getFramePairAnalysis(previousFrame, workingFrame)
-                            : null;
-                    if ((workingPairAnalysis != null) && state.emittedFrameAvailable()
-                            && options.isDuplicateFrameElision()
-                            && workingPairAnalysis.isIdentical()) {
-                        BeamPlanningState duplicateState = this.evaluateDuplicateContinuation(
-                                state,
-                                windowCandidateCache.getFramePairAnalysis(sourceFrame, previousFrame),
-                                frameDelayMs,
-                                options
-                        );
-                        if (duplicateState != null) {
-                            expandedBeam.add(duplicateState);
+                        AfmaFramePairAnalysis workingPairAnalysis = (previousFrame != null)
+                                ? windowCandidateCache.getFramePairAnalysis(previousFrame, workingFrame)
+                                : null;
+                        if ((workingPairAnalysis != null) && state.emittedFrameAvailable()
+                                && options.isDuplicateFrameElision()
+                                && workingPairAnalysis.isIdentical()) {
+                            BeamPlanningState duplicateState = this.evaluateDuplicateContinuation(
+                                    state,
+                                    windowCandidateCache.getFramePairAnalysis(sourceFrame, previousFrame),
+                                    frameDelayMs,
+                                    options
+                            );
+                            if (duplicateState != null) {
+                                expandedBeam.add(duplicateState);
+                            }
+                        }
+
+                        List<PlannedCandidate> candidates = this.collectWindowCandidates(previousFrame, sourceFrame, workingFrame,
+                                introSequence, absoluteFrameIndex, state.framesSinceKeyframe(), state.decodeComplexitySinceKeyframe(),
+                                options, copyDetector, state.archiveState(), windowCandidateCache);
+                        for (PlannedCandidate candidate : candidates) {
+                            BeamPlanningState candidateState = this.evaluateCandidateTransition(
+                                    state,
+                                    candidate,
+                                    windowCandidateCache.getCandidateReferenceFrameAnalysis(candidate, sourceFrame, workingFrame),
+                                    frameDelayMs,
+                                    introSequence,
+                                    options
+                            );
+                            if (candidateState != null) {
+                                expandedBeam.add(candidateState);
+                            }
                         }
                     }
 
-                    List<PlannedCandidate> candidates = this.collectWindowCandidates(previousFrame, sourceFrame, workingFrame,
-                            introSequence, absoluteFrameIndex, state.framesSinceKeyframe(), state.decodeComplexitySinceKeyframe(),
-                            options, copyDetector, state.archiveState(), windowCandidateCache);
-                    for (PlannedCandidate candidate : candidates) {
-                        BeamPlanningState candidateState = this.evaluateCandidateTransition(
-                                state,
-                                candidate,
-                                windowCandidateCache.getCandidateReferenceFrameAnalysis(candidate, sourceFrame, workingFrame),
-                                frameDelayMs,
-                                introSequence,
-                                options
-                        );
-                        if (candidateState != null) {
-                            expandedBeam.add(candidateState);
-                        }
+                    List<BeamPlanningState> nextBeam = this.prunePlanningBeam(expandedBeam, plannerBeamWidth);
+                    nextBeam = this.refinePlanningBeamArchiveScores(nextBeam);
+                    Set<PlannedCandidate> retainedCandidates = Collections.newSetFromMap(new IdentityHashMap<>());
+                    for (BeamPlanningState state : nextBeam) {
+                        this.collectStateCandidates(state, retainedCandidates);
                     }
-                }
-
-                beam = this.prunePlanningBeam(expandedBeam, options.getPlannerBeamWidth());
-                beam = this.refinePlanningBeamArchiveScores(beam);
-                if (beam.isEmpty()) {
-                    throw new IOException("AFMA planner failed to find a valid candidate for source frame " + (absoluteFrameIndex + 1));
+                    windowCandidateCache.closeCandidates(retainedCandidates);
+                    this.closeDiscardedBeamStateCandidates(expandedBeam, nextBeam);
+                    this.discardBeamCandidateReferencePixels(nextBeam);
+                    if (nextBeam.isEmpty()) {
+                        throw new IOException("AFMA planner failed to find a valid candidate for source frame " + (absoluteFrameIndex + 1));
+                    }
+                    beam = nextBeam;
+                    expandedBeam = null;
+                } catch (Throwable throwable) {
+                    windowCandidateCache.closeAllCandidates();
+                    throw throwable;
                 }
             }
             bestState = beam.get(0);
-            windowCandidateCache.closeUnusedCandidates(bestState);
+            this.closeDiscardedBeamStateCandidates(beam, List.of(bestState));
             return bestState;
         } finally {
             if (bestState == null) {
-                windowCandidateCache.closeAllCandidates();
+                this.closeDiscardedBeamStateCandidates(beam, List.of());
+                if (expandedBeam != null) {
+                    this.closeDiscardedBeamStateCandidates(expandedBeam, List.of());
+                }
             }
+            CloseableUtils.closeQuietly(preloadedFrame);
+        }
+    }
+
+    protected void closeDiscardedBeamStateCandidates(@NotNull List<BeamPlanningState> states,
+                                                     @NotNull List<BeamPlanningState> retainedStates) {
+        Set<PlannedCandidate> retainedCandidates = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (BeamPlanningState retainedState : retainedStates) {
+            this.collectStateCandidates(retainedState, retainedCandidates);
+        }
+
+        Set<PlannedCandidate> closedCandidates = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (BeamPlanningState state : states) {
+            PlanningStep step = state.tailStep;
+            while (step != null) {
+                PlannedCandidate candidate = step.candidate();
+                if ((candidate != null) && !retainedCandidates.contains(candidate) && closedCandidates.add(candidate)) {
+                    candidate.closePayloads();
+                }
+                step = step.previous;
+            }
+        }
+    }
+
+    protected void discardBeamCandidateReferencePixels(@NotNull List<BeamPlanningState> states) {
+        Set<PlannedCandidate> visitedCandidates = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (BeamPlanningState state : states) {
+            PlanningStep step = state.tailStep;
+            while (step != null) {
+                PlannedCandidate candidate = step.candidate();
+                if ((candidate != null) && visitedCandidates.add(candidate)) {
+                    candidate.discardReferencePixels();
+                }
+                step = step.previous;
+            }
+        }
+    }
+
+    protected void collectStateCandidates(@NotNull BeamPlanningState state, @NotNull Set<PlannedCandidate> collectedCandidates) {
+        PlanningStep step = state.tailStep;
+        while (step != null) {
+            PlannedCandidate candidate = step.candidate();
+            if (candidate != null) {
+                collectedCandidates.add(candidate);
+            }
+            step = step.previous;
         }
     }
 
@@ -1946,7 +2053,7 @@ public class AfmaEncodePlanner {
                 regionAnalysis
         );
         AfmaBlockInterPayloadHelper.TileOperation[] tileOperations = new AfmaBlockInterPayloadHelper.TileOperation[totalTileCount];
-        if (totalTileCount >= MIN_PARALLEL_BLOCK_INTER_TILES) {
+        if (this.shouldParallelizeBlockInterTiles(totalTileCount, regionBounds)) {
             IntStream.range(0, totalTileCount).parallel().forEach(tileIndex ->
                     tileOperations[tileIndex] = this.buildBlockInterTileOperation(previousFrame, currentFrame, motionVectors,
                             regionBounds, tileCountX, tileCountY, regionAnalysis, tileIndex));
@@ -3182,7 +3289,8 @@ public class AfmaEncodePlanner {
         @Nullable
         protected final AfmaRect referencePatchBounds;
         @Nullable
-        protected final int[] referencePatchPixels;
+        protected int[] referencePatchPixels;
+        protected boolean referencePixelsDiscarded;
         @NotNull
         protected final DecodeCost decodeCost;
         protected final int complexityScore;
@@ -3206,6 +3314,7 @@ public class AfmaEncodePlanner {
             this.referenceBase = referenceBase;
             this.referencePatchBounds = referencePatchBounds;
             this.referencePatchPixels = referencePatchPixels;
+            this.referencePixelsDiscarded = false;
             this.decodeCost = decodeCost;
             this.complexityScore = complexityScore;
         }
@@ -3250,6 +3359,10 @@ public class AfmaEncodePlanner {
 
         @NotNull
         public AfmaPixelFrame materializeReferenceFrame(@NotNull AfmaPixelFrame sourceFrame, @NotNull AfmaPixelFrame workingFrame) {
+            if (this.referencePixelsDiscarded) {
+                throw new IllegalStateException("AFMA planner reference pixels were already discarded for this candidate");
+            }
+
             AfmaPixelFrame baseFrame = (this.referenceBase == ReferenceBase.SOURCE_FRAME) ? sourceFrame : workingFrame;
             if ((this.referencePatchBounds == null) || (this.referencePatchPixels == null)) {
                 return baseFrame;
@@ -3273,6 +3386,9 @@ public class AfmaEncodePlanner {
         }
 
         public boolean isExactRelativeToSourceFrame(@NotNull AfmaPixelFrame sourceFrame, @NotNull AfmaPixelFrame workingFrame) {
+            if (this.referencePixelsDiscarded) {
+                throw new IllegalStateException("AFMA planner reference pixels were already discarded for this candidate");
+            }
             if ((this.referencePatchBounds != null) || (this.referencePatchPixels != null)) {
                 return false;
             }
@@ -3280,6 +3396,14 @@ public class AfmaEncodePlanner {
                 return true;
             }
             return sourceFrame == workingFrame;
+        }
+
+        public void discardReferencePixels() {
+            if (this.referencePatchPixels == null) {
+                return;
+            }
+            this.referencePatchPixels = null;
+            this.referencePixelsDiscarded = true;
         }
 
         public long estimatedArchiveBytes(@NotNull Map<String, String> payloadPathsByFingerprint) {

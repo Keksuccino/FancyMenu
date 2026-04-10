@@ -24,6 +24,7 @@ public final class AfmaBinIntraPayloadHelper {
     public static final int RGB_CHANNELS = 3;
     public static final int RGBA_CHANNELS = 4;
     protected static final int MIN_PARALLEL_MODE_SELECTION_PIXELS = 65536;
+    protected static final long MIN_PARALLEL_MODE_SELECTION_HEADROOM_BYTES = 192L * 1024L * 1024L;
 
     private AfmaBinIntraPayloadHelper() {
     }
@@ -1029,7 +1030,27 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     protected static boolean shouldParallelizeModeSelection(int width, int height, int candidateCount) {
-        return candidateCount > 1 && ((long) width * height) >= MIN_PARALLEL_MODE_SELECTION_PIXELS;
+        long pixelCount = (long) width * height;
+        if ((candidateCount <= 1) || (pixelCount < MIN_PARALLEL_MODE_SELECTION_PIXELS)) {
+            return false;
+        }
+
+        int parallelTasks = Math.min(candidateCount, Math.max(1, Runtime.getRuntime().availableProcessors()));
+        if (parallelTasks <= 1) {
+            return false;
+        }
+
+        long estimatedAdditionalBytes = pixelCount * 12L * parallelTasks;
+        Runtime runtime = Runtime.getRuntime();
+        long maxMemory = runtime.maxMemory();
+        if (maxMemory <= 0L) {
+            return false;
+        }
+
+        long usedMemory = Math.max(0L, runtime.totalMemory() - runtime.freeMemory());
+        long headroomBytes = Math.max(0L, maxMemory - usedMemory);
+        long requiredHeadroomBytes = Math.max(MIN_PARALLEL_MODE_SELECTION_HEADROOM_BYTES, estimatedAdditionalBytes);
+        return headroomBytes >= requiredHeadroomBytes;
     }
 
     @Nullable

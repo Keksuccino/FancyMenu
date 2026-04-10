@@ -3,13 +3,11 @@ package de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.system.MemoryUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.nio.file.Files;
 import java.util.Objects;
 
 public class AfmaFrameNormalizer {
@@ -18,18 +16,12 @@ public class AfmaFrameNormalizer {
     public AfmaPixelFrame loadFrame(@NotNull File file) throws IOException {
         Objects.requireNonNull(file);
 
-        byte[] fileBytes = Files.readAllBytes(file.toPath());
-        ByteBuffer encodedBuffer = null;
         ByteBuffer decodedBuffer = null;
         try (MemoryStack stack = MemoryStack.stackPush()) {
-            encodedBuffer = MemoryUtil.memAlloc(fileBytes.length);
-            encodedBuffer.put(fileBytes);
-            encodedBuffer.flip();
-
             IntBuffer widthBuffer = stack.mallocInt(1);
             IntBuffer heightBuffer = stack.mallocInt(1);
             IntBuffer componentBuffer = stack.mallocInt(1);
-            decodedBuffer = STBImage.stbi_load_from_memory(encodedBuffer, widthBuffer, heightBuffer, componentBuffer, 4);
+            decodedBuffer = STBImage.stbi_load(file.getAbsolutePath(), widthBuffer, heightBuffer, componentBuffer, 4);
             if (decodedBuffer == null) {
                 throw new IOException("Failed to decode AFMA source frame: " + file.getAbsolutePath() + " (" + STBImage.stbi_failure_reason() + ")");
             }
@@ -49,9 +41,6 @@ public class AfmaFrameNormalizer {
         } finally {
             if (decodedBuffer != null) {
                 STBImage.stbi_image_free(decodedBuffer);
-            }
-            if (encodedBuffer != null) {
-                MemoryUtil.memFree(encodedBuffer);
             }
         }
     }
