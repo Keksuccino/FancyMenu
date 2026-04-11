@@ -8,7 +8,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -399,13 +398,24 @@ public class AfmaRectCopyDetector {
         int srcBaseY = Math.max(0, -dy);
         int dstBaseX = Math.max(0, dx);
         int dstBaseY = Math.max(0, dy);
-        LinkedHashMap<Long, RectAccumulator> activeRects = new LinkedHashMap<>();
+        int maxRuns = (overlapWidth / 2) + 2;
+        int[] prevStartX = new int[maxRuns];
+        int[] prevEndX = new int[maxRuns];
+        int[] prevStartY = new int[maxRuns];
+        int[] prevHeight = new int[maxRuns];
+        long[] prevDirty = new long[maxRuns];
+        int prevCount = 0;
+        int[] currStartX = new int[maxRuns];
+        int[] currEndX = new int[maxRuns];
+        int[] currStartY = new int[maxRuns];
+        int[] currHeight = new int[maxRuns];
+        long[] currDirty = new long[maxRuns];
         CopyRectCandidate bestCandidate = null;
 
         for (int localY = 0; localY < overlapHeight; localY++) {
             int srcRowOffset = ((srcBaseY + localY) * width) + srcBaseX;
             int dstRowOffset = ((dstBaseY + localY) * width) + dstBaseX;
-            ArrayList<RowRun> rowRuns = new ArrayList<>();
+            int currCount = 0;
             int runStartX = -1;
             int runDirtyPixels = 0;
 
@@ -413,7 +423,12 @@ public class AfmaRectCopyDetector {
                 boolean motionMatch = predictedPixels[srcRowOffset + localX] == nextPixels[dstRowOffset + localX];
                 if (!motionMatch) {
                     if (runStartX >= 0) {
-                        rowRuns.add(new RowRun(runStartX, localX, runDirtyPixels));
+                        currStartX[currCount] = runStartX;
+                        currEndX[currCount] = localX;
+                        currStartY[currCount] = localY;
+                        currHeight[currCount] = 1;
+                        currDirty[currCount] = runDirtyPixels;
+                        currCount++;
                         runStartX = -1;
                         runDirtyPixels = 0;
                     }
@@ -429,40 +444,87 @@ public class AfmaRectCopyDetector {
                 }
             }
             if (runStartX >= 0) {
-                rowRuns.add(new RowRun(runStartX, overlapWidth, runDirtyPixels));
+                currStartX[currCount] = runStartX;
+                currEndX[currCount] = overlapWidth;
+                currStartY[currCount] = localY;
+                currHeight[currCount] = 1;
+                currDirty[currCount] = runDirtyPixels;
+                currCount++;
             }
 
-            LinkedHashMap<Long, RectAccumulator> nextActiveRects = new LinkedHashMap<>();
-            for (RowRun rowRun : rowRuns) {
-                long spanKey = spanKey(rowRun.startX(), rowRun.endXExclusive());
-                RectAccumulator continuedRect = activeRects.remove(spanKey);
-                RectAccumulator nextRect = (continuedRect != null)
-                        ? continuedRect.extend(rowRun.dirtyPixels())
-                        : new RectAccumulator(rowRun.startX(), localY, rowRun.width(), 1, rowRun.dirtyPixels());
-                nextActiveRects.put(spanKey, nextRect);
+            for (int previousIndex = 0; previousIndex < prevCount; previousIndex++) {
+                boolean matched = false;
+                for (int currentIndex = 0; currentIndex < currCount; currentIndex++) {
+                    if ((prevStartX[previousIndex] == currStartX[currentIndex])
+                            && (prevEndX[previousIndex] == currEndX[currentIndex])) {
+                        currStartY[currentIndex] = prevStartY[previousIndex];
+                        currHeight[currentIndex] = prevHeight[previousIndex] + 1;
+                        currDirty[currentIndex] = prevDirty[previousIndex] + currDirty[currentIndex];
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched) {
+                    bestCandidate = this.selectBetterMultiCopyCandidate(
+                            bestCandidate,
+                            prevStartX[previousIndex],
+                            prevStartY[previousIndex],
+                            prevEndX[previousIndex] - prevStartX[previousIndex],
+                            prevHeight[previousIndex],
+                            prevDirty[previousIndex],
+                            srcBaseX,
+                            srcBaseY,
+                            dstBaseX,
+                            dstBaseY,
+                            dx,
+                            dy
+                    );
+                }
             }
 
-            for (RectAccumulator completedRect : activeRects.values()) {
-                bestCandidate = this.selectBetterMultiCopyCandidate(bestCandidate, completedRect,
-                        srcBaseX, srcBaseY, dstBaseX, dstBaseY, dx, dy);
-            }
-            activeRects = nextActiveRects;
+            int[] tempStartX = prevStartX;
+            prevStartX = currStartX;
+            currStartX = tempStartX;
+            int[] tempEndX = prevEndX;
+            prevEndX = currEndX;
+            currEndX = tempEndX;
+            int[] tempStartY = prevStartY;
+            prevStartY = currStartY;
+            currStartY = tempStartY;
+            int[] tempHeight = prevHeight;
+            prevHeight = currHeight;
+            currHeight = tempHeight;
+            long[] tempDirty = prevDirty;
+            prevDirty = currDirty;
+            currDirty = tempDirty;
+            prevCount = currCount;
         }
 
-        for (RectAccumulator completedRect : activeRects.values()) {
-            bestCandidate = this.selectBetterMultiCopyCandidate(bestCandidate, completedRect,
-                    srcBaseX, srcBaseY, dstBaseX, dstBaseY, dx, dy);
+        for (int previousIndex = 0; previousIndex < prevCount; previousIndex++) {
+            bestCandidate = this.selectBetterMultiCopyCandidate(
+                    bestCandidate,
+                    prevStartX[previousIndex],
+                    prevStartY[previousIndex],
+                    prevEndX[previousIndex] - prevStartX[previousIndex],
+                    prevHeight[previousIndex],
+                    prevDirty[previousIndex],
+                    srcBaseX,
+                    srcBaseY,
+                    dstBaseX,
+                    dstBaseY,
+                    dx,
+                    dy
+            );
         }
         return bestCandidate;
     }
 
     @Nullable
     protected CopyRectCandidate selectBetterMultiCopyCandidate(@Nullable CopyRectCandidate bestCandidate,
-                                                               @NotNull RectAccumulator rectAccumulator,
+                                                               int startX, int startY, int width, int height, long dirtyPixels,
                                                                int srcBaseX, int srcBaseY, int dstBaseX, int dstBaseY,
                                                                int dx, int dy) {
-        long rectArea = rectAccumulator.area();
-        long dirtyPixels = rectAccumulator.dirtyPixels();
+        long rectArea = (long) width * height;
         if ((rectArea < MIN_MULTI_COPY_RECT_AREA) || (dirtyPixels < MIN_MULTI_COPY_DIRTY_PIXELS)) {
             return bestCandidate;
         }
@@ -471,22 +533,18 @@ public class AfmaRectCopyDetector {
         }
 
         AfmaCopyRect copyRect = new AfmaCopyRect(
-                srcBaseX + rectAccumulator.startX(),
-                srcBaseY + rectAccumulator.startY(),
-                dstBaseX + rectAccumulator.startX(),
-                dstBaseY + rectAccumulator.startY(),
-                rectAccumulator.width(),
-                rectAccumulator.height()
+                srcBaseX + startX,
+                srcBaseY + startY,
+                dstBaseX + startX,
+                dstBaseY + startY,
+                width,
+                height
         );
         CopyRectCandidate candidate = new CopyRectCandidate(copyRect, dirtyPixels, rectArea, dx, dy);
         if ((bestCandidate == null) || candidate.isBetterThan(bestCandidate)) {
             return candidate;
         }
         return bestCandidate;
-    }
-
-    protected static long spanKey(int startX, int endXExclusive) {
-        return (((long) startX) << 32) | (endXExclusive & 0xFFFFFFFFL);
     }
 
     protected static final class MotionSearchAnalysis {
@@ -562,22 +620,6 @@ public class AfmaRectCopyDetector {
     public record MultiDetection(@NotNull AfmaMultiCopy multiCopy, @Nullable AfmaRect patchBounds, long usefulness) {
         public long patchArea() {
             return (this.patchBounds != null) ? this.patchBounds.area() : 0L;
-        }
-    }
-
-    protected record RowRun(int startX, int endXExclusive, int dirtyPixels) {
-        public int width() {
-            return this.endXExclusive - this.startX;
-        }
-    }
-
-    protected record RectAccumulator(int startX, int startY, int width, int height, long dirtyPixels) {
-        public RectAccumulator extend(int additionalDirtyPixels) {
-            return new RectAccumulator(this.startX, this.startY, this.width, this.height + 1, this.dirtyPixels + additionalDirtyPixels);
-        }
-
-        public long area() {
-            return (long) this.width * this.height;
         }
     }
 

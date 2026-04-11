@@ -1114,8 +1114,7 @@ public final class AfmaBinIntraPayloadHelper {
         Filter bestFilter = Filter.NONE;
         long bestScore = Long.MAX_VALUE;
         for (Filter filter : Filter.values()) {
-            applyFilter(filter, rawBytes, rowOffset, rowBytes, previousRow, bytesPerPixel, candidateRow);
-            long score = scoreFilteredRow(candidateRow, rowBytes);
+            long score = applyAndScoreFilter(filter, rawBytes, rowOffset, rowBytes, previousRow, bytesPerPixel, candidateRow, bestScore);
             if (score < bestScore) {
                 bestScore = score;
                 bestFilter = filter;
@@ -1125,53 +1124,101 @@ public final class AfmaBinIntraPayloadHelper {
         return new FilterSelection(bestFilter, bestScore);
     }
 
-    protected static void applyFilter(@NotNull Filter filter, @NotNull byte[] rawBytes, int rowOffset, int rowBytes,
-                                      @NotNull byte[] previousRow, int bytesPerPixel, @NotNull byte[] output) {
+    protected static long applyAndScoreFilter(@NotNull Filter filter, @NotNull byte[] rawBytes, int rowOffset, int rowBytes,
+                                              @NotNull byte[] previousRow, int bytesPerPixel,
+                                              @NotNull byte[] output, long bestScore) {
         int prefixBytes = Math.min(rowBytes, bytesPerPixel);
         switch (filter) {
-            case NONE -> System.arraycopy(rawBytes, rowOffset, output, 0, rowBytes);
+            case NONE -> {
+                long score = 0L;
+                for (int i = 0; i < rowBytes; i++) {
+                    byte value = rawBytes[rowOffset + i];
+                    output[i] = value;
+                    score += Math.abs(value);
+                    if (score >= bestScore) {
+                        return Long.MAX_VALUE;
+                    }
+                }
+                return score;
+            }
             case SUB -> {
+                long score = 0L;
                 for (int i = 0; i < prefixBytes; i++) {
-                    output[i] = rawBytes[rowOffset + i];
+                    byte value = rawBytes[rowOffset + i];
+                    output[i] = value;
+                    score += Math.abs(value);
+                    if (score >= bestScore) {
+                        return Long.MAX_VALUE;
+                    }
                 }
                 for (int i = prefixBytes; i < rowBytes; i++) {
-                    output[i] = (byte) ((rawBytes[rowOffset + i] & 0xFF) - (rawBytes[rowOffset + i - bytesPerPixel] & 0xFF));
+                    byte value = (byte) ((rawBytes[rowOffset + i] & 0xFF) - (rawBytes[rowOffset + i - bytesPerPixel] & 0xFF));
+                    output[i] = value;
+                    score += Math.abs(value);
+                    if (score >= bestScore) {
+                        return Long.MAX_VALUE;
+                    }
                 }
+                return score;
             }
             case UP -> {
+                long score = 0L;
                 for (int i = 0; i < rowBytes; i++) {
-                    output[i] = (byte) ((rawBytes[rowOffset + i] & 0xFF) - (previousRow[i] & 0xFF));
+                    byte value = (byte) ((rawBytes[rowOffset + i] & 0xFF) - (previousRow[i] & 0xFF));
+                    output[i] = value;
+                    score += Math.abs(value);
+                    if (score >= bestScore) {
+                        return Long.MAX_VALUE;
+                    }
                 }
+                return score;
             }
             case AVERAGE -> {
+                long score = 0L;
                 for (int i = 0; i < prefixBytes; i++) {
-                    output[i] = (byte) ((rawBytes[rowOffset + i] & 0xFF) - ((previousRow[i] & 0xFF) >>> 1));
+                    byte value = (byte) ((rawBytes[rowOffset + i] & 0xFF) - ((previousRow[i] & 0xFF) >>> 1));
+                    output[i] = value;
+                    score += Math.abs(value);
+                    if (score >= bestScore) {
+                        return Long.MAX_VALUE;
+                    }
                 }
                 for (int i = prefixBytes; i < rowBytes; i++) {
-                    output[i] = (byte) ((rawBytes[rowOffset + i] & 0xFF)
+                    byte value = (byte) ((rawBytes[rowOffset + i] & 0xFF)
                             - (((rawBytes[rowOffset + i - bytesPerPixel] & 0xFF) + (previousRow[i] & 0xFF)) >>> 1));
+                    output[i] = value;
+                    score += Math.abs(value);
+                    if (score >= bestScore) {
+                        return Long.MAX_VALUE;
+                    }
                 }
+                return score;
             }
             case PAETH -> {
+                long score = 0L;
                 for (int i = 0; i < prefixBytes; i++) {
-                    output[i] = (byte) ((rawBytes[rowOffset + i] & 0xFF) - paethPredictor(0, previousRow[i] & 0xFF, 0));
+                    byte value = (byte) ((rawBytes[rowOffset + i] & 0xFF) - paethPredictor(0, previousRow[i] & 0xFF, 0));
+                    output[i] = value;
+                    score += Math.abs(value);
+                    if (score >= bestScore) {
+                        return Long.MAX_VALUE;
+                    }
                 }
                 for (int i = prefixBytes; i < rowBytes; i++) {
-                    output[i] = (byte) ((rawBytes[rowOffset + i] & 0xFF)
+                    byte value = (byte) ((rawBytes[rowOffset + i] & 0xFF)
                             - paethPredictor(rawBytes[rowOffset + i - bytesPerPixel] & 0xFF,
                             previousRow[i] & 0xFF,
                             previousRow[i - bytesPerPixel] & 0xFF));
+                    output[i] = value;
+                    score += Math.abs(value);
+                    if (score >= bestScore) {
+                        return Long.MAX_VALUE;
+                    }
                 }
+                return score;
             }
         }
-    }
-
-    protected static long scoreFilteredRow(@NotNull byte[] filteredRow, int rowBytes) {
-        long score = 0L;
-        for (int i = 0; i < rowBytes; i++) {
-            score += Math.abs(filteredRow[i]);
-        }
-        return score;
+        return Long.MAX_VALUE;
     }
 
     protected static void decodeFilteredRows(@NotNull DataInputStream in, int rowBytes, int height, int bytesPerPixel,

@@ -15,6 +15,8 @@ import java.util.zip.Deflater;
 public final class AfmaPayloadMetricsHelper {
 
     private static final int MAX_CONTENT_CACHE_ENTRIES = 512;
+    private static final ThreadLocal<Deflater> DEFLATER_POOL = ThreadLocal.withInitial(() -> new Deflater(9, true));
+    private static final ThreadLocal<byte[]> BUFFER_POOL = ThreadLocal.withInitial(() -> new byte[8192]);
     private static final Map<byte[], Long> ESTIMATED_ARCHIVE_BYTES = Collections.synchronizedMap(new WeakHashMap<>());
     // Keep a small recent-content cache so fresh byte arrays can still reuse expensive metric work.
     private static final Map<PayloadBytesKey, Long> ESTIMATED_ARCHIVE_BYTES_BY_CONTENT = Collections.synchronizedMap(newBoundedContentCache());
@@ -94,17 +96,14 @@ public final class AfmaPayloadMetricsHelper {
     }
 
     protected static long estimateArchiveBytesUncached(@NotNull byte[] payloadBytes) {
-        Deflater deflater = new Deflater(9, true);
-        byte[] buffer = new byte[8192];
+        Deflater deflater = DEFLATER_POOL.get();
+        byte[] buffer = BUFFER_POOL.get();
+        deflater.reset();
         long compressedBytes = 0L;
-        try {
-            deflater.setInput(payloadBytes);
-            deflater.finish();
-            while (!deflater.finished()) {
-                compressedBytes += deflater.deflate(buffer);
-            }
-        } finally {
-            deflater.end();
+        deflater.setInput(payloadBytes);
+        deflater.finish();
+        while (!deflater.finished()) {
+            compressedBytes += deflater.deflate(buffer);
         }
         return Math.max(1L, compressedBytes);
     }

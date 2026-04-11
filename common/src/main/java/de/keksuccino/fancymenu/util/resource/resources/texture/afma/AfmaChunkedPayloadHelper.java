@@ -48,6 +48,9 @@ public final class AfmaChunkedPayloadHelper {
     protected static final int CHUNK_CACHE_MISS_PENALTY_BYTES = 1024;
     protected static final int MULTI_CHUNK_FRAME_PENALTY_BYTES = 768;
     protected static final byte[] EMPTY_BYTES = new byte[0];
+    private static final ThreadLocal<Deflater> CHUNK_DEFLATER_POOL = ThreadLocal.withInitial(() -> new Deflater(9, true));
+    private static final ThreadLocal<byte[]> CHUNK_BUFFER_POOL = ThreadLocal.withInitial(() -> new byte[8192]);
+    private static final ThreadLocal<byte[]> CHUNK_READ_BUFFER_POOL = ThreadLocal.withInitial(() -> new byte[8192]);
 
     private AfmaChunkedPayloadHelper() {
     }
@@ -115,10 +118,21 @@ public final class AfmaChunkedPayloadHelper {
             return AfmaPayloadMetricsHelper.estimateArchiveBytes(payloadBytes);
         }
 
-        byte[] combinedBytes = new byte[previousTail.length + payloadBytes.length];
-        System.arraycopy(previousTail, 0, combinedBytes, 0, previousTail.length);
-        System.arraycopy(payloadBytes, 0, combinedBytes, previousTail.length, payloadBytes.length);
-        long combinedEstimate = AfmaPayloadMetricsHelper.estimateArchiveBytes(combinedBytes);
+        Deflater deflater = CHUNK_DEFLATER_POOL.get();
+        byte[] deflateBuffer = CHUNK_BUFFER_POOL.get();
+        deflater.reset();
+        long combinedEstimate = 0L;
+        deflater.setInput(previousTail);
+        while (!deflater.needsInput()) {
+            combinedEstimate += deflater.deflate(deflateBuffer);
+        }
+
+        deflater.setInput(payloadBytes);
+        deflater.finish();
+        while (!deflater.finished()) {
+            combinedEstimate += deflater.deflate(deflateBuffer);
+        }
+
         long tailEstimate = AfmaPayloadMetricsHelper.estimateArchiveBytes(previousTail);
         return Math.max(0L, combinedEstimate - tailEstimate);
     }
@@ -133,9 +147,10 @@ public final class AfmaChunkedPayloadHelper {
             return payload.estimatedArchiveBytes();
         }
 
-        Deflater deflater = new Deflater(9, true);
-        byte[] readBuffer = new byte[8192];
-        byte[] deflateBuffer = new byte[8192];
+        Deflater deflater = CHUNK_DEFLATER_POOL.get();
+        byte[] readBuffer = CHUNK_READ_BUFFER_POOL.get();
+        byte[] deflateBuffer = CHUNK_BUFFER_POOL.get();
+        deflater.reset();
         long combinedEstimate = 0L;
         try (InputStream in = payload.openStream()) {
             deflater.setInput(previousTail);
@@ -160,8 +175,6 @@ public final class AfmaChunkedPayloadHelper {
             }
         } catch (IOException ex) {
             throw new IllegalStateException("Failed to estimate AFMA payload chunk compression delta", ex);
-        } finally {
-            deflater.end();
         }
 
         long tailEstimate = AfmaPayloadMetricsHelper.estimateArchiveBytes(previousTail);
@@ -181,8 +194,9 @@ public final class AfmaChunkedPayloadHelper {
             return payloadSummary.estimatedArchiveBytes();
         }
 
-        Deflater deflater = new Deflater(9, true);
-        byte[] deflateBuffer = new byte[8192];
+        Deflater deflater = CHUNK_DEFLATER_POOL.get();
+        byte[] deflateBuffer = CHUNK_BUFFER_POOL.get();
+        deflater.reset();
         long[] combinedEstimateHolder = {0L};
         try {
             deflater.setInput(previousTail);
@@ -260,8 +274,6 @@ public final class AfmaChunkedPayloadHelper {
             }
         } catch (IOException ex) {
             throw new IllegalStateException("Failed to estimate AFMA payload chunk compression delta", ex);
-        } finally {
-            deflater.end();
         }
 
         long tailEstimate = AfmaPayloadMetricsHelper.estimateArchiveBytes(previousTail);
@@ -769,9 +781,10 @@ public final class AfmaChunkedPayloadHelper {
             return Math.max(1L, compressedBytes);
         }
 
-        Deflater deflater = new Deflater(9, true);
-        byte[] readBuffer = new byte[8192];
-        byte[] deflateBuffer = new byte[8192];
+        Deflater deflater = CHUNK_DEFLATER_POOL.get();
+        byte[] readBuffer = CHUNK_READ_BUFFER_POOL.get();
+        byte[] deflateBuffer = CHUNK_BUFFER_POOL.get();
+        deflater.reset();
         long compressedBytes = 0L;
         try {
             for (String payloadPath : chunkPayloadPaths) {
@@ -800,8 +813,6 @@ public final class AfmaChunkedPayloadHelper {
             }
         } catch (IOException ex) {
             throw new IllegalStateException("Failed to estimate AFMA chunk compression from stored payload data", ex);
-        } finally {
-            deflater.end();
         }
         return Math.max(1L, compressedBytes);
     }

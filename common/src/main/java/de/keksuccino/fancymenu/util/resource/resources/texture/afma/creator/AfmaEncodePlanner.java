@@ -2159,10 +2159,20 @@ public class AfmaEncodePlanner {
                 this.estimateBlockInterTileBytes(AfmaBlockInterPayloadHelper.TileMode.RAW, rawTile.payloadBytes().length, 0),
                 0
         );
+        List<TileMotionSAD> scoredVectors = new ArrayList<>(motionVectors.size());
+        for (AfmaRectCopyDetector.MotionVector motionVector : motionVectors) {
+            scoredVectors.add(new TileMotionSAD(
+                    motionVector,
+                    this.computeTileSAD(previousFrame, currentFrame, dstX, dstY, dstX + motionVector.dx(), dstY + motionVector.dy(), width, height)
+            ));
+        }
+        scoredVectors.sort((first, second) -> Long.compare(first.sad(), second.sad()));
+
+        int maxEvals = Math.min(3, scoredVectors.size());
         List<MotionSearchSeed> refinementSeeds = new ArrayList<>(BLOCK_INTER_LOCAL_REFINEMENT_SEEDS);
         Set<Long> testedVectors = new HashSet<>(motionVectors.size() * 2);
-
-        for (AfmaRectCopyDetector.MotionVector motionVector : motionVectors) {
+        for (int vectorIndex = 0; vectorIndex < maxEvals; vectorIndex++) {
+            AfmaRectCopyDetector.MotionVector motionVector = scoredVectors.get(vectorIndex).vector();
             testedVectors.add(packMotionVector(motionVector.dx(), motionVector.dy()));
             BlockInterTileCandidate motionCandidate = this.evaluateBlockInterMotionCandidate(previousFrame, currentFrame, dstX, dstY, width, height,
                     motionVector.dx(), motionVector.dy(), bestCandidate);
@@ -2182,6 +2192,31 @@ public class AfmaEncodePlanner {
         }
 
         return bestCandidate.operation();
+    }
+
+    protected long computeTileSAD(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
+                                  int dstX, int dstY, int srcX, int srcY, int width, int height) {
+        if (!this.isMotionTileInBounds(previousFrame, srcX, srcY, width, height)) {
+            return Long.MAX_VALUE;
+        }
+
+        int frameWidth = currentFrame.getWidth();
+        int[] previousPixels = previousFrame.getPixelsUnsafe();
+        int[] currentPixels = currentFrame.getPixelsUnsafe();
+        long sad = 0L;
+        for (int localY = 0; localY < height; localY++) {
+            int previousRowOffset = ((srcY + localY) * frameWidth) + srcX;
+            int currentRowOffset = ((dstY + localY) * frameWidth) + dstX;
+            for (int localX = 0; localX < width; localX++) {
+                int previousColor = previousPixels[previousRowOffset + localX];
+                int currentColor = currentPixels[currentRowOffset + localX];
+                sad += Math.abs(((previousColor >> 16) & 0xFF) - ((currentColor >> 16) & 0xFF));
+                sad += Math.abs(((previousColor >> 8) & 0xFF) - ((currentColor >> 8) & 0xFF));
+                sad += Math.abs((previousColor & 0xFF) - (currentColor & 0xFF));
+                sad += Math.abs(((previousColor >>> 24) & 0xFF) - ((currentColor >>> 24) & 0xFF));
+            }
+        }
+        return sad;
     }
 
     @Nullable
@@ -4623,6 +4658,9 @@ public class AfmaEncodePlanner {
     }
 
     protected record RawTileData(@NotNull byte[] payloadBytes, int channels) {
+    }
+
+    protected record TileMotionSAD(@NotNull AfmaRectCopyDetector.MotionVector vector, long sad) {
     }
 
     protected record BlockInterTileCandidate(@NotNull AfmaBlockInterPayloadHelper.TileOperation operation, long estimatedBytes,
