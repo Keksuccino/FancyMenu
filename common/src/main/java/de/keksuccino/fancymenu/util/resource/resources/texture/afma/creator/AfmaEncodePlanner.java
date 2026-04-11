@@ -407,7 +407,11 @@ public class AfmaEncodePlanner {
                         AfmaPixelFrame workingFrame = sourceFrame;
                         if ((previousFrame != null) && options.isNearLosslessEnabled()
                                 && this.shouldAllowPerceptualContinuation(state.framesSinceKeyframe(), options)) {
-                            workingFrame = this.applyNearLosslessTemporalMerge(previousFrame, sourceFrame, options.getNearLosslessMaxChannelDelta());
+                            workingFrame = windowCandidateCache.getNearLosslessMergedFrame(
+                                    previousFrame,
+                                    sourceFrame,
+                                    options.getNearLosslessMaxChannelDelta()
+                            );
                         }
 
                         AfmaFramePairAnalysis workingPairAnalysis = (previousFrame != null)
@@ -3334,6 +3338,33 @@ public class AfmaEncodePlanner {
         protected final Map<CandidateReferenceFrameAnalysisKey, CandidateReferenceFrameAnalysis> candidateReferenceFrameAnalysesByKey = new LinkedHashMap<>();
         @NotNull
         protected final Map<ArchiveAppendKey, CandidateArchiveCost> archiveAppendCostsByKey = new LinkedHashMap<>();
+        @NotNull
+        // Keep this cache scoped to a single source-frame expansion so identical beam states can share merges
+        // without pinning past window frames longer than necessary.
+        protected final Map<NearLosslessMergeKey, AfmaPixelFrame> nearLosslessMergedFramesByKey = new LinkedHashMap<>();
+
+        @NotNull
+        public AfmaPixelFrame getNearLosslessMergedFrame(@NotNull AfmaPixelFrame previousFrame,
+                                                         @NotNull AfmaPixelFrame currentFrame,
+                                                         int maxChannelDelta) {
+            if (maxChannelDelta <= 0) {
+                return currentFrame;
+            }
+
+            NearLosslessMergeKey cacheKey = new NearLosslessMergeKey(
+                    this.frameKey(previousFrame),
+                    this.frameKey(currentFrame),
+                    maxChannelDelta
+            );
+            AfmaPixelFrame cachedFrame = this.nearLosslessMergedFramesByKey.get(cacheKey);
+            if (cachedFrame != null) {
+                return cachedFrame;
+            }
+
+            AfmaPixelFrame mergedFrame = AfmaEncodePlanner.this.applyNearLosslessTemporalMerge(previousFrame, currentFrame, maxChannelDelta);
+            this.nearLosslessMergedFramesByKey.put(cacheKey, mergedFrame);
+            return mergedFrame;
+        }
 
         @NotNull
         public PlannedCandidate getFullCandidate(@NotNull AfmaPixelFrame frame, boolean introSequence, int frameIndex,
@@ -3532,6 +3563,11 @@ public class AfmaEncodePlanner {
 
     protected record PairCandidateKey(@NotNull FrameContentKey previousFrameKey, @NotNull FrameContentKey workingFrameKey,
                                       boolean introSequence, int frameIndex) {
+    }
+
+    protected record NearLosslessMergeKey(@NotNull FrameContentKey previousFrameKey,
+                                          @NotNull FrameContentKey currentFrameKey,
+                                          int maxChannelDelta) {
     }
 
     protected record BlockInterPreparation(@NotNull AfmaRect regionBounds,
