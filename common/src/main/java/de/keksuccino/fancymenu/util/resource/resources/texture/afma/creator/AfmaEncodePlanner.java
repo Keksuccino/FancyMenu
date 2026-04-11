@@ -75,6 +75,8 @@ public class AfmaEncodePlanner {
 
     @NotNull
     protected final AfmaFrameNormalizer frameNormalizer;
+    @NotNull
+    protected final ThreadLocal<ResidualPlannerWorkspace> residualPlannerWorkspace = ThreadLocal.withInitial(ResidualPlannerWorkspace::new);
 
     public AfmaEncodePlanner() {
         this(new AfmaFrameNormalizer());
@@ -101,54 +103,57 @@ public class AfmaEncodePlanner {
                                @Nullable ProgressListener progressListener) throws IOException {
         Objects.requireNonNull(mainSequence);
         Objects.requireNonNull(options);
-
-        AfmaSourceSequence intro = (introSequence != null) ? introSequence : AfmaSourceSequence.empty();
-        options.validateForCounts(mainSequence.size(), intro.size());
-
-        checkCancelled(cancellationRequested);
-        AfmaSourceSequence dimensionSource = !mainSequence.isEmpty() ? mainSequence : intro;
-        LoadedDimensionFrame loadedDimension = this.loadDimensionFrame(dimensionSource, cancellationRequested, progressListener);
-        Dimension dimension = loadedDimension.dimension();
-        AfmaPixelFrame preloadedMainFrame = (dimensionSource == mainSequence) ? loadedDimension.frame() : null;
-        AfmaPixelFrame preloadedIntroFrame = (dimensionSource == intro) ? loadedDimension.frame() : null;
-        int totalFrameCount = Math.max(1, mainSequence.size() + intro.size());
-
-        AfmaRectCopyDetector copyDetector = new AfmaRectCopyDetector(options.getMaxCopySearchDistance(), options.getMaxCandidateAxisOffsets());
-        LinkedHashMap<String, AfmaStoredPayload> payloads = new LinkedHashMap<>();
-        Map<String, String> payloadPathsByFingerprint = new LinkedHashMap<>();
         try {
-            PlannedSequence plannedIntroFrames = this.planSequence(intro, true, dimension, options, copyDetector, ArchivePlanningState.empty(), payloads, payloadPathsByFingerprint,
-                    cancellationRequested, progressListener, 0, totalFrameCount, preloadedIntroFrame);
-            preloadedIntroFrame = null;
-            PlannedSequence plannedMainFrames = this.planSequence(mainSequence, false, dimension, options, copyDetector, plannedIntroFrames.archiveState(), payloads, payloadPathsByFingerprint,
-                    cancellationRequested, progressListener, intro.size(), totalFrameCount, preloadedMainFrame);
-            preloadedMainFrame = null;
+            AfmaSourceSequence intro = (introSequence != null) ? introSequence : AfmaSourceSequence.empty();
+            options.validateForCounts(mainSequence.size(), intro.size());
 
-            long mainFrameTime = plannedMainFrames.defaultDelayMs();
-            long introFrameTime = plannedIntroFrames.defaultDelayMs();
-            if (plannedMainFrames.frames().isEmpty() && !plannedIntroFrames.frames().isEmpty()) {
-                mainFrameTime = introFrameTime;
-            } else if (plannedIntroFrames.frames().isEmpty()) {
-                introFrameTime = mainFrameTime;
+            checkCancelled(cancellationRequested);
+            AfmaSourceSequence dimensionSource = !mainSequence.isEmpty() ? mainSequence : intro;
+            LoadedDimensionFrame loadedDimension = this.loadDimensionFrame(dimensionSource, cancellationRequested, progressListener);
+            Dimension dimension = loadedDimension.dimension();
+            AfmaPixelFrame preloadedMainFrame = (dimensionSource == mainSequence) ? loadedDimension.frame() : null;
+            AfmaPixelFrame preloadedIntroFrame = (dimensionSource == intro) ? loadedDimension.frame() : null;
+            int totalFrameCount = Math.max(1, mainSequence.size() + intro.size());
+
+            AfmaRectCopyDetector copyDetector = new AfmaRectCopyDetector(options.getMaxCopySearchDistance(), options.getMaxCandidateAxisOffsets());
+            LinkedHashMap<String, AfmaStoredPayload> payloads = new LinkedHashMap<>();
+            Map<String, String> payloadPathsByFingerprint = new LinkedHashMap<>();
+            try {
+                PlannedSequence plannedIntroFrames = this.planSequence(intro, true, dimension, options, copyDetector, ArchivePlanningState.empty(), payloads, payloadPathsByFingerprint,
+                        cancellationRequested, progressListener, 0, totalFrameCount, preloadedIntroFrame);
+                preloadedIntroFrame = null;
+                PlannedSequence plannedMainFrames = this.planSequence(mainSequence, false, dimension, options, copyDetector, plannedIntroFrames.archiveState(), payloads, payloadPathsByFingerprint,
+                        cancellationRequested, progressListener, intro.size(), totalFrameCount, preloadedMainFrame);
+                preloadedMainFrame = null;
+
+                long mainFrameTime = plannedMainFrames.defaultDelayMs();
+                long introFrameTime = plannedIntroFrames.defaultDelayMs();
+                if (plannedMainFrames.frames().isEmpty() && !plannedIntroFrames.frames().isEmpty()) {
+                    mainFrameTime = introFrameTime;
+                } else if (plannedIntroFrames.frames().isEmpty()) {
+                    introFrameTime = mainFrameTime;
+                }
+
+                AfmaMetadata metadata = AfmaMetadata.create(
+                        dimension.width(),
+                        dimension.height(),
+                        options.getLoopCount(),
+                        mainFrameTime,
+                        introFrameTime,
+                        plannedMainFrames.customFrameTimes(),
+                        plannedIntroFrames.customFrameTimes(),
+                        options.isAdaptiveKeyframePlacementEnabled() ? options.getAdaptiveMaxKeyframeInterval() : options.getKeyframeInterval(),
+                        options.isRectCopyEnabled(),
+                        options.isDuplicateFrameElision()
+                );
+
+                return new AfmaEncodePlan(metadata, new AfmaFrameIndex(plannedMainFrames.frames(), plannedIntroFrames.frames()), payloads);
+            } finally {
+                CloseableUtils.closeQuietly(preloadedIntroFrame);
+                CloseableUtils.closeQuietly(preloadedMainFrame);
             }
-
-            AfmaMetadata metadata = AfmaMetadata.create(
-                    dimension.width(),
-                    dimension.height(),
-                    options.getLoopCount(),
-                    mainFrameTime,
-                    introFrameTime,
-                    plannedMainFrames.customFrameTimes(),
-                    plannedIntroFrames.customFrameTimes(),
-                    options.isAdaptiveKeyframePlacementEnabled() ? options.getAdaptiveMaxKeyframeInterval() : options.getKeyframeInterval(),
-                    options.isRectCopyEnabled(),
-                    options.isDuplicateFrameElision()
-            );
-
-            return new AfmaEncodePlan(metadata, new AfmaFrameIndex(plannedMainFrames.frames(), plannedIntroFrames.frames()), payloads);
         } finally {
-            CloseableUtils.closeQuietly(preloadedIntroFrame);
-            CloseableUtils.closeQuietly(preloadedMainFrame);
+            this.residualPlannerWorkspace.remove();
         }
     }
 
@@ -1609,8 +1614,9 @@ public class AfmaEncodePlanner {
         int startX = deltaBounds.x();
         int startY = deltaBounds.y();
         int pixelCount = width * height;
-        int[] predictedColors = new int[pixelCount];
-        int[] currentColorsDense = new int[pixelCount];
+        ResidualPlannerWorkspace workspace = this.residualPlannerWorkspace.get();
+        int[] predictedColors = workspace.predictedColors(pixelCount);
+        int[] currentColorsDense = workspace.currentColors(pixelCount);
         int pixelOffset = 0;
         boolean includeAlpha = false;
         for (int localY = 0; localY < height; localY++) {
@@ -1631,7 +1637,8 @@ public class AfmaEncodePlanner {
                 predictedColors,
                 currentColorsDense,
                 pixelCount,
-                includeAlpha
+                includeAlpha,
+                workspace.residualEncodeWorkspace()
         );
         return new ResidualPayloadData(encodedPayload.payloadBytes(), encodedPayload.toResidualMetadata(), encodedPayload.complexityScore());
     }
@@ -1653,9 +1660,10 @@ public class AfmaEncodePlanner {
         int startY = deltaBounds.y();
         int changedPixelCount = 0;
         boolean includeAlpha = false;
-        int[] changedIndices = new int[(int) bboxArea];
-        int[] predictedColors = new int[(int) bboxArea];
-        int[] changedColors = new int[(int) bboxArea];
+        ResidualPlannerWorkspace workspace = this.residualPlannerWorkspace.get();
+        int[] changedIndices = workspace.changedIndices((int) bboxArea);
+        int[] predictedColors = workspace.predictedColors((int) bboxArea);
+        int[] changedColors = workspace.currentColors((int) bboxArea);
         for (int localY = 0; localY < height; localY++) {
             int rowOffset = ((startY + localY) * frameWidth) + startX;
             for (int localX = 0; localX < width; localX++) {
@@ -1706,8 +1714,9 @@ public class AfmaEncodePlanner {
         int startX = patchBounds.x();
         int startY = patchBounds.y();
         int pixelCount = width * height;
-        int[] predictedColors = new int[pixelCount];
-        int[] currentColorsDense = new int[pixelCount];
+        ResidualPlannerWorkspace workspace = this.residualPlannerWorkspace.get();
+        int[] predictedColors = workspace.predictedColors(pixelCount);
+        int[] currentColorsDense = workspace.currentColors(pixelCount);
         int pixelOffset = 0;
         boolean includeAlpha = false;
         for (int localY = 0; localY < height; localY++) {
@@ -1735,7 +1744,8 @@ public class AfmaEncodePlanner {
                 predictedColors,
                 currentColorsDense,
                 pixelCount,
-                includeAlpha
+                includeAlpha,
+                workspace.residualEncodeWorkspace()
         );
         return new ResidualPayloadData(encodedPayload.payloadBytes(), encodedPayload.toResidualMetadata(), encodedPayload.complexityScore());
     }
@@ -1763,9 +1773,10 @@ public class AfmaEncodePlanner {
         int startY = patchBounds.y();
         int changedPixelCount = 0;
         boolean includeAlpha = false;
-        int[] changedIndices = new int[(int) bboxArea];
-        int[] predictedColors = new int[(int) bboxArea];
-        int[] changedColors = new int[(int) bboxArea];
+        ResidualPlannerWorkspace workspace = this.residualPlannerWorkspace.get();
+        int[] changedIndices = workspace.changedIndices((int) bboxArea);
+        int[] predictedColors = workspace.predictedColors((int) bboxArea);
+        int[] changedColors = workspace.currentColors((int) bboxArea);
         for (int localY = 0; localY < height; localY++) {
             int y = startY + localY;
             int rowOffset = y * frameWidth;
@@ -1813,16 +1824,15 @@ public class AfmaEncodePlanner {
             return null;
         }
 
-        int[] normalizedChangedIndices = Arrays.copyOf(changedIndices, changedPixelCount);
-        int[] normalizedPredictedColors = Arrays.copyOf(predictedColors, changedPixelCount);
-        int[] normalizedCurrentColors = Arrays.copyOf(currentColors, changedPixelCount);
+        ResidualPlannerWorkspace workspace = this.residualPlannerWorkspace.get();
         AfmaResidualPayloadHelper.EncodedResidualPayload encodedResidual = AfmaResidualPayloadHelper.encodeBestResidualPayload(
-                normalizedPredictedColors,
-                normalizedCurrentColors,
+                predictedColors,
+                currentColors,
                 changedPixelCount,
-                includeAlpha
+                includeAlpha,
+                workspace.residualEncodeWorkspace()
         );
-        SparseLayoutCandidate bestLayout = this.chooseBestSparseLayout(width, height, normalizedChangedIndices, changedPixelCount);
+        SparseLayoutCandidate bestLayout = this.chooseBestSparseLayout(width, height, changedIndices, changedPixelCount);
         return new SparseResidualPayloadData(bestLayout.layoutPayload(), encodedResidual.payloadBytes(), changedPixelCount,
                 bestLayout.layoutCodec(), encodedResidual.channels(), encodedResidual.codec(),
                 encodedResidual.alphaMode(), encodedResidual.alphaChangedPixelCount(),
@@ -2818,9 +2828,10 @@ public class AfmaEncodePlanner {
         int[] previousPixels = previousFrame.getPixelsUnsafe();
         int[] currentPixels = currentFrame.getPixelsUnsafe();
         int changedPixelCount = tileStats.changedPixelCount();
-        int[] changedIndices = new int[changedPixelCount];
-        int[] predictedColors = new int[changedPixelCount];
-        int[] changedColors = new int[changedPixelCount];
+        ResidualPlannerWorkspace workspace = this.residualPlannerWorkspace.get();
+        int[] changedIndices = workspace.changedIndices(changedPixelCount);
+        int[] predictedColors = workspace.predictedColors(changedPixelCount);
+        int[] changedColors = workspace.currentColors(changedPixelCount);
         int changedOffset = 0;
         for (int localY = 0; localY < height; localY++) {
             int previousRowOffset = ((srcY + localY) * frameWidth) + srcX;
@@ -5716,6 +5727,44 @@ public class AfmaEncodePlanner {
     }
 
     protected record SparseLayoutPlan(@NotNull AfmaSparseLayoutCodec layoutCodec, long estimatedRawBytes) {
+    }
+
+    protected static final class ResidualPlannerWorkspace {
+
+        private int[] changedIndices = new int[0];
+        private int[] predictedColors = new int[0];
+        private int[] currentColors = new int[0];
+        private final AfmaResidualPayloadHelper.ResidualEncodeWorkspace residualEncodeWorkspace = new AfmaResidualPayloadHelper.ResidualEncodeWorkspace();
+
+        @NotNull
+        protected int[] changedIndices(int minLength) {
+            if (this.changedIndices.length < minLength) {
+                this.changedIndices = new int[minLength];
+            }
+            return this.changedIndices;
+        }
+
+        @NotNull
+        protected int[] predictedColors(int minLength) {
+            if (this.predictedColors.length < minLength) {
+                this.predictedColors = new int[minLength];
+            }
+            return this.predictedColors;
+        }
+
+        @NotNull
+        protected int[] currentColors(int minLength) {
+            if (this.currentColors.length < minLength) {
+                this.currentColors = new int[minLength];
+            }
+            return this.currentColors;
+        }
+
+        @NotNull
+        protected AfmaResidualPayloadHelper.ResidualEncodeWorkspace residualEncodeWorkspace() {
+            return this.residualEncodeWorkspace;
+        }
+
     }
 
     protected record MotionTileStats(int changedPixelCount, boolean includeAlpha) {

@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Objects;
 
 public final class AfmaResidualPayloadHelper {
@@ -222,6 +223,13 @@ public final class AfmaResidualPayloadHelper {
     @NotNull
     public static EncodedResidualPayload encodeBestResidualPayload(@NotNull int[] predictedColors, @NotNull int[] currentColors,
                                                                    int sampleCount, boolean includeAlpha) {
+        return encodeBestResidualPayload(predictedColors, currentColors, sampleCount, includeAlpha, null);
+    }
+
+    @NotNull
+    public static EncodedResidualPayload encodeBestResidualPayload(@NotNull int[] predictedColors, @NotNull int[] currentColors,
+                                                                   int sampleCount, boolean includeAlpha,
+                                                                   @Nullable ResidualEncodeWorkspace workspace) {
         Objects.requireNonNull(predictedColors);
         Objects.requireNonNull(currentColors);
         if ((sampleCount <= 0) || (sampleCount > predictedColors.length) || (sampleCount > currentColors.length)) {
@@ -231,10 +239,10 @@ public final class AfmaResidualPayloadHelper {
         int channels = includeAlpha ? RGBA_CHANNELS : RGB_CHANNELS;
         int alphaChangedPixelCount = includeAlpha ? countAlphaChanges(predictedColors, currentColors, sampleCount) : 0;
         EncodedResidualPayload bestCandidate = encodeBestResidualPayloadForAlphaMode(predictedColors, currentColors, sampleCount, channels,
-                includeAlpha ? AfmaAlphaResidualMode.FULL : AfmaAlphaResidualMode.NONE, alphaChangedPixelCount);
+                includeAlpha ? AfmaAlphaResidualMode.FULL : AfmaAlphaResidualMode.NONE, alphaChangedPixelCount, workspace);
         if (includeAlpha && (alphaChangedPixelCount > 0) && (alphaChangedPixelCount < sampleCount)) {
             EncodedResidualPayload sparseAlphaCandidate = encodeBestResidualPayloadForAlphaMode(predictedColors, currentColors, sampleCount, channels,
-                    AfmaAlphaResidualMode.SPARSE, alphaChangedPixelCount);
+                    AfmaAlphaResidualMode.SPARSE, alphaChangedPixelCount, workspace);
             if (sparseAlphaCandidate.isBetterThan(bestCandidate)) {
                 bestCandidate = sparseAlphaCandidate;
             }
@@ -246,21 +254,28 @@ public final class AfmaResidualPayloadHelper {
     protected static EncodedResidualPayload encodeBestResidualPayloadForAlphaMode(@NotNull int[] predictedColors, @NotNull int[] currentColors,
                                                                                   int sampleCount, int channels,
                                                                                   @NotNull AfmaAlphaResidualMode alphaMode,
-                                                                                  int alphaChangedPixelCount) {
-        byte[] colorRawStream = buildColorResidualStream(predictedColors, currentColors, sampleCount, alphaMode == AfmaAlphaResidualMode.FULL ? channels : RGB_CHANNELS);
-        byte[] alphaMask = (alphaMode == AfmaAlphaResidualMode.SPARSE)
-                ? buildAlphaChangeMask(predictedColors, currentColors, sampleCount)
+                                                                                  int alphaChangedPixelCount,
+                                                                                  @Nullable ResidualEncodeWorkspace workspace) {
+        int primaryChannels = (alphaMode == AfmaAlphaResidualMode.FULL) ? channels : RGB_CHANNELS;
+        int colorRawLength = sampleCount * primaryChannels;
+        byte[] colorRawStream = buildColorResidualStream(predictedColors, currentColors, sampleCount, primaryChannels, workspace);
+        int alphaMaskLength = (alphaMode == AfmaAlphaResidualMode.SPARSE)
+                ? expectedSparseBitsetBytes(sampleCount)
+                : 0;
+        byte[] alphaMask = (alphaMaskLength > 0)
+                ? buildAlphaChangeMask(predictedColors, currentColors, sampleCount, workspace)
                 : null;
-        byte[] alphaRawStream = (alphaMode == AfmaAlphaResidualMode.SPARSE)
-                ? buildSparseAlphaResidualStream(predictedColors, currentColors, sampleCount, alphaChangedPixelCount)
+        int alphaRawLength = (alphaMode == AfmaAlphaResidualMode.SPARSE) ? alphaChangedPixelCount : 0;
+        byte[] alphaRawStream = (alphaRawLength > 0)
+                ? buildSparseAlphaResidualStream(predictedColors, currentColors, sampleCount, alphaChangedPixelCount, workspace)
                 : null;
 
         EncodedResidualPayload bestCandidate = null;
-        AfmaResidualCodec[] candidateCodecs = selectCodecShortlist(colorRawStream, sampleCount,
-                (alphaMode == AfmaAlphaResidualMode.FULL) ? channels : RGB_CHANNELS, alphaRawStream, alphaChangedPixelCount);
+        AfmaResidualCodec[] candidateCodecs = selectCodecShortlist(colorRawStream, colorRawLength, sampleCount,
+                primaryChannels, alphaRawStream, alphaRawLength, alphaChangedPixelCount);
         for (AfmaResidualCodec codec : candidateCodecs) {
-            EncodedResidualPayload candidate = buildCodecCandidate(colorRawStream, alphaMask, alphaRawStream, sampleCount,
-                    channels, alphaMode, alphaChangedPixelCount, codec);
+            EncodedResidualPayload candidate = buildCodecCandidate(colorRawStream, colorRawLength, alphaMask, alphaMaskLength,
+                    alphaRawStream, alphaRawLength, sampleCount, channels, alphaMode, alphaChangedPixelCount, codec, workspace);
             if ((bestCandidate == null) || candidate.isBetterThan(bestCandidate)) {
                 bestCandidate = candidate;
             }
@@ -269,17 +284,19 @@ public final class AfmaResidualPayloadHelper {
     }
 
     @NotNull
-    protected static AfmaResidualCodec[] selectCodecShortlist(@NotNull byte[] colorRawStream, int sampleCount, int channels,
-                                                              @Nullable byte[] alphaRawStream, int alphaChangedPixelCount) {
+    protected static AfmaResidualCodec[] selectCodecShortlist(@NotNull byte[] colorRawStream, int colorRawLength,
+                                                              int sampleCount, int channels,
+                                                              @Nullable byte[] alphaRawStream, int alphaRawLength,
+                                                              int alphaChangedPixelCount) {
         // Large residual payloads dominate planner time, so keep the stable baselines and only
         // fan out into heavier transforms when the raw stream shows evidence that they can help.
-        int totalBytes = colorRawStream.length + ((alphaRawStream != null) ? alphaRawStream.length : 0);
+        int totalBytes = colorRawLength + alphaRawLength;
         if ((totalBytes <= RESIDUAL_FULL_CODEC_EVALUATION_MAX_BYTES) || (sampleCount <= RESIDUAL_FULL_CODEC_EVALUATION_MAX_SAMPLES)) {
             return AfmaResidualCodec.values();
         }
 
-        ResidualStreamStats colorStats = analyzeResidualStream(colorRawStream, sampleCount, channels);
-        ResidualStreamStats alphaStats = analyzeResidualStream(alphaRawStream, alphaChangedPixelCount, ALPHA_ONLY_CHANNELS);
+        ResidualStreamStats colorStats = analyzeResidualStream(colorRawStream, colorRawLength, sampleCount, channels);
+        ResidualStreamStats alphaStats = analyzeResidualStream(alphaRawStream, alphaRawLength, alphaChangedPixelCount, ALPHA_ONLY_CHANNELS);
         int totalValueCount = colorStats.valueCount() + alphaStats.valueCount();
         int totalPairCount = colorStats.pairCount() + alphaStats.pairCount();
         double smallValueRatio = resolveRatio(colorStats.smallValueCount() + alphaStats.smallValueCount(), totalValueCount);
@@ -301,8 +318,8 @@ public final class AfmaResidualPayloadHelper {
     }
 
     @NotNull
-    protected static ResidualStreamStats analyzeResidualStream(@Nullable byte[] rawBytes, int sampleCount, int channels) {
-        if ((rawBytes == null) || (sampleCount <= 0) || (channels <= 0) || (rawBytes.length != (sampleCount * channels))) {
+    protected static ResidualStreamStats analyzeResidualStream(@Nullable byte[] rawBytes, int rawLength, int sampleCount, int channels) {
+        if ((rawBytes == null) || (sampleCount <= 0) || (channels <= 0) || (rawLength != (sampleCount * channels)) || (rawBytes.length < rawLength)) {
             return ResidualStreamStats.EMPTY;
         }
 
@@ -325,7 +342,7 @@ public final class AfmaResidualPayloadHelper {
                 }
             }
         }
-        return new ResidualStreamStats(rawBytes.length, Math.max(0, sampleCount - 1) * channels,
+        return new ResidualStreamStats(rawLength, Math.max(0, sampleCount - 1) * channels,
                 zeroValueCount, smallValueCount, smoothPairCount);
     }
 
@@ -334,17 +351,22 @@ public final class AfmaResidualPayloadHelper {
     }
 
     @NotNull
-    protected static EncodedResidualPayload buildCodecCandidate(@NotNull byte[] colorRawStream, byte[] alphaMask, @Nullable byte[] alphaRawStream,
+    protected static EncodedResidualPayload buildCodecCandidate(@NotNull byte[] colorRawStream, int colorRawLength,
+                                                                @Nullable byte[] alphaMask, int alphaMaskLength,
+                                                                @Nullable byte[] alphaRawStream, int alphaRawLength,
                                                                 int sampleCount, int channels,
                                                                 @NotNull AfmaAlphaResidualMode alphaMode,
                                                                 int alphaChangedPixelCount,
-                                                                @NotNull AfmaResidualCodec codec) {
-        byte[] primaryBytes = transformResidualStream(colorRawStream, sampleCount,
-                (alphaMode == AfmaAlphaResidualMode.FULL) ? channels : RGB_CHANNELS, codec);
+                                                                @NotNull AfmaResidualCodec codec,
+                                                                @Nullable ResidualEncodeWorkspace workspace) {
+        int primaryChannels = (alphaMode == AfmaAlphaResidualMode.FULL) ? channels : RGB_CHANNELS;
+        byte[] primaryBytes = transformResidualStream(colorRawStream, colorRawLength, sampleCount,
+                primaryChannels, codec, workspace, true);
         byte[] secondaryBytes = (alphaRawStream != null)
-                ? transformResidualStream(alphaRawStream, alphaChangedPixelCount, ALPHA_ONLY_CHANNELS, codec)
+                ? transformResidualStream(alphaRawStream, alphaRawLength, alphaChangedPixelCount,
+                        ALPHA_ONLY_CHANNELS, codec, workspace, false)
                 : null;
-        byte[] payloadBytes = mergeStreams(primaryBytes, alphaMask, secondaryBytes);
+        byte[] payloadBytes = mergeStreams(primaryBytes, colorRawLength, alphaMask, alphaMaskLength, secondaryBytes, alphaRawLength);
         return new EncodedResidualPayload(
                 payloadBytes,
                 channels,
@@ -358,9 +380,10 @@ public final class AfmaResidualPayloadHelper {
 
     @NotNull
     protected static byte[] buildColorResidualStream(@NotNull int[] predictedColors, @NotNull int[] currentColors,
-                                                     int sampleCount, int channels) {
+                                                     int sampleCount, int channels,
+                                                     @Nullable ResidualEncodeWorkspace workspace) {
         int expectedBytes = sampleCount * channels;
-        byte[] rawBytes = new byte[expectedBytes];
+        byte[] rawBytes = (workspace != null) ? workspace.colorRawStream(expectedBytes) : new byte[expectedBytes];
         int offset = 0;
         for (int i = 0; i < sampleCount; i++) {
             int predictedColor = predictedColors[i];
@@ -376,8 +399,11 @@ public final class AfmaResidualPayloadHelper {
     }
 
     @NotNull
-    protected static byte[] buildAlphaChangeMask(@NotNull int[] predictedColors, @NotNull int[] currentColors, int sampleCount) {
-        byte[] maskBytes = new byte[expectedSparseBitsetBytes(sampleCount)];
+    protected static byte[] buildAlphaChangeMask(@NotNull int[] predictedColors, @NotNull int[] currentColors, int sampleCount,
+                                                 @Nullable ResidualEncodeWorkspace workspace) {
+        int expectedBytes = expectedSparseBitsetBytes(sampleCount);
+        byte[] maskBytes = (workspace != null) ? workspace.alphaMask(expectedBytes) : new byte[expectedBytes];
+        Arrays.fill(maskBytes, 0, expectedBytes, (byte) 0);
         for (int i = 0; i < sampleCount; i++) {
             if (((predictedColors[i] ^ currentColors[i]) & 0xFF000000) != 0) {
                 setMaskBit(maskBytes, i);
@@ -388,8 +414,9 @@ public final class AfmaResidualPayloadHelper {
 
     @NotNull
     protected static byte[] buildSparseAlphaResidualStream(@NotNull int[] predictedColors, @NotNull int[] currentColors,
-                                                           int sampleCount, int alphaChangedPixelCount) {
-        byte[] rawBytes = new byte[alphaChangedPixelCount];
+                                                           int sampleCount, int alphaChangedPixelCount,
+                                                           @Nullable ResidualEncodeWorkspace workspace) {
+        byte[] rawBytes = (workspace != null) ? workspace.alphaRawStream(alphaChangedPixelCount) : new byte[alphaChangedPixelCount];
         int offset = 0;
         for (int i = 0; i < sampleCount; i++) {
             int predictedColor = predictedColors[i];
@@ -403,17 +430,22 @@ public final class AfmaResidualPayloadHelper {
     }
 
     @NotNull
-    protected static byte[] transformResidualStream(@NotNull byte[] rawBytes, int sampleCount, int channels,
-                                                    @NotNull AfmaResidualCodec codec) {
+    protected static byte[] transformResidualStream(@NotNull byte[] rawBytes, int rawLength, int sampleCount, int channels,
+                                                    @NotNull AfmaResidualCodec codec,
+                                                    @Nullable ResidualEncodeWorkspace workspace,
+                                                    boolean primaryStream) {
         if (codec == AfmaResidualCodec.INTERLEAVED) {
             return rawBytes;
         }
 
-        if ((sampleCount < 0) || !isValidStreamChannelCount(channels) || (rawBytes.length != (sampleCount * channels))) {
+        if ((sampleCount < 0) || !isValidStreamChannelCount(channels)
+                || (rawLength != (sampleCount * channels)) || (rawBytes.length < rawLength)) {
             throw new IllegalArgumentException("AFMA residual stream dimensions are invalid");
         }
 
-        byte[] transformedBytes = new byte[rawBytes.length];
+        byte[] transformedBytes = (workspace != null)
+                ? workspace.transformStream(rawLength, primaryStream)
+                : new byte[rawLength];
         for (int sampleIndex = 0; sampleIndex < sampleCount; sampleIndex++) {
             int interleavedOffset = sampleIndex * channels;
             for (int channelIndex = 0; channelIndex < channels; channelIndex++) {
@@ -443,20 +475,20 @@ public final class AfmaResidualPayloadHelper {
     }
 
     @NotNull
-    protected static byte[] mergeStreams(@NotNull byte[] primaryStream, byte[] alphaMask, byte[] alphaStream) {
-        int totalLength = primaryStream.length
-                + ((alphaMask != null) ? alphaMask.length : 0)
-                + ((alphaStream != null) ? alphaStream.length : 0);
+    protected static byte[] mergeStreams(@NotNull byte[] primaryStream, int primaryLength,
+                                         @Nullable byte[] alphaMask, int alphaMaskLength,
+                                         @Nullable byte[] alphaStream, int alphaStreamLength) {
+        int totalLength = primaryLength + alphaMaskLength + alphaStreamLength;
         byte[] payloadBytes = new byte[totalLength];
         int offset = 0;
-        System.arraycopy(primaryStream, 0, payloadBytes, offset, primaryStream.length);
-        offset += primaryStream.length;
-        if (alphaMask != null) {
-            System.arraycopy(alphaMask, 0, payloadBytes, offset, alphaMask.length);
-            offset += alphaMask.length;
+        System.arraycopy(primaryStream, 0, payloadBytes, offset, primaryLength);
+        offset += primaryLength;
+        if ((alphaMask != null) && (alphaMaskLength > 0)) {
+            System.arraycopy(alphaMask, 0, payloadBytes, offset, alphaMaskLength);
+            offset += alphaMaskLength;
         }
-        if (alphaStream != null) {
-            System.arraycopy(alphaStream, 0, payloadBytes, offset, alphaStream.length);
+        if ((alphaStream != null) && (alphaStreamLength > 0)) {
+            System.arraycopy(alphaStream, 0, payloadBytes, offset, alphaStreamLength);
         }
         return payloadBytes;
     }
@@ -544,6 +576,54 @@ public final class AfmaResidualPayloadHelper {
     protected record ResidualStreamStats(int valueCount, int pairCount, int zeroValueCount, int smallValueCount, int smoothPairCount) {
 
         protected static final ResidualStreamStats EMPTY = new ResidualStreamStats(0, 0, 0, 0, 0);
+    }
+
+    public static final class ResidualEncodeWorkspace {
+
+        private byte[] colorRawStream = new byte[0];
+        private byte[] alphaMask = new byte[0];
+        private byte[] alphaRawStream = new byte[0];
+        private byte[] primaryTransformStream = new byte[0];
+        private byte[] secondaryTransformStream = new byte[0];
+
+        @NotNull
+        protected byte[] colorRawStream(int minLength) {
+            if (this.colorRawStream.length < minLength) {
+                this.colorRawStream = new byte[minLength];
+            }
+            return this.colorRawStream;
+        }
+
+        @NotNull
+        protected byte[] alphaMask(int minLength) {
+            if (this.alphaMask.length < minLength) {
+                this.alphaMask = new byte[minLength];
+            }
+            return this.alphaMask;
+        }
+
+        @NotNull
+        protected byte[] alphaRawStream(int minLength) {
+            if (this.alphaRawStream.length < minLength) {
+                this.alphaRawStream = new byte[minLength];
+            }
+            return this.alphaRawStream;
+        }
+
+        @NotNull
+        protected byte[] transformStream(int minLength, boolean primaryStream) {
+            byte[] transformStream = primaryStream ? this.primaryTransformStream : this.secondaryTransformStream;
+            if (transformStream.length < minLength) {
+                transformStream = new byte[minLength];
+                if (primaryStream) {
+                    this.primaryTransformStream = transformStream;
+                } else {
+                    this.secondaryTransformStream = transformStream;
+                }
+            }
+            return transformStream;
+        }
+
     }
 
     public static final class ResidualSampleReader {
