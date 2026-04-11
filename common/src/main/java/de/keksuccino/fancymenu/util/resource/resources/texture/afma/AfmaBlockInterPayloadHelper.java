@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Objects;
 
@@ -19,6 +20,15 @@ public final class AfmaBlockInterPayloadHelper {
 
     @NotNull
     public static byte[] writePayload(int tileSize, int regionWidth, int regionHeight, @NotNull List<TileOperation> tileOperations) throws IOException {
+        try (ByteArrayOutputStream byteStream = new ByteArrayOutputStream()) {
+            writePayload(byteStream, tileSize, regionWidth, regionHeight, tileOperations);
+            return byteStream.toByteArray();
+        }
+    }
+
+    public static void writePayload(@NotNull OutputStream out, int tileSize, int regionWidth, int regionHeight,
+                                    @NotNull List<TileOperation> tileOperations) throws IOException {
+        Objects.requireNonNull(out);
         Objects.requireNonNull(tileOperations);
 
         int tileCountX = tileCount(regionWidth, tileSize);
@@ -27,24 +37,21 @@ public final class AfmaBlockInterPayloadHelper {
             throw new IOException("AFMA block inter payload tile count does not match the covered region");
         }
 
-        try (ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-             DataOutputStream out = new DataOutputStream(byteStream)) {
-            out.writeInt(PAYLOAD_MAGIC);
-            out.writeByte(PAYLOAD_VERSION);
-            out.writeShort(tileCountX);
-            out.writeShort(tileCountY);
+        DataOutputStream dataOut = new DataOutputStream(out);
+        dataOut.writeInt(PAYLOAD_MAGIC);
+        dataOut.writeByte(PAYLOAD_VERSION);
+        dataOut.writeShort(tileCountX);
+        dataOut.writeShort(tileCountY);
 
-            int tileIndex = 0;
-            for (int tileY = 0; tileY < tileCountY; tileY++) {
-                for (int tileX = 0; tileX < tileCountX; tileX++, tileIndex++) {
-                    int tileWidth = tileDimension(tileX, tileCountX, tileSize, regionWidth);
-                    int tileHeight = tileDimension(tileY, tileCountY, tileSize, regionHeight);
-                    writeTileOperation(out, tileOperations.get(tileIndex), tileWidth, tileHeight);
-                }
+        int tileIndex = 0;
+        for (int tileY = 0; tileY < tileCountY; tileY++) {
+            for (int tileX = 0; tileX < tileCountX; tileX++, tileIndex++) {
+                int tileWidth = tileDimension(tileX, tileCountX, tileSize, regionWidth);
+                int tileHeight = tileDimension(tileY, tileCountY, tileSize, regionHeight);
+                writeTileOperation(dataOut, tileOperations.get(tileIndex), tileWidth, tileHeight);
             }
-            out.flush();
-            return byteStream.toByteArray();
         }
+        dataOut.flush();
     }
 
     protected static void writeTileOperation(@NotNull DataOutputStream out, @NotNull TileOperation operation, int tileWidth, int tileHeight) throws IOException {
