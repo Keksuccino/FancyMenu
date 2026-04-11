@@ -40,6 +40,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.function.BooleanSupplier;
+import java.util.function.BiConsumer;
 import java.util.stream.IntStream;
 
 public class AfmaEncodePlanner {
@@ -58,6 +59,7 @@ public class AfmaEncodePlanner {
     protected static final int PLANNER_TARGET_CHUNK_BYTES = 256 * 1024;
     protected static final int PLANNER_DEFLATE_TAIL_BYTES = 32 * 1024;
     protected static final int PLANNER_MAX_CACHED_PAYLOAD_CHUNKS = 2;
+    protected static final int PLANNER_MAX_EXACT_ARCHIVE_REFINEMENT_CACHE_ENTRIES = 8192;
     protected static final int PLANNER_CHUNK_CACHE_MISS_PENALTY_BYTES = 1024;
     protected static final int PLANNER_MULTI_CHUNK_FRAME_PENALTY_BYTES = 768;
     protected static final int ESTIMATED_ZIP_CHUNK_OVERHEAD_BYTES = 96;
@@ -4096,12 +4098,336 @@ public class AfmaEncodePlanner {
     protected record ArchivePayloadAppendResult(@NotNull ArchivePlanningState nextState, @Nullable String resolvedPayloadPath) {
     }
 
+    protected static final class PersistentIdentityAllocator {
+
+        protected long nextIdentity = 1L;
+
+        public long allocateIdentity() {
+            return this.nextIdentity++;
+        }
+    }
+
+    protected static final class PersistentAppendMap<K, V> {
+
+        protected static final int HASH_BITS_PER_LEVEL = 5;
+        protected static final int HASH_BRANCH_FACTOR = 1 << HASH_BITS_PER_LEVEL;
+        protected static final int HASH_INDEX_MASK = HASH_BRANCH_FACTOR - 1;
+
+        @NotNull
+        protected final PersistentIdentityAllocator identityAllocator;
+        @Nullable
+        protected final IndexNode<K, V> indexRoot;
+        @Nullable
+        protected final OrderedEntry<K, V> tailEntry;
+        protected final int size;
+
+        protected PersistentAppendMap(@NotNull PersistentIdentityAllocator identityAllocator,
+                                      @Nullable IndexNode<K, V> indexRoot, @Nullable OrderedEntry<K, V> tailEntry, int size) {
+            this.identityAllocator = Objects.requireNonNull(identityAllocator);
+            this.indexRoot = indexRoot;
+            this.tailEntry = tailEntry;
+            this.size = Math.max(0, size);
+        }
+
+        @NotNull
+        public static <K, V> PersistentAppendMap<K, V> empty() {
+            return new PersistentAppendMap<>(new PersistentIdentityAllocator(), null, null, 0);
+        }
+
+        public int size() {
+            return this.size;
+        }
+
+        public boolean isEmpty() {
+            return this.size <= 0;
+        }
+
+        @Nullable
+        public V get(@NotNull K key) {
+            OrderedEntry<K, V> entry = IndexNode.find(this.indexRoot, Objects.requireNonNull(key), spreadHash(key.hashCode()), 0);
+            return (entry != null) ? entry.value : null;
+        }
+
+        public long tailIdentity() {
+            return (this.tailEntry != null) ? this.tailEntry.identity : 0L;
+        }
+
+        @NotNull
+        public PersistentAppendMap<K, V> append(@NotNull K key, @NotNull V value) {
+            Objects.requireNonNull(key);
+            Objects.requireNonNull(value);
+            if (this.get(key) != null) {
+                throw new IllegalArgumentException("AFMA persistent append map already contains key " + key);
+            }
+
+            OrderedEntry<K, V> nextTail = new OrderedEntry<>(this.tailEntry, this.identityAllocator.allocateIdentity(), key, value);
+            return new PersistentAppendMap<>(
+                    this.identityAllocator,
+                    IndexNode.put(this.indexRoot, key, spreadHash(key.hashCode()), nextTail, 0),
+                    nextTail,
+                    this.size + 1
+            );
+        }
+
+        public void forEachInInsertionOrder(@NotNull BiConsumer<K, V> consumer) {
+            Objects.requireNonNull(consumer);
+            if (this.tailEntry == null) {
+                return;
+            }
+
+            ArrayList<OrderedEntry<K, V>> reversedEntries = new ArrayList<>(this.size);
+            OrderedEntry<K, V> currentEntry = this.tailEntry;
+            while (currentEntry != null) {
+                reversedEntries.add(currentEntry);
+                currentEntry = currentEntry.previous;
+            }
+
+            for (int index = reversedEntries.size() - 1; index >= 0; index--) {
+                OrderedEntry<K, V> entry = reversedEntries.get(index);
+                consumer.accept(entry.key, entry.value);
+            }
+        }
+
+        protected static int spreadHash(int hash) {
+            return hash ^ (hash >>> 16);
+        }
+
+        protected abstract static class IndexNode<K, V> {
+
+            @Nullable
+            @SuppressWarnings("unchecked")
+            protected static <K, V> OrderedEntry<K, V> find(@Nullable IndexNode<K, V> node, @NotNull K key, int hash, int shift) {
+                if (node == null) {
+                    return null;
+                }
+                if (node instanceof LeafNode<?, ?>) {
+                    LeafNode<K, V> leafNode = (LeafNode<K, V>) node;
+                    if (leafNode.hash != hash) {
+                        return null;
+                    }
+                    CollisionEntry<K, V> collisionEntry = leafNode.collisionChain;
+                    while (collisionEntry != null) {
+                        if (collisionEntry.key.equals(key)) {
+                            return collisionEntry.entry;
+                        }
+                        collisionEntry = collisionEntry.next;
+                    }
+                    return null;
+                }
+
+                BranchNode<K, V> branchNode = (BranchNode<K, V>) node;
+                int childIndex = (hash >>> shift) & HASH_INDEX_MASK;
+                return find((IndexNode<K, V>) branchNode.children[childIndex], key, hash, shift + HASH_BITS_PER_LEVEL);
+            }
+
+            @NotNull
+            @SuppressWarnings("unchecked")
+            protected static <K, V> IndexNode<K, V> put(@Nullable IndexNode<K, V> node, @NotNull K key, int hash,
+                                                        @NotNull OrderedEntry<K, V> entry, int shift) {
+                if (node == null) {
+                    return new LeafNode<>(hash, new CollisionEntry<>(key, entry, null));
+                }
+                if (node instanceof LeafNode<?, ?>) {
+                    LeafNode<K, V> leafNode = (LeafNode<K, V>) node;
+                    if (leafNode.hash == hash) {
+                        return new LeafNode<>(hash, new CollisionEntry<>(key, entry, leafNode.collisionChain));
+                    }
+                    return mergeLeaves(leafNode, new LeafNode<>(hash, new CollisionEntry<>(key, entry, null)), shift);
+                }
+
+                BranchNode<K, V> branchNode = (BranchNode<K, V>) node;
+                int childIndex = (hash >>> shift) & HASH_INDEX_MASK;
+                Object[] nextChildren = branchNode.children.clone();
+                nextChildren[childIndex] = put((IndexNode<K, V>) nextChildren[childIndex], key, hash, entry, shift + HASH_BITS_PER_LEVEL);
+                return new BranchNode<>(nextChildren);
+            }
+
+            @NotNull
+            protected static <K, V> IndexNode<K, V> mergeLeaves(@NotNull LeafNode<K, V> firstLeaf,
+                                                                @NotNull LeafNode<K, V> secondLeaf, int shift) {
+                int firstIndex = (firstLeaf.hash >>> shift) & HASH_INDEX_MASK;
+                int secondIndex = (secondLeaf.hash >>> shift) & HASH_INDEX_MASK;
+                Object[] children = new Object[HASH_BRANCH_FACTOR];
+                if (firstIndex != secondIndex) {
+                    children[firstIndex] = firstLeaf;
+                    children[secondIndex] = secondLeaf;
+                    return new BranchNode<>(children);
+                }
+                if (shift >= 30) {
+                    throw new IllegalStateException("AFMA persistent append map exceeded its hash trie depth");
+                }
+                children[firstIndex] = mergeLeaves(firstLeaf, secondLeaf, shift + HASH_BITS_PER_LEVEL);
+                return new BranchNode<>(children);
+            }
+        }
+
+        protected static final class BranchNode<K, V> extends IndexNode<K, V> {
+
+            @NotNull
+            protected final Object[] children;
+
+            protected BranchNode(@NotNull Object[] children) {
+                this.children = Objects.requireNonNull(children);
+            }
+        }
+
+        protected static final class LeafNode<K, V> extends IndexNode<K, V> {
+
+            protected final int hash;
+            @NotNull
+            protected final CollisionEntry<K, V> collisionChain;
+
+            protected LeafNode(int hash, @NotNull CollisionEntry<K, V> collisionChain) {
+                this.hash = hash;
+                this.collisionChain = Objects.requireNonNull(collisionChain);
+            }
+        }
+
+        protected static final class CollisionEntry<K, V> {
+
+            @NotNull
+            protected final K key;
+            @NotNull
+            protected final OrderedEntry<K, V> entry;
+            @Nullable
+            protected final CollisionEntry<K, V> next;
+
+            protected CollisionEntry(@NotNull K key, @NotNull OrderedEntry<K, V> entry, @Nullable CollisionEntry<K, V> next) {
+                this.key = Objects.requireNonNull(key);
+                this.entry = Objects.requireNonNull(entry);
+                this.next = next;
+            }
+        }
+
+        protected static final class OrderedEntry<K, V> {
+
+            @Nullable
+            protected final OrderedEntry<K, V> previous;
+            protected final long identity;
+            @NotNull
+            protected final K key;
+            @NotNull
+            protected final V value;
+
+            protected OrderedEntry(@Nullable OrderedEntry<K, V> previous, long identity, @NotNull K key, @NotNull V value) {
+                this.previous = previous;
+                this.identity = identity;
+                this.key = Objects.requireNonNull(key);
+                this.value = Objects.requireNonNull(value);
+            }
+        }
+    }
+
+    protected static final class PersistentAppendList<T> {
+
+        @NotNull
+        protected final PersistentIdentityAllocator identityAllocator;
+        @Nullable
+        protected final Node<T> tailNode;
+        protected final int size;
+
+        protected PersistentAppendList(@NotNull PersistentIdentityAllocator identityAllocator,
+                                       @Nullable Node<T> tailNode, int size) {
+            this.identityAllocator = Objects.requireNonNull(identityAllocator);
+            this.tailNode = tailNode;
+            this.size = Math.max(0, size);
+        }
+
+        @NotNull
+        public static <T> PersistentAppendList<T> empty() {
+            return new PersistentAppendList<>(new PersistentIdentityAllocator(), null, 0);
+        }
+
+        public boolean isEmpty() {
+            return this.size <= 0;
+        }
+
+        public int size() {
+            return this.size;
+        }
+
+        public long tailIdentity() {
+            return (this.tailNode != null) ? this.tailNode.identity : 0L;
+        }
+
+        @NotNull
+        public PersistentAppendList<T> append(@NotNull T value) {
+            Objects.requireNonNull(value);
+            return new PersistentAppendList<>(this.identityAllocator, new Node<>(this.tailNode, this.identityAllocator.allocateIdentity(), value), this.size + 1);
+        }
+
+        @NotNull
+        public List<T> materialize() {
+            if (this.tailNode == null) {
+                return List.of();
+            }
+
+            ArrayList<T> reversedValues = new ArrayList<>(this.size);
+            Node<T> currentNode = this.tailNode;
+            while (currentNode != null) {
+                reversedValues.add(currentNode.value);
+                currentNode = currentNode.previous;
+            }
+
+            ArrayList<T> orderedValues = new ArrayList<>(reversedValues.size());
+            for (int index = reversedValues.size() - 1; index >= 0; index--) {
+                orderedValues.add(reversedValues.get(index));
+            }
+            return orderedValues;
+        }
+
+        protected static final class Node<T> {
+
+            @Nullable
+            protected final Node<T> previous;
+            protected final long identity;
+            @NotNull
+            protected final T value;
+
+            protected Node(@Nullable Node<T> previous, long identity, @NotNull T value) {
+                this.previous = previous;
+                this.identity = identity;
+                this.value = Objects.requireNonNull(value);
+            }
+        }
+    }
+
+    protected record ExactArchiveRefinementKey(long payloadTailIdentity,
+                                               long accessTraceTailIdentity) {
+    }
+
+    protected record ExactArchiveRefinementMetrics(@NotNull IncrementalArchiveScoreState plannerScoreState,
+                                                   long estimatedArchiveBytes, long scoredArchiveBytes) {
+    }
+
+    protected static final class ExactArchiveRefinementCache {
+
+        // Bound the cache so repeated survivor rescoring cannot pin old planner prefixes indefinitely.
+        @NotNull
+        protected final LinkedHashMap<ExactArchiveRefinementKey, ExactArchiveRefinementMetrics> metricsByPrefix
+                = new LinkedHashMap<>(128, 0.75F, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<ExactArchiveRefinementKey, ExactArchiveRefinementMetrics> eldest) {
+                return this.size() > PLANNER_MAX_EXACT_ARCHIVE_REFINEMENT_CACHE_ENTRIES;
+            }
+        };
+
+        @Nullable
+        public ExactArchiveRefinementMetrics get(@NotNull ExactArchiveRefinementKey key) {
+            return this.metricsByPrefix.get(Objects.requireNonNull(key));
+        }
+
+        public void put(@NotNull ExactArchiveRefinementKey key, @NotNull ExactArchiveRefinementMetrics metrics) {
+            this.metricsByPrefix.put(Objects.requireNonNull(key), Objects.requireNonNull(metrics));
+        }
+    }
+
     protected static final class IncrementalArchiveScoreState {
         // Planner-local proxy for archive scoring. This follows append order and decoder cache pressure,
         // which is cheap enough for inner-loop comparisons before exact survivor rescoring.
 
         @NotNull
-        protected final Map<String, AfmaChunkedPayloadHelper.PayloadLocator> payloadLocatorsByPath;
+        protected final PersistentAppendMap<String, AfmaChunkedPayloadHelper.PayloadLocator> payloadLocatorsByPath;
         protected final int currentChunkId;
         protected final int currentChunkLength;
         @NotNull
@@ -4116,23 +4442,23 @@ public class AfmaEncodePlanner {
         protected final long archiveReads;
         protected final int multiChunkFrameCount;
 
-        protected IncrementalArchiveScoreState(@NotNull Map<String, AfmaChunkedPayloadHelper.PayloadLocator> payloadLocatorsByPath,
+        protected IncrementalArchiveScoreState(@NotNull PersistentAppendMap<String, AfmaChunkedPayloadHelper.PayloadLocator> payloadLocatorsByPath,
                                                int currentChunkId, int currentChunkLength,
                                                @NotNull byte[] currentChunkTail, int chunkCount, int payloadCount,
                                                long estimatedCompressedPayloadBytes, long payloadLocatorBytes,
                                                long chunkLengthBytes,
                                                @NotNull LinkedHashMap<Integer, Integer> cachedChunkIds,
                                                long archiveReads, int multiChunkFrameCount) {
-            this.payloadLocatorsByPath = payloadLocatorsByPath;
+            this.payloadLocatorsByPath = Objects.requireNonNull(payloadLocatorsByPath);
             this.currentChunkId = currentChunkId;
             this.currentChunkLength = currentChunkLength;
-            this.currentChunkTail = currentChunkTail;
+            this.currentChunkTail = Objects.requireNonNull(currentChunkTail);
             this.chunkCount = chunkCount;
             this.payloadCount = payloadCount;
             this.estimatedCompressedPayloadBytes = estimatedCompressedPayloadBytes;
             this.payloadLocatorBytes = payloadLocatorBytes;
             this.chunkLengthBytes = chunkLengthBytes;
-            this.cachedChunkIds = cachedChunkIds;
+            this.cachedChunkIds = Objects.requireNonNull(cachedChunkIds);
             this.archiveReads = archiveReads;
             this.multiChunkFrameCount = multiChunkFrameCount;
         }
@@ -4140,7 +4466,7 @@ public class AfmaEncodePlanner {
         @NotNull
         public static IncrementalArchiveScoreState empty() {
             return new IncrementalArchiveScoreState(
-                    Map.of(),
+                    PersistentAppendMap.empty(),
                     -1,
                     0,
                     EMPTY_BYTES,
@@ -4166,13 +4492,13 @@ public class AfmaEncodePlanner {
                 return empty();
             }
 
-            LinkedHashMap<String, AfmaChunkedPayloadHelper.PayloadLocator> payloadLocatorsByPath = new LinkedHashMap<>();
+            PersistentAppendMap<String, AfmaChunkedPayloadHelper.PayloadLocator> payloadLocatorsByPath = PersistentAppendMap.empty();
             for (Map.Entry<String, Integer> entry : archive.payloadIdsByPath().entrySet()) {
                 int payloadId = Objects.requireNonNull(entry.getValue());
                 if (payloadId < 0 || payloadId >= archive.payloadLocators().size()) {
                     continue;
                 }
-                payloadLocatorsByPath.put(entry.getKey(), archive.payloadLocators().get(payloadId));
+                payloadLocatorsByPath = payloadLocatorsByPath.append(entry.getKey(), archive.payloadLocators().get(payloadId));
             }
 
             long payloadLocatorBytes = 0L;
@@ -4189,7 +4515,7 @@ public class AfmaEncodePlanner {
 
             AfmaChunkedPayloadHelper.ChunkPlan lastChunkPlan = archive.chunkPlans().get(archive.chunkPlans().size() - 1);
             IncrementalArchiveScoreState exactState = new IncrementalArchiveScoreState(
-                    Collections.unmodifiableMap(payloadLocatorsByPath),
+                    payloadLocatorsByPath,
                     archive.chunkPlans().size() - 1,
                     lastChunkPlan.uncompressedLength(),
                     buildChunkTail(lastChunkPlan.payloadPaths(), payloadsByPath),
@@ -4231,10 +4557,12 @@ public class AfmaEncodePlanner {
                         - AfmaChunkedPayloadHelper.estimateVarIntBytes(this.currentChunkLength);
             }
 
-            LinkedHashMap<String, AfmaChunkedPayloadHelper.PayloadLocator> nextLocatorsByPath = new LinkedHashMap<>(this.payloadLocatorsByPath);
-            nextLocatorsByPath.put(payloadPath, new AfmaChunkedPayloadHelper.PayloadLocator(nextChunkId, chunkOffset, payload.length()));
+            PersistentAppendMap<String, AfmaChunkedPayloadHelper.PayloadLocator> nextLocatorsByPath = this.payloadLocatorsByPath.append(
+                    payloadPath,
+                    new AfmaChunkedPayloadHelper.PayloadLocator(nextChunkId, chunkOffset, payload.length())
+            );
             return new IncrementalArchiveScoreState(
-                    Collections.unmodifiableMap(nextLocatorsByPath),
+                    nextLocatorsByPath,
                     nextChunkId,
                     nextChunkLength,
                     payload.appendDeflateTail(previousTail),
@@ -4367,37 +4695,41 @@ public class AfmaEncodePlanner {
     protected static final class ArchivePlanningState {
 
         @NotNull
-        protected final LinkedHashMap<String, DeferredPayload> payloadsByPath;
+        protected final PersistentAppendMap<String, DeferredPayload> payloadsByPath;
         @NotNull
-        protected final Map<String, String> payloadPathsByFingerprint;
+        protected final PersistentAppendMap<String, String> payloadPathsByFingerprint;
         @NotNull
-        protected final AfmaChunkedPayloadHelper.ArchivePackingHints packingHints;
+        protected final PersistentAppendList<AfmaChunkedPayloadHelper.PayloadAccessFrame> accessTrace;
         protected final int nextSyntheticPayloadId;
         protected final int nextKeyframeRegionId;
         protected final int currentIntroKeyframeRegionId;
         protected final int currentMainKeyframeRegionId;
         @NotNull
         protected final IncrementalArchiveScoreState plannerScoreState;
+        @NotNull
+        protected final ExactArchiveRefinementCache exactRefinementCache;
         protected final boolean archiveMetricsExact;
         protected final long estimatedArchiveBytes;
         protected final long scoredArchiveBytes;
 
-        protected ArchivePlanningState(@NotNull LinkedHashMap<String, DeferredPayload> payloadsByPath,
-                                       @NotNull Map<String, String> payloadPathsByFingerprint,
-                                       @NotNull AfmaChunkedPayloadHelper.ArchivePackingHints packingHints,
+        protected ArchivePlanningState(@NotNull PersistentAppendMap<String, DeferredPayload> payloadsByPath,
+                                       @NotNull PersistentAppendMap<String, String> payloadPathsByFingerprint,
+                                       @NotNull PersistentAppendList<AfmaChunkedPayloadHelper.PayloadAccessFrame> accessTrace,
                                        int nextSyntheticPayloadId, int nextKeyframeRegionId,
                                        int currentIntroKeyframeRegionId, int currentMainKeyframeRegionId,
                                        @NotNull IncrementalArchiveScoreState plannerScoreState,
+                                       @NotNull ExactArchiveRefinementCache exactRefinementCache,
                                        boolean archiveMetricsExact,
                                        long estimatedArchiveBytes, long scoredArchiveBytes) {
-            this.payloadsByPath = payloadsByPath;
-            this.payloadPathsByFingerprint = payloadPathsByFingerprint;
-            this.packingHints = packingHints;
+            this.payloadsByPath = Objects.requireNonNull(payloadsByPath);
+            this.payloadPathsByFingerprint = Objects.requireNonNull(payloadPathsByFingerprint);
+            this.accessTrace = Objects.requireNonNull(accessTrace);
             this.nextSyntheticPayloadId = nextSyntheticPayloadId;
             this.nextKeyframeRegionId = nextKeyframeRegionId;
             this.currentIntroKeyframeRegionId = currentIntroKeyframeRegionId;
             this.currentMainKeyframeRegionId = currentMainKeyframeRegionId;
-            this.plannerScoreState = plannerScoreState;
+            this.plannerScoreState = Objects.requireNonNull(plannerScoreState);
+            this.exactRefinementCache = Objects.requireNonNull(exactRefinementCache);
             this.archiveMetricsExact = archiveMetricsExact;
             this.estimatedArchiveBytes = estimatedArchiveBytes;
             this.scoredArchiveBytes = scoredArchiveBytes;
@@ -4406,14 +4738,15 @@ public class AfmaEncodePlanner {
         @NotNull
         public static ArchivePlanningState empty() {
             return new ArchivePlanningState(
-                    new LinkedHashMap<>(),
-                    Map.of(),
-                    AfmaChunkedPayloadHelper.ArchivePackingHints.empty(),
+                    PersistentAppendMap.empty(),
+                    PersistentAppendMap.empty(),
+                    PersistentAppendList.empty(),
                     0,
                     0,
                     -1,
                     -1,
                     IncrementalArchiveScoreState.empty(),
+                    new ExactArchiveRefinementCache(),
                     true,
                     0L,
                     0L
@@ -4454,16 +4787,14 @@ public class AfmaEncodePlanner {
                 return new ArchivePayloadAppendResult(this, existingPath);
             }
 
-            LinkedHashMap<String, DeferredPayload> nextPayloadsByPath = new LinkedHashMap<>(this.payloadsByPath);
-            LinkedHashMap<String, String> nextPayloadPathsByFingerprint = new LinkedHashMap<>(this.payloadPathsByFingerprint);
             String syntheticPath = AfmaChunkedPayloadHelper.syntheticPayloadPath(this.nextSyntheticPayloadId);
-            nextPayloadsByPath.put(syntheticPath, payload);
-            nextPayloadPathsByFingerprint.put(fingerprint, syntheticPath);
+            PersistentAppendMap<String, DeferredPayload> nextPayloadsByPath = this.payloadsByPath.append(syntheticPath, payload);
+            PersistentAppendMap<String, String> nextPayloadPathsByFingerprint = this.payloadPathsByFingerprint.append(fingerprint, syntheticPath);
             return new ArchivePayloadAppendResult(
                     this.advancePlanningState(
                             nextPayloadsByPath,
-                            Collections.unmodifiableMap(nextPayloadPathsByFingerprint),
-                            this.packingHints,
+                            nextPayloadPathsByFingerprint,
+                            this.accessTrace,
                             this.nextSyntheticPayloadId + 1,
                             this.nextKeyframeRegionId,
                             this.currentIntroKeyframeRegionId,
@@ -4499,29 +4830,28 @@ public class AfmaEncodePlanner {
                 currentMainRegionId = currentRegionId;
             }
 
-            AfmaChunkedPayloadHelper.ArchivePackingHints nextPackingHints = this.packingHints.append(
-                    new AfmaChunkedPayloadHelper.PayloadAccessFrame(
-                            payloadPaths,
-                            currentRegionId,
-                            introSequence ? AfmaChunkedPayloadHelper.SEQUENCE_KIND_INTRO : AfmaChunkedPayloadHelper.SEQUENCE_KIND_MAIN
-                    )
+            AfmaChunkedPayloadHelper.PayloadAccessFrame accessFrame = new AfmaChunkedPayloadHelper.PayloadAccessFrame(
+                    payloadPaths,
+                    currentRegionId,
+                    introSequence ? AfmaChunkedPayloadHelper.SEQUENCE_KIND_INTRO : AfmaChunkedPayloadHelper.SEQUENCE_KIND_MAIN
             );
+            PersistentAppendList<AfmaChunkedPayloadHelper.PayloadAccessFrame> nextAccessTrace = this.accessTrace.append(accessFrame);
             return this.advancePlanningState(
                     this.payloadsByPath,
                     this.payloadPathsByFingerprint,
-                    nextPackingHints,
+                    nextAccessTrace,
                     this.nextSyntheticPayloadId,
                     nextRegionId,
                     currentIntroRegionId,
                     currentMainRegionId,
-                    this.plannerScoreState.appendFrameAccess(Objects.requireNonNull(nextPackingHints.accessFrames().get(nextPackingHints.accessFrames().size() - 1)))
+                    this.plannerScoreState.appendFrameAccess(accessFrame)
             );
         }
 
         @NotNull
-        protected ArchivePlanningState advancePlanningState(@NotNull LinkedHashMap<String, DeferredPayload> payloadsByPath,
-                                                            @NotNull Map<String, String> payloadPathsByFingerprint,
-                                                            @NotNull AfmaChunkedPayloadHelper.ArchivePackingHints packingHints,
+        protected ArchivePlanningState advancePlanningState(@NotNull PersistentAppendMap<String, DeferredPayload> payloadsByPath,
+                                                            @NotNull PersistentAppendMap<String, String> payloadPathsByFingerprint,
+                                                            @NotNull PersistentAppendList<AfmaChunkedPayloadHelper.PayloadAccessFrame> accessTrace,
                                                             int nextSyntheticPayloadId, int nextKeyframeRegionId,
                                                             int currentIntroKeyframeRegionId, int currentMainKeyframeRegionId,
                                                             @NotNull IncrementalArchiveScoreState nextPlannerScoreState) {
@@ -4530,12 +4860,13 @@ public class AfmaEncodePlanner {
             return new ArchivePlanningState(
                     payloadsByPath,
                     payloadPathsByFingerprint,
-                    packingHints,
+                    accessTrace,
                     nextSyntheticPayloadId,
                     nextKeyframeRegionId,
                     currentIntroKeyframeRegionId,
                     currentMainKeyframeRegionId,
                     nextPlannerScoreState,
+                    this.exactRefinementCache,
                     false,
                     this.estimatedArchiveBytes + estimatedArchiveDelta,
                     this.scoredArchiveBytes + scoredArchiveDelta
@@ -4548,34 +4879,61 @@ public class AfmaEncodePlanner {
                 return this;
             }
 
+            ExactArchiveRefinementKey refinementKey = new ExactArchiveRefinementKey(this.payloadsByPath.tailIdentity(), this.accessTrace.tailIdentity());
+            ExactArchiveRefinementMetrics cachedMetrics = this.exactRefinementCache.get(refinementKey);
+            if (cachedMetrics != null) {
+                return this.withExactMetrics(cachedMetrics);
+            }
+
             LinkedHashMap<String, AfmaStoredPayload> materializedPayloadsByPath = this.materializePayloadsByPath();
-            AfmaChunkedPayloadHelper.PackedPayloadArchive simulatedArchive = AfmaChunkedPayloadHelper.simulateArchiveLayout(materializedPayloadsByPath, packingHints);
+            AfmaChunkedPayloadHelper.ArchivePackingHints exactPackingHints = this.materializePackingHints();
+            AfmaChunkedPayloadHelper.PackedPayloadArchive simulatedArchive = AfmaChunkedPayloadHelper.simulateArchiveLayout(materializedPayloadsByPath, exactPackingHints);
+            ExactArchiveRefinementMetrics exactMetrics = new ExactArchiveRefinementMetrics(
+                    IncrementalArchiveScoreState.fromExactArchive(materializedPayloadsByPath, exactPackingHints, simulatedArchive),
+                    simulatedArchive.packingMetrics().predictedArchiveBytes(),
+                    simulatedArchive.packingMetrics().scoredArchiveBytes()
+            );
+            this.exactRefinementCache.put(refinementKey, exactMetrics);
+            return this.withExactMetrics(exactMetrics);
+        }
+
+        @NotNull
+        protected ArchivePlanningState withExactMetrics(@NotNull ExactArchiveRefinementMetrics exactMetrics) {
             return new ArchivePlanningState(
                     this.payloadsByPath,
                     this.payloadPathsByFingerprint,
-                    this.packingHints,
+                    this.accessTrace,
                     this.nextSyntheticPayloadId,
                     this.nextKeyframeRegionId,
                     this.currentIntroKeyframeRegionId,
                     this.currentMainKeyframeRegionId,
-                    IncrementalArchiveScoreState.fromExactArchive(materializedPayloadsByPath, this.packingHints, simulatedArchive),
+                    exactMetrics.plannerScoreState(),
+                    this.exactRefinementCache,
                     true,
-                    simulatedArchive.packingMetrics().predictedArchiveBytes(),
-                    simulatedArchive.packingMetrics().scoredArchiveBytes()
+                    exactMetrics.estimatedArchiveBytes(),
+                    exactMetrics.scoredArchiveBytes()
             );
         }
 
         @NotNull
         protected LinkedHashMap<String, AfmaStoredPayload> materializePayloadsByPath() {
             LinkedHashMap<String, AfmaStoredPayload> materializedPayloadsByPath = new LinkedHashMap<>(this.payloadsByPath.size());
-            for (Map.Entry<String, DeferredPayload> entry : this.payloadsByPath.entrySet()) {
+            this.payloadsByPath.forEachInInsertionOrder((payloadPath, payload) -> {
                 try {
-                    materializedPayloadsByPath.put(entry.getKey(), Objects.requireNonNull(entry.getValue()).materialize());
+                    materializedPayloadsByPath.put(payloadPath, payload.materialize());
                 } catch (IOException ex) {
-                    throw new IllegalStateException("Failed to materialize AFMA planner payload " + entry.getKey(), ex);
+                    throw new IllegalStateException("Failed to materialize AFMA planner payload " + payloadPath, ex);
                 }
-            }
+            });
             return materializedPayloadsByPath;
+        }
+
+        @NotNull
+        protected AfmaChunkedPayloadHelper.ArchivePackingHints materializePackingHints() {
+            if (this.accessTrace.isEmpty()) {
+                return AfmaChunkedPayloadHelper.ArchivePackingHints.empty();
+            }
+            return new AfmaChunkedPayloadHelper.ArchivePackingHints(this.accessTrace.materialize());
         }
 
     }
