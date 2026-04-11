@@ -2657,8 +2657,9 @@ public class AfmaEncodePlanner {
 
         int maxNonZeroVectors = this.computeMaxBlockInterNonZeroMotionVectors(regionAnalysis.changedTileCount());
         if (nonZeroSeedCount < maxNonZeroVectors) {
-            // Copy detections are cheap to reuse. Only pull the globally ranked list when the seeded frontier is still too small.
-            for (AfmaRectCopyDetector.MotionVector motionVector : copyDetector.collectMotionVectors(pairAnalysis, false)) {
+            // Copy detections are cheap to reuse. Only pull as much of the global motion ranking as the seeded frontier still needs.
+            int requestedRankedMotionVectors = maxNonZeroVectors + nonZeroSeedCount;
+            for (AfmaRectCopyDetector.MotionVector motionVector : copyDetector.collectTopMotionVectors(pairAnalysis, requestedRankedMotionVectors)) {
                 this.addBlockInterMotionVector(motionVectorsByKey, motionVector.dx(), motionVector.dy());
                 if ((motionVectorsByKey.size() - 1) >= maxNonZeroVectors) {
                     break;
