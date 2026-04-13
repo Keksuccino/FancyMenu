@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameOpe
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaMetadata;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaStoredPayload;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -25,19 +26,32 @@ public class AfmaEncodePlan implements AutoCloseable {
     protected final long totalPayloadBytes;
 
     public AfmaEncodePlan(@NotNull AfmaMetadata metadata, @NotNull AfmaFrameIndex frameIndex, @NotNull LinkedHashMap<String, AfmaStoredPayload> payloads) {
-        this(metadata, frameIndex, payloads, calculateTotalPayloadBytes(Objects.requireNonNull(payloads)), true);
+        this(metadata, frameIndex, payloads, calculateTotalPayloadBytes(Objects.requireNonNull(payloads)), null, true);
     }
 
     public AfmaEncodePlan(@NotNull AfmaMetadata metadata, @NotNull AfmaFrameIndex frameIndex, @NotNull LinkedHashMap<String, AfmaStoredPayload> payloads, long totalPayloadBytes) {
-        this(metadata, frameIndex, payloads, totalPayloadBytes, true);
+        this(metadata, frameIndex, payloads, totalPayloadBytes, null, true);
+    }
+
+    public AfmaEncodePlan(@NotNull AfmaMetadata metadata, @NotNull AfmaFrameIndex frameIndex,
+                          @NotNull LinkedHashMap<String, AfmaStoredPayload> payloads,
+                          @NotNull AfmaChunkedPayloadHelper.PackedPayloadArchive payloadArchive) {
+        this(metadata, frameIndex, payloads, calculateTotalPayloadBytes(Objects.requireNonNull(payloads)), payloadArchive, true);
+    }
+
+    public AfmaEncodePlan(@NotNull AfmaMetadata metadata, @NotNull AfmaFrameIndex frameIndex,
+                          @NotNull LinkedHashMap<String, AfmaStoredPayload> payloads, long totalPayloadBytes,
+                          @NotNull AfmaChunkedPayloadHelper.PackedPayloadArchive payloadArchive) {
+        this(metadata, frameIndex, payloads, totalPayloadBytes, payloadArchive, true);
     }
 
     protected AfmaEncodePlan(@NotNull AfmaMetadata metadata, @NotNull AfmaFrameIndex frameIndex,
-                             @NotNull LinkedHashMap<String, AfmaStoredPayload> payloads, long totalPayloadBytes, boolean copyPayloads) {
+                             @NotNull LinkedHashMap<String, AfmaStoredPayload> payloads, long totalPayloadBytes,
+                             @Nullable AfmaChunkedPayloadHelper.PackedPayloadArchive payloadArchive, boolean copyPayloads) {
         this.metadata = Objects.requireNonNull(metadata);
         this.frameIndex = Objects.requireNonNull(frameIndex);
         this.payloads = copyPayloads ? new LinkedHashMap<>(Objects.requireNonNull(payloads)) : Objects.requireNonNull(payloads);
-        this.payloadArchive = buildPayloadArchive(this.payloads, this.frameIndex, this.metadata);
+        this.payloadArchive = (payloadArchive != null) ? payloadArchive : buildPayloadArchive(this.payloads, this.frameIndex, this.metadata);
         this.totalPayloadBytes = Math.max(0L, totalPayloadBytes);
     }
 

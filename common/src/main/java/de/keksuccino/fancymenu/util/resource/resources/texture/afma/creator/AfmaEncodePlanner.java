@@ -147,7 +147,8 @@ public class AfmaEncodePlanner {
                         options.isDuplicateFrameElision()
                 );
 
-                return new AfmaEncodePlan(metadata, new AfmaFrameIndex(plannedMainFrames.frames(), plannedIntroFrames.frames()), payloads);
+                AfmaChunkedPayloadHelper.PackedPayloadArchive payloadArchive = plannedMainFrames.archiveState().buildPayloadArchive(payloads);
+                return new AfmaEncodePlan(metadata, new AfmaFrameIndex(plannedMainFrames.frames(), plannedIntroFrames.frames()), payloads, payloadArchive);
             } finally {
                 CloseableUtils.closeQuietly(preloadedIntroFrame);
                 CloseableUtils.closeQuietly(preloadedMainFrame);
@@ -817,22 +818,9 @@ public class AfmaEncodePlanner {
 
     @NotNull
     protected List<BeamPlanningState> refinePlanningBeamArchiveScores(@NotNull List<BeamPlanningState> beam) {
-        if (beam.isEmpty()) {
-            return beam;
-        }
-
-        // Keep the beam expansion loop cheap, then snap surviving states back to exact archive costs.
-        ArrayList<BeamPlanningState> refinedBeam = new ArrayList<>(beam.size());
-        boolean changed = false;
-        for (BeamPlanningState state : beam) {
-            BeamPlanningState refinedState = state.refineArchiveScore();
-            refinedBeam.add(refinedState);
-            changed |= refinedState != state;
-        }
-        if (!changed) {
-            return beam;
-        }
-        return this.prunePlanningBeam(refinedBeam, refinedBeam.size());
+        // Archive metrics stay exact incrementally now, so beam survivors no longer need a
+        // second full rescoring pass.
+        return beam;
     }
 
     @Nullable
@@ -5140,115 +5128,24 @@ public class AfmaEncodePlanner {
     }
 
     protected static final class IncrementalArchiveScoreState {
-        // Planner-local proxy for archive scoring. This follows append order and decoder cache pressure,
-        // which is cheap enough for inner-loop comparisons before exact survivor rescoring.
+        // This is now the planner's exact archive model. It carries one persistent append-order packing
+        // state per chunk-size candidate so beam comparisons stay incremental while still reusing the
+        // winning archive layout for final output.
 
         @NotNull
-        protected final PersistentAppendMap<String, AfmaChunkedPayloadHelper.PayloadLocator> payloadLocatorsByPath;
-        protected final int currentChunkId;
-        protected final int currentChunkLength;
-        @NotNull
-        protected final byte[] currentChunkTail;
-        protected final int chunkCount;
-        protected final int payloadCount;
-        protected final long estimatedCompressedPayloadBytes;
-        protected final long payloadLocatorBytes;
-        protected final long chunkLengthBytes;
-        @NotNull
-        protected final LinkedHashMap<Integer, Integer> cachedChunkIds;
-        protected final long archiveReads;
-        protected final int multiChunkFrameCount;
+        protected final List<IncrementalArchiveVariantState> variants;
 
-        protected IncrementalArchiveScoreState(@NotNull PersistentAppendMap<String, AfmaChunkedPayloadHelper.PayloadLocator> payloadLocatorsByPath,
-                                               int currentChunkId, int currentChunkLength,
-                                               @NotNull byte[] currentChunkTail, int chunkCount, int payloadCount,
-                                               long estimatedCompressedPayloadBytes, long payloadLocatorBytes,
-                                               long chunkLengthBytes,
-                                               @NotNull LinkedHashMap<Integer, Integer> cachedChunkIds,
-                                               long archiveReads, int multiChunkFrameCount) {
-            this.payloadLocatorsByPath = Objects.requireNonNull(payloadLocatorsByPath);
-            this.currentChunkId = currentChunkId;
-            this.currentChunkLength = currentChunkLength;
-            this.currentChunkTail = Objects.requireNonNull(currentChunkTail);
-            this.chunkCount = chunkCount;
-            this.payloadCount = payloadCount;
-            this.estimatedCompressedPayloadBytes = estimatedCompressedPayloadBytes;
-            this.payloadLocatorBytes = payloadLocatorBytes;
-            this.chunkLengthBytes = chunkLengthBytes;
-            this.cachedChunkIds = Objects.requireNonNull(cachedChunkIds);
-            this.archiveReads = archiveReads;
-            this.multiChunkFrameCount = multiChunkFrameCount;
+        protected IncrementalArchiveScoreState(@NotNull List<IncrementalArchiveVariantState> variants) {
+            this.variants = List.copyOf(Objects.requireNonNull(variants));
         }
 
         @NotNull
         public static IncrementalArchiveScoreState empty() {
-            return new IncrementalArchiveScoreState(
-                    PersistentAppendMap.empty(),
-                    -1,
-                    0,
-                    EMPTY_BYTES,
-                    0,
-                    0,
-                    0L,
-                    0L,
-                    0L,
-                    new LinkedHashMap<>(PLANNER_MAX_CACHED_PAYLOAD_CHUNKS, 0.75F, true),
-                    0L,
-                    0
-            );
-        }
-
-        @NotNull
-        public static IncrementalArchiveScoreState fromExactArchive(@NotNull Map<String, AfmaStoredPayload> payloadsByPath,
-                                                                    @NotNull AfmaChunkedPayloadHelper.ArchivePackingHints packingHints,
-                                                                    @NotNull AfmaChunkedPayloadHelper.PackedPayloadArchive archive) {
-            Objects.requireNonNull(payloadsByPath);
-            Objects.requireNonNull(packingHints);
-            Objects.requireNonNull(archive);
-            if (archive.chunkPlans().isEmpty() || archive.payloadIdsByPath().isEmpty()) {
-                return empty();
+            ArrayList<IncrementalArchiveVariantState> variants = new ArrayList<>(AfmaChunkedPayloadHelper.TARGET_CHUNK_BYTE_CANDIDATES.length);
+            for (int targetChunkBytes : AfmaChunkedPayloadHelper.TARGET_CHUNK_BYTE_CANDIDATES) {
+                variants.add(IncrementalArchiveVariantState.empty(targetChunkBytes));
             }
-
-            PersistentAppendMap<String, AfmaChunkedPayloadHelper.PayloadLocator> payloadLocatorsByPath = PersistentAppendMap.empty();
-            for (Map.Entry<String, Integer> entry : archive.payloadIdsByPath().entrySet()) {
-                int payloadId = Objects.requireNonNull(entry.getValue());
-                if (payloadId < 0 || payloadId >= archive.payloadLocators().size()) {
-                    continue;
-                }
-                payloadLocatorsByPath = payloadLocatorsByPath.append(entry.getKey(), archive.payloadLocators().get(payloadId));
-            }
-
-            long payloadLocatorBytes = 0L;
-            for (AfmaChunkedPayloadHelper.PayloadLocator locator : archive.payloadLocators()) {
-                payloadLocatorBytes += AfmaChunkedPayloadHelper.estimateVarIntBytes(locator.chunkId())
-                        + AfmaChunkedPayloadHelper.estimateVarIntBytes(locator.offset())
-                        + AfmaChunkedPayloadHelper.estimateVarIntBytes(locator.length());
-            }
-
-            long chunkLengthBytes = 0L;
-            for (AfmaChunkedPayloadHelper.ChunkPlan chunkPlan : archive.chunkPlans()) {
-                chunkLengthBytes += AfmaChunkedPayloadHelper.estimateVarIntBytes(chunkPlan.uncompressedLength());
-            }
-
-            AfmaChunkedPayloadHelper.ChunkPlan lastChunkPlan = archive.chunkPlans().get(archive.chunkPlans().size() - 1);
-            IncrementalArchiveScoreState exactState = new IncrementalArchiveScoreState(
-                    payloadLocatorsByPath,
-                    archive.chunkPlans().size() - 1,
-                    lastChunkPlan.uncompressedLength(),
-                    buildChunkTail(lastChunkPlan.payloadPaths(), payloadsByPath),
-                    archive.chunkPlans().size(),
-                    archive.payloadIdsByPath().size(),
-                    archive.packingMetrics().estimatedCompressedPayloadBytes(),
-                    payloadLocatorBytes,
-                    chunkLengthBytes,
-                    new LinkedHashMap<>(PLANNER_MAX_CACHED_PAYLOAD_CHUNKS, 0.75F, true),
-                    0L,
-                    0
-            );
-            for (AfmaChunkedPayloadHelper.PayloadAccessFrame accessFrame : packingHints.accessFrames()) {
-                exactState = exactState.appendFrameAccess(accessFrame);
-            }
-            return exactState;
+            return new IncrementalArchiveScoreState(variants);
         }
 
         @NotNull
@@ -5259,18 +5156,167 @@ public class AfmaEncodePlanner {
                 return this;
             }
 
-            boolean startNewChunk = (this.chunkCount == 0)
-                    || (((long) this.currentChunkLength + payload.length()) > PLANNER_TARGET_CHUNK_BYTES);
-            int nextChunkId = startNewChunk ? this.chunkCount : this.currentChunkId;
+            ArrayList<IncrementalArchiveVariantState> nextVariants = new ArrayList<>(this.variants.size());
+            for (IncrementalArchiveVariantState variant : this.variants) {
+                nextVariants.add(variant.appendPayload(payloadPath, payload));
+            }
+            return new IncrementalArchiveScoreState(nextVariants);
+        }
+
+        @NotNull
+        public IncrementalArchiveScoreState appendFrameAccess(@NotNull AfmaChunkedPayloadHelper.PayloadAccessFrame accessFrame) {
+            Objects.requireNonNull(accessFrame);
+            if (accessFrame.payloadPaths().isEmpty()) {
+                return this;
+            }
+
+            ArrayList<IncrementalArchiveVariantState> nextVariants = new ArrayList<>(this.variants.size());
+            for (IncrementalArchiveVariantState variant : this.variants) {
+                nextVariants.add(variant.appendFrameAccess(accessFrame));
+            }
+            return new IncrementalArchiveScoreState(nextVariants);
+        }
+
+        public long predictedArchiveBytes() {
+            return this.bestVariant().predictedArchiveBytes();
+        }
+
+        public long scoredArchiveBytes() {
+            return this.bestVariant().scoredArchiveBytes();
+        }
+
+        @NotNull
+        public AfmaChunkedPayloadHelper.PackedPayloadArchive buildPackedPayloadArchive(@NotNull LinkedHashMap<String, AfmaStoredPayload> payloadsByPath) {
+            return this.bestVariant().buildPackedPayloadArchive(payloadsByPath);
+        }
+
+        @NotNull
+        protected IncrementalArchiveVariantState bestVariant() {
+            IncrementalArchiveVariantState bestVariant = null;
+            for (IncrementalArchiveVariantState variant : this.variants) {
+                if (bestVariant == null || variant.isBetterThan(bestVariant)) {
+                    bestVariant = variant;
+                }
+            }
+            return Objects.requireNonNull(bestVariant);
+        }
+
+    }
+
+    protected record PlannerChunkDescriptor(int payloadCount, int uncompressedLength) {
+    }
+
+    protected static final class IncrementalArchiveVariantState {
+
+        protected final int targetChunkBytes;
+        @NotNull
+        protected final PersistentAppendMap<String, AfmaChunkedPayloadHelper.PayloadLocator> payloadLocatorsByPath;
+        @NotNull
+        protected final PersistentAppendList<PlannerChunkDescriptor> completedChunks;
+        protected final int currentChunkLength;
+        protected final int currentChunkPayloadCount;
+        @NotNull
+        protected final byte[] currentChunkTail;
+        protected final int chunkCount;
+        protected final int payloadCount;
+        protected final long estimatedCompressedPayloadBytes;
+        protected final long payloadLocatorBytes;
+        protected final long chunkLengthBytes;
+        @NotNull
+        protected final LinkedHashMap<Integer, Integer> cachedChunkIds;
+        protected final long cacheHits;
+        protected final long cacheMisses;
+        protected final long archiveReads;
+        protected final long cacheEvictions;
+        protected final long chunkReads;
+        protected final int accessFrameCount;
+        protected final int multiChunkFrameCount;
+
+        protected IncrementalArchiveVariantState(int targetChunkBytes,
+                                                 @NotNull PersistentAppendMap<String, AfmaChunkedPayloadHelper.PayloadLocator> payloadLocatorsByPath,
+                                                 @NotNull PersistentAppendList<PlannerChunkDescriptor> completedChunks,
+                                                 int currentChunkLength, int currentChunkPayloadCount,
+                                                 @NotNull byte[] currentChunkTail, int chunkCount, int payloadCount,
+                                                 long estimatedCompressedPayloadBytes, long payloadLocatorBytes,
+                                                 long chunkLengthBytes,
+                                                 @NotNull LinkedHashMap<Integer, Integer> cachedChunkIds,
+                                                 long cacheHits, long cacheMisses, long archiveReads, long cacheEvictions,
+                                                 long chunkReads, int accessFrameCount, int multiChunkFrameCount) {
+            this.targetChunkBytes = targetChunkBytes;
+            this.payloadLocatorsByPath = Objects.requireNonNull(payloadLocatorsByPath);
+            this.completedChunks = Objects.requireNonNull(completedChunks);
+            this.currentChunkLength = currentChunkLength;
+            this.currentChunkPayloadCount = currentChunkPayloadCount;
+            this.currentChunkTail = Objects.requireNonNull(currentChunkTail);
+            this.chunkCount = chunkCount;
+            this.payloadCount = payloadCount;
+            this.estimatedCompressedPayloadBytes = estimatedCompressedPayloadBytes;
+            this.payloadLocatorBytes = payloadLocatorBytes;
+            this.chunkLengthBytes = chunkLengthBytes;
+            this.cachedChunkIds = Objects.requireNonNull(cachedChunkIds);
+            this.cacheHits = cacheHits;
+            this.cacheMisses = cacheMisses;
+            this.archiveReads = archiveReads;
+            this.cacheEvictions = cacheEvictions;
+            this.chunkReads = chunkReads;
+            this.accessFrameCount = accessFrameCount;
+            this.multiChunkFrameCount = multiChunkFrameCount;
+        }
+
+        @NotNull
+        public static IncrementalArchiveVariantState empty(int targetChunkBytes) {
+            return new IncrementalArchiveVariantState(
+                    targetChunkBytes,
+                    PersistentAppendMap.empty(),
+                    PersistentAppendList.empty(),
+                    0,
+                    0,
+                    EMPTY_BYTES,
+                    0,
+                    0,
+                    0L,
+                    0L,
+                    0L,
+                    new LinkedHashMap<>(PLANNER_MAX_CACHED_PAYLOAD_CHUNKS, 0.75F, true),
+                    0L,
+                    0L,
+                    0L,
+                    0L,
+                    0L,
+                    0,
+                    0
+            );
+        }
+
+        @NotNull
+        public IncrementalArchiveVariantState appendPayload(@NotNull String payloadPath, @NotNull DeferredPayload payload) {
+            Objects.requireNonNull(payloadPath);
+            Objects.requireNonNull(payload);
+            if (payload.isEmpty()) {
+                return this;
+            }
+
+            boolean hasCurrentChunk = this.currentChunkPayloadCount > 0;
+            boolean startNewChunk = !hasCurrentChunk
+                    || (((long) this.currentChunkLength + payload.length()) > this.targetChunkBytes);
+            int nextChunkId = hasCurrentChunk
+                    ? (startNewChunk ? this.chunkCount : (this.chunkCount - 1))
+                    : 0;
             int chunkOffset = startNewChunk ? 0 : this.currentChunkLength;
-            int nextChunkLength = startNewChunk ? payload.length() : (this.currentChunkLength + payload.length());
+            int nextCurrentChunkLength = startNewChunk ? payload.length() : (this.currentChunkLength + payload.length());
+            int nextCurrentChunkPayloadCount = startNewChunk ? 1 : (this.currentChunkPayloadCount + 1);
             byte[] previousTail = startNewChunk ? EMPTY_BYTES : this.currentChunkTail;
 
+            PersistentAppendList<PlannerChunkDescriptor> nextCompletedChunks = this.completedChunks;
+            if (startNewChunk && hasCurrentChunk) {
+                nextCompletedChunks = nextCompletedChunks.append(new PlannerChunkDescriptor(this.currentChunkPayloadCount, this.currentChunkLength));
+            }
+
             long nextChunkLengthBytes = this.chunkLengthBytes;
-            if (startNewChunk) {
-                nextChunkLengthBytes += AfmaChunkedPayloadHelper.estimateVarIntBytes(nextChunkLength);
+            if (!hasCurrentChunk || startNewChunk) {
+                nextChunkLengthBytes += AfmaChunkedPayloadHelper.estimateVarIntBytes(nextCurrentChunkLength);
             } else {
-                nextChunkLengthBytes += AfmaChunkedPayloadHelper.estimateVarIntBytes(nextChunkLength)
+                nextChunkLengthBytes += AfmaChunkedPayloadHelper.estimateVarIntBytes(nextCurrentChunkLength)
                         - AfmaChunkedPayloadHelper.estimateVarIntBytes(this.currentChunkLength);
             }
 
@@ -5278,12 +5324,14 @@ public class AfmaEncodePlanner {
                     payloadPath,
                     new AfmaChunkedPayloadHelper.PayloadLocator(nextChunkId, chunkOffset, payload.length())
             );
-            return new IncrementalArchiveScoreState(
+            return new IncrementalArchiveVariantState(
+                    this.targetChunkBytes,
                     nextLocatorsByPath,
-                    nextChunkId,
-                    nextChunkLength,
+                    nextCompletedChunks,
+                    nextCurrentChunkLength,
+                    nextCurrentChunkPayloadCount,
                     payload.appendDeflateTail(previousTail),
-                    startNewChunk ? (this.chunkCount + 1) : this.chunkCount,
+                    hasCurrentChunk ? (startNewChunk ? (this.chunkCount + 1) : this.chunkCount) : 1,
                     this.payloadCount + 1,
                     this.estimatedCompressedPayloadBytes + payload.estimateChunkCompressionDelta(previousTail),
                     this.payloadLocatorBytes
@@ -5292,13 +5340,18 @@ public class AfmaEncodePlanner {
                             + AfmaChunkedPayloadHelper.estimateVarIntBytes(payload.length()),
                     nextChunkLengthBytes,
                     this.cachedChunkIds,
+                    this.cacheHits,
+                    this.cacheMisses,
                     this.archiveReads,
+                    this.cacheEvictions,
+                    this.chunkReads,
+                    this.accessFrameCount,
                     this.multiChunkFrameCount
             );
         }
 
         @NotNull
-        public IncrementalArchiveScoreState appendFrameAccess(@NotNull AfmaChunkedPayloadHelper.PayloadAccessFrame accessFrame) {
+        public IncrementalArchiveVariantState appendFrameAccess(@NotNull AfmaChunkedPayloadHelper.PayloadAccessFrame accessFrame) {
             Objects.requireNonNull(accessFrame);
             if (accessFrame.payloadPaths().isEmpty()) {
                 return this;
@@ -5317,27 +5370,35 @@ public class AfmaEncodePlanner {
 
             LinkedHashMap<Integer, Integer> nextCachedChunkIds = new LinkedHashMap<>(Math.max(1, this.cachedChunkIds.size() + 1), 0.75F, true);
             nextCachedChunkIds.putAll(this.cachedChunkIds);
+            long nextCacheHits = this.cacheHits;
+            long nextCacheMisses = this.cacheMisses;
             long nextArchiveReads = this.archiveReads;
+            long nextEvictions = this.cacheEvictions;
             for (Integer chunkId : accessedChunkIds) {
                 if (nextCachedChunkIds.get(chunkId) != null) {
+                    nextCacheHits++;
                     continue;
                 }
 
+                nextCacheMisses++;
                 nextArchiveReads++;
                 if (nextCachedChunkIds.size() >= PLANNER_MAX_CACHED_PAYLOAD_CHUNKS) {
                     java.util.Iterator<Map.Entry<Integer, Integer>> iterator = nextCachedChunkIds.entrySet().iterator();
                     if (iterator.hasNext()) {
                         iterator.next();
                         iterator.remove();
+                        nextEvictions++;
                     }
                 }
                 nextCachedChunkIds.put(chunkId, chunkId);
             }
 
-            return new IncrementalArchiveScoreState(
+            return new IncrementalArchiveVariantState(
+                    this.targetChunkBytes,
                     this.payloadLocatorsByPath,
-                    this.currentChunkId,
+                    this.completedChunks,
                     this.currentChunkLength,
+                    this.currentChunkPayloadCount,
                     this.currentChunkTail,
                     this.chunkCount,
                     this.payloadCount,
@@ -5345,7 +5406,12 @@ public class AfmaEncodePlanner {
                     this.payloadLocatorBytes,
                     this.chunkLengthBytes,
                     nextCachedChunkIds,
+                    nextCacheHits,
+                    nextCacheMisses,
                     nextArchiveReads,
+                    nextEvictions,
+                    this.chunkReads + accessedChunkIds.size(),
+                    this.accessFrameCount + 1,
                     this.multiChunkFrameCount + ((accessedChunkIds.size() > 1) ? 1 : 0)
             );
         }
@@ -5370,16 +5436,99 @@ public class AfmaEncodePlanner {
                     + ((long) this.multiChunkFrameCount * PLANNER_MULTI_CHUNK_FRAME_PENALTY_BYTES);
         }
 
-        @NotNull
-        protected static byte[] buildChunkTail(@NotNull List<String> chunkPayloadPaths, @NotNull Map<String, AfmaStoredPayload> payloadsByPath) {
-            byte[] tail = EMPTY_BYTES;
-            for (String payloadPath : chunkPayloadPaths) {
-                AfmaStoredPayload payload = payloadsByPath.get(payloadPath);
-                if (payload != null) {
-                    tail = AfmaChunkedPayloadHelper.appendDeflateTail(tail, payload);
-                }
+        public boolean isBetterThan(@NotNull IncrementalArchiveVariantState other) {
+            long scoredBytes = this.scoredArchiveBytes();
+            long otherScoredBytes = other.scoredArchiveBytes();
+            if (scoredBytes != otherScoredBytes) {
+                return scoredBytes < otherScoredBytes;
             }
-            return tail;
+            long predictedBytes = this.predictedArchiveBytes();
+            long otherPredictedBytes = other.predictedArchiveBytes();
+            if (predictedBytes != otherPredictedBytes) {
+                return predictedBytes < otherPredictedBytes;
+            }
+            return this.targetChunkBytes > other.targetChunkBytes;
+        }
+
+        @NotNull
+        public AfmaChunkedPayloadHelper.PackedPayloadArchive buildPackedPayloadArchive(@NotNull LinkedHashMap<String, AfmaStoredPayload> payloadsByPath) {
+            Objects.requireNonNull(payloadsByPath);
+            if (this.payloadCount <= 0 || payloadsByPath.isEmpty()) {
+                return new AfmaChunkedPayloadHelper.PackedPayloadArchive(
+                        Collections.unmodifiableMap(new LinkedHashMap<String, Integer>()),
+                        List.of(),
+                        List.of(),
+                        AfmaChunkedPayloadHelper.PackingMetrics.empty(this.targetChunkBytes)
+                );
+            }
+
+            ArrayList<Map.Entry<String, AfmaStoredPayload>> orderedPayloadEntries = new ArrayList<>(payloadsByPath.entrySet());
+            if (orderedPayloadEntries.size() != this.payloadCount) {
+                throw new IllegalStateException("AFMA planner payload count diverged from the final payload materialization order");
+            }
+
+            ArrayList<PlannerChunkDescriptor> orderedChunks = new ArrayList<>(this.completedChunks.materialize());
+            if (this.currentChunkPayloadCount > 0) {
+                orderedChunks.add(new PlannerChunkDescriptor(this.currentChunkPayloadCount, this.currentChunkLength));
+            }
+            if (orderedChunks.size() != this.chunkCount) {
+                throw new IllegalStateException("AFMA planner chunk count diverged while building the final archive");
+            }
+
+            LinkedHashMap<String, Integer> payloadIdsByPath = new LinkedHashMap<>(orderedPayloadEntries.size());
+            ArrayList<AfmaChunkedPayloadHelper.PayloadLocator> payloadLocators = new ArrayList<>(orderedPayloadEntries.size());
+            ArrayList<AfmaChunkedPayloadHelper.ChunkPlan> chunkPlans = new ArrayList<>(orderedChunks.size());
+            int payloadCursor = 0;
+            for (int chunkId = 0; chunkId < orderedChunks.size(); chunkId++) {
+                PlannerChunkDescriptor chunk = orderedChunks.get(chunkId);
+                ArrayList<String> chunkPayloadPaths = new ArrayList<>(chunk.payloadCount());
+                int offset = 0;
+                for (int payloadIndex = 0; payloadIndex < chunk.payloadCount(); payloadIndex++) {
+                    if (payloadCursor >= orderedPayloadEntries.size()) {
+                        throw new IllegalStateException("AFMA planner chunk layout exhausted the materialized payload list early");
+                    }
+                    Map.Entry<String, AfmaStoredPayload> payloadEntry = orderedPayloadEntries.get(payloadCursor++);
+                    AfmaStoredPayload payload = Objects.requireNonNull(payloadEntry.getValue(), "AFMA payload was NULL for " + payloadEntry.getKey());
+                    payloadIdsByPath.put(payloadEntry.getKey(), payloadIdsByPath.size());
+                    payloadLocators.add(new AfmaChunkedPayloadHelper.PayloadLocator(chunkId, offset, payload.length()));
+                    chunkPayloadPaths.add(payloadEntry.getKey());
+                    offset += payload.length();
+                }
+                if (offset != chunk.uncompressedLength()) {
+                    throw new IllegalStateException("AFMA planner chunk layout length diverged while building the final archive");
+                }
+                chunkPlans.add(new AfmaChunkedPayloadHelper.ChunkPlan(AfmaChunkedPayloadHelper.chunkEntryPath(chunkId), chunkPayloadPaths, chunk.uncompressedLength()));
+            }
+            if (payloadCursor != orderedPayloadEntries.size()) {
+                throw new IllegalStateException("AFMA planner chunk layout did not consume every materialized payload");
+            }
+
+            long predictedArchiveBytes = this.predictedArchiveBytes();
+            long payloadIndexBytes = 5L
+                    + AfmaChunkedPayloadHelper.estimateVarIntBytes(this.chunkCount)
+                    + AfmaChunkedPayloadHelper.estimateVarIntBytes(this.payloadCount)
+                    + this.chunkLengthBytes
+                    + this.payloadLocatorBytes;
+            long chunkOverheadBytes = (long) this.chunkCount * ESTIMATED_ZIP_CHUNK_OVERHEAD_BYTES;
+            return new AfmaChunkedPayloadHelper.PackedPayloadArchive(
+                    payloadIdsByPath,
+                    payloadLocators,
+                    chunkPlans,
+                    new AfmaChunkedPayloadHelper.PackingMetrics(
+                            this.targetChunkBytes,
+                            this.estimatedCompressedPayloadBytes,
+                            payloadIndexBytes,
+                            chunkOverheadBytes,
+                            predictedArchiveBytes,
+                            this.scoredArchiveBytes(),
+                            this.cacheHits,
+                            this.cacheMisses,
+                            this.archiveReads,
+                            this.cacheEvictions,
+                            (this.accessFrameCount > 0) ? ((double) this.chunkReads / (double) this.accessFrameCount) : 0D,
+                            this.multiChunkFrameCount
+                    )
+            );
         }
 
     }
@@ -5584,7 +5733,7 @@ public class AfmaEncodePlanner {
                     currentMainKeyframeRegionId,
                     nextPlannerScoreState,
                     this.exactRefinementCache,
-                    false,
+                    true,
                     this.estimatedArchiveBytes + estimatedArchiveDelta,
                     this.scoredArchiveBytes + scoredArchiveDelta
             );
@@ -5592,65 +5741,12 @@ public class AfmaEncodePlanner {
 
         @NotNull
         protected ArchivePlanningState refineArchiveMetrics() {
-            if (this.archiveMetricsExact) {
-                return this;
-            }
-
-            ExactArchiveRefinementKey refinementKey = new ExactArchiveRefinementKey(this.payloadsByPath.tailIdentity(), this.accessTrace.tailIdentity());
-            ExactArchiveRefinementMetrics cachedMetrics = this.exactRefinementCache.get(refinementKey);
-            if (cachedMetrics != null) {
-                return this.withExactMetrics(cachedMetrics);
-            }
-
-            LinkedHashMap<String, AfmaStoredPayload> materializedPayloadsByPath = this.materializePayloadsByPath();
-            AfmaChunkedPayloadHelper.ArchivePackingHints exactPackingHints = this.materializePackingHints();
-            AfmaChunkedPayloadHelper.PackedPayloadArchive simulatedArchive = AfmaChunkedPayloadHelper.simulateArchiveLayout(materializedPayloadsByPath, exactPackingHints);
-            ExactArchiveRefinementMetrics exactMetrics = new ExactArchiveRefinementMetrics(
-                    IncrementalArchiveScoreState.fromExactArchive(materializedPayloadsByPath, exactPackingHints, simulatedArchive),
-                    simulatedArchive.packingMetrics().predictedArchiveBytes(),
-                    simulatedArchive.packingMetrics().scoredArchiveBytes()
-            );
-            this.exactRefinementCache.put(refinementKey, exactMetrics);
-            return this.withExactMetrics(exactMetrics);
+            return this;
         }
 
         @NotNull
-        protected ArchivePlanningState withExactMetrics(@NotNull ExactArchiveRefinementMetrics exactMetrics) {
-            return new ArchivePlanningState(
-                    this.payloadsByPath,
-                    this.payloadPathsByFingerprint,
-                    this.accessTrace,
-                    this.nextSyntheticPayloadId,
-                    this.nextKeyframeRegionId,
-                    this.currentIntroKeyframeRegionId,
-                    this.currentMainKeyframeRegionId,
-                    exactMetrics.plannerScoreState(),
-                    this.exactRefinementCache,
-                    true,
-                    exactMetrics.estimatedArchiveBytes(),
-                    exactMetrics.scoredArchiveBytes()
-            );
-        }
-
-        @NotNull
-        protected LinkedHashMap<String, AfmaStoredPayload> materializePayloadsByPath() {
-            LinkedHashMap<String, AfmaStoredPayload> materializedPayloadsByPath = new LinkedHashMap<>(this.payloadsByPath.size());
-            this.payloadsByPath.forEachInInsertionOrder((payloadPath, payload) -> {
-                try {
-                    materializedPayloadsByPath.put(payloadPath, payload.materialize());
-                } catch (IOException ex) {
-                    throw new IllegalStateException("Failed to materialize AFMA planner payload " + payloadPath, ex);
-                }
-            });
-            return materializedPayloadsByPath;
-        }
-
-        @NotNull
-        protected AfmaChunkedPayloadHelper.ArchivePackingHints materializePackingHints() {
-            if (this.accessTrace.isEmpty()) {
-                return AfmaChunkedPayloadHelper.ArchivePackingHints.empty();
-            }
-            return new AfmaChunkedPayloadHelper.ArchivePackingHints(this.accessTrace.materialize());
+        protected AfmaChunkedPayloadHelper.PackedPayloadArchive buildPayloadArchive(@NotNull LinkedHashMap<String, AfmaStoredPayload> payloadsByPath) {
+            return this.plannerScoreState.buildPackedPayloadArchive(Objects.requireNonNull(payloadsByPath));
         }
 
     }
