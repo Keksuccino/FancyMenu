@@ -41,6 +41,9 @@ public class AfmaRectCopyDetector {
 
     @Nullable
     public Detection detect(@NotNull AfmaFramePairAnalysis pairAnalysis) {
+        if (pairAnalysis.isIdentical()) {
+            return null;
+        }
         AfmaPixelFrame previous = pairAnalysis.previousFrame();
         MotionSearchAnalysis motionSearchAnalysis = this.getMotionSearchAnalysis(pairAnalysis);
 
@@ -95,6 +98,9 @@ public class AfmaRectCopyDetector {
 
     @Nullable
     public MultiDetection detectMulti(@NotNull AfmaFramePairAnalysis pairAnalysis, @Nullable Detection singleDetection) {
+        if (pairAnalysis.isIdentical()) {
+            return null;
+        }
         AfmaPixelFrame previous = pairAnalysis.previousFrame();
         AfmaPixelFrame next = pairAnalysis.nextFrame();
 
@@ -208,12 +214,11 @@ public class AfmaRectCopyDetector {
         }
 
         AfmaPixelFrame previous = pairAnalysis.previousFrame();
-        AfmaPixelFrame next = pairAnalysis.nextFrame();
         int maxDx = Math.min(previous.getWidth() - 1, this.maxSearchDistance);
         int maxDy = Math.min(previous.getHeight() - 1, this.maxSearchDistance);
         MotionSearchAnalysis analysis = new MotionSearchAnalysis(
-                this.collectAxisCandidates(previous, next, true, maxDx),
-                this.collectAxisCandidates(previous, next, false, maxDy)
+                this.collectAxisCandidates(pairAnalysis, true, maxDx),
+                this.collectAxisCandidates(pairAnalysis, false, maxDy)
         );
         pairAnalysis.cacheMotionSearchAnalysis(this.maxSearchDistance, this.maxCandidateAxisOffsets, analysis);
         return analysis;
@@ -225,13 +230,12 @@ public class AfmaRectCopyDetector {
         }
 
         AfmaPixelFrame previous = pairAnalysis.previousFrame();
-        AfmaPixelFrame next = pairAnalysis.nextFrame();
         int width = previous.getWidth();
         int height = previous.getHeight();
         ArrayList<ScoredMotionVector> scoredVectors = new ArrayList<>(
                 (motionSearchAnalysis.candidateDx().size() * motionSearchAnalysis.candidateDy().size()) + 1
         );
-        scoredVectors.add(new ScoredMotionVector(new MotionVector(0, 0), this.scoreMotionVector(previous, next, 0, 0)));
+        scoredVectors.add(new ScoredMotionVector(new MotionVector(0, 0), this.scoreMotionVector(pairAnalysis, 0, 0)));
         for (int dx : motionSearchAnalysis.candidateDx()) {
             for (int dy : motionSearchAnalysis.candidateDy()) {
                 if ((dx == 0) && (dy == 0)) {
@@ -246,7 +250,7 @@ public class AfmaRectCopyDetector {
 
                 scoredVectors.add(new ScoredMotionVector(
                         new MotionVector(dx, dy),
-                        this.scoreMotionVector(previous, next, dx, dy)
+                        this.scoreMotionVector(pairAnalysis, dx, dy)
                 ));
             }
         }
@@ -272,7 +276,6 @@ public class AfmaRectCopyDetector {
         }
 
         AfmaPixelFrame previous = pairAnalysis.previousFrame();
-        AfmaPixelFrame next = pairAnalysis.nextFrame();
         int width = previous.getWidth();
         int height = previous.getHeight();
         ArrayList<ScoredMotionVector> rankedVectors = new ArrayList<>(maxNonZeroVectors);
@@ -293,7 +296,7 @@ public class AfmaRectCopyDetector {
                         maxNonZeroVectors,
                         dx,
                         dy,
-                        this.scoreMotionVector(previous, next, dx, dy)
+                        this.scoreMotionVector(pairAnalysis, dx, dy)
                 );
             }
         }
@@ -309,7 +312,8 @@ public class AfmaRectCopyDetector {
     }
 
     @NotNull
-    protected List<Integer> collectAxisCandidates(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next, boolean horizontal, int maxOffset) {
+    protected List<Integer> collectAxisCandidates(@NotNull AfmaFramePairAnalysis pairAnalysis, boolean horizontal, int maxOffset) {
+        AfmaPixelFrame previous = pairAnalysis.previousFrame();
         Set<Integer> offsets = new LinkedHashSet<>();
         offsets.add(0);
         if (maxOffset <= 0) {
@@ -327,7 +331,7 @@ public class AfmaRectCopyDetector {
                     continue;
                 }
 
-                double score = this.scoreOffset(previous, next, horizontal, offset);
+                double score = this.scoreOffset(pairAnalysis, horizontal, offset);
                 if ((score > MIN_CANDIDATE_SCORE) && ((bestCandidate == null) || (score > bestCandidate.score()))) {
                     bestCandidate = new AxisCandidate(offset, score);
                 }
@@ -348,7 +352,7 @@ public class AfmaRectCopyDetector {
                     rankedCandidates,
                     this.maxCandidateAxisOffsets,
                     offset,
-                    this.scoreOffset(previous, next, horizontal, offset)
+                    this.scoreOffset(pairAnalysis, horizontal, offset)
             );
         }
 
@@ -359,7 +363,8 @@ public class AfmaRectCopyDetector {
         return List.copyOf(offsets);
     }
 
-    protected double scoreOffset(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next, boolean horizontal, int offset) {
+    protected double scoreOffset(@NotNull AfmaFramePairAnalysis pairAnalysis, boolean horizontal, int offset) {
+        AfmaPixelFrame previous = pairAnalysis.previousFrame();
         int width = previous.getWidth();
         int height = previous.getHeight();
         int overlapWidth = horizontal ? width - Math.abs(offset) : width;
@@ -370,60 +375,62 @@ public class AfmaRectCopyDetector {
         int dstX = horizontal ? Math.max(0, offset) : 0;
         int srcY = horizontal ? 0 : Math.max(0, -offset);
         int dstY = horizontal ? 0 : Math.max(0, offset);
+        AfmaRect scoringBounds = pairAnalysis.intersectDifferenceBounds(dstX, dstY, overlapWidth, overlapHeight);
+        if (scoringBounds == null) {
+            return pairAnalysis.isIdentical() ? 1D : 0D;
+        }
 
-        double fullScore = this.sampleMatchRatio(previous, next, srcX, srcY, dstX, dstY, overlapWidth, overlapHeight);
+        int sampleSrcX = srcX + (scoringBounds.x() - dstX);
+        int sampleSrcY = srcY + (scoringBounds.y() - dstY);
+        int sampleWidth = scoringBounds.width();
+        int sampleHeight = scoringBounds.height();
+
+        double fullScore = this.sampleMatchRatio(pairAnalysis, sampleSrcX, sampleSrcY,
+                scoringBounds.x(), scoringBounds.y(), sampleWidth, sampleHeight);
         if (horizontal) {
-            int bandHeight = Math.max(1, overlapHeight / 2);
-            int bandY = srcY + Math.max(0, (overlapHeight - bandHeight) / 2);
-            int dstBandY = dstY + Math.max(0, (overlapHeight - bandHeight) / 2);
-            return Math.max(fullScore, this.sampleMatchRatio(previous, next, srcX, bandY, dstX, dstBandY, overlapWidth, bandHeight));
+            int bandHeight = Math.max(1, sampleHeight / 2);
+            int bandY = sampleSrcY + Math.max(0, (sampleHeight - bandHeight) / 2);
+            int dstBandY = scoringBounds.y() + Math.max(0, (sampleHeight - bandHeight) / 2);
+            return Math.max(fullScore, this.sampleMatchRatio(pairAnalysis,
+                    sampleSrcX, bandY, scoringBounds.x(), dstBandY, sampleWidth, bandHeight));
         }
 
-        int bandWidth = Math.max(1, overlapWidth / 2);
-        int bandX = srcX + Math.max(0, (overlapWidth - bandWidth) / 2);
-        int dstBandX = dstX + Math.max(0, (overlapWidth - bandWidth) / 2);
-        return Math.max(fullScore, this.sampleMatchRatio(previous, next, bandX, srcY, dstBandX, dstY, bandWidth, overlapHeight));
+        int bandWidth = Math.max(1, sampleWidth / 2);
+        int bandX = sampleSrcX + Math.max(0, (sampleWidth - bandWidth) / 2);
+        int dstBandX = scoringBounds.x() + Math.max(0, (sampleWidth - bandWidth) / 2);
+        return Math.max(fullScore, this.sampleMatchRatio(pairAnalysis,
+                bandX, sampleSrcY, dstBandX, scoringBounds.y(), bandWidth, sampleHeight));
     }
 
-    protected double sampleMatchRatio(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next,
+    protected double sampleMatchRatio(@NotNull AfmaFramePairAnalysis pairAnalysis,
                                       int srcX, int srcY, int dstX, int dstY, int sampleWidth, int sampleHeight) {
-        int frameWidth = previous.getWidth();
-        int[] previousPixels = previous.getPixelsUnsafe();
-        int[] nextPixels = next.getPixelsUnsafe();
-        int stepX = Math.max(1, sampleWidth / 48);
-        int stepY = Math.max(1, sampleHeight / 16);
-        int matches = 0;
-        int samples = 0;
-
-        for (int y = 0; y < sampleHeight; y += stepY) {
-            int previousRowOffset = ((srcY + y) * frameWidth) + srcX;
-            int nextRowOffset = ((dstY + y) * frameWidth) + dstX;
-            for (int x = 0; x < sampleWidth; x += stepX) {
-                samples++;
-                if (previousPixels[previousRowOffset + x] == nextPixels[nextRowOffset + x]) {
-                    matches++;
-                }
-            }
-        }
-
-        return (samples > 0) ? ((double)matches / samples) : 0D;
+        return pairAnalysis.sampleMatchRatio(srcX, srcY, dstX, dstY, sampleWidth, sampleHeight);
     }
 
-    protected double scoreMotionVector(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next, int dx, int dy) {
+    protected double scoreMotionVector(@NotNull AfmaFramePairAnalysis pairAnalysis, int dx, int dy) {
+        AfmaPixelFrame previous = pairAnalysis.previousFrame();
         int overlapWidth = previous.getWidth() - Math.abs(dx);
         int overlapHeight = previous.getHeight() - Math.abs(dy);
         if (overlapWidth <= 0 || overlapHeight <= 0) {
             return 0D;
         }
+
+        int srcX = Math.max(0, -dx);
+        int srcY = Math.max(0, -dy);
+        int dstX = Math.max(0, dx);
+        int dstY = Math.max(0, dy);
+        AfmaRect scoringBounds = pairAnalysis.intersectDifferenceBounds(dstX, dstY, overlapWidth, overlapHeight);
+        if (scoringBounds == null) {
+            return pairAnalysis.isIdentical() ? 1D : 0D;
+        }
         return this.sampleMatchRatio(
-                previous,
-                next,
-                Math.max(0, -dx),
-                Math.max(0, -dy),
-                Math.max(0, dx),
-                Math.max(0, dy),
-                overlapWidth,
-                overlapHeight
+                pairAnalysis,
+                srcX + (scoringBounds.x() - dstX),
+                srcY + (scoringBounds.y() - dstY),
+                scoringBounds.x(),
+                scoringBounds.y(),
+                scoringBounds.width(),
+                scoringBounds.height()
         );
     }
 

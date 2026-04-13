@@ -2142,7 +2142,7 @@ public class AfmaEncodePlanner {
             return null;
         }
 
-        BlockInterRegionAnalysis regionAnalysis = this.analyzeBlockInterRegion(previousFrame, currentFrame, regionBounds, tileCountX, tileCountY);
+        BlockInterRegionAnalysis regionAnalysis = this.analyzeBlockInterRegion(pairAnalysis, regionBounds, tileCountX, tileCountY);
         if (!this.shouldAttemptBlockInter(regionBounds, regionAnalysis, bestBaselineCandidate)) {
             return null;
         }
@@ -2176,11 +2176,11 @@ public class AfmaEncodePlanner {
         BlockInterTileCandidate[] tileCandidates = new BlockInterTileCandidate[totalTileCount];
         if (this.shouldParallelizeBlockInterTiles(totalTileCount, regionBounds)) {
             IntStream.range(0, totalTileCount).parallel().forEach(tileIndex ->
-                    tileCandidates[tileIndex] = this.buildBlockInterTileCandidate(previousFrame, currentFrame, motionVectors,
+                    tileCandidates[tileIndex] = this.buildBlockInterTileCandidate(pairAnalysis, previousFrame, currentFrame, motionVectors,
                             regionBounds, tileCountX, tileCountY, regionAnalysis, tileIndex));
         } else {
             for (int tileIndex = 0; tileIndex < totalTileCount; tileIndex++) {
-                tileCandidates[tileIndex] = this.buildBlockInterTileCandidate(previousFrame, currentFrame, motionVectors,
+                tileCandidates[tileIndex] = this.buildBlockInterTileCandidate(pairAnalysis, previousFrame, currentFrame, motionVectors,
                         regionBounds, tileCountX, tileCountY, regionAnalysis, tileIndex);
             }
         }
@@ -2296,7 +2296,8 @@ public class AfmaEncodePlanner {
     }
 
     @NotNull
-    protected BlockInterTileCandidate buildBlockInterTileCandidate(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
+    protected BlockInterTileCandidate buildBlockInterTileCandidate(@NotNull AfmaFramePairAnalysis pairAnalysis,
+                                                                   @NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
                                                                    @NotNull List<AfmaRectCopyDetector.MotionVector> motionVectors,
                                                                    @NotNull AfmaRect regionBounds, int tileCountX, int tileCountY,
                                                                    @NotNull BlockInterRegionAnalysis regionAnalysis,
@@ -2314,14 +2315,15 @@ public class AfmaEncodePlanner {
         int dstX = regionBounds.x() + localX;
         int tileHeight = AfmaBlockInterPayloadHelper.tileDimension(tileY, tileCountY, BLOCK_INTER_TILE_SIZE, regionBounds.height());
         int tileWidth = AfmaBlockInterPayloadHelper.tileDimension(tileX, tileCountX, BLOCK_INTER_TILE_SIZE, regionBounds.width());
-        return this.chooseBestBlockInterTile(previousFrame, currentFrame, dstX, dstY, tileWidth, tileHeight, motionVectors);
+        return this.chooseBestBlockInterTile(pairAnalysis, previousFrame, currentFrame, dstX, dstY, tileWidth, tileHeight, motionVectors);
     }
 
     @NotNull
-    protected BlockInterTileCandidate chooseBestBlockInterTile(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
+    protected BlockInterTileCandidate chooseBestBlockInterTile(@NotNull AfmaFramePairAnalysis pairAnalysis,
+                                                               @NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
                                                                int dstX, int dstY, int width, int height,
                                                                @NotNull List<AfmaRectCopyDetector.MotionVector> motionVectors) {
-        int rawChannels = this.determineRawTileChannels(currentFrame, dstX, dstY, width, height);
+        int rawChannels = this.determineRawTileChannels(pairAnalysis, dstX, dstY, width, height);
         BlockInterTileCandidate bestCandidate = new BlockInterTileCandidate(
                 new RawBlockInterTileEncoding(dstX, dstY, width, height, rawChannels),
                 this.estimateBlockInterTileBytes(AfmaBlockInterPayloadHelper.TileMode.RAW,
@@ -2343,7 +2345,7 @@ public class AfmaEncodePlanner {
         for (int vectorIndex = 0; vectorIndex < maxEvals; vectorIndex++) {
             AfmaRectCopyDetector.MotionVector motionVector = scoredVectors.get(vectorIndex).vector();
             testedVectors.add(packMotionVector(motionVector.dx(), motionVector.dy()));
-            BlockInterTileCandidate motionCandidate = this.evaluateBlockInterMotionCandidate(previousFrame, currentFrame, dstX, dstY, width, height,
+            BlockInterTileCandidate motionCandidate = this.evaluateBlockInterMotionCandidate(pairAnalysis, previousFrame, currentFrame, dstX, dstY, width, height,
                     motionVector.dx(), motionVector.dy(), bestCandidate);
             if (motionCandidate == null) {
                 continue;
@@ -2356,7 +2358,7 @@ public class AfmaEncodePlanner {
         }
 
         if (!refinementSeeds.isEmpty()) {
-            bestCandidate = this.refineBlockInterTileMotion(previousFrame, currentFrame, dstX, dstY, width, height,
+            bestCandidate = this.refineBlockInterTileMotion(pairAnalysis, previousFrame, currentFrame, dstX, dstY, width, height,
                     bestCandidate, refinementSeeds, testedVectors);
         }
 
@@ -2389,7 +2391,8 @@ public class AfmaEncodePlanner {
     }
 
     @Nullable
-    protected BlockInterTileCandidate evaluateBlockInterMotionCandidate(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
+    protected BlockInterTileCandidate evaluateBlockInterMotionCandidate(@NotNull AfmaFramePairAnalysis pairAnalysis,
+                                                                        @NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
                                                                         int dstX, int dstY, int width, int height, int dx, int dy,
                                                                         @NotNull BlockInterTileCandidate currentBestCandidate) {
         int srcX = dstX + dx;
@@ -2398,7 +2401,7 @@ public class AfmaEncodePlanner {
             return null;
         }
 
-        MotionTileStats tileStats = this.scanMotionTile(previousFrame, currentFrame, dstX, dstY, srcX, srcY, width, height, currentBestCandidate);
+        MotionTileStats tileStats = this.scanMotionTile(pairAnalysis, previousFrame, currentFrame, dstX, dstY, srcX, srcY, width, height, currentBestCandidate);
         if (tileStats == null) {
             return null;
         }
@@ -2447,7 +2450,8 @@ public class AfmaEncodePlanner {
     }
 
     @NotNull
-    protected BlockInterTileCandidate refineBlockInterTileMotion(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
+    protected BlockInterTileCandidate refineBlockInterTileMotion(@NotNull AfmaFramePairAnalysis pairAnalysis,
+                                                                 @NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
                                                                  int dstX, int dstY, int width, int height,
                                                                  @NotNull BlockInterTileCandidate bestCandidate,
                                                                  @NotNull List<MotionSearchSeed> refinementSeeds,
@@ -2474,7 +2478,7 @@ public class AfmaEncodePlanner {
                             continue;
                         }
 
-                        BlockInterTileCandidate refinedCandidate = this.evaluateBlockInterMotionCandidate(previousFrame, currentFrame, dstX, dstY, width, height,
+                        BlockInterTileCandidate refinedCandidate = this.evaluateBlockInterMotionCandidate(pairAnalysis, previousFrame, currentFrame, dstX, dstY, width, height,
                                 candidateDx, candidateDy, bestMotionCandidate);
                         if (refinedCandidate == null) {
                             continue;
@@ -2577,19 +2581,19 @@ public class AfmaEncodePlanner {
     }
 
     @NotNull
-    protected BlockInterRegionAnalysis analyzeBlockInterRegion(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
+    protected BlockInterRegionAnalysis analyzeBlockInterRegion(@NotNull AfmaFramePairAnalysis pairAnalysis,
                                                                @NotNull AfmaRect regionBounds, int tileCountX, int tileCountY) {
         int totalTileCount = tileCountX * tileCountY;
         boolean[] changedTiles = new boolean[totalTileCount];
         int changedTileCount = 0;
+        AfmaFramePairAnalysis.TileGridSummary tileGridSummary = pairAnalysis.tileGridSummary(BLOCK_INTER_TILE_SIZE);
+        int baseTileX = regionBounds.x() / BLOCK_INTER_TILE_SIZE;
+        int baseTileY = regionBounds.y() / BLOCK_INTER_TILE_SIZE;
         int tileIndex = 0;
         for (int tileY = 0; tileY < tileCountY; tileY++) {
-            int dstY = regionBounds.y() + (tileY * BLOCK_INTER_TILE_SIZE);
-            int tileHeight = AfmaBlockInterPayloadHelper.tileDimension(tileY, tileCountY, BLOCK_INTER_TILE_SIZE, regionBounds.height());
             for (int tileX = 0; tileX < tileCountX; tileX++, tileIndex++) {
-                int dstX = regionBounds.x() + (tileX * BLOCK_INTER_TILE_SIZE);
-                int tileWidth = AfmaBlockInterPayloadHelper.tileDimension(tileX, tileCountX, BLOCK_INTER_TILE_SIZE, regionBounds.width());
-                boolean tileChanged = !this.isTileIdentical(previousFrame, currentFrame, dstX, dstY, tileWidth, tileHeight);
+                AfmaFramePairAnalysis.TileStats tileStats = tileGridSummary.tileStats(baseTileX + tileX, baseTileY + tileY);
+                boolean tileChanged = !tileStats.isIdentical();
                 changedTiles[tileIndex] = tileChanged;
                 if (tileChanged) {
                     changedTileCount++;
@@ -2712,20 +2716,6 @@ public class AfmaEncodePlanner {
         return (((long) dx) << 32) ^ (dy & 0xFFFFFFFFL);
     }
 
-    protected boolean isTileIdentical(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
-                                      int dstX, int dstY, int width, int height) {
-        int frameWidth = currentFrame.getWidth();
-        int[] previousPixels = previousFrame.getPixelsUnsafe();
-        int[] currentPixels = currentFrame.getPixelsUnsafe();
-        for (int localY = 0; localY < height; localY++) {
-            int rowOffset = ((dstY + localY) * frameWidth) + dstX;
-            if (Arrays.mismatch(previousPixels, rowOffset, rowOffset + width, currentPixels, rowOffset, rowOffset + width) != -1) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     protected boolean isMotionTileInBounds(@NotNull AfmaPixelFrame previousFrame, int srcX, int srcY, int width, int height) {
         return srcX >= 0
                 && srcY >= 0
@@ -2734,9 +2724,36 @@ public class AfmaEncodePlanner {
     }
 
     @Nullable
-    protected MotionTileStats scanMotionTile(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
+    protected MotionTileStats scanMotionTile(@NotNull AfmaFramePairAnalysis pairAnalysis,
+                                             @NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
                                              int dstX, int dstY, int srcX, int srcY, int width, int height,
                                              @NotNull BlockInterTileCandidate currentBestCandidate) {
+        if ((dstX == srcX) && (dstY == srcY)) {
+            AfmaFramePairAnalysis.RegionErrorMetrics regionErrorMetrics = pairAnalysis.regionErrorMetrics(dstX, dstY, width, height);
+            int changedPixelCount = regionErrorMetrics.changedPixelCount();
+            if (changedPixelCount <= 0) {
+                return new MotionTileStats(0, false);
+            }
+
+            long optimisticDenseBytes = this.estimateOptimisticBlockInterDenseBytes(width, height);
+            int totalPixels = width * height;
+            boolean denseCanStillWin = this.canPotentialBlockInterModeBeat(
+                    currentBestCandidate,
+                    AfmaBlockInterPayloadHelper.TileMode.COPY_DENSE,
+                    optimisticDenseBytes
+            );
+            boolean sparseCanStillWin = (changedPixelCount < totalPixels)
+                    && this.canPotentialBlockInterModeBeat(
+                    currentBestCandidate,
+                    AfmaBlockInterPayloadHelper.TileMode.COPY_SPARSE,
+                    this.estimateOptimisticBlockInterSparseBytes(width, height, changedPixelCount)
+            );
+            if (!denseCanStillWin && !sparseCanStillWin) {
+                return null;
+            }
+            return new MotionTileStats(changedPixelCount, regionErrorMetrics.alphaErrorSum() > 0L);
+        }
+
         int frameWidth = currentFrame.getWidth();
         int[] previousPixels = previousFrame.getPixelsUnsafe();
         int[] currentPixels = currentFrame.getPixelsUnsafe();
@@ -2843,18 +2860,11 @@ public class AfmaEncodePlanner {
         }
     }
 
-    protected int determineRawTileChannels(@NotNull AfmaPixelFrame currentFrame, int dstX, int dstY, int width, int height) {
-        int frameWidth = currentFrame.getWidth();
-        int[] currentPixels = currentFrame.getPixelsUnsafe();
-        for (int localY = 0; localY < height; localY++) {
-            int rowOffset = ((dstY + localY) * frameWidth) + dstX;
-            for (int localX = 0; localX < width; localX++) {
-                if (((currentPixels[rowOffset + localX] >>> 24) & 0xFF) != 0xFF) {
-                    return AfmaResidualPayloadHelper.RGBA_CHANNELS;
-                }
-            }
-        }
-        return AfmaResidualPayloadHelper.RGB_CHANNELS;
+    protected int determineRawTileChannels(@NotNull AfmaFramePairAnalysis pairAnalysis,
+                                           int dstX, int dstY, int width, int height) {
+        return pairAnalysis.nextRegionHasNonOpaquePixels(dstX, dstY, width, height)
+                ? AfmaResidualPayloadHelper.RGBA_CHANNELS
+                : AfmaResidualPayloadHelper.RGB_CHANNELS;
     }
 
     @NotNull
@@ -3969,8 +3979,7 @@ public class AfmaEncodePlanner {
             }
 
             BlockInterRegionAnalysis regionAnalysis = AfmaEncodePlanner.this.analyzeBlockInterRegion(
-                    this.previousFrame,
-                    this.workingFrame,
+                    this.pairAnalysis,
                     regionBounds,
                     tileCountX,
                     tileCountY
