@@ -46,6 +46,7 @@ public class AfmaCreatorState {
     private volatile boolean rectCopyEnabled = DEFAULT_PRESET.isRectCopyEnabled();
     private volatile boolean duplicateFrameElision = DEFAULT_PRESET.isDuplicateFrameElision();
     private volatile boolean nearLosslessEnabled = DEFAULT_PRESET.isNearLosslessEnabledByDefault();
+    private volatile boolean strictPostWriteValidation = false;
     private volatile int maxCopySearchDistance = DEFAULT_PRESET.getMaxCopySearchDistance();
     private volatile int maxCandidateAxisOffsets = DEFAULT_PRESET.getMaxCandidateAxisOffsets();
     private volatile boolean adaptiveKeyframePlacement = defaultAdaptiveKeyframePlacement(DEFAULT_PRESET);
@@ -171,6 +172,15 @@ public class AfmaCreatorState {
 
     public void setNearLosslessEnabled(boolean nearLosslessEnabled) {
         this.nearLosslessEnabled = nearLosslessEnabled;
+        this.markDirty();
+    }
+
+    public boolean isStrictPostWriteValidation() {
+        return this.strictPostWriteValidation;
+    }
+
+    public void setStrictPostWriteValidation(boolean strictPostWriteValidation) {
+        this.strictPostWriteValidation = strictPostWriteValidation;
         this.markDirty();
     }
 
@@ -332,9 +342,11 @@ public class AfmaCreatorState {
                         (path, progress) -> job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Packing AFMA archive...", path, 0.82D + (0.16D * progress))));
                 checkCancelled(job);
 
-                job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Validating AFMA archive...", prepared.outputFile.getName(), 0.985D));
-                this.validateWrittenArchive(tempFile);
-                checkCancelled(job);
+                if (prepared.strictPostWriteValidation) {
+                    job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.PACKING_ARCHIVE, "Validating AFMA archive...", prepared.outputFile.getName(), 0.985D));
+                    this.validateWrittenArchive(tempFile);
+                    checkCancelled(job);
+                }
             }
 
             Files.move(tempFile.toPath(), prepared.outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -404,7 +416,8 @@ public class AfmaCreatorState {
                 main.sequence,
                 intro.sequence,
                 output,
-                options
+                options,
+                this.strictPostWriteValidation
         );
     }
 
@@ -634,7 +647,8 @@ public class AfmaCreatorState {
             @NotNull AfmaSourceSequence mainSequence,
             @NotNull AfmaSourceSequence introSequence,
             @Nullable File outputFile,
-            @NotNull AfmaEncodeOptions options
+            @NotNull AfmaEncodeOptions options,
+            boolean strictPostWriteValidation
     ) {
     }
 
