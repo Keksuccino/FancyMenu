@@ -1316,6 +1316,11 @@ public class AfmaEncodePlanner {
     }
 
     @NotNull
+    protected DeferredPayload storePayload(@NotNull AfmaStoredPayload storedPayload) {
+        return DeferredPayload.fromStoredPayload(storedPayload);
+    }
+
+    @NotNull
     protected PlannedCandidate createFullCandidate(@NotNull AfmaPixelFrame currentFrame, boolean introSequence, int frameIndex,
                                                    @NotNull AfmaEncodeOptions options, boolean allowPerceptual,
                                                    @NotNull ReferenceBase referenceBase) throws IOException {
@@ -2226,16 +2231,20 @@ public class AfmaEncodePlanner {
         }
 
         String payloadPath = this.buildRawPayloadPath(introSequence, frameIndex, "bi");
-        // Score block_inter from lightweight tile summaries first, then only materialize the winning tile operations
-        // when the final payload needs to be scored or stored.
-        AfmaStoredPayload.Writer payloadWriter = out -> AfmaBlockInterPayloadHelper.writePayload(
+        // Serialize block_inter once so archive scoring and final output can keep reusing the same stored payload.
+        List<AfmaBlockInterPayloadHelper.TileOperation> tileOperations = this.materializeBlockInterTileOperations(
+                tileCandidates,
+                previousFrame,
+                currentFrame
+        );
+        AfmaStoredPayload storedPayload = AfmaStoredPayload.write(out -> AfmaBlockInterPayloadHelper.writePayload(
                 out,
                 BLOCK_INTER_TILE_SIZE,
                 regionBounds.width(),
                 regionBounds.height(),
-                this.materializeBlockInterTileOperations(tileCandidates, previousFrame, currentFrame)
-        );
-        DeferredPayload payload = this.storePayload(AfmaStoredPayload.summarize(payloadWriter), payloadWriter);
+                tileOperations
+        ));
+        DeferredPayload payload = this.storePayload(storedPayload);
         return new PlannedCandidate(
                 AfmaFrameDescriptor.blockInter(payloadPath, regionBounds.x(), regionBounds.y(), regionBounds.width(), regionBounds.height(), new AfmaBlockInter(BLOCK_INTER_TILE_SIZE)),
                 payloadPath,
@@ -4940,6 +4949,12 @@ public class AfmaEncodePlanner {
             return new DeferredPayload(payloadSummary, null, null, payloadWriter);
         }
 
+        @NotNull
+        public static DeferredPayload fromStoredPayload(@NotNull AfmaStoredPayload storedPayload) {
+            Objects.requireNonNull(storedPayload);
+            return new DeferredPayload(storedPayload.summarize(), storedPayload, null, null);
+        }
+
         public int length() {
             this.ensureOpen();
             return this.payloadSummary.length();
@@ -5003,7 +5018,7 @@ public class AfmaEncodePlanner {
 
             AfmaStoredPayload payload;
             if (this.payloadBytes != null) {
-                payload = AfmaStoredPayload.fromBytes(this.payloadBytes);
+                payload = AfmaStoredPayload.fromBytes(this.payloadSummary, this.payloadBytes);
             } else if (this.payloadWriter != null) {
                 payload = AfmaStoredPayload.write(this.payloadWriter);
             } else {

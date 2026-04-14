@@ -65,6 +65,23 @@ public final class AfmaStoredPayload implements AutoCloseable {
     }
 
     @NotNull
+    public static AfmaStoredPayload fromBytes(@NotNull PayloadSummary payloadSummary, @NotNull byte[] payloadBytes) throws IOException {
+        Objects.requireNonNull(payloadSummary);
+        Objects.requireNonNull(payloadBytes);
+        if (payloadSummary.length() != payloadBytes.length) {
+            throw new IOException("AFMA payload summary length does not match the provided payload bytes");
+        }
+
+        return new AfmaStoredPayload(
+                PAYLOAD_STORE.storeBytes(payloadBytes),
+                payloadSummary.length(),
+                payloadSummary.estimatedArchiveBytes(),
+                payloadSummary.fingerprint(),
+                payloadSummary.tailBytes()
+        );
+    }
+
+    @NotNull
     public static PayloadSummary summarize(@NotNull byte[] payloadBytes) {
         Objects.requireNonNull(payloadBytes);
         return new PayloadSummary(
