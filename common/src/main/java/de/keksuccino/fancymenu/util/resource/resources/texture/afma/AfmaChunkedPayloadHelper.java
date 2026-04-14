@@ -39,6 +39,10 @@ public final class AfmaChunkedPayloadHelper {
             224 * 1024,
             TARGET_CHUNK_BYTES
     };
+    protected static final int TARGET_CHUNK_SIZE_SHORTLIST_MAX = 3;
+    protected static final double TARGET_CHUNK_SIZE_FRAME_HEADROOM = 1.18D;
+    protected static final double TARGET_CHUNK_SIZE_PAYLOAD_GROUPING_MULTIPLIER = 6D;
+    protected static final double TARGET_CHUNK_SIZE_FALLBACK_GROUPING_MULTIPLIER = 4D;
     public static final int SEQUENCE_KIND_INTRO = 0;
     public static final int SEQUENCE_KIND_MAIN = 1;
     public static final int PLANNER_DEFLATE_TAIL_BYTES = 32 * 1024;
@@ -364,10 +368,11 @@ public final class AfmaChunkedPayloadHelper {
 
         ArchivePackingHints effectiveHints = resolveArchivePackingHints(payloadDataByPath, packingHints);
         PackingModel packingModel = buildPackingModel(payloadDataByPath, effectiveHints);
+        int[] targetChunkByteCandidates = resolveTargetChunkByteCandidates(payloadDataByPath, packingModel);
 
         PackedPayloadArchive bestArchive = null;
         long bestScore = Long.MAX_VALUE;
-        for (int targetChunkBytes : TARGET_CHUNK_BYTE_CANDIDATES) {
+        for (int targetChunkBytes : targetChunkByteCandidates) {
             PackedPayloadArchive candidate = packPayloads(payloadDataByPath, packingModel, targetChunkBytes, approximateCompression);
             long candidateScore = candidate.packingMetrics().scoredArchiveBytes();
             if (bestArchive == null || candidateScore < bestScore
@@ -592,6 +597,130 @@ public final class AfmaChunkedPayloadHelper {
         }
         edgeWeightsByPath.computeIfAbsent(firstPath, key -> new HashMap<>()).merge(secondPath, weight, Integer::sum);
         edgeWeightsByPath.computeIfAbsent(secondPath, key -> new HashMap<>()).merge(firstPath, weight, Integer::sum);
+    }
+
+    @NotNull
+    protected static int[] resolveTargetChunkByteCandidates(@NotNull Map<String, PayloadData> payloadDataByPath,
+                                                            @NotNull PackingModel packingModel) {
+        if (TARGET_CHUNK_BYTE_CANDIDATES.length <= TARGET_CHUNK_SIZE_SHORTLIST_MAX || payloadDataByPath.isEmpty()) {
+            return TARGET_CHUNK_BYTE_CANDIDATES.clone();
+        }
+
+        ChunkSizeSelectionStats stats = buildChunkSizeSelectionStats(payloadDataByPath, packingModel);
+        int lowerTargetBytes;
+        if (stats.accessFrameCount() > 0) {
+            lowerTargetBytes = (int) Math.ceil(Math.max((double) stats.maxPayloadBytes(), stats.averageFrameAccessBytes()));
+        } else {
+            lowerTargetBytes = (int) Math.ceil(Math.max((double) stats.maxPayloadBytes(), stats.averagePayloadBytes() * TARGET_CHUNK_SIZE_FALLBACK_GROUPING_MULTIPLIER));
+        }
+
+        int preferredTargetBytes = (int) Math.ceil(Math.max(
+                Math.max((double) stats.maxPayloadBytes(), stats.averageFrameAccessBytes() * TARGET_CHUNK_SIZE_FRAME_HEADROOM),
+                stats.averagePayloadBytes() * TARGET_CHUNK_SIZE_PAYLOAD_GROUPING_MULTIPLIER
+        ));
+        if (preferredTargetBytes <= 0) {
+            preferredTargetBytes = TARGET_CHUNK_BYTES;
+        }
+
+        int upperTargetBytes = (stats.maxFrameAccessBytes() > 0)
+                ? Math.max(preferredTargetBytes, stats.maxFrameAccessBytes())
+                : Math.max(preferredTargetBytes, stats.maxPayloadBytes());
+
+        LinkedHashSet<Integer> shortlistedCandidates = new LinkedHashSet<>(TARGET_CHUNK_SIZE_SHORTLIST_MAX);
+        addClosestTargetChunkCandidate(shortlistedCandidates, lowerTargetBytes);
+        addClosestTargetChunkCandidate(shortlistedCandidates, preferredTargetBytes);
+        addClosestTargetChunkCandidate(shortlistedCandidates, upperTargetBytes);
+        while (shortlistedCandidates.size() < Math.min(TARGET_CHUNK_SIZE_SHORTLIST_MAX, TARGET_CHUNK_BYTE_CANDIDATES.length)) {
+            Integer nextCandidate = findClosestUnselectedTargetChunkCandidate(shortlistedCandidates, preferredTargetBytes);
+            if (nextCandidate == null) {
+                break;
+            }
+            shortlistedCandidates.add(nextCandidate);
+        }
+
+        ArrayList<Integer> orderedCandidates = new ArrayList<>(shortlistedCandidates);
+        orderedCandidates.sort(Integer::compareTo);
+        int[] resolvedCandidates = new int[orderedCandidates.size()];
+        for (int index = 0; index < orderedCandidates.size(); index++) {
+            resolvedCandidates[index] = orderedCandidates.get(index);
+        }
+        return resolvedCandidates;
+    }
+
+    protected static void addClosestTargetChunkCandidate(@NotNull Set<Integer> shortlistedCandidates, int desiredTargetBytes) {
+        Integer candidate = findClosestTargetChunkCandidate(shortlistedCandidates, desiredTargetBytes);
+        if (candidate != null) {
+            shortlistedCandidates.add(candidate);
+        }
+    }
+
+    @Nullable
+    protected static Integer findClosestUnselectedTargetChunkCandidate(@NotNull Set<Integer> shortlistedCandidates, int desiredTargetBytes) {
+        return findClosestTargetChunkCandidate(shortlistedCandidates, desiredTargetBytes);
+    }
+
+    @Nullable
+    protected static Integer findClosestTargetChunkCandidate(@NotNull Set<Integer> excludedCandidates, int desiredTargetBytes) {
+        Integer bestCandidate = null;
+        long bestDistance = Long.MAX_VALUE;
+        for (int candidate : TARGET_CHUNK_BYTE_CANDIDATES) {
+            if (excludedCandidates.contains(candidate)) {
+                continue;
+            }
+
+            long distance = Math.abs((long) candidate - (long) desiredTargetBytes);
+            if (bestCandidate == null
+                    || distance < bestDistance
+                    || ((distance == bestDistance) && candidate > bestCandidate)) {
+                bestCandidate = candidate;
+                bestDistance = distance;
+            }
+        }
+        return bestCandidate;
+    }
+
+    @NotNull
+    protected static ChunkSizeSelectionStats buildChunkSizeSelectionStats(@NotNull Map<String, PayloadData> payloadDataByPath,
+                                                                         @NotNull PackingModel packingModel) {
+        long totalPayloadBytes = 0L;
+        int maxPayloadBytes = 0;
+        for (PayloadData payloadData : payloadDataByPath.values()) {
+            int payloadLength = payloadData.payload().length();
+            totalPayloadBytes += payloadLength;
+            maxPayloadBytes = Math.max(maxPayloadBytes, payloadLength);
+        }
+
+        long totalFrameAccessBytes = 0L;
+        int maxFrameAccessBytes = 0;
+        int accessFrameCount = 0;
+        for (PayloadAccessFrame accessFrame : packingModel.accessFrames()) {
+            if (accessFrame.payloadPaths().isEmpty()) {
+                continue;
+            }
+
+            int frameAccessBytes = 0;
+            for (String payloadPath : accessFrame.payloadPaths()) {
+                PayloadData payloadData = payloadDataByPath.get(payloadPath);
+                if (payloadData != null) {
+                    frameAccessBytes += payloadData.payload().length();
+                }
+            }
+            totalFrameAccessBytes += frameAccessBytes;
+            maxFrameAccessBytes = Math.max(maxFrameAccessBytes, frameAccessBytes);
+            accessFrameCount++;
+        }
+
+        double averagePayloadBytes = (double) totalPayloadBytes / (double) Math.max(1, payloadDataByPath.size());
+        double averageFrameAccessBytes = (double) totalFrameAccessBytes / (double) Math.max(1, accessFrameCount);
+        return new ChunkSizeSelectionStats(
+                payloadDataByPath.size(),
+                totalPayloadBytes,
+                maxPayloadBytes,
+                averagePayloadBytes,
+                accessFrameCount,
+                averageFrameAccessBytes,
+                maxFrameAccessBytes
+        );
     }
 
     @NotNull
@@ -987,6 +1116,15 @@ public final class AfmaChunkedPayloadHelper {
     protected record PackingModel(@NotNull List<PayloadAccessFrame> accessFrames,
                                   @NotNull Map<String, PayloadPackingStats> statsByPath,
                                   @NotNull Map<String, Map<String, Integer>> edgeWeightsByPath) {
+    }
+
+    protected record ChunkSizeSelectionStats(int payloadCount,
+                                             long totalPayloadBytes,
+                                             int maxPayloadBytes,
+                                             double averagePayloadBytes,
+                                             int accessFrameCount,
+                                             double averageFrameAccessBytes,
+                                             int maxFrameAccessBytes) {
     }
 
     protected record CacheSimulationMetrics(long cacheHits, long cacheMisses, long archiveReads, long evictions,

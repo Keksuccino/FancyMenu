@@ -5925,9 +5925,8 @@ public class AfmaEncodePlanner {
                 );
             }
 
-            ArrayList<Map.Entry<String, AfmaStoredPayload>> orderedPayloadEntries = new ArrayList<>(payloadsByPath.entrySet());
-            if (orderedPayloadEntries.size() != this.payloadCount) {
-                throw new IllegalStateException("AFMA planner payload count diverged from the final payload materialization order");
+            if (payloadsByPath.size() != this.payloadCount || this.payloadLocatorsByPath.size() != this.payloadCount) {
+                throw new IllegalStateException("AFMA planner payload count diverged while building the final archive");
             }
 
             ArrayList<PlannerChunkDescriptor> orderedChunks = new ArrayList<>(this.completedChunks.materialize());
@@ -5938,32 +5937,55 @@ public class AfmaEncodePlanner {
                 throw new IllegalStateException("AFMA planner chunk count diverged while building the final archive");
             }
 
-            LinkedHashMap<String, Integer> payloadIdsByPath = new LinkedHashMap<>(orderedPayloadEntries.size());
-            ArrayList<AfmaChunkedPayloadHelper.PayloadLocator> payloadLocators = new ArrayList<>(orderedPayloadEntries.size());
+            LinkedHashMap<String, Integer> payloadIdsByPath = new LinkedHashMap<>(payloadsByPath.size());
+            ArrayList<AfmaChunkedPayloadHelper.PayloadLocator> payloadLocators = new ArrayList<>(payloadsByPath.size());
             ArrayList<AfmaChunkedPayloadHelper.ChunkPlan> chunkPlans = new ArrayList<>(orderedChunks.size());
-            int payloadCursor = 0;
+            ArrayList<ArrayList<String>> chunkPayloadPathsById = new ArrayList<>(orderedChunks.size());
+            int[] chunkPayloadCounts = new int[orderedChunks.size()];
+            int[] chunkLengths = new int[orderedChunks.size()];
+            for (int chunkId = 0; chunkId < orderedChunks.size(); chunkId++) {
+                chunkPayloadPathsById.add(new ArrayList<>(orderedChunks.get(chunkId).payloadCount()));
+            }
+
+            this.payloadLocatorsByPath.forEachInInsertionOrder((payloadPath, locator) -> {
+                AfmaStoredPayload payload = payloadsByPath.get(payloadPath);
+                if (payload == null) {
+                    throw new IllegalStateException("AFMA planner payload layout references a missing payload: " + payloadPath);
+                }
+                if (payload.length() != locator.length()) {
+                    throw new IllegalStateException("AFMA planner payload length diverged for " + payloadPath);
+                }
+                if (locator.chunkId() < 0 || locator.chunkId() >= orderedChunks.size()) {
+                    throw new IllegalStateException("AFMA planner payload layout references an invalid chunk id for " + payloadPath);
+                }
+                if (locator.offset() != chunkLengths[locator.chunkId()]) {
+                    throw new IllegalStateException("AFMA planner payload offsets diverged while building the final archive");
+                }
+
+                payloadIdsByPath.put(payloadPath, payloadIdsByPath.size());
+                payloadLocators.add(locator);
+                chunkPayloadPathsById.get(locator.chunkId()).add(payloadPath);
+                chunkPayloadCounts[locator.chunkId()]++;
+                chunkLengths[locator.chunkId()] += payload.length();
+            });
+
+            if (payloadIdsByPath.size() != payloadsByPath.size()) {
+                throw new IllegalStateException("AFMA planner payload layout did not consume every materialized payload");
+            }
+
             for (int chunkId = 0; chunkId < orderedChunks.size(); chunkId++) {
                 PlannerChunkDescriptor chunk = orderedChunks.get(chunkId);
-                ArrayList<String> chunkPayloadPaths = new ArrayList<>(chunk.payloadCount());
-                int offset = 0;
-                for (int payloadIndex = 0; payloadIndex < chunk.payloadCount(); payloadIndex++) {
-                    if (payloadCursor >= orderedPayloadEntries.size()) {
-                        throw new IllegalStateException("AFMA planner chunk layout exhausted the materialized payload list early");
-                    }
-                    Map.Entry<String, AfmaStoredPayload> payloadEntry = orderedPayloadEntries.get(payloadCursor++);
-                    AfmaStoredPayload payload = Objects.requireNonNull(payloadEntry.getValue(), "AFMA payload was NULL for " + payloadEntry.getKey());
-                    payloadIdsByPath.put(payloadEntry.getKey(), payloadIdsByPath.size());
-                    payloadLocators.add(new AfmaChunkedPayloadHelper.PayloadLocator(chunkId, offset, payload.length()));
-                    chunkPayloadPaths.add(payloadEntry.getKey());
-                    offset += payload.length();
+                if (chunkPayloadCounts[chunkId] != chunk.payloadCount()) {
+                    throw new IllegalStateException("AFMA planner chunk payload count diverged while building the final archive");
                 }
-                if (offset != chunk.uncompressedLength()) {
+                if (chunkLengths[chunkId] != chunk.uncompressedLength()) {
                     throw new IllegalStateException("AFMA planner chunk layout length diverged while building the final archive");
                 }
-                chunkPlans.add(new AfmaChunkedPayloadHelper.ChunkPlan(AfmaChunkedPayloadHelper.chunkEntryPath(chunkId), chunkPayloadPaths, chunk.uncompressedLength()));
-            }
-            if (payloadCursor != orderedPayloadEntries.size()) {
-                throw new IllegalStateException("AFMA planner chunk layout did not consume every materialized payload");
+                chunkPlans.add(new AfmaChunkedPayloadHelper.ChunkPlan(
+                        AfmaChunkedPayloadHelper.chunkEntryPath(chunkId),
+                        chunkPayloadPathsById.get(chunkId),
+                        chunk.uncompressedLength()
+                ));
             }
 
             long predictedArchiveBytes = this.predictedArchiveBytes();
