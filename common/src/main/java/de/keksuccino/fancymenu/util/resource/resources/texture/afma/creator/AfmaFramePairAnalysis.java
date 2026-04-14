@@ -185,6 +185,38 @@ public final class AfmaFramePairAnalysis {
         return (samples > 0) ? ((double) matches / samples) : 0D;
     }
 
+    public double sampleHashMatchRatio(int srcX, int srcY, int dstX, int dstY, int sampleWidth, int sampleHeight,
+                                       int targetColumns, int targetRows) {
+        if ((sampleWidth <= 0) || (sampleHeight <= 0)) {
+            return 0D;
+        }
+
+        int sampleColumns = Math.min(sampleWidth, Math.max(1, targetColumns));
+        int sampleRows = Math.min(sampleHeight, Math.max(1, targetRows));
+        int matches = 0;
+        int samples = 0;
+        for (int sampleRow = 0; sampleRow < sampleRows; sampleRow++) {
+            int cellStartY = (sampleRow * sampleHeight) / sampleRows;
+            int cellEndY = ((sampleRow + 1) * sampleHeight) / sampleRows;
+            int probeHeight = Math.max(1, Math.min(2, cellEndY - cellStartY));
+            int probeY = cellStartY + Math.max(0, ((cellEndY - cellStartY) - probeHeight) / 2);
+            for (int sampleColumn = 0; sampleColumn < sampleColumns; sampleColumn++) {
+                int cellStartX = (sampleColumn * sampleWidth) / sampleColumns;
+                int cellEndX = ((sampleColumn + 1) * sampleWidth) / sampleColumns;
+                int probeWidth = Math.max(1, Math.min(2, cellEndX - cellStartX));
+                int probeX = cellStartX + Math.max(0, ((cellEndX - cellStartX) - probeWidth) / 2);
+                samples++;
+                int previousHash = hashSampleProbe(this.previousPixels, this.width, srcX + probeX, srcY + probeY, probeWidth, probeHeight);
+                int nextHash = hashSampleProbe(this.nextPixels, this.width, dstX + probeX, dstY + probeY, probeWidth, probeHeight);
+                if (previousHash == nextHash) {
+                    matches++;
+                }
+            }
+        }
+
+        return (samples > 0) ? ((double) matches / samples) : 0D;
+    }
+
     @NotNull
     public TileGridSummary tileGridSummary(int tileSize) {
         if (tileSize <= 0) {
@@ -373,6 +405,17 @@ public final class AfmaFramePairAnalysis {
 
     protected static int channelDifference(int first, int second) {
         return Math.abs((first & 0xFF) - (second & 0xFF));
+    }
+
+    protected static int hashSampleProbe(@NotNull int[] pixels, int frameWidth, int x, int y, int width, int height) {
+        int hash = 1;
+        for (int localY = 0; localY < height; localY++) {
+            int rowOffset = ((y + localY) * frameWidth) + x;
+            for (int localX = 0; localX < width; localX++) {
+                hash = (31 * hash) + pixels[rowOffset + localX];
+            }
+        }
+        return hash;
     }
 
     protected static int prefixIndex(int x, int y, int prefixWidth) {

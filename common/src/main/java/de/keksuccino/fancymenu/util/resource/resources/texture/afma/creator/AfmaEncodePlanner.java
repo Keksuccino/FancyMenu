@@ -53,6 +53,15 @@ public class AfmaEncodePlanner {
     protected static final int BLOCK_INTER_MIN_NON_ZERO_MOTION_VECTORS = 8;
     protected static final int BLOCK_INTER_MAX_NON_ZERO_MOTION_VECTORS = 64;
     protected static final int BLOCK_INTER_NON_ZERO_MOTION_VECTORS_PER_CHANGED_TILE = 4;
+    protected static final int BLOCK_INTER_HASH_STAGE_COLUMNS = 4;
+    protected static final int BLOCK_INTER_HASH_STAGE_ROWS = 4;
+    protected static final int BLOCK_INTER_APPROX_SAD_STAGE_COLUMNS = 6;
+    protected static final int BLOCK_INTER_APPROX_SAD_STAGE_ROWS = 6;
+    protected static final int BLOCK_INTER_HASH_SHORTLIST_MIN = 8;
+    protected static final int BLOCK_INTER_HASH_SHORTLIST_MULTIPLIER = 3;
+    protected static final int BLOCK_INTER_EXACT_MOTION_EVALUATIONS = 3;
+    protected static final int BLOCK_INTER_NEIGHBOR_SEARCH_SEEDS = 4;
+    protected static final int BLOCK_INTER_NEIGHBOR_SEARCH_RADIUS = 1;
     protected static final int BLOCK_INTER_LOCAL_REFINEMENT_RADIUS = 2;
     protected static final int BLOCK_INTER_LOCAL_REFINEMENT_SEEDS = 3;
     protected static final int BLOCK_INTER_LOCAL_REFINEMENT_PASSES = 2;
@@ -2361,20 +2370,21 @@ public class AfmaEncodePlanner {
                         AfmaBlockInterPayloadHelper.expectedRawTileBytes(width, height, rawChannels), 0),
                 0
         );
-        List<TileMotionSAD> scoredVectors = new ArrayList<>(motionVectors.size());
-        for (AfmaRectCopyDetector.MotionVector motionVector : motionVectors) {
-            scoredVectors.add(new TileMotionSAD(
-                    motionVector,
-                    this.computeTileSAD(previousFrame, currentFrame, dstX, dstY, dstX + motionVector.dx(), dstY + motionVector.dy(), width, height)
-            ));
-        }
-        scoredVectors.sort((first, second) -> Long.compare(first.sad(), second.sad()));
-
-        int maxEvals = Math.min(3, scoredVectors.size());
+        List<TileMotionSAD> shortlistedVectors = this.shortlistBlockInterTileMotionVectors(
+                pairAnalysis,
+                previousFrame,
+                currentFrame,
+                dstX,
+                dstY,
+                width,
+                height,
+                motionVectors
+        );
+        int maxEvals = Math.min(BLOCK_INTER_EXACT_MOTION_EVALUATIONS, shortlistedVectors.size());
         List<MotionSearchSeed> refinementSeeds = new ArrayList<>(BLOCK_INTER_LOCAL_REFINEMENT_SEEDS);
-        Set<Long> testedVectors = new HashSet<>(motionVectors.size() * 2);
+        Set<Long> testedVectors = new HashSet<>(Math.max(4, shortlistedVectors.size() * 2));
         for (int vectorIndex = 0; vectorIndex < maxEvals; vectorIndex++) {
-            AfmaRectCopyDetector.MotionVector motionVector = scoredVectors.get(vectorIndex).vector();
+            AfmaRectCopyDetector.MotionVector motionVector = shortlistedVectors.get(vectorIndex).vector();
             testedVectors.add(packMotionVector(motionVector.dx(), motionVector.dy()));
             BlockInterTileCandidate motionCandidate = this.evaluateBlockInterMotionCandidate(pairAnalysis, previousFrame, currentFrame, dstX, dstY, width, height,
                     motionVector.dx(), motionVector.dy(), bestCandidate);
@@ -2394,6 +2404,189 @@ public class AfmaEncodePlanner {
         }
 
         return bestCandidate;
+    }
+
+    @NotNull
+    protected List<TileMotionSAD> shortlistBlockInterTileMotionVectors(@NotNull AfmaFramePairAnalysis pairAnalysis,
+                                                                       @NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
+                                                                       int dstX, int dstY, int width, int height,
+                                                                       @NotNull List<AfmaRectCopyDetector.MotionVector> motionVectors) {
+        if (motionVectors.isEmpty()) {
+            return List.of();
+        }
+
+        int hashShortlistSize = Math.min(
+                motionVectors.size(),
+                Math.max(BLOCK_INTER_HASH_SHORTLIST_MIN, BLOCK_INTER_EXACT_MOTION_EVALUATIONS * BLOCK_INTER_HASH_SHORTLIST_MULTIPLIER)
+        );
+        List<AfmaRectCopyDetector.MotionVector> hashFrontier = this.shortlistBlockInterTileMotionVectorsByHash(
+                pairAnalysis,
+                previousFrame,
+                dstX,
+                dstY,
+                width,
+                height,
+                motionVectors,
+                hashShortlistSize
+        );
+        List<AfmaRectCopyDetector.MotionVector> expandedHashFrontier = this.expandBlockInterMotionNeighborhood(
+                previousFrame,
+                dstX,
+                dstY,
+                width,
+                height,
+                hashFrontier
+        );
+        int approxSadShortlistSize = Math.min(
+                expandedHashFrontier.size(),
+                Math.max(BLOCK_INTER_EXACT_MOTION_EVALUATIONS, BLOCK_INTER_LOCAL_REFINEMENT_SEEDS + 1)
+        );
+        return this.shortlistBlockInterTileMotionVectorsByApproxSad(
+                previousFrame,
+                currentFrame,
+                dstX,
+                dstY,
+                width,
+                height,
+                expandedHashFrontier,
+                approxSadShortlistSize
+        );
+    }
+
+    @NotNull
+    protected List<AfmaRectCopyDetector.MotionVector> shortlistBlockInterTileMotionVectorsByHash(@NotNull AfmaFramePairAnalysis pairAnalysis,
+                                                                                                  @NotNull AfmaPixelFrame previousFrame,
+                                                                                                  int dstX, int dstY, int width, int height,
+                                                                                                  @NotNull List<AfmaRectCopyDetector.MotionVector> motionVectors,
+                                                                                                  int maxVectors) {
+        ArrayList<HashedTileMotion> rankedVectors = new ArrayList<>(Math.min(maxVectors, motionVectors.size()));
+        for (AfmaRectCopyDetector.MotionVector motionVector : motionVectors) {
+            if (!this.isMotionTileInBounds(previousFrame, dstX + motionVector.dx(), dstY + motionVector.dy(), width, height)) {
+                continue;
+            }
+            this.insertRankedHashedTileMotion(
+                    rankedVectors,
+                    maxVectors,
+                    motionVector,
+                    this.scoreBlockInterMotionHash(pairAnalysis, dstX, dstY, width, height, motionVector.dx(), motionVector.dy())
+            );
+        }
+
+        ArrayList<AfmaRectCopyDetector.MotionVector> shortlistedVectors = new ArrayList<>(rankedVectors.size());
+        for (HashedTileMotion rankedVector : rankedVectors) {
+            shortlistedVectors.add(rankedVector.vector());
+        }
+        return List.copyOf(shortlistedVectors);
+    }
+
+    @NotNull
+    protected List<AfmaRectCopyDetector.MotionVector> expandBlockInterMotionNeighborhood(@NotNull AfmaPixelFrame previousFrame,
+                                                                                         int dstX, int dstY, int width, int height,
+                                                                                         @NotNull List<AfmaRectCopyDetector.MotionVector> motionVectors) {
+        if (motionVectors.isEmpty()) {
+            return motionVectors;
+        }
+
+        LinkedHashMap<Long, AfmaRectCopyDetector.MotionVector> expandedVectorsByKey = new LinkedHashMap<>();
+        for (AfmaRectCopyDetector.MotionVector motionVector : motionVectors) {
+            this.addBlockInterMotionVector(expandedVectorsByKey, motionVector.dx(), motionVector.dy());
+        }
+
+        int seedCount = Math.min(BLOCK_INTER_NEIGHBOR_SEARCH_SEEDS, motionVectors.size());
+        for (int seedIndex = 0; seedIndex < seedCount; seedIndex++) {
+            AfmaRectCopyDetector.MotionVector seed = motionVectors.get(seedIndex);
+            for (int candidateDy = seed.dy() - BLOCK_INTER_NEIGHBOR_SEARCH_RADIUS; candidateDy <= seed.dy() + BLOCK_INTER_NEIGHBOR_SEARCH_RADIUS; candidateDy++) {
+                for (int candidateDx = seed.dx() - BLOCK_INTER_NEIGHBOR_SEARCH_RADIUS; candidateDx <= seed.dx() + BLOCK_INTER_NEIGHBOR_SEARCH_RADIUS; candidateDx++) {
+                    if (!this.isMotionTileInBounds(previousFrame, dstX + candidateDx, dstY + candidateDy, width, height)) {
+                        continue;
+                    }
+                    this.addBlockInterMotionVector(expandedVectorsByKey, candidateDx, candidateDy);
+                }
+            }
+        }
+        return List.copyOf(expandedVectorsByKey.values());
+    }
+
+    @NotNull
+    protected List<TileMotionSAD> shortlistBlockInterTileMotionVectorsByApproxSad(@NotNull AfmaPixelFrame previousFrame,
+                                                                                   @NotNull AfmaPixelFrame currentFrame,
+                                                                                   int dstX, int dstY, int width, int height,
+                                                                                   @NotNull List<AfmaRectCopyDetector.MotionVector> motionVectors,
+                                                                                   int maxVectors) {
+        ArrayList<TileMotionSAD> rankedVectors = new ArrayList<>(Math.min(maxVectors, motionVectors.size()));
+        for (AfmaRectCopyDetector.MotionVector motionVector : motionVectors) {
+            long sadCutoff = (rankedVectors.size() >= maxVectors)
+                    ? rankedVectors.get(rankedVectors.size() - 1).sad()
+                    : Long.MAX_VALUE;
+            long approximateSad = this.computeApproxTileSAD(
+                    previousFrame,
+                    currentFrame,
+                    dstX,
+                    dstY,
+                    dstX + motionVector.dx(),
+                    dstY + motionVector.dy(),
+                    width,
+                    height,
+                    sadCutoff
+            );
+            if (approximateSad == Long.MAX_VALUE) {
+                continue;
+            }
+            this.insertRankedTileMotionSad(rankedVectors, maxVectors, motionVector, approximateSad);
+        }
+        return List.copyOf(rankedVectors);
+    }
+
+    protected double scoreBlockInterMotionHash(@NotNull AfmaFramePairAnalysis pairAnalysis,
+                                               int dstX, int dstY, int width, int height, int dx, int dy) {
+        double hashScore = pairAnalysis.sampleHashMatchRatio(
+                dstX + dx,
+                dstY + dy,
+                dstX,
+                dstY,
+                width,
+                height,
+                BLOCK_INTER_HASH_STAGE_COLUMNS,
+                BLOCK_INTER_HASH_STAGE_ROWS
+        );
+        return hashScore - ((Math.abs(dx) + Math.abs(dy)) * 1.0E-6D);
+    }
+
+    protected long computeApproxTileSAD(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
+                                        int dstX, int dstY, int srcX, int srcY, int width, int height, long sadCutoff) {
+        if (!this.isMotionTileInBounds(previousFrame, srcX, srcY, width, height)) {
+            return Long.MAX_VALUE;
+        }
+
+        int frameWidth = currentFrame.getWidth();
+        int[] previousPixels = previousFrame.getPixelsUnsafe();
+        int[] currentPixels = currentFrame.getPixelsUnsafe();
+        int sampleColumns = Math.min(width, BLOCK_INTER_APPROX_SAD_STAGE_COLUMNS);
+        int sampleRows = Math.min(height, BLOCK_INTER_APPROX_SAD_STAGE_ROWS);
+        long sad = 0L;
+        for (int sampleRow = 0; sampleRow < sampleRows; sampleRow++) {
+            int cellStartY = (sampleRow * height) / sampleRows;
+            int cellEndY = ((sampleRow + 1) * height) / sampleRows;
+            int cellHeight = Math.max(1, cellEndY - cellStartY);
+            int probeY = cellStartY + Math.max(0, (cellHeight - 1) / 2);
+            for (int sampleColumn = 0; sampleColumn < sampleColumns; sampleColumn++) {
+                int cellStartX = (sampleColumn * width) / sampleColumns;
+                int cellEndX = ((sampleColumn + 1) * width) / sampleColumns;
+                int cellWidth = Math.max(1, cellEndX - cellStartX);
+                int probeX = cellStartX + Math.max(0, (cellWidth - 1) / 2);
+                int previousColor = previousPixels[((srcY + probeY) * frameWidth) + srcX + probeX];
+                int currentColor = currentPixels[((dstY + probeY) * frameWidth) + dstX + probeX];
+                long weightedArea = (long) cellWidth * cellHeight;
+                sad += weightedArea * Math.abs(((previousColor >> 16) & 0xFF) - ((currentColor >> 16) & 0xFF));
+                sad += weightedArea * Math.abs(((previousColor >> 8) & 0xFF) - ((currentColor >> 8) & 0xFF));
+                sad += weightedArea * Math.abs((previousColor & 0xFF) - (currentColor & 0xFF));
+                sad += weightedArea * Math.abs(((previousColor >>> 24) & 0xFF) - ((currentColor >>> 24) & 0xFF));
+                if (sad >= sadCutoff) {
+                    return sad;
+                }
+            }
+        }
+        return sad;
     }
 
     protected long computeTileSAD(@NotNull AfmaPixelFrame previousFrame, @NotNull AfmaPixelFrame currentFrame,
@@ -2419,6 +2612,38 @@ public class AfmaEncodePlanner {
             }
         }
         return sad;
+    }
+
+    protected void insertRankedHashedTileMotion(@NotNull List<HashedTileMotion> rankedVectors, int maxVectors,
+                                                @NotNull AfmaRectCopyDetector.MotionVector motionVector, double hashScore) {
+        int insertIndex = rankedVectors.size();
+        while ((insertIndex > 0) && (hashScore > rankedVectors.get(insertIndex - 1).hashScore())) {
+            insertIndex--;
+        }
+        if ((insertIndex >= maxVectors) && (rankedVectors.size() >= maxVectors)) {
+            return;
+        }
+
+        rankedVectors.add(insertIndex, new HashedTileMotion(motionVector, hashScore));
+        if (rankedVectors.size() > maxVectors) {
+            rankedVectors.remove(rankedVectors.size() - 1);
+        }
+    }
+
+    protected void insertRankedTileMotionSad(@NotNull List<TileMotionSAD> rankedVectors, int maxVectors,
+                                             @NotNull AfmaRectCopyDetector.MotionVector motionVector, long sad) {
+        int insertIndex = rankedVectors.size();
+        while ((insertIndex > 0) && (sad < rankedVectors.get(insertIndex - 1).sad())) {
+            insertIndex--;
+        }
+        if ((insertIndex >= maxVectors) && (rankedVectors.size() >= maxVectors)) {
+            return;
+        }
+
+        rankedVectors.add(insertIndex, new TileMotionSAD(motionVector, sad));
+        if (rankedVectors.size() > maxVectors) {
+            rankedVectors.remove(rankedVectors.size() - 1);
+        }
     }
 
     @Nullable
@@ -6138,6 +6363,9 @@ public class AfmaEncodePlanner {
     }
 
     protected record MotionTileStats(int changedPixelCount, boolean includeAlpha) {
+    }
+
+    protected record HashedTileMotion(@NotNull AfmaRectCopyDetector.MotionVector vector, double hashScore) {
     }
 
     protected record TileMotionSAD(@NotNull AfmaRectCopyDetector.MotionVector vector, long sad) {

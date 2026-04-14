@@ -19,6 +19,14 @@ public class AfmaRectCopyDetector {
     protected static final int NEIGHBOR_OFFSET_RADIUS = 2;
     protected static final int MIN_SINGLE_COPY_MOTION_VECTORS = 12;
     protected static final int MAX_SINGLE_COPY_MOTION_VECTORS = 40;
+    protected static final int MOTION_HASH_STAGE_ONE_COLUMNS = 6;
+    protected static final int MOTION_HASH_STAGE_ONE_ROWS = 4;
+    protected static final int MOTION_HASH_STAGE_TWO_COLUMNS = 12;
+    protected static final int MOTION_HASH_STAGE_TWO_ROWS = 8;
+    protected static final int MOTION_HASH_FRONTIER_MULTIPLIER = 6;
+    protected static final int MOTION_HASH_SECOND_STAGE_MULTIPLIER = 3;
+    protected static final int MOTION_NEIGHBOR_REFINEMENT_SEEDS = 4;
+    protected static final int MOTION_NEIGHBOR_REFINEMENT_RADIUS = 2;
     protected static final int MAX_MULTI_COPY_RECTS = 4;
     protected static final int MAX_MULTI_COPY_MOTION_VECTORS = 12;
     protected static final int MIN_MULTI_COPY_RECT_AREA = 64;
@@ -246,6 +254,25 @@ public class AfmaRectCopyDetector {
         return Math.max(MIN_SINGLE_COPY_MOTION_VECTORS, Math.min(MAX_SINGLE_COPY_MOTION_VECTORS, budget));
     }
 
+    @NotNull
+    protected List<MotionVector> collectCandidateMotionVectors(@NotNull MotionSearchAnalysis motionSearchAnalysis,
+                                                               int width, int height) {
+        ArrayList<MotionVector> candidateVectors = new ArrayList<>(
+                motionSearchAnalysis.candidateDx().size() * motionSearchAnalysis.candidateDy().size()
+        );
+        for (int dx : motionSearchAnalysis.candidateDx()) {
+            for (int dy : motionSearchAnalysis.candidateDy()) {
+                if ((dx == 0) && (dy == 0)) {
+                    continue;
+                }
+                if (this.isValidMotionVector(dx, dy, width, height)) {
+                    candidateVectors.add(new MotionVector(dx, dy));
+                }
+            }
+        }
+        return candidateVectors;
+    }
+
     protected void ensureRankedMotionVectors(@NotNull AfmaFramePairAnalysis pairAnalysis, @NotNull MotionSearchAnalysis motionSearchAnalysis) {
         if (motionSearchAnalysis.hasRankedMotionVectors()) {
             return;
@@ -300,37 +327,102 @@ public class AfmaRectCopyDetector {
         AfmaPixelFrame previous = pairAnalysis.previousFrame();
         int width = previous.getWidth();
         int height = previous.getHeight();
-        ArrayList<ScoredMotionVector> rankedVectors = new ArrayList<>(maxNonZeroVectors);
-        for (int dx : motionSearchAnalysis.candidateDx()) {
-            for (int dy : motionSearchAnalysis.candidateDy()) {
-                if ((dx == 0) && (dy == 0)) {
-                    continue;
-                }
-
-                int overlapWidth = width - Math.abs(dx);
-                int overlapHeight = height - Math.abs(dy);
-                if (overlapWidth <= 0 || overlapHeight <= 0) {
-                    continue;
-                }
-
-                this.insertRankedMotionVector(
-                        rankedVectors,
-                        maxNonZeroVectors,
-                        dx,
-                        dy,
-                        this.scoreMotionVector(pairAnalysis, dx, dy)
-                );
-            }
+        List<MotionVector> candidateVectors = this.collectCandidateMotionVectors(motionSearchAnalysis, width, height);
+        if (candidateVectors.isEmpty()) {
+            motionSearchAnalysis.cacheTopRankedMotionVectorsWithoutZero(List.of(), true);
+            return;
         }
 
-        ArrayList<MotionVector> topRankedVectors = new ArrayList<>(rankedVectors.size());
-        for (ScoredMotionVector rankedVector : rankedVectors) {
-            topRankedVectors.add(rankedVector.vector());
+        if (candidateVectors.size() <= maxNonZeroVectors) {
+            motionSearchAnalysis.cacheTopRankedMotionVectorsWithoutZero(
+                    this.rankMotionVectorsByScore(pairAnalysis, candidateVectors, maxNonZeroVectors),
+                    true
+            );
+            return;
         }
-        motionSearchAnalysis.cacheTopRankedMotionVectorsWithoutZero(
-                List.copyOf(topRankedVectors),
-                topRankedVectors.size() < maxNonZeroVectors
+
+        int firstStageLimit = Math.min(
+                candidateVectors.size(),
+                Math.max(maxNonZeroVectors, maxNonZeroVectors * MOTION_HASH_FRONTIER_MULTIPLIER)
         );
+        List<MotionVector> firstStageFrontier = this.shortlistMotionVectorsByHash(
+                pairAnalysis,
+                candidateVectors,
+                firstStageLimit,
+                MOTION_HASH_STAGE_ONE_COLUMNS,
+                MOTION_HASH_STAGE_ONE_ROWS
+        );
+        List<MotionVector> expandedFirstStageFrontier = this.expandMotionVectorNeighborhood(
+                firstStageFrontier,
+                width,
+                height,
+                MOTION_NEIGHBOR_REFINEMENT_SEEDS,
+                MOTION_NEIGHBOR_REFINEMENT_RADIUS
+        );
+        int secondStageLimit = Math.min(
+                expandedFirstStageFrontier.size(),
+                Math.max(maxNonZeroVectors, maxNonZeroVectors * MOTION_HASH_SECOND_STAGE_MULTIPLIER)
+        );
+        List<MotionVector> secondStageFrontier = this.shortlistMotionVectorsByHash(
+                pairAnalysis,
+                expandedFirstStageFrontier,
+                secondStageLimit,
+                MOTION_HASH_STAGE_TWO_COLUMNS,
+                MOTION_HASH_STAGE_TWO_ROWS
+        );
+        List<MotionVector> finalFrontier = this.expandMotionVectorNeighborhood(
+                secondStageFrontier,
+                width,
+                height,
+                MOTION_NEIGHBOR_REFINEMENT_SEEDS,
+                1
+        );
+        motionSearchAnalysis.cacheTopRankedMotionVectorsWithoutZero(
+                this.rankMotionVectorsByScore(pairAnalysis, finalFrontier, maxNonZeroVectors),
+                false
+        );
+    }
+
+    @NotNull
+    protected List<MotionVector> shortlistMotionVectorsByHash(@NotNull AfmaFramePairAnalysis pairAnalysis,
+                                                              @NotNull List<MotionVector> motionVectors, int maxVectors,
+                                                              int sampleColumns, int sampleRows) {
+        ArrayList<ScoredMotionVector> rankedVectors = new ArrayList<>(Math.min(maxVectors, motionVectors.size()));
+        for (MotionVector motionVector : motionVectors) {
+            this.insertRankedMotionVector(
+                    rankedVectors,
+                    maxVectors,
+                    motionVector.dx(),
+                    motionVector.dy(),
+                    this.scoreMotionVectorHash(pairAnalysis, motionVector.dx(), motionVector.dy(), sampleColumns, sampleRows)
+            );
+        }
+        return this.extractMotionVectors(rankedVectors);
+    }
+
+    @NotNull
+    protected List<MotionVector> rankMotionVectorsByScore(@NotNull AfmaFramePairAnalysis pairAnalysis,
+                                                          @NotNull List<MotionVector> motionVectors, int maxVectors) {
+        ArrayList<ScoredMotionVector> rankedVectors = new ArrayList<>(Math.min(maxVectors, motionVectors.size()));
+        for (MotionVector motionVector : motionVectors) {
+            this.insertRankedMotionVector(
+                    rankedVectors,
+                    maxVectors,
+                    motionVector.dx(),
+                    motionVector.dy(),
+                    this.scoreMotionVector(pairAnalysis, motionVector.dx(), motionVector.dy())
+            );
+        }
+        return this.extractMotionVectors(rankedVectors);
+    }
+
+    @NotNull
+    protected List<MotionVector> extractMotionVectors(@NotNull List<ScoredMotionVector> rankedVectors) {
+        ArrayList<MotionVector> motionVectors = new ArrayList<>(rankedVectors.size());
+        for (ScoredMotionVector rankedVector : rankedVectors) {
+            motionVectors.add(rankedVector.vector());
+        }
+        return List.copyOf(motionVectors);
     }
 
     @NotNull
@@ -429,6 +521,37 @@ public class AfmaRectCopyDetector {
         return pairAnalysis.sampleMatchRatio(srcX, srcY, dstX, dstY, sampleWidth, sampleHeight);
     }
 
+    protected double scoreMotionVectorHash(@NotNull AfmaFramePairAnalysis pairAnalysis, int dx, int dy,
+                                           int sampleColumns, int sampleRows) {
+        AfmaPixelFrame previous = pairAnalysis.previousFrame();
+        int overlapWidth = previous.getWidth() - Math.abs(dx);
+        int overlapHeight = previous.getHeight() - Math.abs(dy);
+        if (overlapWidth <= 0 || overlapHeight <= 0) {
+            return 0D;
+        }
+
+        int srcX = Math.max(0, -dx);
+        int srcY = Math.max(0, -dy);
+        int dstX = Math.max(0, dx);
+        int dstY = Math.max(0, dy);
+        AfmaRect scoringBounds = pairAnalysis.intersectDifferenceBounds(dstX, dstY, overlapWidth, overlapHeight);
+        if (scoringBounds == null) {
+            return pairAnalysis.isIdentical() ? 1D : 0D;
+        }
+
+        double hashScore = pairAnalysis.sampleHashMatchRatio(
+                srcX + (scoringBounds.x() - dstX),
+                srcY + (scoringBounds.y() - dstY),
+                scoringBounds.x(),
+                scoringBounds.y(),
+                scoringBounds.width(),
+                scoringBounds.height(),
+                sampleColumns,
+                sampleRows
+        );
+        return hashScore - ((Math.abs(dx) + Math.abs(dy)) * 1.0E-6D);
+    }
+
     protected double scoreMotionVector(@NotNull AfmaFramePairAnalysis pairAnalysis, int dx, int dy) {
         AfmaPixelFrame previous = pairAnalysis.previousFrame();
         int overlapWidth = previous.getWidth() - Math.abs(dx);
@@ -454,6 +577,61 @@ public class AfmaRectCopyDetector {
                 scoringBounds.width(),
                 scoringBounds.height()
         );
+    }
+
+    protected boolean isValidMotionVector(int dx, int dy, int width, int height) {
+        return (width - Math.abs(dx)) > 0
+                && (height - Math.abs(dy)) > 0;
+    }
+
+    @NotNull
+    protected List<MotionVector> expandMotionVectorNeighborhood(@NotNull List<MotionVector> motionVectors,
+                                                                int width, int height, int maxSeeds, int radius) {
+        if (motionVectors.isEmpty() || (maxSeeds <= 0) || (radius <= 0)) {
+            return motionVectors;
+        }
+
+        int maxDx = Math.min(width - 1, this.maxSearchDistance);
+        int maxDy = Math.min(height - 1, this.maxSearchDistance);
+        LinkedHashSet<Long> motionVectorKeys = new LinkedHashSet<>(motionVectors.size() * ((radius * 2) + 1));
+        ArrayList<MotionVector> expandedVectors = new ArrayList<>(motionVectors.size());
+        for (MotionVector motionVector : motionVectors) {
+            this.addExpandedMotionVector(expandedVectors, motionVectorKeys, motionVector.dx(), motionVector.dy(), width, height, maxDx, maxDy);
+        }
+
+        int seedCount = Math.min(maxSeeds, motionVectors.size());
+        for (int seedIndex = 0; seedIndex < seedCount; seedIndex++) {
+            MotionVector seed = motionVectors.get(seedIndex);
+            for (int candidateDy = seed.dy() - radius; candidateDy <= seed.dy() + radius; candidateDy++) {
+                for (int candidateDx = seed.dx() - radius; candidateDx <= seed.dx() + radius; candidateDx++) {
+                    this.addExpandedMotionVector(
+                            expandedVectors,
+                            motionVectorKeys,
+                            candidateDx,
+                            candidateDy,
+                            width,
+                            height,
+                            maxDx,
+                            maxDy
+                    );
+                }
+            }
+        }
+        return List.copyOf(expandedVectors);
+    }
+
+    protected void addExpandedMotionVector(@NotNull List<MotionVector> expandedVectors, @NotNull Set<Long> motionVectorKeys,
+                                           int dx, int dy, int width, int height, int maxDx, int maxDy) {
+        if ((dx == 0) && (dy == 0)) {
+            return;
+        }
+        if ((Math.abs(dx) > maxDx) || (Math.abs(dy) > maxDy) || !this.isValidMotionVector(dx, dy, width, height)) {
+            return;
+        }
+        long motionVectorKey = packMotionVector(dx, dy);
+        if (motionVectorKeys.add(motionVectorKey)) {
+            expandedVectors.add(new MotionVector(dx, dy));
+        }
     }
 
     @Nullable
@@ -669,6 +847,10 @@ public class AfmaRectCopyDetector {
                 offsets.add(positiveNeighbor);
             }
         }
+    }
+
+    protected static long packMotionVector(int dx, int dy) {
+        return (((long) dx) << 32) ^ (dy & 0xFFFFFFFFL);
     }
 
     @Nullable
