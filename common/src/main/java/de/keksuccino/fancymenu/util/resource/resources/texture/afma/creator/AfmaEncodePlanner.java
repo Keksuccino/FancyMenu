@@ -68,6 +68,8 @@ public class AfmaEncodePlanner {
     protected static final int MIN_SHORTLISTED_SPARSE_LAYOUTS = 2;
     protected static final int SPARSE_LAYOUT_SHORTLIST_MARGIN_BYTES = 24;
     protected static final double SPARSE_LAYOUT_SHORTLIST_MARGIN_RATIO = 0.15D;
+    protected static final int MAX_SHORTLISTED_WINDOW_COMPLEX_CANDIDATES = 6;
+    protected static final int MAX_SHORTLISTED_WINDOW_COMPLEX_CANDIDATES_PER_FAMILY = 2;
     protected static final long MEMORY_SAFETY_RESERVE_BYTES = 192L * 1024L * 1024L;
     protected static final byte[] EMPTY_BYTES = new byte[0];
     @NotNull
@@ -585,139 +587,167 @@ public class AfmaEncodePlanner {
         );
         AfmaRect deltaBounds = pairCandidateSet.deltaBounds();
         PlannedCandidate blockInterBaselineCandidate = fullCandidate;
+        int frameWidth = workingFrame.getWidth();
+        int frameHeight = workingFrame.getHeight();
+        ArrayList<CandidateMaterializationPlan> candidatePlans = new ArrayList<>(10);
         if (deltaBounds != null) {
             long deltaArea = deltaBounds.area();
-            if (this.shouldAttemptComplexCandidate(pairCandidateSet.deltaCandidateArchiveLowerBoundBytes(), fullArchiveBytes,
-                    deltaArea, workingFrame.getWidth(), workingFrame.getHeight(),
-                    options.getMaxDeltaAreaRatioWithoutStrongSavings(), options)) {
-                PlannedCandidate deltaCandidate = pairCandidateSet.getOrCreateDeltaCandidate();
-                blockInterBaselineCandidate = this.selectBestEstimatedArchiveCandidate(blockInterBaselineCandidate, deltaCandidate);
-                if ((deltaCandidate != null) && this.shouldKeepComplexCandidate(deltaCandidate, fullArchiveBytes,
-                        deltaArea, workingFrame.getWidth(), workingFrame.getHeight(),
-                        options.getMaxDeltaAreaRatioWithoutStrongSavings(), options, archiveState, introSequence, windowCandidateCache)) {
-                    candidates.add(deltaCandidate);
-                }
-            }
-
-            if (this.shouldAttemptResidualCandidate(pairCandidateSet.residualDeltaCandidateArchiveLowerBoundBytes(), fullArchiveBytes,
-                    deltaArea, workingFrame.getWidth(), workingFrame.getHeight(),
-                    options.getMaxDeltaAreaRatioWithoutStrongSavings(), options)) {
-                PlannedCandidate residualDeltaCandidate = pairCandidateSet.getOrCreateResidualDeltaCandidate();
-                blockInterBaselineCandidate = this.selectBestEstimatedArchiveCandidate(blockInterBaselineCandidate, residualDeltaCandidate);
-                if ((residualDeltaCandidate != null) && this.shouldKeepResidualCandidate(residualDeltaCandidate, fullArchiveBytes,
-                        deltaArea, workingFrame.getWidth(), workingFrame.getHeight(),
-                        options.getMaxDeltaAreaRatioWithoutStrongSavings(), options, archiveState, introSequence, windowCandidateCache)) {
-                    candidates.add(residualDeltaCandidate);
-                }
-            }
-
-            if (this.shouldAttemptSparseCandidate(pairCandidateSet.sparseDeltaCandidateArchiveLowerBoundBytes(), fullArchiveBytes,
-                    deltaArea, workingFrame.getWidth(), workingFrame.getHeight(),
-                    options.getMaxDeltaAreaRatioWithoutStrongSavings(), options)) {
-                PlannedCandidate sparseDeltaCandidate = pairCandidateSet.getOrCreateSparseDeltaCandidate();
-                blockInterBaselineCandidate = this.selectBestEstimatedArchiveCandidate(blockInterBaselineCandidate, sparseDeltaCandidate);
-                if ((sparseDeltaCandidate != null) && this.shouldKeepSparseCandidate(sparseDeltaCandidate, fullArchiveBytes,
-                        deltaArea, workingFrame.getWidth(), workingFrame.getHeight(),
-                        options.getMaxDeltaAreaRatioWithoutStrongSavings(), options, archiveState, introSequence, windowCandidateCache)) {
-                    candidates.add(sparseDeltaCandidate);
-                }
-            }
+            AfmaFramePairAnalysis.RegionErrorMetrics deltaMetrics = pairCandidateSet.pairAnalysis.regionErrorMetrics(
+                    deltaBounds.x(),
+                    deltaBounds.y(),
+                    deltaBounds.width(),
+                    deltaBounds.height()
+            );
+            this.addPatchCandidateMaterializationPlans(
+                    candidatePlans,
+                    CandidatePlanType.DELTA_COMPLEX,
+                    pairCandidateSet.deltaCandidateArchiveLowerBoundBytes(),
+                    CandidatePlanType.DELTA_RESIDUAL,
+                    pairCandidateSet.residualDeltaCandidateArchiveLowerBoundBytes(),
+                    CandidatePlanType.DELTA_SPARSE,
+                    pairCandidateSet.sparseDeltaCandidateArchiveLowerBoundBytes(),
+                    deltaArea,
+                    deltaMetrics.changedPixelCount(),
+                    deltaMetrics.colorErrorSum(),
+                    deltaMetrics.alphaErrorSum(),
+                    deltaMetrics.nextHasNonOpaquePixels(),
+                    fullArchiveBytes,
+                    frameWidth,
+                    frameHeight,
+                    options.getMaxDeltaAreaRatioWithoutStrongSavings(),
+                    options
+            );
         }
 
         if (options.isRectCopyEnabled()) {
             AfmaRectCopyDetector.Detection detection = pairCandidateSet.copyDetection();
             if (detection != null) {
                 long patchArea = (detection.patchBounds() != null) ? detection.patchBounds().area() : 0L;
-                if (this.shouldAttemptComplexCandidate(pairCandidateSet.copyCandidateArchiveLowerBoundBytes(), fullArchiveBytes,
-                        patchArea, workingFrame.getWidth(), workingFrame.getHeight(),
-                        options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options)) {
-                    PlannedCandidate copyCandidate = pairCandidateSet.getOrCreateCopyCandidate();
-                    blockInterBaselineCandidate = this.selectBestEstimatedArchiveCandidate(blockInterBaselineCandidate, copyCandidate);
-                    if ((copyCandidate != null) && this.shouldKeepComplexCandidate(copyCandidate, fullArchiveBytes,
-                            patchArea, workingFrame.getWidth(), workingFrame.getHeight(),
-                            options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, archiveState, introSequence, windowCandidateCache)) {
-                        candidates.add(copyCandidate);
-                    }
-                }
-
-                if (this.shouldAttemptResidualCandidate(pairCandidateSet.copyResidualCandidateArchiveLowerBoundBytes(), fullArchiveBytes,
-                        patchArea, workingFrame.getWidth(), workingFrame.getHeight(),
-                        options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options)) {
-                    PlannedCandidate copyResidualCandidate = pairCandidateSet.getOrCreateCopyResidualCandidate();
-                    blockInterBaselineCandidate = this.selectBestEstimatedArchiveCandidate(blockInterBaselineCandidate, copyResidualCandidate);
-                    if ((copyResidualCandidate != null) && this.shouldKeepResidualCandidate(copyResidualCandidate, fullArchiveBytes,
-                            patchArea, workingFrame.getWidth(), workingFrame.getHeight(),
-                            options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, archiveState, introSequence, windowCandidateCache)) {
-                        candidates.add(copyResidualCandidate);
-                    }
-                }
-
-                if (this.shouldAttemptSparseCandidate(pairCandidateSet.copySparseCandidateArchiveLowerBoundBytes(), fullArchiveBytes,
-                        patchArea, workingFrame.getWidth(), workingFrame.getHeight(),
-                        options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options)) {
-                    PlannedCandidate copySparseCandidate = pairCandidateSet.getOrCreateCopySparseCandidate();
-                    blockInterBaselineCandidate = this.selectBestEstimatedArchiveCandidate(blockInterBaselineCandidate, copySparseCandidate);
-                    if ((copySparseCandidate != null) && this.shouldKeepSparseCandidate(copySparseCandidate, fullArchiveBytes,
-                            patchArea, workingFrame.getWidth(), workingFrame.getHeight(),
-                            options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, archiveState, introSequence, windowCandidateCache)) {
-                        candidates.add(copySparseCandidate);
-                    }
-                }
+                AfmaFramePairAnalysis.RegionErrorMetrics patchMetrics = (detection.patchBounds() != null)
+                        ? pairCandidateSet.pairAnalysis.regionErrorMetrics(
+                        detection.patchBounds().x(),
+                        detection.patchBounds().y(),
+                        detection.patchBounds().width(),
+                        detection.patchBounds().height()
+                )
+                        : new AfmaFramePairAnalysis.RegionErrorMetrics(0, 0L, 0L, false);
+                this.addPatchCandidateMaterializationPlans(
+                        candidatePlans,
+                        CandidatePlanType.COPY_COMPLEX,
+                        pairCandidateSet.copyCandidateArchiveLowerBoundBytes(),
+                        CandidatePlanType.COPY_RESIDUAL,
+                        pairCandidateSet.copyResidualCandidateArchiveLowerBoundBytes(),
+                        CandidatePlanType.COPY_SPARSE,
+                        pairCandidateSet.copySparseCandidateArchiveLowerBoundBytes(),
+                        patchArea,
+                        detection.remainingDirtyPixelCount(),
+                        patchMetrics.colorErrorSum(),
+                        patchMetrics.alphaErrorSum(),
+                        patchMetrics.nextHasNonOpaquePixels(),
+                        fullArchiveBytes,
+                        frameWidth,
+                        frameHeight,
+                        options.getMaxCopyPatchAreaRatioWithoutStrongSavings(),
+                        options
+                );
             }
 
             AfmaRectCopyDetector.MultiDetection multiDetection = pairCandidateSet.multiDetection();
             if (multiDetection != null) {
                 long patchArea = multiDetection.patchArea();
-                if (this.shouldAttemptComplexCandidate(pairCandidateSet.multiCopyCandidateArchiveLowerBoundBytes(), fullArchiveBytes,
-                        patchArea, workingFrame.getWidth(), workingFrame.getHeight(),
-                        options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options)) {
-                    PlannedCandidate multiCopyCandidate = pairCandidateSet.getOrCreateMultiCopyCandidate();
-                    blockInterBaselineCandidate = this.selectBestEstimatedArchiveCandidate(blockInterBaselineCandidate, multiCopyCandidate);
-                    if ((multiCopyCandidate != null) && this.shouldKeepComplexCandidate(multiCopyCandidate, fullArchiveBytes,
-                            patchArea, workingFrame.getWidth(), workingFrame.getHeight(),
-                            options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, archiveState, introSequence, windowCandidateCache)) {
-                        candidates.add(multiCopyCandidate);
-                    }
-                }
-
-                if (this.shouldAttemptResidualCandidate(pairCandidateSet.multiCopyResidualCandidateArchiveLowerBoundBytes(), fullArchiveBytes,
-                        patchArea, workingFrame.getWidth(), workingFrame.getHeight(),
-                        options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options)) {
-                    PlannedCandidate multiCopyResidualCandidate = pairCandidateSet.getOrCreateMultiCopyResidualCandidate();
-                    blockInterBaselineCandidate = this.selectBestEstimatedArchiveCandidate(blockInterBaselineCandidate, multiCopyResidualCandidate);
-                    if ((multiCopyResidualCandidate != null) && this.shouldKeepResidualCandidate(multiCopyResidualCandidate, fullArchiveBytes,
-                            patchArea, workingFrame.getWidth(), workingFrame.getHeight(),
-                            options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, archiveState, introSequence, windowCandidateCache)) {
-                        candidates.add(multiCopyResidualCandidate);
-                    }
-                }
-
-                if (this.shouldAttemptSparseCandidate(pairCandidateSet.multiCopySparseCandidateArchiveLowerBoundBytes(), fullArchiveBytes,
-                        patchArea, workingFrame.getWidth(), workingFrame.getHeight(),
-                        options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options)) {
-                    PlannedCandidate multiCopySparseCandidate = pairCandidateSet.getOrCreateMultiCopySparseCandidate();
-                    blockInterBaselineCandidate = this.selectBestEstimatedArchiveCandidate(blockInterBaselineCandidate, multiCopySparseCandidate);
-                    if ((multiCopySparseCandidate != null) && this.shouldKeepSparseCandidate(multiCopySparseCandidate, fullArchiveBytes,
-                            patchArea, workingFrame.getWidth(), workingFrame.getHeight(),
-                            options.getMaxCopyPatchAreaRatioWithoutStrongSavings(), options, archiveState, introSequence, windowCandidateCache)) {
-                        candidates.add(multiCopySparseCandidate);
-                    }
-                }
+                AfmaFramePairAnalysis.RegionErrorMetrics patchMetrics = (multiDetection.patchBounds() != null)
+                        ? pairCandidateSet.pairAnalysis.regionErrorMetrics(
+                        multiDetection.patchBounds().x(),
+                        multiDetection.patchBounds().y(),
+                        multiDetection.patchBounds().width(),
+                        multiDetection.patchBounds().height()
+                )
+                        : new AfmaFramePairAnalysis.RegionErrorMetrics(0, 0L, 0L, false);
+                this.addPatchCandidateMaterializationPlans(
+                        candidatePlans,
+                        CandidatePlanType.MULTI_COPY_COMPLEX,
+                        pairCandidateSet.multiCopyCandidateArchiveLowerBoundBytes(),
+                        CandidatePlanType.MULTI_COPY_RESIDUAL,
+                        pairCandidateSet.multiCopyResidualCandidateArchiveLowerBoundBytes(),
+                        CandidatePlanType.MULTI_COPY_SPARSE,
+                        pairCandidateSet.multiCopySparseCandidateArchiveLowerBoundBytes(),
+                        patchArea,
+                        multiDetection.remainingDirtyPixelCount(),
+                        patchMetrics.colorErrorSum(),
+                        patchMetrics.alphaErrorSum(),
+                        patchMetrics.nextHasNonOpaquePixels(),
+                        fullArchiveBytes,
+                        frameWidth,
+                        frameHeight,
+                        options.getMaxCopyPatchAreaRatioWithoutStrongSavings(),
+                        options
+                );
             }
         }
 
         if (options.isRectCopyEnabled() && (deltaBounds != null)) {
-            AfmaRect blockInterBounds = pairCandidateSet.blockInterRegionBounds();
-            if ((blockInterBounds != null) && this.shouldAttemptComplexCandidate(pairCandidateSet.blockInterCandidateArchiveLowerBoundBytes(),
-                    fullArchiveBytes, blockInterBounds.area(), workingFrame.getWidth(), workingFrame.getHeight(),
-                    options.getMaxDeltaAreaRatioWithoutStrongSavings(), options)) {
-                PlannedCandidate blockInterCandidate = pairCandidateSet.getOrCreateBlockInterCandidate(blockInterBaselineCandidate);
-                if ((blockInterCandidate != null) && this.shouldKeepComplexCandidate(blockInterCandidate, fullArchiveBytes,
-                        (long) blockInterCandidate.descriptor().getWidth() * blockInterCandidate.descriptor().getHeight(),
-                        workingFrame.getWidth(), workingFrame.getHeight(),
-                        options.getMaxDeltaAreaRatioWithoutStrongSavings(), options, archiveState, introSequence, windowCandidateCache)) {
-                    candidates.add(blockInterCandidate);
+            BlockInterPreparation blockInterPreparation = pairCandidateSet.blockInterPreparation();
+            if (blockInterPreparation != null) {
+                long optimisticBlockInterBytes = this.estimateOptimisticBlockInterCandidateBytes(
+                        blockInterPreparation.regionBounds(),
+                        blockInterPreparation.regionAnalysis()
+                );
+                if (this.shouldAttemptComplexCandidate(optimisticBlockInterBytes, fullArchiveBytes,
+                        blockInterPreparation.regionBounds().area(), frameWidth, frameHeight,
+                        options.getMaxDeltaAreaRatioWithoutStrongSavings(), options)) {
+                    this.addBlockInterCandidateMaterializationPlan(candidatePlans, blockInterPreparation, optimisticBlockInterBytes);
                 }
+            }
+        }
+
+        for (CandidateMaterializationPlan candidatePlan : this.shortlistCandidateMaterializationPlans(candidatePlans)) {
+            PlannedCandidate candidate = this.materializeCandidatePlan(candidatePlan, pairCandidateSet, blockInterBaselineCandidate);
+            if (candidate == null) {
+                continue;
+            }
+
+            double maxAreaRatioWithoutStrongSavings = this.resolveCandidateAreaRatioWithoutStrongSavings(candidatePlan.type(), options);
+            boolean keepCandidate = switch (candidatePlan.type().strategy()) {
+                case COMPLEX, BLOCK_INTER -> this.shouldKeepComplexCandidate(
+                        candidate,
+                        fullArchiveBytes,
+                        candidatePlan.patchArea(),
+                        frameWidth,
+                        frameHeight,
+                        maxAreaRatioWithoutStrongSavings,
+                        options,
+                        archiveState,
+                        introSequence,
+                        windowCandidateCache
+                );
+                case RESIDUAL -> this.shouldKeepResidualCandidate(
+                        candidate,
+                        fullArchiveBytes,
+                        candidatePlan.patchArea(),
+                        frameWidth,
+                        frameHeight,
+                        maxAreaRatioWithoutStrongSavings,
+                        options,
+                        archiveState,
+                        introSequence,
+                        windowCandidateCache
+                );
+                case SPARSE -> this.shouldKeepSparseCandidate(
+                        candidate,
+                        fullArchiveBytes,
+                        candidatePlan.patchArea(),
+                        frameWidth,
+                        frameHeight,
+                        maxAreaRatioWithoutStrongSavings,
+                        options,
+                        archiveState,
+                        introSequence,
+                        windowCandidateCache
+                );
+            };
+            if (keepCandidate) {
+                candidates.add(candidate);
+                blockInterBaselineCandidate = this.selectBestEstimatedArchiveCandidate(blockInterBaselineCandidate, candidate);
             }
         }
 
@@ -2906,6 +2936,189 @@ public class AfmaEncodePlanner {
         int maxX = Math.min(canvasWidth, ((bounds.x() + bounds.width() + tileSize - 1) / tileSize) * tileSize);
         int maxY = Math.min(canvasHeight, ((bounds.y() + bounds.height() + tileSize - 1) / tileSize) * tileSize);
         return new AfmaRect(minX, minY, Math.max(1, maxX - minX), Math.max(1, maxY - minY));
+    }
+
+    protected void addPatchCandidateMaterializationPlans(@NotNull List<CandidateMaterializationPlan> candidatePlans,
+                                                         @NotNull CandidatePlanType complexType, long complexLowerBoundBytes,
+                                                         @NotNull CandidatePlanType residualType, long residualLowerBoundBytes,
+                                                         @NotNull CandidatePlanType sparseType, long sparseLowerBoundBytes,
+                                                         long patchArea, int changedPixelCount,
+                                                         long colorErrorSum, long alphaErrorSum, boolean nextHasNonOpaquePixels,
+                                                         long fullArchiveBytes, int frameWidth, int frameHeight,
+                                                         double maxAreaRatioWithoutStrongSavings,
+                                                         @NotNull AfmaEncodeOptions options) {
+        if (this.shouldAttemptComplexCandidate(complexLowerBoundBytes, fullArchiveBytes,
+                patchArea, frameWidth, frameHeight, maxAreaRatioWithoutStrongSavings, options)) {
+            this.addCandidateMaterializationPlan(candidatePlans, complexType, complexLowerBoundBytes,
+                    patchArea, changedPixelCount, colorErrorSum, alphaErrorSum, nextHasNonOpaquePixels);
+        }
+        if (this.shouldAttemptResidualCandidate(residualLowerBoundBytes, fullArchiveBytes,
+                patchArea, frameWidth, frameHeight, maxAreaRatioWithoutStrongSavings, options)) {
+            this.addCandidateMaterializationPlan(candidatePlans, residualType, residualLowerBoundBytes,
+                    patchArea, changedPixelCount, colorErrorSum, alphaErrorSum, nextHasNonOpaquePixels);
+        }
+        if (this.shouldAttemptSparseCandidate(sparseLowerBoundBytes, fullArchiveBytes,
+                patchArea, frameWidth, frameHeight, maxAreaRatioWithoutStrongSavings, options)) {
+            this.addCandidateMaterializationPlan(candidatePlans, sparseType, sparseLowerBoundBytes,
+                    patchArea, changedPixelCount, colorErrorSum, alphaErrorSum, nextHasNonOpaquePixels);
+        }
+    }
+
+    protected void addCandidateMaterializationPlan(@NotNull List<CandidateMaterializationPlan> candidatePlans,
+                                                   @NotNull CandidatePlanType type, long lowerBoundArchiveBytes,
+                                                   long patchArea, int changedPixelCount,
+                                                   long colorErrorSum, long alphaErrorSum, boolean nextHasNonOpaquePixels) {
+        candidatePlans.add(new CandidateMaterializationPlan(
+                type,
+                patchArea,
+                changedPixelCount,
+                lowerBoundArchiveBytes,
+                this.computeCandidateMaterializationShortlistScore(
+                        type,
+                        lowerBoundArchiveBytes,
+                        patchArea,
+                        changedPixelCount,
+                        colorErrorSum,
+                        alphaErrorSum,
+                        nextHasNonOpaquePixels
+                )
+        ));
+    }
+
+    protected void addBlockInterCandidateMaterializationPlan(@NotNull List<CandidateMaterializationPlan> candidatePlans,
+                                                             @NotNull BlockInterPreparation blockInterPreparation,
+                                                             long optimisticArchiveBytes) {
+        BlockInterRegionAnalysis regionAnalysis = blockInterPreparation.regionAnalysis();
+        double changedTileRatio = (regionAnalysis.totalTileCount() > 0)
+                ? ((double) regionAnalysis.changedTileCount() / (double) regionAnalysis.totalTileCount())
+                : 1D;
+        double shortlistScore = optimisticArchiveBytes
+                + (changedTileRatio * 96D)
+                + (regionAnalysis.changedTileCount() <= 2 ? 64D : 0D);
+        candidatePlans.add(new CandidateMaterializationPlan(
+                CandidatePlanType.BLOCK_INTER,
+                blockInterPreparation.regionBounds().area(),
+                regionAnalysis.changedTileCount(),
+                optimisticArchiveBytes,
+                shortlistScore
+        ));
+    }
+
+    protected double computeCandidateMaterializationShortlistScore(@NotNull CandidatePlanType type, long lowerBoundArchiveBytes,
+                                                                   long patchArea, int changedPixelCount,
+                                                                   long colorErrorSum, long alphaErrorSum, boolean nextHasNonOpaquePixels) {
+        double shortlistScore = lowerBoundArchiveBytes;
+        if ((patchArea <= 0L) || (changedPixelCount <= 0)) {
+            return shortlistScore + switch (type.strategy()) {
+                case COMPLEX -> -128D;
+                case RESIDUAL -> 96D;
+                case SPARSE -> 128D;
+                case BLOCK_INTER -> 64D;
+            };
+        }
+
+        double changedDensity = Math.min(1D, (double) changedPixelCount / (double) patchArea);
+        double channelCount = nextHasNonOpaquePixels ? 4D : 3D;
+        double averageChannelDelta = (colorErrorSum + alphaErrorSum) / Math.max(1D, changedPixelCount * channelCount);
+        shortlistScore += switch (type.strategy()) {
+            case COMPLEX -> Math.max(0D, (0.35D - changedDensity) * 192D) + (averageChannelDelta <= 18D ? 36D : 0D);
+            case RESIDUAL -> (Math.abs(changedDensity - 0.55D) * 96D)
+                    + Math.max(0D, averageChannelDelta - 32D)
+                    - (averageChannelDelta <= 18D ? 24D : 0D);
+            case SPARSE -> (changedDensity * 224D)
+                    - (changedDensity <= 0.12D ? 40D : 0D)
+                    - (changedPixelCount <= 32 ? 24D : 0D);
+            case BLOCK_INTER -> 64D;
+        };
+
+        shortlistScore += switch (type.family()) {
+            case DELTA -> 0D;
+            case COPY -> -16D;
+            case MULTI_COPY -> 32D;
+            case BLOCK_INTER -> 64D;
+        };
+        return shortlistScore;
+    }
+
+    @NotNull
+    protected List<CandidateMaterializationPlan> shortlistCandidateMaterializationPlans(@NotNull List<CandidateMaterializationPlan> candidatePlans) {
+        ArrayList<CandidateMaterializationPlan> sortedPlans = new ArrayList<>(candidatePlans);
+        sortedPlans.sort((first, second) -> {
+            int compare = Double.compare(first.shortlistScore(), second.shortlistScore());
+            if (compare != 0) {
+                return compare;
+            }
+            compare = Long.compare(first.lowerBoundArchiveBytes(), second.lowerBoundArchiveBytes());
+            if (compare != 0) {
+                return compare;
+            }
+            compare = Integer.compare(first.type().strategy().ordinal(), second.type().strategy().ordinal());
+            if (compare != 0) {
+                return compare;
+            }
+            return Integer.compare(first.type().ordinal(), second.type().ordinal());
+        });
+        if (sortedPlans.size() <= MAX_SHORTLISTED_WINDOW_COMPLEX_CANDIDATES) {
+            return sortedPlans;
+        }
+
+        ArrayList<CandidateMaterializationPlan> shortlistedPlans = new ArrayList<>(MAX_SHORTLISTED_WINDOW_COMPLEX_CANDIDATES);
+        Map<CandidateFamily, Integer> familyCounts = new HashMap<>();
+        for (CandidateMaterializationPlan candidatePlan : sortedPlans) {
+            if (shortlistedPlans.size() >= MAX_SHORTLISTED_WINDOW_COMPLEX_CANDIDATES) {
+                break;
+            }
+            if (familyCounts.containsKey(candidatePlan.type().family())) {
+                continue;
+            }
+            shortlistedPlans.add(candidatePlan);
+            familyCounts.put(candidatePlan.type().family(), 1);
+        }
+
+        for (CandidateMaterializationPlan candidatePlan : sortedPlans) {
+            if (shortlistedPlans.size() >= MAX_SHORTLISTED_WINDOW_COMPLEX_CANDIDATES) {
+                break;
+            }
+            if (shortlistedPlans.contains(candidatePlan)) {
+                continue;
+            }
+
+            CandidateFamily family = candidatePlan.type().family();
+            int familyCount = familyCounts.getOrDefault(family, 0);
+            if (familyCount >= MAX_SHORTLISTED_WINDOW_COMPLEX_CANDIDATES_PER_FAMILY) {
+                continue;
+            }
+
+            shortlistedPlans.add(candidatePlan);
+            familyCounts.put(family, familyCount + 1);
+        }
+        return shortlistedPlans;
+    }
+
+    @Nullable
+    protected PlannedCandidate materializeCandidatePlan(@NotNull CandidateMaterializationPlan candidatePlan,
+                                                        @NotNull PairCandidateSet pairCandidateSet,
+                                                        @Nullable PlannedCandidate blockInterBaselineCandidate) throws IOException {
+        return switch (candidatePlan.type()) {
+            case DELTA_COMPLEX -> pairCandidateSet.getOrCreateDeltaCandidate();
+            case DELTA_RESIDUAL -> pairCandidateSet.getOrCreateResidualDeltaCandidate();
+            case DELTA_SPARSE -> pairCandidateSet.getOrCreateSparseDeltaCandidate();
+            case COPY_COMPLEX -> pairCandidateSet.getOrCreateCopyCandidate();
+            case COPY_RESIDUAL -> pairCandidateSet.getOrCreateCopyResidualCandidate();
+            case COPY_SPARSE -> pairCandidateSet.getOrCreateCopySparseCandidate();
+            case MULTI_COPY_COMPLEX -> pairCandidateSet.getOrCreateMultiCopyCandidate();
+            case MULTI_COPY_RESIDUAL -> pairCandidateSet.getOrCreateMultiCopyResidualCandidate();
+            case MULTI_COPY_SPARSE -> pairCandidateSet.getOrCreateMultiCopySparseCandidate();
+            case BLOCK_INTER -> pairCandidateSet.getOrCreateBlockInterCandidate(blockInterBaselineCandidate);
+        };
+    }
+
+    protected double resolveCandidateAreaRatioWithoutStrongSavings(@NotNull CandidatePlanType candidatePlanType,
+                                                                   @NotNull AfmaEncodeOptions options) {
+        return switch (candidatePlanType.family()) {
+            case DELTA, BLOCK_INTER -> options.getMaxDeltaAreaRatioWithoutStrongSavings();
+            case COPY, MULTI_COPY -> options.getMaxCopyPatchAreaRatioWithoutStrongSavings();
+        };
     }
 
     protected boolean shouldKeepComplexCandidate(@NotNull PlannedCandidate candidate, @NotNull PlannedCandidate fullCandidate,
@@ -5832,6 +6045,57 @@ public class AfmaEncodePlanner {
     }
 
     protected record SparseLayoutPlan(@NotNull AfmaSparseLayoutCodec layoutCodec, long estimatedRawBytes) {
+    }
+
+    protected enum CandidateFamily {
+        DELTA,
+        COPY,
+        MULTI_COPY,
+        BLOCK_INTER
+    }
+
+    protected enum CandidateStrategy {
+        COMPLEX,
+        RESIDUAL,
+        SPARSE,
+        BLOCK_INTER
+    }
+
+    protected enum CandidatePlanType {
+        DELTA_COMPLEX(CandidateFamily.DELTA, CandidateStrategy.COMPLEX),
+        DELTA_RESIDUAL(CandidateFamily.DELTA, CandidateStrategy.RESIDUAL),
+        DELTA_SPARSE(CandidateFamily.DELTA, CandidateStrategy.SPARSE),
+        COPY_COMPLEX(CandidateFamily.COPY, CandidateStrategy.COMPLEX),
+        COPY_RESIDUAL(CandidateFamily.COPY, CandidateStrategy.RESIDUAL),
+        COPY_SPARSE(CandidateFamily.COPY, CandidateStrategy.SPARSE),
+        MULTI_COPY_COMPLEX(CandidateFamily.MULTI_COPY, CandidateStrategy.COMPLEX),
+        MULTI_COPY_RESIDUAL(CandidateFamily.MULTI_COPY, CandidateStrategy.RESIDUAL),
+        MULTI_COPY_SPARSE(CandidateFamily.MULTI_COPY, CandidateStrategy.SPARSE),
+        BLOCK_INTER(CandidateFamily.BLOCK_INTER, CandidateStrategy.BLOCK_INTER);
+
+        @NotNull
+        private final CandidateFamily family;
+        @NotNull
+        private final CandidateStrategy strategy;
+
+        CandidatePlanType(@NotNull CandidateFamily family, @NotNull CandidateStrategy strategy) {
+            this.family = family;
+            this.strategy = strategy;
+        }
+
+        @NotNull
+        public CandidateFamily family() {
+            return this.family;
+        }
+
+        @NotNull
+        public CandidateStrategy strategy() {
+            return this.strategy;
+        }
+    }
+
+    protected record CandidateMaterializationPlan(@NotNull CandidatePlanType type, long patchArea, int changedPixelCount,
+                                                  long lowerBoundArchiveBytes, double shortlistScore) {
     }
 
     protected static final class ResidualPlannerWorkspace {

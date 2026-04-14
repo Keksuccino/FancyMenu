@@ -23,6 +23,11 @@ public final class AfmaBinIntraPayloadHelper {
     public static final int MAX_PALETTE_COLORS = 256;
     public static final int RGB_CHANNELS = 3;
     public static final int RGBA_CHANNELS = 4;
+    protected static final int INDEXED_PRIMARY_MAX_PALETTE_COLORS = 96;
+    protected static final int INDEXED_STABLE_MAX_PALETTE_COLORS = 24;
+    protected static final int INDEXED_COLOR_ALPHA_PRIMARY_MAX_PALETTE_COLORS = 128;
+    protected static final int INDEXED_COLOR_ALPHA_STABLE_MAX_PALETTE_COLORS = 32;
+    protected static final int SECONDARY_TRUECOLOR_MODE_MAX_PIXELS = 16384;
     protected static final int MIN_PARALLEL_MODE_SELECTION_PIXELS = 65536;
     protected static final long MIN_PARALLEL_MODE_SELECTION_HEADROOM_BYTES = 192L * 1024L * 1024L;
 
@@ -772,23 +777,88 @@ public final class AfmaBinIntraPayloadHelper {
 
     @Nullable
     protected static ScoredPayloadCandidate buildBestCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate) throws IOException {
+        if (pixelCandidate.isSolidColor()) {
+            return buildSolidCandidate(width, height, pixelCandidate);
+        }
+
         ScoredPayloadCandidate bestCandidate = null;
-        bestCandidate = pickBetterCandidate(bestCandidate, buildSolidCandidate(width, height, pixelCandidate));
-        bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedCandidate(width, height, pixelCandidate, PaletteOrdering.FREQUENCY));
-        bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedCandidate(width, height, pixelCandidate, PaletteOrdering.STABLE_COLOR));
+        int pixelCount = width * height;
+        Map<Integer, Integer> fullColorCounts = pixelCandidate.fullColorCounts();
+        int fullPaletteSize = (fullColorCounts != null) ? fullColorCounts.size() : Integer.MAX_VALUE;
+        boolean paletteCandidateScheduled = false;
+        if (shouldTryIndexedMode(fullPaletteSize, pixelCount)) {
+            paletteCandidateScheduled = true;
+            bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedCandidate(width, height, pixelCandidate, PaletteOrdering.FREQUENCY));
+            if (shouldTryStableIndexedMode(fullPaletteSize, pixelCount)) {
+                bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedCandidate(width, height, pixelCandidate, PaletteOrdering.STABLE_COLOR));
+            }
+        }
 
         if (pixelCandidate.hasAlpha()) {
-            bestCandidate = pickBetterCandidate(bestCandidate, buildFilteredCandidate(width, height, pixelCandidate, Mode.RGBA_FILTERED));
-            bestCandidate = pickBetterCandidate(bestCandidate, buildPlanarFilteredCandidate(width, height, pixelCandidate, Mode.RGBA_PLANAR_FILTERED));
-            bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedColorPlusAlphaCandidate(width, height, pixelCandidate, PaletteOrdering.FREQUENCY));
-            bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedColorPlusAlphaCandidate(width, height, pixelCandidate, PaletteOrdering.STABLE_COLOR));
-            bestCandidate = pickBetterCandidate(bestCandidate, buildSplitAlphaCandidate(width, height, pixelCandidate));
-            bestCandidate = pickBetterCandidate(bestCandidate, buildColorPlusAlphaMaskCandidate(width, height, pixelCandidate));
+            if (pixelCandidate.hasUniformRgb() && pixelCandidate.alphaVaries()) {
+                return buildColorPlusAlphaMaskCandidate(width, height, pixelCandidate);
+            }
+
+            boolean preferPlanarTruecolor = pixelCandidate.alphaVaries();
+            bestCandidate = pickBetterCandidate(bestCandidate, preferPlanarTruecolor
+                    ? buildPlanarFilteredCandidate(width, height, pixelCandidate, Mode.RGBA_PLANAR_FILTERED)
+                    : buildFilteredCandidate(width, height, pixelCandidate, Mode.RGBA_FILTERED));
+
+            Map<Integer, Integer> rgbColorCounts = pixelCandidate.rgbColorCounts();
+            int rgbPaletteSize = (rgbColorCounts != null) ? rgbColorCounts.size() : Integer.MAX_VALUE;
+            boolean indexedColorAlphaCandidateScheduled = false;
+            if (pixelCandidate.alphaVaries() && shouldTryIndexedColorPlusAlphaMode(rgbPaletteSize, pixelCount)) {
+                indexedColorAlphaCandidateScheduled = true;
+                bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedColorPlusAlphaCandidate(width, height, pixelCandidate, PaletteOrdering.FREQUENCY));
+                if (shouldTryStableIndexedColorPlusAlphaMode(rgbPaletteSize, pixelCount)) {
+                    bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedColorPlusAlphaCandidate(width, height, pixelCandidate, PaletteOrdering.STABLE_COLOR));
+                }
+            }
+
+            if (pixelCandidate.alphaVaries()) {
+                bestCandidate = pickBetterCandidate(bestCandidate, buildSplitAlphaCandidate(width, height, pixelCandidate));
+            }
+
+            if (shouldTrySecondaryTruecolorMode(pixelCount, paletteCandidateScheduled || indexedColorAlphaCandidateScheduled)) {
+                bestCandidate = pickBetterCandidate(bestCandidate, preferPlanarTruecolor
+                        ? buildFilteredCandidate(width, height, pixelCandidate, Mode.RGBA_FILTERED)
+                        : buildPlanarFilteredCandidate(width, height, pixelCandidate, Mode.RGBA_PLANAR_FILTERED));
+            }
         } else {
             bestCandidate = pickBetterCandidate(bestCandidate, buildFilteredCandidate(width, height, pixelCandidate, Mode.RGB_FILTERED));
-            bestCandidate = pickBetterCandidate(bestCandidate, buildPlanarFilteredCandidate(width, height, pixelCandidate, Mode.RGB_PLANAR_FILTERED));
+            if (shouldTrySecondaryTruecolorMode(pixelCount, paletteCandidateScheduled)) {
+                bestCandidate = pickBetterCandidate(bestCandidate, buildPlanarFilteredCandidate(width, height, pixelCandidate, Mode.RGB_PLANAR_FILTERED));
+            }
         }
         return bestCandidate;
+    }
+
+    protected static boolean shouldTryIndexedMode(int paletteSize, int pixelCount) {
+        return (paletteSize > 0)
+                && ((paletteSize <= INDEXED_PRIMARY_MAX_PALETTE_COLORS)
+                || ((paletteSize <= 160) && ((long) paletteSize * 4L <= pixelCount)));
+    }
+
+    protected static boolean shouldTryStableIndexedMode(int paletteSize, int pixelCount) {
+        return (paletteSize > 0)
+                && ((paletteSize <= INDEXED_STABLE_MAX_PALETTE_COLORS)
+                || ((paletteSize <= 48) && ((long) paletteSize * 8L <= pixelCount)));
+    }
+
+    protected static boolean shouldTryIndexedColorPlusAlphaMode(int paletteSize, int pixelCount) {
+        return (paletteSize > 0)
+                && ((paletteSize <= INDEXED_COLOR_ALPHA_PRIMARY_MAX_PALETTE_COLORS)
+                || ((paletteSize <= 192) && ((long) paletteSize * 3L <= pixelCount)));
+    }
+
+    protected static boolean shouldTryStableIndexedColorPlusAlphaMode(int paletteSize, int pixelCount) {
+        return (paletteSize > 0)
+                && ((paletteSize <= INDEXED_COLOR_ALPHA_STABLE_MAX_PALETTE_COLORS)
+                || ((paletteSize <= 64) && ((long) paletteSize * 6L <= pixelCount)));
+    }
+
+    protected static boolean shouldTrySecondaryTruecolorMode(int pixelCount, boolean paletteCandidateScheduled) {
+        return (pixelCount <= SECONDARY_TRUECOLOR_MODE_MAX_PIXELS) || !paletteCandidateScheduled;
     }
 
     @Nullable
