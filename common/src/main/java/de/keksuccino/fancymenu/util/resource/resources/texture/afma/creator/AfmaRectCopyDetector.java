@@ -8,8 +8,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class AfmaRectCopyDetector {
@@ -257,6 +259,11 @@ public class AfmaRectCopyDetector {
     @NotNull
     protected List<MotionVector> collectCandidateMotionVectors(@NotNull MotionSearchAnalysis motionSearchAnalysis,
                                                                int width, int height) {
+        List<MotionVector> cachedCandidateVectors = motionSearchAnalysis.candidateMotionVectors();
+        if (cachedCandidateVectors != null) {
+            return cachedCandidateVectors;
+        }
+
         ArrayList<MotionVector> candidateVectors = new ArrayList<>(
                 motionSearchAnalysis.candidateDx().size() * motionSearchAnalysis.candidateDy().size()
         );
@@ -270,7 +277,9 @@ public class AfmaRectCopyDetector {
                 }
             }
         }
-        return candidateVectors;
+        List<MotionVector> cachedVectors = List.copyOf(candidateVectors);
+        motionSearchAnalysis.cacheCandidateMotionVectors(cachedVectors);
+        return cachedVectors;
     }
 
     protected void ensureRankedMotionVectors(@NotNull AfmaFramePairAnalysis pairAnalysis, @NotNull MotionSearchAnalysis motionSearchAnalysis) {
@@ -284,7 +293,8 @@ public class AfmaRectCopyDetector {
         ArrayList<ScoredMotionVector> scoredVectors = new ArrayList<>(
                 (motionSearchAnalysis.candidateDx().size() * motionSearchAnalysis.candidateDy().size()) + 1
         );
-        scoredVectors.add(new ScoredMotionVector(new MotionVector(0, 0), this.scoreMotionVector(pairAnalysis, 0, 0)));
+        scoredVectors.add(new ScoredMotionVector(new MotionVector(0, 0),
+                this.getOrComputeMotionVectorScore(pairAnalysis, motionSearchAnalysis, 0, 0)));
         for (int dx : motionSearchAnalysis.candidateDx()) {
             for (int dy : motionSearchAnalysis.candidateDy()) {
                 if ((dx == 0) && (dy == 0)) {
@@ -299,7 +309,7 @@ public class AfmaRectCopyDetector {
 
                 scoredVectors.add(new ScoredMotionVector(
                         new MotionVector(dx, dy),
-                        this.scoreMotionVector(pairAnalysis, dx, dy)
+                        this.getOrComputeMotionVectorScore(pairAnalysis, motionSearchAnalysis, dx, dy)
                 ));
             }
         }
@@ -335,7 +345,7 @@ public class AfmaRectCopyDetector {
 
         if (candidateVectors.size() <= maxNonZeroVectors) {
             motionSearchAnalysis.cacheTopRankedMotionVectorsWithoutZero(
-                    this.rankMotionVectorsByScore(pairAnalysis, candidateVectors, maxNonZeroVectors),
+                    this.rankMotionVectorsByScore(pairAnalysis, motionSearchAnalysis, candidateVectors, maxNonZeroVectors),
                     true
             );
             return;
@@ -347,6 +357,7 @@ public class AfmaRectCopyDetector {
         );
         List<MotionVector> firstStageFrontier = this.shortlistMotionVectorsByHash(
                 pairAnalysis,
+                motionSearchAnalysis,
                 candidateVectors,
                 firstStageLimit,
                 MOTION_HASH_STAGE_ONE_COLUMNS,
@@ -365,6 +376,7 @@ public class AfmaRectCopyDetector {
         );
         List<MotionVector> secondStageFrontier = this.shortlistMotionVectorsByHash(
                 pairAnalysis,
+                motionSearchAnalysis,
                 expandedFirstStageFrontier,
                 secondStageLimit,
                 MOTION_HASH_STAGE_TWO_COLUMNS,
@@ -378,13 +390,14 @@ public class AfmaRectCopyDetector {
                 1
         );
         motionSearchAnalysis.cacheTopRankedMotionVectorsWithoutZero(
-                this.rankMotionVectorsByScore(pairAnalysis, finalFrontier, maxNonZeroVectors),
+                this.rankMotionVectorsByScore(pairAnalysis, motionSearchAnalysis, finalFrontier, maxNonZeroVectors),
                 false
         );
     }
 
     @NotNull
     protected List<MotionVector> shortlistMotionVectorsByHash(@NotNull AfmaFramePairAnalysis pairAnalysis,
+                                                              @NotNull MotionSearchAnalysis motionSearchAnalysis,
                                                               @NotNull List<MotionVector> motionVectors, int maxVectors,
                                                               int sampleColumns, int sampleRows) {
         ArrayList<ScoredMotionVector> rankedVectors = new ArrayList<>(Math.min(maxVectors, motionVectors.size()));
@@ -394,7 +407,14 @@ public class AfmaRectCopyDetector {
                     maxVectors,
                     motionVector.dx(),
                     motionVector.dy(),
-                    this.scoreMotionVectorHash(pairAnalysis, motionVector.dx(), motionVector.dy(), sampleColumns, sampleRows)
+                    this.getOrComputeMotionVectorHashScore(
+                            pairAnalysis,
+                            motionSearchAnalysis,
+                            motionVector.dx(),
+                            motionVector.dy(),
+                            sampleColumns,
+                            sampleRows
+                    )
             );
         }
         return this.extractMotionVectors(rankedVectors);
@@ -402,6 +422,7 @@ public class AfmaRectCopyDetector {
 
     @NotNull
     protected List<MotionVector> rankMotionVectorsByScore(@NotNull AfmaFramePairAnalysis pairAnalysis,
+                                                          @NotNull MotionSearchAnalysis motionSearchAnalysis,
                                                           @NotNull List<MotionVector> motionVectors, int maxVectors) {
         ArrayList<ScoredMotionVector> rankedVectors = new ArrayList<>(Math.min(maxVectors, motionVectors.size()));
         for (MotionVector motionVector : motionVectors) {
@@ -410,10 +431,38 @@ public class AfmaRectCopyDetector {
                     maxVectors,
                     motionVector.dx(),
                     motionVector.dy(),
-                    this.scoreMotionVector(pairAnalysis, motionVector.dx(), motionVector.dy())
+                    this.getOrComputeMotionVectorScore(pairAnalysis, motionSearchAnalysis, motionVector.dx(), motionVector.dy())
             );
         }
         return this.extractMotionVectors(rankedVectors);
+    }
+
+    protected double getOrComputeMotionVectorScore(@NotNull AfmaFramePairAnalysis pairAnalysis,
+                                                   @NotNull MotionSearchAnalysis motionSearchAnalysis,
+                                                   int dx, int dy) {
+        long motionVectorKey = packMotionVector(dx, dy);
+        Double cachedScore = motionSearchAnalysis.cachedMotionVectorScore(motionVectorKey);
+        if (cachedScore != null) {
+            return cachedScore;
+        }
+
+        double score = this.scoreMotionVector(pairAnalysis, dx, dy);
+        motionSearchAnalysis.cacheMotionVectorScore(motionVectorKey, score);
+        return score;
+    }
+
+    protected double getOrComputeMotionVectorHashScore(@NotNull AfmaFramePairAnalysis pairAnalysis,
+                                                       @NotNull MotionSearchAnalysis motionSearchAnalysis,
+                                                       int dx, int dy, int sampleColumns, int sampleRows) {
+        long motionVectorKey = packMotionVector(dx, dy);
+        Double cachedScore = motionSearchAnalysis.cachedMotionVectorHashScore(sampleColumns, sampleRows, motionVectorKey);
+        if (cachedScore != null) {
+            return cachedScore;
+        }
+
+        double score = this.scoreMotionVectorHash(pairAnalysis, dx, dy, sampleColumns, sampleRows);
+        motionSearchAnalysis.cacheMotionVectorHashScore(sampleColumns, sampleRows, motionVectorKey, score);
+        return score;
     }
 
     @NotNull
@@ -888,12 +937,18 @@ public class AfmaRectCopyDetector {
         @NotNull
         private final List<Integer> candidateDy;
         @Nullable
+        private List<MotionVector> candidateMotionVectors;
+        @Nullable
         private List<MotionVector> rankedMotionVectors;
         @Nullable
         private List<MotionVector> rankedMotionVectorsWithoutZero;
         @Nullable
         private List<MotionVector> topRankedMotionVectorsWithoutZero;
         private boolean topRankedMotionVectorsWithoutZeroComplete;
+        @Nullable
+        private Map<Long, Double> motionVectorScoresByKey;
+        @Nullable
+        private Map<HashSamplingKey, Map<Long, Double>> motionVectorHashScoresBySampling;
 
         protected MotionSearchAnalysis(@NotNull List<Integer> candidateDx, @NotNull List<Integer> candidateDy) {
             this.candidateDx = List.copyOf(candidateDx);
@@ -908,6 +963,14 @@ public class AfmaRectCopyDetector {
         @NotNull
         public List<Integer> candidateDy() {
             return this.candidateDy;
+        }
+
+        public @Nullable List<MotionVector> candidateMotionVectors() {
+            return this.candidateMotionVectors;
+        }
+
+        public void cacheCandidateMotionVectors(@NotNull List<MotionVector> candidateMotionVectors) {
+            this.candidateMotionVectors = candidateMotionVectors;
         }
 
         public boolean hasRankedMotionVectors() {
@@ -965,6 +1028,37 @@ public class AfmaRectCopyDetector {
             return this.topRankedMotionVectorsWithoutZero.subList(0, maxCount);
         }
 
+        public @Nullable Double cachedMotionVectorScore(long motionVectorKey) {
+            return (this.motionVectorScoresByKey != null) ? this.motionVectorScoresByKey.get(motionVectorKey) : null;
+        }
+
+        public void cacheMotionVectorScore(long motionVectorKey, double score) {
+            if (this.motionVectorScoresByKey == null) {
+                this.motionVectorScoresByKey = new HashMap<>();
+            }
+            this.motionVectorScoresByKey.put(motionVectorKey, score);
+        }
+
+        public @Nullable Double cachedMotionVectorHashScore(int sampleColumns, int sampleRows, long motionVectorKey) {
+            if (this.motionVectorHashScoresBySampling == null) {
+                return null;
+            }
+            Map<Long, Double> scoresByVector = this.motionVectorHashScoresBySampling.get(new HashSamplingKey(sampleColumns, sampleRows));
+            return (scoresByVector != null) ? scoresByVector.get(motionVectorKey) : null;
+        }
+
+        public void cacheMotionVectorHashScore(int sampleColumns, int sampleRows, long motionVectorKey, double score) {
+            if (this.motionVectorHashScoresBySampling == null) {
+                this.motionVectorHashScoresBySampling = new HashMap<>();
+            }
+            this.motionVectorHashScoresBySampling
+                    .computeIfAbsent(new HashSamplingKey(sampleColumns, sampleRows), ignored -> new HashMap<>())
+                    .put(motionVectorKey, score);
+        }
+
+    }
+
+    protected record HashSamplingKey(int sampleColumns, int sampleRows) {
     }
 
     protected record AxisCandidate(int offset, double score) {

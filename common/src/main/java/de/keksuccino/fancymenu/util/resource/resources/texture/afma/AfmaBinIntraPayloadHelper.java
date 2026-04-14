@@ -9,6 +9,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,10 @@ public final class AfmaBinIntraPayloadHelper {
     protected static final int INDEXED_COLOR_ALPHA_PRIMARY_MAX_PALETTE_COLORS = 128;
     protected static final int INDEXED_COLOR_ALPHA_STABLE_MAX_PALETTE_COLORS = 32;
     protected static final int SECONDARY_TRUECOLOR_MODE_MAX_PIXELS = 16384;
+    protected static final int MAX_EXHAUSTIVE_MODE_SELECTION_PIXELS = 16384;
+    protected static final int MODE_ESTIMATE_SAMPLE_ROWS = 8;
+    protected static final int MAX_SHORTLISTED_MODE_CANDIDATES = 4;
+    protected static final int MAX_SHORTLISTED_MODE_CANDIDATES_PER_FAMILY = 2;
     protected static final int MIN_PARALLEL_MODE_SELECTION_PIXELS = 65536;
     protected static final long MIN_PARALLEL_MODE_SELECTION_HEADROOM_BYTES = 192L * 1024L * 1024L;
 
@@ -233,34 +238,22 @@ public final class AfmaBinIntraPayloadHelper {
         if (colorCounts == null) {
             return null;
         }
-
-        int[] pixels = pixelCandidate.pixels();
-        List<Map.Entry<Integer, Integer>> paletteEntries = new ArrayList<>(colorCounts.entrySet());
-        sortPaletteEntries(paletteEntries, paletteOrdering);
-
-        int[] palette = new int[paletteEntries.size()];
-        Map<Integer, Integer> colorToIndex = new HashMap<>(paletteEntries.size() * 2);
         boolean paletteHasAlpha = pixelCandidate.hasAlpha();
-        for (int i = 0; i < paletteEntries.size(); i++) {
-            int color = paletteEntries.get(i).getKey();
-            palette[i] = color;
-            colorToIndex.put(color, i);
-        }
+        IndexedModeContext indexedModeContext = prepareIndexedModeContext(width, colorCounts, paletteOrdering, false);
+        return buildIndexedCandidate(width, height, pixelCandidate, indexedModeContext, paletteHasAlpha,
+                paletteOrdering == PaletteOrdering.STABLE_COLOR ? 0 : 1);
+    }
 
-        int bitsPerIndex = paletteBits(palette.length);
-        for (int i = 0; i < pixels.length; i++) {
-            Integer paletteIndex = colorToIndex.get(pixels[i]);
-            if (paletteIndex == null) {
-                throw new IOException("AFMA BIN_INTRA palette index lookup failed");
-            }
-        }
-
-        int packedRowBytes = packedRowBytes(width, bitsPerIndex);
-        return scoreCandidate(Mode.INDEXED, pixelCandidate.pixels(), pixelCandidate.lossless(),
-                paletteOrdering == PaletteOrdering.STABLE_COLOR ? 0 : 1, out -> {
+    @NotNull
+    protected static ScoredPayloadCandidate buildIndexedCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate,
+                                                                  @NotNull IndexedModeContext indexedModeContext,
+                                                                  boolean paletteHasAlpha, int stabilityPriority) throws IOException {
+        int[] pixels = pixelCandidate.pixels();
+        int[] palette = indexedModeContext.palette();
+        return scoreCandidate(Mode.INDEXED, pixelCandidate.pixels(), pixelCandidate.lossless(), stabilityPriority, out -> {
             writeHeader(out, Mode.INDEXED, width, height);
             out.writeByte(paletteHasAlpha ? 1 : 0);
-            out.writeByte(bitsPerIndex);
+            out.writeByte(indexedModeContext.bitsPerIndex());
             out.writeShort(palette.length);
             for (int color : palette) {
                 out.writeByte((color >> 16) & 0xFF);
@@ -270,12 +263,12 @@ public final class AfmaBinIntraPayloadHelper {
                     out.writeByte((color >>> 24) & 0xFF);
                 }
             }
-            writeFilteredRows(out, packedRowBytes, height, 1, (rowIndex, rowBuffer) -> fillPaletteIndexRow(
+            writeFilteredRows(out, indexedModeContext.packedRowBytes(), height, 1, (rowIndex, rowBuffer) -> fillPaletteIndexRow(
                     pixels,
                     width,
                     rowIndex,
-                    bitsPerIndex,
-                    colorToIndex,
+                    indexedModeContext.bitsPerIndex(),
+                    indexedModeContext.colorToIndex(),
                     false,
                     rowBuffer
             ));
@@ -332,29 +325,17 @@ public final class AfmaBinIntraPayloadHelper {
         if (rgbCounts == null) {
             return null;
         }
+        IndexedModeContext indexedModeContext = prepareIndexedModeContext(width, rgbCounts, paletteOrdering, true);
+        return buildIndexedColorPlusAlphaCandidate(width, height, pixelCandidate, indexedModeContext,
+                paletteOrdering == PaletteOrdering.STABLE_COLOR ? 0 : 1);
+    }
 
+    @NotNull
+    protected static ScoredPayloadCandidate buildIndexedColorPlusAlphaCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate,
+                                                                                @NotNull IndexedModeContext indexedModeContext,
+                                                                                int stabilityPriority) throws IOException {
         int[] pixels = pixelCandidate.pixels();
-        List<Map.Entry<Integer, Integer>> paletteEntries = new ArrayList<>(rgbCounts.entrySet());
-        sortPaletteEntries(paletteEntries, paletteOrdering);
-
-        int[] palette = new int[paletteEntries.size()];
-        Map<Integer, Integer> colorToIndex = new HashMap<>(paletteEntries.size() * 2);
-        for (int i = 0; i < paletteEntries.size(); i++) {
-            int rgb = paletteEntries.get(i).getKey() & 0x00FFFFFF;
-            palette[i] = rgb;
-            colorToIndex.put(rgb, i);
-        }
-
-        int bitsPerIndex = paletteBits(palette.length);
-        for (int i = 0; i < pixels.length; i++) {
-            int color = pixels[i];
-            Integer paletteIndex = colorToIndex.get(color & 0x00FFFFFF);
-            if (paletteIndex == null) {
-                throw new IOException("AFMA BIN_INTRA indexed-color palette index lookup failed");
-            }
-        }
-
-        int packedRowBytes = packedRowBytes(width, bitsPerIndex);
+        int[] palette = indexedModeContext.palette();
         int alphaMode;
         if (pixelCandidate.binaryAlpha()) {
             alphaMode = AlphaMaskMode.BINARY.id();
@@ -363,22 +344,22 @@ public final class AfmaBinIntraPayloadHelper {
         }
 
         return scoreCandidate(Mode.INDEXED_COLOR_PLUS_ALPHA, pixelCandidate.pixels(), pixelCandidate.lossless(),
-                paletteOrdering == PaletteOrdering.STABLE_COLOR ? 0 : 1, out -> {
+                stabilityPriority, out -> {
             writeHeader(out, Mode.INDEXED_COLOR_PLUS_ALPHA, width, height);
             out.writeByte(alphaMode);
-            out.writeByte(bitsPerIndex);
+            out.writeByte(indexedModeContext.bitsPerIndex());
             out.writeShort(palette.length);
             for (int rgb : palette) {
                 out.writeByte((rgb >> 16) & 0xFF);
                 out.writeByte((rgb >> 8) & 0xFF);
                 out.writeByte(rgb & 0xFF);
             }
-            writeFilteredRows(out, packedRowBytes, height, 1, (rowIndex, rowBuffer) -> fillPaletteIndexRow(
+            writeFilteredRows(out, indexedModeContext.packedRowBytes(), height, 1, (rowIndex, rowBuffer) -> fillPaletteIndexRow(
                     pixels,
                     width,
                     rowIndex,
-                    bitsPerIndex,
-                    colorToIndex,
+                    indexedModeContext.bitsPerIndex(),
+                    indexedModeContext.colorToIndex(),
                     true,
                     rowBuffer
             ));
@@ -744,6 +725,103 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     @NotNull
+    protected static IndexedModeContext prepareIndexedModeContext(int width, @NotNull Map<Integer, Integer> colorCounts,
+                                                                  @NotNull PaletteOrdering paletteOrdering,
+                                                                  boolean rgbOnly) {
+        List<Map.Entry<Integer, Integer>> paletteEntries = new ArrayList<>(colorCounts.entrySet());
+        sortPaletteEntries(paletteEntries, paletteOrdering);
+
+        int[] palette = new int[paletteEntries.size()];
+        Map<Integer, Integer> colorToIndex = new HashMap<>(paletteEntries.size() * 2);
+        for (int i = 0; i < paletteEntries.size(); i++) {
+            int color = paletteEntries.get(i).getKey();
+            int paletteColor = rgbOnly ? (color & 0x00FFFFFF) : color;
+            palette[i] = paletteColor;
+            colorToIndex.put(paletteColor, i);
+        }
+
+        int bitsPerIndex = paletteBits(palette.length);
+        return new IndexedModeContext(palette, colorToIndex, bitsPerIndex, packedRowBytes(width, bitsPerIndex));
+    }
+
+    protected static long payloadHeaderBytes() {
+        return 10L;
+    }
+
+    protected static long filteredStreamPayloadLength(int rowBytes, int height) {
+        return (long) height * ((long) rowBytes + 1L);
+    }
+
+    protected static long estimateFilteredStreamArchiveBytes(int rowBytes, int height, int bytesPerPixel,
+                                                             @NotNull RowWriter rowWriter) throws IOException {
+        if (rowBytes <= 0 || height <= 0 || bytesPerPixel <= 0) {
+            return 0L;
+        }
+
+        // Sample a few representative rows so large regions can rank modes without serializing every filtered stream.
+        int[] sampledRows = buildEstimateRowIndices(height);
+        byte[] previousRow = new byte[rowBytes];
+        byte[] currentRow = new byte[rowBytes];
+        byte[] bestRow = new byte[rowBytes];
+        byte[] candidateRow = new byte[rowBytes];
+        long sampledFilterScore = 0L;
+        long sampledNonZeroBytes = 0L;
+        for (int rowIndex : sampledRows) {
+            if (rowIndex <= 0) {
+                Arrays.fill(previousRow, (byte) 0);
+            } else {
+                rowWriter.fillRow(rowIndex - 1, previousRow);
+            }
+            rowWriter.fillRow(rowIndex, currentRow);
+            FilterSelection selection = selectBestFilter(currentRow, 0, rowBytes, previousRow, bytesPerPixel, bestRow, candidateRow);
+            sampledFilterScore += selection.score();
+            sampledNonZeroBytes += countNonZeroBytes(bestRow, rowBytes);
+        }
+
+        long rawDataBytes = (long) rowBytes * height;
+        double rowScale = (double) height / sampledRows.length;
+        long estimatedDataBytes = Math.round((((double) sampledFilterScore) / 32.0D
+                + ((double) sampledNonZeroBytes) / 3.0D) * rowScale);
+        if (estimatedDataBytes < 0L) {
+            estimatedDataBytes = 0L;
+        } else if (estimatedDataBytes > rawDataBytes) {
+            estimatedDataBytes = rawDataBytes;
+        }
+        return height + estimatedDataBytes;
+    }
+
+    protected static int[] buildEstimateRowIndices(int height) {
+        int sampleCount = Math.min(height, MODE_ESTIMATE_SAMPLE_ROWS);
+        int[] sampledRows = new int[sampleCount];
+        if (sampleCount >= height) {
+            for (int rowIndex = 0; rowIndex < height; rowIndex++) {
+                sampledRows[rowIndex] = rowIndex;
+            }
+            return sampledRows;
+        }
+        if (sampleCount == 1) {
+            sampledRows[0] = 0;
+            return sampledRows;
+        }
+        long rowRange = height - 1L;
+        long sampleRange = sampleCount - 1L;
+        for (int sampleIndex = 0; sampleIndex < sampleCount; sampleIndex++) {
+            sampledRows[sampleIndex] = (int) ((sampleIndex * rowRange) / sampleRange);
+        }
+        return sampledRows;
+    }
+
+    protected static int countNonZeroBytes(@NotNull byte[] bytes, int length) {
+        int nonZeroBytes = 0;
+        for (int i = 0; i < length; i++) {
+            if (bytes[i] != 0) {
+                nonZeroBytes++;
+            }
+        }
+        return nonZeroBytes;
+    }
+
+    @NotNull
     protected static byte[] encodeFilteredRows(@NotNull byte[] rawBytes, int rowBytes, int height, int bytesPerPixel) {
         return encodeFilteredRows(rawBytes, 0, rowBytes, height, bytesPerPixel);
     }
@@ -781,56 +859,285 @@ public final class AfmaBinIntraPayloadHelper {
             return buildSolidCandidate(width, height, pixelCandidate);
         }
 
-        ScoredPayloadCandidate bestCandidate = null;
+        if (pixelCandidate.hasAlpha()) {
+            if (pixelCandidate.hasUniformRgb() && pixelCandidate.alphaVaries()) {
+                return buildColorPlusAlphaMaskCandidate(width, height, pixelCandidate);
+            }
+        }
+
+        List<ModePlan> modePlans = collectModePlans(width, height, pixelCandidate);
+        if (modePlans.isEmpty()) {
+            return null;
+        }
+        if (!shouldEvaluateAllModePlans(width, height, modePlans.size())) {
+            modePlans = shortlistModePlans(modePlans);
+        }
+        return evaluateModePlans(modePlans);
+    }
+
+    @NotNull
+    protected static List<ModePlan> collectModePlans(int width, int height, @NotNull PixelCandidateContext pixelCandidate) throws IOException {
+        List<ModePlan> modePlans = new ArrayList<>(8);
         int pixelCount = width * height;
         Map<Integer, Integer> fullColorCounts = pixelCandidate.fullColorCounts();
         int fullPaletteSize = (fullColorCounts != null) ? fullColorCounts.size() : Integer.MAX_VALUE;
         boolean paletteCandidateScheduled = false;
         if (shouldTryIndexedMode(fullPaletteSize, pixelCount)) {
             paletteCandidateScheduled = true;
-            bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedCandidate(width, height, pixelCandidate, PaletteOrdering.FREQUENCY));
+            addModePlan(modePlans, buildIndexedModePlan(width, height, pixelCandidate, PaletteOrdering.FREQUENCY));
             if (shouldTryStableIndexedMode(fullPaletteSize, pixelCount)) {
-                bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedCandidate(width, height, pixelCandidate, PaletteOrdering.STABLE_COLOR));
+                addModePlan(modePlans, buildIndexedModePlan(width, height, pixelCandidate, PaletteOrdering.STABLE_COLOR));
             }
         }
 
         if (pixelCandidate.hasAlpha()) {
-            if (pixelCandidate.hasUniformRgb() && pixelCandidate.alphaVaries()) {
-                return buildColorPlusAlphaMaskCandidate(width, height, pixelCandidate);
-            }
-
             boolean preferPlanarTruecolor = pixelCandidate.alphaVaries();
-            bestCandidate = pickBetterCandidate(bestCandidate, preferPlanarTruecolor
-                    ? buildPlanarFilteredCandidate(width, height, pixelCandidate, Mode.RGBA_PLANAR_FILTERED)
-                    : buildFilteredCandidate(width, height, pixelCandidate, Mode.RGBA_FILTERED));
+            addModePlan(modePlans, preferPlanarTruecolor
+                    ? buildPlanarFilteredModePlan(width, height, pixelCandidate, Mode.RGBA_PLANAR_FILTERED)
+                    : buildFilteredModePlan(width, height, pixelCandidate, Mode.RGBA_FILTERED));
 
             Map<Integer, Integer> rgbColorCounts = pixelCandidate.rgbColorCounts();
             int rgbPaletteSize = (rgbColorCounts != null) ? rgbColorCounts.size() : Integer.MAX_VALUE;
             boolean indexedColorAlphaCandidateScheduled = false;
             if (pixelCandidate.alphaVaries() && shouldTryIndexedColorPlusAlphaMode(rgbPaletteSize, pixelCount)) {
                 indexedColorAlphaCandidateScheduled = true;
-                bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedColorPlusAlphaCandidate(width, height, pixelCandidate, PaletteOrdering.FREQUENCY));
+                addModePlan(modePlans, buildIndexedColorPlusAlphaModePlan(width, height, pixelCandidate, PaletteOrdering.FREQUENCY));
                 if (shouldTryStableIndexedColorPlusAlphaMode(rgbPaletteSize, pixelCount)) {
-                    bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedColorPlusAlphaCandidate(width, height, pixelCandidate, PaletteOrdering.STABLE_COLOR));
+                    addModePlan(modePlans, buildIndexedColorPlusAlphaModePlan(width, height, pixelCandidate, PaletteOrdering.STABLE_COLOR));
                 }
             }
 
             if (pixelCandidate.alphaVaries()) {
-                bestCandidate = pickBetterCandidate(bestCandidate, buildSplitAlphaCandidate(width, height, pixelCandidate));
+                addModePlan(modePlans, buildSplitAlphaModePlan(width, height, pixelCandidate));
             }
 
             if (shouldTrySecondaryTruecolorMode(pixelCount, paletteCandidateScheduled || indexedColorAlphaCandidateScheduled)) {
-                bestCandidate = pickBetterCandidate(bestCandidate, preferPlanarTruecolor
-                        ? buildFilteredCandidate(width, height, pixelCandidate, Mode.RGBA_FILTERED)
-                        : buildPlanarFilteredCandidate(width, height, pixelCandidate, Mode.RGBA_PLANAR_FILTERED));
+                addModePlan(modePlans, preferPlanarTruecolor
+                        ? buildFilteredModePlan(width, height, pixelCandidate, Mode.RGBA_FILTERED)
+                        : buildPlanarFilteredModePlan(width, height, pixelCandidate, Mode.RGBA_PLANAR_FILTERED));
             }
         } else {
-            bestCandidate = pickBetterCandidate(bestCandidate, buildFilteredCandidate(width, height, pixelCandidate, Mode.RGB_FILTERED));
+            addModePlan(modePlans, buildFilteredModePlan(width, height, pixelCandidate, Mode.RGB_FILTERED));
             if (shouldTrySecondaryTruecolorMode(pixelCount, paletteCandidateScheduled)) {
-                bestCandidate = pickBetterCandidate(bestCandidate, buildPlanarFilteredCandidate(width, height, pixelCandidate, Mode.RGB_PLANAR_FILTERED));
+                addModePlan(modePlans, buildPlanarFilteredModePlan(width, height, pixelCandidate, Mode.RGB_PLANAR_FILTERED));
             }
         }
+        return modePlans;
+    }
+
+    protected static void addModePlan(@NotNull List<ModePlan> modePlans, @Nullable ModePlan modePlan) {
+        if (modePlan != null) {
+            modePlans.add(modePlan);
+        }
+    }
+
+    protected static boolean shouldEvaluateAllModePlans(int width, int height, int modePlanCount) {
+        long pixelCount = (long) width * height;
+        return (modePlanCount <= MAX_SHORTLISTED_MODE_CANDIDATES) || (pixelCount <= MAX_EXHAUSTIVE_MODE_SELECTION_PIXELS);
+    }
+
+    @NotNull
+    protected static List<ModePlan> shortlistModePlans(@NotNull List<ModePlan> modePlans) throws IOException {
+        ArrayList<EstimatedModePlan> estimatedPlans = new ArrayList<>(modePlans.size());
+        for (ModePlan modePlan : modePlans) {
+            estimatedPlans.add(new EstimatedModePlan(modePlan, modePlan.estimateBytes()));
+        }
+        estimatedPlans.sort((first, second) -> {
+            int compare = Long.compare(first.estimatedBytes(), second.estimatedBytes());
+            if (compare != 0) {
+                return compare;
+            }
+            compare = Long.compare(first.plan().payloadLength(), second.plan().payloadLength());
+            if (compare != 0) {
+                return compare;
+            }
+            compare = Integer.compare(first.plan().stabilityPriority(), second.plan().stabilityPriority());
+            if (compare != 0) {
+                return compare;
+            }
+            return Integer.compare(first.plan().mode().priority(), second.plan().mode().priority());
+        });
+        if (estimatedPlans.size() <= MAX_SHORTLISTED_MODE_CANDIDATES) {
+            return extractModePlans(estimatedPlans);
+        }
+
+        ArrayList<EstimatedModePlan> shortlistedPlans = new ArrayList<>(MAX_SHORTLISTED_MODE_CANDIDATES);
+        EnumMap<ModeFamily, Integer> familyCounts = new EnumMap<>(ModeFamily.class);
+        // Keep a strong baseline from each family before filling the remaining shortlist slots by estimate.
+        for (EstimatedModePlan estimatedPlan : estimatedPlans) {
+            if (shortlistedPlans.size() >= MAX_SHORTLISTED_MODE_CANDIDATES) {
+                break;
+            }
+            if (familyCounts.containsKey(estimatedPlan.plan().family())) {
+                continue;
+            }
+            shortlistedPlans.add(estimatedPlan);
+            familyCounts.put(estimatedPlan.plan().family(), 1);
+        }
+
+        for (EstimatedModePlan estimatedPlan : estimatedPlans) {
+            if (shortlistedPlans.size() >= MAX_SHORTLISTED_MODE_CANDIDATES) {
+                break;
+            }
+            if (shortlistedPlans.contains(estimatedPlan)) {
+                continue;
+            }
+
+            ModeFamily family = estimatedPlan.plan().family();
+            int familyCount = familyCounts.getOrDefault(family, 0);
+            if (familyCount >= MAX_SHORTLISTED_MODE_CANDIDATES_PER_FAMILY) {
+                continue;
+            }
+
+            shortlistedPlans.add(estimatedPlan);
+            familyCounts.put(family, familyCount + 1);
+        }
+        return extractModePlans(shortlistedPlans);
+    }
+
+    @NotNull
+    protected static List<ModePlan> extractModePlans(@NotNull List<EstimatedModePlan> estimatedPlans) {
+        ArrayList<ModePlan> modePlans = new ArrayList<>(estimatedPlans.size());
+        for (EstimatedModePlan estimatedPlan : estimatedPlans) {
+            modePlans.add(estimatedPlan.plan());
+        }
+        return modePlans;
+    }
+
+    @Nullable
+    protected static ScoredPayloadCandidate evaluateModePlans(@NotNull List<ModePlan> modePlans) throws IOException {
+        ScoredPayloadCandidate bestCandidate = null;
+        for (ModePlan modePlan : modePlans) {
+            bestCandidate = pickBetterCandidate(bestCandidate, modePlan.buildCandidate());
+        }
         return bestCandidate;
+    }
+
+    @Nullable
+    protected static ModePlan buildIndexedModePlan(int width, int height, @NotNull PixelCandidateContext pixelCandidate,
+                                                   @NotNull PaletteOrdering paletteOrdering) throws IOException {
+        Map<Integer, Integer> colorCounts = pixelCandidate.fullColorCounts();
+        if (colorCounts == null) {
+            return null;
+        }
+
+        boolean paletteHasAlpha = pixelCandidate.hasAlpha();
+        IndexedModeContext indexedModeContext = prepareIndexedModeContext(width, colorCounts, paletteOrdering, false);
+        long metadataBytes = payloadHeaderBytes() + 1L + 1L + 2L + ((long) indexedModeContext.palette().length * (paletteHasAlpha ? 4L : 3L));
+        long payloadLength = metadataBytes + filteredStreamPayloadLength(indexedModeContext.packedRowBytes(), height);
+        int stabilityPriority = paletteOrdering == PaletteOrdering.STABLE_COLOR ? 0 : 1;
+        int[] pixels = pixelCandidate.pixels();
+        return new ModePlan(
+                Mode.INDEXED,
+                ModeFamily.INDEXED,
+                payloadLength,
+                stabilityPriority,
+                () -> metadataBytes + estimateFilteredStreamArchiveBytes(indexedModeContext.packedRowBytes(), height, 1, (rowIndex, rowBuffer) ->
+                        fillPaletteIndexRow(pixels, width, rowIndex, indexedModeContext.bitsPerIndex(), indexedModeContext.colorToIndex(), false, rowBuffer)),
+                () -> buildIndexedCandidate(width, height, pixelCandidate, indexedModeContext, paletteHasAlpha, stabilityPriority)
+        );
+    }
+
+    @NotNull
+    protected static ModePlan buildFilteredModePlan(int width, int height, @NotNull PixelCandidateContext pixelCandidate,
+                                                    @NotNull Mode mode) {
+        int channels = switch (mode) {
+            case RGB_FILTERED -> RGB_CHANNELS;
+            case RGBA_FILTERED -> RGBA_CHANNELS;
+            default -> throw new IllegalArgumentException("Unsupported AFMA BIN_INTRA filtered mode: " + mode);
+        };
+        int[] pixels = pixelCandidate.pixels();
+        int rowBytes = width * channels;
+        long payloadLength = payloadHeaderBytes() + filteredStreamPayloadLength(rowBytes, height);
+        return new ModePlan(
+                mode,
+                ModeFamily.TRUECOLOR,
+                payloadLength,
+                1,
+                () -> payloadHeaderBytes() + estimateFilteredStreamArchiveBytes(rowBytes, height, channels,
+                        (rowIndex, rowBuffer) -> fillInterleavedColorRow(pixels, width, rowIndex, channels, rowBuffer)),
+                () -> buildFilteredCandidate(width, height, pixelCandidate, mode)
+        );
+    }
+
+    @NotNull
+    protected static ModePlan buildPlanarFilteredModePlan(int width, int height, @NotNull PixelCandidateContext pixelCandidate,
+                                                          @NotNull Mode mode) {
+        int channels = switch (mode) {
+            case RGB_PLANAR_FILTERED -> RGB_CHANNELS;
+            case RGBA_PLANAR_FILTERED -> RGBA_CHANNELS;
+            default -> throw new IllegalArgumentException("Unsupported AFMA BIN_INTRA planar mode: " + mode);
+        };
+        int[] pixels = pixelCandidate.pixels();
+        long payloadLength = payloadHeaderBytes() + ((long) channels * filteredStreamPayloadLength(width, height));
+        return new ModePlan(
+                mode,
+                ModeFamily.TRUECOLOR,
+                payloadLength,
+                1,
+                () -> {
+                    long estimatedBytes = payloadHeaderBytes();
+                    for (int channelIndex = 0; channelIndex < channels; channelIndex++) {
+                        int finalChannelIndex = channelIndex;
+                        estimatedBytes += estimateFilteredStreamArchiveBytes(width, height, 1,
+                                (rowIndex, rowBuffer) -> fillPlanarChannelRow(pixels, width, rowIndex, finalChannelIndex, rowBuffer));
+                    }
+                    return estimatedBytes;
+                },
+                () -> buildPlanarFilteredCandidate(width, height, pixelCandidate, mode)
+        );
+    }
+
+    @NotNull
+    protected static ModePlan buildSplitAlphaModePlan(int width, int height, @NotNull PixelCandidateContext pixelCandidate) {
+        int[] pixels = pixelCandidate.pixels();
+        long payloadLength = payloadHeaderBytes()
+                + filteredStreamPayloadLength(width * RGB_CHANNELS, height)
+                + filteredStreamPayloadLength(width, height);
+        return new ModePlan(
+                Mode.RGB_PLUS_ALPHA_SPLIT,
+                ModeFamily.ALPHA_SPECIAL,
+                payloadLength,
+                1,
+                () -> payloadHeaderBytes()
+                        + estimateFilteredStreamArchiveBytes(width * RGB_CHANNELS, height, RGB_CHANNELS,
+                        (rowIndex, rowBuffer) -> fillInterleavedColorRow(pixels, width, rowIndex, RGB_CHANNELS, rowBuffer))
+                        + estimateFilteredStreamArchiveBytes(width, height, 1,
+                        (rowIndex, rowBuffer) -> fillFullAlphaRow(pixels, width, rowIndex, rowBuffer)),
+                () -> buildSplitAlphaCandidate(width, height, pixelCandidate)
+        );
+    }
+
+    @Nullable
+    protected static ModePlan buildIndexedColorPlusAlphaModePlan(int width, int height, @NotNull PixelCandidateContext pixelCandidate,
+                                                                 @NotNull PaletteOrdering paletteOrdering) throws IOException {
+        Map<Integer, Integer> rgbCounts = pixelCandidate.rgbColorCounts();
+        if (rgbCounts == null) {
+            return null;
+        }
+
+        IndexedModeContext indexedModeContext = prepareIndexedModeContext(width, rgbCounts, paletteOrdering, true);
+        boolean binaryAlpha = pixelCandidate.binaryAlpha();
+        int alphaRowBytes = binaryAlpha ? packedRowBytes(width, 1) : width;
+        long metadataBytes = payloadHeaderBytes() + 1L + 1L + 2L + ((long) indexedModeContext.palette().length * 3L);
+        long payloadLength = metadataBytes
+                + filteredStreamPayloadLength(indexedModeContext.packedRowBytes(), height)
+                + filteredStreamPayloadLength(alphaRowBytes, height);
+        int stabilityPriority = paletteOrdering == PaletteOrdering.STABLE_COLOR ? 0 : 1;
+        int[] pixels = pixelCandidate.pixels();
+        return new ModePlan(
+                Mode.INDEXED_COLOR_PLUS_ALPHA,
+                ModeFamily.INDEXED,
+                payloadLength,
+                stabilityPriority,
+                () -> metadataBytes
+                        + estimateFilteredStreamArchiveBytes(indexedModeContext.packedRowBytes(), height, 1, (rowIndex, rowBuffer) ->
+                        fillPaletteIndexRow(pixels, width, rowIndex, indexedModeContext.bitsPerIndex(), indexedModeContext.colorToIndex(), true, rowBuffer))
+                        + estimateFilteredStreamArchiveBytes(alphaRowBytes, height, 1, binaryAlpha
+                        ? (rowIndex, rowBuffer) -> fillBinaryAlphaRow(pixels, width, rowIndex, rowBuffer)
+                        : (rowIndex, rowBuffer) -> fillFullAlphaRow(pixels, width, rowIndex, rowBuffer)),
+                () -> buildIndexedColorPlusAlphaCandidate(width, height, pixelCandidate, indexedModeContext, stabilityPriority)
+        );
     }
 
     protected static boolean shouldTryIndexedMode(int paletteSize, int pixelCount) {
@@ -1557,12 +1864,43 @@ public final class AfmaBinIntraPayloadHelper {
         }
     }
 
+    protected record ModePlan(@NotNull Mode mode, @NotNull ModeFamily family, long payloadLength, int stabilityPriority,
+                              @NotNull ModeEstimateBuilder estimateBuilder, @NotNull ExactCandidateBuilder exactBuilder) {
+
+        protected long estimateBytes() throws IOException {
+            return this.estimateBuilder.estimateBytes();
+        }
+
+        @NotNull
+        protected ScoredPayloadCandidate buildCandidate() throws IOException {
+            return this.exactBuilder.buildCandidate();
+        }
+    }
+
+    protected record EstimatedModePlan(@NotNull ModePlan plan, long estimatedBytes) {
+    }
+
+    protected record IndexedModeContext(@NotNull int[] palette, @NotNull Map<Integer, Integer> colorToIndex,
+                                        int bitsPerIndex, int packedRowBytes) {
+    }
+
     protected record FilterSelection(@NotNull Filter filter, long score) {
     }
 
     @FunctionalInterface
     protected interface DecodedRowConsumer {
         void accept(int rowIndex, @NotNull byte[] decodedRow, int rowBytes) throws IOException;
+    }
+
+    @FunctionalInterface
+    protected interface ModeEstimateBuilder {
+        long estimateBytes() throws IOException;
+    }
+
+    @FunctionalInterface
+    protected interface ExactCandidateBuilder {
+        @NotNull
+        ScoredPayloadCandidate buildCandidate() throws IOException;
     }
 
     @FunctionalInterface
@@ -1669,6 +2007,12 @@ public final class AfmaBinIntraPayloadHelper {
     protected enum PaletteOrdering {
         FREQUENCY,
         STABLE_COLOR
+    }
+
+    protected enum ModeFamily {
+        TRUECOLOR,
+        INDEXED,
+        ALPHA_SPECIAL
     }
 
     protected enum PerceptualProfile {

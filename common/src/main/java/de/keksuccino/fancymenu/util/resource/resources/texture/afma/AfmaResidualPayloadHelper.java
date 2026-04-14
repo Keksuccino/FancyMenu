@@ -3,6 +3,8 @@ package de.keksuccino.fancymenu.util.resource.resources.texture.afma;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
@@ -366,14 +368,17 @@ public final class AfmaResidualPayloadHelper {
                 ? transformResidualStream(alphaRawStream, alphaRawLength, alphaChangedPixelCount,
                         ALPHA_ONLY_CHANNELS, codec, workspace, false)
                 : null;
-        byte[] payloadBytes = mergeStreams(primaryBytes, colorRawLength, alphaMask, alphaMaskLength, secondaryBytes, alphaRawLength);
+        byte[] stablePrimaryBytes = copyPayloadSegment(primaryBytes, colorRawLength);
+        byte[] stableAlphaMask = copyPayloadSegment(alphaMask, alphaMaskLength);
+        byte[] stableSecondaryBytes = copyPayloadSegment(secondaryBytes, alphaRawLength);
+        AfmaStoredPayload.Writer payloadWriter = out -> writeMergedStreams(out, stablePrimaryBytes, stableAlphaMask, stableSecondaryBytes);
         return new EncodedResidualPayload(
-                payloadBytes,
+                summarizeMergedStreams(payloadWriter),
+                payloadWriter,
                 channels,
                 codec,
                 alphaMode,
                 alphaMode == AfmaAlphaResidualMode.SPARSE ? alphaChangedPixelCount : 0,
-                AfmaPayloadMetricsHelper.estimateArchiveBytes(payloadBytes),
                 codec.getComplexityScore() + (alphaMode == AfmaAlphaResidualMode.SPARSE ? 1 : 0)
         );
     }
@@ -474,23 +479,37 @@ public final class AfmaResidualPayloadHelper {
         return transformedBytes;
     }
 
+    @Nullable
+    protected static byte[] copyPayloadSegment(@Nullable byte[] payloadSegment, int length) {
+        if ((payloadSegment == null) || (length <= 0)) {
+            return null;
+        }
+        if (payloadSegment.length < length) {
+            throw new IllegalArgumentException("AFMA residual payload segment is shorter than expected");
+        }
+        return Arrays.copyOf(payloadSegment, length);
+    }
+
+    protected static void writeMergedStreams(@NotNull OutputStream out,
+                                             @NotNull byte[] primaryStream,
+                                             @Nullable byte[] alphaMask,
+                                             @Nullable byte[] alphaStream) throws IOException {
+        out.write(primaryStream);
+        if (alphaMask != null) {
+            out.write(alphaMask);
+        }
+        if (alphaStream != null) {
+            out.write(alphaStream);
+        }
+    }
+
     @NotNull
-    protected static byte[] mergeStreams(@NotNull byte[] primaryStream, int primaryLength,
-                                         @Nullable byte[] alphaMask, int alphaMaskLength,
-                                         @Nullable byte[] alphaStream, int alphaStreamLength) {
-        int totalLength = primaryLength + alphaMaskLength + alphaStreamLength;
-        byte[] payloadBytes = new byte[totalLength];
-        int offset = 0;
-        System.arraycopy(primaryStream, 0, payloadBytes, offset, primaryLength);
-        offset += primaryLength;
-        if ((alphaMask != null) && (alphaMaskLength > 0)) {
-            System.arraycopy(alphaMask, 0, payloadBytes, offset, alphaMaskLength);
-            offset += alphaMaskLength;
+    protected static AfmaStoredPayload.PayloadSummary summarizeMergedStreams(@NotNull AfmaStoredPayload.Writer payloadWriter) {
+        try {
+            return AfmaStoredPayload.summarize(payloadWriter);
+        } catch (IOException ex) {
+            throw new IllegalStateException("Failed to summarize AFMA residual payload", ex);
         }
-        if ((alphaStream != null) && (alphaStreamLength > 0)) {
-            System.arraycopy(alphaStream, 0, payloadBytes, offset, alphaStreamLength);
-        }
-        return payloadBytes;
     }
 
     protected static int countAlphaChanges(@NotNull int[] predictedColors, @NotNull int[] currentColors, int sampleCount) {
@@ -543,21 +562,22 @@ public final class AfmaResidualPayloadHelper {
         return new ResidualSampleReader(payloadBytes, offset, sampleCount, channels, codec);
     }
 
-    public record EncodedResidualPayload(@NotNull byte[] payloadBytes, int channels,
+    public record EncodedResidualPayload(@NotNull AfmaStoredPayload.PayloadSummary payloadSummary,
+                                         @NotNull AfmaStoredPayload.Writer payloadWriter,
+                                         int channels,
                                          @NotNull AfmaResidualCodec codec,
                                          @NotNull AfmaAlphaResidualMode alphaMode,
                                          int alphaChangedPixelCount,
-                                         long estimatedArchiveBytes,
                                          int complexityScore) {
 
         public boolean isBetterThan(@NotNull EncodedResidualPayload other) {
-            if (this.estimatedArchiveBytes != other.estimatedArchiveBytes) {
-                return this.estimatedArchiveBytes < other.estimatedArchiveBytes;
+            if (this.payloadSummary.estimatedArchiveBytes() != other.payloadSummary.estimatedArchiveBytes()) {
+                return this.payloadSummary.estimatedArchiveBytes() < other.payloadSummary.estimatedArchiveBytes();
             }
             if (this.complexityScore != other.complexityScore) {
                 return this.complexityScore < other.complexityScore;
             }
-            return this.payloadBytes.length < other.payloadBytes.length;
+            return this.payloadSummary.length() < other.payloadSummary.length();
         }
 
         @NotNull
