@@ -1,27 +1,7 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator;
 
 import de.keksuccino.fancymenu.util.CloseableUtils;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaAlphaResidualMode;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaBinIntraPayloadHelper;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaBlockInter;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaBlockInterPayloadHelper;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaChunkedPayloadHelper;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaCopyRect;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameDescriptor;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameIndex;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameOperationType;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaMetadata;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaMultiCopy;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaPatchRegion;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaPayloadMetricsHelper;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaRect;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaResidualCodec;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaResidualPayload;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaResidualPayloadHelper;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaSparseLayoutCodec;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaSparsePayload;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaSparsePayloadHelper;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaStoredPayload;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
