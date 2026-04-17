@@ -403,6 +403,43 @@ final class AfmaV2PlannerCore {
                 this.createExactFullCandidate(sourceFrame, introSequence, frameIndex, options),
                 sourceFrame
         );
+        Map<FrameCandidate, Long> packedArchiveBytesByCandidate = this.estimatePackedArchiveBytesByCandidate(
+                Arrays.asList(deltaCandidate, copyCandidate, blockInterCandidate, fullCandidate),
+                payloadInterner,
+                introSequence,
+                currentSequenceFrames,
+                companionSequenceFrames,
+                qualityBudgetState,
+                options
+        );
+        deltaCandidate = this.filterWeakCandidateAgainstFull(
+                deltaCandidate,
+                fullCandidate,
+                packedArchiveBytesByCandidate,
+                sourceFrame.getWidth(),
+                sourceFrame.getHeight(),
+                options
+        );
+        copyCandidate = this.filterWeakCandidateAgainstFull(
+                copyCandidate,
+                fullCandidate,
+                packedArchiveBytesByCandidate,
+                sourceFrame.getWidth(),
+                sourceFrame.getHeight(),
+                options
+        );
+        blockInterCandidate = this.filterWeakCandidateAgainstFull(
+                blockInterCandidate,
+                fullCandidate,
+                packedArchiveBytesByCandidate,
+                sourceFrame.getWidth(),
+                sourceFrame.getHeight(),
+                options
+        );
+        bestCandidate = null;
+        bestCandidate = this.pickBetterCandidate(bestCandidate, deltaCandidate, payloadInterner, qualityBudgetState, options, framesSinceKeyframe);
+        bestCandidate = this.pickBetterCandidate(bestCandidate, copyCandidate, payloadInterner, qualityBudgetState, options, framesSinceKeyframe);
+        bestCandidate = this.pickBetterCandidate(bestCandidate, blockInterCandidate, payloadInterner, qualityBudgetState, options, framesSinceKeyframe);
 
         if (hardKeyframe) {
             FrameCandidate selected = Objects.requireNonNull(fullCandidate, "AFMA v2 hard-keyframe candidate was NULL");
@@ -432,10 +469,8 @@ final class AfmaV2PlannerCore {
 
         FrameCandidate packedArchiveWinner = this.pickBestPackedArchiveCandidate(
                 Arrays.asList(deltaCandidate, copyCandidate, blockInterCandidate, fullCandidate),
+                packedArchiveBytesByCandidate,
                 payloadInterner,
-                introSequence,
-                currentSequenceFrames,
-                companionSequenceFrames,
                 qualityBudgetState,
                 options,
                 framesSinceKeyframe
@@ -540,10 +575,8 @@ final class AfmaV2PlannerCore {
 
     @Nullable
     protected FrameCandidate pickBestPackedArchiveCandidate(@NotNull List<FrameCandidate> candidates,
+                                                            @NotNull Map<FrameCandidate, Long> packedArchiveBytesByCandidate,
                                                             @NotNull PayloadInterner payloadInterner,
-                                                            boolean introSequence,
-                                                            @NotNull List<AfmaFrameDescriptor> currentSequenceFrames,
-                                                            @NotNull List<AfmaFrameDescriptor> companionSequenceFrames,
                                                             @NotNull QualityBudgetState qualityBudgetState,
                                                             @NotNull AfmaEncodeOptions options,
                                                             int framesSinceKeyframe) throws IOException {
@@ -555,12 +588,9 @@ final class AfmaV2PlannerCore {
                 continue;
             }
 
-            long packedArchiveBytes = payloadInterner.estimatePackedCandidateArchiveBytes(
+            long packedArchiveBytes = packedArchiveBytesByCandidate.getOrDefault(
                     candidate,
-                    introSequence,
-                    currentSequenceFrames,
-                    companionSequenceFrames,
-                    options.getLoopCount()
+                    candidate.totalArchiveBytes(payloadInterner)
             );
             double packedScore = this.scoreCandidate(candidate, packedArchiveBytes, qualityBudgetState, options, framesSinceKeyframe);
             if (bestCandidate == null
@@ -577,6 +607,217 @@ final class AfmaV2PlannerCore {
             }
         }
         return bestCandidate;
+    }
+
+    @NotNull
+    protected Map<FrameCandidate, Long> estimatePackedArchiveBytesByCandidate(@NotNull List<FrameCandidate> candidates,
+                                                                              @NotNull PayloadInterner payloadInterner,
+                                                                              boolean introSequence,
+                                                                              @NotNull List<AfmaFrameDescriptor> currentSequenceFrames,
+                                                                              @NotNull List<AfmaFrameDescriptor> companionSequenceFrames,
+                                                                              @NotNull QualityBudgetState qualityBudgetState,
+                                                                              @NotNull AfmaEncodeOptions options) throws IOException {
+        IdentityHashMap<FrameCandidate, Long> packedArchiveBytesByCandidate = new IdentityHashMap<>();
+        for (FrameCandidate candidate : candidates) {
+            if ((candidate == null) || !this.isCandidateAllowed(candidate, qualityBudgetState, options)) {
+                continue;
+            }
+            packedArchiveBytesByCandidate.put(
+                    candidate,
+                    payloadInterner.estimatePackedCandidateArchiveBytes(
+                            candidate,
+                            introSequence,
+                            currentSequenceFrames,
+                            companionSequenceFrames,
+                            options.getLoopCount()
+                    )
+            );
+        }
+        return packedArchiveBytesByCandidate;
+    }
+
+    @Nullable
+    protected FrameCandidate filterWeakCandidateAgainstFull(@Nullable FrameCandidate candidate,
+                                                            @Nullable FrameCandidate fullCandidate,
+                                                            @NotNull Map<FrameCandidate, Long> packedArchiveBytesByCandidate,
+                                                            int frameWidth, int frameHeight,
+                                                            @NotNull AfmaEncodeOptions options) {
+        if ((candidate == null) || (fullCandidate == null) || (candidate == fullCandidate)) {
+            return candidate;
+        }
+        if (!this.shouldKeepCandidateAgainstFull(candidate, fullCandidate, packedArchiveBytesByCandidate, frameWidth, frameHeight, options)) {
+            return null;
+        }
+        return candidate;
+    }
+
+    protected boolean shouldKeepCandidateAgainstFull(@NotNull FrameCandidate candidate,
+                                                     @NotNull FrameCandidate fullCandidate,
+                                                     @NotNull Map<FrameCandidate, Long> packedArchiveBytesByCandidate,
+                                                     int frameWidth, int frameHeight,
+                                                     @NotNull AfmaEncodeOptions options) {
+        if ((candidate.kind() == CandidateKind.FULL) || (candidate.kind() == CandidateKind.SAME)) {
+            return true;
+        }
+
+        Long candidateArchiveBytes = packedArchiveBytesByCandidate.get(candidate);
+        Long fullArchiveBytes = packedArchiveBytesByCandidate.get(fullCandidate);
+        if ((candidateArchiveBytes == null) || (fullArchiveBytes == null)) {
+            return true;
+        }
+
+        double maxAreaRatioWithoutStrongSavings = this.resolveMaxAreaRatioWithoutStrongSavings(candidate.kind(), options);
+        long patchArea = this.resolveCandidatePatchArea(candidate);
+        return switch (candidate.kind()) {
+            case DELTA_BIN_INTRA, COPY_BIN_INTRA, MULTI_COPY_BIN_INTRA, BLOCK_INTER ->
+                    this.shouldKeepComplexCandidateByArchiveBytes(
+                            candidateArchiveBytes,
+                            fullArchiveBytes,
+                            patchArea,
+                            frameWidth,
+                            frameHeight,
+                            maxAreaRatioWithoutStrongSavings,
+                            options
+                    );
+            case DELTA_RESIDUAL, COPY_RESIDUAL, MULTI_COPY_RESIDUAL ->
+                    this.shouldKeepResidualCandidateByArchiveBytes(
+                            candidateArchiveBytes,
+                            fullArchiveBytes,
+                            patchArea,
+                            frameWidth,
+                            frameHeight,
+                            maxAreaRatioWithoutStrongSavings,
+                            options
+                    );
+            case DELTA_SPARSE, COPY_SPARSE, MULTI_COPY_SPARSE ->
+                    this.shouldKeepSparseCandidateByArchiveBytes(
+                            candidateArchiveBytes,
+                            fullArchiveBytes,
+                            patchArea,
+                            frameWidth,
+                            frameHeight,
+                            maxAreaRatioWithoutStrongSavings,
+                            options
+                    );
+            default -> true;
+        };
+    }
+
+    protected double resolveMaxAreaRatioWithoutStrongSavings(@NotNull CandidateKind kind, @NotNull AfmaEncodeOptions options) {
+        return switch (kind) {
+            case DELTA_BIN_INTRA, DELTA_RESIDUAL, DELTA_SPARSE, BLOCK_INTER -> options.getMaxDeltaAreaRatioWithoutStrongSavings();
+            case COPY_BIN_INTRA, COPY_RESIDUAL, COPY_SPARSE,
+                 MULTI_COPY_BIN_INTRA, MULTI_COPY_RESIDUAL, MULTI_COPY_SPARSE -> options.getMaxCopyPatchAreaRatioWithoutStrongSavings();
+            case SAME, FULL -> 1D;
+        };
+    }
+
+    protected long resolveCandidatePatchArea(@NotNull FrameCandidate candidate) {
+        AfmaFrameDescriptor descriptor = candidate.descriptor();
+        AfmaPatchRegion patchRegion = descriptor.getPatch();
+        if (patchRegion != null) {
+            return (long) patchRegion.getWidth() * (long) patchRegion.getHeight();
+        }
+        return (long) descriptor.getWidth() * (long) descriptor.getHeight();
+    }
+
+    protected boolean shouldKeepComplexCandidateByArchiveBytes(long candidateArchiveBytes, long fullArchiveBytes,
+                                                               long patchArea, int frameWidth, int frameHeight, double maxAreaRatioWithoutStrongSavings,
+                                                               @NotNull AfmaEncodeOptions options) {
+        long frameArea = (long) frameWidth * frameHeight;
+        if (frameArea <= 0L || patchArea >= frameArea) {
+            return false;
+        }
+
+        long byteSavings = fullArchiveBytes - candidateArchiveBytes;
+        if (byteSavings <= 0L) {
+            return false;
+        }
+        if (patchArea <= 0L) {
+            return true;
+        }
+
+        return byteSavings >= this.computeRequiredCandidateSavings(
+                fullArchiveBytes,
+                patchArea,
+                frameArea,
+                maxAreaRatioWithoutStrongSavings,
+                options
+        );
+    }
+
+    protected boolean shouldKeepResidualCandidateByArchiveBytes(long candidateArchiveBytes, long fullArchiveBytes,
+                                                                long patchArea, int frameWidth, int frameHeight, double maxAreaRatioWithoutStrongSavings,
+                                                                @NotNull AfmaEncodeOptions options) {
+        long frameArea = (long) frameWidth * frameHeight;
+        if (frameArea <= 0L || patchArea <= 0L) {
+            return false;
+        }
+
+        long byteSavings = fullArchiveBytes - candidateArchiveBytes;
+        if (byteSavings <= 0L) {
+            return false;
+        }
+
+        long boundedPatchArea = Math.min(patchArea, frameArea);
+        return byteSavings >= this.computeRequiredCandidateSavings(
+                fullArchiveBytes,
+                boundedPatchArea,
+                frameArea,
+                maxAreaRatioWithoutStrongSavings,
+                options
+        );
+    }
+
+    protected boolean shouldKeepSparseCandidateByArchiveBytes(long candidateArchiveBytes, long fullArchiveBytes,
+                                                              long patchArea, int frameWidth, int frameHeight, double maxAreaRatioWithoutStrongSavings,
+                                                              @NotNull AfmaEncodeOptions options) {
+        long frameArea = (long) frameWidth * frameHeight;
+        if (frameArea <= 0L || patchArea <= 0L) {
+            return false;
+        }
+
+        long byteSavings = fullArchiveBytes - candidateArchiveBytes;
+        if (byteSavings <= 0L) {
+            return false;
+        }
+
+        long boundedPatchArea = Math.min(patchArea, frameArea);
+        return byteSavings >= this.computeRequiredCandidateSavings(
+                fullArchiveBytes,
+                boundedPatchArea,
+                frameArea,
+                maxAreaRatioWithoutStrongSavings,
+                options
+        );
+    }
+
+    protected long computeRequiredCandidateSavings(long fullArchiveBytes, long boundedPatchArea, long frameArea,
+                                                   double maxAreaRatioWithoutStrongSavings, @NotNull AfmaEncodeOptions options) {
+        long requiredSavings = this.computeRequiredComplexCandidateSavings(
+                fullArchiveBytes,
+                options.getMinComplexCandidateSavingsBytes(),
+                options.getMinComplexCandidateSavingsRatio()
+        );
+        double areaRatio = (double) boundedPatchArea / (double) frameArea;
+        if (areaRatio > maxAreaRatioWithoutStrongSavings) {
+            requiredSavings = Math.max(
+                    requiredSavings,
+                    this.computeRequiredComplexCandidateSavings(
+                            fullArchiveBytes,
+                            options.getMinStrongComplexCandidateSavingsBytes(),
+                            options.getMinStrongComplexCandidateSavingsRatio()
+                    )
+            );
+        }
+        return requiredSavings;
+    }
+
+    protected long computeRequiredComplexCandidateSavings(long referenceBytes, long minAbsoluteSavings, double minSavingsRatio) {
+        long ratioSavings = (referenceBytes > 0L && minSavingsRatio > 0D)
+                ? (long) Math.ceil(referenceBytes * minSavingsRatio)
+                : 0L;
+        return Math.max(minAbsoluteSavings, ratioSavings);
     }
 
     @NotNull
