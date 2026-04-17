@@ -19,6 +19,57 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
+/**
+ * Standalone command-line entrypoint for isolated AFMA encode testing.
+ *
+ * <p>This class exists so the AFMA encoder can be profiled, benchmarked, and regression-tested without opening
+ * FancyMenu's creator UI or booting the full in-game export screen flow. It drives {@link AfmaEncodePlanner} and
+ * {@link AfmaArchiveWriter} directly and mirrors the creator-side preset defaults in plain Java code.
+ *
+ * <p>Primary use cases:
+ * <ul>
+ *     <li>Compare output size across encoder revisions.</li>
+ *     <li>Measure encode-only performance on a fixed frame set.</li>
+ *     <li>Debug frame-family selection and archive-packing behavior outside the Minecraft UI.</li>
+ *     <li>Compile only the AFMA encode side plus its direct dependencies in an isolated test setup.</li>
+ * </ul>
+ *
+ * <p>Compilation notes:
+ * <ul>
+ *     <li>Target Java 21, matching the project toolchain.</li>
+ *     <li>This tool intentionally avoids {@code AfmaCreatorScreen} and {@code AfmaCreatorState}.</li>
+ *     <li>For an isolated compile, include the AFMA packages under
+ *     {@code de.keksuccino.fancymenu.util.resource.resources.texture.afma} and
+ *     {@code de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator}, plus shared utility classes
+ *     they reference such as {@code CloseableUtils}.</li>
+ *     <li>The minimal external libraries still need to be on the classpath. In practice that means the same libraries
+ *     the encode path already uses, such as JetBrains annotations, Gson, Apache Commons IO/Compress, and LWJGL STB/System
+ *     for PNG loading inside {@link AfmaFrameNormalizer}.</li>
+ *     <li>If you compile from IntelliJ, the easiest path is a plain Application run configuration for this class while
+ *     limiting the compile target to the AFMA encode-side source set you want to test.</li>
+ * </ul>
+ *
+ * <p>Runtime notes:
+ * <ul>
+ *     <li>Use {@code --main <dir>} for the required PNG frame directory.</li>
+ *     <li>Use {@code --intro <dir>} for optional intro frames.</li>
+ *     <li>Use {@code --output <file>} for the produced AFMA path.</li>
+ *     <li>Use {@code --preset smallest_file}, {@code balanced}, or {@code fastest_decode} to mirror the creator presets.</li>
+ *     <li>Use {@code --temp-dir <dir>} or the {@code fancymenu.afma.temp_dir} system property to redirect AFMA temp files
+ *     during isolated runs.</li>
+ * </ul>
+ *
+ * <p>Example invocation after compiling:
+ * <pre>{@code
+ * java ... de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator.AfmaEncodeStandaloneTool \
+ *   --main /path/to/frames \
+ *   --output /path/to/output.afma \
+ *   --preset smallest_file
+ * }</pre>
+ *
+ * <p>The tool prints planning progress, a frame-mix summary, payload totals, and final output size so encoder changes
+ * can be compared quickly between revisions.
+ */
 public final class AfmaEncodeStandaloneTool {
 
     private static final long DEFAULT_FRAME_TIME_MS = 41L;
@@ -26,6 +77,15 @@ public final class AfmaEncodeStandaloneTool {
     private AfmaEncodeStandaloneTool() {
     }
 
+    /**
+     * Runs the standalone AFMA encoder.
+     *
+     * <p>Pass {@code --help} to print the supported arguments. The method throws on invalid arguments or encode failures
+     * so isolated test runners can fail fast and surface the underlying issue directly.
+     *
+     * @param args command-line arguments for source directories, output path, and encoder options
+     * @throws Exception if argument parsing, planning, or archive writing fails
+     */
     public static void main(@NotNull String[] args) throws Exception {
         Arguments arguments = Arguments.parse(args);
         if (arguments.help()) {
