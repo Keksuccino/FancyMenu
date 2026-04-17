@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaFrameOpe
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaMetadata;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaMultiCopy;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaPatchRegion;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaPayloadArchiveLayout;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaPayloadMetricsHelper;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaRect;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaResidualCodec;
