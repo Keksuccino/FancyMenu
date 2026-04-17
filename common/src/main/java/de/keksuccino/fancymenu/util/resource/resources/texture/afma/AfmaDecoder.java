@@ -684,6 +684,9 @@ public class AfmaDecoder implements Closeable {
             case AfmaContainerV2.COMPRESSION_RAW_DEFLATE -> this.inflateRawChunk(storedBytes, chunkDescriptor.uncompressedLength());
             default -> throw new IOException("Unsupported AFMA v2 payload chunk compression mode: " + chunkDescriptor.compressionMode());
         };
+        if (chunkBytes.length != chunkDescriptor.uncompressedLength()) {
+            throw new IOException("AFMA v2 payload chunk size does not match its descriptor: " + chunkId);
+        }
         int expectedLength = ((chunkId >= 0) && (chunkId < this.payloadChunkLengths.length)) ? this.payloadChunkLengths[chunkId] : -1;
         if ((expectedLength >= 0) && (chunkBytes.length != expectedLength)) {
             throw new IOException("AFMA payload chunk size does not match the payload table: " + chunkId);
@@ -696,7 +699,8 @@ public class AfmaDecoder implements Closeable {
 
     @NotNull
     protected byte[] inflateRawChunk(@NotNull byte[] compressedBytes, int expectedLength) throws IOException {
-        try (InflaterInputStream in = new InflaterInputStream(new ByteArrayInputStream(compressedBytes), new Inflater(true));
+        Inflater inflater = new Inflater(true);
+        try (InflaterInputStream in = new InflaterInputStream(new ByteArrayInputStream(compressedBytes), inflater);
              ByteArrayOutputStream out = new ByteArrayOutputStream(Math.max(32, expectedLength))) {
             in.transferTo(out);
             byte[] decompressedBytes = out.toByteArray();
@@ -704,6 +708,8 @@ public class AfmaDecoder implements Closeable {
                 throw new IOException("AFMA v2 chunk length mismatch after decompression");
             }
             return decompressedBytes;
+        } finally {
+            inflater.end();
         }
     }
 
