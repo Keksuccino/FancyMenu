@@ -26,7 +26,7 @@ public class AfmaEncodePlan implements AutoCloseable {
     protected final long totalPayloadBytes;
 
     public AfmaEncodePlan(@NotNull AfmaMetadata metadata, @NotNull AfmaFrameIndex frameIndex, @NotNull LinkedHashMap<String, AfmaStoredPayload> payloads) {
-        this(metadata, frameIndex, payloads, AfmaPayloadArchiveLayout.build(payloads));
+        this(metadata, frameIndex, payloads, AfmaPayloadArchiveLayout.build(payloads, frameIndex, metadata.getLoopCount()));
     }
 
     public AfmaEncodePlan(@NotNull AfmaMetadata metadata, @NotNull AfmaFrameIndex frameIndex,
@@ -42,7 +42,7 @@ public class AfmaEncodePlan implements AutoCloseable {
     public AfmaEncodePlan(@NotNull AfmaMetadata metadata, @NotNull AfmaFrameIndex frameIndex,
                           @NotNull LinkedHashMap<String, AfmaStoredPayload> payloads,
                           @NotNull AfmaChunkedPayloadHelper.PackedPayloadArchive ignoredLegacyArchive) {
-        this(metadata, frameIndex, payloads, AfmaPayloadArchiveLayout.build(payloads));
+        this(metadata, frameIndex, payloads, AfmaPayloadArchiveLayout.build(payloads, frameIndex, metadata.getLoopCount()));
     }
 
     @NotNull

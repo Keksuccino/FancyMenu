@@ -77,14 +77,51 @@ public final class AfmaPayloadArchiveLayout {
         return new AfmaPayloadArchiveLayout(payloadIdsByPath, chunkPlans, payloadLocatorsById, toIntArray(chunkLengths));
     }
 
+    @NotNull
+    public static AfmaPayloadArchiveLayout build(@NotNull Map<String, AfmaStoredPayload> payloads,
+                                                 @NotNull AfmaFrameIndex frameIndex,
+                                                 int loopCount) {
+        Objects.requireNonNull(frameIndex);
+        if (payloads.isEmpty()) {
+            return build(payloads);
+        }
+
+        AfmaChunkedPayloadHelper.ArchivePackingHints packingHints = AfmaChunkedPayloadHelper.buildPackingHints(frameIndex, loopCount);
+        AfmaChunkedPayloadHelper.PackedPayloadArchive packedArchive = AfmaChunkedPayloadHelper.buildArchiveLayout(payloads, packingHints);
+        return fromPackedArchive(packedArchive);
+    }
+
+    @NotNull
+    protected static AfmaPayloadArchiveLayout fromPackedArchive(@NotNull AfmaChunkedPayloadHelper.PackedPayloadArchive packedArchive) {
+        Objects.requireNonNull(packedArchive);
+        LinkedHashMap<String, Integer> payloadIdsByPath = new LinkedHashMap<>(packedArchive.payloadIdsByPath());
+        ArrayList<ChunkPlan> chunkPlans = new ArrayList<>(packedArchive.chunkPlans().size());
+        ArrayList<Integer> chunkLengths = new ArrayList<>(packedArchive.chunkPlans().size());
+        int chunkId = 0;
+        for (AfmaChunkedPayloadHelper.ChunkPlan chunkPlan : packedArchive.chunkPlans()) {
+            chunkPlans.add(new ChunkPlan(chunkId++, chunkPlan.payloadPaths(), chunkPlan.uncompressedLength()));
+            chunkLengths.add(chunkPlan.uncompressedLength());
+        }
+        return new AfmaPayloadArchiveLayout(
+                payloadIdsByPath,
+                chunkPlans,
+                new ArrayList<>(packedArchive.payloadLocators()),
+                toIntArray(chunkLengths)
+        );
+    }
+
     protected static boolean shouldStartNewChunk(@NotNull ChunkBuilder currentChunk, int payloadLength) {
         if (currentChunk.isEmpty()) {
             return false;
         }
+        return shouldStartNewChunk(currentChunk.uncompressedLength(), payloadLength);
+    }
+
+    public static boolean shouldStartNewChunk(int currentChunkLength, int payloadLength) {
         if (payloadLength > TARGET_CHUNK_BYTES) {
             return true;
         }
-        return (currentChunk.uncompressedLength() + payloadLength) > TARGET_CHUNK_BYTES;
+        return (currentChunkLength + payloadLength) > TARGET_CHUNK_BYTES;
     }
 
     @NotNull

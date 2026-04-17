@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -83,14 +84,15 @@ public class AfmaArchiveWriter {
             try (BufferedOutputStream blobOut = new BufferedOutputStream(new FileOutputStream(blobTempFile))) {
                 for (AfmaPayloadArchiveLayout.ChunkPlan chunkPlan : payloadArchive.chunkPlans()) {
                     checkCancelled(cancellationRequested);
-                    int compressedLength = this.writeChunkBlob(blobOut, chunkPlan, payloadsByNormalizedPath, cancellationRequested);
+                    ChunkBlob chunkBlob = this.buildChunkBlob(chunkPlan, payloadsByNormalizedPath, cancellationRequested);
+                    blobOut.write(chunkBlob.bytes());
                     relativeChunkDescriptors.add(new RelativeChunkDescriptor(
                             blobOffset,
-                            compressedLength,
+                            chunkBlob.bytes().length,
                             chunkPlan.uncompressedLength(),
-                            AfmaContainerV2.COMPRESSION_RAW_DEFLATE
+                            chunkBlob.compressionMode()
                     ));
-                    blobOffset += compressedLength;
+                    blobOffset += chunkBlob.bytes().length;
                     writtenEntries++;
                     reportProgress(progressListener, AfmaChunkedPayloadHelper.chunkEntryPath(chunkPlan.chunkId()), writtenEntries, totalEntries);
                 }
@@ -148,44 +150,59 @@ public class AfmaArchiveWriter {
         return payloadsByNormalizedPath;
     }
 
-    protected int writeChunkBlob(@NotNull OutputStream out, @NotNull AfmaPayloadArchiveLayout.ChunkPlan chunkPlan,
-                                 @NotNull Map<String, AfmaStoredPayload> payloadsByNormalizedPath,
-                                 @Nullable BooleanSupplier cancellationRequested) throws IOException {
+    @NotNull
+    protected ChunkBlob buildChunkBlob(@NotNull AfmaPayloadArchiveLayout.ChunkPlan chunkPlan,
+                                       @NotNull Map<String, AfmaStoredPayload> payloadsByNormalizedPath,
+                                       @Nullable BooleanSupplier cancellationRequested) throws IOException {
+        byte[] rawChunkBytes = this.materializeChunkBytes(chunkPlan, payloadsByNormalizedPath, cancellationRequested);
+        if (rawChunkBytes.length <= 0) {
+            return new ChunkBlob(rawChunkBytes, AfmaContainerV2.COMPRESSION_STORED);
+        }
+
         Deflater deflater = new Deflater(DEFLATE_LEVEL, true);
-        byte[] readBuffer = new byte[IO_BUFFER_BYTES];
         byte[] deflateBuffer = new byte[IO_BUFFER_BYTES];
-        int compressedLength = 0;
         try {
-            for (String payloadPath : chunkPlan.payloadPaths()) {
-                checkCancelled(cancellationRequested);
-                AfmaStoredPayload payload = Objects.requireNonNull(payloadsByNormalizedPath.get(normalizePath(payloadPath)),
-                        "AFMA payload was NULL for " + payloadPath);
-                compressedLength += deflatePayloadInto(out, deflater, readBuffer, deflateBuffer, payload);
-            }
+            ByteArrayOutputStream compressedOut = new ByteArrayOutputStream(Math.max(32, Math.min(rawChunkBytes.length, AfmaPayloadArchiveLayout.TARGET_CHUNK_BYTES)));
+            deflater.setInput(rawChunkBytes);
             deflater.finish();
             while (!deflater.finished()) {
-                compressedLength += drainDeflater(out, deflater, deflateBuffer);
+                drainDeflater(compressedOut, deflater, deflateBuffer);
             }
-            return compressedLength;
+            byte[] compressedChunkBytes = compressedOut.toByteArray();
+            if (compressedChunkBytes.length >= rawChunkBytes.length) {
+                return new ChunkBlob(rawChunkBytes, AfmaContainerV2.COMPRESSION_STORED);
+            }
+            return new ChunkBlob(compressedChunkBytes, AfmaContainerV2.COMPRESSION_RAW_DEFLATE);
         } finally {
             deflater.end();
         }
     }
 
-    protected static int deflatePayloadInto(@NotNull OutputStream out, @NotNull Deflater deflater, @NotNull byte[] readBuffer,
-                                            @NotNull byte[] deflateBuffer, @NotNull AfmaStoredPayload payload) throws IOException {
-        int writtenBytes = 0;
-        try (InputStream in = payload.openStream()) {
-            int read;
-            while ((read = in.read(readBuffer)) >= 0) {
-                if (read <= 0) {
-                    continue;
+    @NotNull
+    protected byte[] materializeChunkBytes(@NotNull AfmaPayloadArchiveLayout.ChunkPlan chunkPlan,
+                                           @NotNull Map<String, AfmaStoredPayload> payloadsByNormalizedPath,
+                                           @Nullable BooleanSupplier cancellationRequested) throws IOException {
+        ByteArrayOutputStream rawOut = new ByteArrayOutputStream(Math.max(32, chunkPlan.uncompressedLength()));
+        byte[] readBuffer = new byte[IO_BUFFER_BYTES];
+        for (String payloadPath : chunkPlan.payloadPaths()) {
+            checkCancelled(cancellationRequested);
+            AfmaStoredPayload payload = Objects.requireNonNull(payloadsByNormalizedPath.get(normalizePath(payloadPath)),
+                    "AFMA payload was NULL for " + payloadPath);
+            try (InputStream in = payload.openStream()) {
+                int read;
+                while ((read = in.read(readBuffer)) >= 0) {
+                    if (read <= 0) {
+                        continue;
+                    }
+                    rawOut.write(readBuffer, 0, read);
                 }
-                deflater.setInput(readBuffer, 0, read);
-                writtenBytes += drainDeflater(out, deflater, deflateBuffer);
             }
         }
-        return writtenBytes;
+        byte[] rawChunkBytes = rawOut.toByteArray();
+        if (rawChunkBytes.length != chunkPlan.uncompressedLength()) {
+            throw new IOException("AFMA v2 chunk length mismatch while materializing " + AfmaChunkedPayloadHelper.chunkEntryPath(chunkPlan.chunkId()));
+        }
+        return rawChunkBytes;
     }
 
     protected static int drainDeflater(@NotNull OutputStream out, @NotNull Deflater deflater, @NotNull byte[] deflateBuffer) throws IOException {
@@ -222,6 +239,9 @@ public class AfmaArchiveWriter {
     }
 
     protected record RelativeChunkDescriptor(long relativeOffset, int compressedLength, int uncompressedLength, int compressionMode) {
+    }
+
+    protected record ChunkBlob(@NotNull byte[] bytes, int compressionMode) {
     }
 
     @FunctionalInterface
