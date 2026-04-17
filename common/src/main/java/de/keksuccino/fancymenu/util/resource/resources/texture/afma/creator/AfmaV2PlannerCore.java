@@ -311,7 +311,7 @@ final class AfmaV2PlannerCore {
                     null,
                     previousFrame,
                     0,
-                    CandidateQualityMetrics.lossless()
+                    CandidateQualityMetrics.losslessMetrics()
             ), sourceFrame);
             if (this.isCandidateAllowed(sameCandidate, qualityBudgetState, options)) {
                 return new FrameDecision(sameCandidate, previousFrame);
@@ -527,12 +527,12 @@ final class AfmaV2PlannerCore {
     @NotNull
     protected CandidateQualityMetrics measureCandidateQuality(@NotNull AfmaPixelFrame sourceFrame, @NotNull AfmaPixelFrame outputFrame) {
         if (sourceFrame == outputFrame) {
-            return CandidateQualityMetrics.lossless();
+            return CandidateQualityMetrics.losslessMetrics();
         }
 
         AfmaFramePairAnalysis driftAnalysis = new AfmaFramePairAnalysis(sourceFrame, outputFrame);
         if (driftAnalysis.isIdentical()) {
-            return CandidateQualityMetrics.lossless();
+            return CandidateQualityMetrics.losslessMetrics();
         }
         AfmaFramePairAnalysis.PerceptualDriftMetrics driftMetrics = driftAnalysis.perceptualDriftMetrics();
         return new CandidateQualityMetrics(
@@ -564,7 +564,7 @@ final class AfmaV2PlannerCore {
                         ? currentFrame
                         : new AfmaPixelFrame(currentFrame.getWidth(), currentFrame.getHeight(), encodedPayload.reconstructedPixels()),
                 1,
-                CandidateQualityMetrics.lossless()
+                CandidateQualityMetrics.losslessMetrics()
         );
     }
 
@@ -704,7 +704,7 @@ final class AfmaV2PlannerCore {
                 null,
                 outputFrame,
                 2,
-                CandidateQualityMetrics.lossless()
+                CandidateQualityMetrics.losslessMetrics()
         );
     }
 
@@ -735,7 +735,7 @@ final class AfmaV2PlannerCore {
                 null,
                 currentFrame,
                 3 + residualPayload.complexityScore(),
-                CandidateQualityMetrics.lossless()
+                CandidateQualityMetrics.losslessMetrics()
         );
     }
 
@@ -767,7 +767,7 @@ final class AfmaV2PlannerCore {
                 this.storePayload(sparsePayload.residualPayloadSummary(), sparsePayload.residualPayloadWriter()),
                 currentFrame,
                 4 + sparsePayload.complexityScore(),
-                CandidateQualityMetrics.lossless()
+                CandidateQualityMetrics.losslessMetrics()
         );
     }
 
@@ -1040,7 +1040,7 @@ final class AfmaV2PlannerCore {
                     null,
                     currentFrame,
                     3,
-                    CandidateQualityMetrics.lossless()
+                    CandidateQualityMetrics.losslessMetrics()
             );
         }
 
@@ -1067,7 +1067,7 @@ final class AfmaV2PlannerCore {
                 this.storePayload(encodedPayload.payloadSummary(), encodedPayload.payloadBytes()),
                 outputFrame,
                 3,
-                CandidateQualityMetrics.lossless()
+                CandidateQualityMetrics.losslessMetrics()
         );
     }
 
@@ -1104,7 +1104,7 @@ final class AfmaV2PlannerCore {
                 null,
                 currentFrame,
                 4 + residualPayload.complexityScore(),
-                CandidateQualityMetrics.lossless()
+                CandidateQualityMetrics.losslessMetrics()
         );
     }
 
@@ -1142,7 +1142,7 @@ final class AfmaV2PlannerCore {
                 this.storePayload(sparsePayload.residualPayloadSummary(), sparsePayload.residualPayloadWriter()),
                 currentFrame,
                 5 + sparsePayload.complexityScore(),
-                CandidateQualityMetrics.lossless()
+                CandidateQualityMetrics.losslessMetrics()
         );
     }
 
@@ -1164,7 +1164,7 @@ final class AfmaV2PlannerCore {
                     null,
                     currentFrame,
                     3 + detection.multiCopy().getCopyRectCount(),
-                    CandidateQualityMetrics.lossless()
+                    CandidateQualityMetrics.losslessMetrics()
             );
         }
 
@@ -1192,7 +1192,7 @@ final class AfmaV2PlannerCore {
                 this.storePayload(encodedPayload.payloadSummary(), encodedPayload.payloadBytes()),
                 outputFrame,
                 3 + detection.multiCopy().getCopyRectCount(),
-                CandidateQualityMetrics.lossless()
+                CandidateQualityMetrics.losslessMetrics()
         );
     }
 
@@ -1230,7 +1230,7 @@ final class AfmaV2PlannerCore {
                 null,
                 currentFrame,
                 4 + detection.multiCopy().getCopyRectCount() + residualPayload.complexityScore(),
-                CandidateQualityMetrics.lossless()
+                CandidateQualityMetrics.losslessMetrics()
         );
     }
 
@@ -1269,7 +1269,7 @@ final class AfmaV2PlannerCore {
                 this.storePayload(sparsePayload.residualPayloadSummary(), sparsePayload.residualPayloadWriter()),
                 currentFrame,
                 5 + detection.multiCopy().getCopyRectCount() + sparsePayload.complexityScore(),
-                CandidateQualityMetrics.lossless()
+                CandidateQualityMetrics.losslessMetrics()
         );
     }
 
@@ -1372,7 +1372,7 @@ final class AfmaV2PlannerCore {
                 null,
                 currentFrame,
                 7,
-                CandidateQualityMetrics.lossless()
+                CandidateQualityMetrics.losslessMetrics()
         );
     }
 
@@ -2775,7 +2775,7 @@ final class AfmaV2PlannerCore {
                                              int maxAlphaDelta) {
 
         @NotNull
-        public static CandidateQualityMetrics lossless() {
+        public static CandidateQualityMetrics losslessMetrics() {
             return new CandidateQualityMetrics(true, 0D, 0, 0);
         }
     }
