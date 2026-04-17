@@ -43,6 +43,7 @@ public final class AfmaChunkedPayloadHelper {
     protected static final double TARGET_CHUNK_SIZE_FRAME_HEADROOM = 1.18D;
     protected static final double TARGET_CHUNK_SIZE_PAYLOAD_GROUPING_MULTIPLIER = 6D;
     protected static final double TARGET_CHUNK_SIZE_FALLBACK_GROUPING_MULTIPLIER = 4D;
+    protected static final int CACHE_SIMULATION_CHUNK_LIMIT = AfmaIoHelper.DEFAULT_PAYLOAD_CHUNK_CACHE_SIZE;
     public static final int SEQUENCE_KIND_INTRO = 0;
     public static final int SEQUENCE_KIND_MAIN = 1;
     public static final int PLANNER_DEFLATE_TAIL_BYTES = 32 * 1024;
@@ -953,7 +954,7 @@ public final class AfmaChunkedPayloadHelper {
             return new CacheSimulationMetrics(0L, 0L, 0L, 0L, 0D, 0);
         }
 
-        LinkedHashMap<Integer, Integer> cachedChunkIds = new LinkedHashMap<>(AfmaDecoder.MAX_CACHED_PAYLOAD_CHUNKS, 0.75F, true);
+        LinkedHashMap<Integer, Integer> cachedChunkIds = new LinkedHashMap<>(CACHE_SIMULATION_CHUNK_LIMIT, 0.75F, true);
         long cacheHits = 0L;
         long cacheMisses = 0L;
         long archiveReads = 0L;
@@ -983,7 +984,7 @@ public final class AfmaChunkedPayloadHelper {
 
                 cacheMisses++;
                 archiveReads++;
-                if (cachedChunkIds.size() >= AfmaDecoder.MAX_CACHED_PAYLOAD_CHUNKS) {
+                if (cachedChunkIds.size() >= CACHE_SIMULATION_CHUNK_LIMIT) {
                     var iterator = cachedChunkIds.entrySet().iterator();
                     if (iterator.hasNext()) {
                         iterator.next();
@@ -1007,7 +1008,7 @@ public final class AfmaChunkedPayloadHelper {
 
     @NotNull
     protected static String normalizePayloadPath(@NotNull String payloadPath) {
-        return AfmaDecoder.normalizeEntryPath(payloadPath).toLowerCase(Locale.ROOT);
+        return AfmaIoHelper.normalizeEntryPath(payloadPath).toLowerCase(Locale.ROOT);
     }
 
     protected static void writeVarInt(@NotNull DataOutputStream out, int value) throws IOException {

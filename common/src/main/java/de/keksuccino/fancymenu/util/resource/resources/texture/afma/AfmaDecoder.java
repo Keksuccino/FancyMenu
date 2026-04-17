@@ -767,14 +767,7 @@ public class AfmaDecoder implements Closeable {
 
     @NotNull
     public static String normalizeEntryPath(@NotNull String entryPath) {
-        String normalized = entryPath.replace('\\', '/');
-        while (normalized.startsWith("/")) {
-            normalized = normalized.substring(1);
-        }
-        while (normalized.startsWith("./")) {
-            normalized = normalized.substring(2);
-        }
-        return normalized;
+        return AfmaIoHelper.normalizeEntryPath(entryPath);
     }
 
     @Override

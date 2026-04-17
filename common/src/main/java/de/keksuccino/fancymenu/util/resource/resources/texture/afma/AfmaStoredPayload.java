@@ -1,7 +1,5 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.afma;
 
-import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.util.file.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,7 +24,7 @@ import java.util.zip.Deflater;
 public final class AfmaStoredPayload implements AutoCloseable {
 
     protected static final int ANALYSIS_BUFFER_BYTES = 8192;
-    private static final File TEMP_DIR = FileUtils.createDirectory(new File(FancyMenu.TEMP_DATA_DIR, "/encoded_afma_payloads"));
+    private static final File TEMP_DIR = AfmaIoHelper.createNamedTempDirectory("encoded_afma_payloads");
     protected static final int INLINE_MEMORY_PAYLOAD_BYTES = 128 * 1024;
     protected static final long MIN_HEAP_BUDGET_BYTES = 16L * 1024L * 1024L;
     protected static final long MAX_HEAP_BUDGET_BYTES = 128L * 1024L * 1024L;

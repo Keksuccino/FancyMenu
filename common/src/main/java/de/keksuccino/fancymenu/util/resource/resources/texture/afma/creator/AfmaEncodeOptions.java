@@ -10,6 +10,8 @@ import java.util.Map;
 public class AfmaEncodeOptions {
 
     public static final int DEFAULT_NEAR_LOSSLESS_MAX_CHANNEL_DELTA = 2;
+    public static final int DEFAULT_MAX_COPY_SEARCH_DISTANCE = 512;
+    public static final int DEFAULT_MAX_CANDIDATE_AXIS_OFFSETS = 5;
 
     protected int loopCount = 0;
     protected long frameTimeMs = 41L;
@@ -21,8 +23,8 @@ public class AfmaEncodeOptions {
     protected int keyframeInterval = AfmaMetadata.DEFAULT_KEYFRAME_INTERVAL;
     protected boolean rectCopyEnabled = true;
     protected boolean duplicateFrameElision = true;
-    protected int maxCopySearchDistance = AfmaOptimizationPreset.BALANCED.getMaxCopySearchDistance();
-    protected int maxCandidateAxisOffsets = AfmaOptimizationPreset.BALANCED.getMaxCandidateAxisOffsets();
+    protected int maxCopySearchDistance = DEFAULT_MAX_COPY_SEARCH_DISTANCE;
+    protected int maxCandidateAxisOffsets = DEFAULT_MAX_CANDIDATE_AXIS_OFFSETS;
     protected double maxDeltaAreaRatioWithoutStrongSavings = 0.94D;
     protected double maxCopyPatchAreaRatioWithoutStrongSavings = 0.90D;
     protected long minComplexCandidateSavingsBytes = 24L * 1024L;

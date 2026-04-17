@@ -5,7 +5,7 @@ import com.google.gson.GsonBuilder;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaBinaryFrameIndexHelper;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaChunkedPayloadHelper;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaContainerV2;
-import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaDecoder;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaIoHelper;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaPayloadArchiveLayout;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaStoredPayload;
 import org.jetbrains.annotations.NotNull;
@@ -223,7 +223,7 @@ public class AfmaArchiveWriter {
 
     @NotNull
     protected static String normalizePath(@NotNull String path) {
-        return AfmaDecoder.normalizeEntryPath(path).toLowerCase(Locale.ROOT);
+        return AfmaIoHelper.normalizeEntryPath(path).toLowerCase(Locale.ROOT);
     }
 
     protected static void checkCancelled(@Nullable BooleanSupplier cancellationRequested) {
