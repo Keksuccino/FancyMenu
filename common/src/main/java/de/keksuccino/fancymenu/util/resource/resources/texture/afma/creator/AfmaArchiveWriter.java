@@ -4,30 +4,38 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaBinaryFrameIndexHelper;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaChunkedPayloadHelper;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaContainerV2;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaDecoder;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaPayloadArchiveLayout;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaStoredPayload;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.apache.commons.compress.archivers.zip.UnixStat;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.attribute.FileTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CancellationException;
 import java.util.function.BooleanSupplier;
+import java.util.zip.Deflater;
 
 public class AfmaArchiveWriter {
 
     private static final Gson GSON = new GsonBuilder().create();
-    private static final FileTime ZIP_EPOCH = FileTime.fromMillis(0L);
+    protected static final int DEFLATE_LEVEL = 9;
+    protected static final int IO_BUFFER_BYTES = 8192;
 
     public void write(@NotNull AfmaEncodePlan plan, @NotNull File outputFile) throws IOException {
         this.write(plan, outputFile, null);
@@ -47,107 +55,158 @@ public class AfmaArchiveWriter {
             throw new IOException("Failed to create AFMA output directory: " + parent.getAbsolutePath());
         }
 
-        try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile)))) {
-            out.setEncoding(StandardCharsets.UTF_8.name());
-            out.setLevel(9);
-            LinkedHashMap<String, AfmaStoredPayload> chunkedPayloads = new LinkedHashMap<>();
-            AfmaStoredPayload thumbnailPayload = null;
-            for (Map.Entry<String, AfmaStoredPayload> entry : plan.getPayloads().entrySet()) {
-                String normalizedPath = AfmaDecoder.normalizeEntryPath(entry.getKey());
-                if ("thumbnail.bin".equalsIgnoreCase(normalizedPath)) {
-                    thumbnailPayload = entry.getValue();
-                    continue;
-                }
-                chunkedPayloads.put(entry.getKey(), entry.getValue());
-            }
+        LinkedHashMap<String, AfmaStoredPayload> payloads = plan.getPayloads();
+        HashMap<String, AfmaStoredPayload> payloadsByNormalizedPath = buildNormalizedPayloadMap(payloads);
+        AfmaPayloadArchiveLayout payloadArchive = plan.getPayloadArchive();
 
-            AfmaChunkedPayloadHelper.PackedPayloadArchive payloadArchive = plan.getPayloadArchive();
-            byte[] frameIndexBytes = AfmaBinaryFrameIndexHelper.encodeFrameIndex(plan.getFrameIndex(), payloadArchive.payloadIdsByPath());
-            byte[] payloadIndexBytes = AfmaChunkedPayloadHelper.encodePayloadIndex(payloadArchive);
+        byte[] metadataBytes = GSON.toJson(plan.getMetadata()).getBytes(StandardCharsets.UTF_8);
+        byte[] frameIndexBytes = AfmaBinaryFrameIndexHelper.encodeFrameIndex(plan.getFrameIndex(), payloadArchive.payloadIdsByPath());
+        byte[] payloadTableBytes = payloadArchive.encodePayloadTable();
 
-            int totalEntries = payloadArchive.chunkPlans().size() + 3 + ((thumbnailPayload != null) ? 1 : 0);
-            int writtenEntries = 0;
+        int totalEntries = payloadArchive.chunkPlans().size() + 3;
+        int writtenEntries = 0;
 
-            checkCancelled(cancellationRequested);
-            this.writeJsonEntry(out, "metadata.json", GSON.toJson(plan.getMetadata()));
-            writtenEntries++;
-            reportProgress(progressListener, "metadata.json", writtenEntries, totalEntries);
-            checkCancelled(cancellationRequested);
-            this.writeBinaryEntry(out, AfmaBinaryFrameIndexHelper.FRAME_INDEX_ENTRY_PATH, frameIndexBytes);
-            writtenEntries++;
-            reportProgress(progressListener, AfmaBinaryFrameIndexHelper.FRAME_INDEX_ENTRY_PATH, writtenEntries, totalEntries);
-            checkCancelled(cancellationRequested);
-            this.writeBinaryEntry(out, AfmaChunkedPayloadHelper.PAYLOAD_INDEX_ENTRY_PATH, payloadIndexBytes);
-            writtenEntries++;
-            reportProgress(progressListener, AfmaChunkedPayloadHelper.PAYLOAD_INDEX_ENTRY_PATH, writtenEntries, totalEntries);
-            for (AfmaChunkedPayloadHelper.ChunkPlan chunkPlan : payloadArchive.chunkPlans()) {
-                checkCancelled(cancellationRequested);
-                this.writePayloadChunkEntry(out, chunkPlan, chunkedPayloads, cancellationRequested);
-                writtenEntries++;
-                reportProgress(progressListener, chunkPlan.entryPath(), writtenEntries, totalEntries);
-            }
-            if (thumbnailPayload != null) {
-                checkCancelled(cancellationRequested);
-                this.writeBinaryEntry(out, "thumbnail.bin", thumbnailPayload);
-                writtenEntries++;
-                reportProgress(progressListener, "thumbnail.bin", writtenEntries, totalEntries);
-            }
-            out.finish();
-        }
-    }
+        checkCancelled(cancellationRequested);
+        writtenEntries++;
+        reportProgress(progressListener, "metadata.json", writtenEntries, totalEntries);
+        checkCancelled(cancellationRequested);
+        writtenEntries++;
+        reportProgress(progressListener, AfmaBinaryFrameIndexHelper.FRAME_INDEX_ENTRY_PATH, writtenEntries, totalEntries);
+        checkCancelled(cancellationRequested);
+        writtenEntries++;
+        reportProgress(progressListener, "payload_table.bin", writtenEntries, totalEntries);
 
-    protected void writeJsonEntry(@NotNull ZipArchiveOutputStream out, @NotNull String path, @NotNull String json) throws IOException {
-        this.writeBinaryEntry(out, path, json.getBytes(StandardCharsets.UTF_8));
-    }
-
-    protected void writeBinaryEntry(@NotNull ZipArchiveOutputStream out, @NotNull String path, @NotNull byte[] bytes) throws IOException {
-        ZipArchiveEntry entry = new ZipArchiveEntry(path);
-        entry.setSize(bytes.length);
-        entry.setTime(0L);
-        entry.setCreationTime(ZIP_EPOCH);
-        entry.setLastModifiedTime(ZIP_EPOCH);
-        entry.setLastAccessTime(ZIP_EPOCH);
-        entry.setUnixMode(UnixStat.FILE_FLAG | 0644);
-        out.putArchiveEntry(entry);
-        out.write(bytes);
-        out.closeArchiveEntry();
-    }
-
-    protected void writeBinaryEntry(@NotNull ZipArchiveOutputStream out, @NotNull String path, @NotNull AfmaStoredPayload payload) throws IOException {
-        ZipArchiveEntry entry = new ZipArchiveEntry(path);
-        entry.setSize(payload.length());
-        entry.setTime(0L);
-        entry.setCreationTime(ZIP_EPOCH);
-        entry.setLastModifiedTime(ZIP_EPOCH);
-        entry.setLastAccessTime(ZIP_EPOCH);
-        entry.setUnixMode(UnixStat.FILE_FLAG | 0644);
-        out.putArchiveEntry(entry);
+        File blobTempFile = File.createTempFile("afma_v2_blobs_", ".tmp", parent);
+        ArrayList<RelativeChunkDescriptor> relativeChunkDescriptors = new ArrayList<>(payloadArchive.chunkPlans().size());
         try {
-            payload.writeTo(out);
+            long blobOffset = 0L;
+            try (BufferedOutputStream blobOut = new BufferedOutputStream(new FileOutputStream(blobTempFile))) {
+                for (AfmaPayloadArchiveLayout.ChunkPlan chunkPlan : payloadArchive.chunkPlans()) {
+                    checkCancelled(cancellationRequested);
+                    int compressedLength = this.writeChunkBlob(blobOut, chunkPlan, payloadsByNormalizedPath, cancellationRequested);
+                    relativeChunkDescriptors.add(new RelativeChunkDescriptor(
+                            blobOffset,
+                            compressedLength,
+                            chunkPlan.uncompressedLength(),
+                            AfmaContainerV2.COMPRESSION_RAW_DEFLATE
+                    ));
+                    blobOffset += compressedLength;
+                    writtenEntries++;
+                    reportProgress(progressListener, AfmaChunkedPayloadHelper.chunkEntryPath(chunkPlan.chunkId()), writtenEntries, totalEntries);
+                }
+                blobOut.flush();
+            }
+
+            long chunkDataOffset = AfmaContainerV2.HEADER_BYTES
+                    + metadataBytes.length
+                    + frameIndexBytes.length
+                    + payloadTableBytes.length
+                    + ((long) relativeChunkDescriptors.size() * (long) AfmaContainerV2.CHUNK_DESCRIPTOR_BYTES);
+
+            ArrayList<AfmaContainerV2.ChunkDescriptor> chunkDescriptors = new ArrayList<>(relativeChunkDescriptors.size());
+            for (RelativeChunkDescriptor relativeDescriptor : relativeChunkDescriptors) {
+                chunkDescriptors.add(new AfmaContainerV2.ChunkDescriptor(
+                        chunkDataOffset + relativeDescriptor.relativeOffset(),
+                        relativeDescriptor.compressedLength(),
+                        relativeDescriptor.uncompressedLength(),
+                        relativeDescriptor.compressionMode()
+                ));
+            }
+
+            checkCancelled(cancellationRequested);
+            try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile)));
+                 InputStream blobIn = new BufferedInputStream(new FileInputStream(blobTempFile))) {
+                AfmaContainerV2.writeHeader(out, new AfmaContainerV2.Header(
+                        metadataBytes.length,
+                        frameIndexBytes.length,
+                        payloadTableBytes.length,
+                        chunkDescriptors.size()
+                ));
+                out.write(metadataBytes);
+                out.write(frameIndexBytes);
+                out.write(payloadTableBytes);
+                for (AfmaContainerV2.ChunkDescriptor chunkDescriptor : chunkDescriptors) {
+                    AfmaContainerV2.writeChunkDescriptor(out, chunkDescriptor);
+                }
+                out.flush();
+                blobIn.transferTo(out);
+                out.flush();
+            }
         } finally {
-            out.closeArchiveEntry();
+            if (blobTempFile.exists()) {
+                blobTempFile.delete();
+            }
         }
     }
 
-    protected void writePayloadChunkEntry(@NotNull ZipArchiveOutputStream out, @NotNull AfmaChunkedPayloadHelper.ChunkPlan chunkPlan,
-                                          @NotNull Map<String, AfmaStoredPayload> payloads, @Nullable BooleanSupplier cancellationRequested) throws IOException {
-        ZipArchiveEntry entry = new ZipArchiveEntry(chunkPlan.entryPath());
-        entry.setSize(chunkPlan.uncompressedLength());
-        entry.setTime(0L);
-        entry.setCreationTime(ZIP_EPOCH);
-        entry.setLastModifiedTime(ZIP_EPOCH);
-        entry.setLastAccessTime(ZIP_EPOCH);
-        entry.setUnixMode(UnixStat.FILE_FLAG | 0644);
-        out.putArchiveEntry(entry);
+    @NotNull
+    protected static HashMap<String, AfmaStoredPayload> buildNormalizedPayloadMap(@NotNull Map<String, AfmaStoredPayload> payloads) {
+        HashMap<String, AfmaStoredPayload> payloadsByNormalizedPath = new HashMap<>(payloads.size());
+        for (Map.Entry<String, AfmaStoredPayload> entry : payloads.entrySet()) {
+            payloadsByNormalizedPath.putIfAbsent(normalizePath(entry.getKey()), entry.getValue());
+        }
+        return payloadsByNormalizedPath;
+    }
+
+    protected int writeChunkBlob(@NotNull OutputStream out, @NotNull AfmaPayloadArchiveLayout.ChunkPlan chunkPlan,
+                                 @NotNull Map<String, AfmaStoredPayload> payloadsByNormalizedPath,
+                                 @Nullable BooleanSupplier cancellationRequested) throws IOException {
+        Deflater deflater = new Deflater(DEFLATE_LEVEL, true);
+        byte[] readBuffer = new byte[IO_BUFFER_BYTES];
+        byte[] deflateBuffer = new byte[IO_BUFFER_BYTES];
+        int compressedLength = 0;
         try {
             for (String payloadPath : chunkPlan.payloadPaths()) {
                 checkCancelled(cancellationRequested);
-                AfmaStoredPayload payload = Objects.requireNonNull(payloads.get(payloadPath), "AFMA payload was NULL for " + payloadPath);
-                payload.writeTo(out);
+                AfmaStoredPayload payload = Objects.requireNonNull(payloadsByNormalizedPath.get(normalizePath(payloadPath)),
+                        "AFMA payload was NULL for " + payloadPath);
+                compressedLength += deflatePayloadInto(out, deflater, readBuffer, deflateBuffer, payload);
             }
+            deflater.finish();
+            while (!deflater.finished()) {
+                compressedLength += drainDeflater(out, deflater, deflateBuffer);
+            }
+            return compressedLength;
         } finally {
-            out.closeArchiveEntry();
+            deflater.end();
         }
+    }
+
+    protected static int deflatePayloadInto(@NotNull OutputStream out, @NotNull Deflater deflater, @NotNull byte[] readBuffer,
+                                            @NotNull byte[] deflateBuffer, @NotNull AfmaStoredPayload payload) throws IOException {
+        int writtenBytes = 0;
+        try (InputStream in = payload.openStream()) {
+            int read;
+            while ((read = in.read(readBuffer)) >= 0) {
+                if (read <= 0) {
+                    continue;
+                }
+                deflater.setInput(readBuffer, 0, read);
+                writtenBytes += drainDeflater(out, deflater, deflateBuffer);
+            }
+        }
+        return writtenBytes;
+    }
+
+    protected static int drainDeflater(@NotNull OutputStream out, @NotNull Deflater deflater, @NotNull byte[] deflateBuffer) throws IOException {
+        int writtenBytes = 0;
+        while (true) {
+            int compressed = deflater.deflate(deflateBuffer);
+            if (compressed > 0) {
+                out.write(deflateBuffer, 0, compressed);
+                writtenBytes += compressed;
+                continue;
+            }
+            if (deflater.needsInput() || deflater.finished()) {
+                return writtenBytes;
+            }
+            throw new IOException("AFMA v2 payload deflater stalled unexpectedly");
+        }
+    }
+
+    @NotNull
+    protected static String normalizePath(@NotNull String path) {
+        return AfmaDecoder.normalizeEntryPath(path).toLowerCase(Locale.ROOT);
     }
 
     protected static void checkCancelled(@Nullable BooleanSupplier cancellationRequested) {
@@ -160,6 +219,9 @@ public class AfmaArchiveWriter {
         if (progressListener != null) {
             progressListener.update(path, (double) writtenEntries / Math.max(1, totalEntries));
         }
+    }
+
+    protected record RelativeChunkDescriptor(long relativeOffset, int compressedLength, int uncompressedLength, int compressionMode) {
     }
 
     @FunctionalInterface

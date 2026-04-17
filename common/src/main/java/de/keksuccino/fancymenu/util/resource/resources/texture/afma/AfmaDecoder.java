@@ -14,12 +14,14 @@ import org.jetbrains.annotations.Nullable;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,6 +32,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.zip.Inflater;
+import java.util.zip.InflaterInputStream;
 
 public class AfmaDecoder implements Closeable {
 
@@ -40,6 +44,10 @@ public class AfmaDecoder implements Closeable {
     @Nullable
     protected ZipFile zipFile = null;
     @Nullable
+    protected RandomAccessFile containerFile = null;
+    protected final Object containerFileReadLock = new Object();
+    protected boolean legacyZipArchive = false;
+    @Nullable
     protected AfmaMetadata metadata = null;
     @Nullable
     protected AfmaFrameIndex frameIndex = null;
@@ -49,6 +57,8 @@ public class AfmaDecoder implements Closeable {
     protected final Map<String, AfmaChunkedPayloadHelper.PayloadLocator> payloadLocatorsByNormalizedPath = new HashMap<>();
     @NotNull
     protected int[] payloadChunkLengths = new int[0];
+    @NotNull
+    protected List<AfmaContainerV2.ChunkDescriptor> payloadChunkDescriptors = List.of();
     protected final Object payloadChunkCacheLock = new Object();
     @NotNull
     protected final LinkedHashMap<Integer, LoadedPayloadChunk> payloadChunkCache = new LinkedHashMap<>(MAX_CACHED_PAYLOAD_CHUNKS, 0.75F, true);
@@ -63,7 +73,9 @@ public class AfmaDecoder implements Closeable {
 
     public void read(@NotNull InputStream in) throws IOException {
         Objects.requireNonNull(in);
-        if (this.zipFile != null) throw new IllegalStateException("The decoder is already reading a file!");
+        if (this.isOpen()) {
+            throw new IllegalStateException("The decoder is already reading a file!");
+        }
 
         try {
             File tempArchive = this.spoolToTempArchive(in);
@@ -82,7 +94,9 @@ public class AfmaDecoder implements Closeable {
 
     public void read(@NotNull File afmaFile) throws IOException {
         Objects.requireNonNull(afmaFile);
-        if (this.zipFile != null) throw new IllegalStateException("The decoder is already reading a file!");
+        if (this.isOpen()) {
+            throw new IllegalStateException("The decoder is already reading a file!");
+        }
 
         try {
             this.openArchive(afmaFile, false);
@@ -91,6 +105,10 @@ public class AfmaDecoder implements Closeable {
             this.close();
             throw new IOException(ex);
         }
+    }
+
+    protected boolean isOpen() {
+        return (this.zipFile != null) || (this.containerFile != null);
     }
 
     @NotNull
@@ -114,16 +132,29 @@ public class AfmaDecoder implements Closeable {
     }
 
     protected void openArchive(@NotNull File archiveFile, boolean deleteOnClose) throws IOException {
-        this.zipFile = new ZipFile(archiveFile);
+        try (RandomAccessFile sniffFile = new RandomAccessFile(archiveFile, "r")) {
+            int magic = (sniffFile.length() >= Integer.BYTES) ? sniffFile.readInt() : 0;
+            if (AfmaContainerV2.isMagic(magic)) {
+                this.containerFile = new RandomAccessFile(archiveFile, "r");
+                this.legacyZipArchive = false;
+            } else {
+                this.zipFile = new ZipFile(archiveFile);
+                this.legacyZipArchive = true;
+            }
+        }
         this.tempArchiveFile = deleteOnClose ? archiveFile : null;
         this.deleteTempArchiveOnClose = deleteOnClose;
     }
 
     protected void initializeArchiveState() throws IOException {
-        this.indexEntries();
-        this.readMetadata();
-        this.readPayloadIndex();
-        this.readFrameIndex();
+        if (this.legacyZipArchive) {
+            this.indexEntries();
+            this.readMetadata();
+            this.readPayloadIndex();
+            this.readFrameIndex();
+        } else {
+            this.readContainerState();
+        }
         this.validateArchiveState();
     }
 
@@ -134,7 +165,9 @@ public class AfmaDecoder implements Closeable {
         var entries = this.zipFile.getEntries();
         while (entries.hasMoreElements()) {
             ZipArchiveEntry entry = entries.nextElement();
-            if (entry == null || entry.isDirectory()) continue;
+            if (entry == null || entry.isDirectory()) {
+                continue;
+            }
             String normalized = normalizeEntryPath(entry.getName()).toLowerCase(Locale.ROOT);
             this.entriesByNormalizedPath.putIfAbsent(normalized, entry);
         }
@@ -148,17 +181,7 @@ public class AfmaDecoder implements Closeable {
         }
 
         try (InputStream metadataIn = this.zipFile.getInputStream(metadataEntry)) {
-            String metadataString = new String(metadataIn.readAllBytes(), StandardCharsets.UTF_8);
-            if (metadataString.trim().isEmpty()) {
-                throw new IOException("metadata.json of AFMA file is empty");
-            }
-
-            AfmaMetadata parsedMetadata = GSON.fromJson(metadataString, AfmaMetadata.class);
-            if (parsedMetadata == null) {
-                throw new IOException("Unable to parse metadata.json of AFMA file");
-            }
-            parsedMetadata.validate();
-            this.metadata = parsedMetadata;
+            this.metadata = parseMetadata(metadataIn.readAllBytes());
         } catch (Exception ex) {
             throw new IOException(ex);
         }
@@ -166,15 +189,8 @@ public class AfmaDecoder implements Closeable {
 
     protected void readPayloadIndex() throws IOException {
         Objects.requireNonNull(this.zipFile);
-        this.payloadLocatorsByNormalizedPath.clear();
-        this.payloadChunkLengths = new int[0];
-        synchronized (this.payloadChunkCacheLock) {
-            this.payloadChunkCache.clear();
-            this.payloadChunkCacheHits = 0L;
-            this.payloadChunkCacheMisses = 0L;
-            this.payloadChunkArchiveReads = 0L;
-            this.payloadChunkCacheEvictions = 0L;
-        }
+        this.resetPayloadChunkState();
+        this.payloadChunkDescriptors = List.of();
 
         ZipArchiveEntry payloadIndexEntry = this.findEntry(AfmaChunkedPayloadHelper.PAYLOAD_INDEX_ENTRY_PATH);
         if (payloadIndexEntry == null) {
@@ -186,7 +202,6 @@ public class AfmaDecoder implements Closeable {
             if (payloadIndexBytes.length <= 0) {
                 throw new IOException("AFMA payload index is empty");
             }
-
             AfmaChunkedPayloadHelper.DecodedPayloadIndex decodedPayloadIndex = AfmaChunkedPayloadHelper.decodePayloadIndex(payloadIndexBytes);
             this.payloadLocatorsByNormalizedPath.putAll(decodedPayloadIndex.payloadLocatorsByPath());
             this.payloadChunkLengths = decodedPayloadIndex.chunkLengths();
@@ -203,17 +218,89 @@ public class AfmaDecoder implements Closeable {
         }
 
         try (InputStream frameIndexIn = this.zipFile.getInputStream(frameIndexEntry)) {
-            byte[] frameIndexBytes = frameIndexIn.readAllBytes();
-            if (frameIndexBytes.length <= 0) {
-                throw new IOException(AfmaBinaryFrameIndexHelper.FRAME_INDEX_ENTRY_PATH + " of AFMA file is empty");
-            }
-            AfmaFrameIndex parsedFrameIndex = AfmaBinaryFrameIndexHelper.decodeFrameIndex(frameIndexBytes);
-            if (parsedFrameIndex == null) {
-                throw new IOException("Unable to parse " + AfmaBinaryFrameIndexHelper.FRAME_INDEX_ENTRY_PATH + " of AFMA file");
-            }
-            this.frameIndex = parsedFrameIndex;
+            this.frameIndex = parseFrameIndex(frameIndexIn.readAllBytes());
         } catch (Exception ex) {
             throw new IOException(ex);
+        }
+    }
+
+    protected void readContainerState() throws IOException {
+        RandomAccessFile file = Objects.requireNonNull(this.containerFile);
+        this.entriesByNormalizedPath.clear();
+        this.resetPayloadChunkState();
+        file.seek(0L);
+        AfmaContainerV2.Header header = AfmaContainerV2.readHeader(file);
+        byte[] metadataBytes = readFully(file, header.metadataLength());
+        byte[] frameIndexBytes = readFully(file, header.frameIndexLength());
+        byte[] payloadTableBytes = readFully(file, header.payloadTableLength());
+        List<AfmaContainerV2.ChunkDescriptor> chunkDescriptors = AfmaContainerV2.readChunkDescriptors(file, header.chunkCount());
+        validateChunkDescriptors(chunkDescriptors, file.length());
+        this.metadata = parseMetadata(metadataBytes);
+        this.frameIndex = parseFrameIndex(frameIndexBytes);
+        AfmaPayloadArchiveLayout.DecodedPayloadTable decodedPayloadTable = AfmaPayloadArchiveLayout.decodePayloadTable(payloadTableBytes);
+        this.payloadLocatorsByNormalizedPath.putAll(decodedPayloadTable.payloadLocatorsByPath());
+        this.payloadChunkLengths = decodedPayloadTable.chunkLengths();
+        this.payloadChunkDescriptors = List.copyOf(chunkDescriptors);
+        if (this.payloadChunkLengths.length != this.payloadChunkDescriptors.size()) {
+            throw new IOException("AFMA payload table chunk count does not match the v2 chunk table");
+        }
+    }
+
+    protected void resetPayloadChunkState() {
+        this.payloadLocatorsByNormalizedPath.clear();
+        this.payloadChunkLengths = new int[0];
+        synchronized (this.payloadChunkCacheLock) {
+            this.payloadChunkCache.clear();
+            this.payloadChunkCacheHits = 0L;
+            this.payloadChunkCacheMisses = 0L;
+            this.payloadChunkArchiveReads = 0L;
+            this.payloadChunkCacheEvictions = 0L;
+        }
+    }
+
+    @NotNull
+    protected static AfmaMetadata parseMetadata(@NotNull byte[] metadataBytes) throws IOException {
+        String metadataString = new String(Objects.requireNonNull(metadataBytes), StandardCharsets.UTF_8);
+        if (metadataString.trim().isEmpty()) {
+            throw new IOException("metadata.json of AFMA file is empty");
+        }
+        AfmaMetadata parsedMetadata = GSON.fromJson(metadataString, AfmaMetadata.class);
+        if (parsedMetadata == null) {
+            throw new IOException("Unable to parse metadata.json of AFMA file");
+        }
+        parsedMetadata.validate();
+        return parsedMetadata;
+    }
+
+    @NotNull
+    protected static AfmaFrameIndex parseFrameIndex(@NotNull byte[] frameIndexBytes) throws IOException {
+        if (frameIndexBytes.length <= 0) {
+            throw new IOException(AfmaBinaryFrameIndexHelper.FRAME_INDEX_ENTRY_PATH + " of AFMA file is empty");
+        }
+        AfmaFrameIndex parsedFrameIndex = AfmaBinaryFrameIndexHelper.decodeFrameIndex(frameIndexBytes);
+        if (parsedFrameIndex == null) {
+            throw new IOException("Unable to parse " + AfmaBinaryFrameIndexHelper.FRAME_INDEX_ENTRY_PATH + " of AFMA file");
+        }
+        return parsedFrameIndex;
+    }
+
+    @NotNull
+    protected static byte[] readFully(@NotNull RandomAccessFile file, int length) throws IOException {
+        if (length < 0) {
+            throw new IOException("AFMA v2 section length is invalid");
+        }
+        byte[] bytes = new byte[length];
+        file.readFully(bytes);
+        return bytes;
+    }
+
+    protected static void validateChunkDescriptors(@NotNull List<AfmaContainerV2.ChunkDescriptor> chunkDescriptors, long fileLength) throws IOException {
+        for (int i = 0; i < chunkDescriptors.size(); i++) {
+            AfmaContainerV2.ChunkDescriptor descriptor = chunkDescriptors.get(i);
+            long endOffset = descriptor.fileOffset() + descriptor.compressedLength();
+            if (descriptor.fileOffset() < 0L || endOffset < descriptor.fileOffset() || endOffset > fileLength) {
+                throw new IOException("AFMA v2 chunk descriptor exceeds the container bounds: " + i);
+            }
         }
     }
 
@@ -452,17 +539,25 @@ public class AfmaDecoder implements Closeable {
 
     @Nullable
     public AfmaFrameDescriptor getFrame(int index) {
-        if (this.frameIndex == null) return null;
+        if (this.frameIndex == null) {
+            return null;
+        }
         List<AfmaFrameDescriptor> frames = this.frameIndex.getFrames();
-        if (index < 0 || index >= frames.size()) return null;
+        if (index < 0 || index >= frames.size()) {
+            return null;
+        }
         return frames.get(index);
     }
 
     @Nullable
     public AfmaFrameDescriptor getIntroFrame(int index) {
-        if (this.frameIndex == null) return null;
+        if (this.frameIndex == null) {
+            return null;
+        }
         List<AfmaFrameDescriptor> frames = this.frameIndex.getIntroFrames();
-        if (index < 0 || index >= frames.size()) return null;
+        if (index < 0 || index >= frames.size()) {
+            return null;
+        }
         return frames.get(index);
     }
 
@@ -474,7 +569,10 @@ public class AfmaDecoder implements Closeable {
 
     @NotNull
     public PayloadBytes readPayloadBytes(@NotNull String path) throws IOException {
-        Objects.requireNonNull(this.zipFile);
+        if (!this.isOpen()) {
+            throw new IOException("No AFMA archive is currently open");
+        }
+
         AfmaChunkedPayloadHelper.PayloadLocator payloadLocator = this.findPayloadLocator(path);
         if (payloadLocator == null) {
             throw new FileNotFoundException("AFMA payload file not found: " + path);
@@ -507,7 +605,13 @@ public class AfmaDecoder implements Closeable {
 
     protected boolean hasPayload(@NotNull String path) {
         AfmaChunkedPayloadHelper.PayloadLocator payloadLocator = this.findPayloadLocator(path);
-        return (payloadLocator != null) && (this.findEntry(AfmaChunkedPayloadHelper.chunkEntryPath(payloadLocator.chunkId())) != null);
+        if (payloadLocator == null) {
+            return false;
+        }
+        if (this.legacyZipArchive) {
+            return this.findEntry(AfmaChunkedPayloadHelper.chunkEntryPath(payloadLocator.chunkId())) != null;
+        }
+        return (payloadLocator.chunkId() >= 0) && (payloadLocator.chunkId() < this.payloadChunkDescriptors.size());
     }
 
     @NotNull
@@ -544,23 +648,62 @@ public class AfmaDecoder implements Closeable {
 
     @NotNull
     protected byte[] readWholeChunk(int chunkId) throws IOException {
-        Objects.requireNonNull(this.zipFile);
-        ZipArchiveEntry chunkEntry = this.findEntry(AfmaChunkedPayloadHelper.chunkEntryPath(chunkId));
-        if (chunkEntry == null) {
-            throw new FileNotFoundException("AFMA payload chunk not found: " + AfmaChunkedPayloadHelper.chunkEntryPath(chunkId));
+        if (this.legacyZipArchive) {
+            Objects.requireNonNull(this.zipFile);
+            ZipArchiveEntry chunkEntry = this.findEntry(AfmaChunkedPayloadHelper.chunkEntryPath(chunkId));
+            if (chunkEntry == null) {
+                throw new FileNotFoundException("AFMA payload chunk not found: " + AfmaChunkedPayloadHelper.chunkEntryPath(chunkId));
+            }
+            try (InputStream chunkInput = this.zipFile.getInputStream(chunkEntry)) {
+                byte[] chunkBytes = chunkInput.readAllBytes();
+                int expectedLength = ((chunkId >= 0) && (chunkId < this.payloadChunkLengths.length)) ? this.payloadChunkLengths[chunkId] : -1;
+                if ((expectedLength >= 0) && (chunkBytes.length != expectedLength)) {
+                    throw new IOException("AFMA payload chunk size does not match the payload index: " + chunkEntry.getName());
+                }
+                synchronized (this.payloadChunkCacheLock) {
+                    this.payloadChunkArchiveReads++;
+                }
+                return chunkBytes;
+            } catch (Exception ex) {
+                throw new IOException(ex);
+            }
         }
-        try (InputStream chunkInput = this.zipFile.getInputStream(chunkEntry)) {
-            byte[] chunkBytes = chunkInput.readAllBytes();
-            int expectedLength = ((chunkId >= 0) && (chunkId < this.payloadChunkLengths.length)) ? this.payloadChunkLengths[chunkId] : -1;
-            if ((expectedLength >= 0) && (chunkBytes.length != expectedLength)) {
-                throw new IOException("AFMA payload chunk size does not match the payload index: " + chunkEntry.getName());
+
+        RandomAccessFile file = Objects.requireNonNull(this.containerFile, "AFMA v2 container file was NULL");
+        if ((chunkId < 0) || (chunkId >= this.payloadChunkDescriptors.size())) {
+            throw new FileNotFoundException("AFMA payload chunk not found: " + chunkId);
+        }
+        AfmaContainerV2.ChunkDescriptor chunkDescriptor = this.payloadChunkDescriptors.get(chunkId);
+        byte[] storedBytes;
+        synchronized (this.containerFileReadLock) {
+            file.seek(chunkDescriptor.fileOffset());
+            storedBytes = readFully(file, chunkDescriptor.compressedLength());
+        }
+        byte[] chunkBytes = switch (chunkDescriptor.compressionMode()) {
+            case AfmaContainerV2.COMPRESSION_STORED -> storedBytes;
+            case AfmaContainerV2.COMPRESSION_RAW_DEFLATE -> this.inflateRawChunk(storedBytes, chunkDescriptor.uncompressedLength());
+            default -> throw new IOException("Unsupported AFMA v2 payload chunk compression mode: " + chunkDescriptor.compressionMode());
+        };
+        int expectedLength = ((chunkId >= 0) && (chunkId < this.payloadChunkLengths.length)) ? this.payloadChunkLengths[chunkId] : -1;
+        if ((expectedLength >= 0) && (chunkBytes.length != expectedLength)) {
+            throw new IOException("AFMA payload chunk size does not match the payload table: " + chunkId);
+        }
+        synchronized (this.payloadChunkCacheLock) {
+            this.payloadChunkArchiveReads++;
+        }
+        return chunkBytes;
+    }
+
+    @NotNull
+    protected byte[] inflateRawChunk(@NotNull byte[] compressedBytes, int expectedLength) throws IOException {
+        try (InflaterInputStream in = new InflaterInputStream(new ByteArrayInputStream(compressedBytes), new Inflater(true));
+             ByteArrayOutputStream out = new ByteArrayOutputStream(Math.max(32, expectedLength))) {
+            in.transferTo(out);
+            byte[] decompressedBytes = out.toByteArray();
+            if ((expectedLength >= 0) && (decompressedBytes.length != expectedLength)) {
+                throw new IOException("AFMA v2 chunk length mismatch after decompression");
             }
-            synchronized (this.payloadChunkCacheLock) {
-                this.payloadChunkArchiveReads++;
-            }
-            return chunkBytes;
-        } catch (Exception ex) {
-            throw new IOException(ex);
+            return decompressedBytes;
         }
     }
 
@@ -596,6 +739,8 @@ public class AfmaDecoder implements Closeable {
         this.entriesByNormalizedPath.clear();
         this.payloadLocatorsByNormalizedPath.clear();
         this.payloadChunkLengths = new int[0];
+        this.payloadChunkDescriptors = List.of();
+        this.legacyZipArchive = false;
         synchronized (this.payloadChunkCacheLock) {
             this.payloadChunkCache.clear();
             this.payloadChunkCacheHits = 0L;
@@ -611,6 +756,15 @@ public class AfmaDecoder implements Closeable {
                 LOGGER.error("[FANCYMENU] Failed to close AFMA ZipFile", ex);
             }
             this.zipFile = null;
+        }
+
+        if (this.containerFile != null) {
+            try {
+                this.containerFile.close();
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to close AFMA v2 container", ex);
+            }
+            this.containerFile = null;
         }
 
         File tempArchive = this.tempArchiveFile;

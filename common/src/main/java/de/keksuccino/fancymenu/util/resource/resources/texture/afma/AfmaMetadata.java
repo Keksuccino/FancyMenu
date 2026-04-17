@@ -9,7 +9,8 @@ import java.util.Map;
 public class AfmaMetadata {
 
     public static final String FORMAT_NAME = "AFMA";
-    public static final int CURRENT_FORMAT_VERSION = 7;
+    public static final int LEGACY_ZIP_FORMAT_VERSION = 7;
+    public static final int CURRENT_FORMAT_VERSION = 8;
     public static final int DEFAULT_KEYFRAME_INTERVAL = 30;
 
     @Nullable
@@ -125,7 +126,7 @@ public class AfmaMetadata {
         if ((this.format == null) || !FORMAT_NAME.equalsIgnoreCase(this.format)) {
             throw new IllegalArgumentException("metadata.json is missing the AFMA format marker");
         }
-        if (this.format_version != CURRENT_FORMAT_VERSION) {
+        if ((this.format_version != LEGACY_ZIP_FORMAT_VERSION) && (this.format_version != CURRENT_FORMAT_VERSION)) {
             throw new IllegalArgumentException("Unsupported AFMA format version: " + this.format_version);
         }
         if (this.canvas_width <= 0 || this.canvas_height <= 0) {
