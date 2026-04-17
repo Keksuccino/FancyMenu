@@ -114,61 +114,7 @@ public class AfmaEncodePlanner {
     public AfmaEncodePlan plan(@NotNull AfmaSourceSequence mainSequence, @Nullable AfmaSourceSequence introSequence,
                                @NotNull AfmaEncodeOptions options, @Nullable BooleanSupplier cancellationRequested,
                                @Nullable ProgressListener progressListener) throws IOException {
-        Objects.requireNonNull(mainSequence);
-        Objects.requireNonNull(options);
-        try {
-            AfmaSourceSequence intro = (introSequence != null) ? introSequence : AfmaSourceSequence.empty();
-            options.validateForCounts(mainSequence.size(), intro.size());
-
-            checkCancelled(cancellationRequested);
-            AfmaSourceSequence dimensionSource = !mainSequence.isEmpty() ? mainSequence : intro;
-            LoadedDimensionFrame loadedDimension = this.loadDimensionFrame(dimensionSource, cancellationRequested, progressListener);
-            Dimension dimension = loadedDimension.dimension();
-            AfmaPixelFrame preloadedMainFrame = (dimensionSource == mainSequence) ? loadedDimension.frame() : null;
-            AfmaPixelFrame preloadedIntroFrame = (dimensionSource == intro) ? loadedDimension.frame() : null;
-            int totalFrameCount = Math.max(1, mainSequence.size() + intro.size());
-
-            AfmaRectCopyDetector copyDetector = new AfmaRectCopyDetector(options.getMaxCopySearchDistance(), options.getMaxCandidateAxisOffsets());
-            LinkedHashMap<String, AfmaStoredPayload> payloads = new LinkedHashMap<>();
-            Map<String, String> payloadPathsByFingerprint = new LinkedHashMap<>();
-            try {
-                PlannedSequence plannedIntroFrames = this.planSequence(intro, true, dimension, options, copyDetector, ArchivePlanningState.empty(), payloads, payloadPathsByFingerprint,
-                        cancellationRequested, progressListener, 0, totalFrameCount, preloadedIntroFrame);
-                preloadedIntroFrame = null;
-                PlannedSequence plannedMainFrames = this.planSequence(mainSequence, false, dimension, options, copyDetector, plannedIntroFrames.archiveState(), payloads, payloadPathsByFingerprint,
-                        cancellationRequested, progressListener, intro.size(), totalFrameCount, preloadedMainFrame);
-                preloadedMainFrame = null;
-
-                long mainFrameTime = plannedMainFrames.defaultDelayMs();
-                long introFrameTime = plannedIntroFrames.defaultDelayMs();
-                if (plannedMainFrames.frames().isEmpty() && !plannedIntroFrames.frames().isEmpty()) {
-                    mainFrameTime = introFrameTime;
-                } else if (plannedIntroFrames.frames().isEmpty()) {
-                    introFrameTime = mainFrameTime;
-                }
-
-                AfmaMetadata metadata = AfmaMetadata.create(
-                        dimension.width(),
-                        dimension.height(),
-                        options.getLoopCount(),
-                        mainFrameTime,
-                        introFrameTime,
-                        plannedMainFrames.customFrameTimes(),
-                        plannedIntroFrames.customFrameTimes(),
-                        options.isAdaptiveKeyframePlacementEnabled() ? options.getAdaptiveMaxKeyframeInterval() : options.getKeyframeInterval(),
-                        options.isRectCopyEnabled(),
-                        options.isDuplicateFrameElision()
-                );
-
-                AfmaChunkedPayloadHelper.PackedPayloadArchive payloadArchive = plannedMainFrames.archiveState().buildPayloadArchive(payloads);
-                return new AfmaEncodePlan(metadata, new AfmaFrameIndex(plannedMainFrames.frames(), plannedIntroFrames.frames()), payloads, payloadArchive);
-            } finally {
-                CloseableUtils.closeQuietly(preloadedIntroFrame);
-                CloseableUtils.closeQuietly(preloadedMainFrame);
-            }
-        } finally {
-            this.residualPlannerWorkspace.remove();
-        }
+        return new AfmaV2PlannerCore(this.frameNormalizer).plan(mainSequence, introSequence, options, cancellationRequested, progressListener);
     }
 
     @NotNull
