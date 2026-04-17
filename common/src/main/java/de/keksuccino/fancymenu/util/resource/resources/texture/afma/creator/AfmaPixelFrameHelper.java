@@ -6,10 +6,22 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 
 public final class AfmaPixelFrameHelper {
 
     private AfmaPixelFrameHelper() {
+    }
+
+    public static void validateDimensions(int width, int height) {
+        if ((width <= 0) || (height <= 0)) {
+            throw new IllegalArgumentException("AFMA frame dimensions must be greater than zero");
+        }
+    }
+
+    public static int pixelCount(int width, int height) {
+        validateDimensions(width, height);
+        return Math.multiplyExact(width, height);
     }
 
     public static void ensureSameSize(@NotNull AfmaPixelFrame first, @NotNull AfmaPixelFrame second) {
@@ -27,13 +39,79 @@ public final class AfmaPixelFrameHelper {
     }
 
     public static @NotNull AfmaPixelFrame crop(@NotNull AfmaPixelFrame source, int x, int y, int width, int height) {
-        int[] sourcePixels = source.getPixelsUnsafe();
-        int sourceWidth = source.getWidth();
-        int[] croppedPixels = new int[width * height];
-        for (int row = 0; row < height; row++) {
-            System.arraycopy(sourcePixels, ((y + row) * sourceWidth) + x, croppedPixels, row * width, width);
+        return crop(source, x, y, width, height, null);
+    }
+
+    public static @NotNull AfmaPixelFrame crop(@NotNull AfmaPixelFrame source, int x, int y, int width, int height,
+                                               @Nullable AfmaFastPixelBufferPool pixelBufferPool) {
+        int[] croppedPixels = allocatePixels(width, height, pixelBufferPool);
+        copyRect(source, x, y, width, height, croppedPixels, 0, width);
+        return new AfmaPixelFrame(width, height, croppedPixels, pixelBufferPool);
+    }
+
+    public static boolean isRegionInBounds(@NotNull AfmaPixelFrame frame, int x, int y, int width, int height) {
+        Objects.requireNonNull(frame);
+        if ((width <= 0) || (height <= 0)) {
+            return false;
         }
-        return new AfmaPixelFrame(width, height, croppedPixels);
+        return (x >= 0) && (y >= 0)
+                && (x <= (frame.getWidth() - width))
+                && (y <= (frame.getHeight() - height));
+    }
+
+    public static void validateContainedRegion(@NotNull AfmaPixelFrame frame, int x, int y, int width, int height) {
+        if (!isRegionInBounds(frame, x, y, width, height)) {
+            throw new IndexOutOfBoundsException("AFMA region exceeds frame bounds");
+        }
+    }
+
+    @NotNull
+    public static int[] allocatePixels(int width, int height, @Nullable AfmaFastPixelBufferPool pixelBufferPool) {
+        int pixelCount = pixelCount(width, height);
+        return (pixelBufferPool != null)
+                ? pixelBufferPool.acquirePixels(pixelCount)
+                : new int[pixelCount];
+    }
+
+    public static void copyRect(@NotNull AfmaPixelFrame source, int x, int y, int width, int height,
+                                @NotNull int[] targetPixels, int targetOffset, int targetStride) {
+        Objects.requireNonNull(source);
+        Objects.requireNonNull(targetPixels);
+        validateContainedRegion(source, x, y, width, height);
+        if ((targetStride < width) || (targetStride <= 0)) {
+            throw new IllegalArgumentException("AFMA target stride must be at least as wide as the copied region");
+        }
+        long requiredTargetLength = (long) targetOffset + ((long) (height - 1) * (long) targetStride) + width;
+        if ((targetOffset < 0) || (requiredTargetLength > targetPixels.length)) {
+            throw new IllegalArgumentException("AFMA target pixel buffer is smaller than the requested region copy");
+        }
+
+        copyRows(source.getPixelsUnsafe(), source.getPixelIndex(x, y), source.getWidth(), targetPixels, targetOffset, targetStride, width, height);
+    }
+
+    public static void copyRows(@NotNull int[] sourcePixels, int sourceOffset, int sourceStride,
+                                @NotNull int[] targetPixels, int targetOffset, int targetStride,
+                                int width, int height) {
+        Objects.requireNonNull(sourcePixels);
+        Objects.requireNonNull(targetPixels);
+        if ((width <= 0) || (height <= 0)) {
+            throw new IllegalArgumentException("AFMA copy dimensions must be greater than zero");
+        }
+        if ((sourceStride < width) || (targetStride < width)) {
+            throw new IllegalArgumentException("AFMA copy stride must be at least as wide as the copied region");
+        }
+        if ((sourceOffset < 0) || (targetOffset < 0)) {
+            throw new IllegalArgumentException("AFMA copy offsets must not be negative");
+        }
+        long requiredSourceLength = (long) sourceOffset + ((long) (height - 1) * (long) sourceStride) + width;
+        long requiredTargetLength = (long) targetOffset + ((long) (height - 1) * (long) targetStride) + width;
+        if ((requiredSourceLength > sourcePixels.length) || (requiredTargetLength > targetPixels.length)) {
+            throw new IllegalArgumentException("AFMA copy exceeds the provided pixel buffers");
+        }
+
+        for (int row = 0; row < height; row++) {
+            System.arraycopy(sourcePixels, sourceOffset + (row * sourceStride), targetPixels, targetOffset + (row * targetStride), width);
+        }
     }
 
     public static @Nullable AfmaRect findDirtyBoundsAfterCopy(@NotNull AfmaPixelFrame previous, @NotNull AfmaPixelFrame next, @NotNull AfmaCopyRect copyRect) {

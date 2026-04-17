@@ -209,6 +209,7 @@ public class AfmaRectCopyDetector {
     @NotNull
     public List<MotionVector> collectMotionVectors(@NotNull AfmaFramePairAnalysis pairAnalysis, boolean includeZeroVector) {
         MotionSearchAnalysis motionSearchAnalysis = this.getMotionSearchAnalysis(pairAnalysis);
+        this.ensureAxisCandidates(pairAnalysis, motionSearchAnalysis);
         this.ensureRankedMotionVectors(pairAnalysis, motionSearchAnalysis);
         return includeZeroVector ? motionSearchAnalysis.rankedMotionVectors() : motionSearchAnalysis.rankedMotionVectorsWithoutZero();
     }
@@ -225,22 +226,46 @@ public class AfmaRectCopyDetector {
     }
 
     @NotNull
+    public List<AfmaTileMotionSearch.MotionCandidate> collectBoundedMotionCandidates(@NotNull AfmaPixelFrame previous,
+                                                                                     @NotNull AfmaPixelFrame next,
+                                                                                     int maxNonZeroVectors) {
+        return this.collectBoundedMotionCandidates(new AfmaFramePairAnalysis(previous, next), maxNonZeroVectors);
+    }
+
+    @NotNull
+    public List<AfmaTileMotionSearch.MotionCandidate> collectBoundedMotionCandidates(@NotNull AfmaFramePairAnalysis pairAnalysis,
+                                                                                     int maxNonZeroVectors) {
+        if (pairAnalysis.isIdentical() || (maxNonZeroVectors <= 0)) {
+            return List.of();
+        }
+        return AfmaTileMotionSearch.collectFrameCandidates(pairAnalysis, this.maxSearchDistance, maxNonZeroVectors);
+    }
+
+    @NotNull
     protected MotionSearchAnalysis getMotionSearchAnalysis(@NotNull AfmaFramePairAnalysis pairAnalysis) {
-        // Reuse the expensive axis scan for detect(), detectMulti(), and block_inter within the same frame pair.
+        // Cache motion search bookkeeping even when the expensive axis scan has not run yet.
         MotionSearchAnalysis cachedAnalysis = pairAnalysis.getMotionSearchAnalysis(this.maxSearchDistance, this.maxCandidateAxisOffsets);
         if (cachedAnalysis != null) {
             return cachedAnalysis;
         }
 
+        MotionSearchAnalysis analysis = new MotionSearchAnalysis();
+        pairAnalysis.cacheMotionSearchAnalysis(this.maxSearchDistance, this.maxCandidateAxisOffsets, analysis);
+        return analysis;
+    }
+
+    protected void ensureAxisCandidates(@NotNull AfmaFramePairAnalysis pairAnalysis, @NotNull MotionSearchAnalysis motionSearchAnalysis) {
+        if (motionSearchAnalysis.hasAxisCandidates()) {
+            return;
+        }
+
         AfmaPixelFrame previous = pairAnalysis.previousFrame();
         int maxDx = Math.min(previous.getWidth() - 1, this.maxSearchDistance);
         int maxDy = Math.min(previous.getHeight() - 1, this.maxSearchDistance);
-        MotionSearchAnalysis analysis = new MotionSearchAnalysis(
+        motionSearchAnalysis.cacheAxisCandidates(
                 this.collectAxisCandidates(pairAnalysis, true, maxDx),
                 this.collectAxisCandidates(pairAnalysis, false, maxDy)
         );
-        pairAnalysis.cacheMotionSearchAnalysis(this.maxSearchDistance, this.maxCandidateAxisOffsets, analysis);
-        return analysis;
     }
 
     protected int computeMaxSingleCopyMotionVectors(@NotNull AfmaFramePairAnalysis pairAnalysis) {
@@ -286,6 +311,7 @@ public class AfmaRectCopyDetector {
         if (motionSearchAnalysis.hasRankedMotionVectors()) {
             return;
         }
+        this.ensureAxisCandidates(pairAnalysis, motionSearchAnalysis);
 
         AfmaPixelFrame previous = pairAnalysis.previousFrame();
         int width = previous.getWidth();
@@ -334,19 +360,36 @@ public class AfmaRectCopyDetector {
             return;
         }
 
+        List<AfmaTileMotionSearch.MotionCandidate> boundedCandidates = this.collectBoundedMotionCandidates(pairAnalysis, maxNonZeroVectors);
+        if (!boundedCandidates.isEmpty()) {
+            ArrayList<MotionVector> boundedVectors = new ArrayList<>(boundedCandidates.size());
+            for (AfmaTileMotionSearch.MotionCandidate boundedCandidate : boundedCandidates) {
+                boundedVectors.add(boundedCandidate.vector());
+            }
+            motionSearchAnalysis.cacheTopRankedMotionVectorsWithoutZero(
+                    List.copyOf(boundedVectors),
+                    boundedVectors.size() < maxNonZeroVectors,
+                    maxNonZeroVectors
+            );
+            return;
+        }
+
+        this.ensureAxisCandidates(pairAnalysis, motionSearchAnalysis);
+
         AfmaPixelFrame previous = pairAnalysis.previousFrame();
         int width = previous.getWidth();
         int height = previous.getHeight();
         List<MotionVector> candidateVectors = this.collectCandidateMotionVectors(motionSearchAnalysis, width, height);
         if (candidateVectors.isEmpty()) {
-            motionSearchAnalysis.cacheTopRankedMotionVectorsWithoutZero(List.of(), true);
+            motionSearchAnalysis.cacheTopRankedMotionVectorsWithoutZero(List.of(), true, maxNonZeroVectors);
             return;
         }
 
         if (candidateVectors.size() <= maxNonZeroVectors) {
             motionSearchAnalysis.cacheTopRankedMotionVectorsWithoutZero(
                     this.rankMotionVectorsByScore(pairAnalysis, motionSearchAnalysis, candidateVectors, maxNonZeroVectors),
-                    true
+                    true,
+                    maxNonZeroVectors
             );
             return;
         }
@@ -391,7 +434,8 @@ public class AfmaRectCopyDetector {
         );
         motionSearchAnalysis.cacheTopRankedMotionVectorsWithoutZero(
                 this.rankMotionVectorsByScore(pairAnalysis, motionSearchAnalysis, finalFrontier, maxNonZeroVectors),
-                false
+                false,
+                maxNonZeroVectors
         );
     }
 
@@ -932,10 +976,10 @@ public class AfmaRectCopyDetector {
 
     protected static final class MotionSearchAnalysis {
 
-        @NotNull
-        private final List<Integer> candidateDx;
-        @NotNull
-        private final List<Integer> candidateDy;
+        @Nullable
+        private List<Integer> candidateDx;
+        @Nullable
+        private List<Integer> candidateDy;
         @Nullable
         private List<MotionVector> candidateMotionVectors;
         @Nullable
@@ -945,23 +989,37 @@ public class AfmaRectCopyDetector {
         @Nullable
         private List<MotionVector> topRankedMotionVectorsWithoutZero;
         private boolean topRankedMotionVectorsWithoutZeroComplete;
+        private int topRankedMotionVectorsWithoutZeroBudget;
         @Nullable
         private Map<Long, Double> motionVectorScoresByKey;
         @Nullable
         private Map<HashSamplingKey, Map<Long, Double>> motionVectorHashScoresBySampling;
 
-        protected MotionSearchAnalysis(@NotNull List<Integer> candidateDx, @NotNull List<Integer> candidateDy) {
+        protected MotionSearchAnalysis() {
+        }
+
+        public boolean hasAxisCandidates() {
+            return (this.candidateDx != null) && (this.candidateDy != null);
+        }
+
+        public void cacheAxisCandidates(@NotNull List<Integer> candidateDx, @NotNull List<Integer> candidateDy) {
             this.candidateDx = List.copyOf(candidateDx);
             this.candidateDy = List.copyOf(candidateDy);
         }
 
         @NotNull
         public List<Integer> candidateDx() {
+            if (this.candidateDx == null) {
+                throw new IllegalStateException("AFMA horizontal motion offsets have not been collected yet");
+            }
             return this.candidateDx;
         }
 
         @NotNull
         public List<Integer> candidateDy() {
+            if (this.candidateDy == null) {
+                throw new IllegalStateException("AFMA vertical motion offsets have not been collected yet");
+            }
             return this.candidateDy;
         }
 
@@ -983,18 +1041,20 @@ public class AfmaRectCopyDetector {
             this.rankedMotionVectorsWithoutZero = rankedMotionVectorsWithoutZero;
             this.topRankedMotionVectorsWithoutZero = rankedMotionVectorsWithoutZero;
             this.topRankedMotionVectorsWithoutZeroComplete = true;
+            this.topRankedMotionVectorsWithoutZeroBudget = rankedMotionVectorsWithoutZero.size();
         }
 
         public boolean hasTopRankedMotionVectorsWithoutZero(int requestedCount) {
             return (this.topRankedMotionVectorsWithoutZero != null)
                     && (this.topRankedMotionVectorsWithoutZeroComplete
-                    || (this.topRankedMotionVectorsWithoutZero.size() >= requestedCount));
+                    || (this.topRankedMotionVectorsWithoutZeroBudget >= requestedCount));
         }
 
         public void cacheTopRankedMotionVectorsWithoutZero(@NotNull List<MotionVector> topRankedMotionVectorsWithoutZero,
-                                                           boolean complete) {
+                                                           boolean complete, int budget) {
             this.topRankedMotionVectorsWithoutZero = topRankedMotionVectorsWithoutZero;
             this.topRankedMotionVectorsWithoutZeroComplete = complete;
+            this.topRankedMotionVectorsWithoutZeroBudget = Math.max(topRankedMotionVectorsWithoutZero.size(), budget);
         }
 
         @NotNull
@@ -1020,7 +1080,7 @@ public class AfmaRectCopyDetector {
             }
             if (this.topRankedMotionVectorsWithoutZero.size() <= maxCount) {
                 if (!this.topRankedMotionVectorsWithoutZeroComplete
-                        && (this.topRankedMotionVectorsWithoutZero.size() < maxCount)) {
+                        && (this.topRankedMotionVectorsWithoutZeroBudget < maxCount)) {
                     throw new IllegalStateException("AFMA top motion vectors have not been ranked deeply enough");
                 }
                 return this.topRankedMotionVectorsWithoutZero;
