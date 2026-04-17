@@ -218,6 +218,7 @@ public final class AfmaEncodeStandaloneTool {
         }
 
         options
+                .setFullFrameReferencePlanEnabled(preset == StandalonePreset.SMALLEST_FILE)
                 .setAdaptiveKeyframePlacement(arguments.adaptiveKeyframePlacement())
                 .setAdaptiveMaxKeyframeInterval(Math.max(preferredKeyframeInterval, arguments.adaptiveMaxKeyframeInterval()))
                 .setAdaptiveContinuationMinSavingsBytes(arguments.adaptiveContinuationMinSavingsBytes())

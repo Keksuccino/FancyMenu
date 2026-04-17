@@ -855,24 +855,23 @@ public final class AfmaBinIntraPayloadHelper {
 
     @Nullable
     protected static ScoredPayloadCandidate buildBestCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate) throws IOException {
-        if (pixelCandidate.isSolidColor()) {
-            return buildSolidCandidate(width, height, pixelCandidate);
-        }
+        ScoredPayloadCandidate bestCandidate = null;
+        bestCandidate = pickBetterCandidate(bestCandidate, buildSolidCandidate(width, height, pixelCandidate));
+        bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedCandidate(width, height, pixelCandidate, PaletteOrdering.FREQUENCY));
+        bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedCandidate(width, height, pixelCandidate, PaletteOrdering.STABLE_COLOR));
 
         if (pixelCandidate.hasAlpha()) {
-            if (pixelCandidate.hasUniformRgb() && pixelCandidate.alphaVaries()) {
-                return buildColorPlusAlphaMaskCandidate(width, height, pixelCandidate);
-            }
+            bestCandidate = pickBetterCandidate(bestCandidate, buildFilteredCandidate(width, height, pixelCandidate, Mode.RGBA_FILTERED));
+            bestCandidate = pickBetterCandidate(bestCandidate, buildPlanarFilteredCandidate(width, height, pixelCandidate, Mode.RGBA_PLANAR_FILTERED));
+            bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedColorPlusAlphaCandidate(width, height, pixelCandidate, PaletteOrdering.FREQUENCY));
+            bestCandidate = pickBetterCandidate(bestCandidate, buildIndexedColorPlusAlphaCandidate(width, height, pixelCandidate, PaletteOrdering.STABLE_COLOR));
+            bestCandidate = pickBetterCandidate(bestCandidate, buildSplitAlphaCandidate(width, height, pixelCandidate));
+            bestCandidate = pickBetterCandidate(bestCandidate, buildColorPlusAlphaMaskCandidate(width, height, pixelCandidate));
+        } else {
+            bestCandidate = pickBetterCandidate(bestCandidate, buildFilteredCandidate(width, height, pixelCandidate, Mode.RGB_FILTERED));
+            bestCandidate = pickBetterCandidate(bestCandidate, buildPlanarFilteredCandidate(width, height, pixelCandidate, Mode.RGB_PLANAR_FILTERED));
         }
-
-        List<ModePlan> modePlans = collectModePlans(width, height, pixelCandidate);
-        if (modePlans.isEmpty()) {
-            return null;
-        }
-        if (!shouldEvaluateAllModePlans(width, height, modePlans.size())) {
-            modePlans = shortlistModePlans(modePlans);
-        }
-        return evaluateModePlans(modePlans);
+        return bestCandidate;
     }
 
     @NotNull

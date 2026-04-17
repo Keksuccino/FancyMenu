@@ -48,6 +48,7 @@ public class AfmaEncodeOptions {
     protected long plannerAlphaDriftPenaltyBytes = 12L;
     protected long plannerLossyContinuationPenaltyBytes = 96L;
     protected long plannerKeyframeDistancePenaltyBytes = 160L;
+    protected boolean fullFrameReferencePlanEnabled = false;
     protected double plannerMaxCumulativeAverageError = 0D;
     protected int plannerMaxCumulativeVisibleColorDelta = 0;
     protected int plannerMaxCumulativeAlphaDelta = 0;
@@ -332,6 +333,15 @@ public class AfmaEncodeOptions {
 
     public AfmaEncodeOptions setPlannerKeyframeDistancePenaltyBytes(long plannerKeyframeDistancePenaltyBytes) {
         this.plannerKeyframeDistancePenaltyBytes = plannerKeyframeDistancePenaltyBytes;
+        return this;
+    }
+
+    public boolean isFullFrameReferencePlanEnabled() {
+        return this.fullFrameReferencePlanEnabled;
+    }
+
+    public AfmaEncodeOptions setFullFrameReferencePlanEnabled(boolean fullFrameReferencePlanEnabled) {
+        this.fullFrameReferencePlanEnabled = fullFrameReferencePlanEnabled;
         return this;
     }
 

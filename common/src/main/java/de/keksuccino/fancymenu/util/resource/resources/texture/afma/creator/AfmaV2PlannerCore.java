@@ -81,22 +81,49 @@ final class AfmaV2PlannerCore {
 
         AfmaSourceSequence intro = (introSequence != null) ? introSequence : AfmaSourceSequence.empty();
         options.validateForCounts(mainSequence.size(), intro.size());
+        if (options.isFullFrameReferencePlanEnabled()) {
+            return this.buildFullFrameReferencePlan(mainSequence, intro, options, cancellationRequested, progressListener);
+        }
+        return this.buildMixedPlan(mainSequence, intro, options, cancellationRequested, progressListener);
+    }
 
+    @Nullable
+    protected ExecutorService createExecutor() {
+        int processors = Runtime.getRuntime().availableProcessors();
+        if (processors <= 1) {
+            return null;
+        }
+        int threads = Math.max(1, processors - 1);
+        AtomicInteger counter = new AtomicInteger(0);
+        ThreadFactory threadFactory = runnable -> {
+            Thread thread = new Thread(runnable, "FancyMenu-AfmaV2Planner-" + counter.incrementAndGet());
+            thread.setDaemon(true);
+            return thread;
+        };
+        return Executors.newFixedThreadPool(threads, threadFactory);
+    }
+
+    @NotNull
+    protected AfmaEncodePlan buildMixedPlan(@NotNull AfmaSourceSequence mainSequence,
+                                            @NotNull AfmaSourceSequence introSequence,
+                                            @NotNull AfmaEncodeOptions options,
+                                            @Nullable BooleanSupplier cancellationRequested,
+                                            @Nullable AfmaEncodePlanner.ProgressListener progressListener) throws IOException {
         ExecutorService executor = this.createExecutor();
         AfmaFastPixelBufferPool pixelBufferPool = new AfmaFastPixelBufferPool(Math.max(4, Runtime.getRuntime().availableProcessors()));
         try {
             checkCancelled(cancellationRequested);
-            AfmaSourceSequence dimensionSource = !mainSequence.isEmpty() ? mainSequence : intro;
+            AfmaSourceSequence dimensionSource = !mainSequence.isEmpty() ? mainSequence : introSequence;
             LoadedDimensionFrame loadedDimension = this.loadDimensionFrame(dimensionSource, pixelBufferPool, cancellationRequested, progressListener);
             Dimension dimension = loadedDimension.dimension();
             AfmaPixelFrame preloadedMainFrame = (dimensionSource == mainSequence) ? loadedDimension.frame() : null;
-            AfmaPixelFrame preloadedIntroFrame = (dimensionSource == intro) ? loadedDimension.frame() : null;
-            int totalFrameCount = Math.max(1, mainSequence.size() + intro.size());
+            AfmaPixelFrame preloadedIntroFrame = (dimensionSource == introSequence) ? loadedDimension.frame() : null;
+            int totalFrameCount = Math.max(1, mainSequence.size() + introSequence.size());
             PayloadInterner payloadInterner = new PayloadInterner();
             AfmaRectCopyDetector copyDetector = new AfmaRectCopyDetector(options.getMaxCopySearchDistance(), options.getMaxCandidateAxisOffsets());
             try {
                 PlannedSequence plannedIntro = this.planSequence(
-                        intro,
+                        introSequence,
                         true,
                         List.of(),
                         dimension,
@@ -124,37 +151,12 @@ final class AfmaV2PlannerCore {
                         executor,
                         cancellationRequested,
                         progressListener,
-                        intro.size(),
+                        introSequence.size(),
                         totalFrameCount,
                         preloadedMainFrame
                 );
                 preloadedMainFrame = null;
-
-                long mainFrameTime = plannedMain.defaultDelayMs();
-                long introFrameTime = plannedIntro.defaultDelayMs();
-                if (plannedMain.frames().isEmpty() && !plannedIntro.frames().isEmpty()) {
-                    mainFrameTime = introFrameTime;
-                } else if (plannedIntro.frames().isEmpty()) {
-                    introFrameTime = mainFrameTime;
-                }
-
-                AfmaMetadata metadata = AfmaMetadata.create(
-                        dimension.width(),
-                        dimension.height(),
-                        options.getLoopCount(),
-                        mainFrameTime,
-                        introFrameTime,
-                        plannedMain.customFrameTimes(),
-                        plannedIntro.customFrameTimes(),
-                        options.isAdaptiveKeyframePlacementEnabled() ? options.getAdaptiveMaxKeyframeInterval() : options.getKeyframeInterval(),
-                        options.isRectCopyEnabled(),
-                        options.isDuplicateFrameElision()
-                );
-                return new AfmaEncodePlan(
-                        metadata,
-                        new AfmaFrameIndex(plannedMain.frames(), plannedIntro.frames()),
-                        payloadInterner.payloads()
-                );
+                return this.buildPlan(dimension, options, plannedMain, plannedIntro, payloadInterner.payloads());
             } finally {
                 CloseableUtils.closeQuietly(preloadedIntroFrame);
                 CloseableUtils.closeQuietly(preloadedMainFrame);
@@ -168,20 +170,177 @@ final class AfmaV2PlannerCore {
         }
     }
 
-    @Nullable
-    protected ExecutorService createExecutor() {
-        int processors = Runtime.getRuntime().availableProcessors();
-        if (processors <= 1) {
-            return null;
+    @NotNull
+    protected AfmaEncodePlan buildFullFrameReferencePlan(@NotNull AfmaSourceSequence mainSequence,
+                                                         @NotNull AfmaSourceSequence introSequence,
+                                                         @NotNull AfmaEncodeOptions options,
+                                                         @Nullable BooleanSupplier cancellationRequested,
+                                                         @Nullable AfmaEncodePlanner.ProgressListener progressListener) throws IOException {
+        ExecutorService executor = this.createExecutor();
+        AfmaFastPixelBufferPool pixelBufferPool = new AfmaFastPixelBufferPool(Math.max(4, Runtime.getRuntime().availableProcessors()));
+        try {
+            checkCancelled(cancellationRequested);
+            AfmaSourceSequence dimensionSource = !mainSequence.isEmpty() ? mainSequence : introSequence;
+            LoadedDimensionFrame loadedDimension = this.loadDimensionFrame(dimensionSource, pixelBufferPool, cancellationRequested, progressListener);
+            Dimension dimension = loadedDimension.dimension();
+            AfmaPixelFrame preloadedMainFrame = (dimensionSource == mainSequence) ? loadedDimension.frame() : null;
+            AfmaPixelFrame preloadedIntroFrame = (dimensionSource == introSequence) ? loadedDimension.frame() : null;
+            int totalFrameCount = Math.max(1, mainSequence.size() + introSequence.size());
+            PayloadInterner payloadInterner = new PayloadInterner();
+            try {
+                PlannedSequence plannedIntro = this.planFullFrameSequence(
+                        introSequence,
+                        true,
+                        dimension,
+                        options,
+                        payloadInterner,
+                        pixelBufferPool,
+                        executor,
+                        cancellationRequested,
+                        progressListener,
+                        0,
+                        totalFrameCount,
+                        preloadedIntroFrame
+                );
+                preloadedIntroFrame = null;
+                PlannedSequence plannedMain = this.planFullFrameSequence(
+                        mainSequence,
+                        false,
+                        dimension,
+                        options,
+                        payloadInterner,
+                        pixelBufferPool,
+                        executor,
+                        cancellationRequested,
+                        progressListener,
+                        introSequence.size(),
+                        totalFrameCount,
+                        preloadedMainFrame
+                );
+                preloadedMainFrame = null;
+                return this.buildPlan(dimension, options, plannedMain, plannedIntro, payloadInterner.payloads());
+            } finally {
+                CloseableUtils.closeQuietly(preloadedIntroFrame);
+                CloseableUtils.closeQuietly(preloadedMainFrame);
+            }
+        } finally {
+            this.residualPlannerWorkspace.remove();
+            pixelBufferPool.clear();
+            if (executor != null) {
+                executor.shutdownNow();
+            }
         }
-        int threads = Math.max(1, processors - 1);
-        AtomicInteger counter = new AtomicInteger(0);
-        ThreadFactory threadFactory = runnable -> {
-            Thread thread = new Thread(runnable, "FancyMenu-AfmaV2Planner-" + counter.incrementAndGet());
-            thread.setDaemon(true);
-            return thread;
-        };
-        return Executors.newFixedThreadPool(threads, threadFactory);
+    }
+
+    @NotNull
+    protected PlannedSequence planFullFrameSequence(@NotNull AfmaSourceSequence sequence,
+                                                    boolean introSequence,
+                                                    @NotNull Dimension dimension,
+                                                    @NotNull AfmaEncodeOptions options,
+                                                    @NotNull PayloadInterner payloadInterner,
+                                                    @NotNull AfmaFastPixelBufferPool pixelBufferPool,
+                                                    @Nullable ExecutorService executor,
+                                                    @Nullable BooleanSupplier cancellationRequested,
+                                                    @Nullable AfmaEncodePlanner.ProgressListener progressListener,
+                                                    int startOffset, int totalFrameCount,
+                                                    @Nullable AfmaPixelFrame firstFrameOverride) throws IOException {
+        List<PlannedTimedFrame> plannedFrames = new ArrayList<>();
+        if (sequence.isEmpty()) {
+            return this.buildPlannedSequence(plannedFrames, this.resolveSequenceDefaultDelay(options, introSequence));
+        }
+
+        AsyncFrameLoader frameLoader = new AsyncFrameLoader(sequence, dimension, firstFrameOverride, pixelBufferPool, executor, cancellationRequested);
+        AfmaPixelFrame previousEncodedFrame = null;
+        try {
+            for (int frameIndex = 0; frameIndex < sequence.size(); frameIndex++) {
+                checkCancelled(cancellationRequested);
+                AfmaPixelFrame sourceFrame = frameLoader.takeFrame(frameIndex);
+                AfmaPixelFrame workingFrame = sourceFrame;
+                AfmaPixelFrame nextPreviousEncodedFrame = previousEncodedFrame;
+                boolean keepSourceFrame = false;
+                boolean keepWorkingFrame = false;
+                try {
+                    long frameDelayMs = this.resolveSourceFrameDelay(options, introSequence, frameIndex);
+                    reportPlanningFrameProgress(
+                            progressListener,
+                            "Planning full-reference",
+                            introSequence,
+                            frameIndex + 1,
+                            sequence.size(),
+                            startOffset + frameIndex + 1D,
+                            totalFrameCount
+                    );
+
+                    boolean allowPerceptual = options.isPerceptualBinIntraEnabled();
+                    if ((previousEncodedFrame != null) && options.isNearLosslessEnabled() && allowPerceptual) {
+                        workingFrame = this.applyNearLosslessTemporalMerge(previousEncodedFrame, sourceFrame, options.getNearLosslessMaxChannelDelta());
+                    }
+
+                    if ((previousEncodedFrame != null)
+                            && options.isDuplicateFrameElision()
+                            && new AfmaFramePairAnalysis(previousEncodedFrame, workingFrame).isIdentical()) {
+                        this.extendPlannedFrameDelay(plannedFrames, frameDelayMs);
+                        continue;
+                    }
+
+                    FrameCandidate fullCandidate = this.withQualityMetrics(
+                            this.createFullCandidate(workingFrame, introSequence, frameIndex, options, allowPerceptual),
+                            sourceFrame
+                    );
+                    nextPreviousEncodedFrame = fullCandidate.outputFrame();
+                    keepSourceFrame = nextPreviousEncodedFrame == sourceFrame;
+                    keepWorkingFrame = nextPreviousEncodedFrame == workingFrame;
+                    plannedFrames.add(new PlannedTimedFrame(payloadInterner.intern(fullCandidate), frameDelayMs));
+                } finally {
+                    if (!keepSourceFrame && (sourceFrame != nextPreviousEncodedFrame)) {
+                        CloseableUtils.closeQuietly(sourceFrame);
+                    }
+                    if (!keepWorkingFrame && (workingFrame != sourceFrame) && (workingFrame != nextPreviousEncodedFrame)) {
+                        CloseableUtils.closeQuietly(workingFrame);
+                    }
+                    if (previousEncodedFrame != nextPreviousEncodedFrame) {
+                        CloseableUtils.closeQuietly(previousEncodedFrame);
+                    }
+                    previousEncodedFrame = nextPreviousEncodedFrame;
+                }
+            }
+            return this.buildPlannedSequence(plannedFrames, this.resolveSequenceDefaultDelay(options, introSequence));
+        } finally {
+            CloseableUtils.closeQuietly(previousEncodedFrame);
+            frameLoader.close();
+        }
+    }
+
+    protected AfmaEncodePlan buildPlan(@NotNull Dimension dimension,
+                                       @NotNull AfmaEncodeOptions options,
+                                       @NotNull PlannedSequence plannedMain,
+                                       @NotNull PlannedSequence plannedIntro,
+                                       @NotNull LinkedHashMap<String, AfmaStoredPayload> payloads) {
+        long mainFrameTime = plannedMain.defaultDelayMs();
+        long introFrameTime = plannedIntro.defaultDelayMs();
+        if (plannedMain.frames().isEmpty() && !plannedIntro.frames().isEmpty()) {
+            mainFrameTime = introFrameTime;
+        } else if (plannedIntro.frames().isEmpty()) {
+            introFrameTime = mainFrameTime;
+        }
+
+        AfmaMetadata metadata = AfmaMetadata.create(
+                dimension.width(),
+                dimension.height(),
+                options.getLoopCount(),
+                mainFrameTime,
+                introFrameTime,
+                plannedMain.customFrameTimes(),
+                plannedIntro.customFrameTimes(),
+                options.isAdaptiveKeyframePlacementEnabled() ? options.getAdaptiveMaxKeyframeInterval() : options.getKeyframeInterval(),
+                options.isRectCopyEnabled(),
+                options.isDuplicateFrameElision()
+        );
+        return new AfmaEncodePlan(
+                metadata,
+                new AfmaFrameIndex(plannedMain.frames(), plannedIntro.frames()),
+                payloads
+        );
     }
 
     @NotNull
@@ -869,11 +1028,19 @@ final class AfmaV2PlannerCore {
     protected FrameCandidate createExactFullCandidate(@NotNull AfmaPixelFrame currentFrame,
                                                       boolean introSequence, int frameIndex,
                                                       @NotNull AfmaEncodeOptions options) throws IOException {
+        return this.createFullCandidate(currentFrame, introSequence, frameIndex, options, false);
+    }
+
+    @NotNull
+    protected FrameCandidate createFullCandidate(@NotNull AfmaPixelFrame currentFrame,
+                                                 boolean introSequence, int frameIndex,
+                                                 @NotNull AfmaEncodeOptions options,
+                                                 boolean allowPerceptual) throws IOException {
         String payloadPath = this.buildPayloadPath(introSequence, frameIndex);
         AfmaBinIntraPayloadHelper.ScoredPayloadResult encodedPayload = this.scoreBinIntraPayload(
                 currentFrame,
                 options,
-                false
+                allowPerceptual
         );
         return new FrameCandidate(
                 CandidateKind.FULL,

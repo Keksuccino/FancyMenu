@@ -457,6 +457,7 @@ public class AfmaCreatorState {
         }
 
         options
+                .setFullFrameReferencePlanEnabled(this.optimizationPreset == AfmaOptimizationPreset.SMALLEST_FILE)
                 .setAdaptiveKeyframePlacement(this.adaptiveKeyframePlacement)
                 .setAdaptiveMaxKeyframeInterval(Math.max(preferredKeyframeInterval, parsePositiveInt(this.adaptiveMaxKeyframeInterval, "adaptive max keyframe interval")))
                 .setAdaptiveContinuationMinSavingsBytes(parseNonNegativeLong(this.adaptiveContinuationMinSavingsBytes, "adaptive continuation savings bytes"))
