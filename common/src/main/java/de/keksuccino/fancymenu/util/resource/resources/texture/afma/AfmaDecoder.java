@@ -230,11 +230,13 @@ public class AfmaDecoder implements Closeable {
         this.resetPayloadChunkState();
         file.seek(0L);
         AfmaContainerV2.Header header = AfmaContainerV2.readHeader(file);
+        long fileLength = file.length();
+        long chunkDataOffset = validateContainerHeaderLayout(header, fileLength);
         byte[] metadataBytes = readFully(file, header.metadataLength());
         byte[] frameIndexBytes = readFully(file, header.frameIndexLength());
         byte[] payloadTableBytes = readFully(file, header.payloadTableLength());
         List<AfmaContainerV2.ChunkDescriptor> chunkDescriptors = AfmaContainerV2.readChunkDescriptors(file, header.chunkCount());
-        validateChunkDescriptors(chunkDescriptors, file.length());
+        validateChunkDescriptors(chunkDescriptors, fileLength, chunkDataOffset);
         this.metadata = parseMetadata(metadataBytes);
         this.frameIndex = parseFrameIndex(frameIndexBytes);
         AfmaPayloadArchiveLayout.DecodedPayloadTable decodedPayloadTable = AfmaPayloadArchiveLayout.decodePayloadTable(payloadTableBytes);
@@ -294,14 +296,39 @@ public class AfmaDecoder implements Closeable {
         return bytes;
     }
 
-    protected static void validateChunkDescriptors(@NotNull List<AfmaContainerV2.ChunkDescriptor> chunkDescriptors, long fileLength) throws IOException {
+    protected static void validateChunkDescriptors(@NotNull List<AfmaContainerV2.ChunkDescriptor> chunkDescriptors,
+                                                  long fileLength,
+                                                  long minimumChunkOffset) throws IOException {
         for (int i = 0; i < chunkDescriptors.size(); i++) {
             AfmaContainerV2.ChunkDescriptor descriptor = chunkDescriptors.get(i);
             long endOffset = descriptor.fileOffset() + descriptor.compressedLength();
-            if (descriptor.fileOffset() < 0L || endOffset < descriptor.fileOffset() || endOffset > fileLength) {
+            if (descriptor.fileOffset() < minimumChunkOffset
+                    || endOffset < descriptor.fileOffset()
+                    || endOffset > fileLength) {
                 throw new IOException("AFMA v2 chunk descriptor exceeds the container bounds: " + i);
             }
         }
+    }
+
+    protected static long validateContainerHeaderLayout(@NotNull AfmaContainerV2.Header header, long fileLength) throws IOException {
+        Objects.requireNonNull(header);
+        if (fileLength < AfmaContainerV2.HEADER_BYTES) {
+            throw new IOException("AFMA v2 container is shorter than its header");
+        }
+
+        long sectionBytes = (long) header.metadataLength()
+                + (long) header.frameIndexLength()
+                + (long) header.payloadTableLength();
+        long descriptorBytes = (long) header.chunkCount() * (long) AfmaContainerV2.CHUNK_DESCRIPTOR_BYTES;
+        long descriptorOffset = (long) AfmaContainerV2.HEADER_BYTES + sectionBytes;
+        long dataOffset = descriptorOffset + descriptorBytes;
+        if (sectionBytes < 0L || descriptorBytes < 0L
+                || descriptorOffset < AfmaContainerV2.HEADER_BYTES
+                || dataOffset < descriptorOffset
+                || dataOffset > fileLength) {
+            throw new IOException("AFMA v2 container header exceeds the file bounds");
+        }
+        return dataOffset;
     }
 
     protected void validateArchiveState() throws IOException {
@@ -702,7 +729,19 @@ public class AfmaDecoder implements Closeable {
         Inflater inflater = new Inflater(true);
         try (InflaterInputStream in = new InflaterInputStream(new ByteArrayInputStream(compressedBytes), inflater);
              ByteArrayOutputStream out = new ByteArrayOutputStream(Math.max(32, expectedLength))) {
-            in.transferTo(out);
+            byte[] buffer = new byte[8192];
+            int totalBytes = 0;
+            int read;
+            while ((read = in.read(buffer)) >= 0) {
+                if (read <= 0) {
+                    continue;
+                }
+                totalBytes = Math.addExact(totalBytes, read);
+                if ((expectedLength >= 0) && (totalBytes > expectedLength)) {
+                    throw new IOException("AFMA v2 chunk length exceeded its descriptor while decompressing");
+                }
+                out.write(buffer, 0, read);
+            }
             byte[] decompressedBytes = out.toByteArray();
             if ((expectedLength >= 0) && (decompressedBytes.length != expectedLength)) {
                 throw new IOException("AFMA v2 chunk length mismatch after decompression");

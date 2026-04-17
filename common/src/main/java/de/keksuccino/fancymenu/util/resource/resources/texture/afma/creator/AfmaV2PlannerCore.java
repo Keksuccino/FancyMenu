@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -3029,6 +3030,9 @@ final class AfmaV2PlannerCore {
             if (this.payloadWriter != null) {
                 return AfmaChunkedPayloadHelper.estimateChunkCompressionDelta(previousTail, this.payloadSummary, this.payloadWriter);
             }
+            if (this.materializedPayload != null) {
+                return AfmaChunkedPayloadHelper.estimateChunkCompressionDelta(previousTail, this.materializedPayload);
+            }
             throw new IllegalStateException("AFMA v2 deferred payload no longer has bytes available for archive estimation");
         }
 
@@ -3227,9 +3231,15 @@ final class AfmaV2PlannerCore {
         @NotNull
         protected final Map<String, String> payloadPathsByFingerprint = new LinkedHashMap<>();
         @NotNull
+        protected final Map<FrameCandidate, Long> candidateArchiveBytesCache = new IdentityHashMap<>();
+        @NotNull
         protected final ArchivePreviewState archivePreviewState = new ArchivePreviewState();
 
         public long estimateCandidateArchiveBytes(@NotNull FrameCandidate candidate) {
+            return this.candidateArchiveBytesCache.computeIfAbsent(candidate, this::computeCandidateArchiveBytes);
+        }
+
+        protected long computeCandidateArchiveBytes(@NotNull FrameCandidate candidate) {
             return this.archivePreviewState.previewArchiveBytes(
                     candidate.primaryPayload(),
                     candidate.patchPayload(),
@@ -3271,6 +3281,7 @@ final class AfmaV2PlannerCore {
             this.payloads.put(path, payload.materialize());
             this.payloadPathsByFingerprint.put(fingerprint, path);
             this.archivePreviewState.commitPayload(payload);
+            this.candidateArchiveBytesCache.clear();
             return path;
         }
 
@@ -3437,6 +3448,7 @@ final class AfmaV2PlannerCore {
         @Nullable
         protected AfmaPixelFrame currentFrame;
         protected int currentIndex = -1;
+        protected volatile boolean closed = false;
 
         protected AsyncFrameLoader(@NotNull AfmaSourceSequence sequence,
                                    @NotNull Dimension dimension,
@@ -3501,8 +3513,16 @@ final class AfmaV2PlannerCore {
                             this.dimension.height(),
                             this.pixelBufferPool
                     );
-                    this.validateFrameSize(loadedFrame, frameIndex);
-                    return loadedFrame;
+                    try {
+                        this.validateFrameSize(loadedFrame, frameIndex);
+                        if (this.closed) {
+                            throw new CancellationException("AFMA v2 frame prefetch was closed");
+                        }
+                        return loadedFrame;
+                    } catch (RuntimeException | Error ex) {
+                        CloseableUtils.closeQuietly(loadedFrame);
+                        throw ex;
+                    }
                 } catch (IOException ex) {
                     throw new CompletionException(ex);
                 }
@@ -3518,8 +3538,16 @@ final class AfmaV2PlannerCore {
                     this.dimension.height(),
                     this.pixelBufferPool
             );
-            this.validateFrameSize(frame, frameIndex);
-            return frame;
+            try {
+                this.validateFrameSize(frame, frameIndex);
+                if (this.closed) {
+                    throw new CancellationException("AFMA v2 frame loader was closed");
+                }
+                return frame;
+            } catch (RuntimeException | Error ex) {
+                CloseableUtils.closeQuietly(frame);
+                throw ex;
+            }
         }
 
         @NotNull
@@ -3549,8 +3577,16 @@ final class AfmaV2PlannerCore {
 
         @Override
         public void close() {
+            this.closed = true;
             if (this.nextFrameFuture != null) {
-                this.nextFrameFuture.cancel(true);
+                CompletableFuture<AfmaPixelFrame> future = this.nextFrameFuture;
+                future.cancel(true);
+                if (future.isDone() && !future.isCompletedExceptionally() && !future.isCancelled()) {
+                    try {
+                        CloseableUtils.closeQuietly(future.getNow(null));
+                    } catch (CancellationException | CompletionException ignored) {
+                    }
+                }
                 this.nextFrameFuture = null;
                 this.nextFutureIndex = -1;
             }

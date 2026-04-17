@@ -62,7 +62,7 @@ public final class AfmaContainerV2 {
     @NotNull
     public static List<ChunkDescriptor> readChunkDescriptors(@NotNull DataInput in, int chunkCount) throws IOException {
         Objects.requireNonNull(in);
-        ArrayList<ChunkDescriptor> descriptors = new ArrayList<>(chunkCount);
+        ArrayList<ChunkDescriptor> descriptors = new ArrayList<>(Math.min(chunkCount, 256));
         for (int i = 0; i < chunkCount; i++) {
             long fileOffset = in.readLong();
             int compressedLength = in.readInt();
