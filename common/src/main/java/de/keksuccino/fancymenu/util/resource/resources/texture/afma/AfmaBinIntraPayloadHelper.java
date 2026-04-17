@@ -1268,7 +1268,7 @@ public final class AfmaBinIntraPayloadHelper {
             return Integer.compareUnsigned(first.bucketColor, second.bucketColor);
         });
 
-        int paletteSize = Math.min(MAX_PALETTE_COLORS, sortedBuckets.size());
+        int paletteSize = Math.min(profile.maxPaletteColors(), sortedBuckets.size());
         paletteBuckets = new BucketAccumulator[paletteSize];
         Map<Integer, Integer> paletteMapping = new HashMap<>(sortedBuckets.size() * 2);
         for (int i = 0; i < paletteSize; i++) {
@@ -2015,8 +2015,13 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     protected enum PerceptualProfile {
-        LIGHT(5, 5, 5, 5, 4, 4),
-        MEDIUM(4, 4, 4, 4, 8, 8);
+        LIGHT(5, 5, 5, 5, 4, 4, MAX_PALETTE_COLORS),
+        MEDIUM(4, 4, 4, 4, 8, 8, MAX_PALETTE_COLORS),
+        PALETTE_64(4, 4, 4, 4, 8, 8, 64),
+        PALETTE_32(4, 4, 4, 4, 8, 8, 32),
+        PALETTE_16(4, 4, 3, 4, 12, 12, 16),
+        PALETTE_8(4, 4, 3, 4, 16, 16, 8),
+        PALETTE_4(3, 3, 3, 4, 20, 20, 4);
 
         private final int redBits;
         private final int greenBits;
@@ -2024,15 +2029,18 @@ public final class AfmaBinIntraPayloadHelper {
         private final int alphaBits;
         private final int transparentSnapThreshold;
         private final int opaqueSnapThreshold;
+        private final int maxPaletteColors;
 
         PerceptualProfile(int redBits, int greenBits, int blueBits, int alphaBits,
-                          int transparentSnapThreshold, int opaqueSnapThreshold) {
+                          int transparentSnapThreshold, int opaqueSnapThreshold,
+                          int maxPaletteColors) {
             this.redBits = redBits;
             this.greenBits = greenBits;
             this.blueBits = blueBits;
             this.alphaBits = alphaBits;
             this.transparentSnapThreshold = transparentSnapThreshold;
             this.opaqueSnapThreshold = opaqueSnapThreshold;
+            this.maxPaletteColors = maxPaletteColors;
         }
 
         public int redBits() {
@@ -2057,6 +2065,10 @@ public final class AfmaBinIntraPayloadHelper {
 
         public int opaqueSnapThreshold() {
             return this.opaqueSnapThreshold;
+        }
+
+        public int maxPaletteColors() {
+            return this.maxPaletteColors;
         }
     }
 

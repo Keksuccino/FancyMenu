@@ -614,7 +614,7 @@ public class AfmaCreatorState {
 
     protected static int defaultPerceptualVisibleColorDelta(@NotNull AfmaOptimizationPreset preset) {
         return switch (preset) {
-            case SMALLEST_FILE -> 16;
+            case SMALLEST_FILE -> 20;
             case BALANCED -> 10;
             case FASTEST_DECODE -> 8;
         };
@@ -622,7 +622,7 @@ public class AfmaCreatorState {
 
     protected static int defaultPerceptualAlphaDelta(@NotNull AfmaOptimizationPreset preset) {
         return switch (preset) {
-            case SMALLEST_FILE -> 32;
+            case SMALLEST_FILE -> 48;
             case BALANCED -> 20;
             case FASTEST_DECODE -> 16;
         };
@@ -630,7 +630,7 @@ public class AfmaCreatorState {
 
     protected static double defaultPerceptualAverageError(@NotNull AfmaOptimizationPreset preset) {
         return switch (preset) {
-            case SMALLEST_FILE -> 7.5D;
+            case SMALLEST_FILE -> 9.0D;
             case BALANCED -> 4.0D;
             case FASTEST_DECODE -> 3.0D;
         };
