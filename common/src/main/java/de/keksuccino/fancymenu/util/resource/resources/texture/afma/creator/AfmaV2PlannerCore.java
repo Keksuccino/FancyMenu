@@ -62,7 +62,8 @@ final class AfmaV2PlannerCore {
     protected static final double STRONG_FULL_FRAME_DELTA_SKIP_CHANGED_RATIO = 0.35D;
     protected static final long FAMILY_SWITCH_MARGIN_BYTES = 48L;
     protected static final double FAMILY_SWITCH_MARGIN_RATIO = 0.05D;
-    protected static final int FULL_REFERENCE_PROBE_FRAMES_PER_SEQUENCE = 3;
+    protected static final int FULL_REFERENCE_PROBE_WINDOWS_PER_SEQUENCE = 3;
+    protected static final int FULL_REFERENCE_PROBE_FRAMES_PER_WINDOW = 3;
     protected static final int FULL_REFERENCE_PROBE_MIN_MIXED_WINS = 2;
     protected static final long FULL_REFERENCE_PROBE_REQUIRED_SAVINGS_BYTES = 48L * 1024L;
     protected static final double FULL_REFERENCE_PROBE_REQUIRED_SAVINGS_RATIO = 0.06D;
@@ -86,9 +87,18 @@ final class AfmaV2PlannerCore {
 
         AfmaSourceSequence intro = (introSequence != null) ? introSequence : AfmaSourceSequence.empty();
         options.validateForCounts(mainSequence.size(), intro.size());
-        if (options.isFullFrameReferencePlanEnabled()
-                && this.shouldUseFullFrameReferencePlan(mainSequence, intro, options, cancellationRequested, progressListener)) {
-            return this.buildFullFrameReferencePlan(mainSequence, intro, options, cancellationRequested, progressListener);
+        if (options.isFullFrameReferencePlanEnabled()) {
+            reportProgress(progressListener, "Profiling smallest-file mode...", 0.04D);
+            boolean useFullIntro = this.shouldUseFullFrameReferencePlanForSequence(intro, true, options, cancellationRequested);
+            reportProgress(progressListener, "Profiling smallest-file mode...", 0.06D);
+            boolean useFullMain = this.shouldUseFullFrameReferencePlanForSequence(mainSequence, false, options, cancellationRequested);
+            reportProgress(progressListener, "Profiling smallest-file mode...", 0.08D);
+            if (useFullIntro || useFullMain) {
+                if (useFullIntro && useFullMain) {
+                    return this.buildFullFrameReferencePlan(mainSequence, intro, options, cancellationRequested, progressListener);
+                }
+                return this.buildAdaptiveReferencePlan(mainSequence, intro, useFullMain, useFullIntro, options, cancellationRequested, progressListener);
+            }
         }
         return this.buildMixedPlan(mainSequence, intro, options, cancellationRequested, progressListener);
     }
@@ -109,56 +119,48 @@ final class AfmaV2PlannerCore {
         return Executors.newFixedThreadPool(threads, threadFactory);
     }
 
-    protected boolean shouldUseFullFrameReferencePlan(@NotNull AfmaSourceSequence mainSequence,
-                                                      @NotNull AfmaSourceSequence introSequence,
-                                                      @NotNull AfmaEncodeOptions options,
-                                                      @Nullable BooleanSupplier cancellationRequested,
-                                                      @Nullable AfmaEncodePlanner.ProgressListener progressListener) throws IOException {
-        int introSampleFrames = Math.min(FULL_REFERENCE_PROBE_FRAMES_PER_SEQUENCE, introSequence.size());
-        int mainSampleFrames = Math.min(FULL_REFERENCE_PROBE_FRAMES_PER_SEQUENCE, mainSequence.size());
-        if ((introSampleFrames + mainSampleFrames) <= 1) {
+    protected boolean shouldUseFullFrameReferencePlanForSequence(@NotNull AfmaSourceSequence sequence,
+                                                                 boolean introSequence,
+                                                                 @NotNull AfmaEncodeOptions options,
+                                                                 @Nullable BooleanSupplier cancellationRequested) throws IOException {
+        if (sequence.size() <= 1) {
             return true;
         }
 
-        reportProgress(progressListener, "Profiling smallest-file mode...", 0.04D);
         ExecutorService executor = this.createExecutor();
         AfmaFastPixelBufferPool pixelBufferPool = new AfmaFastPixelBufferPool(Math.max(4, Runtime.getRuntime().availableProcessors()));
         try {
             checkCancelled(cancellationRequested);
             AfmaRectCopyDetector copyDetector = new AfmaRectCopyDetector(options.getMaxCopySearchDistance(), options.getMaxCandidateAxisOffsets());
-            ReferencePlanProbeResult introProbe = this.probeFullReferenceSequence(
-                    introSequence,
-                    true,
-                    List.of(),
-                    introSampleFrames,
-                    options,
-                    copyDetector,
-                    pixelBufferPool,
-                    executor,
-                    cancellationRequested
-            );
-            reportProgress(progressListener, "Profiling smallest-file mode...", 0.06D);
-            ReferencePlanProbeResult mainProbe = this.probeFullReferenceSequence(
-                    mainSequence,
-                    false,
-                    introProbe.descriptors(),
-                    mainSampleFrames,
-                    options,
-                    copyDetector,
-                    pixelBufferPool,
-                    executor,
-                    cancellationRequested
-            );
-            reportProgress(progressListener, "Profiling smallest-file mode...", 0.08D);
-
-            int sampledFrames = introProbe.sampledFrames() + mainProbe.sampledFrames();
+            int sampledFrames = 0;
+            int mixedWins = 0;
+            long selectedBytes = 0L;
+            long fullReferenceBytes = 0L;
+            for (Integer windowStartIndex : this.buildFullReferenceProbeWindowStartIndexes(sequence.size())) {
+                int sampleFrameCount = Math.min(FULL_REFERENCE_PROBE_FRAMES_PER_WINDOW, sequence.size() - windowStartIndex);
+                if (sampleFrameCount <= 0) {
+                    continue;
+                }
+                ReferencePlanProbeResult probe = this.probeFullReferenceWindow(
+                        sequence,
+                        introSequence,
+                        windowStartIndex,
+                        sampleFrameCount,
+                        options,
+                        copyDetector,
+                        pixelBufferPool,
+                        executor,
+                        cancellationRequested
+                );
+                sampledFrames += probe.sampledFrames();
+                mixedWins += probe.mixedWins();
+                selectedBytes += probe.selectedArchiveBytes();
+                fullReferenceBytes += probe.fullReferenceArchiveBytes();
+            }
             if (sampledFrames <= 1) {
                 return true;
             }
 
-            int mixedWins = introProbe.mixedWins() + mainProbe.mixedWins();
-            long selectedBytes = introProbe.selectedArchiveBytes() + mainProbe.selectedArchiveBytes();
-            long fullReferenceBytes = introProbe.fullReferenceArchiveBytes() + mainProbe.fullReferenceArchiveBytes();
             long requiredSavings = Math.max(
                     FULL_REFERENCE_PROBE_REQUIRED_SAVINGS_BYTES,
                     (long) Math.ceil(fullReferenceBytes * FULL_REFERENCE_PROBE_REQUIRED_SAVINGS_RATIO)
@@ -175,15 +177,40 @@ final class AfmaV2PlannerCore {
     }
 
     @NotNull
-    protected ReferencePlanProbeResult probeFullReferenceSequence(@NotNull AfmaSourceSequence sequence,
-                                                                  boolean introSequence,
-                                                                  @NotNull List<AfmaFrameDescriptor> companionSequenceFrames,
-                                                                  int sampleFrameCount,
-                                                                  @NotNull AfmaEncodeOptions options,
-                                                                  @NotNull AfmaRectCopyDetector copyDetector,
-                                                                  @NotNull AfmaFastPixelBufferPool pixelBufferPool,
-                                                                  @Nullable ExecutorService executor,
-                                                                  @Nullable BooleanSupplier cancellationRequested) throws IOException {
+    protected List<Integer> buildFullReferenceProbeWindowStartIndexes(int sequenceSize) {
+        if (sequenceSize <= FULL_REFERENCE_PROBE_FRAMES_PER_WINDOW) {
+            return List.of(0);
+        }
+
+        int maxStartIndex = Math.max(0, sequenceSize - FULL_REFERENCE_PROBE_FRAMES_PER_WINDOW);
+        int requestedWindowCount = Math.min(
+                FULL_REFERENCE_PROBE_WINDOWS_PER_SEQUENCE,
+                Math.max(1, sequenceSize - FULL_REFERENCE_PROBE_FRAMES_PER_WINDOW + 1)
+        );
+        LinkedHashSet<Integer> startIndexes = new LinkedHashSet<>();
+        startIndexes.add(0);
+        if (requestedWindowCount > 1) {
+            startIndexes.add(maxStartIndex);
+        }
+        for (int windowIndex = 1; (windowIndex < (requestedWindowCount - 1)) && (maxStartIndex > 0); windowIndex++) {
+            int startIndex = (int) Math.round((double) maxStartIndex * ((double) windowIndex / (double) (requestedWindowCount - 1)));
+            startIndexes.add(Math.max(0, Math.min(maxStartIndex, startIndex)));
+        }
+        ArrayList<Integer> sortedStartIndexes = new ArrayList<>(startIndexes);
+        Collections.sort(sortedStartIndexes);
+        return List.copyOf(sortedStartIndexes);
+    }
+
+    @NotNull
+    protected ReferencePlanProbeResult probeFullReferenceWindow(@NotNull AfmaSourceSequence sequence,
+                                                                boolean introSequence,
+                                                                int startFrameIndex,
+                                                                int sampleFrameCount,
+                                                                @NotNull AfmaEncodeOptions options,
+                                                                @NotNull AfmaRectCopyDetector copyDetector,
+                                                                @NotNull AfmaFastPixelBufferPool pixelBufferPool,
+                                                                @Nullable ExecutorService executor,
+                                                                @Nullable BooleanSupplier cancellationRequested) throws IOException {
         if (sequence.isEmpty() || sampleFrameCount <= 0) {
             return ReferencePlanProbeResult.empty();
         }
@@ -200,8 +227,40 @@ final class AfmaV2PlannerCore {
         Integer expectedWidth = null;
         Integer expectedHeight = null;
         try {
-            int limit = Math.min(sampleFrameCount, sequence.size());
-            for (int frameIndex = 0; frameIndex < limit; frameIndex++) {
+            int firstSampleFrameIndex = Math.max(0, Math.min(sequence.size() - 1, startFrameIndex));
+            int limit = Math.min(sequence.size(), firstSampleFrameIndex + Math.max(0, sampleFrameCount));
+            if ((firstSampleFrameIndex > 0) && (firstSampleFrameIndex < sequence.size())) {
+                AfmaPixelFrame warmupSourceFrame = this.frameNormalizer.loadFrame(
+                        Objects.requireNonNull(sequence.getFrame(firstSampleFrameIndex - 1)),
+                        pixelBufferPool
+                );
+                AfmaPixelFrame warmupOutputFrame = warmupSourceFrame;
+                boolean keepWarmupSourceFrame = false;
+                try {
+                    expectedWidth = warmupSourceFrame.getWidth();
+                    expectedHeight = warmupSourceFrame.getHeight();
+                    FrameCandidate warmupFullCandidate = this.createMeasuredFullCandidate(
+                            warmupSourceFrame,
+                            warmupSourceFrame,
+                            introSequence,
+                            firstSampleFrameIndex - 1,
+                            options,
+                            options.isPerceptualBinIntraEnabled()
+                    );
+                    AfmaFrameDescriptor warmupDescriptor = payloadInterner.intern(warmupFullCandidate);
+                    descriptors.add(warmupDescriptor);
+                    qualityBudgetState = qualityBudgetState.advance(warmupFullCandidate);
+                    previousEncodedFrame = warmupFullCandidate.outputFrame();
+                    warmupOutputFrame = previousEncodedFrame;
+                    keepWarmupSourceFrame = previousEncodedFrame == warmupSourceFrame;
+                } finally {
+                    if (!keepWarmupSourceFrame && (warmupSourceFrame != warmupOutputFrame)) {
+                        CloseableUtils.closeQuietly(warmupSourceFrame);
+                    }
+                }
+            }
+
+            for (int frameIndex = firstSampleFrameIndex; frameIndex < limit; frameIndex++) {
                 checkCancelled(cancellationRequested);
                 AfmaPixelFrame sourceFrame = this.frameNormalizer.loadFrame(Objects.requireNonNull(sequence.getFrame(frameIndex)), pixelBufferPool);
                 AfmaPixelFrame workingFrame = sourceFrame;
@@ -242,7 +301,7 @@ final class AfmaV2PlannerCore {
                             workingFrame,
                             introSequence,
                             descriptors,
-                            companionSequenceFrames,
+                            List.of(),
                             frameIndex,
                             framesSinceKeyframe,
                             qualityBudgetState,
@@ -290,6 +349,105 @@ final class AfmaV2PlannerCore {
         } finally {
             CloseableUtils.closeQuietly(previousEncodedFrame);
             this.closeInternedPayloads(payloadInterner);
+        }
+    }
+
+    @NotNull
+    protected AfmaEncodePlan buildAdaptiveReferencePlan(@NotNull AfmaSourceSequence mainSequence,
+                                                        @NotNull AfmaSourceSequence introSequence,
+                                                        boolean useFullMainPlan,
+                                                        boolean useFullIntroPlan,
+                                                        @NotNull AfmaEncodeOptions options,
+                                                        @Nullable BooleanSupplier cancellationRequested,
+                                                        @Nullable AfmaEncodePlanner.ProgressListener progressListener) throws IOException {
+        ExecutorService executor = this.createExecutor();
+        AfmaFastPixelBufferPool pixelBufferPool = new AfmaFastPixelBufferPool(Math.max(4, Runtime.getRuntime().availableProcessors()));
+        try {
+            checkCancelled(cancellationRequested);
+            AfmaSourceSequence dimensionSource = !mainSequence.isEmpty() ? mainSequence : introSequence;
+            LoadedDimensionFrame loadedDimension = this.loadDimensionFrame(dimensionSource, pixelBufferPool, cancellationRequested, progressListener);
+            Dimension dimension = loadedDimension.dimension();
+            AfmaPixelFrame preloadedMainFrame = (dimensionSource == mainSequence) ? loadedDimension.frame() : null;
+            AfmaPixelFrame preloadedIntroFrame = (dimensionSource == introSequence) ? loadedDimension.frame() : null;
+            int totalFrameCount = Math.max(1, mainSequence.size() + introSequence.size());
+            PayloadInterner payloadInterner = new PayloadInterner();
+            AfmaRectCopyDetector copyDetector = new AfmaRectCopyDetector(options.getMaxCopySearchDistance(), options.getMaxCandidateAxisOffsets());
+            try {
+                PlannedSequence plannedIntro = useFullIntroPlan
+                        ? this.planFullFrameSequence(
+                        introSequence,
+                        true,
+                        dimension,
+                        options,
+                        payloadInterner,
+                        pixelBufferPool,
+                        executor,
+                        cancellationRequested,
+                        progressListener,
+                        0,
+                        totalFrameCount,
+                        preloadedIntroFrame
+                )
+                        : this.planSequence(
+                        introSequence,
+                        true,
+                        List.of(),
+                        dimension,
+                        options,
+                        copyDetector,
+                        payloadInterner,
+                        pixelBufferPool,
+                        executor,
+                        cancellationRequested,
+                        progressListener,
+                        0,
+                        totalFrameCount,
+                        preloadedIntroFrame
+                );
+                preloadedIntroFrame = null;
+                PlannedSequence plannedMain = useFullMainPlan
+                        ? this.planFullFrameSequence(
+                        mainSequence,
+                        false,
+                        dimension,
+                        options,
+                        payloadInterner,
+                        pixelBufferPool,
+                        executor,
+                        cancellationRequested,
+                        progressListener,
+                        introSequence.size(),
+                        totalFrameCount,
+                        preloadedMainFrame
+                )
+                        : this.planSequence(
+                        mainSequence,
+                        false,
+                        plannedIntro.frames(),
+                        dimension,
+                        options,
+                        copyDetector,
+                        payloadInterner,
+                        pixelBufferPool,
+                        executor,
+                        cancellationRequested,
+                        progressListener,
+                        introSequence.size(),
+                        totalFrameCount,
+                        preloadedMainFrame
+                );
+                preloadedMainFrame = null;
+                return this.buildPlan(dimension, options, plannedMain, plannedIntro, payloadInterner.payloads());
+            } finally {
+                CloseableUtils.closeQuietly(preloadedIntroFrame);
+                CloseableUtils.closeQuietly(preloadedMainFrame);
+            }
+        } finally {
+            this.residualPlannerWorkspace.remove();
+            pixelBufferPool.clear();
+            if (executor != null) {
+                executor.shutdownNow();
+            }
         }
     }
 
@@ -772,7 +930,7 @@ final class AfmaV2PlannerCore {
                 options,
                 allowPerceptual
         );
-        Map<FrameCandidate, Long> packedArchiveBytesByCandidate = this.estimatePackedArchiveBytesByCandidate(
+        PackedArchiveCandidateMetrics packedArchiveMetrics = this.estimatePackedArchiveBytesByCandidate(
                 Arrays.asList(deltaCandidate, copyCandidate, blockInterCandidate, fullCandidate),
                 payloadInterner,
                 introSequence,
@@ -781,10 +939,12 @@ final class AfmaV2PlannerCore {
                 qualityBudgetState,
                 options
         );
+        Map<FrameCandidate, Long> packedArchiveBytesByCandidate = packedArchiveMetrics.totalBytesByCandidate();
+        Map<FrameCandidate, Long> packedArchiveAddedBytesByCandidate = packedArchiveMetrics.addedBytesByCandidate();
         deltaCandidate = this.filterWeakCandidateAgainstFull(
                 deltaCandidate,
                 fullCandidate,
-                packedArchiveBytesByCandidate,
+                packedArchiveAddedBytesByCandidate,
                 sourceFrame.getWidth(),
                 sourceFrame.getHeight(),
                 options
@@ -792,7 +952,7 @@ final class AfmaV2PlannerCore {
         copyCandidate = this.filterWeakCandidateAgainstFull(
                 copyCandidate,
                 fullCandidate,
-                packedArchiveBytesByCandidate,
+                packedArchiveAddedBytesByCandidate,
                 sourceFrame.getWidth(),
                 sourceFrame.getHeight(),
                 options
@@ -800,7 +960,7 @@ final class AfmaV2PlannerCore {
         blockInterCandidate = this.filterWeakCandidateAgainstFull(
                 blockInterCandidate,
                 fullCandidate,
-                packedArchiveBytesByCandidate,
+                packedArchiveAddedBytesByCandidate,
                 sourceFrame.getWidth(),
                 sourceFrame.getHeight(),
                 options
@@ -996,42 +1156,48 @@ final class AfmaV2PlannerCore {
     }
 
     @NotNull
-    protected Map<FrameCandidate, Long> estimatePackedArchiveBytesByCandidate(@NotNull List<FrameCandidate> candidates,
-                                                                              @NotNull PayloadInterner payloadInterner,
-                                                                              boolean introSequence,
-                                                                              @NotNull List<AfmaFrameDescriptor> currentSequenceFrames,
-                                                                              @NotNull List<AfmaFrameDescriptor> companionSequenceFrames,
-                                                                              @NotNull QualityBudgetState qualityBudgetState,
-                                                                              @NotNull AfmaEncodeOptions options) throws IOException {
+    protected PackedArchiveCandidateMetrics estimatePackedArchiveBytesByCandidate(@NotNull List<FrameCandidate> candidates,
+                                                                                  @NotNull PayloadInterner payloadInterner,
+                                                                                  boolean introSequence,
+                                                                                  @NotNull List<AfmaFrameDescriptor> currentSequenceFrames,
+                                                                                  @NotNull List<AfmaFrameDescriptor> companionSequenceFrames,
+                                                                                  @NotNull QualityBudgetState qualityBudgetState,
+                                                                                  @NotNull AfmaEncodeOptions options) throws IOException {
         IdentityHashMap<FrameCandidate, Long> packedArchiveBytesByCandidate = new IdentityHashMap<>();
+        IdentityHashMap<FrameCandidate, Long> packedArchiveAddedBytesByCandidate = new IdentityHashMap<>();
+        long basePackedArchiveBytes = payloadInterner.estimatePackedArchiveBytes(
+                introSequence,
+                currentSequenceFrames,
+                companionSequenceFrames,
+                options.getLoopCount()
+        );
         for (FrameCandidate candidate : candidates) {
             if ((candidate == null) || !this.isCandidateAllowed(candidate, qualityBudgetState, options)) {
                 continue;
             }
-            packedArchiveBytesByCandidate.put(
+            long packedArchiveBytes = payloadInterner.estimatePackedCandidateArchiveBytes(
                     candidate,
-                    payloadInterner.estimatePackedCandidateArchiveBytes(
-                            candidate,
-                            introSequence,
-                            currentSequenceFrames,
-                            companionSequenceFrames,
-                            options.getLoopCount()
-                    )
+                    introSequence,
+                    currentSequenceFrames,
+                    companionSequenceFrames,
+                    options.getLoopCount()
             );
+            packedArchiveBytesByCandidate.put(candidate, packedArchiveBytes);
+            packedArchiveAddedBytesByCandidate.put(candidate, Math.max(0L, packedArchiveBytes - basePackedArchiveBytes));
         }
-        return packedArchiveBytesByCandidate;
+        return new PackedArchiveCandidateMetrics(packedArchiveBytesByCandidate, packedArchiveAddedBytesByCandidate);
     }
 
     @Nullable
     protected FrameCandidate filterWeakCandidateAgainstFull(@Nullable FrameCandidate candidate,
                                                             @Nullable FrameCandidate fullCandidate,
-                                                            @NotNull Map<FrameCandidate, Long> packedArchiveBytesByCandidate,
+                                                            @NotNull Map<FrameCandidate, Long> packedArchiveAddedBytesByCandidate,
                                                             int frameWidth, int frameHeight,
                                                             @NotNull AfmaEncodeOptions options) {
         if ((candidate == null) || (fullCandidate == null) || (candidate == fullCandidate)) {
             return candidate;
         }
-        if (!this.shouldKeepCandidateAgainstFull(candidate, fullCandidate, packedArchiveBytesByCandidate, frameWidth, frameHeight, options)) {
+        if (!this.shouldKeepCandidateAgainstFull(candidate, fullCandidate, packedArchiveAddedBytesByCandidate, frameWidth, frameHeight, options)) {
             return null;
         }
         return candidate;
@@ -1039,16 +1205,16 @@ final class AfmaV2PlannerCore {
 
     protected boolean shouldKeepCandidateAgainstFull(@NotNull FrameCandidate candidate,
                                                      @NotNull FrameCandidate fullCandidate,
-                                                     @NotNull Map<FrameCandidate, Long> packedArchiveBytesByCandidate,
+                                                     @NotNull Map<FrameCandidate, Long> packedArchiveAddedBytesByCandidate,
                                                      int frameWidth, int frameHeight,
                                                      @NotNull AfmaEncodeOptions options) {
         if ((candidate.kind() == CandidateKind.FULL) || (candidate.kind() == CandidateKind.SAME)) {
             return true;
         }
 
-        Long candidateArchiveBytes = packedArchiveBytesByCandidate.get(candidate);
-        Long fullArchiveBytes = packedArchiveBytesByCandidate.get(fullCandidate);
-        if ((candidateArchiveBytes == null) || (fullArchiveBytes == null)) {
+        Long candidateArchiveAddedBytes = packedArchiveAddedBytesByCandidate.get(candidate);
+        Long fullArchiveAddedBytes = packedArchiveAddedBytesByCandidate.get(fullCandidate);
+        if ((candidateArchiveAddedBytes == null) || (fullArchiveAddedBytes == null)) {
             return true;
         }
 
@@ -1057,8 +1223,8 @@ final class AfmaV2PlannerCore {
         return switch (candidate.kind()) {
             case DELTA_BIN_INTRA, COPY_BIN_INTRA, MULTI_COPY_BIN_INTRA, BLOCK_INTER ->
                     this.shouldKeepComplexCandidateByArchiveBytes(
-                            candidateArchiveBytes,
-                            fullArchiveBytes,
+                            candidateArchiveAddedBytes,
+                            fullArchiveAddedBytes,
                             patchArea,
                             frameWidth,
                             frameHeight,
@@ -1067,8 +1233,8 @@ final class AfmaV2PlannerCore {
                     );
             case DELTA_RESIDUAL, COPY_RESIDUAL, MULTI_COPY_RESIDUAL ->
                     this.shouldKeepResidualCandidateByArchiveBytes(
-                            candidateArchiveBytes,
-                            fullArchiveBytes,
+                            candidateArchiveAddedBytes,
+                            fullArchiveAddedBytes,
                             patchArea,
                             frameWidth,
                             frameHeight,
@@ -1077,8 +1243,8 @@ final class AfmaV2PlannerCore {
                     );
             case DELTA_SPARSE, COPY_SPARSE, MULTI_COPY_SPARSE ->
                     this.shouldKeepSparseCandidateByArchiveBytes(
-                            candidateArchiveBytes,
-                            fullArchiveBytes,
+                            candidateArchiveAddedBytes,
+                            fullArchiveAddedBytes,
                             patchArea,
                             frameWidth,
                             frameHeight,
@@ -3993,6 +4159,27 @@ final class AfmaV2PlannerCore {
             return new AfmaV2DescriptorSizer().estimate(descriptor);
         }
 
+        public long estimatePackedArchiveBytes(boolean introSequence,
+                                               @NotNull List<AfmaFrameDescriptor> currentSequenceFrames,
+                                               @NotNull List<AfmaFrameDescriptor> companionSequenceFrames,
+                                               int loopCount) throws IOException {
+            ArrayList<AfmaFrameDescriptor> introFrames;
+            ArrayList<AfmaFrameDescriptor> mainFrames;
+            if (introSequence) {
+                introFrames = new ArrayList<>(currentSequenceFrames);
+                mainFrames = new ArrayList<>(companionSequenceFrames);
+            } else {
+                introFrames = new ArrayList<>(companionSequenceFrames);
+                mainFrames = new ArrayList<>(currentSequenceFrames);
+            }
+            AfmaFrameIndex frameIndex = new AfmaFrameIndex(mainFrames, introFrames);
+            AfmaChunkedPayloadHelper.PackedPayloadArchive packedArchive = AfmaChunkedPayloadHelper.simulateArchiveLayout(
+                    new LinkedHashMap<>(this.payloads),
+                    AfmaChunkedPayloadHelper.buildPackingHints(frameIndex, loopCount)
+            );
+            return packedArchive.packingMetrics().predictedArchiveBytes();
+        }
+
         public long estimatePackedCandidateArchiveBytes(@NotNull FrameCandidate candidate,
                                                         boolean introSequence,
                                                         @NotNull List<AfmaFrameDescriptor> currentSequenceFrames,
@@ -4102,6 +4289,10 @@ final class AfmaV2PlannerCore {
 
     protected record CandidateArchivePreview(@NotNull LinkedHashMap<String, AfmaStoredPayload> payloads,
                                              @NotNull AfmaFrameDescriptor descriptor) {
+    }
+
+    protected record PackedArchiveCandidateMetrics(@NotNull Map<FrameCandidate, Long> totalBytesByCandidate,
+                                                   @NotNull Map<FrameCandidate, Long> addedBytesByCandidate) {
     }
 
     protected static final class AfmaV2DescriptorSizer {

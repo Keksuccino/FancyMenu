@@ -195,7 +195,7 @@ public final class AfmaEncodeStandaloneTool {
                     .setPlannerAlphaDriftPenaltyBytes(8L)
                     .setPlannerLossyContinuationPenaltyBytes(40L)
                     .setPlannerKeyframeDistancePenaltyBytes(96L)
-                    .setMaxDeltaAreaRatioWithoutStrongSavings(0.985D)
+                    .setMaxDeltaAreaRatioWithoutStrongSavings(1.0D)
                     .setMaxCopyPatchAreaRatioWithoutStrongSavings(0.97D)
                     .setMinComplexCandidateSavingsBytes(8L * 1024L)
                     .setMinStrongComplexCandidateSavingsBytes(32L * 1024L)
@@ -380,7 +380,7 @@ public final class AfmaEncodeStandaloneTool {
     }
 
     protected enum StandalonePreset {
-        SMALLEST_FILE("smallest_file", 90, true, true, true, 2048, 12, true, 360, 128L, 0.0025D, 20, 48, 9.0D),
+        SMALLEST_FILE("smallest_file", 90, true, true, true, 2048, 12, true, 360, 128L, 0.0025D, 24, 64, 12.0D),
         BALANCED("balanced", 30, true, true, false, 512, 5, true, 66, 768L, 0.0075D, 10, 20, 4.0D),
         FASTEST_DECODE("fastest_decode", 18, false, true, false, 96, 2, false, 18, 0L, 0D, 8, 16, 3.0D);
 

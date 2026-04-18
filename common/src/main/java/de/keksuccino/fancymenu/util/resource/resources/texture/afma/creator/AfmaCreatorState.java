@@ -434,7 +434,7 @@ public class AfmaCreatorState {
                     .setPlannerAlphaDriftPenaltyBytes(8L)
                     .setPlannerLossyContinuationPenaltyBytes(40L)
                     .setPlannerKeyframeDistancePenaltyBytes(96L)
-                    .setMaxDeltaAreaRatioWithoutStrongSavings(0.985D)
+                    .setMaxDeltaAreaRatioWithoutStrongSavings(1.0D)
                     .setMaxCopyPatchAreaRatioWithoutStrongSavings(0.97D)
                     .setMinComplexCandidateSavingsBytes(8L * 1024L)
                     .setMinStrongComplexCandidateSavingsBytes(32L * 1024L)
@@ -620,7 +620,7 @@ public class AfmaCreatorState {
 
     protected static int defaultPerceptualVisibleColorDelta(@NotNull AfmaOptimizationPreset preset) {
         return switch (preset) {
-            case SMALLEST_FILE -> 20;
+            case SMALLEST_FILE -> 24;
             case BALANCED -> 10;
             case FASTEST_DECODE -> 8;
         };
@@ -628,7 +628,7 @@ public class AfmaCreatorState {
 
     protected static int defaultPerceptualAlphaDelta(@NotNull AfmaOptimizationPreset preset) {
         return switch (preset) {
-            case SMALLEST_FILE -> 48;
+            case SMALLEST_FILE -> 64;
             case BALANCED -> 20;
             case FASTEST_DECODE -> 16;
         };
@@ -636,7 +636,7 @@ public class AfmaCreatorState {
 
     protected static double defaultPerceptualAverageError(@NotNull AfmaOptimizationPreset preset) {
         return switch (preset) {
-            case SMALLEST_FILE -> 9.0D;
+            case SMALLEST_FILE -> 12.0D;
             case BALANCED -> 4.0D;
             case FASTEST_DECODE -> 3.0D;
         };
