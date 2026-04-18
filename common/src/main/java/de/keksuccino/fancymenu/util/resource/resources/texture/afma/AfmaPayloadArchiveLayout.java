@@ -19,6 +19,8 @@ public final class AfmaPayloadArchiveLayout {
     public static final int PAYLOAD_TABLE_MAGIC = 0x41465054; // AFPT
     public static final int PAYLOAD_TABLE_VERSION = 1;
     public static final int TARGET_CHUNK_BYTES = 256 * 1024;
+    protected static final long APPROXIMATE_PACKING_MIN_TOTAL_PAYLOAD_BYTES = 192L * 1024L * 1024L;
+    protected static final int APPROXIMATE_PACKING_MIN_PAYLOAD_COUNT = 160;
 
     @NotNull
     protected final Map<String, Integer> payloadIdsByPath;
@@ -87,8 +89,27 @@ public final class AfmaPayloadArchiveLayout {
         }
 
         AfmaChunkedPayloadHelper.ArchivePackingHints packingHints = AfmaChunkedPayloadHelper.buildPackingHints(frameIndex, loopCount);
-        AfmaChunkedPayloadHelper.PackedPayloadArchive packedArchive = AfmaChunkedPayloadHelper.buildArchiveLayout(payloads, packingHints);
+        AfmaChunkedPayloadHelper.PackedPayloadArchive packedArchive = shouldApproximatePacking(payloads)
+                ? AfmaChunkedPayloadHelper.simulateArchiveLayout(payloads, packingHints)
+                : AfmaChunkedPayloadHelper.buildArchiveLayout(payloads, packingHints);
         return fromPackedArchive(packedArchive);
+    }
+
+    protected static boolean shouldApproximatePacking(@NotNull Map<String, AfmaStoredPayload> payloads) {
+        if (payloads.size() >= APPROXIMATE_PACKING_MIN_PAYLOAD_COUNT) {
+            return true;
+        }
+
+        long totalPayloadBytes = 0L;
+        for (AfmaStoredPayload payload : payloads.values()) {
+            if (payload != null) {
+                totalPayloadBytes += Math.max(0, payload.length());
+                if (totalPayloadBytes >= APPROXIMATE_PACKING_MIN_TOTAL_PAYLOAD_BYTES) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @NotNull

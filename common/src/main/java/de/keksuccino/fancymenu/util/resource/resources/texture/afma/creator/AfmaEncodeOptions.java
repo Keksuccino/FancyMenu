@@ -153,24 +153,54 @@ public class AfmaEncodeOptions {
         return this.maxDeltaAreaRatioWithoutStrongSavings;
     }
 
+    public AfmaEncodeOptions setMaxDeltaAreaRatioWithoutStrongSavings(double maxDeltaAreaRatioWithoutStrongSavings) {
+        this.maxDeltaAreaRatioWithoutStrongSavings = maxDeltaAreaRatioWithoutStrongSavings;
+        return this;
+    }
+
     public double getMaxCopyPatchAreaRatioWithoutStrongSavings() {
         return this.maxCopyPatchAreaRatioWithoutStrongSavings;
+    }
+
+    public AfmaEncodeOptions setMaxCopyPatchAreaRatioWithoutStrongSavings(double maxCopyPatchAreaRatioWithoutStrongSavings) {
+        this.maxCopyPatchAreaRatioWithoutStrongSavings = maxCopyPatchAreaRatioWithoutStrongSavings;
+        return this;
     }
 
     public long getMinComplexCandidateSavingsBytes() {
         return this.minComplexCandidateSavingsBytes;
     }
 
+    public AfmaEncodeOptions setMinComplexCandidateSavingsBytes(long minComplexCandidateSavingsBytes) {
+        this.minComplexCandidateSavingsBytes = minComplexCandidateSavingsBytes;
+        return this;
+    }
+
     public long getMinStrongComplexCandidateSavingsBytes() {
         return this.minStrongComplexCandidateSavingsBytes;
+    }
+
+    public AfmaEncodeOptions setMinStrongComplexCandidateSavingsBytes(long minStrongComplexCandidateSavingsBytes) {
+        this.minStrongComplexCandidateSavingsBytes = minStrongComplexCandidateSavingsBytes;
+        return this;
     }
 
     public double getMinComplexCandidateSavingsRatio() {
         return this.minComplexCandidateSavingsRatio;
     }
 
+    public AfmaEncodeOptions setMinComplexCandidateSavingsRatio(double minComplexCandidateSavingsRatio) {
+        this.minComplexCandidateSavingsRatio = minComplexCandidateSavingsRatio;
+        return this;
+    }
+
     public double getMinStrongComplexCandidateSavingsRatio() {
         return this.minStrongComplexCandidateSavingsRatio;
+    }
+
+    public AfmaEncodeOptions setMinStrongComplexCandidateSavingsRatio(double minStrongComplexCandidateSavingsRatio) {
+        this.minStrongComplexCandidateSavingsRatio = minStrongComplexCandidateSavingsRatio;
+        return this;
     }
 
     public int getNearLosslessMaxChannelDelta() {

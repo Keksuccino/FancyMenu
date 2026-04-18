@@ -194,7 +194,13 @@ public final class AfmaEncodeStandaloneTool {
                     .setPlannerVisibleColorDriftPenaltyBytes(8L)
                     .setPlannerAlphaDriftPenaltyBytes(8L)
                     .setPlannerLossyContinuationPenaltyBytes(40L)
-                    .setPlannerKeyframeDistancePenaltyBytes(96L);
+                    .setPlannerKeyframeDistancePenaltyBytes(96L)
+                    .setMaxDeltaAreaRatioWithoutStrongSavings(0.985D)
+                    .setMaxCopyPatchAreaRatioWithoutStrongSavings(0.97D)
+                    .setMinComplexCandidateSavingsBytes(8L * 1024L)
+                    .setMinStrongComplexCandidateSavingsBytes(32L * 1024L)
+                    .setMinComplexCandidateSavingsRatio(0.005D)
+                    .setMinStrongComplexCandidateSavingsRatio(0.02D);
             case BALANCED -> options
                     .setPlannerSearchWindowFrames(16)
                     .setPlannerBeamWidth(10)

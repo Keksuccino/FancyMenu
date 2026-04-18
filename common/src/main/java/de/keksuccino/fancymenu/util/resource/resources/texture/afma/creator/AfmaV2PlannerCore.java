@@ -61,6 +61,10 @@ final class AfmaV2PlannerCore {
     protected static final double BLOCK_INTER_REQUIRED_SAVINGS_RATIO = 0.96D;
     protected static final long FAMILY_SWITCH_MARGIN_BYTES = 48L;
     protected static final double FAMILY_SWITCH_MARGIN_RATIO = 0.05D;
+    protected static final int FULL_REFERENCE_PROBE_FRAMES_PER_SEQUENCE = 3;
+    protected static final int FULL_REFERENCE_PROBE_MIN_MIXED_WINS = 2;
+    protected static final long FULL_REFERENCE_PROBE_REQUIRED_SAVINGS_BYTES = 48L * 1024L;
+    protected static final double FULL_REFERENCE_PROBE_REQUIRED_SAVINGS_RATIO = 0.06D;
 
     @NotNull
     protected final AfmaFrameNormalizer frameNormalizer;
@@ -81,7 +85,8 @@ final class AfmaV2PlannerCore {
 
         AfmaSourceSequence intro = (introSequence != null) ? introSequence : AfmaSourceSequence.empty();
         options.validateForCounts(mainSequence.size(), intro.size());
-        if (options.isFullFrameReferencePlanEnabled()) {
+        if (options.isFullFrameReferencePlanEnabled()
+                && this.shouldUseFullFrameReferencePlan(mainSequence, intro, options, cancellationRequested, progressListener)) {
             return this.buildFullFrameReferencePlan(mainSequence, intro, options, cancellationRequested, progressListener);
         }
         return this.buildMixedPlan(mainSequence, intro, options, cancellationRequested, progressListener);
@@ -101,6 +106,190 @@ final class AfmaV2PlannerCore {
             return thread;
         };
         return Executors.newFixedThreadPool(threads, threadFactory);
+    }
+
+    protected boolean shouldUseFullFrameReferencePlan(@NotNull AfmaSourceSequence mainSequence,
+                                                      @NotNull AfmaSourceSequence introSequence,
+                                                      @NotNull AfmaEncodeOptions options,
+                                                      @Nullable BooleanSupplier cancellationRequested,
+                                                      @Nullable AfmaEncodePlanner.ProgressListener progressListener) throws IOException {
+        int introSampleFrames = Math.min(FULL_REFERENCE_PROBE_FRAMES_PER_SEQUENCE, introSequence.size());
+        int mainSampleFrames = Math.min(FULL_REFERENCE_PROBE_FRAMES_PER_SEQUENCE, mainSequence.size());
+        if ((introSampleFrames + mainSampleFrames) <= 1) {
+            return true;
+        }
+
+        reportProgress(progressListener, "Profiling smallest-file mode...", 0.04D);
+        ExecutorService executor = this.createExecutor();
+        AfmaFastPixelBufferPool pixelBufferPool = new AfmaFastPixelBufferPool(Math.max(4, Runtime.getRuntime().availableProcessors()));
+        try {
+            checkCancelled(cancellationRequested);
+            AfmaRectCopyDetector copyDetector = new AfmaRectCopyDetector(options.getMaxCopySearchDistance(), options.getMaxCandidateAxisOffsets());
+            ReferencePlanProbeResult introProbe = this.probeFullReferenceSequence(
+                    introSequence,
+                    true,
+                    List.of(),
+                    introSampleFrames,
+                    options,
+                    copyDetector,
+                    pixelBufferPool,
+                    executor,
+                    cancellationRequested
+            );
+            reportProgress(progressListener, "Profiling smallest-file mode...", 0.06D);
+            ReferencePlanProbeResult mainProbe = this.probeFullReferenceSequence(
+                    mainSequence,
+                    false,
+                    introProbe.descriptors(),
+                    mainSampleFrames,
+                    options,
+                    copyDetector,
+                    pixelBufferPool,
+                    executor,
+                    cancellationRequested
+            );
+            reportProgress(progressListener, "Profiling smallest-file mode...", 0.08D);
+
+            int sampledFrames = introProbe.sampledFrames() + mainProbe.sampledFrames();
+            if (sampledFrames <= 1) {
+                return true;
+            }
+
+            int mixedWins = introProbe.mixedWins() + mainProbe.mixedWins();
+            long selectedBytes = introProbe.selectedArchiveBytes() + mainProbe.selectedArchiveBytes();
+            long fullReferenceBytes = introProbe.fullReferenceArchiveBytes() + mainProbe.fullReferenceArchiveBytes();
+            long requiredSavings = Math.max(
+                    FULL_REFERENCE_PROBE_REQUIRED_SAVINGS_BYTES,
+                    (long) Math.ceil(fullReferenceBytes * FULL_REFERENCE_PROBE_REQUIRED_SAVINGS_RATIO)
+            );
+            boolean mixedShowsRepeatedWins = mixedWins >= Math.max(FULL_REFERENCE_PROBE_MIN_MIXED_WINS, sampledFrames / 4);
+            boolean mixedShowsMeaningfulSavings = (fullReferenceBytes - selectedBytes) >= requiredSavings;
+            return !mixedShowsRepeatedWins && !mixedShowsMeaningfulSavings;
+        } finally {
+            pixelBufferPool.clear();
+            if (executor != null) {
+                executor.shutdownNow();
+            }
+        }
+    }
+
+    @NotNull
+    protected ReferencePlanProbeResult probeFullReferenceSequence(@NotNull AfmaSourceSequence sequence,
+                                                                  boolean introSequence,
+                                                                  @NotNull List<AfmaFrameDescriptor> companionSequenceFrames,
+                                                                  int sampleFrameCount,
+                                                                  @NotNull AfmaEncodeOptions options,
+                                                                  @NotNull AfmaRectCopyDetector copyDetector,
+                                                                  @NotNull AfmaFastPixelBufferPool pixelBufferPool,
+                                                                  @Nullable ExecutorService executor,
+                                                                  @Nullable BooleanSupplier cancellationRequested) throws IOException {
+        if (sequence.isEmpty() || sampleFrameCount <= 0) {
+            return ReferencePlanProbeResult.empty();
+        }
+
+        PayloadInterner payloadInterner = new PayloadInterner();
+        ArrayList<AfmaFrameDescriptor> descriptors = new ArrayList<>();
+        AfmaPixelFrame previousEncodedFrame = null;
+        QualityBudgetState qualityBudgetState = QualityBudgetState.lossless();
+        int framesSinceKeyframe = 0;
+        int sampledFrames = 0;
+        int mixedWins = 0;
+        long selectedArchiveBytes = 0L;
+        long fullReferenceArchiveBytes = 0L;
+        Integer expectedWidth = null;
+        Integer expectedHeight = null;
+        try {
+            int limit = Math.min(sampleFrameCount, sequence.size());
+            for (int frameIndex = 0; frameIndex < limit; frameIndex++) {
+                checkCancelled(cancellationRequested);
+                AfmaPixelFrame sourceFrame = this.frameNormalizer.loadFrame(Objects.requireNonNull(sequence.getFrame(frameIndex)), pixelBufferPool);
+                AfmaPixelFrame workingFrame = sourceFrame;
+                AfmaPixelFrame nextPreviousEncodedFrame = previousEncodedFrame;
+                boolean keepSourceFrame = false;
+                boolean keepWorkingFrame = false;
+                try {
+                    if (expectedWidth == null) {
+                        expectedWidth = sourceFrame.getWidth();
+                        expectedHeight = sourceFrame.getHeight();
+                    } else if ((sourceFrame.getWidth() != expectedWidth) || (sourceFrame.getHeight() != expectedHeight)) {
+                        throw new IOException("AFMA v2 probe frame dimensions do not match the sequence dimensions");
+                    }
+
+                    boolean bootstrapFrame = previousEncodedFrame == null;
+                    if (!bootstrapFrame && options.isNearLosslessEnabled()) {
+                        workingFrame = this.applyNearLosslessTemporalMerge(Objects.requireNonNull(previousEncodedFrame), sourceFrame, options.getNearLosslessMaxChannelDelta());
+                    }
+
+                    boolean allowPerceptual = bootstrapFrame
+                            ? options.isPerceptualBinIntraEnabled()
+                            : this.shouldAllowPerceptualContinuation(framesSinceKeyframe, options);
+                    FrameCandidate fullCandidate = this.createMeasuredFullCandidate(
+                            sourceFrame,
+                            workingFrame,
+                            introSequence,
+                            frameIndex,
+                            options,
+                            allowPerceptual
+                    );
+                    fullReferenceArchiveBytes += fullCandidate.totalArchiveBytes(payloadInterner);
+
+                    FrameDecision decision = bootstrapFrame
+                            ? new FrameDecision(fullCandidate, fullCandidate.outputFrame())
+                            : this.planFrame(
+                            previousEncodedFrame,
+                            sourceFrame,
+                            workingFrame,
+                            introSequence,
+                            descriptors,
+                            companionSequenceFrames,
+                            frameIndex,
+                            framesSinceKeyframe,
+                            qualityBudgetState,
+                            options,
+                            copyDetector,
+                            payloadInterner,
+                            executor,
+                            cancellationRequested
+                    );
+                    FrameCandidate selectedCandidate = decision.candidate();
+                    selectedArchiveBytes += selectedCandidate.totalArchiveBytes(payloadInterner);
+                    if ((selectedCandidate.kind() != CandidateKind.FULL) && (selectedCandidate.kind() != CandidateKind.SAME)) {
+                        mixedWins++;
+                    }
+
+                    qualityBudgetState = qualityBudgetState.advance(selectedCandidate);
+                    if ((selectedCandidate.kind() != CandidateKind.SAME) || !options.isDuplicateFrameElision()) {
+                        AfmaFrameDescriptor finalizedDescriptor = payloadInterner.intern(selectedCandidate);
+                        descriptors.add(finalizedDescriptor);
+                        if (finalizedDescriptor.isKeyframe()) {
+                            framesSinceKeyframe = 0;
+                        } else {
+                            framesSinceKeyframe++;
+                        }
+                    }
+
+                    nextPreviousEncodedFrame = decision.outputFrame();
+                    keepSourceFrame = nextPreviousEncodedFrame == sourceFrame;
+                    keepWorkingFrame = nextPreviousEncodedFrame == workingFrame;
+                    sampledFrames++;
+                } finally {
+                    if (!keepWorkingFrame && (workingFrame != sourceFrame) && (workingFrame != nextPreviousEncodedFrame)) {
+                        CloseableUtils.closeQuietly(workingFrame);
+                    }
+                    if (!keepSourceFrame && (sourceFrame != nextPreviousEncodedFrame)) {
+                        CloseableUtils.closeQuietly(sourceFrame);
+                    }
+                    if (previousEncodedFrame != nextPreviousEncodedFrame) {
+                        CloseableUtils.closeQuietly(previousEncodedFrame);
+                    }
+                    previousEncodedFrame = nextPreviousEncodedFrame;
+                }
+            }
+            return new ReferencePlanProbeResult(List.copyOf(descriptors), sampledFrames, mixedWins, selectedArchiveBytes, fullReferenceArchiveBytes);
+        } finally {
+            CloseableUtils.closeQuietly(previousEncodedFrame);
+            this.closeInternedPayloads(payloadInterner);
+        }
     }
 
     @NotNull
@@ -283,9 +472,13 @@ final class AfmaV2PlannerCore {
                         continue;
                     }
 
-                    FrameCandidate fullCandidate = this.withQualityMetrics(
-                            this.createFullCandidate(workingFrame, introSequence, frameIndex, options, allowPerceptual),
-                            sourceFrame
+                    FrameCandidate fullCandidate = this.createMeasuredFullCandidate(
+                            sourceFrame,
+                            workingFrame,
+                            introSequence,
+                            frameIndex,
+                            options,
+                            allowPerceptual
                     );
                     nextPreviousEncodedFrame = fullCandidate.outputFrame();
                     keepSourceFrame = nextPreviousEncodedFrame == sourceFrame;
@@ -461,10 +654,17 @@ final class AfmaV2PlannerCore {
                                       @Nullable BooleanSupplier cancellationRequested) throws IOException {
         Objects.requireNonNull(sourceFrame);
         Objects.requireNonNull(workingFrame);
+        boolean allowPerceptual = (previousFrame == null)
+                ? options.isPerceptualBinIntraEnabled()
+                : this.shouldAllowPerceptualContinuation(framesSinceKeyframe, options);
         if (previousFrame == null) {
-            FrameCandidate fullCandidate = this.withQualityMetrics(
-                    this.createExactFullCandidate(sourceFrame, introSequence, frameIndex, options),
-                    sourceFrame
+            FrameCandidate fullCandidate = this.createMeasuredFullCandidate(
+                    sourceFrame,
+                    workingFrame,
+                    introSequence,
+                    frameIndex,
+                    options,
+                    allowPerceptual
             );
             return new FrameDecision(fullCandidate, fullCandidate.outputFrame());
         }
@@ -492,15 +692,17 @@ final class AfmaV2PlannerCore {
             pairAnalysis = new AfmaFramePairAnalysis(previousFrame, sourceFrame);
             deltaBounds = pairAnalysis.differenceBounds();
             if (deltaBounds == null) {
-                FrameCandidate fullCandidate = this.withQualityMetrics(
-                        this.createExactFullCandidate(sourceFrame, introSequence, frameIndex, options),
-                        sourceFrame
+                FrameCandidate fullCandidate = this.createMeasuredFullCandidate(
+                        sourceFrame,
+                        sourceFrame,
+                        introSequence,
+                        frameIndex,
+                        options,
+                        allowPerceptual
                 );
                 return new FrameDecision(fullCandidate, fullCandidate.outputFrame());
             }
         }
-
-        boolean allowPerceptual = this.shouldAllowPerceptualContinuation(framesSinceKeyframe, options);
 
         FrameCandidate bestCandidate = null;
         FrameCandidate deltaCandidate = this.withQualityMetrics(this.createBestDeltaFamilyCandidate(
@@ -558,9 +760,13 @@ final class AfmaV2PlannerCore {
                 ? (framesSinceKeyframe + 1) >= options.getKeyframeInterval()
                 : (framesSinceKeyframe + 1) >= options.getKeyframeInterval();
 
-        FrameCandidate fullCandidate = this.withQualityMetrics(
-                this.createExactFullCandidate(sourceFrame, introSequence, frameIndex, options),
-                sourceFrame
+        FrameCandidate fullCandidate = this.createMeasuredFullCandidate(
+                sourceFrame,
+                candidateFrame,
+                introSequence,
+                frameIndex,
+                options,
+                allowPerceptual
         );
         Map<FrameCandidate, Long> packedArchiveBytesByCandidate = this.estimatePackedArchiveBytesByCandidate(
                 Arrays.asList(deltaCandidate, copyCandidate, blockInterCandidate, fullCandidate),
@@ -997,6 +1203,12 @@ final class AfmaV2PlannerCore {
         }
     }
 
+    protected void closeInternedPayloads(@NotNull PayloadInterner payloadInterner) {
+        for (AfmaStoredPayload payload : payloadInterner.payloads().values()) {
+            CloseableUtils.closeQuietly(payload);
+        }
+    }
+
     @Nullable
     protected FrameCandidate withQualityMetrics(@Nullable FrameCandidate candidate, @NotNull AfmaPixelFrame sourceFrame) {
         if (candidate == null) {
@@ -1029,6 +1241,18 @@ final class AfmaV2PlannerCore {
                                                       boolean introSequence, int frameIndex,
                                                       @NotNull AfmaEncodeOptions options) throws IOException {
         return this.createFullCandidate(currentFrame, introSequence, frameIndex, options, false);
+    }
+
+    @NotNull
+    protected FrameCandidate createMeasuredFullCandidate(@NotNull AfmaPixelFrame sourceFrame,
+                                                         @NotNull AfmaPixelFrame encodedFrameInput,
+                                                         boolean introSequence, int frameIndex,
+                                                         @NotNull AfmaEncodeOptions options,
+                                                         boolean allowPerceptual) throws IOException {
+        return this.withQualityMetrics(
+                this.createFullCandidate(encodedFrameInput, introSequence, frameIndex, options, allowPerceptual),
+                sourceFrame
+        );
     }
 
     @NotNull
@@ -3256,6 +3480,18 @@ final class AfmaV2PlannerCore {
     }
 
     protected record FrameDecision(@NotNull FrameCandidate candidate, @NotNull AfmaPixelFrame outputFrame) {
+    }
+
+    protected record ReferencePlanProbeResult(@NotNull List<AfmaFrameDescriptor> descriptors,
+                                              int sampledFrames,
+                                              int mixedWins,
+                                              long selectedArchiveBytes,
+                                              long fullReferenceArchiveBytes) {
+
+        @NotNull
+        public static ReferencePlanProbeResult empty() {
+            return new ReferencePlanProbeResult(List.of(), 0, 0, 0L, 0L);
+        }
     }
 
     protected record CandidateQualityMetrics(boolean lossless,
