@@ -18,7 +18,7 @@ public final class AfmaPayloadArchiveLayout {
 
     public static final int PAYLOAD_TABLE_MAGIC = 0x41465054; // AFPT
     public static final int PAYLOAD_TABLE_VERSION = 1;
-    public static final int TARGET_CHUNK_BYTES = 256 * 1024;
+    public static final int TARGET_CHUNK_BYTES = 512 * 1024;
     protected static final long APPROXIMATE_PACKING_MIN_TOTAL_PAYLOAD_BYTES = 192L * 1024L * 1024L;
     protected static final int APPROXIMATE_PACKING_MIN_PAYLOAD_COUNT = 160;
 

@@ -1,11 +1,10 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaBinaryFrameIndexHelper;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaChunkedPayloadHelper;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaContainerV2;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaIoHelper;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaMetadata;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaPayloadArchiveLayout;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaStoredPayload;
 import org.jetbrains.annotations.NotNull;
@@ -34,7 +33,6 @@ import java.util.zip.Deflater;
 
 public class AfmaArchiveWriter {
 
-    private static final Gson GSON = new GsonBuilder().create();
     protected static final int DEFLATE_LEVEL = 9;
     protected static final int IO_BUFFER_BYTES = 8192;
 
@@ -60,7 +58,7 @@ public class AfmaArchiveWriter {
         HashMap<String, AfmaStoredPayload> payloadsByNormalizedPath = buildNormalizedPayloadMap(payloads);
         AfmaPayloadArchiveLayout payloadArchive = plan.getPayloadArchive();
 
-        byte[] metadataBytes = GSON.toJson(plan.getMetadata()).getBytes(StandardCharsets.UTF_8);
+        byte[] metadataBytes = encodeMetadataJson(plan.getMetadata());
         byte[] frameIndexBytes = AfmaBinaryFrameIndexHelper.encodeFrameIndex(plan.getFrameIndex(), payloadArchive.payloadIdsByPath());
         byte[] payloadTableBytes = payloadArchive.encodePayloadTable();
 
@@ -236,6 +234,146 @@ public class AfmaArchiveWriter {
         if (progressListener != null) {
             progressListener.update(path, (double) writtenEntries / Math.max(1, totalEntries));
         }
+    }
+
+    @NotNull
+    protected static byte[] encodeMetadataJson(@NotNull AfmaMetadata metadata) {
+        StringBuilder json = new StringBuilder(256);
+        json.append('{');
+        boolean firstProperty = true;
+        firstProperty = appendJsonStringProperty(json, firstProperty, "format", metadata.getFormat());
+        firstProperty = appendJsonNumberProperty(json, firstProperty, "format_version", metadata.getFormatVersion());
+        firstProperty = appendJsonNumberProperty(json, firstProperty, "canvas_width", metadata.getCanvasWidth());
+        firstProperty = appendJsonNumberProperty(json, firstProperty, "canvas_height", metadata.getCanvasHeight());
+        firstProperty = appendJsonNumberProperty(json, firstProperty, "loop_count", metadata.getLoopCount());
+        firstProperty = appendJsonNumberProperty(json, firstProperty, "frame_time", metadata.getFrameTime());
+        firstProperty = appendJsonNumberProperty(json, firstProperty, "frame_time_intro", metadata.getFrameTimeIntro());
+        firstProperty = appendJsonLongMapProperty(json, firstProperty, "custom_frame_times", metadata.getCustomFrameTimes());
+        firstProperty = appendJsonLongMapProperty(json, firstProperty, "custom_frame_times_intro", metadata.getCustomFrameTimesIntro());
+        firstProperty = appendJsonNumberProperty(json, firstProperty, "keyframe_interval", metadata.getKeyframeInterval());
+        firstProperty = appendEncodingProperty(json, firstProperty, metadata.getEncoding());
+        appendCreatorProperty(json, firstProperty, metadata.getCreator());
+        json.append('}');
+        return json.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
+    protected static boolean appendEncodingProperty(@NotNull StringBuilder json,
+                                                    boolean firstProperty,
+                                                    @Nullable AfmaMetadata.Encoding encoding) {
+        if (encoding == null) {
+            return firstProperty;
+        }
+        appendJsonPropertyPrefix(json, firstProperty, "encoding");
+        json.append('{');
+        boolean firstEncodingProperty = true;
+        firstEncodingProperty = appendJsonStringProperty(json, firstEncodingProperty, "intra_payload_codec", encoding.getIntraPayloadCodec());
+        firstEncodingProperty = appendJsonStringProperty(json, firstEncodingProperty, "color_model", encoding.getColorModel());
+        firstEncodingProperty = appendJsonBooleanProperty(json, firstEncodingProperty, "rect_copy_enabled", encoding.isRectCopyEnabled());
+        appendJsonBooleanProperty(json, firstEncodingProperty, "duplicate_frame_elision", encoding.isDuplicateFrameElision());
+        json.append('}');
+        return false;
+    }
+
+    protected static boolean appendCreatorProperty(@NotNull StringBuilder json,
+                                                   boolean firstProperty,
+                                                   @Nullable AfmaMetadata.Creator creator) {
+        if (creator == null) {
+            return firstProperty;
+        }
+        appendJsonPropertyPrefix(json, firstProperty, "creator");
+        json.append('{');
+        boolean firstCreatorProperty = true;
+        firstCreatorProperty = appendJsonStringProperty(json, firstCreatorProperty, "tool", creator.getTool());
+        firstCreatorProperty = appendJsonStringProperty(json, firstCreatorProperty, "tool_version", creator.getToolVersion());
+        appendJsonStringProperty(json, firstCreatorProperty, "created_at_utc", creator.getCreatedAtUtc());
+        json.append('}');
+        return false;
+    }
+
+    protected static boolean appendJsonStringProperty(@NotNull StringBuilder json,
+                                                      boolean firstProperty,
+                                                      @NotNull String propertyName,
+                                                      @Nullable String value) {
+        if (value == null) {
+            return firstProperty;
+        }
+        appendJsonPropertyPrefix(json, firstProperty, propertyName);
+        appendJsonString(json, value);
+        return false;
+    }
+
+    protected static boolean appendJsonNumberProperty(@NotNull StringBuilder json,
+                                                      boolean firstProperty,
+                                                      @NotNull String propertyName,
+                                                      long value) {
+        appendJsonPropertyPrefix(json, firstProperty, propertyName);
+        json.append(value);
+        return false;
+    }
+
+    protected static boolean appendJsonBooleanProperty(@NotNull StringBuilder json,
+                                                       boolean firstProperty,
+                                                       @NotNull String propertyName,
+                                                       boolean value) {
+        appendJsonPropertyPrefix(json, firstProperty, propertyName);
+        json.append(value);
+        return false;
+    }
+
+    protected static boolean appendJsonLongMapProperty(@NotNull StringBuilder json,
+                                                       boolean firstProperty,
+                                                       @NotNull String propertyName,
+                                                       @NotNull Map<Integer, Long> values) {
+        if (values.isEmpty()) {
+            return firstProperty;
+        }
+        appendJsonPropertyPrefix(json, firstProperty, propertyName);
+        json.append('{');
+        boolean firstEntry = true;
+        for (Map.Entry<Integer, Long> entry : values.entrySet()) {
+            if (!firstEntry) {
+                json.append(',');
+            }
+            appendJsonString(json, Integer.toString(entry.getKey()));
+            json.append(':').append(Objects.requireNonNull(entry.getValue()));
+            firstEntry = false;
+        }
+        json.append('}');
+        return false;
+    }
+
+    protected static void appendJsonPropertyPrefix(@NotNull StringBuilder json,
+                                                   boolean firstProperty,
+                                                   @NotNull String propertyName) {
+        if (!firstProperty) {
+            json.append(',');
+        }
+        appendJsonString(json, propertyName);
+        json.append(':');
+    }
+
+    protected static void appendJsonString(@NotNull StringBuilder json, @NotNull String value) {
+        json.append('"');
+        for (int i = 0; i < value.length(); i++) {
+            char character = value.charAt(i);
+            switch (character) {
+                case '\\' -> json.append("\\\\");
+                case '"' -> json.append("\\\"");
+                case '\b' -> json.append("\\b");
+                case '\f' -> json.append("\\f");
+                case '\n' -> json.append("\\n");
+                case '\r' -> json.append("\\r");
+                case '\t' -> json.append("\\t");
+                default -> {
+                    if (character < 0x20) {
+                        json.append(String.format(Locale.ROOT, "\\u%04x", (int) character));
+                    } else {
+                        json.append(character);
+                    }
+                }
+            }
+        }
+        json.append('"');
     }
 
     protected record RelativeChunkDescriptor(long relativeOffset, int compressedLength, int uncompressedLength, int compressionMode) {

@@ -2,17 +2,22 @@ package de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.stb.STBImage;
-import org.lwjgl.system.MemoryStack;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.ByteOrder;
 import java.util.Objects;
 
 public class AfmaFrameNormalizer {
+
+    @Nullable
+    protected static volatile Boolean stbAvailable;
 
     @NotNull
     public AfmaPixelFrame loadFrame(@NotNull File file) throws IOException {
@@ -22,27 +27,10 @@ public class AfmaFrameNormalizer {
     @NotNull
     public AfmaPixelFrame loadFrame(@NotNull File file, @Nullable AfmaFastPixelBufferPool pixelBufferPool) throws IOException {
         Objects.requireNonNull(file);
-
-        ByteBuffer decodedBuffer = null;
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            IntBuffer widthBuffer = stack.mallocInt(1);
-            IntBuffer heightBuffer = stack.mallocInt(1);
-            IntBuffer componentBuffer = stack.mallocInt(1);
-            decodedBuffer = STBImage.stbi_load(file.getAbsolutePath(), widthBuffer, heightBuffer, componentBuffer, 4);
-            if (decodedBuffer == null) {
-                throw new IOException("Failed to decode AFMA source frame: " + file.getAbsolutePath() + " (" + STBImage.stbi_failure_reason() + ")");
-            }
-
-            int width = widthBuffer.get(0);
-            int height = heightBuffer.get(0);
-            int[] pixels = AfmaPixelFrameHelper.allocatePixels(width, height, pixelBufferPool);
-            this.decodeFrameToPixels(decodedBuffer, width, height, pixels, file);
-            return new AfmaPixelFrame(width, height, pixels, pixelBufferPool);
-        } finally {
-            if (decodedBuffer != null) {
-                STBImage.stbi_image_free(decodedBuffer);
-            }
-        }
+        DecodedImage decodedImage = this.decodeFrame(file);
+        int[] pixels = AfmaPixelFrameHelper.allocatePixels(decodedImage.width(), decodedImage.height(), pixelBufferPool);
+        System.arraycopy(decodedImage.pixels(), 0, pixels, 0, decodedImage.pixels().length);
+        return new AfmaPixelFrame(decodedImage.width(), decodedImage.height(), pixels, pixelBufferPool);
     }
 
     @NotNull
@@ -83,28 +71,103 @@ public class AfmaFrameNormalizer {
         if (targetPixels.length < expectedPixelCount) {
             throw new IllegalArgumentException("AFMA target pixel buffer is smaller than the expected frame size");
         }
+        DecodedImage decodedImage = this.decodeFrame(file);
+        if ((decodedImage.width() != expectedWidth) || (decodedImage.height() != expectedHeight)) {
+            throw new IOException("AFMA source frame dimensions do not match the expected canvas size: " + file.getAbsolutePath());
+        }
+        System.arraycopy(decodedImage.pixels(), 0, targetPixels, 0, expectedPixelCount);
+    }
 
+    @NotNull
+    protected DecodedImage decodeFrame(@NotNull File file) throws IOException {
+        if (isStbAvailable()) {
+            return this.decodeFrameWithStb(file);
+        }
+        return this.decodeFrameWithImageIo(file);
+    }
+
+    protected boolean isStbAvailable() {
+        Boolean cached = stbAvailable;
+        if (cached != null) {
+            return cached;
+        }
+        synchronized (AfmaFrameNormalizer.class) {
+            cached = stbAvailable;
+            if (cached != null) {
+                return cached;
+            }
+            try {
+                Class.forName("org.lwjgl.stb.STBImage");
+                Class.forName("org.lwjgl.system.MemoryStack");
+                stbAvailable = Boolean.TRUE;
+            } catch (Throwable ignored) {
+                stbAvailable = Boolean.FALSE;
+            }
+            return Objects.requireNonNull(stbAvailable);
+        }
+    }
+
+    @NotNull
+    protected DecodedImage decodeFrameWithStb(@NotNull File file) throws IOException {
         ByteBuffer decodedBuffer = null;
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            IntBuffer widthBuffer = stack.mallocInt(1);
-            IntBuffer heightBuffer = stack.mallocInt(1);
-            IntBuffer componentBuffer = stack.mallocInt(1);
-            decodedBuffer = STBImage.stbi_load(file.getAbsolutePath(), widthBuffer, heightBuffer, componentBuffer, 4);
+        AutoCloseable memoryStack = null;
+        try {
+            Class<?> memoryStackClass = Class.forName("org.lwjgl.system.MemoryStack");
+            memoryStack = (AutoCloseable) memoryStackClass.getMethod("stackPush").invoke(null);
+            Method mallocInt = memoryStackClass.getMethod("mallocInt", int.class);
+            IntBuffer widthBuffer = (IntBuffer) mallocInt.invoke(memoryStack, 1);
+            IntBuffer heightBuffer = (IntBuffer) mallocInt.invoke(memoryStack, 1);
+            IntBuffer componentBuffer = (IntBuffer) mallocInt.invoke(memoryStack, 1);
+
+            Class<?> stbImageClass = Class.forName("org.lwjgl.stb.STBImage");
+            decodedBuffer = (ByteBuffer) stbImageClass
+                    .getMethod("stbi_load", String.class, IntBuffer.class, IntBuffer.class, IntBuffer.class, int.class)
+                    .invoke(null, file.getAbsolutePath(), widthBuffer, heightBuffer, componentBuffer, 4);
             if (decodedBuffer == null) {
-                throw new IOException("Failed to decode AFMA source frame: " + file.getAbsolutePath() + " (" + STBImage.stbi_failure_reason() + ")");
+                String failureReason = (String) stbImageClass.getMethod("stbi_failure_reason").invoke(null);
+                throw new IOException("Failed to decode AFMA source frame: " + file.getAbsolutePath() + " (" + failureReason + ")");
             }
 
             int width = widthBuffer.get(0);
             int height = heightBuffer.get(0);
-            if ((width != expectedWidth) || (height != expectedHeight)) {
-                throw new IOException("AFMA source frame dimensions do not match the expected canvas size: " + file.getAbsolutePath());
+            int[] pixels = new int[AfmaPixelFrameHelper.pixelCount(width, height)];
+            this.decodeFrameToPixels(decodedBuffer, width, height, pixels, file);
+            return new DecodedImage(width, height, pixels);
+        } catch (InvocationTargetException ex) {
+            Throwable cause = (ex.getCause() != null) ? ex.getCause() : ex;
+            if (cause instanceof IOException ioEx) {
+                throw ioEx;
             }
-            this.decodeFrameToPixels(decodedBuffer, width, height, targetPixels, file);
+            throw new IOException("Failed to decode AFMA source frame via STB: " + file.getAbsolutePath(), cause);
+        } catch (ReflectiveOperationException | ClassCastException ex) {
+            throw new IOException("Failed to initialize AFMA STB frame decoding for " + file.getAbsolutePath(), ex);
         } finally {
             if (decodedBuffer != null) {
-                STBImage.stbi_image_free(decodedBuffer);
+                try {
+                    Class<?> stbImageClass = Class.forName("org.lwjgl.stb.STBImage");
+                    stbImageClass.getMethod("stbi_image_free", ByteBuffer.class).invoke(null, decodedBuffer);
+                } catch (Throwable ignored) {
+                }
+            }
+            if (memoryStack != null) {
+                try {
+                    memoryStack.close();
+                } catch (Exception ignored) {
+                }
             }
         }
+    }
+
+    @NotNull
+    protected DecodedImage decodeFrameWithImageIo(@NotNull File file) throws IOException {
+        BufferedImage image = ImageIO.read(file);
+        if (image == null) {
+            throw new IOException("Failed to decode AFMA source frame: " + file.getAbsolutePath());
+        }
+        int width = image.getWidth();
+        int height = image.getHeight();
+        int[] pixels = image.getRGB(0, 0, width, height, null, 0, width);
+        return new DecodedImage(width, height, pixels);
     }
 
     protected void decodeFrameToPixels(@NotNull ByteBuffer decodedBuffer, int width, int height,
@@ -125,6 +188,9 @@ public class AfmaFrameNormalizer {
                     | ((rgbaColor & 0x00FF0000) >>> 16)
                     | ((rgbaColor & 0x000000FF) << 16);
         }
+    }
+
+    protected record DecodedImage(int width, int height, @NotNull int[] pixels) {
     }
 
 }

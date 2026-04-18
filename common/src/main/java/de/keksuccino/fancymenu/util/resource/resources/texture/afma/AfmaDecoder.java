@@ -37,7 +37,7 @@ import java.util.zip.InflaterInputStream;
 
 public class AfmaDecoder implements Closeable {
 
-    protected static final int MAX_CACHED_PAYLOAD_CHUNKS = 2;
+    protected static final int MAX_CACHED_PAYLOAD_CHUNKS = 4;
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson GSON = new GsonBuilder().create();
     private static final File TEMP_DIR = FileUtils.createDirectory(new File(FancyMenu.TEMP_DATA_DIR, "/decoded_afma_images"));

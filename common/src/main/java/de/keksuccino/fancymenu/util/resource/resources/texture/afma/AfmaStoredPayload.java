@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.afma;
 
-import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -227,6 +226,30 @@ public final class AfmaStoredPayload implements AutoCloseable {
     @NotNull
     protected static File createTempFile() throws IOException {
         return File.createTempFile("afma_payload_", ".bin", TEMP_DIR);
+    }
+
+    protected static void copyStream(@NotNull InputStream in, @NotNull OutputStream out) throws IOException {
+        in.transferTo(out);
+    }
+
+    protected static void closeQuietly(@Nullable AutoCloseable closeable) {
+        if (closeable == null) {
+            return;
+        }
+        try {
+            closeable.close();
+        } catch (Exception ignored) {
+        }
+    }
+
+    protected static void deleteQuietly(@Nullable File file) {
+        if (file == null) {
+            return;
+        }
+        try {
+            file.delete();
+        } catch (Exception ignored) {
+        }
     }
 
     protected static long computeHeapBudgetBytes() {
@@ -732,7 +755,7 @@ public final class AfmaStoredPayload implements AutoCloseable {
             }
             try (InputStream in = this.openSpoolStream(Objects.requireNonNull(payloadSnapshot.spoolSegment()));
                  ByteArrayOutputStream out = new ByteArrayOutputStream(Math.max(32, payloadSnapshot.length()))) {
-                IOUtils.copyLarge(in, out);
+                copyStream(in, out);
                 return out.toByteArray();
             }
         }
@@ -746,7 +769,7 @@ public final class AfmaStoredPayload implements AutoCloseable {
             }
 
             try (InputStream in = this.openSpoolStream(Objects.requireNonNull(payloadSnapshot.spoolSegment()))) {
-                IOUtils.copyLarge(in, out);
+                copyStream(in, out);
             }
         }
 
@@ -834,11 +857,11 @@ public final class AfmaStoredPayload implements AutoCloseable {
                 return;
             }
             if (this.spoolOut != null) {
-                IOUtils.closeQuietly(this.spoolOut);
+                closeQuietly(this.spoolOut);
                 this.spoolOut = null;
             }
             if (this.spoolFile != null) {
-                org.apache.commons.io.FileUtils.deleteQuietly(this.spoolFile);
+                deleteQuietly(this.spoolFile);
                 this.spoolFile = null;
             }
             this.spoolLength = 0L;
@@ -924,7 +947,7 @@ public final class AfmaStoredPayload implements AutoCloseable {
                 return new BufferedInputStream(in);
             } finally {
                 if (!success) {
-                    IOUtils.closeQuietly(fileIn);
+                    closeQuietly(fileIn);
                 }
             }
         }

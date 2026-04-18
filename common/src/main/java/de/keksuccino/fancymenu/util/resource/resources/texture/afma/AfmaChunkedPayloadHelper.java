@@ -31,13 +31,15 @@ public final class AfmaChunkedPayloadHelper {
     public static final String PAYLOAD_CHUNK_EXTENSION = ".bin";
     public static final int PAYLOAD_INDEX_MAGIC = 0x41465049; // AFPI
     public static final int PAYLOAD_INDEX_VERSION = 1;
-    public static final int TARGET_CHUNK_BYTES = 256 * 1024;
+    public static final int TARGET_CHUNK_BYTES = 512 * 1024;
     public static final int[] TARGET_CHUNK_BYTE_CANDIDATES = {
-            128 * 1024,
-            160 * 1024,
-            192 * 1024,
-            224 * 1024,
-            TARGET_CHUNK_BYTES
+            256 * 1024,
+            384 * 1024,
+            TARGET_CHUNK_BYTES,
+            768 * 1024,
+            1024 * 1024,
+            1536 * 1024,
+            2048 * 1024
     };
     protected static final int TARGET_CHUNK_SIZE_SHORTLIST_MAX = 3;
     protected static final double TARGET_CHUNK_SIZE_FRAME_HEADROOM = 1.18D;

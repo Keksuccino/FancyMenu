@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -33,6 +34,11 @@ public final class AfmaBinIntraPayloadHelper {
     protected static final int MODE_ESTIMATE_SAMPLE_ROWS = 8;
     protected static final int MAX_SHORTLISTED_MODE_CANDIDATES = 4;
     protected static final int MAX_SHORTLISTED_MODE_CANDIDATES_PER_FAMILY = 2;
+    protected static final int MAX_SHORTLISTED_PIXEL_CANDIDATES = 4;
+    protected static final int MIN_PIXEL_CANDIDATE_SHORTLIST_PIXELS = 65536;
+    protected static final int MIN_PARALLEL_PERCEPTUAL_CANDIDATE_PIXELS = 131072;
+    protected static final int MAX_SELECTED_PERCEPTUAL_PROFILES = 5;
+    protected static final int PERCEPTUAL_PROFILE_SAMPLE_PIXELS = 8192;
     protected static final int MIN_PARALLEL_MODE_SELECTION_PIXELS = 65536;
     protected static final long MIN_PARALLEL_MODE_SELECTION_HEADROOM_BYTES = 192L * 1024L * 1024L;
 
@@ -93,7 +99,11 @@ public final class AfmaBinIntraPayloadHelper {
         int[] sourcePixels = materializeDensePixels(width, height, pixels, offset, scanlineStride);
 
         EncodePreferences normalizedPreferences = (preferences != null) ? preferences : EncodePreferences.lossless();
-        List<PixelCandidateContext> pixelCandidates = collectPixelCandidates(width, height, sourcePixels, normalizedPreferences);
+        List<PixelCandidateContext> pixelCandidates = shortlistPixelCandidates(
+                width,
+                height,
+                collectPixelCandidates(width, height, sourcePixels, normalizedPreferences)
+        );
         ScoredPayloadCandidate bestCandidate = shouldParallelizeModeSelection(width, height, pixelCandidates.size())
                 ? selectBestCandidateInParallel(width, height, pixelCandidates)
                 : selectBestCandidateSequential(width, height, pixelCandidates);
@@ -105,6 +115,29 @@ public final class AfmaBinIntraPayloadHelper {
                 bestCandidate.payloadSummary(),
                 bestCandidate.payloadBytes(),
                 bestCandidate.reconstructedPixels(),
+                bestCandidate.lossless(),
+                bestCandidate.mode()
+        );
+    }
+
+    @NotNull
+    public static EstimatedPayloadResult estimatePayloadDetailed(int width, int height, @NotNull int[] pixels, int offset,
+                                                                 int scanlineStride, @Nullable EncodePreferences preferences) throws IOException {
+        validateDimensions(width, height);
+        int[] sourcePixels = materializeDensePixels(width, height, pixels, offset, scanlineStride);
+
+        EncodePreferences normalizedPreferences = (preferences != null) ? preferences : EncodePreferences.lossless();
+        List<PixelCandidateContext> pixelCandidates = collectPixelCandidates(width, height, sourcePixels, normalizedPreferences);
+        EstimatedPayloadCandidate bestCandidate = null;
+        for (PixelCandidateContext pixelCandidate : pixelCandidates) {
+            bestCandidate = pickBetterEstimatedCandidate(bestCandidate, estimateBestCandidate(width, height, pixelCandidate));
+        }
+        if (bestCandidate == null) {
+            throw new IOException("Failed to estimate an AFMA BIN_INTRA payload");
+        }
+        return new EstimatedPayloadResult(
+                bestCandidate.estimatedArchiveBytes(),
+                bestCandidate.payloadLength(),
                 bestCandidate.lossless(),
                 bestCandidate.mode()
         );
@@ -874,10 +907,26 @@ public final class AfmaBinIntraPayloadHelper {
         return bestCandidate;
     }
 
+    @Nullable
+    protected static EstimatedPayloadCandidate estimateBestCandidate(int width, int height, @NotNull PixelCandidateContext pixelCandidate) throws IOException {
+        EstimatedPayloadCandidate bestCandidate = null;
+        for (ModePlan modePlan : collectModePlans(width, height, pixelCandidate)) {
+            bestCandidate = pickBetterEstimatedCandidate(bestCandidate, new EstimatedPayloadCandidate(
+                    modePlan.mode(),
+                    modePlan.estimateBytes(),
+                    modePlan.payloadLength(),
+                    pixelCandidate.lossless(),
+                    modePlan.stabilityPriority()
+            ));
+        }
+        return bestCandidate;
+    }
+
     @NotNull
     protected static List<ModePlan> collectModePlans(int width, int height, @NotNull PixelCandidateContext pixelCandidate) throws IOException {
         List<ModePlan> modePlans = new ArrayList<>(8);
         int pixelCount = width * height;
+        addModePlan(modePlans, buildSolidModePlan(width, height, pixelCandidate));
         Map<Integer, Integer> fullColorCounts = pixelCandidate.fullColorCounts();
         int fullPaletteSize = (fullColorCounts != null) ? fullColorCounts.size() : Integer.MAX_VALUE;
         boolean paletteCandidateScheduled = false;
@@ -909,6 +958,7 @@ public final class AfmaBinIntraPayloadHelper {
             if (pixelCandidate.alphaVaries()) {
                 addModePlan(modePlans, buildSplitAlphaModePlan(width, height, pixelCandidate));
             }
+            addModePlan(modePlans, buildColorPlusAlphaMaskModePlan(width, height, pixelCandidate));
 
             if (shouldTrySecondaryTruecolorMode(pixelCount, paletteCandidateScheduled || indexedColorAlphaCandidateScheduled)) {
                 addModePlan(modePlans, preferPlanarTruecolor
@@ -922,6 +972,22 @@ public final class AfmaBinIntraPayloadHelper {
             }
         }
         return modePlans;
+    }
+
+    @Nullable
+    protected static ModePlan buildSolidModePlan(int width, int height, @NotNull PixelCandidateContext pixelCandidate) {
+        if (!pixelCandidate.isSolidColor()) {
+            return null;
+        }
+        long payloadLength = payloadHeaderBytes() + 4L;
+        return new ModePlan(
+                Mode.SOLID,
+                ModeFamily.TRUECOLOR,
+                payloadLength,
+                1,
+                () -> payloadLength,
+                () -> buildSolidCandidate(width, height, pixelCandidate)
+        );
     }
 
     protected static void addModePlan(@NotNull List<ModePlan> modePlans, @Nullable ModePlan modePlan) {
@@ -1108,6 +1174,30 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     @Nullable
+    protected static ModePlan buildColorPlusAlphaMaskModePlan(int width, int height,
+                                                              @NotNull PixelCandidateContext pixelCandidate) {
+        if (!pixelCandidate.hasUniformRgb() || !pixelCandidate.alphaVaries()) {
+            return null;
+        }
+
+        int[] pixels = pixelCandidate.pixels();
+        boolean binaryAlpha = pixelCandidate.binaryAlpha();
+        int alphaRowBytes = binaryAlpha ? packedRowBytes(width, 1) : width;
+        long metadataBytes = payloadHeaderBytes() + 4L;
+        long payloadLength = metadataBytes + filteredStreamPayloadLength(alphaRowBytes, height);
+        return new ModePlan(
+                Mode.COLOR_PLUS_ALPHA_MASK,
+                ModeFamily.ALPHA_SPECIAL,
+                payloadLength,
+                1,
+                () -> metadataBytes + estimateFilteredStreamArchiveBytes(alphaRowBytes, height, 1, binaryAlpha
+                        ? (rowIndex, rowBuffer) -> fillBinaryAlphaRow(pixels, width, rowIndex, rowBuffer)
+                        : (rowIndex, rowBuffer) -> fillFullAlphaRow(pixels, width, rowIndex, rowBuffer)),
+                () -> buildColorPlusAlphaMaskCandidate(width, height, pixelCandidate)
+        );
+    }
+
+    @Nullable
     protected static ModePlan buildIndexedColorPlusAlphaModePlan(int width, int height, @NotNull PixelCandidateContext pixelCandidate,
                                                                  @NotNull PaletteOrdering paletteOrdering) throws IOException {
         Map<Integer, Integer> rgbCounts = pixelCandidate.rgbColorCounts();
@@ -1182,6 +1272,21 @@ public final class AfmaBinIntraPayloadHelper {
         return currentBest;
     }
 
+    @Nullable
+    protected static EstimatedPayloadCandidate pickBetterEstimatedCandidate(@Nullable EstimatedPayloadCandidate currentBest,
+                                                                            @Nullable EstimatedPayloadCandidate candidate) {
+        if (candidate == null) {
+            return currentBest;
+        }
+        if (currentBest == null) {
+            return candidate;
+        }
+        if (candidate.isBetterThan(currentBest)) {
+            return candidate;
+        }
+        return currentBest;
+    }
+
     @NotNull
     protected static List<PixelCandidateContext> collectPixelCandidates(int width, int height, @NotNull int[] pixels, @NotNull EncodePreferences preferences) {
         List<PixelCandidateContext> pixelCandidates = new ArrayList<>(4);
@@ -1194,13 +1299,158 @@ public final class AfmaBinIntraPayloadHelper {
         if (sourceCandidate.hasHiddenTransparentRgb()) {
             addPixelCandidate(pixelCandidates, normalizeHiddenTransparentPixels(pixels), false);
         }
-        for (PerceptualProfile profile : PerceptualProfile.values()) {
-            int[] quantizedPixels = buildPerceptualPaletteCandidate(width, height, pixels, profile, preferences);
-            if (quantizedPixels != null) {
-                addPixelCandidate(pixelCandidates, quantizedPixels, false);
+        List<PerceptualProfile> perceptualProfiles = selectPerceptualProfiles(pixels);
+        if (shouldParallelizePerceptualCandidates(width, height, perceptualProfiles.size())) {
+            ArrayList<CompletableFuture<int[]>> profileFutures = new ArrayList<>(perceptualProfiles.size());
+            for (PerceptualProfile profile : perceptualProfiles) {
+                profileFutures.add(CompletableFuture.supplyAsync(() -> buildPerceptualPaletteCandidate(width, height, pixels, profile, preferences)));
+            }
+            for (CompletableFuture<int[]> profileFuture : profileFutures) {
+                int[] quantizedPixels = joinPerceptualCandidate(profileFuture);
+                if (quantizedPixels != null) {
+                    addPixelCandidate(pixelCandidates, quantizedPixels, false);
+                }
+            }
+        } else {
+            for (PerceptualProfile profile : perceptualProfiles) {
+                int[] quantizedPixels = buildPerceptualPaletteCandidate(width, height, pixels, profile, preferences);
+                if (quantizedPixels != null) {
+                    addPixelCandidate(pixelCandidates, quantizedPixels, false);
+                }
             }
         }
         return pixelCandidates;
+    }
+
+    @NotNull
+    protected static List<PerceptualProfile> selectPerceptualProfiles(@NotNull int[] pixels) {
+        LinkedHashSet<PerceptualProfile> selectedProfiles = new LinkedHashSet<>(MAX_SELECTED_PERCEPTUAL_PROFILES);
+        selectedProfiles.add(PerceptualProfile.LIGHT);
+        selectedProfiles.add(PerceptualProfile.MEDIUM);
+
+        int sampledPaletteBucketCount = estimateSampledPaletteBucketCount(pixels);
+        if (sampledPaletteBucketCount <= 16) {
+            selectedProfiles.add(PerceptualProfile.PALETTE_4);
+            selectedProfiles.add(PerceptualProfile.PALETTE_8);
+            selectedProfiles.add(PerceptualProfile.PALETTE_16);
+        } else if (sampledPaletteBucketCount <= 48) {
+            selectedProfiles.add(PerceptualProfile.PALETTE_8);
+            selectedProfiles.add(PerceptualProfile.PALETTE_16);
+            selectedProfiles.add(PerceptualProfile.PALETTE_32);
+        } else if (sampledPaletteBucketCount <= 96) {
+            selectedProfiles.add(PerceptualProfile.PALETTE_16);
+            selectedProfiles.add(PerceptualProfile.PALETTE_32);
+            selectedProfiles.add(PerceptualProfile.PALETTE_64);
+        } else {
+            selectedProfiles.add(PerceptualProfile.PALETTE_32);
+            selectedProfiles.add(PerceptualProfile.PALETTE_64);
+        }
+
+        if (selectedProfiles.size() > MAX_SELECTED_PERCEPTUAL_PROFILES) {
+            ArrayList<PerceptualProfile> limitedProfiles = new ArrayList<>(MAX_SELECTED_PERCEPTUAL_PROFILES);
+            for (PerceptualProfile profile : selectedProfiles) {
+                limitedProfiles.add(profile);
+                if (limitedProfiles.size() >= MAX_SELECTED_PERCEPTUAL_PROFILES) {
+                    break;
+                }
+            }
+            return List.copyOf(limitedProfiles);
+        }
+        return List.copyOf(selectedProfiles);
+    }
+
+    protected static int estimateSampledPaletteBucketCount(@NotNull int[] pixels) {
+        int sampleStep = Math.max(1, pixels.length / PERCEPTUAL_PROFILE_SAMPLE_PIXELS);
+        HashMap<Integer, Boolean> sampledBuckets = new HashMap<>();
+        for (int pixelIndex = 0; pixelIndex < pixels.length; pixelIndex += sampleStep) {
+            int color = pixels[pixelIndex];
+            int sampledBucket = ((color >>> 28) << 12)
+                    | (((color >>> 20) & 0xF) << 8)
+                    | (((color >>> 12) & 0xF) << 4)
+                    | ((color >>> 4) & 0xF);
+            sampledBuckets.put(sampledBucket, Boolean.TRUE);
+            if (sampledBuckets.size() > 128) {
+                return sampledBuckets.size();
+            }
+        }
+        return sampledBuckets.size();
+    }
+
+    protected static boolean shouldParallelizePerceptualCandidates(int width, int height, int profileCount) {
+        return (profileCount > 1)
+                && ((long) width * (long) height >= MIN_PARALLEL_PERCEPTUAL_CANDIDATE_PIXELS)
+                && (Runtime.getRuntime().availableProcessors() > 1);
+    }
+
+    @Nullable
+    protected static int[] joinPerceptualCandidate(@NotNull CompletableFuture<int[]> profileFuture) {
+        try {
+            return profileFuture.join();
+        } catch (CompletionException ex) {
+            Throwable cause = ex.getCause();
+            if (cause instanceof RuntimeException runtimeException) {
+                throw runtimeException;
+            }
+            if (cause instanceof Error error) {
+                throw error;
+            }
+            throw new IllegalStateException("Failed to build an AFMA BIN_INTRA perceptual pixel candidate", cause);
+        }
+    }
+
+    @NotNull
+    protected static List<PixelCandidateContext> shortlistPixelCandidates(int width, int height,
+                                                                          @NotNull List<PixelCandidateContext> pixelCandidates) throws IOException {
+        if (pixelCandidates.size() <= MAX_SHORTLISTED_PIXEL_CANDIDATES) {
+            return pixelCandidates;
+        }
+
+        int pixelCount = width * height;
+        if (pixelCount < MIN_PIXEL_CANDIDATE_SHORTLIST_PIXELS) {
+            return pixelCandidates;
+        }
+
+        ArrayList<EstimatedPixelCandidate> estimatedCandidates = new ArrayList<>(pixelCandidates.size());
+        for (PixelCandidateContext pixelCandidate : pixelCandidates) {
+            EstimatedPayloadCandidate estimatedCandidate = estimateBestCandidate(width, height, pixelCandidate);
+            if (estimatedCandidate != null) {
+                estimatedCandidates.add(new EstimatedPixelCandidate(pixelCandidate, estimatedCandidate));
+            }
+        }
+        if (estimatedCandidates.size() <= MAX_SHORTLISTED_PIXEL_CANDIDATES) {
+            return pixelCandidates;
+        }
+
+        estimatedCandidates.sort((first, second) -> {
+            EstimatedPayloadCandidate firstEstimated = first.estimatedCandidate();
+            EstimatedPayloadCandidate secondEstimated = second.estimatedCandidate();
+            if (firstEstimated.estimatedArchiveBytes() != secondEstimated.estimatedArchiveBytes()) {
+                return Long.compare(firstEstimated.estimatedArchiveBytes(), secondEstimated.estimatedArchiveBytes());
+            }
+            if (firstEstimated.stabilityPriority() != secondEstimated.stabilityPriority()) {
+                return Integer.compare(firstEstimated.stabilityPriority(), secondEstimated.stabilityPriority());
+            }
+            if (first.pixelCandidate().lossless() != second.pixelCandidate().lossless()) {
+                return first.pixelCandidate().lossless() ? -1 : 1;
+            }
+            return Integer.compare(
+                    System.identityHashCode(first.pixelCandidate()),
+                    System.identityHashCode(second.pixelCandidate())
+            );
+        });
+
+        LinkedHashSet<PixelCandidateContext> shortlistedCandidates = new LinkedHashSet<>(MAX_SHORTLISTED_PIXEL_CANDIDATES);
+        shortlistedCandidates.add(pixelCandidates.getFirst());
+        for (EstimatedPixelCandidate estimatedCandidate : estimatedCandidates) {
+            shortlistedCandidates.add(estimatedCandidate.pixelCandidate());
+            if (shortlistedCandidates.size() >= MAX_SHORTLISTED_PIXEL_CANDIDATES) {
+                break;
+            }
+        }
+        if (shortlistedCandidates.size() >= pixelCandidates.size()) {
+            return pixelCandidates;
+        }
+        return List.copyOf(shortlistedCandidates);
     }
 
     @NotNull
@@ -1863,6 +2113,12 @@ public final class AfmaBinIntraPayloadHelper {
         }
     }
 
+    public record EstimatedPayloadResult(long estimatedArchiveBytes,
+                                         long payloadLength,
+                                         boolean lossless,
+                                         @NotNull Mode mode) {
+    }
+
     protected record ModePlan(@NotNull Mode mode, @NotNull ModeFamily family, long payloadLength, int stabilityPriority,
                               @NotNull ModeEstimateBuilder estimateBuilder, @NotNull ExactCandidateBuilder exactBuilder) {
 
@@ -1874,6 +2130,33 @@ public final class AfmaBinIntraPayloadHelper {
         protected ScoredPayloadCandidate buildCandidate() throws IOException {
             return this.exactBuilder.buildCandidate();
         }
+    }
+
+    protected record EstimatedPayloadCandidate(@NotNull Mode mode,
+                                               long estimatedArchiveBytes,
+                                               long payloadLength,
+                                               boolean lossless,
+                                               int stabilityPriority) {
+
+        protected boolean isBetterThan(@NotNull EstimatedPayloadCandidate other) {
+            if (this.estimatedArchiveBytes != other.estimatedArchiveBytes) {
+                return this.estimatedArchiveBytes < other.estimatedArchiveBytes;
+            }
+            if (this.lossless != other.lossless) {
+                return this.lossless;
+            }
+            if (this.payloadLength != other.payloadLength) {
+                return this.payloadLength < other.payloadLength;
+            }
+            if (this.stabilityPriority != other.stabilityPriority) {
+                return this.stabilityPriority < other.stabilityPriority;
+            }
+            return this.mode.priority() < other.mode.priority();
+        }
+    }
+
+    protected record EstimatedPixelCandidate(@NotNull PixelCandidateContext pixelCandidate,
+                                             @NotNull EstimatedPayloadCandidate estimatedCandidate) {
     }
 
     protected record EstimatedModePlan(@NotNull ModePlan plan, long estimatedBytes) {
