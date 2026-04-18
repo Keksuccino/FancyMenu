@@ -318,7 +318,7 @@ public final class AfmaStoredPayload implements AutoCloseable {
         @NotNull
         protected final MessageDigest digest;
         @NotNull
-        protected final Deflater deflater = new Deflater(9, true);
+        protected final Deflater deflater = new Deflater(AfmaChunkedPayloadHelper.PLANNER_DEFLATE_LEVEL, true);
         @NotNull
         protected final byte[] analysisBuffer = new byte[ANALYSIS_BUFFER_BYTES];
         @NotNull

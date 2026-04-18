@@ -49,13 +49,14 @@ public final class AfmaChunkedPayloadHelper {
     public static final int SEQUENCE_KIND_INTRO = 0;
     public static final int SEQUENCE_KIND_MAIN = 1;
     public static final int PLANNER_DEFLATE_TAIL_BYTES = 32 * 1024;
+    public static final int PLANNER_DEFLATE_LEVEL = 1;
     protected static final int ESTIMATED_ZIP_CHUNK_OVERHEAD_BYTES = 96;
     protected static final int SAME_FRAME_EDGE_WEIGHT = 10;
     protected static final int CONSECUTIVE_FRAME_EDGE_WEIGHT = 5;
     protected static final int CHUNK_CACHE_MISS_PENALTY_BYTES = 1024;
     protected static final int MULTI_CHUNK_FRAME_PENALTY_BYTES = 768;
     protected static final byte[] EMPTY_BYTES = new byte[0];
-    private static final ThreadLocal<Deflater> CHUNK_DEFLATER_POOL = ThreadLocal.withInitial(() -> new Deflater(9, true));
+    private static final ThreadLocal<Deflater> CHUNK_DEFLATER_POOL = ThreadLocal.withInitial(() -> new Deflater(PLANNER_DEFLATE_LEVEL, true));
     private static final ThreadLocal<byte[]> CHUNK_BUFFER_POOL = ThreadLocal.withInitial(() -> new byte[8192]);
     private static final ThreadLocal<byte[]> CHUNK_READ_BUFFER_POOL = ThreadLocal.withInitial(() -> new byte[8192]);
 

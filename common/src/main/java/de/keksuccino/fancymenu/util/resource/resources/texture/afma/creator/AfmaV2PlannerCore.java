@@ -74,14 +74,14 @@ final class AfmaV2PlannerCore {
     protected static final int FULL_REFERENCE_PROBE_MIN_MIXED_WINS = 2;
     protected static final long FULL_REFERENCE_PROBE_REQUIRED_SAVINGS_BYTES = 48L * 1024L;
     protected static final double FULL_REFERENCE_PROBE_REQUIRED_SAVINGS_RATIO = 0.06D;
-    protected static final int FULL_REFERENCE_MIXED_PROBE_INTERVAL_FRAMES = 8;
+    protected static final int FULL_REFERENCE_MIXED_PROBE_INTERVAL_FRAMES = 4;
     protected static final int FULL_REFERENCE_MIXED_PROBE_END_FRAMES = 16;
     protected static final double FULL_REFERENCE_MIXED_PROBE_MIN_BOUNDS_RATIO = 0.94D;
-    protected static final double FULL_REFERENCE_MIXED_PROBE_MAX_CHANGED_RATIO = 0.24D;
-    protected static final double FULL_REFERENCE_MIXED_PROBE_STRONG_CHANGED_RATIO = 0.12D;
+    protected static final double FULL_REFERENCE_MIXED_PROBE_MAX_CHANGED_RATIO = 0.30D;
+    protected static final double FULL_REFERENCE_MIXED_PROBE_STRONG_CHANGED_RATIO = 0.18D;
     protected static final int QUICK_REFERENCE_PROBE_PAIR_COUNT = 4;
-    protected static final double QUICK_REFERENCE_MIXED_MAX_AVERAGE_CHANGED_RATIO = 0.15D;
-    protected static final double QUICK_REFERENCE_MIXED_MIN_AVERAGE_BOUNDS_RATIO = 0.95D;
+    protected static final double QUICK_REFERENCE_MIXED_MAX_AVERAGE_CHANGED_RATIO = 0.18D;
+    protected static final double QUICK_REFERENCE_MIXED_MIN_AVERAGE_BOUNDS_RATIO = 0.94D;
     protected static final double QUICK_REFERENCE_FULL_MIN_AVERAGE_CHANGED_RATIO = 0.25D;
     protected static final double QUICK_REFERENCE_FULL_MIN_AVERAGE_BOUNDS_RATIO = 0.75D;
     protected static final double QUICK_REFERENCE_FULL_MAX_AVERAGE_CHANGED_RATIO = 0.06D;
@@ -1106,6 +1106,19 @@ final class AfmaV2PlannerCore {
                 allowPerceptual
         ), sourceFrame);
         bestCandidate = this.pickBetterCandidate(bestCandidate, deltaCandidate, payloadInterner, qualityBudgetState, options, framesSinceKeyframe);
+        FrameCandidate exactContinuationCandidate = this.withQualityMetrics(
+                this.createExactContinuationCandidate(
+                        previousFrame,
+                        sourceFrame,
+                        candidateFrame,
+                        introSequence,
+                        frameIndex,
+                        deltaCandidate,
+                        options
+                ),
+                sourceFrame
+        );
+        bestCandidate = this.pickBetterCandidate(bestCandidate, exactContinuationCandidate, payloadInterner, qualityBudgetState, options, framesSinceKeyframe);
         int hardInterval = options.isAdaptiveKeyframePlacementEnabled()
                 ? options.getAdaptiveMaxKeyframeInterval()
                 : options.getKeyframeInterval();
@@ -1178,7 +1191,7 @@ final class AfmaV2PlannerCore {
                 allowPerceptual
         );
         PackedArchiveCandidateMetrics packedArchiveMetrics = this.resolveArchiveCandidateMetrics(
-                Arrays.asList(deltaCandidate, copyCandidate, blockInterCandidate, fullCandidate),
+                Arrays.asList(deltaCandidate, exactContinuationCandidate, copyCandidate, blockInterCandidate, fullCandidate),
                 payloadInterner,
                 pairAnalysis,
                 introSequence,
@@ -1191,6 +1204,14 @@ final class AfmaV2PlannerCore {
         Map<FrameCandidate, Long> packedArchiveAddedBytesByCandidate = packedArchiveMetrics.addedBytesByCandidate();
         deltaCandidate = this.filterWeakCandidateAgainstFull(
                 deltaCandidate,
+                fullCandidate,
+                packedArchiveAddedBytesByCandidate,
+                sourceFrame.getWidth(),
+                sourceFrame.getHeight(),
+                options
+        );
+        exactContinuationCandidate = this.filterWeakCandidateAgainstFull(
+                exactContinuationCandidate,
                 fullCandidate,
                 packedArchiveAddedBytesByCandidate,
                 sourceFrame.getWidth(),
@@ -1215,37 +1236,38 @@ final class AfmaV2PlannerCore {
         );
         bestCandidate = null;
         bestCandidate = this.pickBetterCandidate(bestCandidate, deltaCandidate, payloadInterner, qualityBudgetState, options, framesSinceKeyframe);
+        bestCandidate = this.pickBetterCandidate(bestCandidate, exactContinuationCandidate, payloadInterner, qualityBudgetState, options, framesSinceKeyframe);
         bestCandidate = this.pickBetterCandidate(bestCandidate, copyCandidate, payloadInterner, qualityBudgetState, options, framesSinceKeyframe);
         bestCandidate = this.pickBetterCandidate(bestCandidate, blockInterCandidate, payloadInterner, qualityBudgetState, options, framesSinceKeyframe);
 
         if (hardKeyframe) {
             FrameCandidate selected = Objects.requireNonNull(fullCandidate, "AFMA v2 hard-keyframe candidate was NULL");
-            return this.finalizeFrameDecision(selected, motionFamilyUsageTracker, frameIndex, motionFamiliesAttempted, deltaCandidate, copyCandidate, blockInterCandidate, fullCandidate);
+            return this.finalizeFrameDecision(selected, motionFamilyUsageTracker, frameIndex, motionFamiliesAttempted, deltaCandidate, exactContinuationCandidate, copyCandidate, blockInterCandidate, fullCandidate);
         }
 
         if (bestCandidate == null) {
             FrameCandidate selected = Objects.requireNonNull(fullCandidate, "AFMA v2 fallback full candidate was NULL");
-            return this.finalizeFrameDecision(selected, motionFamilyUsageTracker, frameIndex, motionFamiliesAttempted, deltaCandidate, copyCandidate, blockInterCandidate, fullCandidate);
+            return this.finalizeFrameDecision(selected, motionFamilyUsageTracker, frameIndex, motionFamiliesAttempted, deltaCandidate, exactContinuationCandidate, copyCandidate, blockInterCandidate, fullCandidate);
         }
 
         if (fullCandidate != null) {
             if (!options.isAdaptiveKeyframePlacementEnabled() && preferredKeyframe) {
-                return this.finalizeFrameDecision(fullCandidate, motionFamilyUsageTracker, frameIndex, motionFamiliesAttempted, deltaCandidate, copyCandidate, blockInterCandidate, fullCandidate);
+                return this.finalizeFrameDecision(fullCandidate, motionFamilyUsageTracker, frameIndex, motionFamiliesAttempted, deltaCandidate, exactContinuationCandidate, copyCandidate, blockInterCandidate, fullCandidate);
             }
             if (options.isAdaptiveKeyframePlacementEnabled() && preferredKeyframe) {
                 long continuationSavings = fullCandidate.totalArchiveBytes(payloadInterner) - bestCandidate.totalArchiveBytes(payloadInterner);
                 long requiredSavings = this.resolveAdaptiveContinuationSavings(fullCandidate.totalArchiveBytes(payloadInterner), options);
                 if (continuationSavings < requiredSavings) {
-                    return this.finalizeFrameDecision(fullCandidate, motionFamilyUsageTracker, frameIndex, motionFamiliesAttempted, deltaCandidate, copyCandidate, blockInterCandidate, fullCandidate);
+                    return this.finalizeFrameDecision(fullCandidate, motionFamilyUsageTracker, frameIndex, motionFamiliesAttempted, deltaCandidate, exactContinuationCandidate, copyCandidate, blockInterCandidate, fullCandidate);
                 }
             }
             if (this.pickBetterCandidate(bestCandidate, fullCandidate, payloadInterner, qualityBudgetState, options, framesSinceKeyframe) == fullCandidate) {
-                return this.finalizeFrameDecision(fullCandidate, motionFamilyUsageTracker, frameIndex, motionFamiliesAttempted, deltaCandidate, copyCandidate, blockInterCandidate, fullCandidate);
+                return this.finalizeFrameDecision(fullCandidate, motionFamilyUsageTracker, frameIndex, motionFamiliesAttempted, deltaCandidate, exactContinuationCandidate, copyCandidate, blockInterCandidate, fullCandidate);
             }
         }
 
         FrameCandidate packedArchiveWinner = this.pickBestPackedArchiveCandidate(
-                Arrays.asList(deltaCandidate, copyCandidate, blockInterCandidate, fullCandidate),
+                Arrays.asList(deltaCandidate, exactContinuationCandidate, copyCandidate, blockInterCandidate, fullCandidate),
                 packedArchiveBytesByCandidate,
                 payloadInterner,
                 qualityBudgetState,
@@ -1253,10 +1275,10 @@ final class AfmaV2PlannerCore {
                 framesSinceKeyframe
         );
         if (packedArchiveWinner != null) {
-            return this.finalizeFrameDecision(packedArchiveWinner, motionFamilyUsageTracker, frameIndex, motionFamiliesAttempted, deltaCandidate, copyCandidate, blockInterCandidate, fullCandidate);
+            return this.finalizeFrameDecision(packedArchiveWinner, motionFamilyUsageTracker, frameIndex, motionFamiliesAttempted, deltaCandidate, exactContinuationCandidate, copyCandidate, blockInterCandidate, fullCandidate);
         }
 
-        return this.finalizeFrameDecision(bestCandidate, motionFamilyUsageTracker, frameIndex, motionFamiliesAttempted, deltaCandidate, copyCandidate, blockInterCandidate, fullCandidate);
+        return this.finalizeFrameDecision(bestCandidate, motionFamilyUsageTracker, frameIndex, motionFamiliesAttempted, deltaCandidate, exactContinuationCandidate, copyCandidate, blockInterCandidate, fullCandidate);
     }
 
     protected boolean shouldSkipMotionFamiliesForStrongDelta(@Nullable FrameCandidate deltaCandidate,
@@ -1953,6 +1975,58 @@ final class AfmaV2PlannerCore {
             throw lastException;
         }
         return null;
+    }
+
+    @Nullable
+    protected FrameCandidate createExactContinuationCandidate(@NotNull AfmaPixelFrame previousFrame,
+                                                              @NotNull AfmaPixelFrame sourceFrame,
+                                                              @NotNull AfmaPixelFrame candidateFrame,
+                                                              boolean introSequence,
+                                                              int frameIndex,
+                                                              @Nullable FrameCandidate mergedDeltaCandidate,
+                                                              @NotNull AfmaEncodeOptions options) throws IOException {
+        if ((candidateFrame == sourceFrame)
+                || (mergedDeltaCandidate == null)
+                || mergedDeltaCandidate.qualityMetrics().lossless()
+                || ((mergedDeltaCandidate.kind() != CandidateKind.DELTA_SPARSE) && (mergedDeltaCandidate.kind() != CandidateKind.DELTA_RESIDUAL))) {
+            return null;
+        }
+
+        AfmaFramePairAnalysis exactPairAnalysis = new AfmaFramePairAnalysis(previousFrame, sourceFrame);
+        AfmaRect exactDeltaBounds = exactPairAnalysis.differenceBounds();
+        if (exactDeltaBounds == null) {
+            return new FrameCandidate(
+                    CandidateKind.SAME,
+                    AfmaFrameDescriptor.same(),
+                    null,
+                    null,
+                    null,
+                    null,
+                    previousFrame,
+                    0,
+                    CandidateQualityMetrics.losslessMetrics()
+            );
+        }
+
+        long frameArea = (long) sourceFrame.getWidth() * (long) sourceFrame.getHeight();
+        if (frameArea <= 0L) {
+            return null;
+        }
+        double changedRatio = (double) exactPairAnalysis.changedPixelCount() / (double) frameArea;
+        if (changedRatio > MAX_SPARSE_DELTA_CHANGED_DENSITY) {
+            return null;
+        }
+
+        return this.createBestDeltaFamilyCandidate(
+                previousFrame,
+                sourceFrame,
+                exactPairAnalysis,
+                introSequence,
+                frameIndex,
+                exactDeltaBounds,
+                options,
+                false
+        );
     }
 
     @NotNull

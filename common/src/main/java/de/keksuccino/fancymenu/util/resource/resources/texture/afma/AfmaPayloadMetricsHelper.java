@@ -15,7 +15,7 @@ import java.util.zip.Deflater;
 public final class AfmaPayloadMetricsHelper {
 
     private static final int MAX_CONTENT_CACHE_ENTRIES = 512;
-    private static final ThreadLocal<Deflater> DEFLATER_POOL = ThreadLocal.withInitial(() -> new Deflater(9, true));
+    private static final ThreadLocal<Deflater> DEFLATER_POOL = ThreadLocal.withInitial(() -> new Deflater(AfmaChunkedPayloadHelper.PLANNER_DEFLATE_LEVEL, true));
     private static final ThreadLocal<byte[]> BUFFER_POOL = ThreadLocal.withInitial(() -> new byte[8192]);
     private static final Map<byte[], Long> ESTIMATED_ARCHIVE_BYTES = Collections.synchronizedMap(new WeakHashMap<>());
     // Keep a small recent-content cache so fresh byte arrays can still reuse expensive metric work.
