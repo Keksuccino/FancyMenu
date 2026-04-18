@@ -59,6 +59,7 @@ final class AfmaV2PlannerCore {
     protected static final int MAX_BLOCK_INTER_MOTION_VECTORS = 5;
     protected static final long BLOCK_INTER_MIN_REGION_AREA = (long) BLOCK_INTER_TILE_SIZE * BLOCK_INTER_TILE_SIZE * 3L;
     protected static final double BLOCK_INTER_REQUIRED_SAVINGS_RATIO = 0.96D;
+    protected static final double STRONG_FULL_FRAME_DELTA_SKIP_CHANGED_RATIO = 0.35D;
     protected static final long FAMILY_SWITCH_MARGIN_BYTES = 48L;
     protected static final double FAMILY_SWITCH_MARGIN_RATIO = 0.05D;
     protected static final int FULL_REFERENCE_PROBE_FRAMES_PER_SEQUENCE = 3;
@@ -717,10 +718,11 @@ final class AfmaV2PlannerCore {
         ), sourceFrame);
         bestCandidate = this.pickBetterCandidate(bestCandidate, deltaCandidate, payloadInterner, qualityBudgetState, options, framesSinceKeyframe);
 
-        CopyEvaluation copyEvaluation = options.isRectCopyEnabled()
+        boolean skipMotionFamilies = this.shouldSkipMotionFamiliesForStrongFullFrameDelta(deltaCandidate, pairAnalysis, sourceFrame);
+        CopyEvaluation copyEvaluation = (options.isRectCopyEnabled() && !skipMotionFamilies)
                 ? this.evaluateCopyDetections(previousFrame, candidateFrame, pairAnalysis, copyDetector)
                 : CopyEvaluation.EMPTY;
-        FrameCandidate copyCandidate = options.isRectCopyEnabled()
+        FrameCandidate copyCandidate = (options.isRectCopyEnabled() && !skipMotionFamilies)
                 ? this.withQualityMetrics(this.createBestCopyFamilyCandidate(
                 previousFrame,
                 candidateFrame,
@@ -737,7 +739,9 @@ final class AfmaV2PlannerCore {
         long blockInterReferenceBytes = (bestCandidate != null)
                 ? bestCandidate.totalArchiveBytes(payloadInterner)
                 : 0L;
-        FrameCandidate blockInterCandidate = this.withQualityMetrics(this.createBlockInterFamilyCandidate(
+        FrameCandidate blockInterCandidate = skipMotionFamilies
+                ? null
+                : this.withQualityMetrics(this.createBlockInterFamilyCandidate(
                 previousFrame,
                 candidateFrame,
                 pairAnalysis,
@@ -845,6 +849,23 @@ final class AfmaV2PlannerCore {
         }
 
         return this.toFrameDecision(bestCandidate, deltaCandidate, copyCandidate, blockInterCandidate, fullCandidate);
+    }
+
+    protected boolean shouldSkipMotionFamiliesForStrongFullFrameDelta(@Nullable FrameCandidate deltaCandidate,
+                                                                      @NotNull AfmaFramePairAnalysis pairAnalysis,
+                                                                      @NotNull AfmaPixelFrame currentFrame) {
+        if ((deltaCandidate == null) || (deltaCandidate.kind() != CandidateKind.DELTA_SPARSE)) {
+            return false;
+        }
+        AfmaRect differenceBounds = pairAnalysis.differenceBounds();
+        if (differenceBounds == null) {
+            return false;
+        }
+        long frameArea = (long) currentFrame.getWidth() * (long) currentFrame.getHeight();
+        if ((frameArea <= 0L) || (differenceBounds.area() < frameArea)) {
+            return false;
+        }
+        return ((double) pairAnalysis.changedPixelCount() / (double) frameArea) <= STRONG_FULL_FRAME_DELTA_SKIP_CHANGED_RATIO;
     }
 
     protected long resolveAdaptiveContinuationSavings(long fullBytes, @NotNull AfmaEncodeOptions options) {
@@ -1289,10 +1310,6 @@ final class AfmaV2PlannerCore {
                                                             @NotNull AfmaRect deltaBounds,
                                                             @NotNull AfmaEncodeOptions options,
                                                             boolean allowPerceptual) throws IOException {
-        if (deltaBounds.area() >= ((long) currentFrame.getWidth() * currentFrame.getHeight())) {
-            return null;
-        }
-
         AfmaFramePairAnalysis.RegionDiffAnalysis regionAnalysis = pairAnalysis.regionDiffAnalysis(
                 deltaBounds.x(),
                 deltaBounds.y(),
