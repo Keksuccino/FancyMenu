@@ -18,6 +18,16 @@ public class AfmaFrameNormalizer {
 
     @Nullable
     protected static volatile Boolean stbAvailable;
+    @Nullable
+    protected static volatile Method stbLoadMethod;
+    @Nullable
+    protected static volatile Method stbFailureReasonMethod;
+    @Nullable
+    protected static volatile Method stbImageFreeMethod;
+    @Nullable
+    protected static volatile Method memoryStackPushMethod;
+    @Nullable
+    protected static volatile Method memoryStackMallocIntMethod;
 
     @NotNull
     public AfmaPixelFrame loadFrame(@NotNull File file) throws IOException {
@@ -81,7 +91,14 @@ public class AfmaFrameNormalizer {
     @NotNull
     protected DecodedImage decodeFrame(@NotNull File file) throws IOException {
         if (isStbAvailable()) {
-            return this.decodeFrameWithStb(file);
+            try {
+                return this.decodeFrameWithStb(file);
+            } catch (IOException ex) {
+                if (!shouldFallbackToImageIo(ex)) {
+                    throw ex;
+                }
+                disableStb();
+            }
         }
         return this.decodeFrameWithImageIo(file);
     }
@@ -97,10 +114,16 @@ public class AfmaFrameNormalizer {
                 return cached;
             }
             try {
-                Class.forName("org.lwjgl.stb.STBImage");
-                Class.forName("org.lwjgl.system.MemoryStack");
+                Class<?> stbImageClass = Class.forName("org.lwjgl.stb.STBImage");
+                Class<?> memoryStackClass = Class.forName("org.lwjgl.system.MemoryStack");
+                stbLoadMethod = resolveStbiLoadMethod(stbImageClass);
+                stbFailureReasonMethod = stbImageClass.getMethod("stbi_failure_reason");
+                stbImageFreeMethod = stbImageClass.getMethod("stbi_image_free", ByteBuffer.class);
+                memoryStackPushMethod = memoryStackClass.getMethod("stackPush");
+                memoryStackMallocIntMethod = memoryStackClass.getMethod("mallocInt", int.class);
                 stbAvailable = Boolean.TRUE;
             } catch (Throwable ignored) {
+                clearStbMethodCache();
                 stbAvailable = Boolean.FALSE;
             }
             return Objects.requireNonNull(stbAvailable);
@@ -112,19 +135,18 @@ public class AfmaFrameNormalizer {
         ByteBuffer decodedBuffer = null;
         AutoCloseable memoryStack = null;
         try {
-            Class<?> memoryStackClass = Class.forName("org.lwjgl.system.MemoryStack");
-            memoryStack = (AutoCloseable) memoryStackClass.getMethod("stackPush").invoke(null);
-            Method mallocInt = memoryStackClass.getMethod("mallocInt", int.class);
+            Method stackPush = Objects.requireNonNull(memoryStackPushMethod, "AFMA STB stackPush method is not initialized");
+            Method mallocInt = Objects.requireNonNull(memoryStackMallocIntMethod, "AFMA STB mallocInt method is not initialized");
+            Method loadMethod = Objects.requireNonNull(stbLoadMethod, "AFMA STB load method is not initialized");
+            Method failureReasonMethod = Objects.requireNonNull(stbFailureReasonMethod, "AFMA STB failure-reason method is not initialized");
+            memoryStack = (AutoCloseable) stackPush.invoke(null);
             IntBuffer widthBuffer = (IntBuffer) mallocInt.invoke(memoryStack, 1);
             IntBuffer heightBuffer = (IntBuffer) mallocInt.invoke(memoryStack, 1);
             IntBuffer componentBuffer = (IntBuffer) mallocInt.invoke(memoryStack, 1);
 
-            Class<?> stbImageClass = Class.forName("org.lwjgl.stb.STBImage");
-            decodedBuffer = (ByteBuffer) stbImageClass
-                    .getMethod("stbi_load", String.class, IntBuffer.class, IntBuffer.class, IntBuffer.class, int.class)
-                    .invoke(null, file.getAbsolutePath(), widthBuffer, heightBuffer, componentBuffer, 4);
+            decodedBuffer = (ByteBuffer) loadMethod.invoke(null, file.getAbsolutePath(), widthBuffer, heightBuffer, componentBuffer, 4);
             if (decodedBuffer == null) {
-                String failureReason = (String) stbImageClass.getMethod("stbi_failure_reason").invoke(null);
+                String failureReason = (String) failureReasonMethod.invoke(null);
                 throw new IOException("Failed to decode AFMA source frame: " + file.getAbsolutePath() + " (" + failureReason + ")");
             }
 
@@ -144,8 +166,10 @@ public class AfmaFrameNormalizer {
         } finally {
             if (decodedBuffer != null) {
                 try {
-                    Class<?> stbImageClass = Class.forName("org.lwjgl.stb.STBImage");
-                    stbImageClass.getMethod("stbi_image_free", ByteBuffer.class).invoke(null, decodedBuffer);
+                    Method imageFreeMethod = stbImageFreeMethod;
+                    if (imageFreeMethod != null) {
+                        imageFreeMethod.invoke(null, decodedBuffer);
+                    }
                 } catch (Throwable ignored) {
                 }
             }
@@ -155,6 +179,56 @@ public class AfmaFrameNormalizer {
                 } catch (Exception ignored) {
                 }
             }
+        }
+    }
+
+    protected static void disableStb() {
+        synchronized (AfmaFrameNormalizer.class) {
+            stbAvailable = Boolean.FALSE;
+        }
+    }
+
+    protected static void clearStbMethodCache() {
+        stbLoadMethod = null;
+        stbFailureReasonMethod = null;
+        stbImageFreeMethod = null;
+        memoryStackPushMethod = null;
+        memoryStackMallocIntMethod = null;
+    }
+
+    protected static boolean shouldFallbackToImageIo(@NotNull IOException exception) {
+        return containsCauseType(exception, ReflectiveOperationException.class)
+                || containsCauseType(exception, ClassCastException.class)
+                || containsCauseType(exception, LinkageError.class);
+    }
+
+    protected static boolean containsCauseType(@NotNull Throwable throwable, @NotNull Class<? extends Throwable> causeType) {
+        Throwable current = throwable;
+        while (current != null) {
+            if (causeType.isInstance(current)) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
+    }
+
+    @NotNull
+    protected static Method resolveStbiLoadMethod(@NotNull Class<?> stbImageClass) throws NoSuchMethodException {
+        try {
+            return stbImageClass.getMethod("stbi_load",
+                    CharSequence.class,
+                    IntBuffer.class,
+                    IntBuffer.class,
+                    IntBuffer.class,
+                    int.class);
+        } catch (NoSuchMethodException ignored) {
+            return stbImageClass.getMethod("stbi_load",
+                    String.class,
+                    IntBuffer.class,
+                    IntBuffer.class,
+                    IntBuffer.class,
+                    int.class);
         }
     }
 
