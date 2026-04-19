@@ -39,6 +39,14 @@ public final class AfmaBinIntraPayloadHelper {
     protected static final int MIN_PARALLEL_PERCEPTUAL_CANDIDATE_PIXELS = 131072;
     protected static final int MAX_SELECTED_PERCEPTUAL_PROFILES = 5;
     protected static final int PERCEPTUAL_PROFILE_SAMPLE_PIXELS = 8192;
+    protected static final int PERCEPTUAL_PALETTE_REFINEMENT_MIN_PALETTE_COLORS = 32;
+    protected static final int PERCEPTUAL_PALETTE_REFINEMENT_MIN_EXTRA_BUCKETS = 8;
+    protected static final int PERCEPTUAL_PALETTE_REFINEMENT_MAX_ITERATIONS = 3;
+    protected static final ChannelQuantizationProfile[] HIGH_COLOR_CHANNEL_QUANTIZATION_PROFILES = {
+            ChannelQuantizationProfile.RGB555,
+            ChannelQuantizationProfile.RGB454,
+            ChannelQuantizationProfile.RGB444
+    };
     protected static final int MIN_PARALLEL_MODE_SELECTION_PIXELS = 65536;
     protected static final long MIN_PARALLEL_MODE_SELECTION_HEADROOM_BYTES = 192L * 1024L * 1024L;
 
@@ -1299,7 +1307,15 @@ public final class AfmaBinIntraPayloadHelper {
         if (sourceCandidate.hasHiddenTransparentRgb()) {
             addPixelCandidate(pixelCandidates, normalizeHiddenTransparentPixels(pixels), false);
         }
-        List<PerceptualProfile> perceptualProfiles = selectPerceptualProfiles(pixels);
+
+        int sampledPaletteBucketCount = estimateSampledPaletteBucketCount(pixels);
+        for (ChannelQuantizationProfile channelProfile : selectChannelQuantizationProfiles(sampledPaletteBucketCount)) {
+            int[] quantizedPixels = buildPerceptualChannelCandidate(pixels, channelProfile, preferences);
+            if (quantizedPixels != null) {
+                addPixelCandidate(pixelCandidates, quantizedPixels, false);
+            }
+        }
+        List<PerceptualProfile> perceptualProfiles = selectPerceptualProfiles(sampledPaletteBucketCount);
         if (shouldParallelizePerceptualCandidates(width, height, perceptualProfiles.size())) {
             ArrayList<CompletableFuture<int[]>> profileFutures = new ArrayList<>(perceptualProfiles.size());
             for (PerceptualProfile profile : perceptualProfiles) {
@@ -1323,12 +1339,43 @@ public final class AfmaBinIntraPayloadHelper {
     }
 
     @NotNull
+    protected static ChannelQuantizationProfile[] selectChannelQuantizationProfiles(int sampledPaletteBucketCount) {
+        return (sampledPaletteBucketCount > 96)
+                ? HIGH_COLOR_CHANNEL_QUANTIZATION_PROFILES
+                : ChannelQuantizationProfile.NONE;
+    }
+
+    @Nullable
+    protected static int[] buildPerceptualChannelCandidate(@NotNull int[] pixels,
+                                                           @NotNull ChannelQuantizationProfile profile,
+                                                           @NotNull EncodePreferences preferences) {
+        int[] quantizedPixels = new int[pixels.length];
+        boolean changed = false;
+        for (int i = 0; i < pixels.length; i++) {
+            int sourceColor = pixels[i];
+            int quantizedColor = quantizeChannels(sourceColor, profile.redBits(), profile.greenBits(), profile.blueBits(), profile.alphaBits());
+            quantizedPixels[i] = quantizedColor;
+            changed |= quantizedColor != sourceColor;
+        }
+        if (!changed) {
+            return null;
+        }
+
+        PerceptualErrorStats errorStats = measurePerceptualError(pixels, quantizedPixels);
+        return errorStats.isWithin(preferences) ? quantizedPixels : null;
+    }
+
+    @NotNull
     protected static List<PerceptualProfile> selectPerceptualProfiles(@NotNull int[] pixels) {
+        return selectPerceptualProfiles(estimateSampledPaletteBucketCount(pixels));
+    }
+
+    @NotNull
+    protected static List<PerceptualProfile> selectPerceptualProfiles(int sampledPaletteBucketCount) {
         LinkedHashSet<PerceptualProfile> selectedProfiles = new LinkedHashSet<>(MAX_SELECTED_PERCEPTUAL_PROFILES);
         selectedProfiles.add(PerceptualProfile.LIGHT);
         selectedProfiles.add(PerceptualProfile.MEDIUM);
 
-        int sampledPaletteBucketCount = estimateSampledPaletteBucketCount(pixels);
         if (sampledPaletteBucketCount <= 16) {
             selectedProfiles.add(PerceptualProfile.PALETTE_4);
             selectedProfiles.add(PerceptualProfile.PALETTE_8);
@@ -1494,7 +1541,6 @@ public final class AfmaBinIntraPayloadHelper {
     @Nullable
     protected static int[] buildPerceptualPaletteCandidate(int width, int height, @NotNull int[] pixels,
                                                            @NotNull PerceptualProfile profile, @NotNull EncodePreferences preferences) {
-        BucketAccumulator[] paletteBuckets = new BucketAccumulator[0];
         Map<Integer, BucketAccumulator> buckets = new HashMap<>();
         int[] bucketColors = new int[pixels.length];
         for (int i = 0; i < pixels.length; i++) {
@@ -1519,7 +1565,7 @@ public final class AfmaBinIntraPayloadHelper {
         });
 
         int paletteSize = Math.min(profile.maxPaletteColors(), sortedBuckets.size());
-        paletteBuckets = new BucketAccumulator[paletteSize];
+        BucketAccumulator[] paletteBuckets = new BucketAccumulator[paletteSize];
         Map<Integer, Integer> paletteMapping = new HashMap<>(sortedBuckets.size() * 2);
         for (int i = 0; i < paletteSize; i++) {
             BucketAccumulator accumulator = sortedBuckets.get(i);
@@ -1532,20 +1578,143 @@ public final class AfmaBinIntraPayloadHelper {
             paletteMapping.put(accumulator.bucketColor, findNearestPaletteBucket(accumulator.representativeColor(), paletteBuckets));
         }
 
-        int[] quantizedPixels = new int[pixels.length];
-        for (int i = 0; i < bucketColors.length; i++) {
-            Integer paletteIndex = paletteMapping.get(bucketColors[i]);
-            if (paletteIndex == null) {
-                return null;
-            }
-            quantizedPixels[i] = paletteBuckets[paletteIndex].representativeColor();
+        int[] paletteColors = new int[paletteSize];
+        for (int i = 0; i < paletteSize; i++) {
+            paletteColors[i] = paletteBuckets[i].representativeColor();
         }
 
-        PerceptualErrorStats errorStats = measurePerceptualError(pixels, quantizedPixels);
-        if (!errorStats.isWithin(preferences)) {
+        int[] quantizedPixels = materializePerceptualPaletteCandidate(bucketColors, paletteMapping, paletteColors);
+        if (quantizedPixels == null) {
             return null;
         }
+        PerceptualErrorStats errorStats = measurePerceptualError(pixels, quantizedPixels);
+        if (errorStats.isWithin(preferences)) {
+            return quantizedPixels;
+        }
+
+        if (!shouldRefinePerceptualPalette(sortedBuckets.size(), paletteSize)) {
+            return null;
+        }
+
+        RefinedPerceptualPalette refinedPalette = refinePerceptualPalette(sortedBuckets, paletteColors);
+        if (refinedPalette == null) {
+            return null;
+        }
+        quantizedPixels = materializePerceptualPaletteCandidate(bucketColors, refinedPalette.paletteMapping(), refinedPalette.paletteColors());
+        if (quantizedPixels == null) {
+            return null;
+        }
+        errorStats = measurePerceptualError(pixels, quantizedPixels);
+        return errorStats.isWithin(preferences) ? quantizedPixels : null;
+    }
+
+    protected static boolean shouldRefinePerceptualPalette(int bucketCount, int paletteSize) {
+        return (paletteSize >= PERCEPTUAL_PALETTE_REFINEMENT_MIN_PALETTE_COLORS)
+                && (bucketCount >= (paletteSize + PERCEPTUAL_PALETTE_REFINEMENT_MIN_EXTRA_BUCKETS));
+    }
+
+    @Nullable
+    protected static int[] materializePerceptualPaletteCandidate(@NotNull int[] bucketColors,
+                                                                 @NotNull Map<Integer, Integer> paletteMapping,
+                                                                 @NotNull int[] paletteColors) {
+        int[] quantizedPixels = new int[bucketColors.length];
+        for (int i = 0; i < bucketColors.length; i++) {
+            Integer paletteIndex = paletteMapping.get(bucketColors[i]);
+            if ((paletteIndex == null) || (paletteIndex < 0) || (paletteIndex >= paletteColors.length)) {
+                return null;
+            }
+            quantizedPixels[i] = paletteColors[paletteIndex];
+        }
         return quantizedPixels;
+    }
+
+    @Nullable
+    protected static RefinedPerceptualPalette refinePerceptualPalette(@NotNull List<BucketAccumulator> sortedBuckets,
+                                                                      @NotNull int[] initialPaletteColors) {
+        int paletteSize = initialPaletteColors.length;
+        if (paletteSize <= 0) {
+            return null;
+        }
+
+        int[] paletteColors = Arrays.copyOf(initialPaletteColors, paletteSize);
+        int[] assignments = new int[sortedBuckets.size()];
+        Arrays.fill(assignments, -1);
+
+        for (int iteration = 0; iteration < PERCEPTUAL_PALETTE_REFINEMENT_MAX_ITERATIONS; iteration++) {
+            long[] redSums = new long[paletteSize];
+            long[] greenSums = new long[paletteSize];
+            long[] blueSums = new long[paletteSize];
+            long[] alphaSums = new long[paletteSize];
+            long[] counts = new long[paletteSize];
+            boolean assignmentsChanged = false;
+
+            for (int bucketIndex = 0; bucketIndex < sortedBuckets.size(); bucketIndex++) {
+                BucketAccumulator bucket = sortedBuckets.get(bucketIndex);
+                int bestPaletteIndex = findNearestPaletteColor(bucket.representativeColor(), paletteColors);
+                if (assignments[bucketIndex] != bestPaletteIndex) {
+                    assignments[bucketIndex] = bestPaletteIndex;
+                    assignmentsChanged = true;
+                }
+                redSums[bestPaletteIndex] += bucket.redSum;
+                greenSums[bestPaletteIndex] += bucket.greenSum;
+                blueSums[bestPaletteIndex] += bucket.blueSum;
+                alphaSums[bestPaletteIndex] += bucket.alphaSum;
+                counts[bestPaletteIndex] += bucket.count;
+            }
+
+            boolean paletteChanged = false;
+            for (int paletteIndex = 0; paletteIndex < paletteSize; paletteIndex++) {
+                if (counts[paletteIndex] <= 0L) {
+                    continue;
+                }
+                int refinedColor = buildAverageColor(redSums[paletteIndex], greenSums[paletteIndex], blueSums[paletteIndex], alphaSums[paletteIndex], counts[paletteIndex]);
+                if (paletteColors[paletteIndex] != refinedColor) {
+                    paletteColors[paletteIndex] = refinedColor;
+                    paletteChanged = true;
+                }
+            }
+
+            if (!assignmentsChanged && !paletteChanged) {
+                break;
+            }
+        }
+
+        HashMap<Integer, Integer> paletteMapping = new HashMap<>(sortedBuckets.size() * 2);
+        for (int bucketIndex = 0; bucketIndex < sortedBuckets.size(); bucketIndex++) {
+            paletteMapping.put(sortedBuckets.get(bucketIndex).bucketColor, assignments[bucketIndex]);
+        }
+        return new RefinedPerceptualPalette(paletteMapping, paletteColors);
+    }
+
+    protected static int findNearestPaletteColor(int color, @NotNull int[] paletteColors) {
+        int bestIndex = 0;
+        long bestDistance = Long.MAX_VALUE;
+        for (int i = 0; i < paletteColors.length; i++) {
+            long distance = perceptualDistance(color, paletteColors[i]);
+            if (distance >= bestDistance) {
+                continue;
+            }
+            bestDistance = distance;
+            bestIndex = i;
+        }
+        return bestIndex;
+    }
+
+    protected static int buildAverageColor(long redSum, long greenSum, long blueSum, long alphaSum, long count) {
+        if (count <= 0L) {
+            return 0;
+        }
+        int alpha = (int) Math.round((double) alphaSum / (double) count);
+        if (alpha <= 0) {
+            return 0;
+        }
+        int red = (int) Math.round((double) redSum / (double) count);
+        int green = (int) Math.round((double) greenSum / (double) count);
+        int blue = (int) Math.round((double) blueSum / (double) count);
+        return (Math.min(0xFF, alpha) << 24)
+                | (Math.min(0xFF, red) << 16)
+                | (Math.min(0xFF, green) << 8)
+                | Math.min(0xFF, blue);
     }
 
     protected static int quantizeBucketColor(int sourceColor, @NotNull PerceptualProfile profile) {
@@ -1565,6 +1734,17 @@ public final class AfmaBinIntraPayloadHelper {
         int green = quantizeChannel((sourceColor >> 8) & 0xFF, profile.greenBits());
         int blue = quantizeChannel(sourceColor & 0xFF, profile.blueBits());
         return (normalizedAlpha << 24) | (red << 16) | (green << 8) | blue;
+    }
+
+    protected static int quantizeChannels(int sourceColor, int redBits, int greenBits, int blueBits, int alphaBits) {
+        int alpha = quantizeChannel((sourceColor >>> 24) & 0xFF, alphaBits);
+        if (alpha <= 0) {
+            return 0;
+        }
+        int red = quantizeChannel((sourceColor >> 16) & 0xFF, redBits);
+        int green = quantizeChannel((sourceColor >> 8) & 0xFF, greenBits);
+        int blue = quantizeChannel(sourceColor & 0xFF, blueBits);
+        return (alpha << 24) | (red << 16) | (green << 8) | blue;
     }
 
     protected static int normalizeColorForRepresentative(int sourceColor, @NotNull PerceptualProfile profile) {
@@ -2162,6 +2342,10 @@ public final class AfmaBinIntraPayloadHelper {
     protected record EstimatedModePlan(@NotNull ModePlan plan, long estimatedBytes) {
     }
 
+    protected record RefinedPerceptualPalette(@NotNull Map<Integer, Integer> paletteMapping,
+                                              @NotNull int[] paletteColors) {
+    }
+
     protected record IndexedModeContext(@NotNull int[] palette, @NotNull Map<Integer, Integer> colorToIndex,
                                         int bitsPerIndex, int packedRowBytes) {
     }
@@ -2295,6 +2479,44 @@ public final class AfmaBinIntraPayloadHelper {
         TRUECOLOR,
         INDEXED,
         ALPHA_SPECIAL
+    }
+
+    protected enum ChannelQuantizationProfile {
+        RGB666(6, 6, 6, 8),
+        RGB565(5, 6, 5, 8),
+        RGB555(5, 5, 5, 8),
+        RGB454(4, 5, 4, 8),
+        RGB444(4, 4, 4, 8);
+
+        private static final ChannelQuantizationProfile[] NONE = new ChannelQuantizationProfile[0];
+
+        private final int redBits;
+        private final int greenBits;
+        private final int blueBits;
+        private final int alphaBits;
+
+        ChannelQuantizationProfile(int redBits, int greenBits, int blueBits, int alphaBits) {
+            this.redBits = redBits;
+            this.greenBits = greenBits;
+            this.blueBits = blueBits;
+            this.alphaBits = alphaBits;
+        }
+
+        public int redBits() {
+            return this.redBits;
+        }
+
+        public int greenBits() {
+            return this.greenBits;
+        }
+
+        public int blueBits() {
+            return this.blueBits;
+        }
+
+        public int alphaBits() {
+            return this.alphaBits;
+        }
     }
 
     protected enum PerceptualProfile {
