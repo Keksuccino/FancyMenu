@@ -5,7 +5,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.nio.file.Files;
 
 public final class AfmaIoHelper {
@@ -41,32 +40,8 @@ public final class AfmaIoHelper {
         if (configuredPath != null) {
             return ensureDirectory(new File(configuredPath));
         }
-
-        File fancyMenuTempDir = resolveFancyMenuTempDirectory();
-        if (fancyMenuTempDir != null) {
-            return ensureDirectory(fancyMenuTempDir);
-        }
-
         String javaTemp = firstNonBlank(System.getProperty("java.io.tmpdir"), ".");
         return ensureDirectory(new File(javaTemp, FALLBACK_TEMP_DIR_NAME));
-    }
-
-    @Nullable
-    protected static File resolveFancyMenuTempDirectory() {
-        try {
-            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            if (classLoader == null) {
-                classLoader = AfmaIoHelper.class.getClassLoader();
-            }
-            Class<?> fancyMenuClass = Class.forName("de.keksuccino.fancymenu.FancyMenu", false, classLoader);
-            Field tempDirField = fancyMenuClass.getField("TEMP_DATA_DIR");
-            Object tempDirValue = tempDirField.get(null);
-            if (tempDirValue instanceof File tempDir) {
-                return tempDir;
-            }
-        } catch (Throwable ignore) {
-        }
-        return null;
     }
 
     @NotNull
