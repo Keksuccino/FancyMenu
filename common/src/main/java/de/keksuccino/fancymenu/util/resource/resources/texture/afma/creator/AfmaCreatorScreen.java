@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollbar.ScrollBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseDirectoryWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
@@ -23,6 +24,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -49,12 +51,19 @@ public class AfmaCreatorScreen extends Screen {
     private static final int FIELD_BUTTON_GAP = 8;
     private static final int BUTTON_GROUP_GAP = 4;
     private static final int MIN_INPUT_WIDTH = 120;
+    private static final int CONTENT_SCROLL_BAR_GAP = 6;
 
     private final @NotNull Screen parentScreen;
     private final @NotNull AfmaCreatorState state = new AfmaCreatorState();
     private final @NotNull List<PiPWindow> childWindows = new ArrayList<>();
+    private final @NotNull ScrollBar contentScrollBar;
+    private final @NotNull List<AbstractWidget> scrollableWidgets = new ArrayList<>();
+    private final @NotNull List<AbstractWidget> fixedWidgets = new ArrayList<>();
     private boolean syncingWidgets = false;
     private @Nullable AfmaEncodeJob handledTerminalJob = null;
+    private int scrollableContentWidth = 0;
+    private int scrollableContentHeight = 0;
+    private int diagnosticsY = 0;
 
     private @Nullable ExtendedEditBox mainFramesPathEditBox;
     private @Nullable ExtendedEditBox introFramesPathEditBox;
@@ -90,12 +99,15 @@ public class AfmaCreatorScreen extends Screen {
     public AfmaCreatorScreen(@NotNull Screen parentScreen) {
         super(Component.translatable("fancymenu.afma.creator.title"));
         this.parentScreen = parentScreen;
+        this.contentScrollBar = this.createContentScrollBar();
     }
 
     @Override
     protected void init() {
         this.clearWidgets();
         this.childWindows.removeIf(window -> window == null);
+        this.scrollableWidgets.clear();
+        this.fixedWidgets.clear();
 
         this.mainFramesPathEditBox = this.addStyledEditBox(Component.translatable("fancymenu.afma.creator.main_frames"));
         this.mainFramesPathEditBox.setResponder(value -> {
@@ -221,6 +233,7 @@ public class AfmaCreatorScreen extends Screen {
         this.cancelJobButton = this.addStyledButton(Component.translatable("fancymenu.common_components.cancel"), button -> this.state.cancelCurrentJob());
         this.closeButton = this.addStyledButton(Component.translatable("fancymenu.common.close"), button -> this.onClose());
 
+        this.rebuildTrackedWidgetLists();
         this.configureTooltips();
         this.syncWidgetsFromState();
         this.repositionWidgets();
@@ -416,99 +429,28 @@ public class AfmaCreatorScreen extends Screen {
     }
 
     protected void repositionWidgets() {
-        int contentX = this.getContentLeft();
-        int contentWidth = this.getContentWidth();
-        int inlineLabelWidth = this.getInlineLabelWidth();
-        int browseWidth = 84;
-        int clearWidth = 64;
-        int y = this.getContentStartY();
-        y = this.layoutLabeledPathRow(contentX, y, contentWidth, inlineLabelWidth, this.mainFramesPathEditBox, this.browseMainFramesButton, browseWidth, null, 0);
-        y += ROW_GAP;
-        y = this.layoutLabeledPathRow(contentX, y, contentWidth, inlineLabelWidth, this.introFramesPathEditBox, this.browseIntroFramesButton, browseWidth, this.clearIntroFramesButton, clearWidth);
-        y += ROW_GAP;
-        y = this.layoutLabeledPathRow(contentX, y, contentWidth, inlineLabelWidth, this.outputPathEditBox, this.browseOutputButton, browseWidth, null, 0);
-        y += SECTION_GAP;
+        int fullContentX = this.getContentLeft();
+        int fullContentWidth = this.getContentWidth();
+        int viewportHeight = this.getScrollableViewportHeight();
 
-        int columnWidth = (contentWidth - COLUMN_GAP) / 2;
-        boolean useSingleColumnNumericLayout = this.useSingleColumnNumericLayout(columnWidth, inlineLabelWidth);
-        if (useSingleColumnNumericLayout) {
-            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.frameTimeEditBox);
-            y += ROW_GAP;
-            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.introFrameTimeEditBox);
-            y += ROW_GAP;
-            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.loopCountEditBox);
-            y += SECTION_GAP;
+        ContentLayout contentLayout = this.applyScrollableLayout(fullContentX, fullContentWidth, 0);
+        boolean showScrollBar = contentLayout.totalHeight() > viewportHeight;
+        if (showScrollBar) {
+            this.scrollableContentWidth = Math.max(0, fullContentWidth - this.getContentScrollBarReservedWidth());
+            ContentLayout measuredLayout = this.applyScrollableLayout(fullContentX, this.scrollableContentWidth, 0);
+            this.scrollableContentHeight = measuredLayout.totalHeight();
+            this.updateContentScrollBar(fullContentX, this.scrollableContentWidth, true);
+            contentLayout = this.applyScrollableLayout(fullContentX, this.scrollableContentWidth, this.getScrollableContentScrollOffset());
         } else {
-            y = this.layoutLabeledFieldRow(contentX, y, columnWidth, inlineLabelWidth, this.frameTimeEditBox);
-            this.layoutLabeledFieldRow(contentX + columnWidth + COLUMN_GAP, y, columnWidth, inlineLabelWidth, this.introFrameTimeEditBox);
-            y += ROW_GAP;
-            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.loopCountEditBox);
-            y += SECTION_GAP;
+            this.scrollableContentWidth = fullContentWidth;
+            this.scrollableContentHeight = contentLayout.totalHeight();
+            this.contentScrollBar.setScroll(0.0F);
+            this.updateContentScrollBar(fullContentX, this.scrollableContentWidth, false);
         }
 
-        this.layoutWidget(this.presetCycleButton, contentX, y, contentWidth, FIELD_HEIGHT);
-        y += ROW_GAP;
-        y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.keyframeIntervalEditBox);
-        y += ROW_GAP;
-
-        int toggleWidth = (contentWidth - COLUMN_GAP) / 2;
-        boolean useSingleColumnToggleLayout = toggleWidth < 220;
-        if (useSingleColumnToggleLayout) {
-            this.layoutWidget(this.rectCopyCycleButton, contentX, y, contentWidth, FIELD_HEIGHT);
-            y += ROW_GAP;
-            this.layoutWidget(this.duplicateCycleButton, contentX, y, contentWidth, FIELD_HEIGHT);
-            y += ROW_GAP;
-            this.layoutWidget(this.nearLosslessCycleButton, contentX, y, contentWidth, FIELD_HEIGHT);
-            y += ROW_GAP;
-            this.layoutWidget(this.strictPostWriteValidationCycleButton, contentX, y, contentWidth, FIELD_HEIGHT);
-        } else {
-            this.layoutWidget(this.rectCopyCycleButton, contentX, y, toggleWidth, FIELD_HEIGHT);
-            this.layoutWidget(this.duplicateCycleButton, contentX + toggleWidth + COLUMN_GAP, y, toggleWidth, FIELD_HEIGHT);
-            y += ROW_GAP;
-            this.layoutWidget(this.nearLosslessCycleButton, contentX, y, toggleWidth, FIELD_HEIGHT);
-            this.layoutWidget(this.strictPostWriteValidationCycleButton, contentX + toggleWidth + COLUMN_GAP, y, toggleWidth, FIELD_HEIGHT);
-        }
-
-        y += SECTION_GAP;
-        this.layoutWidget(this.adaptiveKeyframeCycleButton, contentX, y, contentWidth, FIELD_HEIGHT);
-        y += ROW_GAP;
-
-        int advancedColumnWidth = (contentWidth - COLUMN_GAP) / 2;
-        boolean useSingleColumnAdvancedLayout = this.useSingleColumnNumericLayout(advancedColumnWidth, inlineLabelWidth);
-        if (useSingleColumnAdvancedLayout) {
-            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.adaptiveMaxKeyframeIntervalEditBox);
-            y += ROW_GAP;
-            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.adaptiveContinuationMinSavingsBytesEditBox);
-            y += ROW_GAP;
-            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.adaptiveContinuationMinSavingsRatioEditBox);
-            y += ROW_GAP;
-            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.maxCopySearchDistanceEditBox);
-            y += ROW_GAP;
-            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.maxCandidateAxisOffsetsEditBox);
-            y += ROW_GAP;
-            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.perceptualVisibleColorDeltaEditBox);
-            y += ROW_GAP;
-            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.perceptualAlphaDeltaEditBox);
-            y += ROW_GAP;
-            y = this.layoutLabeledFieldRow(contentX, y, contentWidth, inlineLabelWidth, this.perceptualAverageErrorEditBox);
-        } else {
-            y = this.layoutLabeledFieldRow(contentX, y, advancedColumnWidth, inlineLabelWidth, this.adaptiveMaxKeyframeIntervalEditBox);
-            this.layoutLabeledFieldRow(contentX + advancedColumnWidth + COLUMN_GAP, y, advancedColumnWidth, inlineLabelWidth, this.adaptiveContinuationMinSavingsBytesEditBox);
-            y += ROW_GAP;
-            y = this.layoutLabeledFieldRow(contentX, y, advancedColumnWidth, inlineLabelWidth, this.adaptiveContinuationMinSavingsRatioEditBox);
-            this.layoutLabeledFieldRow(contentX + advancedColumnWidth + COLUMN_GAP, y, advancedColumnWidth, inlineLabelWidth, this.maxCopySearchDistanceEditBox);
-            y += ROW_GAP;
-            y = this.layoutLabeledFieldRow(contentX, y, advancedColumnWidth, inlineLabelWidth, this.maxCandidateAxisOffsetsEditBox);
-            this.layoutLabeledFieldRow(contentX + advancedColumnWidth + COLUMN_GAP, y, advancedColumnWidth, inlineLabelWidth, this.perceptualVisibleColorDeltaEditBox);
-            y += ROW_GAP;
-            y = this.layoutLabeledFieldRow(contentX, y, advancedColumnWidth, inlineLabelWidth, this.perceptualAlphaDeltaEditBox);
-            this.layoutLabeledFieldRow(contentX + advancedColumnWidth + COLUMN_GAP, y, advancedColumnWidth, inlineLabelWidth, this.perceptualAverageErrorEditBox);
-        }
-
-        int bottomY = this.getBottomButtonY();
-        this.layoutWidget(this.exportButton, contentX, bottomY, 120, FIELD_HEIGHT);
-        this.layoutWidget(this.cancelJobButton, contentX + 128, bottomY, 120, FIELD_HEIGHT);
-        this.layoutWidget(this.closeButton, contentX + contentWidth - 120, bottomY, 120, FIELD_HEIGHT);
+        this.scrollableContentHeight = contentLayout.totalHeight();
+        this.diagnosticsY = contentLayout.diagnosticsY();
+        this.layoutFixedButtons(fullContentX, fullContentWidth);
     }
 
     protected int layoutLabeledPathRow(int x, int y, int rowWidth, int labelWidth, @Nullable AbstractWidget field, @Nullable AbstractWidget primaryButton, int primaryButtonWidth, @Nullable AbstractWidget secondaryButton, int secondaryButtonWidth) {
@@ -640,9 +582,15 @@ public class AfmaCreatorScreen extends Screen {
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        super.render(graphics, mouseX, mouseY, partialTick);
-        this.renderFieldLabels(graphics);
-        this.renderDiagnostics(graphics);
+        this.repositionWidgets();
+        this.renderBackground(graphics, mouseX, mouseY, partialTick);
+        this.renderScrollableContent(graphics, mouseX, mouseY, partialTick);
+        if (this.isContentScrollBarVisible()) {
+            this.contentScrollBar.render(graphics, mouseX, mouseY, partialTick);
+        }
+        for (AbstractWidget widget : this.fixedWidgets) {
+            widget.render(graphics, mouseX, mouseY, partialTick);
+        }
     }
 
     @Override
@@ -722,8 +670,8 @@ public class AfmaCreatorScreen extends Screen {
         if (job == null) return;
 
         int contentX = this.getContentLeft();
-        int contentWidth = this.getContentWidth();
-        int textY = this.getDiagnosticsStartY();
+        int contentWidth = this.scrollableContentWidth;
+        int textY = this.diagnosticsY;
         AfmaEncodeProgress progress = job.getProgress();
         textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.job_status", progress.task()), contentX, textY, contentWidth, this.getThemeLabelColor(false));
         if (progress.detail() != null && !progress.detail().isBlank()) {
@@ -775,6 +723,10 @@ public class AfmaCreatorScreen extends Screen {
         return this.getPanelTop() + PANEL_PADDING;
     }
 
+    protected int getScrollableViewportHeight() {
+        return Math.max(0, this.getPanelBottom() - this.getContentStartY());
+    }
+
     protected int getInlineLabelWidth() {
         float widestLabel = 0.0F;
         widestLabel = Math.max(widestLabel, UIBase.getUITextWidthNormal(Component.translatable("fancymenu.afma.creator.main_frames")));
@@ -797,40 +749,6 @@ public class AfmaCreatorScreen extends Screen {
 
     protected boolean useSingleColumnNumericLayout(int columnWidth, int labelWidth) {
         return (columnWidth - labelWidth - INLINE_LABEL_GAP) < 150;
-    }
-
-    protected int getDiagnosticsStartY() {
-        int contentStartY = this.getContentStartY();
-        int widgetsBottom = Math.max(
-                Math.max(
-                        Math.max(this.getWidgetBottom(this.keyframeIntervalEditBox), this.getWidgetBottom(this.presetCycleButton)),
-                        this.getWidgetBottom(this.adaptiveKeyframeCycleButton)
-                ),
-                Math.max(
-                                Math.max(
-                                        Math.max(
-                                                Math.max(this.getWidgetBottom(this.rectCopyCycleButton), this.getWidgetBottom(this.duplicateCycleButton)),
-                                                this.getWidgetBottom(this.nearLosslessCycleButton)
-                                        ),
-                                        this.getWidgetBottom(this.strictPostWriteValidationCycleButton)
-                                ),
-                        Math.max(
-                                Math.max(this.getWidgetBottom(this.adaptiveMaxKeyframeIntervalEditBox), this.getWidgetBottom(this.adaptiveContinuationMinSavingsBytesEditBox)),
-                                Math.max(
-                                        Math.max(this.getWidgetBottom(this.adaptiveContinuationMinSavingsRatioEditBox), this.getWidgetBottom(this.maxCopySearchDistanceEditBox)),
-                                        Math.max(
-                                                Math.max(this.getWidgetBottom(this.maxCandidateAxisOffsetsEditBox), this.getWidgetBottom(this.perceptualVisibleColorDeltaEditBox)),
-                                                Math.max(this.getWidgetBottom(this.perceptualAlphaDeltaEditBox), this.getWidgetBottom(this.perceptualAverageErrorEditBox))
-                                        )
-                                )
-                        )
-                )
-        );
-        return Math.max(contentStartY, widgetsBottom + 18);
-    }
-
-    protected int getWidgetBottom(@Nullable AbstractWidget widget) {
-        return (widget != null) ? (widget.getY() + widget.getHeight()) : 0;
     }
 
     protected int getThemeLabelColor(boolean inactive) {
@@ -884,6 +802,59 @@ public class AfmaCreatorScreen extends Screen {
     public void onClose() {
         this.state.cancelCurrentJob();
         Minecraft.getInstance().setScreen(this.parentScreen);
+    }
+
+    @Override
+    public void setFocused(@Nullable GuiEventListener focused) {
+        super.setFocused(focused);
+        if (focused instanceof AbstractWidget widget) {
+            this.ensureScrollableWidgetVisible(widget);
+        }
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (this.isContentScrollBarVisible() && this.contentScrollBar.mouseClicked(mouseX, mouseY, button)) {
+            return true;
+        }
+        if (this.isMouseOverScrollableViewport(mouseX, mouseY) && this.mouseClickedOnWidgets(this.scrollableWidgets, mouseX, mouseY, button)) {
+            return true;
+        }
+        return this.mouseClickedOnWidgets(this.fixedWidgets, mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (this.contentScrollBar.isGrabberGrabbed()) {
+            this.contentScrollBar.mouseReleased(mouseX, mouseY, button);
+            return true;
+        }
+        if (button == 0 && this.isDragging()) {
+            this.setDragging(false);
+            if (this.getFocused() != null) {
+                return this.getFocused().mouseReleased(mouseX, mouseY, button);
+            }
+        }
+
+        GuiEventListener hoveredWidget = this.getInteractiveWidgetAt(mouseX, mouseY);
+        return hoveredWidget != null && hoveredWidget.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (this.contentScrollBar.isGrabberGrabbed()) {
+            return this.contentScrollBar.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        }
+        return this.getFocused() != null && this.isDragging() && button == 0 && this.getFocused().mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
+        if (this.isContentScrollBarVisible() && this.contentScrollBar.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY)) {
+            return true;
+        }
+        GuiEventListener hoveredWidget = this.getInteractiveWidgetAt(mouseX, mouseY);
+        return hoveredWidget != null && hoveredWidget.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
     }
 
     @Override
@@ -943,6 +914,350 @@ public class AfmaCreatorScreen extends Screen {
         } catch (Exception ignored) {
             return fallback;
         }
+    }
+
+    protected @NotNull ScrollBar createContentScrollBar() {
+        ScrollBar scrollBar = new ScrollBar(
+                ScrollBar.ScrollBarDirection.VERTICAL,
+                UIBase.VERTICAL_SCROLL_BAR_WIDTH,
+                UIBase.VERTICAL_SCROLL_BAR_HEIGHT,
+                0,
+                0,
+                0,
+                0,
+                () -> UIBase.getUITheme().scroll_grabber_color_normal,
+                () -> UIBase.getUITheme().scroll_grabber_color_hover
+        );
+        scrollBar.setScrollWheelAllowed(true);
+        scrollBar.setRoundedGrabberEnabled(true);
+        return scrollBar;
+    }
+
+    protected void rebuildTrackedWidgetLists() {
+        this.scrollableWidgets.clear();
+        this.fixedWidgets.clear();
+
+        this.addScrollableWidget(this.mainFramesPathEditBox);
+        this.addScrollableWidget(this.introFramesPathEditBox);
+        this.addScrollableWidget(this.outputPathEditBox);
+        this.addScrollableWidget(this.frameTimeEditBox);
+        this.addScrollableWidget(this.introFrameTimeEditBox);
+        this.addScrollableWidget(this.loopCountEditBox);
+        this.addScrollableWidget(this.keyframeIntervalEditBox);
+        this.addScrollableWidget(this.presetCycleButton);
+        this.addScrollableWidget(this.rectCopyCycleButton);
+        this.addScrollableWidget(this.duplicateCycleButton);
+        this.addScrollableWidget(this.nearLosslessCycleButton);
+        this.addScrollableWidget(this.strictPostWriteValidationCycleButton);
+        this.addScrollableWidget(this.adaptiveKeyframeCycleButton);
+        this.addScrollableWidget(this.adaptiveMaxKeyframeIntervalEditBox);
+        this.addScrollableWidget(this.adaptiveContinuationMinSavingsBytesEditBox);
+        this.addScrollableWidget(this.adaptiveContinuationMinSavingsRatioEditBox);
+        this.addScrollableWidget(this.maxCopySearchDistanceEditBox);
+        this.addScrollableWidget(this.maxCandidateAxisOffsetsEditBox);
+        this.addScrollableWidget(this.perceptualVisibleColorDeltaEditBox);
+        this.addScrollableWidget(this.perceptualAlphaDeltaEditBox);
+        this.addScrollableWidget(this.perceptualAverageErrorEditBox);
+        this.addScrollableWidget(this.browseMainFramesButton);
+        this.addScrollableWidget(this.browseIntroFramesButton);
+        this.addScrollableWidget(this.clearIntroFramesButton);
+        this.addScrollableWidget(this.browseOutputButton);
+
+        this.addFixedWidget(this.exportButton);
+        this.addFixedWidget(this.cancelJobButton);
+        this.addFixedWidget(this.closeButton);
+    }
+
+    protected void addScrollableWidget(@Nullable AbstractWidget widget) {
+        if (widget != null) {
+            this.scrollableWidgets.add(widget);
+        }
+    }
+
+    protected void addFixedWidget(@Nullable AbstractWidget widget) {
+        if (widget != null) {
+            this.fixedWidgets.add(widget);
+        }
+    }
+
+    protected void layoutFixedButtons(int contentX, int contentWidth) {
+        int bottomY = this.getBottomButtonY();
+        this.layoutWidget(this.exportButton, contentX, bottomY, 120, FIELD_HEIGHT);
+        this.layoutWidget(this.cancelJobButton, contentX + 128, bottomY, 120, FIELD_HEIGHT);
+        this.layoutWidget(this.closeButton, contentX + contentWidth - 120, bottomY, 120, FIELD_HEIGHT);
+    }
+
+    protected @NotNull ContentLayout applyScrollableLayout(int contentX, int contentWidth, int scrollOffset) {
+        int inlineLabelWidth = this.getInlineLabelWidth();
+        int browseWidth = 84;
+        int clearWidth = 64;
+        int contentY = 0;
+        int contentBottom = 0;
+
+        this.layoutLabeledPathRow(contentX, this.toScrollableScreenY(contentY, scrollOffset), contentWidth, inlineLabelWidth, this.mainFramesPathEditBox, this.browseMainFramesButton, browseWidth, null, 0);
+        contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+        contentY += ROW_GAP;
+        this.layoutLabeledPathRow(contentX, this.toScrollableScreenY(contentY, scrollOffset), contentWidth, inlineLabelWidth, this.introFramesPathEditBox, this.browseIntroFramesButton, browseWidth, this.clearIntroFramesButton, clearWidth);
+        contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+        contentY += ROW_GAP;
+        this.layoutLabeledPathRow(contentX, this.toScrollableScreenY(contentY, scrollOffset), contentWidth, inlineLabelWidth, this.outputPathEditBox, this.browseOutputButton, browseWidth, null, 0);
+        contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+        contentY += SECTION_GAP;
+
+        int columnWidth = (contentWidth - COLUMN_GAP) / 2;
+        boolean useSingleColumnNumericLayout = this.useSingleColumnNumericLayout(columnWidth, inlineLabelWidth);
+        if (useSingleColumnNumericLayout) {
+            this.layoutLabeledFieldRow(contentX, this.toScrollableScreenY(contentY, scrollOffset), contentWidth, inlineLabelWidth, this.frameTimeEditBox);
+            contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+            contentY += ROW_GAP;
+            this.layoutLabeledFieldRow(contentX, this.toScrollableScreenY(contentY, scrollOffset), contentWidth, inlineLabelWidth, this.introFrameTimeEditBox);
+            contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+            contentY += ROW_GAP;
+            this.layoutLabeledFieldRow(contentX, this.toScrollableScreenY(contentY, scrollOffset), contentWidth, inlineLabelWidth, this.loopCountEditBox);
+            contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+            contentY += SECTION_GAP;
+        } else {
+            int rowY = this.toScrollableScreenY(contentY, scrollOffset);
+            this.layoutLabeledFieldRow(contentX, rowY, columnWidth, inlineLabelWidth, this.frameTimeEditBox);
+            this.layoutLabeledFieldRow(contentX + columnWidth + COLUMN_GAP, rowY, columnWidth, inlineLabelWidth, this.introFrameTimeEditBox);
+            contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+            contentY += ROW_GAP;
+            this.layoutLabeledFieldRow(contentX, this.toScrollableScreenY(contentY, scrollOffset), contentWidth, inlineLabelWidth, this.loopCountEditBox);
+            contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+            contentY += SECTION_GAP;
+        }
+
+        this.layoutWidget(this.presetCycleButton, contentX, this.toScrollableScreenY(contentY, scrollOffset), contentWidth, FIELD_HEIGHT);
+        contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+        contentY += ROW_GAP;
+        this.layoutLabeledFieldRow(contentX, this.toScrollableScreenY(contentY, scrollOffset), contentWidth, inlineLabelWidth, this.keyframeIntervalEditBox);
+        contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+        contentY += ROW_GAP;
+
+        int toggleWidth = (contentWidth - COLUMN_GAP) / 2;
+        boolean useSingleColumnToggleLayout = toggleWidth < 220;
+        if (useSingleColumnToggleLayout) {
+            this.layoutWidget(this.rectCopyCycleButton, contentX, this.toScrollableScreenY(contentY, scrollOffset), contentWidth, FIELD_HEIGHT);
+            contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+            contentY += ROW_GAP;
+            this.layoutWidget(this.duplicateCycleButton, contentX, this.toScrollableScreenY(contentY, scrollOffset), contentWidth, FIELD_HEIGHT);
+            contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+            contentY += ROW_GAP;
+            this.layoutWidget(this.nearLosslessCycleButton, contentX, this.toScrollableScreenY(contentY, scrollOffset), contentWidth, FIELD_HEIGHT);
+            contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+            contentY += ROW_GAP;
+            this.layoutWidget(this.strictPostWriteValidationCycleButton, contentX, this.toScrollableScreenY(contentY, scrollOffset), contentWidth, FIELD_HEIGHT);
+            contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+        } else {
+            int rowY = this.toScrollableScreenY(contentY, scrollOffset);
+            this.layoutWidget(this.rectCopyCycleButton, contentX, rowY, toggleWidth, FIELD_HEIGHT);
+            this.layoutWidget(this.duplicateCycleButton, contentX + toggleWidth + COLUMN_GAP, rowY, toggleWidth, FIELD_HEIGHT);
+            contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+            contentY += ROW_GAP;
+            rowY = this.toScrollableScreenY(contentY, scrollOffset);
+            this.layoutWidget(this.nearLosslessCycleButton, contentX, rowY, toggleWidth, FIELD_HEIGHT);
+            this.layoutWidget(this.strictPostWriteValidationCycleButton, contentX + toggleWidth + COLUMN_GAP, rowY, toggleWidth, FIELD_HEIGHT);
+            contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+        }
+
+        contentY += SECTION_GAP;
+        this.layoutWidget(this.adaptiveKeyframeCycleButton, contentX, this.toScrollableScreenY(contentY, scrollOffset), contentWidth, FIELD_HEIGHT);
+        contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+        contentY += ROW_GAP;
+
+        int advancedColumnWidth = (contentWidth - COLUMN_GAP) / 2;
+        boolean useSingleColumnAdvancedLayout = this.useSingleColumnNumericLayout(advancedColumnWidth, inlineLabelWidth);
+        if (useSingleColumnAdvancedLayout) {
+            this.layoutLabeledFieldRow(contentX, this.toScrollableScreenY(contentY, scrollOffset), contentWidth, inlineLabelWidth, this.adaptiveMaxKeyframeIntervalEditBox);
+            contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+            contentY += ROW_GAP;
+            this.layoutLabeledFieldRow(contentX, this.toScrollableScreenY(contentY, scrollOffset), contentWidth, inlineLabelWidth, this.adaptiveContinuationMinSavingsBytesEditBox);
+            contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+            contentY += ROW_GAP;
+            this.layoutLabeledFieldRow(contentX, this.toScrollableScreenY(contentY, scrollOffset), contentWidth, inlineLabelWidth, this.adaptiveContinuationMinSavingsRatioEditBox);
+            contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+            contentY += ROW_GAP;
+            this.layoutLabeledFieldRow(contentX, this.toScrollableScreenY(contentY, scrollOffset), contentWidth, inlineLabelWidth, this.maxCopySearchDistanceEditBox);
+            contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+            contentY += ROW_GAP;
+            this.layoutLabeledFieldRow(contentX, this.toScrollableScreenY(contentY, scrollOffset), contentWidth, inlineLabelWidth, this.maxCandidateAxisOffsetsEditBox);
+            contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+            contentY += ROW_GAP;
+            this.layoutLabeledFieldRow(contentX, this.toScrollableScreenY(contentY, scrollOffset), contentWidth, inlineLabelWidth, this.perceptualVisibleColorDeltaEditBox);
+            contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+            contentY += ROW_GAP;
+            this.layoutLabeledFieldRow(contentX, this.toScrollableScreenY(contentY, scrollOffset), contentWidth, inlineLabelWidth, this.perceptualAlphaDeltaEditBox);
+            contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+            contentY += ROW_GAP;
+            this.layoutLabeledFieldRow(contentX, this.toScrollableScreenY(contentY, scrollOffset), contentWidth, inlineLabelWidth, this.perceptualAverageErrorEditBox);
+            contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+        } else {
+            int rowY = this.toScrollableScreenY(contentY, scrollOffset);
+            this.layoutLabeledFieldRow(contentX, rowY, advancedColumnWidth, inlineLabelWidth, this.adaptiveMaxKeyframeIntervalEditBox);
+            this.layoutLabeledFieldRow(contentX + advancedColumnWidth + COLUMN_GAP, rowY, advancedColumnWidth, inlineLabelWidth, this.adaptiveContinuationMinSavingsBytesEditBox);
+            contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+            contentY += ROW_GAP;
+            rowY = this.toScrollableScreenY(contentY, scrollOffset);
+            this.layoutLabeledFieldRow(contentX, rowY, advancedColumnWidth, inlineLabelWidth, this.adaptiveContinuationMinSavingsRatioEditBox);
+            this.layoutLabeledFieldRow(contentX + advancedColumnWidth + COLUMN_GAP, rowY, advancedColumnWidth, inlineLabelWidth, this.maxCopySearchDistanceEditBox);
+            contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+            contentY += ROW_GAP;
+            rowY = this.toScrollableScreenY(contentY, scrollOffset);
+            this.layoutLabeledFieldRow(contentX, rowY, advancedColumnWidth, inlineLabelWidth, this.maxCandidateAxisOffsetsEditBox);
+            this.layoutLabeledFieldRow(contentX + advancedColumnWidth + COLUMN_GAP, rowY, advancedColumnWidth, inlineLabelWidth, this.perceptualVisibleColorDeltaEditBox);
+            contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+            contentY += ROW_GAP;
+            rowY = this.toScrollableScreenY(contentY, scrollOffset);
+            this.layoutLabeledFieldRow(contentX, rowY, advancedColumnWidth, inlineLabelWidth, this.perceptualAlphaDeltaEditBox);
+            this.layoutLabeledFieldRow(contentX + advancedColumnWidth + COLUMN_GAP, rowY, advancedColumnWidth, inlineLabelWidth, this.perceptualAverageErrorEditBox);
+            contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
+        }
+
+        int diagnosticsY = this.toScrollableScreenY(contentBottom + 18, scrollOffset);
+        int totalHeight = contentBottom;
+        if (this.state.getCurrentJob() != null) {
+            totalHeight = contentBottom + 18 + this.getDiagnosticsHeight(contentWidth);
+        }
+        return new ContentLayout(totalHeight, diagnosticsY);
+    }
+
+    protected void renderScrollableContent(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        int scissorMinX = this.getContentLeft();
+        int scissorMinY = this.getContentStartY();
+        int scissorMaxX = scissorMinX + this.scrollableContentWidth;
+        int scissorMaxY = scissorMinY + this.getScrollableViewportHeight();
+        if ((scissorMaxX <= scissorMinX) || (scissorMaxY <= scissorMinY)) {
+            return;
+        }
+
+        graphics.enableScissor(scissorMinX, scissorMinY, scissorMaxX, scissorMaxY);
+        for (AbstractWidget widget : this.scrollableWidgets) {
+            widget.render(graphics, mouseX, mouseY, partialTick);
+        }
+        this.renderFieldLabels(graphics);
+        this.renderDiagnostics(graphics);
+        graphics.disableScissor();
+    }
+
+    protected int getDiagnosticsHeight(int maxWidth) {
+        AfmaEncodeJob job = this.state.getCurrentJob();
+        if (job == null) return 0;
+
+        AfmaEncodeProgress progress = job.getProgress();
+        int height = this.getWrappedUiTextHeight(Component.translatable("fancymenu.afma.creator.job_status", progress.task()), maxWidth);
+        if (progress.detail() != null && !progress.detail().isBlank()) {
+            height += this.getWrappedUiTextHeight(Component.literal(progress.detail()), maxWidth);
+        }
+        return height + 8;
+    }
+
+    protected int getWrappedUiTextHeight(@NotNull Component text, int maxWidth) {
+        List<MutableComponent> lines = UIBase.lineWrapUIComponentsNormal(text, Math.max(20, maxWidth));
+        int lineHeight = Math.max(10, Math.round(UIBase.getUITextHeightNormal()));
+        return lines.size() * (lineHeight + 2);
+    }
+
+    protected int toScrollableScreenY(int contentY, int scrollOffset) {
+        return this.getContentStartY() + contentY - scrollOffset;
+    }
+
+    protected int getContentScrollBarReservedWidth() {
+        return Math.round(this.contentScrollBar.grabberWidth) + CONTENT_SCROLL_BAR_GAP;
+    }
+
+    protected int getScrollableContentScrollRange() {
+        return Math.max(0, this.scrollableContentHeight - this.getScrollableViewportHeight());
+    }
+
+    protected int getScrollableContentScrollOffset() {
+        int scrollRange = this.getScrollableContentScrollRange();
+        if (scrollRange <= 0) {
+            return 0;
+        }
+        return Math.round(scrollRange * this.contentScrollBar.getScroll());
+    }
+
+    protected boolean isContentScrollBarVisible() {
+        return this.contentScrollBar.active && (this.getScrollableContentScrollRange() > 0);
+    }
+
+    protected void updateContentScrollBar(int contentX, int contentWidth, boolean visible) {
+        this.contentScrollBar.active = visible;
+        int scrollBarEndX = contentX + contentWidth + CONTENT_SCROLL_BAR_GAP + Math.round(this.contentScrollBar.grabberWidth);
+        this.contentScrollBar.scrollAreaStartX = contentX;
+        this.contentScrollBar.scrollAreaStartY = this.getContentStartY() + 1;
+        this.contentScrollBar.scrollAreaEndX = scrollBarEndX;
+        this.contentScrollBar.scrollAreaEndY = this.getContentStartY() + this.getScrollableViewportHeight() - 1;
+
+        float scrollRange = Math.max(1.0F, this.getScrollableContentScrollRange());
+        this.contentScrollBar.setWheelScrollSpeed(1.0F / (scrollRange / 500.0F));
+        if (!visible || (this.getScrollableContentScrollRange() <= 0)) {
+            this.contentScrollBar.setScroll(0.0F);
+        }
+    }
+
+    protected boolean isMouseOverScrollableViewport(double mouseX, double mouseY) {
+        return mouseX >= this.getContentLeft()
+                && mouseX <= (this.getContentLeft() + this.scrollableContentWidth)
+                && mouseY >= this.getContentStartY()
+                && mouseY <= (this.getContentStartY() + this.getScrollableViewportHeight());
+    }
+
+    protected boolean mouseClickedOnWidgets(@NotNull List<AbstractWidget> widgets, double mouseX, double mouseY, int button) {
+        for (AbstractWidget widget : widgets) {
+            if (widget.mouseClicked(mouseX, mouseY, button)) {
+                this.setFocused(widget);
+                if (button == 0) {
+                    this.setDragging(true);
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected @Nullable GuiEventListener getInteractiveWidgetAt(double mouseX, double mouseY) {
+        if (this.isMouseOverScrollableViewport(mouseX, mouseY)) {
+            for (AbstractWidget widget : this.scrollableWidgets) {
+                if (widget.isMouseOver(mouseX, mouseY)) {
+                    return widget;
+                }
+            }
+        }
+        for (AbstractWidget widget : this.fixedWidgets) {
+            if (widget.isMouseOver(mouseX, mouseY)) {
+                return widget;
+            }
+        }
+        return null;
+    }
+
+    protected void ensureScrollableWidgetVisible(@Nullable AbstractWidget widget) {
+        if ((widget == null) || !this.scrollableWidgets.contains(widget) || !this.isContentScrollBarVisible()) {
+            return;
+        }
+
+        int viewportTop = this.getContentStartY();
+        int viewportBottom = viewportTop + this.getScrollableViewportHeight();
+        int widgetTop = widget.getY();
+        int widgetBottom = widget.getY() + widget.getHeight();
+        int scrollRange = this.getScrollableContentScrollRange();
+        if (scrollRange <= 0) return;
+
+        float newScroll = this.contentScrollBar.getScroll();
+        if (widgetTop < viewportTop) {
+            newScroll -= (float) (viewportTop - widgetTop) / (float) scrollRange;
+        } else if (widgetBottom > viewportBottom) {
+            newScroll += (float) (widgetBottom - viewportBottom) / (float) scrollRange;
+        }
+
+        if (Float.compare(newScroll, this.contentScrollBar.getScroll()) != 0) {
+            this.contentScrollBar.setScroll(newScroll);
+            this.repositionWidgets();
+        }
+    }
+
+    protected record ContentLayout(int totalHeight, int diagnosticsY) {
     }
 
 }
