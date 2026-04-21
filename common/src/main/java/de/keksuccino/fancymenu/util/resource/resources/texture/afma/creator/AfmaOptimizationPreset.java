@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 public enum AfmaOptimizationPreset implements LocalizedEnum<AfmaOptimizationPreset> {
 
     BALANCED("balanced", 90, true, true, true, 512, 8, LocalizedEnum.WARNING_TEXT_STYLE),
-    BEST_QUALITY("best_quality", 90, true, true, false, 2048, 12, LocalizedEnum.SUCCESS_TEXT_STYLE),
+    BEST_QUALITY("best_quality", 90, true, true, false, 2048, 12, LocalizedEnum.WARNING_TEXT_STYLE),
     SMALLEST_FILE("smallest_file", 90, true, true, true, 2048, 12, LocalizedEnum.WARNING_TEXT_STYLE),
     FASTEST_DECODE("fastest_decode", 18, false, true, false, 96, 2, LocalizedEnum.WARNING_TEXT_STYLE);
 
