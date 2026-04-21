@@ -25,7 +25,7 @@ import java.util.concurrent.Executors;
 public class AfmaCreatorState {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final @NotNull AfmaOptimizationPreset DEFAULT_PRESET = AfmaOptimizationPreset.SMALLEST_FILE;
+    private static final @NotNull AfmaOptimizationPreset DEFAULT_PRESET = AfmaOptimizationPreset.BALANCED;
     private final ExecutorService executor = Executors.newSingleThreadExecutor(runnable -> {
         Thread thread = new Thread(runnable, "FancyMenu-AFMA-Creator");
         thread.setDaemon(true);
