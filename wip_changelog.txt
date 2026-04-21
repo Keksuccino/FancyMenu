@@ -104,7 +104,7 @@
   - FM now opens most of its configuration screens as "PiP windows", so basically a window in the Minecraft window, which makes it possible to see live-previews for stuff you customize
   - There's looots of animations now in FM's UI (this can be disabled in **menu bar -> Customization -> Settings -> FancyMenu's UI**)
   - There are new UI themes now, optimized for FM's new look
-- Added a new type of animated textures: AFMA
+- Added a new type of animated textures: AFMA (Advanced FancyMenu Animation)
   - This is the successor to FMA files, with way better file sizes, better memory consumption, and better performance
   - AFMA files are not ZIP files anymore, they are now its own custom file type that stores frame data in similar ways than video codecs or other animated image codecs
   - Creating an AFMA file works by using the "AFMA Creator", which can be accessed via "menu bar -> Tools -> AFMA Creator"
