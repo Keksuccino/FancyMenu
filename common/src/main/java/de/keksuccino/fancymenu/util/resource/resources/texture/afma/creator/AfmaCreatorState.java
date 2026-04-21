@@ -469,16 +469,6 @@ public class AfmaCreatorState {
                     .setPlannerAlphaDriftPenaltyBytes(10L)
                     .setPlannerLossyContinuationPenaltyBytes(80L)
                     .setPlannerKeyframeDistancePenaltyBytes(160L);
-            case FASTEST_DECODE -> options
-                    .setPlannerSearchWindowFrames(8)
-                    .setPlannerBeamWidth(4)
-                    .setPlannerDecodeCostPenaltyBytes(288L)
-                    .setPlannerComplexityPenaltyBytes(32L)
-                    .setPlannerAverageDriftPenaltyBytes(72D)
-                    .setPlannerVisibleColorDriftPenaltyBytes(16L)
-                    .setPlannerAlphaDriftPenaltyBytes(16L)
-                    .setPlannerLossyContinuationPenaltyBytes(160L)
-                    .setPlannerKeyframeDistancePenaltyBytes(256L);
         }
 
         options
@@ -514,10 +504,6 @@ public class AfmaCreatorState {
                     .setPerceptualBinIntraMaxVisibleColorDelta(parseNonNegativeInt(this.perceptualBinIntraMaxVisibleColorDelta, "perceptual BIN_INTRA visible color delta"))
                     .setPerceptualBinIntraMaxAlphaDelta(parseNonNegativeInt(this.perceptualBinIntraMaxAlphaDelta, "perceptual BIN_INTRA alpha delta"))
                     .setPerceptualBinIntraMaxAverageError(parseNonNegativeDouble(this.perceptualBinIntraMaxAverageError, "perceptual BIN_INTRA average error"));
-            case FASTEST_DECODE -> options
-                    .setPerceptualBinIntraMaxVisibleColorDelta(parseNonNegativeInt(this.perceptualBinIntraMaxVisibleColorDelta, "perceptual BIN_INTRA visible color delta"))
-                    .setPerceptualBinIntraMaxAlphaDelta(parseNonNegativeInt(this.perceptualBinIntraMaxAlphaDelta, "perceptual BIN_INTRA alpha delta"))
-                    .setPerceptualBinIntraMaxAverageError(parseNonNegativeDouble(this.perceptualBinIntraMaxAverageError, "perceptual BIN_INTRA average error"));
         }
 
         switch (this.optimizationPreset) {
@@ -536,11 +522,6 @@ public class AfmaCreatorState {
                     .setPlannerMaxCumulativeVisibleColorDelta(Math.max(24, options.getPerceptualBinIntraMaxVisibleColorDelta() * 3))
                     .setPlannerMaxCumulativeAlphaDelta(Math.max(48, options.getPerceptualBinIntraMaxAlphaDelta() * 2))
                     .setPlannerMaxConsecutiveLossyFrames(6);
-            case FASTEST_DECODE -> options
-                    .setPlannerMaxCumulativeAverageError(Math.max(6D, options.getPerceptualBinIntraMaxAverageError() * 2.0D))
-                    .setPlannerMaxCumulativeVisibleColorDelta(Math.max(16, options.getPerceptualBinIntraMaxVisibleColorDelta() * 2))
-                    .setPlannerMaxCumulativeAlphaDelta(Math.max(32, options.getPerceptualBinIntraMaxAlphaDelta() * 2))
-                    .setPlannerMaxConsecutiveLossyFrames(3);
         }
     }
 
@@ -619,7 +600,7 @@ public class AfmaCreatorState {
     }
 
     protected static boolean defaultAdaptiveKeyframePlacement(@NotNull AfmaOptimizationPreset preset) {
-        return preset != AfmaOptimizationPreset.FASTEST_DECODE;
+        return true;
     }
 
     protected static int defaultAdaptiveMaxKeyframeInterval(@NotNull AfmaOptimizationPreset preset) {
@@ -628,7 +609,6 @@ public class AfmaCreatorState {
             case BEST_QUALITY -> Math.max(preferredKeyframeInterval * 4, preferredKeyframeInterval + 180);
             case SMALLEST_FILE -> Math.max(preferredKeyframeInterval * 4, preferredKeyframeInterval + 180);
             case BALANCED -> Math.max(preferredKeyframeInterval * 2, preferredKeyframeInterval + 36);
-            case FASTEST_DECODE -> preferredKeyframeInterval;
         };
     }
 
@@ -637,7 +617,6 @@ public class AfmaCreatorState {
             case BEST_QUALITY -> 128L;
             case SMALLEST_FILE -> 128L;
             case BALANCED -> 768L;
-            case FASTEST_DECODE -> 0L;
         };
     }
 
@@ -646,7 +625,6 @@ public class AfmaCreatorState {
             case BEST_QUALITY -> 0.0025D;
             case SMALLEST_FILE -> 0.0025D;
             case BALANCED -> 0.0075D;
-            case FASTEST_DECODE -> 0D;
         };
     }
 
@@ -655,7 +633,6 @@ public class AfmaCreatorState {
             case BEST_QUALITY -> 0;
             case SMALLEST_FILE -> 24;
             case BALANCED -> 14;
-            case FASTEST_DECODE -> 8;
         };
     }
 
@@ -664,7 +641,6 @@ public class AfmaCreatorState {
             case BEST_QUALITY -> 0;
             case SMALLEST_FILE -> 64;
             case BALANCED -> 20;
-            case FASTEST_DECODE -> 16;
         };
     }
 
@@ -673,7 +649,6 @@ public class AfmaCreatorState {
             case BEST_QUALITY -> 0D;
             case SMALLEST_FILE -> 12.0D;
             case BALANCED -> 6.0D;
-            case FASTEST_DECODE -> 3.0D;
         };
     }
 

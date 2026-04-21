@@ -54,7 +54,7 @@ import java.util.regex.Pattern;
  *     <li>Use {@code --main <dir>} for the required PNG frame directory.</li>
  *     <li>Use {@code --intro <dir>} for optional intro frames.</li>
  *     <li>Use {@code --output <file>} for the produced AFMA path.</li>
- *     <li>Use {@code --preset best_quality}, {@code balanced}, {@code smallest_file}, or {@code fastest_decode}
+ *     <li>Use {@code --preset best_quality}, {@code balanced}, or {@code smallest_file}
  *     to mirror the creator presets.</li>
  *     <li>Use {@code --temp-dir <dir>} or the {@code fancymenu.afma.temp_dir} system property to redirect AFMA temp files
  *     during isolated runs.</li>
@@ -143,7 +143,7 @@ public final class AfmaEncodeStandaloneTool {
         System.out.println("  --main <dir> --output <file> [options]");
         System.out.println("Options:");
         System.out.println("  --intro <dir>");
-        System.out.println("  --preset <best_quality|balanced|smallest_file|fastest_decode>");
+        System.out.println("  --preset <best_quality|balanced|smallest_file>");
         System.out.println("  --frame-time <ms>");
         System.out.println("  --intro-frame-time <ms>");
         System.out.println("  --loop-count <count>");
@@ -228,16 +228,6 @@ public final class AfmaEncodeStandaloneTool {
                     .setPlannerAlphaDriftPenaltyBytes(10L)
                     .setPlannerLossyContinuationPenaltyBytes(80L)
                     .setPlannerKeyframeDistancePenaltyBytes(160L);
-            case FASTEST_DECODE -> options
-                    .setPlannerSearchWindowFrames(8)
-                    .setPlannerBeamWidth(4)
-                    .setPlannerDecodeCostPenaltyBytes(288L)
-                    .setPlannerComplexityPenaltyBytes(32L)
-                    .setPlannerAverageDriftPenaltyBytes(72D)
-                    .setPlannerVisibleColorDriftPenaltyBytes(16L)
-                    .setPlannerAlphaDriftPenaltyBytes(16L)
-                    .setPlannerLossyContinuationPenaltyBytes(160L)
-                    .setPlannerKeyframeDistancePenaltyBytes(256L);
         }
 
         options
@@ -281,11 +271,6 @@ public final class AfmaEncodeStandaloneTool {
                     .setPlannerMaxCumulativeVisibleColorDelta(Math.max(24, options.getPerceptualBinIntraMaxVisibleColorDelta() * 3))
                     .setPlannerMaxCumulativeAlphaDelta(Math.max(48, options.getPerceptualBinIntraMaxAlphaDelta() * 2))
                     .setPlannerMaxConsecutiveLossyFrames(6);
-            case FASTEST_DECODE -> options
-                    .setPlannerMaxCumulativeAverageError(Math.max(6D, options.getPerceptualBinIntraMaxAverageError() * 2.0D))
-                    .setPlannerMaxCumulativeVisibleColorDelta(Math.max(16, options.getPerceptualBinIntraMaxVisibleColorDelta() * 2))
-                    .setPlannerMaxCumulativeAlphaDelta(Math.max(32, options.getPerceptualBinIntraMaxAlphaDelta() * 2))
-                    .setPlannerMaxConsecutiveLossyFrames(3);
         }
     }
 
@@ -405,8 +390,7 @@ public final class AfmaEncodeStandaloneTool {
     protected enum StandalonePreset {
         BEST_QUALITY("best_quality", 90, true, true, false, 2048, 12, true, 360, 128L, 0.0025D, 0, 0, 0D),
         SMALLEST_FILE("smallest_file", 90, true, true, true, 2048, 12, true, 360, 128L, 0.0025D, 24, 64, 12.0D),
-        BALANCED("balanced", 90, true, true, true, 512, 8, true, 180, 768L, 0.0075D, 14, 20, 6.0D),
-        FASTEST_DECODE("fastest_decode", 18, false, true, false, 96, 2, false, 18, 0L, 0D, 8, 16, 3.0D);
+        BALANCED("balanced", 90, true, true, true, 512, 8, true, 180, 768L, 0.0075D, 14, 20, 6.0D);
 
         private final @NotNull String id;
         private final int keyframeInterval;
