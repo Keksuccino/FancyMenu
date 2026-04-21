@@ -362,6 +362,6 @@
 - Fixed invisible sliders still produce click sounds when clicked
 - Fixed Video background freezing after random amount of time (should be fixed when using the new WaterMedia-powered Video background) (#1200)
 - Fixed fading in/out not working for Video element (should be fixed when using the new WaterMedia-powered Video element) (#1240)
-- Fixed being able to hide the Copyright notice by using button templates, Parallax and other stuff (#1550)
+- Fixed being able to hide the Copyright notice by using button templates, Parallax, and other stuff (#1550)
 
 %changelog:end%
