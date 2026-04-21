@@ -53,6 +53,7 @@ public class AfmaCreatorScreen extends Screen {
     private static final int MIN_INPUT_WIDTH = 120;
     private static final int CONTENT_SCROLL_BAR_GAP = 6;
     private static final int SCROLL_CONTENT_VERTICAL_PADDING = 10;
+    private static final int SCROLL_CONTENT_HORIZONTAL_PADDING = 2;
 
     private final @NotNull Screen parentScreen;
     private final @NotNull AfmaCreatorState state = new AfmaCreatorState();
@@ -631,18 +632,18 @@ public class AfmaCreatorScreen extends Screen {
         this.drawInlineLabel(graphics, this.outputPathEditBox, Component.translatable("fancymenu.afma.creator.output_file"), inlineLabelWidth);
 
         if (this.frameTimeEditBox != null) {
-            this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.playback"), this.getContentLeft(), this.frameTimeEditBox.getY() - 18, true);
+            this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.playback"), this.getScrollableContentInnerLeft(), this.frameTimeEditBox.getY() - 18, true);
         }
         this.drawInlineLabel(graphics, this.frameTimeEditBox, Component.translatable("fancymenu.afma.creator.frame_time"), inlineLabelWidth);
         this.drawInlineLabel(graphics, this.introFrameTimeEditBox, Component.translatable("fancymenu.afma.creator.intro_frame_time"), inlineLabelWidth);
         this.drawInlineLabel(graphics, this.loopCountEditBox, Component.translatable("fancymenu.afma.creator.loop_count"), inlineLabelWidth);
 
         if (this.presetCycleButton != null) {
-            this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.optimization"), this.getContentLeft(), this.presetCycleButton.getY() - 18, true);
+            this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.optimization"), this.getScrollableContentInnerLeft(), this.presetCycleButton.getY() - 18, true);
         }
         this.drawInlineLabel(graphics, this.keyframeIntervalEditBox, Component.translatable("fancymenu.afma.creator.keyframe_interval"), inlineLabelWidth);
         if (this.adaptiveKeyframeCycleButton != null) {
-            this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.advanced"), this.getContentLeft(), this.adaptiveKeyframeCycleButton.getY() - 18, true);
+            this.drawFieldLabel(graphics, Component.translatable("fancymenu.afma.creator.section.advanced"), this.getScrollableContentInnerLeft(), this.adaptiveKeyframeCycleButton.getY() - 18, true);
         }
         this.drawInlineLabel(graphics, this.adaptiveMaxKeyframeIntervalEditBox, Component.translatable("fancymenu.afma.creator.adaptive_max_keyframe_interval"), inlineLabelWidth);
         this.drawInlineLabel(graphics, this.adaptiveContinuationMinSavingsBytesEditBox, Component.translatable("fancymenu.afma.creator.adaptive_continuation_min_savings_bytes"), inlineLabelWidth);
@@ -670,8 +671,8 @@ public class AfmaCreatorScreen extends Screen {
         AfmaEncodeJob job = this.state.getCurrentJob();
         if (job == null) return;
 
-        int contentX = this.getContentLeft();
-        int contentWidth = this.scrollableContentWidth;
+        int contentX = this.getScrollableContentInnerLeft();
+        int contentWidth = this.getScrollableContentInnerWidth();
         int textY = this.diagnosticsY;
         AfmaEncodeProgress progress = job.getProgress();
         textY = this.renderWrappedUiText(graphics, Component.translatable("fancymenu.afma.creator.job_status", progress.task()), contentX, textY, contentWidth, this.getThemeLabelColor(false));
@@ -726,6 +727,14 @@ public class AfmaCreatorScreen extends Screen {
 
     protected int getScrollableViewportHeight() {
         return Math.max(0, this.getPanelBottom() - this.getContentStartY());
+    }
+
+    protected int getScrollableContentInnerLeft() {
+        return this.getContentLeft() + SCROLL_CONTENT_HORIZONTAL_PADDING;
+    }
+
+    protected int getScrollableContentInnerWidth() {
+        return Math.max(0, this.scrollableContentWidth - (SCROLL_CONTENT_HORIZONTAL_PADDING * 2));
     }
 
     protected int getInlineLabelWidth() {
@@ -989,6 +998,8 @@ public class AfmaCreatorScreen extends Screen {
     }
 
     protected @NotNull ContentLayout applyScrollableLayout(int contentX, int contentWidth, int scrollOffset) {
+        contentX += SCROLL_CONTENT_HORIZONTAL_PADDING;
+        contentWidth = Math.max(0, contentWidth - (SCROLL_CONTENT_HORIZONTAL_PADDING * 2));
         int inlineLabelWidth = this.getInlineLabelWidth();
         int browseWidth = 84;
         int clearWidth = 64;
