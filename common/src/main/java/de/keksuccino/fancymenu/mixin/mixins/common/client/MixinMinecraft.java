@@ -10,15 +10,12 @@ import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.customization.listener.listeners.helpers.WorldSessionTracker;
 import de.keksuccino.fancymenu.util.MouseUtil;
-import de.keksuccino.fancymenu.util.mcp.FancyMenuMcpManager;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
-import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
-import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PipableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
@@ -84,7 +81,6 @@ public class MixinMinecraft {
 
 	@Inject(method = "stop", at = @At("HEAD"))
 	private void before_stop_FancyMenu(CallbackInfo info) {
-        FancyMenuMcpManager.onGameShutdown();
 		if (!this.quitListenerFired_FancyMenu) {
 			this.quitListenerFired_FancyMenu = true;
 			Listeners.ON_QUIT_MINECRAFT.onQuitMinecraft();

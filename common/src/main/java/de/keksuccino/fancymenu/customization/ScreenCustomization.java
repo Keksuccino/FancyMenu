@@ -45,7 +45,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollS
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIThemes;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
-import de.keksuccino.fancymenu.util.mcp.FancyMenuMcpManager;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
@@ -129,7 +128,6 @@ public class ScreenCustomization {
 		Listeners.registerAll();
 		ListenerHandler.init();
 		SchedulerHandler.init();
-		FancyMenuMcpManager.syncWithOptions();
 
 		initialized = true;
 
@@ -294,7 +292,6 @@ public class ScreenCustomization {
 
 	public static void reloadFancyMenu() {
 		FancyMenu.reloadOptions();
-		FancyMenuMcpManager.syncWithOptions();
 		ResourceHandlers.reloadAll();
 		UIThemes.reloadThemes();
 		LayoutHandler.reloadLayouts();
