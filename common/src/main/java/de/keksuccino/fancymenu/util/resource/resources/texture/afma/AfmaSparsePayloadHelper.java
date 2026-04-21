@@ -271,9 +271,11 @@ public final class AfmaSparsePayloadHelper {
         int payloadOffset = offset;
         int coarseMaskOffset = payloadOffset;
         payloadOffset += coarseMaskBytes;
+        int[] localMaskOffsets = new int[tileCount];
         int emittedPixels = 0;
         for (int tileIndex = 0; tileIndex < tileCount; tileIndex++) {
             if (!isMaskBitSet(layoutBytes, coarseMaskOffset, tileIndex)) {
+                localMaskOffsets[tileIndex] = -1;
                 continue;
             }
 
@@ -285,20 +287,35 @@ public final class AfmaSparsePayloadHelper {
             if ((payloadOffset + localMaskBytes) > (offset + length)) {
                 throw new IOException("AFMA sparse tile-mask payload is truncated");
             }
+            localMaskOffsets[tileIndex] = payloadOffset;
+            payloadOffset += localMaskBytes;
+        }
 
-            int baseX = tileX * TILE_MASK_TILE_SIZE;
-            int baseY = tileY * TILE_MASK_TILE_SIZE;
-            int bitIndex = 0;
+        // Emit pixels in global row-major order so TILE_MASK uses the same changed-pixel
+        // sequencing as every other sparse layout and as the residual encoder input.
+        for (int tileRow = 0; tileRow < tileCountY; tileRow++) {
+            int baseTileY = tileRow * TILE_MASK_TILE_SIZE;
+            int tileHeight = tileDimension(tileRow, tileCountY, TILE_MASK_TILE_SIZE, height);
             for (int localY = 0; localY < tileHeight; localY++) {
-                int rowOffset = (baseY + localY) * width;
-                for (int localX = 0; localX < tileWidth; localX++, bitIndex++) {
-                    if (!isMaskBitSet(layoutBytes, payloadOffset, bitIndex)) {
+                int rowOffset = (baseTileY + localY) * width;
+                for (int tileX = 0; tileX < tileCountX; tileX++) {
+                    int tileIndex = (tileRow * tileCountX) + tileX;
+                    int localMaskOffset = localMaskOffsets[tileIndex];
+                    if (localMaskOffset < 0) {
                         continue;
                     }
-                    consumer.accept(rowOffset + baseX + localX, emittedPixels++);
+
+                    int tileWidth = tileDimension(tileX, tileCountX, TILE_MASK_TILE_SIZE, width);
+                    int baseX = tileX * TILE_MASK_TILE_SIZE;
+                    int rowBitIndex = localY * tileWidth;
+                    for (int localX = 0; localX < tileWidth; localX++) {
+                        if (!isMaskBitSet(layoutBytes, localMaskOffset, rowBitIndex + localX)) {
+                            continue;
+                        }
+                        consumer.accept(rowOffset + baseX + localX, emittedPixels++);
+                    }
                 }
             }
-            payloadOffset += localMaskBytes;
         }
 
         if (emittedPixels != changedPixelCount) {
