@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.world;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.resources.language.I18n;
@@ -10,6 +11,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 public class WorldDayTimeHourPlaceholder extends Placeholder {
@@ -27,9 +30,10 @@ public class WorldDayTimeHourPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
+        boolean twelveHourFormat = SerializationHelper.INSTANCE.deserializeBoolean(false, dps.values.get("twelve_hour_format"));
 
         try {
-            return getDayTimeHours();
+            return getDayTimeHours(twelveHourFormat);
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to get replacement for '" + this.getIdentifier() + "' placeholder.", ex);
         }
@@ -46,7 +50,7 @@ public class WorldDayTimeHourPlaceholder extends Placeholder {
         return 0L;
     }
 
-    private static String getDayTimeHours() {
+    private static String getDayTimeHours(boolean twelveHourFormat) {
         String hString = "00";
         long dt = getDayTime();
         while (dt >= 24000) {
@@ -57,6 +61,12 @@ public class WorldDayTimeHourPlaceholder extends Placeholder {
             h = (dt / 1000) + 6;
         } else {
             h = (dt / 1000) - 18;
+        }
+        if (twelveHourFormat) {
+            h %= 12;
+            if (h == 0) {
+                h = 12;
+            }
         }
         hString = "" + h;
         if (hString.length() < 2) {
@@ -85,7 +95,9 @@ public class WorldDayTimeHourPlaceholder extends Placeholder {
 
     @Override
     public @Nullable List<String> getValueNames() {
-        return null;
+        List<String> l = new ArrayList<>();
+        l.add("twelve_hour_format"); // true/false - if true returns the hour in 12-hour format (01-12)
+        return l;
     }
 
     @Override
@@ -105,7 +117,9 @@ public class WorldDayTimeHourPlaceholder extends Placeholder {
 
     @Override
     public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
-        return new DeserializedPlaceholderString(this.getIdentifier(), null, "");
+        LinkedHashMap<String, String> values = new LinkedHashMap<>();
+        values.put("twelve_hour_format", "false");
+        return new DeserializedPlaceholderString(this.getIdentifier(), values, "");
     }
 
 }
