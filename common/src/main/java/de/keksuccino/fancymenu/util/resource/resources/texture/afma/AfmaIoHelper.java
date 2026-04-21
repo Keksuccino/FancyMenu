@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Objects;
 
 public final class AfmaIoHelper {
 
@@ -32,6 +33,11 @@ public final class AfmaIoHelper {
     @NotNull
     public static File createNamedTempDirectory(@NotNull String childName) {
         return ensureDirectory(new File(resolveBaseTempDirectory(), childName));
+    }
+
+    public static void configureBaseTempDirectory(@NotNull File baseTempDirectory) {
+        File configuredDirectory = ensureDirectory(Objects.requireNonNull(baseTempDirectory));
+        System.setProperty(TEMP_DIR_PROPERTY, configuredDirectory.getAbsolutePath());
     }
 
     @NotNull

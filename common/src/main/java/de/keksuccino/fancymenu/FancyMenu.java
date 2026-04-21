@@ -17,6 +17,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIThemes;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
 import de.keksuccino.fancymenu.util.resource.resources.audio.AudioEngineReloadHandler;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaIoHelper;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.fancymenu.customization.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.customization.server.ServerCache;
@@ -44,6 +45,8 @@ public class FancyMenu {
 	private static Options options;
 
 	public static void init() {
+
+		AfmaIoHelper.configureBaseTempDirectory(TEMP_DATA_DIR);
 
 		if (Services.PLATFORM.isOnClient()) {
 			LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in client-side mode on " + MOD_LOADER.toUpperCase() + "!");

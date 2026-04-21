@@ -1,7 +1,9 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.file.FilenameComparator;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaDecoder;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaIoHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -327,6 +329,7 @@ public class AfmaCreatorState {
     protected void runExportJob(@NotNull AfmaEncodeJob job, @NotNull PreparedInputs prepared) {
         File tempFile = null;
         try {
+            AfmaIoHelper.configureBaseTempDirectory(FancyMenu.TEMP_DATA_DIR);
             job.setProgress(new AfmaEncodeProgress(AfmaEncodeProgress.Phase.VALIDATING_SOURCES, "Validating AFMA creator input...", null, 0.10D));
             checkCancelled(job);
 
