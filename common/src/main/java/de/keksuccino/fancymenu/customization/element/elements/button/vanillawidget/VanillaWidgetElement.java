@@ -8,23 +8,17 @@ import de.keksuccino.fancymenu.customization.element.elements.button.custombutto
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public class VanillaWidgetElement extends ButtonElement implements HideableElement {
 
-    private static final Logger LOGGER = LogManager.getLogger();
-
     public WidgetMeta widgetMeta;
     public boolean vanillaButtonHidden = false;
-    public final Property.IntegerProperty automatedButtonClicks = putProperty(Property.integerProperty("automated_button_clicks", 0,
-            "fancymenu.elements.vanilla_button.automated_clicks"));
+    public final Property.IntegerProperty automatedButtonClicks = putProperty(Property.integerProperty("automated_button_clicks", 0, "fancymenu.elements.vanilla_button.automated_clicks"));
     protected boolean automatedButtonClicksDone = false;
 
     public VanillaWidgetElement(ElementBuilder<ButtonElement, ButtonEditorElement> builder) {
@@ -178,12 +172,6 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
         float o = super.getBaseOpacity();
         if (this.isCopyrightButton() && (o < 0.4F)) o = 0.4F;
         return o;
-    }
-
-    public boolean isCopyrightButton() {
-        if (this.widgetMeta == null) return false;
-        String compId = ((UniqueWidget)this.widgetMeta.getWidget()).getWidgetIdentifierFancyMenu();
-        return ((compId != null) && compId.equals("title_screen_copyright_button"));
     }
 
 }

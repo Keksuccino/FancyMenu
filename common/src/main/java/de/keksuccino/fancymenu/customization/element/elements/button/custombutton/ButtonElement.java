@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBloc
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
@@ -16,6 +17,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtendedSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
@@ -165,20 +167,48 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
     @Override
     public int getAbsoluteWidth() {
+        int w = 1;
         if (!this.isTemplate && this.isTemplateActive()) {
             ButtonElement template = getTopActiveTemplateElement(this.isSlider());
-            if ((template != null) && template.templateApplyWidth) return template.getAbsoluteWidth();
+            if ((template != null) && template.templateApplyWidth) w = template.getAbsoluteWidth();
         }
-        return super.getAbsoluteWidth();
+        w = super.getAbsoluteWidth();
+        if (this.isCopyrightButton()) {
+            if (w < 60) {
+                w = 60;
+            }
+        }
+        return w;
     }
 
     @Override
     public int getAbsoluteHeight() {
+        int h = 1;
         if (!this.isTemplate && this.isTemplateActive()) {
             ButtonElement template = getTopActiveTemplateElement(this.isSlider());
-            if ((template != null) && template.templateApplyHeight) return template.getAbsoluteHeight();
+            if ((template != null) && template.templateApplyHeight) h = template.getAbsoluteHeight();
         }
-        return super.getAbsoluteHeight();
+        h = super.getAbsoluteHeight();
+        if (this.isCopyrightButton()) {
+            if (h < 6) {
+                h = 6;
+            }
+        }
+        return h;
+    }
+
+    @Override
+    protected int getAbsoluteX(boolean includeParallax) {
+        int x = super.getAbsoluteX(includeParallax);
+        if (this.isCopyrightButton()) {
+            if (x < 0) {
+                x = 0;
+            }
+            if (x > (getScreenWidth() - this.getAbsoluteWidth())) {
+                x = getScreenWidth() - this.getAbsoluteWidth();
+            }
+        }
+        return x;
     }
 
     @Override
@@ -197,6 +227,20 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
             if ((template != null) && template.templateApplyPosX) return template.getAbsoluteXWithoutParallax();
         }
         return super.getAbsoluteXWithoutParallax();
+    }
+
+    @Override
+    protected int getAbsoluteY(boolean includeParallax) {
+        int y = super.getAbsoluteY(includeParallax);
+        if (this.isCopyrightButton()) {
+            if (y < 0) {
+                y = 0;
+            }
+            if (y > (getScreenHeight() - this.getAbsoluteHeight())) {
+                y = getScreenHeight() - this.getAbsoluteHeight();
+            }
+        }
+        return y;
     }
 
     @Override
@@ -513,6 +557,15 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
     public boolean isSlider() {
         return (this.getWidget() instanceof CustomizableSlider);
+    }
+
+    public boolean isCopyrightButton() {
+        if (this instanceof VanillaWidgetElement w) {
+            if (w.widgetMeta == null) return false;
+            String compId = ((UniqueWidget)w.widgetMeta.getWidget()).getWidgetIdentifierFancyMenu();
+            return ((compId != null) && compId.equals("title_screen_copyright_button"));
+        }
+        return false;
     }
 
     public float getOpacity() {
