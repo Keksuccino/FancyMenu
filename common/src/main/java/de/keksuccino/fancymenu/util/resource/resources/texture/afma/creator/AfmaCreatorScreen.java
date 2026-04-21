@@ -52,6 +52,7 @@ public class AfmaCreatorScreen extends Screen {
     private static final int BUTTON_GROUP_GAP = 4;
     private static final int MIN_INPUT_WIDTH = 120;
     private static final int CONTENT_SCROLL_BAR_GAP = 6;
+    private static final int SCROLL_CONTENT_VERTICAL_PADDING = 10;
 
     private final @NotNull Screen parentScreen;
     private final @NotNull AfmaCreatorState state = new AfmaCreatorState();
@@ -991,8 +992,8 @@ public class AfmaCreatorScreen extends Screen {
         int inlineLabelWidth = this.getInlineLabelWidth();
         int browseWidth = 84;
         int clearWidth = 64;
-        int contentY = 0;
-        int contentBottom = 0;
+        int contentY = SCROLL_CONTENT_VERTICAL_PADDING;
+        int contentBottom = SCROLL_CONTENT_VERTICAL_PADDING;
 
         this.layoutLabeledPathRow(contentX, this.toScrollableScreenY(contentY, scrollOffset), contentWidth, inlineLabelWidth, this.mainFramesPathEditBox, this.browseMainFramesButton, browseWidth, null, 0);
         contentBottom = Math.max(contentBottom, contentY + FIELD_HEIGHT);
@@ -1114,9 +1115,9 @@ public class AfmaCreatorScreen extends Screen {
         }
 
         int diagnosticsY = this.toScrollableScreenY(contentBottom + 18, scrollOffset);
-        int totalHeight = contentBottom;
+        int totalHeight = contentBottom + SCROLL_CONTENT_VERTICAL_PADDING;
         if (this.state.getCurrentJob() != null) {
-            totalHeight = contentBottom + 18 + this.getDiagnosticsHeight(contentWidth);
+            totalHeight = contentBottom + 18 + this.getDiagnosticsHeight(contentWidth) + SCROLL_CONTENT_VERTICAL_PADDING;
         }
         return new ContentLayout(totalHeight, diagnosticsY);
     }
