@@ -54,7 +54,8 @@ import java.util.regex.Pattern;
  *     <li>Use {@code --main <dir>} for the required PNG frame directory.</li>
  *     <li>Use {@code --intro <dir>} for optional intro frames.</li>
  *     <li>Use {@code --output <file>} for the produced AFMA path.</li>
- *     <li>Use {@code --preset smallest_file}, {@code balanced}, or {@code fastest_decode} to mirror the creator presets.</li>
+ *     <li>Use {@code --preset best_quality}, {@code balanced}, {@code smallest_file}, or {@code fastest_decode}
+ *     to mirror the creator presets.</li>
  *     <li>Use {@code --temp-dir <dir>} or the {@code fancymenu.afma.temp_dir} system property to redirect AFMA temp files
  *     during isolated runs.</li>
  * </ul>
@@ -64,7 +65,7 @@ import java.util.regex.Pattern;
  * java ... de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator.AfmaEncodeStandaloneTool \
  *   --main /path/to/frames \
  *   --output /path/to/output.afma \
- *   --preset smallest_file
+ *   --preset best_quality
  * }</pre>
  *
  * <p>The tool prints planning progress, a frame-mix summary, payload totals, and final output size so encoder changes
@@ -142,7 +143,7 @@ public final class AfmaEncodeStandaloneTool {
         System.out.println("  --main <dir> --output <file> [options]");
         System.out.println("Options:");
         System.out.println("  --intro <dir>");
-        System.out.println("  --preset <smallest_file|balanced|fastest_decode>");
+        System.out.println("  --preset <best_quality|balanced|smallest_file|fastest_decode>");
         System.out.println("  --frame-time <ms>");
         System.out.println("  --intro-frame-time <ms>");
         System.out.println("  --loop-count <count>");
@@ -185,6 +186,22 @@ public final class AfmaEncodeStandaloneTool {
                                               @NotNull StandalonePreset preset) {
         int preferredKeyframeInterval = Math.max(1, options.getKeyframeInterval());
         switch (preset) {
+            case BEST_QUALITY -> options
+                    .setPlannerSearchWindowFrames(24)
+                    .setPlannerBeamWidth(14)
+                    .setPlannerDecodeCostPenaltyBytes(80L)
+                    .setPlannerComplexityPenaltyBytes(8L)
+                    .setPlannerAverageDriftPenaltyBytes(16D)
+                    .setPlannerVisibleColorDriftPenaltyBytes(4L)
+                    .setPlannerAlphaDriftPenaltyBytes(4L)
+                    .setPlannerLossyContinuationPenaltyBytes(96L)
+                    .setPlannerKeyframeDistancePenaltyBytes(96L)
+                    .setMaxDeltaAreaRatioWithoutStrongSavings(1.0D)
+                    .setMaxCopyPatchAreaRatioWithoutStrongSavings(0.97D)
+                    .setMinComplexCandidateSavingsBytes(8L * 1024L)
+                    .setMinStrongComplexCandidateSavingsBytes(32L * 1024L)
+                    .setMinComplexCandidateSavingsRatio(0.005D)
+                    .setMinStrongComplexCandidateSavingsRatio(0.02D);
             case SMALLEST_FILE -> options
                     .setPlannerSearchWindowFrames(24)
                     .setPlannerBeamWidth(14)
@@ -224,7 +241,8 @@ public final class AfmaEncodeStandaloneTool {
         }
 
         options
-                .setFullFrameReferencePlanEnabled(preset == StandalonePreset.SMALLEST_FILE)
+                .setFullFrameReferencePlanEnabled((preset == StandalonePreset.SMALLEST_FILE)
+                        || (preset == StandalonePreset.BEST_QUALITY))
                 .setAdaptiveKeyframePlacement(arguments.adaptiveKeyframePlacement())
                 .setAdaptiveMaxKeyframeInterval(Math.max(preferredKeyframeInterval, arguments.adaptiveMaxKeyframeInterval()))
                 .setAdaptiveContinuationMinSavingsBytes(arguments.adaptiveContinuationMinSavingsBytes())
@@ -248,6 +266,11 @@ public final class AfmaEncodeStandaloneTool {
                 .setPerceptualBinIntraMaxAverageError(arguments.perceptualAverageError());
 
         switch (preset) {
+            case BEST_QUALITY -> options
+                    .setPlannerMaxCumulativeAverageError(Math.max(4D, options.getPerceptualBinIntraMaxAverageError() * 1.5D))
+                    .setPlannerMaxCumulativeVisibleColorDelta(Math.max(8, options.getPerceptualBinIntraMaxVisibleColorDelta() * 2))
+                    .setPlannerMaxCumulativeAlphaDelta(Math.max(16, options.getPerceptualBinIntraMaxAlphaDelta()))
+                    .setPlannerMaxConsecutiveLossyFrames(1);
             case SMALLEST_FILE -> options
                     .setPlannerMaxCumulativeAverageError(Math.max(18D, options.getPerceptualBinIntraMaxAverageError() * 4.0D))
                     .setPlannerMaxCumulativeVisibleColorDelta(Math.max(48, options.getPerceptualBinIntraMaxVisibleColorDelta() * 4))
@@ -380,6 +403,7 @@ public final class AfmaEncodeStandaloneTool {
     }
 
     protected enum StandalonePreset {
+        BEST_QUALITY("best_quality", 90, true, true, false, 2048, 12, true, 360, 128L, 0.0025D, 0, 0, 0D),
         SMALLEST_FILE("smallest_file", 90, true, true, true, 2048, 12, true, 360, 128L, 0.0025D, 24, 64, 12.0D),
         BALANCED("balanced", 90, true, true, true, 512, 8, true, 180, 768L, 0.0075D, 14, 20, 6.0D),
         FASTEST_DECODE("fastest_decode", 18, false, true, false, 96, 2, false, 18, 0L, 0D, 8, 16, 3.0D);

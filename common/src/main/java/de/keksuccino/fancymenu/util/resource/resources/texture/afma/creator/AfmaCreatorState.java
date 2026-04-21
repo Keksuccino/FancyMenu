@@ -427,6 +427,22 @@ public class AfmaCreatorState {
     protected void applyAdvancedCompressionDefaults(@NotNull AfmaEncodeOptions options) {
         int preferredKeyframeInterval = Math.max(1, options.getKeyframeInterval());
         switch (this.optimizationPreset) {
+            case BEST_QUALITY -> options
+                    .setPlannerSearchWindowFrames(24)
+                    .setPlannerBeamWidth(14)
+                    .setPlannerDecodeCostPenaltyBytes(80L)
+                    .setPlannerComplexityPenaltyBytes(8L)
+                    .setPlannerAverageDriftPenaltyBytes(16D)
+                    .setPlannerVisibleColorDriftPenaltyBytes(4L)
+                    .setPlannerAlphaDriftPenaltyBytes(4L)
+                    .setPlannerLossyContinuationPenaltyBytes(96L)
+                    .setPlannerKeyframeDistancePenaltyBytes(96L)
+                    .setMaxDeltaAreaRatioWithoutStrongSavings(1.0D)
+                    .setMaxCopyPatchAreaRatioWithoutStrongSavings(0.97D)
+                    .setMinComplexCandidateSavingsBytes(8L * 1024L)
+                    .setMinStrongComplexCandidateSavingsBytes(32L * 1024L)
+                    .setMinComplexCandidateSavingsRatio(0.005D)
+                    .setMinStrongComplexCandidateSavingsRatio(0.02D);
             case SMALLEST_FILE -> options
                     .setPlannerSearchWindowFrames(24)
                     .setPlannerBeamWidth(14)
@@ -466,7 +482,8 @@ public class AfmaCreatorState {
         }
 
         options
-                .setFullFrameReferencePlanEnabled(this.optimizationPreset == AfmaOptimizationPreset.SMALLEST_FILE)
+                .setFullFrameReferencePlanEnabled((this.optimizationPreset == AfmaOptimizationPreset.SMALLEST_FILE)
+                        || (this.optimizationPreset == AfmaOptimizationPreset.BEST_QUALITY))
                 .setAdaptiveKeyframePlacement(this.adaptiveKeyframePlacement)
                 .setAdaptiveMaxKeyframeInterval(Math.max(preferredKeyframeInterval, parsePositiveInt(this.adaptiveMaxKeyframeInterval, "adaptive max keyframe interval")))
                 .setAdaptiveContinuationMinSavingsBytes(parseNonNegativeLong(this.adaptiveContinuationMinSavingsBytes, "adaptive continuation savings bytes"))
@@ -485,6 +502,10 @@ public class AfmaCreatorState {
         }
 
         switch (this.optimizationPreset) {
+            case BEST_QUALITY -> options
+                    .setPerceptualBinIntraMaxVisibleColorDelta(parseNonNegativeInt(this.perceptualBinIntraMaxVisibleColorDelta, "perceptual BIN_INTRA visible color delta"))
+                    .setPerceptualBinIntraMaxAlphaDelta(parseNonNegativeInt(this.perceptualBinIntraMaxAlphaDelta, "perceptual BIN_INTRA alpha delta"))
+                    .setPerceptualBinIntraMaxAverageError(parseNonNegativeDouble(this.perceptualBinIntraMaxAverageError, "perceptual BIN_INTRA average error"));
             case SMALLEST_FILE -> options
                     .setPerceptualBinIntraMaxVisibleColorDelta(parseNonNegativeInt(this.perceptualBinIntraMaxVisibleColorDelta, "perceptual BIN_INTRA visible color delta"))
                     .setPerceptualBinIntraMaxAlphaDelta(parseNonNegativeInt(this.perceptualBinIntraMaxAlphaDelta, "perceptual BIN_INTRA alpha delta"))
@@ -500,6 +521,11 @@ public class AfmaCreatorState {
         }
 
         switch (this.optimizationPreset) {
+            case BEST_QUALITY -> options
+                    .setPlannerMaxCumulativeAverageError(Math.max(4D, options.getPerceptualBinIntraMaxAverageError() * 1.5D))
+                    .setPlannerMaxCumulativeVisibleColorDelta(Math.max(8, options.getPerceptualBinIntraMaxVisibleColorDelta() * 2))
+                    .setPlannerMaxCumulativeAlphaDelta(Math.max(16, options.getPerceptualBinIntraMaxAlphaDelta()))
+                    .setPlannerMaxConsecutiveLossyFrames(1);
             case SMALLEST_FILE -> options
                     .setPlannerMaxCumulativeAverageError(Math.max(18D, options.getPerceptualBinIntraMaxAverageError() * 4.0D))
                     .setPlannerMaxCumulativeVisibleColorDelta(Math.max(48, options.getPerceptualBinIntraMaxVisibleColorDelta() * 4))
@@ -599,6 +625,7 @@ public class AfmaCreatorState {
     protected static int defaultAdaptiveMaxKeyframeInterval(@NotNull AfmaOptimizationPreset preset) {
         int preferredKeyframeInterval = Math.max(1, preset.getKeyframeInterval());
         return switch (preset) {
+            case BEST_QUALITY -> Math.max(preferredKeyframeInterval * 4, preferredKeyframeInterval + 180);
             case SMALLEST_FILE -> Math.max(preferredKeyframeInterval * 4, preferredKeyframeInterval + 180);
             case BALANCED -> Math.max(preferredKeyframeInterval * 2, preferredKeyframeInterval + 36);
             case FASTEST_DECODE -> preferredKeyframeInterval;
@@ -607,6 +634,7 @@ public class AfmaCreatorState {
 
     protected static long defaultAdaptiveContinuationMinSavingsBytes(@NotNull AfmaOptimizationPreset preset) {
         return switch (preset) {
+            case BEST_QUALITY -> 128L;
             case SMALLEST_FILE -> 128L;
             case BALANCED -> 768L;
             case FASTEST_DECODE -> 0L;
@@ -615,6 +643,7 @@ public class AfmaCreatorState {
 
     protected static double defaultAdaptiveContinuationMinSavingsRatio(@NotNull AfmaOptimizationPreset preset) {
         return switch (preset) {
+            case BEST_QUALITY -> 0.0025D;
             case SMALLEST_FILE -> 0.0025D;
             case BALANCED -> 0.0075D;
             case FASTEST_DECODE -> 0D;
@@ -623,6 +652,7 @@ public class AfmaCreatorState {
 
     protected static int defaultPerceptualVisibleColorDelta(@NotNull AfmaOptimizationPreset preset) {
         return switch (preset) {
+            case BEST_QUALITY -> 0;
             case SMALLEST_FILE -> 24;
             case BALANCED -> 14;
             case FASTEST_DECODE -> 8;
@@ -631,6 +661,7 @@ public class AfmaCreatorState {
 
     protected static int defaultPerceptualAlphaDelta(@NotNull AfmaOptimizationPreset preset) {
         return switch (preset) {
+            case BEST_QUALITY -> 0;
             case SMALLEST_FILE -> 64;
             case BALANCED -> 20;
             case FASTEST_DECODE -> 16;
@@ -639,6 +670,7 @@ public class AfmaCreatorState {
 
     protected static double defaultPerceptualAverageError(@NotNull AfmaOptimizationPreset preset) {
         return switch (preset) {
+            case BEST_QUALITY -> 0D;
             case SMALLEST_FILE -> 12.0D;
             case BALANCED -> 6.0D;
             case FASTEST_DECODE -> 3.0D;
