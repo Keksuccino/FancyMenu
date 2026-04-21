@@ -2,11 +2,15 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.realtime;
 
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import net.minecraft.client.resources.language.I18n;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 public class RealtimeHourPlaceholder extends Placeholder {
@@ -18,7 +22,12 @@ public class RealtimeHourPlaceholder extends Placeholder {
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         Calendar c = Calendar.getInstance();
-        return formatToFancyDateTime(c.get(Calendar.HOUR_OF_DAY));
+        boolean twelveHourFormat = SerializationHelper.INSTANCE.deserializeBoolean(false, dps.values.get("twelve_hour_format"));
+        int hour = c.get(twelveHourFormat ? Calendar.HOUR : Calendar.HOUR_OF_DAY);
+        if (twelveHourFormat && hour == 0) {
+            hour = 12;
+        }
+        return formatToFancyDateTime(hour);
     }
 
     private static String formatToFancyDateTime(int in) {
@@ -31,7 +40,9 @@ public class RealtimeHourPlaceholder extends Placeholder {
 
     @Override
     public @Nullable List<String> getValueNames() {
-        return null;
+        List<String> l = new ArrayList<>();
+        l.add("twelve_hour_format"); // true/false - if true returns the hour in 12-hour format (01-12)
+        return l;
     }
 
     @Override
@@ -41,7 +52,7 @@ public class RealtimeHourPlaceholder extends Placeholder {
 
     @Override
     public List<String> getDescription() {
-        return null;
+        return List.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.placeholders.realtime_hour.desc"));
     }
 
     @Override
@@ -51,9 +62,9 @@ public class RealtimeHourPlaceholder extends Placeholder {
 
     @Override
     public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
-        DeserializedPlaceholderString dps = new DeserializedPlaceholderString();
-        dps.placeholderIdentifier = this.getIdentifier();
-        return dps;
+        LinkedHashMap<String, String> values = new LinkedHashMap<>();
+        values.put("twelve_hour_format", "false");
+        return new DeserializedPlaceholderString(this.getIdentifier(), values, "");
     }
 
 }
