@@ -270,7 +270,7 @@ public class AfmaCreatorScreen extends Screen {
         this.setWidgetActive(this.adaptiveContinuationMinSavingsBytesEditBox, adaptiveKeyframesEnabled);
         this.setWidgetActive(this.adaptiveContinuationMinSavingsRatioEditBox, adaptiveKeyframesEnabled);
 
-        boolean perceptualControlsEnabled = this.state.isNearLosslessEnabled() && !jobRunning;
+        boolean perceptualControlsEnabled = !jobRunning;
         this.setWidgetActive(this.perceptualVisibleColorDeltaEditBox, perceptualControlsEnabled);
         this.setWidgetActive(this.perceptualAlphaDeltaEditBox, perceptualControlsEnabled);
         this.setWidgetActive(this.perceptualAverageErrorEditBox, perceptualControlsEnabled);
