@@ -14,6 +14,7 @@ import java.util.concurrent.Executor;
 public class WatermediaReflectionBridge {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static volatile boolean WATERMEDIA_unsupported_texture_handle_logged = false;
 
     @Nullable
     public static Object createMrl(@NotNull String source) {
@@ -117,12 +118,25 @@ public class WatermediaReflectionBridge {
 
         WatermediaUtil.trySuppressDevelopmentFfmpegDebugLogs();
 
-        Method createPlayer = findMethod(mrl.getClass(), "createPlayer", 7);
-        if (createPlayer == null) {
-            LOGGER.error("[FANCYMENU] Failed to create Watermedia player, unable to find MRL#createPlayer(..) method");
-            return null;
-        }
+        // Watermedia 3.0.0-beta.15+ API
         try {
+            Object player = createModernPlayer(mrl, renderThread, renderThreadExecutor, video, audio);
+            if (player != null) {
+                return player;
+            }
+        } catch (ClassNotFoundException | NoSuchMethodException ignored) {
+            // Fall back to the legacy API below.
+        } catch (Throwable ex) {
+            LOGGER.error("[FANCYMENU] Failed to create Watermedia player via beta15+ engine API", ex);
+        }
+
+        // Legacy Watermedia 3.x API
+        try {
+            Method createPlayer = findMethod(mrl.getClass(), "createPlayer", 7);
+            if (createPlayer == null) {
+                LOGGER.error("[FANCYMENU] Failed to create Watermedia player, unable to find MRL#createPlayer(..) method");
+                return null;
+            }
             return createPlayer.invoke(mrl, 0, renderThread, renderThreadExecutor, null, null, video, audio);
         } catch (Throwable ex) {
             LOGGER.error("[FANCYMENU] Failed to create Watermedia player!", ex);
@@ -147,6 +161,10 @@ public class WatermediaReflectionBridge {
     }
 
     public static void playerRelease(@Nullable Object player) {
+        if (player instanceof ManagedModernPlayer managedModernPlayer) {
+            managedModernPlayer.release();
+            return;
+        }
         invoke(player, "release", 0);
     }
 
@@ -165,7 +183,20 @@ public class WatermediaReflectionBridge {
     }
 
     public static int playerTextureId(@Nullable Object player) {
-        return invokeInt(player, "texture", 0);
+        Number textureHandle = invokeNumber(player, "texture", 0);
+        if (textureHandle == null) return 0;
+
+        long textureId = textureHandle.longValue();
+        if (textureId <= 0L) return 0;
+        if (textureId > Integer.MAX_VALUE) {
+            if (!WATERMEDIA_unsupported_texture_handle_logged) {
+                WATERMEDIA_unsupported_texture_handle_logged = true;
+                LOGGER.warn("[FANCYMENU] Watermedia returned an unsupported texture handle for Minecraft rendering: {}", textureId);
+            }
+            return 0;
+        }
+
+        return (int) textureId;
     }
 
     public static int playerWidth(@Nullable Object player) {
@@ -203,12 +234,71 @@ public class WatermediaReflectionBridge {
     }
 
     @Nullable
-    private static Object invoke(@Nullable Object target, @NotNull String methodName, int parameterCount, Object... args) {
-        if (target == null) return null;
+    private static Object createModernPlayer(@NotNull Object mrl, @NotNull Thread renderThread, @NotNull Executor renderThreadExecutor, boolean video, boolean audio) throws Throwable {
+        ClassLoader classLoader = FancyMenu.class.getClassLoader();
+        Class<?> gfxEngineClass = Class.forName("org.watermedia.api.media.engines.GFXEngine", false, classLoader);
+        Class<?> sfxEngineClass = Class.forName("org.watermedia.api.media.engines.SFXEngine", false, classLoader);
+
+        Object gfxEngine = video ? buildModernGfxEngine(renderThread, renderThreadExecutor) : null;
+        Object sfxEngine = audio ? buildModernSfxEngine() : null;
+
         try {
-            Method method = findMethod(target.getClass(), methodName, parameterCount);
+            Object player;
+            try {
+                Method createPlayer = mrl.getClass().getMethod("createPlayer", int.class, gfxEngineClass, sfxEngineClass);
+                player = createPlayer.invoke(mrl, 0, gfxEngine, sfxEngine);
+            } catch (NoSuchMethodException ignored) {
+                Method createPlayer = mrl.getClass().getMethod("createPlayer", gfxEngineClass, sfxEngineClass);
+                player = createPlayer.invoke(mrl, gfxEngine, sfxEngine);
+            }
+
+            if (player == null) {
+                releaseModernResource(gfxEngine);
+                releaseModernResource(sfxEngine);
+                return null;
+            }
+
+            return new ManagedModernPlayer(player, gfxEngine);
+        } catch (Throwable ex) {
+            releaseModernResource(gfxEngine);
+            releaseModernResource(sfxEngine);
+            throw ex;
+        }
+    }
+
+    @NotNull
+    private static Object buildModernGfxEngine(@NotNull Thread renderThread, @NotNull Executor renderThreadExecutor) throws Throwable {
+        ClassLoader classLoader = FancyMenu.class.getClassLoader();
+        Class<?> builderClass = Class.forName("org.watermedia.api.media.engines.GLEngine$Builder", false, classLoader);
+        Object builder = builderClass.getConstructor(Thread.class, Executor.class).newInstance(renderThread, renderThreadExecutor);
+        Method build = builderClass.getMethod("build");
+        return build.invoke(builder);
+    }
+
+    @NotNull
+    private static Object buildModernSfxEngine() throws Throwable {
+        ClassLoader classLoader = FancyMenu.class.getClassLoader();
+        Class<?> alEngineClass = Class.forName("org.watermedia.api.media.engines.ALEngine", false, classLoader);
+
+        try {
+            Method buildDefault = alEngineClass.getMethod("buildDefault");
+            return buildDefault.invoke(null);
+        } catch (NoSuchMethodException ignored) {
+            Class<?> builderClass = Class.forName("org.watermedia.api.media.engines.ALEngine$Builder", false, classLoader);
+            Object builder = builderClass.getConstructor().newInstance();
+            Method build = builderClass.getMethod("build");
+            return build.invoke(builder);
+        }
+    }
+
+    @Nullable
+    private static Object invoke(@Nullable Object target, @NotNull String methodName, int parameterCount, Object... args) {
+        Object invocationTarget = unwrapInvocationTarget(target);
+        if (invocationTarget == null) return null;
+        try {
+            Method method = findMethod(invocationTarget.getClass(), methodName, parameterCount);
             if (method != null) {
-                return method.invoke(target, args);
+                return method.invoke(invocationTarget, args);
             }
         } catch (Throwable ex) {
             LOGGER.error("[FANCYMENU] Failed to invoke Watermedia method '{}'", methodName, ex);
@@ -220,6 +310,13 @@ public class WatermediaReflectionBridge {
         Object result = invoke(target, methodName, 0);
         if (result instanceof Boolean b) return b;
         return fallback;
+    }
+
+    @Nullable
+    private static Number invokeNumber(@Nullable Object target, @NotNull String methodName, int parameterCount, Object... args) {
+        Object result = invoke(target, methodName, parameterCount, args);
+        if (result instanceof Number number) return number;
+        return null;
     }
 
     private static int invokeInt(@Nullable Object target, @NotNull String methodName, int fallback) {
@@ -235,6 +332,26 @@ public class WatermediaReflectionBridge {
     }
 
     @Nullable
+    private static Object unwrapInvocationTarget(@Nullable Object target) {
+        if (target instanceof ManagedModernPlayer managedModernPlayer) {
+            return managedModernPlayer.player;
+        }
+        return target;
+    }
+
+    private static void releaseModernResource(@Nullable Object resource) {
+        if (resource == null) return;
+        try {
+            Method release = findMethod(resource.getClass(), "release", 0);
+            if (release != null) {
+                release.invoke(resource);
+            }
+        } catch (Throwable ex) {
+            LOGGER.error("[FANCYMENU] Failed to release Watermedia engine resource", ex);
+        }
+    }
+
+    @Nullable
     private static Method findMethod(@NotNull Class<?> type, @NotNull String name, int parameterCount) {
         for (Method method : type.getMethods()) {
             if (method.getName().equals(name) && method.getParameterCount() == parameterCount) {
@@ -242,6 +359,34 @@ public class WatermediaReflectionBridge {
             }
         }
         return null;
+    }
+
+    private static final class ManagedModernPlayer {
+        private final Object player;
+        @Nullable
+        private final Object gfxEngine;
+        private volatile boolean released = false;
+
+        private ManagedModernPlayer(@NotNull Object player, @Nullable Object gfxEngine) {
+            this.player = player;
+            this.gfxEngine = gfxEngine;
+        }
+
+        private void release() {
+            if (this.released) return;
+            this.released = true;
+
+            try {
+                Method release = findMethod(this.player.getClass(), "release", 0);
+                if (release != null) {
+                    release.invoke(this.player);
+                }
+            } catch (Throwable ex) {
+                LOGGER.error("[FANCYMENU] Failed to release Watermedia player", ex);
+            }
+
+            releaseModernResource(this.gfxEngine);
+        }
     }
 
 }
