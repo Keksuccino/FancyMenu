@@ -2930,7 +2930,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             super(identifier, parent, label, ((menu, entry) -> {}));
             this.subContextMenu = subContextMenu;
             this.subContextMenu.parentEntry = this;
-            this.clickAction = (menu, entry) -> this.openSubMenu();
+            this.clickAction = (menu, entry) -> ((SubMenuContextMenuEntry) entry).openSubMenu();
         }
 
         @Override
@@ -3097,6 +3097,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             copy.tooltipSupplier = this.tooltipSupplier;
             copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
             copy.labelSupplier = this.labelSupplier;
+            copy.clickAction = this.clickAction;
             copy.icon = this.icon;
             copy.materialIcon = this.materialIcon;
             copy.iconWiggleAnimation = this.iconWiggleAnimation.getAnimation().createInstance();

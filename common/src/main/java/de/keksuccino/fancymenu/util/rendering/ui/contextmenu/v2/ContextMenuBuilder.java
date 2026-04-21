@@ -796,7 +796,7 @@ public interface ContextMenuBuilder<O> {
                 .addIsVisibleSupplier((menu, entry) -> this.stack(entry, selectedObjectsFilter).getObjects().size() == 1)
                 .setIcon(MaterialIcons.INFO);
 
-        return new ContextMenu.SubMenuContextMenuEntry(entryIdentifier, parentMenu, label, subMenu)
+        return this.buildPrimaryActionSubMenuEntry(entryIdentifier, parentMenu, label, subMenu, "choose_file")
                 .setStackable(true)
                 .setIcon(MaterialIcons.FOLDER_OPEN);
 
@@ -807,6 +807,11 @@ public interface ContextMenuBuilder<O> {
      */
     default <R extends Resource, F extends FileType<R>> ContextMenu.ClickableContextMenuEntry<?> addGenericResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull Supplier<ResourceChooserWindowBody<R,F>> resourceChooserScreenBuilder, @NotNull ConsumingSupplier<String, ResourceSupplier<R>> resourceSupplierBuilder, ResourceSupplier<R> defaultValue, @NotNull ConsumingSupplier<O, ResourceSupplier<R>> targetFieldGetter, @NotNull BiConsumer<O, ResourceSupplier<R>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileTypeGroup<F> fileTypes, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
         return addTo.addEntry(buildGenericResourceChooserContextMenuEntry(addTo, entryIdentifier, selectedObjectsFilter, resourceChooserScreenBuilder, resourceSupplierBuilder, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, fileTypes, fileFilter, allowLocation, allowLocal, allowWeb));
+    }
+
+    @NotNull
+    default ContextMenu.SubMenuContextMenuEntry buildPrimaryActionSubMenuEntry(@NotNull String entryIdentifier, @NotNull ContextMenu parentMenu, @NotNull Component label, @NotNull ContextMenu subMenu, @NotNull String primaryEntryIdentifier) {
+        return ContextMenuUtils.createPrimaryActionSubMenuEntry(entryIdentifier, parentMenu, label, subMenu, primaryEntryIdentifier);
     }
 
     /**
@@ -887,7 +892,7 @@ public interface ContextMenuBuilder<O> {
                 .addIsVisibleSupplier((menu, entry) -> this.stack(entry, selectedObjectsFilter).getObjects().size() == 1)
                 .setIcon(MaterialIcons.INFO);
 
-        return new ContextMenu.SubMenuContextMenuEntry(entryIdentifier, parentMenu, label, subMenu)
+        return this.buildPrimaryActionSubMenuEntry(entryIdentifier, parentMenu, label, subMenu, "input_value")
                 .setStackable(true)
                 .setIcon(MaterialIcons.SLIDERS);
     }
@@ -1014,7 +1019,7 @@ public interface ContextMenuBuilder<O> {
                 .addIsVisibleSupplier((menu, entry) -> this.stack(entry, selectedObjectsFilter).getObjects().size() == 1)
                 .setIcon(MaterialIcons.INFO);
 
-        return new ContextMenu.SubMenuContextMenuEntry(entryIdentifier, parentMenu, label, subMenu)
+        return this.buildPrimaryActionSubMenuEntry(entryIdentifier, parentMenu, label, subMenu, "input_value")
                 .setStackable(true)
                 .setIcon(MaterialIcons.EDIT);
 

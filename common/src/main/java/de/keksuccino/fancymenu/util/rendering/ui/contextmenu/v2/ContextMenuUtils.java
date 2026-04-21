@@ -43,6 +43,22 @@ import java.util.function.Supplier;
 @SuppressWarnings("all")
 public class ContextMenuUtils {
 
+    private static void runPrimarySubMenuEntryClick(@NotNull ContextMenu.SubMenuContextMenuEntry entry, @NotNull String primaryEntryIdentifier) {
+        ContextMenu.ContextMenuEntry<?> primaryEntry = entry.getSubContextMenu().getEntry(primaryEntryIdentifier);
+        if (primaryEntry instanceof ContextMenu.ClickableContextMenuEntry<?> clickableEntry) {
+            clickableEntry.runClickAction();
+            return;
+        }
+        entry.openSubMenu();
+    }
+
+    @NotNull
+    public static ContextMenu.SubMenuContextMenuEntry createPrimaryActionSubMenuEntry(@NotNull String entryIdentifier, @NotNull ContextMenu parentMenu, @NotNull Component label, @NotNull ContextMenu subContextMenu, @NotNull String primaryEntryIdentifier) {
+        ContextMenu.SubMenuContextMenuEntry entry = new ContextMenu.SubMenuContextMenuEntry(entryIdentifier, parentMenu, label, subContextMenu);
+        entry.clickAction = (menu, clickedEntry) -> runPrimarySubMenuEntryClick((ContextMenu.SubMenuContextMenuEntry) clickedEntry, primaryEntryIdentifier);
+        return entry;
+    }
+
     public static ContextMenu.ClickableContextMenuEntry<?> addImageResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, ResourceSupplier<ITexture> defaultValue, @NotNull Supplier<ResourceSupplier<ITexture>> targetFieldGetter, @NotNull Consumer<ResourceSupplier<ITexture>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
         return addGenericResourceChooserContextMenuEntryTo(addTo, entryIdentifier, () -> ResourceChooserWindowBody.image(null, file -> {}), ResourceSupplier::image, defaultValue, targetFieldGetter, targetFieldSetter, label, addResetOption, FileTypeGroups.IMAGE_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
     }
@@ -116,9 +132,9 @@ public class ContextMenuUtils {
                 .setClickSoundEnabled(false)
                 .setIcon(MaterialIcons.INFO);
 
-        return addTo.addSubMenuEntry(entryIdentifier, label, subMenu)
+        return addTo.addEntry(createPrimaryActionSubMenuEntry(entryIdentifier, addTo, label, subMenu, "choose_file")
                 .setStackable(true)
-                .setIcon(MaterialIcons.FOLDER_OPEN);
+                .setIcon(MaterialIcons.FOLDER_OPEN));
 
     }
 
@@ -191,8 +207,8 @@ public class ContextMenuUtils {
                 .setChangeBackgroundColorOnHover(false)
                 .setIcon(MaterialIcons.INFO);
 
-        return addTo.addSubMenuEntry(entryIdentifier, label, subMenu)
-                .setIcon(MaterialIcons.FOLDER_OPEN);
+        return addTo.addEntry(createPrimaryActionSubMenuEntry(entryIdentifier, addTo, label, subMenu, "choose_file")
+                .setIcon(MaterialIcons.FOLDER_OPEN));
     }
 
     @NotNull
@@ -240,8 +256,8 @@ public class ContextMenuUtils {
                 .setChangeBackgroundColorOnHover(false)
                 .setIcon(MaterialIcons.INFO);
 
-        return addTo.addSubMenuEntry(entryIdentifier, label, subMenu)
-                .setIcon(parentIcon);
+        return addTo.addEntry(createPrimaryActionSubMenuEntry(entryIdentifier, addTo, label, subMenu, "input_value")
+                .setIcon(parentIcon));
     }
 
     @NotNull

@@ -22,6 +22,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ColorPickerWindowBody;
@@ -566,7 +567,7 @@ public class Property<T> {
                     .addIsVisibleSupplier((contextMenu, entry) -> builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects().size() == 1)
                     .setIcon(MaterialIcons.INFO);
 
-            return new ContextMenu.SubMenuContextMenuEntry("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), subMenu)
+            return ContextMenuUtils.createPrimaryActionSubMenuEntry("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), subMenu, "input_via_number_picker")
                     .setIcon(MaterialIcons.NUMBERS)
                     .setStackable(true);
         };
@@ -769,7 +770,7 @@ public class Property<T> {
                     .addIsVisibleSupplier((contextMenu, entry) -> builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects().size() == 1)
                     .setIcon(MaterialIcons.INFO);
 
-            return new ContextMenu.SubMenuContextMenuEntry("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), subMenu)
+            return ContextMenuUtils.createPrimaryActionSubMenuEntry("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), subMenu, "input_via_number_picker")
                     .setIcon(MaterialIcons.FUNCTIONS)
                     .setStackable(true);
         };
@@ -972,7 +973,7 @@ public class Property<T> {
                     .addIsVisibleSupplier((contextMenu, entry) -> builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects().size() == 1)
                     .setIcon(MaterialIcons.INFO);
 
-            return new ContextMenu.SubMenuContextMenuEntry("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), subMenu)
+            return ContextMenuUtils.createPrimaryActionSubMenuEntry("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), subMenu, "input_via_number_picker")
                     .setIcon(MaterialIcons.NUMBERS)
                     .setStackable(true);
         };
@@ -1175,7 +1176,7 @@ public class Property<T> {
                     .addIsVisibleSupplier((contextMenu, entry) -> builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects().size() == 1)
                     .setIcon(MaterialIcons.INFO);
 
-            return new ContextMenu.SubMenuContextMenuEntry("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), subMenu)
+            return ContextMenuUtils.createPrimaryActionSubMenuEntry("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), subMenu, "input_via_number_picker")
                     .setIcon(MaterialIcons.FUNCTIONS)
                     .setStackable(true);
         };
@@ -1854,7 +1855,7 @@ public class Property<T> {
                     .addIsVisibleSupplier((contextMenu, entry) -> builder.stack(entry, consumes -> consumes.getProperty(key) != null).getObjects().size() == 1)
                     .setIcon(MaterialIcons.INFO);
 
-            return new ContextMenu.SubMenuContextMenuEntry("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), subMenu)
+            return ContextMenuUtils.createPrimaryActionSubMenuEntry("menu_entry_" + key, menu, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), subMenu, "input_via_color_picker")
                     .setIcon(MaterialIcons.PALETTE)
                     .setStackable(true);
         };
