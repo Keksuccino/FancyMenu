@@ -266,6 +266,7 @@ public class AfmaCreatorScreen extends Screen {
         try {
             this.syncStateFromWidgets();
             this.state.startExport();
+            this.scrollScrollableContentToBottom();
         } catch (Exception ex) {
             Dialogs.openMessage(Component.literal(ex.getMessage() != null ? ex.getMessage() : "AFMA export failed to start."), MessageDialogStyle.ERROR);
         }
@@ -995,6 +996,12 @@ public class AfmaCreatorScreen extends Screen {
         this.layoutWidget(this.exportButton, contentX, bottomY, 120, FIELD_HEIGHT);
         this.layoutWidget(this.cancelJobButton, contentX + 128, bottomY, 120, FIELD_HEIGHT);
         this.layoutWidget(this.closeButton, contentX + contentWidth - 120, bottomY, 120, FIELD_HEIGHT);
+    }
+
+    protected void scrollScrollableContentToBottom() {
+        this.repositionWidgets();
+        this.contentScrollBar.setScroll(1.0F);
+        this.repositionWidgets();
     }
 
     protected @NotNull ContentLayout applyScrollableLayout(int contentX, int contentWidth, int scrollOffset) {
