@@ -696,19 +696,20 @@ def build_update_file_plans(
     current_source: OrderedDict[str, str],
     target_paths: dict[str, Path],
 ) -> list[FilePlan]:
-    plans: list[FilePlan] = []
+    existing_file_plans: list[FilePlan] = []
+    missing_file_plans: list[FilePlan] = []
 
-    for file_number, (language_code, target_path) in enumerate(target_paths.items(), start=1):
+    for language_code, target_path in target_paths.items():
         if not target_path.exists():
-            plans.append(
+            missing_file_plans.append(
                 FilePlan(
-                    file_number=file_number,
+                    file_number=0,
                     language_code=language_code,
                     path=target_path,
-                    action_label="Skipping missing localization file",
-                    result_label="skipped (missing file)",
-                    skipped=True,
-                    skip_reason="Target localization file does not exist in update mode",
+                    action_label="Creating missing localization file",
+                    result_label="created new file",
+                    translation_source_entries=current_source,
+                    entries_to_translate=len(current_source),
                 )
             )
             continue
@@ -718,9 +719,9 @@ def build_update_file_plans(
         overwrite_keys_count = len(current_source) - missing_keys_count
         obsolete_keys = [key for key in existing_entries if key not in current_source]
 
-        plans.append(
+        existing_file_plans.append(
             FilePlan(
-                file_number=file_number,
+                file_number=0,
                 language_code=language_code,
                 path=target_path,
                 action_label="Updating existing localization file",
@@ -734,6 +735,10 @@ def build_update_file_plans(
                 obsolete_keys_count=len(obsolete_keys),
             )
         )
+
+    plans = [*existing_file_plans, *missing_file_plans]
+    for file_number, plan in enumerate(plans, start=1):
+        plan.file_number = file_number
 
     return plans
 
@@ -839,6 +844,9 @@ def describe_file_stats(mode_label: str, plan: FilePlan) -> str:
     if plan.skipped:
         return f"File stats: skipped | {plan.skip_reason}"
 
+    if plan.existing_entries is None:
+        return f"File stats: new file | full translate {plan.entries_to_translate:,} keys"
+
     if mode_label == "update-existing":
         return (
             "File stats: "
@@ -914,15 +922,18 @@ def main() -> int:
         mode = prompt_mode()
         if mode == MODE_UPDATE_EXISTING:
             plans = build_update_file_plans(current_source, target_paths)
-            existing_file_count = sum(1 for plan in plans if not plan.skipped)
-            skipped_count = sum(1 for plan in plans if plan.skipped)
+            existing_file_count = sum(1 for plan in plans if plan.existing_entries is not None)
+            new_file_count = sum(1 for plan in plans if not plan.skipped and plan.existing_entries is None)
             overview_lines = [
                 f"Source: {SOURCE_FILE_PATH.name} | Source keys: {len(current_source):,}",
                 f"Model: {OPENROUTER_MODEL} | Batch size: {BATCH_SIZE:,} | API key source: {api_key_source}",
-                f"Run stats: existing files {existing_file_count} | skipped missing files {skipped_count}",
+                f"Run stats: existing files {existing_file_count} | missing files to create {new_file_count}",
             ]
             tracker = ProgressTracker("update-existing", plans, overview_lines)
-            tracker.set_action("Refreshing all keys for existing localization files", "Starting translation work")
+            tracker.set_action(
+                "Refreshing existing localization files and creating missing ones",
+                "Starting translation work",
+            )
             results = process_file_plans(plans, tracker, openrouter_api_key)
             tracker.finish_run("All update-mode files finished")
             print_summary(results, tracker)
