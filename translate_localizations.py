@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import json
+import http.client
 import os
 import re
 import shutil
+import socket
+import ssl
 import subprocess
 import sys
 import tempfile
@@ -35,7 +38,10 @@ BATCH_SIZE = 500
 
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 REQUEST_TIMEOUT_SECONDS = 2400
-REQUEST_RETRY_COUNT = 3
+REQUEST_RETRY_COUNT = 30
+REQUEST_RETRY_DELAY_SECONDS = 2
+REQUEST_RETRY_DELAY_MAX_SECONDS = 60
+NETWORK_RETRY_WAIT_SECONDS = 5
 TEMP_DIFF_PREFIX = "fancymenu_translation_diff_"
 PROGRESS_BAR_WIDTH = 28
 UI_REFRESH_INTERVAL_SECONDS = 1.0
@@ -61,6 +67,8 @@ USER_PROMPT_TEMPLATE = """Please translate the following localization to {target
 
 MODE_UPDATE_EXISTING = "1"
 MODE_REGENERATE = "2"
+LANGUAGE_SCOPE_ALL = "1"
+LANGUAGE_SCOPE_SELECTED = "2"
 OPENROUTER_TOKENS_ENTRY_NAME = "openrouter_mod_localization_key"
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -71,6 +79,14 @@ SOURCE_FILE_REPO_PATH = SOURCE_FILE_PATH.relative_to(SCRIPT_DIR).as_posix()
 
 
 class ScriptError(RuntimeError):
+    pass
+
+
+class RetryableRequestError(ScriptError):
+    pass
+
+
+class NetworkUnavailableError(RetryableRequestError):
     pass
 
 
@@ -498,6 +514,48 @@ def prompt_mode() -> str:
         print("Please enter 1 or 2.")
 
 
+def prompt_target_languages() -> list[str]:
+    available_languages = [
+        language_code
+        for language_code in TARGET_LANGUAGE_CODES
+        if language_code != SOURCE_LANGUAGE_CODE
+    ]
+
+    print()
+    print("Choose which target languages should be processed:")
+    print("  1) All configured target languages")
+    print("  2) Only a selected subset")
+    print(f"Configured target languages: {', '.join(available_languages)}")
+    print()
+
+    while True:
+        choice = input("Select 1 or 2: ").strip()
+        if choice == LANGUAGE_SCOPE_ALL:
+            return available_languages
+        if choice == LANGUAGE_SCOPE_SELECTED:
+            break
+        print("Please enter 1 or 2.")
+
+    print()
+    print("Enter a comma-separated list of target language codes to process.")
+    print(f"Available target languages: {', '.join(available_languages)}")
+
+    while True:
+        raw_value = input("Target languages: ").strip()
+        raw_codes = [part.strip().lower() for part in raw_value.split(",") if part.strip()]
+        if not raw_codes:
+            print("Enter at least one target language code.")
+            continue
+
+        invalid_codes = sorted({code for code in raw_codes if code not in available_languages})
+        if invalid_codes:
+            print(f"Unknown target language codes: {', '.join(invalid_codes)}")
+            continue
+
+        selected_codes = {code for code in raw_codes}
+        return [code for code in available_languages if code in selected_codes]
+
+
 def prompt_commit_reference() -> str:
     print()
     print("Enter the git commit hash or revision to compare against the current en_us.json.")
@@ -739,6 +797,43 @@ def build_translation_request(language_code: str, batch_entries: OrderedDict[str
     }
 
 
+def is_network_related_exception(exc: BaseException) -> bool:
+    if isinstance(
+        exc,
+        (
+            NetworkUnavailableError,
+            TimeoutError,
+            socket.timeout,
+            ConnectionError,
+            ConnectionResetError,
+            ConnectionAbortedError,
+            ConnectionRefusedError,
+            BrokenPipeError,
+            http.client.IncompleteRead,
+            ssl.SSLError,
+        ),
+    ):
+        return True
+
+    if isinstance(exc, urllib.error.URLError):
+        reason = exc.reason
+        if isinstance(reason, BaseException):
+            return is_network_related_exception(reason)
+        return True
+
+    if isinstance(exc, OSError):
+        return True
+
+    return False
+
+
+def wrap_request_exception(prefix: str, exc: BaseException) -> RetryableRequestError:
+    message = f"{prefix}: {exc}"
+    if is_network_related_exception(exc):
+        return NetworkUnavailableError(message)
+    return RetryableRequestError(message)
+
+
 def send_openrouter_request(
     request_body: dict[str, object],
     openrouter_api_key: str,
@@ -759,14 +854,26 @@ def send_openrouter_request(
     try:
         with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT_SECONDS) as response:
             content_type = response.info().get("Content-Type", "").lower()
-            if "text/event-stream" in content_type:
-                tracker.set_batch_stage(
-                    "Streaming model response",
-                    f"{stream_label} stream opened",
-                )
-                return read_openrouter_stream_response(response, tracker)
+            try:
+                if "text/event-stream" in content_type:
+                    tracker.set_batch_stage(
+                        "Streaming model response",
+                        f"{stream_label} stream opened",
+                    )
+                    return read_openrouter_stream_response(response, tracker)
 
-            response_text = response.read().decode("utf-8")
+                response_text = response.read().decode("utf-8")
+            except ScriptError as exc:
+                raise RetryableRequestError(str(exc)) from exc
+            except (
+                TimeoutError,
+                socket.timeout,
+                ConnectionError,
+                OSError,
+                http.client.IncompleteRead,
+                ssl.SSLError,
+            ) as exc:
+                raise wrap_request_exception("OpenRouter response read failed", exc) from exc
     except urllib.error.HTTPError as exc:
         error_text = exc.read().decode("utf-8", errors="replace")
         if request_body.get("response_format") and should_retry_without_json_mode(exc.code, error_text):
@@ -778,19 +885,27 @@ def send_openrouter_request(
                 tracker,
                 f"{stream_label} fallback without JSON mode",
             )
-        raise ScriptError(
+        raise RetryableRequestError(
             f"OpenRouter request failed with HTTP {exc.code}.\n{error_text}"
         ) from exc
-    except urllib.error.URLError as exc:
-        raise ScriptError(f"OpenRouter request failed: {exc}") from exc
+    except (
+        urllib.error.URLError,
+        TimeoutError,
+        socket.timeout,
+        ConnectionError,
+        OSError,
+        http.client.IncompleteRead,
+        ssl.SSLError,
+    ) as exc:
+        raise wrap_request_exception("OpenRouter request failed", exc) from exc
 
     try:
         parsed = json.loads(response_text)
     except json.JSONDecodeError as exc:
-        raise ScriptError(f"OpenRouter returned invalid JSON.\n{response_text}") from exc
+        raise RetryableRequestError(f"OpenRouter returned invalid JSON.\n{response_text}") from exc
 
     if not isinstance(parsed, dict):
-        raise ScriptError("OpenRouter returned a non-object response.")
+        raise RetryableRequestError("OpenRouter returned a non-object response.")
 
     extracted_text = extract_response_text(parsed)
     tracker.update_stream_output(extracted_text)
@@ -943,7 +1058,8 @@ def translate_batch(
     batch_label = f"{language_code}.json batch {batch_index}/{total_batches}"
     last_error: Exception | None = None
 
-    for attempt in range(1, REQUEST_RETRY_COUNT + 1):
+    attempt = 1
+    while attempt <= REQUEST_RETRY_COUNT:
         tracker.start_batch(
             batch_index,
             total_batches,
@@ -985,14 +1101,29 @@ def translate_batch(
                 )
 
             return OrderedDict((key, translated_entries[key]) for key in expected_keys)
+        except NetworkUnavailableError as exc:
+            last_error = exc
+            tracker.set_batch_stage(
+                "Waiting for network connection to recover",
+                f"{batch_label} paused: {exc} | retrying in {NETWORK_RETRY_WAIT_SECONDS}s",
+            )
+            time.sleep(NETWORK_RETRY_WAIT_SECONDS)
+            continue
         except Exception as exc:
             last_error = exc
             if attempt < REQUEST_RETRY_COUNT:
+                retry_delay = min(
+                    REQUEST_RETRY_DELAY_MAX_SECONDS,
+                    max(1, attempt * REQUEST_RETRY_DELAY_SECONDS),
+                )
                 tracker.set_batch_stage(
                     "Retrying failed batch",
-                    f"{batch_label} failed: {exc}",
+                    f"{batch_label} failed: {exc} | retrying in {retry_delay}s",
                 )
-                time.sleep(attempt * 2)
+                time.sleep(retry_delay)
+                attempt += 1
+                continue
+            break
 
     assert last_error is not None
     raise ScriptError(
@@ -1198,13 +1329,18 @@ def process_file_plans(
     return results
 
 
-def print_summary(results: dict[str, str], tracker: ProgressTracker) -> None:
+def print_summary(
+    results: dict[str, str],
+    tracker: ProgressTracker,
+    selected_language_codes: list[str],
+) -> None:
     print()
     print("Summary:")
     print(f"  Mode: {tracker.mode_label}")
     print(f"  Elapsed: {format_duration(time.time() - tracker.start_time)}")
     print(f"  Total translated keys: {tracker.completed_entries:,}/{tracker.total_entries:,}")
-    for language_code in TARGET_LANGUAGE_CODES:
+    print(f"  Target scope: {', '.join(selected_language_codes)}")
+    for language_code in selected_language_codes:
         result = results.get(language_code)
         if result is None:
             continue
@@ -1420,13 +1556,22 @@ def main() -> int:
             )
 
         current_source = load_json_file(SOURCE_FILE_PATH)
+        mode = prompt_mode()
+        selected_language_codes = prompt_target_languages()
         target_paths = {
             language_code: RESOLVED_LANG_DIRECTORY / f"{language_code}.json"
-            for language_code in TARGET_LANGUAGE_CODES
-            if language_code != SOURCE_LANGUAGE_CODE
+            for language_code in selected_language_codes
         }
+        available_target_language_count = len(
+            [language_code for language_code in TARGET_LANGUAGE_CODES if language_code != SOURCE_LANGUAGE_CODE]
+        )
+        scope_label = (
+            f"Target scope: all configured languages ({len(selected_language_codes)})"
+            if len(selected_language_codes) == available_target_language_count
+            else f"Target scope: selected languages ({len(selected_language_codes)})"
+        )
+        scope_languages_line = f"Targets: {', '.join(selected_language_codes)}"
 
-        mode = prompt_mode()
         if mode == MODE_UPDATE_EXISTING:
             revision = prompt_commit_reference()
             old_source = load_source_json_from_git(revision)
@@ -1444,6 +1589,8 @@ def main() -> int:
                 skipped_count = sum(1 for plan in plans if plan.skipped)
                 overview_lines = [
                     f"Source: {SOURCE_FILE_PATH.name} | Revision diff vs {revision}",
+                    scope_label,
+                    scope_languages_line,
                     (
                         f"Model: {OPENROUTER_MODEL} | Batch size: {BATCH_SIZE:,} | "
                         f"Temp diff: {temp_diff_path.name} | API key source: {api_key_source}"
@@ -1470,7 +1617,7 @@ def main() -> int:
 
             tracker.finish_run("All update-mode files finished")
             tracker.shutdown()
-            print_summary(results, tracker)
+            print_summary(results, tracker, selected_language_codes)
             return 0
 
         plans = build_regenerate_file_plans(current_source, target_paths)
@@ -1478,6 +1625,8 @@ def main() -> int:
         new_file_count = sum(1 for plan in plans if not plan.target_existed_before_run)
         overview_lines = [
             f"Source: {SOURCE_FILE_PATH.name} | Full regeneration from current English source",
+            scope_label,
+            scope_languages_line,
             f"Model: {OPENROUTER_MODEL} | Batch size: {BATCH_SIZE:,} | API key source: {api_key_source}",
             (
                 "Run stats: "
@@ -1492,7 +1641,7 @@ def main() -> int:
 
         tracker.finish_run("All regenerate-mode files finished")
         tracker.shutdown()
-        print_summary(results, tracker)
+        print_summary(results, tracker, selected_language_codes)
         return 0
     except KeyboardInterrupt:
         if tracker is not None:
