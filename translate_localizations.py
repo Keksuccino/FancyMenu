@@ -31,7 +31,7 @@ OPENROUTER_MODEL = "google/gemini-3.1-pro-preview"
 BATCH_SIZE = 500
 
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
-REQUEST_TIMEOUT_SECONDS = 240
+REQUEST_TIMEOUT_SECONDS = 2400
 REQUEST_RETRY_COUNT = 3
 TEMP_DIFF_PREFIX = "fancymenu_translation_diff_"
 PROGRESS_BAR_WIDTH = 28
