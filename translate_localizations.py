@@ -31,6 +31,7 @@ TARGET_LANGUAGE_CODES = [
     "ru_ru",
     "zh_cn",
     "ko_kr",
+    "pl_pl",
 ]
 OPENROUTER_API_KEY = "<openrouter_api_key_here>"
 OPENROUTER_MODEL = "google/gemini-3.1-pro-preview"
@@ -61,7 +62,7 @@ ANSI_CYAN = "\x1b[36m"
 ANSI_WHITE = "\x1b[37m"
 ANSI_BRIGHT_BLACK = "\x1b[90m"
 
-SYSTEM_PROMPT = """You are a professional Minecraft mod localization translator. You translate Minecraft-style localization JSONs from English to the target language. You only translate the value, never the translation keys. You never remove or add lines. You translate every line of the JSON to the target language and return back the translated version of the received JSON. Make sure you return ONLY THE TRANSLATED JSON as valid JSON, no other text. You translate mod localizations to natural sounding text in the target language, which means you sometimes swap words for better fitting ones in the target language, instead of translating directly. You also make sure to use proper gaming and Minecraft slang when translating, which means that when the target language commonly uses terms for specific words that are not the perfect direct translation, but would work best, then you will use this term, to make the translation sound more natural and high-quality. Use an informal tone for translations, like the 'Du' tone in German."""
+SYSTEM_PROMPT = """You are a professional Minecraft mod localization translator. You translate Minecraft-style localization JSONs from English to the target language. You only translate the value, never the translation keys. You never remove or add lines. You translate every line of the JSON to the target language and return back the translated version of the received JSON. Make sure you return ONLY THE TRANSLATED JSON as valid JSON, no other text. You translate mod localizations to natural sounding localizations in the target language. You use proper gaming and Minecraft slang when translating, which means that when the target language commonly uses terms for specific words that are not the perfect direct translation, but would work best, then you will use this term, to make the translation sound more natural and high-quality. Use a chill (non-formal) tone for translations, like using 'Du' in German, for example. The translations should fit the typical wording and style for Vanilla Minecraft localizations, meaning a friendly and chill tone, but still professional."""
 USER_PROMPT_TEMPLATE = """Please translate the following localization to {target_language_code}. Return ONLY THE TRANSLATED JSON, no other text! Here is the JSON:
 
 {json_localization_line_batch}"""
