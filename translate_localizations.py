@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import os
+import re
 import shutil
 import subprocess
 import sys
@@ -38,6 +40,19 @@ TEMP_DIFF_PREFIX = "fancymenu_translation_diff_"
 PROGRESS_BAR_WIDTH = 28
 UI_REFRESH_INTERVAL_SECONDS = 1.0
 STREAM_RENDER_THROTTLE_SECONDS = 0.15
+DASHBOARD_MAX_WIDTH = 150
+
+ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*m")
+ANSI_RESET = "\x1b[0m"
+ANSI_BOLD = "\x1b[1m"
+ANSI_RED = "\x1b[31m"
+ANSI_GREEN = "\x1b[32m"
+ANSI_YELLOW = "\x1b[33m"
+ANSI_BLUE = "\x1b[34m"
+ANSI_MAGENTA = "\x1b[35m"
+ANSI_CYAN = "\x1b[36m"
+ANSI_WHITE = "\x1b[37m"
+ANSI_BRIGHT_BLACK = "\x1b[90m"
 
 SYSTEM_PROMPT = """You are a professional Minecraft mod localization translator. You translate Minecraft-style localization JSONs from English to the target language. You only translate the value, never the translation keys. You never remove or add lines. You translate every line of the JSON to the target language and return back the translated version of the received JSON. Make sure you return ONLY THE TRANSLATED JSON as valid JSON, no other text. You translate mod localizations to natural sounding text in the target language, which means you sometimes swap words for better fitting ones in the target language, instead of translating directly. You also make sure to use proper gaming and Minecraft slang when translating, which means that when the target language commonly uses terms for specific words that are not the perfect direct translation, but would work best, then you will use this term, to make the translation sound more natural and high-quality. Use an informal tone for translations, like the 'Du' tone in German."""
 USER_PROMPT_TEMPLATE = """Please translate the following localization to {target_language_code}. Return ONLY THE TRANSLATED JSON, no other text! Here is the JSON:
@@ -92,6 +107,7 @@ class FilePlan:
 class TerminalRenderer:
     def __init__(self) -> None:
         self.dynamic = sys.stdout.isatty()
+        self.supports_color = self.dynamic and os.environ.get("TERM") != "dumb" and "NO_COLOR" not in os.environ
         self.last_line_count = 0
 
     def render(self, lines: list[str]) -> None:
@@ -331,85 +347,133 @@ class ProgressTracker:
 
     def build_lines(self) -> list[str]:
         elapsed = format_duration(time.time() - self.start_time)
+        width = get_dashboard_width()
         lines = [
-            fit_text("FancyMenu localization translator"),
-            fit_text(f"Mode: {self.mode_label} | Action: {self.current_action} | Elapsed: {elapsed}"),
+            make_box_top(
+                "FancyMenu Localization Translator",
+                width,
+                self.renderer.supports_color,
+            ),
+            make_box_content(
+                format_status_summary(
+                    self.mode_label,
+                    self.current_action,
+                    elapsed,
+                    self.renderer.supports_color,
+                ),
+                width,
+            ),
         ]
 
+        lines.append(make_box_separator("Overview", width, self.renderer.supports_color))
         for overview_line in self.overview_lines:
-            lines.append(fit_text(overview_line))
+            lines.append(make_box_content(overview_line, width))
 
         if self.current_plan is None:
-            current_file_label = "Current file: none"
-            remaining_languages = ", ".join(plan.language_code for plan in self.plans[self.completed_files :]) or "none"
-            file_stats_line = "File stats: waiting"
+            current_file_label = "Current: none"
+            target_path_line = "Target : none"
+            remaining_languages = "Remaining: none"
+            file_stats_line = "Stats  : waiting"
         else:
             current_file_label = (
-                f"Current file: {self.current_plan.language_code}.json "
+                f"Current: {self.current_plan.language_code}.json "
                 f"({self.current_plan.file_number}/{self.total_files})"
             )
-            remaining_languages = ", ".join(
-                plan.language_code
-                for plan in self.plans[self.current_plan.file_number :]
-            ) or "none"
+            target_path_line = f"Target : {self.current_plan.path.name}"
+            remaining_languages = format_remaining_languages(
+                self.plans[self.current_plan.file_number :]
+            )
             file_stats_line = describe_file_stats(self.mode_label, self.current_plan)
 
         files_summary = (
-            f"Files done: {self.completed_files}/{self.total_files} | "
-            f"Active files: {self.active_files} | "
-            f"Remaining after current: {remaining_languages}"
+            f"Files   : {self.completed_files}/{self.total_files} done  •  "
+            f"{self.active_files} active  •  {remaining_languages}"
         )
 
-        total_progress = format_progress_line("Total", self.completed_entries, self.total_entries)
+        total_progress = format_progress_line(
+            "Total",
+            self.completed_entries,
+            self.total_entries,
+            self.renderer.supports_color,
+            ANSI_CYAN,
+        )
         current_total = 0 if self.current_plan is None else self.current_plan.entries_to_translate
-        file_progress = format_progress_line("File ", self.current_file_entries_done, current_total)
+        file_progress = format_progress_line(
+            "File",
+            self.current_file_entries_done,
+            current_total,
+            self.renderer.supports_color,
+            ANSI_GREEN,
+        )
 
         if self.current_plan is None:
-            batch_line = "Batch: none"
-            batch_stream_line = "Batch progress: waiting for stream output"
-            batch_stream_meta_line = "Stream info: waiting"
-            target_path_line = "Target path: none"
+            batch_line = "Batch  : none"
+            batch_stream_line = format_progress_line(
+                "Batch",
+                0,
+                0,
+                self.renderer.supports_color,
+                ANSI_MAGENTA,
+            )
+            batch_stream_meta_line = "Stream : waiting"
         else:
             if self.current_batch_total > 0:
                 batch_elapsed = format_duration(time.time() - self.current_batch_started_at)
                 batch_line = (
-                    f"Batch: {self.current_batch_index}/{self.current_batch_total} | "
-                    f"Size: {self.current_batch_size:,} | "
-                    f"Attempt: {self.current_attempt}/{REQUEST_RETRY_COUNT} | "
-                    f"Elapsed: {batch_elapsed}"
+                    f"Batch  : {self.current_batch_index}/{self.current_batch_total}  •  "
+                    f"{self.current_batch_size:,} keys  •  "
+                    f"attempt {self.current_attempt}/{REQUEST_RETRY_COUNT}  •  "
+                    f"{batch_elapsed}"
                 )
                 batch_stream_line = format_progress_line(
                     "Batch",
                     self.current_batch_stream_line_count,
                     self.current_batch_stream_line_total,
+                    self.renderer.supports_color,
+                    ANSI_MAGENTA,
                 )
-                comment_suffix = ""
-                if self.current_batch_stream_comment:
-                    comment_suffix = f" | Last stream event: {self.current_batch_stream_comment}"
-                batch_stream_meta_line = (
-                    f"Stream info: chunks {self.current_batch_stream_chunk_count:,} | "
-                    f"chars {self.current_batch_stream_character_count:,}{comment_suffix}"
+                batch_stream_meta_line = format_stream_meta_line(
+                    self.current_batch_stream_chunk_count,
+                    self.current_batch_stream_character_count,
+                    self.current_batch_stream_comment,
+                    self.renderer.supports_color,
                 )
             else:
-                batch_line = "Batch: not started"
-                batch_stream_line = "Batch progress: waiting for stream output"
-                batch_stream_meta_line = "Stream info: waiting"
-            target_path_line = f"Target path: {self.current_plan.path.name}"
+                batch_line = "Batch  : not started"
+                batch_stream_line = format_progress_line(
+                    "Batch",
+                    0,
+                    0,
+                    self.renderer.supports_color,
+                    ANSI_MAGENTA,
+                )
+                batch_stream_meta_line = "Stream : waiting"
 
         lines.extend(
             [
-                fit_text(current_file_label),
-                fit_text(files_summary),
-                fit_text(total_progress),
-                fit_text(file_progress),
-                fit_text(file_stats_line),
-                fit_text(target_path_line),
-                fit_text(batch_line),
-                fit_text(batch_stream_line),
-                fit_text(batch_stream_meta_line),
-                fit_text(f"Status note: {self.current_note}"),
-                fit_text(f"Last event: {self.last_event}"),
-                fit_text(f"Last stream line: {self.last_stream_line}"),
+                make_box_separator("Queue", width, self.renderer.supports_color),
+                make_box_content(current_file_label, width),
+                make_box_content(target_path_line, width),
+                make_box_content(files_summary, width),
+                make_box_separator("Progress", width, self.renderer.supports_color),
+                make_box_content(total_progress, width),
+                make_box_content(file_progress, width),
+                make_box_content(batch_stream_line, width),
+                make_box_separator("Details", width, self.renderer.supports_color),
+                make_box_content(file_stats_line, width),
+                make_box_content(batch_line, width),
+                make_box_content(batch_stream_meta_line, width),
+                make_box_separator("Activity", width, self.renderer.supports_color),
+                make_box_content(format_labeled_value("Status", self.current_note), width),
+                make_box_content(format_labeled_value("Event", self.last_event), width),
+                make_box_bottom(
+                    format_labeled_value(
+                        "Last stream line",
+                        self.last_stream_line,
+                    ),
+                    width,
+                    self.renderer.supports_color,
+                ),
             ]
         )
         return lines
@@ -1149,26 +1213,26 @@ def print_summary(results: dict[str, str], tracker: ProgressTracker) -> None:
 
 def describe_file_stats(mode_label: str, plan: FilePlan) -> str:
     if plan.skipped:
-        return f"File stats: skipped | {plan.skip_reason}"
+        return f"Stats  : skipped  •  {plan.skip_reason}"
 
     if plan.force_full_rewrite:
         if plan.target_existed_before_run:
-            return f"File stats: replace existing file | full translate {plan.entries_to_translate:,} keys"
-        return f"File stats: new file | full translate {plan.entries_to_translate:,} keys"
+            return f"Stats  : replace existing file  •  full translate {plan.entries_to_translate:,} keys"
+        return f"Stats  : new file  •  full translate {plan.entries_to_translate:,} keys"
 
     if plan.existing_entries is None:
-        return f"File stats: new file | full translate {plan.entries_to_translate:,} keys"
+        return f"Stats  : new file  •  full translate {plan.entries_to_translate:,} keys"
 
     if mode_label == "update-existing":
         return (
-            "File stats: "
-            f"patch {plan.entries_to_translate:,} | "
-            f"english added {plan.added_keys_count:,} | "
-            f"english edited {plan.edited_keys_count:,} | "
+            "Stats  : "
+            f"patch {plan.entries_to_translate:,}  •  "
+            f"english added {plan.added_keys_count:,}  •  "
+            f"english edited {plan.edited_keys_count:,}  •  "
             f"english removed {plan.obsolete_keys_count:,}"
         )
 
-    return f"File stats: new file | full translate {plan.entries_to_translate:,} keys"
+    return f"Stats  : new file  •  full translate {plan.entries_to_translate:,} keys"
 
 
 def format_duration(seconds: float) -> str:
@@ -1178,10 +1242,16 @@ def format_duration(seconds: float) -> str:
     return f"{hours:02}:{minutes:02}:{secs:02}"
 
 
-def format_progress_line(label: str, current: int, total: int) -> str:
+def format_progress_line(
+    label: str,
+    current: int,
+    total: int,
+    supports_color: bool,
+    accent_color: str,
+) -> str:
     if total <= 0:
-        ratio = 1.0
-        filled = PROGRESS_BAR_WIDTH
+        ratio = 0.0
+        filled = 0
     else:
         ratio = max(0.0, min(1.0, current / total))
         filled = int(ratio * PROGRESS_BAR_WIDTH)
@@ -1190,19 +1260,152 @@ def format_progress_line(label: str, current: int, total: int) -> str:
 
     empty = PROGRESS_BAR_WIDTH - filled
     percent = ratio * 100.0
-    bar = f"[{'#' * filled}{'-' * empty}]"
-    return f"{label} progress: {bar} {current:,}/{total:,} ({percent:5.1f}%)"
+    filled_bar = "█" * filled
+    empty_bar = "░" * empty
+
+    if supports_color and filled_bar:
+        filled_bar = colorize(filled_bar, accent_color, bold=True)
+    if supports_color and empty_bar:
+        empty_bar = colorize(empty_bar, ANSI_BRIGHT_BLACK)
+
+    bar = f"{filled_bar}{empty_bar}"
+    label_text = colorize(f"{label:<5}", ANSI_WHITE, bold=True) if supports_color else f"{label:<5}"
+    return f"{label_text} {bar}  {current:,}/{total:,}  {percent:5.1f}%"
 
 
-def fit_text(text: str) -> str:
+def get_dashboard_width() -> int:
     width = shutil.get_terminal_size((140, 24)).columns
+    return max(20, min(width, DASHBOARD_MAX_WIDTH))
+
+
+def strip_ansi(text: str) -> str:
+    return ANSI_ESCAPE_RE.sub("", text)
+
+
+def visible_len(text: str) -> int:
+    return len(strip_ansi(text))
+
+
+def colorize(text: str, *codes: str, bold: bool = False) -> str:
+    if not codes and not bold:
+        return text
+    prefix = ""
+    if bold:
+        prefix += ANSI_BOLD
+    prefix += "".join(codes)
+    return f"{prefix}{text}{ANSI_RESET}"
+
+
+def fit_text(text: str, width: int | None = None) -> str:
+    width = width or get_dashboard_width()
     if width < 20:
+        return strip_ansi(text)
+
+    if visible_len(text) <= width:
         return text
 
-    if len(text) <= width - 1:
-        return text
+    plain_text = strip_ansi(text)
+    if width <= 3:
+        return plain_text[:width]
+    return plain_text[: width - 3] + "..."
 
-    return text[: width - 4] + "..."
+
+def pad_visible(text: str, width: int) -> str:
+    text = fit_text(text, width)
+    padding = max(0, width - visible_len(text))
+    return f"{text}{' ' * padding}"
+
+
+def sanitize_inline_text(text: str) -> str:
+    cleaned = " ".join(text.split())
+    return cleaned if cleaned else "-"
+
+
+def format_labeled_value(label: str, value: str) -> str:
+    return f"{label:<16}: {sanitize_inline_text(value)}"
+
+
+def format_remaining_languages(plans: list[FilePlan]) -> str:
+    if not plans:
+        return "Remaining: none"
+    languages = ", ".join(plan.language_code for plan in plans)
+    return f"Remaining: {len(plans)} file(s)  •  {languages}"
+
+
+def format_status_summary(
+    mode_label: str,
+    current_action: str,
+    elapsed: str,
+    supports_color: bool,
+) -> str:
+    mode_text = colorize(mode_label, ANSI_CYAN, bold=True) if supports_color else mode_label
+    action_text = style_action(current_action, supports_color)
+    elapsed_text = colorize(elapsed, ANSI_YELLOW, bold=True) if supports_color else elapsed
+    return f"Mode {mode_text}  •  Action {action_text}  •  Elapsed {elapsed_text}"
+
+
+def style_action(action: str, supports_color: bool) -> str:
+    if not supports_color:
+        return action
+
+    lower_action = action.lower()
+    if "complete" in lower_action or "finished" in lower_action:
+        return colorize(action, ANSI_GREEN, bold=True)
+    if "stream" in lower_action:
+        return colorize(action, ANSI_BLUE, bold=True)
+    if "wait" in lower_action or "prepar" in lower_action:
+        return colorize(action, ANSI_YELLOW, bold=True)
+    if "error" in lower_action or "cancel" in lower_action:
+        return colorize(action, ANSI_RED, bold=True)
+    return colorize(action, ANSI_MAGENTA, bold=True)
+
+
+def format_stream_meta_line(
+    chunk_count: int,
+    character_count: int,
+    stream_comment: str,
+    supports_color: bool,
+) -> str:
+    base = f"Stream : {chunk_count:,} chunks  •  {character_count:,} chars"
+    if stream_comment:
+        comment = sanitize_inline_text(stream_comment)
+        if supports_color:
+            comment = colorize(comment, ANSI_BLUE, bold=True)
+        return f"{base}  •  event {comment}"
+    return base
+
+
+def make_box_top(title: str, width: int, supports_color: bool) -> str:
+    title_text = f" {title} "
+    if supports_color:
+        title_text = colorize(title_text, ANSI_CYAN, bold=True)
+    return make_border_line("┌", "┐", title_text, width)
+
+
+def make_box_separator(title: str, width: int, supports_color: bool) -> str:
+    title_text = f" {title} "
+    if supports_color:
+        title_text = colorize(title_text, ANSI_WHITE, bold=True)
+    return make_border_line("├", "┤", title_text, width)
+
+
+def make_box_bottom(text: str, width: int, supports_color: bool) -> str:
+    footer_text = f" {text} "
+    if supports_color:
+        footer_text = colorize(footer_text, ANSI_GREEN, bold=True)
+    return make_border_line("└", "┘", footer_text, width)
+
+
+def make_border_line(left: str, right: str, content: str, width: int) -> str:
+    inner_width = max(10, width - 2)
+    plain_content = fit_text(content, inner_width)
+    fill_count = max(0, inner_width - visible_len(plain_content))
+    return f"{left}{plain_content}{'─' * fill_count}{right}"
+
+
+def make_box_content(text: str, width: int) -> str:
+    inner_width = max(10, width - 4)
+    return f"│ {pad_visible(text, inner_width)} │"
 
 
 def main() -> int:
