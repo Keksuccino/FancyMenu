@@ -39,6 +39,7 @@ BATCH_SIZE = 500
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 REQUEST_TIMEOUT_SECONDS = 2400
 REQUEST_RETRY_COUNT = 30
+BATCH_SPLIT_AFTER_FAILED_ATTEMPTS = 5
 REQUEST_RETRY_DELAY_SECONDS = 2
 REQUEST_RETRY_DELAY_MAX_SECONDS = 60
 NETWORK_RETRY_WAIT_SECONDS = 5
@@ -88,6 +89,16 @@ class RetryableRequestError(ScriptError):
 
 class NetworkUnavailableError(RetryableRequestError):
     pass
+
+
+class BatchSplitRequest(ScriptError):
+    def __init__(
+        self,
+        split_batches: list[OrderedDict[str, str]],
+        message: str,
+    ) -> None:
+        super().__init__(message)
+        self.split_batches = split_batches
 
 
 @dataclass
@@ -722,6 +733,21 @@ def chunk_entries(entries: OrderedDict[str, str], batch_size: int) -> list[Order
     ]
 
 
+def split_batch_entries(entries: OrderedDict[str, str]) -> list[OrderedDict[str, str]] | None:
+    items = list(entries.items())
+    if len(items) <= 1:
+        return None
+
+    midpoint = len(items) // 2
+    if midpoint <= 0 or midpoint >= len(items):
+        return None
+
+    return [
+        OrderedDict(items[:midpoint]),
+        OrderedDict(items[midpoint:]),
+    ]
+
+
 def extract_response_text(response_json: dict[str, object]) -> str:
     choices = response_json.get("choices")
     if not isinstance(choices, list) or not choices:
@@ -1111,6 +1137,27 @@ def translate_batch(
             continue
         except Exception as exc:
             last_error = exc
+            if (
+                attempt >= BATCH_SPLIT_AFTER_FAILED_ATTEMPTS
+                and attempt < REQUEST_RETRY_COUNT
+            ):
+                split_batches = split_batch_entries(batch_entries)
+                if split_batches is not None:
+                    split_sizes = ", ".join(f"{len(batch):,}" for batch in split_batches)
+                    tracker.set_batch_stage(
+                        "Splitting failed batch into smaller requests",
+                        (
+                            f"{batch_label} failed {attempt} times; "
+                            f"splitting {len(batch_entries):,} keys into {split_sizes}"
+                        ),
+                    )
+                    raise BatchSplitRequest(
+                        split_batches,
+                        (
+                            f"{batch_label} failed {attempt} times and was split into "
+                            f"{split_sizes} keys"
+                        ),
+                    ) from exc
             if attempt < REQUEST_RETRY_COUNT:
                 retry_delay = min(
                     REQUEST_RETRY_DELAY_MAX_SECONDS,
@@ -1141,20 +1188,31 @@ def translate_entries(
         tracker.set_action("No translation request needed", f"{language_code}.json has 0 keys to translate")
         return OrderedDict()
 
-    batches = chunk_entries(entries, BATCH_SIZE)
+    pending_batches = chunk_entries(entries, BATCH_SIZE)
     translated_entries: OrderedDict[str, str] = OrderedDict()
+    completed_batches = 0
 
-    for batch_index, batch_entries in enumerate(batches, start=1):
-        translated_batch = translate_batch(
-            language_code=language_code,
-            batch_entries=batch_entries,
-            batch_index=batch_index,
-            total_batches=len(batches),
-            tracker=tracker,
-            openrouter_api_key=openrouter_api_key,
-        )
+    while pending_batches:
+        batch_entries = pending_batches.pop(0)
+        batch_index = completed_batches + 1
+        total_batches = completed_batches + 1 + len(pending_batches)
+
+        try:
+            translated_batch = translate_batch(
+                language_code=language_code,
+                batch_entries=batch_entries,
+                batch_index=batch_index,
+                total_batches=total_batches,
+                tracker=tracker,
+                openrouter_api_key=openrouter_api_key,
+            )
+        except BatchSplitRequest as exc:
+            pending_batches = [*exc.split_batches, *pending_batches]
+            continue
+
         translated_entries.update(translated_batch)
         tracker.finish_batch(len(batch_entries))
+        completed_batches += 1
 
     return translated_entries
 
@@ -1184,6 +1242,9 @@ def validate_configuration(openrouter_api_key: str) -> None:
 
     if BATCH_SIZE <= 0:
         raise ScriptError("BATCH_SIZE must be greater than 0.")
+
+    if BATCH_SPLIT_AFTER_FAILED_ATTEMPTS <= 0:
+        raise ScriptError("BATCH_SPLIT_AFTER_FAILED_ATTEMPTS must be greater than 0.")
 
     if not RESOLVED_LANG_DIRECTORY.is_dir():
         raise ScriptError(f"Language directory does not exist: {RESOLVED_LANG_DIRECTORY}")
