@@ -43,8 +43,10 @@ USER_PROMPT_TEMPLATE = """Please translate the following localization to {target
 
 MODE_UPDATE_EXISTING = "1"
 MODE_REGENERATE = "2"
+OPENROUTER_TOKENS_ENTRY_NAME = "openrouter_mod_localization_key"
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+TOKENS_FILE_PATH = (SCRIPT_DIR / "../../../.TOKENS").resolve()
 RESOLVED_LANG_DIRECTORY = (SCRIPT_DIR / LANG_DIRECTORY).resolve()
 SOURCE_FILE_PATH = RESOLVED_LANG_DIRECTORY / f"{SOURCE_LANGUAGE_CODE}.json"
 SOURCE_FILE_REPO_PATH = SOURCE_FILE_PATH.relative_to(SCRIPT_DIR).as_posix()
@@ -374,6 +376,29 @@ def write_json_file(path: Path, data: OrderedDict[str, str]) -> None:
         handle.write("\n")
 
 
+def resolve_openrouter_api_key() -> tuple[str, str]:
+    if TOKENS_FILE_PATH.is_file():
+        try:
+            with TOKENS_FILE_PATH.open("r", encoding="utf-8") as handle:
+                for raw_line in handle:
+                    line = raw_line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+
+                    entry_name, separator, entry_value = line.partition(":")
+                    if separator and entry_name.strip() == OPENROUTER_TOKENS_ENTRY_NAME:
+                        token = entry_value.strip()
+                        if not token:
+                            raise ScriptError(
+                                f"{TOKENS_FILE_PATH} contains an empty {OPENROUTER_TOKENS_ENTRY_NAME} entry."
+                            )
+                        return token, ".TOKENS file"
+        except OSError as exc:
+            raise ScriptError(f"Failed to read tokens file: {TOKENS_FILE_PATH}\n{exc}") from exc
+
+    return OPENROUTER_API_KEY.strip(), "script variable"
+
+
 def load_source_json_from_git(revision: str) -> OrderedDict[str, str]:
     result = run_git_command(["show", f"{revision}:{SOURCE_FILE_REPO_PATH}"], check=False)
     if result.returncode != 0:
@@ -500,13 +525,16 @@ def build_translation_request(language_code: str, batch_entries: OrderedDict[str
     }
 
 
-def send_openrouter_request(request_body: dict[str, object]) -> dict[str, object]:
+def send_openrouter_request(
+    request_body: dict[str, object],
+    openrouter_api_key: str,
+) -> dict[str, object]:
     encoded_body = json.dumps(request_body, ensure_ascii=False).encode("utf-8")
     request = urllib.request.Request(
         OPENROUTER_API_URL,
         data=encoded_body,
         headers={
-            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Authorization": f"Bearer {openrouter_api_key}",
             "Content-Type": "application/json",
         },
         method="POST",
@@ -520,7 +548,7 @@ def send_openrouter_request(request_body: dict[str, object]) -> dict[str, object
         if request_body.get("response_format") and should_retry_without_json_mode(exc.code, error_text):
             fallback_body = dict(request_body)
             fallback_body.pop("response_format", None)
-            return send_openrouter_request(fallback_body)
+            return send_openrouter_request(fallback_body, openrouter_api_key)
         raise ScriptError(
             f"OpenRouter request failed with HTTP {exc.code}.\n{error_text}"
         ) from exc
@@ -551,6 +579,7 @@ def translate_batch(
     batch_index: int,
     total_batches: int,
     tracker: ProgressTracker,
+    openrouter_api_key: str,
 ) -> OrderedDict[str, str]:
     expected_keys = list(batch_entries.keys())
     last_error: Exception | None = None
@@ -564,7 +593,7 @@ def translate_batch(
                 "Waiting for OpenRouter response",
                 f"{language_code}.json batch {batch_index}/{total_batches} request sent",
             )
-            response_json = send_openrouter_request(request_body)
+            response_json = send_openrouter_request(request_body, openrouter_api_key)
 
             tracker.set_batch_stage(
                 "Validating translated JSON response",
@@ -606,6 +635,7 @@ def translate_entries(
     language_code: str,
     entries: OrderedDict[str, str],
     tracker: ProgressTracker,
+    openrouter_api_key: str,
 ) -> OrderedDict[str, str]:
     if not entries:
         tracker.set_action("No translation request needed", f"{language_code}.json has 0 keys to translate")
@@ -621,6 +651,7 @@ def translate_entries(
             batch_index=batch_index,
             total_batches=len(batches),
             tracker=tracker,
+            openrouter_api_key=openrouter_api_key,
         )
         translated_entries.update(translated_batch)
         tracker.finish_batch(len(batch_entries))
@@ -644,10 +675,11 @@ def merge_existing_translation(
     return merged_entries
 
 
-def validate_configuration() -> None:
-    if OPENROUTER_API_KEY == "<openrouter_api_key_here>":
+def validate_configuration(openrouter_api_key: str) -> None:
+    if not openrouter_api_key or openrouter_api_key == "<openrouter_api_key_here>":
         raise ScriptError(
-            "Set OPENROUTER_API_KEY at the top of the script before running it."
+            "Set OPENROUTER_API_KEY at the top of the script before running it, or provide "
+            f"{OPENROUTER_TOKENS_ENTRY_NAME} in {TOKENS_FILE_PATH}."
         )
 
     if BATCH_SIZE <= 0:
@@ -749,7 +781,11 @@ def build_regenerate_file_plans(
     return plans
 
 
-def process_file_plans(plans: list[FilePlan], tracker: ProgressTracker) -> dict[str, str]:
+def process_file_plans(
+    plans: list[FilePlan],
+    tracker: ProgressTracker,
+    openrouter_api_key: str,
+) -> dict[str, str]:
     results: dict[str, str] = {}
 
     for plan in plans:
@@ -759,7 +795,12 @@ def process_file_plans(plans: list[FilePlan], tracker: ProgressTracker) -> dict[
             continue
 
         tracker.start_file(plan)
-        translated_entries = translate_entries(plan.language_code, plan.translation_source_entries, tracker)
+        translated_entries = translate_entries(
+            plan.language_code,
+            plan.translation_source_entries,
+            tracker,
+            openrouter_api_key,
+        )
 
         tracker.set_action("Merging translated keys into localization file", f"{plan.language_code}.json")
         merged_entries = merge_existing_translation(plan.existing_entries, translated_entries, plan.removed_keys)
@@ -855,7 +896,14 @@ def fit_text(text: str) -> str:
 
 def main() -> int:
     try:
-        validate_configuration()
+        openrouter_api_key, api_key_source = resolve_openrouter_api_key()
+        validate_configuration(openrouter_api_key)
+        if api_key_source == ".TOKENS file":
+            print(
+                f"Using OpenRouter API key from {TOKENS_FILE_PATH} "
+                f"({OPENROUTER_TOKENS_ENTRY_NAME})."
+            )
+
         current_source = load_json_file(SOURCE_FILE_PATH)
         target_paths = {
             language_code: RESOLVED_LANG_DIRECTORY / f"{language_code}.json"
@@ -870,12 +918,12 @@ def main() -> int:
             skipped_count = sum(1 for plan in plans if plan.skipped)
             overview_lines = [
                 f"Source: {SOURCE_FILE_PATH.name} | Source keys: {len(current_source):,}",
-                f"Model: {OPENROUTER_MODEL} | Batch size: {BATCH_SIZE:,}",
+                f"Model: {OPENROUTER_MODEL} | Batch size: {BATCH_SIZE:,} | API key source: {api_key_source}",
                 f"Run stats: existing files {existing_file_count} | skipped missing files {skipped_count}",
             ]
             tracker = ProgressTracker("update-existing", plans, overview_lines)
             tracker.set_action("Refreshing all keys for existing localization files", "Starting translation work")
-            results = process_file_plans(plans, tracker)
+            results = process_file_plans(plans, tracker, openrouter_api_key)
             tracker.finish_run("All update-mode files finished")
             print_summary(results, tracker)
             return 0
@@ -893,7 +941,10 @@ def main() -> int:
             new_file_count = sum(1 for plan in plans if not plan.skipped and plan.existing_entries is None)
             overview_lines = [
                 f"Source: {SOURCE_FILE_PATH.name} | Revision diff vs {revision}",
-                f"Model: {OPENROUTER_MODEL} | Batch size: {BATCH_SIZE:,} | Temp diff: {temp_diff_path.name}",
+                (
+                    f"Model: {OPENROUTER_MODEL} | Batch size: {BATCH_SIZE:,} | "
+                    f"Temp diff: {temp_diff_path.name} | API key source: {api_key_source}"
+                ),
                 (
                     "Run stats: "
                     f"english added {len(diff.added_entries):,} | "
@@ -904,7 +955,7 @@ def main() -> int:
             ]
             tracker = ProgressTracker("regenerate", plans, overview_lines)
             tracker.set_action("Preparing regenerate-mode translation run", f"Temp diff file: {temp_diff_path.name}")
-            results = process_file_plans(plans, tracker)
+            results = process_file_plans(plans, tracker, openrouter_api_key)
         finally:
             if temp_diff_path.exists():
                 temp_diff_path.unlink()
