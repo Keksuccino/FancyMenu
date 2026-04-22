@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -35,6 +36,8 @@ REQUEST_TIMEOUT_SECONDS = 2400
 REQUEST_RETRY_COUNT = 3
 TEMP_DIFF_PREFIX = "fancymenu_translation_diff_"
 PROGRESS_BAR_WIDTH = 28
+UI_REFRESH_INTERVAL_SECONDS = 1.0
+STREAM_RENDER_THROTTLE_SECONDS = 0.15
 
 SYSTEM_PROMPT = """You are a professional Minecraft mod localization translator. You translate Minecraft-style localization JSONs from English to the target language. You only translate the value, never the translation keys. You never remove or add lines. You translate every line of the JSON to the target language and return back the translated version of the received JSON. Make sure you return ONLY THE TRANSLATED JSON as valid JSON, no other text. You translate mod localizations to natural sounding text in the target language, which means you sometimes swap words for better fitting ones in the target language, instead of translating directly. You also make sure to use proper gaming and Minecraft slang when translating, which means that when the target language commonly uses terms for specific words that are not the perfect direct translation, but would work best, then you will use this term, to make the translation sound more natural and high-quality. Use an informal tone for translations, like the 'Du' tone in German."""
 USER_PROMPT_TEMPLATE = """Please translate the following localization to {target_language_code}. Return ONLY THE TRANSLATED JSON, no other text! Here is the JSON:
@@ -120,6 +123,10 @@ class ProgressTracker:
         self.plans = plans
         self.overview_lines = overview_lines
         self.renderer = TerminalRenderer()
+        self.lock = threading.RLock()
+        self.refresh_stop_event = threading.Event()
+        self.refresh_thread: threading.Thread | None = None
+        self.last_render_time = 0.0
         self.start_time = time.time()
         self.total_entries = sum(plan.entries_to_translate for plan in plans if not plan.skipped)
         self.total_files = len(plans)
@@ -134,97 +141,193 @@ class ProgressTracker:
         self.current_batch_total = 0
         self.current_batch_size = 0
         self.current_attempt = 0
+        self.current_batch_started_at = 0.0
+        self.current_batch_stream_line_total = 0
+        self.current_batch_stream_line_count = 0
+        self.current_batch_stream_chunk_count = 0
+        self.current_batch_stream_character_count = 0
+        self.current_batch_stream_comment = ""
+        self.last_stream_line = "Waiting for model output"
         self.last_event = "No file processed yet"
-        self.render()
+        if self.renderer.dynamic:
+            self.refresh_thread = threading.Thread(
+                target=self._refresh_loop,
+                name="fancymenu-translation-progress",
+                daemon=True,
+            )
+            self.refresh_thread.start()
+        self.render(force=True)
+
+    def shutdown(self) -> None:
+        self.refresh_stop_event.set()
+        thread = self.refresh_thread
+        if thread is not None and thread.is_alive():
+            thread.join(timeout=UI_REFRESH_INTERVAL_SECONDS + 0.5)
+        self.refresh_thread = None
+
+    def _refresh_loop(self) -> None:
+        while not self.refresh_stop_event.wait(UI_REFRESH_INTERVAL_SECONDS):
+            self.render(force=True)
 
     def set_action(self, action: str, note: str | None = None) -> None:
-        self.current_action = action
-        if note is not None:
-            self.current_note = note
-        self.render()
+        with self.lock:
+            self.current_action = action
+            if note is not None:
+                self.current_note = note
+        self.render(force=True)
 
     def start_file(self, plan: FilePlan) -> None:
-        self.current_plan = plan
-        self.current_action = plan.action_label
-        self.current_note = f"Preparing {plan.language_code}.json"
-        self.current_file_entries_done = 0
-        self.current_batch_index = 0
-        self.current_batch_total = 0
-        self.current_batch_size = 0
-        self.current_attempt = 0
-        self.render()
+        with self.lock:
+            self.current_plan = plan
+            self.current_action = plan.action_label
+            self.current_note = f"Preparing {plan.language_code}.json"
+            self.current_file_entries_done = 0
+            self.current_batch_index = 0
+            self.current_batch_total = 0
+            self.current_batch_size = 0
+            self.current_attempt = 0
+            self.current_batch_started_at = 0.0
+            self.current_batch_stream_line_total = 0
+            self.current_batch_stream_line_count = 0
+            self.current_batch_stream_chunk_count = 0
+            self.current_batch_stream_character_count = 0
+            self.current_batch_stream_comment = ""
+            self.last_stream_line = "Waiting for model output"
+        self.render(force=True)
 
     def skip_file(self, plan: FilePlan) -> None:
-        self.current_plan = plan
-        self.current_action = plan.action_label
-        self.current_note = plan.skip_reason
-        self.current_file_entries_done = 0
-        self.current_batch_index = 0
-        self.current_batch_total = 0
-        self.current_batch_size = 0
-        self.current_attempt = 0
-        self.last_event = f"{plan.language_code}.json skipped: {plan.skip_reason}"
-        self.completed_files += 1
-        self.render()
+        with self.lock:
+            self.current_plan = plan
+            self.current_action = plan.action_label
+            self.current_note = plan.skip_reason
+            self.current_file_entries_done = 0
+            self.current_batch_index = 0
+            self.current_batch_total = 0
+            self.current_batch_size = 0
+            self.current_attempt = 0
+            self.current_batch_started_at = 0.0
+            self.current_batch_stream_line_total = 0
+            self.current_batch_stream_line_count = 0
+            self.current_batch_stream_chunk_count = 0
+            self.current_batch_stream_character_count = 0
+            self.current_batch_stream_comment = ""
+            self.last_stream_line = "Waiting for model output"
+            self.last_event = f"{plan.language_code}.json skipped: {plan.skip_reason}"
+            self.completed_files += 1
+        self.render(force=True)
 
-    def start_batch(self, batch_index: int, total_batches: int, batch_size: int, attempt: int) -> None:
-        if self.current_plan is None:
-            return
+    def start_batch(
+        self,
+        batch_index: int,
+        total_batches: int,
+        batch_size: int,
+        attempt: int,
+        expected_output_lines: int,
+    ) -> None:
+        with self.lock:
+            if self.current_plan is None:
+                return
 
-        self.current_batch_index = batch_index
-        self.current_batch_total = total_batches
-        self.current_batch_size = batch_size
-        self.current_attempt = attempt
-        self.current_action = "Waiting for OpenRouter response"
-        self.current_note = (
-            f"{self.current_plan.language_code}.json batch {batch_index}/{total_batches} "
-            f"({batch_size:,} keys)"
-        )
-        self.render()
+            self.current_batch_index = batch_index
+            self.current_batch_total = total_batches
+            self.current_batch_size = batch_size
+            self.current_attempt = attempt
+            self.current_batch_started_at = time.time()
+            self.current_batch_stream_line_total = expected_output_lines
+            self.current_batch_stream_line_count = 0
+            self.current_batch_stream_chunk_count = 0
+            self.current_batch_stream_character_count = 0
+            self.current_batch_stream_comment = ""
+            self.last_stream_line = "Waiting for model output"
+            self.current_action = "Waiting for OpenRouter response"
+            self.current_note = (
+                f"{self.current_plan.language_code}.json batch {batch_index}/{total_batches} "
+                f"({batch_size:,} keys)"
+            )
+        self.render(force=True)
 
     def set_batch_stage(self, action: str, note: str) -> None:
-        self.current_action = action
-        self.current_note = note
-        self.render()
+        with self.lock:
+            self.current_action = action
+            self.current_note = note
+        self.render(force=True)
+
+    def note_stream_comment(self, comment: str) -> None:
+        with self.lock:
+            self.current_batch_stream_comment = comment or "OPENROUTER PROCESSING"
+        if self.renderer.dynamic:
+            self.render(force=False)
+
+    def update_stream_output(self, streamed_text: str) -> None:
+        with self.lock:
+            self.current_batch_stream_chunk_count += 1
+            self.current_batch_stream_character_count = len(streamed_text)
+            self.current_batch_stream_line_count = count_text_lines(streamed_text)
+            self.last_stream_line = extract_last_stream_line(streamed_text)
+            self.current_action = "Streaming model response"
+        if self.renderer.dynamic:
+            self.render(force=False)
 
     def finish_batch(self, processed_entries: int) -> None:
-        self.current_file_entries_done += processed_entries
-        self.completed_entries += processed_entries
-        if self.current_plan is not None:
-            self.last_event = (
-                f"{self.current_plan.language_code}.json finished batch "
-                f"{self.current_batch_index}/{self.current_batch_total}"
-            )
-        self.current_action = "Batch translated"
-        self.current_note = f"Processed {processed_entries:,} keys in the latest batch"
-        self.render()
+        with self.lock:
+            self.current_file_entries_done += processed_entries
+            self.completed_entries += processed_entries
+            if self.current_batch_stream_line_total > self.current_batch_stream_line_count:
+                self.current_batch_stream_line_count = self.current_batch_stream_line_total
+            if self.current_plan is not None:
+                self.last_event = (
+                    f"{self.current_plan.language_code}.json finished batch "
+                    f"{self.current_batch_index}/{self.current_batch_total}"
+                )
+            self.current_action = "Batch translated"
+            self.current_note = f"Processed {processed_entries:,} keys in the latest batch"
+        self.render(force=True)
 
     def finish_file(self, plan: FilePlan, result_note: str) -> None:
-        self.current_plan = plan
-        self.current_action = "File finished"
-        self.current_note = result_note
-        self.current_file_entries_done = plan.entries_to_translate
-        self.current_batch_index = self.current_batch_total
-        self.current_attempt = 0
-        self.last_event = f"{plan.language_code}.json completed"
-        self.completed_files += 1
-        self.render()
-        self.current_plan = None
+        with self.lock:
+            self.current_plan = plan
+            self.current_action = "File finished"
+            self.current_note = result_note
+            self.current_file_entries_done = plan.entries_to_translate
+            self.current_batch_index = self.current_batch_total
+            self.current_attempt = 0
+            self.last_event = f"{plan.language_code}.json completed"
+            self.completed_files += 1
+        self.render(force=True)
+        with self.lock:
+            self.current_plan = None
 
     def finish_run(self, final_note: str) -> None:
-        self.current_action = "Run complete"
-        self.current_note = final_note
-        self.current_plan = None
-        self.current_file_entries_done = 0
-        self.current_batch_index = 0
-        self.current_batch_total = 0
-        self.current_batch_size = 0
-        self.current_attempt = 0
-        self.render()
+        with self.lock:
+            self.current_action = "Run complete"
+            self.current_note = final_note
+            self.current_plan = None
+            self.current_file_entries_done = 0
+            self.current_batch_index = 0
+            self.current_batch_total = 0
+            self.current_batch_size = 0
+            self.current_attempt = 0
+            self.current_batch_started_at = 0.0
+            self.current_batch_stream_line_total = 0
+            self.current_batch_stream_line_count = 0
+            self.current_batch_stream_chunk_count = 0
+            self.current_batch_stream_character_count = 0
+            self.current_batch_stream_comment = ""
+            self.last_stream_line = "Waiting for model output"
+        self.render(force=True)
 
-    def render(self) -> None:
-        lines = self.build_lines()
-        self.renderer.render(lines)
+    def render(self, force: bool = False) -> None:
+        with self.lock:
+            if self.renderer.dynamic and not force:
+                now = time.monotonic()
+                if now - self.last_render_time < STREAM_RENDER_THROTTLE_SECONDS:
+                    return
+                self.last_render_time = now
+            elif self.renderer.dynamic:
+                self.last_render_time = time.monotonic()
+
+            lines = self.build_lines()
+            self.renderer.render(lines)
 
     def build_lines(self) -> list[str]:
         elapsed = format_duration(time.time() - self.start_time)
@@ -263,16 +366,34 @@ class ProgressTracker:
 
         if self.current_plan is None:
             batch_line = "Batch: none"
+            batch_stream_line = "Batch progress: waiting for stream output"
+            batch_stream_meta_line = "Stream info: waiting"
             target_path_line = "Target path: none"
         else:
             if self.current_batch_total > 0:
+                batch_elapsed = format_duration(time.time() - self.current_batch_started_at)
                 batch_line = (
                     f"Batch: {self.current_batch_index}/{self.current_batch_total} | "
                     f"Size: {self.current_batch_size:,} | "
-                    f"Attempt: {self.current_attempt}/{REQUEST_RETRY_COUNT}"
+                    f"Attempt: {self.current_attempt}/{REQUEST_RETRY_COUNT} | "
+                    f"Elapsed: {batch_elapsed}"
+                )
+                batch_stream_line = format_progress_line(
+                    "Batch",
+                    self.current_batch_stream_line_count,
+                    self.current_batch_stream_line_total,
+                )
+                comment_suffix = ""
+                if self.current_batch_stream_comment:
+                    comment_suffix = f" | Last stream event: {self.current_batch_stream_comment}"
+                batch_stream_meta_line = (
+                    f"Stream info: chunks {self.current_batch_stream_chunk_count:,} | "
+                    f"chars {self.current_batch_stream_character_count:,}{comment_suffix}"
                 )
             else:
                 batch_line = "Batch: not started"
+                batch_stream_line = "Batch progress: waiting for stream output"
+                batch_stream_meta_line = "Stream info: waiting"
             target_path_line = f"Target path: {self.current_plan.path.name}"
 
         lines.extend(
@@ -284,8 +405,11 @@ class ProgressTracker:
                 fit_text(file_stats_line),
                 fit_text(target_path_line),
                 fit_text(batch_line),
+                fit_text(batch_stream_line),
+                fit_text(batch_stream_meta_line),
                 fit_text(f"Status note: {self.current_note}"),
                 fit_text(f"Last event: {self.last_event}"),
+                fit_text(f"Last stream line: {self.last_stream_line}"),
             ]
         )
         return lines
@@ -376,6 +500,29 @@ def write_json_file(path: Path, data: OrderedDict[str, str]) -> None:
     with path.open("w", encoding="utf-8", newline="\n") as handle:
         json.dump(data, handle, ensure_ascii=False, indent=2)
         handle.write("\n")
+
+
+def serialize_localization_json(entries: OrderedDict[str, str]) -> str:
+    return json.dumps(entries, ensure_ascii=False, indent=2)
+
+
+def count_text_lines(text: str) -> int:
+    if not text:
+        return 0
+
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    return normalized.count("\n") + 1
+
+
+def extract_last_stream_line(text: str) -> str:
+    if not text:
+        return "Waiting for model output"
+
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    for line in reversed(normalized.split("\n")):
+        if line != "":
+            return line
+    return "Waiting for model output"
 
 
 def resolve_openrouter_api_key() -> tuple[str, str]:
@@ -512,7 +659,7 @@ def parse_json_object_from_text(text: str, context: str) -> OrderedDict[str, str
 
 
 def build_translation_request(language_code: str, batch_entries: OrderedDict[str, str]) -> dict[str, object]:
-    batch_json = json.dumps(batch_entries, ensure_ascii=False, indent=2)
+    batch_json = serialize_localization_json(batch_entries)
     user_prompt = USER_PROMPT_TEMPLATE.format(
         target_language_code=language_code,
         json_localization_line_batch=batch_json,
@@ -524,13 +671,16 @@ def build_translation_request(language_code: str, batch_entries: OrderedDict[str
             {"role": "user", "content": user_prompt},
         ],
         "response_format": {"type": "json_object"},
+        "stream": True,
     }
 
 
 def send_openrouter_request(
     request_body: dict[str, object],
     openrouter_api_key: str,
-) -> dict[str, object]:
+    tracker: ProgressTracker,
+    stream_label: str,
+) -> str:
     encoded_body = json.dumps(request_body, ensure_ascii=False).encode("utf-8")
     request = urllib.request.Request(
         OPENROUTER_API_URL,
@@ -544,13 +694,26 @@ def send_openrouter_request(
 
     try:
         with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT_SECONDS) as response:
+            content_type = response.info().get("Content-Type", "").lower()
+            if "text/event-stream" in content_type:
+                tracker.set_batch_stage(
+                    "Streaming model response",
+                    f"{stream_label} stream opened",
+                )
+                return read_openrouter_stream_response(response, tracker)
+
             response_text = response.read().decode("utf-8")
     except urllib.error.HTTPError as exc:
         error_text = exc.read().decode("utf-8", errors="replace")
         if request_body.get("response_format") and should_retry_without_json_mode(exc.code, error_text):
             fallback_body = dict(request_body)
             fallback_body.pop("response_format", None)
-            return send_openrouter_request(fallback_body, openrouter_api_key)
+            return send_openrouter_request(
+                fallback_body,
+                openrouter_api_key,
+                tracker,
+                f"{stream_label} fallback without JSON mode",
+            )
         raise ScriptError(
             f"OpenRouter request failed with HTTP {exc.code}.\n{error_text}"
         ) from exc
@@ -564,7 +727,10 @@ def send_openrouter_request(
 
     if not isinstance(parsed, dict):
         raise ScriptError("OpenRouter returned a non-object response.")
-    return parsed
+
+    extracted_text = extract_response_text(parsed)
+    tracker.update_stream_output(extracted_text)
+    return extracted_text
 
 
 def should_retry_without_json_mode(status_code: int, error_text: str) -> bool:
@@ -573,6 +739,131 @@ def should_retry_without_json_mode(status_code: int, error_text: str) -> bool:
 
     lowered = error_text.lower()
     return "response_format" in lowered or "json_object" in lowered or "structured output" in lowered
+
+
+def extract_stream_delta_text(chunk_json: dict[str, object]) -> str:
+    choices = chunk_json.get("choices")
+    if not isinstance(choices, list) or not choices:
+        return ""
+
+    first_choice = choices[0]
+    if not isinstance(first_choice, dict):
+        return ""
+
+    delta = first_choice.get("delta")
+    if not isinstance(delta, dict):
+        return ""
+
+    content = delta.get("content")
+    if isinstance(content, str):
+        return content
+
+    if isinstance(content, list):
+        text_parts: list[str] = []
+        for part in content:
+            if isinstance(part, dict):
+                text = part.get("text")
+                if isinstance(text, str):
+                    text_parts.append(text)
+        return "".join(text_parts)
+
+    return ""
+
+
+def extract_stream_finish_reason(chunk_json: dict[str, object]) -> str | None:
+    choices = chunk_json.get("choices")
+    if not isinstance(choices, list) or not choices:
+        return None
+
+    first_choice = choices[0]
+    if not isinstance(first_choice, dict):
+        return None
+
+    finish_reason = first_choice.get("finish_reason")
+    if isinstance(finish_reason, str):
+        return finish_reason
+    return None
+
+
+def format_stream_error_message(chunk_json: dict[str, object]) -> str:
+    error_payload = chunk_json.get("error")
+    if isinstance(error_payload, dict):
+        message = error_payload.get("message")
+        code = error_payload.get("code")
+        if isinstance(message, str) and isinstance(code, str):
+            return f"{code}: {message}"
+        if isinstance(message, str):
+            return message
+    return "OpenRouter stream terminated with an error."
+
+
+def process_stream_event(
+    payload_lines: list[str],
+    accumulated_text_parts: list[str],
+    tracker: ProgressTracker,
+) -> bool:
+    if not payload_lines:
+        return False
+
+    payload = "\n".join(payload_lines).strip()
+    if not payload:
+        return False
+
+    if payload == "[DONE]":
+        return True
+
+    try:
+        chunk_json = json.loads(payload)
+    except json.JSONDecodeError as exc:
+        raise ScriptError(f"OpenRouter stream returned invalid JSON chunk.\n{payload}") from exc
+
+    if not isinstance(chunk_json, dict):
+        raise ScriptError(f"OpenRouter stream returned a non-object chunk.\n{payload}")
+
+    if "error" in chunk_json:
+        raise ScriptError(f"OpenRouter stream error: {format_stream_error_message(chunk_json)}")
+
+    delta_text = extract_stream_delta_text(chunk_json)
+    if delta_text:
+        accumulated_text_parts.append(delta_text)
+        tracker.update_stream_output("".join(accumulated_text_parts))
+
+    finish_reason = extract_stream_finish_reason(chunk_json)
+    if finish_reason == "error":
+        raise ScriptError(f"OpenRouter stream error: {format_stream_error_message(chunk_json)}")
+
+    return False
+
+
+def read_openrouter_stream_response(response, tracker: ProgressTracker) -> str:
+    accumulated_text_parts: list[str] = []
+    payload_lines: list[str] = []
+    stream_finished = False
+
+    while True:
+        raw_line = response.readline()
+        if not raw_line:
+            break
+
+        line = raw_line.decode("utf-8", errors="replace").rstrip("\r\n")
+        if not line:
+            stream_finished = process_stream_event(payload_lines, accumulated_text_parts, tracker)
+            payload_lines = []
+            if stream_finished:
+                break
+            continue
+
+        if line.startswith(":"):
+            tracker.note_stream_comment(line[1:].strip())
+            continue
+
+        if line.startswith("data:"):
+            payload_lines.append(line[5:].lstrip())
+
+    if payload_lines and not stream_finished:
+        process_stream_event(payload_lines, accumulated_text_parts, tracker)
+
+    return "".join(accumulated_text_parts)
 
 
 def translate_batch(
@@ -584,24 +875,36 @@ def translate_batch(
     openrouter_api_key: str,
 ) -> OrderedDict[str, str]:
     expected_keys = list(batch_entries.keys())
+    expected_output_lines = count_text_lines(serialize_localization_json(batch_entries))
+    batch_label = f"{language_code}.json batch {batch_index}/{total_batches}"
     last_error: Exception | None = None
 
     for attempt in range(1, REQUEST_RETRY_COUNT + 1):
-        tracker.start_batch(batch_index, total_batches, len(batch_entries), attempt)
+        tracker.start_batch(
+            batch_index,
+            total_batches,
+            len(batch_entries),
+            attempt,
+            expected_output_lines,
+        )
 
         try:
             request_body = build_translation_request(language_code, batch_entries)
             tracker.set_batch_stage(
                 "Waiting for OpenRouter response",
-                f"{language_code}.json batch {batch_index}/{total_batches} request sent",
+                f"{batch_label} request sent",
             )
-            response_json = send_openrouter_request(request_body, openrouter_api_key)
+            response_text = send_openrouter_request(
+                request_body,
+                openrouter_api_key,
+                tracker,
+                batch_label,
+            )
 
             tracker.set_batch_stage(
                 "Validating translated JSON response",
-                f"{language_code}.json batch {batch_index}/{total_batches} response received",
+                f"{batch_label} response received",
             )
-            response_text = extract_response_text(response_json)
             translated_entries = parse_json_object_from_text(
                 response_text,
                 f"{language_code} batch {batch_index}",
@@ -623,7 +926,7 @@ def translate_batch(
             if attempt < REQUEST_RETRY_COUNT:
                 tracker.set_batch_stage(
                     "Retrying failed batch",
-                    f"{language_code}.json batch {batch_index}/{total_batches} failed: {exc}",
+                    f"{batch_label} failed: {exc}",
                 )
                 time.sleep(attempt * 2)
 
@@ -903,6 +1206,7 @@ def fit_text(text: str) -> str:
 
 
 def main() -> int:
+    tracker: ProgressTracker | None = None
     try:
         openrouter_api_key, api_key_source = resolve_openrouter_api_key()
         validate_configuration(openrouter_api_key)
@@ -962,6 +1266,7 @@ def main() -> int:
                     temp_diff_path.unlink()
 
             tracker.finish_run("All update-mode files finished")
+            tracker.shutdown()
             print_summary(results, tracker)
             return 0
 
@@ -983,12 +1288,17 @@ def main() -> int:
         results = process_file_plans(plans, tracker, openrouter_api_key)
 
         tracker.finish_run("All regenerate-mode files finished")
+        tracker.shutdown()
         print_summary(results, tracker)
         return 0
     except KeyboardInterrupt:
+        if tracker is not None:
+            tracker.shutdown()
         print("\nOperation cancelled.")
         return 1
     except ScriptError as exc:
+        if tracker is not None:
+            tracker.shutdown()
         print(f"Error: {exc}")
         return 1
 
