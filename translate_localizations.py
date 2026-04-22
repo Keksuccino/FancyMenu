@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -9,6 +10,7 @@ import time
 import urllib.error
 import urllib.request
 from collections import OrderedDict
+from dataclasses import dataclass, field
 from pathlib import Path
 
 
@@ -32,6 +34,7 @@ OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 REQUEST_TIMEOUT_SECONDS = 240
 REQUEST_RETRY_COUNT = 3
 TEMP_DIFF_PREFIX = "fancymenu_translation_diff_"
+PROGRESS_BAR_WIDTH = 28
 
 SYSTEM_PROMPT = """You are a professional Minecraft mod localization translator. You translate Minecraft-style localization JSONs from English to the target language. You only translate the value, never the translation keys. You never remove or add lines. You translate every line of the JSON to the target language and return back the translated version of the received JSON. Make sure you return ONLY THE TRANSLATED JSON as valid JSON, no other text. You translate mod localizations to natural sounding text in the target language, which means you sometimes swap words for better fitting ones in the target language, instead of translating directly. You also make sure to use proper gaming and Minecraft slang when translating, which means that when the target language commonly uses terms for specific words that are not the perfect direct translation, but would work best, then you will use this term, to make the translation sound more natural and high-quality."""
 USER_PROMPT_TEMPLATE = """Please translate the following localization to {target_language_code}. Return ONLY THE TRANSLATED JSON, no other text! Here is the JSON:
@@ -51,18 +54,237 @@ class ScriptError(RuntimeError):
     pass
 
 
+@dataclass
 class DiffResult:
-    def __init__(
-        self,
-        added_entries: OrderedDict[str, str],
-        edited_entries: OrderedDict[str, str],
-        removed_keys: list[str],
-        changed_entries: OrderedDict[str, str],
-    ) -> None:
-        self.added_entries = added_entries
-        self.edited_entries = edited_entries
-        self.removed_keys = removed_keys
-        self.changed_entries = changed_entries
+    added_entries: OrderedDict[str, str]
+    edited_entries: OrderedDict[str, str]
+    removed_keys: list[str]
+    changed_entries: OrderedDict[str, str]
+
+
+@dataclass
+class FilePlan:
+    file_number: int
+    language_code: str
+    path: Path
+    action_label: str
+    result_label: str
+    translation_source_entries: OrderedDict[str, str] = field(default_factory=OrderedDict)
+    existing_entries: OrderedDict[str, str] | None = None
+    removed_keys: list[str] = field(default_factory=list)
+    entries_to_translate: int = 0
+    missing_keys_count: int = 0
+    overwrite_keys_count: int = 0
+    obsolete_keys_count: int = 0
+    added_keys_count: int = 0
+    edited_keys_count: int = 0
+    skipped: bool = False
+    skip_reason: str = ""
+
+
+class TerminalRenderer:
+    def __init__(self) -> None:
+        self.dynamic = sys.stdout.isatty()
+        self.last_line_count = 0
+
+    def render(self, lines: list[str]) -> None:
+        if not self.dynamic:
+            for line in lines:
+                print(line)
+            print()
+            return
+
+        padded_lines = list(lines)
+        if self.last_line_count > len(padded_lines):
+            padded_lines.extend([""] * (self.last_line_count - len(padded_lines)))
+
+        if self.last_line_count:
+            sys.stdout.write(f"\x1b[{self.last_line_count}F")
+
+        for line in padded_lines:
+            sys.stdout.write("\x1b[2K")
+            sys.stdout.write(line)
+            sys.stdout.write("\n")
+
+        sys.stdout.flush()
+        self.last_line_count = len(lines)
+
+
+class ProgressTracker:
+    def __init__(self, mode_label: str, plans: list[FilePlan], overview_lines: list[str]) -> None:
+        self.mode_label = mode_label
+        self.plans = plans
+        self.overview_lines = overview_lines
+        self.renderer = TerminalRenderer()
+        self.start_time = time.time()
+        self.total_entries = sum(plan.entries_to_translate for plan in plans if not plan.skipped)
+        self.total_files = len(plans)
+        self.active_files = sum(1 for plan in plans if not plan.skipped)
+        self.completed_entries = 0
+        self.completed_files = 0
+        self.current_plan: FilePlan | None = None
+        self.current_action = "Preparing translation run"
+        self.current_note = "Waiting to start"
+        self.current_file_entries_done = 0
+        self.current_batch_index = 0
+        self.current_batch_total = 0
+        self.current_batch_size = 0
+        self.current_attempt = 0
+        self.last_event = "No file processed yet"
+        self.render()
+
+    def set_action(self, action: str, note: str | None = None) -> None:
+        self.current_action = action
+        if note is not None:
+            self.current_note = note
+        self.render()
+
+    def start_file(self, plan: FilePlan) -> None:
+        self.current_plan = plan
+        self.current_action = plan.action_label
+        self.current_note = f"Preparing {plan.language_code}.json"
+        self.current_file_entries_done = 0
+        self.current_batch_index = 0
+        self.current_batch_total = 0
+        self.current_batch_size = 0
+        self.current_attempt = 0
+        self.render()
+
+    def skip_file(self, plan: FilePlan) -> None:
+        self.current_plan = plan
+        self.current_action = plan.action_label
+        self.current_note = plan.skip_reason
+        self.current_file_entries_done = 0
+        self.current_batch_index = 0
+        self.current_batch_total = 0
+        self.current_batch_size = 0
+        self.current_attempt = 0
+        self.last_event = f"{plan.language_code}.json skipped: {plan.skip_reason}"
+        self.completed_files += 1
+        self.render()
+
+    def start_batch(self, batch_index: int, total_batches: int, batch_size: int, attempt: int) -> None:
+        if self.current_plan is None:
+            return
+
+        self.current_batch_index = batch_index
+        self.current_batch_total = total_batches
+        self.current_batch_size = batch_size
+        self.current_attempt = attempt
+        self.current_action = "Waiting for OpenRouter response"
+        self.current_note = (
+            f"{self.current_plan.language_code}.json batch {batch_index}/{total_batches} "
+            f"({batch_size:,} keys)"
+        )
+        self.render()
+
+    def set_batch_stage(self, action: str, note: str) -> None:
+        self.current_action = action
+        self.current_note = note
+        self.render()
+
+    def finish_batch(self, processed_entries: int) -> None:
+        self.current_file_entries_done += processed_entries
+        self.completed_entries += processed_entries
+        if self.current_plan is not None:
+            self.last_event = (
+                f"{self.current_plan.language_code}.json finished batch "
+                f"{self.current_batch_index}/{self.current_batch_total}"
+            )
+        self.current_action = "Batch translated"
+        self.current_note = f"Processed {processed_entries:,} keys in the latest batch"
+        self.render()
+
+    def finish_file(self, plan: FilePlan, result_note: str) -> None:
+        self.current_plan = plan
+        self.current_action = "File finished"
+        self.current_note = result_note
+        self.current_file_entries_done = plan.entries_to_translate
+        self.current_batch_index = self.current_batch_total
+        self.current_attempt = 0
+        self.last_event = f"{plan.language_code}.json completed"
+        self.completed_files += 1
+        self.render()
+        self.current_plan = None
+
+    def finish_run(self, final_note: str) -> None:
+        self.current_action = "Run complete"
+        self.current_note = final_note
+        self.current_plan = None
+        self.current_file_entries_done = 0
+        self.current_batch_index = 0
+        self.current_batch_total = 0
+        self.current_batch_size = 0
+        self.current_attempt = 0
+        self.render()
+
+    def render(self) -> None:
+        lines = self.build_lines()
+        self.renderer.render(lines)
+
+    def build_lines(self) -> list[str]:
+        elapsed = format_duration(time.time() - self.start_time)
+        lines = [
+            fit_text("FancyMenu localization translator"),
+            fit_text(f"Mode: {self.mode_label} | Action: {self.current_action} | Elapsed: {elapsed}"),
+        ]
+
+        for overview_line in self.overview_lines:
+            lines.append(fit_text(overview_line))
+
+        if self.current_plan is None:
+            current_file_label = "Current file: none"
+            remaining_languages = ", ".join(plan.language_code for plan in self.plans[self.completed_files :]) or "none"
+            file_stats_line = "File stats: waiting"
+        else:
+            current_file_label = (
+                f"Current file: {self.current_plan.language_code}.json "
+                f"({self.current_plan.file_number}/{self.total_files})"
+            )
+            remaining_languages = ", ".join(
+                plan.language_code
+                for plan in self.plans[self.current_plan.file_number :]
+            ) or "none"
+            file_stats_line = describe_file_stats(self.mode_label, self.current_plan)
+
+        files_summary = (
+            f"Files done: {self.completed_files}/{self.total_files} | "
+            f"Active files: {self.active_files} | "
+            f"Remaining after current: {remaining_languages}"
+        )
+
+        total_progress = format_progress_line("Total", self.completed_entries, self.total_entries)
+        current_total = 0 if self.current_plan is None else self.current_plan.entries_to_translate
+        file_progress = format_progress_line("File ", self.current_file_entries_done, current_total)
+
+        if self.current_plan is None:
+            batch_line = "Batch: none"
+            target_path_line = "Target path: none"
+        else:
+            if self.current_batch_total > 0:
+                batch_line = (
+                    f"Batch: {self.current_batch_index}/{self.current_batch_total} | "
+                    f"Size: {self.current_batch_size:,} | "
+                    f"Attempt: {self.current_attempt}/{REQUEST_RETRY_COUNT}"
+                )
+            else:
+                batch_line = "Batch: not started"
+            target_path_line = f"Target path: {self.current_plan.path.name}"
+
+        lines.extend(
+            [
+                fit_text(current_file_label),
+                fit_text(files_summary),
+                fit_text(total_progress),
+                fit_text(file_progress),
+                fit_text(file_stats_line),
+                fit_text(target_path_line),
+                fit_text(batch_line),
+                fit_text(f"Status note: {self.current_note}"),
+                fit_text(f"Last event: {self.last_event}"),
+            ]
+        )
+        return lines
 
 
 def prompt_mode() -> str:
@@ -328,19 +550,26 @@ def translate_batch(
     batch_entries: OrderedDict[str, str],
     batch_index: int,
     total_batches: int,
+    tracker: ProgressTracker,
 ) -> OrderedDict[str, str]:
     expected_keys = list(batch_entries.keys())
     last_error: Exception | None = None
 
     for attempt in range(1, REQUEST_RETRY_COUNT + 1):
-        print(
-            f"  [{language_code}] Translating batch {batch_index}/{total_batches} "
-            f"({len(batch_entries)} entries, attempt {attempt}/{REQUEST_RETRY_COUNT})..."
-        )
+        tracker.start_batch(batch_index, total_batches, len(batch_entries), attempt)
 
         try:
             request_body = build_translation_request(language_code, batch_entries)
+            tracker.set_batch_stage(
+                "Waiting for OpenRouter response",
+                f"{language_code}.json batch {batch_index}/{total_batches} request sent",
+            )
             response_json = send_openrouter_request(request_body)
+
+            tracker.set_batch_stage(
+                "Validating translated JSON response",
+                f"{language_code}.json batch {batch_index}/{total_batches} response received",
+            )
             response_text = extract_response_text(response_json)
             translated_entries = parse_json_object_from_text(
                 response_text,
@@ -361,8 +590,10 @@ def translate_batch(
         except Exception as exc:
             last_error = exc
             if attempt < REQUEST_RETRY_COUNT:
-                print(f"  [{language_code}] Batch {batch_index} failed: {exc}")
-                print("  Retrying...")
+                tracker.set_batch_stage(
+                    "Retrying failed batch",
+                    f"{language_code}.json batch {batch_index}/{total_batches} failed: {exc}",
+                )
                 time.sleep(attempt * 2)
 
     assert last_error is not None
@@ -371,26 +602,38 @@ def translate_batch(
     )
 
 
-def translate_entries(language_code: str, entries: OrderedDict[str, str]) -> OrderedDict[str, str]:
+def translate_entries(
+    language_code: str,
+    entries: OrderedDict[str, str],
+    tracker: ProgressTracker,
+) -> OrderedDict[str, str]:
     if not entries:
+        tracker.set_action("No translation request needed", f"{language_code}.json has 0 keys to translate")
         return OrderedDict()
 
     batches = chunk_entries(entries, BATCH_SIZE)
     translated_entries: OrderedDict[str, str] = OrderedDict()
 
     for batch_index, batch_entries in enumerate(batches, start=1):
-        translated_entries.update(
-            translate_batch(language_code, batch_entries, batch_index, len(batches))
+        translated_batch = translate_batch(
+            language_code=language_code,
+            batch_entries=batch_entries,
+            batch_index=batch_index,
+            total_batches=len(batches),
+            tracker=tracker,
         )
+        translated_entries.update(translated_batch)
+        tracker.finish_batch(len(batch_entries))
+
     return translated_entries
 
 
 def merge_existing_translation(
-    existing_entries: OrderedDict[str, str],
+    existing_entries: OrderedDict[str, str] | None,
     translated_entries: OrderedDict[str, str],
     removed_keys: list[str],
 ) -> OrderedDict[str, str]:
-    merged_entries = OrderedDict(existing_entries)
+    merged_entries = OrderedDict(existing_entries or ())
 
     for key in removed_keys:
         merged_entries.pop(key, None)
@@ -417,75 +660,197 @@ def validate_configuration() -> None:
         raise ScriptError(f"Main localization file does not exist: {SOURCE_FILE_PATH}")
 
 
-def process_existing_only(
+def build_update_file_plans(
     current_source: OrderedDict[str, str],
     target_paths: dict[str, Path],
-) -> dict[str, str]:
-    results: dict[str, str] = {}
+) -> list[FilePlan]:
+    plans: list[FilePlan] = []
 
-    for language_code, target_path in target_paths.items():
+    for file_number, (language_code, target_path) in enumerate(target_paths.items(), start=1):
         if not target_path.exists():
-            print(f"[{language_code}] Skipping because the localization file does not exist.")
-            results[language_code] = "skipped (missing file)"
+            plans.append(
+                FilePlan(
+                    file_number=file_number,
+                    language_code=language_code,
+                    path=target_path,
+                    action_label="Skipping missing localization file",
+                    result_label="skipped (missing file)",
+                    skipped=True,
+                    skip_reason="Target localization file does not exist in update mode",
+                )
+            )
             continue
 
-        print(f"[{language_code}] Loading existing localization file...")
         existing_entries = load_json_file(target_path)
-        removed_keys = [key for key in existing_entries if key not in current_source]
-        translated_entries = translate_entries(language_code, current_source)
-        merged_entries = merge_existing_translation(existing_entries, translated_entries, removed_keys)
-        write_json_file(target_path, merged_entries)
+        missing_keys_count = sum(1 for key in current_source if key not in existing_entries)
+        overwrite_keys_count = len(current_source) - missing_keys_count
+        obsolete_keys = [key for key in existing_entries if key not in current_source]
 
-        print(
-            f"[{language_code}] Updated {len(translated_entries)} translated keys"
-            f" and removed {len(removed_keys)} obsolete keys."
+        plans.append(
+            FilePlan(
+                file_number=file_number,
+                language_code=language_code,
+                path=target_path,
+                action_label="Updating existing localization file",
+                result_label="updated",
+                translation_source_entries=current_source,
+                existing_entries=existing_entries,
+                removed_keys=obsolete_keys,
+                entries_to_translate=len(current_source),
+                missing_keys_count=missing_keys_count,
+                overwrite_keys_count=overwrite_keys_count,
+                obsolete_keys_count=len(obsolete_keys),
+            )
         )
-        results[language_code] = "updated"
 
-    return results
+    return plans
 
 
-def process_regenerate(
+def build_regenerate_file_plans(
     current_source: OrderedDict[str, str],
-    target_paths: dict[str, Path],
     changed_entries: OrderedDict[str, str],
-    removed_keys: list[str],
-) -> dict[str, str]:
+    diff: DiffResult,
+    target_paths: dict[str, Path],
+) -> list[FilePlan]:
+    plans: list[FilePlan] = []
+
+    for file_number, (language_code, target_path) in enumerate(target_paths.items(), start=1):
+        if target_path.exists():
+            plans.append(
+                FilePlan(
+                    file_number=file_number,
+                    language_code=language_code,
+                    path=target_path,
+                    action_label="Patching existing localization file",
+                    result_label="patched existing file",
+                    translation_source_entries=changed_entries,
+                    existing_entries=load_json_file(target_path),
+                    removed_keys=list(diff.removed_keys),
+                    entries_to_translate=len(changed_entries),
+                    added_keys_count=len(diff.added_entries),
+                    edited_keys_count=len(diff.edited_entries),
+                    obsolete_keys_count=len(diff.removed_keys),
+                )
+            )
+            continue
+
+        plans.append(
+            FilePlan(
+                file_number=file_number,
+                language_code=language_code,
+                path=target_path,
+                action_label="Creating new localization file",
+                result_label="created new file",
+                translation_source_entries=current_source,
+                entries_to_translate=len(current_source),
+            )
+        )
+
+    return plans
+
+
+def process_file_plans(plans: list[FilePlan], tracker: ProgressTracker) -> dict[str, str]:
     results: dict[str, str] = {}
 
-    for language_code, target_path in target_paths.items():
-        if target_path.exists():
-            print(f"[{language_code}] Patching existing localization file...")
-            existing_entries = load_json_file(target_path)
-            translated_entries = translate_entries(language_code, changed_entries)
-            merged_entries = merge_existing_translation(existing_entries, translated_entries, removed_keys)
-            write_json_file(target_path, merged_entries)
-
-            print(
-                f"[{language_code}] Patched {len(translated_entries)} changed keys"
-                f" and removed {len(removed_keys)} obsolete keys."
-            )
-            results[language_code] = "patched existing file"
+    for plan in plans:
+        if plan.skipped:
+            tracker.skip_file(plan)
+            results[plan.language_code] = plan.result_label
             continue
 
-        print(f"[{language_code}] Creating a new localization file from the full source...")
-        translated_entries = translate_entries(language_code, current_source)
-        write_json_file(target_path, translated_entries)
+        tracker.start_file(plan)
+        translated_entries = translate_entries(plan.language_code, plan.translation_source_entries, tracker)
 
-        print(f"[{language_code}] Created new file with {len(translated_entries)} translated keys.")
-        results[language_code] = "created new file"
+        tracker.set_action("Merging translated keys into localization file", f"{plan.language_code}.json")
+        merged_entries = merge_existing_translation(plan.existing_entries, translated_entries, plan.removed_keys)
+
+        tracker.set_action("Writing localization file to disk", f"{plan.path.name}")
+        write_json_file(plan.path, merged_entries)
+
+        if plan.existing_entries is None:
+            result_note = f"Created {plan.path.name} with {len(merged_entries):,} keys"
+        else:
+            result_note = (
+                f"Wrote {plan.path.name} | translated {len(translated_entries):,} keys | "
+                f"removed {len(plan.removed_keys):,} keys"
+            )
+
+        tracker.finish_file(plan, result_note)
+        results[plan.language_code] = plan.result_label
 
     return results
 
 
-def print_summary(results: dict[str, str]) -> None:
+def print_summary(results: dict[str, str], tracker: ProgressTracker) -> None:
     print()
     print("Summary:")
+    print(f"  Mode: {tracker.mode_label}")
+    print(f"  Elapsed: {format_duration(time.time() - tracker.start_time)}")
+    print(f"  Total translated keys: {tracker.completed_entries:,}/{tracker.total_entries:,}")
     for language_code in TARGET_LANGUAGE_CODES:
         result = results.get(language_code)
         if result is None:
             continue
         print(f"  {language_code}: {result}")
+
+
+def describe_file_stats(mode_label: str, plan: FilePlan) -> str:
+    if plan.skipped:
+        return f"File stats: skipped | {plan.skip_reason}"
+
+    if mode_label == "update-existing":
+        return (
+            "File stats: "
+            f"translate {plan.entries_to_translate:,} | "
+            f"overwrite {plan.overwrite_keys_count:,} | "
+            f"missing add {plan.missing_keys_count:,} | "
+            f"obsolete remove {plan.obsolete_keys_count:,}"
+        )
+
+    if plan.existing_entries is not None:
+        return (
+            "File stats: "
+            f"patch {plan.entries_to_translate:,} | "
+            f"english added {plan.added_keys_count:,} | "
+            f"english edited {plan.edited_keys_count:,} | "
+            f"english removed {plan.obsolete_keys_count:,}"
+        )
+
+    return f"File stats: new file | full translate {plan.entries_to_translate:,} keys"
+
+
+def format_duration(seconds: float) -> str:
+    total_seconds = max(0, int(seconds))
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, secs = divmod(remainder, 60)
+    return f"{hours:02}:{minutes:02}:{secs:02}"
+
+
+def format_progress_line(label: str, current: int, total: int) -> str:
+    if total <= 0:
+        ratio = 1.0
+        filled = PROGRESS_BAR_WIDTH
+    else:
+        ratio = max(0.0, min(1.0, current / total))
+        filled = int(ratio * PROGRESS_BAR_WIDTH)
+        if current > 0 and filled == 0:
+            filled = 1
+
+    empty = PROGRESS_BAR_WIDTH - filled
+    percent = ratio * 100.0
+    bar = f"[{'#' * filled}{'-' * empty}]"
+    return f"{label} progress: {bar} {current:,}/{total:,} ({percent:5.1f}%)"
+
+
+def fit_text(text: str) -> str:
+    width = shutil.get_terminal_size((140, 24)).columns
+    if width < 20:
+        return text
+
+    if len(text) <= width - 1:
+        return text
+
+    return text[: width - 4] + "..."
 
 
 def main() -> int:
@@ -500,40 +865,52 @@ def main() -> int:
 
         mode = prompt_mode()
         if mode == MODE_UPDATE_EXISTING:
-            print()
-            print("Refreshing all keys for existing localization files...")
-            results = process_existing_only(current_source, target_paths)
-            print_summary(results)
+            plans = build_update_file_plans(current_source, target_paths)
+            existing_file_count = sum(1 for plan in plans if not plan.skipped)
+            skipped_count = sum(1 for plan in plans if plan.skipped)
+            overview_lines = [
+                f"Source: {SOURCE_FILE_PATH.name} | Source keys: {len(current_source):,}",
+                f"Model: {OPENROUTER_MODEL} | Batch size: {BATCH_SIZE:,}",
+                f"Run stats: existing files {existing_file_count} | skipped missing files {skipped_count}",
+            ]
+            tracker = ProgressTracker("update-existing", plans, overview_lines)
+            tracker.set_action("Refreshing all keys for existing localization files", "Starting translation work")
+            results = process_file_plans(plans, tracker)
+            tracker.finish_run("All update-mode files finished")
+            print_summary(results, tracker)
             return 0
 
         revision = prompt_commit_reference()
         old_source = load_source_json_from_git(revision)
         diff = compute_diff(old_source, current_source)
 
-        print()
-        print(
-            f"English diff summary compared to {revision}: "
-            f"{len(diff.added_entries)} added, "
-            f"{len(diff.edited_entries)} edited, "
-            f"{len(diff.removed_keys)} removed."
-        )
-
         temp_diff_path = create_temp_diff_file(diff.changed_entries)
-        print(f"Temporary diff localization file: {temp_diff_path}")
+        changed_entries = load_json_file(temp_diff_path)
 
         try:
-            results = process_regenerate(
-                current_source=current_source,
-                target_paths=target_paths,
-                changed_entries=load_json_file(temp_diff_path),
-                removed_keys=diff.removed_keys,
-            )
+            plans = build_regenerate_file_plans(current_source, changed_entries, diff, target_paths)
+            existing_file_count = sum(1 for plan in plans if plan.existing_entries is not None)
+            new_file_count = sum(1 for plan in plans if not plan.skipped and plan.existing_entries is None)
+            overview_lines = [
+                f"Source: {SOURCE_FILE_PATH.name} | Revision diff vs {revision}",
+                f"Model: {OPENROUTER_MODEL} | Batch size: {BATCH_SIZE:,} | Temp diff: {temp_diff_path.name}",
+                (
+                    "Run stats: "
+                    f"english added {len(diff.added_entries):,} | "
+                    f"english edited {len(diff.edited_entries):,} | "
+                    f"english removed {len(diff.removed_keys):,} | "
+                    f"existing files {existing_file_count} | new files {new_file_count}"
+                ),
+            ]
+            tracker = ProgressTracker("regenerate", plans, overview_lines)
+            tracker.set_action("Preparing regenerate-mode translation run", f"Temp diff file: {temp_diff_path.name}")
+            results = process_file_plans(plans, tracker)
         finally:
             if temp_diff_path.exists():
                 temp_diff_path.unlink()
-                print(f"Deleted temporary diff localization file: {temp_diff_path}")
 
-        print_summary(results)
+        tracker.finish_run("All regenerate-mode files finished")
+        print_summary(results, tracker)
         return 0
     except KeyboardInterrupt:
         print("\nOperation cancelled.")
