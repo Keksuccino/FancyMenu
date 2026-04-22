@@ -3,9 +3,7 @@ from __future__ import annotations
 
 import json
 import shutil
-import subprocess
 import sys
-import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -33,7 +31,6 @@ BATCH_SIZE = 500
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 REQUEST_TIMEOUT_SECONDS = 240
 REQUEST_RETRY_COUNT = 3
-TEMP_DIFF_PREFIX = "fancymenu_translation_diff_"
 PROGRESS_BAR_WIDTH = 28
 
 SYSTEM_PROMPT = """You are a professional Minecraft mod localization translator. You translate Minecraft-style localization JSONs from English to the target language. You only translate the value, never the translation keys. You never remove or add lines. You translate every line of the JSON to the target language and return back the translated version of the received JSON. Make sure you return ONLY THE TRANSLATED JSON as valid JSON, no other text. You translate mod localizations to natural sounding text in the target language, which means you sometimes swap words for better fitting ones in the target language, instead of translating directly. You also make sure to use proper gaming and Minecraft slang when translating, which means that when the target language commonly uses terms for specific words that are not the perfect direct translation, but would work best, then you will use this term, to make the translation sound more natural and high-quality. Use an informal tone for translations, like the 'Du' tone in German."""
@@ -49,19 +46,10 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 TOKENS_FILE_PATH = (SCRIPT_DIR / "../../.TOKENS").resolve()
 RESOLVED_LANG_DIRECTORY = (SCRIPT_DIR / LANG_DIRECTORY).resolve()
 SOURCE_FILE_PATH = RESOLVED_LANG_DIRECTORY / f"{SOURCE_LANGUAGE_CODE}.json"
-SOURCE_FILE_REPO_PATH = SOURCE_FILE_PATH.relative_to(SCRIPT_DIR).as_posix()
 
 
 class ScriptError(RuntimeError):
     pass
-
-
-@dataclass
-class DiffResult:
-    added_entries: OrderedDict[str, str]
-    edited_entries: OrderedDict[str, str]
-    removed_keys: list[str]
-    changed_entries: OrderedDict[str, str]
 
 
 @dataclass
@@ -82,6 +70,8 @@ class FilePlan:
     edited_keys_count: int = 0
     skipped: bool = False
     skip_reason: str = ""
+    target_existed_before_run: bool = False
+    force_full_rewrite: bool = False
 
 
 class TerminalRenderer:
@@ -297,8 +287,8 @@ def prompt_mode() -> str:
     print("     Existing files are refreshed against the current en_us.json.")
     print("     Missing language files are created afterward from the full current en_us.json.")
     print("  2) Completely (re-)generate translations for all configured languages")
-    print("     Existing files only patch English keys changed since a git revision.")
-    print("     Missing language files are generated from the full current en_us.json.")
+    print("     Every configured language file is regenerated from the full current en_us.json.")
+    print("     Existing translation files are fully replaced, not patched.")
     print()
 
     while True:
@@ -306,33 +296,6 @@ def prompt_mode() -> str:
         if choice in {MODE_UPDATE_EXISTING, MODE_REGENERATE}:
             return choice
         print("Please enter 1 or 2.")
-
-
-def prompt_commit_reference() -> str:
-    print()
-    print("Enter the git commit hash or revision to compare against the current en_us.json.")
-    print("Examples: a1b2c3d4 or HEAD~1")
-
-    while True:
-        revision = input("Git revision: ").strip()
-        if not revision:
-            print("A git revision is required.")
-            continue
-
-        result = run_git_command(["rev-parse", "--verify", f"{revision}^{{commit}}"], check=False)
-        if result.returncode == 0:
-            return revision
-        print("That git revision could not be resolved. Please try again.")
-
-
-def run_git_command(arguments: list[str], check: bool) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        ["git", *arguments],
-        cwd=SCRIPT_DIR,
-        text=True,
-        capture_output=True,
-        check=check,
-    )
 
 
 def load_json_file(path: Path) -> OrderedDict[str, str]:
@@ -397,50 +360,6 @@ def resolve_openrouter_api_key() -> tuple[str, str]:
             raise ScriptError(f"Failed to read tokens file: {TOKENS_FILE_PATH}\n{exc}") from exc
 
     return OPENROUTER_API_KEY.strip(), "script variable"
-
-
-def load_source_json_from_git(revision: str) -> OrderedDict[str, str]:
-    result = run_git_command(["show", f"{revision}:{SOURCE_FILE_REPO_PATH}"], check=False)
-    if result.returncode != 0:
-        stderr = result.stderr.strip() or "git show failed."
-        raise ScriptError(
-            f"Could not read {SOURCE_FILE_REPO_PATH} from git revision '{revision}'.\n{stderr}"
-        )
-    return load_json_text(result.stdout, f"{SOURCE_FILE_REPO_PATH} at {revision}")
-
-
-def compute_diff(old_source: OrderedDict[str, str], current_source: OrderedDict[str, str]) -> DiffResult:
-    added_entries: OrderedDict[str, str] = OrderedDict()
-    edited_entries: OrderedDict[str, str] = OrderedDict()
-    changed_entries: OrderedDict[str, str] = OrderedDict()
-
-    for key, value in current_source.items():
-        if key not in old_source:
-            added_entries[key] = value
-            changed_entries[key] = value
-            continue
-
-        if old_source[key] != value:
-            edited_entries[key] = value
-            changed_entries[key] = value
-
-    removed_keys = [key for key in old_source if key not in current_source]
-    return DiffResult(added_entries, edited_entries, removed_keys, changed_entries)
-
-
-def create_temp_diff_file(changed_entries: OrderedDict[str, str]) -> Path:
-    with tempfile.NamedTemporaryFile(
-        mode="w",
-        encoding="utf-8",
-        suffix=".json",
-        prefix=TEMP_DIFF_PREFIX,
-        dir=RESOLVED_LANG_DIRECTORY,
-        delete=False,
-    ) as handle:
-        temp_path = Path(handle.name)
-
-    write_json_file(temp_path, changed_entries)
-    return temp_path
 
 
 def chunk_entries(entries: OrderedDict[str, str], batch_size: int) -> list[OrderedDict[str, str]]:
@@ -745,41 +664,22 @@ def build_update_file_plans(
 
 def build_regenerate_file_plans(
     current_source: OrderedDict[str, str],
-    changed_entries: OrderedDict[str, str],
-    diff: DiffResult,
     target_paths: dict[str, Path],
 ) -> list[FilePlan]:
     plans: list[FilePlan] = []
 
     for file_number, (language_code, target_path) in enumerate(target_paths.items(), start=1):
-        if target_path.exists():
-            plans.append(
-                FilePlan(
-                    file_number=file_number,
-                    language_code=language_code,
-                    path=target_path,
-                    action_label="Patching existing localization file",
-                    result_label="patched existing file",
-                    translation_source_entries=changed_entries,
-                    existing_entries=load_json_file(target_path),
-                    removed_keys=list(diff.removed_keys),
-                    entries_to_translate=len(changed_entries),
-                    added_keys_count=len(diff.added_entries),
-                    edited_keys_count=len(diff.edited_entries),
-                    obsolete_keys_count=len(diff.removed_keys),
-                )
-            )
-            continue
-
         plans.append(
             FilePlan(
                 file_number=file_number,
                 language_code=language_code,
                 path=target_path,
-                action_label="Creating new localization file",
-                result_label="created new file",
+                action_label="Regenerating localization file" if target_path.exists() else "Creating regenerated localization file",
+                result_label="regenerated file" if target_path.exists() else "created new file",
                 translation_source_entries=current_source,
                 entries_to_translate=len(current_source),
+                target_existed_before_run=target_path.exists(),
+                force_full_rewrite=True,
             )
         )
 
@@ -807,13 +707,22 @@ def process_file_plans(
             openrouter_api_key,
         )
 
-        tracker.set_action("Merging translated keys into localization file", f"{plan.language_code}.json")
-        merged_entries = merge_existing_translation(plan.existing_entries, translated_entries, plan.removed_keys)
+        if plan.force_full_rewrite:
+            tracker.set_action("Replacing localization file with regenerated translation", f"{plan.language_code}.json")
+            merged_entries = OrderedDict(translated_entries)
+        else:
+            tracker.set_action("Merging translated keys into localization file", f"{plan.language_code}.json")
+            merged_entries = merge_existing_translation(plan.existing_entries, translated_entries, plan.removed_keys)
 
         tracker.set_action("Writing localization file to disk", f"{plan.path.name}")
         write_json_file(plan.path, merged_entries)
 
-        if plan.existing_entries is None:
+        if plan.force_full_rewrite:
+            if plan.target_existed_before_run:
+                result_note = f"Regenerated {plan.path.name} with {len(merged_entries):,} keys"
+            else:
+                result_note = f"Created {plan.path.name} with {len(merged_entries):,} keys"
+        elif plan.existing_entries is None:
             result_note = f"Created {plan.path.name} with {len(merged_entries):,} keys"
         else:
             result_note = (
@@ -844,6 +753,11 @@ def describe_file_stats(mode_label: str, plan: FilePlan) -> str:
     if plan.skipped:
         return f"File stats: skipped | {plan.skip_reason}"
 
+    if plan.force_full_rewrite:
+        if plan.target_existed_before_run:
+            return f"File stats: replace existing file | full translate {plan.entries_to_translate:,} keys"
+        return f"File stats: new file | full translate {plan.entries_to_translate:,} keys"
+
     if plan.existing_entries is None:
         return f"File stats: new file | full translate {plan.entries_to_translate:,} keys"
 
@@ -854,15 +768,6 @@ def describe_file_stats(mode_label: str, plan: FilePlan) -> str:
             f"overwrite {plan.overwrite_keys_count:,} | "
             f"missing add {plan.missing_keys_count:,} | "
             f"obsolete remove {plan.obsolete_keys_count:,}"
-        )
-
-    if plan.existing_entries is not None:
-        return (
-            "File stats: "
-            f"patch {plan.entries_to_translate:,} | "
-            f"english added {plan.added_keys_count:,} | "
-            f"english edited {plan.edited_keys_count:,} | "
-            f"english removed {plan.obsolete_keys_count:,}"
         )
 
     return f"File stats: new file | full translate {plan.entries_to_translate:,} keys"
@@ -939,37 +844,22 @@ def main() -> int:
             print_summary(results, tracker)
             return 0
 
-        revision = prompt_commit_reference()
-        old_source = load_source_json_from_git(revision)
-        diff = compute_diff(old_source, current_source)
-
-        temp_diff_path = create_temp_diff_file(diff.changed_entries)
-        changed_entries = load_json_file(temp_diff_path)
-
-        try:
-            plans = build_regenerate_file_plans(current_source, changed_entries, diff, target_paths)
-            existing_file_count = sum(1 for plan in plans if plan.existing_entries is not None)
-            new_file_count = sum(1 for plan in plans if not plan.skipped and plan.existing_entries is None)
-            overview_lines = [
-                f"Source: {SOURCE_FILE_PATH.name} | Revision diff vs {revision}",
-                (
-                    f"Model: {OPENROUTER_MODEL} | Batch size: {BATCH_SIZE:,} | "
-                    f"Temp diff: {temp_diff_path.name} | API key source: {api_key_source}"
-                ),
-                (
-                    "Run stats: "
-                    f"english added {len(diff.added_entries):,} | "
-                    f"english edited {len(diff.edited_entries):,} | "
-                    f"english removed {len(diff.removed_keys):,} | "
-                    f"existing files {existing_file_count} | new files {new_file_count}"
-                ),
-            ]
-            tracker = ProgressTracker("regenerate", plans, overview_lines)
-            tracker.set_action("Preparing regenerate-mode translation run", f"Temp diff file: {temp_diff_path.name}")
-            results = process_file_plans(plans, tracker, openrouter_api_key)
-        finally:
-            if temp_diff_path.exists():
-                temp_diff_path.unlink()
+        plans = build_regenerate_file_plans(current_source, target_paths)
+        existing_file_count = sum(1 for plan in plans if plan.target_existed_before_run)
+        new_file_count = sum(1 for plan in plans if not plan.target_existed_before_run)
+        overview_lines = [
+            f"Source: {SOURCE_FILE_PATH.name} | Full regeneration from current English source",
+            f"Model: {OPENROUTER_MODEL} | Batch size: {BATCH_SIZE:,} | API key source: {api_key_source}",
+            (
+                "Run stats: "
+                f"files to replace {existing_file_count} | "
+                f"missing files to create {new_file_count} | "
+                f"keys per file {len(current_source):,}"
+            ),
+        ]
+        tracker = ProgressTracker("regenerate", plans, overview_lines)
+        tracker.set_action("Preparing full regeneration run", "Starting translation work")
+        results = process_file_plans(plans, tracker, openrouter_api_key)
 
         tracker.finish_run("All regenerate-mode files finished")
         print_summary(results, tracker)
