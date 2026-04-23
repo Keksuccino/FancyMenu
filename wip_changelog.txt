@@ -237,6 +237,7 @@
 - The Game Intro now always consumes all mouse clicks while open, so you don't acidentally click the screen behind it anymore
 - Context menu chains now try to avoid overlapping parent menus in the chain
 - The "World Day Time Hour" and "Realtime Hour" placeholders now have a value to control if they should return the hour in 12-hour or 24-hour format
+- All realtime-related placeholders now support a "timezone" value for defining a specific timezone other than the system timezone (#1555)
 
 ### Breaking Changes
 
