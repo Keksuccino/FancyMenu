@@ -31,6 +31,7 @@ TARGET_LANGUAGE_CODES = [
     "ru_ru",
     "zh_cn",
     "ko_kr",
+    "pl_pl",
 ]
 OPENROUTER_API_KEY = "<openrouter_api_key_here>"
 OPENROUTER_MODEL = "openai/gpt-5.4-mini"
