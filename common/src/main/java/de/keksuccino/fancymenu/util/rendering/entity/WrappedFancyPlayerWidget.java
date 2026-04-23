@@ -304,6 +304,14 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
     }
 
     /**
+     * If the entity's nametag should be pinned. Pinning the nametag disables nametag rotation.
+     */
+    public WrappedFancyPlayerWidget setPinName(boolean pin) {
+        wrapped.setPinName(pin);
+        return this;
+    }
+
+    /**
      * Sets whether to show the player's name.
      *
      * @param showName whether to show the player's name.
@@ -311,6 +319,71 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
      */
     public WrappedFancyPlayerWidget setShowName(boolean showName) {
         wrapped.setShowName(showName);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowCape(boolean showCape) {
+        wrapped.setShowCape(showCape);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowLeftArm(boolean showLeftArm) {
+        wrapped.setShowLeftArm(showLeftArm);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowLeftSleeve(boolean showLeftSleeve) {
+        wrapped.setShowLeftSleeve(showLeftSleeve);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowRightArm(boolean showRightArm) {
+        wrapped.setShowRightArm(showRightArm);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowRightSleeve(boolean showRightSleeve) {
+        wrapped.setShowRightSleeve(showRightSleeve);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowLeftLeg(boolean showLeftLeg) {
+        wrapped.setShowLeftLeg(showLeftLeg);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowLeftPants(boolean showLeftPants) {
+        wrapped.setShowLeftPants(showLeftPants);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowRightLeg(boolean showRightLeg) {
+        wrapped.setShowRightLeg(showRightLeg);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowRightPants(boolean showRightPants) {
+        wrapped.setShowRightPants(showRightPants);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowHead(boolean showHead) {
+        wrapped.setShowHead(showHead);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowHat(boolean showHat) {
+        wrapped.setShowHat(showHat);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowBody(boolean showBody) {
+        wrapped.setShowBody(showBody);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowJacket(boolean showJacket) {
+        wrapped.setShowJacket(showJacket);
         return this;
     }
 

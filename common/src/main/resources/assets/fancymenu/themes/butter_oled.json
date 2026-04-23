@@ -1,6 +1,6 @@
 {
   "identifier": "butter_oled",
-  "display_name": "Butter OLED [by caelaThinx]",
+  "display_name": "Butter OLED [by caela]",
   "menu_bar_bottom_line_color": {
     "hex": "#101010FF"
   },
@@ -37,7 +37,7 @@
   "scroll_grabber_color_hover": {
     "hex": "#30303064"
   },
-  "screen_background_color": {
+  "interface_background_color": {
     "hex": "#000000FF"
   },
   "screen_background_color_darker": {

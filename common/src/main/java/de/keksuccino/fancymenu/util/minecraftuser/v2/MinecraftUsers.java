@@ -7,21 +7,24 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTextures;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 import de.keksuccino.fancymenu.util.CloseableUtils;
-import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.*;
 
 public class MinecraftUsers {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final Gson GSON = new Gson();
+    private static final int PROFILE_API_TIMEOUT_MS = 5000;
     private static final String MOJANG_PROFILE_API_URL = "https://api.mojang.com/users/profiles/minecraft/";
-    private static final String MINETOOLS_PROFILE_API_URL = "https://api.minetools.eu/uuid/";
     private static final Map<String, UserProfile> CACHED_PROFILES = Collections.synchronizedMap(new HashMap<>());
     private static final Map<String, MinecraftProfileTextures> CACHED_PROFILE_TEXTURES = Collections.synchronizedMap(new HashMap<>());
 
@@ -33,41 +36,48 @@ public class MinecraftUsers {
 
     @NotNull
     public static UserProfile getUserProfile(@NotNull String playerName) {
-        return _getUserProfile(playerName, false);
-    }
-
-    @NotNull
-    private static UserProfile _getUserProfile(@NotNull String playerName, boolean useMojangApi) {
-
         Objects.requireNonNull(playerName);
 
-        if (CACHED_PROFILES.containsKey(playerName)) return CACHED_PROFILES.get(playerName);
+        UserProfile cachedProfile = CACHED_PROFILES.get(playerName);
+        if (cachedProfile != null) return cachedProfile;
 
-        UserProfile profile = null;
+        HttpURLConnection connection = null;
         InputStream in = null;
+        UserProfile profile = UNKNOWN_USER_PROFILE;
 
         try {
+            URL url = new URL(MOJANG_PROFILE_API_URL + playerName);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.addRequestProperty("User-Agent", "Mozilla/4.0");
+            connection.setConnectTimeout(PROFILE_API_TIMEOUT_MS);
+            connection.setReadTimeout(PROFILE_API_TIMEOUT_MS);
 
-            Gson gson = new Gson();
-            in = Objects.requireNonNull(WebUtils.openResourceStream(useMojangApi ? (MOJANG_PROFILE_API_URL + playerName) : (MINETOOLS_PROFILE_API_URL + playerName)));
-            List<String> jsonLines = FileUtils.readTextLinesFrom(in);
-            StringBuilder json = new StringBuilder();
-            jsonLines.forEach(json::append);
-            profile = Objects.requireNonNull(gson.fromJson(json.toString(), UserProfile.class));
-            CACHED_PROFILES.put(playerName, profile);
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                in = connection.getInputStream();
+                String json = String.join("", FileUtils.readTextLinesFrom(in));
+                if (!json.isBlank()) {
+                    UserProfile parsedProfile = GSON.fromJson(json, UserProfile.class);
+                    if ((parsedProfile != null) && (parsedProfile.getUUID() != null)) {
+                        profile = parsedProfile;
+                    }
+                }
+            } else if ((responseCode != HttpURLConnection.HTTP_NO_CONTENT) && (responseCode != HttpURLConnection.HTTP_NOT_FOUND)) {
+                LOGGER.error("[FANCYMENU] Failed to get player profile via Mojang API: " + playerName + " (HTTP " + responseCode + ")");
+            }
 
         } catch (Exception ex) {
-            if (!useMojangApi) {
-                LOGGER.error("[FANCYMENU] Failed to get player profile '" + playerName + "' via Minetools API! Trying Mojang API now..", ex);
-                return _getUserProfile(playerName, true);
+            LOGGER.error("[FANCYMENU] Failed to get player profile via Mojang API: " + playerName, ex);
+        } finally {
+            CloseableUtils.closeQuietly(in);
+            if (connection != null) {
+                connection.disconnect();
             }
-            CACHED_PROFILES.put(playerName, UNKNOWN_USER_PROFILE);
-            LOGGER.error("[FANCYMENU] Failed to get player profile: " + playerName, ex);
         }
 
-        CloseableUtils.closeQuietly(in);
+        CACHED_PROFILES.put(playerName, profile);
 
-        return (profile != null) ? profile : UNKNOWN_USER_PROFILE;
+        return profile;
 
     }
 

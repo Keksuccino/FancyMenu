@@ -27,11 +27,17 @@ Target Java 21 with 4-space indentation and UTF-8 encoding (WITHOUT BOM), matchi
 FancyMenu uses its own custom packet system. If you need to add packets for a feature, make sure to analyze the `de.keksuccino.fancymenu.networking` package in the `common` module first, to understand how packets get implemented and registered.
 
 ## Minecraft Sources
-You have access to the full Minecraft 1.21.1 sources in the `minecraft_cached_sources` folder. The folder contains source sets for Fabric (`fabric`), Forge (`forge`) and NeoForge (`neoforge`). Before starting a task, make sure to read sources you could need for the task, so you know how the current Minecraft code actually looks. Always do that, knowing how the actual Minecraft code looks is very important, especially when you work with mixins.
+You have access to the full Minecraft 1.21.1 sources in the `minecraft_sources` folder. The folder contains source sets for Fabric (`fabric`), Forge (`forge`) and NeoForge (`neoforge`). Before starting a task, make sure to read sources you could need for the task, so you know how the current Minecraft code actually looks. Always do that, knowing how the actual Minecraft code looks is very important, especially when you work with mixins.
 Make sure to always compare Vanilla classes from all 3 modloaders (Fabric, Forge, NeoForge), since Forge and NeoForge often alter Vanilla classes, so mixins can't always get applied in `common` and instead need to get implemented for every launcher if the point to place the mixin differs between modloaders.
 
-## OpenGL Sources
-You have access to the full LWJGL OpenGL library sources of the OpenGL version used in Minecraft 1.21.1 in the `opengl_library_cached_sources` folder. Make sure to check the sources when working on GUI tasks that involve working with raw OpenGL.
+## Library Sources
+You have access to many of the libraries used in FancyMenu and Minecraft, including full LWJGL/OpenGL library sources and full Watermedia V3 sources in the `library_sources` folder. Make sure to check the correct sources before starting to work with libraries.
 
-## Git & Run/Compile
-NEVER try to run git commands or try to run/compile the project!
+## Git
+Use git as needed for the task. Every time you finish a task, commit your changes and push them to the configured remote.
+
+## Build/Compile
+NEVER try to run or compile the project!
+
+## Sub Agents
+DON'S SPAWN SUB AGENTS unless the user explicitly tells you to do that.

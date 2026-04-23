@@ -1,20 +1,18 @@
 package de.keksuccino.fancymenu.customization.element.elements.splash;
 
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.input.TextValidators;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
-public class SplashTextEditorElement extends AbstractEditorElement {
+public class SplashTextEditorElement extends AbstractEditorElement<SplashTextEditorElement, SplashTextElement> {
 
-    public SplashTextEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public SplashTextEditorElement(@NotNull SplashTextElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
     }
 
@@ -39,22 +37,23 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                         return Component.translatable("fancymenu.elements.splash.source_mode.direct");
                     }
                     return Component.translatable("fancymenu.elements.splash.source_mode.text_file");
-                });
+                })
+                .setIcon(MaterialIcons.TUNE);
 
         this.addTextResourceChooserContextMenuEntryTo(this.rightClickMenu, "set_source_file",
                         SplashTextEditorElement.class,
                         null,
-                        consumes -> consumes.getElement().textFileSupplier,
+                        consumes -> consumes.element.textFileSupplier,
                         (splashTextEditorElement, iTextResourceSupplier) -> {
-                            splashTextEditorElement.getElement().textFileSupplier = iTextResourceSupplier;
-                            if (iTextResourceSupplier != null) splashTextEditorElement.getElement().source = iTextResourceSupplier.getSourceWithPrefix();
-                            splashTextEditorElement.getElement().refresh();
-                            splashTextEditorElement.getElement().updateSplash();
+                            splashTextEditorElement.element.textFileSupplier = iTextResourceSupplier;
+                            if (iTextResourceSupplier != null) splashTextEditorElement.element.source = iTextResourceSupplier.getSourceWithPrefix();
+                            splashTextEditorElement.element.refresh();
+                            splashTextEditorElement.element.updateSplash();
                         },
                         Component.translatable("fancymenu.elements.splash.source_mode.text_file.set_source"),
                         false, null, true, true, true)
                 .setIsVisibleSupplier((menu, entry) -> ((SplashTextElement)this.element).sourceMode == SplashTextElement.SourceMode.TEXT_FILE)
-                .setIcon(ContextMenu.IconFactory.getIcon("text"));
+                .setIcon(MaterialIcons.FILE_OPEN);
 
         this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "input_direct",
                         consumes -> (consumes instanceof SplashTextEditorElement),
@@ -66,71 +65,47 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                         null, false, true, Component.translatable("fancymenu.elements.splash.source_mode.direct.set_source"),
                         false, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
                 .setIsVisibleSupplier((menu, entry) -> ((SplashTextElement)this.element).sourceMode == SplashTextElement.SourceMode.DIRECT_TEXT)
-                .setIcon(ContextMenu.IconFactory.getIcon("text"));
+                .setIcon(MaterialIcons.TEXT_FIELDS);
 
         this.rightClickMenu.addSeparatorEntry("splash_separator_1");
 
-        this.addGenericFloatInputContextMenuEntryTo(this.rightClickMenu, "set_scale",
-                        consumes -> (consumes instanceof SplashTextEditorElement),
-                        consumes -> ((SplashTextElement)consumes.element).scale,
-                        (element, scale) -> {
-                            ((SplashTextElement)element.element).scale = Math.max(0.2F, scale);
-                            ((SplashTextElement)element.element).updateSplash();
-                        },
-                        Component.translatable("fancymenu.elements.splash.set_scale"),
-                        true, 1.0F, null, null)
+        this.element.scale.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setStackable(true)
-                .setIcon(ContextMenu.IconFactory.getIcon("measure"));
+                .setIcon(MaterialIcons.FORMAT_SIZE);
 
-        this.addGenericFloatInputContextMenuEntryTo(this.rightClickMenu, "set_rotation",
-                        consumes -> (consumes instanceof SplashTextEditorElement),
-                        consumes -> ((SplashTextElement)consumes.element).rotation,
-                        (element, rot) -> {
-                            ((SplashTextElement)element.element).rotation = rot;
-                            ((SplashTextElement)element.element).updateSplash();
-                        },
-                        Component.translatable("fancymenu.elements.splash.rotation"),
-                        true, 20.0F, null, null)
-                .setStackable(true);
+        this.element.rotation.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setStackable(true)
+                .setIcon(MaterialIcons.ROTATE_RIGHT);
 
-        this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "set_color",
-                        consumes -> (consumes instanceof SplashTextEditorElement),
-                        consumes -> ((SplashTextElement)consumes.element).baseColor.getHex(),
-                        (element1, s) -> {
-                            ((SplashTextElement)element1.element).baseColor = DrawableColor.of(s);
-                            ((SplashTextElement)element1.element).updateSplash();
-                        },
-                        null, false, true, Component.translatable("fancymenu.elements.splash.basecolor"),
-                        true, DrawableColor.of(255, 255, 0).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
-                .setStackable(true);
+        this.element.baseColor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setIcon(MaterialIcons.PALETTE);
 
-        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "shadow",
-                        consumes -> (consumes instanceof SplashTextEditorElement),
-                        consumes -> ((SplashTextElement)consumes.element).shadow,
-                        (element1, s) -> ((SplashTextElement)element1.element).shadow = s,
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "shadow",
+                        SplashTextEditorElement.class,
+                        element -> element.element.shadow,
+                        (element, s) -> element.element.shadow = s,
                         "fancymenu.elements.splash.shadow")
                 .setStackable(true)
-                .setIcon(ContextMenu.IconFactory.getIcon("shadow"));
+                .setIcon(MaterialIcons.SHADOW);
 
-        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "bouncing",
-                        consumes -> (consumes instanceof SplashTextEditorElement),
-                        consumes -> ((SplashTextElement)consumes.element).bounce,
-                        (element1, s) -> ((SplashTextElement)element1.element).bounce = s,
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "bouncing",
+                        SplashTextEditorElement.class,
+                        element -> element.element.bounce,
+                        (element, s) -> element.element.bounce = s,
                         "fancymenu.elements.splash.bounce")
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(MaterialIcons.ANIMATION);
 
-        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "refresh_on_load",
-                        consumes -> (consumes instanceof SplashTextEditorElement),
-                        consumes -> ((SplashTextElement)consumes.element).refreshOnMenuReload,
-                        (element1, s) -> ((SplashTextElement)element1.element).refreshOnMenuReload = s,
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "refresh_on_load",
+                        SplashTextEditorElement.class,
+                        element -> element.element.refreshOnMenuReload,
+                        (element, s) -> element.element.refreshOnMenuReload = s,
                         "fancymenu.elements.splash.refresh")
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.splash.refresh.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.splash.refresh.desc")))
+                .setIcon(MaterialIcons.REFRESH);
 
     }
 
-    public SplashTextElement getElement() {
-        return (SplashTextElement) this.element;
-    }
 
 }

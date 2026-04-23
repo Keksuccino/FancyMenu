@@ -134,7 +134,7 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
      * This scale works against the actual GUI scale to make it possible to render the {@link UIComponent} in a different scale than the GUI scale.
      */
     public float getFixedComponentScale() {
-        return calculateFixedScale(this.getComponentScale());
+        return calculateFixedRenderScale(this.getComponentScale());
     }
 
     /**

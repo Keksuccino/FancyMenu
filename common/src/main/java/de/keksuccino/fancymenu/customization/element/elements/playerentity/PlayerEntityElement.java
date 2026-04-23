@@ -5,8 +5,10 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.textures.CapeResourceSupplier;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.textures.SkinResourceSupplier;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinOptions;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.entity.FancyEntityRendererUtils;
 import de.keksuccino.fancymenu.util.rendering.entity.WrappedFancyPlayerWidget;
@@ -19,6 +21,7 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.animal.Parrot;
+import net.minecraft.world.entity.player.PlayerModelPart;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -27,6 +30,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
+import java.util.Set;
 
 public class PlayerEntityElement extends AbstractElement {
     
@@ -37,6 +41,7 @@ public class PlayerEntityElement extends AbstractElement {
     @NotNull
     public volatile String playerName = "Steve";
     public boolean showPlayerName = true;
+    public final Property<Boolean> nametagRotation = putProperty(Property.booleanProperty("nametag_rotation", true, "fancymenu.elements.player_entity.nametag_rotation"));
     @NotNull
     public PlayerPose pose = PlayerPose.STANDING;
     public boolean bodyMovement = false;
@@ -103,16 +108,24 @@ public class PlayerEntityElement extends AbstractElement {
 
     @Nullable
     protected WrappedFancyPlayerWidget widget = null;
+    protected Exception widgetConstructionFirstFail = null;
+    protected Exception widgetConstructionSecondFail = null;
 
     public PlayerEntityElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.supportsRotation = false;
+        this.supportsTilting = false;
     }
 
     @Override
     public void afterConstruction() {
         super.afterConstruction();
         if (FancyEntityRendererUtils.isFerLoaded()) {
-            this.widget = WrappedFancyPlayerWidget.build(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+            try {
+                this.widget = WrappedFancyPlayerWidget.build(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+            } catch (Exception ex) {
+                this.widgetConstructionFirstFail = ex;
+            }
         }
     }
 
@@ -120,6 +133,18 @@ public class PlayerEntityElement extends AbstractElement {
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.shouldRender()) {
+
+            // Re-try constructing widget if first attempt failed
+            if ((this.widgetConstructionFirstFail != null) && (this.widgetConstructionSecondFail == null)) {
+                if (FancyEntityRendererUtils.isFerLoaded()) {
+                    try {
+                        this.widget = WrappedFancyPlayerWidget.build(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+                    } catch (Exception ex) {
+                        this.widgetConstructionSecondFail = ex;
+                        LOGGER.error("[FANCYMENU] Failed to construct widget for PlayerEntityElement! Both construction attempts failed!", ex);
+                    }
+                }
+            }
 
             if (this.widget == null) {
 
@@ -159,11 +184,13 @@ public class PlayerEntityElement extends AbstractElement {
         if (this.widget != null) {
 
             this.widget.setShowName(this.showPlayerName);
-            this.widget.setName(this.playerName);
+            this.widget.setName(PlaceholderParser.replacePlaceholders(this.playerName));
+            this.widget.setPinName(!this.nametagRotation.tryGetNonNull());
             this.widget.setBaby(this.isBaby);
             this.widget.setHeadFollowsMouse(this.headFollowsMouse);
             this.widget.setBodyFollowsMouse(this.bodyFollowsMouse);
             this.widget.setSlim(this.slim);
+            this.updateModelPartVisibility();
 
         }
 
@@ -247,6 +274,45 @@ public class PlayerEntityElement extends AbstractElement {
             if (capeLoc == CapeResourceSupplier.DEFAULT_CAPE_LOCATION) capeLoc = null;
         }
         this.widget.setSkin(new PlayerSkin(skinLoc, null, capeLoc, null, this.slim ? PlayerSkin.Model.SLIM : PlayerSkin.Model.WIDE, false));
+    }
+
+    protected void updateModelPartVisibility() {
+        if (this.widget == null) return;
+        if (this.copyClientPlayer) {
+            try {
+                Set<PlayerModelPart> parts = ((IMixinOptions) Minecraft.getInstance().options).getModelPartsFancyMenu();
+                this.widget.setShowCape(parts.contains(PlayerModelPart.CAPE));
+                this.widget.setShowJacket(parts.contains(PlayerModelPart.JACKET));
+                this.widget.setShowLeftSleeve(parts.contains(PlayerModelPart.LEFT_SLEEVE));
+                this.widget.setShowRightSleeve(parts.contains(PlayerModelPart.RIGHT_SLEEVE));
+                this.widget.setShowLeftPants(parts.contains(PlayerModelPart.LEFT_PANTS_LEG));
+                this.widget.setShowRightPants(parts.contains(PlayerModelPart.RIGHT_PANTS_LEG));
+                this.widget.setShowHat(parts.contains(PlayerModelPart.HAT));
+
+                this.widget.setShowHead(true);
+                this.widget.setShowBody(true);
+                this.widget.setShowLeftArm(true);
+                this.widget.setShowRightArm(true);
+                this.widget.setShowLeftLeg(true);
+                this.widget.setShowRightLeg(true);
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to sync client skin settings for PlayerEntityElement!", ex);
+            }
+        } else {
+            this.widget.setShowCape(true);
+            this.widget.setShowJacket(true);
+            this.widget.setShowLeftSleeve(true);
+            this.widget.setShowRightSleeve(true);
+            this.widget.setShowLeftPants(true);
+            this.widget.setShowRightPants(true);
+            this.widget.setShowHat(true);
+            this.widget.setShowHead(true);
+            this.widget.setShowBody(true);
+            this.widget.setShowLeftArm(true);
+            this.widget.setShowRightArm(true);
+            this.widget.setShowLeftLeg(true);
+            this.widget.setShowRightLeg(true);
+        }
     }
 
     public void setCopyClientPlayer(boolean copyClientPlayer) {
@@ -441,7 +507,7 @@ public class PlayerEntityElement extends AbstractElement {
                 if (serialized.contains(SERIALIZATION_SEPARATOR)) {
                     var array = serialized.split(SERIALIZATION_SEPARATOR);
                     String key = array[0];
-                    boolean enchant = SerializationUtils.deserializeBoolean(false, array[1]);
+                    boolean enchant = SerializationHelper.INSTANCE.deserializeBoolean(false, array[1]);
                     return new Wearable(key, enchant);
                 }
             } catch (Exception ex) {

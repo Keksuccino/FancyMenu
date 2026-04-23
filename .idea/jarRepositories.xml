@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RemoteRepositoriesConfiguration">
+    <remote-repository>
+      <option name="id" value="central" />
+      <option name="name" value="Maven Central repository" />
+      <option name="url" value="https://repo1.maven.org/maven2" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="jboss.community" />
+      <option name="name" value="JBoss Community repository" />
+      <option name="url" value="https://repository.jboss.org/nexus/content/repositories/public/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="Mojang" />
+      <option name="name" value="Mojang" />
+      <option name="url" value="https://libraries.minecraft.net/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="MavenRepo" />
+      <option name="name" value="MavenRepo" />
+      <option name="url" value="https://repo.maven.apache.org/maven2/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="Sponge / Mixin" />
+      <option name="name" value="Sponge / Mixin" />
+      <option name="url" value="https://repo.spongepowered.org/repository/maven-public/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="maven" />
+      <option name="name" value="maven" />
+      <option name="url" value="https://cursemaven.com" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="maven2" />
+      <option name="name" value="maven2" />
+      <option name="url" value="https://api.modrinth.com/maven" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="maven3" />
+      <option name="name" value="maven3" />
+      <option name="url" value="https://jitpack.io" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="MCEF Releases" />
+      <option name="name" value="MCEF Releases" />
+      <option name="url" value="https://mcef-download.cinemamod.com/repositories/releases" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="MCEF Snapshots" />
+      <option name="name" value="MCEF Snapshots" />
+      <option name="url" value="https://mcef-download.cinemamod.com/repositories/snapshots" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="ParchmentMC Maven" />
+      <option name="name" value="ParchmentMC Maven" />
+      <option name="url" value="https://maven.parchmentmc.org" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="Crystal Nest" />
+      <option name="name" value="Crystal Nest" />
+      <option name="url" value="https://maven.crystalnest.it" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="LoomLocalRemappedMods" />
+      <option name="name" value="LoomLocalRemappedMods" />
+      <option name="url" value="file:/$PROJECT_DIR$/../../Minecraft%20Mods/fancymenu-1.21.1/.gradle/loom-cache/remapped_mods/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="LoomGlobalMinecraft" />
+      <option name="name" value="LoomGlobalMinecraft" />
+      <option name="url" value="file:/$PROJECT_DIR$/../../../../.GRADLE_CACHE/caches/fabric-loom/minecraftMaven/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="LoomLocalMinecraft" />
+      <option name="name" value="LoomLocalMinecraft" />
+      <option name="url" value="file:/$PROJECT_DIR$/../../Minecraft%20Mods/fancymenu-1.21.1/.gradle/loom-cache/minecraftMaven/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="Fabric" />
+      <option name="name" value="Fabric" />
+      <option name="url" value="https://maven.fabricmc.net/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="maven4" />
+      <option name="name" value="maven4" />
+      <option name="url" value="https://maven.minecraftforge.net/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="Parchment Data" />
+      <option name="name" value="Parchment Data" />
+      <option name="url" value="https://maven.parchmentmc.org/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="NeoForm Maven" />
+      <option name="name" value="NeoForm Maven" />
+      <option name="url" value="https://maven.neoforged.net/releases/" />
+    </remote-repository>
+  </component>
+</project>

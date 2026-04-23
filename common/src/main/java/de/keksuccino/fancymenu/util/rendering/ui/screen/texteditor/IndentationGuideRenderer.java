@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 
-import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
@@ -12,13 +11,13 @@ import java.util.*;
  */
 public class IndentationGuideRenderer {
 
-    private final TextEditorScreen editor;
+    private final TextEditorWindowBody editor;
     private final Color guideColor;
     private int indentSize = 2; // Default indent size (2 spaces)
     private final Map<Integer, List<IndentGuide>> lineGuides = new HashMap<>(); // lineIndex -> list of guides to render
     private boolean needsUpdate = true;
 
-    public IndentationGuideRenderer(TextEditorScreen editor) {
+    public IndentationGuideRenderer(TextEditorWindowBody editor) {
         this.editor = editor;
         this.guideColor = new Color(100, 100, 100, 60); // Subtle gray with transparency
     }

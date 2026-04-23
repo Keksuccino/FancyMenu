@@ -4,20 +4,30 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
+import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
+import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.resource.RenderableResource;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
+import net.minecraft.client.renderer.PanoramaRenderer;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -33,18 +43,36 @@ import java.util.List;
 @Mixin(Screen.class)
 public abstract class MixinScreen implements CustomizableScreen {
 
-	@Unique private static final Logger LOGGER_FANCYMENU = LogManager.getLogger();
+    @Unique private static final ResourceLocation DIRT_TEXTURE_FANCYMENU = ResourceLocation.withDefaultNamespace("textures/block/dirt.png");
 
 	@Unique private final List<GuiEventListener> removeOnInitChildrenFancyMenu = new ArrayList<>();
 	@Unique private boolean nextFocusPath_called_FancyMenu = false;
 
 	@Shadow @Final private List<GuiEventListener> children;
 
+    @Shadow
+    public int width;
+
+    @Shadow
+    public int height;
+
     @WrapOperation(method = "renderWithTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
     private void wrap_render_in_renderWithTooltip_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {
         EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(instance, graphics, mouseX, mouseY, partial));
         original.call(instance, graphics, mouseX, mouseY, partial);
         EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(instance, graphics, mouseX, mouseY, partial));
+    }
+
+    @WrapOperation(method = "renderWithTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;renderTooltip(Lnet/minecraft/client/gui/Font;Ljava/util/List;Lnet/minecraft/client/gui/screens/inventory/tooltip/ClientTooltipPositioner;II)V"))
+    private void wrap_renderTooltip_in_renderWithTooltip_FancyMenu(GuiGraphics instance, Font font, List<FormattedCharSequence> tooltipLines, ClientTooltipPositioner tooltipPositioner, int mouseX, int mouseY, Operation<Void> original) {
+        if (PiPWindowHandler.INSTANCE.isAnyWindowOpen()) {
+            // Makes tooltips render later when PipWindows are open
+            RenderingUtils.postPostRenderTask((graphics, mouseX1, mouseY1, partial) -> {
+                instance.renderTooltip(font, tooltipLines, tooltipPositioner, mouseX, mouseY);
+            });
+            return;
+        }
+        original.call(instance, font, tooltipLines, tooltipPositioner, mouseX, mouseY);
     }
 
     @Inject(method = "renderWithTooltip", at = @At("RETURN"))
@@ -54,13 +82,60 @@ public abstract class MixinScreen implements CustomizableScreen {
 
     @Inject(method = "renderBlurredBackground", at = @At("HEAD"), cancellable = true)
     private void head_renderBlurredBackground_FancyMenu(float f, CallbackInfo info) {
-        if (RenderingUtils.isMenuBlurringBlocked()) info.cancel();
+        if (RenderingUtils.isVanillaMenuBlurringBlocked()) info.cancel();
+    }
+
+    @Inject(method = "renderPanorama", at = @At("HEAD"), cancellable = true)
+    private void before_renderPanorama_FancyMenu(GuiGraphics graphics, float partial, CallbackInfo info) {
+        LocalTexturePanoramaRenderer panorama = GlobalCustomizationHandler.getCustomBackgroundPanorama();
+        if (panorama != null) {
+            float previousOpacity = panorama.opacity;
+            panorama.opacity = 1.0F;
+            panorama.render(graphics, 0, 0, partial);
+            panorama.opacity = previousOpacity;
+            info.cancel();
+        }
+    }
+
+    @WrapOperation(method = "renderPanorama", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/PanoramaRenderer;render(Lnet/minecraft/client/gui/GuiGraphics;IIFF)V"))
+    private void wrap_panorama_rendering_in_renderPanorama_FancyMenu(PanoramaRenderer instance, GuiGraphics graphics, int width, int height, float fade, float partialTick, Operation<Void> original) {
+        if (PiPWindowHandler.INSTANCE.isScreenRenderActive()) {
+            // This forces a normal background texture for PiP window screens
+            graphics.setColor(0.5F, 0.5F, 0.5F, 1.0F);
+            RenderSystem.enableBlend();
+            Screen.renderMenuBackgroundTexture(graphics, DIRT_TEXTURE_FANCYMENU, 0, 0, 0.0F, 0.0F, this.width, this.height);
+            RenderSystem.disableBlend();
+            RenderingUtils.resetShaderColor(graphics);
+        } else {
+            original.call(instance, graphics, width, height, fade, partialTick);
+        }
+    }
+
+    @Inject(method = "renderMenuBackgroundTexture", at = @At("HEAD"), cancellable = true)
+    private static void before_renderMenuBackgroundTexture_FancyMenu(GuiGraphics graphics, ResourceLocation location, int x, int y, float uOffset, float vOffset, int width, int height, CallbackInfo info) {
+        Screen currentScreen = Minecraft.getInstance().screen;
+        if (SeamlessWorldLoadingHandler.renderLoadingBackgroundIfActive(graphics, x, y, width, height, currentScreen)) {
+            info.cancel();
+            return;
+        }
+        RenderableResource customBackground = GlobalCustomizationHandler.getCustomMenuBackgroundTexture();
+        if (customBackground == null) return;
+        ResourceLocation customLocation = customBackground.getResourceLocation();
+        if (customLocation == null) return;
+        int textureWidth = customBackground.getWidth();
+        int textureHeight = customBackground.getHeight();
+        if (textureWidth <= 0 || textureHeight <= 0) return;
+        RenderSystem.enableBlend();
+        RenderingUtils.blitRepeat(graphics, customLocation, x, y, width, height, textureWidth, textureHeight);
+        RenderingUtils.resetShaderColor(graphics);
+        RenderSystem.disableBlend();
+        info.cancel();
     }
 
 	@WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderBackground(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
 	private void wrap_renderBackground_in_render_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {
-		//Don't fire the event in the TitleScreen, because it gets handled differently there
-		if (instance instanceof TitleScreen) {
+		//Don't fire the event in the TitleScreen and container screens, because it gets handled differently there
+		if ((instance instanceof TitleScreen) || (instance instanceof AbstractContainerScreen<?>)) {
 			original.call(instance, graphics, mouseX, mouseY, partial);
 			return;
 		}

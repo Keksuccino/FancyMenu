@@ -5,17 +5,18 @@ import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v1.RangeSliderButton;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -273,16 +274,16 @@ public class PlayerEntityPoseScreen extends CellScreen {
         String cachedRightLegZRot = this.element.rightLegZRot;
         String cachedScale = this.element.scale;
         ElementAnchorPoint cachedOrientation = this.element.anchorPoint;
-        String cachedAdvancedX = this.element.advancedX;
-        String cachedAdvancedY = this.element.advancedY;
+        var cachedAdvancedX = this.element.advancedX.clone();
+        var cachedAdvancedY = this.element.advancedY.clone();
         int cachedPosOffsetX = this.element.posOffsetX;
         int cachedPosOffsetY = this.element.posOffsetY;
 
         this.applyPose();
         this.element.scale = "" + ENTITY_SCALE;
         this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
-        this.element.advancedX = null;
-        this.element.advancedY = null;
+        this.element.advancedX.resetToDefault();
+        this.element.advancedY.resetToDefault();
         this.element.posOffsetX = posX;
         this.element.posOffsetY = posY;
 
@@ -307,8 +308,8 @@ public class PlayerEntityPoseScreen extends CellScreen {
         this.element.rightLegZRot = cachedRightLegZRot;
         this.element.scale = cachedScale;
         this.element.anchorPoint = cachedOrientation;
-        this.element.advancedX = cachedAdvancedX;
-        this.element.advancedY = cachedAdvancedY;
+        this.element.advancedX.copyValueFrom((Property.ManualInputProperty<Integer>) cachedAdvancedX);
+        this.element.advancedY.copyValueFrom((Property.ManualInputProperty<Integer>) cachedAdvancedY);
         this.element.posOffsetX = cachedPosOffsetX;
         this.element.posOffsetY = cachedPosOffsetY;
 
@@ -381,7 +382,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
 
         public AbstractWidget activeWidget;
         public ExtendedButton rotationStringButton;
-        public RangeSliderButton rotationSlider;
+        public RangeSlider rotationSlider;
         public CycleButton<CommonCycles.CycleEnabledDisabled> toggleModeButton;
 
         public RotationCell(@NotNull String localizationKeySuffix, @NotNull Supplier<String> rotationValueGetter, @NotNull Consumer<String> rotationValueSetter, @NotNull Supplier<Boolean> advancedModeGetter, @NotNull Consumer<Boolean> advancedModeSetter) {
@@ -395,25 +396,24 @@ public class PlayerEntityPoseScreen extends CellScreen {
             UIBase.applyDefaultWidgetSkinTo(this.toggleModeButton);
 
             this.rotationStringButton = new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.elements.player_entity.pose.advanced." + localizationKeySuffix), button -> {
-                TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.elements.player_entity.pose.advanced." + localizationKeySuffix), null, call -> {
+                Component title = Component.translatable("fancymenu.elements.player_entity.pose.advanced." + localizationKeySuffix);
+                TextEditorWindowBody s = new TextEditorWindowBody(title, null, call -> {
                     if (call != null) {
                         rotationValueSetter.accept(call);
                     }
-                    Minecraft.getInstance().setScreen(PlayerEntityPoseScreen.this);
                 });
                 s.setText(rotationValueGetter.get());
-                Minecraft.getInstance().setScreen(s);
+                Dialogs.openGeneric(s, title, null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
             });
             UIBase.applyDefaultWidgetSkinTo(this.rotationStringButton);
 
-            this.rotationSlider = new RangeSliderButton(0, 0, 20, 20, false, -180.0D, 180.0D, stringToFloat(rotationValueGetter.get()), (slider) -> {
-                if (!advancedModeGetter.get()) rotationValueSetter.accept("" + (float)((RangeSliderButton)slider).getSelectedRangeDoubleValue());
-            }) {
-                @Override
-                public String getSliderMessageWithoutPrefixSuffix() {
-                    return I18n.get("fancymenu.elements.player_entity.pose." + localizationKeySuffix, super.getSliderMessageWithoutPrefixSuffix());
-                }
-            };
+            this.rotationSlider = new RangeSlider(0, 0, 20, 20, Component.empty(), -180.0D, 180.0D, stringToFloat(rotationValueGetter.get()));
+            this.rotationSlider.setShowAsInteger(true);
+            this.rotationSlider.setRoundingDecimalPlace(-1);
+            this.rotationSlider.setLabelSupplier(consumes -> Component.translatable("fancymenu.elements.player_entity.pose." + localizationKeySuffix, Component.literal(((RangeSlider)consumes).getValueDisplayText())));
+            this.rotationSlider.setSliderValueUpdateListener((slider1, valueDisplayText, value) -> {
+                if (!advancedModeGetter.get()) rotationValueSetter.accept("" + (float)((RangeSlider)slider1).getRangeValue());
+            });
             UIBase.applyDefaultWidgetSkinTo(this.rotationSlider);
 
             this.activeWidget = advancedModeGetter.get() ? this.rotationStringButton : this.rotationSlider;

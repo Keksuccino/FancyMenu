@@ -1,18 +1,12 @@
 package de.keksuccino.fancymenu.customization.background.backgrounds.video.mcef;
 
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
-import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.SerializationUtils;
-import de.keksuccino.fancymenu.util.resource.ResourceSource;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
+import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
-import java.util.function.Consumer;
 
 public class MCEFVideoMenuBackgroundBuilder extends MenuBackgroundBuilder<MCEFVideoMenuBackground> {
 
@@ -21,60 +15,37 @@ public class MCEFVideoMenuBackgroundBuilder extends MenuBackgroundBuilder<MCEFVi
     }
 
     @Override
-    public void buildNewOrEditInstance(Screen currentScreen, @Nullable MCEFVideoMenuBackground backgroundToEdit, @NotNull Consumer<MCEFVideoMenuBackground> backgroundConsumer) {
-        MCEFVideoMenuBackground back = (backgroundToEdit != null) ? (MCEFVideoMenuBackground) backgroundToEdit.copy() : null;
-        if (back == null) {
-            back = new MCEFVideoMenuBackground(this);
-        }
-        MCEFVideoMenuBackgroundConfigScreen s = new MCEFVideoMenuBackgroundConfigScreen(back, background -> {
-            if (background != null) {
-                backgroundConsumer.accept(background);
-            } else {
-                backgroundConsumer.accept(backgroundToEdit);
-            }
-            Minecraft.getInstance().setScreen(currentScreen);
-        });
-        Minecraft.getInstance().setScreen(s);
+    public boolean isDeprecated() {
+        return true;
     }
 
     @Override
-    public MCEFVideoMenuBackground deserializeBackground(SerializedMenuBackground serialized) {
+    public @NotNull MCEFVideoMenuBackground buildDefaultInstance() {
+        return new MCEFVideoMenuBackground(this);
+    }
 
-        MCEFVideoMenuBackground background = new MCEFVideoMenuBackground(this);
+    @Override
+    public void deserializeBackground(@NotNull PropertyContainer serializedBackground, @NotNull MCEFVideoMenuBackground deserializeTo) {
 
-        String source = serialized.getValue("source");
-        background.rawVideoUrlSource = (source != null) ? ResourceSource.of(source) : null;
-        background.loop = SerializationUtils.deserializeBoolean(background.loop, serialized.getValue("loop"));
-        background.volume = SerializationUtils.deserializeNumber(Float.class, background.volume, serialized.getValue("volume"));
-        String soundSource = serialized.getValue("sound_source");
-        if (soundSource != null) background.soundSource = Objects.requireNonNullElse(getSoundSourceByName(soundSource), SoundSource.MASTER);
+        // Legacy support for old single-value parallax intensity
+        String parallaxIntensityX = serializedBackground.getValue("parallax_intensity_x");
+        String parallaxIntensityY = serializedBackground.getValue("parallax_intensity_y");
+        if ((parallaxIntensityX == null) || (parallaxIntensityY == null)) {
+            String legacyParallaxIntensity = Objects.requireNonNullElse(serializedBackground.getValue("parallax_intensity"), "0.02");
+            deserializeTo.parallaxIntensityXString.setManualInput(legacyParallaxIntensity);
+            deserializeTo.parallaxIntensityYString.setManualInput(legacyParallaxIntensity);
+        }
 
-        background.parallaxEnabled = SerializationUtils.deserializeBoolean(background.parallaxEnabled, serialized.getValue("parallax"));
-        background.parallaxIntensityString = Objects.requireNonNullElse(serialized.getValue("parallax_intensity"), "0.02");
-        background.invertParallax = SerializationUtils.deserializeBoolean(background.invertParallax, serialized.getValue("invert_parallax"));
-
-        return background;
+        // Fix for unknown sound channels
+        String soundSource = deserializeTo.soundSource.getString();
+        if ((soundSource != null) && (MCEFVideoMenuBackground.getSoundSourceByName(soundSource) == null)) {
+            deserializeTo.soundSource.set(SoundSource.MASTER.getName());
+        }
 
     }
 
     @Override
-    public SerializedMenuBackground serializedBackground(MCEFVideoMenuBackground background) {
-
-        SerializedMenuBackground serialized = new SerializedMenuBackground();
-
-        if (background.rawVideoUrlSource != null) {
-            serialized.putProperty("source", background.rawVideoUrlSource.getSerializationSource());
-        }
-        serialized.putProperty("loop", "" + background.loop);
-        serialized.putProperty("volume", "" + background.volume);
-        serialized.putProperty("sound_source", background.soundSource.getName());
-
-        serialized.putProperty("parallax", "" + background.parallaxEnabled);
-        serialized.putProperty("parallax_intensity", background.parallaxIntensityString);
-        serialized.putProperty("invert_parallax", "" + background.invertParallax);
-
-        return serialized;
-
+    public void serializeBackground(@NotNull MCEFVideoMenuBackground background, @NotNull PropertyContainer serializeTo) {
     }
 
     @Override
@@ -83,16 +54,8 @@ public class MCEFVideoMenuBackgroundBuilder extends MenuBackgroundBuilder<MCEFVi
     }
 
     @Override
-    public @Nullable Component[] getDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.backgrounds.video_mcef.desc");
-    }
-
-    @Nullable
-    protected static SoundSource getSoundSourceByName(@NotNull String name) {
-        for (SoundSource source : SoundSource.values()) {
-            if (source.getName().equals(name)) return source;
-        }
-        return null;
+    public @Nullable Component getDescription() {
+        return Component.translatable("fancymenu.backgrounds.video_mcef.desc");
     }
 
 }

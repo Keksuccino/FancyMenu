@@ -6,15 +6,11 @@ import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.network.chat.Component;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
 public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityElement, PlayerEntityEditorElement> {
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
     public PlayerEntityElementBuilder() {
         super("player_entity_v2");
@@ -156,9 +152,7 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
     protected SerializedElement serializeElement(@NotNull PlayerEntityElement element, @NotNull SerializedElement serializeTo) {
 
         serializeTo.putProperty("copy_client_player", "" + element.copyClientPlayer);
-        if (element.playerName != null) {
-            serializeTo.putProperty("playername", element.playerName);
-        }
+        serializeTo.putProperty("playername", element.playerName);
         serializeTo.putProperty("auto_skin", "" + element.autoSkin);
         serializeTo.putProperty("auto_cape", "" + element.autoCape);
         serializeTo.putProperty("slim", "" + element.slim);

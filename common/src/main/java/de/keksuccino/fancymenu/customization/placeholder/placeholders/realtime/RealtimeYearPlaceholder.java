@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders.realtime;
 
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
-import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import net.minecraft.client.resources.language.I18n;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -9,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Calendar;
 import java.util.List;
 
-public class RealtimeYearPlaceholder extends Placeholder {
+public class RealtimeYearPlaceholder extends AbstractRealtimePlaceholder {
 
     public RealtimeYearPlaceholder() {
         super("realtimeyear");
@@ -17,13 +16,13 @@ public class RealtimeYearPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        Calendar c = Calendar.getInstance();
+        Calendar c = this.getCalendar(dps);
         return "" + c.get(Calendar.YEAR);
     }
 
     @Override
     public @Nullable List<String> getValueNames() {
-        return null;
+        return getTimezoneValueNames();
     }
 
     @Override
@@ -37,15 +36,8 @@ public class RealtimeYearPlaceholder extends Placeholder {
     }
 
     @Override
-    public String getCategory() {
-        return I18n.get("fancymenu.requirements.categories.realtime");
-    }
-
-    @Override
     public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
-        DeserializedPlaceholderString dps = new DeserializedPlaceholderString();
-        dps.placeholderIdentifier = this.getIdentifier();
-        return dps;
+        return this.buildDefaultPlaceholderString();
     }
 
 }

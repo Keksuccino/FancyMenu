@@ -6,8 +6,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -19,37 +17,36 @@ public class DotMinecraftUtils {
     public static Path getMinecraftDirectory() {
         String userHome = System.getProperty("user.home");
         Path minecraftPath;
-        
+
         if (OSUtils.isWindows()) {
             // Windows: %APPDATA%\.minecraft
             String appData = System.getenv("APPDATA");
             if (appData != null) {
                 minecraftPath = Paths.get(appData, ".minecraft");
-            } else {
+            } else if (userHome != null) {
                 // Fallback if APPDATA is not set
                 minecraftPath = Paths.get(userHome, "AppData", "Roaming", ".minecraft");
+            } else {
+                LOGGER.warn("[FANCYMENU] Failed to resolve user home directory.");
+                minecraftPath = Paths.get(".minecraft");
             }
         } else if (OSUtils.isMacOS()) {
             // macOS: ~/Library/Application Support/minecraft
-            minecraftPath = Paths.get(userHome, "Library", "Application Support", "minecraft");
+            minecraftPath = (userHome != null)
+                    ? Paths.get(userHome, "Library", "Application Support", "minecraft")
+                    : Paths.get("minecraft");
         } else if (OSUtils.isLinux()) {
             // Linux: ~/.minecraft
-            minecraftPath = Paths.get(userHome, ".minecraft");
+            minecraftPath = (userHome != null)
+                    ? Paths.get(userHome, ".minecraft")
+                    : Paths.get(".minecraft");
         } else {
             // Default fallback for unknown OS
-            minecraftPath = Paths.get(userHome, ".minecraft");
+            minecraftPath = (userHome != null)
+                    ? Paths.get(userHome, ".minecraft")
+                    : Paths.get(".minecraft");
         }
-        
-        // Create the directory if it doesn't exist
-        if (!Files.exists(minecraftPath)) {
-            try {
-                Files.createDirectories(minecraftPath);
-            } catch (IOException | SecurityException ex) {
-                // Log the error but still return the path
-                LOGGER.error("[FANCYMENU] Failed to create .minecraft directory at: " + minecraftPath, ex);
-            }
-        }
-        
+
         return minecraftPath;
     }
 

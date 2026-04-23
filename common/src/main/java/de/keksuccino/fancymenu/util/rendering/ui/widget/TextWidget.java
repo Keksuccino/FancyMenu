@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -28,6 +29,7 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
     @NotNull
     protected Font font;
     protected float scale = 1.0F;
+    protected boolean forUI = false;
 
     @NotNull
     public static TextWidget empty(int x, int y, int width) {
@@ -56,14 +58,22 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
         double drawY = this.getRenderY();
         float currentScale = this.scale;
         RenderingUtils.resetShaderColor(graphics);
-        graphics.pose().pushPose();
-        if (currentScale != 1.0F) {
-            graphics.pose().scale(currentScale, currentScale, 1.0F);
-            drawX /= currentScale;
-            drawY /= currentScale;
+        if (this.forUI && !UIBase.shouldUseMinecraftFontForUIRendering()) {
+            UIBase.renderText(graphics, this.getMessage(), (float) drawX, (float) drawY, this.baseColor.getColorInt(), this.resolveUITextSize());
+        } else {
+            graphics.pose().pushPose();
+            if (currentScale != 1.0F) {
+                graphics.pose().scale(currentScale, currentScale, 1.0F);
+                drawX /= currentScale;
+                drawY /= currentScale;
+            }
+            if (this.forUI) {
+                UIBase.renderText(graphics, this.getMessage(), (float) drawX, (float) drawY, this.baseColor.getColorInt(), UIBase.getUITextSizeNormal());
+            } else {
+                graphics.drawString(this.font, this.getMessage(), Mth.floor(drawX), Mth.floor(drawY), this.baseColor.getColorInt(), this.shadow);
+            }
+            graphics.pose().popPose();
         }
-        graphics.drawString(this.font, this.getMessage(), Mth.floor(drawX), Mth.floor(drawY), this.baseColor.getColorInt(), this.shadow);
-        graphics.pose().popPose();
         RenderingUtils.resetShaderColor(graphics);
     }
 
@@ -72,10 +82,22 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
     }
 
     public double getScaledTextWidth() {
+        if (this.forUI) {
+            if (UIBase.shouldUseMinecraftFontForUIRendering()) {
+                return UIBase.getUITextWidthNormal(this.getMessage()) * this.scale;
+            }
+            return UIBase.getUITextWidth(this.getMessage(), this.resolveUITextSize());
+        }
         return this.font.width(this.getMessage().getVisualOrderText()) * this.scale;
     }
 
     public double getScaledTextHeight() {
+        if (this.forUI) {
+            if (UIBase.shouldUseMinecraftFontForUIRendering()) {
+                return UIBase.getUITextHeightNormal() * this.scale;
+            }
+            return UIBase.getUITextHeight(this.resolveUITextSize());
+        }
         return this.font.lineHeight * this.scale;
     }
 
@@ -100,6 +122,16 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
 
     public TextWidget setScale(float scale) {
         this.scale = Math.max(0.0001F, scale);
+        this.updateIntrinsicSize();
+        return this;
+    }
+
+    public boolean isForUI() {
+        return this.forUI;
+    }
+
+    public TextWidget setForUI(boolean forUI) {
+        this.forUI = forUI;
         this.updateIntrinsicSize();
         return this;
     }
@@ -208,7 +240,11 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
     }
 
     protected void updateIntrinsicSize() {
-        this.height = Math.max(1, Mth.ceil(this.font.lineHeight * this.scale));
+        this.height = Math.max(1, Mth.ceil(this.getScaledTextHeight()));
+    }
+
+    protected float resolveUITextSize() {
+        return UIBase.getUITextSizeNormal() * this.scale;
     }
 
     public enum TextAlignment {

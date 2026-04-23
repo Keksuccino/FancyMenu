@@ -1,0 +1,731 @@
+package de.keksuccino.fancymenu.customization.listener.gui;
+
+import de.keksuccino.fancymenu.customization.action.ActionInstance;
+import de.keksuccino.fancymenu.customization.action.Executable;
+import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.DelayExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.ExecuteLaterExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseIfExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.WhileExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorWindowBody;
+import de.keksuccino.fancymenu.customization.listener.ListenerHandler;
+import de.keksuccino.fancymenu.customization.listener.ListenerInstance;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGroup;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
+import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPCellWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
+import de.keksuccino.konkrete.input.MouseInput;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.function.Consumer;
+
+public class ManageListenersWindowBody extends PiPCellWindowBody {
+
+    public static final int PIP_WINDOW_WIDTH = 640;
+    public static final int PIP_WINDOW_HEIGHT = 420;
+
+    @NotNull
+    protected final Consumer<Boolean> callback;
+    protected boolean resultHandled = false;
+    protected boolean skipCloseWarning = false;
+    @NotNull
+    protected final List<ListenerInstance> tempInstances = new ArrayList<>();
+    @Nullable
+    protected ListenerInstance selectedInstance;
+
+    public ManageListenersWindowBody(@NotNull Consumer<Boolean> callback) {
+        super(Component.translatable("fancymenu.listeners.manage"));
+        this.callback = callback;
+        this.setAllowCloseOnEsc(false);
+        // Create a copy of all listener instances to work with
+        this.tempInstances.addAll(ListenerHandler.getInstances());
+        this.setSearchBarEnabled(true);
+        this.setDescriptionAreaEnabled(true);
+    }
+
+    @Override
+    protected void initCells() {
+        
+        // Track which instance was being edited
+        String editingInstanceId = null;
+        String editingValue = null;
+        for (RenderCell cell : this.allCells) {
+            if (cell instanceof ListenerInstanceCell instanceCell) {
+                if (instanceCell.editMode && instanceCell.editBox != null) {
+                    editingInstanceId = instanceCell.instance.instanceIdentifier;
+                    editingValue = instanceCell.editBox.getValue();
+                    break;
+                }
+            }
+        }
+
+        this.addSpacerCell(5).setIgnoreSearch();
+
+        // Add all listener instances to the list
+        List<ListenerInstanceCell> instanceCells = new ArrayList<>();
+        for (ListenerInstance instance : this.tempInstances) {
+            ListenerInstanceCell cell = new ListenerInstanceCell(instance);
+            instanceCells.add(cell);
+        }
+
+        instanceCells.sort(Comparator
+                .comparing((ListenerInstanceCell cell) -> cell.labelComponent.getString(), String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(cell -> cell.labelComponent.getString())
+                .thenComparing(cell -> cell.instance.instanceIdentifier));
+
+        String finalEditingInstanceId = editingInstanceId;
+        String finalEditingValue = editingValue;
+        instanceCells.forEach(cell -> {
+            this.addCell(cell).setSelectable(true);
+            // Restore edit mode if this was the cell being edited
+            if (finalEditingInstanceId != null && finalEditingInstanceId.equals(cell.instance.instanceIdentifier)) {
+                cell.enterEditMode();
+                if (cell.editBox != null && finalEditingValue != null) {
+                    cell.editBox.setValue(finalEditingValue);
+                    cell.editBox.setCursorPosition(finalEditingValue.length());
+                }
+            }
+        });
+
+        this.addSpacerCell(5).setIgnoreSearch();
+        
+    }
+
+    @Override
+    protected void initRightSideWidgets() {
+        
+        // Add listener button
+        this.addRightSideButton(20, Component.translatable("fancymenu.listeners.manage.add"), button -> {
+            PiPWindow parentWindow = this.getWindow();
+            if (parentWindow != null) {
+                parentWindow.setVisible(false);
+            }
+            boolean[] restoreParentOnClose = new boolean[] { true };
+            ChooseListenerTypeScreen chooseScreen = new ChooseListenerTypeScreen(listener -> {
+                if (listener != null) {
+                    restoreParentOnClose[0] = false;
+                    // Create new instance and open action editor
+                    ListenerInstance newInstance = listener.createFreshInstance();
+                    ActionScriptEditorWindowBody actionsScreen = new ActionScriptEditorWindowBody(newInstance.getActionScript(), updatedScript -> {
+                        if (updatedScript != null) {
+                            newInstance.setActionScript(updatedScript);
+                            this.tempInstances.add(newInstance);
+                            this.rebuild();
+                        }
+                    });
+                    PiPWindow actionWindow = ActionScriptEditorWindowBody.openInWindow(actionsScreen, parentWindow);
+                    if (parentWindow != null) {
+                        actionWindow.setPosition(parentWindow.getX(), parentWindow.getY());
+                        actionWindow.addCloseCallback(() -> parentWindow.setVisible(true));
+                    }
+                }
+            });
+            PiPWindow chooseWindow = ChooseListenerTypeScreen.openInWindow(chooseScreen, parentWindow);
+            if (parentWindow != null) {
+                chooseWindow.setPosition(parentWindow.getX(), parentWindow.getY());
+                chooseWindow.addCloseCallback(() -> {
+                    if (restoreParentOnClose[0]) {
+                        parentWindow.setVisible(true);
+                    }
+                });
+            }
+        });
+        
+        // Edit listener button
+        this.addRightSideButton(20, Component.translatable("fancymenu.listeners.manage.edit"), button -> {
+            this.onEditActionsOfSelected();
+        }).setIsActiveSupplier(consumes -> this.selectedInstance != null);
+
+        // Remove listener button
+        this.addRightSideButton(20, Component.translatable("fancymenu.listeners.manage.remove"), button -> {
+            ListenerInstance sel = this.selectedInstance;
+            if (sel != null) {
+                Dialogs.openMessageWithCallback(Component.translatable("fancymenu.listeners.manage.delete_warning"), MessageDialogStyle.WARNING, call -> {
+                    if (call) {
+                        this.tempInstances.remove(sel);
+                        this.selectedInstance = null;
+                        this.rebuild();
+                    }
+                });
+            }
+        }).setIsActiveSupplier(consumes -> this.selectedInstance != null);
+        
+    }
+
+    protected void onEditActionsOfSelected() {
+        if (this.selectedInstance != null) {
+            ListenerInstance cached = this.selectedInstance;
+            ActionScriptEditorWindowBody actionsScreen = new ActionScriptEditorWindowBody(cached.getActionScript(), updatedScript -> {
+                if (updatedScript != null) {
+                    cached.setActionScript(updatedScript);
+                }
+            });
+            PiPWindow parentWindow = this.getWindow();
+            if (parentWindow != null) {
+                parentWindow.setVisible(false);
+            }
+            PiPWindow actionWindow = ActionScriptEditorWindowBody.openInWindow(actionsScreen, parentWindow);
+            if (parentWindow != null) {
+                actionWindow.setPosition(parentWindow.getX(), parentWindow.getY());
+                actionWindow.addCloseCallback(() -> parentWindow.setVisible(true));
+            }
+        }
+    }
+
+    @Override
+    protected @Nullable List<Component> getCurrentDescription() {
+
+        this.updateSelectedInstance();
+
+        List<Component> desc = super.getCurrentDescription();
+        if (desc == null) return null;
+        if (this.selectedInstance == null) return null;
+
+        List<Component> newDesc = new ArrayList<>();
+
+        newDesc.add(Component.translatable("fancymenu.listeners.manage.description.listener_desc").withStyle(ChatFormatting.BOLD));
+        newDesc.add(Component.literal("(").append(this.selectedInstance.parent.getDisplayName()).append(")"));
+        newDesc.add(Component.empty());
+        newDesc.addAll(desc);
+
+        newDesc.add(Component.empty());
+        newDesc.add(Component.empty());
+
+        newDesc.add(Component.translatable("fancymenu.listeners.manage.description.actions").withStyle(ChatFormatting.BOLD));
+        newDesc.add(Component.empty());
+
+        List<Component> actionLines = this.buildActionScriptDescription(this.selectedInstance.getActionScript(), 0);
+        newDesc.addAll(actionLines);
+
+        return newDesc;
+
+    }
+
+    @Override
+    public boolean allowEnterForDone() {
+        return false;
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (super.keyPressed(keyCode, scanCode, modifiers)) {
+            return true;
+        }
+        if (keyCode == InputConstants.KEY_ESCAPE) {
+            this.onCancel();
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        this.updateSelectedInstance();
+    }
+
+    @Override
+    public void renderLateBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        if (this.descriptionScrollArea != null) {
+            int descW = (int) this.descriptionScrollArea.getWidthWithBorder();
+            int descEndX = (int) (this.descriptionScrollArea.getXWithBorder() + this.descriptionScrollArea.getWidthWithBorder());
+            int descEndY = (int) (this.descriptionScrollArea.getYWithBorder() + this.descriptionScrollArea.getHeightWithBorder());
+            int inactiveLabelColor = this.getInactiveLabelTextColor();
+            List<MutableComponent> renameTip = UIBase.lineWrapUIComponentsSmall(Component.translatable("fancymenu.listeners.manage.rename_tip").withStyle(Style.EMPTY.withColor(inactiveLabelColor)), descW);
+            List<MutableComponent> quickEditTip = UIBase.lineWrapUIComponentsSmall(Component.translatable("fancymenu.listeners.manage.quick_edit_tip").withStyle(Style.EMPTY.withColor(inactiveLabelColor)), descW);
+            int lineY = descEndY + 4;
+            for (MutableComponent line : renameTip) {
+                int lineWidth = (int)UIBase.getUITextWidthSmall(line);
+                int lineX = descEndX - lineWidth;
+                UIBase.renderText(graphics, line, lineX, lineY, -1, UIBase.getUITextSizeSmall());
+                lineY += (int) (UIBase.getUITextHeightSmall() + 2);
+            }
+            lineY += 2;
+            for (MutableComponent line : quickEditTip) {
+                int lineWidth = (int)UIBase.getUITextWidthSmall(line);
+                int lineX = descEndX - lineWidth;
+                UIBase.renderText(graphics, line, lineX, lineY, -1, UIBase.getUITextSizeSmall());
+                lineY += (int) (UIBase.getUITextHeightSmall() + 2);
+            }
+        }
+
+    }
+
+    @Override
+    public void setWindow(@Nullable PiPWindow window) {
+        if (window != null) {
+            window.setCloseWindowCheck((window1, decision) -> {
+                if (this.skipCloseWarning) {
+                    this.skipCloseWarning = false;
+                    decision.supply(true);
+                    return;
+                }
+                Dialogs.openMessageWithCallback(Component.translatable("fancymenu.listeners.manage.cancel_warning"), MessageDialogStyle.WARNING, decision::supply);
+            });
+            window.addCloseCallback(() -> {
+                if (this.resultHandled) {
+                    return;
+                }
+                this.resultHandled = true;
+                this.callback.accept(false);
+            });
+        }
+        super.setWindow(window);
+    }
+
+    @Override
+    protected void onCancel() {
+        this.closeWindow();
+    }
+
+    @Override
+    protected void onDone() {
+        // Clear existing instances
+        for (ListenerInstance instance : new ArrayList<>(ListenerHandler.getInstances())) {
+            ListenerHandler.removeInstance(instance.instanceIdentifier);
+        }
+        
+        // Add all temp instances to handler
+        for (ListenerInstance instance : this.tempInstances) {
+            ListenerHandler.addInstance(instance);
+        }
+        
+        this.closeWithResult(true);
+    }
+
+    @Override
+    public void onWindowClosedExternally() {
+    }
+
+    protected void closeWithResult(boolean accepted) {
+        if (this.resultHandled) {
+            return;
+        }
+        this.resultHandled = true;
+        this.skipCloseWarning = accepted;
+        this.callback.accept(accepted);
+        this.closeWindow();
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull ManageListenersWindowBody screen, @Nullable PiPWindow parentWindow) {
+        PiPWindow window = new PiPWindow(screen.getTitle())
+                .setScreen(screen)
+                .setForceFancyMenuUiScale(true)
+                .setBlockMinecraftScreenInputs(false)
+                .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
+                .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, parentWindow);
+        return window;
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull ManageListenersWindowBody screen) {
+        return openInWindow(screen, null);
+    }
+
+    protected void updateSelectedInstance() {
+        this.updateSelectedCell();
+        RenderCell selected = this.getSelectedCell();
+        if (selected instanceof ListenerInstanceCell cell) {
+            this.selectedInstance = cell.instance;
+        } else {
+            this.selectedInstance = null;
+        }
+    }
+
+    protected int getLabelTextColor() {
+        return UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt()
+                : UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt();
+    }
+
+    protected int getInactiveLabelTextColor() {
+        return UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_widget_label_color_inactive.getColorInt()
+                : UIBase.getUITheme().ui_interface_widget_label_color_inactive.getColorInt();
+    }
+
+    @NotNull
+    protected List<Component> buildActionScriptDescription(@NotNull GenericExecutableBlock block, int indentLevel) {
+        List<Component> lines = new ArrayList<>();
+        
+        for (Executable executable : block.getExecutables()) {
+            lines.addAll(this.buildExecutableDescription(executable, indentLevel));
+        }
+        
+        if (lines.isEmpty()) {
+            String indent = "  ".repeat(Math.max(0, indentLevel));
+            lines.add(Component.literal(indent + "• ")
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().bullet_list_dot_color_1.getColorInt()))
+                    .append(Component.translatable("fancymenu.actions.screens.manage_screen.info.value.none")
+                            .setStyle(Style.EMPTY.withColor(this.getLabelTextColor()))));
+        }
+        
+        return lines;
+    }
+    
+    @NotNull
+    protected List<Component> buildExecutableDescription(@NotNull Executable executable, int indentLevel) {
+        List<Component> lines = new ArrayList<>();
+        String indent = "  ".repeat(Math.max(0, indentLevel));
+        int labelColor = this.getLabelTextColor();
+        
+        if (executable instanceof ActionInstance actionInstance) {
+            // Action display name
+            lines.add(Component.literal(indent + "• ")
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().bullet_list_dot_color_2.getColorInt()))
+                    .append(actionInstance.action.getDisplayName().copy()
+                            .setStyle(Style.EMPTY.withColor(labelColor))));
+            
+            // Action value (indented more)
+            String cachedValue = actionInstance.value;
+            String valueString = ((cachedValue != null) && actionInstance.action.hasValue()) 
+                    ? cachedValue 
+                    : I18n.get("fancymenu.actions.screens.manage_screen.info.value.none");
+            lines.add(Component.literal(indent + "    ◦ ")
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().bullet_list_dot_color_1.getColorInt()))
+                    .append(Component.literal(I18n.get("fancymenu.actions.screens.manage_screen.info.value") + " ")
+                            .setStyle(Style.EMPTY.withColor(labelColor)))
+                    .append(Component.literal(valueString)
+                            .setStyle(Style.EMPTY.withColor(labelColor))));
+            
+        } else if (executable instanceof IfExecutableBlock ifBlock) {
+            String requirements = this.buildRequirementsString(ifBlock);
+            lines.add(Component.literal(indent + "• ")
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
+                    .append(Component.translatable("fancymenu.actions.blocks.if", Component.literal(requirements))
+                            .setStyle(Style.EMPTY.withColor(labelColor))));
+            
+            // Add nested executables
+            for (Executable nested : ifBlock.getExecutables()) {
+                lines.addAll(this.buildExecutableDescription(nested, indentLevel + 1));
+            }
+            
+            // Handle appended blocks (else if, else)
+            AbstractExecutableBlock appended = ifBlock.getAppendedBlock();
+            while (appended != null) {
+                lines.addAll(this.buildAppendedBlockDescription(appended, indentLevel));
+                appended = appended.getAppendedBlock();
+            }
+            
+        } else if (executable instanceof WhileExecutableBlock whileBlock) {
+            String requirements = this.buildRequirementsString(whileBlock);
+            lines.add(Component.literal(indent + "• ")
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
+                    .append(Component.translatable("fancymenu.actions.blocks.while", Component.literal(requirements))
+                            .setStyle(Style.EMPTY.withColor(labelColor))));
+            
+            // Add nested executables
+            for (Executable nested : whileBlock.getExecutables()) {
+                lines.addAll(this.buildExecutableDescription(nested, indentLevel + 1));
+            }
+        } else if (executable instanceof DelayExecutableBlock delayBlock) {
+            lines.add(Component.literal(indent + "• ")
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
+                    .append(Component.translatable("fancymenu.actions.blocks.delay", Component.literal(delayBlock.getDelayMsRaw()))
+                            .setStyle(Style.EMPTY.withColor(labelColor))));
+
+            for (Executable nested : delayBlock.getExecutables()) {
+                lines.addAll(this.buildExecutableDescription(nested, indentLevel + 1));
+            }
+        } else if (executable instanceof ExecuteLaterExecutableBlock executeLaterBlock) {
+            lines.add(Component.literal(indent + "• ")
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
+                    .append(Component.translatable("fancymenu.actions.blocks.execute_later", Component.literal(executeLaterBlock.getDelayMsRaw()))
+                            .setStyle(Style.EMPTY.withColor(labelColor))));
+
+            for (Executable nested : executeLaterBlock.getExecutables()) {
+                lines.addAll(this.buildExecutableDescription(nested, indentLevel + 1));
+            }
+        } else if (executable instanceof AbstractExecutableBlock) {
+            // For any other abstract executable blocks
+            lines.add(Component.literal(indent + "• ")
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
+                    .append(Component.literal("[UNKNOWN BLOCK]")
+                            .setStyle(Style.EMPTY.withColor(ChatFormatting.RED))));
+        }
+        
+        return lines;
+    }
+    
+    @NotNull
+    protected List<Component> buildAppendedBlockDescription(@NotNull AbstractExecutableBlock block, int indentLevel) {
+        List<Component> lines = new ArrayList<>();
+        String indent = "  ".repeat(Math.max(0, indentLevel));
+        int labelColor = this.getLabelTextColor();
+        
+        if (block instanceof ElseIfExecutableBlock elseIfBlock) {
+            String requirements = this.buildRequirementsString(elseIfBlock);
+            lines.add(Component.literal(indent + "• ")
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
+                    .append(Component.translatable("fancymenu.actions.blocks.else_if", Component.literal(requirements))
+                            .setStyle(Style.EMPTY.withColor(labelColor))));
+            
+            // Add nested executables
+            for (Executable nested : elseIfBlock.getExecutables()) {
+                lines.addAll(this.buildExecutableDescription(nested, indentLevel + 1));
+            }
+            
+        } else if (block instanceof ElseExecutableBlock elseBlock) {
+            lines.add(Component.literal(indent + "• ")
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
+                    .append(Component.translatable("fancymenu.actions.blocks.else")
+                            .setStyle(Style.EMPTY.withColor(labelColor))));
+            
+            // Add nested executables
+            for (Executable nested : elseBlock.getExecutables()) {
+                lines.addAll(this.buildExecutableDescription(nested, indentLevel + 1));
+            }
+        }
+        
+        return lines;
+    }
+    
+    @NotNull
+    protected String buildRequirementsString(@NotNull IfExecutableBlock block) {
+        String requirements = "";
+        for (RequirementGroup g : block.condition.getGroups()) {
+            if (!requirements.isEmpty()) requirements += ", ";
+            requirements += g.identifier;
+        }
+        for (RequirementInstance i : block.condition.getInstances()) {
+            if (!requirements.isEmpty()) requirements += ", ";
+            requirements += i.requirement.getDisplayName();
+        }
+        return requirements.isEmpty() ? "none" : requirements;
+    }
+    
+    @NotNull
+    protected String buildRequirementsString(@NotNull ElseIfExecutableBlock block) {
+        String requirements = "";
+        for (RequirementGroup g : block.condition.getGroups()) {
+            if (!requirements.isEmpty()) requirements += ", ";
+            requirements += g.identifier;
+        }
+        for (RequirementInstance i : block.condition.getInstances()) {
+            if (!requirements.isEmpty()) requirements += ", ";
+            requirements += i.requirement.getDisplayName();
+        }
+        return requirements.isEmpty() ? "none" : requirements;
+    }
+    
+    @NotNull
+    protected String buildRequirementsString(@NotNull WhileExecutableBlock block) {
+        String requirements = "";
+        for (RequirementGroup g : block.condition.getGroups()) {
+            if (!requirements.isEmpty()) requirements += ", ";
+            requirements += g.identifier;
+        }
+        for (RequirementInstance i : block.condition.getInstances()) {
+            if (!requirements.isEmpty()) requirements += ", ";
+            requirements += i.requirement.getDisplayName();
+        }
+        return requirements.isEmpty() ? "none" : requirements;
+    }
+
+    public class ListenerInstanceCell extends RenderCell {
+        
+        @NotNull
+        protected final ListenerInstance instance;
+        @NotNull
+        protected Component labelComponent;
+        @Nullable
+        protected ExtendedEditBox editBox;
+        protected boolean editMode = false;
+        protected long lastClickTime = 0;
+        protected static final long DOUBLE_CLICK_TIME = 500; // milliseconds
+        protected static final int TOP_DOWN_CELL_BORDER = 1;
+        
+        public ListenerInstanceCell(@NotNull ListenerInstance instance) {
+            this.instance = instance;
+            this.updateLabelComponent();
+            this.setDescriptionSupplier(this.instance.parent::getDescription);
+            this.setSearchStringSupplier(() -> {
+                if (this.instance.getDisplayName() != null) {
+                    return this.instance.getDisplayName();
+                }
+                return this.instance.parent.getDisplayName().getString();
+            });
+        }
+        
+        protected void updateLabelComponent() {
+            if (this.instance.getDisplayName() != null && !this.instance.getDisplayName().isBlank()) {
+                // Show display name if it exists
+                this.labelComponent = Component.literal(this.instance.getDisplayName())
+                        .setStyle(Style.EMPTY.withColor(ManageListenersWindowBody.this.getLabelTextColor()));
+            } else {
+                // Show default label (listener type)
+                this.labelComponent = this.instance.parent.getDisplayName().copy()
+                        .setStyle(Style.EMPTY.withColor(ManageListenersWindowBody.this.getLabelTextColor()));
+            }
+        }
+        
+        @Override
+        public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            if (this.editMode && this.editBox != null) {
+                // Render edit box
+                this.editBox.setX(this.getX());
+                this.editBox.setY(this.getY() + TOP_DOWN_CELL_BORDER);
+                this.editBox.setWidth(Math.min(this.getWidth(), 200));
+                this.editBox.setHeight((int)(UIBase.getUITextHeightNormal() + 1));
+                this.editBox.render(graphics, mouseX, mouseY, partial);
+                
+                // Check if user clicked outside or pressed enter
+                if (MouseInput.isLeftMouseDown() && !this.editBox.isHovered()) {
+                    this.exitEditMode(true);
+                }
+            } else {
+                // Render label
+                RenderingUtils.resetShaderColor(graphics);
+                UIBase.renderText(graphics, this.labelComponent, this.getX(), this.getY() + TOP_DOWN_CELL_BORDER);
+                RenderingUtils.resetShaderColor(graphics);
+                // Show Writing cursor when the label is hovered
+                if (UIBase.isXYInArea(mouseX, mouseY, this.getX(), this.getY() + TOP_DOWN_CELL_BORDER, UIBase.getUITextWidthNormal(this.labelComponent), UIBase.getUITextHeightNormal())) {
+                    CursorHandler.setClientTickCursor(CursorHandler.CURSOR_WRITING);
+                }
+            }
+        }
+        
+        @Override
+        protected void updateSize(@NotNull CellScrollEntry scrollEntry) {
+            if (this.editMode && this.editBox != null) {
+                this.setWidth(Math.min((int)(ManageListenersWindowBody.this.scrollArea.getInnerWidth() - 40), 200));
+            } else {
+                this.setWidth((int)UIBase.getUITextWidthNormal(this.labelComponent));
+            }
+            this.setHeight((int)(UIBase.getUITextHeightNormal() + (TOP_DOWN_CELL_BORDER * 2)));
+        }
+
+        @Override
+        protected void updatePosition(@NotNull CellScrollEntry scrollEntry) {
+            this.setX((int)(scrollEntry.getX() + 5));
+            this.setY((int)scrollEntry.getY());
+        }
+        
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (button == 0 && this.isHovered() && !this.editMode) { // Left click
+                long currentTime = System.currentTimeMillis();
+                if (currentTime - this.lastClickTime < DOUBLE_CLICK_TIME) {
+                    // Double click detected - enter edit mode
+                    this.enterEditMode();
+                    this.lastClickTime = 0; // Reset to prevent triple clicks
+                } else {
+                    this.lastClickTime = currentTime;
+                }
+            }
+            boolean b = super.mouseClicked(mouseX, mouseY, button);
+            if ((button == 1) && this.isHovered() && !this.editMode) {
+                MainThreadTaskExecutor.executeInMainThread(() -> {
+                    MainThreadTaskExecutor.executeInMainThread(() -> {
+                        this.setSelected(true);
+                        ManageListenersWindowBody.this.updateSelectedInstance();
+                        ManageListenersWindowBody.this.onEditActionsOfSelected();
+                    }, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
+                }, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
+            }
+            return b;
+        }
+        
+        @Override
+        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            if (this.editMode && this.editBox != null) {
+                if (keyCode == InputConstants.KEY_ENTER || keyCode == InputConstants.KEY_NUMPADENTER) { // Enter or Numpad Enter
+                    this.exitEditMode(true);
+                    return true;
+                } else if (keyCode == InputConstants.KEY_ESCAPE) { // Escape
+                    this.exitEditMode(false);
+                    return true;
+                }
+                return this.editBox.keyPressed(keyCode, scanCode, modifiers);
+            }
+            return super.keyPressed(keyCode, scanCode, modifiers);
+        }
+        
+        @Override
+        public boolean charTyped(char codePoint, int modifiers) {
+            if (this.editMode && this.editBox != null) {
+                return this.editBox.charTyped(codePoint, modifiers);
+            }
+            return super.charTyped(codePoint, modifiers);
+        }
+        
+        protected void enterEditMode() {
+            if (this.editMode) return; // Already in edit mode
+            
+            this.editMode = true;
+            
+            // Create edit box
+            this.editBox = new ExtendedEditBox(
+                    Minecraft.getInstance().font, 
+                    this.getX(), 
+                    this.getY(), 
+                    Math.min(200, (int)(ManageListenersWindowBody.this.scrollArea.getInnerWidth() - 40)),
+                    18, 
+                    Component.empty()
+            );
+            UIBase.applyDefaultWidgetSkinTo(this.editBox, UIBase.shouldBlur());
+            this.editBox.setMaxLength(100000);
+            
+            // Set current display name or empty if null
+            String currentName = this.instance.getDisplayName();
+            if (currentName != null) {
+                this.editBox.setValue(currentName);
+            } else {
+                this.editBox.setValue("");
+            }
+            
+            this.editBox.setFocused(true);
+            this.editBox.setCursorPosition(this.editBox.getValue().length());
+            this.editBox.setHighlightPos(0);
+            
+            // Add to children for input handling
+            this.children.clear();
+            this.children.add(this.editBox);
+        }
+        
+        protected void exitEditMode(boolean save) {
+            if (!this.editMode || this.editBox == null) return;
+            
+            if (save) {
+                String newName = this.editBox.getValue();
+                if (newName.isBlank()) {
+                    this.instance.setDisplayName(null);
+                } else {
+                    this.instance.setDisplayName(newName);
+                }
+                this.updateLabelComponent();
+                // Update the description area if this is the selected cell
+                if (ManageListenersWindowBody.this.selectedInstance == this.instance) {
+                    ManageListenersWindowBody.this.updateDescriptionArea();
+                }
+            }
+            
+            this.editMode = false;
+            this.editBox = null;
+            this.children.clear();
+        }
+        
+    }
+
+}

@@ -44,8 +44,10 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
     protected float lastGrabberX = 0;
     protected float lastGrabberY = 0;
     protected float leftMouseDownOnGrabberAtScroll = 0.0F;
+    protected float grabberEdgeInset = 1.0F;
     protected List<Consumer<ScrollBar>> scrollListeners = new ArrayList<>();
     protected boolean grabberHovered = false;
+    protected boolean roundedGrabber = false;
 
     public ScrollBar(@NotNull ScrollBarDirection direction, float grabberWidth, float grabberHeight, float scrollAreaStartX, float scrollAreaStartY, float scrollAreaEndX, float scrollAreaEndY, @NotNull Supplier<DrawableColor> idleBarColor, @NotNull Supplier<DrawableColor> hoverBarColor) {
         this(direction, grabberWidth, grabberHeight, scrollAreaStartX, scrollAreaStartY, scrollAreaEndX, scrollAreaEndY);
@@ -74,14 +76,18 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
 
         this.grabberHovered = this.isMouseOverGrabber(mouseX, mouseY);
 
-        float x = this.scrollAreaEndX - this.grabberWidth;
-        float y = this.scrollAreaEndY - this.grabberHeight;
+        float effectiveStartX = this.scrollAreaStartX + this.grabberEdgeInset;
+        float effectiveStartY = this.scrollAreaStartY + this.grabberEdgeInset;
+        float effectiveEndX = Math.max(effectiveStartX, this.scrollAreaEndX - this.grabberEdgeInset);
+        float effectiveEndY = Math.max(effectiveStartY, this.scrollAreaEndY - this.grabberEdgeInset);
+        float x = effectiveEndX - this.grabberWidth;
+        float y = effectiveEndY - this.grabberHeight;
         if (this.direction == ScrollBarDirection.VERTICAL) {
-            float usableAreaHeight = this.scrollAreaEndY - this.scrollAreaStartY - this.grabberHeight;
-            y = this.scrollAreaStartY + (usableAreaHeight * this.scroll);
+            float usableAreaHeight = Math.max(0.0F, effectiveEndY - effectiveStartY - this.grabberHeight);
+            y = effectiveStartY + (usableAreaHeight * this.scroll);
         } else {
-            float usableAreaWidth = this.scrollAreaEndX - this.scrollAreaStartX - this.grabberWidth;
-            x = this.scrollAreaStartX + (usableAreaWidth * this.scroll);
+            float usableAreaWidth = Math.max(0.0F, effectiveEndX - effectiveStartX - this.grabberWidth);
+            x = effectiveStartX + (usableAreaWidth * this.scroll);
         }
         this.lastGrabberX = x;
         this.lastGrabberY = y;
@@ -94,13 +100,23 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
             if (this.hoverBarTexture != null) {
                 blitF(graphics, this.hoverBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight);
             } else if (hoverC != null) {
-                fillF(graphics, x, y, x + this.grabberWidth, y + this.grabberHeight, hoverC.getColorInt());
+                if (this.roundedGrabber) {
+                    float radius = UIBase.getWidgetCornerRoundingRadius();
+                    renderRoundedRect(graphics, x, y, this.grabberWidth, this.grabberHeight, radius, radius, radius, radius, hoverC.getColorInt());
+                } else {
+                    fillF(graphics, x, y, x + this.grabberWidth, y + this.grabberHeight, hoverC.getColorInt());
+                }
             }
         } else {
             if (this.idleBarTexture != null) {
                 blitF(graphics, this.idleBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight);
             } else if (normalC != null) {
-                fillF(graphics, x, y, x + this.grabberWidth, y + this.grabberHeight, normalC.getColorInt());
+                if (this.roundedGrabber) {
+                    float radius = UIBase.getWidgetCornerRoundingRadius();
+                    renderRoundedRect(graphics, x, y, this.grabberWidth, this.grabberHeight, radius, radius, radius, radius, normalC.getColorInt());
+                } else {
+                    fillF(graphics, x, y, x + this.grabberWidth, y + this.grabberHeight, normalC.getColorInt());
+                }
             }
         }
 
@@ -109,6 +125,15 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
     public boolean isGrabberHovered() {
         if (!this.active) return false;
         return this.grabberHovered;
+    }
+
+    public boolean isRoundedGrabberEnabled() {
+        return this.roundedGrabber;
+    }
+
+    public ScrollBar setRoundedGrabberEnabled(boolean roundedGrabber) {
+        this.roundedGrabber = roundedGrabber;
+        return this;
     }
 
     public boolean isMouseOverGrabber(double mouseX, double mouseY) {
@@ -159,6 +184,14 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
 
     public void setGrabberScrollSpeed(float speed) {
         this.grabberScrollSpeed = Math.max(0.0F, speed);
+    }
+
+    public float getGrabberEdgeInset() {
+        return this.grabberEdgeInset;
+    }
+
+    public void setGrabberEdgeInset(float grabberEdgeInset) {
+        this.grabberEdgeInset = Math.max(0.0F, grabberEdgeInset);
     }
 
     public float getWheelScrollSpeed() {
@@ -216,8 +249,12 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
 
         if (this.leftMouseDownOnGrabber) {
 
-            float usableAreaWidth = this.scrollAreaEndX - this.scrollAreaStartX - this.grabberWidth;
-            float usableAreaHeight = this.scrollAreaEndY - this.scrollAreaStartY - this.grabberHeight;
+            float effectiveStartX = this.scrollAreaStartX + this.grabberEdgeInset;
+            float effectiveStartY = this.scrollAreaStartY + this.grabberEdgeInset;
+            float effectiveEndX = Math.max(effectiveStartX, this.scrollAreaEndX - this.grabberEdgeInset);
+            float effectiveEndY = Math.max(effectiveStartY, this.scrollAreaEndY - this.grabberEdgeInset);
+            float usableAreaWidth = Math.max(0.0F, effectiveEndX - effectiveStartX - this.grabberWidth);
+            float usableAreaHeight = Math.max(0.0F, effectiveEndY - effectiveStartY - this.grabberHeight);
 
             float offsetX = (float) (mouseX - this.leftMouseDownOnGrabberAtMouseX);
             float offsetY = (float) (mouseY - this.leftMouseDownOnGrabberAtMouseY);

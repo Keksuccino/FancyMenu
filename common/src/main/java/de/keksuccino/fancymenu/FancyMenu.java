@@ -12,9 +12,12 @@ import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.rendering.text.color.colors.TextColorFormatters;
+import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothFontManager;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIThemes;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
+import de.keksuccino.fancymenu.util.resource.resources.audio.AudioEngineReloadHandler;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaIoHelper;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.fancymenu.customization.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.customization.server.ServerCache;
@@ -27,7 +30,7 @@ public class FancyMenu {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	public static final String VERSION = "3.8.1";
+	public static final String VERSION = "3.9.0";
 	public static final String MOD_LOADER = Services.PLATFORM.getPlatformName();
 	public static final String MOD_ID = "fancymenu";
 
@@ -38,11 +41,12 @@ public class FancyMenu {
 		if (f.isDirectory()) org.apache.commons.io.FileUtils.deleteQuietly(f);
 		return createDirectory(f);
 	});
-	public static final File CACHE_DIR = createDirectory(new File(INSTANCE_DATA_DIR, "/cached_data"));
 
 	private static Options options;
 
 	public static void init() {
+
+		AfmaIoHelper.configureBaseTempDirectory(TEMP_DATA_DIR);
 
 		if (Services.PLATFORM.isOnClient()) {
 			LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in client-side mode on " + MOD_LOADER.toUpperCase() + "!");
@@ -54,14 +58,17 @@ public class FancyMenu {
 
 		if (Services.PLATFORM.isOnClient()) {
 
-			FileTypes.registerAll();
+            FileTypes.registerAll();
 
-			if (MCEFUtil.isMCEFLoaded()) {
-				BrowserHandler.init();
-				MCEFVideoManager.getInstance().initialize();
-			}
+            if (MCEFUtil.isMCEFLoaded()) {
+                BrowserHandler.init();
+                MCEFVideoManager.getInstance().initialize();
+            }
 
-			TextColorFormatters.registerAll();
+            TextColorFormatters.registerAll();
+
+            SmoothFontManager.registerReloadListener();
+            AudioEngineReloadHandler.register();
 
 			EventHandler.INSTANCE.registerListenersOf(new Test());
 
@@ -79,7 +86,7 @@ public class FancyMenu {
 
 		LOGGER.info("[FANCYMENU] Starting late client initialization phase..");
 
-		UIColorThemes.registerAll();
+		UIThemes.registerAll();
 
 		WindowHandler.updateCustomWindowIcon();
 

@@ -1,8 +1,16 @@
 package de.keksuccino.fancymenu.customization.customgui;
 
+import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
+import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
+import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -38,15 +46,20 @@ public class CustomGuiBaseScreen extends Screen {
     protected void resizePopupMenuBackgroundScreen(Minecraft minecraft, int width, int height) {
         try {
             if (this.parentScreen != null) {
-                Screen current = Minecraft.getInstance().screen;
-                Minecraft.getInstance().screen = this.parentScreen;
-//                EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(this.parentScreen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
-//                EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(this.parentScreen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
-                this.parentScreen.resize(minecraft, width, height);
-//                ScrollScreenNormalizer.normalizeScrollableScreen(this.parentScreen);
-//                EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(this.parentScreen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
-//                EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(this.parentScreen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
-                Minecraft.getInstance().screen = current;
+                this.withPopupMenuBackgroundScreen(this.parentScreen, () -> {
+                    boolean initialized = ((IMixinScreen)this.parentScreen).get_initialized_FancyMenu();
+                    InitOrResizeScreenEvent.InitializationPhase phase = initialized ? InitOrResizeScreenEvent.InitializationPhase.RESIZE : InitOrResizeScreenEvent.InitializationPhase.INIT;
+                    EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(this.parentScreen, phase));
+                    EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(this.parentScreen, phase));
+                    if (initialized) {
+                        this.parentScreen.resize(minecraft, width, height);
+                    } else {
+                        this.parentScreen.init(minecraft, width, height);
+                    }
+                    ScrollScreenNormalizer.normalizeScrollableScreen(this.parentScreen);
+                    EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(this.parentScreen, phase));
+                    EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(this.parentScreen, phase));
+                });
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to resize popup menu background screen of Custom GUI!", ex);
@@ -80,48 +93,69 @@ public class CustomGuiBaseScreen extends Screen {
 	}
 
 	@Override
-	public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         boolean popup = this.gui.popupMode && (this.parentScreen != null);
         boolean popupOverlay = popup && this.gui.popupModeBackgroundOverlay;
-		if (popup) {
+        boolean renderWorldBackground = this.gui.worldBackground;
+        boolean renderBackgroundOverlay = !renderWorldBackground || this.gui.worldBackgroundOverlay;
+        if (popup) {
             this.renderPopupMenuBackgroundScreen(graphics, mouseX, mouseY, partial);
         } else {
-            if ((Minecraft.getInstance().level == null) || !this.gui.worldBackground) {
+            if ((Minecraft.getInstance().level == null) || !renderWorldBackground) {
                 this.renderPanorama(graphics, partial);
             }
         }
         if (popup) {
             RenderingUtils.setOverrideBackgroundBlurRadius(7);
         }
-		try {
-            if (!popup || popupOverlay) {
-                this.renderBlurredBackground(partial);
+        try {
+            if ((!popup && renderBackgroundOverlay) || (popup && popupOverlay)) {
+                this.renderGuiBlurBackground(graphics, partial);
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Error while rendering background blur in Custom GUI!", ex);
         }
         RenderingUtils.resetOverrideBackgroundBlurRadius();
-		if (!popup) {
+        if (!popup && renderBackgroundOverlay) {
             this.renderMenuBackground(graphics);
         }
-	}
+    }
 
     protected void renderPopupMenuBackgroundScreen(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        if (this.gui.popupModeBackgroundOverlay) RenderingUtils.setMenuBlurringBlocked(true);
+        if (this.parentScreen == null) return;
+        if (this.gui.popupModeBackgroundOverlay) RenderingUtils.setVanillaMenuBlurringBlocked(true);
         RenderingUtils.setTooltipRenderingBlocked(true);
-        Screen current = Minecraft.getInstance().screen;
         CustomGui.isCurrentlyRenderingPopupBackgroundScreen = true;
         try {
-            Minecraft.getInstance().screen = this.parentScreen;
-            // FancyMenu's render events get fired in renderWithTooltip, so they should fire here automatically
-            this.parentScreen.renderWithTooltip(graphics, -500, -500, partial);
+            this.withPopupMenuBackgroundScreen(this.parentScreen, () -> {
+                // FancyMenu's render events get fired in renderWithTooltip, so they should fire here automatically
+                this.parentScreen.renderWithTooltip(graphics, -500, -500, partial);
+            });
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to render popup menu background screen of Custom GUI!", ex);
+        } finally {
+            CustomGui.isCurrentlyRenderingPopupBackgroundScreen = false;
+            RenderingUtils.setTooltipRenderingBlocked(false);
+            RenderingUtils.setVanillaMenuBlurringBlocked(false);
         }
-        CustomGui.isCurrentlyRenderingPopupBackgroundScreen = false;
-        Minecraft.getInstance().screen = current;
-        RenderingUtils.setTooltipRenderingBlocked(false);
-        RenderingUtils.setMenuBlurringBlocked(false);
+    }
+
+    protected void renderGuiBlurBackground(@NotNull GuiGraphics graphics, float partial) {
+        int radius = 7;
+        double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+        float blurRadius = guiScale > 0.0D ? (float) radius / (float) guiScale : (float) radius;
+        GuiBlurRenderer.renderBlurArea(graphics, 0.0F, 0.0F, this.width, this.height, blurRadius, 0.0F, DrawableColor.FULLY_TRANSPARENT, partial);
+    }
+
+    protected void withPopupMenuBackgroundScreen(@NotNull Screen backgroundScreen, @NotNull Runnable action) {
+        Minecraft minecraft = Minecraft.getInstance();
+        Screen current = minecraft.screen;
+        minecraft.screen = backgroundScreen;
+        try {
+            action.run();
+        } finally {
+            minecraft.screen = current;
+        }
     }
 
 	@NotNull

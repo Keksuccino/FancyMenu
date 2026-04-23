@@ -6,15 +6,16 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
-import net.minecraft.client.Minecraft;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
-public class TooltipEditorElement extends AbstractEditorElement {
+public class TooltipEditorElement extends AbstractEditorElement<TooltipEditorElement, TooltipElement> {
 
     public TooltipEditorElement(@NotNull TooltipElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor, new EditorElementSettings() {{
@@ -41,41 +42,43 @@ public class TooltipEditorElement extends AbstractEditorElement {
         // Content source submenu
         ContextMenu contentMenu = new ContextMenu();
         this.rightClickMenu.addSubMenuEntry("content", Component.translatable("fancymenu.elements.tooltip.content"), contentMenu)
-                .setIcon(ContextMenu.IconFactory.getIcon("text"));
+                .setIcon(MaterialIcons.TEXT_FIELDS);
 
         // Source mode selector - using Text element localization
         this.addCycleContextMenuEntryTo(contentMenu, "source_mode",
                         List.of(TooltipElement.SourceMode.DIRECT, TooltipElement.SourceMode.RESOURCE),
                         TooltipEditorElement.class,
-                        e -> e.getElement().sourceMode,
-                        (e, mode) -> e.getElement().setSource(mode, null),
+                        e -> e.element.sourceMode,
+                        (e, mode) -> e.element.setSource(mode, null),
                         (menu, entry, value) -> value.getCycleComponent())
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.v2.source_mode.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.v2.source_mode.desc")))
+                .setIcon(MaterialIcons.TUNE);
 
         // Text input for direct mode - using Text element localization
         contentMenu.addClickableEntry("set_text", Component.translatable("fancymenu.elements.text.v2.source.input"),
                         (menu, entry) -> {
                             if (entry.getStackMeta().isFirstInStack()) {
-                                List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(e -> e instanceof TooltipEditorElement);
+                                List<TooltipEditorElement> selectedElements = this.getFilteredSelectedElementList(e -> e instanceof TooltipEditorElement);
                                 String defaultText = tooltipElement.source;
-                                TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.elements.text.v2.source.input"), null, (call) -> {
+                                TextEditorWindowBody s = new TextEditorWindowBody(Component.translatable("fancymenu.elements.text.v2.source.input"), null, (call) -> {
                                     if (call != null) {
                                         this.editor.history.saveSnapshot();
-                                        for (AbstractEditorElement e : selectedElements) {
+                                        for (AbstractEditorElement<?, ?> e : selectedElements) {
                                             ((TooltipElement)e.element).setSource(TooltipElement.SourceMode.DIRECT, call);
                                         }
                                     }
-                                    Minecraft.getInstance().setScreen(this.editor);
                                 });
                                 s.setText(defaultText);
                                 s.setMultilineMode(true);
                                 s.setPlaceholdersAllowed(true);
-                                Minecraft.getInstance().setScreen(s);
+                                menu.closeMenuChain();
+                                Dialogs.openGeneric(s, Component.translatable("fancymenu.elements.text.v2.source.input"), null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT)
+                                        .getSecond().setIcon(MaterialIcons.TEXT_FIELDS);
                             }
                         })
                 .setStackable(true)
                 .setIsActiveSupplier((menu, entry) -> tooltipElement.sourceMode == TooltipElement.SourceMode.DIRECT)
-                .setIcon(ContextMenu.IconFactory.getIcon("text"));
+                .setIcon(MaterialIcons.TEXT_FIELDS);
 
         // Resource file input for resource mode - using Text element localization
         this.addTextResourceChooserContextMenuEntryTo(contentMenu, "set_resource",
@@ -89,19 +92,21 @@ public class TooltipEditorElement extends AbstractEditorElement {
                         },
                         Component.translatable("fancymenu.elements.text.v2.source.choose"),
                         true, null, true, true, true)
-                .setIsActiveSupplier((menu, entry) -> tooltipElement.sourceMode == TooltipElement.SourceMode.RESOURCE);
+                .setIsActiveSupplier((menu, entry) -> tooltipElement.sourceMode == TooltipElement.SourceMode.RESOURCE)
+                .setIcon(MaterialIcons.FILE_OPEN);
 
         // Markdown submenu - using Text element localization
         ContextMenu markdownMenu = new ContextMenu();
         this.rightClickMenu.addSubMenuEntry("markdown", Component.translatable("fancymenu.elements.text.markdown"), markdownMenu)
-                .setIcon(ContextMenu.IconFactory.getIcon("text"));
+                .setIcon(MaterialIcons.MENU_BOOK);
 
         // Text shadow - using Text element localization
         this.addToggleContextMenuEntryTo(markdownMenu, "text_shadow",
                 TooltipEditorElement.class,
                 e -> ((TooltipElement)e.element).markdownRenderer.isTextShadow(),
                 (e, value) -> ((TooltipElement)e.element).markdownRenderer.setTextShadow(value),
-                "fancymenu.elements.text.shadow");
+                "fancymenu.elements.text.shadow")
+                .setIcon(MaterialIcons.SHADOW);
 
         // Text case mode - using Text element localization
         this.addCycleContextMenuEntryTo(markdownMenu, "text_case",
@@ -117,15 +122,12 @@ public class TooltipEditorElement extends AbstractEditorElement {
                         return Component.translatable("fancymenu.elements.text.case_mode.lower");
                     }
                     return Component.translatable("fancymenu.elements.text.case_mode.upper");
-                });
+                })
+                .setIcon(MaterialIcons.TEXT_FORMAT);
 
         // Text scale - using Text element localization
-        this.addFloatInputContextMenuEntryTo(markdownMenu, "text_scale",
-                TooltipEditorElement.class,
-                e -> ((TooltipElement)e.element).markdownRenderer.getTextBaseScale(),
-                (e, scale) -> ((TooltipElement)e.element).markdownRenderer.setTextBaseScale(scale),
-                Component.translatable("fancymenu.elements.text.scale"),
-                true, 1.0F, null, null);
+        this.element.textScale.buildContextMenuEntryAndAddTo(markdownMenu, this)
+                .setIcon(MaterialIcons.FORMAT_SIZE);
 
         // Text color - using Text element localization
         this.addStringInputContextMenuEntryTo(markdownMenu, "text_color",
@@ -134,44 +136,39 @@ public class TooltipEditorElement extends AbstractEditorElement {
                 (e, color) -> ((TooltipElement)e.element).markdownRenderer.setTextBaseColor(DrawableColor.of(color)),
                 null, false, false,
                 Component.translatable("fancymenu.elements.text.base_color"),
-                true, "#FFFFFF", null, null);
+                true, "#FFFFFF", null, null)
+                .setIcon(MaterialIcons.PALETTE);
 
         // Text border - using Text element localization
-        this.addIntegerInputContextMenuEntryTo(markdownMenu, "text_border",
-                TooltipEditorElement.class,
-                e -> (int)((TooltipElement)e.element).markdownRenderer.getBorder(),
-                (e, border) -> ((TooltipElement)e.element).markdownRenderer.setBorder(border),
-                Component.translatable("fancymenu.elements.text.text_border"),
-                true, 0, null, null);
+        this.element.textBorder.buildContextMenuEntryAndAddTo(markdownMenu, this)
+                .setIcon(MaterialIcons.BORDER_OUTER);
 
         // Line spacing - using Text element localization
-        this.addIntegerInputContextMenuEntryTo(markdownMenu, "line_spacing",
-                TooltipEditorElement.class,
-                e -> (int)((TooltipElement)e.element).markdownRenderer.getLineSpacing(),
-                (e, spacing) -> ((TooltipElement)e.element).markdownRenderer.setLineSpacing(spacing),
-                Component.translatable("fancymenu.elements.text.line_spacing"),
-                true, 1, null, null);
+        this.element.lineSpacing.buildContextMenuEntryAndAddTo(markdownMenu, this)
+                .setIcon(MaterialIcons.FORMAT_LINE_SPACING);
 
         // Auto line wrapping - using Text element localization
         this.addToggleContextMenuEntryTo(markdownMenu, "auto_line_wrapping",
                 TooltipEditorElement.class,
                 e -> ((TooltipElement)e.element).markdownRenderer.isAutoLineBreakingEnabled(),
                 (e, value) -> ((TooltipElement)e.element).markdownRenderer.setAutoLineBreakingEnabled(value),
-                "fancymenu.elements.text.auto_line_wrapping");
+                "fancymenu.elements.text.auto_line_wrapping")
+                .setIcon(MaterialIcons.FORMAT_TEXT_WRAP);
 
         // Parse markdown toggle - using Text element localization
         this.addToggleContextMenuEntryTo(markdownMenu, "parse_markdown",
                 TooltipEditorElement.class,
                 e -> ((TooltipElement)e.element).markdownRenderer.isParseMarkdown(),
                 (e, value) -> ((TooltipElement)e.element).markdownRenderer.setParseMarkdown(value),
-                "fancymenu.elements.text.markdown.toggle");
+                "fancymenu.elements.text.markdown.toggle")
+                .setIcon(MaterialIcons.CODE);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_markdown");
 
         // Background sub menu
         ContextMenu backgroundMenu = new ContextMenu();
         this.rightClickMenu.addSubMenuEntry("background", Component.translatable("fancymenu.elements.tooltip.background"), backgroundMenu)
-                .setIcon(ContextMenu.IconFactory.getIcon("image"));
+                .setIcon(MaterialIcons.IMAGE);
 
         // Background texture
         this.addImageResourceChooserContextMenuEntryTo(backgroundMenu, "background_texture",
@@ -181,46 +178,30 @@ public class TooltipEditorElement extends AbstractEditorElement {
                         (e, texture) -> ((TooltipElement)e.element).backgroundTexture = texture,
                         Component.translatable("fancymenu.elements.tooltip.background_texture"),
                         true, null, true, true, true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.tooltip.background_texture.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("image"));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.tooltip.background_texture.desc")))
+                .setIcon(MaterialIcons.IMAGE);
 
         // Nine-slice submenu
         ContextMenu nineSliceMenu = new ContextMenu();
         backgroundMenu.addSubMenuEntry("nine_slice", Component.translatable("fancymenu.elements.tooltip.nine_slice"), nineSliceMenu)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.tooltip.nine_slice.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("measure"));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.tooltip.nine_slice.desc")))
+                .setIcon(MaterialIcons.GRID_GUIDES);
 
         // Nine-slice border top
-        this.addIntegerInputContextMenuEntryTo(nineSliceMenu, "nine_slice_border_top",
-                TooltipEditorElement.class,
-                e -> ((TooltipElement)e.element).nineSliceBorderTop,
-                (e, value) -> ((TooltipElement)e.element).nineSliceBorderTop = value,
-                Component.translatable("fancymenu.elements.tooltip.nine_slice.border.top"),
-                true, 5, null, null);
+        this.element.nineSliceBorderTop.buildContextMenuEntryAndAddTo(nineSliceMenu, this)
+                .setIcon(MaterialIcons.BORDER_TOP);
 
         // Nine-slice border right
-        this.addIntegerInputContextMenuEntryTo(nineSliceMenu, "nine_slice_border_right",
-                TooltipEditorElement.class,
-                e -> ((TooltipElement)e.element).nineSliceBorderRight,
-                (e, value) -> ((TooltipElement)e.element).nineSliceBorderRight = value,
-                Component.translatable("fancymenu.elements.tooltip.nine_slice.border.right"),
-                true, 5, null, null);
+        this.element.nineSliceBorderRight.buildContextMenuEntryAndAddTo(nineSliceMenu, this)
+                .setIcon(MaterialIcons.BORDER_RIGHT);
 
         // Nine-slice border bottom
-        this.addIntegerInputContextMenuEntryTo(nineSliceMenu, "nine_slice_border_bottom",
-                TooltipEditorElement.class,
-                e -> ((TooltipElement)e.element).nineSliceBorderBottom,
-                (e, value) -> ((TooltipElement)e.element).nineSliceBorderBottom = value,
-                Component.translatable("fancymenu.elements.tooltip.nine_slice.border.bottom"),
-                true, 5, null, null);
+        this.element.nineSliceBorderBottom.buildContextMenuEntryAndAddTo(nineSliceMenu, this)
+                .setIcon(MaterialIcons.BORDER_BOTTOM);
 
         // Nine-slice border left
-        this.addIntegerInputContextMenuEntryTo(nineSliceMenu, "nine_slice_border_left",
-                TooltipEditorElement.class,
-                e -> ((TooltipElement)e.element).nineSliceBorderLeft,
-                (e, value) -> ((TooltipElement)e.element).nineSliceBorderLeft = value,
-                Component.translatable("fancymenu.elements.tooltip.nine_slice.border.left"),
-                true, 5, null, null);
+        this.element.nineSliceBorderLeft.buildContextMenuEntryAndAddTo(nineSliceMenu, this)
+                .setIcon(MaterialIcons.BORDER_LEFT);
 
         // Mouse following toggle
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "mouse_following",
@@ -228,13 +209,9 @@ public class TooltipEditorElement extends AbstractEditorElement {
                         e -> ((TooltipElement)e.element).mouseFollowing,
                         (e, value) -> ((TooltipElement)e.element).mouseFollowing = value,
                         "fancymenu.elements.tooltip.mouse_following")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.tooltip.mouse_following.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.tooltip.mouse_following.desc")))
+                .setIcon(MaterialIcons.MOUSE);
 
-    }
-
-    @NotNull
-    public TooltipElement getElement() {
-        return (TooltipElement) this.element;
     }
 
 }

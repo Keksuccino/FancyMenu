@@ -3,8 +3,10 @@ package de.keksuccino.fancymenu.customization.customgui;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPCellWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -14,7 +16,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-public class BuildCustomGuiScreen extends CellScreen {
+public class BuildCustomGuiScreen extends PiPCellWindowBody {
+
+    public static final int PIP_WINDOW_WIDTH = 640;
+    public static final int PIP_WINDOW_HEIGHT = 420;
 
     @NotNull
     protected CustomGui gui;
@@ -65,15 +70,20 @@ public class BuildCustomGuiScreen extends CellScreen {
             this.guiTemp.worldBackground = value.getAsBoolean();
         }), true);
 
+        this.addWidgetCell(new CycleButton<>(0, 0, 20, 20, CommonCycles.cycleEnabledDisabled("fancymenu.custom_guis.build.world_background_overlay", this.guiTemp.worldBackgroundOverlay), (value, button) -> {
+            this.guiTemp.worldBackgroundOverlay = value.getAsBoolean();
+        }).setUITooltip(UITooltip.of(Component.translatable("fancymenu.custom_guis.build.world_background_overlay.desc")))
+                .setIsActiveSupplier(consumes -> this.guiTemp.worldBackground), true);
+
         this.addSpacerCell(10);
 
         this.addWidgetCell(new CycleButton<>(0, 0, 20, 20, CommonCycles.cycleEnabledDisabled("fancymenu.custom_guis.build.popup_mode", this.guiTemp.popupMode), (value, button) -> {
             this.guiTemp.popupMode = value.getAsBoolean();
-        }).setTooltip(Tooltip.of(Component.translatable("fancymenu.custom_guis.build.popup_mode.desc"))), true);
+        }).setUITooltip(UITooltip.of(Component.translatable("fancymenu.custom_guis.build.popup_mode.desc"))), true);
 
         this.addWidgetCell(new CycleButton<>(0, 0, 20, 20, CommonCycles.cycleEnabledDisabled("fancymenu.custom_guis.build.popup_mode_background_overlay", this.guiTemp.popupModeBackgroundOverlay), (value, button) -> {
             this.guiTemp.popupModeBackgroundOverlay = value.getAsBoolean();
-        }).setTooltip(Tooltip.of(Component.translatable("fancymenu.custom_guis.build.popup_mode_background_overlay.desc")))
+        }).setUITooltip(UITooltip.of(Component.translatable("fancymenu.custom_guis.build.popup_mode_background_overlay.desc")))
                 .setIsActiveSupplier(consumes -> this.guiTemp.popupMode), true);
 
         this.addSpacerCell(10);
@@ -90,26 +100,24 @@ public class BuildCustomGuiScreen extends CellScreen {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.guiTemp.identifier.isEmpty()) {
-            this.settingsFeedbackCell.setText(Component.translatable("fancymenu.custom_guis.build.identifier.invalid").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())));
+            this.settingsFeedbackCell.setText(Component.translatable("fancymenu.custom_guis.build.identifier.invalid").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt())));
             this.allSettingsValid = false;
         } else if (CustomGuiHandler.guiExists(this.guiTemp.identifier) && !Objects.equals(this.guiTemp.identifier, this.identifierOfEdit)) {
-            this.settingsFeedbackCell.setText(Component.translatable("fancymenu.custom_guis.build.identifier.already_in_use").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())));
+            this.settingsFeedbackCell.setText(Component.translatable("fancymenu.custom_guis.build.identifier.already_in_use").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt())));
             this.allSettingsValid = false;
         } else {
             this.settingsFeedbackCell.setText(Component.empty());
             this.allSettingsValid = true;
         }
-
-        super.render(graphics, mouseX, mouseY, partial);
-
     }
 
     @Override
     protected void onCancel() {
         this.callback.accept(null);
+        this.closeWindow();
     }
 
     @Override
@@ -126,7 +134,30 @@ public class BuildCustomGuiScreen extends CellScreen {
                 this.gui.popupModeBackgroundOverlay = this.guiTemp.popupModeBackgroundOverlay;
             }
             this.callback.accept(this.gui);
+            this.closeWindow();
         }
+    }
+
+    @Override
+    public void onWindowClosedExternally() {
+        this.callback.accept(null);
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull BuildCustomGuiScreen screen, @Nullable PiPWindow parentWindow) {
+        PiPWindow window = new PiPWindow(screen.getTitle())
+                .setScreen(screen)
+                .setForceFancyMenuUiScale(true)
+                .setAlwaysOnTop(false)
+                .setForceFocus(false)
+                .setBlockMinecraftScreenInputs(false)
+                .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
+                .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, parentWindow);
+        return window;
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull BuildCustomGuiScreen screen) {
+        return openInWindow(screen, null);
     }
 
 }

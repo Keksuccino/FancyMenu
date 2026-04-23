@@ -9,6 +9,8 @@ import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.RenderScaleUtil;
+import de.keksuccino.fancymenu.util.rendering.RenderTranslationUtil;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -170,6 +172,70 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 		}
 	}
 
+	public void renderInArea(@NotNull GuiGraphics graphics, int x, int y, int width, int height, float partial) {
+		if (width <= 0 || height <= 0) {
+			return;
+		}
+		this.lastRenderCall = System.currentTimeMillis();
+		this.startTickerThreadIfNeeded();
+
+		if (this.panoramaImageSuppliers.size() < 6) {
+			RenderSystem.enableBlend();
+			RenderingUtils.resetShaderColor(graphics);
+			graphics.blit(ITexture.MISSING_TEXTURE_LOCATION, x, y, 0.0F, 0.0F, width, height, width, height);
+			RenderingUtils.resetShaderColor(graphics);
+			return;
+		}
+
+		Minecraft mc = Minecraft.getInstance();
+		int windowWidth = mc.getWindow().getWidth();
+		int windowHeight = mc.getWindow().getHeight();
+		if (windowWidth <= 0 || windowHeight <= 0) {
+			return;
+		}
+
+		float renderScale = RenderScaleUtil.getCurrentRenderScale();
+		if (renderScale <= 0.0F || !Float.isFinite(renderScale)) {
+			return;
+		}
+
+		float translationX = RenderTranslationUtil.getCurrentRenderTranslationX();
+		float translationY = RenderTranslationUtil.getCurrentRenderTranslationY();
+		int viewportX = Math.round(translationX + (x * renderScale));
+		int viewportY = Math.round(translationY + (y * renderScale));
+		int viewportWidth = Math.round(width * renderScale);
+		int viewportHeight = Math.round(height * renderScale);
+
+		viewportX = Math.max(0, viewportX);
+		viewportY = Math.max(0, viewportY);
+		viewportWidth = Math.min(viewportWidth, windowWidth - viewportX);
+		viewportHeight = Math.min(viewportHeight, windowHeight - viewportY);
+		if (viewportWidth <= 0 || viewportHeight <= 0) {
+			return;
+		}
+
+		graphics.flush();
+		RenderSystem.viewport(viewportX, windowHeight - (viewportY + viewportHeight), viewportWidth, viewportHeight);
+		try {
+			this.renderPanoramaCube(graphics, mc, this.opacity, viewportWidth, viewportHeight);
+		} finally {
+			RenderSystem.viewport(0, 0, windowWidth, windowHeight);
+		}
+
+		if (this.overlayTextureSupplier != null) {
+			ITexture texture = this.overlayTextureSupplier.get();
+			if (texture != null) {
+				ResourceLocation location = texture.getResourceLocation();
+				if (location != null) {
+					graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
+					RenderSystem.enableBlend();
+					graphics.blit(location, x, y, 0.0F, 0.0F, width, height, width, height);
+					RenderingUtils.resetShaderColor(graphics);
+				}
+			}
+		}
+	}
+
 	private void _render(@NotNull GuiGraphics graphics, Minecraft mc, float panoAlpha) {
 
 		int screenW = ScreenUtils.getScreenWidth();
@@ -288,6 +354,107 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 
 		RenderingUtils.resetShaderColor(graphics);
 
+	}
+
+	private void renderPanoramaCube(@NotNull GuiGraphics graphics, Minecraft mc, float panoAlpha, int viewportWidth, int viewportHeight) {
+		float pitch = this.angle;
+		float yaw = -this.currentRotation;
+		float fovF = ((float)this.fov * ((float)Math.PI / 180));
+
+		Tesselator tesselator = Tesselator.getInstance();
+		Matrix4f projection = (new Matrix4f()).setPerspective(fovF, (float)viewportWidth / (float)viewportHeight, 0.05F, 10.0F);
+		RenderSystem.backupProjectionMatrix();
+		RenderSystem.setProjectionMatrix(projection, VertexSorting.DISTANCE_TO_ORIGIN);
+		Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();
+		modelViewStack.pushMatrix();
+		try {
+			modelViewStack.rotationX(3.1415927F);
+			RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+			RenderSystem.enableBlend();
+			RenderSystem.disableCull();
+			RenderSystem.depthMask(false);
+			RenderSystem.disableDepthTest();
+
+			for(int $$8 = 0; $$8 < 4; ++$$8) {
+				modelViewStack.pushMatrix();
+				float $$9 = ((float)($$8 % 2) / 2.0F - 0.5F) / 256.0F;
+				float $$10 = ((float)($$8 / 2) / 2.0F - 0.5F) / 256.0F;
+				modelViewStack.translate($$9, $$10, 0.0F);
+				modelViewStack.rotateX(pitch * (float) (Math.PI / 180.0));
+				modelViewStack.rotateY(yaw * (float) (Math.PI / 180.0));
+				RenderSystem.applyModelViewMatrix();
+
+				for(int texNum = 0; texNum < 6; ++texNum) {
+					ResourceLocation location = null;
+					if (this.panoramaImageSuppliers.size() >= (texNum + 1)) {
+						ResourceSupplier<ITexture> texSupplier = this.panoramaImageSuppliers.get(texNum);
+						ITexture texture = texSupplier.get();
+						if (texture != null) {
+							location = texture.getResourceLocation();
+						}
+					}
+					if (location == null) location = ITexture.MISSING_TEXTURE_LOCATION;
+					RenderSystem.setShaderTexture(0, location);
+					BufferBuilder bufferBuilder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+					int $$14 = Math.round(255.0F * panoAlpha) / ($$8 + 1);
+					if (texNum == 0) {
+						bufferBuilder.addVertex(-1.0F, -1.0F, 1.0F).setUv(0.0F, 0.0F).setWhiteAlpha($$14);
+						bufferBuilder.addVertex(-1.0F, 1.0F, 1.0F).setUv(0.0F, 1.0F).setWhiteAlpha($$14);
+						bufferBuilder.addVertex(1.0F, 1.0F, 1.0F).setUv(1.0F, 1.0F).setWhiteAlpha($$14);
+						bufferBuilder.addVertex(1.0F, -1.0F, 1.0F).setUv(1.0F, 0.0F).setWhiteAlpha($$14);
+					}
+
+					if (texNum == 1) {
+						bufferBuilder.addVertex(1.0F, -1.0F, 1.0F).setUv(0.0F, 0.0F).setWhiteAlpha($$14);
+						bufferBuilder.addVertex(1.0F, 1.0F, 1.0F).setUv(0.0F, 1.0F).setWhiteAlpha($$14);
+						bufferBuilder.addVertex(1.0F, 1.0F, -1.0F).setUv(1.0F, 1.0F).setWhiteAlpha($$14);
+						bufferBuilder.addVertex(1.0F, -1.0F, -1.0F).setUv(1.0F, 0.0F).setWhiteAlpha($$14);
+					}
+
+					if (texNum == 2) {
+						bufferBuilder.addVertex(1.0F, -1.0F, -1.0F).setUv(0.0F, 0.0F).setWhiteAlpha($$14);
+						bufferBuilder.addVertex(1.0F, 1.0F, -1.0F).setUv(0.0F, 1.0F).setWhiteAlpha($$14);
+						bufferBuilder.addVertex(-1.0F, 1.0F, -1.0F).setUv(1.0F, 1.0F).setWhiteAlpha($$14);
+						bufferBuilder.addVertex(-1.0F, -1.0F, -1.0F).setUv(1.0F, 0.0F).setWhiteAlpha($$14);
+					}
+
+					if (texNum == 3) {
+						bufferBuilder.addVertex(-1.0F, -1.0F, -1.0F).setUv(0.0F, 0.0F).setWhiteAlpha($$14);
+						bufferBuilder.addVertex(-1.0F, 1.0F, -1.0F).setUv(0.0F, 1.0F).setWhiteAlpha($$14);
+						bufferBuilder.addVertex(-1.0F, 1.0F, 1.0F).setUv(1.0F, 1.0F).setWhiteAlpha($$14);
+						bufferBuilder.addVertex(-1.0F, -1.0F, 1.0F).setUv(1.0F, 0.0F).setWhiteAlpha($$14);
+					}
+
+					if (texNum == 4) {
+						bufferBuilder.addVertex(-1.0F, -1.0F, -1.0F).setUv(0.0F, 0.0F).setWhiteAlpha($$14);
+						bufferBuilder.addVertex(-1.0F, -1.0F, 1.0F).setUv(0.0F, 1.0F).setWhiteAlpha($$14);
+						bufferBuilder.addVertex(1.0F, -1.0F, 1.0F).setUv(1.0F, 1.0F).setWhiteAlpha($$14);
+						bufferBuilder.addVertex(1.0F, -1.0F, -1.0F).setUv(1.0F, 0.0F).setWhiteAlpha($$14);
+					}
+
+					if (texNum == 5) {
+						bufferBuilder.addVertex(-1.0F, 1.0F, 1.0F).setUv(0.0F, 0.0F).setWhiteAlpha($$14);
+						bufferBuilder.addVertex(-1.0F, 1.0F, -1.0F).setUv(0.0F, 1.0F).setWhiteAlpha($$14);
+						bufferBuilder.addVertex(1.0F, 1.0F, -1.0F).setUv(1.0F, 1.0F).setWhiteAlpha($$14);
+						bufferBuilder.addVertex(1.0F, 1.0F, 1.0F).setUv(1.0F, 0.0F).setWhiteAlpha($$14);
+					}
+
+					BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+				}
+
+				modelViewStack.popMatrix();
+				RenderSystem.colorMask(true, true, true, false);
+			}
+		} finally {
+			RenderSystem.colorMask(true, true, true, true);
+			RenderSystem.restoreProjectionMatrix();
+			modelViewStack.popMatrix();
+			RenderSystem.applyModelViewMatrix();
+			RenderSystem.depthMask(true);
+			RenderSystem.enableCull();
+			RenderSystem.enableDepthTest();
+			RenderingUtils.resetShaderColor(graphics);
+		}
 	}
 
 //	public void renderRaw(@NotNull GuiGraphics graphics, float panoramaAlpha, float partial) {

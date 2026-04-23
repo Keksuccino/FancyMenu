@@ -10,6 +10,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
@@ -46,6 +47,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     protected final UUID genericIdentifier = UUID.randomUUID();
     protected final ResourceLocation frameLocation = ResourceLocation.fromNamespaceAndPath("fancymenu", "mcef_browser_frame_texture_" + this.genericIdentifier.toString().toLowerCase().replace("-", ""));
     protected final BrowserFrameTexture frameTexture = new BrowserFrameTexture(-1);
+    protected volatile boolean closed = false;
     
     // Track if initialization is complete for this browser
     private volatile boolean initialized = false;
@@ -141,9 +143,14 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     @Override
     protected void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
+        if (this.closed) {
+            return;
+        }
+
         try {
 
             this.frameTexture.setId(this.browser.getRenderer().getTextureID());
+            this.ensureFrameTextureRegistered();
 
             if (this.autoHandle) BrowserHandler.notifyHandler(this.genericIdentifier.toString(), this);
 
@@ -159,6 +166,13 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
             LOGGER.error("[FANCYMENU] Failed to render MCEFBrowser!", ex);
         }
 
+    }
+
+    private void ensureFrameTextureRegistered() {
+        var textureManager = this.minecraft.getTextureManager();
+        if (textureManager.getTexture(this.frameLocation, MissingTextureAtlasSprite.getTexture()) != this.frameTexture) {
+            textureManager.register(this.frameLocation, this.frameTexture);
+        }
     }
 
     public void onVolumeUpdated(@NotNull SoundSource soundSource, float newVolume) {
@@ -304,6 +318,15 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
     public boolean isInteractable() {
         return this.interactable;
+    }
+
+    public void setBrowserFocused(boolean browserFocused) {
+        this.browserFocused = browserFocused;
+        this.browser.setFocus(browserFocused);
+    }
+
+    public boolean isBrowserFocused() {
+        return this.browserFocused;
     }
 
     public void setAutoHandle(boolean autoHandle) {
@@ -487,6 +510,10 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         return this.genericIdentifier.toString();
     }
 
+    public boolean isClosed() {
+        return this.closed;
+    }
+
     @NotNull
     public ResourceLocation getFrameLocation() {
         this.frameTexture.setId(this.browser.getRenderer().getTextureID());
@@ -514,6 +541,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
     @Override
     public void close() throws IOException {
+        this.closed = true;
         // Unregister from the global handler manager
         if (this.browser != null) {
             BrowserLoadEventListenerManager.getInstance().unregisterAllListenersForBrowser(this.getIdentifier());

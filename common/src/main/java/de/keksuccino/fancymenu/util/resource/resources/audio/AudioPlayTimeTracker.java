@@ -29,6 +29,15 @@ public class AudioPlayTimeTracker {
         reset();
     }
 
+    public void setPlayTime(float seconds, boolean paused) {
+        if (!Float.isFinite(seconds) || seconds < 0.0F) {
+            seconds = 0.0F;
+        }
+        this.totalPlayedTime = (long) (seconds * 1000.0F);
+        this.playStartTime = System.currentTimeMillis();
+        this.isPaused = paused;
+    }
+
     public void reset() {
         playStartTime = -1;
         totalPlayedTime = 0;
