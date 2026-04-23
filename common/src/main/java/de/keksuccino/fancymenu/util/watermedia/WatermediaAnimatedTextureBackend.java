@@ -36,6 +36,8 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
     @Nullable
     protected volatile File generatedTempFile;
 
+    @NotNull
+    protected volatile String sourceName = "[Unknown Source]";
     protected volatile int width = 10;
     protected volatile int height = 10;
     @NotNull
@@ -86,6 +88,7 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
 
     protected boolean initializeInternal(@NotNull String source, @NotNull String sourceName) {
         if (this.closed) return false;
+        this.sourceName = sourceName;
         try {
             Object cachedMrl = WatermediaReflectionBridge.createMrl(source);
             if (cachedMrl == null) {
@@ -216,6 +219,7 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
 
         Object cachedPlayer = this.mediaPlayer;
         if (cachedPlayer == null) return RenderableResource.FULLY_TRANSPARENT_TEXTURE;
+        if (this.handlePlayerError(cachedPlayer)) return RenderableResource.FULLY_TRANSPARENT_TEXTURE;
 
         this.applyFiniteLoopStop(cachedPlayer);
         this.updateSizeFromPlayer(cachedPlayer);
@@ -257,7 +261,11 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
         Object cachedPlayer = this.mediaPlayer;
         if (cachedPlayer != null) {
             String statusName = WatermediaReflectionBridge.playerStatusName(cachedPlayer);
-            if (statusName.equals("STOPPED") || statusName.equals("ENDED") || statusName.equals("ERROR")) {
+            if (statusName.equals("ERROR")) {
+                this.handlePlayerError(cachedPlayer);
+                return;
+            }
+            if (statusName.equals("STOPPED") || statusName.equals("ENDED")) {
                 WatermediaReflectionBridge.playerStart(cachedPlayer);
             }
             WatermediaReflectionBridge.playerPause(cachedPlayer, false);
@@ -272,6 +280,10 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
         if (cachedPlayer != null) {
             if (WatermediaReflectionBridge.playerIsPlaying(cachedPlayer)) return true;
             String statusName = WatermediaReflectionBridge.playerStatusName(cachedPlayer);
+            if (statusName.equals("ERROR")) {
+                this.handlePlayerError(cachedPlayer);
+                return false;
+            }
             return this.playRequested && !this.pausedRequested
                     && (statusName.equals("WAITING") || statusName.equals("LOADING") || statusName.equals("BUFFERING"));
         }
@@ -374,7 +386,15 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
         LOGGER.warn("[FANCYMENU] Watermedia is not loaded, {} source will use fallback decoder: {}", this.logTypeName, sourceName);
     }
 
+    protected boolean handlePlayerError(@Nullable Object player) {
+        if (player == null) return false;
+        if (!WatermediaReflectionBridge.playerStatusName(player).equals("ERROR")) return false;
+        this.fail("Watermedia player entered error state for " + this.logTypeName + " texture: " + this.sourceName, null);
+        return true;
+    }
+
     protected void fail(@NotNull String message, @Nullable Throwable cause) {
+        if (this.loadingFailed) return;
         this.loadingFailed = true;
         this.ready = true;
         if (cause != null) LOGGER.error("[FANCYMENU] {}", message, cause);
