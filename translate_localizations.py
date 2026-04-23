@@ -35,7 +35,7 @@ TARGET_LANGUAGE_CODES = [
 ]
 OPENROUTER_API_KEY = "<openrouter_api_key_here>"
 OPENROUTER_MODEL = "google/gemini-3.1-pro-preview"
-BATCH_SIZE = 200
+BATCH_SIZE = 100
 
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 REQUEST_TIMEOUT_SECONDS = 2400
