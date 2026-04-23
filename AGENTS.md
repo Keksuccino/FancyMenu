@@ -26,12 +26,14 @@ Target Java 21 with 4-space indentation and UTF-8 encoding (WITHOUT BOM), matchi
 ## Networking & Packets
 FancyMenu uses its own custom packet system. If you need to add packets for a feature, make sure to analyze the `de.keksuccino.fancymenu.networking` package in the `common` module first, to understand how packets get implemented and registered.
 
-## Minecraft Sources
-You have access to the full Minecraft 1.21.11 sources in the `minecraft_cached_sources` folder. The folder contains source sets for Fabric (`fabric`) and NeoForge (`neoforge`). Before starting a task, make sure to read sources you could need for the task, so you know how the current Minecraft code actually looks. Always do that, knowing how the actual Minecraft code looks is very important, especially when you work with mixins.
-Make sure to always compare Vanilla classes from both modloaders (Fabric, NeoForge), since NeoForge often alter Vanilla classes, so mixins can't always get applied in `common` and instead need to get implemented for every launcher if the point to place the mixin differs between modloaders.
+## Minecraft & Library Sources
+- There is a directory with full Minecraft sources of all common versions for you to look up things when working with Minecraft code.
+- The sources directory is located at `E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\.MINECRAFT_SOURCES`.
+- The top level of the sources directory has subdirectories for each Minecraft version, such as `1.20.1`, `1.21.1`, `1.21.11`, `26.1.1`, etc.
+- In each Minecraft version subdirectory is a `minecraft` directory and a `libraries` directory.
+- The `minecraft` directory has subdirectories for the different launchers, so you can compare launcher-specific changes to Minecraft code, such as `fabric`, `forge`, `neoforge`, etc., and inside each is the Minecraft source code.
+- The `libraries` directory contains the source code of some important libraries used by Minecraft, such as the source code for LWJGL.
+- Make sure to check the Minecraft source code when working with Minecraft code, instead of guessing.
 
-## Library Sources
-You have access to some of the most important library sources used by Minecraft, like full LWJGL and JOML sources in the `library_cached_sources` folder. Make sure to check the sources when working on tasks that involve working with libraries used by Minecraft.
-
-## Git & Run/Compile
-NEVER try to run git commands or try to run/compile the project!
+## Testing
+- Test for compile/runtime errors by running the game via the proper "run game" tasks of the `fabric` and `neoforge` modules. Never compile or run the `common` module.
