@@ -814,6 +814,7 @@ def build_translation_request(language_code: str, batch_entries: OrderedDict[str
     )
     return {
         "model": OPENROUTER_MODEL,
+        "temperature": 1,
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt},
