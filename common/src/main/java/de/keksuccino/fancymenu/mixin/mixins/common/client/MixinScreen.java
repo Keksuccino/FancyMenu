@@ -23,6 +23,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
 import net.minecraft.client.renderer.PanoramaRenderer;
 import net.minecraft.resources.ResourceLocation;
@@ -133,8 +134,8 @@ public abstract class MixinScreen implements CustomizableScreen {
 
 	@WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderBackground(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
 	private void wrap_renderBackground_in_render_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {
-		//Don't fire the event in the TitleScreen, because it gets handled differently there
-		if (instance instanceof TitleScreen) {
+		//Don't fire the event in the TitleScreen and container screens, because it gets handled differently there
+		if ((instance instanceof TitleScreen) || (instance instanceof AbstractContainerScreen<?>)) {
 			original.call(instance, graphics, mouseX, mouseY, partial);
 			return;
 		}
