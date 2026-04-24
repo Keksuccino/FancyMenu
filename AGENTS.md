@@ -3,6 +3,9 @@
 ## Project Structure & Module Organization
 FancyMenu is a Minecraft 1.20.1 mod that uses the MultiLoader layout with shared logic under `common` and loader-specific wrappers under `fabric` and `forge`. Place shared Java sources in `common/src/main/java` and assets such as menu JSON, translations, or textures in `common/src/main/resources` so they ship with every loader build. Loader-only hooks belong inside each module's `src/main/java` tree; keep local run directories like `run_client` and `run_server` for iterative testing but never depend on them for assets.
 
+## Environment
+- You are running inside WSL on a Windows machine.
+
 ## Coding Style & Naming Conventions
 Target Java 17 with 4-space indentation and UTF-8 encoding (WITHOUT BOM), matching the Gradle toolchain configuration. Follow existing packages under `de.keksuccino.fancymenu`, mirroring existing sub-packages like `customization`, `events`, and `platform` to keep cross-loader boundaries clear. Name resources with the `fancymenu` prefix (e.g., `fancymenu.mixins.json`, `fancymenu.accesswidener`) so Gradle and the loaders resolve them consistently. Prefer explicit nullability annotations from `jsr305`, keep Mixin classes lightweight, and document multi-step flows with concise comments.
 
@@ -26,12 +29,14 @@ Target Java 17 with 4-space indentation and UTF-8 encoding (WITHOUT BOM), matchi
 ## Networking & Packets
 FancyMenu uses its own custom packet system. If you need to add packets for a feature, make sure to analyze the `de.keksuccino.fancymenu.networking` package in the `common` module first, to understand how packets get implemented and registered.
 
-## Minecraft Sources
-You have access to the full Minecraft 1.20.1 sources in the `minecraft_cached_sources` folder. The folder contains source sets for Fabric (`fabric`) and Forge (`forge`). Before starting a task, make sure to read sources you could need for the task, so you know how the current Minecraft code actually looks. Always do that, knowing how the actual Minecraft code looks is very important, especially when you work with mixins.
-Make sure to always compare Vanilla classes from both modloaders (Fabric, Forge), since Forge often alters Vanilla classes, so mixins can't always get applied in `common` and instead need to get implemented for every launcher if the point to place the mixin differs between modloaders.
+## Minecraft & Library Sources
+- There is a directory with full Minecraft sources of all common versions for you to look up things when working with Minecraft code.
+- The sources directory is located at `E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\.MINECRAFT_SOURCES`.
+- The top level of the sources directory has subdirectories for each Minecraft version, such as `1.20.1`, `1.21.1`, `1.21.11`, `26.1.1`, etc.
+- In each Minecraft version subdirectory is a `minecraft` directory and a `libraries` directory.
+- The `minecraft` directory has subdirectories for the different launchers, so you can compare launcher-specific changes to Minecraft code, such as `fabric`, `forge`, `neoforge`, etc., and inside each is the Minecraft source code.
+- The `libraries` directory contains the source code of some important libraries used by Minecraft, such as the source code for LWJGL.
+- Make sure to check the Minecraft source code when working with Minecraft code, instead of guessing.
 
-## OpenGL/LWJGL Sources
-You have access to the full LWJGL library sources of the LWJGL version used in Minecraft 1.20.1 in the `lwjgl_library_cached_sources` folder. Make sure to check the sources when working on GUI tasks that involve working with raw OpenGL.
-
-## Git & Run/Compile
-NEVER try to run git commands or try to run/compile the project!
+## Testing
+- Test for compile/runtime errors by running the game via the proper "run game" tasks of the `fabric` and `neoforge` modules. Never compile or run the `common` module.
