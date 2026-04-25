@@ -4,7 +4,7 @@
 ### New Features and Improvements
 
 - FancyMenu's UI got a complete overhaul
-  - Most of FM's UI elements have a blurred background now (this can be disabled in **menu bar -> Customization -> Settings -> FancyMenu's UI**)
+  - Most of FM's UI elements support blur now (this is disabled by default and can be enabled in **menu bar -> Customization -> Settings -> FancyMenu's UI**)
   - Most of FM's UI now uses a smooth font with a custom font render engine for crisp and easy to read text at many scales (this can be disabled in **menu bar -> Customization -> Settings -> FancyMenu's UI**)
   - FM now opens most of its configuration screens as "PiP windows", so basically a window in the Minecraft window, which makes it possible to see live-previews for stuff you customize
   - There's looots of animations now in FM's UI (this can be disabled in **menu bar -> Customization -> Settings -> FancyMenu's UI**)
