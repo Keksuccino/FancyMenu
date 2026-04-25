@@ -1,13 +1,12 @@
 package de.keksuccino.fancymenu.util.rendering.ui.icon;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.FilterMode;
 import de.keksuccino.fancymenu.util.MinecraftResourceReloadObserver;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.Identifier;
-import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -3974,7 +3973,7 @@ public final class MaterialIcons {
         try {
             nativeImage = toNativeImage(image);
             Identifier location = buildTextureLocation(icon.getName(), sizePx);
-            dynamicTexture = new DynamicTexture(location::toString, nativeImage);
+            dynamicTexture = new MaterialIconDynamicTexture(location, nativeImage);
             Minecraft.getInstance().getTextureManager().register(location, dynamicTexture);
             icon.assign(cache, location, width, height);
             applyMaterialIconFilter(location);
@@ -4157,10 +4156,19 @@ public final class MaterialIcons {
         int index = 0;
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                nativeImage.setPixel(x, y, ARGB.toABGR(pixels[index++]));
+                nativeImage.setPixel(x, y, pixels[index++]);
             }
         }
         return nativeImage;
+    }
+
+    private static final class MaterialIconDynamicTexture extends DynamicTexture {
+
+        private MaterialIconDynamicTexture(@Nonnull Identifier location, @Nonnull NativeImage pixels) {
+            super(location::toString, pixels);
+            this.sampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR);
+        }
+
     }
 
     private static BufferedImage applyBlur(BufferedImage src, float sigma) {

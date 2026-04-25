@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.global;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
 import de.keksuccino.fancymenu.util.file.FileUtils;
@@ -45,6 +44,7 @@ public final class SeamlessWorldLoadingHandler {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final File ROOT_DIR = FileUtils.createDirectory(new File(FancyMenu.INSTANCE_DATA_DIR, "seamless_world_loading"));
     private static final int RECENT_PRELOAD_LIMIT = 5;
+    private static final Object CAPTURE_LOCK = new Object();
 
     @Nullable private static LoadTarget activeTarget;
     @Nullable private static File activeFile;
@@ -57,6 +57,8 @@ public final class SeamlessWorldLoadingHandler {
     @Nullable private static String captureIdentifier;
     @Nullable private static NativeImage lastCapturedImage;
     private static long lastCaptureTimeMs;
+    private static long captureGeneration;
+    private static boolean captureInProgress;
     private static final long CAPTURE_INTERVAL_MS = 1000L;
 
     private SeamlessWorldLoadingHandler() {
@@ -313,25 +315,70 @@ public final class SeamlessWorldLoadingHandler {
             clearCaptureState();
             return;
         }
-        if (captureTarget == null || captureIdentifier == null) {
-            return;
-        }
         long now = Util.getMillis();
-        if (lastCapturedImage != null && now - lastCaptureTimeMs < CAPTURE_INTERVAL_MS) {
-            return;
+
+        LoadTarget target;
+        String identifier;
+        long generation;
+        synchronized (CAPTURE_LOCK) {
+            if (captureTarget == null || captureIdentifier == null) {
+                return;
+            }
+            if (captureInProgress || (lastCaptureTimeMs > 0L && now - lastCaptureTimeMs < CAPTURE_INTERVAL_MS)) {
+                return;
+            }
+
+            target = captureTarget;
+            identifier = captureIdentifier;
+            generation = captureGeneration;
+            captureInProgress = true;
+            lastCaptureTimeMs = now;
         }
-        final NativeImage[] image = new NativeImage[1];
+
+        // Minecraft 1.21.11 delivers screenshot pixels asynchronously.
         try {
-            Screenshot.takeScreenshot(renderTarget, capturedImage -> image[0] = capturedImage);
+            Screenshot.takeScreenshot(renderTarget, capturedImage -> handleCapturedFrame(capturedImage, target, identifier, generation));
         } catch (Exception ex) {
+            synchronized (CAPTURE_LOCK) {
+                if (captureGeneration == generation) {
+                    captureInProgress = false;
+                }
+            }
             LOGGER.warn("[FANCYMENU] Failed to capture seamless world loading screenshot.", ex);
+        }
+    }
+
+    private static void handleCapturedFrame(@Nullable NativeImage capturedImage, @NotNull LoadTarget target, @NotNull String identifier, long generation) {
+        if (capturedImage == null) {
+            synchronized (CAPTURE_LOCK) {
+                if (captureGeneration == generation) {
+                    captureInProgress = false;
+                }
+            }
             return;
         }
-        if (image[0] == null) {
-            return;
+
+        boolean stored = false;
+        try {
+            synchronized (CAPTURE_LOCK) {
+                if (isEnabled() && captureGeneration == generation && captureTarget == target && identifier.equals(captureIdentifier)) {
+                    replaceLastCapturedImageLocked(capturedImage);
+                    lastCaptureTimeMs = Util.getMillis();
+                    stored = true;
+                }
+            }
+        } catch (Exception ex) {
+            LOGGER.warn("[FANCYMENU] Failed to store seamless world loading screenshot.", ex);
+        } finally {
+            synchronized (CAPTURE_LOCK) {
+                if (captureGeneration == generation) {
+                    captureInProgress = false;
+                }
+            }
+            if (!stored) {
+                capturedImage.close();
+            }
         }
-        replaceLastCapturedImage(image[0]);
-        lastCaptureTimeMs = now;
     }
 
     private static void setCaptureTarget(@NotNull LoadTarget target, @Nullable String identifier) {
@@ -344,11 +391,15 @@ public final class SeamlessWorldLoadingHandler {
             clearCaptureState();
             return;
         }
-        if (target != captureTarget || !resolved.equals(captureIdentifier)) {
-            clearLastCapturedImage();
-            captureTarget = target;
-            captureIdentifier = resolved;
-            lastCaptureTimeMs = 0L;
+        synchronized (CAPTURE_LOCK) {
+            if (target != captureTarget || !resolved.equals(captureIdentifier)) {
+                clearLastCapturedImageLocked();
+                captureTarget = target;
+                captureIdentifier = resolved;
+                lastCaptureTimeMs = 0L;
+                captureInProgress = false;
+                captureGeneration++;
+            }
         }
     }
 
@@ -362,15 +413,20 @@ public final class SeamlessWorldLoadingHandler {
             clearCaptureState();
             return;
         }
-        if (captureTarget != target || !resolved.equals(captureIdentifier)) {
-            clearCaptureState();
-            return;
+        NativeImage image;
+        synchronized (CAPTURE_LOCK) {
+            if (captureTarget != target || !resolved.equals(captureIdentifier)) {
+                clearCaptureStateLocked();
+                return;
+            }
+            image = lastCapturedImage;
+            lastCapturedImage = null;
+            captureTarget = null;
+            captureIdentifier = null;
+            lastCaptureTimeMs = 0L;
+            captureInProgress = false;
+            captureGeneration++;
         }
-        NativeImage image = lastCapturedImage;
-        lastCapturedImage = null;
-        captureTarget = null;
-        captureIdentifier = null;
-        lastCaptureTimeMs = 0L;
         if (image == null) {
             return;
         }
@@ -379,21 +435,29 @@ public final class SeamlessWorldLoadingHandler {
     }
 
     private static void clearCaptureState() {
+        synchronized (CAPTURE_LOCK) {
+            clearCaptureStateLocked();
+        }
+    }
+
+    private static void clearCaptureStateLocked() {
         captureTarget = null;
         captureIdentifier = null;
         lastCaptureTimeMs = 0L;
-        clearLastCapturedImage();
+        captureInProgress = false;
+        captureGeneration++;
+        clearLastCapturedImageLocked();
     }
 
-    private static void clearLastCapturedImage() {
+    private static void clearLastCapturedImageLocked() {
         if (lastCapturedImage != null) {
             lastCapturedImage.close();
             lastCapturedImage = null;
         }
     }
 
-    private static void replaceLastCapturedImage(@NotNull NativeImage image) {
-        clearLastCapturedImage();
+    private static void replaceLastCapturedImageLocked(@NotNull NativeImage image) {
+        clearLastCapturedImageLocked();
         lastCapturedImage = image;
     }
 

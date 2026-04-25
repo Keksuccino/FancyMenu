@@ -36,6 +36,11 @@ public class MixinGuiGraphics {
         if (RenderingUtils.isTooltipRenderingBlocked()) info.cancel();
     }
 
+    @ModifyArgs(method = "innerBlit", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;submitBlit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lcom/mojang/blaze3d/textures/GpuTextureView;Lcom/mojang/blaze3d/textures/GpuSampler;IIIIFFFFI)V"))
+    private void modify_innerBlitColor_FancyMenu(Args args) {
+        args.set(11, RenderingUtils.applyShaderColor((int) args.get(11)));
+    }
+
     @ModifyArgs(method = "enableScissor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/navigation/ScreenRectangle;<init>(IIII)V"))
     private void modify_enableScissor_FancyMenu(Args args) {
         boolean pipActive = PiPWindowHandler.INSTANCE.isScreenRenderActive();

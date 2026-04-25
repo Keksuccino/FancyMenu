@@ -56,6 +56,16 @@ public class RenderingUtils {
         return shaderColor;
     }
 
+    public static int applyShaderColor(int color) {
+        if (shaderColor == -1) {
+            return color;
+        }
+        if (color == -1) {
+            return shaderColor;
+        }
+        return ARGB.multiply(color, shaderColor);
+    }
+
     public static void setShaderColor(@NotNull GuiGraphics graphics, @NotNull Color color) {
         shaderColor = color.getRGB();
     }
