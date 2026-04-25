@@ -240,9 +240,12 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
     }
 
     protected void renderBodyViewport(@NotNull GuiGraphics graphics, double localMouseX, double localMouseY, double renderScale, float partial) {
-        int scissorWidth = Math.max(0, Math.round((float) (this.getBodyWidth() * renderScale)));
-        int scissorHeight = Math.max(0, Math.round((float) (this.getBodyHeight() * renderScale)));
-        if (scissorWidth <= 0 || scissorHeight <= 0) {
+        // GuiGraphics applies the active Matrix3x2fStack to scissors in 1.21.11.
+        int localScissorMinX = (int)Math.floor(this.getRealBodyX());
+        int localScissorMinY = (int)Math.floor(this.getRealBodyY());
+        int localScissorMaxX = (int)Math.ceil(this.getRealBodyX() + this.getBodyWidth());
+        int localScissorMaxY = (int)Math.ceil(this.getRealBodyY() + this.getBodyHeight());
+        if (localScissorMaxX <= localScissorMinX || localScissorMaxY <= localScissorMinY) {
             return;
         }
         int scissorX = Math.round((float) ((this.getTranslatedX() + this.getRealBodyX()) * renderScale));
@@ -253,7 +256,7 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
             bodyMouseX = -100000;
             bodyMouseY = -100000;
         }
-        graphics.enableScissor(scissorX, scissorY, scissorX + scissorWidth, scissorY + scissorHeight);
+        graphics.enableScissor(localScissorMinX, localScissorMinY, localScissorMaxX, localScissorMaxY);
         graphics.pose().pushMatrix();
         graphics.pose().translate(this.getRealBodyX(), this.getRealBodyY());
         try {
@@ -318,12 +321,12 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
         UIBase.resetShaderColor(graphics);
         com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
         graphics.pose().pushMatrix();
-        double renderScale = getRenderScaleSafe();
-        int scissorScreenX = Math.round((float) ((this.getTranslatedX() + scissorX) * renderScale));
-        int scissorScreenY = Math.round((float) ((this.getTranslatedY() + scissorY) * renderScale));
-        int scissorScreenWidth = Math.round((float) (labelDisplayWidth * renderScale));
-        int scissorScreenHeight = Math.round((float) ((this.getTitleBarHeight() + 2) * renderScale));
-        graphics.enableScissor(scissorScreenX, scissorScreenY, scissorScreenX + scissorScreenWidth, scissorScreenY + scissorScreenHeight);
+        graphics.enableScissor(
+                (int)Math.floor(scissorX),
+                (int)Math.floor(scissorY),
+                (int)Math.ceil(scissorX + labelDisplayWidth),
+                (int)Math.ceil(scissorY + this.getTitleBarHeight() + 2.0F)
+        );
         UIBase.renderText(graphics, this.displayLabel, (int)(titleBarX + 3), (int)(titleBarY + (this.getTitleBarHeight() / 2f) - (UIBase.getUITextHeightNormal() / 2f)));
         graphics.disableScissor();
         graphics.pose().popMatrix();

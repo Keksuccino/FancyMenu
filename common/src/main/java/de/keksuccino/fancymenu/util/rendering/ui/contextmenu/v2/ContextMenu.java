@@ -306,21 +306,18 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         // Enable scissoring if scrollable
         if (needsScrolling && renderContent) {
-            // Calculate scissor boundaries IN THE SCALED CONTEXT
+            // GuiGraphics transforms scissors through the active Matrix3x2fStack in 1.21.11.
             float scissorTopInScaledContext = scaledY + SCROLL_INDICATOR_HEIGHT;
             float scissorBottomInScaledContext = scaledY + displayHeight - SCROLL_INDICATOR_HEIGHT;
             float scissorLeftInScaledContext = scaledX;
             float scissorRightInScaledContext = scaledX + this.getWidth();
 
-            // Convert coordinates from the scaled context to the UNscaled logical GUI space
-            // The 'renderScale' variable is the one used in graphics.pose().scale()
-            float logicalMinX = scissorLeftInScaledContext * renderScale;
-            float logicalMinY = scissorTopInScaledContext * renderScale;
-            float logicalMaxX = scissorRightInScaledContext * renderScale;
-            float logicalMaxY = scissorBottomInScaledContext * renderScale;
-
-            // enableScissor expects unscaled logical GUI coordinates
-            graphics.enableScissor((int)logicalMinX, (int)logicalMinY, (int)logicalMaxX, (int)logicalMaxY);
+            graphics.enableScissor(
+                    (int)Math.floor(scissorLeftInScaledContext),
+                    (int)Math.floor(scissorTopInScaledContext),
+                    (int)Math.ceil(scissorRightInScaledContext),
+                    (int)Math.ceil(scissorBottomInScaledContext)
+            );
         }
 
         //Update + render entries
