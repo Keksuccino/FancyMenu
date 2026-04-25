@@ -3,7 +3,9 @@
 
 ### Important
 
-As you will probably notice, this update is a tiny bit large and was originally coded in 1.21.1, so it is basically optimized for 1.21.1. If you notice any bugs, especially when using other Minecraft versions than 1.21.1, please report them on GitHub, because the scale of this update makes it impossible for me (and even the testing team) to catch all bugs and other issues.
+As you will probably notice, this update is a tiny bit large and was originally coded in 1.21.1, so it is basically optimized for 1.21.1.
+If you notice any bugs, especially when using other Minecraft versions than 1.21.1, please report them on GitHub, because the scale of this update
+makes it impossible for me (and even the testing team) to catch all bugs and other issues.
 Thank you very much! 🙏
 
 ### New Features and Improvements
