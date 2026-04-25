@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.Std140Builder;
+import com.mojang.blaze3d.buffers.Std140SizeCalculator;
 import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPostChain;
@@ -13,8 +14,10 @@ import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.PostPass;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
+import org.lwjgl.system.MemoryStack;
 
 import javax.annotation.Nonnull;
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -22,6 +25,13 @@ import java.util.Objects;
 public final class SmoothRectangleRenderer {
 
     private static final Identifier SMOOTH_RECT_POST_CHAIN_FANCYMENU = Identifier.withDefaultNamespace("fancymenu_gui_smooth_rect");
+    private static final int SMOOTH_RECT_CONFIG_SIZE_FANCYMENU = new Std140SizeCalculator()
+            .putVec4()
+            .putVec4()
+            .putVec4()
+            .putVec4()
+            .putFloat()
+            .get();
     private static boolean smoothRectPostChainFailed_FancyMenu;
 
     private SmoothRectangleRenderer() {
@@ -207,15 +217,31 @@ public final class SmoothRectangleRenderer {
             return false;
         }
 
-        try (GpuBuffer.MappedView mappedView = RenderSystem.getDevice().createCommandEncoder().mapBuffer(buffer, false, true)) {
-            Std140Builder.intoBuffer(mappedView.data())
-                    .putVec4(x, y, width, height)
-                    .putVec4(rotation.m00(), rotation.m01(), rotation.m10(), rotation.m11())
-                    .putVec4(cornerRadii.topLeft(), cornerRadii.topRight(), cornerRadii.bottomRight(), cornerRadii.bottomLeft())
-                    .putVec4((float)ARGB.red(color) / 255.0F, (float)ARGB.green(color) / 255.0F, (float)ARGB.blue(color) / 255.0F, (float)ARGB.alpha(color) / 255.0F)
-                    .putFloat(borderThickness);
+        try (MemoryStack memoryStack = MemoryStack.stackPush()) {
+            ByteBuffer config = createConfigBuffer_FancyMenu(memoryStack, x, y, width, height, borderThickness, cornerRadii, rotation, color);
+            if ((buffer.usage() & GpuBuffer.USAGE_COPY_DST) == 0 || buffer.size() < SMOOTH_RECT_CONFIG_SIZE_FANCYMENU) {
+                GpuBuffer writableBuffer = RenderSystem.getDevice().createBuffer(
+                        () -> "FancyMenu SmoothRectConfig",
+                        GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST,
+                        config
+                );
+                customUniforms.put("SmoothRectConfig", writableBuffer);
+                buffer.close();
+                return true;
+            }
+            RenderSystem.getDevice().createCommandEncoder().writeToBuffer(buffer.slice(), config);
         }
         return true;
+    }
+
+    private static ByteBuffer createConfigBuffer_FancyMenu(@Nonnull MemoryStack memoryStack, float x, float y, float width, float height, float borderThickness, @Nonnull CornerRadii cornerRadii, @Nonnull RenderRotationUtil.Rotation2D rotation, int color) {
+        return Std140Builder.onStack(memoryStack, SMOOTH_RECT_CONFIG_SIZE_FANCYMENU)
+                .putVec4(x, y, width, height)
+                .putVec4(rotation.m00(), rotation.m01(), rotation.m10(), rotation.m11())
+                .putVec4(cornerRadii.topLeft(), cornerRadii.topRight(), cornerRadii.bottomRight(), cornerRadii.bottomLeft())
+                .putVec4((float)ARGB.red(color) / 255.0F, (float)ARGB.green(color) / 255.0F, (float)ARGB.blue(color) / 255.0F, (float)ARGB.alpha(color) / 255.0F)
+                .putFloat(borderThickness)
+                .get();
     }
 
     private static void renderFallbackRect_FancyMenu(@Nonnull GuiGraphics graphics, @Nonnull RectArea area) {
