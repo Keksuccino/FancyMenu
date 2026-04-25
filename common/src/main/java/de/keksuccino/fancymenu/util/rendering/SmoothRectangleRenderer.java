@@ -26,6 +26,7 @@ import java.util.Objects;
 public final class SmoothRectangleRenderer {
 
     private static final float QUAD_AA_PADDING_PIXELS_FANCYMENU = 2.0F;
+    private static final Matrix3x2f IDENTITY_POSE_FANCYMENU = new Matrix3x2f();
     private static final VertexFormatElement RECT_INFO_0_FANCYMENU = registerNextVertexFormatElement_FancyMenu();
     private static final VertexFormatElement RECT_INFO_1_FANCYMENU = registerNextVertexFormatElement_FancyMenu();
     private static final VertexFormatElement RECT_INFO_2_FANCYMENU = registerNextVertexFormatElement_FancyMenu();
@@ -339,7 +340,7 @@ public final class SmoothRectangleRenderer {
 
     private static void submitSmoothRect_FancyMenu(@Nonnull GuiGraphics graphics, @Nonnull RectArea area, @Nonnull QuadBounds bounds, float guiScale, float halfWidth, float halfHeight, float borderThickness, @Nonnull CornerRadii cornerRadii, @Nonnull RenderRotationUtil.Rotation2D rotation) {
         ((IMixinGuiGraphics)graphics).get_guiRenderState_FancyMenu().submitGuiElement(new SmoothRectRenderState(
-                new Matrix3x2f(graphics.pose()),
+                new Matrix3x2f(IDENTITY_POSE_FANCYMENU),
                 bounds.minX(),
                 bounds.minY(),
                 bounds.maxX(),
