@@ -7,6 +7,7 @@
     "client.IMixinAbstractSliderButton",
     "client.IMixinAbstractWidget",
     "client.IMixinBossHealthOverlay",
+    "client.IMixinBufferBuilder",
     "client.IMixinButton",
     "client.IMixinChatScreen",
     "client.IMixinClientLanguage",
@@ -108,5 +109,4 @@
   "plugin": "de.keksuccino.fancymenu.mixin.FMMixinPlugin",
   "minVersion": "0.8"
 }
-
 

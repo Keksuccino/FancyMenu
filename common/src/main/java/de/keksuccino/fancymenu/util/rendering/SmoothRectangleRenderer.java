@@ -1,40 +1,63 @@
 package de.keksuccino.fancymenu.util.rendering;
 
-import com.mojang.blaze3d.buffers.GpuBuffer;
-import com.mojang.blaze3d.buffers.Std140Builder;
-import com.mojang.blaze3d.buffers.Std140SizeCalculator;
-import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
-import com.mojang.blaze3d.systems.RenderSystem;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPostChain;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPostPass;
+import com.mojang.blaze3d.pipeline.BlendFunction;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.DepthTestFunction;
+import com.mojang.blaze3d.shaders.UniformType;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormatElement;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinBufferBuilder;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphics;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.LevelTargetBundle;
-import net.minecraft.client.renderer.PostChain;
-import net.minecraft.client.renderer.PostPass;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.gui.render.TextureSetup;
+import net.minecraft.client.gui.render.state.GuiElementRenderState;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
-import org.lwjgl.system.MemoryStack;
+import org.joml.Matrix3x2f;
+import org.lwjgl.system.MemoryUtil;
 
 import javax.annotation.Nonnull;
-import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.Map;
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 public final class SmoothRectangleRenderer {
 
-    private static final Identifier SMOOTH_RECT_POST_CHAIN_FANCYMENU = Identifier.withDefaultNamespace("fancymenu_gui_smooth_rect");
-    private static final int SMOOTH_RECT_CONFIG_SIZE_FANCYMENU = new Std140SizeCalculator()
-            .putVec4()
-            .putVec4()
-            .putVec4()
-            .putVec4()
-            .putFloat()
-            .get();
-    private static boolean smoothRectPostChainFailed_FancyMenu;
+    private static final float QUAD_AA_PADDING_PIXELS_FANCYMENU = 2.0F;
+    private static final VertexFormatElement RECT_INFO_0_FANCYMENU = registerNextVertexFormatElement_FancyMenu();
+    private static final VertexFormatElement RECT_INFO_1_FANCYMENU = registerNextVertexFormatElement_FancyMenu();
+    private static final VertexFormatElement RECT_INFO_2_FANCYMENU = registerNextVertexFormatElement_FancyMenu();
+    private static final VertexFormat SMOOTH_RECT_VERTEX_FORMAT_FANCYMENU = VertexFormat.builder()
+            .add("Position", VertexFormatElement.POSITION)
+            .add("Color", VertexFormatElement.COLOR)
+            .add("UV0", VertexFormatElement.UV0)
+            .add("RectInfo0", RECT_INFO_0_FANCYMENU)
+            .add("RectInfo1", RECT_INFO_1_FANCYMENU)
+            .add("RectInfo2", RECT_INFO_2_FANCYMENU)
+            .build();
+    private static final RenderPipeline SMOOTH_RECT_PIPELINE_FANCYMENU = RenderPipeline.builder()
+            .withLocation(Identifier.withDefaultNamespace("pipeline/fancymenu_gui_smooth_rect"))
+            .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
+            .withUniform("Projection", UniformType.UNIFORM_BUFFER)
+            .withVertexShader("core/fancymenu_gui_smooth_rect")
+            .withFragmentShader("core/fancymenu_gui_smooth_rect")
+            .withBlend(BlendFunction.TRANSLUCENT)
+            .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+            .withVertexFormat(SMOOTH_RECT_VERTEX_FORMAT_FANCYMENU, VertexFormat.Mode.QUADS)
+            .build();
 
     private SmoothRectangleRenderer() {
+    }
+
+    private static VertexFormatElement registerNextVertexFormatElement_FancyMenu() {
+        for (int i = 0; i < VertexFormatElement.MAX_COUNT; i++) {
+            if (VertexFormatElement.byId(i) == null) {
+                return VertexFormatElement.register(i, 0, VertexFormatElement.Type.FLOAT, VertexFormatElement.Usage.GENERIC, 4);
+            }
+        }
+        throw new IllegalStateException("VertexFormatElement count limit exceeded");
     }
 
     public static void renderSmoothRect(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float cornerRadius, int color, float partial) {
@@ -163,85 +186,20 @@ public final class SmoothRectangleRenderer {
     }
 
     private static void _renderSmoothRect(@Nonnull GuiGraphics graphics, @Nonnull RectArea area) {
-        Minecraft minecraft = Minecraft.getInstance();
-        int targetWidth = minecraft.getWindow().getWidth();
-        int targetHeight = minecraft.getWindow().getHeight();
         float guiScale = resolveGuiScale_FancyMenu();
         float scaledWidth = area.width * guiScale;
         float scaledHeight = area.height * guiScale;
-        if (targetWidth <= 0 || targetHeight <= 0 || scaledWidth <= 0.0F || scaledHeight <= 0.0F) {
-            return;
-        }
-
-        PostChain postChain = getPostChain_FancyMenu(minecraft);
-        if (postChain == null) {
+        if (scaledWidth <= 0.0F || scaledHeight <= 0.0F) {
             renderFallbackRect_FancyMenu(graphics, area);
             return;
         }
 
-        float scaledX = area.x * guiScale;
-        float scaledY = targetHeight - (area.y * guiScale) - scaledHeight;
         float scaledBorderThickness = area.borderThickness * guiScale;
         CornerRadii scaledRadii = area.cornerRadii.scaled(guiScale).clamped(Math.min(scaledWidth, scaledHeight) * 0.5F).flipVertical();
         RenderRotationUtil.Rotation2D rotation = RenderRotationUtil.getCurrentAdditionalRenderMaskRotation2D();
-
-        if (!applyUniforms_FancyMenu(postChain, scaledX, scaledY, scaledWidth, scaledHeight, scaledBorderThickness, scaledRadii, rotation, area.color)) {
-            renderFallbackRect_FancyMenu(graphics, area);
-            return;
-        }
-
-        postChain.process(minecraft.getMainRenderTarget(), GraphicsResourceAllocator.UNPOOLED);
+        QuadBounds bounds = computeQuadBounds_FancyMenu(area, guiScale, scaledWidth, scaledHeight, rotation);
+        submitSmoothRect_FancyMenu(graphics, area, bounds, guiScale, scaledWidth * 0.5F, scaledHeight * 0.5F, scaledBorderThickness, scaledRadii, rotation);
         RenderingUtils.resetShaderColor(graphics);
-    }
-
-    private static PostChain getPostChain_FancyMenu(@Nonnull Minecraft minecraft) {
-        if (smoothRectPostChainFailed_FancyMenu) {
-            return null;
-        }
-        PostChain postChain = minecraft.getShaderManager().getPostChain(SMOOTH_RECT_POST_CHAIN_FANCYMENU, LevelTargetBundle.MAIN_TARGETS);
-        if (postChain == null) {
-            smoothRectPostChainFailed_FancyMenu = true;
-        }
-        return postChain;
-    }
-
-    private static boolean applyUniforms_FancyMenu(@Nonnull PostChain postChain, float x, float y, float width, float height, float borderThickness, @Nonnull CornerRadii cornerRadii, @Nonnull RenderRotationUtil.Rotation2D rotation, int color) {
-        List<PostPass> passes = ((IMixinPostChain)postChain).getPasses_FancyMenu();
-        if (passes.isEmpty()) {
-            return false;
-        }
-
-        Map<String, GpuBuffer> customUniforms = ((IMixinPostPass)passes.get(0)).get_customUniforms_FancyMenu();
-        GpuBuffer buffer = customUniforms.get("SmoothRectConfig");
-        if (buffer == null) {
-            return false;
-        }
-
-        try (MemoryStack memoryStack = MemoryStack.stackPush()) {
-            ByteBuffer config = createConfigBuffer_FancyMenu(memoryStack, x, y, width, height, borderThickness, cornerRadii, rotation, color);
-            if ((buffer.usage() & GpuBuffer.USAGE_COPY_DST) == 0 || buffer.size() < SMOOTH_RECT_CONFIG_SIZE_FANCYMENU) {
-                GpuBuffer writableBuffer = RenderSystem.getDevice().createBuffer(
-                        () -> "FancyMenu SmoothRectConfig",
-                        GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST,
-                        config
-                );
-                customUniforms.put("SmoothRectConfig", writableBuffer);
-                buffer.close();
-                return true;
-            }
-            RenderSystem.getDevice().createCommandEncoder().writeToBuffer(buffer.slice(), config);
-        }
-        return true;
-    }
-
-    private static ByteBuffer createConfigBuffer_FancyMenu(@Nonnull MemoryStack memoryStack, float x, float y, float width, float height, float borderThickness, @Nonnull CornerRadii cornerRadii, @Nonnull RenderRotationUtil.Rotation2D rotation, int color) {
-        return Std140Builder.onStack(memoryStack, SMOOTH_RECT_CONFIG_SIZE_FANCYMENU)
-                .putVec4(x, y, width, height)
-                .putVec4(rotation.m00(), rotation.m01(), rotation.m10(), rotation.m11())
-                .putVec4(cornerRadii.topLeft(), cornerRadii.topRight(), cornerRadii.bottomRight(), cornerRadii.bottomLeft())
-                .putVec4((float)ARGB.red(color) / 255.0F, (float)ARGB.green(color) / 255.0F, (float)ARGB.blue(color) / 255.0F, (float)ARGB.alpha(color) / 255.0F)
-                .putFloat(borderThickness)
-                .get();
     }
 
     private static void renderFallbackRect_FancyMenu(@Nonnull GuiGraphics graphics, @Nonnull RectArea area) {
@@ -347,6 +305,69 @@ public final class SmoothRectangleRenderer {
         return (float)guiScale;
     }
 
+    private static QuadBounds computeQuadBounds_FancyMenu(@Nonnull RectArea area, float guiScale, float scaledWidth, float scaledHeight, @Nonnull RenderRotationUtil.Rotation2D maskRotation) {
+        float halfWidth = scaledWidth * 0.5F;
+        float halfHeight = scaledHeight * 0.5F;
+        RenderRotationUtil.Rotation2D forwardRotation = invertRotation_FancyMenu(maskRotation);
+        float extentX = Math.abs(forwardRotation.m00()) * halfWidth + Math.abs(forwardRotation.m01()) * halfHeight;
+        float extentY = Math.abs(forwardRotation.m10()) * halfWidth + Math.abs(forwardRotation.m11()) * halfHeight;
+
+        if (!Float.isFinite(extentX) || !Float.isFinite(extentY)) {
+            return new QuadBounds(area.x, area.y, area.x + area.width, area.y + area.height);
+        }
+
+        float centerX = area.x + area.width * 0.5F;
+        float centerY = area.y + area.height * 0.5F;
+        float extentXGui = (extentX + QUAD_AA_PADDING_PIXELS_FANCYMENU) / guiScale;
+        float extentYGui = (extentY + QUAD_AA_PADDING_PIXELS_FANCYMENU) / guiScale;
+        return new QuadBounds(centerX - extentXGui, centerY - extentYGui, centerX + extentXGui, centerY + extentYGui);
+    }
+
+    private static RenderRotationUtil.Rotation2D invertRotation_FancyMenu(@Nonnull RenderRotationUtil.Rotation2D rotation) {
+        float det = rotation.m00() * rotation.m11() - rotation.m01() * rotation.m10();
+        if (!Float.isFinite(det) || Math.abs(det) < 1.0E-6F) {
+            return RenderRotationUtil.Rotation2D.identity();
+        }
+        float invDet = 1.0F / det;
+        return new RenderRotationUtil.Rotation2D(
+                rotation.m11() * invDet,
+                -rotation.m01() * invDet,
+                -rotation.m10() * invDet,
+                rotation.m00() * invDet
+        );
+    }
+
+    private static void submitSmoothRect_FancyMenu(@Nonnull GuiGraphics graphics, @Nonnull RectArea area, @Nonnull QuadBounds bounds, float guiScale, float halfWidth, float halfHeight, float borderThickness, @Nonnull CornerRadii cornerRadii, @Nonnull RenderRotationUtil.Rotation2D rotation) {
+        ((IMixinGuiGraphics)graphics).get_guiRenderState_FancyMenu().submitGuiElement(new SmoothRectRenderState(
+                new Matrix3x2f(graphics.pose()),
+                bounds.minX(),
+                bounds.minY(),
+                bounds.maxX(),
+                bounds.maxY(),
+                area.x + area.width * 0.5F,
+                area.y + area.height * 0.5F,
+                guiScale,
+                halfWidth,
+                halfHeight,
+                borderThickness,
+                cornerRadii,
+                rotation,
+                area.color,
+                null
+        ));
+    }
+
+    private static void writeVec4_FancyMenu(@Nonnull VertexConsumer consumer, @Nonnull VertexFormatElement element, float x, float y, float z, float w) {
+        long pointer = ((IMixinBufferBuilder)consumer).invoke_beginElement_FancyMenu(element);
+        if (pointer == -1L) {
+            return;
+        }
+        MemoryUtil.memPutFloat(pointer, x);
+        MemoryUtil.memPutFloat(pointer + 4L, y);
+        MemoryUtil.memPutFloat(pointer + 8L, z);
+        MemoryUtil.memPutFloat(pointer + 12L, w);
+    }
+
     private static void fillPixelSpan_FancyMenu(@Nonnull GuiGraphics graphics, float left, float top, float right, float bottom, int color, float guiScale) {
         if (right <= left || bottom <= top) {
             return;
@@ -409,6 +430,106 @@ public final class SmoothRectangleRenderer {
     }
 
     private record RectArea(float x, float y, float width, float height, float borderThickness, CornerRadii cornerRadii, int color) {
+    }
+
+    private record QuadBounds(float minX, float minY, float maxX, float maxY) {
+    }
+
+    private record SmoothRectRenderState(
+            Matrix3x2f transform,
+            float minX,
+            float minY,
+            float maxX,
+            float maxY,
+            float centerX,
+            float centerY,
+            float guiScale,
+            float halfWidth,
+            float halfHeight,
+            float borderThickness,
+            CornerRadii cornerRadii,
+            RenderRotationUtil.Rotation2D rotation,
+            int color,
+            @Nullable ScreenRectangle scissorArea,
+            @Nullable ScreenRectangle bounds
+    ) implements GuiElementRenderState {
+
+        private SmoothRectRenderState(
+                Matrix3x2f transform,
+                float minX,
+                float minY,
+                float maxX,
+                float maxY,
+                float centerX,
+                float centerY,
+                float guiScale,
+                float halfWidth,
+                float halfHeight,
+                float borderThickness,
+                CornerRadii cornerRadii,
+                RenderRotationUtil.Rotation2D rotation,
+                int color,
+                @Nullable ScreenRectangle scissorArea
+        ) {
+            this(
+                    transform,
+                    minX,
+                    minY,
+                    maxX,
+                    maxY,
+                    centerX,
+                    centerY,
+                    guiScale,
+                    halfWidth,
+                    halfHeight,
+                    borderThickness,
+                    cornerRadii,
+                    rotation,
+                    color,
+                    scissorArea,
+                    getBounds_FancyMenu(minX, minY, maxX, maxY, transform, scissorArea)
+            );
+        }
+
+        @Override
+        public void buildVertices(@Nonnull VertexConsumer consumer) {
+            this.addVertex_FancyMenu(consumer, this.minX, this.minY);
+            this.addVertex_FancyMenu(consumer, this.minX, this.maxY);
+            this.addVertex_FancyMenu(consumer, this.maxX, this.maxY);
+            this.addVertex_FancyMenu(consumer, this.maxX, this.minY);
+        }
+
+        private void addVertex_FancyMenu(@Nonnull VertexConsumer consumer, float x, float y) {
+            consumer.addVertexWith2DPose(this.transform, x, y)
+                    .setColor(this.color)
+                    .setUv((x - this.centerX) * this.guiScale, (this.centerY - y) * this.guiScale);
+            writeVec4_FancyMenu(consumer, RECT_INFO_0_FANCYMENU, this.halfWidth, this.halfHeight, this.borderThickness, 0.0F);
+            writeVec4_FancyMenu(consumer, RECT_INFO_1_FANCYMENU, this.cornerRadii.topLeft(), this.cornerRadii.topRight(), this.cornerRadii.bottomRight(), this.cornerRadii.bottomLeft());
+            writeVec4_FancyMenu(consumer, RECT_INFO_2_FANCYMENU, this.rotation.m00(), this.rotation.m01(), this.rotation.m10(), this.rotation.m11());
+        }
+
+        @Override
+        public RenderPipeline pipeline() {
+            return SMOOTH_RECT_PIPELINE_FANCYMENU;
+        }
+
+        @Override
+        public TextureSetup textureSetup() {
+            return TextureSetup.noTexture();
+        }
+
+        @Nullable
+        private static ScreenRectangle getBounds_FancyMenu(float minX, float minY, float maxX, float maxY, Matrix3x2f transform, @Nullable ScreenRectangle scissorArea) {
+            int x = (int)Math.floor(Math.min(minX, maxX));
+            int y = (int)Math.floor(Math.min(minY, maxY));
+            int right = (int)Math.ceil(Math.max(minX, maxX));
+            int bottom = (int)Math.ceil(Math.max(minY, maxY));
+            int width = Math.max(1, right - x);
+            int height = Math.max(1, bottom - y);
+            ScreenRectangle rectangle = new ScreenRectangle(x, y, width, height).transformMaxBounds(transform);
+            return scissorArea != null ? scissorArea.intersection(rectangle) : rectangle;
+        }
+
     }
 
     private record Span(float y, float height, float left, float right) {
