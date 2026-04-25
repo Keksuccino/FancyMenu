@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.util.rendering.ui.icon;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.FilterMode;
 import de.keksuccino.fancymenu.util.MinecraftResourceReloadObserver;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -30,7 +30,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
 public final class MaterialIcons {
@@ -3975,7 +3974,7 @@ public final class MaterialIcons {
         try {
             nativeImage = toNativeImage(image);
             Identifier location = buildTextureLocation(icon.getName(), sizePx);
-            dynamicTexture = new SmoothMaterialIconTexture(location::toString, nativeImage);
+            dynamicTexture = new DynamicTexture(location::toString, nativeImage);
             Minecraft.getInstance().getTextureManager().register(location, dynamicTexture);
             icon.assign(cache, location, width, height);
             applyMaterialIconFilter(location);
@@ -3999,9 +3998,7 @@ public final class MaterialIcons {
     private static void applyMaterialIconFilter(@Nonnull Identifier location) {
         Runnable action = () -> {
             try {
-                if (Minecraft.getInstance().getTextureManager().getTexture(location) instanceof SmoothMaterialIconTexture texture) {
-                    texture.applySmoothSampler();
-                }
+                Minecraft.getInstance().getTextureManager().getTexture(location);
             } catch (Exception ignored) {
             }
         };
@@ -4010,19 +4007,6 @@ public final class MaterialIcons {
         } else {
             Minecraft.getInstance().execute(action);
         }
-    }
-
-    private static final class SmoothMaterialIconTexture extends DynamicTexture {
-
-        private SmoothMaterialIconTexture(@Nonnull Supplier<String> label, @Nonnull NativeImage pixels) {
-            super(label, pixels);
-            applySmoothSampler();
-        }
-
-        private void applySmoothSampler() {
-            this.sampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR);
-        }
-
     }
 
     @Nullable
