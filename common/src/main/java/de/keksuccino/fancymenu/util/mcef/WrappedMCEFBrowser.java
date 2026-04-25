@@ -2,22 +2,18 @@ package de.keksuccino.fancymenu.util.mcef;
 
 import com.cinemamod.mcef.MCEF;
 import com.cinemamod.mcef.MCEFBrowser;
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
-import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -50,8 +46,9 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     protected volatile boolean hideVideoControls = false;
     protected final UUID genericIdentifier = UUID.randomUUID();
     protected final Identifier frameLocation = Identifier.fromNamespaceAndPath("fancymenu", "mcef_browser_frame_texture_" + this.genericIdentifier.toString().toLowerCase().replace("-", ""));
-    protected final BrowserFrameTexture frameTexture = new BrowserFrameTexture(-1, this.frameLocation.toString());
-
+    protected final BrowserFrameTexture frameTexture = new BrowserFrameTexture(-1, "FancyMenu MCEF browser frame");
+    protected volatile boolean closed = false;
+    
     // Track if initialization is complete for this browser
     private volatile boolean initialized = false;
 
@@ -106,12 +103,12 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         this.setSize(200, 200);
         this.setPosition(0, 0);
 
-        this.updateFrameTexture();
+        this.frameTexture.setId(this.browser.getRenderer().getTextureID());
 
         Minecraft.getInstance().getTextureManager().register(this.frameLocation, this.frameTexture);
 
     }
-
+    
     /**
      * Apply all initial settings once the page is loaded
      */
@@ -143,22 +140,27 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         }
     }
 
-    protected void updateFrameTexture() {
-        this.frameTexture.setId(this.browser.getRenderer().getTextureID());
-        this.frameTexture.setWidth(this.getWidth());
-        this.frameTexture.setHeight(this.getHeight());
-    }
-
     @Override
     protected void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
+        if (this.closed) {
+            return;
+        }
+
         try {
 
-            this.updateFrameTexture();
+            this.frameTexture.setId(this.browser.getRenderer().getTextureID());
+            this.ensureFrameTextureRegistered();
 
             if (this.autoHandle) BrowserHandler.notifyHandler(this.genericIdentifier.toString(), this);
 
-            graphics.blit(RenderPipelines.GUI_TEXTURED, this.frameLocation, this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight(), ARGB.white(this.opacity));
+            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+
+            de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, this.opacity);
+
+            graphics.blit(RenderPipelines.GUI_TEXTURED, this.frameLocation, this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+
+            de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, 1.0F);
 
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to render MCEFBrowser!", ex);
@@ -166,15 +168,26 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
     }
 
+    private void ensureFrameTextureRegistered() {
+        var textureManager = this.minecraft.getTextureManager();
+        if (textureManager.getTexture(this.frameLocation) != this.frameTexture) {
+            textureManager.register(this.frameLocation, this.frameTexture);
+        }
+    }
+
     public void onVolumeUpdated(@NotNull SoundSource soundSource, float newVolume) {
         this.setVolume(this.volume);
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
-        if (this.isMouseOver(event.x(), event.y()) && this.interactable) {
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean isDoubleClick) {
+        return this.mouseClicked(event.x(), event.y(), event.button());
+    }
+    
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (this.isMouseOver(mouseX, mouseY) && this.interactable) {
             this.browserFocused = true;
-            this.browser.sendMousePress(this.convertMouseX(event.x()), this.convertMouseY(event.y()), event.button());
+            this.browser.sendMousePress(this.convertMouseX(mouseX), this.convertMouseY(mouseY), button);
             this.browser.setFocus(true);
         } else {
             this.browserFocused = false;
@@ -183,9 +196,13 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     }
 
     @Override
-    public boolean mouseReleased(MouseButtonEvent event) {
+    public boolean mouseReleased(net.minecraft.client.input.MouseButtonEvent event) {
+        return this.mouseReleased(event.x(), event.y(), event.button());
+    }
+    
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if (this.interactable) {
-            this.browser.sendMouseRelease(this.convertMouseX(event.x()), this.convertMouseY(event.y()), event.button());
+            this.browser.sendMouseRelease(this.convertMouseX(mouseX), this.convertMouseY(mouseY), button);
             this.browser.setFocus(true);
         }
         return false;
@@ -207,28 +224,40 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     }
 
     @Override
-    public boolean keyPressed(KeyEvent event) {
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+    }
+    
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (this.interactable && this.browserFocused) {
-            this.browser.sendKeyPress(event.key(), event.scancode(), event.modifiers());
+            this.browser.sendKeyPress(keyCode, scanCode, modifiers);
             this.browser.setFocus(true);
         }
         return false;
     }
 
     @Override
-    public boolean keyReleased(KeyEvent event) {
+    public boolean keyReleased(net.minecraft.client.input.KeyEvent event) {
+        return this.keyReleased(event.key(), event.scancode(), event.modifiers());
+    }
+    
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
         if (this.interactable && this.browserFocused) {
-            this.browser.sendKeyRelease(event.key(), event.scancode(), event.modifiers());
+            this.browser.sendKeyRelease(keyCode, scanCode, modifiers);
             this.browser.setFocus(true);
         }
         return false;
     }
 
     @Override
-    public boolean charTyped(CharacterEvent event) {
+    public boolean charTyped(net.minecraft.client.input.CharacterEvent event) {
+        return this.charTyped((char)event.codepoint(), event.modifiers());
+    }
+    
+    public boolean charTyped(char codePoint, int modifiers) {
         if (this.interactable && this.browserFocused) {
-            if (event.codepoint() == (char) 0) return true;
-            this.browser.sendKeyTyped((char) event.codepoint(), event.modifiers());
+            if (codePoint == (char) 0) return true;
+            this.browser.sendKeyTyped(codePoint, modifiers);
             this.browser.setFocus(true);
         }
         return false;
@@ -262,19 +291,19 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     }
 
     protected int convertMouseX(double mouseX) {
-        return (int)((mouseX - (double)this.getX()) * WindowHandler.getGuiScale());
+        return (int)((mouseX - (double)this.getX()) * this.minecraft.getWindow().getGuiScale());
     }
 
     protected int convertMouseY(double mouseY) {
-        return (int)((mouseY - (double)this.getY()) * WindowHandler.getGuiScale());
+        return (int)((mouseY - (double)this.getY()) * this.minecraft.getWindow().getGuiScale());
     }
 
     protected int convertWidth(double width) {
-        return (int) (width * WindowHandler.getGuiScale());
+        return (int) (width * this.minecraft.getWindow().getGuiScale());
     }
 
     protected int convertHeight(double height) {
-        return (int) (height * WindowHandler.getGuiScale());
+        return (int) (height * this.minecraft.getWindow().getGuiScale());
     }
 
     /**
@@ -309,6 +338,15 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
     public boolean isInteractable() {
         return this.interactable;
+    }
+
+    public void setBrowserFocused(boolean browserFocused) {
+        this.browserFocused = browserFocused;
+        this.browser.setFocus(browserFocused);
+    }
+
+    public boolean isBrowserFocused() {
+        return this.browserFocused;
     }
 
     public void setAutoHandle(boolean autoHandle) {
@@ -482,19 +520,23 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     public MCEFBrowser getBrowser() {
         return this.browser;
     }
-
+    
     /**
      * Get the browser identifier
-     *
+     * 
      * @return The browser identifier
      */
     public String getIdentifier() {
         return this.genericIdentifier.toString();
     }
 
+    public boolean isClosed() {
+        return this.closed;
+    }
+
     @NotNull
     public Identifier getFrameLocation() {
-        this.updateFrameTexture();
+        this.frameTexture.setId(this.browser.getRenderer().getTextureID());
         if (this.autoHandle) BrowserHandler.notifyHandler(this.genericIdentifier.toString(), this);
         return this.frameLocation;
     }
@@ -519,6 +561,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
     @Override
     public void close() throws IOException {
+        this.closed = true;
         // Unregister from the global handler manager
         if (this.browser != null) {
             BrowserLoadEventListenerManager.getInstance().unregisterAllListenersForBrowser(this.getIdentifier());

@@ -7,7 +7,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphics;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScissorStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
@@ -15,14 +14,17 @@ import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @SuppressWarnings("unused")
 public class RenderingUtils {
@@ -33,11 +35,80 @@ public class RenderingUtils {
     public static final DrawableColor MISSING_TEXTURE_COLOR_BLACK = DrawableColor.BLACK;
     public static final Identifier FULLY_TRANSPARENT_TEXTURE = Identifier.fromNamespaceAndPath("fancymenu", "textures/fully_transparent.png");
 
-    private static final List<DeferredScreenRenderingTask> DEFERRED_SCREEN_RENDERING_TASKS = new ArrayList<>();
-    private static boolean lockDepthTest = false;
-    private static boolean blurBlocked = false;
-    private static boolean tooltipRenderingBlocked = false;
+    private static final List<RenderingTask> PRE_RENDER_CONTEXTS = new ArrayList<>();
+    private static final List<RenderingTask> POST_RENDER_CONTEXTS = new ArrayList<>();
+    private static final List<RenderingTask> DEFERRED_SCREEN_RENDERING_TASKS = new ArrayList<>();
+    private static int depthTestLockDepth = 0;
+    private static int blurBlockDepth = 0;
+    private static int tooltipRenderingBlockDepth = 0;
     private static int overrideBackgroundBlurRadius = -1000;
+    private static int shaderColor = -1;
+
+    public static void setShaderColor(@NotNull GuiGraphics graphics, float red, float green, float blue, float alpha) {
+        shaderColor = ARGB.colorFromFloat(alpha, red, green, blue);
+    }
+
+    public static void setShaderColor(@NotNull GuiGraphics graphics, int color) {
+        shaderColor = color;
+    }
+
+    public static int getShaderColor() {
+        return shaderColor;
+    }
+
+    public static void setShaderColor(@NotNull GuiGraphics graphics, @NotNull Color color) {
+        shaderColor = color.getRGB();
+    }
+
+    public static void setShaderColor(@NotNull GuiGraphics graphics, @NotNull DrawableColor color) {
+        shaderColor = color.getColorInt();
+    }
+
+    public static void setShaderColor(@NotNull GuiGraphics graphics, @NotNull Color color, float alpha) {
+        shaderColor = replaceAlphaInColor(color.getRGB(), alpha);
+    }
+
+    public static void setShaderColor(@NotNull GuiGraphics graphics, @NotNull DrawableColor color, float alpha) {
+        shaderColor = color.getColorIntWithAlpha(alpha);
+    }
+
+    public static void resetShaderColor(@NotNull GuiGraphics graphics) {
+        shaderColor = -1;
+    }
+
+    public static void postPreRenderTask(@NotNull RenderingTask context) {
+        PRE_RENDER_CONTEXTS.add(Objects.requireNonNull(context));
+    }
+
+    public static void postPostRenderTask(@NotNull RenderingTask context) {
+        POST_RENDER_CONTEXTS.add(Objects.requireNonNull(context));
+    }
+
+    @ApiStatus.Internal
+    public static void executeAllPreRenderTasks(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        List<RenderingTask> copy = new ArrayList<>(PRE_RENDER_CONTEXTS);
+        PRE_RENDER_CONTEXTS.clear();
+        for (RenderingTask context : copy) {
+            try {
+                context.render(graphics, mouseX, mouseY, partial);
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to execute pre-screen-render task!", ex);
+            }
+        }
+    }
+
+    @ApiStatus.Internal
+    public static void executeAllPostRenderTasks(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        List<RenderingTask> copy = new ArrayList<>(POST_RENDER_CONTEXTS);
+        POST_RENDER_CONTEXTS.clear();
+        for (RenderingTask context : copy) {
+            try {
+                context.render(graphics, mouseX, mouseY, partial);
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to execute post-screen-render task!", ex);
+            }
+        }
+    }
 
     public static void renderMissing(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
         int partW = width / 2;
@@ -69,40 +140,66 @@ public class RenderingUtils {
     }
 
     public static void setDepthTestLocked(boolean locked) {
-        lockDepthTest = locked;
+        if (locked) {
+            depthTestLockDepth++;
+            return;
+        }
+        if (depthTestLockDepth > 0) {
+            depthTestLockDepth--;
+        }
     }
 
     public static boolean isDepthTestLocked() {
-        return lockDepthTest;
+        return depthTestLockDepth > 0;
     }
 
     public static void setMenuBlurringBlocked(boolean blocked) {
-        blurBlocked = blocked;
+        setVanillaMenuBlurringBlocked(blocked);
     }
 
     public static boolean isMenuBlurringBlocked() {
-        return blurBlocked;
+        return isVanillaMenuBlurringBlocked();
+    }
+
+    public static void setVanillaMenuBlurringBlocked(boolean blocked) {
+        if (blocked) {
+            blurBlockDepth++;
+            return;
+        }
+        if (blurBlockDepth > 0) {
+            blurBlockDepth--;
+        }
+    }
+
+    public static boolean isVanillaMenuBlurringBlocked() {
+        return blurBlockDepth > 0;
     }
 
     public static void setTooltipRenderingBlocked(boolean blocked) {
-        tooltipRenderingBlocked = blocked;
+        if (blocked) {
+            tooltipRenderingBlockDepth++;
+            return;
+        }
+        if (tooltipRenderingBlockDepth > 0) {
+            tooltipRenderingBlockDepth--;
+        }
     }
 
     public static boolean isTooltipRenderingBlocked() {
-        return tooltipRenderingBlocked;
+        return tooltipRenderingBlockDepth > 0;
     }
 
-    public static void addDeferredScreenRenderingTask(@NotNull DeferredScreenRenderingTask task) {
+    public static void addDeferredScreenRenderingTask(@NotNull RenderingTask task) {
         DEFERRED_SCREEN_RENDERING_TASKS.add(task);
     }
 
     @NotNull
-    public static List<DeferredScreenRenderingTask> getDeferredScreenRenderingTasks() {
+    public static List<RenderingTask> getDeferredScreenRenderingTasks() {
         return new ArrayList<>(DEFERRED_SCREEN_RENDERING_TASKS);
     }
 
     public static void executeAndClearDeferredScreenRenderingTasks(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        List<DeferredScreenRenderingTask> tasks = getDeferredScreenRenderingTasks();
+        List<RenderingTask> tasks = getDeferredScreenRenderingTasks();
         DEFERRED_SCREEN_RENDERING_TASKS.clear();
         tasks.forEach(task -> task.render(graphics, mouseX, mouseY, partial));
     }
@@ -190,8 +287,7 @@ public class RenderingUtils {
         //    will occupy the screen space from [x + renderWidth] to [x + renderWidth - renderWidth],
         //    which is [x + renderWidth] to [x]. This achieves the horizontal mirror.
         //    We use a blit overload that handles separate source and render dimensions.
-        graphics.blit(
-                RenderPipelines.GUI_TEXTURED,
+        graphics.blit(RenderPipelines.GUI_TEXTURED,
                 atlasLocation,
                 0, 0, // Draw at the new (0,0) of our transformed matrix
                 (float) u, (float) v, // Top-left corner of the texture region to draw (in pixels)
@@ -222,6 +318,10 @@ public class RenderingUtils {
         blitRepeat(graphics, RenderPipelines.GUI_TEXTURED, location, x, y, areaRenderWidth, areaRenderHeight, texWidth, texHeight, color);
     }
 
+    public static void blitRepeat(@NotNull GuiGraphics graphics, @NotNull Identifier location, int x, int y, int areaRenderWidth, int areaRenderHeight, int texWidth, int texHeight) {
+        blitRepeat(graphics, location, x, y, areaRenderWidth, areaRenderHeight, texWidth, texHeight, shaderColor);
+    }
+
     /**
      * Repeatedly renders a tileable (seamless) texture inside an area. Fills the area with the texture.
      *
@@ -237,6 +337,10 @@ public class RenderingUtils {
      */
     public static void blitRepeat(@NotNull GuiGraphics graphics, @NotNull RenderPipeline renderType, @NotNull Identifier location, int x, int y, int areaRenderWidth, int areaRenderHeight, int texWidth, int texHeight, int color) {
         graphics.blit(renderType, location, x, y, 0.0F, 0.0F, areaRenderWidth, areaRenderHeight, texWidth, texHeight, color);
+    }
+
+    public static void blitRepeat(@NotNull GuiGraphics graphics, @NotNull RenderPipeline renderType, @NotNull Identifier location, int x, int y, int areaRenderWidth, int areaRenderHeight, int texWidth, int texHeight) {
+        blitRepeat(graphics, renderType, location, x, y, areaRenderWidth, areaRenderHeight, texWidth, texHeight, shaderColor);
     }
 
     /**
@@ -261,6 +365,14 @@ public class RenderingUtils {
                                              int borderTop, int borderRight, int borderBottom, int borderLeft, int color) {
 
         blitNineSlicedTexture(graphics, RenderPipelines.GUI_TEXTURED, texture, x, y, width, height, textureWidth, textureHeight, borderTop, borderRight, borderBottom, borderLeft, color);
+
+    }
+
+    public static void blitNineSlicedTexture(GuiGraphics graphics, Identifier texture, int x, int y, int width, int height,
+                                             int textureWidth, int textureHeight,
+                                             int borderTop, int borderRight, int borderBottom, int borderLeft) {
+
+        blitNineSlicedTexture(graphics, texture, x, y, width, height, textureWidth, textureHeight, borderTop, borderRight, borderBottom, borderLeft, shaderColor);
 
     }
 
@@ -387,10 +499,17 @@ public class RenderingUtils {
         submitColoredRectangle(graphics, RenderPipelines.GUI, TextureSetup.noTexture(), minX, minY, maxX, maxY, color, null);
     }
 
+    public static void blitF(@NotNull GuiGraphics graphics, Identifier location, float x, float y, float f3, float f4, float width, float height, float width2, float height2, int color) {
+        blitF(graphics, RenderPipelines.GUI_TEXTURED, location, x, y, f3, f4, width, height, width2, height2, color);
+    }
+
+    public static void blitF(@NotNull GuiGraphics graphics, Identifier location, float x, float y, float f3, float f4, float width, float height, float width2, float height2) {
+        blitF(graphics, RenderPipelines.GUI_TEXTURED, location, x, y, f3, f4, width, height, width2, height2, shaderColor);
+    }
+
     private static void submitColoredRectangle(@NotNull GuiGraphics graphics, RenderPipeline pipeline, TextureSetup textureSetup, float minX, float minY, float maxX, float maxY, int color, @Nullable Integer endColor) {
-        ScreenRectangle scissorStackPeek = ((IMixinScissorStack)((IMixinGuiGraphics)graphics).get_scissorStack_FancyMenu()).invoke_peek_FancyMenu();
         ((IMixinGuiGraphics)graphics).get_guiRenderState_FancyMenu().submitGuiElement(
-                new FloatColoredRectangleRenderState(pipeline, textureSetup, new Matrix3x2f(graphics.pose()), minX, minY, maxX, maxY, color, endColor != null ? endColor : color, scissorStackPeek)
+                new FloatColoredRectangleRenderState(pipeline, textureSetup, new Matrix3x2f(graphics.pose()), minX, minY, maxX, maxY, color, endColor != null ? endColor : color, null)
         );
     }
 
@@ -399,11 +518,11 @@ public class RenderingUtils {
     }
 
     public static void blitF(@NotNull GuiGraphics graphics, RenderPipeline renderTypeFunc, Identifier location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9) {
-        blitF(graphics, renderTypeFunc, location, $$2, $$3, $$4, $$5, $$6, $$7, $$6, $$7, $$8, $$9);
+        blitF(graphics, renderTypeFunc, location, $$2, $$3, $$4, $$5, $$6, $$7, $$6, $$7, $$8, $$9, shaderColor);
     }
 
     public static void blitF(@NotNull GuiGraphics graphics, RenderPipeline renderTypeFunc, Identifier location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10, float $$11) {
-        blitF(graphics, renderTypeFunc, location, $$2, $$3, $$4, $$5, $$6, $$7, $$8, $$9, $$10, $$11, -1);
+        blitF(graphics, renderTypeFunc, location, $$2, $$3, $$4, $$5, $$6, $$7, $$8, $$9, $$10, $$11, shaderColor);
     }
 
     public static void blitF(@NotNull GuiGraphics graphics, RenderPipeline renderTypeFunc, Identifier location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10, float $$11, int color) {
@@ -429,10 +548,9 @@ public class RenderingUtils {
     }
 
     private static void submitBlit(@NotNull GuiGraphics graphics, RenderPipeline pipeline, GpuTextureView textureView, GpuSampler gpuSampler, float minX, float minY, float maxX, float maxY, float minU, float maxU, float minV, float maxV, int color) {
-        ScreenRectangle scissorStackPeek = ((IMixinScissorStack)((IMixinGuiGraphics)graphics).get_scissorStack_FancyMenu()).invoke_peek_FancyMenu();
         ((IMixinGuiGraphics)graphics).get_guiRenderState_FancyMenu().submitGuiElement(
                 new FloatBlitRenderState(
-                        pipeline, TextureSetup.singleTexture(textureView, gpuSampler), new Matrix3x2f(graphics.pose()), minX, minY, maxX, maxY, minU, maxU, minV, maxV, color, scissorStackPeek
+                        pipeline, TextureSetup.singleTexture(textureView, gpuSampler), new Matrix3x2f(graphics.pose()), minX, minY, maxX, maxY, minU, maxU, minV, maxV, color, null
                 )
         );
     }
@@ -494,8 +612,12 @@ public class RenderingUtils {
     }
 
     @FunctionalInterface
-    public interface DeferredScreenRenderingTask {
+    public interface RenderingTask {
         void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
+    }
+
+    @FunctionalInterface
+    public interface DeferredScreenRenderingTask extends RenderingTask {
     }
 
 }

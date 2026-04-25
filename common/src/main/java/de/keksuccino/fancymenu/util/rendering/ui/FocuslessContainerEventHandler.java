@@ -5,12 +5,37 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.input.MouseButtonInfo;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * {@link ContainerEventHandler}, but fires all events for every child instead of just focused/hovered ones in some cases.
  */
 public interface FocuslessContainerEventHandler extends ContainerEventHandler, FancyMenuUiComponent {
+
+    default boolean mouseClicked(double mouseX, double mouseY, int button) {
+        return this.mouseClicked(new MouseButtonEvent(mouseX, mouseY, new MouseButtonInfo(button, 0)), false);
+    }
+
+    default boolean mouseReleased(double mouseX, double mouseY, int button) {
+        return this.mouseReleased(new MouseButtonEvent(mouseX, mouseY, new MouseButtonInfo(button, 0)));
+    }
+
+    default boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        return this.mouseDragged(new MouseButtonEvent(mouseX, mouseY, new MouseButtonInfo(button, 0)), dragX, dragY);
+    }
+
+    default boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        return this.keyPressed(new KeyEvent(keyCode, scanCode, modifiers));
+    }
+
+    default boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        return this.keyReleased(new KeyEvent(keyCode, scanCode, modifiers));
+    }
+
+    default boolean charTyped(char codePoint, int modifiers) {
+        return this.charTyped(new CharacterEvent(codePoint, modifiers));
+    }
 
     @Override
     default boolean mouseReleased(MouseButtonEvent event) {

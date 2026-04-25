@@ -31,6 +31,8 @@ public class CursorHandler {
 
     public static final long CURSOR_RESIZE_HORIZONTAL = GLFW.glfwCreateStandardCursor(GLFW.GLFW_RESIZE_EW_CURSOR);
     public static final long CURSOR_RESIZE_VERTICAL = GLFW.glfwCreateStandardCursor(GLFW.GLFW_RESIZE_NS_CURSOR);
+    public static final long CURSOR_RESIZE_NWSE = GLFW.glfwCreateStandardCursor(GLFW.GLFW_RESIZE_NWSE_CURSOR);
+    public static final long CURSOR_RESIZE_NESW = GLFW.glfwCreateStandardCursor(GLFW.GLFW_RESIZE_NESW_CURSOR);
     public static final long CURSOR_RESIZE_ALL = GLFW.glfwCreateStandardCursor(GLFW.GLFW_RESIZE_ALL_CURSOR);
     public static final long CURSOR_WRITING = GLFW.glfwCreateStandardCursor(GLFW.GLFW_IBEAM_CURSOR);
     public static final long CURSOR_POINTING_HAND = GLFW.glfwCreateStandardCursor(GLFW.GLFW_POINTING_HAND_CURSOR);
@@ -40,6 +42,35 @@ public class CursorHandler {
 
     private static long clientTickCursor = -2;
     private static boolean initialized = false;
+
+    /**
+     * Returns the currently active GLFW cursor handle on the Minecraft window, or {@code -1} if unknown/not yet tracked.
+     * <p>
+     * Note: GLFW does not expose a cursor getter, this relies on mixin hooks tracking calls to {@code GLFW.glfwSetCursor(...)}.
+     */
+    public static long getActiveCursor() {
+        try {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc == null || mc.getWindow() == null) return -1L;
+            return GlfwCursorTracker.getActiveCursor(de.keksuccino.fancymenu.util.window.WindowHandler.getWindowHandle());
+        } catch (Exception ignored) {
+            return -1L;
+        }
+    }
+
+    /**
+     * Returns the standard GLFW cursor shape id of the currently active cursor, or {@code -1} if unknown/not a standard cursor.
+     */
+    public static int getActiveStandardCursorShape() {
+        long cursor = getActiveCursor();
+        if (cursor == 0L) {
+            return GLFW.GLFW_ARROW_CURSOR; // GLFW docs: NULL cursor switches back to default arrow cursor
+        }
+        if (cursor <= 0L) {
+            return -1;
+        }
+        return GlfwCursorTracker.getStandardCursorShape(cursor);
+    }
 
     public static void init() {
         if (initialized) return;
@@ -85,7 +116,7 @@ public class CursorHandler {
 
     private static void setCursor(long cursor) {
         if (!initialized) throw new RuntimeException("[FANCYMENU] CursorHandler accessed too early!");
-        GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().handle(), cursor);
+        GLFW.glfwSetCursor(de.keksuccino.fancymenu.util.window.WindowHandler.getWindowHandle(), cursor);
     }
 
     @EventListener

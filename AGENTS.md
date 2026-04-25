@@ -39,4 +39,7 @@ FancyMenu uses its own custom packet system. If you need to add packets for a fe
 - Make sure to check the Minecraft source code when working with Minecraft code, instead of guessing.
 
 ## Testing
-- Test for compile/runtime errors by running the game via the proper "run game" tasks of the `fabric` and `neoforge` modules. Never compile or run the `common` module.
+- Test for compile/runtime errors by running the game via the proper "run game" tasks of the `fabric` and `neoforge` modules. Never run the `common` module.
+- Run game tests from Windows, outside the WSL environment, even when controlling the workspace from WSL. Use the Windows Gradle wrapper directly, for example:
+  - `powershell.exe -NoProfile -Command 'Set-Location -LiteralPath "E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.11"; .\gradlew.bat :fabric:runClient'`
+  - `powershell.exe -NoProfile -Command 'Set-Location -LiteralPath "E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\fancymenu-1.21.11"; .\gradlew.bat :neoforge:runClient'`

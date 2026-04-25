@@ -87,8 +87,7 @@ public class ServerCache {
             try {
                 new Thread(() -> {
                     try {
-                        Minecraft minecraft = Minecraft.getInstance();
-                        pinger.pingServer(d, () -> {}, () -> {}, EventLoopGroupHolder.remote(minecraft.options.useNativeTransport()));
+                        pinger.pingServer(d, () -> {}, () -> {}, EventLoopGroupHolder.remote(Minecraft.getInstance().options.useNativeTransport()));
                         if ((d == null) || d.status.getString().isEmpty()) {
                             d.ping = -1L;
                             d.motd = CANT_CONNECT_TEXT;

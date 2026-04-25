@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollbar;
 
-import com.mojang.blaze3d.platform.cursor.CursorTypes;
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.gui.GuiGraphics;
@@ -9,9 +9,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
-import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -20,6 +18,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@SuppressWarnings("unused")
 public class ScrollBar extends UIBase implements GuiEventListener, Renderable, NarratableEntry {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -46,8 +45,10 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
     protected float lastGrabberX = 0;
     protected float lastGrabberY = 0;
     protected float leftMouseDownOnGrabberAtScroll = 0.0F;
+    protected float grabberEdgeInset = 1.0F;
     protected List<Consumer<ScrollBar>> scrollListeners = new ArrayList<>();
     protected boolean grabberHovered = false;
+    protected boolean roundedGrabber = false;
 
     public ScrollBar(@NotNull ScrollBarDirection direction, float grabberWidth, float grabberHeight, float scrollAreaStartX, float scrollAreaStartY, float scrollAreaEndX, float scrollAreaEndY, @NotNull Supplier<DrawableColor> idleBarColor, @NotNull Supplier<DrawableColor> hoverBarColor) {
         this(direction, grabberWidth, grabberHeight, scrollAreaStartX, scrollAreaStartY, scrollAreaEndX, scrollAreaEndY);
@@ -76,48 +77,64 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
 
         this.grabberHovered = this.isMouseOverGrabber(mouseX, mouseY);
 
-        float x = this.scrollAreaEndX - this.grabberWidth;
-        float y = this.scrollAreaEndY - this.grabberHeight;
+        float effectiveStartX = this.scrollAreaStartX + this.grabberEdgeInset;
+        float effectiveStartY = this.scrollAreaStartY + this.grabberEdgeInset;
+        float effectiveEndX = Math.max(effectiveStartX, this.scrollAreaEndX - this.grabberEdgeInset);
+        float effectiveEndY = Math.max(effectiveStartY, this.scrollAreaEndY - this.grabberEdgeInset);
+        float x = effectiveEndX - this.grabberWidth;
+        float y = effectiveEndY - this.grabberHeight;
         if (this.direction == ScrollBarDirection.VERTICAL) {
-            float usableAreaHeight = this.scrollAreaEndY - this.scrollAreaStartY - this.grabberHeight;
-            y = this.scrollAreaStartY + (usableAreaHeight * this.scroll);
+            float usableAreaHeight = Math.max(0.0F, effectiveEndY - effectiveStartY - this.grabberHeight);
+            y = effectiveStartY + (usableAreaHeight * this.scroll);
         } else {
-            float usableAreaWidth = this.scrollAreaEndX - this.scrollAreaStartX - this.grabberWidth;
-            x = this.scrollAreaStartX + (usableAreaWidth * this.scroll);
+            float usableAreaWidth = Math.max(0.0F, effectiveEndX - effectiveStartX - this.grabberWidth);
+            x = effectiveStartX + (usableAreaWidth * this.scroll);
         }
         this.lastGrabberX = x;
         this.lastGrabberY = y;
 
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        resetShaderColor(graphics);
         DrawableColor normalC = this.idleBarColor.get();
         DrawableColor hoverC = this.hoverBarColor.get();
         if (this.isGrabberHovered() || this.isGrabberGrabbed()) {
             if (this.hoverBarTexture != null) {
-                blitF(graphics, RenderPipelines.GUI_TEXTURED, this.hoverBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
+                blitF(graphics, this.hoverBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight);
             } else if (hoverC != null) {
-                fillF(graphics, x, y, x + this.grabberWidth, y + this.grabberHeight, hoverC.getColorInt());
+                if (this.roundedGrabber) {
+                    float radius = UIBase.getWidgetCornerRoundingRadius();
+                    renderRoundedRect(graphics, x, y, this.grabberWidth, this.grabberHeight, radius, radius, radius, radius, hoverC.getColorInt());
+                } else {
+                    fillF(graphics, x, y, x + this.grabberWidth, y + this.grabberHeight, hoverC.getColorInt());
+                }
             }
         } else {
             if (this.idleBarTexture != null) {
-                blitF(graphics, RenderPipelines.GUI_TEXTURED, this.idleBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
+                blitF(graphics, this.idleBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight);
             } else if (normalC != null) {
-                fillF(graphics, x, y, x + this.grabberWidth, y + this.grabberHeight, normalC.getColorInt());
+                if (this.roundedGrabber) {
+                    float radius = UIBase.getWidgetCornerRoundingRadius();
+                    renderRoundedRect(graphics, x, y, this.grabberWidth, this.grabberHeight, radius, radius, radius, radius, normalC.getColorInt());
+                } else {
+                    fillF(graphics, x, y, x + this.grabberWidth, y + this.grabberHeight, normalC.getColorInt());
+                }
             }
         }
 
-        if (this.grabberHovered) {
-            graphics.requestCursor(this.isActive() ? CursorTypes.POINTING_HAND : CursorTypes.NOT_ALLOWED);
-        }
-
-    }
-
-    @Override
-    public boolean isActive() {
-        return this.active;
     }
 
     public boolean isGrabberHovered() {
         if (!this.active) return false;
         return this.grabberHovered;
+    }
+
+    public boolean isRoundedGrabberEnabled() {
+        return this.roundedGrabber;
+    }
+
+    public ScrollBar setRoundedGrabberEnabled(boolean roundedGrabber) {
+        this.roundedGrabber = roundedGrabber;
+        return this;
     }
 
     public boolean isMouseOverGrabber(double mouseX, double mouseY) {
@@ -170,6 +187,14 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
         this.grabberScrollSpeed = Math.max(0.0F, speed);
     }
 
+    public float getGrabberEdgeInset() {
+        return this.grabberEdgeInset;
+    }
+
+    public void setGrabberEdgeInset(float grabberEdgeInset) {
+        this.grabberEdgeInset = Math.max(0.0F, grabberEdgeInset);
+    }
+
     public float getWheelScrollSpeed() {
         return this.wheelScrollSpeed;
     }
@@ -196,14 +221,18 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
-        if (event.button() == 0) {
+        return this.mouseClicked(event.x(), event.y(), event.button());
+    }
+
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0) {
             if (!this.active) {
                 return false;
             }
             if (this.isGrabberHovered()) {
                 this.leftMouseDownOnGrabber = true;
-                this.leftMouseDownOnGrabberAtMouseX = event.x();
-                this.leftMouseDownOnGrabberAtMouseY = event.y();
+                this.leftMouseDownOnGrabberAtMouseX = mouseX;
+                this.leftMouseDownOnGrabberAtMouseY = mouseY;
                 this.leftMouseDownOnGrabberAtScroll = this.scroll;
                 return true;
             }
@@ -213,6 +242,10 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
+        return this.mouseReleased(event.x(), event.y(), event.button());
+    }
+
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
 
         this.leftMouseDownOnGrabber = false;
 
@@ -222,14 +255,22 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double $$3, double $$4) {
+        return this.mouseDragged(event.x(), event.y(), event.button(), $$3, $$4);
+    }
+
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double $$3, double $$4) {
 
         if (this.leftMouseDownOnGrabber) {
 
-            float usableAreaWidth = this.scrollAreaEndX - this.scrollAreaStartX - this.grabberWidth;
-            float usableAreaHeight = this.scrollAreaEndY - this.scrollAreaStartY - this.grabberHeight;
+            float effectiveStartX = this.scrollAreaStartX + this.grabberEdgeInset;
+            float effectiveStartY = this.scrollAreaStartY + this.grabberEdgeInset;
+            float effectiveEndX = Math.max(effectiveStartX, this.scrollAreaEndX - this.grabberEdgeInset);
+            float effectiveEndY = Math.max(effectiveStartY, this.scrollAreaEndY - this.grabberEdgeInset);
+            float usableAreaWidth = Math.max(0.0F, effectiveEndX - effectiveStartX - this.grabberWidth);
+            float usableAreaHeight = Math.max(0.0F, effectiveEndY - effectiveStartY - this.grabberHeight);
 
-            float offsetX = (float) (event.x() - this.leftMouseDownOnGrabberAtMouseX);
-            float offsetY = (float) (event.y() - this.leftMouseDownOnGrabberAtMouseY);
+            float offsetX = (float) (mouseX - this.leftMouseDownOnGrabberAtMouseX);
+            float offsetY = (float) (mouseY - this.leftMouseDownOnGrabberAtMouseY);
 
             float scrollOffset;
             if (this.direction == ScrollBarDirection.VERTICAL) {

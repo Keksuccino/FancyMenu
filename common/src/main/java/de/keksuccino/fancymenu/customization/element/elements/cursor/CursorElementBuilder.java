@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,16 +34,6 @@ public class CursorElementBuilder extends ElementBuilder<CursorElement, CursorEd
 
         element.textureSupplier = deserializeImageResourceSupplier(serialized.getValue("source"));
 
-        String hotspotX = serialized.getValue("hotspot_x");
-        if ((hotspotX != null) && MathUtils.isInteger(hotspotX)) {
-            element.hotspotX = Integer.parseInt(hotspotX);
-        }
-
-        String hotspotY = serialized.getValue("hotspot_y");
-        if ((hotspotY != null) && MathUtils.isInteger(hotspotY)) {
-            element.hotspotY = Integer.parseInt(hotspotY);
-        }
-
         String editorPreviewMode = serialized.getValue("editor_preview_mode");
         if (editorPreviewMode != null) {
             if (editorPreviewMode.equals("true")) element.editorPreviewMode = true;
@@ -61,10 +50,6 @@ public class CursorElementBuilder extends ElementBuilder<CursorElement, CursorEd
         if (element.textureSupplier != null) {
             serializeTo.putProperty("source", element.textureSupplier.getSourceWithPrefix());
         }
-
-        serializeTo.putProperty("hotspot_x", "" + element.hotspotX);
-
-        serializeTo.putProperty("hotspot_y", "" + element.hotspotY);
 
         serializeTo.putProperty("editor_preview_mode", "" + element.editorPreviewMode);
 

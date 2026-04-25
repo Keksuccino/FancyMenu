@@ -183,7 +183,7 @@ public class RealmsNotificationRenderer {
      */
     public boolean hasUnseenNotifications() {
         if (isEditor()) return true;
-        return this.screenAccess.get_hasUnseenNotifications();
+        return IMixinRealmsNotificationsScreen.get_hasUnseenNotifications_FancyMenu();
     }
 
     /**
@@ -191,7 +191,7 @@ public class RealmsNotificationRenderer {
      */
     public boolean hasUnreadNews() {
         if (isEditor()) return true;
-        return this.screenAccess.get_hasUnreadNews_FancyMenu();
+        return IMixinRealmsNotificationsScreen.get_hasUnreadNews_FancyMenu();
     }
 
     /**
@@ -199,7 +199,7 @@ public class RealmsNotificationRenderer {
      */
     public boolean isTrialAvailable() {
         if (isEditor()) return true;
-        return this.screenAccess.get_trialAvailable_FancyMenu();
+        return IMixinRealmsNotificationsScreen.get_trialAvailable_FancyMenu();
     }
 
     protected static boolean isEditor() {

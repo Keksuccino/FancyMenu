@@ -5,9 +5,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import com.mojang.blaze3d.systems.RenderSystem;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -15,10 +14,7 @@ import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderPipelines;
-
 import net.minecraft.resources.Identifier;
-import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -101,7 +97,7 @@ public class ExternalTextureSlideshowRenderer {
 						this.height = Integer.parseInt(sh);
 					}
 
-					this.randomize = SerializationUtils.deserializeBoolean(this.randomize, l.get(0).getValue("randomize"));
+					this.randomize = SerializationHelper.INSTANCE.deserializeBoolean(this.randomize, l.get(0).getValue("randomize"));
 
 				}
 			}
@@ -223,34 +219,43 @@ public class ExternalTextureSlideshowRenderer {
 
 	protected void renderPrevious(GuiGraphics graphics) {
 		if ((this.previous != null) && (this.current != this.previous)) {
+			graphics.pose().pushMatrix();
+			com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
 			float o = this.opacity;
 			if (o > this.slideshowOpacity) {
 				o = this.slideshowOpacity;
 			}
+			de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, o);
 			ITexture t = this.previous.get();
-			Identifier loc = (t != null) ? t.getIdentifier() : null;
+			Identifier loc = (t != null) ? t.getResourceLocation() : null;
 			if (loc != null) {
-				graphics.blit(RenderPipelines.GUI_TEXTURED, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, DrawableColor.WHITE.getColorIntWithAlpha(o));
+				graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
+			de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, 1.0F);
+			graphics.pose().popMatrix();
 		}
 	}
 
 	protected void renderCurrent(GuiGraphics graphics) {
 		if (this.current != null) {
+			com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+			de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, this.slideshowOpacity);
 			ITexture t = this.current.get();
-			Identifier loc = (t != null) ? t.getIdentifier() : null;
+			Identifier loc = (t != null) ? t.getResourceLocation() : null;
 			if (loc != null) {
-				graphics.blit(RenderPipelines.GUI_TEXTURED, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, DrawableColor.WHITE.getColorIntWithAlpha(this.slideshowOpacity));
+				graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
 		}
 	}
 
 	protected void renderOverlay(GuiGraphics graphics) {
 		if (this.overlayTexture != null) {
+			com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+			de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, 1.0F);
 			ITexture t = this.overlayTexture.get();
-			Identifier loc = (t != null) ? t.getIdentifier() : null;
+			Identifier loc = (t != null) ? t.getResourceLocation() : null;
 			if (loc != null) {
-				graphics.blit(RenderPipelines.GUI_TEXTURED, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, -1);
+				graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
 		}
 	}

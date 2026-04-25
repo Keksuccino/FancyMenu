@@ -7,6 +7,8 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(Window.class)
 public interface IMixinWindow {
 
+    @Accessor("handle") long get_handle_FancyMenu();
+
     @Accessor("guiScaledWidth") void set_guiScaledWidth_FancyMenu(int width);
 
     @Accessor("guiScaledHeight") void set_guiScaledHeight_FancyMenu(int height);

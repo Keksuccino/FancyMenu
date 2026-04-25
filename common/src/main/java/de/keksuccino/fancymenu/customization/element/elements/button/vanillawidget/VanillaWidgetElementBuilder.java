@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElementBuilder;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.konkrete.math.MathUtils;
+import de.keksuccino.fancymenu.util.properties.Property;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,6 +27,7 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
     @Override
     public @NotNull VanillaWidgetElement buildDefaultInstance() {
         VanillaWidgetElement element = new VanillaWidgetElement(this);
+        element.shouldBeAffectedByDecorationOverlays.setDefault(true).set(true);
         element.anchorPoint = ElementAnchorPoints.VANILLA;
         return element;
     }
@@ -43,14 +44,13 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
                 serializeTo.setType("vanilla_button");
 
                 serializeTo.putProperty("is_hidden", "" + element.vanillaButtonHidden);
-                serializeTo.putProperty("automated_button_clicks", "" + element.automatedButtonClicks);
 
                 return serializeTo;
 
             }
 
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to serialize VanillaWidgetElement!", ex);
         }
 
         return null;
@@ -67,11 +67,6 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
             element.vanillaButtonHidden = true;
         }
 
-        String automatedClicks = serialized.getValue("automated_button_clicks");
-        if ((automatedClicks != null) && MathUtils.isInteger(automatedClicks)) {
-            element.automatedButtonClicks = Integer.parseInt(automatedClicks);
-        }
-
         return element;
 
     }
@@ -83,7 +78,7 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
 
     @Override
     public @NotNull VanillaWidgetEditorElement wrapIntoEditorElement(@NotNull ButtonElement element, @NotNull LayoutEditorScreen editor) {
-        return new VanillaWidgetEditorElement(element, editor);
+        return new VanillaWidgetEditorElement((VanillaWidgetElement) element, editor);
     }
 
     //Stacking Step 3
@@ -99,8 +94,8 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
         if (e.vanillaButtonHidden) {
             stack.vanillaButtonHidden = true;
         }
-        if (e.automatedButtonClicks != 0) {
-            stack.automatedButtonClicks = e.automatedButtonClicks;
+        if (!e.automatedButtonClicks.isDefault()) {
+            stack.automatedButtonClicks.copyValueFrom(e.automatedButtonClicks);
         }
 
         //ButtonElement stuff
@@ -128,26 +123,41 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
         if (e.backgroundTextureInactive != null) {
             stack.backgroundTextureInactive = e.backgroundTextureInactive;
         }
+        if (e.iconTextureNormal != null) {
+            stack.iconTextureNormal = e.iconTextureNormal;
+        }
+        if (e.iconTextureHover != null) {
+            stack.iconTextureHover = e.iconTextureHover;
+        }
+        if (e.iconTextureInactive != null) {
+            stack.iconTextureInactive = e.iconTextureInactive;
+        }
+        if (e.underlineLabelOnHover) {
+            stack.underlineLabelOnHover = true;
+        }
+        if (e.transparentBackground) {
+            stack.transparentBackground = true;
+        }
         if (!e.restartBackgroundAnimationsOnHover) {
             stack.restartBackgroundAnimationsOnHover = false;
         }
         if (e.nineSliceCustomBackground) {
             stack.nineSliceCustomBackground = true;
         }
-        if (e.nineSliceBorderX != 5) {
-            stack.nineSliceBorderX = e.nineSliceBorderX;
+        if (!e.nineSliceBorderX.isDefault()) {
+            stack.nineSliceBorderX.copyValueFrom(e.nineSliceBorderX);
         }
-        if (e.nineSliceBorderY != 5) {
-            stack.nineSliceBorderY = e.nineSliceBorderY;
+        if (!e.nineSliceBorderY.isDefault()) {
+            stack.nineSliceBorderY.copyValueFrom(e.nineSliceBorderY);
         }
         if (e.nineSliceSliderHandle) {
             stack.nineSliceSliderHandle = true;
         }
-        if (e.nineSliceSliderHandleBorderX != 5) {
-            stack.nineSliceSliderHandleBorderX = e.nineSliceSliderHandleBorderX;
+        if (!e.nineSliceSliderHandleBorderX.isDefault()) {
+            stack.nineSliceSliderHandleBorderX.copyValueFrom(e.nineSliceSliderHandleBorderX);
         }
-        if (e.nineSliceSliderHandleBorderY != 5) {
-            stack.nineSliceSliderHandleBorderY = e.nineSliceSliderHandleBorderY;
+        if (!e.nineSliceSliderHandleBorderY.isDefault()) {
+            stack.nineSliceSliderHandleBorderY.copyValueFrom(e.nineSliceSliderHandleBorderY);
         }
         if (e.sliderBackgroundTextureNormal != null) {
             stack.sliderBackgroundTextureNormal = e.sliderBackgroundTextureNormal;
@@ -155,6 +165,13 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
         if (e.sliderBackgroundTextureHighlighted != null) {
             stack.sliderBackgroundTextureHighlighted = e.sliderBackgroundTextureHighlighted;
         }
+
+        e.getPropertyMap().forEach((key, property) -> {
+            if (!property.isDefault()) {
+                Property<?> sp = stack.getProperty(key);
+                if (sp != null) sp.forceSet(property.get());
+            }
+        });
 
     }
 

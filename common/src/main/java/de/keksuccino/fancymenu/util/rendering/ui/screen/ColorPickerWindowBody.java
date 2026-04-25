@@ -1,0 +1,448 @@
+package de.keksuccino.fancymenu.util.rendering.ui.screen;
+
+import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.util.VanillaEvents;
+import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.ARGB;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import java.awt.Color;
+import java.util.function.Consumer;
+
+public class ColorPickerWindowBody extends PiPWindowBody {
+
+    public static final int PIP_WINDOW_WIDTH = 401;
+    public static final int PIP_WINDOW_HEIGHT = 328;
+
+    private static final int MIN_PICKER_SIZE = 80;
+    private static final int MAX_PICKER_SIZE = 260;
+    private static final int SLIDER_HEIGHT = 12;
+    private static final int SLIDER_GAP = 8;
+    private static final int COLUMN_GAP = 24;
+    private static final int PANEL_PADDING = 10;
+    private static final int PREVIEW_SIZE = 70;
+
+    @Nullable
+    private final DrawableColor presetColor;
+    @NotNull
+    private final Consumer<DrawableColor> onColorUpdate;
+    @NotNull
+    private final Consumer<DrawableColor> onDone;
+    @NotNull
+    private final Consumer<DrawableColor> onCancel;
+
+    private float hue = 0.0F;
+    private float saturation = 0.0F;
+    private float value = 1.0F;
+    private float alpha = 1.0F;
+
+    private ExtendedButton doneButton;
+    private ExtendedButton cancelButton;
+
+    private boolean draggingSV = false;
+    private boolean draggingHue = false;
+    private boolean draggingAlpha = false;
+
+    private int pickerX;
+    private int pickerY;
+    private int pickerSize;
+    private int hueLabelY;
+    private int hueX;
+    private int hueY;
+    private int hueWidth;
+    private int hueHeight;
+    private int alphaLabelY;
+    private int alphaX;
+    private int alphaY;
+    private int alphaWidth;
+    private int alphaHeight;
+    private int infoX;
+    private int infoY;
+    private int infoWidth;
+    private int infoHeight;
+
+    public ColorPickerWindowBody(@Nullable DrawableColor presetColor, @NotNull Consumer<DrawableColor> onColorUpdate, @NotNull Consumer<DrawableColor> onDone, @NotNull Consumer<DrawableColor> onCancel) {
+        super(Component.translatable("fancymenu.ui.color_picker.title"));
+        this.onColorUpdate = onColorUpdate;
+        this.onDone = onDone;
+        this.onCancel = onCancel;
+        this.presetColor = presetColor;
+        this.applyPresetColor(this.presetColor);
+    }
+
+    @Override
+    protected void init() {
+        this.cancelButton = new ExtendedButton(0, 0, 100, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
+            this.onCancel.accept(this.presetColor);
+            this.closeWindow();
+        });
+        this.addWidget(this.cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton, UIBase.shouldBlur());
+
+        this.doneButton = new ExtendedButton(0, 0, 100, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
+            this.onDone.accept(DrawableColor.of(this.getCurrentHex()));
+            this.closeWindow();
+        });
+        this.addWidget(this.doneButton);
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton, UIBase.shouldBlur());
+    }
+
+    @Override
+    public void onWindowClosedExternally() {
+        this.onCancel.accept(this.presetColor);
+    }
+
+    @Override
+    public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+        UITheme theme = UIBase.getUITheme();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+
+        this.updateLayout();
+
+        this.renderLeftPanel(graphics, theme);
+        this.renderInfoPanel(graphics, theme);
+
+        this.cancelButton.setX((this.width / 2) - this.cancelButton.getWidth() - 5);
+        this.cancelButton.setY(this.height - 36);
+        this.cancelButton.render(graphics, mouseX, mouseY, partial);
+
+        this.doneButton.setX((this.width / 2) + 5);
+        this.doneButton.setY(this.height - 36);
+        this.doneButton.render(graphics, mouseX, mouseY, partial);
+
+    }
+
+    @Override
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    }
+
+    @Override
+    public boolean keyPressed(KeyEvent event) {
+        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+    }
+    
+    public boolean keyPressed(int button, int scanCode, int modifiers) {
+        if (button == InputConstants.KEY_ENTER) {
+            this.closeWindow();
+            return true;
+        }
+        return super.keyPressed(new KeyEvent(button, scanCode, modifiers));
+    }
+
+    @Override
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        return this.mouseClicked(event.x(), event.y(), event.button());
+    }
+    
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0) {
+            if (RenderingUtils.isXYInArea(mouseX, mouseY, this.pickerX, this.pickerY, this.pickerSize, this.pickerSize)) {
+                this.draggingSV = true;
+                this.updateSVFromMouse(mouseX, mouseY);
+                return true;
+            }
+            if (RenderingUtils.isXYInArea(mouseX, mouseY, this.hueX, this.hueY, this.hueWidth, this.hueHeight)) {
+                this.draggingHue = true;
+                this.updateHueFromMouse(mouseX);
+                return true;
+            }
+            if (RenderingUtils.isXYInArea(mouseX, mouseY, this.alphaX, this.alphaY, this.alphaWidth, this.alphaHeight)) {
+                this.draggingAlpha = true;
+                this.updateAlphaFromMouse(mouseX);
+                return true;
+            }
+        }
+        return super.mouseClicked(VanillaEvents.mouseButtonEvent(mouseX, mouseY, button), false);
+    }
+
+    @Override
+    public boolean mouseDragged(MouseButtonEvent event, double deltaX, double deltaY) {
+        return this.mouseDragged(event.x(), event.y(), event.button(), deltaX, deltaY);
+    }
+    
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        if (this.draggingSV) {
+            this.updateSVFromMouse(mouseX, mouseY);
+            return true;
+        }
+        if (this.draggingHue) {
+            this.updateHueFromMouse(mouseX);
+            return true;
+        }
+        if (this.draggingAlpha) {
+            this.updateAlphaFromMouse(mouseX);
+            return true;
+        }
+        return super.mouseDragged(VanillaEvents.mouseButtonEvent(mouseX, mouseY, button), deltaX, deltaY);
+    }
+
+    @Override
+    public boolean mouseReleased(MouseButtonEvent event) {
+        return this.mouseReleased(event.x(), event.y(), event.button());
+    }
+    
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        this.draggingSV = false;
+        this.draggingHue = false;
+        this.draggingAlpha = false;
+        return super.mouseReleased(VanillaEvents.mouseButtonEvent(mouseX, mouseY, button));
+    }
+
+    private void updateLayout() {
+        int padding = 24;
+        int top = 24;
+        int bottom = 56;
+        int availableWidth = this.width - (padding * 2);
+        int availableHeight = this.height - top - bottom;
+        int labelHeight = (int)UIBase.getUITextHeightNormal();
+        int extraHeight = (labelHeight + SLIDER_HEIGHT + 2) * 2 + (SLIDER_GAP * 3);
+        int minInfoWidth = 160;
+
+        this.pickerSize = Math.min(MAX_PICKER_SIZE, Math.max(MIN_PICKER_SIZE, availableHeight - extraHeight));
+
+        int maxPickerSizeByWidth = Math.max(MIN_PICKER_SIZE, availableWidth - COLUMN_GAP - minInfoWidth);
+        this.pickerSize = Math.min(this.pickerSize, maxPickerSizeByWidth);
+
+        int infoCandidateWidth = Math.max(0, availableWidth - this.pickerSize - COLUMN_GAP);
+        int totalWidth = this.pickerSize + COLUMN_GAP + infoCandidateWidth;
+        int startX = (this.width - totalWidth) / 2;
+
+        this.pickerX = startX;
+        this.pickerY = top;
+
+        this.hueLabelY = this.pickerY + this.pickerSize + SLIDER_GAP;
+        this.hueX = this.pickerX;
+        this.hueY = this.hueLabelY + labelHeight + 2;
+        this.hueWidth = this.pickerSize;
+        this.hueHeight = SLIDER_HEIGHT;
+
+        this.alphaLabelY = this.hueY + this.hueHeight + SLIDER_GAP;
+        this.alphaX = this.pickerX;
+        this.alphaY = this.alphaLabelY + labelHeight + 2;
+        this.alphaWidth = this.pickerSize;
+        this.alphaHeight = SLIDER_HEIGHT;
+
+        int leftPanelHeight = (this.alphaY + this.alphaHeight) - this.pickerY;
+
+        this.infoX = this.pickerX + this.pickerSize + COLUMN_GAP;
+        this.infoY = this.pickerY;
+        this.infoWidth = infoCandidateWidth;
+        this.infoHeight = leftPanelHeight;
+    }
+
+    private void renderLeftPanel(@NotNull GuiGraphics graphics, @NotNull UITheme theme) {
+        int panelX = this.pickerX - PANEL_PADDING;
+        int panelY = this.pickerY - PANEL_PADDING;
+        int panelW = this.pickerSize + (PANEL_PADDING * 2);
+        int panelH = (this.alphaY + this.alphaHeight - this.pickerY) + (PANEL_PADDING * 2);
+        float rounding = UIBase.getInterfaceCornerRoundingRadius();
+
+        UIBase.renderRoundedRect(graphics, panelX, panelY, panelW, panelH, rounding, rounding, rounding, rounding, UIBase.shouldBlur() ? theme.ui_blur_interface_area_background_color_type_1.getColorInt() : theme.ui_interface_area_background_color_type_1.getColorInt());
+        UIBase.renderRoundedBorder(graphics, panelX, panelY, panelX + panelW, panelY + panelH, 1, rounding, rounding, rounding, rounding, UIBase.shouldBlur() ? theme.ui_blur_interface_area_border_color.getColorInt() : theme.ui_interface_area_border_color.getColorInt());
+
+        this.renderColorArea(graphics);
+        this.renderColorAreaSelector(graphics, theme);
+
+        UIBase.renderText(graphics, Component.translatable("fancymenu.ui.color_picker.hue"), this.hueX, this.hueLabelY);
+        this.renderHueSlider(graphics, theme);
+
+        UIBase.renderText(graphics, Component.translatable("fancymenu.ui.color_picker.alpha"), this.alphaX, this.alphaLabelY);
+        this.renderAlphaSlider(graphics, theme);
+    }
+
+    private void renderInfoPanel(@NotNull GuiGraphics graphics, @NotNull UITheme theme) {
+        int panelX = this.infoX - PANEL_PADDING;
+        int panelY = this.infoY - PANEL_PADDING;
+        int panelW = this.infoWidth + (PANEL_PADDING * 2);
+        int panelH = Math.max(this.infoHeight, 140) + (PANEL_PADDING * 2);
+        float rounding = UIBase.getInterfaceCornerRoundingRadius();
+
+        UIBase.renderRoundedRect(graphics, panelX, panelY, panelW, panelH, rounding, rounding, rounding, rounding, UIBase.shouldBlur() ? theme.ui_blur_interface_area_background_color_type_1.getColorInt() : theme.ui_interface_area_background_color_type_1.getColorInt());
+        UIBase.renderRoundedBorder(graphics, panelX, panelY, panelX + panelW, panelY + panelH, 1, rounding, rounding, rounding, rounding, UIBase.shouldBlur() ? theme.ui_blur_interface_area_border_color.getColorInt() : theme.ui_interface_area_border_color.getColorInt());
+
+        int x = this.infoX;
+        int y = this.infoY;
+        int labelHeight = (int)UIBase.getUITextHeightNormal();
+
+        int previewLabelY = y;
+        int previewRectY = previewLabelY + labelHeight + 4;
+        UIBase.renderText(graphics, Component.translatable("fancymenu.ui.color_picker.preview"), x, previewLabelY);
+
+        this.renderCheckerboard(graphics, x, previewRectY, PREVIEW_SIZE, PREVIEW_SIZE, 6);
+        graphics.fill(x, previewRectY, x + PREVIEW_SIZE, previewRectY + PREVIEW_SIZE, this.getCurrentColorInt());
+        UIBase.renderBorder(graphics, x, previewRectY, x + PREVIEW_SIZE, previewRectY + PREVIEW_SIZE, 1, theme.ui_interface_widget_border_color.getColorInt(), true, true, true, true);
+
+        if (this.presetColor != null) {
+            int presetX = x + PREVIEW_SIZE + 12;
+            UIBase.renderText(graphics, Component.translatable("fancymenu.ui.color_picker.original"), presetX, previewLabelY);
+            this.renderCheckerboard(graphics, presetX, previewRectY, PREVIEW_SIZE, PREVIEW_SIZE, 6);
+            graphics.fill(presetX, previewRectY, presetX + PREVIEW_SIZE, previewRectY + PREVIEW_SIZE, this.presetColor.getColorInt());
+            UIBase.renderBorder(graphics, presetX, previewRectY, presetX + PREVIEW_SIZE, previewRectY + PREVIEW_SIZE, 1, theme.ui_interface_widget_border_color.getColorInt(), true, true, true, true);
+        }
+
+        y = previewRectY + PREVIEW_SIZE + 12;
+
+        UIBase.renderText(graphics, Component.translatable("fancymenu.ui.color_picker.hex"), x, y);
+        y += labelHeight + 2;
+        UIBase.renderText(graphics, Component.literal(this.getCurrentHex()), x, y, theme.ui_interface_generic_text_color.getColorInt());
+
+        y += labelHeight + 8;
+        UIBase.renderText(graphics, Component.translatable("fancymenu.ui.color_picker.rgba"), x, y);
+        y += labelHeight + 2;
+        int rgb = this.getCurrentColorInt();
+        int r = (rgb >> 16) & 0xFF;
+        int g = (rgb >> 8) & 0xFF;
+        int b = rgb & 0xFF;
+        int a = Math.round(this.alpha * 255.0F);
+        UIBase.renderText(graphics, Component.literal("R: " + r + "  G: " + g + "  B: " + b + "  A: " + a), x, y, theme.ui_interface_generic_text_color.getColorInt());
+
+        y += labelHeight + 8;
+        UIBase.renderText(graphics, Component.translatable("fancymenu.ui.color_picker.hsv"), x, y);
+        y += labelHeight + 2;
+        int h = Math.round(this.hue * 360.0F);
+        int s = Math.round(this.saturation * 100.0F);
+        int v = Math.round(this.value * 100.0F);
+        UIBase.renderText(graphics, Component.literal("H: " + h + "  S: " + s + "%  V: " + v + "%"), x, y, theme.ui_interface_generic_text_color.getColorInt());
+    }
+
+    private void renderColorArea(@NotNull GuiGraphics graphics) {
+        int hueRgb = Color.HSBtoRGB(this.hue, 1.0F, 1.0F);
+        int hueColor = 0xFF000000 | (hueRgb & 0xFFFFFF);
+        this.fillGradientHorizontal(graphics, this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 0xFFFFFFFF, hueColor);
+        graphics.fillGradient(this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 0x00000000, 0xFF000000);
+        UIBase.renderBorder(graphics, this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 1, UIBase.getUITheme().ui_interface_widget_border_color.getColorInt(), true, true, true, true);
+    }
+
+    private void renderColorAreaSelector(@NotNull GuiGraphics graphics, @NotNull UITheme theme) {
+        int max = Math.max(1, this.pickerSize - 1);
+        int selectorX = this.pickerX + Math.round(this.saturation * max);
+        int selectorY = this.pickerY + Math.round((1.0F - this.value) * max);
+        int outerSize = 7;
+        int innerSize = 5;
+        int outerX = selectorX - (outerSize / 2);
+        int outerY = selectorY - (outerSize / 2);
+        graphics.fill(outerX, outerY, outerX + outerSize, outerY + outerSize, theme.ui_interface_widget_border_color.getColorInt());
+        int innerX = selectorX - (innerSize / 2);
+        int innerY = selectorY - (innerSize / 2);
+        graphics.fill(innerX, innerY, innerX + innerSize, innerY + innerSize, theme.ui_interface_generic_text_color.getColorInt());
+    }
+
+    private void renderHueSlider(@NotNull GuiGraphics graphics, @NotNull UITheme theme) {
+        int segments = 6;
+        for (int i = 0; i < segments; i++) {
+            float startHue = (float) i / (float) segments;
+            float endHue = (float) (i + 1) / (float) segments;
+            int startX = this.hueX + (i * this.hueWidth) / segments;
+            int endX = (i == segments - 1) ? (this.hueX + this.hueWidth) : (this.hueX + ((i + 1) * this.hueWidth) / segments);
+            if (endX <= startX) {
+                continue;
+            }
+            int startRgb = Color.HSBtoRGB(startHue, 1.0F, 1.0F);
+            int endRgb = Color.HSBtoRGB(endHue, 1.0F, 1.0F);
+            int startColor = 0xFF000000 | (startRgb & 0xFFFFFF);
+            int endColor = 0xFF000000 | (endRgb & 0xFFFFFF);
+            this.fillGradientHorizontal(graphics, startX, this.hueY, endX, this.hueY + this.hueHeight, startColor, endColor);
+        }
+        UIBase.renderBorder(graphics, this.hueX, this.hueY, this.hueX + this.hueWidth, this.hueY + this.hueHeight, 1, theme.ui_interface_widget_border_color.getColorInt(), true, true, true, true);
+
+        int max = Math.max(1, this.hueWidth - 1);
+        int markerX = this.hueX + Math.round(this.hue * max);
+        graphics.fill(markerX - 1, this.hueY - 2, markerX + 1, this.hueY + this.hueHeight + 2, theme.ui_interface_generic_text_color.getColorInt());
+    }
+
+    private void renderAlphaSlider(@NotNull GuiGraphics graphics, @NotNull UITheme theme) {
+        this.renderCheckerboard(graphics, this.alphaX, this.alphaY, this.alphaWidth, this.alphaHeight, 4);
+        int rgb = this.getCurrentColorInt() & 0xFFFFFF;
+        int leftColor = rgb;
+        int rightColor = 0xFF000000 | rgb;
+        this.fillGradientHorizontal(graphics, this.alphaX, this.alphaY, this.alphaX + this.alphaWidth, this.alphaY + this.alphaHeight, leftColor, rightColor);
+        UIBase.renderBorder(graphics, this.alphaX, this.alphaY, this.alphaX + this.alphaWidth, this.alphaY + this.alphaHeight, 1, theme.ui_interface_widget_border_color.getColorInt(), true, true, true, true);
+
+        int max = Math.max(1, this.alphaWidth - 1);
+        int markerX = this.alphaX + Math.round(this.alpha * max);
+        graphics.fill(markerX - 1, this.alphaY - 2, markerX + 1, this.alphaY + this.alphaHeight + 2, theme.ui_interface_generic_text_color.getColorInt());
+    }
+
+    private void renderCheckerboard(@NotNull GuiGraphics graphics, int x, int y, int width, int height, int cellSize) {
+        int light = 0xFFB8B8B8;
+        int dark = 0xFF7E7E7E;
+        for (int yy = 0; yy < height; yy += cellSize) {
+            for (int xx = 0; xx < width; xx += cellSize) {
+                int color = (((xx / cellSize) + (yy / cellSize)) % 2 == 0) ? light : dark;
+                graphics.fill(x + xx, y + yy, x + Math.min(xx + cellSize, width), y + Math.min(yy + cellSize, height), color);
+            }
+        }
+    }
+
+    private void updateSVFromMouse(double mouseX, double mouseY) {
+        int max = Math.max(1, this.pickerSize - 1);
+        this.saturation = clamp((float) ((mouseX - this.pickerX) / (double) max));
+        this.value = clamp(1.0F - (float) ((mouseY - this.pickerY) / (double) max));
+        this.notifyOnColorUpdate();
+    }
+
+    private void updateHueFromMouse(double mouseX) {
+        int max = Math.max(1, this.hueWidth - 1);
+        this.hue = clamp((float) ((mouseX - this.hueX) / (double) max));
+        this.notifyOnColorUpdate();
+    }
+
+    private void updateAlphaFromMouse(double mouseX) {
+        int max = Math.max(1, this.alphaWidth - 1);
+        this.alpha = clamp((float) ((mouseX - this.alphaX) / (double) max));
+        this.notifyOnColorUpdate();
+    }
+
+    private void applyPresetColor(@Nullable DrawableColor preset) {
+        DrawableColor color = (preset != null) ? preset : DrawableColor.of(new Color(255, 255, 255, 255));
+        Color awt = color.getColor();
+        float[] hsv = Color.RGBtoHSB(awt.getRed(), awt.getGreen(), awt.getBlue(), null);
+        this.hue = hsv[0];
+        this.saturation = hsv[1];
+        this.value = hsv[2];
+        this.alpha = Math.min(1.0F, Math.max(0.0F, (float) awt.getAlpha() / 255.0F));
+    }
+
+    private int getCurrentColorInt() {
+        int rgb = Color.HSBtoRGB(this.hue, this.saturation, this.value);
+        int alphaInt = Math.round(this.alpha * 255.0F);
+        return (alphaInt << 24) | (rgb & 0xFFFFFF);
+    }
+
+    private String getCurrentHex() {
+        int rgb = Color.HSBtoRGB(this.hue, this.saturation, this.value);
+        int r = (rgb >> 16) & 0xFF;
+        int g = (rgb >> 8) & 0xFF;
+        int b = rgb & 0xFF;
+        int a = Math.round(this.alpha * 255.0F);
+        return DrawableColor.of(r, g, b, a).getHex();
+    }
+
+    private void notifyOnColorUpdate() {
+        this.onColorUpdate.accept(DrawableColor.of(this.getCurrentHex()));
+    }
+
+    private static float clamp(float value) {
+        return Math.max(0.0F, Math.min(1.0F, value));
+    }
+
+    private void fillGradientHorizontal(@NotNull GuiGraphics graphics, int x1, int y1, int x2, int y2, int colorLeft, int colorRight) {
+        int width = Math.max(1, x2 - x1);
+        for (int x = x1; x < x2; x++) {
+            float factor = (float) (x - x1) / (float) width;
+            graphics.fill(x, y1, x + 1, y2, ARGB.srgbLerp(factor, colorLeft, colorRight));
+        }
+    }
+
+}

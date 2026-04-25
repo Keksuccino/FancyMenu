@@ -3,8 +3,10 @@ package de.keksuccino.fancymenu.customization.element.elements.text.v2;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
@@ -17,7 +19,6 @@ import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
@@ -35,20 +36,33 @@ public class TextElement extends AbstractElement {
     protected String source; //direct text, file path, link
     protected volatile String text;
     protected String lastText;
+
     @Nullable
     public ResourceSupplier<IText> textResourceSupplier;
     public ResourceSupplier<ITexture> verticalScrollGrabberTextureNormal;
     public ResourceSupplier<ITexture> verticalScrollGrabberTextureHover;
     public ResourceSupplier<ITexture> horizontalScrollGrabberTextureNormal;
     public ResourceSupplier<ITexture> horizontalScrollGrabberTextureHover;
-    public String scrollGrabberColorHexNormal;
-    public String scrollGrabberColorHexHover;
     public boolean enableScrolling = true;
     public boolean interactable = true;
     @NotNull
     public volatile MarkdownRenderer markdownRenderer = new MarkdownRenderer();
     @NotNull
     public volatile ScrollArea scrollArea;
+
+    public final Property.ColorProperty baseColor = putProperty(Property.hexColorProperty("base_color", DrawableColor.WHITE.getHex(), true, "fancymenu.elements.text.base_color"));
+    public final Property.ColorProperty scrollGrabberColorHexNormal = putProperty(Property.hexColorProperty("grabber_color_normal", null, true, "fancymenu.elements.text.scroll_grabber_color.normal"));
+    public final Property.ColorProperty scrollGrabberColorHexHover = putProperty(Property.hexColorProperty("grabber_color_hover", null, true, "fancymenu.elements.text.scroll_grabber_color.hover"));
+    public final Property.FloatProperty textScale = putProperty(Property.floatProperty("scale", 1.0F, "fancymenu.elements.text.scale"));
+    public final Property.IntegerProperty textBorder = putProperty(Property.integerProperty("text_border", 2, "fancymenu.elements.text.text_border"));
+    public final Property.IntegerProperty lineSpacing = putProperty(Property.integerProperty("line_spacing", 2, "fancymenu.elements.text.line_spacing"));
+    public final Property.IntegerProperty quoteIndent = putProperty(Property.integerProperty("quote_indent", 8, "fancymenu.elements.text.markdown.quote.indent"));
+    public final Property.IntegerProperty bulletListIndent = putProperty(Property.integerProperty("bullet_list_indent", 8, "fancymenu.elements.text.markdown.bullet_list.indent"));
+    public final Property.IntegerProperty bulletListSpacing = putProperty(Property.integerProperty("bullet_list_spacing", 3, "fancymenu.elements.text.markdown.bullet_list.spacing"));
+    public final Property.FloatProperty tableLineThickness = putProperty(Property.floatProperty("table_line_thickness", 1.0F, "fancymenu.elements.text.markdown.tables.line_thickness"));
+    public final Property.FloatProperty tableCellPadding = putProperty(Property.floatProperty("table_cell_padding", 8.0F, "fancymenu.elements.text.markdown.tables.cell_padding"));
+    public final Property.FloatProperty tableMargin = putProperty(Property.floatProperty("table_margin", 4.0F, "fancymenu.elements.text.markdown.tables.margin"));
+
     protected List<String> lastLines;
     protected IText lastIText;
     protected boolean lastTickShouldRender = false;
@@ -70,13 +84,17 @@ public class TextElement extends AbstractElement {
                 }
             }
             @Override
-            public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+            public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean isDoubleClick) {
+                return this.mouseClicked(event.x(), event.y(), event.button());
+            }
+            
+            public boolean mouseClicked(double mouseX, double mouseY, int button) {
                 if (isEditor()) {
-                    if (this.verticalScrollBar.mouseClicked(event, isDoubleClick)) return true;
-                    if (this.horizontalScrollBar.mouseClicked(event, isDoubleClick)) return true;
+                    if (this.verticalScrollBar.mouseClicked(mouseX, mouseY, button)) return true;
+                    if (this.horizontalScrollBar.mouseClicked(mouseX, mouseY, button)) return true;
                     return false;
                 }
-                return super.mouseClicked(event, isDoubleClick);
+                return super.mouseClicked(mouseX, mouseY, button);
             }
             @Override
             public boolean isMouseOver(double mouseX, double mouseY) {
@@ -95,16 +113,42 @@ public class TextElement extends AbstractElement {
         this.scrollArea.borderColor = () -> DrawableColor.of(0,0,0,0);
 
         this.scrollArea.addEntry(new MarkdownRendererEntry(this.scrollArea, this.markdownRenderer));
+        // Ensure markdown can render once to measure its size before culling kicks in.
+        this.scrollArea.setRenderOnlyEntriesInArea(false);
 
         //Don't render markdown lines outside visible area (for performance reasons)
         this.markdownRenderer.addLineRenderValidator(line -> {
-            if ((line.parent.getY() + line.offsetY + line.getLineHeight()) < this.getAbsoluteY()) {
+            if ((line.parent.getY() + line.offsetY + line.getLineHeight()) < this.scrollArea.getInnerY()) {
                 return false;
             }
-            if ((line.parent.getY() + line.offsetY) > (this.getAbsoluteY() + this.getAbsoluteHeight())) {
+            if ((line.parent.getY() + line.offsetY) > (this.scrollArea.getInnerY() + this.scrollArea.getInnerHeight())) {
                 return false;
             }
             return true;
+        });
+
+        this.markdownRenderer.setTextEventHandler(new MarkdownRenderer.TextEventHandler() {
+            @Override
+            public void onTextClickEvent(@NotNull String eventId) {
+                if (TextElement.this.isEditor() || !TextElement.this.interactable) {
+                    return;
+                }
+                if (eventId.isEmpty()) {
+                    return;
+                }
+                Listeners.ON_TEXT_CLICKED.onTextClicked(eventId);
+            }
+
+            @Override
+            public void onTextHoverEvent(@NotNull String eventId) {
+                if (TextElement.this.isEditor() || !TextElement.this.interactable) {
+                    return;
+                }
+                if (eventId.isEmpty()) {
+                    return;
+                }
+                Listeners.ON_TEXT_HOVERED.onTextHovered(eventId);
+            }
         });
 
     }
@@ -120,6 +164,7 @@ public class TextElement extends AbstractElement {
 
                 this.markdownRenderer.setTextOpacity(this.opacity);
 
+                com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
                 this.scrollArea.setX(this.getAbsoluteX(), true);
                 this.scrollArea.setY(this.getAbsoluteY(), true);
                 this.scrollArea.setWidth(this.getAbsoluteWidth(), true);
@@ -129,6 +174,8 @@ public class TextElement extends AbstractElement {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
+            RenderingUtils.resetShaderColor(graphics);
 
         }
 
@@ -152,6 +199,8 @@ public class TextElement extends AbstractElement {
     }
 
     protected void renderTick() {
+
+        this.syncMarkdownRendererProperties();
 
         //If IText instance or its content changes, update element
         if (this.sourceMode == SourceMode.RESOURCE) {
@@ -180,13 +229,13 @@ public class TextElement extends AbstractElement {
         this.scrollArea.horizontalScrollBar.active = (this.scrollArea.getTotalEntryWidth() > this.scrollArea.getInnerWidth()) && this.enableScrolling;
 
         //Update scroll grabber colors
-        if (this.scrollGrabberColorHexNormal != null) {
-            DrawableColor c = DrawableColor.of(this.scrollGrabberColorHexNormal);
+        if (this.scrollGrabberColorHexNormal.get() != null) {
+            DrawableColor c = this.scrollGrabberColorHexNormal.getDrawable();
             this.scrollArea.verticalScrollBar.idleBarColor = () -> c;
             this.scrollArea.horizontalScrollBar.idleBarColor = () -> c;
         }
-        if (this.scrollGrabberColorHexHover != null) {
-            DrawableColor c = DrawableColor.of(this.scrollGrabberColorHexHover);
+        if (this.scrollGrabberColorHexHover.get() != null) {
+            DrawableColor c = this.scrollGrabberColorHexHover.getDrawable();
             this.scrollArea.verticalScrollBar.hoverBarColor = () -> c;
             this.scrollArea.horizontalScrollBar.hoverBarColor = () -> c;
         }
@@ -195,7 +244,7 @@ public class TextElement extends AbstractElement {
         if (this.verticalScrollGrabberTextureNormal != null) {
             ITexture r = this.verticalScrollGrabberTextureNormal.get();
             if (r != null) {
-                this.scrollArea.verticalScrollBar.idleBarTexture = r.getIdentifier();
+                this.scrollArea.verticalScrollBar.idleBarTexture = r.getResourceLocation();
             }
         } else {
             this.scrollArea.verticalScrollBar.idleBarTexture = null;
@@ -203,7 +252,7 @@ public class TextElement extends AbstractElement {
         if (this.verticalScrollGrabberTextureHover != null) {
             ITexture r = this.verticalScrollGrabberTextureHover.get();
             if (r != null) {
-                this.scrollArea.verticalScrollBar.hoverBarTexture = r.getIdentifier();
+                this.scrollArea.verticalScrollBar.hoverBarTexture = r.getResourceLocation();
             }
         } else {
             this.scrollArea.verticalScrollBar.hoverBarTexture = null;
@@ -211,7 +260,7 @@ public class TextElement extends AbstractElement {
         if (this.horizontalScrollGrabberTextureNormal != null) {
             ITexture r = this.horizontalScrollGrabberTextureNormal.get();
             if (r != null) {
-                this.scrollArea.horizontalScrollBar.idleBarTexture = r.getIdentifier();
+                this.scrollArea.horizontalScrollBar.idleBarTexture = r.getResourceLocation();
             }
         } else {
             this.scrollArea.horizontalScrollBar.idleBarTexture = null;
@@ -219,12 +268,64 @@ public class TextElement extends AbstractElement {
         if (this.horizontalScrollGrabberTextureHover != null) {
             ITexture r = this.horizontalScrollGrabberTextureHover.get();
             if (r != null) {
-                this.scrollArea.horizontalScrollBar.hoverBarTexture = r.getIdentifier();
+                this.scrollArea.horizontalScrollBar.hoverBarTexture = r.getResourceLocation();
             }
         } else {
             this.scrollArea.horizontalScrollBar.hoverBarTexture = null;
         }
 
+    }
+
+    protected void syncMarkdownRendererProperties() {
+        String baseColorHex = this.baseColor.getHex();
+        if (!Objects.equals(this.markdownRenderer.getTextBaseColor().getHex(), baseColorHex)) {
+            this.markdownRenderer.setTextBaseColor(this.baseColor.getDrawable());
+        }
+
+        float scale = Math.max(0.0F, this.textScale.getFloat());
+        if (this.markdownRenderer.getTextBaseScale() != scale) {
+            this.markdownRenderer.setTextBaseScale(scale);
+        }
+
+        int border = Math.max(0, this.textBorder.getInteger());
+        if ((int)this.markdownRenderer.getBorder() != border) {
+            this.markdownRenderer.setBorder(border);
+        }
+
+        int spacing = Math.max(0, this.lineSpacing.getInteger());
+        if ((int)this.markdownRenderer.getLineSpacing() != spacing) {
+            this.markdownRenderer.setLineSpacing(spacing);
+        }
+
+        int quoteIndentValue = Math.max(0, this.quoteIndent.getInteger());
+        if ((int)this.markdownRenderer.getQuoteIndent() != quoteIndentValue) {
+            this.markdownRenderer.setQuoteIndent(quoteIndentValue);
+        }
+
+        int bulletIndentValue = Math.max(0, this.bulletListIndent.getInteger());
+        if ((int)this.markdownRenderer.getBulletListIndent() != bulletIndentValue) {
+            this.markdownRenderer.setBulletListIndent(bulletIndentValue);
+        }
+
+        int bulletSpacingValue = Math.max(0, this.bulletListSpacing.getInteger());
+        if ((int)this.markdownRenderer.getBulletListSpacing() != bulletSpacingValue) {
+            this.markdownRenderer.setBulletListSpacing(bulletSpacingValue);
+        }
+
+        float lineThickness = Math.max(0.0F, this.tableLineThickness.getFloat());
+        if (this.markdownRenderer.getTableLineThickness() != lineThickness) {
+            this.markdownRenderer.setTableLineThickness(lineThickness);
+        }
+
+        float cellPadding = Math.max(0.0F, this.tableCellPadding.getFloat());
+        if (this.markdownRenderer.getTableCellPadding() != cellPadding) {
+            this.markdownRenderer.setTableCellPadding(cellPadding);
+        }
+
+        float margin = Math.max(0.0F, this.tableMargin.getFloat());
+        if (this.markdownRenderer.getTableMargin() != margin) {
+            this.markdownRenderer.setTableMargin(margin);
+        }
     }
 
     public void updateContent() {

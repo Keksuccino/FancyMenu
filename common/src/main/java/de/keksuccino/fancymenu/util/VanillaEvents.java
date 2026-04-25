@@ -1,6 +1,8 @@
 package de.keksuccino.fancymenu.util;
 
 import de.keksuccino.fancymenu.util.input.MouseUtils;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.MouseButtonInfo;
 import org.apache.logging.log4j.LogManager;
@@ -33,6 +35,16 @@ public class VanillaEvents {
     public static void updateLatestVanillaMouseButtonInfo(@NotNull MouseButtonInfo info) {
         latestVanillaMouseButtonInfoCachingTime = System.currentTimeMillis();
         latestVanillaMouseButtonInfo = Objects.requireNonNull(info);
+    }
+
+    @NotNull
+    public static KeyEvent keyEvent(int keyCode, int scanCode, int modifiers) {
+        return new KeyEvent(keyCode, scanCode, modifiers);
+    }
+
+    @NotNull
+    public static CharacterEvent characterEvent(int codePoint, int modifiers) {
+        return new CharacterEvent(codePoint, modifiers);
     }
 
     /**

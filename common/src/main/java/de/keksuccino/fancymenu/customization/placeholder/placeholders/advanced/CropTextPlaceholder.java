@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.advanced;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import net.minecraft.client.resources.language.I18n;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,8 +25,8 @@ public class CropTextPlaceholder extends Placeholder {
         try {
 
             String input = dps.values.get("text");
-            int removeFromStart = SerializationUtils.deserializeNumber(Integer.class, -1, dps.values.get("remove_from_start"));
-            int removeFromEnd = SerializationUtils.deserializeNumber(Integer.class, -1, dps.values.get("remove_from_end"));
+            int removeFromStart = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, -1, dps.values.get("remove_from_start"));
+            int removeFromEnd = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, -1, dps.values.get("remove_from_end"));
 
             if (input != null) {
                 if (input.length() <= removeFromStart) return "";

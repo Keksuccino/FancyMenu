@@ -14,38 +14,42 @@ import java.util.List;
 public class ScreenKeyPressedEvent extends EventBase {
 
     private final Screen screen;
-    private final KeyEvent keyEvent;
+    private final KeyEvent event;
 
-    public ScreenKeyPressedEvent(@NotNull Screen screen, @NotNull KeyEvent keyEvent) {
+    public ScreenKeyPressedEvent(Screen screen, int keycode, int scancode, int modifiers) {
         this.screen = screen;
-        this.keyEvent = keyEvent;
+        this.event = new KeyEvent(keycode, scancode, modifiers);
     }
 
-    @NotNull
+    public ScreenKeyPressedEvent(@NotNull Screen screen, @NotNull KeyEvent event) {
+        this.screen = screen;
+        this.event = event;
+    }
+
     public Screen getScreen() {
         return this.screen;
     }
 
     @NotNull
     public KeyEvent getKeyEvent() {
-        return this.keyEvent;
+        return event;
     }
 
     public int getKeycode() {
-        return this.keyEvent.key();
+        return this.event.key();
     }
 
     public int getScancode() {
-        return this.keyEvent.scancode();
+        return this.event.scancode();
     }
 
     public int getModifiers() {
-        return this.keyEvent.modifiers();
+        return this.event.modifiers();
     }
 
     @NotNull
     public String getKeyName() {
-        String key = GLFW.glfwGetKeyName(this.keyEvent.key(), this.keyEvent.scancode());
+        String key = GLFW.glfwGetKeyName(this.event.key(), this.event.scancode());
         if (key == null) key = "";
         return key;
     }

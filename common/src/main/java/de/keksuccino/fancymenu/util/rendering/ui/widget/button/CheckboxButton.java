@@ -1,9 +1,8 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderPipelines;
-
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
@@ -38,20 +37,22 @@ public class CheckboxButton extends ExtendedButton {
     }
 
     @Override
-    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    protected void renderContents(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        super.renderWidget(graphics, mouseX, mouseY, partial);
+        super.renderContents(graphics, mouseX, mouseY, partial);
 
         if (this.checkboxState && this.isActive()) {
-            graphics.blit(RenderPipelines.GUI_TEXTURED, this.getCheckboxCheckmarkTexture(), this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+            graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, this.getCheckboxCheckmarkTexture(), this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
         }
 
     }
 
     @Override
-    protected void renderBackground(@NotNull GuiGraphics graphics) {
+    protected void renderBackground(@NotNull GuiGraphics graphics, float partial) {
 
-        graphics.blit(RenderPipelines.GUI_TEXTURED, this.getCheckboxBackground(), this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, this.getCheckboxBackground(), this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
 
     }
 
@@ -63,7 +64,7 @@ public class CheckboxButton extends ExtendedButton {
     @NotNull
     public Identifier getCheckboxCheckmarkTexture() {
         if (this.customCheckmarkTexture != null) {
-            Identifier loc = this.customCheckmarkTexture.getIdentifier();
+            Identifier loc = this.customCheckmarkTexture.getResourceLocation();
             if (loc != null) return loc;
         }
         return CHECKBOX_CHECKMARK_TEXTURE_DEFAULT;
@@ -99,7 +100,7 @@ public class CheckboxButton extends ExtendedButton {
     @NotNull
     public Identifier getCheckboxBackgroundTextureNormal() {
         if (this.customBackgroundTextureNormal != null) {
-            Identifier loc = this.customBackgroundTextureNormal.getIdentifier();
+            Identifier loc = this.customBackgroundTextureNormal.getResourceLocation();
             if (loc != null) return loc;
         }
         return CHECKBOX_BACKGROUND_TEXTURE_NORMAL_DEFAULT;
@@ -108,7 +109,7 @@ public class CheckboxButton extends ExtendedButton {
     @NotNull
     public Identifier getCheckboxBackgroundTextureHover() {
         if (this.customBackgroundTextureHover != null) {
-            Identifier loc = this.customBackgroundTextureHover.getIdentifier();
+            Identifier loc = this.customBackgroundTextureHover.getResourceLocation();
             if (loc != null) return loc;
         }
         return CHECKBOX_BACKGROUND_TEXTURE_HOVER_DEFAULT;
@@ -117,7 +118,7 @@ public class CheckboxButton extends ExtendedButton {
     @NotNull
     public Identifier getCheckboxBackgroundTextureInactive() {
         if (this.customBackgroundTextureInactive != null) {
-            Identifier loc = this.customBackgroundTextureInactive.getIdentifier();
+            Identifier loc = this.customBackgroundTextureInactive.getResourceLocation();
             if (loc != null) return loc;
         }
         return CHECKBOX_BACKGROUND_TEXTURE_INACTIVE_DEFAULT;

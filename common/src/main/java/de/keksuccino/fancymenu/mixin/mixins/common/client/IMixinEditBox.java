@@ -20,7 +20,7 @@ public interface IMixinEditBox {
 
     @Accessor("maxLength") int getMaxLengthFancyMenu();
 
-    @Accessor("formatters") List<EditBox.TextFormatter> get_formatters_FancyMenu();
+    @Accessor("formatters") List<EditBox.TextFormatter> getFormattersFancyMenu();
 
     @Accessor("highlightPos") int getHighlightPosFancyMenu();
 
@@ -35,5 +35,7 @@ public interface IMixinEditBox {
     @Accessor("hint") Component getHintFancyMenu();
 
     @Accessor("suggestion") String getSuggestionFancyMenu();
+
+    @Accessor("invertHighlightedTextColor") boolean getInvertHighlightedTextColorFancyMenu();
 
 }

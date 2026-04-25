@@ -9,12 +9,12 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(AbstractWidget.class)
 public interface IMixinAbstractWidget {
 
-    @Accessor("tooltip") WidgetTooltipHolder get_tooltip_FancyMenu();
-
     @Accessor("alpha") float getAlphaFancyMenu();
 
     @Accessor("height") void setHeightFancyMenu(int height);
 
     @Accessor("message") void setMessageFieldFancyMenu(Component message);
+
+    @Accessor("tooltip") WidgetTooltipHolder getTooltipHolderFancyMenu();
 
 }

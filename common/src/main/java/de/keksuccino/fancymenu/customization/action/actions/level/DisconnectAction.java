@@ -4,10 +4,12 @@ import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.ScreenUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.GenericMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 public class DisconnectAction extends Action {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final Component SAVING_LEVEL = Component.translatable("menu.savingLevel");
 
     public DisconnectAction() {
         super("disconnect_server_or_world");
@@ -51,13 +54,13 @@ public class DisconnectAction extends Action {
                         if (openAfter == null) {
                             openAfter = new TitleScreen();
                         }
-                        mc.level.disconnect(Component.empty());
+                        mc.level.disconnect(ClientLevel.DEFAULT_QUIT_MESSAGE);
                         if (isSinglePlayer) {
-                            mc.disconnectWithSavingScreen();
+                            mc.disconnect(new GenericMessageScreen(SAVING_LEVEL), false);
                         } else {
-                            mc.disconnectWithProgressScreen();
+                            mc.disconnect(new TitleScreen(), false);
                         }
-                        mc.setScreen(openAfter);
+                        ScreenUtils.setScreen(openAfter);
                     }
                 }, true);
             } catch (Exception ex) {
@@ -67,13 +70,13 @@ public class DisconnectAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.disconnect");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.disconnect.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.disconnect.desc");
     }
 
     @Override
@@ -82,7 +85,7 @@ public class DisconnectAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "example.menu.identifier";
     }
 

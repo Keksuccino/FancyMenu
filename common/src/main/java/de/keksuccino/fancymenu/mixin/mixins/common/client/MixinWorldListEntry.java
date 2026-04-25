@@ -13,8 +13,8 @@ import org.spongepowered.asm.mixin.injection.At;
 public class MixinWorldListEntry {
 
     @WrapWithCondition(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V"), method = "renderContent")
-    private boolean wrapBlitInRenderFancyMenu(GuiGraphics instance, RenderPipeline $$0, Identifier $$1, int $$2, int $$3, float $$4, float $$5, int $$6, int $$7, int $$8, int i) {
-        if (i == 32) {
+    private boolean wrapBlitInRenderFancyMenu(GuiGraphics graphics, RenderPipeline pipeline, Identifier loc, int x, int y, float u, float v, int width, int height, int textureWidth, int textureHeight) {
+        if (textureHeight == 32) {
             return FancyMenu.getOptions().showSingleplayerScreenWorldIcons.getValue();
         }
         return true;

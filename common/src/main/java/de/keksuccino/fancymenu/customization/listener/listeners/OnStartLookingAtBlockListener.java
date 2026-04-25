@@ -28,6 +28,10 @@ public class OnStartLookingAtBlockListener extends AbstractListener {
         super("start_looking_at_block");
     }
 
+    public boolean shouldCheckLookingAt() {
+        return this.hasInstancesListening() || Listeners.ON_STOP_LOOKING_AT_BLOCK.hasInstancesListening();
+    }
+
     /**
      * @return {@code true} if a new block target was detected and listeners were notified.
      */

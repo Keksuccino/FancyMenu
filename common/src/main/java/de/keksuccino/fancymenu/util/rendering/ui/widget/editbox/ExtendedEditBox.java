@@ -1,26 +1,32 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.editbox;
 
-import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.VanillaEvents;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
+import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.util.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -28,13 +34,6 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.Color;
 import java.util.function.Supplier;
 
-/**
- * An extended version of Minecraft's EditBox with custom styling and functionality.
- * <p>
- * NOTE: This class relies on {@link IMixinEditBox} to access private members of the vanilla {@link EditBox}.
- * Ensure that the mixin accessors/invokers are targeting the correct field and method names for the
- * current Minecraft version.
- */
 @SuppressWarnings("unused")
 public class ExtendedEditBox extends EditBox implements UniqueWidget, NavigatableWidget, FancyMenuWidget {
 
@@ -49,24 +48,30 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     protected DrawableColor textColorUneditable = DrawableColor.of(new Color(7368816));
     protected DrawableColor suggestionTextColor = DrawableColor.of(new Color(-8355712));
     protected boolean textShadow = true;
+    protected boolean renderLabelWithUiBase = false;
+    protected boolean fancyHighlightEnabled = false;
     protected final Font font;
     @Nullable
     protected String identifier;
     protected boolean focusable = true;
     protected boolean navigatable = true;
     protected boolean canConsumeUserInput = true;
+    protected boolean roundedColorBackground = false;
+    protected float roundedColorBackgroundRadius = -1.0F;
+    @Nullable
+    protected DrawableColor hintTextColor = null;
     @Nullable
     protected String inputPrefix;
     @Nullable
     protected String inputSuffix;
     protected boolean deleteAllAllowed = true;
+    protected boolean leftMouseDown = false;
     @Nullable
     protected ConsumingSupplier<ExtendedEditBox, Boolean> isActiveSupplier = null;
     @Nullable
     protected ConsumingSupplier<ExtendedEditBox, Boolean> isVisibleSupplier = null;
     @Nullable
-    protected Supplier<Tooltip> customTooltip;
-    protected boolean forceDefaultTooltipStyle = true;
+    protected Supplier<UITooltip> uiTooltip;
     @Nullable
     protected ConsumingSupplier<ExtendedEditBox, Component> hintFancymenu = null;
 
@@ -87,34 +92,75 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         boolean bordered = access.getBorderedFancyMenu();
 
         if (this.isVisible()) {
-            // Background and Border Rendering (Custom)
-            graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, this.backgroundColor.getColorInt());
+
+            float radius = this.roundedColorBackground ? this.resolveRoundedColorBackgroundRadius() : 0.0F;
+            boolean useRoundedBackground = this.roundedColorBackground && radius > 0.0F;
+
+            if (useRoundedBackground) {
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+                        graphics,
+                        this.getX(),
+                        this.getY(),
+                        this.width,
+                        this.height,
+                        radius,
+                        radius,
+                        radius,
+                        radius,
+                        this.backgroundColor.getColorInt(),
+                        partial
+                );
+            } else {
+                graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, this.backgroundColor.getColorInt());
+            }
             if (bordered) {
                 int borderColor = this.isFocused() ? this.borderFocusedColor.getColorInt() : this.borderNormalColor.getColorInt();
-                // Assuming UIBase.renderBorder is compatible with GuiGraphics
-                UIBase.renderBorder(graphics, this.getX() - 1, this.getY() - 1, this.getX() + this.width + 1, this.getY() + this.height + 1, 1, borderColor, true, true, true, true);
+                if (useRoundedBackground) {
+                    float borderThickness = 1.0F;
+                    float borderRadius = radius > 0.0F ? radius + borderThickness : 0.0F;
+                    SmoothRectangleRenderer.renderSmoothBorderRoundAllCornersScaled(
+                            graphics,
+                            this.getX() - 1,
+                            this.getY() - 1,
+                            this.width + 2,
+                            this.height + 2,
+                            borderThickness,
+                            borderRadius,
+                            borderRadius,
+                            borderRadius,
+                            borderRadius,
+                            borderColor,
+                            partial
+                    );
+                } else {
+                    UIBase.renderBorder(graphics, this.getX() - 1, this.getY() - 1, this.getX() + this.width + 1, this.getY() + this.height + 1, 1, borderColor, true, true, true, true);
+                }
             }
 
-            // Text and Cursor Rendering
             int textColor = access.getIsEditableFancyMenu() ? this.textColor.getColorInt() : this.textColorUneditable.getColorInt();
             int cursorPos = this.getCursorPosition() - access.getDisplayPosFancyMenu();
             int highlightPos = access.getHighlightPosFancyMenu() - access.getDisplayPosFancyMenu();
-            String text = this.font.plainSubstrByWidth(this.getValue().substring(access.getDisplayPosFancyMenu()), this.getInnerWidth());
+            boolean renderWithUiBase = this.renderLabelWithUiBase;
+            String text = this.getVisibleText(access.getDisplayPosFancyMenu(), this.getInnerWidth(), renderWithUiBase);
             boolean isCursorInsideVisibleText = cursorPos >= 0 && cursorPos <= text.length();
-            boolean isCursorVisible = this.isFocused() && (Util.getMillis() - access.getFocusedTimeFancyMenu()) / 300L % 2L == 0L && isCursorInsideVisibleText;
-            int textX = bordered ? this.getX() + 4 : this.getX();
-            int textY = bordered ? this.getY() + (this.height - 8) / 2 : this.getY();
-            int textXAfterCursor = textX;
+            boolean isCursorVisible = this.isFocused() && (Util.getMillis() - ((IMixinEditBox)this).getFocusedTimeFancyMenu()) / 300L % 2L == 0L && isCursorInsideVisibleText;
+            float textHeight = renderWithUiBase ? UIBase.getUITextHeightNormal() : 9.0F;
+            float textCenterOffset = renderWithUiBase ? textHeight : 8.0F;
+            float textX = bordered ? this.getX() + 4.0F : this.getX();
+            float textY = bordered ? this.getY() + (this.height - textCenterOffset) / 2F : this.getY();
+            float textXAfterCursor = textX;
             if (highlightPos > text.length()) {
                 highlightPos = text.length();
             }
 
             int textCharacterRenderIndex = access.getDisplayPosFancyMenu();
+            MutableComponent beforeCursorComp = null;
+            MutableComponent afterCursorComp = null;
+            boolean renderAfterCursor = false;
 
-            // Render text before the cursor
             if (!text.isEmpty()) {
                 String textBeforeCursor = isCursorInsideVisibleText ? text.substring(0, cursorPos) : text;
-                MutableComponent beforeCursorComp = Component.literal("");
+                beforeCursorComp = Component.literal("");
                 if (this.characterRenderFormatter == null) {
                     beforeCursorComp = Component.literal(textBeforeCursor);
                 } else {
@@ -124,38 +170,49 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
                         textCharacterRenderIndex++;
                     }
                 }
+                textXAfterCursor = textX + (renderWithUiBase ? UIBase.getUITextWidthNormal(beforeCursorComp) : this.font.width(beforeCursorComp));
 
-                graphics.drawString(this.font, beforeCursorComp, textX, textY, textColor, this.textShadow);
-                textXAfterCursor = textX + this.font.width(beforeCursorComp);
-
+                if (isCursorInsideVisibleText && cursorPos < text.length()) {
+                    String textAfterCursor = text.substring(cursorPos);
+                    MutableComponent afterCursor = Component.literal("");
+                    if (this.characterRenderFormatter == null) {
+                        afterCursor = Component.literal(textAfterCursor);
+                    } else {
+                        for (char c : textAfterCursor.toCharArray()) {
+                            MutableComponent comp = this.characterRenderFormatter.formatComponent(this, Component.literal(String.valueOf(c)), textCharacterRenderIndex, c, text, this.getValue());
+                            afterCursor.append(comp);
+                            textCharacterRenderIndex++;
+                        }
+                    }
+                    afterCursorComp = afterCursor;
+                    renderAfterCursor = true;
+                }
             }
 
-            // Calculate cursor's final render position
             boolean renderSmallCursor = (this.getCursorPosition() < this.getValue().length()) || (this.getValue().length() >= access.getMaxLengthFancyMenu());
-            int finalTextXAfterCursor = textXAfterCursor;
+            float finalTextXAfterCursor = textXAfterCursor;
             if (!isCursorInsideVisibleText) {
                 finalTextXAfterCursor = (cursorPos > 0) ? (textX + this.width) : textX;
             } else if (renderSmallCursor) {
                 finalTextXAfterCursor = textXAfterCursor - 1;
-                if (this.textShadow) {
-                    --textXAfterCursor;
+                if (!renderWithUiBase && this.textShadow) {
+                    textXAfterCursor--;
                 }
             }
 
-            // Render text after the cursor
-            if (!text.isEmpty() && isCursorInsideVisibleText && cursorPos < text.length()) {
-                String textAfterCursor = text.substring(cursorPos);
-                MutableComponent afterCursorComp = Component.literal("");
-                if (this.characterRenderFormatter == null) {
-                    afterCursorComp = Component.literal(textAfterCursor);
+            if (!text.isEmpty() && beforeCursorComp != null) {
+                if (renderWithUiBase) {
+                    UIBase.renderText(graphics, beforeCursorComp, textX, textY, textColor);
                 } else {
-                    for (char c : textAfterCursor.toCharArray()) {
-                        MutableComponent comp = this.characterRenderFormatter.formatComponent(this, Component.literal(String.valueOf(c)), textCharacterRenderIndex, c, text, this.getValue());
-                        afterCursorComp.append(comp);
-                        textCharacterRenderIndex++;
+                    graphics.drawString(this.font, beforeCursorComp, (int) textX, (int) textY, textColor, this.textShadow);
+                }
+                if (renderAfterCursor && afterCursorComp != null) {
+                    if (renderWithUiBase) {
+                        UIBase.renderText(graphics, afterCursorComp, textXAfterCursor, textY, textColor);
+                    } else {
+                        graphics.drawString(this.font, afterCursorComp, (int) textXAfterCursor, (int) textY, textColor, this.textShadow);
                     }
                 }
-                graphics.drawString(this.font, afterCursorComp, textXAfterCursor, textY, textColor, this.textShadow);
             }
 
             // Vanilla Hint
@@ -163,7 +220,12 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             boolean vanillaHintRendered = false;
             if ((hint != null) && text.isEmpty() && !this.isFocused()) {
                 graphics.enableScissor(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight());
-                graphics.drawString(this.font, hint, textXAfterCursor, textY, textColor, this.textShadow);
+                if (this.renderLabelWithUiBase) {
+                    float hintY = this.getY() + (this.getHeight() / 2F) - (UIBase.getUITextHeightNormal() / 2F);
+                    UIBase.renderText(graphics, hint, textXAfterCursor, hintY, textColor);
+                } else {
+                    graphics.drawString(this.font, hint, (int) textXAfterCursor, (int) textY, textColor, this.textShadow);
+                }
                 graphics.disableScissor();
                 vanillaHintRendered = true;
             }
@@ -172,51 +234,94 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             Component hintFm = this.getHintFancyMenu();
             if (!vanillaHintRendered && (hintFm != null) && text.isEmpty()) {
                 graphics.enableScissor(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight());
-                graphics.drawString(this.font, hintFm, this.getX() + 4, this.getY() + (this.getHeight() / 2) - (this.font.lineHeight / 2), -1, false);
+                if (this.renderLabelWithUiBase) {
+                    float hintY = this.getY() + (this.getHeight() / 2F) - (UIBase.getUITextHeightNormal() / 2F);
+                    UIBase.renderText(graphics, hintFm, this.getX() + 4, hintY, -1);
+                } else {
+                    graphics.drawString(this.font, hintFm, this.getX() + 4, this.getY() + (this.getHeight() / 2) - (this.font.lineHeight / 2), -1, false);
+                }
                 graphics.disableScissor();
             }
 
-            // Render suggestion text
             if (!renderSmallCursor && access.getSuggestionFancyMenu() != null) {
-                graphics.drawString(this.font, access.getSuggestionFancyMenu(), (finalTextXAfterCursor - 1), textY, this.suggestionTextColor.getColorInt(), this.textShadow);
-            }
-
-            // Render the cursor
-            if (isCursorVisible) {
-                if (renderSmallCursor) {
-                    graphics.fill(finalTextXAfterCursor, textY - 1, finalTextXAfterCursor + 1, textY + 1 + 9, textColor);
+                if (renderWithUiBase) {
+                    UIBase.renderText(graphics, access.getSuggestionFancyMenu(), finalTextXAfterCursor - 1, textY, this.suggestionTextColor.getColorInt());
                 } else {
-                    // This is the underscore-style cursor at the end
-                    graphics.drawString(this.font, "_", finalTextXAfterCursor, textY, textColor, this.textShadow);
+                    graphics.drawString(this.font, access.getSuggestionFancyMenu(), (int) (finalTextXAfterCursor - 1), (int) textY, this.suggestionTextColor.getColorInt(), this.textShadow);
                 }
             }
 
-            // Render the text highlight
+            if (isCursorVisible) {
+                if (renderSmallCursor) {
+                    graphics.fill((int) finalTextXAfterCursor, (int) (textY - 1), (int) finalTextXAfterCursor + 1, (int) (textY + 1 + textHeight), textColor);
+                } else {
+                    graphics.fill((int) finalTextXAfterCursor, (int) (textY + textHeight - 1), (int) finalTextXAfterCursor + 5, (int) (textY + textHeight), textColor);
+                }
+            }
+
             if (highlightPos != cursorPos) {
-                int l1 = textX + this.font.width(text.substring(0, highlightPos));
-                boolean invert = true;
-                graphics.textHighlight(finalTextXAfterCursor, textY - 1, l1 - 1, textY + 1 + 9, invert);
+                float highlightWidth = UIBase.getUITextWidth(text.substring(0, highlightPos));
+                int highlightEndX = (int) (textX + highlightWidth) - 1;
+                graphics.textHighlight((int) finalTextXAfterCursor, (int) (textY - 1), highlightEndX, (int) (textY + 1 + textHeight), access.getInvertHighlightedTextColorFancyMenu());
             }
 
         }
+
+    }
+
+    private void renderFancyHighlight(@NotNull GuiGraphics graphics, int minX, int minY, int maxX, int maxY, int textColor) {
+        if (minX < maxX) {
+            int i = minX;
+            minX = maxX;
+            maxX = i;
+        }
+
+        if (minY < maxY) {
+            int i = minY;
+            minY = maxY;
+            maxY = i;
+        }
+
+        int maxWidth = this.getX() + this.width;
+        if (maxX > maxWidth) {
+            maxX = maxWidth;
+        }
+
+        if (minX > maxWidth) {
+            minX = maxWidth;
+        }
+
+        int highlightColor = (textColor & 0xFF000000) | (~textColor & 0x00FFFFFF);
+        graphics.fill(minX, minY, maxX, maxY, highlightColor);
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        if (this.isActiveSupplier != null) this.active = this.isActiveSupplier.get(this);
-        if (this.isVisibleSupplier != null) this.visible = this.isVisibleSupplier.get(this);
-        super.render(graphics, mouseX, mouseY, partial);
+    public void render(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
 
-        if ((this.customTooltip != null) && this.visible && this.isHovered()) {
-            Tooltip tt = this.customTooltip.get();
+        if (this.isActiveSupplier != null) this.active = this.isActiveSupplier.get(this);
+
+        if (this.isVisibleSupplier != null) this.visible = this.isVisibleSupplier.get(this);
+
+        super.render($$0, $$1, $$2, $$3);
+
+        if ((this.uiTooltip != null) && this.visible && this.isHovered()) {
+            UITooltip tt = this.uiTooltip.get();
             if (tt != null) {
-                if (this.forceDefaultTooltipStyle) {
-                    tt.setDefaultStyle();
-                }
-                TooltipHandler.INSTANCE.addTooltip(tt, () -> true, true, true);
+                TooltipHandler.INSTANCE.addRenderTickTooltip(tt, () -> true);
             }
         }
 
+    }
+
+    @Override
+    public void playDownSound(@NotNull SoundManager handler) {
+        if (this instanceof CustomizableWidget w) {
+            IAudio sound = w.getCustomClickSoundFancyMenu();
+            if (sound != null) {
+                sound.stop();
+                sound.play();
+            }
+        }
     }
 
     public void setHeight(int height) {
@@ -263,6 +368,24 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
      */
     public ExtendedEditBox setTextShadow_FancyMenu(boolean textShadow) {
         this.textShadow = textShadow;
+        return this;
+    }
+
+    public boolean isLabelRenderedWithUiBase() {
+        return this.renderLabelWithUiBase;
+    }
+
+    public ExtendedEditBox setLabelRenderedWithUiBase(boolean renderLabelWithUiBase) {
+        this.renderLabelWithUiBase = renderLabelWithUiBase;
+        return this;
+    }
+
+    public boolean isFancyHighlightEnabled() {
+        return this.fancyHighlightEnabled;
+    }
+
+    public ExtendedEditBox setFancyHighlightEnabled(boolean fancyHighlightEnabled) {
+        this.fancyHighlightEnabled = fancyHighlightEnabled;
         return this;
     }
 
@@ -345,6 +468,31 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         return this;
     }
 
+    public boolean isRoundedColorBackgroundEnabled() {
+        return this.roundedColorBackground;
+    }
+
+    public ExtendedEditBox setRoundedColorBackgroundEnabled(boolean roundedColorBackground) {
+        this.roundedColorBackground = roundedColorBackground;
+        return this;
+    }
+
+    public float getRoundedColorBackgroundRadius() {
+        return this.roundedColorBackgroundRadius;
+    }
+
+    public ExtendedEditBox setRoundedColorBackgroundRadius(float roundedColorBackgroundRadius) {
+        this.roundedColorBackgroundRadius = roundedColorBackgroundRadius;
+        return this;
+    }
+
+    protected float resolveRoundedColorBackgroundRadius() {
+        if (this.roundedColorBackgroundRadius >= 0.0F) {
+            return this.roundedColorBackgroundRadius;
+        }
+        return UIBase.getWidgetCornerRoundingRadius();
+    }
+
     public @Nullable String getInputPrefix() {
         return inputPrefix;
     }
@@ -386,10 +534,6 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         this.isVisibleSupplier = isVisibleSupplier;
     }
 
-    public boolean isEditable() {
-        return ((IMixinEditBox)this).getIsEditableFancyMenu();
-    }
-
     @Deprecated
     @Override
     public void setTextColor(int color) {
@@ -412,10 +556,28 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
 
     @Override
     public boolean charTyped(CharacterEvent event) {
-        if ((this.characterFilter != null) && !this.characterFilter.isAllowedChar((char) event.codepoint())) {
+        return this.charTyped((char)event.codepoint(), event.modifiers());
+    }
+    
+    public boolean charTyped(char character, int modifiers) {
+        if ((this.characterFilter != null) && !this.characterFilter.isAllowedChar(character)) {
             return false;
         }
-        return super.charTyped(event);
+        return super.charTyped(VanillaEvents.characterEvent(character, modifiers));
+    }
+
+    @Override
+    public void onClick(MouseButtonEvent event, boolean isDoubleClick) {
+        if (!this.renderLabelWithUiBase) {
+            super.onClick(event, isDoubleClick);
+            return;
+        }
+
+        this.moveCursorTo(this.getCursorPosFromMouseX(event.x()), event.hasShiftDown());
+    }
+
+    public void onClick(double mouseX, double mouseY) {
+        this.onClick(VanillaEvents.mouseButtonEvent(mouseX, mouseY, 0, 0), false);
     }
 
     @Override
@@ -462,20 +624,41 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         return v;
     }
 
-    @Override
-    public void deleteText(int i, boolean hasControlDown) {
+    protected void deleteText(int i, boolean words) {
         if (this.deleteAllAllowed) {
-            super.deleteText(i, hasControlDown);
+            ((IMixinEditBox)this).invokeDeleteTextFancyMenu(i, words);
         } else {
             this.deleteChars(i);
         }
     }
 
+    public void deleteText(int i) {
+        this.deleteText(i, false);
+    }
+
     @Override
     public boolean keyPressed(KeyEvent event) {
+        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+    }
+    
+    public boolean keyPressed(int keycode, int scancode, int modifiers) {
         if (!this.canConsumeUserInput) return false;
+        if (!net.minecraft.client.Minecraft.getInstance().hasShiftDown()) {
+            int cursorPos = this.getCursorPosition();
+            int highlightPos = this.getHighlightPosition();
+            if (cursorPos != highlightPos) {
+                if (keycode == 263) {
+                    this.moveCursorTo(Math.min(cursorPos, highlightPos), false);
+                    return true;
+                }
+                if (keycode == 262) {
+                    this.moveCursorTo(Math.max(cursorPos, highlightPos), false);
+                    return true;
+                }
+            }
+        }
         //If select all, only select parts that are not prefix or suffix
-        if (event.isSelectAll() && ((this.inputPrefix != null) || (this.inputSuffix != null))) {
+        if (((keycode) == 65 && net.minecraft.client.Minecraft.getInstance().hasControlDown()) && ((this.inputPrefix != null) || (this.inputSuffix != null))) {
             if (this.inputSuffix != null) {
                 this.moveCursorTo(this.getValue().length() - this.inputSuffix.length(), false);
             } else {
@@ -484,19 +667,115 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             this.setHighlightPos((this.inputPrefix != null) ? this.inputPrefix.length() : 0);
             return true;
         }
-        return super.keyPressed(event);
+        return super.keyPressed(VanillaEvents.keyEvent(keycode, scancode, modifiers));
     }
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         if (!this.canConsumeUserInput) return false;
-        return super.mouseClicked(event, isDoubleClick);
+        boolean handled = super.mouseClicked(event, isDoubleClick);
+        if (handled && event.button() == 0) this.leftMouseDown = true;
+        return handled;
     }
 
-    // This is to make the edit box work in FocuslessEventHandlers
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        return this.mouseClicked(VanillaEvents.mouseButtonEvent(mouseX, mouseY, button, 0), false);
+    }
+
+    //This is to make the edit box work in FocuslessEventHandlers
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
+        return this.mouseReleased(event.x(), event.y(), event.button());
+    }
+    
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        this.leftMouseDown = false;
         return false;
+    }
+
+    @Override
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        return this.mouseDragged(event.x(), event.y(), event.button(), dragX, dragY);
+    }
+    
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (!this.canConsumeUserInput) return false;
+        if (!this.leftMouseDown || (button != 0)) return false;
+        this.moveCursorTo(this.getCursorPosFromMouseX(mouseX), true);
+        return true;
+    }
+
+    protected int getCursorPosFromMouseX(double mouseX) {
+        int displayPos = Math.max(0, this.getDisplayPosition());
+        String value = this.getValue();
+        if (value.isEmpty() || (displayPos >= value.length())) {
+            return value.length();
+        }
+
+        int localX = Mth.floor(mouseX) - this.getX();
+        if (((IMixinEditBox)this).getBorderedFancyMenu()) {
+            localX -= 4;
+        }
+        if (localX <= 0) {
+            return displayPos;
+        }
+
+        float maxWidth = this.getInnerWidth();
+        float targetWidth = (maxWidth > 0.0F) ? Math.min(localX, maxWidth) : localX;
+        String remaining = value.substring(displayPos);
+        int offset = this.renderLabelWithUiBase
+                ? this.getTextIndexByWidthAtUIScale(remaining, targetWidth)
+                : this.font.plainSubstrByWidth(remaining, (int) targetWidth).length();
+        return Math.min(value.length(), displayPos + offset);
+    }
+
+    protected String getVisibleText(int displayPos, int innerWidth, boolean renderWithUiBase) {
+        String remaining = this.getValue().substring(displayPos);
+        if (!renderWithUiBase) {
+            return this.font.plainSubstrByWidth(remaining, innerWidth);
+        }
+        int length = this.getTextIndexByWidthAtUIScale(remaining, innerWidth);
+        return remaining.substring(0, length);
+    }
+
+    protected int getTextIndexByWidthAtUIScale(@NotNull String text, float targetWidth) {
+        if (text.isEmpty()) {
+            return 0;
+        }
+        if (!Float.isFinite(targetWidth)) {
+            return targetWidth > 0.0F ? text.length() : 0;
+        }
+        if (targetWidth <= 0.0F) {
+            return 0;
+        }
+        if (UIBase.isCurrentlyRenderingAtUIScale()) {
+            return this.getTextIndexByWidthAtUIScaleInternal(text, targetWidth);
+        }
+        UIBase.startUIScaleRendering();
+        try {
+            return this.getTextIndexByWidthAtUIScaleInternal(text, targetWidth);
+        } finally {
+            UIBase.stopUIScaleRendering();
+        }
+    }
+
+    protected int getTextIndexByWidthAtUIScaleInternal(@NotNull String text, float targetWidth) {
+        float fullWidth = UIBase.getUITextWidth(text);
+        if (targetWidth >= fullWidth) {
+            return text.length();
+        }
+        int low = 0;
+        int high = text.length();
+        while (low < high) {
+            int mid = (low + high + 1) / 2;
+            float width = UIBase.getUITextWidth(text.substring(0, mid));
+            if (width <= targetWidth) {
+                low = mid;
+            } else {
+                high = mid - 1;
+            }
+        }
+        return low;
     }
 
     @Override
@@ -546,17 +825,9 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     }
 
     @NotNull
-    public ExtendedEditBox setTooltip(@Nullable Supplier<Tooltip> tooltip) {
-        this.customTooltip = tooltip;
+    public ExtendedEditBox setUITooltip(@Nullable Supplier<UITooltip> tooltip) {
+        this.uiTooltip = tooltip;
         return this;
-    }
-
-    public boolean isForceDefaultTooltipStyle() {
-        return forceDefaultTooltipStyle;
-    }
-
-    public void setForceDefaultTooltipStyle(boolean forceDefaultTooltipStyle) {
-        this.forceDefaultTooltipStyle = forceDefaultTooltipStyle;
     }
 
     @NotNull
@@ -565,12 +836,21 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         return this;
     }
 
+    @NotNull
+    public ExtendedEditBox setHintTextColor(@Nullable DrawableColor hintTextColor) {
+        this.hintTextColor = hintTextColor;
+        return this;
+    }
+
     @Nullable
     protected MutableComponent getHintFancyMenu() {
         if (this.hintFancymenu == null) return null;
         Component c = this.hintFancymenu.get(this);
         if (c != null) {
-            return c.copy().withColor(UIBase.getUIColorTheme().edit_box_text_color_uneditable.getColorInt());
+            DrawableColor color = (this.hintTextColor != null)
+                    ? this.hintTextColor
+                    : UIBase.getUITheme().ui_interface_input_field_text_color_uneditable;
+            return c.copy().withColor(color.getColorInt());
         }
         return null;
     }

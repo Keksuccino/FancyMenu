@@ -15,13 +15,13 @@ import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.renderer.RenderPipelines;
-
+import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.network.chat.Style;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -118,14 +118,14 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
     public DrawableColor getOverlayColorBase() {
         if (this.invertOverlayColors()) return DrawableColor.WHITE;
         DrawableColor override = this.getOverlayColorBaseOverride();
-        return (override != null) ? override : UIBase.getUIColorTheme().layout_editor_anchor_point_overlay_color_base;
+        return (override != null) ? override : UIBase.getUITheme().layout_editor_anchor_point_overlay_color_base;
     }
 
     @NotNull
     public DrawableColor getOverlayColorBorder() {
         if (this.invertOverlayColors()) return DrawableColor.WHITE;
         DrawableColor override = this.getOverlayColorBorderOverride();
-        return (override != null) ? override : UIBase.getUIColorTheme().layout_editor_anchor_point_overlay_color_border;
+        return (override != null) ? override : UIBase.getUITheme().layout_editor_anchor_point_overlay_color_border;
     }
 
     public boolean isOverlayBusy() {
@@ -161,23 +161,26 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
 
         this.tickAreaMouseOver(mouseX, mouseY);
 
+        RenderingUtils.resetShaderColor(graphics);
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
         //Invert color of overlay based on what's rendered behind it
         if (this.invertOverlayColors()) {
-            GlStateManager._enableBlend();
-            RenderingUtils.blendFuncSeparate(RenderingUtils.SourceFactor.ONE_MINUS_DST_COLOR, RenderingUtils.DestFactor.ONE_MINUS_SRC_COLOR, RenderingUtils.SourceFactor.ONE, RenderingUtils.DestFactor.ZERO);
+            GlStateManager._blendFuncSeparate(775, 769, 1, 0);
         }
 
         this.renderAreas(graphics, mouseX, mouseY, partial);
         this.renderConnectionLines(graphics);
 
-        RenderingUtils.defaultBlendFunc();
+        de.keksuccino.fancymenu.util.rendering.RenderingUtils.defaultBlendFunc();
+        RenderingUtils.resetShaderColor(graphics);
 
     }
 
     protected void renderAreas(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        int menuBarHeight = ((this.editor.menuBar != null) ? (int)((float)this.editor.menuBar.getHeight() * UIBase.calculateFixedScale(this.editor.menuBar.getScale())) : 0);
-        if ((this.editor.menuBar != null) && !this.editor.menuBar.isExpanded()) menuBarHeight = 0;
+        MenuBar menuBar = this.editor.getCurrentMenuBar();
+        int menuBarHeight = ((menuBar != null) ? (int)((float)MenuBar.PIXEL_SIZE * MenuBar.getRenderScale()) : 0);
+        if ((menuBar != null) && !menuBar.isExpanded()) menuBarHeight = 0;
 
         this.topLeftArea.x = -1;
         this.topLeftArea.y = -1 + menuBarHeight;
@@ -235,14 +238,14 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
     }
 
     protected void renderConnectionLines(@NotNull GuiGraphics graphics) {
-        List<AbstractEditorElement> elements = FancyMenu.getOptions().showAllAnchorOverlayConnections.getValue() ? this.editor.getAllElements() : this.editor.getCurrentlyDraggedElements();
-        for (AbstractEditorElement e : elements) {
+        List<AbstractEditorElement<?, ?>> elements = FancyMenu.getOptions().showAllAnchorOverlayConnections.getValue() ? this.editor.getAllElements() : this.editor.getCurrentlyDraggedElements();
+        for (AbstractEditorElement<?, ?> e : elements) {
             boolean hidden = (e instanceof HideableElement h) && h.isHidden();
             if (!hidden) this.renderConnectionLineFor(graphics, e);
         }
     }
 
-    protected void renderConnectionLineFor(@NotNull GuiGraphics graphics, @NotNull AbstractEditorElement e) {
+    protected void renderConnectionLineFor(@NotNull GuiGraphics graphics, @NotNull AbstractEditorElement<?, ?> e) {
         AnchorPointArea a = this.getParentAreaOfElement(e);
         if (a != null) {
             int xElement = e.getX() + (e.getWidth() / 2);
@@ -266,16 +269,19 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
             horizontalX += lineThickness;
         }
 
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        UIBase.resetShaderColor(graphics);
         //Horizontal Line
         graphics.fill(horizontalX, horizontalY, horizontalX + horizontalWidth, horizontalY + lineThickness, color);
         //Vertical Line
         graphics.fill(verticalX, verticalY, verticalX + lineThickness, verticalY + verticalHeight, color);
+        UIBase.resetShaderColor(graphics);
 
     }
 
     protected void tickAreaMouseOver(int mouseX, int mouseY) {
-        boolean draggedEmpty = this.editor.getCurrentlyDraggedElements().isEmpty();
-        if (!draggedEmpty) {
+        boolean hoverChangeAllowed = this.isHoverAnchorChangeAllowed();
+        if (hoverChangeAllowed) {
             this.currentlyHoveredArea = FancyMenu.getOptions().anchorOverlayChangeAnchorOnAreaHover.getValue() ? this.getMouseOverArea(mouseX, mouseY) : null;
             //If just started dragging, set lastCompleted to current, to "ignore" the initially hovered area
             if (this.lastTickDraggedEmpty) {
@@ -293,7 +299,7 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
             if (this.currentlyHoveredArea != null) {
                 //Change anchor of dragged elements if area hovered long enough
                 if ((this.areaHoverStartTime + this.getOverlayHoverChargingTimeMs()) <= System.currentTimeMillis()) {
-                    for (AbstractEditorElement e : this.editor.getCurrentlyDraggedElements()) {
+                    for (AbstractEditorElement<?, ?> e : this.editor.getCurrentlyDraggedElements()) {
                         if (this.canChangeAnchorTo(e, this.currentlyHoveredArea)) {
                             e.setAnchorPointViaOverlay(this.currentlyHoveredArea, mouseX, mouseY);
                         }
@@ -305,7 +311,20 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
         } else {
             this.resetAreaHoverCache();
         }
-        this.lastTickDraggedEmpty = draggedEmpty;
+        this.lastTickDraggedEmpty = !hoverChangeAllowed;
+    }
+
+    protected boolean isHoverAnchorChangeAllowed() {
+        List<AbstractEditorElement<?, ?>> draggedElements = this.editor.getCurrentlyDraggedElements();
+        if (draggedElements.isEmpty()) {
+            return false;
+        }
+        for (AbstractEditorElement<?, ?> e : draggedElements) {
+            if (e.isGettingResized() || e.isGettingRotated() || e.isGettingTilted()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -321,13 +340,13 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
         return firstArea.anchorPoint == secondArea.anchorPoint;
     }
 
-    protected boolean canChangeAnchorTo(@NotNull AbstractEditorElement element, @NotNull AnchorPointArea area) {
+    protected boolean canChangeAnchorTo(@NotNull AbstractEditorElement<?, ?> element, @NotNull AnchorPointArea area) {
         Objects.requireNonNull(element);
         Objects.requireNonNull(area);
         if (this.isAttachedToAnchor(element, area)) return false;
         //Check if area is ElementAnchorPointArea and if so, check if area's element is child of the given element parameter
         if (area instanceof ElementAnchorPointArea) {
-            AbstractEditorElement areaElement = this.editor.getElementByInstanceIdentifier(((ElementAnchorPointArea) area).elementIdentifier);
+            AbstractEditorElement<?, ?> areaElement = this.editor.getElementByInstanceIdentifier(((ElementAnchorPointArea) area).elementIdentifier);
             AbstractElement parentOfAreaElement = (areaElement != null) ? areaElement.element.getElementAnchorPointParent() : null;
             if ((parentOfAreaElement != null) && parentOfAreaElement.getInstanceIdentifier().equals(element.element.getInstanceIdentifier())) return false;
         }
@@ -338,11 +357,11 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
      * Returns NULL if there was an error while trying to get all child elements.
      */
     @Nullable
-    protected List<AbstractEditorElement> getChildElementsOfDraggedElements() {
-        List<AbstractEditorElement> currentlyDragged = this.editor.getCurrentlyDraggedElements();
-        List<AbstractEditorElement> children = new ArrayList<>();
-        for (AbstractEditorElement e : currentlyDragged) {
-            List<AbstractEditorElement> childChainOfE = this.editor.getElementChildChainOfExcluding(e);
+    protected List<AbstractEditorElement<?, ?>> getChildElementsOfDraggedElements() {
+        List<AbstractEditorElement<?, ?>> currentlyDragged = this.editor.getCurrentlyDraggedElements();
+        List<AbstractEditorElement<?, ?>> children = new ArrayList<>();
+        for (AbstractEditorElement<?, ?> e : currentlyDragged) {
+            List<AbstractEditorElement<?, ?>> childChainOfE = this.editor.getElementChildChainOfExcluding(e);
             if (childChainOfE == null) return null;
             childChainOfE.forEach(element -> {
                 if (!currentlyDragged.contains(element)) children.add(element);
@@ -351,7 +370,7 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
         return children;
     }
 
-    protected boolean isAttachedToAnchor(@NotNull AbstractEditorElement element, @NotNull AnchorPointArea area) {
+    protected boolean isAttachedToAnchor(@NotNull AbstractEditorElement<?, ?> element, @NotNull AnchorPointArea area) {
         if (area instanceof ElementAnchorPointArea ae) {
             String parentOfElement = element.element.getAnchorPointElementIdentifier();
             if (parentOfElement != null) {
@@ -362,11 +381,11 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
     }
 
     @Nullable
-    protected AnchorPointArea getParentAreaOfElement(@NotNull AbstractEditorElement element) {
+    protected AnchorPointArea getParentAreaOfElement(@NotNull AbstractEditorElement<?, ?> element) {
         if (element.element.anchorPoint == ElementAnchorPoints.ELEMENT) {
             if (element.element.getAnchorPointElementIdentifier() != null) {
                 //Safety check to lower the change to construct a broken ElementAnchorPointArea instance
-                AbstractEditorElement e = this.editor.getElementByInstanceIdentifier(element.element.getAnchorPointElementIdentifier());
+                AbstractEditorElement<?, ?> e = this.editor.getElementByInstanceIdentifier(element.element.getAnchorPointElementIdentifier());
                 if (e != null) return new ElementAnchorPointArea(e.element.getInstanceIdentifier());
             }
             return null;
@@ -378,14 +397,14 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
     }
 
     @Nullable
-    protected AbstractEditorElement getTopHoveredNotDraggedElement() {
-        List<AbstractEditorElement> childrenOfDragged = this.getChildElementsOfDraggedElements();
+    protected AbstractEditorElement<?, ?> getTopHoveredNotDraggedElement() {
+        List<AbstractEditorElement<?, ?>> childrenOfDragged = this.getChildElementsOfDraggedElements();
         if (childrenOfDragged == null) {
             LOGGER.error("[FANCYMENU] Failed to get hovered element! Error while getting children of dragged elements!", new IllegalStateException());
             return null;
         }
-        List<AbstractEditorElement> draggedElements = this.editor.getCurrentlyDraggedElements();
-        List<AbstractEditorElement> notDraggedElements = this.editor.getHoveredElements();
+        List<AbstractEditorElement<?, ?>> draggedElements = this.editor.getCurrentlyDraggedElements();
+        List<AbstractEditorElement<?, ?>> notDraggedElements = this.editor.getHoveredElements();
         notDraggedElements.removeIf(draggedElements::contains);
         notDraggedElements.removeIf(childrenOfDragged::contains);
         return notDraggedElements.isEmpty() ? null : ListUtils.getLast(notDraggedElements);
@@ -399,11 +418,11 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
             }
         }
         if (FancyMenu.getOptions().anchorOverlayChangeAnchorOnElementHover.getValue()) {
-            AbstractEditorElement e = this.getTopHoveredNotDraggedElement();
+            AbstractEditorElement<?, ?> e = this.getTopHoveredNotDraggedElement();
             if (e != null) {
                 AbstractElement parentOfHovered = e.element.getElementAnchorPointParent();
                 if (parentOfHovered != null) {
-                    for (AbstractEditorElement dragged : this.editor.getCurrentlyDraggedElements()) {
+                    for (AbstractEditorElement<?, ?> dragged : this.editor.getCurrentlyDraggedElements()) {
                         if (parentOfHovered.getInstanceIdentifier().equals(dragged.element.getInstanceIdentifier())) return null;
                     }
                 }
@@ -422,36 +441,48 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
+        return this.mouseReleased(event.x(), event.y(), event.button());
+    }
+    
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
 
         this.resetAreaHoverCache();
         this.lastTickDraggedEmpty = true;
         this.setLastCompletedHoverArea(null);
 
-        return GuiEventListener.super.mouseReleased(event);
+        return GuiEventListener.super.mouseReleased(new MouseButtonEvent(mouseX, mouseY, new MouseButtonInfo(button, 0)));
 
     }
 
     @Override
     public boolean keyPressed(KeyEvent event) {
+        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+    }
+    
+    public boolean keyPressed(int keycode, int scancode, int modifiers) {
 
-        String key = GLFW.glfwGetKeyName(event.key(), event.scancode());
+        String key = GLFW.glfwGetKeyName(keycode, scancode);
         if (key == null) key = "";
 
         if (key.equals("o")) this.overlayVisibilityKeybindPressed = true;
 
-        return GuiEventListener.super.keyPressed(event);
+        return GuiEventListener.super.keyPressed(new KeyEvent(keycode, scancode, modifiers));
 
     }
 
     @Override
     public boolean keyReleased(KeyEvent event) {
+        return this.keyReleased(event.key(), event.scancode(), event.modifiers());
+    }
+    
+    public boolean keyReleased(int keycode, int scancode, int modifiers) {
 
-        String key = GLFW.glfwGetKeyName(event.key(), event.scancode());
+        String key = GLFW.glfwGetKeyName(keycode, scancode);
         if (key == null) key = "";
 
         if (key.equals("o")) this.overlayVisibilityKeybindPressed = false;
 
-        return GuiEventListener.super.keyReleased(event);
+        return GuiEventListener.super.keyReleased(new KeyEvent(keycode, scancode, modifiers));
 
     }
 
@@ -480,40 +511,40 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
         }
 
         @Nullable
-        public AbstractEditorElement getElement() {
-            AbstractEditorElement element = AnchorPointOverlay.this.editor.getElementByInstanceIdentifier(this.elementIdentifier);
+        public AbstractEditorElement<?, ?> getElement() {
+            AbstractEditorElement<?, ?> element = AnchorPointOverlay.this.editor.getElementByInstanceIdentifier(this.elementIdentifier);
             if (element == null) LOGGER.error("[FANCYMENU] Failed to get element instance of ElementAnchorPointArea! Element was NULL!", new NullPointerException());
             return element;
         }
 
         @Override
         protected int getX() {
-            AbstractEditorElement element = this.getElement();
+            AbstractEditorElement<?, ?> element = this.getElement();
             return (element != null) ? element.getX() : -100000;
         }
 
         @Override
         protected int getY() {
-            AbstractEditorElement element = this.getElement();
+            AbstractEditorElement<?, ?> element = this.getElement();
             return (element != null) ? element.getY() : -100000;
         }
 
         @Override
         protected int getWidth() {
-            AbstractEditorElement element = this.getElement();
+            AbstractEditorElement<?, ?> element = this.getElement();
             return (element != null) ? element.getWidth() : 1;
         }
 
         @Override
         protected int getHeight() {
-            AbstractEditorElement element = this.getElement();
+            AbstractEditorElement<?, ?> element = this.getElement();
             return (element != null) ? element.getHeight() : 1;
         }
 
         @SuppressWarnings("all")
         @Override
         public boolean isMouseOver(double mouseX, double mouseY) {
-            AbstractEditorElement element = this.getElement();
+            AbstractEditorElement<?, ?> element = this.getElement();
             return (element != null) ? element.isMouseOver(mouseX, mouseY) : false;
         }
 
@@ -546,6 +577,7 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
             int endY = this.getY() + this.getHeight();
             graphics.fill(this.getX(), this.getY(), endX, endY, RenderingUtils.replaceAlphaInColor(getOverlayColorBase().getColorInt(), getOverlayOpacity()));
             UIBase.renderBorder(graphics, this.getX(), this.getY(), endX, endY, 1, RenderingUtils.replaceAlphaInColor(getOverlayColorBorder().getColorInt(), getOverlayOpacity()), true, true, true, true);
+            UIBase.resetShaderColor(graphics);
         }
 
         protected void renderMouseOverProgress(@NotNull GuiGraphics graphics, float progress) {
@@ -566,6 +598,7 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
                 startY = endY - progressHeight;
             }
             graphics.fill(startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(getOverlayColorBorder().getColorInt(), getOverlayOpacity()));
+            UIBase.resetShaderColor(graphics);
         }
 
         protected int getWidth() {

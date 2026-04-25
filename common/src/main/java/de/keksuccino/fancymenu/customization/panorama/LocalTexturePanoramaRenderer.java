@@ -222,13 +222,22 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 		if (this.overlayTextureSupplier != null) {
 			ITexture texture = this.overlayTextureSupplier.get();
 			if (texture != null) {
-				Identifier location = texture.getIdentifier();
+				Identifier location = texture.getResourceLocation();
 				if (location != null) {
 					graphics.blit(RenderPipelines.GUI_TEXTURED, location, 0, 0, 0.0F, 0.0F, screenW, screenH, screenW, screenH, ARGB.white(this.opacity));
 				}
 			}
 		}
 
+	}
+
+	public void renderInArea(@NotNull GuiGraphics graphics, int x, int y, int width, int height, float partial) {
+		graphics.enableScissor(x, y, x + width, y + height);
+		graphics.pose().pushMatrix();
+		graphics.pose().translate(x, y);
+		this.render(graphics, x + (width / 2), y + (height / 2), partial);
+		graphics.pose().popMatrix();
+		graphics.disableScissor();
 	}
 
 	private void renderCubeMapWithAlpha(Minecraft mc, float pitch, float yaw, float alpha) {

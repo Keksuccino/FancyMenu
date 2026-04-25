@@ -23,6 +23,11 @@ public class MCEFVideoElementBuilder extends ElementBuilder<MCEFVideoElement, MC
     }
 
     @Override
+    public boolean isDeprecated() {
+        return true;
+    }
+
+    @Override
     public @NotNull MCEFVideoElement buildDefaultInstance() {
         MCEFVideoElement i = new MCEFVideoElement(this);
         i.baseWidth = 400;
@@ -38,7 +43,7 @@ public class MCEFVideoElementBuilder extends ElementBuilder<MCEFVideoElement, MC
         String source = serialized.getValue("source");
         element.rawVideoUrlSource = (source != null) ? ResourceSource.of(source) : null;
         element.loop = deserializeBoolean(element.loop, serialized.getValue("loop"));
-        element.volume = deserializeNumber(Float.class, element.volume, serialized.getValue("volume"));
+        element.preserveAspectRatio = deserializeBoolean(element.preserveAspectRatio, serialized.getValue("preserve_aspect_ratio"));
         String soundSource = serialized.getValue("sound_source");
         if (soundSource != null) element.soundSource = Objects.requireNonNullElse(getSoundSourceByName(soundSource), SoundSource.MASTER);
 
@@ -53,7 +58,7 @@ public class MCEFVideoElementBuilder extends ElementBuilder<MCEFVideoElement, MC
             serializeTo.putProperty("source", element.rawVideoUrlSource.getSerializationSource());
         }
         serializeTo.putProperty("loop", "" + element.loop);
-        serializeTo.putProperty("volume", "" + element.volume);
+        serializeTo.putProperty("preserve_aspect_ratio", "" + element.preserveAspectRatio);
         serializeTo.putProperty("sound_source", element.soundSource.getName());
 
         return serializeTo;

@@ -91,11 +91,33 @@ public class VideoElementController {
         syncChanges();
     }
 
+    public static void queueSeekTimeMs(@NotNull String elementIdentifier, long seekTimeMs) {
+        VideoElementMeta meta = getMeta(elementIdentifier);
+        if (meta == null) {
+            meta = new VideoElementMeta(elementIdentifier, 1.0F, false);
+        }
+        meta.pending_seek_time_ms = Math.max(0L, seekTimeMs);
+        putMeta(elementIdentifier, meta);
+    }
+
+    @Nullable
+    public static Long pollPendingSeekTimeMs(@NotNull String elementIdentifier) {
+        VideoElementMeta meta = getMeta(elementIdentifier);
+        if (meta == null) return null;
+        Long pendingSeekTime = meta.pending_seek_time_ms;
+        if (pendingSeekTime == null) return null;
+        meta.pending_seek_time_ms = null;
+        putMeta(elementIdentifier, meta);
+        return Math.max(0L, pendingSeekTime);
+    }
+
     public static class VideoElementMeta {
 
         public String element_identifier;
         public float volume;
         public boolean paused;
+        @Nullable
+        public Long pending_seek_time_ms = null;
 
         public VideoElementMeta(@NotNull String element_identifier, float volume, boolean paused) {
             this.element_identifier = element_identifier;

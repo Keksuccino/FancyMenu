@@ -4,6 +4,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import com.mojang.serialization.JsonOps;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
@@ -12,16 +14,16 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.layout.Layout;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.properties.Property;
+import de.keksuccino.fancymenu.util.properties.PropertyHolder;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
-import de.keksuccino.fancymenu.util.window.WindowHandler;
-import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
@@ -38,12 +40,10 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
+import java.util.*;
 import java.util.List;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
 
-public abstract class AbstractElement implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget {
+public abstract class AbstractElement implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget, PropertyHolder {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -52,41 +52,27 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public static final AbstractElement EMPTY_ELEMENT = new AbstractElement(null){public void render(@NotNull GuiGraphics g, int i1, int i2, float f){}};
 	public static final int STAY_ON_SCREEN_EDGE_ZONE_SIZE = 2;
 
-	public final ElementBuilder<?,?> builder;
+    private final Map<String, Property<?>> propertyMap = new LinkedHashMap<>();
+	protected final ElementBuilder<?,?> builder;
+    private String instanceIdentifier;
+
 	public ElementAnchorPoint anchorPoint = ElementAnchorPoints.MID_CENTERED;
-	protected String anchorPointElementIdentifier = null;
-	protected AbstractElement cachedElementAnchorPointParent = null;
-	/** Not the same as {@link AbstractElement#getAbsoluteX()}! This is the X-offset from the origin of its anchor! **/
+    /** X-offset from the element's origin/anchor **/
 	public int posOffsetX = 0;
-	/** Not the same as {@link AbstractElement#getAbsoluteY()}! This is the Y-offset from the origin of its anchor! **/
+    /** Y-offset from the element's origin/anchor **/
 	public int posOffsetY = 0;
 	public int baseWidth = 0;
 	public int baseHeight = 0;
-	public String advancedX;
-	public Integer cachedAdvancedX;
-	public long lastAdvancedXParse = -1;
-	public String advancedY;
-	public Integer cachedAdvancedY;
-	public long lastAdvancedYParse = -1;
-	public String advancedWidth;
-	public Integer cachedAdvancedWidth;
-	public long lastAdvancedWidthParse = -1;
-	public String advancedHeight;
-	public Integer cachedAdvancedHeight;
-	public long lastAdvancedHeightParse = -1;
-	public boolean stretchX = false;
-	public boolean stretchY = false;
 	public boolean stayOnScreen = true;
 	public volatile boolean visible = true;
 	public volatile AppearanceDelay appearanceDelay = AppearanceDelay.NO_DELAY;
-	public volatile float appearanceDelayInSeconds = 1.0F;
 	public long appearanceDelayEndTime = -1;
+	public volatile DisappearanceDelay disappearanceDelay = DisappearanceDelay.NO_DELAY;
+	public long disappearanceDelayEndTime = -1;
 	@NotNull
 	public Fading fadeIn = Fading.NO_FADING;
 	@NotNull
 	public Fading fadeOut = Fading.NO_FADING;
-	public float fadeInSpeed = 1.0F;
-	public float fadeOutSpeed = 1.0F;
 	public boolean shouldDoFadeInIfNeeded = false;
 	public boolean fadeInStarted = false;
 	public boolean fadeInFinished = false;
@@ -96,8 +82,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public long lastFadeInTick = -1;
 	public long lastFadeOutTick = -1;
 	public float opacity = 1.0F;
-	@NotNull
-	public String baseOpacity = "1.0";
 	public float lastBaseOpacity = -1.0F;
 	public long lastBaseOpacityParse = -1L;
 	public float cachedBaseOpacity = 1.0F;
@@ -108,6 +92,10 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public boolean fadeOutElementJustCreated = true;
 	public boolean appearanceDelayElementJustCreated = true;
 	public boolean lastTickAppearanceDelayed = false;
+	public boolean disappearanceDelayElementJustCreated = true;
+	public boolean lastTickDisappearanceDelayed = false;
+	public boolean lastTickRawShouldRender = false;
+	public boolean lastTickShouldRender = false;
 	public boolean autoSizing = false;
 	public int autoSizingBaseScreenWidth = 0;
 	public int autoSizingBaseScreenHeight = 0;
@@ -118,72 +106,64 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public boolean stickyAnchor = false;
 	public int animatedOffsetX = 0;
 	public int animatedOffsetY = 0;
-	/**
-	 * This is for when the render scale was changed in a non-system-wide way like via {@link com.mojang.blaze3d.vertex.PoseStack#translate(float, float, float)}.<br>
-	 * Elements that do not support scaling via {@link com.mojang.blaze3d.vertex.PoseStack#translate(float, float, float)} need to use this value to manually scale themselves.<br>
-	 * This value is -1F by default and is not always set to an actual scale, so check this before using it!
-	 **/
-	public float customGuiScale = -1F;
-	public LoadingRequirementContainer loadingRequirementContainer = new LoadingRequirementContainer();
+	public RequirementContainer requirementContainer = new RequirementContainer();
 	@Nullable
 	public String customElementLayerName = null;
-	/**
-	 * Controls whether the element should enable parallax movement in response to mouse position.
-	 * When true, the element will move slightly opposite to mouse movement (or with it if invertParallax is true)
-	 * to create a depth effect.
-	 */
 	public boolean enableParallax = false;
-	/**
-	 * Controls the direction of parallax movement.
-	 * When false (default), elements move opposite to mouse movement.
-	 * When true, elements move with mouse movement.
-	 */
 	public boolean invertParallax = false;
-	/**
-	 * Controls the intensity of the parallax effect.
-	 * Range is 0.0 to 1.0 where:
-	 * - 0.0 means no movement
-	 * - 1.0 means maximum movement
-	 * Default is 0.5 for medium intensity.
-	 */
-	@NotNull
-	public String parallaxIntensityString = "0.5";
-	public float lastParallaxIntensity = -10000.0F;
 	public boolean loadOncePerSession = false;
-	@NotNull
-	public DrawableColor inEditorColor = DrawableColor.of(Color.ORANGE);
 	public boolean layerHiddenInEditor = false;
-	private String instanceIdentifier;
-	@Nullable
-	protected Layout parentLayout;
-	@Nullable
-	protected RuntimePropertyContainer cachedMemory;
-	protected int cachedMouseX = 0;
-	protected int cachedMouseY = 0;
 	/** The rotation angle in degrees. 0 = no rotation, positive values rotate clockwise */
-	public float rotationDegrees = 0.0F;
 	public boolean advancedRotationMode = false;
-	@Nullable
-	public String advancedRotationDegrees;
-	/** Whether this element type supports rotation. Can be overridden in subclasses. */
-	protected boolean supportsRotation = true;
-	protected String lastAdvancedRotationDegrees;
-	
-	/** The vertical tilt angle in degrees. Positive values tilt top away from viewer */
-	public float verticalTiltDegrees = 0.0F;
-	/** The horizontal tilt angle in degrees. Positive values tilt right side away from viewer */
-	public float horizontalTiltDegrees = 0.0F;
-	/** Whether this element type supports tilting. Can be overridden in subclasses. */
-	protected boolean supportsTilting = true;
+	/** The vertical tilt angle in degrees. */
+	/** The horizontal tilt angle in degrees. */
 	public boolean advancedVerticalTiltMode = false;
-	@Nullable
-	public String advancedVerticalTiltDegrees;
-	protected String lastAdvancedVerticalTiltDegrees;
 	public boolean advancedHorizontalTiltMode = false;
-	@Nullable
-	public String advancedHorizontalTiltDegrees;
-	protected String lastAdvancedHorizontalTiltDegrees;
-	protected boolean allowDepthTestManipulation = false;
+
+    /**
+     * This is for when the render scale was changed in a non-system-wide way like via {@link PoseStack#translate(float, float, float)}.<br>
+     * Elements that do not support scaling via {@link PoseStack#translate(float, float, float)} need to use this value to manually scale themselves.<br>
+     * This value is -1F by default and is not always set to an actual scale, so check this before using it!
+     **/
+    public float customGuiScale = -1F;
+
+    protected String anchorPointElementIdentifier = null;
+    protected AbstractElement cachedElementAnchorPointParent = null;
+    @Nullable
+    protected Layout parentLayout;
+    @Nullable
+    protected RuntimePropertyContainer cachedMemory;
+    protected int cachedMouseX = 0;
+    protected int cachedMouseY = 0;
+    protected float lastParallaxIntensityX = -10000.0F;
+    protected float lastParallaxIntensityY = -10000.0F;
+    protected boolean allowDepthTestManipulation = false;
+    /** Whether this element type supports rotation. Can be overridden in subclasses. */
+    protected boolean supportsRotation = true;
+    /** Whether this element type supports tilting. Can be overridden in subclasses. */
+    protected boolean supportsTilting = true;
+
+    public final Property<Boolean> shouldBeAffectedByDecorationOverlays = putProperty(Property.booleanProperty("should_be_affected_by_decoration_overlays", false, "fancymenu.elements.abstract.should_be_affected_by_decoration_overlays"));
+    public final Property.ColorProperty inEditorColor = putProperty(Property.hexColorProperty("in_editor_color", DrawableColor.of(Color.ORANGE).getHex(), false, "fancymenu.elements.in_editor_color"));
+    public final Property.IntegerProperty advancedX = putProperty(Property.integerProperty("advanced_posx", Integer.MIN_VALUE, "fancymenu.elements.features.advanced_positioning.posx", Property.NumericInputBehavior.<Integer>builder().freeInput().build()));
+    public final Property.IntegerProperty advancedY = putProperty(Property.integerProperty("advanced_posy", Integer.MIN_VALUE, "fancymenu.elements.features.advanced_positioning.posy", Property.NumericInputBehavior.<Integer>builder().freeInput().build()));
+    public final Property.IntegerProperty advancedWidth = putProperty(Property.integerProperty("advanced_width", Integer.MIN_VALUE, "fancymenu.elements.features.advanced_sizing.width", Property.NumericInputBehavior.<Integer>builder().freeInput().build()));
+    public final Property.IntegerProperty advancedHeight = putProperty(Property.integerProperty("advanced_height", Integer.MIN_VALUE, "fancymenu.elements.features.advanced_sizing.height", Property.NumericInputBehavior.<Integer>builder().freeInput().build()));
+    public final Property.BooleanProperty stretchX = putProperty(Property.booleanProperty("stretch_x", false, "fancymenu.elements.stretch.x"));
+    public final Property.BooleanProperty stretchY = putProperty(Property.booleanProperty("stretch_y", false, "fancymenu.elements.stretch.y"));
+    public final Property.FloatProperty appearanceDelaySeconds = putProperty(Property.floatProperty("appearance_delay_seconds", 1.0F, "fancymenu.element.general.appearance_delay.seconds"));
+    public final Property.FloatProperty disappearanceDelaySeconds = putProperty(Property.floatProperty("disappearance_delay_seconds", 1.0F, "fancymenu.element.general.disappearance_delay.seconds"));
+    public final Property.FloatProperty fadeInSpeed = putProperty(Property.floatProperty("fade_in_speed", 1.0F, "fancymenu.element.fading.fade_in.speed"));
+    public final Property.FloatProperty fadeOutSpeed = putProperty(Property.floatProperty("fade_out_speed", 1.0F, "fancymenu.element.fading.fade_out.speed"));
+    public final Property.FloatProperty baseOpacity = putProperty(Property.floatProperty("base_opacity", 1.0F, "fancymenu.element.base_opacity"));
+    public final Property.FloatProperty parallaxIntensityX = putProperty(Property.floatProperty("parallax_intensity_x", 0.5F, "fancymenu.elements.parallax.intensity_x"));
+    public final Property.FloatProperty parallaxIntensityY = putProperty(Property.floatProperty("parallax_intensity_y", 0.5F, "fancymenu.elements.parallax.intensity_y"));
+    public final Property.FloatProperty rotationDegrees = putProperty(Property.floatProperty("rotation_degrees", 0.0F, "fancymenu.element.rotation.degrees"));
+    public final Property.FloatProperty advancedRotationDegrees = putProperty(Property.floatProperty("advanced_rotation_degrees", 0.0F, "fancymenu.element.rotation.degrees"));
+    public final Property.FloatProperty verticalTiltDegrees = putProperty(Property.floatProperty("vertical_tilt_degrees", 0.0F, "fancymenu.element.tilt.vertical.degrees"));
+    public final Property.FloatProperty advancedVerticalTiltDegrees = putProperty(Property.floatProperty("advanced_vertical_tilt_degrees", 0.0F, "fancymenu.element.tilt.vertical.degrees"));
+    public final Property.FloatProperty horizontalTiltDegrees = putProperty(Property.floatProperty("horizontal_tilt_degrees", 0.0F, "fancymenu.element.tilt.horizontal.degrees"));
+    public final Property.FloatProperty advancedHorizontalTiltDegrees = putProperty(Property.floatProperty("advanced_horizontal_tilt_degrees", 0.0F, "fancymenu.element.tilt.horizontal.degrees"));
 
 	@SuppressWarnings("all")
 	public AbstractElement(@NotNull ElementBuilder<?,?> builder) {
@@ -191,7 +171,12 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.instanceIdentifier = ScreenCustomization.generateUniqueIdentifier();
 	}
 
-	/**
+    @Override
+    public @NotNull Map<String, Property<?>> getPropertyMap() {
+        return this.propertyMap;
+    }
+
+    /**
 	 * Returns whether this element type supports rotation.
 	 * @return true if this element can be rotated, false otherwise
 	 */
@@ -251,15 +236,25 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public void renderInternal(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
 		if (this.allowDepthTestManipulation) {
+			com.mojang.blaze3d.opengl.GlStateManager._disableDepthTest();
 			RenderingUtils.setDepthTestLocked(true);
 		}
 
 		this.cachedMouseX = mouseX;
 		this.cachedMouseY = mouseY;
 
-		this.lastParallaxIntensity = SerializationUtils.deserializeNumber(Float.class, 0.5F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityString));
+		this.lastParallaxIntensityX = this.parallaxIntensityX.getFloat();
+		this.lastParallaxIntensityY = this.parallaxIntensityY.getFloat();
 
 		this.tickBaseOpacity();
+
+		boolean rawShouldRender = this._shouldRender();
+		boolean willStartFadeOutThisTick = !isEditor()
+				&& !rawShouldRender
+				&& !this.isDisappearanceDelayed()
+				&& !this.becameInvisible
+				&& (this.fadeOut != Fading.NO_FADING)
+				&& !this.fadeOutElementJustCreated;
 
 		// Apply transformations if needed
 		boolean transformationsApplied = false;
@@ -269,7 +264,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		boolean hasRotation = this.supportsRotation && (rotDegrees != 0.0F);
 		boolean hasTilt = this.supportsTilting && (verticalTilt != 0.0F || horizontalTilt != 0.0F);
 
-		if (this.shouldRender() && (hasRotation || hasTilt)) {
+		if ((this.shouldRender() || willStartFadeOutThisTick) && (hasRotation || hasTilt)) {
 
 			graphics.pose().pushMatrix();
 			transformationsApplied = true;
@@ -281,24 +276,11 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			// Translate to center
 			graphics.pose().translate(centerX, centerY);
 
-			// Apply tilting first (before rotation)
-			if (hasTilt) {
-				float scaleX = 1.0F;
-				float scaleY = 1.0F;
-				if (verticalTilt != 0.0F) {
-					scaleY *= (float) Math.cos(Math.toRadians(verticalTilt));
-				}
-				if (horizontalTilt != 0.0F) {
-					scaleX *= (float) Math.cos(Math.toRadians(horizontalTilt));
-				}
-				if ((scaleX != 1.0F) || (scaleY != 1.0F)) {
-					graphics.pose().scale(scaleX, scaleY);
-				}
-			}
+			// Matrix3x2fStack only supports 2D GUI transforms. X/Y tilt is skipped here.
 
 			// Apply rotation (around Z axis)
 			if (hasRotation) {
-				graphics.pose().rotate((float) Math.toRadians(rotDegrees));
+				graphics.pose().rotate((float)Math.toRadians(rotDegrees));
 			}
 
 			// Translate back
@@ -315,6 +297,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		if (!isEditor()) {
 
 			this.tickAppearanceDelay(this.shouldRender());
+			this.tickDisappearanceDelay();
 
 			this.tickFadeInOut(this.shouldRender());
 
@@ -330,12 +313,15 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.renderTick_Tail();
 
 		// Pop the transformations
-		if (this.shouldRender() && transformationsApplied) {
+		if (transformationsApplied) {
 			graphics.pose().popMatrix();
 		}
 
+		this.lastTickShouldRender = this.shouldRender();
+
 		if (this.allowDepthTestManipulation) {
 			RenderingUtils.setDepthTestLocked(false);
+			com.mojang.blaze3d.opengl.GlStateManager._enableDepthTest();
 		}
 
 	}
@@ -368,7 +354,22 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	public void tickVisibleInvisible() {
 
-		if (!this._shouldRender()) {
+		boolean rawShouldRender = this._shouldRender();
+
+		if (!rawShouldRender) {
+			if (this.lastTickRawShouldRender && this.lastTickShouldRender) {
+				this.applyDisappearanceDelay();
+			}
+		} else if (this.disappearanceDelayEndTime != -1) {
+			this.disappearanceDelayEndTime = -1;
+			this.lastTickDisappearanceDelayed = false;
+		}
+
+		this.lastTickRawShouldRender = rawShouldRender;
+
+		boolean effectiveVisible = rawShouldRender || this.isDisappearanceDelayed();
+
+		if (!effectiveVisible) {
 			if (!this.becameInvisible) {
 				this.becameInvisible = true;
 				this.onBecomeInvisible();
@@ -396,6 +397,15 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	}
 
+	public void tickDisappearanceDelay() {
+
+		if (this.lastTickDisappearanceDelayed && !this.isDisappearanceDelayed() && !this.lastTickRawShouldRender) {
+			this.getMemory().putProperty("disappearance_delay_applied", true);
+		}
+		this.lastTickDisappearanceDelayed = this.isDisappearanceDelayed();
+
+	}
+
 	public void tickFadeInOut(boolean shouldRender) {
 
 		if (shouldRender) {
@@ -416,7 +426,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 						float elapsedSeconds = (now - this.lastFadeInTick) / 1000.0F;
 						this.lastFadeInTick = now;
 						// Increase opacity based on elapsed time; 0.4 is the base rate for fadeSpeed = 1.
-						this.opacity += elapsedSeconds * (0.4F * this.fadeInSpeed);
+						float fadeInSpeed = Math.max(0.0F, this.fadeInSpeed.getFloat());
+						this.opacity += elapsedSeconds * (0.4F * fadeInSpeed);
 						this.opacity = Math.max(0.02F, this.opacity);
 						if (this.opacity >= this.lastBaseOpacity) {
 							this.opacity = this.lastBaseOpacity;
@@ -450,7 +461,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 					float elapsedSeconds = (now - this.lastFadeOutTick) / 1000.0F;
 					this.lastFadeOutTick = now;
 					// Decrease opacity based on elapsed time.
-					this.opacity -= elapsedSeconds * (0.4F * this.fadeOutSpeed);
+					float fadeOutSpeed = Math.max(0.0F, this.fadeOutSpeed.getFloat());
+					this.opacity -= elapsedSeconds * (0.4F * fadeOutSpeed);
 					this.opacity = Math.max(0.02F, this.opacity);
 					if (this.opacity <= 0.02F) {
 						this.opacity = 0.02F;
@@ -475,6 +487,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.fadeOutFinished = false;
 		this.shouldDoFadeInIfNeeded = true;
 		this.shouldDoFadeOutIfNeeded = false;
+		this.fadeOutElementJustCreated = false;
 
 	}
 
@@ -504,16 +517,38 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			return;
 		}
 		boolean applied = this.getMemory().putPropertyIfAbsentAndGet("appearance_delay_applied", false);
-		if ((!isResize || !applied) && (this.appearanceDelay != AppearanceDelay.NO_DELAY) && (this.appearanceDelayInSeconds > 0.0F)) {
+		float delaySeconds = Math.max(0.0F, this.appearanceDelaySeconds.getFloat());
+		if ((!isResize || !applied) && (this.appearanceDelay != AppearanceDelay.NO_DELAY) && (delaySeconds > 0.0F)) {
 			if ((this.appearanceDelay == AppearanceDelay.FIRST_TIME) && applied) {
 				this.appearanceDelayEndTime = -1;
 			} else {
-				this.appearanceDelayEndTime = System.currentTimeMillis() + ((long)(this.appearanceDelayInSeconds * 1000.0F));
+				this.appearanceDelayEndTime = System.currentTimeMillis() + ((long)(delaySeconds * 1000.0F));
 			}
 		} else {
 			this.appearanceDelayEndTime = -1;
 		}
 		this.lastTickAppearanceDelayed = this.isAppearanceDelayed();
+	}
+
+	public void applyDisappearanceDelay() {
+		boolean isResize = !this.isNewMenu && this.disappearanceDelayElementJustCreated;
+		this.disappearanceDelayElementJustCreated = false;
+		if (isEditor()) {
+			this.disappearanceDelayEndTime = -1;
+			return;
+		}
+		boolean applied = this.getMemory().putPropertyIfAbsentAndGet("disappearance_delay_applied", false);
+		float delaySeconds = Math.max(0.0F, this.disappearanceDelaySeconds.getFloat());
+		if ((!isResize || !applied) && (this.disappearanceDelay != DisappearanceDelay.NO_DELAY) && (delaySeconds > 0.0F)) {
+			if ((this.disappearanceDelay == DisappearanceDelay.FIRST_TIME) && applied) {
+				this.disappearanceDelayEndTime = -1;
+			} else {
+				this.disappearanceDelayEndTime = System.currentTimeMillis() + ((long)(delaySeconds * 1000.0F));
+			}
+		} else {
+			this.disappearanceDelayEndTime = -1;
+		}
+		this.lastTickDisappearanceDelayed = this.isDisappearanceDelayed();
 	}
 
 	public void updateOpacity() {
@@ -524,16 +559,11 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		long now = System.currentTimeMillis();
 		if ((this.lastBaseOpacityParse + 30L) > now) return this.cachedBaseOpacity;
 		this.lastBaseOpacityParse = now;
-		String s = PlaceholderParser.replacePlaceholders(this.baseOpacity);
-		if (MathUtils.isFloat(s)) {
-			float f = Float.parseFloat(s);
-			if (f < 0.0F) f = 0.0F;
-			if (f > 1.0F) f = 1.0F;
-			this.cachedBaseOpacity = f;
-			return f;
-		}
-		this.cachedBaseOpacity = 1.0F;
-		return 1.0F;
+		float f = this.baseOpacity.getFloat();
+		if (f < 0.0F) f = 0.0F;
+		if (f > 1.0F) f = 1.0F;
+		this.cachedBaseOpacity = f;
+		return f;
 	}
 
 	/**
@@ -626,104 +656,69 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.instanceIdentifier = Objects.requireNonNull(id);
 	}
 
-	public float getRotationDegrees() {
+    public ElementBuilder<?, ?> getBuilder() {
+        return builder;
+    }
+
+    public float getRotationDegrees() {
 		if (!this.supportsRotation()) return 0;
 		if (this.advancedRotationMode) {
-			if (this.advancedRotationDegrees == null) return 0;
-			String degrees = PlaceholderParser.replacePlaceholders(this.advancedRotationDegrees);
-			if (!degrees.equals(this.lastAdvancedRotationDegrees)) {
-				this.lastAdvancedRotationDegrees = degrees;
-				if (MathUtils.isFloat(degrees)) {
-					this.rotationDegrees = Float.parseFloat(degrees);
-				} else {
-					this.rotationDegrees = 0;
-					LOGGER.error("[FANCYMENU] Failed to parse advanced rotation degrees for element with ID: " + this.getInstanceIdentifier(), new NumberFormatException("Not a valid float: " + degrees));
-				}
-			}
+			return this.advancedRotationDegrees.getFloat();
 		}
-		return this.rotationDegrees;
+		return this.rotationDegrees.getFloat();
 	}
 
 	public float getVerticalTiltDegrees() {
 		if (!this.supportsTilting()) return 0;
-		if (this.advancedVerticalTiltMode) {
-			if (this.advancedVerticalTiltDegrees == null) return 0;
-			String degrees = PlaceholderParser.replacePlaceholders(this.advancedVerticalTiltDegrees);
-			if (!degrees.equals(this.lastAdvancedVerticalTiltDegrees)) {
-				this.lastAdvancedVerticalTiltDegrees = degrees;
-				if (MathUtils.isFloat(degrees)) {
-					float value = Float.parseFloat(degrees);
-					// Clamp to -60 to 60 range
-					this.verticalTiltDegrees = Math.max(-60.0F, Math.min(60.0F, value));
-				} else {
-					this.verticalTiltDegrees = 0;
-					LOGGER.error("[FANCYMENU] Failed to parse advanced vertical tilt degrees for element with ID: " + this.getInstanceIdentifier(), new NumberFormatException("Not a valid float: " + degrees));
-				}
-			}
-		}
-		return this.verticalTiltDegrees;
+		float value = this.advancedVerticalTiltMode ? this.advancedVerticalTiltDegrees.getFloat() : this.verticalTiltDegrees.getFloat();
+		return Math.max(-60.0F, Math.min(60.0F, value));
 	}
 
 	public float getHorizontalTiltDegrees() {
 		if (!this.supportsTilting()) return 0;
-		if (this.advancedHorizontalTiltMode) {
-			if (this.advancedHorizontalTiltDegrees == null) return 0;
-			String degrees = PlaceholderParser.replacePlaceholders(this.advancedHorizontalTiltDegrees);
-			if (!degrees.equals(this.lastAdvancedHorizontalTiltDegrees)) {
-				this.lastAdvancedHorizontalTiltDegrees = degrees;
-				if (MathUtils.isFloat(degrees)) {
-					float value = Float.parseFloat(degrees);
-					// Clamp to -60 to 60 range
-					this.horizontalTiltDegrees = Math.max(-60.0F, Math.min(60.0F, value));
-				} else {
-					this.horizontalTiltDegrees = 0;
-					LOGGER.error("[FANCYMENU] Failed to parse advanced horizontal tilt degrees for element with ID: " + this.getInstanceIdentifier(), new NumberFormatException("Not a valid float: " + degrees));
-				}
-			}
-		}
-		return this.horizontalTiltDegrees;
+		float value = this.advancedHorizontalTiltMode ? this.advancedHorizontalTiltDegrees.getFloat() : this.horizontalTiltDegrees.getFloat();
+		return Math.max(-60.0F, Math.min(60.0F, value));
 	}
 
 	/**
 	 * Returns the actual/final X position the element will have when it gets rendered.
 	 */
 	public int getAbsoluteX() {
+		return this.getAbsoluteX(true);
+	}
+
+	public int getAbsoluteXWithoutParallax() {
+		return this.getAbsoluteX(false);
+	}
+
+	protected int getAbsoluteX(boolean includeParallax) {
+
 		int x = 0;
 		if (this.anchorPoint != null) {
 			x = this.anchorPoint.getElementPositionX(this);
 		}
 
-		if (this.advancedX != null) {
-			long now = System.currentTimeMillis();
-			if (((this.lastAdvancedXParse + 30) > now) && (this.cachedAdvancedX != null)) {
-				x = this.cachedAdvancedX;
-			} else {
-				String s = PlaceholderParser.replacePlaceholders(this.advancedX).replace(" ", "");
-				if (MathUtils.isDouble(s)) {
-					x = (int) Double.parseDouble(s);
-					this.cachedAdvancedX = x;
-					this.lastAdvancedXParse = now;
-				}
-			}
+		if (!this.advancedX.isDefault()) {
+			x = this.advancedX.getInteger();
 		}
 
 		x += this.animatedOffsetX;
 
-		boolean applyParallax = this.enableParallax && !isEditor();
+		boolean applyParallax = includeParallax && this.enableParallax && !isEditor();
 
 		// Apply parallax effect if enabled and not in editor
 		if (applyParallax) {
 			// Calculate parallax offset using cached mouse position
 			float centerX = getScreenWidth() / 2f;
 			float offsetX = this.cachedMouseX - centerX;
-			float parallaxOffset = offsetX * this.lastParallaxIntensity * 0.1f; // Scale factor to control maximum movement
+			float parallaxOffset = offsetX * this.lastParallaxIntensityX * 0.1f; // Scale factor to control maximum movement
 
 			// Apply offset based on direction
 			x += (int) (invertParallax ? parallaxOffset : -parallaxOffset);
 		}
 
-		if (this.stretchX) {
-			x = 0;
+		if (this.stretchX.getBoolean()) {
+            x = 0;
 		} else if (this.stayOnScreen && !this.stickyAnchor && !applyParallax) {
 			if (x < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
 				x = STAY_ON_SCREEN_EDGE_ZONE_SIZE;
@@ -732,48 +727,49 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 				x = getScreenWidth() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteWidth();
 			}
 		}
+
 		return x;
+
 	}
 
 	/**
 	 * Returns the actual/final Y position the element will have when it gets rendered.
 	 */
 	public int getAbsoluteY() {
+		return this.getAbsoluteY(true);
+	}
+
+	public int getAbsoluteYWithoutParallax() {
+		return this.getAbsoluteY(false);
+	}
+
+	protected int getAbsoluteY(boolean includeParallax) {
+
 		int y = 0;
 		if (this.anchorPoint != null) {
 			y = this.anchorPoint.getElementPositionY(this);
 		}
 
-		if (this.advancedY != null) {
-			long now = System.currentTimeMillis();
-			if (((this.lastAdvancedYParse + 30) > now) && (this.cachedAdvancedY != null)) {
-				y = this.cachedAdvancedY;
-			} else {
-				String s = PlaceholderParser.replacePlaceholders(this.advancedY).replace(" ", "");
-				if (MathUtils.isDouble(s)) {
-					y = (int) Double.parseDouble(s);
-					this.cachedAdvancedY = y;
-					this.lastAdvancedYParse = now;
-				}
-			}
+		if (!this.advancedY.isDefault()) {
+			y = this.advancedY.getInteger();
 		}
 
 		y += this.animatedOffsetY;
 
-		boolean applyParallax = this.enableParallax && !isEditor();
+		boolean applyParallax = includeParallax && this.enableParallax && !isEditor();
 
 		// Apply parallax effect if enabled and not in editor
 		if (applyParallax) {
 			// Calculate parallax offset using cached mouse position
 			float centerY = getScreenHeight() / 2f;
 			float offsetY = this.cachedMouseY - centerY;
-			float parallaxOffset = offsetY * this.lastParallaxIntensity * 0.1f; // Scale factor to control maximum movement
+			float parallaxOffset = offsetY * this.lastParallaxIntensityY * 0.1f; // Scale factor to control maximum movement
 
 			// Apply offset based on direction
 			y += (int) (invertParallax ? parallaxOffset : -parallaxOffset);
 		}
 
-		if (this.stretchY) {
+		if (this.stretchY.getBoolean()) {
 			y = 0;
 		} else if (this.stayOnScreen && !this.stickyAnchor && !applyParallax) {
 			if (y < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
@@ -783,28 +779,19 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 				y = getScreenHeight() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteHeight();
 			}
 		}
+
 		return y;
+
 	}
 
 	/**
 	 * Returns the actual/final width the element will have when it gets rendered.
 	 */
 	public int getAbsoluteWidth() {
-		if (this.advancedWidth != null) {
-			long now = System.currentTimeMillis();
-			//Cache advancedWidth for 30ms to save performance (thanks to danorris for the idea!)
-			if (((this.lastAdvancedWidthParse + 30) > now) && (this.cachedAdvancedWidth != null)) {
-				return this.cachedAdvancedWidth;
-			} else {
-				String s = PlaceholderParser.replacePlaceholders(this.advancedWidth).replace(" ", "");
-				if (MathUtils.isDouble(s)) {
-					this.cachedAdvancedWidth = (int) Double.parseDouble(s);
-					this.lastAdvancedWidthParse = now;
-					return this.cachedAdvancedWidth;
-				}
-			}
+		if (!this.advancedWidth.isDefault()) {
+			return this.advancedWidth.getInteger();
 		}
-		if (this.stretchX) {
+		if (this.stretchX.getBoolean()) {
 			return getScreenWidth();
 		}
 		this.updateAutoSizing(false);
@@ -818,21 +805,10 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 * Returns the actual/final height the element will have when it gets rendered.
 	 */
 	public int getAbsoluteHeight() {
-		if (this.advancedHeight != null) {
-			long now = System.currentTimeMillis();
-			//Cache advancedHeight for 30ms to save performance (thanks to danorris for the idea!)
-			if (((this.lastAdvancedHeightParse + 30) > now) && (this.cachedAdvancedHeight != null)) {
-				return this.cachedAdvancedHeight;
-			} else {
-				String s = PlaceholderParser.replacePlaceholders(this.advancedHeight).replace(" ", "");
-				if (MathUtils.isDouble(s)) {
-					this.cachedAdvancedHeight = (int) Double.parseDouble(s);
-					this.lastAdvancedHeightParse = now;
-					return this.cachedAdvancedHeight;
-				}
-			}
+		if (!this.advancedHeight.isDefault()) {
+			return this.advancedHeight.getInteger();
 		}
-		if (this.stretchY) {
+		if (this.stretchY.getBoolean()) {
 			return getScreenHeight();
 		}
 		this.updateAutoSizing(false);
@@ -843,16 +819,18 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	}
 
 	public void setAutoSizingBaseWidthAndHeight() {
-        double guiWidth = getScreenWidth() * WindowHandler.getGuiScale();
-        double guiHeight = getScreenHeight() * WindowHandler.getGuiScale();
+		Window window = Minecraft.getInstance().getWindow();
+		double guiWidth = getScreenWidth() * window.getGuiScale();
+		double guiHeight = getScreenHeight() * window.getGuiScale();
 		this.autoSizingBaseScreenWidth = (int)guiWidth;
 		this.autoSizingBaseScreenHeight = (int)guiHeight;
 	}
 
 	public void updateAutoSizing(boolean ignoreLastTickScreenSize) {
 
-        double guiWidth = getScreenWidth() * WindowHandler.getGuiScale();
-        double guiHeight = getScreenHeight() * WindowHandler.getGuiScale();
+		Window window = Minecraft.getInstance().getWindow();
+		double guiWidth = getScreenWidth() * window.getGuiScale();
+		double guiHeight = getScreenHeight() * window.getGuiScale();
 
 		if (((this.autoSizingLastTickScreenWidth != guiWidth) || (this.autoSizingLastTickScreenHeight != guiHeight)) || ignoreLastTickScreenSize) {
 			if (this.autoSizing && (this.autoSizingBaseScreenWidth > 0) && (this.autoSizingBaseScreenHeight > 0)) {
@@ -1021,6 +999,10 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		return (System.currentTimeMillis() < this.appearanceDelayEndTime);
 	}
 
+	public boolean isDisappearanceDelayed() {
+		return (System.currentTimeMillis() < this.disappearanceDelayEndTime);
+	}
+
 	public boolean shouldRender() {
 
 		if (!isEditor() && this.loadOncePerSession && this.shouldHideOncePerSessionElement()) return false;
@@ -1029,6 +1011,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		boolean b = this._shouldRender();
 		if (!isEditor()) {
+			if (!b && this.isDisappearanceDelayed()) return true;
 			if (!b && this.fadeOutStarted && !this.fadeOutFinished) return true;
 		}
 
@@ -1043,7 +1026,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	public boolean loadingRequirementsMet() {
 		if (isEditor()) return true;
-		return this.loadingRequirementContainer.requirementsMet();
+		return this.requirementContainer.requirementsMet();
 	}
 
 	public boolean shouldHideOncePerSessionElement() {
@@ -1118,6 +1101,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 */
 	@NotNull
 	public static Component buildComponent(@NotNull String serializedComponentOrPlainText) {
+        serializedComponentOrPlainText = TextFormattingUtils.replaceFormattingCodes(serializedComponentOrPlainText, "&", "§");
 		serializedComponentOrPlainText = PlaceholderParser.replacePlaceholders(serializedComponentOrPlainText);
 		if (!serializedComponentOrPlainText.startsWith("{") && !serializedComponentOrPlainText.startsWith("[")) return Component.literal(serializedComponentOrPlainText);
 		try {
@@ -1229,6 +1213,30 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		@Nullable
 		public static AppearanceDelay getByName(@NotNull String name) {
 			for (AppearanceDelay d : AppearanceDelay.values()) {
+				if (d.name.equals(name)) {
+					return d;
+				}
+			}
+			return null;
+		}
+
+	}
+
+	public enum DisappearanceDelay {
+
+		NO_DELAY("no_delay"),
+		FIRST_TIME("first_time"),
+		EVERY_TIME("every_time");
+
+		public final String name;
+
+		DisappearanceDelay(String name) {
+			this.name = name;
+		}
+
+		@Nullable
+		public static DisappearanceDelay getByName(@NotNull String name) {
+			for (DisappearanceDelay d : DisappearanceDelay.values()) {
 				if (d.name.equals(name)) {
 					return d;
 				}

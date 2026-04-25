@@ -13,10 +13,9 @@ import de.keksuccino.fancymenu.util.Legacy;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.GenericMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -67,21 +66,29 @@ public class LayoutHandler {
 		if (!directory.exists()) {
 			directory.mkdirs();
 		}
+		collectLayoutsInDirectory(directory, layouts, LAYOUT_DIR.equals(directory));
+		return layouts;
+	}
+
+	private static void collectLayoutsInDirectory(@NotNull File directory, @NotNull List<Layout> layouts, boolean skipDisabledDir) {
 		File[] filesArray = directory.listFiles();
-		if (filesArray != null) {
-			for (File f : filesArray) {
-				if (f.getPath().toLowerCase().endsWith(".txt")) {
-					PropertyContainerSet s = PropertiesParser.deserializeSetFromFile(f.getAbsolutePath().replace("\\", "/"));
-					if (s != null) {
-						Layout layout = deserializeLayout(s, f);
-						if (layout != null) {
-							layouts.add(layout);
-						}
+		if (filesArray == null) return;
+		for (File f : filesArray) {
+			if (f.isDirectory()) {
+				if (skipDisabledDir && f.getName().equalsIgnoreCase(".disabled")) continue;
+				collectLayoutsInDirectory(f, layouts, skipDisabledDir);
+				continue;
+			}
+			if (f.getPath().toLowerCase().endsWith(".txt")) {
+				PropertyContainerSet s = PropertiesParser.deserializeSetFromFile(f.getAbsolutePath().replace("\\", "/"));
+				if (s != null) {
+					Layout layout = deserializeLayout(s, f);
+					if (layout != null) {
+						layouts.add(layout);
 					}
 				}
 			}
 		}
-		return layouts;
 	}
 
 	@Nullable
@@ -183,6 +190,19 @@ public class LayoutHandler {
 		return null;
 	}
 
+	@Nullable
+	public static Layout getLastEditedLayout() {
+		return getLastEditedLayout(true);
+	}
+
+	@Nullable
+	public static Layout getLastEditedLayout(boolean removeNeverEdited) {
+		List<Layout> layouts = getAllLayouts();
+		sortLayoutListByLastEdited(layouts, removeNeverEdited);
+		if (layouts.isEmpty()) return null;
+		return layouts.getFirst();
+	}
+
 	@NotNull
 	public static List<Layout> sortLayoutListByLastEdited(@NotNull List<Layout> layouts, boolean removeNeverEdited) {
 		layouts.sort(Comparator.comparingLong(value -> value.lastEditedTime));
@@ -253,10 +273,7 @@ public class LayoutHandler {
 
 	public static void openLayoutEditor(@NotNull Layout layout, @Nullable Screen layoutTargetScreen) {
 		try {
-			// This probably was there for a reason, but I don't remember anymore and it breaks some event triggers, so lets comment it out for now
-//			GenericMessageScreen msgScreen = new GenericMessageScreen(Component.literal("Opening editor.."));
-//			msgScreen.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
-//			Minecraft.getInstance().screen = msgScreen;
+            ContextMenuHandler.INSTANCE.removeCurrent();
 			Minecraft.getInstance().setScreen(new LayoutEditorScreen(layoutTargetScreen, layout).setAsCurrentInstance());
 		} catch (Exception e) {
 			e.printStackTrace();

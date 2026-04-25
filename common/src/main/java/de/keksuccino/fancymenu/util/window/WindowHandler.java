@@ -13,9 +13,9 @@ import com.mojang.blaze3d.platform.TextureUtil;
 import com.mojang.blaze3d.platform.Window;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinWindow;
-import de.keksuccino.fancymenu.util.OSUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.Util;
 import net.minecraft.server.packs.resources.IoSupplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,6 +30,23 @@ public class WindowHandler {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
+	public static long getWindowHandle() {
+		return ((IMixinWindow)(Object)Minecraft.getInstance().getWindow()).get_handle_FancyMenu();
+	}
+
+	public static double getGuiScale() {
+		return ((FancyWindow)(Object)Minecraft.getInstance().getWindow()).getPreciseGuiScale_FancyMenu();
+	}
+
+	public static void setGuiScale(double scale) {
+		Window window = Minecraft.getInstance().getWindow();
+		double safeScale = Double.isFinite(scale) && scale > 0.0D ? scale : 1.0D;
+		window.setGuiScale(Math.max(1, (int)Math.floor(safeScale)));
+		((FancyWindow)(Object)window).setPreciseGuiScale_FancyMenu(safeScale);
+		((IMixinWindow)(Object)window).set_guiScaledWidth_FancyMenu((int)Math.ceil(window.getWidth() / safeScale));
+		((IMixinWindow)(Object)window).set_guiScaledHeight_FancyMenu((int)Math.ceil(window.getHeight() / safeScale));
+	}
+
 	public static void handleForceFullscreen() {
 		try {
 			if (FancyMenu.getOptions().forceFullscreen.getValue()) {
@@ -42,20 +59,6 @@ public class WindowHandler {
 			e.printStackTrace();
 		}
 	}
-
-	public static double getGuiScale() {
-		return ((FancyWindow)(Object)Minecraft.getInstance().getWindow()).getPreciseGuiScale_FancyMenu();
-	}
-
-    public static void setGuiScale(double scaleFactor) {
-        Window w = Minecraft.getInstance().getWindow();
-        w.setGuiScale(Math.max(1, (int) scaleFactor));
-        ((FancyWindow)(Object)w).setPreciseGuiScale_FancyMenu(scaleFactor);
-        int i = (int)(w.getWidth() / scaleFactor);
-        ((IMixinWindow)(Object)w).set_guiScaledWidth_FancyMenu(w.getWidth() / scaleFactor > i ? i + 1 : i);
-        int j = (int)(w.getHeight() / scaleFactor);
-        ((IMixinWindow)(Object)w).set_guiScaledHeight_FancyMenu(w.getHeight() / scaleFactor > j ? j + 1 : j);
-    }
 
 	public static boolean isCustomWindowIconEnabled() {
 		return FancyMenu.getOptions().showCustomWindowIcon.getValue();
@@ -90,11 +93,15 @@ public class WindowHandler {
 	}
 
 	public static void updateCustomWindowIcon() {
-		if (OSUtils.isMacOS()) {
+		if (isMacOS()) {
 			updateCustomWindowIconMacOS();
 		} else {
 			updateCustomWindowIconWindowsLinux();
 		}
+	}
+
+	private static boolean isMacOS() {
+		return Util.getPlatform() == Util.OS.OSX;
 	}
 
 	private static void updateCustomWindowIconMacOS() {
@@ -165,7 +172,7 @@ public class WindowHandler {
 			$$6.height($$4.get(0));
 			$$6.pixels($$8);
 			$$6.position(0);
-			GLFW.glfwSetWindowIcon(Minecraft.getInstance().getWindow().handle(), $$6);
+			GLFW.glfwSetWindowIcon(getWindowHandle(), $$6);
 			STBImage.stbi_image_free($$7);
 			STBImage.stbi_image_free($$8);
 		} catch (IOException var12) {
@@ -191,7 +198,7 @@ public class WindowHandler {
 
 	public static void resetWindowIcon() {
 		try {
-			if (OSUtils.isMacOS()) {
+			if (isMacOS()) {
 				MacosUtil.loadIcon(getVanillaWindowIconFile("icons", "minecraft.icns"));
 			} else {
 				setIcon(getVanillaWindowIconFile("icons", "icon_16x16.png"), getVanillaWindowIconFile("icons", "icon_32x32.png"));

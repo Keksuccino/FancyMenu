@@ -14,7 +14,6 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenRenderUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import net.minecraft.client.Minecraft;
@@ -30,28 +29,29 @@ import java.util.Objects;
 @Mixin(LoadingOverlay.class)
 public abstract class MixinLoadingOverlay {
 
-	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderWithTooltipAndSubtitles(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
-	private void before_renderScreen_in_render_FancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
+		@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderWithTooltipAndSubtitles(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
+		private void beforeRenderScreenFancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		//Fire RenderPre event for current screen in loading overlay
 		if (ScreenUtils.getScreen() != null) {
-			ScreenRenderUtils.executeAllPreRenderTasks(graphics, mouseX, mouseY, partial);
+			RenderingUtils.executeAllPreRenderTasks(graphics, mouseX, mouseY, partial);
 			EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(ScreenUtils.getScreen(), graphics, mouseX, mouseY, partial));
 		}
 	}
 
-	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderWithTooltipAndSubtitles(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", shift = At.Shift.AFTER))
-	private void after_renderScreen_in_render_FancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
+		@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderWithTooltipAndSubtitles(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", shift = At.Shift.AFTER))
+		private void afterRenderScreenFancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		//Fire RenderPost event for current screen in loading overlay
 		if (ScreenUtils.getScreen() != null) {
 			EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(ScreenUtils.getScreen(), graphics, mouseX, mouseY, partial));
-			ScreenRenderUtils.executeAllPostRenderTasks(graphics, mouseX, mouseY, partial);
+			RenderingUtils.executeAllPostRenderTasks(graphics, mouseX, mouseY, partial);
 		}
 	}
 
-	@WrapOperation(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init(II)V"))
-	private void wrap_initScreen_in_tick_FancyMenu(Screen instance, int width, int height, Operation<Void> original) {
+		@WrapOperation(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init(II)V"))
+		private void wrapInitScreenFancyMenu(Screen instance, int width, int height, Operation<Void> original) {
+			Minecraft mc = Minecraft.getInstance();
 
-		if (!GameIntroHandler.introPlayed && GameIntroHandler.shouldPlayIntro()) {
+			if (!GameIntroHandler.introPlayed && GameIntroHandler.shouldPlayIntro()) {
 			GameIntroHandler.introPlayed = true;
 			PlayableResource intro = GameIntroHandler.getIntro();
 			if (intro != null) {
@@ -70,7 +70,6 @@ public abstract class MixinLoadingOverlay {
 		EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(Objects.requireNonNull(instance), InitOrResizeScreenEvent.InitializationPhase.INIT));
 		EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(Objects.requireNonNull(instance), InitOrResizeScreenEvent.InitializationPhase.INIT));
 
-        Minecraft mc = Minecraft.getInstance();
 		//Use window.getGuiScaledWidth/Height here to respect GUI scale modifications made in Init.Pre events
 		original.call(instance, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
 
@@ -83,4 +82,3 @@ public abstract class MixinLoadingOverlay {
 	}
 
 }
-

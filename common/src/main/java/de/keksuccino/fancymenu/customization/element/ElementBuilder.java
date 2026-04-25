@@ -4,17 +4,10 @@ import com.google.common.collect.Lists;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.SerializationUtils;
-import de.keksuccino.fancymenu.util.file.ResourceFile;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
-import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
-import de.keksuccino.fancymenu.util.resource.resources.text.IText;
-import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -31,7 +24,7 @@ import java.util.Objects;
  * Needs to get registered to the {@link ElementRegistry}.
  */
 @SuppressWarnings("all")
-public abstract class ElementBuilder<E extends AbstractElement, L extends AbstractEditorElement> {
+public abstract class ElementBuilder<E extends AbstractElement, L extends AbstractEditorElement> implements SerializationHelper {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -95,12 +88,19 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                     element.appearanceDelay = appearanceDelay;
                 }
             }
+            String disappearanceDelay = serialized.getValue("disappearance_delay");
+            if (disappearanceDelay != null) {
+                AbstractElement.DisappearanceDelay parsed = AbstractElement.DisappearanceDelay.getByName(disappearanceDelay);
+                if (parsed != null) {
+                    element.disappearanceDelay = parsed;
+                }
+            }
             String delaySec = serialized.getValue("appearance_delay_seconds");
             if (delaySec == null) {
                 delaySec = serialized.getValue("delayappearanceseconds");
-            }
-            if ((delaySec != null) && MathUtils.isFloat(delaySec)) {
-                element.appearanceDelayInSeconds = Float.parseFloat(delaySec);
+                if (delaySec != null) {
+                    serialized.putProperty("appearance_delay_seconds", delaySec);
+                }
             }
 
             //Backwards compat for old fade-in logic
@@ -129,14 +129,10 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             String fis = serialized.getValue("fade_in_speed");
             if (fis == null) {
                 fis = serialized.getValue("fadeinspeed");
+                if (fis != null) {
+                    serialized.putProperty("fade_in_speed", fis);
+                }
             }
-            if ((fis != null) && MathUtils.isFloat(fis)) {
-                element.fadeInSpeed = Float.parseFloat(fis);
-            }
-
-            element.fadeOutSpeed = deserializeNumber(Float.class, element.fadeOutSpeed, serialized.getValue("fade_out_speed"));
-
-            element.baseOpacity = Objects.requireNonNullElse(serialized.getValue("base_opacity"), element.baseOpacity);
 
             element.autoSizing = deserializeBoolean(element.autoSizing, serialized.getValue("auto_sizing"));
             element.autoSizingBaseScreenWidth = deserializeNumber(Integer.class, element.autoSizingBaseScreenWidth, serialized.getValue("auto_sizing_base_screen_width"));
@@ -178,10 +174,71 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                 element.anchorPointElementIdentifier = anchorElement;
             }
 
+            String stayOnScreen = serialized.getValue("stay_on_screen");
+            //Setting this to false if null should set it to false for all legacy elements, so old layouts don't break
+            if ((stayOnScreen == null) || stayOnScreen.equals("false")) {
+                element.stayOnScreen = false;
+            }
+
+            String loadingRequirementContainerIdentifier = serialized.getValue("element_loading_requirement_container_identifier");
+            if (loadingRequirementContainerIdentifier != null) {
+                RequirementContainer c = RequirementContainer.deserializeWithIdentifier(loadingRequirementContainerIdentifier, serialized);
+                if (c != null) {
+                    element.requirementContainer = c;
+                }
+            } else {
+                //Legacy support for when only one container per element existed
+                element.requirementContainer = RequirementContainer.deserializeToSingleContainer(serialized);
+            }
+
+            element.enableParallax = deserializeBoolean(element.enableParallax, serialized.getValue("enable_parallax"));
+            element.invertParallax = deserializeBoolean(element.invertParallax, serialized.getValue("invert_parallax"));
+
+            String parallaxIntensityX = serialized.getValue("parallax_intensity_x");
+            String parallaxIntensityY = serialized.getValue("parallax_intensity_y");
+
+            String legacyParallaxIntensity = null;
+            if (parallaxIntensityX == null || parallaxIntensityY == null) {
+                legacyParallaxIntensity = serialized.getValue("parallax_intensity_v2");
+                if (legacyParallaxIntensity == null) legacyParallaxIntensity = serialized.getValue("parallax_intensity");
+                if (legacyParallaxIntensity == null) legacyParallaxIntensity = "0.5";
+            }
+
+            if (parallaxIntensityX == null && parallaxIntensityY == null) {
+                parallaxIntensityX = legacyParallaxIntensity;
+                parallaxIntensityY = legacyParallaxIntensity;
+            } else {
+                if (parallaxIntensityX == null) parallaxIntensityX = (parallaxIntensityY != null) ? parallaxIntensityY : legacyParallaxIntensity;
+                if (parallaxIntensityY == null) parallaxIntensityY = (parallaxIntensityX != null) ? parallaxIntensityX : legacyParallaxIntensity;
+            }
+
+            if (serialized.getValue("parallax_intensity_x") == null && parallaxIntensityX != null) {
+                serialized.putProperty("parallax_intensity_x", parallaxIntensityX);
+            }
+            if (serialized.getValue("parallax_intensity_y") == null && parallaxIntensityY != null) {
+                serialized.putProperty("parallax_intensity_y", parallaxIntensityY);
+            }
+
+            element.animatedOffsetX = deserializeNumber(Integer.class, element.animatedOffsetX, serialized.getValue("animated_offset_x"));
+            element.animatedOffsetY = deserializeNumber(Integer.class, element.animatedOffsetY, serialized.getValue("animated_offset_y"));
+
+            element.loadOncePerSession = deserializeBoolean(element.loadOncePerSession, serialized.getValue("load_once_per_session"));
+
+            element.layerHiddenInEditor = deserializeBoolean(element.layerHiddenInEditor, serialized.getValue("layer_hidden_in_editor"));
+
+            element.advancedRotationMode = deserializeBoolean(element.advancedRotationMode, serialized.getValue("advanced_rotation_mode"));
+
+            element.advancedVerticalTiltMode = deserializeBoolean(element.advancedVerticalTiltMode, serialized.getValue("advanced_vertical_tilt_mode"));
+            
+            element.advancedHorizontalTiltMode = deserializeBoolean(element.advancedHorizontalTiltMode, serialized.getValue("advanced_horizontal_tilt_mode"));
+
+            element.getPropertyMap().forEach((s, property) -> property.deserialize(serialized));
+
+            // Legacy support
             String w = serialized.getValue("width");
             if (w != null) {
                 if (w.equals("%guiwidth%")) {
-                    element.stretchX = true;
+                    element.stretchX.set(true);
                 } else {
                     if (MathUtils.isInteger(w)) {
                         element.baseWidth = Integer.parseInt(w);
@@ -192,10 +249,11 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                 }
             }
 
+            // Legacy support
             String h = serialized.getValue("height");
             if (h != null) {
                 if (h.equals("%guiheight%")) {
-                    element.stretchY = true;
+                    element.stretchY.set(true);
                 } else {
                     if (MathUtils.isInteger(h)) {
                         element.baseHeight = Integer.parseInt(h);
@@ -205,70 +263,6 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                     }
                 }
             }
-
-            String stretchXString = serialized.getValue("stretch_x");
-            if ((stretchXString != null) && stretchXString.equals("true")) {
-                element.stretchX = true;
-            }
-
-            String stretchYString = serialized.getValue("stretch_y");
-            if ((stretchYString != null) && stretchYString.equals("true")) {
-                element.stretchY = true;
-            }
-
-            element.advancedWidth = serialized.getValue("advanced_width");
-            element.advancedHeight = serialized.getValue("advanced_height");
-            element.advancedX = serialized.getValue("advanced_posx");
-            element.advancedY = serialized.getValue("advanced_posy");
-
-            String stayOnScreen = serialized.getValue("stay_on_screen");
-            //Setting this to false if null should set it to false for all legacy elements, so old layouts don't break
-            if ((stayOnScreen == null) || stayOnScreen.equals("false")) {
-                element.stayOnScreen = false;
-            }
-
-            String loadingRequirementContainerIdentifier = serialized.getValue("element_loading_requirement_container_identifier");
-            if (loadingRequirementContainerIdentifier != null) {
-                LoadingRequirementContainer c = LoadingRequirementContainer.deserializeWithIdentifier(loadingRequirementContainerIdentifier, serialized);
-                if (c != null) {
-                    element.loadingRequirementContainer = c;
-                }
-            } else {
-                //Legacy support for when only one container per element existed
-                element.loadingRequirementContainer = LoadingRequirementContainer.deserializeToSingleContainer(serialized);
-            }
-
-            element.enableParallax = SerializationUtils.deserializeBoolean(element.enableParallax, serialized.getValue("enable_parallax"));
-            element.invertParallax = SerializationUtils.deserializeBoolean(element.invertParallax, serialized.getValue("invert_parallax"));
-
-            String parallaxIntensity = serialized.getValue("parallax_intensity_v2");
-            if (parallaxIntensity == null) parallaxIntensity = serialized.getValue("parallax_intensity");
-            if (parallaxIntensity == null) parallaxIntensity = "0.5";
-            element.parallaxIntensityString = parallaxIntensity;
-
-            element.animatedOffsetX = SerializationUtils.deserializeNumber(Integer.class, element.animatedOffsetX, serialized.getValue("animated_offset_x"));
-            element.animatedOffsetY = SerializationUtils.deserializeNumber(Integer.class, element.animatedOffsetY, serialized.getValue("animated_offset_y"));
-
-            element.loadOncePerSession = SerializationUtils.deserializeBoolean(element.loadOncePerSession, serialized.getValue("load_once_per_session"));
-
-            String inEditorColor = serialized.getValue("in_editor_color");
-            if (inEditorColor != null) {
-                element.inEditorColor = DrawableColor.of(inEditorColor);
-            }
-
-            element.layerHiddenInEditor = deserializeBoolean(element.layerHiddenInEditor, serialized.getValue("layer_hidden_in_editor"));
-
-            element.rotationDegrees = deserializeNumber(Float.class, element.rotationDegrees, serialized.getValue("rotation_degrees"));
-            element.advancedRotationMode = deserializeBoolean(element.advancedRotationMode, serialized.getValue("advanced_rotation_mode"));
-            element.advancedRotationDegrees = serialized.getValue("advanced_rotation_degrees");
-
-            element.verticalTiltDegrees = deserializeNumber(Float.class, element.verticalTiltDegrees, serialized.getValue("vertical_tilt_degrees"));
-            element.advancedVerticalTiltMode = deserializeBoolean(element.advancedVerticalTiltMode, serialized.getValue("advanced_vertical_tilt_mode"));
-            element.advancedVerticalTiltDegrees = serialized.getValue("advanced_vertical_tilt_degrees");
-            
-            element.horizontalTiltDegrees = deserializeNumber(Float.class, element.horizontalTiltDegrees, serialized.getValue("horizontal_tilt_degrees"));
-            element.advancedHorizontalTiltMode = deserializeBoolean(element.advancedHorizontalTiltMode, serialized.getValue("advanced_horizontal_tilt_mode"));
-            element.advancedHorizontalTiltDegrees = serialized.getValue("advanced_horizontal_tilt_degrees");
 
             element.afterConstruction();
 
@@ -281,40 +275,6 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
         return null;
 
-    }
-
-    @Nullable
-    public static ResourceSupplier<ITexture> deserializeImageResourceSupplier(@Nullable String resourceSource) {
-        return SerializationUtils.deserializeImageResourceSupplier(resourceSource);
-    }
-
-    @Nullable
-    public static ResourceSupplier<IAudio> deserializeAudioResourceSupplier(@Nullable String resourceSource) {
-        return SerializationUtils.deserializeAudioResourceSupplier(resourceSource);
-    }
-
-    @Nullable
-    public static ResourceSupplier<IVideo> deserializeVideoResourceSupplier(@Nullable String resourceSource) {
-        return SerializationUtils.deserializeVideoResourceSupplier(resourceSource);
-    }
-
-    @Nullable
-    public static ResourceSupplier<IText> deserializeTextResourceSupplier(@Nullable String resourceSource) {
-        return SerializationUtils.deserializeTextResourceSupplier(resourceSource);
-    }
-
-    @Nullable
-    public static ResourceFile deserializeResourceFile(@Nullable String gameDirectoryFilePath) {
-        return SerializationUtils.deserializeResourceFile(gameDirectoryFilePath);
-    }
-
-    @NotNull
-    protected <T extends Number> T deserializeNumber(@NotNull Class<T> type, @NotNull T fallbackValue, @Nullable String serialized) {
-        return SerializationUtils.deserializeNumber(type, fallbackValue, serialized);
-    }
-
-    protected boolean deserializeBoolean(boolean fallbackValue, @Nullable String serialized) {
-        return SerializationUtils.deserializeBoolean(fallbackValue, serialized);
     }
 
     /**
@@ -344,12 +304,9 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             }
 
             sec.putProperty("appearance_delay", element.appearanceDelay.name);
-            sec.putProperty("appearance_delay_seconds", "" + element.appearanceDelayInSeconds);
+            sec.putProperty("disappearance_delay", element.disappearanceDelay.name);
             sec.putProperty("fade_in_v2", element.fadeIn.getName());
-            sec.putProperty("fade_in_speed", "" + element.fadeInSpeed);
             sec.putProperty("fade_out", element.fadeOut.getName());
-            sec.putProperty("fade_out_speed", "" + element.fadeOutSpeed);
-            sec.putProperty("base_opacity", element.baseOpacity);
             sec.putProperty("auto_sizing", "" + element.autoSizing);
             sec.putProperty("auto_sizing_base_screen_width", "" + element.autoSizingBaseScreenWidth);
             sec.putProperty("auto_sizing_base_screen_height", "" + element.autoSizingBaseScreenHeight);
@@ -360,35 +317,23 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                 sec.putProperty("anchor_point_element", element.anchorPointElementIdentifier);
             }
 
-            if (element.advancedX != null) {
-                sec.putProperty("advanced_posx", element.advancedX);
-            }
-            if (element.advancedY != null) {
-                sec.putProperty("advanced_posy", element.advancedY);
-            }
-            if (element.advancedWidth != null) {
-                sec.putProperty("advanced_width", element.advancedWidth);
-            }
-            if (element.advancedHeight != null) {
-                sec.putProperty("advanced_height", element.advancedHeight);
-            }
             if (element.appearanceDelay == null) {
                 element.appearanceDelay = AbstractElement.AppearanceDelay.NO_DELAY;
+            }
+            if (element.disappearanceDelay == null) {
+                element.disappearanceDelay = AbstractElement.DisappearanceDelay.NO_DELAY;
             }
             sec.putProperty("x", "" + element.posOffsetX);
             sec.putProperty("y", "" + element.posOffsetY);
             sec.putProperty("width", "" + element.baseWidth);
             sec.putProperty("height", "" + element.baseHeight);
-            sec.putProperty("stretch_x", "" + element.stretchX);
-            sec.putProperty("stretch_y", "" + element.stretchY);
 
             sec.putProperty("stay_on_screen", "" + element.stayOnScreen);
 
-            sec.putProperty("element_loading_requirement_container_identifier", element.loadingRequirementContainer.identifier);
-            element.loadingRequirementContainer.serializeToExistingPropertyContainer(sec);
+            sec.putProperty("element_loading_requirement_container_identifier", element.requirementContainer.identifier);
+            element.requirementContainer.serializeToExistingPropertyContainer(sec);
 
             sec.putProperty("enable_parallax", "" + element.enableParallax);
-            sec.putProperty("parallax_intensity_v2", "" + element.parallaxIntensityString);
             sec.putProperty("invert_parallax", "" + element.invertParallax);
 
             sec.putProperty("animated_offset_x", "" + element.animatedOffsetX);
@@ -396,21 +341,13 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
             sec.putProperty("load_once_per_session", "" + element.loadOncePerSession);
 
-            sec.putProperty("in_editor_color", element.inEditorColor.getHex());
-
             sec.putProperty("layer_hidden_in_editor", "" + element.layerHiddenInEditor);
 
-            sec.putProperty("rotation_degrees", "" + element.rotationDegrees);
             sec.putProperty("advanced_rotation_mode", "" + element.advancedRotationMode);
-            sec.putProperty("advanced_rotation_degrees", element.advancedRotationDegrees);
-
-            sec.putProperty("vertical_tilt_degrees", "" + element.verticalTiltDegrees);
             sec.putProperty("advanced_vertical_tilt_mode", "" + element.advancedVerticalTiltMode);
-            sec.putProperty("advanced_vertical_tilt_degrees", element.advancedVerticalTiltDegrees);
-            
-            sec.putProperty("horizontal_tilt_degrees", "" + element.horizontalTiltDegrees);
             sec.putProperty("advanced_horizontal_tilt_mode", "" + element.advancedHorizontalTiltMode);
-            sec.putProperty("advanced_horizontal_tilt_degrees", element.advancedHorizontalTiltDegrees);
+
+            element.getPropertyMap().forEach((s, property) -> property.serialize(sec));
 
             return sec;
 

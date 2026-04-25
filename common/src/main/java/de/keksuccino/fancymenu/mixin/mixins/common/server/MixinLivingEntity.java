@@ -8,6 +8,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -52,7 +53,7 @@ public class MixinLivingEntity {
             packet.killer_uuid = killer.getUUID().toString();
             Identifier killerKeyLocation = BuiltInRegistries.ENTITY_TYPE.getKey(killer.getType());
             packet.killer_key = (killerKeyLocation != null) ? killerKeyLocation.toString() : null;
-            if (packet.killer_key == null && killer instanceof net.minecraft.world.entity.player.Player) {
+            if (packet.killer_key == null && killer instanceof Player) {
                 packet.killer_key = "minecraft:player";
             }
         } else {
