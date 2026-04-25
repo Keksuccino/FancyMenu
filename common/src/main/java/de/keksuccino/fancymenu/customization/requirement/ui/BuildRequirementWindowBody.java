@@ -220,7 +220,7 @@ public class BuildRequirementWindowBody extends PiPWindowBody implements Initial
             }
         }
 
-        return super.keyPressed(new KeyEvent(keyCode, scanCode, modifiers));
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override

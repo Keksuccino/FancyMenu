@@ -290,7 +290,7 @@ public class ManageSchedulersWindowBody extends PiPCellWindowBody {
     }
     
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (super.keyPressed(new KeyEvent(keyCode, scanCode, modifiers))) {
+        if (super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
         if (keyCode == InputConstants.KEY_ESCAPE) {

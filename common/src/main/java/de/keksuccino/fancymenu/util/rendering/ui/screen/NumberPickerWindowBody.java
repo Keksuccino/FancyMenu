@@ -296,7 +296,7 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
             }
             return true;
         }
-        return super.keyPressed(new KeyEvent(keyCode, scanCode, modifiers));
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override

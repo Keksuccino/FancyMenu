@@ -163,7 +163,7 @@ public class IsKeyPressedRequirement extends Requirement {
                 this.selectedKeyLabel.setText(Component.translatable("fancymenu.requirements.is_key_pressed.screen.selected_key", ((MutableComponent)key.getDisplayName()).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_color.getColorInt()))));
                 return true;
             }
-            return super.keyPressed(new KeyEvent(keycode, scancode, modifiers));
+            return super.keyPressed(keycode, scancode, modifiers);
         }
 
         @Override

@@ -318,7 +318,7 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
             }
         }
 
-        if (super.keyPressed(new KeyEvent(keyCode, scanCode, modifiers))) return true;
+        if (super.keyPressed(keyCode, scanCode, modifiers)) return true;
         if (keyCode == InputConstants.KEY_DELETE) {
             if (this.getSelectedEntry() != null) {
                 this.requestDeleteSelectedVariable();

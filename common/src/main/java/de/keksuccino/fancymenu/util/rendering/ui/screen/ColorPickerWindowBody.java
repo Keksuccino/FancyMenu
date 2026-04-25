@@ -137,7 +137,7 @@ public class ColorPickerWindowBody extends PiPWindowBody {
             this.closeWindow();
             return true;
         }
-        return super.keyPressed(new KeyEvent(button, scanCode, modifiers));
+        return super.keyPressed(button, scanCode, modifiers);
     }
 
     @Override

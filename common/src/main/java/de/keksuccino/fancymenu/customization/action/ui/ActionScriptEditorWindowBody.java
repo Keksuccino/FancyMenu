@@ -1660,7 +1660,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             }
         }
 
-        return super.keyPressed(new KeyEvent(keyCode, scanCode, modifiers));
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     protected boolean handleEnterShortcut(@Nullable ExecutableEntry selected) {

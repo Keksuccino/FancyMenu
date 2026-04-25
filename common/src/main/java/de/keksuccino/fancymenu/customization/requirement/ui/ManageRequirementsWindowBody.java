@@ -476,7 +476,7 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
             return true;
         }
 
-        return super.keyPressed(new KeyEvent(keyCode, scanCode, modifiers));
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     private void triggerDoneAction() {
