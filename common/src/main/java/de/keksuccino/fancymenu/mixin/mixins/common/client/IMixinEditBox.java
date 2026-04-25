@@ -4,7 +4,6 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
-import org.spongepowered.asm.mixin.gen.Invoker;
 import java.util.List;
 
 @Mixin(EditBox.class)
@@ -23,8 +22,6 @@ public interface IMixinEditBox {
     @Accessor("formatters") List<EditBox.TextFormatter> getFormattersFancyMenu();
 
     @Accessor("highlightPos") int getHighlightPosFancyMenu();
-
-    @Invoker("deleteText") void invokeDeleteTextFancyMenu(int i, boolean hasControlDown);
 
     @Accessor("textColor") int getTextColorFancyMenu();
 

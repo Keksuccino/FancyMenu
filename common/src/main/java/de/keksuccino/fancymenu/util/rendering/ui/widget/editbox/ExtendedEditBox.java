@@ -624,9 +624,10 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         return v;
     }
 
+    @Override
     protected void deleteText(int i, boolean words) {
         if (this.deleteAllAllowed) {
-            ((IMixinEditBox)this).invokeDeleteTextFancyMenu(i, words);
+            super.deleteText(i, words);
         } else {
             this.deleteChars(i);
         }

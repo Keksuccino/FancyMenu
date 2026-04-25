@@ -1696,7 +1696,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
                     if (this.isLineFocused()) {
                         if (!this.getText().isEmpty()) this.history.saveSnapshot();
                         TextEditorLine focused = Objects.requireNonNull(this.getFocusedLine());
-                        focused.getAsAccessor().invokeDeleteTextFancyMenu(-1, false);
+                        focused.deleteText(-1);
                     }
                 }
                 this.resetHighlighting();
