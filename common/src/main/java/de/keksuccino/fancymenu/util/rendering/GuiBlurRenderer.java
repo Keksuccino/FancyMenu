@@ -1,18 +1,24 @@
 package de.keksuccino.fancymenu.util.rendering;
 
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPostChain;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPostPass;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.LevelTargetBundle;
 import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.PostPass;
-import com.mojang.blaze3d.pipeline.RenderTarget;
 import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.system.MemoryStack;
 import javax.annotation.Nonnull;
+import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public final class GuiBlurRenderer {
@@ -20,13 +26,14 @@ public final class GuiBlurRenderer {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final float SHAPE_TYPE_ROUNDED_RECT = 0.0F;
     private static final float SHAPE_TYPE_SUPERELLIPSE = 1.0F;
-    // Keep shader files in the default 'minecraft' namespace so the vanilla resource manager finds them for every loader.
-    private static final Identifier GUI_BLUR_POST_CHAIN = Identifier.withDefaultNamespace("shaders/post/fancymenu_gui_blur.json");
+    private static final Identifier GUI_BLUR_POST_CHAIN = Identifier.withDefaultNamespace("fancymenu_gui_blur");
+    private static final String BLUR_CONFIG_UNIFORM_FANCYMENU = "BlurConfig";
+    private static final String GUI_BLUR_CONFIG_UNIFORM_FANCYMENU = "GuiBlurConfig";
+    private static final int BLUR_CONFIG_UBO_SIZE_FANCYMENU = 12;
+    private static final int GUI_BLUR_CONFIG_UBO_SIZE_FANCYMENU = 80;
+    private static final float[] BLUR_RADIUS_MULTIPLIERS_FANCYMENU = new float[]{1.0F, 1.0F, 0.5F, 0.5F, 0.25F, 0.25F};
 
-    private static PostChain blurPostChain;
     private static boolean blurPostChainFailed;
-    private static int cachedWidth = -1;
-    private static int cachedHeight = -1;
 
     private GuiBlurRenderer() {
     }
@@ -262,43 +269,85 @@ public final class GuiBlurRenderer {
 
         DrawableColor.FloatColor tint = area.tint.getAsFloats();
         RenderRotationUtil.Rotation2D maskRotation = RenderRotationUtil.getCurrentAdditionalRenderMaskRotation2D();
-        RenderRotationUtil.Rotation2D scissorRotation = RenderRotationUtil.getCurrentAdditionalRenderRotation2D();
         applyUniforms(postChain, scaledX, scaledY, scaledWidth, scaledHeight, blurRadius, scaledRadii, area.shapeType, area.roundness, maskRotation, tint);
 
-        
-        // Run the post chain with blending off; otherwise each full-screen pass would multiply existing alpha,
-        // darkening any translucent GUI content every time a blur area is drawn.
-        com.mojang.blaze3d.opengl.GlStateManager._disableBlend();
-
-        float margin = blurRadius * 4.0F;
-        ScissorBounds scissor = resolveScissorBounds(area, margin, scissorRotation);
-        graphics.enableScissor(scissor.minXInt(), scissor.minYInt(), scissor.maxXInt(), scissor.maxYInt());
+        // The final post pass writes a masked mix back into the main target, so no extra blit is needed here.
         postChain.process(minecraft.getMainRenderTarget(), com.mojang.blaze3d.resource.GraphicsResourceAllocator.UNPOOLED);
-
-        RenderTarget finalTarget = getFinalTarget(postChain);
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
-        de.keksuccino.fancymenu.util.rendering.RenderingUtils.defaultBlendFunc();
-        if (finalTarget != null) {
-            // Compose the isolated blur result back onto the main target. The final shader outputs alpha = mask,
-            // so normal alpha blending here preserves untouched pixels outside the rounded blur rect.
-            finalTarget.blitToScreen();
-        }
         RenderingUtils.resetShaderColor(graphics);
-        graphics.disableScissor();
     }
 
     private static PostChain getOrCreatePostChain(Minecraft minecraft) {
-        return null;
+        PostChain postChain = minecraft.getShaderManager().getPostChain(GUI_BLUR_POST_CHAIN, LevelTargetBundle.MAIN_TARGETS);
+        if (postChain == null) {
+            if (!blurPostChainFailed) {
+                blurPostChainFailed = true;
+                LOGGER.error("[FANCYMENU] Failed to load GUI blur shader!");
+            }
+            return null;
+        }
+        blurPostChainFailed = false;
+        return postChain;
     }
 
     private static void ensurePostChainSize(PostChain postChain, int width, int height) {
+        // 1.21.11 frame graph post chains size their internal targets from the input target each process call.
     }
 
     private static void applyUniforms(PostChain postChain, float x, float y, float width, float height, float blurRadius, CornerRadii cornerRadii, float shapeType, float roundness, RenderRotationUtil.Rotation2D rotation, DrawableColor.FloatColor tint) {
+        List<PostPass> passes = ((IMixinPostChain) postChain).getPasses_FancyMenu();
+        int blurIndex = 0;
+        for (PostPass pass : passes) {
+            Map<String, GpuBuffer> customUniforms = ((IMixinPostPass) pass).get_customUniforms_FancyMenu();
+            if (customUniforms.containsKey(BLUR_CONFIG_UNIFORM_FANCYMENU) && blurIndex < BLUR_RADIUS_MULTIPLIERS_FANCYMENU.length) {
+                float directionX = (blurIndex & 1) == 0 ? 1.0F : 0.0F;
+                float directionY = (blurIndex & 1) == 0 ? 0.0F : 1.0F;
+                updateBlurConfigUniform(customUniforms, directionX, directionY, blurRadius * BLUR_RADIUS_MULTIPLIERS_FANCYMENU[blurIndex]);
+                blurIndex++;
+            }
+
+            if (customUniforms.containsKey(GUI_BLUR_CONFIG_UNIFORM_FANCYMENU)) {
+                updateGuiBlurConfigUniform(customUniforms, x, y, width, height, cornerRadii, shapeType, roundness, rotation, tint);
+            }
+        }
     }
 
-    private static RenderTarget getFinalTarget(PostChain postChain) {
-        return null;
+    private static void updateBlurConfigUniform(Map<String, GpuBuffer> customUniforms, float directionX, float directionY, float radius) {
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            ByteBuffer data = Std140Builder.onStack(stack, BLUR_CONFIG_UBO_SIZE_FANCYMENU)
+                    .putVec2(directionX, directionY)
+                    .putFloat(radius)
+                    .get();
+            updateUniformBuffer(customUniforms, BLUR_CONFIG_UNIFORM_FANCYMENU, data);
+        }
+    }
+
+    private static void updateGuiBlurConfigUniform(Map<String, GpuBuffer> customUniforms, float x, float y, float width, float height, CornerRadii cornerRadii, float shapeType, float roundness, RenderRotationUtil.Rotation2D rotation, DrawableColor.FloatColor tint) {
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            ByteBuffer data = Std140Builder.onStack(stack, GUI_BLUR_CONFIG_UBO_SIZE_FANCYMENU)
+                    .putVec4(x, y, width, height)
+                    .putVec4(cornerRadii.topLeft(), cornerRadii.topRight(), cornerRadii.bottomRight(), cornerRadii.bottomLeft())
+                    .putVec4(rotation.m00(), rotation.m01(), rotation.m10(), rotation.m11())
+                    .putVec4(tint.red(), tint.green(), tint.blue(), tint.alpha())
+                    .putVec4(shapeType, roundness, 0.0F, 0.0F)
+                    .get();
+            updateUniformBuffer(customUniforms, GUI_BLUR_CONFIG_UNIFORM_FANCYMENU, data);
+        }
+    }
+
+    private static void updateUniformBuffer(Map<String, GpuBuffer> customUniforms, String uniformName, ByteBuffer data) {
+        GpuBuffer currentBuffer = customUniforms.get(uniformName);
+        if (currentBuffer == null) {
+            return;
+        }
+
+        if (currentBuffer.size() != data.remaining() || (currentBuffer.usage() & GpuBuffer.USAGE_COPY_DST) == 0) {
+            GpuBuffer newBuffer = RenderSystem.getDevice().createBuffer(() -> "FancyMenu GUI blur " + uniformName, GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, data);
+            customUniforms.put(uniformName, newBuffer);
+            currentBuffer.close();
+            return;
+        }
+
+        RenderSystem.getDevice().createCommandEncoder().writeToBuffer(currentBuffer.slice(), data);
     }
 
     private record BlurArea(float x, float y, float width, float height, float blurRadius, CornerRadii cornerRadii, float shapeType, float roundness, DrawableColor tint) {

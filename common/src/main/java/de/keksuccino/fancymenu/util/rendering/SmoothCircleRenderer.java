@@ -1,35 +1,65 @@
 package de.keksuccino.fancymenu.util.rendering;
 
-import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.systems.RenderSystem;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPostChain;
+import com.mojang.blaze3d.pipeline.BlendFunction;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.DepthTestFunction;
+import com.mojang.blaze3d.shaders.UniformType;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormatElement;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinBufferBuilder;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphics;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.PostChain;
-import net.minecraft.client.renderer.PostPass;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.gui.render.TextureSetup;
+import net.minecraft.client.gui.render.state.GuiElementRenderState;
 import net.minecraft.resources.Identifier;
-import net.minecraft.util.ARGB;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.joml.Matrix3x2f;
+import org.lwjgl.system.MemoryUtil;
 
 import javax.annotation.Nonnull;
-import java.util.List;
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 public final class SmoothCircleRenderer {
 
-    private static final Logger LOGGER = LogManager.getLogger();
-    // Keep shader files in the default 'minecraft' namespace so the vanilla resource manager finds them for every loader.
-    private static final Identifier GUI_SMOOTH_CIRCLE_POST_CHAIN = Identifier.withDefaultNamespace("shaders/post/fancymenu_gui_smooth_circle.json");
-
-    private static PostChain smoothCirclePostChain;
-    private static boolean smoothCirclePostChainFailed;
-    private static int cachedWidth = -1;
-    private static int cachedHeight = -1;
+    private static final float QUAD_AA_PADDING_PIXELS_FANCYMENU = 2.0F;
+    private static final Matrix3x2f IDENTITY_POSE_FANCYMENU = new Matrix3x2f();
+    private static final VertexFormatElement CIRCLE_INFO_0_FANCYMENU = registerNextVertexFormatElement_FancyMenu();
+    private static final VertexFormatElement CIRCLE_INFO_1_FANCYMENU = registerNextVertexFormatElement_FancyMenu();
+    private static final VertexFormatElement CIRCLE_INFO_2_FANCYMENU = registerNextVertexFormatElement_FancyMenu();
+    private static final VertexFormat SMOOTH_CIRCLE_VERTEX_FORMAT_FANCYMENU = VertexFormat.builder()
+            .add("Position", VertexFormatElement.POSITION)
+            .add("Color", VertexFormatElement.COLOR)
+            .add("UV0", VertexFormatElement.UV0)
+            .add("CircleInfo0", CIRCLE_INFO_0_FANCYMENU)
+            .add("CircleInfo1", CIRCLE_INFO_1_FANCYMENU)
+            .add("CircleInfo2", CIRCLE_INFO_2_FANCYMENU)
+            .build();
+    private static final RenderPipeline SMOOTH_CIRCLE_PIPELINE_FANCYMENU = RenderPipeline.builder()
+            .withLocation(Identifier.withDefaultNamespace("pipeline/fancymenu_gui_smooth_circle"))
+            .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
+            .withUniform("Projection", UniformType.UNIFORM_BUFFER)
+            .withVertexShader("core/fancymenu_gui_smooth_circle")
+            .withFragmentShader("core/fancymenu_gui_smooth_circle")
+            .withBlend(BlendFunction.TRANSLUCENT)
+            .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+            .withVertexFormat(SMOOTH_CIRCLE_VERTEX_FORMAT_FANCYMENU, VertexFormat.Mode.QUADS)
+            .build();
     private static final float SHAPE_MODE_CIRCLE_FANCYMENU = 0.0F;
     private static final float SHAPE_MODE_ARC_FANCYMENU = 2.0F;
 
     private SmoothCircleRenderer() {
+    }
+
+    private static VertexFormatElement registerNextVertexFormatElement_FancyMenu() {
+        for (int i = 0; i < VertexFormatElement.MAX_COUNT; i++) {
+            if (VertexFormatElement.byId(i) == null) {
+                return VertexFormatElement.register(i, 0, VertexFormatElement.Type.FLOAT, VertexFormatElement.Usage.GENERIC, 4);
+            }
+        }
+        throw new IllegalStateException("VertexFormatElement count limit exceeded");
     }
 
     /**
@@ -181,145 +211,259 @@ public final class SmoothCircleRenderer {
     }
 
     private static void _renderSmoothCircle(GuiGraphics graphics, float partial, CircleArea area) {
-        Minecraft minecraft = Minecraft.getInstance();
-        PostChain postChain = getOrCreatePostChain(minecraft);
-        if (postChain == null) {
-            return;
-        }
-        int targetWidth = minecraft.getWindow().getWidth();
-        int targetHeight = minecraft.getWindow().getHeight();
-        if (targetWidth <= 0 || targetHeight <= 0) {
-            return;
-        }
-        ensurePostChainSize(postChain, targetWidth, targetHeight);
-
-        float guiScale = (float) minecraft.getWindow().getGuiScale();
+        float guiScale = resolveGuiScale_FancyMenu();
         float scaledWidth = area.width * guiScale;
         float scaledHeight = area.height * guiScale;
         if (scaledWidth <= 0.0F || scaledHeight <= 0.0F) {
             return;
         }
 
-        float scaledX = area.x * guiScale;
-        float scaledY = targetHeight - (area.y * guiScale) - scaledHeight;
         float scaledBorderThickness = area.borderThickness * guiScale;
         float scaledRoundness = area.roundness;
 
-        float red = (float) ARGB.red(area.color) / 255.0F;
-        float green = (float) ARGB.green(area.color) / 255.0F;
-        float blue = (float) ARGB.blue(area.color) / 255.0F;
-        float alpha = (float) ARGB.alpha(area.color) / 255.0F;
-
         RenderRotationUtil.Rotation2D rotation = RenderRotationUtil.getCurrentAdditionalRenderMaskRotation2D();
-        applyUniforms(
-                postChain,
-                scaledX,
-                scaledY,
-                scaledWidth,
-                scaledHeight,
+        QuadBounds bounds = computeQuadBounds_FancyMenu(area, guiScale, scaledWidth, scaledHeight, rotation);
+        submitSmoothCircle_FancyMenu(
+                graphics,
+                area,
+                bounds,
+                guiScale,
+                scaledWidth * 0.5F,
+                scaledHeight * 0.5F,
                 scaledBorderThickness,
                 scaledRoundness,
                 rotation,
-                red,
-                green,
-                blue,
-                alpha,
                 SHAPE_MODE_CIRCLE_FANCYMENU,
                 0.0F,
                 0.0F
         );
-
-        
-        com.mojang.blaze3d.opengl.GlStateManager._disableBlend();
-        postChain.process(minecraft.getMainRenderTarget(), com.mojang.blaze3d.resource.GraphicsResourceAllocator.UNPOOLED);
-        RenderTarget finalTarget = getFinalTarget(postChain);
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
-        de.keksuccino.fancymenu.util.rendering.RenderingUtils.defaultBlendFunc();
-        if (finalTarget != null) {
-            finalTarget.blitToScreen();
-        }
         RenderingUtils.resetShaderColor(graphics);
     }
 
     private static void _renderSmoothCircleArc(GuiGraphics graphics, float partial, ArcArea area) {
-        Minecraft minecraft = Minecraft.getInstance();
-        PostChain postChain = getOrCreatePostChain(minecraft);
-        if (postChain == null) {
-            return;
-        }
-        int targetWidth = minecraft.getWindow().getWidth();
-        int targetHeight = minecraft.getWindow().getHeight();
-        if (targetWidth <= 0 || targetHeight <= 0) {
-            return;
-        }
-        ensurePostChainSize(postChain, targetWidth, targetHeight);
-
-        float guiScale = (float) minecraft.getWindow().getGuiScale();
+        float guiScale = resolveGuiScale_FancyMenu();
         float scaledWidth = area.width * guiScale;
         float scaledHeight = area.height * guiScale;
         if (scaledWidth <= 0.0F || scaledHeight <= 0.0F) {
             return;
         }
 
-        float scaledX = area.x * guiScale;
-        float scaledY = targetHeight - (area.y * guiScale) - scaledHeight;
         float scaledBorderThickness = area.borderThickness * guiScale;
         float scaledRoundness = area.roundness;
 
-        float red = (float) ARGB.red(area.color) / 255.0F;
-        float green = (float) ARGB.green(area.color) / 255.0F;
-        float blue = (float) ARGB.blue(area.color) / 255.0F;
-        float alpha = (float) ARGB.alpha(area.color) / 255.0F;
-
         RenderRotationUtil.Rotation2D rotation = RenderRotationUtil.getCurrentAdditionalRenderMaskRotation2D();
-        applyUniforms(
-                postChain,
-                scaledX,
-                scaledY,
-                scaledWidth,
-                scaledHeight,
+        QuadBounds bounds = computeQuadBounds_FancyMenu(area, guiScale, scaledWidth, scaledHeight, rotation);
+        submitSmoothCircle_FancyMenu(
+                graphics,
+                area,
+                bounds,
+                guiScale,
+                scaledWidth * 0.5F,
+                scaledHeight * 0.5F,
                 scaledBorderThickness,
                 scaledRoundness,
                 rotation,
-                red,
-                green,
-                blue,
-                alpha,
                 SHAPE_MODE_ARC_FANCYMENU,
                 area.startAngleRadians,
                 area.endAngleRadians
         );
-
-        
-        com.mojang.blaze3d.opengl.GlStateManager._disableBlend();
-        postChain.process(minecraft.getMainRenderTarget(), com.mojang.blaze3d.resource.GraphicsResourceAllocator.UNPOOLED);
-        RenderTarget finalTarget = getFinalTarget(postChain);
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
-        de.keksuccino.fancymenu.util.rendering.RenderingUtils.defaultBlendFunc();
-        if (finalTarget != null) {
-            finalTarget.blitToScreen();
-        }
         RenderingUtils.resetShaderColor(graphics);
     }
 
-    private static PostChain getOrCreatePostChain(Minecraft minecraft) {
-        return null;
+    private static float resolveGuiScale_FancyMenu() {
+        double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+        if (!Double.isFinite(guiScale) || guiScale <= 0.0D) {
+            return 1.0F;
+        }
+        return (float)guiScale;
     }
 
-    private static void ensurePostChainSize(PostChain postChain, int width, int height) {
+    private static QuadBounds computeQuadBounds_FancyMenu(@Nonnull CircleArea area, float guiScale, float scaledWidth, float scaledHeight, @Nonnull RenderRotationUtil.Rotation2D maskRotation) {
+        float halfWidth = scaledWidth * 0.5F;
+        float halfHeight = scaledHeight * 0.5F;
+        RenderRotationUtil.Rotation2D forwardRotation = invertRotation_FancyMenu(maskRotation);
+        float extentX = Math.abs(forwardRotation.m00()) * halfWidth + Math.abs(forwardRotation.m01()) * halfHeight;
+        float extentY = Math.abs(forwardRotation.m10()) * halfWidth + Math.abs(forwardRotation.m11()) * halfHeight;
+
+        if (!Float.isFinite(extentX) || !Float.isFinite(extentY)) {
+            return new QuadBounds(area.x, area.y, area.x + area.width, area.y + area.height);
+        }
+
+        float centerX = area.x + area.width * 0.5F;
+        float centerY = area.y + area.height * 0.5F;
+        float extentXGui = (extentX + QUAD_AA_PADDING_PIXELS_FANCYMENU) / guiScale;
+        float extentYGui = (extentY + QUAD_AA_PADDING_PIXELS_FANCYMENU) / guiScale;
+        return new QuadBounds(centerX - extentXGui, centerY - extentYGui, centerX + extentXGui, centerY + extentYGui);
     }
 
-    private static void applyUniforms(PostChain postChain, float x, float y, float width, float height, float borderThickness, float roundness, RenderRotationUtil.Rotation2D rotation, float red, float green, float blue, float alpha, float shapeMode, float arcStartRadians, float arcEndRadians) {
+    private static QuadBounds computeQuadBounds_FancyMenu(@Nonnull ArcArea area, float guiScale, float scaledWidth, float scaledHeight, @Nonnull RenderRotationUtil.Rotation2D maskRotation) {
+        return computeQuadBounds_FancyMenu(new CircleArea(area.x, area.y, area.width, area.height, area.borderThickness, area.roundness, area.color), guiScale, scaledWidth, scaledHeight, maskRotation);
     }
 
-    private static RenderTarget getFinalTarget(PostChain postChain) {
-        return null;
+    private static RenderRotationUtil.Rotation2D invertRotation_FancyMenu(@Nonnull RenderRotationUtil.Rotation2D rotation) {
+        float det = rotation.m00() * rotation.m11() - rotation.m01() * rotation.m10();
+        if (!Float.isFinite(det) || Math.abs(det) < 1.0E-6F) {
+            return RenderRotationUtil.Rotation2D.identity();
+        }
+        float invDet = 1.0F / det;
+        return new RenderRotationUtil.Rotation2D(
+                rotation.m11() * invDet,
+                -rotation.m01() * invDet,
+                -rotation.m10() * invDet,
+                rotation.m00() * invDet
+        );
+    }
+
+    private static void submitSmoothCircle_FancyMenu(@Nonnull GuiGraphics graphics, @Nonnull CircleArea area, @Nonnull QuadBounds bounds, float guiScale, float halfWidth, float halfHeight, float borderThickness, float roundness, @Nonnull RenderRotationUtil.Rotation2D rotation, float shapeMode, float arcStartRadians, float arcEndRadians) {
+        ((IMixinGuiGraphics)graphics).get_guiRenderState_FancyMenu().submitGuiElement(new SmoothCircleRenderState(
+                new Matrix3x2f(IDENTITY_POSE_FANCYMENU),
+                bounds.minX(),
+                bounds.minY(),
+                bounds.maxX(),
+                bounds.maxY(),
+                area.x + area.width * 0.5F,
+                area.y + area.height * 0.5F,
+                guiScale,
+                halfWidth,
+                halfHeight,
+                borderThickness,
+                roundness,
+                rotation,
+                shapeMode,
+                arcStartRadians,
+                arcEndRadians,
+                area.color,
+                null
+        ));
+    }
+
+    private static void submitSmoothCircle_FancyMenu(@Nonnull GuiGraphics graphics, @Nonnull ArcArea area, @Nonnull QuadBounds bounds, float guiScale, float halfWidth, float halfHeight, float borderThickness, float roundness, @Nonnull RenderRotationUtil.Rotation2D rotation, float shapeMode, float arcStartRadians, float arcEndRadians) {
+        submitSmoothCircle_FancyMenu(graphics, new CircleArea(area.x, area.y, area.width, area.height, area.borderThickness, area.roundness, area.color), bounds, guiScale, halfWidth, halfHeight, borderThickness, roundness, rotation, shapeMode, arcStartRadians, arcEndRadians);
+    }
+
+    private static void writeVec4_FancyMenu(@Nonnull VertexConsumer consumer, @Nonnull VertexFormatElement element, float x, float y, float z, float w) {
+        long pointer = ((IMixinBufferBuilder)consumer).invoke_beginElement_FancyMenu(element);
+        if (pointer == -1L) {
+            return;
+        }
+        MemoryUtil.memPutFloat(pointer, x);
+        MemoryUtil.memPutFloat(pointer + 4L, y);
+        MemoryUtil.memPutFloat(pointer + 8L, z);
+        MemoryUtil.memPutFloat(pointer + 12L, w);
     }
 
     private record CircleArea(float x, float y, float width, float height, float borderThickness, float roundness, int color) {
     }
 
     private record ArcArea(float x, float y, float width, float height, float borderThickness, float roundness, float startAngleRadians, float endAngleRadians, int color) {
+    }
+
+    private record QuadBounds(float minX, float minY, float maxX, float maxY) {
+    }
+
+    private record SmoothCircleRenderState(
+            Matrix3x2f transform,
+            float minX,
+            float minY,
+            float maxX,
+            float maxY,
+            float centerX,
+            float centerY,
+            float guiScale,
+            float halfWidth,
+            float halfHeight,
+            float borderThickness,
+            float roundness,
+            RenderRotationUtil.Rotation2D rotation,
+            float shapeMode,
+            float arcStartRadians,
+            float arcEndRadians,
+            int color,
+            @Nullable ScreenRectangle scissorArea,
+            @Nullable ScreenRectangle bounds
+    ) implements GuiElementRenderState {
+
+        private SmoothCircleRenderState(
+                Matrix3x2f transform,
+                float minX,
+                float minY,
+                float maxX,
+                float maxY,
+                float centerX,
+                float centerY,
+                float guiScale,
+                float halfWidth,
+                float halfHeight,
+                float borderThickness,
+                float roundness,
+                RenderRotationUtil.Rotation2D rotation,
+                float shapeMode,
+                float arcStartRadians,
+                float arcEndRadians,
+                int color,
+                @Nullable ScreenRectangle scissorArea
+        ) {
+            this(
+                    transform,
+                    minX,
+                    minY,
+                    maxX,
+                    maxY,
+                    centerX,
+                    centerY,
+                    guiScale,
+                    halfWidth,
+                    halfHeight,
+                    borderThickness,
+                    roundness,
+                    rotation,
+                    shapeMode,
+                    arcStartRadians,
+                    arcEndRadians,
+                    color,
+                    scissorArea,
+                    getBounds_FancyMenu(minX, minY, maxX, maxY, transform, scissorArea)
+            );
+        }
+
+        @Override
+        public void buildVertices(@Nonnull VertexConsumer consumer) {
+            this.addVertex_FancyMenu(consumer, this.minX, this.minY);
+            this.addVertex_FancyMenu(consumer, this.minX, this.maxY);
+            this.addVertex_FancyMenu(consumer, this.maxX, this.maxY);
+            this.addVertex_FancyMenu(consumer, this.maxX, this.minY);
+        }
+
+        private void addVertex_FancyMenu(@Nonnull VertexConsumer consumer, float x, float y) {
+            consumer.addVertexWith2DPose(this.transform, x, y)
+                    .setColor(this.color)
+                    .setUv((x - this.centerX) * this.guiScale, (this.centerY - y) * this.guiScale);
+            writeVec4_FancyMenu(consumer, CIRCLE_INFO_0_FANCYMENU, this.halfWidth, this.halfHeight, this.borderThickness, this.roundness);
+            writeVec4_FancyMenu(consumer, CIRCLE_INFO_1_FANCYMENU, this.rotation.m00(), this.rotation.m01(), this.rotation.m10(), this.rotation.m11());
+            writeVec4_FancyMenu(consumer, CIRCLE_INFO_2_FANCYMENU, this.shapeMode, this.arcStartRadians, this.arcEndRadians, 0.0F);
+        }
+
+        @Override
+        public RenderPipeline pipeline() {
+            return SMOOTH_CIRCLE_PIPELINE_FANCYMENU;
+        }
+
+        @Override
+        public TextureSetup textureSetup() {
+            return TextureSetup.noTexture();
+        }
+
+        @Nullable
+        private static ScreenRectangle getBounds_FancyMenu(float minX, float minY, float maxX, float maxY, Matrix3x2f transform, @Nullable ScreenRectangle scissorArea) {
+            int x = (int)Math.floor(Math.min(minX, maxX));
+            int y = (int)Math.floor(Math.min(minY, maxY));
+            int right = (int)Math.ceil(Math.max(minX, maxX));
+            int bottom = (int)Math.ceil(Math.max(minY, maxY));
+            int width = Math.max(1, right - x);
+            int height = Math.max(1, bottom - y);
+            ScreenRectangle rectangle = new ScreenRectangle(x, y, width, height).transformMaxBounds(transform);
+            return scissorArea != null ? scissorArea.intersection(rectangle) : rectangle;
+        }
     }
 
 }
