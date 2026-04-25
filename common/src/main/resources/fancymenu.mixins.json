@@ -17,6 +17,7 @@
     "client.IMixinEditBox",
     "client.IMixinFilePackResources",
     "client.IMixinFilePackResourcesSharedZipFileAccess",
+    "client.IMixinGameRenderer",
     "client.IMixinGui",
     "client.IMixinGuiGraphics",
     "client.IMixinKeyboardHandler",

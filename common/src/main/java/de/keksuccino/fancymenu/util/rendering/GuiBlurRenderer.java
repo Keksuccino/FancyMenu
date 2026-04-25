@@ -4,6 +4,7 @@ import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGameRenderer;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPostChain;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPostPass;
 import net.minecraft.client.Minecraft;
@@ -11,6 +12,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.LevelTargetBundle;
 import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.PostPass;
+import net.minecraft.client.renderer.fog.FogRenderer;
 import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,6 +36,7 @@ public final class GuiBlurRenderer {
     private static final float[] BLUR_RADIUS_MULTIPLIERS_FANCYMENU = new float[]{1.0F, 1.0F, 0.5F, 0.5F, 0.25F, 0.25F};
 
     private static boolean blurPostChainFailed;
+    private static boolean flushingGuiRenderState;
 
     private GuiBlurRenderer() {
     }
@@ -271,9 +274,23 @@ public final class GuiBlurRenderer {
         RenderRotationUtil.Rotation2D maskRotation = RenderRotationUtil.getCurrentAdditionalRenderMaskRotation2D();
         applyUniforms(postChain, scaledX, scaledY, scaledWidth, scaledHeight, blurRadius, scaledRadii, area.shapeType, area.roundness, maskRotation, tint);
 
+        flushGuiRenderState(minecraft);
         // The final post pass writes a masked mix back into the main target, so no extra blit is needed here.
         postChain.process(minecraft.getMainRenderTarget(), com.mojang.blaze3d.resource.GraphicsResourceAllocator.UNPOOLED);
         RenderingUtils.resetShaderColor(graphics);
+    }
+
+    private static void flushGuiRenderState(Minecraft minecraft) {
+        if (flushingGuiRenderState) {
+            return;
+        }
+        flushingGuiRenderState = true;
+        try {
+            IMixinGameRenderer gameRenderer = (IMixinGameRenderer) minecraft.gameRenderer;
+            gameRenderer.get_guiRenderer_FancyMenu().render(gameRenderer.get_fogRenderer_FancyMenu().getBuffer(FogRenderer.FogMode.NONE));
+        } finally {
+            flushingGuiRenderState = false;
+        }
     }
 
     private static PostChain getOrCreatePostChain(Minecraft minecraft) {
