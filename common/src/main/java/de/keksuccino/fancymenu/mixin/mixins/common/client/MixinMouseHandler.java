@@ -193,6 +193,8 @@ public class MixinMouseHandler {
 
     @WrapOperation(method = "handleAccumulatedMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;mouseDragged(Lnet/minecraft/client/input/MouseButtonEvent;DD)Z"))
     private boolean wrap_mouseDragged_in_handleAccumulatedMovement_FancyMenu(Screen instance, MouseButtonEvent event, double dragX, double dragY, Operation<Boolean> original) {
+        VanillaEvents.updateLatestVanillaMouseButtonInfo(event.buttonInfo());
+
         double guiWidth = this.mc_FancyMenu.getWindow().getGuiScaledWidth();
         double guiHeight = this.mc_FancyMenu.getWindow().getGuiScaledHeight();
         double screenWidth = this.mc_FancyMenu.getWindow().getScreenWidth();
