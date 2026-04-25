@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import com.mojang.blaze3d.resource.CrossFrameResourcePool;
 import net.minecraft.client.gui.render.GuiRenderer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.fog.FogRenderer;
@@ -14,5 +15,8 @@ public interface IMixinGameRenderer {
 
     @Accessor("fogRenderer")
     FogRenderer get_fogRenderer_FancyMenu();
+
+    @Accessor("resourcePool")
+    CrossFrameResourcePool get_resourcePool_FancyMenu();
 
 }

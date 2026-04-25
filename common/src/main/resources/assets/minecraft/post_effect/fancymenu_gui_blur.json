@@ -1,8 +1,14 @@
 {
   "targets": {
-    "fancymenu_gui_blur_original": {},
-    "fancymenu_gui_blur_swap": {},
-    "fancymenu_gui_blur_blurred": {}
+    "fancymenu_gui_blur_original": {
+      "persistent": true
+    },
+    "fancymenu_gui_blur_swap": {
+      "persistent": true
+    },
+    "fancymenu_gui_blur_blurred": {
+      "persistent": true
+    }
   },
   "passes": [
     {

@@ -60,6 +60,7 @@
     "client.MixinGameRenderer",
     "client.MixinGenericMessageScreen",
     "client.MixinGLFW",
+    "client.MixinGlRenderPass",
     "client.MixinGuiGraphics",
     "client.MixinGuiRenderer",
     "client.MixinImageButton",

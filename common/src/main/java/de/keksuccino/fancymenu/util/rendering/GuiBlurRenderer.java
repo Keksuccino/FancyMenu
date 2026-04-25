@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.Std140Builder;
+import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGameRenderer;
@@ -34,6 +35,7 @@ public final class GuiBlurRenderer {
     private static final int BLUR_CONFIG_UBO_SIZE_FANCYMENU = 12;
     private static final int GUI_BLUR_CONFIG_UBO_SIZE_FANCYMENU = 80;
     private static final float[] BLUR_RADIUS_MULTIPLIERS_FANCYMENU = new float[]{1.0F, 1.0F, 0.5F, 0.5F, 0.25F, 0.25F};
+    private static final ThreadLocal<PostPassScissor> ACTIVE_POST_PASS_SCISSOR_FANCYMENU = new ThreadLocal<>();
 
     private static boolean blurPostChainFailed;
     private static boolean flushingGuiRenderState;
@@ -267,16 +269,28 @@ public final class GuiBlurRenderer {
 
         float scaledX = area.x * guiScale;
         float scaledY = targetHeight - (area.y * guiScale) - scaledHeight;
-        float blurRadius = Math.max(0.0F, area.blurRadius * guiScale);
+        float rawBlurRadius = area.blurRadius * guiScale;
+        float blurRadius = Float.isFinite(rawBlurRadius) && rawBlurRadius > 0.0F ? rawBlurRadius : 0.0F;
         CornerRadii scaledRadii = area.cornerRadii.scaled(guiScale).clamped(Math.min(scaledWidth, scaledHeight) * 0.5F).flipVertical();
 
         DrawableColor.FloatColor tint = area.tint.getAsFloats();
         RenderRotationUtil.Rotation2D maskRotation = RenderRotationUtil.getCurrentAdditionalRenderMaskRotation2D();
+        RenderRotationUtil.Rotation2D scissorRotation = RenderRotationUtil.getCurrentAdditionalRenderRotation2D();
+        float margin = guiScale > 0.0F ? (blurRadius / guiScale) * 4.0F : 0.0F;
+        PostPassScissor scissor = toPostPassScissor(resolveScissorBounds(area, margin, scissorRotation), guiScale, targetWidth, targetHeight);
+        if (scissor.isEmpty()) {
+            return;
+        }
         applyUniforms(postChain, scaledX, scaledY, scaledWidth, scaledHeight, blurRadius, scaledRadii, area.shapeType, area.roundness, maskRotation, tint);
 
-        flushGuiRenderState(minecraft);
         // The final post pass writes a masked mix back into the main target, so no extra blit is needed here.
-        postChain.process(minecraft.getMainRenderTarget(), com.mojang.blaze3d.resource.GraphicsResourceAllocator.UNPOOLED);
+        flushGuiRenderState(minecraft);
+        ACTIVE_POST_PASS_SCISSOR_FANCYMENU.set(scissor);
+        try {
+            postChain.process(minecraft.getMainRenderTarget(), getResourceAllocator(minecraft));
+        } finally {
+            ACTIVE_POST_PASS_SCISSOR_FANCYMENU.remove();
+        }
         RenderingUtils.resetShaderColor(graphics);
     }
 
@@ -291,6 +305,14 @@ public final class GuiBlurRenderer {
         } finally {
             flushingGuiRenderState = false;
         }
+    }
+
+    private static GraphicsResourceAllocator getResourceAllocator(Minecraft minecraft) {
+        return ((IMixinGameRenderer) minecraft.gameRenderer).get_resourcePool_FancyMenu();
+    }
+
+    public static PostPassScissor getActivePostPassScissor_FancyMenu() {
+        return ACTIVE_POST_PASS_SCISSOR_FANCYMENU.get();
     }
 
     private static PostChain getOrCreatePostChain(Minecraft minecraft) {
@@ -367,7 +389,28 @@ public final class GuiBlurRenderer {
         RenderSystem.getDevice().createCommandEncoder().writeToBuffer(currentBuffer.slice(), data);
     }
 
+    private static PostPassScissor toPostPassScissor(ScissorBounds bounds, float guiScale, int targetWidth, int targetHeight) {
+        float minX = bounds.minX() * guiScale;
+        float maxX = bounds.maxX() * guiScale;
+        float minY = targetHeight - bounds.maxY() * guiScale;
+        float maxY = targetHeight - bounds.minY() * guiScale;
+
+        int x0 = clampToInt(floorToInt(minX), 0, targetWidth);
+        int y0 = clampToInt(floorToInt(minY), 0, targetHeight);
+        int x1 = clampToInt(ceilToInt(maxX), 0, targetWidth);
+        int y1 = clampToInt(ceilToInt(maxY), 0, targetHeight);
+        return new PostPassScissor(x0, y0, Math.max(0, x1 - x0), Math.max(0, y1 - y0));
+    }
+
     private record BlurArea(float x, float y, float width, float height, float blurRadius, CornerRadii cornerRadii, float shapeType, float roundness, DrawableColor tint) {
+    }
+
+    public record PostPassScissor(int x, int y, int width, int height) {
+
+        private boolean isEmpty() {
+            return width <= 0 || height <= 0;
+        }
+
     }
 
     private record CornerRadii(float topLeft, float topRight, float bottomRight, float bottomLeft) {
@@ -473,31 +516,22 @@ public final class GuiBlurRenderer {
         return Float.isFinite(value);
     }
 
+    private static int clampToInt(int value, int min, int max) {
+        if (value < min) {
+            return min;
+        }
+        return Math.min(value, max);
+    }
+
+    private static int floorToInt(float value) {
+        return (int) Math.floor(value);
+    }
+
+    private static int ceilToInt(float value) {
+        return (int) Math.ceil(value);
+    }
+
     private record ScissorBounds(float minX, float minY, float maxX, float maxY) {
-
-        private int minXInt() {
-            return floorToInt(minX);
-        }
-
-        private int minYInt() {
-            return floorToInt(minY);
-        }
-
-        private int maxXInt() {
-            return ceilToInt(maxX);
-        }
-
-        private int maxYInt() {
-            return ceilToInt(maxY);
-        }
-
-        private static int floorToInt(float value) {
-            return (int) Math.floor(value);
-        }
-
-        private static int ceilToInt(float value) {
-            return (int) Math.ceil(value);
-        }
     }
 
 }
