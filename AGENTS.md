@@ -6,14 +6,17 @@
 - Loader-only hooks belong inside each module's `src/main/java` tree; keep local run directories like `run_client` and `run_server` for iterative testing but never depend on them for assets.
 
 ## Environment
-- You are operating in a WSL2 environment running inside a Windows system.
+- You are running inside WSL on a Windows machine.
+
+## General Guidelines and Reminders
+- Always keep in mind that you are an AI. Time does not work the same for you as it does for humans.
+- What would take humans weeks or more to implement/write will take you only some minutes, so you should never take the "faster" route just to get the job done quicker. Take the BEST route, even if it takes a bit longer.
 
 ## Coding Style & Naming Conventions
 - Target Java 25 with 4-space indentation and UTF-8 encoding (WITHOUT BOM), matching the Gradle toolchain configuration.
 - Follow existing packages under `de.keksuccino.fancymenu`, mirroring existing sub-packages like `customization`, `events`, and `platform` to keep cross-loader boundaries clear.
 - Name resources with the `fancymenu` prefix (e.g., `fancymenu.mixins.json`, `fancymenu.accesswidener`) so Gradle and the loaders resolve them consistently.
 - Prefer explicit nullability annotations from `jsr305`.
-- Keep Mixin classes lightweight.
 
 ## Mixin Structurization
 - Place shared mixins under `common/src/main/java/de/keksuccino/fancymenu/mixin/mixins/common/<side>` and mirror the existing folder depth when adding new targets.
@@ -24,6 +27,8 @@
 - FancyMenu has access to Mixin Extras.
 - Prefer using features from Mixin Extras instead of using normal Mixin redirects or overrides.
 - When leveraging Mixin Extras (`WrapOperation`, `WrapWithCondition`, etc.), name helpers after the intent (`wrap_..._FancyMenu`, `cancel_..._FancyMenu`) and call the provided `Operation` when returning to vanilla flow.
+- Keep Mixin classes lightweight and try to always describe what a Mixin does in its javadoc via `@reason ...`.
+- Always leave `require` at default for mixins! Never do `require = 0` or similar.
 
 ## Localization
 - Always add en_us localizations for the features you add. Only en_us.
@@ -36,12 +41,20 @@
 - FancyMenu uses its own custom packet system.
 - If you need to add packets for a feature, make sure to analyze the `de.keksuccino.fancymenu.networking` package in the `common` module first, to understand how packets get implemented and registered.
 
-## Minecraft Sources
-- You have access to the full Minecraft 26.1.1 sources in `/library_sources/minecraft_26.1.1/fabric/` and `/library_sources/minecraft_26.1.1/neoforge/`.
-- You have access to the full Minecraft 1.21.11 sources in `/library_sources/minecraft_1.21.11/fabric/` and `/library_sources/minecraft_1.21.11/neoforge/`.
-- Use the Minecraft sources for research when working with Minecraft-related code.
-- Always prefer the sources provided in the `/library_sources/` folder instead of trying to unpack source JARs yourself. Only do that when the provided sources don't contain what you need.
-- Minecraft 1.21.11 is the version before Minecraft 26.1.1.
+## Minecraft & Library Sources
+- There is a directory with full Minecraft sources of all common versions for you to look up things when working with Minecraft code.
+- The sources directory is located at `E:\CODING\WORKSPACES\IntelliJ\Minecraft Mods\.MINECRAFT_SOURCES`.
+- The top level of the sources directory has subdirectories for each Minecraft version, such as `1.19.2`, `1.20.1`, `1.21.1`, `1.21.11`, `26.1.1`, etc.
+- In each Minecraft version subdirectory is a `minecraft` directory and a `libraries` directory.
+- The `minecraft` directory has subdirectories for the different launchers, so you can compare launcher-specific changes to Minecraft code, such as `fabric`, `forge`, `neoforge`, etc., and inside each is the Minecraft source code.
+- The `libraries` directory contains the source code of some important libraries used by Minecraft, such as the source code for LWJGL.
+- Make sure to check the Minecraft source code when working with Minecraft code, instead of guessing.
 
-## Run/Compile
-- NEVER try to run/compile the project!
+## Porting
+- When porting code from other Minecraft versions to this project, make sure to preserve 100% of the code's original function.
+- Do not dumb down or straight up remove parts of the code just because it's difficult to port. Take all the time that's needed to properly port the code and make it work in this project.
+- Preserve optimizations of the original code, to not make the port less optimized, less performance-friendly, etc.
+- When porting code from a different Minecraft version, you should compare both Minecraft version's code to see what changed, how it works here and how to best port the code.
+
+## Gradle
+- Do NOT run or compile the project, except the user explicitly tells you to do so.
