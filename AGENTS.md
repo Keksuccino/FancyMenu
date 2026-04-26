@@ -58,3 +58,7 @@
 
 ## Gradle
 - Do NOT run or compile the project, except the user explicitly tells you to do so.
+
+## Testing
+- To check if the project compiles and to look for errors/issues in general, use the `get_run_configurations` and `execute_run_configuration` tools to get and execute the Fabric and NeoForge client run configurations inside the open IntelliJ IDE.
+- Never try to run the `common` module directly, because it is only the base for the `fabric` and `neoforge` ones.
