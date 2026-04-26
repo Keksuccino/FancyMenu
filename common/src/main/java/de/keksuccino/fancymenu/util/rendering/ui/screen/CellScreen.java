@@ -1621,16 +1621,31 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
             if (CellScreen.this.scrollArea.isMouseInteractingWithGrabbers()) {
                 return false;
             }
-            if (!CellScreen.this.scrollArea.isInnerAreaHovered()) {
+            if (!CellScreen.this.scrollArea.isMouseOverInnerArea($$0, $$1)) {
                 return false;
             }
-            if (!this.hovered) {
+            if (!this.isMouseOver($$0, $$1)) {
                 return false;
             }
             if (this.selectable) {
                 CellScreen.this.selectCell(this, false);
             }
             return super.mouseClicked(new MouseButtonEvent($$0, $$1, new MouseButtonInfo($$2, 0)), false);
+        }
+
+        @Override
+        public boolean isMouseOver(double mouseX, double mouseY) {
+            if (CellScreen.this.scrollArea.isMouseInteractingWithGrabbers()) {
+                return false;
+            }
+            if (!CellScreen.this.scrollArea.isMouseOverInnerArea(mouseX, mouseY)) {
+                return false;
+            }
+            CellScrollEntry entry = CellScreen.this.getCellEntry(this);
+            if (entry == null) {
+                return false;
+            }
+            return UIBase.isXYInArea(mouseX, mouseY, entry.getX(), entry.getY(), CellScreen.this.scrollArea.getInnerWidth(), entry.getHeight());
         }
 
         @Override
