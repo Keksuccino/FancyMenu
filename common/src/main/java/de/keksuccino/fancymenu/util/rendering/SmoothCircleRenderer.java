@@ -84,10 +84,8 @@ public final class SmoothCircleRenderer {
     }
 
     public static void renderSmoothCircleScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float roundness, int color, float partial) {
-        float additionalScale = resolveAdditionalRenderScale();
-        float translationX = resolveAdditionalRenderTranslationX();
-        float translationY = resolveAdditionalRenderTranslationY();
-        renderSmoothCircle(graphics, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, roundness, color, partial);
+        GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
+        renderSmoothCircle(graphics, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), roundness, color, partial);
     }
 
     /**
@@ -112,10 +110,8 @@ public final class SmoothCircleRenderer {
     }
 
     public static void renderSmoothCircleBorderScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, float roundness, int color, float partial) {
-        float additionalScale = resolveAdditionalRenderScale();
-        float translationX = resolveAdditionalRenderTranslationX();
-        float translationY = resolveAdditionalRenderTranslationY();
-        renderSmoothCircleBorder(graphics, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, borderThickness * additionalScale, roundness, color, partial);
+        GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
+        renderSmoothCircleBorder(graphics, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), borderThickness * transform.scale(), roundness, color, partial);
     }
 
     /**
@@ -147,16 +143,14 @@ public final class SmoothCircleRenderer {
      * and the border is expanded outward by {@code borderThickness}.
      */
     public static void renderSmoothCircleBorderArcScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, float roundness, float startAngleRadians, float endAngleRadians, boolean roundInside, int color, float partial) {
-        float additionalScale = resolveAdditionalRenderScale();
-        float translationX = resolveAdditionalRenderTranslationX();
-        float translationY = resolveAdditionalRenderTranslationY();
+        GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
         renderSmoothCircleBorderArc(
                 graphics,
-                x * additionalScale + translationX,
-                y * additionalScale + translationY,
-                width * additionalScale,
-                height * additionalScale,
-                borderThickness * additionalScale,
+                transform.transformX(x),
+                transform.transformY(y),
+                width * transform.scale(),
+                height * transform.scale(),
+                borderThickness * transform.scale(),
                 roundness,
                 startAngleRadians,
                 endAngleRadians,
@@ -195,21 +189,6 @@ public final class SmoothCircleRenderer {
         _renderSmoothCircleArc(graphics, partial, new ArcArea(adjustedX, adjustedY, adjustedWidth, adjustedHeight, clampedBorder, clampedRoundness, startAngleRadians, endAngleRadians, color));
     }
 
-    private static float resolveAdditionalRenderScale() {
-        float scale = RenderScaleUtil.getCurrentAdditionalRenderScale();
-        return Float.isFinite(scale) && scale > 0.0F ? scale : 1.0F;
-    }
-
-    private static float resolveAdditionalRenderTranslationX() {
-        float translation = RenderTranslationUtil.getCurrentAdditionalRenderTranslationX();
-        return Float.isFinite(translation) ? translation : 0.0F;
-    }
-
-    private static float resolveAdditionalRenderTranslationY() {
-        float translation = RenderTranslationUtil.getCurrentAdditionalRenderTranslationY();
-        return Float.isFinite(translation) ? translation : 0.0F;
-    }
-
     private static void _renderSmoothCircle(GuiGraphics graphics, float partial, CircleArea area) {
         float guiScale = resolveGuiScale_FancyMenu();
         float scaledWidth = area.width * guiScale;
@@ -221,7 +200,7 @@ public final class SmoothCircleRenderer {
         float scaledBorderThickness = area.borderThickness * guiScale;
         float scaledRoundness = area.roundness;
 
-        RenderRotationUtil.Rotation2D rotation = RenderRotationUtil.getCurrentAdditionalRenderMaskRotation2D();
+        RenderRotationUtil.Rotation2D rotation = GuiPoseTransformUtil.resolve(graphics).rotation();
         QuadBounds bounds = computeQuadBounds_FancyMenu(area, guiScale, scaledWidth, scaledHeight, rotation);
         submitSmoothCircle_FancyMenu(
                 graphics,
@@ -251,7 +230,7 @@ public final class SmoothCircleRenderer {
         float scaledBorderThickness = area.borderThickness * guiScale;
         float scaledRoundness = area.roundness;
 
-        RenderRotationUtil.Rotation2D rotation = RenderRotationUtil.getCurrentAdditionalRenderMaskRotation2D();
+        RenderRotationUtil.Rotation2D rotation = GuiPoseTransformUtil.resolve(graphics).rotation();
         QuadBounds bounds = computeQuadBounds_FancyMenu(area, guiScale, scaledWidth, scaledHeight, rotation);
         submitSmoothCircle_FancyMenu(
                 graphics,

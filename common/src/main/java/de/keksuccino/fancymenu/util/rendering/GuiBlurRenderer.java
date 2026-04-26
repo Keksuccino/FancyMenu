@@ -63,10 +63,8 @@ public final class GuiBlurRenderer {
     }
 
     public static void renderBlurAreaScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float blurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
-        float additionalScale = resolveAdditionalRenderScale();
-        float translationX = resolveAdditionalRenderTranslationX();
-        float translationY = resolveAdditionalRenderTranslationY();
-        renderBlurArea(graphics, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, blurRadius * additionalScale, cornerRadius * additionalScale, tint, partial);
+        GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
+        renderBlurArea(graphics, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), blurRadius * transform.scale(), cornerRadius * transform.scale(), tint, partial);
     }
 
     /**
@@ -77,10 +75,8 @@ public final class GuiBlurRenderer {
     }
 
     public static void renderBlurAreaRoundTopCornersScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float blurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
-        float additionalScale = resolveAdditionalRenderScale();
-        float translationX = resolveAdditionalRenderTranslationX();
-        float translationY = resolveAdditionalRenderTranslationY();
-        renderBlurAreaRoundTopCorners(graphics, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, blurRadius * additionalScale, cornerRadius * additionalScale, tint, partial);
+        GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
+        renderBlurAreaRoundTopCorners(graphics, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), blurRadius * transform.scale(), cornerRadius * transform.scale(), tint, partial);
     }
 
     /**
@@ -91,10 +87,8 @@ public final class GuiBlurRenderer {
     }
 
     public static void renderBlurAreaRoundBottomCornersScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float blurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
-        float additionalScale = resolveAdditionalRenderScale();
-        float translationX = resolveAdditionalRenderTranslationX();
-        float translationY = resolveAdditionalRenderTranslationY();
-        renderBlurAreaRoundBottomCorners(graphics, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, blurRadius * additionalScale, cornerRadius * additionalScale, tint, partial);
+        GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
+        renderBlurAreaRoundBottomCorners(graphics, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), blurRadius * transform.scale(), cornerRadius * transform.scale(), tint, partial);
     }
 
     /**
@@ -105,20 +99,18 @@ public final class GuiBlurRenderer {
     }
 
     public static void renderBlurAreaRoundAllCornersScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float blurRadius, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, @Nonnull DrawableColor tint, float partial) {
-        float additionalScale = resolveAdditionalRenderScale();
-        float translationX = resolveAdditionalRenderTranslationX();
-        float translationY = resolveAdditionalRenderTranslationY();
+        GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
         renderBlurAreaRoundAllCorners(
                 graphics,
-                x * additionalScale + translationX,
-                y * additionalScale + translationY,
-                width * additionalScale,
-                height * additionalScale,
-                blurRadius * additionalScale,
-                topLeftRadius * additionalScale,
-                topRightRadius * additionalScale,
-                bottomRightRadius * additionalScale,
-                bottomLeftRadius * additionalScale,
+                transform.transformX(x),
+                transform.transformY(y),
+                width * transform.scale(),
+                height * transform.scale(),
+                blurRadius * transform.scale(),
+                topLeftRadius * transform.scale(),
+                topRightRadius * transform.scale(),
+                bottomRightRadius * transform.scale(),
+                bottomLeftRadius * transform.scale(),
                 tint,
                 partial
         );
@@ -137,10 +129,8 @@ public final class GuiBlurRenderer {
     }
 
     public static void renderBlurAreaCircleScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float blurRadius, float roundness, @Nonnull DrawableColor tint, float partial) {
-        float additionalScale = resolveAdditionalRenderScale();
-        float translationX = resolveAdditionalRenderTranslationX();
-        float translationY = resolveAdditionalRenderTranslationY();
-        renderBlurAreaCircle(graphics, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, blurRadius * additionalScale, roundness, tint, partial);
+        GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
+        renderBlurAreaCircle(graphics, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), blurRadius * transform.scale(), roundness, tint, partial);
     }
 
     /**
@@ -154,10 +144,8 @@ public final class GuiBlurRenderer {
     }
 
     public static void renderBlurAreaWithIntensityScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float baseBlurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
-        float additionalScale = resolveAdditionalRenderScale();
-        float translationX = resolveAdditionalRenderTranslationX();
-        float translationY = resolveAdditionalRenderTranslationY();
-        renderBlurAreaWithIntensity(graphics, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, baseBlurRadius * additionalScale, cornerRadius * additionalScale, tint, partial);
+        GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
+        renderBlurAreaWithIntensity(graphics, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), baseBlurRadius * transform.scale(), cornerRadius * transform.scale(), tint, partial);
     }
 
     /**
@@ -169,10 +157,8 @@ public final class GuiBlurRenderer {
     }
 
     public static void renderBlurAreaWithIntensityRoundTopCornersScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float baseBlurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
-        float additionalScale = resolveAdditionalRenderScale();
-        float translationX = resolveAdditionalRenderTranslationX();
-        float translationY = resolveAdditionalRenderTranslationY();
-        renderBlurAreaWithIntensityRoundTopCorners(graphics, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, baseBlurRadius * additionalScale, cornerRadius * additionalScale, tint, partial);
+        GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
+        renderBlurAreaWithIntensityRoundTopCorners(graphics, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), baseBlurRadius * transform.scale(), cornerRadius * transform.scale(), tint, partial);
     }
 
     /**
@@ -184,10 +170,8 @@ public final class GuiBlurRenderer {
     }
 
     public static void renderBlurAreaWithIntensityRoundBottomCornersScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float baseBlurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
-        float additionalScale = resolveAdditionalRenderScale();
-        float translationX = resolveAdditionalRenderTranslationX();
-        float translationY = resolveAdditionalRenderTranslationY();
-        renderBlurAreaWithIntensityRoundBottomCorners(graphics, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, baseBlurRadius * additionalScale, cornerRadius * additionalScale, tint, partial);
+        GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
+        renderBlurAreaWithIntensityRoundBottomCorners(graphics, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), baseBlurRadius * transform.scale(), cornerRadius * transform.scale(), tint, partial);
     }
 
     /**
@@ -199,20 +183,18 @@ public final class GuiBlurRenderer {
     }
 
     public static void renderBlurAreaWithIntensityRoundAllCornersScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float baseBlurRadius, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, @Nonnull DrawableColor tint, float partial) {
-        float additionalScale = resolveAdditionalRenderScale();
-        float translationX = resolveAdditionalRenderTranslationX();
-        float translationY = resolveAdditionalRenderTranslationY();
+        GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
         renderBlurAreaWithIntensityRoundAllCorners(
                 graphics,
-                x * additionalScale + translationX,
-                y * additionalScale + translationY,
-                width * additionalScale,
-                height * additionalScale,
-                baseBlurRadius * additionalScale,
-                topLeftRadius * additionalScale,
-                topRightRadius * additionalScale,
-                bottomRightRadius * additionalScale,
-                bottomLeftRadius * additionalScale,
+                transform.transformX(x),
+                transform.transformY(y),
+                width * transform.scale(),
+                height * transform.scale(),
+                baseBlurRadius * transform.scale(),
+                topLeftRadius * transform.scale(),
+                topRightRadius * transform.scale(),
+                bottomRightRadius * transform.scale(),
+                bottomLeftRadius * transform.scale(),
                 tint,
                 partial
         );
@@ -230,21 +212,6 @@ public final class GuiBlurRenderer {
             return;
         }
         _renderBlurArea(graphics, partial, new BlurArea(x, y, width, height, blurRadius, cornerRadii, shapeType, clampRoundness(roundness), tint));
-    }
-
-    private static float resolveAdditionalRenderScale() {
-        float scale = RenderScaleUtil.getCurrentAdditionalRenderScale();
-        return Float.isFinite(scale) && scale > 0.0F ? scale : 1.0F;
-    }
-
-    private static float resolveAdditionalRenderTranslationX() {
-        float translation = RenderTranslationUtil.getCurrentAdditionalRenderTranslationX();
-        return Float.isFinite(translation) ? translation : 0.0F;
-    }
-
-    private static float resolveAdditionalRenderTranslationY() {
-        float translation = RenderTranslationUtil.getCurrentAdditionalRenderTranslationY();
-        return Float.isFinite(translation) ? translation : 0.0F;
     }
 
     private static void _renderBlurArea(GuiGraphics graphics, float partial, BlurArea area) {
@@ -274,8 +241,8 @@ public final class GuiBlurRenderer {
         CornerRadii scaledRadii = area.cornerRadii.scaled(guiScale).clamped(Math.min(scaledWidth, scaledHeight) * 0.5F).flipVertical();
 
         DrawableColor.FloatColor tint = area.tint.getAsFloats();
-        RenderRotationUtil.Rotation2D maskRotation = RenderRotationUtil.getCurrentAdditionalRenderMaskRotation2D();
-        RenderRotationUtil.Rotation2D scissorRotation = RenderRotationUtil.getCurrentAdditionalRenderRotation2D();
+        RenderRotationUtil.Rotation2D maskRotation = GuiPoseTransformUtil.resolve(graphics).rotation();
+        RenderRotationUtil.Rotation2D scissorRotation = maskRotation;
         float margin = guiScale > 0.0F ? (blurRadius / guiScale) * 4.0F : 0.0F;
         PostPassScissor scissor = toPostPassScissor(resolveScissorBounds(area, margin, scissorRotation), guiScale, targetWidth, targetHeight);
         if (scissor.isEmpty()) {

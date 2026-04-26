@@ -52,10 +52,8 @@ public final class SmoothImageCircleRenderer {
     }
 
     public static void renderSmoothImageCircleScaled(@Nonnull GuiGraphics graphics, @Nonnull Identifier texture, float x, float y, float width, float height, float roundness, int color, float partial) {
-        float additionalScale = resolveAdditionalRenderScale();
-        float translationX = resolveAdditionalRenderTranslationX();
-        float translationY = resolveAdditionalRenderTranslationY();
-        renderSmoothImageCircle(graphics, texture, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, roundness, color, partial);
+        GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
+        renderSmoothImageCircle(graphics, texture, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), roundness, color, partial);
     }
 
     public static void renderSmoothImageCircle(@Nonnull GuiGraphics graphics, @Nonnull Identifier texture, float x, float y, float width, float height, float uOffset, float vOffset, float uWidth, float vHeight, float textureWidth, float textureHeight, float roundness, int color, float partial) {
@@ -63,10 +61,8 @@ public final class SmoothImageCircleRenderer {
     }
 
     public static void renderSmoothImageCircleScaled(@Nonnull GuiGraphics graphics, @Nonnull Identifier texture, float x, float y, float width, float height, float uOffset, float vOffset, float uWidth, float vHeight, float textureWidth, float textureHeight, float roundness, int color, float partial) {
-        float additionalScale = resolveAdditionalRenderScale();
-        float translationX = resolveAdditionalRenderTranslationX();
-        float translationY = resolveAdditionalRenderTranslationY();
-        renderSmoothImageCircle(graphics, texture, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, uOffset, vOffset, uWidth, vHeight, textureWidth, textureHeight, roundness, color, partial);
+        GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
+        renderSmoothImageCircle(graphics, texture, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), uOffset, vOffset, uWidth, vHeight, textureWidth, textureHeight, roundness, color, partial);
     }
 
     private static void renderSmoothImageCircleInternal(@Nonnull GuiGraphics graphics, @Nonnull Identifier texture, float x, float y, float width, float height, float roundness, @Nonnull TextureRegion textureRegion, int color, float partial) {
@@ -78,21 +74,6 @@ public final class SmoothImageCircleRenderer {
         }
         float clampedRoundness = Math.max(0.1F, roundness);
         _renderSmoothImageCircle(graphics, partial, new CircleArea(x, y, width, height, clampedRoundness, textureRegion, texture, color));
-    }
-
-    private static float resolveAdditionalRenderScale() {
-        float scale = RenderScaleUtil.getCurrentAdditionalRenderScale();
-        return Float.isFinite(scale) && scale > 0.0F ? scale : 1.0F;
-    }
-
-    private static float resolveAdditionalRenderTranslationX() {
-        float translation = RenderTranslationUtil.getCurrentAdditionalRenderTranslationX();
-        return Float.isFinite(translation) ? translation : 0.0F;
-    }
-
-    private static float resolveAdditionalRenderTranslationY() {
-        float translation = RenderTranslationUtil.getCurrentAdditionalRenderTranslationY();
-        return Float.isFinite(translation) ? translation : 0.0F;
     }
 
     private static void _renderSmoothImageCircle(GuiGraphics graphics, float partial, CircleArea area) {
@@ -124,7 +105,7 @@ public final class SmoothImageCircleRenderer {
         float blue = (float) ARGB.blue(area.color) / 255.0F;
         float alpha = (float) ARGB.alpha(area.color) / 255.0F;
 
-        RenderRotationUtil.Rotation2D rotation = RenderRotationUtil.getCurrentAdditionalRenderMaskRotation2D();
+        RenderRotationUtil.Rotation2D rotation = GuiPoseTransformUtil.resolve(graphics).rotation();
         int textureId = 0;
         applyUniforms(postChain, area.textureRegion, scaledX, scaledY, scaledWidth, scaledHeight, scaledRoundness, rotation, red, green, blue, alpha, textureId);
 
