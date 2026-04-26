@@ -22,8 +22,8 @@ public class ClientSideOpenGuiCommandPacketLogic {
         try {
             Objects.requireNonNull(packet.screen_identifier);
             if (packet.screen_identifier.equalsIgnoreCase(CreateWorldScreen.class.getName())) {
-                Screen current = Minecraft.getInstance().screen;
-                CreateWorldScreen.openFresh(Minecraft.getInstance(), () -> Minecraft.getInstance().setScreen(current));
+                Screen currentScreen = Minecraft.getInstance().screen;
+                CreateWorldScreen.openFresh(Minecraft.getInstance(), () -> Minecraft.getInstance().setScreen(currentScreen));
                 return true;
             }
             if (CustomGuiHandler.guiExists(packet.screen_identifier)) {

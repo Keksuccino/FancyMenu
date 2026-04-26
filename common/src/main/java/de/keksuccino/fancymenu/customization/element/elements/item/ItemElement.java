@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.item;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
@@ -45,8 +45,7 @@ public class ItemElement extends AbstractElement {
     @NotNull
     public String itemKey = "" + BuiltInRegistries.ITEM.getKey(Items.BARRIER);
     public boolean enchanted = false;
-    @NotNull
-    public String itemCount = "1";
+    public final Property.IntegerProperty itemCount = putProperty(Property.integerProperty("item_count", 1, "fancymenu.elements.item.item_count"));
     @Nullable
     public String lore = null;
     @Nullable
@@ -136,7 +135,7 @@ public class ItemElement extends AbstractElement {
      */
     protected void renderItem(GuiGraphics graphics, int x, int y, int width, int height, int mouseX, int mouseY, @NotNull ItemStack itemStack) {
 
-        int count = SerializationUtils.deserializeNumber(Integer.class, 1, PlaceholderParser.replacePlaceholders(this.itemCount));
+        int count = this.itemCount.getInteger();
 
         this.renderScaledItem(graphics, itemStack, x, y, width, height);
 

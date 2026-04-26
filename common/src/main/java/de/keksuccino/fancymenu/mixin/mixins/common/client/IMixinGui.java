@@ -12,4 +12,10 @@ public interface IMixinGui {
 
     @Accessor("subtitle") Component get_subtitle_FancyMenu();
 
+    @Accessor("overlayMessageString") Component get_overlayMessageString_FancyMenu();
+
+    @Accessor("overlayMessageTime") int get_overlayMessageTime_FancyMenu();
+
+    @Accessor("toolHighlightTimer") int get_toolHighlightTimer_FancyMenu();
+
 }

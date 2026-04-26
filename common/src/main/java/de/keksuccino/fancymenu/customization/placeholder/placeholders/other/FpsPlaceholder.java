@@ -23,7 +23,7 @@ public class FpsPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        return "" + Minecraft.getInstance().getFps();
+        return Integer.toString(Minecraft.getInstance().getFps());
     }
 
     @Override

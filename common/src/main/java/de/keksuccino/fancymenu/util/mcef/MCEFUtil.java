@@ -9,6 +9,7 @@ public class MCEFUtil {
 
     public static boolean isMCEFLoaded() {
         if (MCEF_critical_failure) return false;
+        if (FancyMenu.getOptions().devForceMcefMissing.getValue()) return false;
         try {
             Class.forName("com.cinemamod.mcef.MCEF", false, FancyMenu.class.getClassLoader());
             return true;

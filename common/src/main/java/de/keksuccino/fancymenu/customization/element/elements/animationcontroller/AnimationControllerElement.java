@@ -5,9 +5,10 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
+import de.keksuccino.fancymenu.util.properties.Property;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-
+import net.minecraft.client.renderer.rendertype.RenderType;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +23,11 @@ public class AnimationControllerElement extends AbstractElement {
     public boolean offsetMode = false;
     public boolean ignoreSize = false;
     public boolean ignorePosition = false;
+    public boolean randomTimingOffsetMode = false;
+    public final Property.IntegerProperty randomTimingOffsetMinMs = putProperty(Property.integerProperty("random_timing_offset_min_ms", 0,
+            "fancymenu.elements.animation_controller.random_timing_offsets.range.min"));
+    public final Property.IntegerProperty randomTimingOffsetMaxMs = putProperty(Property.integerProperty("random_timing_offset_max_ms", 0,
+            "fancymenu.elements.animation_controller.random_timing_offsets.range.max"));
 
     public AnimationControllerElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -39,7 +45,8 @@ public class AnimationControllerElement extends AbstractElement {
                 int y = this.getAbsoluteY();
                 int w = this.getAbsoluteWidth();
                 int h = this.getAbsoluteHeight();
-                graphics.fill(x, y, x + w, y + h, this.inEditorColor.getColorInt());
+                com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+                graphics.fill(x, y, x + w, y + h, this.inEditorColor.getDrawable().getColorInt());
                 graphics.enableScissor(x, y, x + w, y + h);
                 graphics.drawCenteredString(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
                 graphics.disableScissor();
@@ -62,7 +69,7 @@ public class AnimationControllerElement extends AbstractElement {
                         ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getActiveLayer();
                         if (layer != null) {
                             AbstractElement target = layer.getElementByInstanceIdentifier(targetElement.targetElementId);
-                            if (target != null) targetElement.animationApplied = AnimationControllerHandler.applyAnimation(this, target);
+                            if (target != null) targetElement.animationApplied = AnimationControllerHandler.applyAnimation(this, targetElement, target);
                         }
                     }
                 } else {
@@ -83,13 +90,19 @@ public class AnimationControllerElement extends AbstractElement {
     public static class TargetElement {
 
         public String targetElementId;
-        public boolean animationApplied = false;
+        public int timingOffsetMs = 0;
+        public transient boolean animationApplied = false;
 
         public TargetElement() {
         }
 
         public TargetElement(String targetElementId) {
             this.targetElementId = targetElementId;
+        }
+
+        public TargetElement(String targetElementId, int timingOffsetMs) {
+            this.targetElementId = targetElementId;
+            this.timingOffsetMs = timingOffsetMs;
         }
 
     }

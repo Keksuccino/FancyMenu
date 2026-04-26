@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import net.minecraft.client.gui.GuiGraphics;
@@ -11,14 +11,13 @@ import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.input.MouseButtonEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHandler, NarratableEntry, FancyMenuUiComponent {
+public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHandler, NarratableEntry {
 
     @NotNull
     protected ScrollArea scrollArea = new ScrollArea(0,0,0,0);
@@ -66,6 +65,8 @@ public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHan
 
         this.scrollArea.addEntry(new MarkdownRendererEntry(this.scrollArea, this.markdownRenderer));
 
+        this.scrollArea.setRenderOnlyEntriesInArea(false);
+
         //Don't render markdown lines outside visible area (for performance reasons)
         this.markdownRenderer.addLineRenderValidator(line -> {
             if ((line.parent.getY() + line.offsetY + line.getLineHeight()) < this.scrollArea.getInnerY()) {
@@ -100,7 +101,9 @@ public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHan
 
         this.tick();
 
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
         this.scrollArea.render(graphics, mouseX, mouseY, partial);
+        RenderingUtils.resetShaderColor(graphics);
 
     }
 
@@ -169,26 +172,13 @@ public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHan
     }
 
     @Override
-    public boolean mouseReleased(MouseButtonEvent event) {
-        this.markdownRenderer.mouseReleased(event);
-        this.scrollArea.mouseReleased(event);
-        return false;
+    public boolean mouseReleased(net.minecraft.client.input.MouseButtonEvent event) {
+        return this.mouseReleased(event.x(), event.y(), event.button());
     }
-
-    /**
-     * This restores the old click logic.
-     */
-    @Override
-    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
-        for (GuiEventListener listener : this.children()) {
-            if (listener.mouseClicked(event, isDoubleClick)) {
-                this.setFocused(listener);
-                if (event.button() == 0) {
-                    this.setDragging(true);
-                }
-                return true;
-            }
-        }
+    
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        this.markdownRenderer.mouseReleased(mouseX, mouseY, button);
+        this.scrollArea.mouseReleased(mouseX, mouseY, button);
         return false;
     }
 

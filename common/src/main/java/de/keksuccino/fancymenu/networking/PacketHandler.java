@@ -127,7 +127,7 @@ public class PacketHandler {
                 if (server != null) {
                     Packet packet = deserializePacket(() -> Objects.requireNonNull(codec.deserialize(dataSplit[1])));
                     if (packet != null) {
-                        sender.level().getServer().execute(() -> {
+                        server.execute(() -> {
                             try {
                                 packet.processPacket(sender);
                             } catch (Exception ex) {

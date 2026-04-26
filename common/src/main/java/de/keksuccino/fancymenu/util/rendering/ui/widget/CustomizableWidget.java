@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.ClassExtender;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -7,17 +8,10 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.renderer.RenderPipelines;
-
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import net.minecraft.util.ARGB;
-import net.minecraft.util.Mth;
-import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
@@ -68,54 +62,27 @@ public interface CustomizableWidget {
         boolean renderVanilla = true;
         if (customBackground != null) {
             if (customBackground instanceof PlayableResource p) p.play();
-            Identifier location = customBackground.getIdentifier();
+            Identifier location = customBackground.getResourceLocation();
             if (location != null) {
                 renderVanilla = false;
+                de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)widget).getAlphaFancyMenu());
+                com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+                de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)widget).getAlphaFancyMenu());
                 if ((widget instanceof CustomizableSlider s) && s.isNineSliceCustomSliderHandle_FancyMenu()) {
-                    RenderingUtils.blitNineSlicedTexture(graphics, location, x, y, width, height, customBackground.getWidth(), customBackground.getHeight(), s.getNineSliceSliderHandleBorderY_FancyMenu(), s.getNineSliceSliderHandleBorderX_FancyMenu(), s.getNineSliceSliderHandleBorderY_FancyMenu(), s.getNineSliceSliderHandleBorderX_FancyMenu(), ARGB.white(((IMixinAbstractWidget)widget).getAlphaFancyMenu()));
+                    RenderingUtils.blitNineSlicedTexture(graphics, location, x, y, width, height, customBackground.getWidth(), customBackground.getHeight(),
+                            s.getNineSliceSliderHandleBorderTop_FancyMenu(), s.getNineSliceSliderHandleBorderRight_FancyMenu(),
+                            s.getNineSliceSliderHandleBorderBottom_FancyMenu(), s.getNineSliceSliderHandleBorderLeft_FancyMenu());
                 } else if (!(widget instanceof CustomizableSlider) && this.isNineSliceCustomBackgroundTexture_FancyMenu()) {
-                    RenderingUtils.blitNineSlicedTexture(graphics, location, x, y, width, height, customBackground.getWidth(), customBackground.getHeight(), getNineSliceCustomBackgroundBorderY_FancyMenu(), getNineSliceCustomBackgroundBorderX_FancyMenu(), getNineSliceCustomBackgroundBorderY_FancyMenu(), getNineSliceCustomBackgroundBorderX_FancyMenu(), ARGB.white(((IMixinAbstractWidget)widget).getAlphaFancyMenu()));
+                    RenderingUtils.blitNineSlicedTexture(graphics, location, x, y, width, height, customBackground.getWidth(), customBackground.getHeight(),
+                            getNineSliceCustomBackgroundBorderTop_FancyMenu(), getNineSliceCustomBackgroundBorderRight_FancyMenu(),
+                            getNineSliceCustomBackgroundBorderBottom_FancyMenu(), getNineSliceCustomBackgroundBorderLeft_FancyMenu());
                 } else {
-                    graphics.blit(RenderPipelines.GUI_TEXTURED, location, x, y, 0.0F, 0.0F, width, height, width, height, DrawableColor.WHITE.getColorIntWithAlpha(((IMixinAbstractWidget)widget).getAlphaFancyMenu()));
+                    graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, location, x, y, 0.0F, 0.0F, width, height, width, height);
                 }
+                RenderingUtils.resetShaderColor(graphics);
             }
         }
         return renderVanilla;
-    }
-
-    default void renderScrollingLabel(GuiGraphics guiGraphics, Component text, int centerX, int minX, int minY, int maxX, int maxY, int color) {
-        Font font = Minecraft.getInstance().font;
-        int i = font.width(text);
-        int j = (minY + maxY - 9) / 2 + 1;
-        int k = maxX - minX;
-        if (i > k) {
-            int l = i - k;
-            double d = Util.getMillis() / 1000.0;
-            double e = Math.max(l * 0.5, 3.0);
-            double f = Math.sin((Math.PI / 2) * Math.cos((Math.PI * 2) * d / e)) / 2.0 + 0.5;
-            double g = Mth.lerp(f, 0.0, (double)l);
-            guiGraphics.enableScissor(minX, minY, maxX, maxY);
-            guiGraphics.drawString(font, text, minX - (int)g, j, color);
-            guiGraphics.disableScissor();
-        } else {
-            int l = Mth.clamp(centerX, minX + i / 2, maxX - i / 2);
-            guiGraphics.drawCenteredString(font, text, l, j, color);
-        }
-    }
-
-    default void renderScrollingLabel(GuiGraphics guiGraphics, Component text, int minX, int minY, int maxX, int maxY, int color) {
-        renderScrollingLabel(guiGraphics, text, (minX + maxX) / 2, minX, minY, maxX, maxY, color);
-    }
-
-    default void renderScrollingWidgetLabel(@NotNull AbstractWidget widget, @NotNull Component label, GuiGraphics guiGraphics, int color) {
-        int padding = 2;
-        int i = widget.getX() + padding;
-        int j = widget.getX() + widget.getWidth() - padding;
-        renderScrollingLabel(guiGraphics, label, i, widget.getY(), j, widget.getY() + widget.getHeight(), color);
-    }
-
-    default void renderScrollingWidgetLabel(@NotNull AbstractWidget widget, GuiGraphics guiGraphics, int color) {
-        renderScrollingWidgetLabel(widget, widget.getMessage(), guiGraphics, color);
     }
 
     void resetWidgetCustomizationsFancyMenu();
@@ -191,6 +158,32 @@ public interface CustomizableWidget {
     @Nullable
     Component getHoverLabelFancyMenu();
 
+    void setLabelHoverColorFancyMenu(@Nullable DrawableColor color);
+
+    @Nullable
+    DrawableColor getLabelHoverColorFancyMenu();
+
+    void setLabelBaseColorFancyMenu(@Nullable DrawableColor color);
+
+    @Nullable
+    DrawableColor getLabelBaseColorFancyMenu();
+
+    void setLabelScaleFancyMenu(float scale);
+
+    float getLabelScaleFancyMenu();
+
+    default float resolveLabelScaleFancyMenu() {
+        return this.getLabelScaleFancyMenu();
+    }
+
+    void setUnderlineLabelOnHoverFancyMenu(boolean underline);
+
+    boolean isUnderlineLabelOnHoverFancyMenu();
+
+    void setLabelShadowFancyMenu(boolean shadow);
+
+    boolean isLabelShadowFancyMenu();
+
     void setCustomClickSoundFancyMenu(@Nullable IAudio sound);
 
     @Nullable
@@ -208,6 +201,16 @@ public interface CustomizableWidget {
 
     default void stopHoverSoundFancyMenu() {
         IAudio a = this.getHoverSoundFancyMenu();
+        if (a != null) a.stop();
+    }
+
+    void setUnhoverSoundFancyMenu(@Nullable IAudio sound);
+
+    @Nullable
+    IAudio getUnhoverSoundFancyMenu();
+
+    default void stopUnhoverSoundFancyMenu() {
+        IAudio a = this.getUnhoverSoundFancyMenu();
         if (a != null) a.stop();
     }
 
@@ -242,6 +245,38 @@ public interface CustomizableWidget {
 
     int getNineSliceCustomBackgroundBorderY_FancyMenu();
 
+    default void setNineSliceBorderTop_FancyMenu(int borderTop) {
+        setNineSliceBorderY_FancyMenu(borderTop);
+    }
+
+    default int getNineSliceCustomBackgroundBorderTop_FancyMenu() {
+        return getNineSliceCustomBackgroundBorderY_FancyMenu();
+    }
+
+    default void setNineSliceBorderRight_FancyMenu(int borderRight) {
+        setNineSliceBorderX_FancyMenu(borderRight);
+    }
+
+    default int getNineSliceCustomBackgroundBorderRight_FancyMenu() {
+        return getNineSliceCustomBackgroundBorderX_FancyMenu();
+    }
+
+    default void setNineSliceBorderBottom_FancyMenu(int borderBottom) {
+        setNineSliceBorderY_FancyMenu(borderBottom);
+    }
+
+    default int getNineSliceCustomBackgroundBorderBottom_FancyMenu() {
+        return getNineSliceCustomBackgroundBorderY_FancyMenu();
+    }
+
+    default void setNineSliceBorderLeft_FancyMenu(int borderLeft) {
+        setNineSliceBorderX_FancyMenu(borderLeft);
+    }
+
+    default int getNineSliceCustomBackgroundBorderLeft_FancyMenu() {
+        return getNineSliceCustomBackgroundBorderX_FancyMenu();
+    }
+
     void setCustomBackgroundResetBehaviorFancyMenu(@NotNull CustomBackgroundResetBehavior resetBehavior);
 
     @NotNull
@@ -266,6 +301,14 @@ public interface CustomizableWidget {
     Integer getCustomYFancyMenu();
 
     void setCustomYFancyMenu(@Nullable Integer y);
+
+    void setHitboxRotationFancyMenu(float rotationDegrees, float verticalTiltDegrees, float horizontalTiltDegrees);
+
+    float getHitboxRotationDegreesFancyMenu();
+
+    float getHitboxVerticalTiltDegreesFancyMenu();
+
+    float getHitboxHorizontalTiltDegreesFancyMenu();
 
     enum CustomBackgroundResetBehavior {
         RESET_NEVER,

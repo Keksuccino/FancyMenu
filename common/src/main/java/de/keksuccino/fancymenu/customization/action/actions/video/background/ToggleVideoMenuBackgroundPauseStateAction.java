@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.customization.action.actions.video.background;
 
 import de.keksuccino.fancymenu.customization.action.Action;
+import de.keksuccino.fancymenu.customization.background.backgrounds.video.nativevideo.NativeVideoMenuBackground;
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,6 +39,9 @@ public class ToggleVideoMenuBackgroundPauseStateAction extends Action {
                 }
                 meta.paused = !meta.paused;
                 VideoElementController.putMeta(id, meta);
+                if (meta.paused) {
+                    NativeVideoMenuBackground.savePauseThumbnailForBackgroundIdentifier_FancyMenu(id);
+                }
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to execute ToggleVideoMenuBackgroundPauseStateAction!", ex);
@@ -46,13 +49,13 @@ public class ToggleVideoMenuBackgroundPauseStateAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.video.background.toggle_paused_state");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.video.background.toggle_paused_state.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.video.background.toggle_paused_state.desc");
     }
 
     @Override
@@ -61,7 +64,7 @@ public class ToggleVideoMenuBackgroundPauseStateAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "background_identifier";
     }
 

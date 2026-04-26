@@ -61,6 +61,21 @@ public interface MixinContainerEventHandler {
         }
     }
 
+    /**
+     * @reason This restores Minecraft's old UI component scroll routing for FancyMenu components that manage their own hit-testing.
+     */
+    @Inject(method = "mouseScrolled", at = @At("HEAD"), cancellable = true)
+    private void head_mouseScrolled_FancyMenu(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY, CallbackInfoReturnable<Boolean> info) {
+        for (GuiEventListener listener : this.children()) {
+            if (listener instanceof FancyMenuUiComponent) {
+                if (listener.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY)) {
+                    info.setReturnValue(true);
+                    return;
+                }
+            }
+        }
+    }
+
     @Shadow
     List<? extends GuiEventListener> children();
 

@@ -3,37 +3,35 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.image;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
-import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderPipelines;
-
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import net.minecraft.util.ARGB;
 import org.jetbrains.annotations.NotNull;
 
-public class ImageMenuBackground extends MenuBackground {
+public class ImageMenuBackground extends MenuBackground<ImageMenuBackground> {
 
-    private static final DrawableColor BACKGROUND_COLOR = DrawableColor.BLACK;
-
-    public ResourceSupplier<ITexture> textureSupplier;
-    public ResourceSupplier<ITexture> fallbackTextureSupplier;
-    public boolean slideLeftRight = false;
-    public boolean repeat = false;
-    public boolean parallaxEnabled = false;
+    public final Property<ResourceSupplier<ITexture>> textureSupplier = putProperty(Property.resourceSupplierProperty(ITexture.class, "image_path", null, "fancymenu.backgrounds.image.configure.choose_image.local", true, true, true, null));
+    public final Property<ResourceSupplier<ITexture>> fallbackTextureSupplier = putProperty(Property.resourceSupplierProperty(ITexture.class, "fallback_path", null, "fancymenu.backgrounds.image.type.web.fallback", true, true, true, null));
+    public final Property<Boolean> slideLeftRight = putProperty(Property.booleanProperty("slide", false, "fancymenu.backgrounds.image.configure.slide"));
+    public final Property<Boolean> repeat = putProperty(Property.booleanProperty("repeat_texture", false, "fancymenu.backgrounds.image.configure.repeat"));
+    public final Property<Boolean> parallaxEnabled = putProperty(Property.booleanProperty("parallax", false, "fancymenu.backgrounds.image.configure.parallax"));
     /** Value between 0.0 and 1.0, where 0.0 is no movement and 1.0 is maximum movement **/
-    @NotNull
-    public String parallaxIntensityString = "0.02";
-    public float lastParallaxIntensity = -10000.0F;
+    public final Property.FloatProperty parallaxIntensityXString = putProperty(Property.floatProperty("parallax_intensity_x", 0.02F, "fancymenu.backgrounds.image.configure.parallax_intensity_x"));
+    /** Value between 0.0 and 1.0, where 0.0 is no movement and 1.0 is maximum movement **/
+    public final Property.FloatProperty parallaxIntensityYString = putProperty(Property.floatProperty("parallax_intensity_y", 0.02F, "fancymenu.backgrounds.image.configure.parallax_intensity_y"));
     /** When TRUE, the parallax effect will move in the SAME direction as the mouse, otherwise it moves in the opposite direction **/
-    public boolean invertParallax = false;
-    public boolean restartAnimatedOnMenuLoad = false;
+    public final Property<Boolean> invertParallax = putProperty(Property.booleanProperty("invert_parallax", false, "fancymenu.backgrounds.image.configure.invert_parallax"));
+    public final Property<Boolean> restartAnimatedOnMenuLoad = putProperty(Property.booleanProperty("restart_animated_on_menu_load", false, "fancymenu.backgrounds.image.restart_animated_on_menu_load"));
 
     protected double slidePos = 0.0D;
     protected boolean slideMoveBack = false;
@@ -50,16 +48,18 @@ public class ImageMenuBackground extends MenuBackground {
         super.onOpenScreen();
 
         // Restart animated textures on menu load if enabled
-        if (this.restartAnimatedOnMenuLoad) {
-            if (this.textureSupplier != null) {
-                ITexture tex = this.textureSupplier.get();
+        if (this.restartAnimatedOnMenuLoad.tryGetNonNull()) {
+            ResourceSupplier<ITexture> supplier = this.textureSupplier.get();
+            if (supplier != null) {
+                ITexture tex = supplier.get();
                 if (tex instanceof PlayableResource r) {
                     r.stop();
                     r.play();
                 }
             }
-            if (this.fallbackTextureSupplier != null) {
-                ITexture tex = this.fallbackTextureSupplier.get();
+            ResourceSupplier<ITexture> fallbackSupplier = this.fallbackTextureSupplier.get();
+            if (fallbackSupplier != null) {
+                ITexture tex = fallbackSupplier.get();
                 if (tex instanceof PlayableResource r) {
                     r.stop();
                     r.play();
@@ -70,46 +70,95 @@ public class ImageMenuBackground extends MenuBackground {
     }
 
     @Override
+    protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
+
+        this.textureSupplier.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.IMAGE);
+        this.fallbackTextureSupplier.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.type.web.fallback.desc")))
+                .setIcon(MaterialIcons.BROKEN_IMAGE);
+
+        menu.addSeparatorEntry("separator_after_image_sources");
+
+        this.restartAnimatedOnMenuLoad.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.RESTART_ALT);
+
+        menu.addSeparatorEntry("separator_after_restart_animated");
+
+        this.repeat.buildContextMenuEntryAndAddTo(menu, this)
+                .addIsActiveSupplier((m, entry) -> !this.slideLeftRight.tryGetNonNull())
+                .setIcon(MaterialIcons.REPEAT);
+
+        this.slideLeftRight.buildContextMenuEntryAndAddTo(menu, this)
+                .addIsActiveSupplier((m, entry) -> !this.repeat.tryGetNonNull() && !this.parallaxEnabled.tryGetNonNull())
+                .setIcon(MaterialIcons.SWIPE);
+
+        menu.addSeparatorEntry("separator_before_parallax");
+
+        this.parallaxEnabled.buildContextMenuEntryAndAddTo(menu, this)
+                .addIsActiveSupplier((m, entry) -> !this.slideLeftRight.tryGetNonNull())
+                .setIcon(MaterialIcons._3D);
+        this.parallaxIntensityXString.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_x.desc")))
+                .setIcon(MaterialIcons.SPLITSCREEN_LANDSCAPE);
+        this.parallaxIntensityYString.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.parallax_intensity_y.desc")))
+                .setIcon(MaterialIcons.SPLITSCREEN_PORTRAIT);
+        this.invertParallax.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> UITooltip.of(Component.translatable("fancymenu.backgrounds.image.configure.invert_parallax.desc")))
+                .setIcon(MaterialIcons.SWAP_HORIZ);
+
+    }
+
+    @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        this.lastParallaxIntensity = SerializationUtils.deserializeNumber(Float.class, 0.02F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityString));
+        float parallaxIntensityX = this.parallaxIntensityXString.getFloat();
+        float parallaxIntensityY = this.parallaxIntensityYString.getFloat();
+
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
 
         Identifier resourceLocation = null;
         ITexture tex = null;
         AspectRatio ratio = new AspectRatio(10, 10);
-        if (this.textureSupplier != null) {
-            ITexture background = this.textureSupplier.get();
+        ResourceSupplier<ITexture> supplier = this.textureSupplier.get();
+        if (supplier != null) {
+            ITexture background = supplier.get();
             if (background != null) {
                 tex = background;
                 ratio = background.getAspectRatio();
-                resourceLocation = background.getIdentifier();
+                resourceLocation = background.getResourceLocation();
             }
         }
-        if ((resourceLocation == null) && (this.fallbackTextureSupplier != null)) {
-            ITexture fallback = this.fallbackTextureSupplier.get();
+        ResourceSupplier<ITexture> fallbackSupplier = this.fallbackTextureSupplier.get();
+        if ((resourceLocation == null) && (fallbackSupplier != null)) {
+            ITexture fallback = fallbackSupplier.get();
             if (fallback != null) {
                 tex = fallback;
                 ratio = fallback.getAspectRatio();
-                resourceLocation = fallback.getIdentifier();
+                resourceLocation = fallback.getResourceLocation();
             }
         }
 
         if (resourceLocation != null) {
-            float[] parallaxOffset = calculateParallaxOffset(mouseX, mouseY);
-            if (this.repeat) {
-                renderRepeatBackground(graphics, resourceLocation, tex, parallaxOffset);
-            } else if (this.slideLeftRight && !this.parallaxEnabled) {
-                renderSlideBackground(graphics, ratio, resourceLocation, parallaxOffset);
+            float[] parallaxOffset = calculateParallaxOffset(mouseX, mouseY, parallaxIntensityX, parallaxIntensityY);
+            if (this.repeat.tryGetNonNull()) {
+                renderRepeatBackground(graphics, resourceLocation, tex, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
+            } else if (this.slideLeftRight.tryGetNonNull() && !this.parallaxEnabled.tryGetNonNull()) {
+                renderSlideBackground(graphics, ratio, resourceLocation, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
             } else if (this.keepBackgroundAspectRatio) {
-                renderKeepAspectRatio(graphics, ratio, resourceLocation, parallaxOffset);
+                renderKeepAspectRatio(graphics, ratio, resourceLocation, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
             } else {
-                renderFullScreen(graphics, resourceLocation, parallaxOffset);
+                renderFullScreen(graphics, resourceLocation, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
             }
         }
+
+        RenderingUtils.resetShaderColor(graphics);
+
     }
 
-    protected float[] calculateParallaxOffset(int mouseX, int mouseY) {
-        if (!parallaxEnabled) {
+    protected float[] calculateParallaxOffset(int mouseX, int mouseY, float parallaxIntensityX, float parallaxIntensityY) {
+        if (!this.parallaxEnabled.tryGetNonNull()) {
             return new float[]{0, 0};
         }
 
@@ -118,96 +167,92 @@ public class ImageMenuBackground extends MenuBackground {
         float mouseYPercent = (2.0f * mouseY / getScreenHeight()) - 1.0f;
 
         // Apply inversion if enabled
-        float directionMultiplier = invertParallax ? 1.0f : -1.0f;
+        float directionMultiplier = this.invertParallax.tryGetNonNull() ? 1.0f : -1.0f;
 
         // Calculate offset based on screen dimensions and center-adjusted mouse position
-        float xOffset = directionMultiplier * this.lastParallaxIntensity * mouseXPercent * getScreenWidth() * 0.5f;
-        float yOffset = directionMultiplier * this.lastParallaxIntensity * mouseYPercent * getScreenHeight() * 0.5f;
+        float xOffset = directionMultiplier * parallaxIntensityX * mouseXPercent * getScreenWidth() * 0.5f;
+        float yOffset = directionMultiplier * parallaxIntensityY * mouseYPercent * getScreenHeight() * 0.5f;
 
         return new float[]{xOffset, yOffset};
+
     }
 
-    protected void renderRepeatBackground(@NotNull GuiGraphics graphics, @NotNull Identifier resourceLocation, ITexture tex, float[] parallaxOffset) {
-        if (parallaxEnabled) {
+    protected void renderRepeatBackground(@NotNull GuiGraphics graphics, @NotNull Identifier resourceLocation, ITexture tex, float[] parallaxOffset, float parallaxIntensityX, float parallaxIntensityY) {
+
+        de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, this.opacity);
+
+        if (this.parallaxEnabled.tryGetNonNull()) {
             // Create expanded area for parallax movement
-            int expandedWidth = (int)(getScreenWidth() * (1.0F + this.lastParallaxIntensity));
-            int expandedHeight = (int)(getScreenHeight() * (1.0F + this.lastParallaxIntensity));
+            int expandedWidth = (int)(getScreenWidth() * (1.0F + parallaxIntensityX));
+            int expandedHeight = (int)(getScreenHeight() * (1.0F + parallaxIntensityY));
 
             // Center the expanded area and apply parallax offset
             int baseX = -((expandedWidth - getScreenWidth()) / 2) + (int)parallaxOffset[0];
             int baseY = -((expandedHeight - getScreenHeight()) / 2) + (int)parallaxOffset[1];
 
-            RenderingUtils.blitRepeat(graphics, resourceLocation, baseX, baseY,
-                    expandedWidth, expandedHeight,
-                    tex.getWidth(), tex.getHeight(),
-                    DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
+            RenderingUtils.blitRepeat(graphics, resourceLocation, baseX, baseY, expandedWidth, expandedHeight, tex.getWidth(), tex.getHeight());
         } else {
-            RenderingUtils.blitRepeat(graphics, resourceLocation, 0, 0,
-                    getScreenWidth(), getScreenHeight(),
-                    tex.getWidth(), tex.getHeight(),
-                    DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
+            RenderingUtils.blitRepeat(graphics, resourceLocation, 0, 0, getScreenWidth(), getScreenHeight(), tex.getWidth(), tex.getHeight());
         }
+
+        RenderingUtils.resetShaderColor(graphics);
+
     }
 
-    protected void renderSlideBackground(@NotNull GuiGraphics graphics, @NotNull AspectRatio ratio, @NotNull Identifier resourceLocation, float[] parallaxOffset) {
+    protected void renderSlideBackground(@NotNull GuiGraphics graphics, @NotNull AspectRatio ratio, @NotNull Identifier resourceLocation, float[] parallaxOffset, float parallaxIntensityX, float parallaxIntensityY) {
         int w = ratio.getAspectRatioWidth(getScreenHeight());
         handleSlideAnimation(w);
+        de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, this.opacity);
         if (w <= getScreenWidth()) {
             if (this.keepBackgroundAspectRatio) {
-                renderKeepAspectRatio(graphics, ratio, resourceLocation, parallaxOffset);
+                renderKeepAspectRatio(graphics, ratio, resourceLocation, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
             } else {
-                renderFullScreen(graphics, resourceLocation, parallaxOffset);
+                renderFullScreen(graphics, resourceLocation, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
             }
         } else {
-            float finalX = (float)slidePos;
-            RenderingUtils.blitF(graphics, RenderPipelines.GUI_TEXTURED, resourceLocation,
-                    finalX, parallaxOffset[1], 0.0F, 0.0F,
-                    w, getScreenHeight(), w, getScreenHeight(),
-                    ARGB.white(this.opacity));
+            float finalX = (float)this.slidePos;
+            RenderingUtils.blitF(graphics, resourceLocation, finalX, parallaxOffset[1], 0.0F, 0.0F, w, getScreenHeight(), w, getScreenHeight());
         }
+        RenderingUtils.resetShaderColor(graphics);
     }
 
-    protected void renderKeepAspectRatio(@NotNull GuiGraphics graphics, @NotNull AspectRatio ratio, @NotNull Identifier resourceLocation, float[] parallaxOffset) {
+    protected void renderKeepAspectRatio(@NotNull GuiGraphics graphics, @NotNull AspectRatio ratio, @NotNull Identifier resourceLocation, float[] parallaxOffset, float parallaxIntensityX, float parallaxIntensityY) {
         // Calculate base size with reduced parallax expansion
-        float parallaxScale = parallaxEnabled ? (1.0F + this.lastParallaxIntensity) : 1.0F;
+        boolean parallax = this.parallaxEnabled.tryGetNonNull();
+        float parallaxScaleX = parallax ? (1.0F + parallaxIntensityX) : 1.0F;
+        float parallaxScaleY = parallax ? (1.0F + parallaxIntensityY) : 1.0F;
         int[] baseSize = ratio.getAspectRatioSizeByMinimumSize(
-                (int)(getScreenWidth() * parallaxScale),
-                (int)(getScreenHeight() * parallaxScale)
+                (int)(getScreenWidth() * parallaxScaleX),
+                (int)(getScreenHeight() * parallaxScaleY)
         );
 
         // Calculate centered position with adjusted parallax offset
         int x = (getScreenWidth() - baseSize[0]) / 2 + (int)parallaxOffset[0];
         int y = (getScreenHeight() - baseSize[1]) / 2 + (int)parallaxOffset[1];
 
-        graphics.blit(RenderPipelines.GUI_TEXTURED, resourceLocation,
-                x, y, 0.0F, 0.0F,
-                baseSize[0], baseSize[1],
-                baseSize[0], baseSize[1],
-                ARGB.white(this.opacity));
+        de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, this.opacity);
+
+        graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, resourceLocation, x, y, 0.0F, 0.0F, baseSize[0], baseSize[1], baseSize[0], baseSize[1]);
+
+        RenderingUtils.resetShaderColor(graphics);
     }
 
-    protected void renderFullScreen(@NotNull GuiGraphics graphics, @NotNull Identifier resourceLocation, float[] parallaxOffset) {
-        if (parallaxEnabled) {
+    protected void renderFullScreen(@NotNull GuiGraphics graphics, @NotNull Identifier resourceLocation, float[] parallaxOffset, float parallaxIntensityX, float parallaxIntensityY) {
+        de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, this.opacity);
+        if (this.parallaxEnabled.tryGetNonNull()) {
             // Reduce the expansion amount for parallax
-            int expandedWidth = (int)(getScreenWidth() * (1.0F + this.lastParallaxIntensity));
-            int expandedHeight = (int)(getScreenHeight() * (1.0F + this.lastParallaxIntensity));
+            int expandedWidth = (int)(getScreenWidth() * (1.0F + parallaxIntensityX));
+            int expandedHeight = (int)(getScreenHeight() * (1.0F + parallaxIntensityY));
 
             // Center the expanded area and apply parallax offset
             int x = -((expandedWidth - getScreenWidth()) / 2) + (int)parallaxOffset[0];
             int y = -((expandedHeight - getScreenHeight()) / 2) + (int)parallaxOffset[1];
 
-            graphics.blit(RenderPipelines.GUI_TEXTURED, resourceLocation,
-                    x, y, 0.0F, 0.0F,
-                    expandedWidth, expandedHeight,
-                    expandedWidth, expandedHeight,
-                    ARGB.white(this.opacity));
+            graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, resourceLocation, x, y, 0.0F, 0.0F, expandedWidth, expandedHeight, expandedWidth, expandedHeight);
         } else {
-            graphics.blit(RenderPipelines.GUI_TEXTURED, resourceLocation,
-                    0, 0, 0.0F, 0.0F,
-                    getScreenWidth(), getScreenHeight(),
-                    getScreenWidth(), getScreenHeight(),
-                    ARGB.white(this.opacity));
+            graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
         }
+        RenderingUtils.resetShaderColor(graphics);
     }
 
     protected void handleSlideAnimation(int backgroundWidth) {
@@ -245,4 +290,5 @@ public class ImageMenuBackground extends MenuBackground {
             }
         }
     }
+
 }

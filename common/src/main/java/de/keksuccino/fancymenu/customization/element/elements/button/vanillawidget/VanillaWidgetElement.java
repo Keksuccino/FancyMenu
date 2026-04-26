@@ -6,24 +6,21 @@ import de.keksuccino.fancymenu.customization.element.HideableElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
-import de.keksuccino.fancymenu.util.VanillaEvents;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.input.MouseButtonInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public class VanillaWidgetElement extends ButtonElement implements HideableElement {
 
-    private static final Logger LOGGER = LogManager.getLogger();
-
     public WidgetMeta widgetMeta;
     public boolean vanillaButtonHidden = false;
-    public int automatedButtonClicks = 0;
+    public final Property.IntegerProperty automatedButtonClicks = putProperty(Property.integerProperty("automated_button_clicks", 0, "fancymenu.elements.vanilla_button.automated_clicks"));
     protected boolean automatedButtonClicksDone = false;
 
     public VanillaWidgetElement(ElementBuilder<ButtonElement, ButtonEditorElement> builder) {
@@ -36,9 +33,10 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
     public void tick() {
 
         //Auto-click the vanilla button on menu load
-        if (!isEditor() && !this.automatedButtonClicksDone && (this.automatedButtonClicks > 0)) {
-            for (int i = 0; i < this.automatedButtonClicks; i++) {
-                if (this.getWidget() != null) this.getWidget().onClick(VanillaEvents.mouseButtonEvent(this.getWidget().getX() + 1, this.getWidget().getY() + 1, 0, 0), false);
+        int automatedClicks = this.automatedButtonClicks.getInteger();
+        if (!isEditor() && !this.automatedButtonClicksDone && (automatedClicks > 0)) {
+            for (int i = 0; i < automatedClicks; i++) {
+                if (this.getWidget() != null) this.getWidget().onClick(new MouseButtonEvent(this.getWidget().getX() + 1, this.getWidget().getY() + 1, new MouseButtonInfo(0, 0)), false);
             }
             this.automatedButtonClicksDone = true;
         }
@@ -176,12 +174,6 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
         float o = super.getBaseOpacity();
         if (this.isCopyrightButton() && (o < 0.4F)) o = 0.4F;
         return o;
-    }
-
-    public boolean isCopyrightButton() {
-        if (this.widgetMeta == null) return false;
-        String compId = ((UniqueWidget)this.widgetMeta.getWidget()).getWidgetIdentifierFancyMenu();
-        return ((compId != null) && compId.equals("title_screen_copyright_button"));
     }
 
 }

@@ -8,9 +8,9 @@ import com.google.common.collect.Lists;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.variables.Variable;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
+import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
-import net.minecraft.client.resources.language.I18n;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -18,6 +18,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
+import java.util.function.Supplier;
 
 //PLACEHOLDER STRING EXAMPLES:
 //{"placeholder":"ph_id","values":{"value_1":"{"placeholder":"ph_id_2"}","value_2":"content"}}
@@ -32,7 +33,10 @@ public class PlaceholderParser {
     private static final HashSet<String> TOO_LONG_TO_PARSE = new HashSet<>();
     private static final HashMap<String, Boolean> CONTAINS_PLACEHOLDERS = new HashMap<>();
     private static final HashMap<String, Pair<String, Long>> PLACEHOLDER_CACHE = new HashMap<>();
+    private static final Map<Long, ConsumingSupplier<String, String>> PARSING_PROCESSORS_BEFORE_REPLACING_PLACEHOLDERS = new LinkedHashMap<>();
+    private static final Map<Long, ConsumingSupplier<String, String>> PARSING_PROCESSORS_AFTER_REPLACING_PLACEHOLDERS = new LinkedHashMap<>();
 
+    private static final int MIN_LENGTH_FOR_PARSING = 8;
     private static final int MAX_TEXT_LENGTH = 17000;
     private static final String PLACEHOLDER_PREFIX = "{\"placeholder\":\"";
     private static final String EMPTY_STRING = "";
@@ -49,49 +53,107 @@ public class PlaceholderParser {
     private static final char SPACE_CHAR = ' ';
     private static final char TAB_CHAR = '\t';
     private static final char CARRIAGE_RETURN_CHAR = '\r';
-    private static final char COLON_CHAR = ':';
-    private static final char COMMA_CHAR = ',';
     private static final char PERCENT_CHAR = '%';
     private static final char LOWERCASE_N_CHAR = 'n';
-    private static final String BACKSLASH = "\\";
     private static final String COMMA = ",";
     private static final String COMMA_WRAPPED_IN_APOSTROPHES = "\",\"";
     private static final String COLON_WRAPPED_IN_APOSTROPHES = "\":\"";
     private static final String PERCENT_NEWLINE_CODE = "%n%";
-    private static final String TOO_LONG_TO_PARSE_LOCALIZATION = "fancymenu.placeholders.error.text_too_long";
+    private static final String TOO_LONG_TO_PARSE_ERROR_MESSAGE = "ERROR: Text too long to parse placeholders! 17,000 characters at max!";
+
+    private static long processorId = 0;
+    @NotNull
+    private static PlaceholderCachingController cachingController = new PlaceholderCachingController(() -> true, () -> 30L);
+
+    static {
+
+        setPlaceholderCachingController(new PlaceholderCachingController(
+                () -> FancyMenu.getOptions().placeholderCachingDurationMs.getValue() > 0,
+                () -> FancyMenu.getOptions().placeholderCachingDurationMs.getValue()
+        ));
+
+        // Text editor multi-line placeholder compression
+        // Can be done for multi-line strings too, because the method only replaces codes instead of actual spaces or newlines
+        addParsingProcessor(ParsingProcessorTiming.BEFORE_REPLACING_PLACEHOLDERS, TextEditorWindowBody::compileSingleLineString);
+
+        // Minecraft Formatting Codes
+        addParsingProcessor(ParsingProcessorTiming.AFTER_REPLACING_PLACEHOLDERS, in -> {
+            return TextFormattingUtils.replaceFormattingCodes(in, FORMATTING_PREFIX_AND, FORMATTING_PREFIX_PARAGRAPH);
+        });
+
+        // Replace generic reference of FancyMenu's variables ($$variable_name instead of using the "Get Variable" placeholder)
+        addParsingProcessor(ParsingProcessorTiming.AFTER_REPLACING_PLACEHOLDERS, in -> {
+            String replaced = in;
+            int index = 0;
+            for (char c : in.toCharArray()) {
+                if (c == DOLLAR_CHAR) {
+                    String sub = StringUtils.substring(in, index);
+                    if (StringUtils.startsWith(sub, SHORT_VARIABLE_PLACEHOLDER_PREFIX)) {
+                        for (Variable variable : VariableHandler.getVariables()) {
+                            if (StringUtils.startsWith(sub, SHORT_VARIABLE_PLACEHOLDER_PREFIX + variable.getName())) {
+                                replaced = StringUtils.replace(replaced, SHORT_VARIABLE_PLACEHOLDER_PREFIX + variable.getName(), variable.getValue());
+                                break;
+                            }
+                        }
+                    }
+                }
+                index++;
+            }
+            return replaced;
+        });
+
+    }
+
+    /**
+     * Adds a parsing processor. The timing controls if the processor should get executed before or after replacing placeholders in the string.
+     *
+     * <p>{@code ParsingProcessorTiming.BEFORE_REPLACING_PLACEHOLDERS} processors get executed if the input text is not null, is not too long to get parsed and is not currently in the cache.
+     *
+     * <p>{@code ParsingProcessorTiming.AFTER_REPLACING_PLACEHOLDERS} processors only get executed if the input text contains placeholders and the system successfully replaced them.
+     *
+     * @return The unique ID of the processor.
+     */
+    public static long addParsingProcessor(@NotNull ParsingProcessorTiming timing, @NotNull ConsumingSupplier<String, String> processor) {
+        processorId++;
+        if (timing == ParsingProcessorTiming.BEFORE_REPLACING_PLACEHOLDERS) {
+            PARSING_PROCESSORS_BEFORE_REPLACING_PLACEHOLDERS.put(processorId, Objects.requireNonNull(processor));
+        }
+        if (timing == ParsingProcessorTiming.AFTER_REPLACING_PLACEHOLDERS) {
+            PARSING_PROCESSORS_AFTER_REPLACING_PLACEHOLDERS.put(processorId, Objects.requireNonNull(processor));
+        }
+        return processorId;
+    }
+
+    public static void removeParsingProcessor(long id) {
+        PARSING_PROCESSORS_BEFORE_REPLACING_PLACEHOLDERS.remove(id);
+        PARSING_PROCESSORS_AFTER_REPLACING_PLACEHOLDERS.remove(id);
+    }
+
+    @NotNull
+    public static PlaceholderCachingController getPlaceholderCachingController() {
+        return cachingController;
+    }
+
+    public static void setPlaceholderCachingController(@NotNull PlaceholderCachingController cachingController) {
+        PlaceholderParser.cachingController = cachingController;
+    }
 
     public static boolean isCachingPlaceholders() {
-        return FancyMenu.getOptions().placeholderCachingDurationMs.getValue() > 0;
+        return cachingController.shouldCachePlaceholders.get();
     }
 
     public static long getPlaceholderCachingDurationMs() {
-        return FancyMenu.getOptions().placeholderCachingDurationMs.getValue();
+        return cachingController.cachingDurationMillis.get();
     }
 
     /**
      * Simple check if the given {@link String} contains placeholders.<br>
-     * This basically only checks if the {@link String} contains ' {"placeholder" ', so it's not 100% safe, but performance-friendly.
-     *
-     * @param checkForVariableReferences If the method should check for the short version of variable placeholders ($$variable_name).
-     * @param checkForFormattingCodes If the method should check for "&" formatting codes.
+     * This basically only checks if the {@link String} contains <code>&#123;"placeholder"</code>, so it's not 100% safe, but performance-friendly.
      */
-    public static boolean containsPlaceholders(@Nullable String in, boolean checkForVariableReferences, boolean checkForFormattingCodes) {
+    public static boolean containsPlaceholders(@Nullable String in) {
         if (in == null) return false;
-        if (in.length() <= 2) return false;
-        if (StringUtils.contains(in, "{\"placeholder\"")) return true;
-        if (checkForFormattingCodes && (in.hashCode() != TextFormattingUtils.replaceFormattingCodes(in, FORMATTING_PREFIX_AND, FORMATTING_PREFIX_PARAGRAPH).hashCode())) return true;
-        if (checkForVariableReferences && (in.hashCode() != replaceVariableReferences(in).hashCode())) return true;
-        return false;
-    }
-
-    /**
-     * Simple check if the given {@link String} contains placeholders.<br>
-     * This basically only checks if the {@link String} contains ' {"placeholder" ', so it's not 100% safe, but performance-friendly.
-     *
-     * @param checkForVariableReferences If the method should check for the short version of variable placeholders ($$variable_name).
-     */
-    public static boolean containsPlaceholders(@Nullable String in, boolean checkForVariableReferences) {
-        return containsPlaceholders(in, checkForVariableReferences, true);
+        if (in.length() < MIN_LENGTH_FOR_PARSING) return false;
+        return StringUtils.contains(in, "{\"placeholder\"");
     }
 
     /**
@@ -104,21 +166,7 @@ public class PlaceholderParser {
      */
     @NotNull
     public static String replacePlaceholders(@Nullable String in) {
-        return replacePlaceholders(in, true);
-    }
-
-    /**
-     * Replaces all placeholders in the given {@link String}.<br>
-     * Since placeholders can contain variables that are not always the same, this task can be performance-intensive,
-     * so you should keep in mind to not parse/update long texts too often in a short time frame.
-     *
-     * @param in The {@link String} to replace placeholders in.
-     * @param replaceFormattingCodes If Minecraft formatting codes should get replaced.
-     * @return The given {@link String} with all placeholders replaced.
-     */
-    @NotNull
-    public static String replacePlaceholders(@Nullable String in, boolean replaceFormattingCodes) {
-        return replacePlaceholders(in, null, replaceFormattingCodes);
+        return replacePlaceholders(in, null);
     }
 
     /**
@@ -128,46 +176,48 @@ public class PlaceholderParser {
      *
      * @param in The {@link String} to replace placeholders in.
      * @param parsed The placeholder replacement cache.
-     * @param replaceFormattingCodes If Minecraft formatting codes should get replaced.
      * @return The given {@link String} with all placeholders replaced.
      */
     @NotNull
-    protected static String replacePlaceholders(@Nullable String in, @Nullable HashMap<String, String> parsed, boolean replaceFormattingCodes) {
+    private static String replacePlaceholders(@Nullable String in, @Nullable HashMap<String, String> parsed) {
 
         if (in == null) return EMPTY_STRING;
 
-        // Can be done for multi-line strings too, because the method only replaces codes instead of actual spaces or newlines
-        in = TextEditorScreen.compileSingleLineString(in);
-
-        if (in.length() <= 2) return in;
-
-        Boolean containsPlaceholders = CONTAINS_PLACEHOLDERS.get(in);
-        if (containsPlaceholders == null) {
-            containsPlaceholders = containsPlaceholders(in, true, replaceFormattingCodes);
-            CONTAINS_PLACEHOLDERS.put(in, containsPlaceholders);
-        }
-        if (!containsPlaceholders) return in;
-
-        if (TOO_LONG_TO_PARSE.contains(in)) return I18n.get(TOO_LONG_TO_PARSE_LOCALIZATION);
+        if (TOO_LONG_TO_PARSE.contains(in)) return TOO_LONG_TO_PARSE_ERROR_MESSAGE;
         if (in.length() >= MAX_TEXT_LENGTH) {
             TOO_LONG_TO_PARSE.add(in);
-            return I18n.get(TOO_LONG_TO_PARSE_LOCALIZATION);
+            return TOO_LONG_TO_PARSE_ERROR_MESSAGE;
         }
 
         if (isCachingPlaceholders()) {
             Pair<String, Long> cached = PLACEHOLDER_CACHE.get(in);
-            if ((cached != null) && ((cached.getValue() + getPlaceholderCachingDurationMs()) > System.currentTimeMillis())) return cached.getKey();
+            if ((cached != null) && ((cached.getValue() + getPlaceholderCachingDurationMs()) > System.currentTimeMillis())) {
+                return cached.getKey();
+            }
         }
 
+        in = processBeforeReplacement(in);
+
+        // If "in" is too short, just return here, because there can't be placeholders in it
+        if (in.length() < MIN_LENGTH_FOR_PARSING) return in;
+
+        Boolean containsPlaceholders = CONTAINS_PLACEHOLDERS.get(in);
+        if (containsPlaceholders == null) {
+            containsPlaceholders = containsPlaceholders(in);
+            CONTAINS_PLACEHOLDERS.put(in, containsPlaceholders);
+        }
+        if (!containsPlaceholders) return in;
+
+        // Used for the placeholder cache (saved after visiting before-replacement processors)
         String original = in;
 
-        //Used to cache replacements for already parsed placeholders, so they can get reused to improve performance
+        // Used to cache replacements for already parsed placeholders, so they can get reused to improve performance
         if (parsed == null) parsed = new HashMap<>();
 
         int hash = in.hashCode();
         while (true) {
-            //Reverse the list to start replacing from the end of the String, so all nested placeholders get replaced first
-            for (ParsedPlaceholder p : Lists.reverse(findPlaceholders(in, parsed, replaceFormattingCodes))) {
+            // Reverse the list to start replacing from the end of the String, so all nested placeholders get replaced first
+            for (ParsedPlaceholder p : Lists.reverse(findPlaceholders(in, parsed))) {
                 String replacement = parsed.get(p.placeholderString);
                 if (replacement == null) {
                     replacement = p.getReplacement();
@@ -180,9 +230,7 @@ public class PlaceholderParser {
             hash = hashNew;
         }
 
-        if (replaceFormattingCodes) in = TextFormattingUtils.replaceFormattingCodes(in, FORMATTING_PREFIX_AND, FORMATTING_PREFIX_PARAGRAPH);
-
-        in = replaceVariableReferences(in);
+        in = processAfterReplacement(in);
 
         if (isCachingPlaceholders()) {
             PLACEHOLDER_CACHE.put(original, Pair.of(in, System.currentTimeMillis()));
@@ -192,6 +240,20 @@ public class PlaceholderParser {
 
     }
 
+    private static String processBeforeReplacement(@NotNull String in) {
+        for (ConsumingSupplier<String, String> processor : PARSING_PROCESSORS_BEFORE_REPLACING_PLACEHOLDERS.values()) {
+            in = processor.get(in);
+        }
+        return in;
+    }
+
+    private static String processAfterReplacement(@NotNull String in) {
+        for (ConsumingSupplier<String, String> processor : PARSING_PROCESSORS_AFTER_REPLACING_PLACEHOLDERS.values()) {
+            in = processor.get(in);
+        }
+        return in;
+    }
+
     /**
      * Finds all placeholders in a {@link String}.<br>
      * Will not find placeholders that get added to the {@link String} by replacing other placeholders.
@@ -199,7 +261,7 @@ public class PlaceholderParser {
      * @param in The {@link String} to get the placeholders from.
      */
     @NotNull
-    public static List<ParsedPlaceholder> findPlaceholders(@Nullable String in, @NotNull HashMap<String, String> parsed, boolean replaceFormattingCodes) {
+    public static List<ParsedPlaceholder> findPlaceholders(@Nullable String in, @NotNull HashMap<String, String> parsed) {
         List<ParsedPlaceholder> placeholders = new ArrayList<>();
         if (in == null) return placeholders;
 
@@ -223,7 +285,7 @@ public class PlaceholderParser {
                         // It's a valid placeholder. Add it to our list.
                         // Note: We use the original 'candidate' string for the object,
                         // as that's what exists in the input string 'in'.
-                        placeholders.add(new ParsedPlaceholder(candidate, i, endIndex + 1, parsed, replaceFormattingCodes));
+                        placeholders.add(new ParsedPlaceholder(candidate, i, endIndex + 1, parsed));
 
                         // Advance the loop counter past this placeholder to avoid
                         // parsing its contents as separate, new placeholders.
@@ -332,27 +394,6 @@ public class PlaceholderParser {
         return c == SPACE_CHAR || c == TAB_CHAR || c == NEWLINE_CHAR || c == CARRIAGE_RETURN_CHAR;
     }
 
-    @NotNull
-    public static String replaceVariableReferences(@NotNull String in) {
-        String replaced = in;
-        int index = 0;
-        for (char c : in.toCharArray()) {
-            if (c == DOLLAR_CHAR) {
-                String sub = StringUtils.substring(in, index);
-                if (StringUtils.startsWith(sub, SHORT_VARIABLE_PLACEHOLDER_PREFIX)) {
-                    for (Variable variable : VariableHandler.getVariables()) {
-                        if (StringUtils.startsWith(sub, SHORT_VARIABLE_PLACEHOLDER_PREFIX + variable.getName())) {
-                            replaced = StringUtils.replace(replaced, SHORT_VARIABLE_PLACEHOLDER_PREFIX + variable.getName(), variable.getValue());
-                            break;
-                        }
-                    }
-                }
-            }
-            index++;
-        }
-        return replaced;
-    }
-
     private static void logError(@NotNull String error, @Nullable Exception ex) {
         long now = System.currentTimeMillis();
         Long last = LOG_COOLDOWN.get(error);
@@ -376,7 +417,6 @@ public class PlaceholderParser {
         public final int startIndex;
         public final int endIndex;
         private final HashMap<String, String> parsed;
-        private final boolean replaceFormattingCodes;
         private Integer hashcode;
         private String identifier;
         private boolean identifierFailed = false;
@@ -384,12 +424,11 @@ public class PlaceholderParser {
         private boolean placeholderFailed = false;
         private String normalizedString;
 
-        protected ParsedPlaceholder(@NotNull String placeholderString, int startIndex, int endIndex, @NotNull HashMap<String, String> parsed, boolean replaceFormattingCodes) {
+        protected ParsedPlaceholder(@NotNull String placeholderString, int startIndex, int endIndex, @NotNull HashMap<String, String> parsed) {
             this.placeholderString = placeholderString;
             this.startIndex = startIndex;
             this.endIndex = endIndex;
             this.parsed = parsed;
-            this.replaceFormattingCodes = replaceFormattingCodes;
         }
 
         /**
@@ -436,7 +475,7 @@ public class PlaceholderParser {
             DeserializedPlaceholderString deserialized = new DeserializedPlaceholderString(identifier, null, this.placeholderString);
             if (values != null) {
                 for (Map.Entry<String, String> value : values.entrySet()) {
-                    deserialized.values.put(value.getKey(), replacePlaceholders(value.getValue(), this.parsed, this.replaceFormattingCodes));
+                    deserialized.values.put(value.getKey(), replacePlaceholders(value.getValue(), this.parsed));
                 }
             }
             return p.getReplacementFor(deserialized);
@@ -468,7 +507,7 @@ public class PlaceholderParser {
                     if (currentIndex >= currentValueStartIndex) {
                         if (c == APOSTROPHE_CHAR) {
                             if (currentValueName != null) {
-                                if ((inValueDepth == 0) && !StringUtils.startsWith(StringUtils.substring(valueString, currentIndex-1), BACKSLASH) && isEndOfValueContent(placeholder, valueString, currentIndex)) {
+                                if ((inValueDepth == 0) && !isEscaped(valueString, currentIndex) && isEndOfValueContent(placeholder, valueString, currentIndex)) {
                                     String valueContent = StringUtils.substring(valueString, currentValueStartIndex, currentIndex);
                                     values.put(currentValueName, valueContent);
                                     currentValueName = null;
@@ -482,10 +521,10 @@ public class PlaceholderParser {
                                 }
                             }
                         }
-                        if ((c == OPEN_CURLY_BRACKETS_CHAR) && (currentValueName != null) && !StringUtils.startsWith(StringUtils.substring(valueString, currentIndex-1), BACKSLASH)) {
+                        if ((c == OPEN_CURLY_BRACKETS_CHAR) && (currentValueName != null) && !isEscaped(valueString, currentIndex)) {
                             inValueDepth++;
                         }
-                        if ((c == CLOSE_CURLY_BRACKETS_CHAR) && (currentValueName != null) && !StringUtils.startsWith(StringUtils.substring(valueString, currentIndex-1), BACKSLASH)) {
+                        if ((c == CLOSE_CURLY_BRACKETS_CHAR) && (currentValueName != null) && !isEscaped(valueString, currentIndex)) {
                             if (inValueDepth > 0) inValueDepth--;
                         }
                     }
@@ -505,6 +544,17 @@ public class PlaceholderParser {
                 return nextValue != null;
             }
             return false;
+        }
+
+        private static boolean isEscaped(@NotNull String valueString, int index) {
+            int backslashCount = 0;
+            for (int i = index - 1; i >= 0; i--) {
+                if (valueString.charAt(i) != BACKSLASH_CHAR) {
+                    break;
+                }
+                backslashCount++;
+            }
+            return (backslashCount % 2) == 1;
         }
 
         /**
@@ -548,6 +598,14 @@ public class PlaceholderParser {
             return this.hashcode;
         }
 
+    }
+
+    public enum ParsingProcessorTiming {
+        BEFORE_REPLACING_PLACEHOLDERS,
+        AFTER_REPLACING_PLACEHOLDERS
+    }
+
+    public record PlaceholderCachingController(@NotNull Supplier<Boolean> shouldCachePlaceholders, @NotNull Supplier<Long> cachingDurationMillis) {
     }
 
 }

@@ -1,13 +1,20 @@
 package de.keksuccino.fancymenu.customization.action;
 
-import de.keksuccino.fancymenu.customization.action.ui.AsyncActionErrorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
+import de.keksuccino.fancymenu.util.ScreenUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
@@ -19,7 +26,7 @@ import java.util.Objects;
  */
 public abstract class Action {
 
-    public static final Action EMPTY = new Action("empty") {@Override public boolean hasValue() {return false;}@Override public void execute(@Nullable String value) {}@Override public @NotNull Component getActionDisplayName() {return Component.empty();}@Override public @NotNull Component[] getActionDescription() {return new Component[0];}@Override public @Nullable Component getValueDisplayName() {return null;}@Override public @Nullable String getValueExample() {return null;}};
+    public static final Action EMPTY = new Action("empty") {@Override public boolean hasValue() {return false;}@Override public void execute(@Nullable String value) {}@Override public @NotNull Component getDisplayName() {return Component.empty();}@Override public @NotNull Component getDescription() {return Component.empty();}@Override public @Nullable Component getValueDisplayName() {return null;}@Override public @Nullable String getValuePreset() {return null;}};
 
     private final String identifier;
     @Nullable
@@ -53,10 +60,10 @@ public abstract class Action {
     public abstract void execute(@Nullable String value);
 
     @NotNull
-    public abstract Component getActionDisplayName();
+    public abstract Component getDisplayName();
 
     @NotNull
-    public abstract Component[] getActionDescription();
+    public abstract Component getDescription();
 
     @Nullable
     public abstract Component getValueDisplayName();
@@ -65,7 +72,7 @@ public abstract class Action {
      * An example of how the value of this action should look like.
      */
     @Nullable
-    public abstract String getValueExample();
+    public abstract String getValuePreset();
 
     @NotNull
     public String getIdentifier() {
@@ -77,13 +84,27 @@ public abstract class Action {
         return null;
     }
 
-    public void editValue(@NotNull Screen parentScreen, @NotNull ActionInstance instance) {
+    /**
+     * Called when editing the value of an {@link ActionInstance}.<br>
+     * The value of the given {@code instance} needs to get updated during the editing process.<br><br>
+     *
+     * This method should only open {@link PiPWindow}s and NEVER real {@link Screen}s!
+     *
+     * @param instance The {@link ActionInstance} to edit.
+     * @param onEditingCompleted Always needs to get called when the editing was completed without canceling it. Should get called AFTER updating the instance's value.
+     * @param onEditingCanceled Always needs to get called when the editing got canceled without completing it.
+     */
+    public void editValue(@NotNull ActionInstance instance, @NotNull Action.ActionEditingCompletedFeedback onEditingCompleted, @NotNull Action.ActionEditingCanceledFeedback onEditingCanceled) {
         if (this.hasValue()) {
-            TextEditorScreen s = new TextEditorScreen(this.getValueDisplayName(), null, (call) -> {
-                if (call != null) {
-                    instance.value = call;
+            Component title = (this.getValueDisplayName() != null) ? this.getValueDisplayName() : Component.empty();
+            TextEditorWindowBody s = new TextEditorWindowBody(title, null, editedValue -> {
+                if (editedValue != null) {
+                    String old = instance.value;
+                    instance.value = editedValue;
+                    onEditingCompleted.accept(instance, old, editedValue);
+                } else {
+                    onEditingCanceled.accept(instance);
                 }
-                Minecraft.getInstance().setScreen(parentScreen);
             });
             List<TextEditorFormattingRule> formattingRules = this.getValueFormattingRules();
             if (formattingRules != null) s.formattingRules.addAll(formattingRules);
@@ -91,9 +112,25 @@ public abstract class Action {
             if (instance.value != null) {
                 s.setText(instance.value);
             } else {
-                s.setText(this.getValueExample());
+                s.setText(this.getValuePreset());
             }
-            Minecraft.getInstance().setScreen(s);
+            Dialogs.openGeneric(s, title, null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
+        }
+    }
+
+    @ApiStatus.Internal
+    public void editValueInternal(@NotNull ActionInstance instance, @NotNull Action.ActionEditingCompletedFeedback onEditingCompleted, @NotNull Action.ActionEditingCanceledFeedback onEditingCanceled) {
+        this.editValueInternal(instance, onEditingCompleted, onEditingCanceled, null);
+    }
+
+    @ApiStatus.Internal
+    public void editValueInternal(@NotNull ActionInstance instance, @NotNull Action.ActionEditingCompletedFeedback onEditingCompleted, @NotNull Action.ActionEditingCanceledFeedback onEditingCanceled, @Nullable PiPWindow parentWindow) {
+        ScreenUtils.blockSetScreenCalls(true);
+        try {
+            PiPWindowHandler.INSTANCE.withFullscreenInheritanceFrom(parentWindow, () ->
+                    this.editValue(instance, onEditingCompleted, onEditingCanceled));
+        } finally {
+            ScreenUtils.blockSetScreenCalls(false);
         }
     }
 
@@ -105,9 +142,22 @@ public abstract class Action {
         boolean sameThread = Minecraft.getInstance().isSameThread();
         if (!sameThread && !this.canRunAsync() && !this.asyncErrorShown) {
             this.asyncErrorShown = true;
-            QueueableScreenHandler.addToQueue(new AsyncActionErrorScreen(this.getActionDisplayName()));
+            MainThreadTaskExecutor.executeInMainThread(() -> {
+                Component actionNameFormatted = this.getDisplayName().copy().withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUITheme().error_color.getColorInt()));
+                Dialogs.openMessage(Component.translatable("fancymenu.actions.async.cant_run_async", actionNameFormatted), MessageDialogStyle.ERROR);
+            }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         }
         return this.canRunAsync() || sameThread; // should run action
+    }
+
+    @FunctionalInterface
+    public interface ActionEditingCompletedFeedback {
+        void accept(@NotNull ActionInstance instance, @Nullable String oldValue, @NotNull String newValue);
+    }
+
+    @FunctionalInterface
+    public interface ActionEditingCanceledFeedback {
+        void accept(@NotNull ActionInstance instance);
     }
 
 }

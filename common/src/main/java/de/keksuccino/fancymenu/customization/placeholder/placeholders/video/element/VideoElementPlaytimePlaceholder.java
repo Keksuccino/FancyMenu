@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandl
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import net.minecraft.client.resources.language.I18n;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -32,6 +33,7 @@ public class VideoElementPlaytimePlaceholder extends Placeholder {
         String elementId = dps.values.get("element_identifier");
         String showPercentageStr = dps.values.get("show_percentage");
         boolean showPercentage = StringUtils.equalsIgnoreCase(showPercentageStr, "true");
+        boolean outputAsTimestamp = SerializationHelper.INSTANCE.deserializeBoolean(false, dps.values.get("output_as_timestamp"));
         if (elementId != null) {
             ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getActiveLayer();
             if (layer != null) {
@@ -46,6 +48,9 @@ public class VideoElementPlaytimePlaceholder extends Placeholder {
                             return String.valueOf(Math.min(100, Math.max(0, percentage)));
                         }
                         return "0";
+                    } else if (outputAsTimestamp) {
+                        long playTimeMillis = Math.max(0L, Math.round(Math.max(0.0F, playTimeSeconds) * 1000D));
+                        return String.valueOf(playTimeMillis);
                     } else {
                         // Return MM:SS format
                         int minutes = (int)(playTimeSeconds / 60);
@@ -55,7 +60,10 @@ public class VideoElementPlaytimePlaceholder extends Placeholder {
                 }
             }
         }
-        return showPercentage ? "0" : "00:00";
+        if (showPercentage || outputAsTimestamp) {
+            return "0";
+        }
+        return "00:00";
     }
 
     @Override
@@ -63,6 +71,7 @@ public class VideoElementPlaytimePlaceholder extends Placeholder {
         List<String> l = new ArrayList<>();
         l.add("element_identifier");
         l.add("show_percentage"); // true/false - if true returns percentage (0-100) instead of time
+        l.add("output_as_timestamp");
         return l;
     }
 
@@ -86,6 +95,7 @@ public class VideoElementPlaytimePlaceholder extends Placeholder {
         LinkedHashMap<String, String> m = new LinkedHashMap<>();
         m.put("element_identifier", "put_identifier_of_video_element_here");
         m.put("show_percentage", "false");
+        m.put("output_as_timestamp", "false");
         return DeserializedPlaceholderString.build(this.getIdentifier(), m);
     }
 

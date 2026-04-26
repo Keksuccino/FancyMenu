@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.advanced;
 
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
+import de.keksuccino.fancymenu.customization.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import org.jetbrains.annotations.NotNull;
@@ -20,7 +21,11 @@ public class LocalizationPlaceholder extends Placeholder {
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         String key = dps.values.get("key");
         if (key != null) {
-            return I18n.get(key);
+            String localized = I18n.get(key);
+            if (localized.equals(key)) {
+                localized = CustomLocalsHandler.localize(key);
+            }
+            return localized;
         }
         return null;
     }

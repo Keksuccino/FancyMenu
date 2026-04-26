@@ -7,12 +7,12 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
+import de.keksuccino.fancymenu.util.rendering.text.smooth.TextDimensions;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import org.apache.logging.log4j.LogManager;
@@ -32,7 +32,7 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
     protected ConsumingSupplier<ComponentWidget, MutableComponent> textSupplier;
     protected boolean shadow = true;
     @NotNull
-    protected ConsumingSupplier<ComponentWidget, DrawableColor> baseColorSupplier = (var) -> UIBase.getUIColorTheme().generic_text_base_color;
+    protected ConsumingSupplier<ComponentWidget, DrawableColor> baseColorSupplier = (var) -> UIBase.getUITheme().ui_interface_generic_text_color;
     protected Consumer<ComponentWidget> onHoverOrFocusStart;
     protected Consumer<ComponentWidget> onHoverOrFocusEnd;
     protected Consumer<ComponentWidget> onClick;
@@ -43,6 +43,7 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
     protected Font font;
     protected boolean isCurrentlyHoveredOrFocused = false;
     protected int endX;
+    protected boolean useUIRendering = false;
 
     public static ComponentWidget of(@NotNull MutableComponent component, int x, int y) {
         return new ComponentWidget(Minecraft.getInstance().font, x, y, component);
@@ -82,10 +83,21 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
 
         this.handleComponentHover();
 
-        MutableComponent text = this.getText();
-        this.endX = this.getX() + this.font.width(text);
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
 
-        graphics.drawString(this.font, text, this.getX(), this.getY(), this.getBaseColor().getColorInt(), this.shadow);
+        this.endX = this.getX();
+        if (this.useUIRendering) {
+            if (UIBase.shouldUseMinecraftFontForUIRendering()) {
+                graphics.drawString(Minecraft.getInstance().font, this.getText(), this.getX(), this.getY(), this.getBaseColor().getColorInt(), this.shadow);
+                this.endX = this.getX() + Minecraft.getInstance().font.width(this.getText());
+            } else {
+                TextDimensions dimensions = UIBase.renderText(graphics, this.getText(), this.getX(), this.getY(), this.getBaseColor().getColorInt());
+                this.endX = this.getX() + (int) Math.ceil(dimensions.width());
+            }
+        } else {
+            graphics.drawString(this.font, this.getText(), this.getX(), this.getY(), this.getBaseColor().getColorInt(), this.shadow);
+            this.endX = this.getX() + this.font.width(this.getText());
+        }
 
         for (ComponentWidget c : this.children) {
             c.setX(this.endX);
@@ -98,6 +110,7 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
 
     public ComponentWidget append(@NotNull ComponentWidget child) {
         child.parent = this;
+        child.useUIRendering = this.useUIRendering;
         this.children.add(child);
         return this;
     }
@@ -141,6 +154,14 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
         this.shadow = shadow;
         for (ComponentWidget w : this.children) {
             w.shadow = shadow;
+        }
+        return this;
+    }
+
+    public ComponentWidget setUseUIFont(boolean useUIRendering) {
+        this.useUIRendering = useUIRendering;
+        for (ComponentWidget w : this.children) {
+            w.useUIRendering = useUIRendering;
         }
         return this;
     }
@@ -190,7 +211,9 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
 
     @Override
     public int getWidth() {
-        int w = this.font.width(this.getText());
+        int w = this.useUIRendering
+                ? (int) Math.ceil(UIBase.getUITextWidthNormal(this.getText()))
+                : this.font.width(this.getText());
         for (ComponentWidget c : this.children) {
             w += c.getWidth();
         }
@@ -199,6 +222,9 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
 
     @Override
     public int getHeight() {
+        if (this.useUIRendering) {
+            return (int) Math.ceil(UIBase.getUITextHeightNormal());
+        }
         return this.font.lineHeight;
     }
 
@@ -219,10 +245,14 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
-        if (this.active && this.visible && this.isHoveredOrFocused() && (event.button() == 0)) {
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean isDoubleClick) {
+        return this.mouseClicked(event.x(), event.y(), event.button());
+    }
+    
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (this.active && this.visible && this.isHoveredOrFocused() && (button == 0)) {
             for (ComponentWidget w : this.children) {
-                if (w.mouseClicked(event, isDoubleClick)) return true;
+                if (w.mouseClicked(mouseX, mouseY, button)) return true;
             }
             if (this.onClick != null) {
                 this.onClick.accept(this);

@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.cursor;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -11,8 +12,6 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderPipelines;
-
 import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,8 +22,8 @@ public class CursorElement extends AbstractElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public int hotspotX = 0;
-    public int hotspotY = 0;
+    public final Property.IntegerProperty hotspotX = putProperty(Property.integerProperty("hotspot_x", 0, "fancymenu.elements.cursor.hotspot_x"));
+    public final Property.IntegerProperty hotspotY = putProperty(Property.integerProperty("hotspot_y", 0, "fancymenu.elements.cursor.hotspot_y"));
     public boolean editorPreviewMode = false;
     @Nullable
     public ResourceSupplier<ITexture> textureSupplier;
@@ -50,15 +49,20 @@ public class CursorElement extends AbstractElement {
                 if ((this.textureSupplier != null) && !this.editorPreviewMode) {
                     ITexture t = this.textureSupplier.get();
                     if (t != null) {
-                        Identifier loc = t.getIdentifier();
+                        Identifier loc = t.getResourceLocation();
                         if (loc != null) {
                             int[] size = t.getAspectRatio().getAspectRatioSizeByMaximumSize(this.getAbsoluteWidth(), this.getAbsoluteHeight());
-                            graphics.blit(RenderPipelines.GUI_TEXTURED, loc, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
+                            RenderingUtils.resetShaderColor(graphics);
+                            graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, loc, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
+                            RenderingUtils.resetShaderColor(graphics);
                         }
                     }
                 } else {
+                    RenderingUtils.resetShaderColor(graphics);
+                    com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
                     graphics.fill(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY() + this.getAbsoluteHeight(), DrawableColor.WHITE.getColorInt());
                     graphics.fill(this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), DrawableColor.BLACK.getColorInt());
+                    RenderingUtils.resetShaderColor(graphics);
                 }
             }
 
@@ -75,14 +79,16 @@ public class CursorElement extends AbstractElement {
         if (this.textureSupplier != null) {
             ITexture t = this.textureSupplier.get();
             if (t instanceof PngTexture s) {
-                Identifier loc = t.getIdentifier();
-                if ((loc != this.lastLocation) || (this.lastHotspotX != this.hotspotX) || (this.lastHotspotY != this.hotspotY)) {
+                Identifier loc = t.getResourceLocation();
+                int resolvedHotspotX = this.hotspotX.getInteger();
+                int resolvedHotspotY = this.hotspotY.getInteger();
+                if ((loc != this.lastLocation) || (this.lastHotspotX != resolvedHotspotX) || (this.lastHotspotY != resolvedHotspotY)) {
                     if (loc != null) {
                         this.cursorReady = false;
                         if (!isEditor() || this.editorPreviewMode) {
                             CursorHandler.CustomCursor cursor = CursorHandler.getCustomCursor(this.getCursorName());
-                            if ((cursor == null) || (cursor.texture != s) || (cursor.hotspotX != this.hotspotX) || (cursor.hotspotY != this.hotspotY)) {
-                                cursor = CursorHandler.CustomCursor.create(s, this.hotspotX, this.hotspotY, this.textureSupplier.getSourceWithPrefix());
+                            if ((cursor == null) || (cursor.texture != s) || (cursor.hotspotX != resolvedHotspotX) || (cursor.hotspotY != resolvedHotspotY)) {
+                                cursor = CursorHandler.CustomCursor.create(s, resolvedHotspotX, resolvedHotspotY, this.textureSupplier.getSourceWithPrefix());
                                 if (cursor != null) {
                                     CursorHandler.registerCustomCursor(this.getCursorName(), cursor);
                                     this.cursorReady = true;
@@ -94,8 +100,8 @@ public class CursorElement extends AbstractElement {
                     }
                 }
                 this.lastLocation = loc;
-                this.lastHotspotX = this.hotspotX;
-                this.lastHotspotY = this.hotspotY;
+                this.lastHotspotX = resolvedHotspotX;
+                this.lastHotspotY = resolvedHotspotY;
             }
         } else {
             this.lastLocation = null;

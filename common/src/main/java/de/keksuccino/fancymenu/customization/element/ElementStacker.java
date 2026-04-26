@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.element;
 
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -37,44 +37,50 @@ public interface ElementStacker<E extends AbstractElement> {
         if ((e.baseHeight != 0) && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
             stack.baseHeight = e.baseHeight;
         }
-        if ((e.advancedX != null) && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
-            stack.advancedX = e.advancedX;
+        if (!e.advancedX.isDefault() && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
+            stack.advancedX.copyValueFrom(e.advancedX);
         }
-        if ((e.advancedY != null) && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
-            stack.advancedY = e.advancedY;
+        if (!e.advancedY.isDefault() && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
+            stack.advancedY.copyValueFrom(e.advancedY);
         }
-        if ((e.advancedWidth != null) && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
-            stack.advancedWidth = e.advancedWidth;
+        if (!e.advancedWidth.isDefault() && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
+            stack.advancedWidth.copyValueFrom(e.advancedWidth);
         }
-        if ((e.advancedHeight != null) && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
-            stack.advancedHeight = e.advancedHeight;
+        if (!e.advancedHeight.isDefault() && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
+            stack.advancedHeight.copyValueFrom(e.advancedHeight);
         }
-        if (e.stretchX) {
-            stack.stretchX = true;
+        if (!e.stretchX.isDefault()) {
+            stack.stretchX.copyValueFrom(e.stretchX);
         }
-        if (e.stretchY) {
-            stack.stretchY = true;
+        if (!e.stretchY.isDefault()) {
+            stack.stretchY.copyValueFrom(e.stretchY);
         }
         if (e.appearanceDelay != AbstractElement.AppearanceDelay.NO_DELAY) {
             stack.appearanceDelay = e.appearanceDelay;
         }
-        if (e.appearanceDelayInSeconds != 1.0F) {
-            stack.appearanceDelayInSeconds = e.appearanceDelayInSeconds;
+        if (!e.appearanceDelaySeconds.isDefault()) {
+            stack.appearanceDelaySeconds.copyValueFrom(e.appearanceDelaySeconds);
+        }
+        if (e.disappearanceDelay != AbstractElement.DisappearanceDelay.NO_DELAY) {
+            stack.disappearanceDelay = e.disappearanceDelay;
+        }
+        if (!e.disappearanceDelaySeconds.isDefault()) {
+            stack.disappearanceDelaySeconds.copyValueFrom(e.disappearanceDelaySeconds);
         }
         if (e.fadeIn != AbstractElement.Fading.NO_FADING) {
             stack.fadeIn = e.fadeIn;
         }
-        if (e.fadeInSpeed != 1.0F) {
-            stack.fadeInSpeed = e.fadeInSpeed;
+        if (!e.fadeInSpeed.isDefault()) {
+            stack.fadeInSpeed.copyValueFrom(e.fadeInSpeed);
         }
         if (e.fadeOut != AbstractElement.Fading.NO_FADING) {
             stack.fadeOut = e.fadeOut;
         }
-        if (e.fadeOutSpeed != 1.0F) {
-            stack.fadeOutSpeed = e.fadeOutSpeed;
+        if (!e.fadeOutSpeed.isDefault()) {
+            stack.fadeOutSpeed.copyValueFrom(e.fadeOutSpeed);
         }
-        if (!e.baseOpacity.equals("1.0")) {
-            stack.baseOpacity = e.baseOpacity;
+        if (!e.baseOpacity.isDefault()) {
+            stack.baseOpacity.copyValueFrom(e.baseOpacity);
         }
         if (e.autoSizing) {
             stack.autoSizing = true;
@@ -101,12 +107,12 @@ public interface ElementStacker<E extends AbstractElement> {
     @SuppressWarnings("all")
     public default E stackElementsInternal(AbstractElement stack, AbstractElement... elements) {
         try {
-            List<LoadingRequirementContainer> containers = new ArrayList<>();
+            List<RequirementContainer> containers = new ArrayList<>();
             for (AbstractElement e : elements) {
                 this.stackElementsSingleInternal(e, stack);
-                containers.add(e.loadingRequirementContainer);
+                containers.add(e.requirementContainer);
             }
-            stack.loadingRequirementContainer = LoadingRequirementContainer.stackContainers(containers.toArray(new LoadingRequirementContainer[0]));
+            stack.requirementContainer = RequirementContainer.stackContainers(containers.toArray(new RequirementContainer[0]));
             return (E) stack;
         } catch (Exception ex) {
             ex.printStackTrace();

@@ -1,10 +1,13 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2;
 
-import com.mojang.blaze3d.platform.cursor.CursorTypes;
+import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSliderButton;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.VanillaEvents;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
@@ -16,7 +19,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
@@ -51,12 +53,14 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     @NotNull
     protected DrawableColor labelColorInactive = DrawableColor.of(new Color(10526880));
     protected boolean labelShadow = true;
+    protected boolean renderLabelWithUiBase = false;
     @Nullable
     protected SliderValueUpdateListener sliderValueUpdateListener;
     @NotNull
     protected ConsumingSupplier<AbstractExtendedSlider, Component> labelSupplier = slider -> Component.literal(slider.getValueDisplayText());
     protected boolean focusable = true;
     protected boolean navigatable = true;
+    protected boolean roundedColorBackground = false;
     @Nullable
     protected ConsumingSupplier<AbstractExtendedSlider, Boolean> isActiveSupplier = null;
     protected boolean leftMouseDown = false;
@@ -77,14 +81,13 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.renderBackground(graphics, mouseX, mouseY, partial);
+        RenderingUtils.resetShaderColor(graphics);
 
         this.renderHandle(graphics, mouseX, mouseY, partial);
+        RenderingUtils.resetShaderColor(graphics);
 
         this.renderLabel(graphics, mouseX, mouseY, partial);
-
-        if (this.isHovered()) {
-            graphics.requestCursor(this.isActive() ? CursorTypes.POINTING_HAND : CursorTypes.NOT_ALLOWED);
-        }
+        RenderingUtils.resetShaderColor(graphics);
 
     }
 
@@ -104,16 +107,92 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
      * Returns if the slider should render its Vanilla background (true) or not (false).
      */
     protected boolean renderColorBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        RenderingUtils.resetShaderColor(graphics);
         if ((this.isFocused() && !this.getAccessor().getCanChangeValueFancyMenu()) && (this.sliderBackgroundColorHighlighted != null)) {
-            graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.sliderBackgroundColorHighlighted.getColorInt());
+            if (this.roundedColorBackground) {
+                float radius = UIBase.getWidgetCornerRoundingRadius();
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+                        graphics,
+                        this.getX(),
+                        this.getY(),
+                        this.getWidth(),
+                        this.getHeight(),
+                        radius,
+                        radius,
+                        radius,
+                        radius,
+                        this.sliderBackgroundColorHighlighted.getColorInt(),
+                        partial
+                );
+            } else {
+                graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.sliderBackgroundColorHighlighted.getColorInt());
+            }
             if (this.sliderBorderColorHighlighted != null) {
-                UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.sliderBorderColorHighlighted.getColorInt(), true, true, true, true);
+                if (this.roundedColorBackground) {
+                    float radius = UIBase.getWidgetCornerRoundingRadius();
+                    float borderThickness = 1.0F;
+                    float borderRadius = radius > 0.0F ? radius + borderThickness : 0.0F;
+                    SmoothRectangleRenderer.renderSmoothBorderRoundAllCornersScaled(
+                            graphics,
+                            this.getX(),
+                            this.getY(),
+                            this.getWidth(),
+                            this.getHeight(),
+                            borderThickness,
+                            borderRadius,
+                            borderRadius,
+                            borderRadius,
+                            borderRadius,
+                            this.sliderBorderColorHighlighted.getColorInt(),
+                            partial
+                    );
+                } else {
+                    UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.sliderBorderColorHighlighted.getColorInt(), true, true, true, true);
+                }
             }
             return false;
         } else if (this.sliderBackgroundColorNormal != null) {
-            graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.sliderBackgroundColorNormal.getColorInt());
+            if (this.roundedColorBackground) {
+                float radius = UIBase.getWidgetCornerRoundingRadius();
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+                        graphics,
+                        this.getX(),
+                        this.getY(),
+                        this.getWidth(),
+                        this.getHeight(),
+                        radius,
+                        radius,
+                        radius,
+                        radius,
+                        this.sliderBackgroundColorNormal.getColorInt(),
+                        partial
+                );
+            } else {
+                graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.sliderBackgroundColorNormal.getColorInt());
+            }
             if (this.sliderBorderColorNormal != null) {
-                UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.sliderBorderColorNormal.getColorInt(), true, true, true, true);
+                if (this.roundedColorBackground) {
+                    float radius = UIBase.getWidgetCornerRoundingRadius();
+                    float borderThickness = 1.0F;
+                    float borderRadius = radius > 0.0F ? radius + borderThickness : 0.0F;
+                    SmoothRectangleRenderer.renderSmoothBorderRoundAllCornersScaled(
+                            graphics,
+                            this.getX(),
+                            this.getY(),
+                            this.getWidth(),
+                            this.getHeight(),
+                            borderThickness,
+                            borderRadius,
+                            borderRadius,
+                            borderRadius,
+                            borderRadius,
+                            this.sliderBorderColorNormal.getColorInt(),
+                            partial
+                    );
+                } else {
+                    UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.sliderBorderColorNormal.getColorInt(), true, true, true, true);
+                }
             }
             return false;
         }
@@ -121,7 +200,12 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     }
 
     protected void renderVanillaBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, this.getSprite(), this.getX(), this.getY(), this.getWidth(), this.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.alpha));
+        de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, this.alpha);
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        de.keksuccino.fancymenu.util.rendering.RenderingUtils.defaultBlendFunc();
+        com.mojang.blaze3d.opengl.GlStateManager._enableDepthTest();
+        graphics.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, this.getSprite(), this.getX(), this.getY(), this.getWidth(), this.getHeight());
+        RenderingUtils.resetShaderColor(graphics);
     }
 
     protected void renderHandle(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
@@ -134,23 +218,75 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
      * Returns if the slider should render its Vanilla handle (true) or not (false).
      */
     protected boolean renderColorHandle(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
         int handleX = this.getHandleX();
         int handleWidth = this.getHandleWidth();
         if (this.active) {
             if (this.isHoveredOrFocused()) {
                 if (this.sliderHandleColorHover != null) {
-                    graphics.fill(handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorHover.getColorInt());
+                    if (this.roundedColorBackground) {
+                        float radius = UIBase.getWidgetCornerRoundingRadius();
+                        SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+                                graphics,
+                                handleX,
+                                this.getY(),
+                                handleWidth,
+                                this.getHeight(),
+                                radius,
+                                radius,
+                                radius,
+                                radius,
+                                this.sliderHandleColorHover.getColorInt(),
+                                partial
+                        );
+                    } else {
+                        graphics.fill(handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorHover.getColorInt());
+                    }
                     return false;
                 }
             } else {
                 if (this.sliderHandleColorNormal != null) {
-                    graphics.fill(handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorNormal.getColorInt());
+                    if (this.roundedColorBackground) {
+                        float radius = UIBase.getWidgetCornerRoundingRadius();
+                        SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+                                graphics,
+                                handleX,
+                                this.getY(),
+                                handleWidth,
+                                this.getHeight(),
+                                radius,
+                                radius,
+                                radius,
+                                radius,
+                                this.sliderHandleColorNormal.getColorInt(),
+                                partial
+                        );
+                    } else {
+                        graphics.fill(handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorNormal.getColorInt());
+                    }
                     return false;
                 }
             }
         } else {
             if (this.sliderHandleColorInactive != null) {
-                graphics.fill(handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorInactive.getColorInt());
+                if (this.roundedColorBackground) {
+                    float radius = UIBase.getWidgetCornerRoundingRadius();
+                    SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+                            graphics,
+                            handleX,
+                            this.getY(),
+                            handleWidth,
+                            this.getHeight(),
+                            radius,
+                            radius,
+                            radius,
+                            radius,
+                            this.sliderHandleColorInactive.getColorInt(),
+                            partial
+                    );
+                } else {
+                    graphics.fill(handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorInactive.getColorInt());
+                }
                 return false;
             }
         }
@@ -158,12 +294,23 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     }
 
     protected void renderVanillaHandle(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, this.getHandleSprite(), this.getHandleX(), this.getY(), this.getHandleWidth(), this.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.alpha));
+        de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, this.alpha);
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        de.keksuccino.fancymenu.util.rendering.RenderingUtils.defaultBlendFunc();
+        com.mojang.blaze3d.opengl.GlStateManager._enableDepthTest();
+        graphics.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, this.getHandleSprite(), this.getHandleX(), this.getY(), this.getHandleWidth(), this.getHeight());
+        RenderingUtils.resetShaderColor(graphics);
     }
 
     protected void renderLabel(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         int textColor = this.active ? this.labelColorNormal.getColorInt() : this.labelColorInactive.getColorInt();
-        this.renderScrollingLabel(this, graphics, Minecraft.getInstance().font, 2, this.labelShadow, RenderingUtils.replaceAlphaInColor(textColor, this.alpha));
+        int finalTextColor = RenderingUtils.replaceAlphaInColor(textColor, this.alpha);
+        boolean labelShadowFinal = this.labelShadow && GlobalCustomizationHandler.isGlobalSliderLabelShadowEnabled();
+        if (this.renderLabelWithUiBase) {
+            this.renderScrollingLabelUiBase(this, graphics, 2, finalTextColor);
+        } else {
+            this.renderScrollingLabel(this, graphics, Minecraft.getInstance().font, 2, labelShadowFinal, finalTextColor);
+        }
     }
 
     public int getHandleX() {
@@ -364,6 +511,24 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
         return this;
     }
 
+    public boolean isLabelRenderedWithUiBase() {
+        return this.renderLabelWithUiBase;
+    }
+
+    public AbstractExtendedSlider setLabelRenderedWithUiBase(boolean renderLabelWithUiBase) {
+        this.renderLabelWithUiBase = renderLabelWithUiBase;
+        return this;
+    }
+
+    public boolean isRoundedColorBackgroundEnabled() {
+        return this.roundedColorBackground;
+    }
+
+    public AbstractExtendedSlider setRoundedColorBackgroundEnabled(boolean roundedColorBackground) {
+        this.roundedColorBackground = roundedColorBackground;
+        return this;
+    }
+
     @NotNull
     public ConsumingSupplier<AbstractExtendedSlider, Component> getLabelSupplier() {
         return this.labelSupplier;
@@ -407,22 +572,37 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     }
 
     @Override
-    public boolean mouseClicked(@NotNull MouseButtonEvent event, boolean isDoubleClick) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         if (!this.canClick()) return false;
-        if (event.button() == 0) this.leftMouseDown = true;
-        return super.mouseClicked(event, isDoubleClick);
+        boolean handled = super.mouseClicked(event, isDoubleClick);
+        if (event.button() == 0) this.leftMouseDown = handled;
+        return handled;
+    }
+
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        return this.mouseClicked(VanillaEvents.mouseButtonEvent(mouseX, mouseY, button, 0), false);
     }
 
     @Override
-    public boolean mouseReleased(@NotNull MouseButtonEvent event) {
+    public boolean mouseReleased(MouseButtonEvent event) {
+        boolean wasLeftMouseDown = this.leftMouseDown;
         this.leftMouseDown = false;
+        if (!wasLeftMouseDown || (event.button() != 0)) return false;
         return super.mouseReleased(event);
     }
 
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        return this.mouseReleased(VanillaEvents.mouseButtonEvent(mouseX, mouseY, button, 0));
+    }
+
     @Override
-    public boolean mouseDragged(@NotNull MouseButtonEvent event, double dragX, double dragY) {
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
         if (!this.leftMouseDown) return false;
         return super.mouseDragged(event, dragX, dragY);
+    }
+
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        return this.mouseDragged(VanillaEvents.mouseButtonEvent(mouseX, mouseY, button, 0), dragX, dragY);
     }
 
     protected boolean canClick() {

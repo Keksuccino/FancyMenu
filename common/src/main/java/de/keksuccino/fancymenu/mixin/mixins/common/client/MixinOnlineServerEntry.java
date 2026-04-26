@@ -20,9 +20,12 @@ public class MixinOnlineServerEntry {
         }
     }
 
-    @WrapWithCondition(method = "renderContent", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;fill(IIIII)V"))
+    @WrapWithCondition(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;fill(IIIII)V"), method = "renderContent")
     private boolean onFillInRenderFancyMenu(GuiGraphics instance, int $$0, int $$1, int $$2, int $$3, int $$4) {
-        return FancyMenu.getOptions().showMultiplayerScreenServerIcons.getValue();
+        if (FancyMenu.getOptions().showMultiplayerScreenServerIcons.getValue()) {
+            instance.fill($$0, $$1, $$2, $$3, $$4);
+        }
+        return false;
     }
 
 }

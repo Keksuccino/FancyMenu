@@ -19,7 +19,7 @@ public class CloseGuiScreenCommand {
         d.register(Commands.literal("closeguiscreen").executes((stack) -> {
             return closeGui(stack.getSource(), null);
         }).then(Commands.argument("target_players", EntityArgument.players())
-                .requires(stack -> stack.permissions().hasPermission(Permissions.COMMANDS_ADMIN))
+                .requires(stack -> stack.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER))
                 .executes(stack -> {
                     return closeGui(stack.getSource(), EntityArgument.getPlayers(stack, "target_players"));
                 })));

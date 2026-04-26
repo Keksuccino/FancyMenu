@@ -10,7 +10,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 public class WorldUtils {
 
@@ -40,11 +42,13 @@ public class WorldUtils {
         if (levelCandidates.isEmpty()) {
             return List.of();
         } else {
-            future = minecraft.getLevelSource().loadLevelSummaries(levelCandidates).exceptionally(throwable -> List.of());
+            future = minecraft.getLevelSource().loadLevelSummaries(levelCandidates);
         }
         try {
-            return Objects.requireNonNullElse(future.getNow(List.of()), List.of());
-        } catch (Exception ignore) {
+            // loadLevelSummaries resolves asynchronously, so getNow(...) can return empty even though worlds exist.
+            return Objects.requireNonNullElse(future.join(), List.of());
+        } catch (CompletionException | CancellationException ex) {
+            LOGGER.error("[FANCYMENU] Couldn't load level summaries!", ex);
         }
         return List.of();
     }

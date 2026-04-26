@@ -20,7 +20,6 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 
 @SuppressWarnings("unused")
 public class JpegTexture implements ITexture {
@@ -250,12 +249,13 @@ public class JpegTexture implements ITexture {
     }
 
     @Nullable
-    public Identifier getIdentifier() {
+    public Identifier getResourceLocation() {
         if (this.closed) return FULLY_TRANSPARENT_TEXTURE;
         if ((this.resourceLocation == null) && !this.loadedIntoMinecraft && (this.nativeImage != null)) {
             try {
-                this.dynamicTexture = new DynamicTexture(() -> UUID.randomUUID().toString(), this.nativeImage);
-                this.resourceLocation = this.registerAbstractTexture(this.dynamicTexture);
+                this.resourceLocation = Identifier.fromNamespaceAndPath("fancymenu", "dynamic/simple_jpeg_texture_" + System.nanoTime());
+                this.dynamicTexture = new DynamicTexture(this.resourceLocation::toString, this.nativeImage);
+                Minecraft.getInstance().getTextureManager().register(this.resourceLocation, this.dynamicTexture);
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to get Identifier of JpegTexture!", ex);
             }
@@ -336,4 +336,3 @@ public class JpegTexture implements ITexture {
     }
 
 }
-

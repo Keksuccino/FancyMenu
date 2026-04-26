@@ -4,9 +4,6 @@ import com.mojang.blaze3d.platform.NativeImage;
 import java.io.*;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
-import java.util.function.Supplier;
-
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
@@ -241,12 +238,13 @@ public class PngTexture implements ITexture {
     }
 
     @Nullable
-    public Identifier getIdentifier() {
+    public Identifier getResourceLocation() {
         if (this.closed) return FULLY_TRANSPARENT_TEXTURE;
         if ((this.resourceLocation == null) && !this.loadedIntoMinecraft && (this.nativeImage != null)) {
             try {
-                this.dynamicTexture = new DynamicTexture(() -> UUID.randomUUID().toString(), this.nativeImage);
-                this.resourceLocation = this.registerAbstractTexture(this.dynamicTexture);
+                this.resourceLocation = Identifier.fromNamespaceAndPath("fancymenu", "dynamic/simple_texture_" + System.nanoTime());
+                this.dynamicTexture = new DynamicTexture(this.resourceLocation::toString, this.nativeImage);
+                Minecraft.getInstance().getTextureManager().register(this.resourceLocation, this.dynamicTexture);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -263,24 +261,18 @@ public class PngTexture implements ITexture {
         return this.height;
     }
 
+    @Nullable
+    public NativeImage getNativeImage() {
+        return this.nativeImage;
+    }
+
     @NotNull
     public AspectRatio getAspectRatio() {
         return this.aspectRatio;
     }
 
-    @Nullable
-    public NativeImage getNativeImage() {
-        return nativeImage;
-    }
-
-    @Nullable
-    public DynamicTexture getDynamicTexture() {
-        return dynamicTexture;
-    }
-
     @Override
     public @Nullable InputStream open() throws IOException {
-
         if (this.nativeImage != null) return new ByteArrayInputStream(NativeImageUtil.asByteArray(this.nativeImage));
         return null;
     }
@@ -335,4 +327,3 @@ public class PngTexture implements ITexture {
     }
 
 }
-

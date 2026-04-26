@@ -12,6 +12,7 @@ public class Commands {
         OpenGuiScreenCommand.register(dispatcher);
         VariableCommand.register(dispatcher);
         LayoutCommand.register(dispatcher);
+        FmDataCommand.register(dispatcher);
 
     }
 

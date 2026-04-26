@@ -38,12 +38,13 @@ public class ElementSelectorScreen extends CellScreen {
         this.callback = callback;
         this.filter = filter;
         this.elementIds = elementIds;
+        this.setSearchBarEnabled(true);
     }
 
     @Override
     protected void initCells() {
 
-        this.addStartEndSpacerCell();
+        this.addCellGroupEndSpacerCell().setIgnoreSearch();
 
         // Get all available elements
         List<AbstractEditorElement> elements = new ArrayList<>();
@@ -58,8 +59,8 @@ public class ElementSelectorScreen extends CellScreen {
             this.elementIds.forEach(s -> {
                 if (!this.containsElement(elements, s)) {
                     ImageEditorElement dummy = Elements.IMAGE.wrapIntoEditorElement(Elements.IMAGE.buildDefaultInstance(), this.layoutEditor);
-                    dummy.getElement().customElementLayerName = "---";
-                    dummy.getElement().setInstanceIdentifier(s);
+                    dummy.element.customElementLayerName = "---";
+                    dummy.element.setInstanceIdentifier(s);
                     elements.add(dummy);
                 }
             });
@@ -70,7 +71,7 @@ public class ElementSelectorScreen extends CellScreen {
             this.addCell(new ElementCell(element)).setSelectable(true);
         }
 
-        this.addStartEndSpacerCell();
+        this.addCellGroupEndSpacerCell().setIgnoreSearch();
 
     }
 
@@ -108,8 +109,8 @@ public class ElementSelectorScreen extends CellScreen {
             this.element = element;
 
             MutableComponent label = element.element.getDisplayName().copy();
-            label = label.setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
-            label = label.append(Component.literal(" [" + element.element.getInstanceIdentifier() + "]").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().generic_text_base_color.getColorInt())));
+            label = label.setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
+            label = label.append(Component.literal(" [" + element.element.getInstanceIdentifier() + "]").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_generic_text_color.getColorInt())));
             this.setText(label);
 
         }

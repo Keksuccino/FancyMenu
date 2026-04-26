@@ -18,7 +18,7 @@ import java.util.Objects;
  */
 public class MinecraftSplashRenderer {
 
-    // This initialization logic remains correct, as it retrieves the splash string.
+    // This initialization logic remains correct, as it retrieves the splash component.
     public static final MinecraftSplashRenderer DEFAULT_INSTANCE = new MinecraftSplashRenderer(((IMixinSplashRenderer)Objects.requireNonNullElse(Minecraft.getInstance().getSplashManager().getSplash(), new SplashRenderer(Component.translatable("ERROR")))).getSplashFancyMenu());
 
     public static final int WIDTH_OFFSET = 123;

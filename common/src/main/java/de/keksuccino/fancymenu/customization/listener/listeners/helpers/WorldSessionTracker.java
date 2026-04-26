@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.listener.listeners.helpers;
 
+import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -22,11 +23,14 @@ public final class WorldSessionTracker {
     public static void prepareSession(@NotNull String worldName, @NotNull String worldSavePath, @Nullable String iconPath, boolean isFirstJoin) {
         String resolvedIconPath = resolveIconPath(worldSavePath, iconPath);
         pendingSession = new SessionData(worldName, worldSavePath, resolvedIconPath, isFirstJoin);
+        SeamlessWorldLoadingHandler.beginWorldLoad(worldSavePath);
     }
 
     public static void clearSession() {
         activeSession = null;
         pendingSession = null;
+        SeamlessWorldLoadingHandler.clearCapture();
+        SeamlessWorldLoadingHandler.finishWorldLoad();
     }
 
     public static boolean hasPendingEntry() {
@@ -46,6 +50,8 @@ public final class WorldSessionTracker {
         SessionData session = pendingSession.copy();
         activeSession = pendingSession;
         pendingSession = null;
+        SeamlessWorldLoadingHandler.startWorldCapture(session.worldSavePath);
+        SeamlessWorldLoadingHandler.finishWorldLoad();
         Listeners.ON_WORLD_ENTERED.onWorldEntered(
                 session.worldName,
                 session.worldSavePath,
@@ -64,6 +70,7 @@ public final class WorldSessionTracker {
         captureSnapshot(minecraft);
         SessionData session = activeSession.copy();
         activeSession = null;
+        SeamlessWorldLoadingHandler.saveAndClearWorldCapture(session.worldSavePath);
         Listeners.ON_WORLD_LEFT.onWorldLeft(
                 session.worldName,
                 session.worldSavePath,

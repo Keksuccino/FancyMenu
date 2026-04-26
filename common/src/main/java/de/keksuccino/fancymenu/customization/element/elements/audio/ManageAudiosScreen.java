@@ -2,11 +2,11 @@ package de.keksuccino.fancymenu.customization.element.elements.audio;
 
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserWindowBody;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -36,16 +36,18 @@ public class ManageAudiosScreen extends CellScreen {
         this.tempAudios = new ArrayList<>(audios);
         this.element = element;
         this.editor = editor;
+        this.setSearchBarEnabled(true);
     }
 
     @Override
     protected void initCells() {
-        this.addSpacerCell(10);
+
+        this.addCellGroupEndSpacerCell().setIgnoreSearch();
 
         for (AudioElement.AudioInstance instance : this.tempAudios) {
-            MutableComponent sourceName = Component.literal("[").append(instance.supplier.getSourceType().getValueComponent().setStyle(Style.EMPTY)).append("] ").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
-            MutableComponent name = Component.literal(instance.supplier.getSourceWithoutPrefix()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
-            MutableComponent weight = Component.translatable("fancymenu.elements.audio.manage_audios.weight_display", String.format("%.1f", instance.weight)).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
+            MutableComponent sourceName = Component.literal("[").append(instance.supplier.getSourceType().getValueComponent().setStyle(Style.EMPTY)).append("] ").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
+            MutableComponent name = Component.literal(instance.supplier.getSourceWithoutPrefix()).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()));
+            MutableComponent weight = Component.translatable("fancymenu.elements.audio.manage_audios.weight_display", String.format("%.1f", instance.weight)).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt()));
             RenderCell cell = this.addLabelCell(sourceName.append(name).append(weight))
                     .putMemoryValue("source", instance.supplier.getSourceWithPrefix())
                     .setHeight(80)
@@ -56,7 +58,8 @@ public class ManageAudiosScreen extends CellScreen {
             }
         }
 
-        this.addStartEndSpacerCell();
+        this.addCellGroupEndSpacerCell().setIgnoreSearch();
+
     }
 
     @Override
@@ -77,12 +80,9 @@ public class ManageAudiosScreen extends CellScreen {
     protected void initRightSideWidgets() {
 
         this.addRightSideButton(20, Component.translatable("fancymenu.elements.audio.manage_audios.add_audio"), button -> {
-            Minecraft.getInstance().setScreen(
-                    ResourceChooserScreen.audio(null, s -> {
-                        if (s != null) this.addAudio(s);
-                        Minecraft.getInstance().setScreen(this);
-                    })
-            );
+            ResourceChooserWindowBody.audio(null, s -> {
+                if (s != null) this.addAudio(s);
+            }).openInWindow(null);
         });
 
         this.addRightSideDefaultSpacer();
@@ -92,10 +92,9 @@ public class ManageAudiosScreen extends CellScreen {
             if (selected != null) {
                 String source = selected.getMemoryValue("source");
                 if (source != null) {
-                    Minecraft.getInstance().setScreen(ConfirmationScreen.warning(aBoolean -> {
+                    Dialogs.openMessageWithCallback(Component.translatable("fancymenu.elements.audio.manage_audios.remove_audio.confirm"), MessageDialogStyle.WARNING, aBoolean -> {
                         if (aBoolean) this.removeAudio(source);
-                        Minecraft.getInstance().setScreen(this);
-                    }, LocalizationUtils.splitLocalizedLines("fancymenu.elements.audio.manage_audios.remove_audio.confirm")));
+                    });
                 }
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedCell() != null));

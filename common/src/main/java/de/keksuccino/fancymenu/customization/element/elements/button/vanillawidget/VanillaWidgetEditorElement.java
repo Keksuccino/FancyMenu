@@ -1,27 +1,26 @@
 package de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget;
 
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.HideableElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.AnchorPointOverlay;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
-public class VanillaWidgetEditorElement extends ButtonEditorElement implements HideableElement {
+public class VanillaWidgetEditorElement extends ButtonEditorElement<VanillaWidgetEditorElement, VanillaWidgetElement> implements HideableElement {
 
     private ElementAnchorPoint lastAnchorPoint = null;
 
-    public VanillaWidgetEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public VanillaWidgetEditorElement(@NotNull VanillaWidgetElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
         this.settings.setOrderable(false);
         this.settings.setCopyable(false);
@@ -45,19 +44,19 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements H
             this.rightClickMenu.removeEntry("edit_hover_label");
         }
 
-        if (this.getElement().getWidget() != null) {
+        if (this.element.getWidget() != null) {
 
             this.rightClickMenu.addClickableEntryAfter("copy_id", "copy_vanilla_widget_locator", Component.translatable("fancymenu.elements.vanilla_button.copy_locator"), (menu, entry) ->
                     {
-                        Minecraft.getInstance().keyboardHandler.setClipboard(((VanillaWidgetElement)this.element).widgetMeta.getLocator());
+                        Minecraft.getInstance().keyboardHandler.setClipboard(this.element.widgetMeta.getLocator());
                         menu.closeMenu();
                     })
-                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.vanilla_button.copy_locator.desc")))
-                    .setIcon(ContextMenu.IconFactory.getIcon("notes"));
+                    .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.vanilla_button.copy_locator.desc")))
+                    .setIcon(MaterialIcons.CONTENT_COPY);
 
         }
 
-        if (this.getElement().getWidget() instanceof CustomizableSlider) {
+        if (this.element.getWidget() instanceof CustomizableSlider) {
 
             ContextMenu.ContextMenuEntry<?> buttonBackgroundMenuEntry = this.rightClickMenu.getEntry("button_background");
             if (buttonBackgroundMenuEntry instanceof ContextMenu.SubMenuContextMenuEntry s1) {
@@ -72,38 +71,37 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements H
                     this.addImageResourceChooserContextMenuEntryTo(setBackMenu, "normal_slider_background_texture",
                             VanillaWidgetEditorElement.class,
                             null,
-                            consumes -> consumes.getElement().sliderBackgroundTextureNormal,
+                            consumes -> consumes.element.sliderBackgroundTextureNormal,
                             (buttonEditorElement, iTextureResourceSupplier) -> {
-                                buttonEditorElement.getElement().sliderBackgroundTextureNormal = iTextureResourceSupplier;
-                            }, Component.translatable("fancymenu.elements.buttons.buttonbackground.slider.normal"), true, null, true, true, true);
+                                buttonEditorElement.element.sliderBackgroundTextureNormal = iTextureResourceSupplier;
+                            }, Component.translatable("fancymenu.elements.buttons.buttonbackground.slider.normal"), true, null, true, true, true)
+                            .setIcon(MaterialIcons.IMAGE);
 
                     this.addImageResourceChooserContextMenuEntryTo(setBackMenu, "highlighted_slider_background_texture",
                                     VanillaWidgetEditorElement.class,
                                     null,
-                                    consumes -> consumes.getElement().sliderBackgroundTextureHighlighted,
+                                    consumes -> consumes.element.sliderBackgroundTextureHighlighted,
                                     (buttonEditorElement, iTextureResourceSupplier) -> {
-                                        buttonEditorElement.getElement().sliderBackgroundTextureHighlighted = iTextureResourceSupplier;
+                                        buttonEditorElement.element.sliderBackgroundTextureHighlighted = iTextureResourceSupplier;
                                     }, Component.translatable("fancymenu.elements.buttons.buttonbackground.slider.highlighted"), true, null, true, true, true)
-                            .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.buttons.buttonbackground.slider.highlighted.desc")));
+                            .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.buttons.buttonbackground.slider.highlighted.desc")))
+                            .setIcon(MaterialIcons.IMAGE);
 
                 }
 
                 buttonBackgroundMenu.addSeparatorEntry("separator_before_nine_slider_slider_handle_settings");
 
                 this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_slider_handle", VanillaWidgetEditorElement.class,
-                        consumes -> consumes.getElement().nineSliceSliderHandle,
-                        (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().nineSliceSliderHandle = aBoolean,
-                        "fancymenu.elements.slider.v2.handle.textures.nine_slice");
+                        consumes -> consumes.element.nineSliceSliderHandle,
+                        (buttonEditorElement, aBoolean) -> buttonEditorElement.element.nineSliceSliderHandle = aBoolean,
+                        "fancymenu.elements.slider.v2.handle.textures.nine_slice")
+                        .setIcon(MaterialIcons.DRAG_HANDLE);
 
-                this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_slider_handle_border_x", VanillaWidgetEditorElement.class,
-                        consumes -> consumes.getElement().nineSliceSliderHandleBorderX,
-                        (buttonEditorElement, integer) -> buttonEditorElement.getElement().nineSliceSliderHandleBorderX = integer,
-                        Component.translatable("fancymenu.elements.slider.v2.handle.textures.nine_slice.border_x"), true, 5, null, null);
+                this.element.nineSliceSliderHandleBorderX.buildContextMenuEntryAndAddTo(buttonBackgroundMenu, this)
+                        .setIcon(MaterialIcons.BORDER_HORIZONTAL);
 
-                this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_slider_handle_border_y", VanillaWidgetEditorElement.class,
-                        consumes -> consumes.getElement().nineSliceSliderHandleBorderY,
-                        (buttonEditorElement, integer) -> buttonEditorElement.getElement().nineSliceSliderHandleBorderY = integer,
-                        Component.translatable("fancymenu.elements.slider.v2.handle.textures.nine_slice.border_y"), true, 5, null, null);
+                this.element.nineSliceSliderHandleBorderY.buildContextMenuEntryAndAddTo(buttonBackgroundMenu, this)
+                        .setIcon(MaterialIcons.BORDER_VERTICAL);
 
             }
 
@@ -197,21 +195,33 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements H
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean isDoubleClick) {
+        return this.mouseClicked(event.x(), event.y(), event.button());
+    }
+    
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (this.isHidden()) return false;
-        return super.mouseClicked(event, isDoubleClick);
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseReleased(MouseButtonEvent event) {
+    public boolean mouseReleased(net.minecraft.client.input.MouseButtonEvent event) {
+        return this.mouseReleased(event.x(), event.y(), event.button());
+    }
+    
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if (this.isHidden()) return false;
-        return super.mouseReleased(event);
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseDragged(MouseButtonEvent event, double $$3, double $$4) {
+    public boolean mouseDragged(net.minecraft.client.input.MouseButtonEvent event, double $$3, double $$4) {
+        return this.mouseDragged(event.x(), event.y(), event.button(), $$3, $$4);
+    }
+    
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double $$3, double $$4) {
         if (this.isHidden()) return false;
-        return super.mouseDragged(event, $$3, $$4);
+        return super.mouseDragged(mouseX, mouseY, button, $$3, $$4);
     }
 
     @Override
@@ -222,23 +232,19 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements H
 
     @Override
     public boolean isHidden() {
-        return ((HideableElement)this.element).isHidden();
+        return this.element.isHidden();
     }
 
     @Override
     public void setHidden(boolean hidden) {
-        ((HideableElement)this.element).setHidden(hidden);
+        this.element.setHidden(hidden);
         if (this.isHidden()) {
             this.resetElementStates();
         }
     }
 
     public boolean isCopyrightButton() {
-        return ((VanillaWidgetElement)this.element).isCopyrightButton();
-    }
-
-    public VanillaWidgetElement getElement() {
-        return (VanillaWidgetElement) this.element;
+        return this.element.isCopyrightButton();
     }
 
 }

@@ -3,13 +3,15 @@ package de.keksuccino.fancymenu.util.resource.resources.texture;
 import com.madgag.gif.fmsware.GifDecoder;
 import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
-import de.keksuccino.konkrete.rendering.RenderUtils;
+import de.keksuccino.fancymenu.util.watermedia.WatermediaAnimatedTextureBackend;
+import de.keksuccino.fancymenu.util.watermedia.WatermediaUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.Identifier;
@@ -23,7 +25,6 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -40,7 +41,7 @@ public class GifTexture implements ITexture, PlayableResource {
     protected volatile AspectRatio aspectRatio = new AspectRatio(10, 10);
     protected volatile int width = 10;
     protected volatile int height = 10;
-    protected volatile long lastIdentifierCall = -1;
+    protected volatile long lastResourceLocationCall = -1;
     protected final AtomicBoolean tickerThreadRunning = new AtomicBoolean(false);
     protected final AtomicBoolean decoded = new AtomicBoolean(false);
     protected volatile boolean allFramesDecoded = false;
@@ -55,7 +56,15 @@ public class GifTexture implements ITexture, PlayableResource {
     protected final String uniqueId = ScreenCustomization.generateUniqueIdentifier();
     protected int frameRegistrationCounter = 0;
     protected volatile boolean maxLoopsReached = false;
+    protected volatile boolean pendingStartEvent = true;
     protected final AtomicBoolean closed = new AtomicBoolean(false);
+    @Nullable
+    protected volatile WatermediaAnimatedTextureBackend watermediaBackend = null;
+    @Nullable
+    protected volatile byte[] watermediaFallbackData = null;
+    @Nullable
+    protected volatile String sourceName = null;
+    protected final AtomicBoolean watermediaFallbackTriggered = new AtomicBoolean(false);
 
     @NotNull
     public static GifTexture location(@NotNull Identifier location) {
@@ -136,22 +145,14 @@ public class GifTexture implements ITexture, PlayableResource {
 
         //Download and decode GIF image
         new Thread(() -> {
-            InputStream in = null;
-            ByteArrayInputStream byteIn = null;
             try {
-                in = WebUtils.openResourceStream(gifUrl);
-                if (in == null) throw new NullPointerException("Web resource input stream was NULL!");
-                //The extract method seems to struggle with a direct web input stream, so read all bytes of it and wrap them into a ByteArrayInputStream
-                byteIn = new ByteArrayInputStream(in.readAllBytes());
+                populateTexture(texture, null, gifUrl);
+                if (texture.closed.get()) MainThreadTaskExecutor.executeInMainThread(texture::close, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
             } catch (Exception ex) {
                 texture.loadingFailed.set(true);
+                texture.decoded.set(true);
                 LOGGER.error("[FANCYMENU] Failed to read GIF image from URL: " + gifUrl, ex);
             }
-            if (byteIn != null) {
-                of(byteIn, gifUrl, texture);
-            }
-            //"byteIn" gets closed in of(), so only close "in" here
-            CloseableUtils.closeQuietly(in);
         }).start();
 
         return texture;
@@ -186,42 +187,206 @@ public class GifTexture implements ITexture, PlayableResource {
         return of(in, null, null);
     }
 
-    protected static void populateTexture(@NotNull GifTexture texture, @NotNull InputStream in, @NotNull String gifTextureName) {
+    protected static void populateTexture(@NotNull GifTexture texture, @Nullable InputStream in, @NotNull String gifTextureName) {
+        InputStream readInput = in;
+        texture.sourceName = gifTextureName;
+        texture.watermediaFallbackTriggered.set(false);
+        texture.watermediaFallbackData = null;
         if (!texture.closed.get()) {
-            DecodedGifImage decodedImage = decodeGif(in, gifTextureName);
-            if (decodedImage == null) {
-                LOGGER.error("[FANCYMENU] Failed to read GIF image, because DecodedGifImage was NULL: " + gifTextureName);
-                texture.decoded.set(true);
-                texture.loadingFailed.set(true);
-                return;
+            boolean decodedByWatermedia = false;
+            if (WatermediaUtil.isWatermediaLoaded()) {
+                LOGGER.info("[FANCYMENU] Starting GIF loading via Watermedia (direct source preferred): {}", gifTextureName);
+                decodedByWatermedia = populateTextureWithWatermediaDirectSource(texture, gifTextureName);
             }
-            texture.width = decodedImage.imageWidth;
-            texture.height = decodedImage.imageHeight;
-            texture.aspectRatio = new AspectRatio(decodedImage.imageWidth, decodedImage.imageHeight);
-            texture.numPlays.set(decodedImage.numPlays);
-            texture.decoded.set(true);
-            try {
-                deliverGifFrames(decodedImage.decoder(), gifTextureName, frame -> {
-                    if (frame != null) {
-                        try {
-                            frame.nativeImage = NativeImage.read(frame.frameInputStream);
-                        } catch (Exception ex) {
-                            LOGGER.error("[FANCYMENU] Failed to read frame of GIF image into NativeImage: " + gifTextureName, ex);
-                        }
-                        CloseableUtils.closeQuietly(frame.closeAfterLoading);
-                        CloseableUtils.closeQuietly(frame.frameInputStream);
-                        texture.frames.add(frame);
+
+            byte[] gifData = null;
+            if (!decodedByWatermedia) {
+                if (readInput == null) {
+                    try {
+                        readInput = texture.open();
+                    } catch (Exception ex) {
+                        texture.loadingFailed.set(true);
+                        texture.decoded.set(true);
+                        LOGGER.error("[FANCYMENU] Failed to open GIF image data stream: " + gifTextureName, ex);
+                        CloseableUtils.closeQuietly(readInput);
+                        return;
                     }
-                });
-                texture.loadingCompleted.set(true);
-            } catch (Exception ex) {
-                texture.loadingFailed.set(true);
-                LOGGER.error("[FANCYMENU] Failed to read frames of GIF image: " + gifTextureName, ex);
+                }
+                if (readInput == null) {
+                    texture.loadingFailed.set(true);
+                    texture.decoded.set(true);
+                    LOGGER.error("[FANCYMENU] Failed to open GIF image data stream: {}", gifTextureName);
+                    CloseableUtils.closeQuietly(readInput);
+                    return;
+                }
+                try {
+                    gifData = readInput.readAllBytes();
+                } catch (Exception ex) {
+                    texture.loadingFailed.set(true);
+                    texture.decoded.set(true);
+                    LOGGER.error("[FANCYMENU] Failed to read GIF image data: " + gifTextureName, ex);
+                    CloseableUtils.closeQuietly(readInput);
+                    return;
+                }
             }
-            texture.allFramesDecoded = true;
+
+            if (!decodedByWatermedia && WatermediaUtil.isWatermediaLoaded()) {
+                decodedByWatermedia = populateTextureWithWatermedia(texture, gifData, gifTextureName);
+                if (decodedByWatermedia) {
+                    WatermediaUtil.WATERMEDIA_initialized = true;
+                } else {
+                    LOGGER.warn("[FANCYMENU] Watermedia GIF decoding failed, falling back to primitive decoder: {}", gifTextureName);
+                }
+            }
+
+            if (!decodedByWatermedia) {
+                if (gifData == null) {
+                    texture.loadingFailed.set(true);
+                    LOGGER.error("[FANCYMENU] Failed to read GIF image data: {}", gifTextureName);
+                    texture.decoded.set(true);
+                    CloseableUtils.closeQuietly(readInput);
+                    return;
+                }
+                populateTextureWithPrimitiveDecoder(texture, gifData, gifTextureName);
+            }
         }
         texture.decoded.set(true);
-        CloseableUtils.closeQuietly(in);
+        CloseableUtils.closeQuietly(readInput);
+    }
+
+    protected static boolean populateTextureWithWatermediaDirectSource(@NotNull GifTexture texture, @NotNull String gifTextureName) {
+        String directSource = null;
+        if (texture.sourceURL != null) {
+            directSource = texture.sourceURL;
+        } else if ((texture.sourceFile != null) && texture.sourceFile.isFile()) {
+            directSource = texture.sourceFile.getAbsolutePath();
+        }
+        if (directSource == null) return false;
+
+        WatermediaAnimatedTextureBackend backend = new WatermediaAnimatedTextureBackend(texture.uniqueId, "gif");
+        backend.setLoopCount(-1);
+        boolean initialized = backend.initializeFromSource(directSource, gifTextureName);
+        if (!initialized) {
+            backend.close();
+            return false;
+        }
+        texture.watermediaBackend = backend;
+        texture.watermediaFallbackData = null;
+        texture.decoded.set(true);
+        return true;
+    }
+
+    protected static void populateTextureWithPrimitiveDecoder(@NotNull GifTexture texture, @NotNull byte[] gifData, @NotNull String gifTextureName) {
+        texture.watermediaFallbackData = null;
+        DecodedGifImage decodedImage = decodeGif(new ByteArrayInputStream(gifData), gifTextureName);
+        if (decodedImage == null) {
+            LOGGER.error("[FANCYMENU] Failed to read GIF image, because DecodedGifImage was NULL: " + gifTextureName);
+            texture.loadingFailed.set(true);
+            return;
+        }
+        texture.width = decodedImage.imageWidth;
+        texture.height = decodedImage.imageHeight;
+        texture.aspectRatio = new AspectRatio(decodedImage.imageWidth, decodedImage.imageHeight);
+        texture.numPlays.set(decodedImage.numPlays);
+        texture.decoded.set(true);
+        try {
+            deliverGifFrames(decodedImage.decoder(), gifTextureName, frame -> {
+                if (frame != null) {
+                    try {
+                        if ((frame.nativeImage == null) && (frame.frameInputStream != null)) {
+                            frame.nativeImage = NativeImage.read(frame.frameInputStream);
+                        }
+                    } catch (Exception ex) {
+                        LOGGER.error("[FANCYMENU] Failed to read frame of GIF image into NativeImage: " + gifTextureName, ex);
+                    }
+                    CloseableUtils.closeQuietly(frame.closeAfterLoading);
+                    CloseableUtils.closeQuietly(frame.frameInputStream);
+                    texture.frames.add(frame);
+                }
+            });
+            texture.loadingCompleted.set(true);
+        } catch (Exception ex) {
+            texture.loadingFailed.set(true);
+            LOGGER.error("[FANCYMENU] Failed to read frames of GIF image: " + gifTextureName, ex);
+        }
+        texture.allFramesDecoded = true;
+    }
+
+    protected static boolean populateTextureWithWatermedia(@NotNull GifTexture texture, @NotNull byte[] gifData, @NotNull String gifTextureName) {
+        WatermediaAnimatedTextureBackend backend = new WatermediaAnimatedTextureBackend(texture.uniqueId, "gif");
+        backend.setLoopCount(readGifLoopCount(gifData));
+        boolean initialized = backend.initializeFromBytes(gifData, ".gif", gifTextureName);
+        if (!initialized) {
+            backend.close();
+            return false;
+        }
+        texture.watermediaBackend = backend;
+        texture.watermediaFallbackData = gifData;
+        texture.decoded.set(true);
+        return true;
+    }
+
+    protected static int readGifLoopCount(@NotNull byte[] gifData) {
+        // Defaults to one playback if no loop extension is present.
+        if (gifData.length < 13) return 1;
+        int index = 6;
+        int packed = gifData[index + 4] & 255;
+        index += 7;
+        if ((packed & 0x80) != 0) {
+            int gctSize = 3 * (1 << ((packed & 0x07) + 1));
+            index += gctSize;
+        }
+        while (index < gifData.length) {
+            int block = gifData[index++] & 255;
+            if (block == 0x3B) break; // trailer
+            if (block == 0x21) { // extension
+                if (index >= gifData.length) break;
+                int label = gifData[index++] & 255;
+                String appIdentifier = null;
+                if ((label == 0xFF) && (index < gifData.length)) {
+                    int appBlockSize = gifData[index++] & 255;
+                    if ((appBlockSize > 0) && ((index + appBlockSize) <= gifData.length)) {
+                        appIdentifier = new String(gifData, index, appBlockSize);
+                        index += appBlockSize;
+                    } else {
+                        return 1;
+                    }
+                }
+                while (index < gifData.length) {
+                    int size = gifData[index++] & 255;
+                    if (size == 0) break;
+                    if ((index + size) > gifData.length) return 1;
+                    if ((appIdentifier != null)
+                            && (size >= 3)
+                            && (("NETSCAPE2.0".equals(appIdentifier)) || ("ANIMEXTS1.0".equals(appIdentifier)))
+                            && ((gifData[index] & 255) == 1)) {
+                        int loops = (gifData[index + 1] & 255) | ((gifData[index + 2] & 255) << 8);
+                        return (loops == 0) ? -1 : Math.max(1, loops);
+                    }
+                    index += size;
+                    if (index > gifData.length) return 1;
+                }
+            } else if (block == 0x2C) { // image descriptor
+                if ((index + 9) > gifData.length) break;
+                int localPacked = gifData[index + 8] & 255;
+                index += 9;
+                if ((localPacked & 0x80) != 0) {
+                    int lctSize = 3 * (1 << ((localPacked & 0x07) + 1));
+                    index += lctSize;
+                }
+                if (index >= gifData.length) break;
+                index++; // LZW min code size
+                while (index < gifData.length) {
+                    int size = gifData[index++] & 255;
+                    if (size == 0) break;
+                    index += size;
+                    if (index > gifData.length) return 1;
+                }
+            } else {
+                break;
+            }
+        }
+        return 1;
     }
 
     protected GifTexture() {
@@ -232,12 +397,12 @@ public class GifTexture implements ITexture, PlayableResource {
         if (!this.tickerThreadRunning.get() && !this.frames.isEmpty() && !this.maxLoopsReached && !this.closed.get()) {
 
             this.tickerThreadRunning.set(true);
-            this.lastIdentifierCall = System.currentTimeMillis();
+            this.lastResourceLocationCall = System.currentTimeMillis();
 
             new Thread(() -> {
 
                 //Automatically stop thread if APNG was inactive for >=10 seconds
-                while ((this.lastIdentifierCall + 10000) > System.currentTimeMillis()) {
+                while ((this.lastResourceLocationCall + 10000) > System.currentTimeMillis()) {
                     if (this.frames.isEmpty() || this.closed.get()) break;
                     //Don't tick frame if max loops reached
                     if (this.maxLoopsReached) break;
@@ -250,7 +415,10 @@ public class GifTexture implements ITexture, PlayableResource {
                             //Set initial (first) frame if current is NULL
                             if (this.current == null) {
                                 this.current = cachedFrames.get(0);
+                                this.maybeEmitStartEvent(cachedFrames, this.current);
                                 Thread.sleep(Math.max(20, cachedFrames.get(0).delayMs));
+                            } else {
+                                this.maybeEmitStartEvent(cachedFrames, this.current);
                             }
                             //Cache current frame to make sure it stays the same instance while working with it
                             GifFrame cachedCurrent = this.current;
@@ -265,19 +433,26 @@ public class GifTexture implements ITexture, PlayableResource {
                                     //Count cycles up if APNG should not loop infinitely (numPlays > 0 = finite loops)
                                     if (cachedNumPlays > 0) {
                                         int newCycles = this.cycles.incrementAndGet();
-                                        if (newCycles >= cachedNumPlays) {
+                                        boolean willRestart = newCycles < cachedNumPlays;
+                                        this.notifyAnimatedTextureFinished(willRestart);
+                                        if (!willRestart) {
                                             this.maxLoopsReached = true;
                                             break; //end the while loop of the frame ticker
-                                        } else {
-                                            //If APNG has a finite number of loops but did not reach its max loops yet, reset to first frame, because end reached
-                                            newCurrent = cachedFrames.get(0);
                                         }
+                                        //If APNG has a finite number of loops but did not reach its max loops yet, reset to first frame, because end reached
+                                        newCurrent = cachedFrames.get(0);
+                                        this.pendingStartEvent = true;
                                     } else {
                                         //If APNG loops infinitely, reset to first frame, because end reached
+                                        this.notifyAnimatedTextureFinished(true);
                                         newCurrent = cachedFrames.get(0);
+                                        this.pendingStartEvent = true;
                                     }
                                 }
-                                if (newCurrent != null) this.current = newCurrent;
+                                if (newCurrent != null) {
+                                    this.current = newCurrent;
+                                    this.maybeEmitStartEvent(cachedFrames, this.current);
+                                }
                                 //Sleep for the new current frame's delay or sleep for 100ms if there's no new frame
                                 Thread.sleep(Math.max(20, (newCurrent != null) ? newCurrent.delayMs : 100));
                             } else {
@@ -308,17 +483,26 @@ public class GifTexture implements ITexture, PlayableResource {
 
     @Nullable
     @Override
-    public Identifier getIdentifier() {
+    public Identifier getResourceLocation() {
+        WatermediaAnimatedTextureBackend backend = this.resolveWatermediaBackend();
+        if (backend != null) {
+            this.width = backend.getWidth();
+            this.height = backend.getHeight();
+            this.aspectRatio = backend.getAspectRatio();
+            Identifier resourceLocation = backend.getResourceLocation();
+            return (resourceLocation != null) ? resourceLocation : FULLY_TRANSPARENT_TEXTURE;
+        }
         if (this.closed.get()) return FULLY_TRANSPARENT_TEXTURE;
-        this.lastIdentifierCall = System.currentTimeMillis();
+        this.lastResourceLocationCall = System.currentTimeMillis();
         this.startTickerIfNeeded();
         GifFrame frame = this.current;
         if (frame != null) {
             if ((frame.resourceLocation == null) && !frame.loaded && (frame.nativeImage != null)) {
                 try {
                     this.frameRegistrationCounter++;
-                    frame.dynamicTexture = new DynamicTexture(() -> UUID.randomUUID().toString(), frame.nativeImage);
-                    frame.resourceLocation = RenderUtils.register("fancymenu_gif_frame_" + this.uniqueId + "_" + this.frameRegistrationCounter, frame.dynamicTexture);
+                    frame.resourceLocation = Identifier.fromNamespaceAndPath("fancymenu", "dynamic/gif_frame_" + this.uniqueId + "_" + this.frameRegistrationCounter);
+                    frame.dynamicTexture = new DynamicTexture(frame.resourceLocation::toString, frame.nativeImage);
+                    Minecraft.getInstance().getTextureManager().register(frame.resourceLocation, frame.dynamicTexture);
                 } catch (Exception ex) {
                     LOGGER.error("[FANCYMENU] Failed to register GIF frame to Minecraft's TextureManager!", ex);
                 }
@@ -331,16 +515,22 @@ public class GifTexture implements ITexture, PlayableResource {
 
     @Override
     public int getWidth() {
+        WatermediaAnimatedTextureBackend backend = this.resolveWatermediaBackend();
+        if (backend != null) return backend.getWidth();
         return this.width;
     }
 
     @Override
     public int getHeight() {
+        WatermediaAnimatedTextureBackend backend = this.resolveWatermediaBackend();
+        if (backend != null) return backend.getHeight();
         return this.height;
     }
 
     @Override
     public @NotNull AspectRatio getAspectRatio() {
+        WatermediaAnimatedTextureBackend backend = this.resolveWatermediaBackend();
+        if (backend != null) return backend.getAspectRatio();
         return this.aspectRatio;
     }
 
@@ -354,22 +544,34 @@ public class GifTexture implements ITexture, PlayableResource {
 
     @Override
     public boolean isReady() {
+        WatermediaAnimatedTextureBackend backend = this.resolveWatermediaBackend();
+        if (backend != null) return backend.isReady();
         //Everything important (like size) is set at this point, so it is considered ready
         return this.decoded.get();
     }
 
     @Override
     public boolean isLoadingCompleted() {
+        WatermediaAnimatedTextureBackend backend = this.resolveWatermediaBackend();
+        if (backend != null) return backend.isLoadingCompleted();
         return !this.closed.get() && !this.loadingFailed.get() && this.loadingCompleted.get();
     }
 
     @Override
     public boolean isLoadingFailed() {
+        WatermediaAnimatedTextureBackend backend = this.resolveWatermediaBackend();
+        if (backend != null) return backend.isLoadingFailed();
         return this.loadingFailed.get();
     }
 
     public void reset() {
+        WatermediaAnimatedTextureBackend backend = this.resolveWatermediaBackend();
+        if (backend != null) {
+            backend.reset();
+            return;
+        }
         this.current = null;
+        this.pendingStartEvent = true;
         List<GifFrame> l = new ArrayList<>(this.frames);
         if (!l.isEmpty()) {
             this.current = l.get(0);
@@ -377,26 +579,91 @@ public class GifTexture implements ITexture, PlayableResource {
         }
     }
 
+    private void maybeEmitStartEvent(@NotNull List<GifFrame> frames, @Nullable GifFrame currentFrame) {
+        if (!this.pendingStartEvent || currentFrame == null || frames.isEmpty()) return;
+        if (currentFrame != frames.get(0)) return;
+        this.pendingStartEvent = false;
+        this.notifyAnimatedTextureStarted(this.willRestartAfterCurrentCycle());
+    }
+
+    private boolean willRestartAfterCurrentCycle() {
+        int plays = this.numPlays.get();
+        if (plays <= 0) return true;
+        return (this.cycles.get() + 1) < plays;
+    }
+
+    private void notifyAnimatedTextureStarted(boolean willRestart) {
+        Listeners.ON_ANIMATED_TEXTURE_STARTED_PLAYING.onAnimatedTextureStartedPlaying(
+            this.resolveTextureSource(),
+            this.resolveTextureSourceType(),
+            willRestart
+        );
+    }
+
+    private void notifyAnimatedTextureFinished(boolean willRestart) {
+        Listeners.ON_ANIMATED_TEXTURE_FINISHED_PLAYING.onAnimatedTextureFinishedPlaying(
+            this.resolveTextureSource(),
+            this.resolveTextureSourceType(),
+            willRestart
+        );
+    }
+
+    private String resolveTextureSource() {
+        if (this.sourceURL != null) return this.sourceURL;
+        if (this.sourceFile != null) return this.sourceFile.getPath();
+        if (this.sourceLocation != null) return this.sourceLocation.toString();
+        return "ERROR";
+    }
+
+    @NotNull
+    protected String resolveTextureName() {
+        return (this.sourceName != null) ? this.sourceName : this.resolveTextureSource();
+    }
+
+    private String resolveTextureSourceType() {
+        if (this.sourceURL != null) return "WEB";
+        if (this.sourceFile != null) return "LOCAL";
+        if (this.sourceLocation != null) return "RESOURCE_LOCATION";
+        return "UNKNOWN";
+    }
+
     @Override
     public void play() {
+        WatermediaAnimatedTextureBackend backend = this.resolveWatermediaBackend();
+        if (backend != null) {
+            backend.play();
+        }
     }
 
     @Override
     public boolean isPlaying() {
+        WatermediaAnimatedTextureBackend backend = this.resolveWatermediaBackend();
+        if (backend != null) return backend.isPlaying();
         return !this.maxLoopsReached;
     }
 
     @Override
     public void pause() {
+        WatermediaAnimatedTextureBackend backend = this.resolveWatermediaBackend();
+        if (backend != null) {
+            backend.pause();
+        }
     }
 
     @Override
     public boolean isPaused() {
+        WatermediaAnimatedTextureBackend backend = this.resolveWatermediaBackend();
+        if (backend != null) return backend.isPaused();
         return false;
     }
 
     @Override
     public void stop() {
+        WatermediaAnimatedTextureBackend backend = this.resolveWatermediaBackend();
+        if (backend != null) {
+            backend.stop();
+            return;
+        }
         this.reset();
     }
 
@@ -407,8 +674,80 @@ public class GifTexture implements ITexture, PlayableResource {
 
     @Override
     public void close() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if (backend != null) {
+            backend.close();
+            this.watermediaBackend = null;
+        }
+        this.watermediaFallbackData = null;
         this.closed.set(true);
         this.sourceLocation = null;
+        this.releasePrimitiveFrames();
+    }
+
+    @Nullable
+    protected WatermediaAnimatedTextureBackend resolveWatermediaBackend() {
+        WatermediaAnimatedTextureBackend backend = this.watermediaBackend;
+        if ((backend != null) && backend.isLoadingFailed()) {
+            this.startPrimitiveFallbackAfterWatermediaFailure(backend);
+            return null;
+        }
+        return backend;
+    }
+
+    protected void startPrimitiveFallbackAfterWatermediaFailure(@NotNull WatermediaAnimatedTextureBackend failedBackend) {
+        if (!this.watermediaFallbackTriggered.compareAndSet(false, true)) return;
+        if (this.watermediaBackend == failedBackend) {
+            this.watermediaBackend = null;
+        }
+        failedBackend.close();
+        String gifTextureName = this.resolveTextureName();
+        LOGGER.warn("[FANCYMENU] Watermedia GIF playback failed, falling back to primitive decoder: {}", gifTextureName);
+        this.preparePrimitiveFallbackState();
+        new Thread(() -> this.loadPrimitiveFallback(gifTextureName)).start();
+    }
+
+    protected void preparePrimitiveFallbackState() {
+        this.loadingCompleted.set(false);
+        this.loadingFailed.set(false);
+        this.decoded.set(false);
+        this.allFramesDecoded = false;
+        this.maxLoopsReached = false;
+        this.pendingStartEvent = true;
+        this.cycles.set(0);
+        this.releasePrimitiveFrames();
+    }
+
+    protected void loadPrimitiveFallback(@NotNull String gifTextureName) {
+        InputStream in = null;
+        try {
+            byte[] gifData = this.watermediaFallbackData;
+            if (gifData == null) {
+                in = this.open();
+                if (in == null) {
+                    this.loadingFailed.set(true);
+                    LOGGER.error("[FANCYMENU] Failed to reopen GIF image data stream for Watermedia fallback: {}", gifTextureName);
+                    return;
+                }
+                gifData = in.readAllBytes();
+            }
+            if (!this.closed.get()) {
+                populateTextureWithPrimitiveDecoder(this, gifData, gifTextureName);
+            }
+        } catch (Exception ex) {
+            this.loadingFailed.set(true);
+            LOGGER.error("[FANCYMENU] Failed to decode GIF image after Watermedia fallback: " + gifTextureName, ex);
+        } finally {
+            this.decoded.set(true);
+            this.watermediaFallbackData = null;
+            CloseableUtils.closeQuietly(in);
+            if (this.closed.get()) {
+                MainThreadTaskExecutor.executeInMainThread(this::close, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
+            }
+        }
+    }
+
+    protected void releasePrimitiveFrames() {
         for (GifFrame frame : new ArrayList<>(this.frames)) {
             try {
                 if (frame.dynamicTexture != null) frame.dynamicTexture.close();

@@ -3,13 +3,17 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.realmsclient.gui.screens.RealmsNotificationsScreen;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
+import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -112,17 +116,22 @@ public abstract class MixinTitleScreen extends Screen {
      * @reason Manually fire FancyMenu's {@link RenderedScreenBackgroundEvent} in {@link TitleScreen}, because normal event doesn't work correctly here.
      */
     @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/TitleScreen;renderPanorama(Lnet/minecraft/client/gui/GuiGraphics;F)V"))
-    private void wrap_renderPanorama_FancyMenu(TitleScreen instance, GuiGraphics graphics, float f, Operation<Void> original) {
+    private void wrap_renderPanorama_FancyMenu(TitleScreen instance, GuiGraphics graphics, float partial, Operation<Void> original) {
+        LocalTexturePanoramaRenderer panorama = GlobalCustomizationHandler.getCustomBackgroundPanorama();
         ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen(this);
-        if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this)) {
+        if (panorama != null) {
+            panorama.render(graphics, 0, 0, partial);
+        } else if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this)) {
             if (!l.layoutBase.menuBackgrounds.isEmpty()) {
+                GlStateManager._enableBlend();
                 //Render a black background before the custom background gets rendered
                 graphics.fill(0, 0, this.width, this.height, 0);
+                RenderingUtils.resetShaderColor(graphics);
             } else {
-                original.call(instance, graphics, f);
+                original.call(instance, graphics, partial);
             }
         } else {
-            original.call(instance, graphics, f);
+            original.call(instance, graphics, partial);
         }
         EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, graphics, this.cached_mouseX_FancyMenu, this.cached_mouseY_FancyMenu, this.cached_partial_FancyMenu));
     }
@@ -140,6 +149,16 @@ public abstract class MixinTitleScreen extends Screen {
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/SplashRenderer;render(Lnet/minecraft/client/gui/GuiGraphics;ILnet/minecraft/client/gui/Font;F)V"))
     private boolean cancel_VanillaSplashRendering_FancyMenu(SplashRenderer instance, GuiGraphics $$0, int $$1, Font $$2, float $$3) {
         return false;
+    }
+
+    /**
+     * @reason This is to make the Title screen not constantly update the alpha of its widgets, so FancyMenu can properly handle it.
+     */
+    @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/TitleScreen;fadeWidgets(F)V"))
+    private void wrap_fadeWidgets_FancyMenu(TitleScreen instance, float alpha, Operation<Void> original) {
+        if (!ScreenCustomization.isCustomizationEnabledForScreen(this)) {
+            original.call(instance, alpha);
+        }
     }
 
 }

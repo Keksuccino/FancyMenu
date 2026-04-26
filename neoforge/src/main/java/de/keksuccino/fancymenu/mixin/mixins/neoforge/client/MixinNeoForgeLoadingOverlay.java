@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.mixin.mixins.neoforge.client;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenRenderUtils;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.neoforged.neoforge.client.loading.NeoForgeLoadingOverlay;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,7 +18,7 @@ public class MixinNeoForgeLoadingOverlay {
     private void beforeRenderScreenFancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
         //Fire RenderPre event for current screen in loading overlay
         if (ScreenUtils.getScreen() != null) {
-            ScreenRenderUtils.executeAllPreRenderTasks(graphics, mouseX, mouseY, partial);
+            RenderingUtils.executeAllPreRenderTasks(graphics, mouseX, mouseY, partial);
             EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(ScreenUtils.getScreen(), graphics, mouseX, mouseY, partial));
         }
     }
@@ -28,7 +28,7 @@ public class MixinNeoForgeLoadingOverlay {
         //Fire RenderPost event for current screen in loading overlay
         if (ScreenUtils.getScreen() != null) {
             EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(ScreenUtils.getScreen(), graphics, mouseX, mouseY, partial));
-            ScreenRenderUtils.executeAllPostRenderTasks(graphics, mouseX, mouseY, partial);
+            RenderingUtils.executeAllPostRenderTasks(graphics, mouseX, mouseY, partial);
         }
     }
 

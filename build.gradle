@@ -64,6 +64,20 @@ subprojects {
                 includeGroupByRegex 'com\\.github\\..*'
             }
         }
+        maven {
+            name = 'MCEF Releases'
+            url = 'https://mcef-download.cinemamod.com/repositories/releases'
+            content {
+                includeGroup 'com.cinemamod'
+            }
+        }
+        maven {
+            name = 'MCEF Snapshots'
+            url = 'https://mcef-download.cinemamod.com/repositories/snapshots'
+            content {
+                includeGroup 'com.cinemamod'
+            }
+        }
         maven { url = "https://keksuccino.github.io/maven/" }
         maven {
             name = 'ParchmentMC Maven'
@@ -94,6 +108,7 @@ subprojects {
                         'maven.modrinth',
                         'curse.maven',
                         'com.github.Keksuccino',
+                        'com.github.WaterMediaTeam',
                         'com.github.rtyley',
                         'net.fabricmc',
                         'net.fabricmc.fabric-api',
@@ -124,6 +139,21 @@ subprojects {
         it.options.compilerArgs += ['-Xlint:-deprecation', '-Xlint:-removal']
     }
 
+    tasks.named("compileTestJava", JavaCompile).configure {
+        enabled = false
+        source = files()
+        classpath = files()
+        options.annotationProcessorPath = files()
+    }
+
+    tasks.named("processTestResources", ProcessResources).configure {
+        enabled = false
+    }
+
+    tasks.named("test", Test).configure {
+        enabled = false
+    }
+
     processResources {
         def expandProps = [
                 "group": project.group,
@@ -141,6 +171,8 @@ subprojects {
                 "neoforge_loader_version": neoforge_loader_version,
                 "fer_version": fer_version,
                 "fer_mc_version": fer_mc_version,
+                "watermedia_version": watermedia_version,
+                "watermedia_binaries_version": watermedia_binaries_version,
                 "parchment_version": parchment_version,
                 "parchment_mc_version": parchment_mc_version,
                 "mixin_extras_version": mixin_extras_version,

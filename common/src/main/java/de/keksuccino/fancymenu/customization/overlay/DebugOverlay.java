@@ -9,12 +9,13 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.VanillaEvents;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -26,7 +27,6 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
-
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,10 +36,11 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 @SuppressWarnings("all")
-public class DebugOverlay implements FancyMenuUiComponent, Renderable, NarratableEntry, ContainerEventHandler {
+public class DebugOverlay implements Renderable, NarratableEntry, ContainerEventHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -56,68 +57,98 @@ public class DebugOverlay implements FancyMenuUiComponent, Renderable, Narratabl
     protected DrawableColor lineBackgroundColor = DrawableColor.of(new Color(0, 0, 0, 230));
     @NotNull
     protected DrawableColor lineTextColor = DrawableColor.WHITE;
-    protected boolean lineTextShadow = true;
     protected List<AbstractElement> currentScreenElements = new ArrayList<>();
     @Nullable
     protected ContextMenu rightClickMenu = null;
     protected final List<GuiEventListener> children = new ArrayList<>();
-    public boolean allowRender = false;
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        if (!this.allowRender) return;
-
         if (Minecraft.getInstance().screen == null) return;
 
-        this.renderWidgetOverlays(graphics, Minecraft.getInstance().screen, mouseX, mouseY, partial);
+        com.mojang.blaze3d.opengl.GlStateManager._disableDepthTest();
+        RenderingUtils.setDepthTestLocked(true);
+
+        try {
+            this.renderWidgetOverlays(graphics, Minecraft.getInstance().screen, mouseX, mouseY, partial);
+        } catch (Throwable ex) {
+            LOGGER.error("[FANCYMENU] Failed to render debug overlay widget highlights", ex);
+        }
+
+        float uiScale = UIBase.getFixedUIRenderScale();
+        if (!Float.isFinite(uiScale) || (uiScale <= 0.0F)) uiScale = 1.0F;
+        int scaledMouseX = (int)((float)mouseX / uiScale);
+        int scaledMouseY = (int)((float)mouseY / uiScale);
 
         int leftX = 0;
-        int rightX = Minecraft.getInstance().screen.width;
+        int rightX = (int)((float)Minecraft.getInstance().screen.width / uiScale);
 
-        int topLeftY = this.topYOffsetSupplier.get();
-        int topRightY = this.topYOffsetSupplier.get();
-        int bottomLeftY = this.bottomYOffsetSupplier.get();
-        int bottomRightY = this.bottomYOffsetSupplier.get();
-         
+        int topYOffset = this.safeGetYOffset(this.topYOffsetSupplier, "top");
+        int bottomYOffset = this.safeGetYOffset(this.bottomYOffsetSupplier, "bottom");
+        int topLeftY = (int)((float)topYOffset / uiScale);
+        int topRightY = (int)((float)topYOffset / uiScale);
+        int bottomLeftY = (int)((float)bottomYOffset / uiScale);
+        int bottomRightY = (int)((float)bottomYOffset / uiScale);
+
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
         graphics.pose().pushMatrix();
+        graphics.pose().scale(uiScale, uiScale);
 
         for (DebugOverlayLine line : this.lines) {
+            try {
 
-            boolean isLeft = (line.linePosition == LinePosition.TOP_LEFT) || (line.linePosition == LinePosition.BOTTOM_LEFT);
-            Component text = line.textSupplier.get(line);
-            int width = this.font.width(text) + (this.lineBorderWidth*2);
-            int height = this.font.lineHeight + (this.lineSpacerHeight*2);
-            if (line instanceof DebugOverlaySpacerLine s) height = s.height;
-            int x = isLeft ? leftX : rightX - width;
-            int y = topLeftY;
-            if (line.linePosition == LinePosition.TOP_RIGHT) y = topRightY;
-            if (line.linePosition == LinePosition.BOTTOM_LEFT) y = bottomLeftY;
-            if (line.linePosition == LinePosition.BOTTOM_RIGHT) y = bottomRightY;
+                boolean isLeft = (line.linePosition == LinePosition.TOP_LEFT) || (line.linePosition == LinePosition.BOTTOM_LEFT);
+                int width;
+                int height;
+                Component text = null;
+                if (line instanceof DebugOverlayGraphLine graphLine) {
+                    width = graphLine.getRenderWidth(this.lineBorderWidth);
+                    height = graphLine.getRenderHeight(this.lineBorderWidth, this.lineSpacerHeight);
+                } else {
+                    text = this.safeGetLineText(line);
+                    float textWidth = UIBase.getUITextWidthNormal(text);
+                    float textHeight = UIBase.getUITextHeightNormal();
+                    width = (int)Math.ceil(textWidth) + (this.lineBorderWidth * 2);
+                    height = (int)Math.ceil(textHeight) + (this.lineSpacerHeight * 2);
+                    if (line instanceof DebugOverlaySpacerLine s) height = s.height;
+                }
+                int x = isLeft ? leftX : rightX - width;
+                int y = topLeftY;
+                if (line.linePosition == LinePosition.TOP_RIGHT) y = topRightY;
+                if (line.linePosition == LinePosition.BOTTOM_LEFT) y = bottomLeftY;
+                if (line.linePosition == LinePosition.BOTTOM_RIGHT) y = bottomRightY;
 
-            line.lastX = x;
-            line.lastY = y;
-            line.lastWidth = width;
-            line.lastHeight = height;
-            line.hovered = line.isMouseOver(mouseX, mouseY);
+                line.lastX = x;
+                line.lastY = y;
+                line.lastWidth = width;
+                line.lastHeight = height;
+                line.hovered = line.isMouseOver(scaledMouseX, scaledMouseY);
 
-            if (!(line instanceof DebugOverlaySpacerLine)) {
+                if (line instanceof DebugOverlayGraphLine graphLine) {
+                    this.renderGraphLine(graphics, graphLine, x, y, width, height);
+                } else if (!(line instanceof DebugOverlaySpacerLine)) {
 
-                this.renderLineBackground(graphics, x, y, width, height);
+                    this.renderLineBackground(graphics, x, y, width, height);
 
-                graphics.drawString(this.font, text, x + this.lineBorderWidth, y + this.lineSpacerHeight, this.lineTextColor.getColorInt(), this.lineTextShadow);
+                    UIBase.renderText(graphics, text, x + this.lineBorderWidth, y + this.lineSpacerHeight, this.lineTextColor.getColorInt(), UIBase.getUITextSizeNormal());
 
+                }
+
+                //Update line Y positions
+                if (line.linePosition == LinePosition.TOP_LEFT) topLeftY += height;
+                if (line.linePosition == LinePosition.TOP_RIGHT) topRightY += height;
+                if (line.linePosition == LinePosition.BOTTOM_LEFT) bottomLeftY -= height;
+                if (line.linePosition == LinePosition.BOTTOM_RIGHT) bottomRightY -= height;
+            } catch (Throwable ex) {
+                this.logLineRenderFailure(line, ex);
             }
-
-            //Update line Y positions
-            if (line.linePosition == LinePosition.TOP_LEFT) topLeftY += height;
-            if (line.linePosition == LinePosition.TOP_RIGHT) topRightY += height;
-            if (line.linePosition == LinePosition.BOTTOM_LEFT) bottomLeftY -= height;
-            if (line.linePosition == LinePosition.BOTTOM_RIGHT) bottomRightY -= height;
 
         }
 
         graphics.pose().popMatrix();
+
+        RenderingUtils.resetShaderColor(graphics);
 
         //Close right-click context menu if context menu of overlay menu bar is open
         if ((CustomizationOverlay.getCurrentMenuBarInstance() != null) && CustomizationOverlay.getCurrentMenuBarInstance().isEntryContextMenuOpen()) {
@@ -125,11 +156,20 @@ public class DebugOverlay implements FancyMenuUiComponent, Renderable, Narratabl
         }
         //Render right-click context menu
         if (this.rightClickMenu != null) {
-
+            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
             graphics.pose().pushMatrix();
-            this.rightClickMenu.render(graphics, mouseX, mouseY, partial);
+            try {
+                this.rightClickMenu.render(graphics, mouseX, mouseY, partial);
+            } catch (Throwable ex) {
+                LOGGER.error("[FANCYMENU] Failed to render debug overlay right-click menu", ex);
+                this.closeRightClickContextMenu();
+            }
             graphics.pose().popMatrix();
         }
+
+        RenderingUtils.resetShaderColor(graphics);
+
+        RenderingUtils.setDepthTestLocked(false);
 
     }
 
@@ -146,18 +186,102 @@ public class DebugOverlay implements FancyMenuUiComponent, Renderable, Narratabl
         for (AbstractElement e : widgets) {
             if ((e instanceof HideableElement h) && h.isHidden()) continue;
             this.currentScreenElements.add(e);
-            UIBase.renderBorder(graphics, e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteX() + e.getAbsoluteWidth(), e.getAbsoluteY() + e.getAbsoluteHeight(), 1, UIBase.getUIColorTheme().layout_editor_element_border_color_normal, true, true, true, true);
+            UIBase.renderBorder(graphics, e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteX() + e.getAbsoluteWidth(), e.getAbsoluteY() + e.getAbsoluteHeight(), 1, UIBase.getUITheme().layout_editor_element_border_color_normal, true, true, true, true);
         }
+
+        RenderingUtils.resetShaderColor(graphics);
 
     }
 
     protected void renderLineBackground(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
         graphics.fill(x, y, x + width, y + height, this.lineBackgroundColor.getColorInt());
+        RenderingUtils.resetShaderColor(graphics);
     }
 
-    public DebugOverlay setLineTextShadow(boolean shadow) {
-        this.lineTextShadow = shadow;
-        return this;
+    @NotNull
+    private Component safeGetLineText(@NotNull DebugOverlayLine line) {
+        try {
+            Component text = line.textSupplier.get(line);
+            line.renderFailureLogged = false;
+            return text != null ? text : Component.empty();
+        } catch (Throwable ex) {
+            this.logLineRenderFailure(line, ex);
+            return Component.literal("Error");
+        }
+    }
+
+    private int safeGetYOffset(@NotNull Supplier<Integer> supplier, @NotNull String type) {
+        try {
+            Integer offset = supplier.get();
+            return offset != null ? offset : 0;
+        } catch (Throwable ex) {
+            LOGGER.error("[FANCYMENU] Failed to get {} Y offset for debug overlay", type, ex);
+            return 0;
+        }
+    }
+
+    protected void renderGraphLine(@NotNull GuiGraphics graphics, @NotNull DebugOverlayGraphLine graphLine, int x, int y, int width, int height) {
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+
+        int backgroundColor = graphLine.getBackgroundColor(this.lineBackgroundColor.getColorInt());
+        graphics.fill(x, y, x + width, y + height, backgroundColor);
+
+        if (this.lineBorderWidth > 0) {
+            int borderColor = graphLine.getBorderColor(this.lineTextColor.getColorInt());
+            UIBase.renderBorder(graphics, x, y, x + width, y + height, this.lineBorderWidth, borderColor, true, true, true, true);
+        }
+
+        int innerX = x + this.lineBorderWidth;
+        int innerY = y + this.lineBorderWidth + this.lineSpacerHeight;
+        int innerWidth = graphLine.getGraphWidth();
+        int innerHeight = graphLine.getGraphHeight();
+
+        int innerBackground = graphLine.getInnerBackgroundColor(backgroundColor);
+        graphics.fill(innerX, innerY, innerX + innerWidth, innerY + innerHeight, innerBackground);
+
+        graphLine.pushSample();
+
+        int gridColor = graphLine.getGridColor();
+        for (int i = 1; i <= 3; i++) {
+            float yLine = innerY + (innerHeight * (i / 4.0F));
+            RenderingUtils.fillF(graphics, innerX, yLine, innerX + innerWidth, yLine + 1.0F, gridColor);
+        }
+
+        int sampleCount = graphLine.getSampleCount();
+        if (sampleCount > 0) {
+            int offset = Math.max(0, innerWidth - sampleCount);
+            float lastX = 0.0F;
+            float lastY = 0.0F;
+            boolean hasLast = false;
+            for (int i = 0; i < sampleCount; i++) {
+                float sample = graphLine.getSample(i);
+                float sampleHeight = sample * innerHeight;
+                float sampleX = innerX + offset + i;
+                float sampleY = innerY + innerHeight - sampleHeight;
+                int fillColor = graphLine.getFillColor(sample);
+                RenderingUtils.fillF(graphics, sampleX, sampleY, sampleX + 1.0F, innerY + innerHeight, fillColor);
+
+                int lineColor = graphLine.getLineColor(sample);
+                if (hasLast) {
+                    RenderingUtils.fillF(graphics, lastX, lastY, sampleX + 1.0F, lastY + 1.0F, lineColor);
+                    if (sampleY != lastY) {
+                        float minY = Math.min(sampleY, lastY);
+                        float maxY = Math.max(sampleY, lastY);
+                        RenderingUtils.fillF(graphics, sampleX, minY, sampleX + 1.0F, maxY + 1.0F, lineColor);
+                    }
+                }
+                lastX = sampleX;
+                lastY = sampleY;
+                hasLast = true;
+            }
+            float dotX = lastX - 1.0F;
+            float dotY = lastY - 1.0F;
+            float lastSample = graphLine.getSample(sampleCount - 1);
+            RenderingUtils.fillF(graphics, dotX, dotY, dotX + 3.0F, dotY + 3.0F, graphLine.getHighlightColor(lastSample));
+        }
+
+        RenderingUtils.resetShaderColor(graphics);
     }
 
     public DebugOverlay setLineTextColor(@NotNull DrawableColor color) {
@@ -213,6 +337,16 @@ public class DebugOverlay implements FancyMenuUiComponent, Renderable, Narratabl
 
     public DebugOverlayLine addLine(@NotNull String identifier, @NotNull LinePosition position, @NotNull ConsumingSupplier<DebugOverlayLine, Component> textSupplier) {
         return this.addLine(new DebugOverlayLine(identifier).setTextSupplier(textSupplier).setPosition(position));
+    }
+
+    public DebugOverlayGraphLine addGraphLine(@NotNull String identifier, @NotNull LinePosition position, @NotNull DoubleSupplier valueSupplier, double minValue, double maxValue) {
+        return this.addGraphLine(identifier, position, valueSupplier, minValue, maxValue, DebugOverlayGraphLine.DEFAULT_GRAPH_WIDTH, DebugOverlayGraphLine.DEFAULT_GRAPH_HEIGHT);
+    }
+
+    public DebugOverlayGraphLine addGraphLine(@NotNull String identifier, @NotNull LinePosition position, @NotNull DoubleSupplier valueSupplier, double minValue, double maxValue, int graphWidth, int graphHeight) {
+        DebugOverlayGraphLine line = new DebugOverlayGraphLine(identifier, graphWidth, graphHeight, valueSupplier, minValue, maxValue);
+        line.setPosition(position);
+        return this.addLine(line);
     }
 
     public DebugOverlayLine addLineBefore(@NotNull String addBeforeIdentifier, @NotNull String identifier, @NotNull LinePosition position, @NotNull ConsumingSupplier<DebugOverlayLine, Component> textSupplier) {
@@ -328,15 +462,15 @@ public class DebugOverlay implements FancyMenuUiComponent, Renderable, Narratabl
                         }
                         MainThreadTaskExecutor.executeInMainThread(() -> this.closeRightClickContextMenu(), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                     })
-                    .setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.vanilla_button.copy_locator.desc")))
-                    .setIcon(ContextMenu.IconFactory.getIcon("notes"));
+                    .setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.vanilla_button.copy_locator.desc")))
+                    .setIcon(MaterialIcons.CONTENT_COPY);
         }
 
         menu.addClickableEntry("copy_id", Component.translatable("fancymenu.elements.copyid"), (menu1, entry) -> {
                     Minecraft.getInstance().keyboardHandler.setClipboard(element.getInstanceIdentifier());
                     MainThreadTaskExecutor.executeInMainThread(() -> this.closeRightClickContextMenu(), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-                }).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.copyid.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("notes"));
+                }).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.copyid.desc")))
+                .setIcon(MaterialIcons.CONTENT_COPY);
 
         return menu;
 
@@ -344,15 +478,34 @@ public class DebugOverlay implements FancyMenuUiComponent, Renderable, Narratabl
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
-        if ((this.rightClickMenu != null) && this.rightClickMenu.mouseClicked(event, isDoubleClick) && this.rightClickMenu.isOpen()) return true;
+        return this.mouseClicked(event.x(), event.y(), event.button());
+    }
+    
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (ContainerEventHandler.super.mouseClicked(VanillaEvents.mouseButtonEvent(mouseX, mouseY, button), false)) return true;
         this.closeRightClickContextMenu();
+        float uiScale = UIBase.getFixedUIRenderScale();
+        if (!Float.isFinite(uiScale) || (uiScale <= 0.0F)) uiScale = 1.0F;
+        int scaledMouseX = (int)(mouseX / uiScale);
+        int scaledMouseY = (int)(mouseY / uiScale);
         for (DebugOverlayLine line : this.lines) {
-            if (line.onClick(event.button(), (int) event.x(), (int) event.y())) return true;
+            try {
+                if (line.onClick(button, scaledMouseX, scaledMouseY)) return true;
+            } catch (Throwable ex) {
+                if (!line.clickFailureLogged) {
+                    line.clickFailureLogged = true;
+                    LOGGER.error("[FANCYMENU] Failed to process click on debug overlay line '{}'", line.getIdentifier(), ex);
+                }
+            }
         }
-        if (event.button() == 1) {
+        if (button == 1) {
             for (AbstractElement e : this.currentScreenElements) {
-                if (RenderingUtils.isXYInArea(event.x(), event.y(), e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteWidth(), e.getAbsoluteHeight())) {
-                    this.openRightClickContextMenu(this.buildContextMenuForElement(e));
+                if (RenderingUtils.isXYInArea(mouseX, mouseY, e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteWidth(), e.getAbsoluteHeight())) {
+                    try {
+                        this.openRightClickContextMenu(this.buildContextMenuForElement(e));
+                    } catch (Throwable ex) {
+                        LOGGER.error("[FANCYMENU] Failed to open debug overlay context menu for hovered element", ex);
+                    }
                     return true;
                 }
             }
@@ -429,6 +582,8 @@ public class DebugOverlay implements FancyMenuUiComponent, Renderable, Narratabl
         protected int lastWidth;
         protected int lastHeight;
         protected boolean hovered = false;
+        protected boolean renderFailureLogged = false;
+        protected boolean clickFailureLogged = false;
 
         protected DebugOverlayLine(@NotNull String identifier) {
             this.identifier = Objects.requireNonNull(identifier);
@@ -489,11 +644,199 @@ public class DebugOverlay implements FancyMenuUiComponent, Renderable, Narratabl
 
     }
 
+    public static class DebugOverlayGraphLine extends DebugOverlayLine {
+
+        public static final int DEFAULT_GRAPH_WIDTH = 120;
+        public static final int DEFAULT_GRAPH_HEIGHT = 26;
+
+        private static final int GRADIENT_LOW = 0xFF4CAF50;
+        private static final int GRADIENT_MID = 0xFFFFC107;
+        private static final int GRADIENT_HIGH = 0xFFF44336;
+
+        private final DoubleSupplier valueSupplier;
+        private final double minValue;
+        private final double maxValue;
+        private final int graphWidth;
+        private final int graphHeight;
+        private final float[] samples;
+        private int sampleIndex = 0;
+        private int sampleCount = 0;
+        private int sampleIntervalMs = 150;
+        private long lastSampleTime = 0L;
+        private boolean invertColorGradient = false;
+        @Nullable
+        private Integer backgroundColorOverride = null;
+        @Nullable
+        private Integer borderColorOverride = null;
+        private int gridColor = RenderingUtils.replaceAlphaInColor(0xFFFFFFFF, 40);
+        @Nullable
+        private Integer highlightColorOverride = null;
+        private boolean sampleFailureLogged = false;
+
+        protected DebugOverlayGraphLine(@NotNull String identifier, int graphWidth, int graphHeight, @NotNull DoubleSupplier valueSupplier, double minValue, double maxValue) {
+            super(identifier);
+            this.valueSupplier = Objects.requireNonNull(valueSupplier);
+            this.minValue = minValue;
+            this.maxValue = maxValue;
+            this.graphWidth = Math.max(2, graphWidth);
+            this.graphHeight = Math.max(2, graphHeight);
+            this.samples = new float[this.graphWidth];
+        }
+
+        public DebugOverlayGraphLine setSampleIntervalMs(int sampleIntervalMs) {
+            this.sampleIntervalMs = Math.max(10, sampleIntervalMs);
+            return this;
+        }
+
+        public DebugOverlayGraphLine setInvertColorGradient(boolean invert) {
+            this.invertColorGradient = invert;
+            return this;
+        }
+
+        public DebugOverlayGraphLine setBackgroundColor(@Nullable Integer backgroundColor) {
+            this.backgroundColorOverride = backgroundColor;
+            return this;
+        }
+
+        public DebugOverlayGraphLine setBorderColor(@Nullable Integer borderColor) {
+            this.borderColorOverride = borderColor;
+            return this;
+        }
+
+        public DebugOverlayGraphLine setGridColor(int gridColor) {
+            this.gridColor = gridColor;
+            return this;
+        }
+
+        public DebugOverlayGraphLine setHighlightColor(int highlightColor) {
+            this.highlightColorOverride = highlightColor;
+            return this;
+        }
+
+        protected int getGraphWidth() {
+            return this.graphWidth;
+        }
+
+        protected int getGraphHeight() {
+            return this.graphHeight;
+        }
+
+        protected int getRenderWidth(int borderWidth) {
+            return this.graphWidth + (borderWidth * 2);
+        }
+
+        protected int getRenderHeight(int borderWidth, int padding) {
+            return this.graphHeight + (borderWidth * 2) + (padding * 2);
+        }
+
+        protected int getSampleCount() {
+            return this.sampleCount;
+        }
+
+        protected float getSample(int index) {
+            int start = this.sampleIndex - this.sampleCount;
+            if (start < 0) start += this.samples.length;
+            int idx = (start + index) % this.samples.length;
+            return this.samples[idx];
+        }
+
+        protected int getBackgroundColor(int fallbackColor) {
+            return this.backgroundColorOverride != null ? this.backgroundColorOverride : fallbackColor;
+        }
+
+        protected int getBorderColor(int fallbackColor) {
+            return this.borderColorOverride != null ? this.borderColorOverride : RenderingUtils.replaceAlphaInColor(fallbackColor, 120);
+        }
+
+        protected int getInnerBackgroundColor(int fallbackColor) {
+            return RenderingUtils.replaceAlphaInColor(fallbackColor, 180);
+        }
+
+        protected int getGridColor() {
+            return this.gridColor;
+        }
+
+        protected int getFillColor(float normalized) {
+            return RenderingUtils.replaceAlphaInColor(getLineColor(normalized), 90);
+        }
+
+        protected int getLineColor(float normalized) {
+            float value = this.invertColorGradient ? 1.0F - normalized : normalized;
+            value = Math.min(1.0F, Math.max(0.0F, value));
+            if (value <= 0.5F) {
+                return lerpColor(GRADIENT_LOW, GRADIENT_MID, value / 0.5F);
+            }
+            return lerpColor(GRADIENT_MID, GRADIENT_HIGH, (value - 0.5F) / 0.5F);
+        }
+
+        protected int getHighlightColor(float normalized) {
+            return this.highlightColorOverride != null
+                    ? this.highlightColorOverride
+                    : RenderingUtils.replaceAlphaInColor(getLineColor(normalized), 220);
+        }
+
+        protected void pushSample() {
+            long now = System.currentTimeMillis();
+            if ((now - this.lastSampleTime) < this.sampleIntervalMs) return;
+            this.lastSampleTime = now;
+            double value;
+            try {
+                value = this.valueSupplier.getAsDouble();
+                this.sampleFailureLogged = false;
+            } catch (Throwable ex) {
+                if (!this.sampleFailureLogged) {
+                    this.sampleFailureLogged = true;
+                    LOGGER.error("[FANCYMENU] Failed to sample value for debug overlay graph line '{}'", this.getIdentifier(), ex);
+                }
+                value = this.minValue;
+            }
+            double range = this.maxValue - this.minValue;
+            float normalized;
+            if (range <= 0.0D) {
+                normalized = 0.0F;
+            } else {
+                normalized = (float)((value - this.minValue) / range);
+            }
+            if (!Float.isFinite(normalized)) normalized = 0.0F;
+            normalized = Math.min(1.0F, Math.max(0.0F, normalized));
+            this.samples[this.sampleIndex] = normalized;
+            this.sampleIndex = (this.sampleIndex + 1) % this.samples.length;
+            if (this.sampleCount < this.samples.length) this.sampleCount++;
+        }
+
+        private static int lerpColor(int colorA, int colorB, float t) {
+            int aA = (colorA >> 24) & 0xFF;
+            int rA = (colorA >> 16) & 0xFF;
+            int gA = (colorA >> 8) & 0xFF;
+            int bA = colorA & 0xFF;
+
+            int aB = (colorB >> 24) & 0xFF;
+            int rB = (colorB >> 16) & 0xFF;
+            int gB = (colorB >> 8) & 0xFF;
+            int bB = colorB & 0xFF;
+
+            int a = (int)(aA + (aB - aA) * t);
+            int r = (int)(rA + (rB - rA) * t);
+            int g = (int)(gA + (gB - gA) * t);
+            int b = (int)(bA + (bB - bA) * t);
+
+            return (a << 24) | (r << 16) | (g << 8) | b;
+        }
+
+    }
+
     public enum LinePosition {
         TOP_LEFT,
         TOP_RIGHT,
         BOTTOM_LEFT,
         BOTTOM_RIGHT
+    }
+
+    private void logLineRenderFailure(@NotNull DebugOverlayLine line, @NotNull Throwable ex) {
+        if (!line.renderFailureLogged) {
+            line.renderFailureLogged = true;
+            LOGGER.error("[FANCYMENU] Failed to render debug overlay line '{}'", line.getIdentifier(), ex);
+        }
     }
 
 }

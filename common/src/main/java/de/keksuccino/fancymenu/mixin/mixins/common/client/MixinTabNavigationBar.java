@@ -29,7 +29,7 @@ public class MixinTabNavigationBar {
     @Shadow private int width;
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V"))
-    private boolean wrapHeaderSeparatorRenderingInRender_FancyMenu(GuiGraphics instance, RenderPipeline $$0, Identifier $$1, int $$2, int $$3, float $$4, float $$5, int $$6, int $$7, int $$8, int $$9) {
+    private boolean wrapHeaderSeparatorRenderingInRender_FancyMenu(GuiGraphics instance, RenderPipeline pipeline, Identifier sprite, int x, int y, float u, float v, int width, int height, int textureWidth, int textureHeight) {
         if (this.isBarPartOfCurrentScreen_FancyMenu()) {
             if (ScreenCustomization.isCustomizationEnabledForScreen(Minecraft.getInstance().screen)) {
                 ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(Minecraft.getInstance().screen);
@@ -46,7 +46,7 @@ public class MixinTabNavigationBar {
         EventHandler.INSTANCE.postEvent(new RenderTabNavigationBarHeaderBackgroundEvent.Pre(this.getBar_FancyMenu(), graphics, this.width, HEIGHT));
     }
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/ImmutableList;iterator()Lcom/google/common/collect/UnmodifiableIterator;", remap = false, shift = At.Shift.AFTER))
+    @Inject(method = "render", at = @At("TAIL"))
     private void after_disableBlend_in_render_FancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo info) {
         EventHandler.INSTANCE.postEvent(new RenderTabNavigationBarHeaderBackgroundEvent.Post(this.getBar_FancyMenu(), graphics, this.width, HEIGHT));
     }
@@ -63,7 +63,7 @@ public class MixinTabNavigationBar {
      * @reason Re-init the screen when the tab got changed by using keys (arrow keys, Tab key, number keys)
      */
     @Inject(method = "keyPressed", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/tabs/TabNavigationBar;selectTab(IZ)V", shift = At.Shift.AFTER))
-    private void after_selectTab_in_keyPressed_FancyMenu(KeyEvent $$0, CallbackInfoReturnable<Boolean> cir) {
+    private void after_selectTab_in_keyPressed_FancyMenu(KeyEvent event, CallbackInfoReturnable<Boolean> info) {
         this.reInitScreenAfterTabChanged_FancyMenu();
     }
 

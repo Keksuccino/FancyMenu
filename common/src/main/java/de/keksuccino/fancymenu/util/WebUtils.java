@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.util;
 
-import net.minecraft.client.Minecraft;
+import net.minecraft.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -124,7 +124,7 @@ public class WebUtils {
         try {
             String s = System.getProperty("os.name").toLowerCase(Locale.ROOT);
             URL u = new URL(url);
-            if (!OSUtils.isMacOS()) {
+            if (Util.getPlatform() != Util.OS.OSX) {
                 if (s.contains("win")) {
                     Runtime.getRuntime().exec(new String[]{"rundll32", "url.dll,FileProtocolHandler", url});
                 } else {
