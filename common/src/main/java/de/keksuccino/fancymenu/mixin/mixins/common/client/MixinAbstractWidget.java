@@ -28,6 +28,7 @@ import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -269,8 +270,11 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		info.setReturnValue(result);
 	}
 
+	/**
+	 * @reason Vanilla's 1.21.11 text collector always renders widget labels with a shadow, so FancyMenu draws the label directly when shadow or scale customizations are active.
+	 */
 	@Inject(method = "renderScrollingStringOverContents", at = @At("HEAD"), cancellable = true)
-	private void before_renderScrollingString_FancyMenu(ActiveTextCollector activeTextCollector, Component component, int i, CallbackInfo info) {
+	private void before_renderScrollingString_FancyMenu(ActiveTextCollector activeTextCollector, Component component, int margin, CallbackInfo info) {
         GuiGraphics graphics = this.cached_graphics_FancyMenu;
         Font font = Minecraft.getInstance().font;
 		float scale = this.resolveLabelScaleFancyMenu();
@@ -282,10 +286,11 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		}
 		AbstractWidget w = this.getWidgetFancyMenu();
 		Component text = w.getMessage();
-		int xMin = w.getX() + width;
-		int xMax = w.getX() + w.getWidth() - width;
+		int xMin = w.getX() + margin;
+		int xMax = w.getX() + w.getWidth() - margin;
 		int yMin = w.getY();
 		int yMax = w.getY() + w.getHeight();
+		int textColor = ARGB.white(this.alpha);
 		if (scale == 1.0F) {
 			int textWidth = font.width(text);
 			int textPosY = (yMin + yMax - 9) / 2 + 1;
@@ -297,11 +302,11 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 				double scrollAlpha = Math.sin((Math.PI / 2D) * Math.cos((Math.PI * 2D) * scrollTime / scrollDuration)) / 2.0D + 0.5D;
 				double textOffset = Mth.lerp(scrollAlpha, 0.0D, (double) diffTextWidth);
 				graphics.enableScissor(xMin, yMin, xMax, yMax);
-				graphics.drawString(font, text, xMin - (int) textOffset, textPosY, -1, labelShadow);
+				graphics.drawString(font, text, xMin - (int) textOffset, textPosY, textColor, labelShadow);
 				graphics.disableScissor();
 			} else {
 				int textPosX = Mth.clamp((xMin + xMax) / 2, xMin + textWidth / 2, xMax - textWidth / 2);
-				graphics.drawString(font, text, textPosX - (textWidth / 2), textPosY, -1, labelShadow);
+				graphics.drawString(font, text, textPosX - (textWidth / 2), textPosY, textColor, labelShadow);
 			}
 			info.cancel();
 			return;
@@ -324,11 +329,11 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 			double scrollAlpha = Math.sin((Math.PI / 2D) * Math.cos((Math.PI * 2D) * scrollTime / scrollDuration)) / 2.0D + 0.5D;
 			double textOffset = Mth.lerp(scrollAlpha, 0.0D, diffTextWidth);
 			graphics.enableScissor(xMin, yMin, xMax, yMax);
-			graphics.drawString(font, text, (int)(scaledMinX - (float)textOffset), (int)textPosY, -1, labelShadow);
+			graphics.drawString(font, text, (int)(scaledMinX - (float)textOffset), (int)textPosY, textColor, labelShadow);
 			graphics.disableScissor();
 		} else {
 			float textPosX = ((scaledMinX + scaledMaxX) / 2F) - (textWidth / 2F);
-			graphics.drawString(font, text, (int)textPosX, (int)textPosY, -1, labelShadow);
+			graphics.drawString(font, text, (int)textPosX, (int)textPosY, textColor, labelShadow);
 		}
 		graphics.pose().popMatrix();
 		info.cancel();

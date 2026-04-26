@@ -42,6 +42,11 @@ public class BuddyStatusScreen implements Renderable {
     private static final int STATUS_BAR_GAP = 6;
     private static final int STATUS_ICON_SIZE = 12;
     private static final int STATUS_ICON_GAP = 6;
+    private static final int ACHIEVEMENT_LIST_ITEM_HEIGHT = 25;
+    private static final int ACHIEVEMENT_MAX_VISIBLE_ITEMS = 6;
+    private static final int TEXT_COLOR_WHITE = 0xFFFFFFFF;
+    private static final int TEXT_COLOR_MUTED = 0xFFAAAAAA;
+    private static final int TEXT_COLOR_REWARD = 0xFFFFFF00;
 
     // GUI Texture
     public static final Identifier BACKGROUND_TEXTURE = Identifier.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/status_screen_background.png");
@@ -329,7 +334,7 @@ public class BuddyStatusScreen implements Renderable {
             graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, buttonTexture, tabX, tabY, 0.0F, 0.0F, tabWidth, tabHeight, tabWidth, tabHeight);
 
             // Draw tab text
-            int textColor = isSelected ? 0xFFFFFF : 0xAAAAAA;
+            int textColor = isSelected ? TEXT_COLOR_WHITE : TEXT_COLOR_MUTED;
             int textX = tabX + (tabWidth - font.width(tabNames[i])) / 2;
             int textY = tabY + (tabHeight - font.lineHeight) / 2;
             graphics.drawString(font, tabNames[i], textX, textY, textColor);
@@ -348,7 +353,7 @@ public class BuddyStatusScreen implements Renderable {
 
         // Draw title
         String title = I18n.get("fancymenu.buddy.title.stats");
-        graphics.drawString(font, title, guiX + (SCREEN_WIDTH - font.width(title)) / 2, contentStartY, 0xFFFFFF);
+        graphics.drawString(font, title, guiX + (SCREEN_WIDTH - font.width(title)) / 2, contentStartY, TEXT_COLOR_WHITE);
 
         // Draw status bars (moved from BuddyGui)
         tooltip = renderStatusBars(graphics, contentStartX, contentStartY + 20, mouseX, mouseY);
@@ -370,7 +375,7 @@ public class BuddyStatusScreen implements Renderable {
 
         // Draw level and XP - moved further down
         String levelText = I18n.get("fancymenu.buddy.level", levelingManager.getCurrentLevel());
-        graphics.drawString(font, levelText, contentStartX, contentStartY + 140, 0xFFFFFF);
+        graphics.drawString(font, levelText, contentStartX, contentStartY + 140, TEXT_COLOR_WHITE);
 
         // Draw XP bar - moved further down
         int minXpBarX = contentStartX + font.width(levelText) + STATUS_ICON_SIZE + STATUS_ICON_GAP + 10;
@@ -408,45 +413,30 @@ public class BuddyStatusScreen implements Renderable {
 
         // Draw title
         String title = I18n.get("fancymenu.buddy.title.achievements");
-        graphics.drawString(font, title, guiX + (SCREEN_WIDTH - font.width(title)) / 2, contentStartY, 0xFFFFFF);
+        graphics.drawString(font, title, guiX + (SCREEN_WIDTH - font.width(title)) / 2, contentStartY, TEXT_COLOR_WHITE);
 
         // Create a scrollable list of achievements
         int listStartY = contentStartY + 20;
-        int listItemHeight = 25;
         int listWidth = SCREEN_WIDTH - 45; // Reduced by 5 pixels
-        int maxVisibleItems = 6;
 
         // Get achievements and sort by tier
-        List<BuddyAchievement> achievementsList = new ArrayList<>();
-        for (Map.Entry<BuddyAchievement.AchievementType, BuddyAchievement> entry : 
-                levelingManager.getAchievements().entrySet()) {
-            achievementsList.add(entry.getValue());
-        }
-        
-        achievementsList.sort((a1, a2) -> {
-            // First sort by unlocked status (unlocked first)
-            if (a1.isUnlocked() != a2.isUnlocked()) {
-                return a1.isUnlocked() ? -1 : 1;
-            }
-            // Then sort by tier
-            return Integer.compare(a1.getType().getTier(), a2.getType().getTier());
-        });
+        List<BuddyAchievement> achievementsList = getSortedAchievements();
 
         // Calculate max scroll offset
-        int maxScrollOffset = Math.max(0, achievementsList.size() - maxVisibleItems) * listItemHeight;
-        achievementsScrollOffset = Math.min(achievementsScrollOffset, maxScrollOffset);
+        int maxScrollOffset = getMaxAchievementScrollOffset(achievementsList.size());
+        achievementsScrollOffset = clampAchievementScrollOffset(achievementsScrollOffset, maxScrollOffset);
 
         // Set up scissor area for the achievement list
         int scissorY = listStartY;
-        int scissorHeight = maxVisibleItems * listItemHeight;
+        int scissorHeight = ACHIEVEMENT_MAX_VISIBLE_ITEMS * ACHIEVEMENT_LIST_ITEM_HEIGHT;
         graphics.enableScissor(contentStartX - 5, scissorY, contentStartX + listWidth, scissorY + scissorHeight);
 
         // Draw achievement items
         for (int i = 0; i < achievementsList.size(); i++) {
-            int itemY = listStartY + (i * listItemHeight) - achievementsScrollOffset;
+            int itemY = listStartY + (i * ACHIEVEMENT_LIST_ITEM_HEIGHT) - achievementsScrollOffset;
             
             // Only skip if completely out of view (with some margin for safety)
-            if (itemY + listItemHeight < scissorY - 50 || itemY > scissorY + scissorHeight + 50) {
+            if (itemY + ACHIEVEMENT_LIST_ITEM_HEIGHT < scissorY - 50 || itemY > scissorY + scissorHeight + 50) {
                 continue;
             }
             
@@ -455,11 +445,11 @@ public class BuddyStatusScreen implements Renderable {
             
             // Draw item background
             int bgColor = isUnlocked ? 0x8000FF00 : 0x80FF0000;
-            graphics.fill(contentStartX, itemY, contentStartX + listWidth, itemY + listItemHeight - 2, bgColor);
+            graphics.fill(contentStartX, itemY, contentStartX + listWidth, itemY + ACHIEVEMENT_LIST_ITEM_HEIGHT - 2, bgColor);
             
             // Draw achievement name with scrolling if needed
             String name = achievement.getType().getName();
-            int nameColor = isUnlocked ? 0xFFFFFF : 0xAAAAAA;
+            int nameColor = isUnlocked ? TEXT_COLOR_WHITE : TEXT_COLOR_MUTED;
             
             // Calculate available width for name
             int nameMaxX = contentStartX + listWidth - 5;
@@ -490,7 +480,7 @@ public class BuddyStatusScreen implements Renderable {
             // Draw reward info if unlocked
             if (isUnlocked && achievement.getExperienceReward() > 0) {
                 String rewardText = I18n.get("fancymenu.buddy.achievement.reward", achievement.getExperienceReward());
-                graphics.drawString(font, rewardText, contentStartX + listWidth - font.width(rewardText) - 5, itemY + 5, 0xFFFF00);
+                graphics.drawString(font, rewardText, contentStartX + listWidth - font.width(rewardText) - 5, itemY + 5, TEXT_COLOR_REWARD);
             }
         }
 
@@ -502,10 +492,10 @@ public class BuddyStatusScreen implements Renderable {
         boolean canScrollDown = achievementsScrollOffset < maxScrollOffset;
 
         if (canScrollUp) {
-            graphics.drawString(font, "▲", guiX + SCREEN_WIDTH - 20, listStartY - 5, 0xFFFFFF);
+            graphics.drawString(font, "▲", guiX + SCREEN_WIDTH - 20, listStartY - 5, TEXT_COLOR_WHITE);
         }
         if (canScrollDown) {
-            graphics.drawString(font, "▼", guiX + SCREEN_WIDTH - 20, listStartY + (maxVisibleItems * listItemHeight) + 5, 0xFFFFFF);
+            graphics.drawString(font, "▼", guiX + SCREEN_WIDTH - 20, listStartY + (ACHIEVEMENT_MAX_VISIBLE_ITEMS * ACHIEVEMENT_LIST_ITEM_HEIGHT) + 5, TEXT_COLOR_WHITE);
         }
     }
 
@@ -551,17 +541,15 @@ public class BuddyStatusScreen implements Renderable {
                 case TAB_ACHIEVEMENTS:
                     // Check for scroll up/down clicks
                     int listStartY = guiY + 50;
-                    int maxVisibleItems = 6;
-                    int listItemHeight = 25;
                     if (mouseX >= guiX + SCREEN_WIDTH - 20) {
                         if (mouseY >= listStartY - 10 && mouseY <= listStartY + 10) {
                             // Scroll up
-                            achievementsScrollOffset = Math.max(0, achievementsScrollOffset - listItemHeight);
+                            scrollAchievementsBy(-ACHIEVEMENT_LIST_ITEM_HEIGHT);
                             return true;
-                        } else if (mouseY >= listStartY + (maxVisibleItems * listItemHeight) && 
-                                  mouseY <= listStartY + (maxVisibleItems * listItemHeight) + 20) {
+                        } else if (mouseY >= listStartY + (ACHIEVEMENT_MAX_VISIBLE_ITEMS * ACHIEVEMENT_LIST_ITEM_HEIGHT) &&
+                                  mouseY <= listStartY + (ACHIEVEMENT_MAX_VISIBLE_ITEMS * ACHIEVEMENT_LIST_ITEM_HEIGHT) + 20) {
                             // Scroll down
-                            achievementsScrollOffset += listItemHeight;
+                            scrollAchievementsBy(ACHIEVEMENT_LIST_ITEM_HEIGHT);
                             return true;
                         }
                     }
@@ -618,7 +606,7 @@ public class BuddyStatusScreen implements Renderable {
             switch (currentTab) {
                 case TAB_ACHIEVEMENTS:
                     // Scroll the achievements list
-                    achievementsScrollOffset = Math.max(0, achievementsScrollOffset - (int)(deltaY * 20));
+                    scrollAchievements(deltaX, deltaY);
                     return true;
             }
 
@@ -633,6 +621,47 @@ public class BuddyStatusScreen implements Renderable {
      */
     public boolean isVisible() {
         return isVisible;
+    }
+
+    private List<BuddyAchievement> getSortedAchievements() {
+        List<BuddyAchievement> achievementsList = new ArrayList<>();
+        for (Map.Entry<BuddyAchievement.AchievementType, BuddyAchievement> entry :
+                levelingManager.getAchievements().entrySet()) {
+            achievementsList.add(entry.getValue());
+        }
+
+        achievementsList.sort((a1, a2) -> {
+            // First sort by unlocked status (unlocked first)
+            if (a1.isUnlocked() != a2.isUnlocked()) {
+                return a1.isUnlocked() ? -1 : 1;
+            }
+            // Then sort by tier
+            return Integer.compare(a1.getType().getTier(), a2.getType().getTier());
+        });
+        return achievementsList;
+    }
+
+    private int getMaxAchievementScrollOffset(int achievementCount) {
+        return Math.max(0, achievementCount - ACHIEVEMENT_MAX_VISIBLE_ITEMS) * ACHIEVEMENT_LIST_ITEM_HEIGHT;
+    }
+
+    private int clampAchievementScrollOffset(int scrollOffset, int maxScrollOffset) {
+        return Math.max(0, Math.min(scrollOffset, maxScrollOffset));
+    }
+
+    private void scrollAchievements(double deltaX, double deltaY) {
+        double scrollDelta = Math.abs(deltaY) >= Math.abs(deltaX) ? deltaY : deltaX;
+        if (scrollDelta == 0.0D) {
+            return;
+        }
+
+        int scrollAmount = Math.max(1, (int)Math.round(Math.abs(scrollDelta) * ACHIEVEMENT_LIST_ITEM_HEIGHT));
+        scrollAchievementsBy(scrollDelta > 0.0D ? -scrollAmount : scrollAmount);
+    }
+
+    private void scrollAchievementsBy(int scrollAmount) {
+        int maxScrollOffset = getMaxAchievementScrollOffset(levelingManager.getAchievements().size());
+        achievementsScrollOffset = clampAchievementScrollOffset(achievementsScrollOffset + scrollAmount, maxScrollOffset);
     }
 
     /**
