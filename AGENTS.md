@@ -56,4 +56,4 @@
 - When porting code from a different Minecraft version, you should compare both Minecraft version's code to see what changed, how it works here and how to best port the code.
 
 ## Gradle
-- Do NOT run or compile the project!
+- Do NOT run or compile the project, except the user explicitly tells you to do so.
