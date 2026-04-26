@@ -15,7 +15,6 @@ import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGro
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.customization.scheduler.SchedulerHandler;
 import de.keksuccino.fancymenu.customization.scheduler.SchedulerInstance;
-import de.keksuccino.fancymenu.util.VanillaEvents;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -288,8 +287,13 @@ public class ManageSchedulersWindowBody extends PiPCellWindowBody {
     public boolean keyPressed(KeyEvent event) {
         return this.keyPressed(event.key(), event.scancode(), event.modifiers());
     }
-    
+
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        SchedulerInstanceCell editingCell = this.getEditingInstanceCell();
+        if (editingCell != null) {
+            editingCell.keyPressed(keyCode, scanCode, modifiers);
+            return true;
+        }
         if (super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
@@ -298,6 +302,38 @@ public class ManageSchedulersWindowBody extends PiPCellWindowBody {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean charTyped(CharacterEvent event) {
+        return this.charTyped((char)event.codepoint(), event.modifiers());
+    }
+
+    public boolean charTyped(char codePoint, int modifiers) {
+        SchedulerInstanceCell editingCell = this.getEditingInstanceCell();
+        if (editingCell != null) {
+            return editingCell.charTyped(codePoint, modifiers);
+        }
+        return super.charTyped(new CharacterEvent(codePoint, modifiers));
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        SchedulerInstanceCell editingCell = this.getEditingInstanceCell();
+        if ((button == 0) && (editingCell != null) && (editingCell.editBox != null) && !editingCell.editBox.isMouseOver(mouseX, mouseY)) {
+            editingCell.exitEditMode(true);
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Nullable
+    protected SchedulerInstanceCell getEditingInstanceCell() {
+        for (RenderCell cell : this.allCells) {
+            if ((cell instanceof SchedulerInstanceCell instanceCell) && instanceCell.editMode && (instanceCell.editBox != null)) {
+                return instanceCell;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -690,7 +726,7 @@ public class ManageSchedulersWindowBody extends PiPCellWindowBody {
                     this.lastClickTime = currentTime;
                 }
             }
-            boolean b = super.mouseClicked(VanillaEvents.mouseButtonEvent(mouseX, mouseY, button), false);
+            boolean b = super.mouseClicked(mouseX, mouseY, button);
             if ((button == 1) && this.isHovered() && !this.editMode) {
                 MainThreadTaskExecutor.executeInMainThread(() -> {
                     MainThreadTaskExecutor.executeInMainThread(() -> {
@@ -757,6 +793,8 @@ public class ManageSchedulersWindowBody extends PiPCellWindowBody {
 
             this.children.clear();
             this.children.add(this.editBox);
+            this.setFocused(this.editBox);
+            ManageSchedulersWindowBody.this.setFocused(this);
         }
 
         protected void exitEditMode(boolean save) {
@@ -787,6 +825,10 @@ public class ManageSchedulersWindowBody extends PiPCellWindowBody {
             this.editMode = false;
             this.editBox = null;
             this.children.clear();
+            this.setFocused(null);
+            if (ManageSchedulersWindowBody.this.getFocused() == this) {
+                ManageSchedulersWindowBody.this.setFocused(null);
+            }
         }
 
     }

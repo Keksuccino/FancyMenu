@@ -15,7 +15,6 @@ import de.keksuccino.fancymenu.customization.listener.ListenerHandler;
 import de.keksuccino.fancymenu.customization.listener.ListenerInstance;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGroup;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
-import de.keksuccino.fancymenu.util.VanillaEvents;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -237,6 +236,11 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
     }
     
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        ListenerInstanceCell editingCell = this.getEditingInstanceCell();
+        if (editingCell != null) {
+            editingCell.keyPressed(keyCode, scanCode, modifiers);
+            return true;
+        }
         if (super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
@@ -245,6 +249,38 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean charTyped(CharacterEvent event) {
+        return this.charTyped((char)event.codepoint(), event.modifiers());
+    }
+
+    public boolean charTyped(char codePoint, int modifiers) {
+        ListenerInstanceCell editingCell = this.getEditingInstanceCell();
+        if (editingCell != null) {
+            return editingCell.charTyped(codePoint, modifiers);
+        }
+        return super.charTyped(new CharacterEvent(codePoint, modifiers));
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        ListenerInstanceCell editingCell = this.getEditingInstanceCell();
+        if ((button == 0) && (editingCell != null) && (editingCell.editBox != null) && !editingCell.editBox.isMouseOver(mouseX, mouseY)) {
+            editingCell.exitEditMode(true);
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Nullable
+    protected ListenerInstanceCell getEditingInstanceCell() {
+        for (RenderCell cell : this.allCells) {
+            if ((cell instanceof ListenerInstanceCell instanceCell) && instanceCell.editMode && (instanceCell.editBox != null)) {
+                return instanceCell;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -645,7 +681,7 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
                     this.lastClickTime = currentTime;
                 }
             }
-            boolean b = super.mouseClicked(VanillaEvents.mouseButtonEvent(mouseX, mouseY, button), false);
+            boolean b = super.mouseClicked(mouseX, mouseY, button);
             if ((button == 1) && this.isHovered() && !this.editMode) {
                 MainThreadTaskExecutor.executeInMainThread(() -> {
                     MainThreadTaskExecutor.executeInMainThread(() -> {
@@ -721,6 +757,8 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
             // Add to children for input handling
             this.children.clear();
             this.children.add(this.editBox);
+            this.setFocused(this.editBox);
+            ManageListenersWindowBody.this.setFocused(this);
         }
         
         protected void exitEditMode(boolean save) {
@@ -743,6 +781,10 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
             this.editMode = false;
             this.editBox = null;
             this.children.clear();
+            this.setFocused(null);
+            if (ManageListenersWindowBody.this.getFocused() == this) {
+                ManageListenersWindowBody.this.setFocused(null);
+            }
         }
         
     }

@@ -216,8 +216,6 @@ public class RenderingUtils {
 
     /**
      * Draws a textured quad, mirrored horizontally.
-     * <p>
-     * This is achieved by applying a negative horizontal scale to the transformation matrix before drawing.
      *
      * @param graphics      The GuiGraphics context, which manages transformations and rendering.
      * @param atlasLocation The texture resource location.
@@ -237,8 +235,6 @@ public class RenderingUtils {
 
     /**
      * Draws a textured quad with a color tint, mirrored horizontally.
-     * <p>
-     * This is achieved by applying a negative horizontal scale to the transformation matrix before drawing.
      *
      * @param graphics      The GuiGraphics context, which manages transformations and rendering.
      * @param atlasLocation The texture resource location.
@@ -259,10 +255,8 @@ public class RenderingUtils {
     /**
      * Draws a textured quad scaled to a specific render size, mirrored horizontally.
      * <p>
-     * The mirroring is performed by manipulating the transformation stack within {@link GuiGraphics}.
-     * The context is translated to the right edge of the target location, scaled by -1 on the X-axis,
-     * and then the texture is drawn normally at the new, mirrored origin. This correctly uses the
-     * 2D transformation methods from JOML's {@link Matrix3x2f}.
+     * Minecraft 1.21.11 defers GUI quads through render states. Mirroring with a negative X scale flips
+     * the quad winding and can make the renderer cull it, so keep the geometry normal and flip the UVs.
      *
      * @param graphics      The GuiGraphics context.
      * @param atlasLocation The texture resource location.
@@ -279,36 +273,16 @@ public class RenderingUtils {
      * @param color         The color tint to apply (ARGB format, -1 for white/no tint).
      */
     public static void blitMirroredScaled(@NotNull GuiGraphics graphics, Identifier atlasLocation, int x, int y, int u, int v, int spriteWidth, int spriteHeight, int renderWidth, int renderHeight, int textureWidth, int textureHeight, int color) {
-
-        // Push the current transformation matrix onto the stack to isolate our changes.
-        graphics.pose().pushMatrix();
-
-        // 1. Translate the coordinate system's origin to the TOP-RIGHT corner of our target render area.
-        //    All subsequent drawing operations will be relative to this new origin.
-        graphics.pose().translate((float)x + (float)renderWidth, (float)y);
-
-        // 2. Scale the coordinate system. A negative x-scale flips the x-axis.
-        //    Now, drawing with a positive width will extend to the LEFT from the origin.
-        graphics.pose().scale(-1.0f, 1.0f);
-
-        // 3. Blit the texture.
-        //    We draw at the new, transformed origin (0, 0).
-        //    Because the coordinate system is flipped, a quad of `renderWidth` drawn at 0
-        //    will occupy the screen space from [x + renderWidth] to [x + renderWidth - renderWidth],
-        //    which is [x + renderWidth] to [x]. This achieves the horizontal mirror.
-        //    We use a blit overload that handles separate source and render dimensions.
+        // Starting the source region at its right edge and using a negative source width flips U coordinates.
         graphics.blit(RenderPipelines.GUI_TEXTURED,
                 atlasLocation,
-                0, 0, // Draw at the new (0,0) of our transformed matrix
-                (float) u, (float) v, // Top-left corner of the texture region to draw (in pixels)
-                renderWidth, renderHeight, // The size to draw on screen
-                spriteWidth, spriteHeight, // The size of the source texture region
+                x, y,
+                (float)(u + spriteWidth), (float)v,
+                renderWidth, renderHeight,
+                -spriteWidth, spriteHeight,
                 textureWidth, textureHeight,
                 color
         );
-
-        // Pop the matrix from the stack to restore the original transformation state.
-        graphics.pose().popMatrix();
 
     }
 
