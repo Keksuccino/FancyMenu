@@ -10,4 +10,6 @@ public interface IMixinGuiGraphics {
 
     @Accessor("guiRenderState") GuiRenderState get_guiRenderState_FancyMenu();
 
+    @Accessor("scissorStack") GuiGraphics.ScissorStack get_scissorStack_FancyMenu();
+
 }

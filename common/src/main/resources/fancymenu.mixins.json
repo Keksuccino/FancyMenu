@@ -6,6 +6,7 @@
     "client.IMixinAbstractContainerScreen",
     "client.IMixinAbstractSliderButton",
     "client.IMixinAbstractWidget",
+    "client.IMixinAbstractWidgetWithInactiveMessage",
     "client.IMixinBossHealthOverlay",
     "client.IMixinBufferBuilder",
     "client.IMixinButton",

@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.fma;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.CloseableUtils;
@@ -310,6 +311,7 @@ public class FmaTexture implements ITexture, PlayableResource {
                 synchronized (this.streamStateLock) {
                     this.clearPrefetchedFramesLocked();
                 }
+                this.clearPendingUploadFrame();
                 sleepQuietly(100L);
                 continue;
             }
@@ -319,6 +321,19 @@ public class FmaTexture implements ITexture, PlayableResource {
                     if (!this.initializeFirstFrame(generation)) {
                         sleepQuietly(IDLE_SLEEP_MS);
                     }
+                    continue;
+                }
+
+                if (this.shouldIdleOnSingleInfiniteMainFrame()) {
+                    synchronized (this.streamStateLock) {
+                        this.clearPrefetchedFramesLocked();
+                    }
+                    sleepQuietly(100L);
+                    continue;
+                }
+
+                if (this.pendingUploadFrame.get() != null) {
+                    sleepQuietly(IDLE_SLEEP_MS);
                     continue;
                 }
 
@@ -562,6 +577,14 @@ public class FmaTexture implements ITexture, PlayableResource {
         return (this.cycles.get() + 1) < plays;
     }
 
+    protected boolean shouldIdleOnSingleInfiniteMainFrame() {
+        return this.playbackInitialized
+                && !this.playbackIntro
+                && (this.playbackIndex == 0)
+                && (this.frameCount == 1)
+                && (this.numPlays.get() <= 0);
+    }
+
     protected void requestPlaybackReset() {
         this.streamGeneration.incrementAndGet();
 
@@ -601,34 +624,46 @@ public class FmaTexture implements ITexture, PlayableResource {
         try {
             DynamicTexture currentTexture = this.streamingTexture;
 
-            if (currentTexture == null) {
-                this.streamingResourceLocation = Identifier.fromNamespaceAndPath("fancymenu", "dynamic/fma_stream_" + this.uniqueId);
-                this.streamingTexture = new DynamicTexture(this.streamingResourceLocation::toString, frame.nativeImage);
-                frame.nativeImage = null;
-                Minecraft.getInstance().getTextureManager().register(this.streamingResourceLocation, this.streamingTexture);
+            if ((currentTexture == null) || !this.canUploadFrameToTexture(currentTexture, frame.nativeImage)) {
+                this.replaceStreamingTexture(frame);
                 return;
             }
 
-            NativeImage destinationPixels = currentTexture.getPixels();
-            if ((destinationPixels == null)
-                    || (destinationPixels.getWidth() != frame.nativeImage.getWidth())
-                    || (destinationPixels.getHeight() != frame.nativeImage.getHeight())) {
-                currentTexture.close();
-                this.streamingResourceLocation = Identifier.fromNamespaceAndPath("fancymenu", "dynamic/fma_stream_" + this.uniqueId);
-                this.streamingTexture = new DynamicTexture(this.streamingResourceLocation::toString, frame.nativeImage);
-                frame.nativeImage = null;
-                Minecraft.getInstance().getTextureManager().register(this.streamingResourceLocation, this.streamingTexture);
-                return;
-            }
-
-            destinationPixels.copyFrom(frame.nativeImage);
-            currentTexture.upload();
+            RenderSystem.getDevice().createCommandEncoder().writeToTexture(currentTexture.getTexture(), frame.nativeImage);
         } catch (Exception ex) {
             this.loadingFailed.set(true);
             LOGGER.error("[FANCYMENU] Failed to upload streamed FMA frame into DynamicTexture", ex);
         } finally {
             frame.close();
         }
+    }
+
+    protected boolean canUploadFrameToTexture(@NotNull DynamicTexture texture, @NotNull NativeImage frameImage) {
+        NativeImage texturePixels = texture.getPixels();
+        return (texturePixels != null)
+                && (texturePixels.getWidth() == frameImage.getWidth())
+                && (texturePixels.getHeight() == frameImage.getHeight());
+    }
+
+    protected void replaceStreamingTexture(@NotNull DecodedFrame frame) {
+        NativeImage frameImage = Objects.requireNonNull(frame.nativeImage, "FMA frame NativeImage was NULL");
+        DynamicTexture previousTexture = this.streamingTexture;
+        Identifier resourceLocation = this.streamingResourceLocation;
+        boolean hadResourceLocation = resourceLocation != null;
+        if (resourceLocation == null) {
+            resourceLocation = Identifier.fromNamespaceAndPath("fancymenu", "dynamic/fma_stream_" + this.uniqueId);
+            this.streamingResourceLocation = resourceLocation;
+        } else {
+            Minecraft.getInstance().getTextureManager().release(resourceLocation);
+        }
+        if ((previousTexture != null) && !hadResourceLocation) {
+            previousTexture.close();
+        }
+
+        Identifier textureLocation = resourceLocation;
+        this.streamingTexture = new DynamicTexture(textureLocation::toString, frameImage);
+        frame.nativeImage = null;
+        Minecraft.getInstance().getTextureManager().register(textureLocation, this.streamingTexture);
     }
 
     @Nullable
@@ -783,15 +818,7 @@ public class FmaTexture implements ITexture, PlayableResource {
         }
         this.clearPendingUploadFrame();
 
-        if (this.streamingTexture != null) {
-            try {
-                this.streamingTexture.close();
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to close streaming DynamicTexture of FMA", ex);
-            }
-            this.streamingTexture = null;
-        }
-        this.streamingResourceLocation = null;
+        this.releaseStreamingTextureNow();
 
         FmaDecoder activeDecoder = this.decoder;
         this.decoder = null;
@@ -802,6 +829,27 @@ public class FmaTexture implements ITexture, PlayableResource {
         this.sourceLocation = null;
         this.sourceFile = null;
         this.sourceURL = null;
+    }
+
+    protected void releaseStreamingTextureNow() {
+        DynamicTexture activeTexture = this.streamingTexture;
+        Identifier activeLocation = this.streamingResourceLocation;
+        this.streamingTexture = null;
+        this.streamingResourceLocation = null;
+        this.releaseStreamingTexture(activeLocation, activeTexture);
+    }
+
+    protected void releaseStreamingTexture(@Nullable Identifier resourceLocation, @Nullable DynamicTexture texture) {
+        if (resourceLocation != null) {
+            Minecraft.getInstance().getTextureManager().release(resourceLocation);
+        }
+        if (texture != null) {
+            try {
+                texture.close();
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to close streaming DynamicTexture of FMA", ex);
+            }
+        }
     }
 
     @Nullable

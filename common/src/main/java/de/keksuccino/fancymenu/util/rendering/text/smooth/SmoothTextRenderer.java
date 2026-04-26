@@ -2,12 +2,14 @@ package de.keksuccino.fancymenu.util.rendering.text.smooth;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.GuiScissorUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.color.TextColorFormatter;
 import de.keksuccino.fancymenu.util.rendering.text.color.TextColorFormatterRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.ARGB;
@@ -15,6 +17,7 @@ import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.FormattedCharSink;
 import org.joml.Matrix3x2f;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
@@ -124,6 +127,7 @@ public final class SmoothTextRenderer {
         StyleState style = new StyleState(baseColor);
 
         Matrix3x2f transform = new Matrix3x2f(graphics.pose());
+        ScreenRectangle scissorArea = GuiScissorUtil.getActiveScissor(graphics);
 
         float underlineStartX = 0.0F;
         float strikeStartX = 0.0F;
@@ -159,7 +163,7 @@ public final class SmoothTextRenderer {
                 }
                 SmoothFontGlyph glyph = font.getGlyph(generationSize, codepoint, style.bold, style.italic);
                 if (glyph.hasTexture()) {
-                    addGlyph(graphics, transform, glyph, penX, baseline, scale, style.color, style.italic);
+                    addGlyph(graphics, transform, glyph, penX, baseline, scale, style.color, style.italic, scissorArea);
                 }
                 penX += glyph.advance() * scale;
                 continue;
@@ -201,7 +205,7 @@ public final class SmoothTextRenderer {
             SmoothFontGlyph glyph = font.getGlyph(generationSize, codepoint, style.bold, style.italic);
 
             if (glyph.hasTexture()) {
-                addGlyph(graphics, transform, glyph, penX, baseline, scale, style.color, style.italic);
+                addGlyph(graphics, transform, glyph, penX, baseline, scale, style.color, style.italic, scissorArea);
             }
 
             float advance = glyph.advance() * scale;
@@ -322,7 +326,7 @@ public final class SmoothTextRenderer {
     private static void applyShaderState() {
     }
 
-    private static void addGlyph(GuiGraphics graphics, Matrix3x2f transform, SmoothFontGlyph glyph, float penX, float baseline, float scale, int color, boolean italic) {
+    private static void addGlyph(GuiGraphics graphics, Matrix3x2f transform, SmoothFontGlyph glyph, float penX, float baseline, float scale, int color, boolean italic, @Nullable ScreenRectangle scissorArea) {
         float width = glyph.width() * scale;
         float height = glyph.height() * scale;
         if (width <= 0.0F || height <= 0.0F) {
@@ -352,7 +356,7 @@ public final class SmoothTextRenderer {
                         glyph.v0(),
                         glyph.v1(),
                         color,
-                        null
+                        scissorArea
                 )
         );
     }
@@ -517,6 +521,8 @@ public final class SmoothTextRenderer {
         private float lineY;
         private float baseline;
         private final Matrix3x2f transform;
+        @Nullable
+        private final ScreenRectangle scissorArea;
         private final StyleState style;
         private final StyleState nextStyle;
         private float underlineStartX;
@@ -541,6 +547,7 @@ public final class SmoothTextRenderer {
             this.lineY = y;
             this.baseline = y + ascent + yOffset;
             this.transform = new Matrix3x2f(graphics.pose());
+            this.scissorArea = GuiScissorUtil.getActiveScissor(graphics);
             this.style = new StyleState(baseColor);
             this.nextStyle = new StyleState(baseColor);
             this.underlineColor = baseColor;
@@ -569,7 +576,7 @@ public final class SmoothTextRenderer {
             SmoothFontGlyph glyph = font.getGlyph(generationSize, renderCodepoint, style.bold, style.italic);
 
             if (glyph.hasTexture()) {
-                addGlyph(graphics, transform, glyph, penX, baseline, scale, style.color, style.italic);
+                addGlyph(graphics, transform, glyph, penX, baseline, scale, style.color, style.italic, this.scissorArea);
             }
 
             penX += glyph.advance() * scale;

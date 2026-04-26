@@ -58,7 +58,7 @@ void main() {
     }
 
     if (shapeMode > 0.5) {
-        float angle = wrapAngle(atan(-p.y, p.x));
+        float angle = wrapAngle(atan(p.y, p.x));
         float start = wrapAngle(circleInfo2.y);
         float end = wrapAngle(circleInfo2.z);
         float angleAa = max(fwidth(angle), 0.0001);

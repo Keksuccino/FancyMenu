@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidgetWithInactiveMessage;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -258,7 +259,12 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     protected void updateLabel() {
         Component c = this.labelSupplier.get(this);
         if (c == null) c = Component.literal("");
-        ((IMixinAbstractWidget)this).setMessageFieldFancyMenu(c);
+        this.setVanillaLabelFields(c);
+    }
+
+    private void setVanillaLabelFields(@NotNull Component label) {
+        ((IMixinAbstractWidget)this).setMessageFieldFancyMenu(label);
+        ((IMixinAbstractWidgetWithInactiveMessage)this).setInactiveMessageFancyMenu(label);
     }
 
     protected void updateIsActive() {
@@ -343,13 +349,12 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
 
     public ExtendedButton setLabel(@NotNull Component label) {
         this.labelSupplier = (btn) -> label;
-        ((IMixinAbstractWidget)this).setMessageFieldFancyMenu(label);
+        this.setVanillaLabelFields(label);
         return this;
     }
 
     public ExtendedButton setLabel(@NotNull String label) {
-        this.labelSupplier = (btn) -> Component.literal(label);
-        return this;
+        return this.setLabel(Component.literal(label));
     }
 
     public ExtendedButton setLabelSupplier(@NotNull ConsumingSupplier<ExtendedButton, Component> labelSupplier) {

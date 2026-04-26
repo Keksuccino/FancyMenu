@@ -206,7 +206,7 @@ public final class SmoothImageRectangleRenderer {
                 rotation,
                 area.textureRegion,
                 area.color,
-                null
+                GuiScissorUtil.getActiveScissor(graphics)
         ));
     }
 

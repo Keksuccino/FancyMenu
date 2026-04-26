@@ -190,7 +190,7 @@ public final class SmoothImageCircleRenderer {
                 rotation,
                 area.textureRegion,
                 area.color,
-                null
+                GuiScissorUtil.getActiveScissor(graphics)
         ));
     }
 

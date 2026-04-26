@@ -327,7 +327,7 @@ public final class SmoothRectangleRenderer {
                 cornerRadii,
                 rotation,
                 area.color,
-                null
+                GuiScissorUtil.getActiveScissor(graphics)
         ));
     }
 

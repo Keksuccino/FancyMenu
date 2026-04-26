@@ -519,7 +519,7 @@ public class RenderingUtils {
 
     private static void submitColoredRectangle(@NotNull GuiGraphics graphics, RenderPipeline pipeline, TextureSetup textureSetup, float minX, float minY, float maxX, float maxY, int color, @Nullable Integer endColor) {
         ((IMixinGuiGraphics)graphics).get_guiRenderState_FancyMenu().submitGuiElement(
-                new FloatColoredRectangleRenderState(pipeline, textureSetup, new Matrix3x2f(graphics.pose()), minX, minY, maxX, maxY, color, endColor != null ? endColor : color, null)
+                new FloatColoredRectangleRenderState(pipeline, textureSetup, new Matrix3x2f(graphics.pose()), minX, minY, maxX, maxY, color, endColor != null ? endColor : color, GuiScissorUtil.getActiveScissor(graphics))
         );
     }
 
@@ -560,7 +560,7 @@ public class RenderingUtils {
     private static void submitBlit(@NotNull GuiGraphics graphics, RenderPipeline pipeline, GpuTextureView textureView, GpuSampler gpuSampler, float minX, float minY, float maxX, float maxY, float minU, float maxU, float minV, float maxV, int color) {
         ((IMixinGuiGraphics)graphics).get_guiRenderState_FancyMenu().submitGuiElement(
                 new FloatBlitRenderState(
-                        pipeline, TextureSetup.singleTexture(textureView, gpuSampler), new Matrix3x2f(graphics.pose()), minX, minY, maxX, maxY, minU, maxU, minV, maxV, color, null
+                        pipeline, TextureSetup.singleTexture(textureView, gpuSampler), new Matrix3x2f(graphics.pose()), minX, minY, maxX, maxY, minU, maxU, minV, maxV, color, GuiScissorUtil.getActiveScissor(graphics)
                 )
         );
     }

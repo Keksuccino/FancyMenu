@@ -312,7 +312,7 @@ public final class SmoothCircleRenderer {
                 arcStartRadians,
                 arcEndRadians,
                 area.color,
-                null
+                GuiScissorUtil.getActiveScissor(graphics)
         ));
     }
 
