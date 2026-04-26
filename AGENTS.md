@@ -28,6 +28,7 @@
 - Prefer using features from Mixin Extras instead of using normal Mixin redirects or overrides.
 - When leveraging Mixin Extras (`WrapOperation`, `WrapWithCondition`, etc.), name helpers after the intent (`wrap_..._FancyMenu`, `cancel_..._FancyMenu`) and call the provided `Operation` when returning to vanilla flow.
 - Keep Mixin classes lightweight and try to always describe what a Mixin does in its javadoc via `@reason ...`.
+- Always leave `require` at default for mixins! Never do `require = 0` or similar.
 
 ## Localization
 - Always add en_us localizations for the features you add. Only en_us.
