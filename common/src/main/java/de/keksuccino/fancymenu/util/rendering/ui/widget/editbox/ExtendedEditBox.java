@@ -625,7 +625,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     }
 
     @Override
-    protected void deleteText(int i, boolean words) {
+    public void deleteText(int i, boolean words) {
         if (this.deleteAllAllowed) {
             super.deleteText(i, words);
         } else {

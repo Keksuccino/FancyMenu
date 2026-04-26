@@ -2,10 +2,10 @@ package de.keksuccino.fancymenu.networking;
 
 import de.keksuccino.fancymenu.networking.bridge.BridgePacketPayloadNeoForge;
 import de.keksuccino.fancymenu.networking.packets.Packets;
-import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,18 +37,31 @@ public class PacketsNeoForge {
         //using the optional() registrar is important to be able to connect to servers without FM installed
         PayloadRegistrar registrar = e.registrar("fancymenu").optional();
 
-        registrar.playBidirectional(BridgePacketPayloadNeoForge.TYPE, BridgePacketPayloadNeoForge.CODEC, (payload, context) -> {
-           try {
-               if (context.flow() == PacketFlow.CLIENTBOUND) {
-                   payload.handle(null, PacketHandler.PacketDirection.TO_CLIENT);
-               } else {
-                   payload.handle((ServerPlayer) context.player(), PacketHandler.PacketDirection.TO_SERVER);
-               }
-           } catch (Exception ex) {
-               LOGGER.error("[FANCYMENU] Failed to handle NeoForge bridge packet!", ex);
-           }
-        });
+        registrar.playBidirectional(
+                BridgePacketPayloadNeoForge.TYPE,
+                BridgePacketPayloadNeoForge.CODEC,
+                PacketsNeoForge::handleServerboundBridgePacket,
+                PacketsNeoForge::handleClientboundBridgePacket
+        );
 
+    }
+
+    private static void handleServerboundBridgePacket(BridgePacketPayloadNeoForge payload, IPayloadContext context) {
+        try {
+            if (context.player() instanceof ServerPlayer sender) {
+                payload.handle(sender, PacketHandler.PacketDirection.TO_SERVER);
+            }
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to handle NeoForge bridge packet!", ex);
+        }
+    }
+
+    private static void handleClientboundBridgePacket(BridgePacketPayloadNeoForge payload, IPayloadContext context) {
+        try {
+            payload.handle(null, PacketHandler.PacketDirection.TO_CLIENT);
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to handle NeoForge bridge packet!", ex);
+        }
     }
 
 }

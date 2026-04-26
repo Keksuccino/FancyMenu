@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.reload.FancyMenuResourceReload;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.input.KeyEvent;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent;
@@ -36,11 +37,12 @@ public class FancyMenuNeoForgeClientEvents {
 
     @SubscribeEvent
     public void afterScreenKeyPress(ScreenEvent.KeyPressed.Post e) {
-        ScreenKeyPressedEvent event = new ScreenKeyPressedEvent(e.getScreen(), e.getKeyEvent());
+        KeyEvent keyEvent = e.getKeyEvent();
+        ScreenKeyPressedEvent event = new ScreenKeyPressedEvent(e.getScreen(), keyEvent);
         EventHandler.INSTANCE.postEvent(event);
 
         if (Minecraft.getInstance().getOverlay() instanceof GameIntroOverlay o) {
-            o.keyPressed(e.getKeyEvent());
+            o.keyPressed(keyEvent.key(), keyEvent.scancode(), keyEvent.modifiers());
         }
     }
 
