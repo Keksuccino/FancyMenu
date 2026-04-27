@@ -913,7 +913,11 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     public PiPWindow setVisible(boolean visible) {
+        if (this.visible == visible) {
+            return this;
+        }
         this.visible = visible;
+        PiPWindowHandler.INSTANCE.handleWindowVisibilityChanged(this);
         return this;
     }
 
