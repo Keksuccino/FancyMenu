@@ -286,7 +286,7 @@ public final class GuiBlurRenderer {
         if (finalTarget != null) {
             // Compose the isolated blur result back onto the main target. The final shader outputs alpha = mask,
             // so normal alpha blending here preserves untouched pixels outside the rounded blur rect.
-            finalTarget.blitToScreen(minecraft.getWindow().getWidth(), minecraft.getWindow().getHeight(), false);
+            RenderingUtils.blitRenderTargetToScreenImmediate(finalTarget);
         }
         RenderingUtils.resetShaderColor(graphics);
         graphics.disableScissor();

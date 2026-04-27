@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering;
 
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -390,6 +391,47 @@ public class RenderingUtils {
                 GlStateManager.SourceFactor.ONE,
                 GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA
         );
+    }
+
+    public static void blitRenderTargetToScreenImmediate(@NotNull RenderTarget renderTarget) {
+        Objects.requireNonNull(renderTarget);
+        Minecraft minecraft = Minecraft.getInstance();
+        Window window = minecraft.getWindow();
+        int screenWidth = window.getWidth();
+        int screenHeight = window.getHeight();
+        if (screenWidth <= 0 || screenHeight <= 0 || renderTarget.width <= 0 || renderTarget.height <= 0) {
+            return;
+        }
+        if (!RenderSystem.isOnRenderThread()) {
+            renderTarget.blitToScreen(screenWidth, screenHeight, false);
+            return;
+        }
+
+        float guiWidth = (float)((double)screenWidth / window.getGuiScale());
+        float guiHeight = (float)((double)screenHeight / window.getGuiScale());
+        float maxU = (float)renderTarget.viewWidth / (float)renderTarget.width;
+        float maxV = (float)renderTarget.viewHeight / (float)renderTarget.height;
+
+        minecraft.getMainRenderTarget().bindWrite(false);
+        GlStateManager._colorMask(true, true, true, false);
+        GlStateManager._disableDepthTest();
+        GlStateManager._depthMask(false);
+        GlStateManager._viewport(0, 0, screenWidth, screenHeight);
+        setupAlphaBlend();
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderTexture(0, renderTarget.getColorTextureId());
+        RenderSystem.setShader(RenderingUtils::getAlphaTextureShader_FancyMenu);
+
+        BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
+        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        bufferBuilder.vertex(0.0D, guiHeight, 0.0D).uv(0.0F, 0.0F).color(255, 255, 255, 255).endVertex();
+        bufferBuilder.vertex(guiWidth, guiHeight, 0.0D).uv(maxU, 0.0F).color(255, 255, 255, 255).endVertex();
+        bufferBuilder.vertex(guiWidth, 0.0D, 0.0D).uv(maxU, maxV).color(255, 255, 255, 255).endVertex();
+        bufferBuilder.vertex(0.0D, 0.0D, 0.0D).uv(0.0F, maxV).color(255, 255, 255, 255).endVertex();
+        BufferUploader.drawWithShader(bufferBuilder.end());
+
+        GlStateManager._depthMask(true);
+        GlStateManager._colorMask(true, true, true, true);
     }
 
     public static void blitAlphaTexture(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, float x, float y, float width, float height) {

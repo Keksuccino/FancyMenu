@@ -135,7 +135,7 @@ public final class SmoothImageCircleRenderer {
         minecraft.getMainRenderTarget().bindWrite(false);
         RenderingUtils.setupAlphaBlend();
         if (finalTarget != null) {
-            finalTarget.blitToScreen(minecraft.getWindow().getWidth(), minecraft.getWindow().getHeight(), false);
+            RenderingUtils.blitRenderTargetToScreenImmediate(finalTarget);
         }
         RenderingUtils.resetShaderColor(graphics);
     }

@@ -236,7 +236,7 @@ public final class SmoothCircleRenderer {
         minecraft.getMainRenderTarget().bindWrite(false);
         RenderingUtils.setupAlphaBlend();
         if (finalTarget != null) {
-            finalTarget.blitToScreen(minecraft.getWindow().getWidth(), minecraft.getWindow().getHeight(), false);
+            RenderingUtils.blitRenderTargetToScreenImmediate(finalTarget);
         }
         RenderingUtils.resetShaderColor(graphics);
     }
@@ -297,7 +297,7 @@ public final class SmoothCircleRenderer {
         minecraft.getMainRenderTarget().bindWrite(false);
         RenderingUtils.setupAlphaBlend();
         if (finalTarget != null) {
-            finalTarget.blitToScreen(minecraft.getWindow().getWidth(), minecraft.getWindow().getHeight(), false);
+            RenderingUtils.blitRenderTargetToScreenImmediate(finalTarget);
         }
         RenderingUtils.resetShaderColor(graphics);
     }
