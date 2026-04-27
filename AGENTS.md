@@ -58,7 +58,7 @@
 - When porting code from a different Minecraft version, you should compare both Minecraft version's code to see what changed, how it works here and how to best port the code.
 
 ## Gradle
-- Do NOT directly run or compile the project via Gradle, except the user explicitly tells you to do so. Using IntelliJ run configurations are an exception here.
+- Do NOT directly run or compile the project via Gradle, except the user explicitly tells you to do so. Using IntelliJ run configurations does not count here and is allowed.
 
 ## Testing
 - To check if the project compiles and to look for errors/issues in general, use the `get_run_configurations` and `execute_run_configuration` tools to get and execute the Fabric and NeoForge client run configurations inside the open IntelliJ IDE.
