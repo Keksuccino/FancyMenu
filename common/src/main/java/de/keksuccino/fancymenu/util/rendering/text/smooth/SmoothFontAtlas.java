@@ -85,10 +85,10 @@ final class SmoothFontAtlas implements AutoCloseable {
                     false,
                     false,
                     () -> {
+                        RenderSystem.setShader(SmoothTextShader::getShader);
                         SmoothTextShader.applySdfRange(getEffectiveSdfRange());
                         SmoothTextShader.applyEdge(SmoothTextShader.getResolvedEdge());
                         SmoothTextShader.applySharpness(SmoothTextShader.getResolvedSharpness());
-                        RenderSystem.setShader(SmoothTextShader::getShader);
 
                         TextureManager textureManager = Minecraft.getInstance().getTextureManager();
                         textureManager.getTexture(textureLocation).setFilter(true, false);
