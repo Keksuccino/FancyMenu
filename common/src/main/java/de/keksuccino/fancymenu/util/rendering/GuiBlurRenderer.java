@@ -12,17 +12,13 @@ import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import javax.annotation.Nonnull;
-import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 public final class GuiBlurRenderer {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String GUI_BOX_BLUR_SHADER_NAME_FANCYMENU = "fancymenu_gui_box_blur";
-    private static final int GL_NEAREST_FANCYMENU = 9728;
-    private static final int GL_LINEAR_FANCYMENU = 9729;
     private static final float SHAPE_TYPE_ROUNDED_RECT = 0.0F;
     private static final float SHAPE_TYPE_SUPERELLIPSE = 1.0F;
     // Keep shader files in the default 'minecraft' namespace so the vanilla resource manager finds them for every loader.
@@ -271,25 +267,34 @@ public final class GuiBlurRenderer {
         applyUniforms(postChain, scaledX, scaledY, scaledWidth, scaledHeight, blurRadius, scaledRadii, area.shapeType, area.roundness, maskRotation, tint);
 
         graphics.flush();
-        // Run the post chain with blending off; otherwise each full-screen pass would multiply existing alpha,
-        // darkening any translucent GUI content every time a blur area is drawn.
-        RenderSystem.disableBlend();
+        RenderingUtils.RenderStateSnapshot renderState = RenderingUtils.captureRenderState();
+        boolean scissorEnabled = false;
+        try {
+            // Run the post chain with blending off; otherwise each full-screen pass would multiply existing alpha,
+            // darkening any translucent GUI content every time a blur area is drawn.
+            RenderSystem.disableBlend();
 
-        float margin = blurRadius * 4.0F;
-        ScissorBounds scissor = resolveScissorBounds(area, margin, scissorRotation);
-        graphics.enableScissor(scissor.minXInt(), scissor.minYInt(), scissor.maxXInt(), scissor.maxYInt());
-        processBlurPostChain(postChain, partial);
+            float margin = blurRadius * 4.0F;
+            ScissorBounds scissor = resolveScissorBounds(area, margin, scissorRotation);
+            graphics.enableScissor(scissor.minXInt(), scissor.minYInt(), scissor.maxXInt(), scissor.maxYInt());
+            scissorEnabled = true;
+            processBlurPostChain(postChain, partial);
 
-        RenderTarget finalTarget = getFinalTarget(postChain);
-        minecraft.getMainRenderTarget().bindWrite(false);
-        RenderingUtils.setupAlphaBlend();
-        if (finalTarget != null) {
-            // Compose the isolated blur result back onto the main target. The final shader outputs alpha = mask,
-            // so normal alpha blending here preserves untouched pixels outside the rounded blur rect.
-            RenderingUtils.blitRenderTargetToScreenImmediate(finalTarget);
+            RenderTarget finalTarget = getFinalTarget(postChain);
+            minecraft.getMainRenderTarget().bindWrite(false);
+            RenderingUtils.setupAlphaBlend();
+            if (finalTarget != null) {
+                // Compose the isolated blur result back onto the main target. The final shader outputs alpha = mask,
+                // so normal alpha blending here preserves untouched pixels outside the rounded blur rect.
+                RenderingUtils.blitRenderTargetToScreenImmediate(finalTarget);
+            }
+        } finally {
+            if (scissorEnabled) {
+                graphics.disableScissor();
+            }
+            renderState.restore();
+            RenderingUtils.resetShaderColor(graphics);
         }
-        RenderingUtils.resetShaderColor(graphics);
-        graphics.disableScissor();
     }
 
     private static PostChain getOrCreatePostChain(Minecraft minecraft) {
@@ -325,38 +330,7 @@ public final class GuiBlurRenderer {
     }
 
     private static void processBlurPostChain(PostChain postChain, float partial) {
-        Map<RenderTarget, Integer> originalFilterModes = new IdentityHashMap<>();
-        try {
-            for (PostPass pass : ((IMixinPostChain) postChain).getPasses_FancyMenu()) {
-                if (GUI_BOX_BLUR_SHADER_NAME_FANCYMENU.equals(pass.getName()) || "fancymenu_gui_blur".equals(pass.getName())) {
-                    setLinearFilterMode(originalFilterModes, pass.inTarget);
-                    setLinearFilterMode(originalFilterModes, pass.outTarget);
-                }
-            }
-            postChain.process(partial);
-        } finally {
-            restoreFilterModes(originalFilterModes);
-        }
-    }
-
-    private static void setLinearFilterMode(Map<RenderTarget, Integer> originalFilterModes, RenderTarget target) {
-        if (target == null || originalFilterModes.containsKey(target)) {
-            return;
-        }
-        originalFilterModes.put(target, target.filterMode);
-        if (target.filterMode != GL_LINEAR_FANCYMENU) {
-            target.setFilterMode(GL_LINEAR_FANCYMENU);
-        }
-    }
-
-    private static void restoreFilterModes(Map<RenderTarget, Integer> originalFilterModes) {
-        for (Map.Entry<RenderTarget, Integer> entry : originalFilterModes.entrySet()) {
-            RenderTarget target = entry.getKey();
-            int originalFilterMode = entry.getValue() != null ? entry.getValue() : GL_NEAREST_FANCYMENU;
-            if (target.filterMode != originalFilterMode) {
-                target.setFilterMode(originalFilterMode);
-            }
-        }
+        RenderingUtils.processPostChainRestoringRenderState(postChain, partial);
     }
 
     private static void applyUniforms(PostChain postChain, float x, float y, float width, float height, float blurRadius, CornerRadii cornerRadii, float shapeType, float roundness, RenderRotationUtil.Rotation2D rotation, DrawableColor.FloatColor tint) {

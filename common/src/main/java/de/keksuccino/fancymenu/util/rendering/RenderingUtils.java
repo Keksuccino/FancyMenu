@@ -3,14 +3,18 @@ package de.keksuccino.fancymenu.util.rendering;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.shaders.FogShape;
+import com.mojang.blaze3d.shaders.ProgramManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinMinecraft;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPostChain;
 import de.keksuccino.fancymenu.util.MinecraftResourceReloadObserver;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
@@ -22,10 +26,16 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL14;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL30;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class RenderingUtils {
@@ -37,6 +47,7 @@ public class RenderingUtils {
     public static final ResourceLocation FULLY_TRANSPARENT_TEXTURE = new ResourceLocation("fancymenu", "textures/fully_transparent.png");
 
     private static final String ALPHA_TEXTURE_SHADER_NAME_FANCYMENU = "fancymenu_gui_alpha_texture";
+    private static final int GL_LINEAR_FANCYMENU = 9729;
     private static final List<RenderingTask> PRE_RENDER_CONTEXTS = new ArrayList<>();
     private static final List<RenderingTask> POST_RENDER_CONTEXTS = new ArrayList<>();
     private static final List<RenderingTask> DEFERRED_SCREEN_RENDERING_TASKS = new ArrayList<>();
@@ -393,6 +404,60 @@ public class RenderingUtils {
         );
     }
 
+    public static void processPostChainRestoringRenderState(@NotNull PostChain postChain, float partial) {
+        RenderStateSnapshot renderState = captureRenderState();
+        Map<RenderTarget, Integer> originalFilterModes = capturePostChainFilterModes(postChain);
+        try {
+            // Minecraft 1.20.1 parses post chains before "use_linear_filter" existed.
+            // FancyMenu's GUI shaders rely on the 1.21.x behavior, where the screen target
+            // and all custom targets switch to linear filtering for linear passes.
+            setPostChainFilterMode(postChain, GL_LINEAR_FANCYMENU);
+            postChain.process(partial);
+        } finally {
+            try {
+                restoreFilterModes(originalFilterModes);
+            } finally {
+                renderState.restore();
+            }
+        }
+    }
+
+    private static Map<RenderTarget, Integer> capturePostChainFilterModes(@NotNull PostChain postChain) {
+        Map<RenderTarget, Integer> filterModes = new IdentityHashMap<>();
+        IMixinPostChain accessor = (IMixinPostChain) postChain;
+        rememberFilterMode(filterModes, accessor.getScreenTarget_FancyMenu());
+        for (RenderTarget target : accessor.getCustomRenderTargets_FancyMenu().values()) {
+            rememberFilterMode(filterModes, target);
+        }
+        return filterModes;
+    }
+
+    private static void rememberFilterMode(@NotNull Map<RenderTarget, Integer> filterModes, RenderTarget target) {
+        if (target != null && !filterModes.containsKey(target)) {
+            filterModes.put(target, target.filterMode);
+        }
+    }
+
+    private static void setPostChainFilterMode(@NotNull PostChain postChain, int filterMode) {
+        IMixinPostChain accessor = (IMixinPostChain) postChain;
+        setFilterMode(accessor.getScreenTarget_FancyMenu(), filterMode);
+        for (RenderTarget target : accessor.getCustomRenderTargets_FancyMenu().values()) {
+            setFilterMode(target, filterMode);
+        }
+    }
+
+    private static void restoreFilterModes(@NotNull Map<RenderTarget, Integer> filterModes) {
+        for (Map.Entry<RenderTarget, Integer> entry : filterModes.entrySet()) {
+            setFilterMode(entry.getKey(), entry.getValue());
+        }
+    }
+
+    private static void setFilterMode(RenderTarget target, int filterMode) {
+        if (target != null && target.filterMode != filterMode) {
+            target.setFilterMode(filterMode);
+        }
+    }
+
     public static void blitRenderTargetToScreenImmediate(@NotNull RenderTarget renderTarget) {
         Objects.requireNonNull(renderTarget);
         Minecraft minecraft = Minecraft.getInstance();
@@ -407,31 +472,146 @@ public class RenderingUtils {
             return;
         }
 
-        float guiWidth = (float)((double)screenWidth / window.getGuiScale());
-        float guiHeight = (float)((double)screenHeight / window.getGuiScale());
-        float maxU = (float)renderTarget.viewWidth / (float)renderTarget.width;
-        float maxV = (float)renderTarget.viewHeight / (float)renderTarget.height;
+        RenderStateSnapshot renderState = captureRenderState();
+        try {
+            float guiWidth = (float)((double)screenWidth / window.getGuiScale());
+            float guiHeight = (float)((double)screenHeight / window.getGuiScale());
+            float maxU = (float)renderTarget.viewWidth / (float)renderTarget.width;
+            float maxV = (float)renderTarget.viewHeight / (float)renderTarget.height;
 
-        minecraft.getMainRenderTarget().bindWrite(false);
-        GlStateManager._colorMask(true, true, true, false);
-        GlStateManager._disableDepthTest();
-        GlStateManager._depthMask(false);
-        GlStateManager._viewport(0, 0, screenWidth, screenHeight);
-        setupAlphaBlend();
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, renderTarget.getColorTextureId());
-        RenderSystem.setShader(RenderingUtils::getAlphaTextureShader_FancyMenu);
+            minecraft.getMainRenderTarget().bindWrite(false);
+            GlStateManager._colorMask(true, true, true, false);
+            GlStateManager._disableDepthTest();
+            GlStateManager._depthMask(false);
+            GlStateManager._viewport(0, 0, screenWidth, screenHeight);
+            setupAlphaBlend();
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            RenderSystem.setShaderTexture(0, renderTarget.getColorTextureId());
+            RenderSystem.setShader(RenderingUtils::getAlphaTextureShader_FancyMenu);
 
-        BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
-        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-        bufferBuilder.vertex(0.0D, guiHeight, 0.0D).uv(0.0F, 0.0F).color(255, 255, 255, 255).endVertex();
-        bufferBuilder.vertex(guiWidth, guiHeight, 0.0D).uv(maxU, 0.0F).color(255, 255, 255, 255).endVertex();
-        bufferBuilder.vertex(guiWidth, 0.0D, 0.0D).uv(maxU, maxV).color(255, 255, 255, 255).endVertex();
-        bufferBuilder.vertex(0.0D, 0.0D, 0.0D).uv(0.0F, maxV).color(255, 255, 255, 255).endVertex();
-        BufferUploader.drawWithShader(bufferBuilder.end());
+            BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
+            bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+            bufferBuilder.vertex(0.0D, guiHeight, 0.0D).uv(0.0F, 0.0F).color(255, 255, 255, 255).endVertex();
+            bufferBuilder.vertex(guiWidth, guiHeight, 0.0D).uv(maxU, 0.0F).color(255, 255, 255, 255).endVertex();
+            bufferBuilder.vertex(guiWidth, 0.0D, 0.0D).uv(maxU, maxV).color(255, 255, 255, 255).endVertex();
+            bufferBuilder.vertex(0.0D, 0.0D, 0.0D).uv(0.0F, maxV).color(255, 255, 255, 255).endVertex();
+            BufferUploader.drawWithShader(bufferBuilder.end());
+        } finally {
+            GlStateManager._depthMask(true);
+            GlStateManager._colorMask(true, true, true, true);
+            renderState.restore();
+        }
+    }
 
-        GlStateManager._depthMask(true);
-        GlStateManager._colorMask(true, true, true, true);
+    public static RenderStateSnapshot captureRenderState() {
+        return RenderStateSnapshot.capture();
+    }
+
+    public static final class RenderStateSnapshot {
+
+        private static final int SHADER_TEXTURE_COUNT_FANCYMENU = 12;
+
+        private final int framebuffer;
+        private final int currentProgram;
+        private final int activeTexture;
+        private final int[] viewport = new int[4];
+        private final int[] scissorBox = new int[4];
+        private final int[] textureBindings = new int[SHADER_TEXTURE_COUNT_FANCYMENU];
+        private final int[] shaderTextures = new int[SHADER_TEXTURE_COUNT_FANCYMENU];
+        private final boolean scissorEnabled;
+        private final boolean blendEnabled;
+        private final int blendEquation;
+        private final int blendSrcRgb;
+        private final int blendDstRgb;
+        private final int blendSrcAlpha;
+        private final int blendDstAlpha;
+        private final boolean depthTestEnabled;
+        private final int depthFunc;
+        private final boolean depthMask;
+        private final float[] shaderColor = new float[4];
+        private final float shaderFogStart;
+        private final float shaderFogEnd;
+        private final float[] shaderFogColor = new float[4];
+        private final FogShape shaderFogShape;
+        private final ShaderInstance shader;
+
+        private RenderStateSnapshot() {
+            this.framebuffer = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
+            this.currentProgram = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
+            this.activeTexture = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
+            GL11.glGetIntegerv(GL11.GL_VIEWPORT, this.viewport);
+            GL11.glGetIntegerv(GL11.GL_SCISSOR_BOX, this.scissorBox);
+            this.scissorEnabled = GL11.glIsEnabled(GL11.GL_SCISSOR_TEST);
+            this.blendEnabled = GL11.glIsEnabled(GL11.GL_BLEND);
+            this.blendEquation = GL11.glGetInteger(GL20.GL_BLEND_EQUATION_RGB);
+            this.blendSrcRgb = GL11.glGetInteger(GL14.GL_BLEND_SRC_RGB);
+            this.blendDstRgb = GL11.glGetInteger(GL14.GL_BLEND_DST_RGB);
+            this.blendSrcAlpha = GL11.glGetInteger(GL14.GL_BLEND_SRC_ALPHA);
+            this.blendDstAlpha = GL11.glGetInteger(GL14.GL_BLEND_DST_ALPHA);
+            this.depthTestEnabled = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
+            this.depthFunc = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
+            this.depthMask = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
+            System.arraycopy(RenderSystem.getShaderColor(), 0, this.shaderColor, 0, this.shaderColor.length);
+            this.shaderFogStart = RenderSystem.getShaderFogStart();
+            this.shaderFogEnd = RenderSystem.getShaderFogEnd();
+            System.arraycopy(RenderSystem.getShaderFogColor(), 0, this.shaderFogColor, 0, this.shaderFogColor.length);
+            this.shaderFogShape = RenderSystem.getShaderFogShape();
+            this.shader = RenderSystem.getShader();
+
+            for (int i = 0; i < SHADER_TEXTURE_COUNT_FANCYMENU; i++) {
+                this.shaderTextures[i] = RenderSystem.getShaderTexture(i);
+                RenderSystem.activeTexture(GL13.GL_TEXTURE0 + i);
+                this.textureBindings[i] = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+            }
+            RenderSystem.activeTexture(this.activeTexture);
+        }
+
+        private static RenderStateSnapshot capture() {
+            return new RenderStateSnapshot();
+        }
+
+        public void restore() {
+            for (int i = 0; i < SHADER_TEXTURE_COUNT_FANCYMENU; i++) {
+                RenderSystem.setShaderTexture(i, this.shaderTextures[i]);
+                RenderSystem.activeTexture(GL13.GL_TEXTURE0 + i);
+                RenderSystem.bindTexture(this.textureBindings[i]);
+            }
+            RenderSystem.activeTexture(this.activeTexture);
+
+            RenderSystem.setShader(() -> this.shader);
+            ProgramManager.glUseProgram(this.currentProgram);
+            GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, this.framebuffer);
+            GlStateManager._viewport(this.viewport[0], this.viewport[1], this.viewport[2], this.viewport[3]);
+
+            if (this.scissorEnabled) {
+                RenderSystem.enableScissor(this.scissorBox[0], this.scissorBox[1], this.scissorBox[2], this.scissorBox[3]);
+            } else {
+                RenderSystem.disableScissor();
+            }
+
+            if (this.blendEnabled) {
+                RenderSystem.enableBlend();
+            } else {
+                RenderSystem.disableBlend();
+            }
+            RenderSystem.blendEquation(this.blendEquation);
+            RenderSystem.blendFuncSeparate(this.blendSrcRgb, this.blendDstRgb, this.blendSrcAlpha, this.blendDstAlpha);
+
+            if (this.depthTestEnabled) {
+                RenderSystem.enableDepthTest();
+            } else {
+                RenderSystem.disableDepthTest();
+            }
+            RenderSystem.depthFunc(this.depthFunc);
+            RenderSystem.depthMask(this.depthMask);
+            RenderSystem.setShaderColor(this.shaderColor[0], this.shaderColor[1], this.shaderColor[2], this.shaderColor[3]);
+            RenderSystem.setShaderFogStart(this.shaderFogStart);
+            RenderSystem.setShaderFogEnd(this.shaderFogEnd);
+            RenderSystem.setShaderFogColor(this.shaderFogColor[0], this.shaderFogColor[1], this.shaderFogColor[2], this.shaderFogColor[3]);
+            RenderSystem.setShaderFogShape(this.shaderFogShape);
+            GlStateManager._colorMask(true, true, true, true);
+        }
+
     }
 
     public static void blitAlphaTexture(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, float x, float y, float width, float height) {

@@ -17,6 +17,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPauseScreen;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
@@ -37,7 +38,7 @@ public class CustomizationOverlay {
     static {
 
         // This makes the clear version of the Pause screen not show the customization overlay
-        registerOverlayVisibilityController(screen -> true);
+        registerOverlayVisibilityController(screen -> (screen instanceof PauseScreen) ? ((IMixinPauseScreen) screen).get_showPauseMenu_FancyMenu() : true);
 
     }
 

@@ -21,6 +21,7 @@
     "client.IMixinMusicManager",
     "client.IMixinNativeImage",
     "client.IMixinOptions",
+    "client.IMixinPauseScreen",
     "client.IMixinPostChain",
     "client.IMixinPathPackResources",
     "client.IMixinPlayerModel",
@@ -102,7 +103,6 @@
   "plugin": "de.keksuccino.fancymenu.mixin.FMMixinPlugin",
   "minVersion": "0.8"
 }
-
 
 
 

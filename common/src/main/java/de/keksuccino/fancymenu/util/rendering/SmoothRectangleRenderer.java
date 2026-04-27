@@ -201,11 +201,15 @@ public final class SmoothRectangleRenderer {
         QuadBounds bounds = computeQuadBounds_FancyMenu(area, targetHeight, guiScale, scaledX, scaledY, scaledWidth, scaledHeight, rotation);
 
         graphics.flush();
-        RenderingUtils.setupAlphaBlend();
-        RenderSystem.setShader(() -> shader);
-        drawQuad_FancyMenu(bounds);
-        RenderSystem.defaultBlendFunc();
-        RenderingUtils.resetShaderColor(graphics);
+        RenderingUtils.RenderStateSnapshot renderState = RenderingUtils.captureRenderState();
+        try {
+            RenderingUtils.setupAlphaBlend();
+            RenderSystem.setShader(() -> shader);
+            drawQuad_FancyMenu(bounds);
+        } finally {
+            renderState.restore();
+            RenderingUtils.resetShaderColor(graphics);
+        }
     }
 
     private static void renderFallbackRect_FancyMenu(@Nonnull GuiGraphics graphics, @Nonnull RectArea area) {

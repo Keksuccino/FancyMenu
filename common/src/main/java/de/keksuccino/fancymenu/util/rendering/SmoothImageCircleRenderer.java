@@ -130,7 +130,7 @@ public final class SmoothImageCircleRenderer {
 
         graphics.flush();
         RenderSystem.disableBlend();
-        postChain.process(partial);
+        RenderingUtils.processPostChainRestoringRenderState(postChain, partial);
         RenderTarget finalTarget = getFinalTarget(postChain);
         minecraft.getMainRenderTarget().bindWrite(false);
         RenderingUtils.setupAlphaBlend();

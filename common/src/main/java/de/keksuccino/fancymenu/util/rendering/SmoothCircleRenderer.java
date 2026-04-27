@@ -231,7 +231,7 @@ public final class SmoothCircleRenderer {
 
         graphics.flush();
         RenderSystem.disableBlend();
-        postChain.process(partial);
+        RenderingUtils.processPostChainRestoringRenderState(postChain, partial);
         RenderTarget finalTarget = getFinalTarget(postChain);
         minecraft.getMainRenderTarget().bindWrite(false);
         RenderingUtils.setupAlphaBlend();
@@ -292,7 +292,7 @@ public final class SmoothCircleRenderer {
 
         graphics.flush();
         RenderSystem.disableBlend();
-        postChain.process(partial);
+        RenderingUtils.processPostChainRestoringRenderState(postChain, partial);
         RenderTarget finalTarget = getFinalTarget(postChain);
         minecraft.getMainRenderTarget().bindWrite(false);
         RenderingUtils.setupAlphaBlend();
