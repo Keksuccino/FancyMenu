@@ -21,6 +21,7 @@
     "client.IMixinGameRenderer",
     "client.IMixinGui",
     "client.IMixinGuiGraphicsExtractor",
+    "client.IMixinGuiRendererDraw",
     "client.IMixinKeyboardHandler",
     "client.IMixinLevelLoadingScreen",
     "client.IMixinMinecraft",
