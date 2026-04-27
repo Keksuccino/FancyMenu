@@ -77,6 +77,11 @@ public class ScreenMouseScrollEvent extends EventBase {
             super(screen, mouseX, mouseY, scrollDeltaX, scrollDeltaY);
         }
 
+        @Override
+        public boolean isCancelable() {
+            return true;
+        }
+
     }
 
     public static class Post extends ScreenMouseScrollEvent {

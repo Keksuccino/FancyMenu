@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.dragger;
 
+import de.keksuccino.fancymenu.util.VanillaEvents;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -23,7 +24,7 @@ public class DraggerWidget extends AbstractWidget {
     }
 
     @Override
-    protected void extractWidgetRenderState(@NotNull GuiGraphicsExtractor GuiGraphicsExtractor, int i, int i1, float v) {
+    protected void extractWidgetRenderState(@NotNull GuiGraphicsExtractor guiGraphics, int i, int i1, float v) {
     }
 
     @Override
@@ -37,31 +38,43 @@ public class DraggerWidget extends AbstractWidget {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        return this.mouseClicked(event.x(), event.y(), event.button());
+    }
+    
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (this.canClick()) {
             this.leftMouseDown = true;
-            this.mouseCallback.onClickOrRelease(event.x(), event.y(), false);
+            this.mouseCallback.onClickOrRelease(mouseX, mouseY, false);
             return true;
         }
-        return super.mouseClicked(event, isDoubleClick);
+        return super.mouseClicked(VanillaEvents.mouseButtonEvent(mouseX, mouseY, button), false);
     }
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
+        return this.mouseReleased(event.x(), event.y(), event.button());
+    }
+    
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if (this.leftMouseDown) {
             this.leftMouseDown = false;
-            this.mouseCallback.onClickOrRelease(event.x(), event.y(), true);
+            this.mouseCallback.onClickOrRelease(mouseX, mouseY, true);
             return true;
         }
-        return super.mouseReleased(event);
+        return super.mouseReleased(VanillaEvents.mouseButtonEvent(mouseX, mouseY, button));
     }
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        return this.mouseDragged(event.x(), event.y(), event.button(), dragX, dragY);
+    }
+    
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (this.leftMouseDown) {
-            this.draggingCallback.onDrag(event.x(), event.y(), dragX, dragY);
+            this.draggingCallback.onDrag(mouseX, mouseY, dragX, dragY);
             return true;
         }
-        return super.mouseDragged(event, dragX, dragY);
+        return super.mouseDragged(VanillaEvents.mouseButtonEvent(mouseX, mouseY, button), dragX, dragY);
     }
 
     protected boolean canClick() {

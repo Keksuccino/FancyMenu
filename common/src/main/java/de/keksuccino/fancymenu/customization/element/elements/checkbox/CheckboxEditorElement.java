@@ -1,55 +1,45 @@
 package de.keksuccino.fancymenu.customization.element.elements.checkbox;
 
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorScreen;
-import de.keksuccino.fancymenu.customization.loadingrequirement.ui.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
-import net.minecraft.client.Minecraft;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
-public class CheckboxEditorElement extends AbstractEditorElement {
+public class CheckboxEditorElement extends AbstractEditorElement<CheckboxEditorElement, CheckboxElement> {
 
-    public CheckboxEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public CheckboxEditorElement(@NotNull CheckboxElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
     }
 
     @Override
     public void init() {
-        
-        super.init();
-        
-        this.rightClickMenu.addClickableEntry("manage_actions", Component.translatable("fancymenu.actions.screens.manage_screen.manage"), (menu, entry) -> {
-                    ActionScriptEditorScreen s = new ActionScriptEditorScreen(this.getElement().getExecutableBlock(), (call) -> {
-                        if (call != null) {
-                            this.editor.history.saveSnapshot();
-                            this.getElement().actionExecutor = call;
-                        }
-                        Minecraft.getInstance().setScreen(this.editor);
-                    });
-                    Minecraft.getInstance().setScreen(s);
-                })
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.manage_actions.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("script"))
-                .setStackable(false);
 
-        this.rightClickMenu.addClickableEntry("widget_active_state_controller", Component.translatable("fancymenu.elements.button.active_state_controller"), (menu, entry) -> {
-                    ManageRequirementsScreen s = new ManageRequirementsScreen(this.getElement().activeStateSupplier.copy(false), (call) -> {
-                        if (call != null) {
-                            this.editor.history.saveSnapshot();
-                            this.getElement().activeStateSupplier = call;
-                        }
-                        Minecraft.getInstance().setScreen(this.editor);
-                    });
-                    Minecraft.getInstance().setScreen(s);
-                })
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.active_state_controller.desc")))
-                .setStackable(false);
+        super.init();
+
+        this.element.actionExecutor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.manage_actions.desc")))
+                .setIcon(MaterialIcons.CODE);
+
+        this.element.activeStateSupplier.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.active_state_controller.desc")))
+                .setIcon(MaterialIcons.CHECKLIST);
+
+        this.rightClickMenu.addSeparatorEntry("checkbox_separator_variable");
+
+        this.element.variableMode.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setStackable(false)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.variable_mode.desc")))
+                .setIcon(MaterialIcons.VARIABLES);
+
+        this.element.linkedVariable.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setStackable(false)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.editor.set_variable.desc")))
+                .setIcon(MaterialIcons.VARIABLES)
+                .addIsActiveSupplier((menu, entry) -> this.element.variableMode.tryGetNonNull());
 
         this.rightClickMenu.addSeparatorEntry("checkbox_separator_1");
 
@@ -57,102 +47,59 @@ public class CheckboxEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("checkbox_separator_3").setStackable(true);
 
-        this.addAudioResourceChooserContextMenuEntryTo(this.rightClickMenu, "hover_sound",
-                        CheckboxEditorElement.class,
-                        null,
-                        consumes -> consumes.getElement().hoverSound,
-                        (checkboxEditorElement, supplier) -> checkboxEditorElement.getElement().hoverSound = supplier,
-                        Component.translatable("fancymenu.elements.button.hoversound"), true, null, true, true, true)
-                .setIcon(ContextMenu.IconFactory.getIcon("sound"));
+        this.element.hoverSound.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setIcon(MaterialIcons.VOLUME_UP);
 
-        this.addAudioResourceChooserContextMenuEntryTo(this.rightClickMenu, "click_sound",
-                        CheckboxEditorElement.class,
-                        null,
-                        consumes -> consumes.getElement().clickSound,
-                        (checkboxEditorElement, supplier) -> checkboxEditorElement.getElement().clickSound = supplier,
-                        Component.translatable("fancymenu.elements.button.clicksound"), true, null, true, true, true)
-                .setIcon(ContextMenu.IconFactory.getIcon("sound"));
+        this.element.unhoverAudio.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setIcon(MaterialIcons.VOLUME_UP);
+
+        this.element.clickSound.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setIcon(MaterialIcons.VOLUME_UP);
 
         this.rightClickMenu.addSeparatorEntry("checkbox_separator_5").setStackable(true);
 
-        this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "edit_tooltip",
-                        consumes -> (consumes instanceof CheckboxEditorElement),
-                        consumes -> {
-                            String t = ((CheckboxElement)consumes.element).tooltip;
-                            if (t != null) t = t.replace("%n%", "\n");
-                            return t;
-                        },
-                        (element1, s) -> {
-                            if (s != null) {
-                                s = s.replace("\n", "%n%");
-                            }
-                            ((CheckboxElement)element1.element).tooltip = s;
-                        },
-                        null, true, true, Component.translatable("fancymenu.elements.button.tooltip"),
-                        true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
+        this.element.tooltip.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.tooltip.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("talk"));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.tooltip.desc")))
+                .setIcon(MaterialIcons.CHAT);
 
         this.rightClickMenu.addSeparatorEntry("separator_before_navigatable");
 
-        this.addToggleContextMenuEntryTo(this.rightClickMenu, "toggle_navigatable", CheckboxEditorElement.class,
-                        consumes -> consumes.getElement().navigatable,
-                        (checkboxEditorElement, aBoolean) -> checkboxEditorElement.getElement().navigatable = aBoolean,
-                        "fancymenu.elements.widgets.generic.navigatable")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")));
-        
+        this.element.navigatable.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")))
+                .setIcon(MaterialIcons.MOUSE);
+
     }
 
     protected void addTextureSettings() {
-        
+
         ContextMenu texturesMenu = new ContextMenu();
         this.rightClickMenu.addSubMenuEntry("checkbox_textures", Component.translatable("fancymenu.elements.checkbox.textures"), texturesMenu)
-                .setIcon(ContextMenu.IconFactory.getIcon("image"))
+                .setIcon(MaterialIcons.IMAGE)
                 .setStackable(true);
 
-        this.addImageResourceChooserContextMenuEntryTo(texturesMenu, "background_texture_normal",
-                        CheckboxEditorElement.class,
-                        null,
-                        consumes -> consumes.getElement().backgroundTextureNormal,
-                        (checkboxEditorElement, iTextureResourceSupplier) -> checkboxEditorElement.getElement().backgroundTextureNormal = iTextureResourceSupplier,
-                        Component.translatable("fancymenu.elements.checkbox.background_texture_normal"), true, null, true, true, true)
+        this.element.backgroundTextureNormal.buildContextMenuEntryAndAddTo(texturesMenu, this)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.background_texture_normal.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.background_texture_normal.desc")))
+                .setIcon(MaterialIcons.IMAGE);
 
-        this.addImageResourceChooserContextMenuEntryTo(texturesMenu, "background_texture_hover",
-                        CheckboxEditorElement.class,
-                        null,
-                        consumes -> consumes.getElement().backgroundTextureHover,
-                        (checkboxEditorElement, iTextureResourceSupplier) -> checkboxEditorElement.getElement().backgroundTextureHover = iTextureResourceSupplier,
-                        Component.translatable("fancymenu.elements.checkbox.background_texture_hover"), true, null, true, true, true)
+        this.element.backgroundTextureHover.buildContextMenuEntryAndAddTo(texturesMenu, this)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.background_texture_hover.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.background_texture_hover.desc")))
+                .setIcon(MaterialIcons.IMAGE);
 
-        this.addImageResourceChooserContextMenuEntryTo(texturesMenu, "background_texture_inactive",
-                        CheckboxEditorElement.class,
-                        null,
-                        consumes -> consumes.getElement().backgroundTextureInactive,
-                        (checkboxEditorElement, iTextureResourceSupplier) -> checkboxEditorElement.getElement().backgroundTextureInactive = iTextureResourceSupplier,
-                        Component.translatable("fancymenu.elements.checkbox.background_texture_inactive"), true, null, true, true, true)
+        this.element.backgroundTextureInactive.buildContextMenuEntryAndAddTo(texturesMenu, this)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.background_texture_inactive.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.background_texture_inactive.desc")))
+                .setIcon(MaterialIcons.IMAGE);
 
         texturesMenu.addSeparatorEntry("separator_after_background_textures");
 
-        this.addImageResourceChooserContextMenuEntryTo(texturesMenu, "checkmark_texture",
-                        CheckboxEditorElement.class,
-                        null,
-                        consumes -> consumes.getElement().checkmarkTexture,
-                        (checkboxEditorElement, iTextureResourceSupplier) -> checkboxEditorElement.getElement().checkmarkTexture = iTextureResourceSupplier,
-                        Component.translatable("fancymenu.elements.checkbox.checkmark_texture"), true, null, true, true, true)
+        this.element.checkmarkTexture.buildContextMenuEntryAndAddTo(texturesMenu, this)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.checkmark_texture.desc")));
-        
-    }
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.checkmark_texture.desc")))
+                .setIcon(MaterialIcons.CHECK_BOX);
 
-    protected CheckboxElement getElement() {
-        return (CheckboxElement) this.element;
     }
 
 }

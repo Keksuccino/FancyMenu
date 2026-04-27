@@ -1,6 +1,9 @@
 package de.keksuccino.fancymenu.util.rendering.entity;
 
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import it.crystalnest.fancy_entity_renderer.api.Rotation;
+import it.crystalnest.fancy_entity_renderer.api.entity.RenderMode;
+import it.crystalnest.fancy_entity_renderer.api.entity.player.FancyPlayerWidget;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -12,38 +15,16 @@ import net.minecraft.world.entity.animal.parrot.Parrot;
 import net.minecraft.world.entity.player.PlayerSkin;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
-@SuppressWarnings("all")
+@SuppressWarnings("unused")
 public class WrappedFancyPlayerWidget extends AbstractWidget implements NavigatableWidget {
 
-    private static final Logger LOGGER = LogManager.getLogger();
-    private static final String FANCY_PLAYER_WIDGET_CLASS_NAME = "it.crystalnest.fancy_entity_renderer.api.entity.player.FancyPlayerWidget";
-    private static final String ROTATION_CLASS_NAME = "it.crystalnest.fancy_entity_renderer.api.Rotation";
-    private static final String RENDER_MODE_CLASS_NAME = "it.crystalnest.fancy_entity_renderer.api.entity.RenderMode";
-    private static final Set<String> LOGGED_FAILURES = ConcurrentHashMap.newKeySet();
-    private static final Map<String, Optional<Class<?>>> RESOLVED_CLASSES = new ConcurrentHashMap<>();
-    private static final Map<MethodKey, Optional<Method>> WRAPPED_METHODS = new ConcurrentHashMap<>();
-
-    @Nullable
-    private static volatile Constructor<?> wrappedConstructor;
-    private static volatile boolean wrappedConstructorResolved = false;
-
-    @Nullable
-    protected final Object wrapped;
-    protected volatile boolean available;
+    @NotNull
+    protected final FancyPlayerWidget wrapped;
 
     @NotNull
     public static WrappedFancyPlayerWidget build(int x, int y, int width, int height) {
@@ -52,445 +33,694 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
 
     protected WrappedFancyPlayerWidget(int x, int y, int width, int height) {
         super(x, y, width, height, Component.empty());
-        this.wrapped = createWrapped(x, y, width, height);
-        this.available = this.wrapped != null;
-    }
-
-    @Nullable
-    private static Object createWrapped(int x, int y, int width, int height) {
-        if (!FancyEntityRendererUtils.isFerLoaded()) {
-            return null;
-        }
-        Constructor<?> constructor = getWrappedConstructor();
-        if (constructor == null) {
-            return null;
-        }
-        try {
-            return constructor.newInstance(x, y, width, height);
-        } catch (ReflectiveOperationException | IllegalArgumentException ex) {
-            logFailureOnce("construct", "[FANCYMENU] Failed to construct FancyPlayerWidget reflectively!", ex);
-            return null;
-        }
-    }
-
-    @Nullable
-    private static Constructor<?> getWrappedConstructor() {
-        if (wrappedConstructorResolved) {
-            return wrappedConstructor;
-        }
-        synchronized (WrappedFancyPlayerWidget.class) {
-            if (wrappedConstructorResolved) {
-                return wrappedConstructor;
-            }
-            Class<?> wrappedClass = resolveClass(FANCY_PLAYER_WIDGET_CLASS_NAME);
-            if (wrappedClass != null) {
-                try {
-                    wrappedConstructor = wrappedClass.getConstructor(int.class, int.class, int.class, int.class);
-                } catch (ReflectiveOperationException ex) {
-                    logFailureOnce("constructor", "[FANCYMENU] Failed to resolve FancyPlayerWidget constructor reflectively!", ex);
-                }
-            }
-            wrappedConstructorResolved = true;
-            return wrappedConstructor;
-        }
-    }
-
-    @Nullable
-    private static Class<?> resolveClass(@NotNull String className) {
-        return RESOLVED_CLASSES.computeIfAbsent(className, ignored -> {
-            try {
-                return Optional.of(Class.forName(className, false, WrappedFancyPlayerWidget.class.getClassLoader()));
-            } catch (ClassNotFoundException | LinkageError ex) {
-                if (FancyEntityRendererUtils.isFerLoaded()) {
-                    logFailureOnce("class:" + className, "[FANCYMENU] Failed to resolve Fancy Entity Renderer class '" + className + "' reflectively!", ex);
-                }
-                return Optional.empty();
-            }
-        }).orElse(null);
-    }
-
-    @Nullable
-    private static Class<?> getRotationClass() {
-        return resolveClass(ROTATION_CLASS_NAME);
-    }
-
-    @Nullable
-    private static Class<?> getRenderModeClass() {
-        return resolveClass(RENDER_MODE_CLASS_NAME);
-    }
-
-    @Nullable
-    private Method getWrappedMethod(@NotNull String methodName, @NotNull Class<?>... parameterTypes) {
-        MethodKey key = new MethodKey(methodName, List.of(parameterTypes));
-        return WRAPPED_METHODS.computeIfAbsent(key, ignored -> {
-            try {
-                return Optional.of(this.wrapped.getClass().getMethod(methodName, parameterTypes));
-            } catch (ReflectiveOperationException ex) {
-                logFailureOnce("method:" + key, "[FANCYMENU] Failed to resolve FancyPlayerWidget method '" + methodName + "' reflectively!", ex);
-                return Optional.empty();
-            }
-        }).orElse(null);
-    }
-
-    @Nullable
-    private Object invokeWrapped(@NotNull String methodName, @NotNull Class<?>[] parameterTypes, @NotNull Object... args) {
-        if (!this.available || (this.wrapped == null)) {
-            return null;
-        }
-        Method method = this.getWrappedMethod(methodName, parameterTypes);
-        if (method == null) {
-            this.available = false;
-            return null;
-        }
-        try {
-            return method.invoke(this.wrapped, args);
-        } catch (ReflectiveOperationException | IllegalArgumentException ex) {
-            this.available = false;
-            logFailureOnce("invoke:" + methodName + ":" + List.of(parameterTypes), "[FANCYMENU] Failed to invoke FancyPlayerWidget method '" + methodName + "' reflectively!", ex);
-            return null;
-        }
-    }
-
-    private static void logFailureOnce(@NotNull String key, @NotNull String message, @NotNull Throwable ex) {
-        if (LOGGED_FAILURES.add(key)) {
-            LOGGER.error(message, ex);
-        }
-    }
-
-    public boolean isAvailable() {
-        return this.available && (this.wrapped != null);
-    }
-
-    private void invokeWrappedVoid(@NotNull String methodName) {
-        this.invokeWrapped(methodName, new Class<?>[0]);
-    }
-
-    private void invokeWrappedVoid(@NotNull String methodName, @NotNull Class<?> parameterType, @Nullable Object arg) {
-        this.invokeWrapped(methodName, new Class<?>[]{parameterType}, arg);
-    }
-
-    private void invokeWrappedVoid(@NotNull String methodName, @NotNull Class<?> firstParameterType, @Nullable Object firstArg, @NotNull Class<?> secondParameterType, @Nullable Object secondArg) {
-        this.invokeWrapped(methodName, new Class<?>[]{firstParameterType, secondParameterType}, firstArg, secondArg);
-    }
-
-    private void invokeWrappedVoid(@NotNull String methodName, @NotNull Class<?> firstParameterType, @Nullable Object firstArg, @NotNull Class<?> secondParameterType, @Nullable Object secondArg, @NotNull Class<?> thirdParameterType, @Nullable Object thirdArg) {
-        this.invokeWrapped(methodName, new Class<?>[]{firstParameterType, secondParameterType, thirdParameterType}, firstArg, secondArg, thirdArg);
-    }
-
-    private void invokeWrappedVoid(@NotNull String methodName, @NotNull Class<?> firstParameterType, @Nullable Object firstArg, @NotNull Class<?> secondParameterType, @Nullable Object secondArg, @NotNull Class<?> thirdParameterType, @Nullable Object thirdArg, @NotNull Class<?> fourthParameterType, @Nullable Object fourthArg) {
-        this.invokeWrapped(methodName, new Class<?>[]{firstParameterType, secondParameterType, thirdParameterType, fourthParameterType}, firstArg, secondArg, thirdArg, fourthArg);
-    }
-
-    private boolean invokeWrappedBoolean(@NotNull String methodName) {
-        Object result = this.invokeWrapped(methodName, new Class<?>[0]);
-        return result instanceof Boolean b && b;
+        this.wrapped = new FancyPlayerWidget(x, y, width, height);
     }
 
     @Override
     protected void extractWidgetRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
-        this.invokeWrappedVoid("extractRenderState", GuiGraphicsExtractor.class, graphics, int.class, mouseX, int.class, mouseY, float.class, partial);
+        wrapped.extractRenderState(graphics, mouseX, mouseY, partial);
     }
 
     @Override
     protected void updateWidgetNarration(@NotNull NarrationElementOutput output) {
-        this.invokeWrappedVoid("updateNarration", NarrationElementOutput.class, output);
+        wrapped.updateNarration(output);
     }
 
     @Override
     public void setX(int x) {
         super.setX(x);
-        this.invokeWrappedVoid("setX", int.class, x);
+        wrapped.setX(x);
     }
 
     @Override
     public void setY(int y) {
         super.setY(y);
-        this.invokeWrappedVoid("setY", int.class, y);
+        wrapped.setY(y);
     }
 
     @Override
     public void setWidth(int width) {
         super.setWidth(width);
-        this.invokeWrappedVoid("setWidth", int.class, width);
+        wrapped.setWidth(width);
     }
 
     @Override
     public void setHeight(int height) {
         super.setHeight(height);
-        this.invokeWrappedVoid("setHeight", int.class, height);
+        wrapped.setHeight(height);
     }
 
     @Override
     public void setSize(int width, int height) {
         super.setSize(width, height);
-        this.invokeWrappedVoid("setSize", int.class, width, int.class, height);
+        wrapped.setSize(width, height);
     }
 
+    /**
+     * Sets whether the player's model should follow the mouse cursor.<br>
+     * Overrides any manual body rotation set previously if {@code true}, otherwise restores the previous body rotation, if any.
+     *
+     * @param followsMouse whether to follow the mouse cursor.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setBodyFollowsMouse(boolean followsMouse) {
-        this.invokeWrappedVoid("setBodyFollowsMouse", boolean.class, followsMouse);
+        wrapped.setBodyFollowsMouse(followsMouse);
         return this;
     }
 
+    /**
+     * Sets whether the player's head should follow the mouse cursor.<br>
+     * Overrides any manual head rotation set previously if {@code true}, otherwise restores the previous head rotation, if any.
+     *
+     * @param followsMouse whether to follow the mouse cursor.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setHeadFollowsMouse(boolean followsMouse) {
-        this.invokeWrappedVoid("setHeadFollowsMouse", boolean.class, followsMouse);
+        wrapped.setHeadFollowsMouse(followsMouse);
         return this;
     }
 
-    public WrappedFancyPlayerWidget setHeadRotation(Object rotation) {
-        Class<?> rotationClass = getRotationClass();
-        if (rotationClass != null) {
-            this.invokeWrappedVoid("setHeadRotation", rotationClass, rotation);
-        }
+    /**
+     * Sets a manual head rotation.<br>
+     * If you want to set the rotation based on degree values, it's suggested to use {@link #setHeadRotation(float, float, float)} instead.
+     *
+     * @param rotation {@link Rotation} to set.
+     * @return {@code this}.
+     */
+    public WrappedFancyPlayerWidget setHeadRotation(Rotation rotation) {
+        wrapped.setHeadRotation(rotation);
         return this;
     }
 
+    /**
+     * Sets a manual head rotation.<br>
+     * The values passed as parameters are assumed in degrees. If you want to use radians, use {@link #setHeadRotation(Rotation)} instead.
+     *
+     * @param x rotation around the X axis (horizontal).
+     * @param y rotation around the Y axis (vertical).
+     * @param z rotation around the Z axis (depth).
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setHeadRotation(float x, float y, float z) {
-        this.invokeWrappedVoid("setHeadRotation", float.class, x, float.class, y, float.class, z);
+        wrapped.setHeadRotation(x, y, z);
         return this;
     }
 
-    public WrappedFancyPlayerWidget setBodyRotation(Object rotation) {
-        Class<?> rotationClass = getRotationClass();
-        if (rotationClass != null) {
-            this.invokeWrappedVoid("setBodyRotation", rotationClass, rotation);
-        }
+    /**
+     * Sets a manual rotation of the whole model.<br>
+     * If you want to set the rotation based on degree values, it's suggested to use {@link #setBodyRotation(float, float, float)} instead.
+     *
+     * @param rotation {@link Rotation} to set.
+     * @return {@code this}.
+     */
+    public WrappedFancyPlayerWidget setBodyRotation(Rotation rotation) {
+        wrapped.setBodyRotation(rotation);
         return this;
     }
 
+    /**
+     * Sets a manual rotation of the whole model.<br>
+     * The values passed as parameters are assumed in degrees. If you want to use radians, use {@link #setBodyRotation(Rotation)} instead.
+     *
+     * @param x rotation around the X axis (horizontal).
+     * @param y rotation around the Y axis (vertical).
+     * @param z rotation around the Z axis (depth).
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setBodyRotation(float x, float y, float z) {
-        this.invokeWrappedVoid("setBodyRotation", float.class, x, float.class, y, float.class, z);
+        wrapped.setBodyRotation(x, y, z);
         return this;
     }
 
-    public WrappedFancyPlayerWidget setLeftArmRotation(Object rotation) {
-        Class<?> rotationClass = getRotationClass();
-        if (rotationClass != null) {
-            this.invokeWrappedVoid("setLeftArmRotation", rotationClass, rotation);
-        }
+    /**
+     * Sets a manual left arm rotation.<br>
+     * If you want to set the rotation based on degree values, it's suggested to use {@link #setLeftArmRotation(float, float, float)} instead.
+     *
+     * @param rotation {@link Rotation} to set.
+     * @return {@code this}.
+     */
+    public WrappedFancyPlayerWidget setLeftArmRotation(Rotation rotation) {
+        wrapped.setLeftArmRotation(rotation);
         return this;
     }
 
+    /**
+     * Sets a manual left arm rotation.<br>
+     * The values passed as parameters are assumed in degrees. If you want to use radians, use {@link #setLeftArmRotation(Rotation)} instead.
+     *
+     * @param x rotation around the X axis (horizontal).
+     * @param y rotation around the Y axis (vertical).
+     * @param z rotation around the Z axis (depth).
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setLeftArmRotation(float x, float y, float z) {
-        this.invokeWrappedVoid("setLeftArmRotation", float.class, x, float.class, y, float.class, z);
+        wrapped.setLeftArmRotation(x, y, z);
         return this;
     }
 
-    public WrappedFancyPlayerWidget setRightArmRotation(Object rotation) {
-        Class<?> rotationClass = getRotationClass();
-        if (rotationClass != null) {
-            this.invokeWrappedVoid("setRightArmRotation", rotationClass, rotation);
-        }
+    /**
+     * Sets a manual right arm rotation.<br>
+     * If you want to set the rotation based on degree values, it's suggested to use {@link #setRightArmRotation(float, float, float)} instead.
+     *
+     * @param rotation {@link Rotation} to set.
+     * @return {@code this}.
+     */
+    public WrappedFancyPlayerWidget setRightArmRotation(Rotation rotation) {
+        wrapped.setRightArmRotation(rotation);
         return this;
     }
 
+    /**
+     * Sets a manual right arm rotation.<br>
+     * The values passed as parameters are assumed in degrees. If you want to use radians, use {@link #setRightArmRotation(Rotation)} instead.
+     *
+     * @param x rotation around the X axis (horizontal).
+     * @param y rotation around the Y axis (vertical).
+     * @param z rotation around the Z axis (depth).
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setRightArmRotation(float x, float y, float z) {
-        this.invokeWrappedVoid("setRightArmRotation", float.class, x, float.class, y, float.class, z);
+        wrapped.setRightArmRotation(x, y, z);
         return this;
     }
 
-    public WrappedFancyPlayerWidget setLeftLegRotation(Object rotation) {
-        Class<?> rotationClass = getRotationClass();
-        if (rotationClass != null) {
-            this.invokeWrappedVoid("setLeftLegRotation", rotationClass, rotation);
-        }
+    /**
+     * Sets a manual left leg rotation.<br>
+     * If you want to set the rotation based on degree values, it's suggested to use {@link #setLeftLegRotation(float, float, float)} instead.
+     *
+     * @param rotation {@link Rotation} to set.
+     * @return {@code this}.
+     */
+    public WrappedFancyPlayerWidget setLeftLegRotation(Rotation rotation) {
+        wrapped.setLeftLegRotation(rotation);
         return this;
     }
 
+    /**
+     * Sets a manual left leg rotation.<br>
+     * The values passed as parameters are assumed in degrees. If you want to use radians, use {@link #setLeftLegRotation(Rotation)} instead.
+     *
+     * @param x rotation around the X axis (horizontal).
+     * @param y rotation around the Y axis (vertical).
+     * @param z rotation around the Z axis (depth).
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setLeftLegRotation(float x, float y, float z) {
-        this.invokeWrappedVoid("setLeftLegRotation", float.class, x, float.class, y, float.class, z);
+        wrapped.setLeftLegRotation(x, y, z);
         return this;
     }
 
-    public WrappedFancyPlayerWidget setRightLegRotation(Object rotation) {
-        Class<?> rotationClass = getRotationClass();
-        if (rotationClass != null) {
-            this.invokeWrappedVoid("setRightLegRotation", rotationClass, rotation);
-        }
+    /**
+     * Sets a manual right leg rotation.<br>
+     * If you want to set the rotation based on degree values, it's suggested to use {@link #setRightLegRotation(float, float, float)} instead.
+     *
+     * @param rotation {@link Rotation} to set.
+     * @return {@code this}.
+     */
+    public WrappedFancyPlayerWidget setRightLegRotation(Rotation rotation) {
+        wrapped.setRightLegRotation(rotation);
         return this;
     }
 
+    /**
+     * Sets a manual right leg rotation.<br>
+     * The values passed as parameters are assumed in degrees. If you want to use radians, use {@link #setRightLegRotation(Rotation)} instead.
+     *
+     * @param x rotation around the X axis (horizontal).
+     * @param y rotation around the Y axis (vertical).
+     * @param z rotation around the Z axis (depth).
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setRightLegRotation(float x, float y, float z) {
-        this.invokeWrappedVoid("setRightLegRotation", float.class, x, float.class, y, float.class, z);
+        wrapped.setRightLegRotation(x, y, z);
         return this;
     }
 
+    /**
+     * Makes the player slim or wide.<br>
+     * If no skin is set (either manually or by copying a player), a random base skin is selected.
+     *
+     * @param isSlim whether the player should be slim.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setSlim(boolean isSlim) {
-        this.invokeWrappedVoid("setSlim", boolean.class, isSlim);
+        wrapped.setSlim(isSlim);
         return this;
     }
 
+    /**
+     * Sets a custom skin for the player.<br>
+     * Overrides the slim property if a valid skin. If {@code null}, restores the previous value for the slim property.
+     *
+     * @param skin {@link PlayerSkin}.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setSkin(@Nullable PlayerSkin skin) {
-        this.invokeWrappedVoid("setSkin", PlayerSkin.class, skin);
+        wrapped.setSkin(skin);
         return this;
     }
 
+    /**
+     * Makes the model copy the local player.<br>
+     * If you want to undo the copy, use {@link #uncopyPlayer()}.<br>
+     * Overrides the slim and the skin properties.
+     *
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget copyLocalPlayer() {
-        this.invokeWrappedVoid("copyLocalPlayer");
+        wrapped.copyLocalPlayer();
         return this;
     }
 
+    /**
+     * Sets the player's name.<br>
+     * If you want to change the name's visibility, use {@link #setShowName(boolean)}.
+     *
+     * @param name player's name.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setName(String name) {
-        this.invokeWrappedVoid("setName", String.class, name);
+        wrapped.setName(name);
         return this;
     }
 
+    /**
+     * If the entity's nametag should be pinned. Pinning the nametag disables nametag rotation.
+     */
+    public WrappedFancyPlayerWidget setPinName(boolean pin) {
+        wrapped.setPinName(pin);
+        return this;
+    }
+
+    /**
+     * Sets whether to show the player's name.
+     *
+     * @param showName whether to show the player's name.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setShowName(boolean showName) {
-        this.invokeWrappedVoid("setShowName", boolean.class, showName);
+        wrapped.setShowName(showName);
         return this;
     }
 
+    public WrappedFancyPlayerWidget setShowCape(boolean showCape) {
+        wrapped.setShowCape(showCape);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowLeftArm(boolean showLeftArm) {
+        wrapped.setShowLeftArm(showLeftArm);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowLeftSleeve(boolean showLeftSleeve) {
+        wrapped.setShowLeftSleeve(showLeftSleeve);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowRightArm(boolean showRightArm) {
+        wrapped.setShowRightArm(showRightArm);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowRightSleeve(boolean showRightSleeve) {
+        wrapped.setShowRightSleeve(showRightSleeve);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowLeftLeg(boolean showLeftLeg) {
+        wrapped.setShowLeftLeg(showLeftLeg);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowLeftPants(boolean showLeftPants) {
+        wrapped.setShowLeftPants(showLeftPants);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowRightLeg(boolean showRightLeg) {
+        wrapped.setShowRightLeg(showRightLeg);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowRightPants(boolean showRightPants) {
+        wrapped.setShowRightPants(showRightPants);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowHead(boolean showHead) {
+        wrapped.setShowHead(showHead);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowHat(boolean showHat) {
+        wrapped.setShowHat(showHat);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowBody(boolean showBody) {
+        wrapped.setShowBody(showBody);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setShowJacket(boolean showJacket) {
+        wrapped.setShowJacket(showJacket);
+        return this;
+    }
+
+    /**
+     * Sets whether the player is rendered upside-down.
+     *
+     * @param isUpsideDown whether to render the player's upside-down.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setUpsideDown(boolean isUpsideDown) {
-        this.invokeWrappedVoid("setUpsideDown", boolean.class, isUpsideDown);
+        wrapped.setUpsideDown(isUpsideDown);
         return this;
     }
 
     public WrappedFancyPlayerWidget setPose(@NotNull Pose pose) {
-        this.invokeWrappedVoid("setPose", Pose.class, pose);
+        wrapped.setPose(pose);
         return this;
     }
 
-    public WrappedFancyPlayerWidget setRenderMode(@NotNull Object renderMode) {
-        Class<?> renderModeClass = getRenderModeClass();
-        if (renderModeClass != null) {
-            this.invokeWrappedVoid("setRenderMode", renderModeClass, renderMode);
-        }
+    public WrappedFancyPlayerWidget setRenderMode(@NotNull RenderMode renderMode) {
+        wrapped.setRenderMode(renderMode);
         return this;
     }
 
+    /**
+     * Sets whether the player should glow.<p>
+     * <b>WARNING: Experimental!</b><br>
+     * Currently, it has no effect.
+     *
+     * @param glowColor The glow color.
+     * @return {@code this}.
+     */
     @ApiStatus.Experimental
     public WrappedFancyPlayerWidget setGlowing(int glowColor) {
-        this.invokeWrappedVoid("setGlowing", int.class, glowColor);
+        wrapped.setGlowing(glowColor);
         return this;
     }
 
+    /**
+     * Sets whether the player should be moving.<p>
+     * <b>WARNING: Experimental!</b><br>
+     * Currently, it just makes the player's arms move idly and has not been tested with custom arm rotations.
+     *
+     * @param isMoving whether the player should be moving.
+     * @return {@code this}.
+     */
     @ApiStatus.Experimental
     public WrappedFancyPlayerWidget setMoving(boolean isMoving) {
-        this.invokeWrappedVoid("setMoving", boolean.class, isMoving);
+        wrapped.setMoving(isMoving);
         return this;
     }
 
+    /**
+     * Sets whether the player is on fire.<br>
+     * If Soul Fire'd is installed, you can use {@link #setOnFire(boolean, Identifier)} to specify the kind of fire.
+     *
+     * @param onFire whether the player is on fire.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setOnFire(boolean onFire) {
-        this.invokeWrappedVoid("setOnFire", boolean.class, onFire);
+        wrapped.setOnFire(onFire);
         return this;
     }
 
+    /**
+     * Sets whether the player is on fire and what kind of fire it is.<br>
+     * Effective only when Soul Fire'd is installed too.
+     *
+     * @param onFire whether the player is on fire.
+     * @param fireType Soul Fire'd fire type.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setOnFire(boolean onFire, Identifier fireType) {
-        this.invokeWrappedVoid("setOnFire", boolean.class, onFire, Identifier.class, fireType);
+        wrapped.setOnFire(onFire, fireType);
         return this;
     }
 
+    /**
+     * Sets whether the player is a baby.<br>
+     * Overrides the visibility of the left and right parrots. If {@code true}, the parrots will be hidden. If {@code false}, any previously hidden parrots will be restored.
+     *
+     * @param isBaby whether the player is a baby.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setBaby(boolean isBaby) {
-        this.invokeWrappedVoid("setBaby", boolean.class, isBaby);
+        wrapped.setBaby(isBaby);
         return this;
     }
 
     public WrappedFancyPlayerWidget setParrots(@Nullable Parrot.Variant leftParrot, @Nullable Parrot.Variant rightParrot) {
-        this.invokeWrappedVoid("setParrots", Parrot.Variant.class, leftParrot, Parrot.Variant.class, rightParrot);
+        wrapped.setParrots(leftParrot, rightParrot);
         return this;
     }
 
     public WrappedFancyPlayerWidget setBodyMovement(boolean shouldMove) {
-        this.invokeWrappedVoid("setMoving", boolean.class, shouldMove);
+        wrapped.setMoving(shouldMove);
         return this;
     }
 
+    /**
+     * Sets the item the player is holding in its right hand.<br>
+     * Pass a valid item to set it, pass {@code null} to empty the hand.
+     *
+     * @param item item to set or {@code null}.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setRightHandItem(@Nullable Item item) {
-        this.invokeWrappedVoid("setRightHandItem", Item.class, item);
+        wrapped.setRightHandItem(item);
         return this;
     }
 
+    /**
+     * Sets the item the player is holding in its right hand.<br>
+     * Pass a valid item to set it, pass {@code null} to empty the hand.
+     *
+     * @param item item to set or {@code null}.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setRightHandItem(@Nullable ItemStack item) {
-        this.invokeWrappedVoid("setRightHandItem", ItemStack.class, item);
+        wrapped.setRightHandItem(item);
         return this;
     }
 
+    /**
+     * Sets the item the player is holding in its left hand.<br>
+     * Pass a valid item to set it, pass {@code null} to empty the hand.
+     *
+     * @param item item to set or {@code null}.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setLeftHandItem(@Nullable Item item) {
-        this.invokeWrappedVoid("setLeftHandItem", Item.class, item);
+        wrapped.setLeftHandItem(item);
         return this;
     }
 
+    /**
+     * Sets the item the player is holding in its left hand.<br>
+     * Pass a valid item to set it, pass {@code null} to empty the hand.
+     *
+     * @param item item to set or {@code null}.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setLeftHandItem(@Nullable ItemStack item) {
-        this.invokeWrappedVoid("setLeftHandItem", ItemStack.class, item);
+        wrapped.setLeftHandItem(item);
         return this;
     }
 
+    /**
+     * Sets the item the player is wearing on its head.<br>
+     * Pass a valid item string to set it, pass {@code null} to remove it.
+     *
+     * @param item item string, in the same format as for the command {@code /give}.
+     * @param provider {@link HolderLookup.Provider} for registry access, for example from {@link net.minecraft.world.level.Level#registryAccess()}.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setHeadWearable(@Nullable String item, HolderLookup.Provider provider) {
-        this.invokeWrappedVoid("setHeadWearable", String.class, item, HolderLookup.Provider.class, provider);
+        wrapped.setHeadWearable(item, provider);
         return this;
     }
 
+    /**
+     * Sets the item the player is wearing on its chest.<br>
+     * Pass a valid item to set it, pass {@code null} to remove it.
+     *
+     * @param item item string, in the same format as for the command {@code /give}.
+     * @param provider {@link HolderLookup.Provider} for registry access, for example from {@link net.minecraft.world.level.Level#registryAccess()}.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setChestWearable(@Nullable String item, HolderLookup.Provider provider) {
-        this.invokeWrappedVoid("setChestWearable", String.class, item, HolderLookup.Provider.class, provider);
+        wrapped.setChestWearable(item, provider);
         return this;
     }
 
+    /**
+     * Sets the item the player is wearing on its legs.<br>
+     * Pass a valid item to set it, pass {@code null} to remove it.
+     *
+     * @param item item string, in the same format as for the command {@code /give}.
+     * @param provider {@link HolderLookup.Provider} for registry access, for example from {@link net.minecraft.world.level.Level#registryAccess()}.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setLegsWearable(@Nullable String item, HolderLookup.Provider provider) {
-        this.invokeWrappedVoid("setLegsWearable", String.class, item, HolderLookup.Provider.class, provider);
+        wrapped.setLegsWearable(item, provider);
         return this;
     }
 
+    /**
+     * Sets the item the player is wearing on its feet.<br>
+     * Pass a valid item to set it, pass {@code null} to remove it.
+     *
+     * @param item item string, in the same format as for the command {@code /give}.
+     * @param provider {@link HolderLookup.Provider} for registry access, for example from {@link net.minecraft.world.level.Level#registryAccess()}.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setFeetWearable(@Nullable String item, HolderLookup.Provider provider) {
-        this.invokeWrappedVoid("setFeetWearable", String.class, item, HolderLookup.Provider.class, provider);
+        wrapped.setFeetWearable(item, provider);
         return this;
     }
 
+    /**
+     * Sets the item the player is wearing on its head.<br>
+     * Pass a valid item to set it, pass {@code null} to remove it.
+     *
+     * @param item item to wear on the head.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setHeadWearable(@Nullable Item item) {
-        this.invokeWrappedVoid("setHeadWearable", Item.class, item);
+        wrapped.setHeadWearable(item);
         return this;
     }
 
+    /**
+     * Sets the item the player is wearing on its chest.<br>
+     * Pass a valid item to set it, pass {@code null} to remove it.
+     *
+     * @param item item to wear on the chest.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setChestWearable(@Nullable Item item) {
-        this.invokeWrappedVoid("setChestWearable", Item.class, item);
+        wrapped.setChestWearable(item);
         return this;
     }
 
+    /**
+     * Sets the item the player is wearing on its legs.<br>
+     * Pass a valid item to set it, pass {@code null} to remove it.
+     *
+     * @param item item to wear on the legs.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setLegsWearable(@Nullable Item item) {
-        this.invokeWrappedVoid("setLegsWearable", Item.class, item);
+        wrapped.setLegsWearable(item);
         return this;
     }
 
+    /**
+     * Sets the item the player is wearing on its feet.<br>
+     * Pass a valid item to set it, pass {@code null} to remove it.
+     *
+     * @param item item to wear on the feet.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setFeetWearable(@Nullable Item item) {
-        this.invokeWrappedVoid("setFeetWearable", Item.class, item);
+        wrapped.setFeetWearable(item);
         return this;
     }
 
+    /**
+     * Sets the item the player is wearing on its head.<br>
+     * Pass a valid item to set it, pass {@code null} to remove it.
+     *
+     * @param item item to wear on the head.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setHeadWearable(@Nullable ItemStack item) {
-        this.invokeWrappedVoid("setHeadWearable", ItemStack.class, item);
+        wrapped.setHeadWearable(item);
         return this;
     }
 
+    /**
+     * Sets the item the player is wearing on its chest.<br>
+     * Pass a valid item to set it, pass {@code null} to remove it.
+     *
+     * @param item item to wear on the chest.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setChestWearable(@Nullable ItemStack item) {
-        this.invokeWrappedVoid("setChestWearable", ItemStack.class, item);
+        wrapped.setChestWearable(item);
         return this;
     }
 
+    /**
+     * Sets the item the player is wearing on its legs.<br>
+     * Pass a valid item to set it, pass {@code null} to remove it.
+     *
+     * @param item item to wear on the legs.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setLegsWearable(@Nullable ItemStack item) {
-        this.invokeWrappedVoid("setLegsWearable", ItemStack.class, item);
+        wrapped.setLegsWearable(item);
         return this;
     }
 
+    /**
+     * Sets the item the player is wearing on its feet.<br>
+     * Pass a valid item to set it, pass {@code null} to remove it.
+     *
+     * @param item item to wear on the feet.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget setFeetWearable(@Nullable ItemStack item) {
-        this.invokeWrappedVoid("setFeetWearable", ItemStack.class, item);
+        wrapped.setFeetWearable(item);
         return this;
     }
 
+    /**
+     * Copies a player from its profile name.<br>
+     * Verify that the copy was successful by calling {@link #isCopyingPlayer()}.
+     *
+     * @param profileName profile name.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget copyPlayer(String profileName) {
-        this.invokeWrappedVoid("copyPlayer", String.class, profileName);
+        wrapped.copyPlayer(profileName);
         return this;
     }
 
+    /**
+     * Copies a player from its UUID.<br>
+     * Verify that the copy was successful by calling {@link #isCopyingPlayer()}.
+     *
+     * @param profileId profile UUID.
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget copyPlayer(UUID profileId) {
-        this.invokeWrappedVoid("copyPlayer", UUID.class, profileId);
+        wrapped.copyPlayer(profileId);
         return this;
     }
 
+    /**
+     * Stops the widget from currently copying a player.
+     *
+     * @return {@code this}.
+     */
     public WrappedFancyPlayerWidget uncopyPlayer() {
-        this.invokeWrappedVoid("uncopyPlayer");
+        wrapped.uncopyPlayer();
         return this;
     }
 
+    /**
+     * Returns whether the widget is currently copying a player (either local or remote).
+     *
+     * @return whether the widget is copying a player.
+     */
     public boolean isCopyingPlayer() {
-        return this.invokeWrappedBoolean("isCopyingPlayer");
+        return wrapped.isCopyingPlayer();
     }
 
     @Override
@@ -510,7 +740,5 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
     @Override
     public void setNavigatable(boolean navigatable) {
     }
-
-    private record MethodKey(@NotNull String name, @NotNull List<Class<?>> parameterTypes) {}
 
 }

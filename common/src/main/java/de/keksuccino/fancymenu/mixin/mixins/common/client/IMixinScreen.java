@@ -6,6 +6,7 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
+import org.spongepowered.asm.mixin.gen.Invoker;
 import java.util.List;
 
 @Mixin(Screen.class)
@@ -17,6 +18,10 @@ public interface IMixinScreen {
 
     @Accessor("narratables") List<NarratableEntry> getNarratablesFancyMenu();
 
+    @Invoker("removeWidget") void invokeRemoveWidgetFancyMenu(GuiEventListener widget);
+
     @Accessor("initialized") boolean get_initialized_FancyMenu();
+
+    @Invoker("init") void invoke_init_FancyMenu();
 
 }

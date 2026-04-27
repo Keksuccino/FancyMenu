@@ -30,7 +30,7 @@ public class MixinTabNavigationBar {
     @Unique private boolean suppressHeaderSeparator_FancyMenu;
 
     @WrapWithCondition(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V"))
-    private boolean wrapHeaderSeparatorRenderingInExtractRenderState_FancyMenu(GuiGraphicsExtractor instance, RenderPipeline $$0, Identifier $$1, int $$2, int $$3, float $$4, float $$5, int $$6, int $$7, int $$8, int $$9) {
+    private boolean wrapHeaderSeparatorRenderingInExtractRenderState_FancyMenu(GuiGraphicsExtractor instance, RenderPipeline pipeline, Identifier sprite, int x, int y, float u, float v, int width, int height, int textureWidth, int textureHeight) {
         if (this.suppressHeaderSeparator_FancyMenu) {
             return false;
         }
@@ -70,7 +70,7 @@ public class MixinTabNavigationBar {
      * @reason Re-init the screen when the tab got changed by using keys (arrow keys, Tab key, number keys)
      */
     @Inject(method = "keyPressed", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/tabs/TabNavigationBar;selectTab(IZ)V", shift = At.Shift.AFTER))
-    private void after_selectTab_in_keyPressed_FancyMenu(KeyEvent $$0, CallbackInfoReturnable<Boolean> cir) {
+    private void after_selectTab_in_keyPressed_FancyMenu(KeyEvent event, CallbackInfoReturnable<Boolean> info) {
         this.reInitScreenAfterTabChanged_FancyMenu();
     }
 

@@ -3,15 +3,14 @@ package de.keksuccino.fancymenu.customization.element.elements.progressbar;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.renderer.RenderPipelines;
-
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
@@ -34,16 +33,27 @@ public class ProgressBarElement extends AbstractElement {
     private static final Logger LOGGER = LogManager.getLogger();
 
     public BarDirection direction = BarDirection.RIGHT;
-    public DrawableColor barColor = DrawableColor.of(new Color(82, 149, 255));
     @Nullable
     public ResourceSupplier<ITexture> barTextureSupplier;
-    public DrawableColor backgroundColor = DrawableColor.of(new Color(171, 200, 247));
+    public boolean barNineSlice = false;
+    public final Property.IntegerProperty barNineSliceBorderTop = putProperty(Property.integerProperty("bar_nine_slice_border_top", 5, "fancymenu.elements.progress_bar.bar_texture.nine_slice.border.top"));
+    public final Property.IntegerProperty barNineSliceBorderRight = putProperty(Property.integerProperty("bar_nine_slice_border_right", 5, "fancymenu.elements.progress_bar.bar_texture.nine_slice.border.right"));
+    public final Property.IntegerProperty barNineSliceBorderBottom = putProperty(Property.integerProperty("bar_nine_slice_border_bottom", 5, "fancymenu.elements.progress_bar.bar_texture.nine_slice.border.bottom"));
+    public final Property.IntegerProperty barNineSliceBorderLeft = putProperty(Property.integerProperty("bar_nine_slice_border_left", 5, "fancymenu.elements.progress_bar.bar_texture.nine_slice.border.left"));
     @Nullable
     public ResourceSupplier<ITexture> backgroundTextureSupplier;
+    public boolean backgroundNineSlice = false;
+    public final Property.IntegerProperty backgroundNineSliceBorderTop = putProperty(Property.integerProperty("background_nine_slice_border_top", 5, "fancymenu.elements.progress_bar.background_texture.nine_slice.border.top"));
+    public final Property.IntegerProperty backgroundNineSliceBorderRight = putProperty(Property.integerProperty("background_nine_slice_border_right", 5, "fancymenu.elements.progress_bar.background_texture.nine_slice.border.right"));
+    public final Property.IntegerProperty backgroundNineSliceBorderBottom = putProperty(Property.integerProperty("background_nine_slice_border_bottom", 5, "fancymenu.elements.progress_bar.background_texture.nine_slice.border.bottom"));
+    public final Property.IntegerProperty backgroundNineSliceBorderLeft = putProperty(Property.integerProperty("background_nine_slice_border_left", 5, "fancymenu.elements.progress_bar.background_texture.nine_slice.border.left"));
     public boolean useProgressForElementAnchor = false;
-    public String progressSource = null;
+    public final Property.FloatProperty progressSource = putProperty(Property.floatProperty("progress_source", 50.0F, "fancymenu.elements.progress_bar.source"));
     public ProgressValueMode progressValueMode = ProgressValueMode.PERCENTAGE;
     public boolean smoothFillingAnimation = true;
+
+    public final Property.ColorProperty barColor = putProperty(Property.hexColorProperty("bar_color", DrawableColor.of(new Color(82, 149, 255)).getHex(), true, "fancymenu.elements.progress_bar.bar_color"));
+    public final Property.ColorProperty backgroundColor = putProperty(Property.hexColorProperty("background_color", DrawableColor.of(new Color(171, 200, 247)).getHex(), true, "fancymenu.elements.progress_bar.background_color"));
 
     protected int lastRenderedProgressX = 0;
     protected int lastRenderedProgressY = 0;
@@ -64,7 +74,7 @@ public class ProgressBarElement extends AbstractElement {
         if (!this.shouldRender()) return;
 
         // First, render the background.
-        renderBackground(graphics);
+        extractBackground(graphics);
         // Then, render the progress (filled portion).
         renderProgress(graphics);
 
@@ -97,8 +107,6 @@ public class ProgressBarElement extends AbstractElement {
         int fullHeight = getAbsoluteHeight();
         int progressX = getAbsoluteX();
         int progressY = getAbsoluteY();
-        float offsetX = 0.0F;
-        float offsetY = 0.0F;
         int progressWidth = fullWidth;
         int progressHeight = fullHeight;
 
@@ -120,11 +128,9 @@ public class ProgressBarElement extends AbstractElement {
         // For left/up directions, adjust the starting point.
         if (direction == BarDirection.LEFT) {
             progressX += fullWidth - progressWidth;
-            offsetX = fullWidth - progressWidth;
         }
         if (direction == BarDirection.UP) {
             progressY += fullHeight - progressHeight;
-            offsetY = fullHeight - progressHeight;
         }
 
         // Cache the computed progress bar area.
@@ -134,26 +140,42 @@ public class ProgressBarElement extends AbstractElement {
         lastRenderedProgressHeight = progressHeight;
 
         // Enable blending for transparency.
-         
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
 
         // Render using a texture if available.
         if (barTextureSupplier != null) {
             ITexture texture = barTextureSupplier.get();
             if (texture != null) {
-                Identifier loc = texture.getIdentifier();
+                Identifier loc = texture.getResourceLocation();
                 if (loc != null) {
-                    graphics.blit(RenderPipelines.GUI_TEXTURED, loc, progressX, progressY, offsetX, offsetY, progressWidth, progressHeight, fullWidth, fullHeight, DrawableColor.WHITE.getColorIntWithAlpha(opacity));
+                    DrawableColor.WHITE.setAsShaderColor(graphics, this.opacity);
+                    if (progressWidth > 0 && progressHeight > 0) {
+                        graphics.enableScissor(progressX, progressY, progressX + progressWidth, progressY + progressHeight);
+                        if (this.barNineSlice) {
+                            int textureWidth = Math.max(1, texture.getWidth());
+                            int textureHeight = Math.max(1, texture.getHeight());
+                            RenderingUtils.blitNineSlicedTexture(graphics, loc, getAbsoluteX(), getAbsoluteY(), fullWidth, fullHeight,
+                                    textureWidth, textureHeight,
+                                    this.barNineSliceBorderTop.getInteger(), this.barNineSliceBorderRight.getInteger(), this.barNineSliceBorderBottom.getInteger(), this.barNineSliceBorderLeft.getInteger());
+                        } else {
+                            graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, loc, getAbsoluteX(), getAbsoluteY(), 0.0F, 0.0F, fullWidth, fullHeight, fullWidth, fullHeight);
+                        }
+                        graphics.disableScissor();
+                    }
                 }
             }
         }
         // Otherwise, render a solid colored bar.
-        else if (barColor != null) {
-            float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) ARGB.alpha(barColor.getColorInt()) / 255.0F));
+        else {
+            DrawableColor c = this.barColor.getDrawable();
+            float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) ARGB.alpha(c.getColorInt()) / 255.0F));
             if (opacity <= colorAlpha) {
                 colorAlpha = opacity;
             }
-            graphics.fill(progressX, progressY, progressX + progressWidth, progressY + progressHeight, barColor.getColorIntWithAlpha(colorAlpha));
+            graphics.fill(progressX, progressY, progressX + progressWidth, progressY + progressHeight, c.getColorIntWithAlpha(colorAlpha));
         }
+
+        de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, 1.0F);
 
         this.setSmoothedProgress(smoothedProgress);
 
@@ -162,19 +184,32 @@ public class ProgressBarElement extends AbstractElement {
     /**
      * Renders the background of the progress bar element.
      */
-    protected void renderBackground(@NotNull GuiGraphicsExtractor graphics) {
-         
+    protected void extractBackground(@NotNull GuiGraphicsExtractor graphics) {
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
         if (backgroundTextureSupplier != null) {
             backgroundTextureSupplier.forRenderable((texture, location) -> {
-                graphics.blit(RenderPipelines.GUI_TEXTURED, location, getAbsoluteX(), getAbsoluteY(), 0.0F, 0.0F, getAbsoluteWidth(), getAbsoluteHeight(), getAbsoluteWidth(), getAbsoluteHeight(), DrawableColor.WHITE.getColorIntWithAlpha(opacity));
+                DrawableColor.WHITE.setAsShaderColor(graphics, this.opacity);
+                if (this.backgroundNineSlice) {
+                    int textureWidth = Math.max(1, texture.getWidth());
+                    int textureHeight = Math.max(1, texture.getHeight());
+                    RenderingUtils.blitNineSlicedTexture(graphics, location,
+                            getAbsoluteX(), getAbsoluteY(), getAbsoluteWidth(), getAbsoluteHeight(),
+                            textureWidth, textureHeight,
+                            this.backgroundNineSliceBorderTop.getInteger(), this.backgroundNineSliceBorderRight.getInteger(),
+                            this.backgroundNineSliceBorderBottom.getInteger(), this.backgroundNineSliceBorderLeft.getInteger());
+                } else {
+                    graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, location, getAbsoluteX(), getAbsoluteY(), 0.0F, 0.0F, getAbsoluteWidth(), getAbsoluteHeight(), getAbsoluteWidth(), getAbsoluteHeight());
+                }
             });
-        } else if (backgroundColor != null) {
-            float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) ARGB.alpha(backgroundColor.getColorInt()) / 255.0F));
+        } else {
+            DrawableColor c = this.backgroundColor.getDrawable();
+            float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) ARGB.alpha(c.getColorInt()) / 255.0F));
             if (opacity <= colorAlpha) {
                 colorAlpha = opacity;
             }
-            graphics.fill(getAbsoluteX(), getAbsoluteY(), getAbsoluteX() + getAbsoluteWidth(), getAbsoluteY() + getAbsoluteHeight(), backgroundColor.getColorIntWithAlpha(colorAlpha));
+            graphics.fill(getAbsoluteX(), getAbsoluteY(), getAbsoluteX() + getAbsoluteWidth(), getAbsoluteY() + getAbsoluteHeight(), c.getColorIntWithAlpha(colorAlpha));
         }
+        de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, 1.0F);
     }
 
     /**
@@ -184,15 +219,15 @@ public class ProgressBarElement extends AbstractElement {
      */
     public float getCurrentProgress() {
         if (isEditor()) return 0.5F;
-        if (progressSource != null) {
-            // Replace placeholders and remove spaces.
-            String progressString = StringUtils.replace(PlaceholderParser.replacePlaceholders(progressSource), " ", "");
+        String progressString = this.progressSource.getAsString();
+        if (progressString != null) {
+            progressString = StringUtils.replace(progressString, " ", "");
             if (MathUtils.isFloat(progressString)) {
-                // If progress is provided as a percentage, convert to 0.0-1.0.
+                float progressValue = Float.parseFloat(progressString);
                 if (progressValueMode == ProgressValueMode.PERCENTAGE) {
-                    return Float.parseFloat(progressString) / 100.0F;
+                    return progressValue / 100.0F;
                 }
-                return Float.parseFloat(progressString);
+                return progressValue;
             }
         }
         return 0.0F;

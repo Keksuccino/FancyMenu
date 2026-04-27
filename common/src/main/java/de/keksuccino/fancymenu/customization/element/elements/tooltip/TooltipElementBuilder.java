@@ -51,27 +51,6 @@ public class TooltipElementBuilder extends ElementBuilder<TooltipElement, Toolti
 
         element.backgroundTexture = deserializeImageResourceSupplier(serialized.getValue("background_texture"));
         
-        // Nine-slice borders
-        String nineSliceBorderTopString = serialized.getValue("nine_slice_border_top");
-        if ((nineSliceBorderTopString != null) && MathUtils.isInteger(nineSliceBorderTopString)) {
-            element.nineSliceBorderTop = Integer.parseInt(nineSliceBorderTopString);
-        }
-        
-        String nineSliceBorderRightString = serialized.getValue("nine_slice_border_right");
-        if ((nineSliceBorderRightString != null) && MathUtils.isInteger(nineSliceBorderRightString)) {
-            element.nineSliceBorderRight = Integer.parseInt(nineSliceBorderRightString);
-        }
-        
-        String nineSliceBorderBottomString = serialized.getValue("nine_slice_border_bottom");
-        if ((nineSliceBorderBottomString != null) && MathUtils.isInteger(nineSliceBorderBottomString)) {
-            element.nineSliceBorderBottom = Integer.parseInt(nineSliceBorderBottomString);
-        }
-        
-        String nineSliceBorderLeftString = serialized.getValue("nine_slice_border_left");
-        if ((nineSliceBorderLeftString != null) && MathUtils.isInteger(nineSliceBorderLeftString)) {
-            element.nineSliceBorderLeft = Integer.parseInt(nineSliceBorderLeftString);
-        }
-
         // Markdown renderer settings
         String shadowString = serialized.getValue("shadow");
         if (shadowString != null) {
@@ -89,27 +68,10 @@ public class TooltipElementBuilder extends ElementBuilder<TooltipElement, Toolti
             }
         }
 
-        String scaleString = serialized.getValue("scale");
-        if (scaleString != null) {
-            if (MathUtils.isFloat(scaleString)) {
-                element.markdownRenderer.setTextBaseScale(Float.parseFloat(scaleString));
-            }
-        }
-
         String baseColorString = serialized.getValue("base_color");
         if (baseColorString != null) {
             DrawableColor c = DrawableColor.of(baseColorString);
             element.markdownRenderer.setTextBaseColor(c);
-        }
-
-        String textBorderString = serialized.getValue("text_border");
-        if ((textBorderString != null) && MathUtils.isInteger(textBorderString)) {
-            element.markdownRenderer.setBorder(Integer.parseInt(textBorderString));
-        }
-
-        String lineSpacingString = serialized.getValue("line_spacing");
-        if ((lineSpacingString != null) && MathUtils.isInteger(lineSpacingString)) {
-            element.markdownRenderer.setLineSpacing(Integer.parseInt(lineSpacingString));
         }
 
         String autoLineWrapping = serialized.getValue("auto_line_wrapping");
@@ -147,6 +109,14 @@ public class TooltipElementBuilder extends ElementBuilder<TooltipElement, Toolti
         String hyperlinkColor = serialized.getValue("hyperlink_color");
         if (hyperlinkColor != null) {
             element.markdownRenderer.setHyperlinkColor(DrawableColor.of(hyperlinkColor));
+        }
+        String clickEventColor = serialized.getValue("click_event_color");
+        if (clickEventColor != null) {
+            element.markdownRenderer.setTextClickEventColor(DrawableColor.of(clickEventColor));
+        }
+        String hoverEventColor = serialized.getValue("hover_event_color");
+        if (hoverEventColor != null) {
+            element.markdownRenderer.setTextHoverEventColor(DrawableColor.of(hoverEventColor));
         }
 
         String quoteColor = serialized.getValue("quote_color");
@@ -201,11 +171,6 @@ public class TooltipElementBuilder extends ElementBuilder<TooltipElement, Toolti
             serializeTo.putProperty("background_texture", element.backgroundTexture.getSourceWithPrefix());
         }
         
-        serializeTo.putProperty("nine_slice_border_top", "" + element.nineSliceBorderTop);
-        serializeTo.putProperty("nine_slice_border_right", "" + element.nineSliceBorderRight);
-        serializeTo.putProperty("nine_slice_border_bottom", "" + element.nineSliceBorderBottom);
-        serializeTo.putProperty("nine_slice_border_left", "" + element.nineSliceBorderLeft);
-
         // Markdown renderer settings
         serializeTo.putProperty("shadow", "" + element.markdownRenderer.isTextShadow());
         if (element.markdownRenderer.getTextCase() == MarkdownRenderer.TextCase.ALL_LOWER) {
@@ -213,10 +178,7 @@ public class TooltipElementBuilder extends ElementBuilder<TooltipElement, Toolti
         } else if (element.markdownRenderer.getTextCase() == MarkdownRenderer.TextCase.ALL_UPPER) {
             serializeTo.putProperty("case_mode", "upper");
         }
-        serializeTo.putProperty("scale", "" + element.markdownRenderer.getTextBaseScale());
         serializeTo.putProperty("base_color", element.markdownRenderer.getTextBaseColor().getHex());
-        serializeTo.putProperty("text_border", "" + (int)element.markdownRenderer.getBorder());
-        serializeTo.putProperty("line_spacing", "" + (int)element.markdownRenderer.getLineSpacing());
         serializeTo.putProperty("auto_line_wrapping", "" + element.markdownRenderer.isAutoLineBreakingEnabled());
         serializeTo.putProperty("remove_html_breaks", "" + element.markdownRenderer.isRemoveHtmlBreaks());
         serializeTo.putProperty("code_block_single_color", element.markdownRenderer.getCodeBlockSingleLineColor().getHex());
@@ -224,6 +186,8 @@ public class TooltipElementBuilder extends ElementBuilder<TooltipElement, Toolti
         serializeTo.putProperty("headline_line_color", element.markdownRenderer.getHeadlineUnderlineColor().getHex());
         serializeTo.putProperty("separation_line_color", element.markdownRenderer.getSeparationLineColor().getHex());
         serializeTo.putProperty("hyperlink_color", element.markdownRenderer.getHyperlinkColor().getHex());
+        serializeTo.putProperty("click_event_color", element.markdownRenderer.getTextClickEventColor().getHex());
+        serializeTo.putProperty("hover_event_color", element.markdownRenderer.getTextHoverEventColor().getHex());
         serializeTo.putProperty("quote_color", element.markdownRenderer.getQuoteColor().getHex());
         serializeTo.putProperty("quote_indent", "" + element.markdownRenderer.getQuoteIndent());
         serializeTo.putProperty("quote_italic", "" + element.markdownRenderer.isQuoteItalic());

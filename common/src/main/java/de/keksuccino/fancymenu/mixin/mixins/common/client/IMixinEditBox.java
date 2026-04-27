@@ -37,4 +37,6 @@ public interface IMixinEditBox {
 
     @Accessor("suggestion") String getSuggestionFancyMenu();
 
+    @Accessor("invertHighlightedTextColor") boolean getInvertHighlightedTextColorFancyMenu();
+
 }

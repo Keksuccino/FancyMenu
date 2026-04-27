@@ -1,0 +1,400 @@
+package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.glsl;
+
+import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
+import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.file.FileFilter;
+import de.keksuccino.fancymenu.util.properties.Property;
+import de.keksuccino.fancymenu.util.rendering.glsl.GlslShaderRuntime;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
+import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.util.Mth;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+import java.util.Locale;
+
+public class GlslDecorationOverlay extends AbstractDecorationOverlay<GlslDecorationOverlay> {
+
+    private static final List<GlslShaderRuntime.CompileMode> COMPILE_MODES = List.of(
+            GlslShaderRuntime.CompileMode.AUTO,
+            GlslShaderRuntime.CompileMode.DIRECT,
+            GlslShaderRuntime.CompileMode.SHADERTOY
+    );
+    private static final List<GlslShaderRuntime.ChannelInput> CHANNEL_INPUTS = List.of(GlslShaderRuntime.ChannelInput.values());
+
+    public final Property.StringProperty inlineShaderSource = putProperty(Property.stringProperty("inline_shader_source", "", true, false, "fancymenu.decoration_overlays.glsl.inline_shader_source"));
+    public final Property.StringProperty bufferAInlineSource = putProperty(Property.stringProperty("buffer_a_inline_source", "", true, false, "fancymenu.decoration_overlays.glsl.buffer_a_inline_source"));
+    public final Property.StringProperty bufferBInlineSource = putProperty(Property.stringProperty("buffer_b_inline_source", "", true, false, "fancymenu.decoration_overlays.glsl.buffer_b_inline_source"));
+    public final Property.StringProperty bufferCInlineSource = putProperty(Property.stringProperty("buffer_c_inline_source", "", true, false, "fancymenu.decoration_overlays.glsl.buffer_c_inline_source"));
+    public final Property.StringProperty bufferDInlineSource = putProperty(Property.stringProperty("buffer_d_inline_source", "", true, false, "fancymenu.decoration_overlays.glsl.buffer_d_inline_source"));
+
+    public final Property.StringProperty imageIChannel0Input = putProperty(Property.stringProperty("image_ichannel0_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.decoration_overlays.glsl.image_ichannel0_input"));
+    public final Property.StringProperty imageIChannel1Input = putProperty(Property.stringProperty("image_ichannel1_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.decoration_overlays.glsl.image_ichannel1_input"));
+    public final Property.StringProperty imageIChannel2Input = putProperty(Property.stringProperty("image_ichannel2_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.decoration_overlays.glsl.image_ichannel2_input"));
+    public final Property.StringProperty imageIChannel3Input = putProperty(Property.stringProperty("image_ichannel3_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.decoration_overlays.glsl.image_ichannel3_input"));
+    public final Property.StringProperty bufferAIChannel0Input = putProperty(Property.stringProperty("buffer_a_ichannel0_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.decoration_overlays.glsl.buffer_a_ichannel0_input"));
+    public final Property.StringProperty bufferAIChannel1Input = putProperty(Property.stringProperty("buffer_a_ichannel1_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.decoration_overlays.glsl.buffer_a_ichannel1_input"));
+    public final Property.StringProperty bufferAIChannel2Input = putProperty(Property.stringProperty("buffer_a_ichannel2_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.decoration_overlays.glsl.buffer_a_ichannel2_input"));
+    public final Property.StringProperty bufferAIChannel3Input = putProperty(Property.stringProperty("buffer_a_ichannel3_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.decoration_overlays.glsl.buffer_a_ichannel3_input"));
+    public final Property.StringProperty bufferBIChannel0Input = putProperty(Property.stringProperty("buffer_b_ichannel0_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.decoration_overlays.glsl.buffer_b_ichannel0_input"));
+    public final Property.StringProperty bufferBIChannel1Input = putProperty(Property.stringProperty("buffer_b_ichannel1_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.decoration_overlays.glsl.buffer_b_ichannel1_input"));
+    public final Property.StringProperty bufferBIChannel2Input = putProperty(Property.stringProperty("buffer_b_ichannel2_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.decoration_overlays.glsl.buffer_b_ichannel2_input"));
+    public final Property.StringProperty bufferBIChannel3Input = putProperty(Property.stringProperty("buffer_b_ichannel3_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.decoration_overlays.glsl.buffer_b_ichannel3_input"));
+    public final Property.StringProperty bufferCIChannel0Input = putProperty(Property.stringProperty("buffer_c_ichannel0_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.decoration_overlays.glsl.buffer_c_ichannel0_input"));
+    public final Property.StringProperty bufferCIChannel1Input = putProperty(Property.stringProperty("buffer_c_ichannel1_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.decoration_overlays.glsl.buffer_c_ichannel1_input"));
+    public final Property.StringProperty bufferCIChannel2Input = putProperty(Property.stringProperty("buffer_c_ichannel2_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.decoration_overlays.glsl.buffer_c_ichannel2_input"));
+    public final Property.StringProperty bufferCIChannel3Input = putProperty(Property.stringProperty("buffer_c_ichannel3_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.decoration_overlays.glsl.buffer_c_ichannel3_input"));
+    public final Property.StringProperty bufferDIChannel0Input = putProperty(Property.stringProperty("buffer_d_ichannel0_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.decoration_overlays.glsl.buffer_d_ichannel0_input"));
+    public final Property.StringProperty bufferDIChannel1Input = putProperty(Property.stringProperty("buffer_d_ichannel1_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.decoration_overlays.glsl.buffer_d_ichannel1_input"));
+    public final Property.StringProperty bufferDIChannel2Input = putProperty(Property.stringProperty("buffer_d_ichannel2_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.decoration_overlays.glsl.buffer_d_ichannel2_input"));
+    public final Property.StringProperty bufferDIChannel3Input = putProperty(Property.stringProperty("buffer_d_ichannel3_input", GlslShaderRuntime.ChannelInput.NONE.serializedName(), false, false, "fancymenu.decoration_overlays.glsl.buffer_d_ichannel3_input"));
+
+    public final Property.StringProperty compileMode = putProperty(Property.stringProperty("compile_mode", "auto", false, false, "fancymenu.decoration_overlays.glsl.compile_mode"));
+    public final Property.BooleanProperty forceShadertoyCompatibility = putProperty(Property.booleanProperty("force_shadertoy_compatibility", true, "fancymenu.decoration_overlays.glsl.force_shadertoy_compatibility"));
+    public final Property.BooleanProperty freezeTime = putProperty(Property.booleanProperty("freeze_time", false, "fancymenu.decoration_overlays.glsl.freeze_time"));
+    public final Property.FloatProperty timeScale = putProperty(Property.floatProperty("time_scale", 1.0F, "fancymenu.decoration_overlays.glsl.time_scale"));
+    public final Property.BooleanProperty enableBlending = putProperty(Property.booleanProperty("enable_blending", true, "fancymenu.decoration_overlays.glsl.enable_blending"));
+    public final Property.BooleanProperty useInput = putProperty(Property.booleanProperty("use_input", true, "fancymenu.decoration_overlays.glsl.use_input"));
+    public final Property.BooleanProperty mousePositionRequiresHold = putProperty(Property.booleanProperty("mouse_position_requires_hold", false, "fancymenu.decoration_overlays.glsl.mouse_position_requires_hold"));
+    public final Property.FloatProperty opacityMultiplier = putProperty(Property.floatProperty("opacity_multiplier", 1.0F, "fancymenu.decoration_overlays.glsl.opacity_multiplier"));
+    public final Property.BooleanProperty showCompileErrors = putProperty(Property.booleanProperty("show_compile_errors", true, "fancymenu.decoration_overlays.glsl.show_compile_errors"));
+    public final Property<ResourceSupplier<ITexture>> iChannel0Source = putProperty(Property.resourceSupplierProperty(ITexture.class, "ichannel_0_source", null, "fancymenu.decoration_overlays.glsl.ichannel0_source", true, true, true, FileFilter.IMAGE_FILE_FILTER));
+    public final Property<ResourceSupplier<ITexture>> iChannel1Source = putProperty(Property.resourceSupplierProperty(ITexture.class, "ichannel_1_source", null, "fancymenu.decoration_overlays.glsl.ichannel1_source", true, true, true, FileFilter.IMAGE_FILE_FILTER));
+    public final Property<ResourceSupplier<ITexture>> iChannel2Source = putProperty(Property.resourceSupplierProperty(ITexture.class, "ichannel_2_source", null, "fancymenu.decoration_overlays.glsl.ichannel2_source", true, true, true, FileFilter.IMAGE_FILE_FILTER));
+    public final Property<ResourceSupplier<ITexture>> iChannel3Source = putProperty(Property.resourceSupplierProperty(ITexture.class, "ichannel_3_source", null, "fancymenu.decoration_overlays.glsl.ichannel3_source", true, true, true, FileFilter.IMAGE_FILE_FILTER));
+
+    private final GlslShaderRuntime shaderRuntime = new GlslShaderRuntime();
+
+    public GlslDecorationOverlay() {
+        this.showOverlay.addValueSetListener((oldValue, newValue) -> {
+            if (Boolean.FALSE.equals(newValue)) {
+                this.shaderRuntime.close();
+            }
+        });
+    }
+
+    @Override
+    protected void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor) {
+
+        this.inlineShaderSource.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.decoration_overlays.glsl.inline_shader_source.desc"))
+                .setIcon(MaterialIcons.CODE);
+
+        menu.addSeparatorEntry("separator_before_buffer_sources");
+
+        this.bufferAInlineSource.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.decoration_overlays.glsl.buffer_a_inline_source.desc"))
+                .setIcon(MaterialIcons.CODE);
+
+        this.bufferBInlineSource.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.decoration_overlays.glsl.buffer_b_inline_source.desc"))
+                .setIcon(MaterialIcons.CODE);
+
+        this.bufferCInlineSource.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.decoration_overlays.glsl.buffer_c_inline_source.desc"))
+                .setIcon(MaterialIcons.CODE);
+
+        this.bufferDInlineSource.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.decoration_overlays.glsl.buffer_d_inline_source.desc"))
+                .setIcon(MaterialIcons.CODE);
+
+        menu.addSeparatorEntry("separator_before_channel_resources");
+
+        this.iChannel0Source.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.decoration_overlays.glsl.ichannel0_source.desc"))
+                .setIcon(MaterialIcons.IMAGE);
+
+        this.iChannel1Source.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.decoration_overlays.glsl.ichannel1_source.desc"))
+                .setIcon(MaterialIcons.IMAGE);
+
+        this.iChannel2Source.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.decoration_overlays.glsl.ichannel2_source.desc"))
+                .setIcon(MaterialIcons.IMAGE);
+
+        this.iChannel3Source.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.decoration_overlays.glsl.ichannel3_source.desc"))
+                .setIcon(MaterialIcons.IMAGE);
+
+        menu.addSeparatorEntry("separator_before_channel_routing");
+
+        this.addChannelInputCycleEntry(menu, "image_ichannel0_input", this.imageIChannel0Input, "fancymenu.decoration_overlays.glsl.image_ichannel0_input");
+        this.addChannelInputCycleEntry(menu, "image_ichannel1_input", this.imageIChannel1Input, "fancymenu.decoration_overlays.glsl.image_ichannel1_input");
+        this.addChannelInputCycleEntry(menu, "image_ichannel2_input", this.imageIChannel2Input, "fancymenu.decoration_overlays.glsl.image_ichannel2_input");
+        this.addChannelInputCycleEntry(menu, "image_ichannel3_input", this.imageIChannel3Input, "fancymenu.decoration_overlays.glsl.image_ichannel3_input");
+
+        menu.addSeparatorEntry("separator_before_buffer_a_routing");
+
+        this.addChannelInputCycleEntry(menu, "buffer_a_ichannel0_input", this.bufferAIChannel0Input, "fancymenu.decoration_overlays.glsl.buffer_a_ichannel0_input");
+        this.addChannelInputCycleEntry(menu, "buffer_a_ichannel1_input", this.bufferAIChannel1Input, "fancymenu.decoration_overlays.glsl.buffer_a_ichannel1_input");
+        this.addChannelInputCycleEntry(menu, "buffer_a_ichannel2_input", this.bufferAIChannel2Input, "fancymenu.decoration_overlays.glsl.buffer_a_ichannel2_input");
+        this.addChannelInputCycleEntry(menu, "buffer_a_ichannel3_input", this.bufferAIChannel3Input, "fancymenu.decoration_overlays.glsl.buffer_a_ichannel3_input");
+
+        menu.addSeparatorEntry("separator_before_buffer_b_routing");
+
+        this.addChannelInputCycleEntry(menu, "buffer_b_ichannel0_input", this.bufferBIChannel0Input, "fancymenu.decoration_overlays.glsl.buffer_b_ichannel0_input");
+        this.addChannelInputCycleEntry(menu, "buffer_b_ichannel1_input", this.bufferBIChannel1Input, "fancymenu.decoration_overlays.glsl.buffer_b_ichannel1_input");
+        this.addChannelInputCycleEntry(menu, "buffer_b_ichannel2_input", this.bufferBIChannel2Input, "fancymenu.decoration_overlays.glsl.buffer_b_ichannel2_input");
+        this.addChannelInputCycleEntry(menu, "buffer_b_ichannel3_input", this.bufferBIChannel3Input, "fancymenu.decoration_overlays.glsl.buffer_b_ichannel3_input");
+
+        menu.addSeparatorEntry("separator_before_buffer_c_routing");
+
+        this.addChannelInputCycleEntry(menu, "buffer_c_ichannel0_input", this.bufferCIChannel0Input, "fancymenu.decoration_overlays.glsl.buffer_c_ichannel0_input");
+        this.addChannelInputCycleEntry(menu, "buffer_c_ichannel1_input", this.bufferCIChannel1Input, "fancymenu.decoration_overlays.glsl.buffer_c_ichannel1_input");
+        this.addChannelInputCycleEntry(menu, "buffer_c_ichannel2_input", this.bufferCIChannel2Input, "fancymenu.decoration_overlays.glsl.buffer_c_ichannel2_input");
+        this.addChannelInputCycleEntry(menu, "buffer_c_ichannel3_input", this.bufferCIChannel3Input, "fancymenu.decoration_overlays.glsl.buffer_c_ichannel3_input");
+
+        menu.addSeparatorEntry("separator_before_buffer_d_routing");
+
+        this.addChannelInputCycleEntry(menu, "buffer_d_ichannel0_input", this.bufferDIChannel0Input, "fancymenu.decoration_overlays.glsl.buffer_d_ichannel0_input");
+        this.addChannelInputCycleEntry(menu, "buffer_d_ichannel1_input", this.bufferDIChannel1Input, "fancymenu.decoration_overlays.glsl.buffer_d_ichannel1_input");
+        this.addChannelInputCycleEntry(menu, "buffer_d_ichannel2_input", this.bufferDIChannel2Input, "fancymenu.decoration_overlays.glsl.buffer_d_ichannel2_input");
+        this.addChannelInputCycleEntry(menu, "buffer_d_ichannel3_input", this.bufferDIChannel3Input, "fancymenu.decoration_overlays.glsl.buffer_d_ichannel3_input");
+
+        menu.addSeparatorEntry("separator_after_channel_routing");
+
+        this.addCycleContextMenuEntryTo(menu,
+                        "compile_mode",
+                        COMPILE_MODES,
+                        GlslDecorationOverlay.class,
+                        GlslDecorationOverlay::getCompileMode,
+                        GlslDecorationOverlay::setCompileMode,
+                        (contextMenu, entry, mode) -> Component.translatable("fancymenu.decoration_overlays.glsl.compile_mode", warningValue(getCompileModeDisplay(mode))))
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.decoration_overlays.glsl.compile_mode.desc"))
+                .setIcon(MaterialIcons.TUNE);
+
+        this.forceShadertoyCompatibility.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.decoration_overlays.glsl.force_shadertoy_compatibility.desc"))
+                .setIcon(MaterialIcons.CODE);
+
+        this.freezeTime.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.decoration_overlays.glsl.freeze_time.desc"))
+                .setIcon(MaterialIcons.PAUSE);
+
+        this.timeScale.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.decoration_overlays.glsl.time_scale.desc"))
+                .setIcon(MaterialIcons.SPEED);
+
+        menu.addSeparatorEntry("separator_before_render_settings");
+
+        this.enableBlending.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.decoration_overlays.glsl.enable_blending.desc"))
+                .setIcon(MaterialIcons.BLUR_ON);
+
+        this.useInput.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.decoration_overlays.glsl.use_input.desc"))
+                .setIcon(MaterialIcons.MOUSE);
+
+        this.mousePositionRequiresHold.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.decoration_overlays.glsl.mouse_position_requires_hold.desc"))
+                .setIcon(MaterialIcons.MOUSE);
+
+        this.opacityMultiplier.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.decoration_overlays.glsl.opacity_multiplier.desc"))
+                .setIcon(MaterialIcons.PALETTE);
+
+        this.showCompileErrors.buildContextMenuEntryAndAddTo(menu, this)
+                .setTooltipSupplier((m, entry) -> tooltip("fancymenu.decoration_overlays.glsl.show_compile_errors.desc"))
+                .setIcon(MaterialIcons.ERROR);
+
+    }
+
+    @Override
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
+
+        int width = getScreenWidth();
+        int height = getScreenHeight();
+        float resolvedOpacity = Mth.clamp(Math.max(0.0F, this.opacityMultiplier.getFloat()), 0.0F, 1.0F);
+
+        boolean rendered = this.shaderRuntime.render(
+                graphics,
+                0,
+                0,
+                width,
+                height,
+                partial,
+                resolveShaderSource(),
+                new GlslShaderRuntime.RenderSettings(
+                        this.getCompileMode(),
+                        this.forceShadertoyCompatibility.getBoolean(),
+                        Math.max(0.0F, this.timeScale.getFloat()),
+                        this.freezeTime.getBoolean(),
+                        this.enableBlending.getBoolean(),
+                        this.useInput.getBoolean(),
+                        this.mousePositionRequiresHold.getBoolean(),
+                        resolvedOpacity,
+                        this.iChannel0Source.get(),
+                        this.iChannel1Source.get(),
+                        this.iChannel2Source.get(),
+                        this.iChannel3Source.get(),
+                        this.bufferAInlineSource.get(),
+                        this.bufferBInlineSource.get(),
+                        this.bufferCInlineSource.get(),
+                        this.bufferDInlineSource.get(),
+                        this.resolveRouting(this.imageIChannel0Input, this.imageIChannel1Input, this.imageIChannel2Input, this.imageIChannel3Input),
+                        this.resolveRouting(this.bufferAIChannel0Input, this.bufferAIChannel1Input, this.bufferAIChannel2Input, this.bufferAIChannel3Input),
+                        this.resolveRouting(this.bufferBIChannel0Input, this.bufferBIChannel1Input, this.bufferBIChannel2Input, this.bufferBIChannel3Input),
+                        this.resolveRouting(this.bufferCIChannel0Input, this.bufferCIChannel1Input, this.bufferCIChannel2Input, this.bufferCIChannel3Input),
+                        this.resolveRouting(this.bufferDIChannel0Input, this.bufferDIChannel1Input, this.bufferDIChannel2Input, this.bufferDIChannel3Input)
+                )
+        );
+
+        if (!this.showCompileErrors.getBoolean()) {
+            return;
+        }
+
+        if (!rendered && this.shaderRuntime.isSourceMissing()) {
+            this.renderErrorOverlay(graphics, Component.translatable("fancymenu.decoration_overlays.glsl.error.no_source").getString());
+            return;
+        }
+
+        String compileError = this.shaderRuntime.getLastCompileError();
+        if (compileError != null && !compileError.isBlank()) {
+            this.renderErrorOverlay(graphics, compileError);
+        }
+
+    }
+
+    @Override
+    public void onScreenInitializedOrResized(@NotNull Screen screen, @NotNull List<AbstractElement> elements) {
+        this.shaderRuntime.close();
+    }
+
+    @Override
+    public void onCloseScreen(@Nullable Screen closedScreen, @Nullable Screen newScreen) {
+        this.shaderRuntime.close();
+    }
+
+    @Nullable
+    private String resolveShaderSource() {
+        String inlineSource = this.inlineShaderSource.get();
+
+        if (inlineSource != null && !inlineSource.isBlank()) {
+            return inlineSource;
+        }
+
+        return null;
+    }
+
+    @NotNull
+    private static UITooltip tooltip(@NotNull String key) {
+        return UITooltip.of(LocalizationUtils.splitLocalizedLines(key));
+    }
+
+    private void renderErrorOverlay(@NotNull GuiGraphicsExtractor graphics, @NotNull String message) {
+        var font = Minecraft.getInstance().font;
+
+        String[] split = message.replace("\r", "").split("\n");
+        int maxLines = Math.min(split.length, 8);
+        int maxWidth = Math.max(20, getScreenWidth() - 16);
+
+        int y = 8;
+        int boxWidth = 0;
+        String[] lines = new String[maxLines];
+        for (int i = 0; i < maxLines; i++) {
+            String line = split[i];
+            if (font.width(line) > maxWidth) {
+                line = font.plainSubstrByWidth(line, maxWidth - font.width("..")) + "..";
+            }
+            lines[i] = line;
+            boxWidth = Math.max(boxWidth, font.width(line));
+        }
+
+        int lineHeight = font.lineHeight + 1;
+        int boxHeight = (maxLines * lineHeight) + 8;
+
+        graphics.fill(4, 4, 12 + boxWidth, 8 + boxHeight, 0xCC000000);
+
+        for (String line : lines) {
+            graphics.text(font, line, 8, y, 0xFFFF6666, false);
+            y += lineHeight;
+        }
+    }
+
+    @NotNull
+    private static Component getCompileModeDisplay(@NotNull GlslShaderRuntime.CompileMode mode) {
+        return switch (mode) {
+            case AUTO -> Component.translatable("fancymenu.decoration_overlays.glsl.compile_mode.auto");
+            case DIRECT -> Component.translatable("fancymenu.decoration_overlays.glsl.compile_mode.direct");
+            case SHADERTOY -> Component.translatable("fancymenu.decoration_overlays.glsl.compile_mode.shadertoy");
+        };
+    }
+
+    @NotNull
+    private GlslShaderRuntime.CompileMode getCompileMode() {
+        String raw = this.compileMode.get();
+        if (raw != null) {
+            try {
+                return GlslShaderRuntime.CompileMode.valueOf(raw.toUpperCase(Locale.ROOT));
+            } catch (Exception ignored) {
+            }
+        }
+        return GlslShaderRuntime.CompileMode.AUTO;
+    }
+
+    private void setCompileMode(@NotNull GlslShaderRuntime.CompileMode mode) {
+        this.compileMode.set(mode.name().toLowerCase(Locale.ROOT));
+    }
+
+    private void addChannelInputCycleEntry(@NotNull ContextMenu menu,
+                                           @NotNull String cycleId,
+                                           @NotNull Property.StringProperty property,
+                                           @NotNull String localizationKey) {
+        this.addCycleContextMenuEntryTo(menu,
+                        cycleId,
+                        CHANNEL_INPUTS,
+                        GlslDecorationOverlay.class,
+                        overlay -> overlay.getChannelInput(property, GlslShaderRuntime.ChannelInput.NONE),
+                        (overlay, input) -> overlay.setChannelInput(property, input),
+                        (contextMenu, entry, input) -> Component.translatable(localizationKey, warningValue(getChannelInputDisplay(input))))
+                .setTooltipSupplier((m, entry) -> tooltip(localizationKey + ".desc"))
+                .setIcon(MaterialIcons.ROUTE);
+    }
+
+    @NotNull
+    private GlslShaderRuntime.ChannelRouting resolveRouting(@NotNull Property.StringProperty c0,
+                                                            @NotNull Property.StringProperty c1,
+                                                            @NotNull Property.StringProperty c2,
+                                                            @NotNull Property.StringProperty c3) {
+        return new GlslShaderRuntime.ChannelRouting(
+                this.getChannelInput(c0, GlslShaderRuntime.ChannelInput.NONE),
+                this.getChannelInput(c1, GlslShaderRuntime.ChannelInput.NONE),
+                this.getChannelInput(c2, GlslShaderRuntime.ChannelInput.NONE),
+                this.getChannelInput(c3, GlslShaderRuntime.ChannelInput.NONE)
+        );
+    }
+
+    @NotNull
+    private GlslShaderRuntime.ChannelInput getChannelInput(@NotNull Property.StringProperty property,
+                                                           @NotNull GlslShaderRuntime.ChannelInput fallback) {
+        return GlslShaderRuntime.ChannelInput.fromSerialized(property.get(), fallback);
+    }
+
+    private void setChannelInput(@NotNull Property.StringProperty property,
+                                 @NotNull GlslShaderRuntime.ChannelInput input) {
+        property.set(input.serializedName());
+    }
+
+    @NotNull
+    private static Component getChannelInputDisplay(@NotNull GlslShaderRuntime.ChannelInput input) {
+        return Component.translatable("fancymenu.glsl.channel_input." + input.serializedName());
+    }
+
+    @NotNull
+    private static Component warningValue(@NotNull Component value) {
+        return value.copy().withStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
+    }
+
+}

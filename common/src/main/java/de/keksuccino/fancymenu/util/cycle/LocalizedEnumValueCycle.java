@@ -6,7 +6,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
-import java.security.InvalidParameterException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -22,8 +21,8 @@ public class LocalizedEnumValueCycle<E extends LocalizedEnum<?>> extends ValueCy
     public static <E extends LocalizedEnum<?>> LocalizedEnumValueCycle<E> ofArray(@NotNull String cycleLocalizationKey, @NotNull E... values) {
         Objects.requireNonNull(values);
         List<E> valueList = Arrays.asList(values);
-        if (valueList.size() < 2) {
-            throw new InvalidParameterException("Failed to create LocalizedValueCycle! Value list size too small (<2)!");
+        if (valueList.isEmpty()) {
+            throw new IllegalArgumentException("Failed to create LocalizedValueCycle! Value list size too small (empty)!");
         }
         LocalizedEnumValueCycle<E> valueCycle = new LocalizedEnumValueCycle<>(cycleLocalizationKey);
         valueCycle.values.addAll(valueList);

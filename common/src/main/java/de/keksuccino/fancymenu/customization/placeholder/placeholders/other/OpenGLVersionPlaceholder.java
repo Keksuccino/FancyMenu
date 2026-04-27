@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders.other;
 
-import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -23,7 +23,7 @@ public class OpenGLVersionPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        return GlStateManager._getString(7938);
+        return RenderSystem.getDevice().getVersion();
     }
 
     @Override

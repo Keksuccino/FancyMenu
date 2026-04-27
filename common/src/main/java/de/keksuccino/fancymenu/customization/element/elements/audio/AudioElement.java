@@ -6,13 +6,13 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.Trio;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-
 import net.minecraft.network.chat.Style;
 import net.minecraft.sounds.SoundSource;
 import org.apache.commons.lang3.StringUtils;
@@ -31,7 +31,8 @@ public class AudioElement extends AbstractElement {
     @NotNull
     protected PlayMode playMode = PlayMode.NORMAL;
     protected boolean loop = false;
-    protected float volume = 1.0F;
+    public final Property.FloatProperty volume = putProperty(Property.floatProperty("volume", 1.0F, "fancymenu.elements.audio.set_volume",
+            Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 1.0F).build()));
     @NotNull
     protected SoundSource soundSource = SoundSource.MASTER;
     /** Call {@link AudioElement#resetAudioElementKeepAudios()} after adding or removing audios. **/
@@ -48,6 +49,7 @@ public class AudioElement extends AbstractElement {
     public AudioElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
         this.allowDepthTestManipulation = true;
+        this.volume.addValueSetListener((oldValue, newValue) -> this.updateVolume());
     }
 
     /**
@@ -416,7 +418,7 @@ public class AudioElement extends AbstractElement {
     }
 
     public void updateVolume() {
-        float v = Math.max(0.0F, Math.min(1.0F, this.getControllerVolume() * this.volume));
+        float v = Math.max(0.0F, Math.min(1.0F, this.getControllerVolume() * this.volume.getFloat()));
         if (this.currentAudio != null) {
             this.currentAudio.setVolume(v);
         }
@@ -428,7 +430,7 @@ public class AudioElement extends AbstractElement {
     public void setVolume(float volume) {
         if (volume > 1.0F) volume = 1.0F;
         if (volume < 0.0F) volume = 0.0F;
-        this.volume = volume;
+        this.volume.set(volume);
         this.updateVolume();
     }
 
@@ -436,7 +438,7 @@ public class AudioElement extends AbstractElement {
      * Value between 0.0F and 1.0F.
      */
     public float getVolume() {
-        return this.volume;
+        return this.volume.getFloat();
     }
 
     /**
@@ -480,10 +482,12 @@ public class AudioElement extends AbstractElement {
             int y = this.getAbsoluteY();
             int w = this.getAbsoluteWidth();
             int h = this.getAbsoluteHeight();
-            graphics.fill(x, y, x + w, y + h, this.inEditorColor.getColorInt());
+            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+            graphics.fill(x, y, x + w, y + h, this.inEditorColor.getDrawable().getColorInt());
             graphics.enableScissor(x, y, x + w, y + h);
             graphics.centeredText(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
             graphics.disableScissor();
+            RenderingUtils.resetShaderColor(graphics);
         }
 
     }

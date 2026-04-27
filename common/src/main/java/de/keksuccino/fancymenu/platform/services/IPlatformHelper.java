@@ -10,6 +10,7 @@ import net.minecraft.world.item.Item;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
+import java.util.Set;
 
 public interface IPlatformHelper {
 
@@ -62,6 +63,12 @@ public interface IPlatformHelper {
 
     @NotNull
     List<UniversalModContainer> getLoadedMods();
+
+    /**
+     * Returns all loaded client-side {@link Identifier}s from resource packs.
+     */
+    @NotNull
+    Set<Identifier> getLoadedClientResourceLocations();
 
     @Nullable
     default UniversalModContainer getLoadedMod(@NotNull String id) {

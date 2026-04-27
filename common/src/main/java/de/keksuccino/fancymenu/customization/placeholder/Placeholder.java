@@ -1,14 +1,18 @@
-//Copyright (c) 2022-2023 Keksuccino.
-//This code is licensed under DSMSLv2.
+//Copyright (c) 2022-2025 Keksuccino.
+//This code is licensed under DSMSLv3.
 //For more information about the license, see this: https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md
 
 package de.keksuccino.fancymenu.customization.placeholder;
 
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
@@ -73,7 +77,10 @@ public abstract class Placeholder {
         boolean sameThread = Minecraft.getInstance().isSameThread();
         if (!sameThread && !this.canRunAsync() && !this.asyncErrorShown) {
             this.asyncErrorShown = true;
-            QueueableScreenHandler.addToQueue(new AsyncPlaceholderErrorScreen(Component.literal(this.getDisplayName())));
+            MainThreadTaskExecutor.executeInMainThread(() -> {
+                var placeholderName = Component.literal(this.getDisplayName()).withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUITheme().error_color.getColorInt()));
+                Dialogs.openMessage(Component.translatable("fancymenu.placeholders.async.cant_run_async", placeholderName), MessageDialogStyle.ERROR);
+            }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         }
         return this.canRunAsync() || sameThread; // should parse placeholder
     }

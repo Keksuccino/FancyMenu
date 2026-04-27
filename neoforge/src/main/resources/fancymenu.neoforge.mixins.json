@@ -9,7 +9,8 @@
     "client.MixinNeoForgeGameRenderer",
     "client.MixinNeoForgeKeyboardHandler",
     "client.MixinNeoForgeLoadingOverlay",
-    "client.MixinNeoForgeTitleScreen"
+    "client.MixinNeoForgeTitleScreen",
+    "client.MixinWatermediaNeoBootstrap"
   ],
   "injectors": {
     "defaultRequire": 1

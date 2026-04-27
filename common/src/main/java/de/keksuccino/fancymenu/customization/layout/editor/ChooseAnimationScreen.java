@@ -1,0 +1,52 @@
+package de.keksuccino.fancymenu.customization.layout.editor;
+
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import java.util.function.Consumer;
+
+public class ChooseAnimationScreen extends Screen {
+
+    protected Consumer<String> callback;
+    protected String selectedAnimationName = null;
+
+    protected ScrollArea animationListScrollArea = new ScrollArea(0, 0, 0, 0);
+    protected ExtendedButton doneButton;
+    protected ExtendedButton cancelButton;
+
+    public ChooseAnimationScreen(@Nullable String preSelectedAnimation, @NotNull Consumer<String> callback) {
+        super(Component.translatable("fancymenu.animation.choose"));
+    }
+
+    @Override
+    protected void init() {}
+
+    @Override
+    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {}
+
+    @Override
+    public void extractBackground(@NotNull GuiGraphicsExtractor $$0, int $$1, int $$2, float $$3) {}
+
+    protected void setSelectedAnimation(@Nullable AnimationScrollEntry entry) {}
+
+    protected void updateAnimationScrollAreaContent() {}
+
+    public static class AnimationScrollEntry extends TextListScrollAreaEntry {
+
+        public String animation;
+
+        public AnimationScrollEntry(ScrollArea parent, @NotNull String animation, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
+            super(parent, Component.literal(animation).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())), UIBase.getUITheme().bullet_list_dot_color_1, onClick);
+            this.animation = animation;
+        }
+
+    }
+
+}

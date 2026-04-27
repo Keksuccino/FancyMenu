@@ -13,16 +13,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ServerSelectionList.OnlineServerEntry.class)
 public class MixinOnlineServerEntry {
 
-    @Inject(at = @At("HEAD"), method = "extractIcon", cancellable = true)
-    private void head_extractIcon_FancyMenu(GuiGraphicsExtractor graphics, int rowLeft, int rowTop, Identifier location, CallbackInfo info) {
+    @Inject(at = @At("HEAD"), method = "drawIcon", cancellable = true)
+    private void onDrawIconFancyMenu(GuiGraphicsExtractor $$0, int $$1, int $$2, Identifier $$3, CallbackInfo info) {
         if (!FancyMenu.getOptions().showMultiplayerScreenServerIcons.getValue()) {
             info.cancel();
         }
     }
 
-    @WrapWithCondition(method = "extractContent", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fill(IIIII)V"))
-    private boolean wrap_fill_in_extractContent_FancyMenu(GuiGraphicsExtractor instance, int x0, int y0, int x1, int y1, int col) {
-        return FancyMenu.getOptions().showMultiplayerScreenServerIcons.getValue();
+    @WrapWithCondition(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fill(IIIII)V"), method = "renderContent")
+    private boolean onFillInRenderFancyMenu(GuiGraphicsExtractor instance, int $$0, int $$1, int $$2, int $$3, int $$4) {
+        if (FancyMenu.getOptions().showMultiplayerScreenServerIcons.getValue()) {
+            instance.fill($$0, $$1, $$2, $$3, $$4);
+        }
+        return false;
     }
 
 }

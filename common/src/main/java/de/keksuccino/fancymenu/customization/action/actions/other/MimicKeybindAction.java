@@ -7,22 +7,25 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinKeyboardHandler;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.MathUtils;
-import de.keksuccino.fancymenu.util.VanillaEvents;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.PiPCellStringBuilderWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -110,7 +113,10 @@ public class MimicKeybindAction extends Action {
     }
 
     private boolean pressKeyboardKey(@NotNull KeyMapping keyMapping, @NotNull InputConstants.Key key, boolean keepPressed, long holdDurationMs) {
-        long window = Minecraft.getInstance().getWindow().handle();
+        Minecraft minecraft = Minecraft.getInstance();
+        KeyboardHandler handler = minecraft.keyboardHandler;
+
+        long window = WindowHandler.getWindowHandle();
         int keyCode;
         int scanCode;
         if (key.getType() == InputConstants.Type.KEYSYM) {
@@ -120,8 +126,10 @@ public class MimicKeybindAction extends Action {
             keyCode = InputConstants.UNKNOWN.getValue();
             scanCode = key.getValue();
         }
+
         KeyMapping.set(key, true);
-        this.onKey(window, keyCode, scanCode, 1, 0);
+        ((IMixinKeyboardHandler)handler).invoke_keyPress_FancyMenu(window, 1, new KeyEvent(keyCode, scanCode, 0));
+
         if (keepPressed) {
             startHoldThread(keyMapping, key, keyCode, scanCode, true, holdDurationMs);
         } else {
@@ -131,13 +139,10 @@ public class MimicKeybindAction extends Action {
     }
 
     private void releaseKeyboardKey(@NotNull InputConstants.Key key, int keyCode, int scanCode) {
-        this.onKey(Minecraft.getInstance().getWindow().handle(), keyCode, scanCode, 0, 0);
+        Minecraft minecraft = Minecraft.getInstance();
+        KeyboardHandler handler = minecraft.keyboardHandler;
+        ((IMixinKeyboardHandler)handler).invoke_keyPress_FancyMenu(WindowHandler.getWindowHandle(), 0, new KeyEvent(keyCode, scanCode, 0));
         KeyMapping.set(key, false);
-    }
-
-    private void onKey(long window, int keyCode, int scanCode, int action, int modifiers) {
-        KeyboardHandler handler = Minecraft.getInstance().keyboardHandler;
-        ((IMixinKeyboardHandler)handler).invoke_keyPress_FancyMenu(window, action, new KeyEvent(keyCode, scanCode, modifiers));
     }
 
     private void startHoldThread(@NotNull KeyMapping keyMapping, @NotNull InputConstants.Key key, int keyCode, int scanCode, boolean keyboard, long durationMs) {
@@ -183,19 +188,18 @@ public class MimicKeybindAction extends Action {
         long now = System.currentTimeMillis();
         if ((lastErrorNotification + 60000) < now) {
             lastErrorNotification = now;
-            Screen current = Minecraft.getInstance().screen;
-            Minecraft.getInstance().setScreen(NotificationScreen.error(callback -> Minecraft.getInstance().setScreen(current), LocalizationUtils.splitLocalizedLines("fancymenu.actions.mimic_keybind.error")));
+            Dialogs.openMessage(Component.translatable("fancymenu.actions.mimic_keybind.error"), MessageDialogStyle.ERROR);
         }
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.mimic_keybind");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.mimic_keybind.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.mimic_keybind.desc");
     }
 
     @Override
@@ -204,19 +208,48 @@ public class MimicKeybindAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "key.jump|||false|||1000";
     }
 
     @Override
-    public void editValue(@NotNull Screen parentScreen, @NotNull ActionInstance instance) {
-        MimicKeybindActionValueScreen screen = new MimicKeybindActionValueScreen(Objects.requireNonNullElse(instance.value, this.getValueExample()), value -> {
+    public void editValue(@NotNull ActionInstance instance, @NotNull Action.ActionEditingCompletedFeedback onEditingCompleted, @NotNull Action.ActionEditingCanceledFeedback onEditingCanceled) {
+        String oldValue = instance.value;
+        boolean[] handled = {false};
+        final PiPWindow[] windowHolder = new PiPWindow[1];
+        MimicKeybindActionValueScreen screen = new MimicKeybindActionValueScreen(Objects.requireNonNullElse(instance.value, this.getValuePreset()), value -> {
+            if (handled[0]) {
+                return;
+            }
+            handled[0] = true;
             if (value != null) {
                 instance.value = value;
+                onEditingCompleted.accept(instance, oldValue, value);
+            } else {
+                onEditingCanceled.accept(instance);
             }
-            Minecraft.getInstance().setScreen(parentScreen);
+            PiPWindow window = windowHolder[0];
+            if (window != null) {
+                window.close();
+            }
         });
-        Minecraft.getInstance().setScreen(screen);
+        PiPWindow window = new PiPWindow(screen.getTitle())
+                .setScreen(screen)
+                .setForceFancyMenuUiScale(true)
+                .setAlwaysOnTop(true)
+                .setBlockMinecraftScreenInputs(true)
+                .setForceFocus(true)
+                .setMinSize(TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT)
+                .setSize(TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
+        windowHolder[0] = window;
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
+        window.addCloseCallback(() -> {
+            if (handled[0]) {
+                return;
+            }
+            handled[0] = true;
+            onEditingCanceled.accept(instance);
+        });
     }
 
     @NotNull
@@ -232,7 +265,7 @@ public class MimicKeybindAction extends Action {
         return names;
     }
 
-    public static class MimicKeybindActionValueScreen extends StringBuilderScreen {
+    public static class MimicKeybindActionValueScreen extends PiPCellStringBuilderWindowBody {
 
         protected MimicKeybindConfig config;
         protected EditBoxSuggestions suggestions;
@@ -274,7 +307,7 @@ public class MimicKeybindAction extends Action {
             @SuppressWarnings("unchecked")
             CycleButton<CommonCycles.CycleEnabledDisabled> keepPressedButton =
                     (CycleButton<CommonCycles.CycleEnabledDisabled>) keepPressedCell.widget;
-            keepPressedButton.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.mimic_keybind.edit.keep_pressed.desc")));
+            keepPressedButton.setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.mimic_keybind.edit.keep_pressed.desc")));
 
             this.addCellGroupEndSpacerCell();
 
@@ -329,17 +362,20 @@ public class MimicKeybindAction extends Action {
         }
 
         @Override
-        public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-            super.extractRenderState(graphics, mouseX, mouseY, partialTick);
+        public void renderLateBody(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
             this.suggestions.extractRenderState(graphics, mouseX, mouseY);
         }
 
         @Override
-        public boolean keyPressed(KeyEvent event) {
-            if (this.suggestions.keyPressed(event)) {
+        public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+            return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        }
+        
+        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            if (this.suggestions.keyPressed(keyCode, scanCode, modifiers)) {
                 return true;
             }
-            return super.keyPressed(event);
+            return super.keyPressed(keyCode, scanCode, modifiers);
         }
 
         @Override
@@ -351,11 +387,15 @@ public class MimicKeybindAction extends Action {
         }
 
         @Override
-        public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
-            if (this.suggestions.mouseClicked(event)) {
+        public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean isDoubleClick) {
+            return this.mouseClicked(event.x(), event.y(), event.button());
+        }
+        
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (this.suggestions.mouseClicked(mouseX, mouseY, button)) {
                 return true;
             }
-            return super.mouseClicked(event, isDoubleClick);
+            return super.mouseClicked(mouseX, mouseY, button);
         }
 
         @Override
@@ -366,6 +406,10 @@ public class MimicKeybindAction extends Action {
         @Override
         public @NotNull String buildString() {
             return this.config.serialize();
+        }
+
+        @Override
+        protected void autoScaleScreen(AbstractWidget topRightSideWidget) {
         }
 
     }
@@ -412,6 +456,3 @@ public class MimicKeybindAction extends Action {
     }
 
 }
-
-
-

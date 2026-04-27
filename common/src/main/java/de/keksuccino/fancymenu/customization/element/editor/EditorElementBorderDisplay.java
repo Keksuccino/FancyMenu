@@ -1,12 +1,8 @@
 package de.keksuccino.fancymenu.customization.element.editor;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -18,9 +14,10 @@ public class EditorElementBorderDisplay implements Renderable {
 
     private static final int LINE_BACKGROUND_HORIZONTAL_PADDING_FANCYMENU = 2;
     private static final int LINE_BACKGROUND_VERTICAL_PADDING_FANCYMENU = 1;
+    private static final int DISPLAY_OUTSIDE_PADDING_FANCYMENU = 2;
+    private static final int DISPLAY_INSIDE_PADDING_FANCYMENU = 2;
 
     public final AbstractEditorElement editorElement;
-    public Font font = Minecraft.getInstance().font;
     public final DisplayPosition defaultPosition;
     public final List<DisplayPosition> alternativePositions = new ArrayList<>();
     public DisplayPosition currentPosition;
@@ -28,6 +25,7 @@ public class EditorElementBorderDisplay implements Renderable {
     protected List<Component> renderLines = new ArrayList<>();
     protected int width = 0;
     protected int height = 0;
+    protected boolean renderInsideFallback = false;
 
     public EditorElementBorderDisplay(@NotNull AbstractEditorElement editorElement, @NotNull DisplayPosition defaultPosition, @Nullable DisplayPosition... alternativePositions) {
         this.defaultPosition = defaultPosition;
@@ -49,58 +47,66 @@ public class EditorElementBorderDisplay implements Renderable {
 
     protected void renderDisplayLines(GuiGraphicsExtractor graphics) {
 
-        int x = this.editorElement.getX();
-        int y = this.editorElement.getY() - this.getHeight() - 2;
+        int eleX = this.editorElement.getX();
+        int eleY = this.editorElement.getY();
+        int eleW = this.editorElement.getWidth();
+        int eleH = this.editorElement.getHeight();
+        int padding = this.renderInsideFallback ? DISPLAY_INSIDE_PADDING_FANCYMENU : DISPLAY_OUTSIDE_PADDING_FANCYMENU;
+        int x = eleX + (this.renderInsideFallback ? padding : 0);
+        int y = this.renderInsideFallback ? eleY + padding : eleY - this.getHeight() - padding;
         boolean leftAligned = true;
         if (this.currentPosition == DisplayPosition.TOP_RIGHT) {
-            x = this.editorElement.getX() + this.editorElement.getWidth() - this.getWidth();
+            x = eleX + eleW - this.getWidth() - (this.renderInsideFallback ? padding : 0);
             leftAligned = false;
         }
         if (this.currentPosition == DisplayPosition.RIGHT_TOP) {
-            x = this.editorElement.getX() + this.editorElement.getWidth() + 2;
-            y = this.editorElement.getY();
+            x = this.renderInsideFallback ? eleX + eleW - this.getWidth() - padding : eleX + eleW + padding;
+            y = this.renderInsideFallback ? eleY + padding : eleY;
         }
         if (this.currentPosition == DisplayPosition.RIGHT_BOTTOM) {
-            x = this.editorElement.getX() + this.editorElement.getWidth() + 2;
-            y = this.editorElement.getY() + this.editorElement.getHeight() - this.getHeight();
+            x = this.renderInsideFallback ? eleX + eleW - this.getWidth() - padding : eleX + eleW + padding;
+            y = this.renderInsideFallback ? eleY + eleH - this.getHeight() - padding : eleY + eleH - this.getHeight();
         }
         if (this.currentPosition == DisplayPosition.BOTTOM_RIGHT) {
-            x = this.editorElement.getX() + this.editorElement.getWidth() - this.getWidth();
-            y = this.editorElement.getY() + this.editorElement.getHeight() + 2;
+            x = eleX + eleW - this.getWidth() - (this.renderInsideFallback ? padding : 0);
+            y = this.renderInsideFallback ? eleY + eleH - this.getHeight() - padding : eleY + eleH + padding;
             leftAligned = false;
         }
         if (this.currentPosition == DisplayPosition.BOTTOM_LEFT) {
-            y = this.editorElement.getY() + this.editorElement.getHeight() + 2;
+            y = this.renderInsideFallback ? eleY + eleH - this.getHeight() - padding : eleY + eleH + padding;
         }
         if (this.currentPosition == DisplayPosition.LEFT_BOTTOM) {
-            x = this.editorElement.getX() - this.getWidth() - 2;
-            y = this.editorElement.getY() + this.editorElement.getHeight() - this.getHeight();
+            x = this.renderInsideFallback ? eleX + padding : eleX - this.getWidth() - padding;
+            y = this.renderInsideFallback ? eleY + eleH - this.getHeight() - padding : eleY + eleH - this.getHeight();
             leftAligned = false;
         }
         if (this.currentPosition == DisplayPosition.LEFT_TOP) {
-            x = this.editorElement.getX() - this.getWidth() - 2;
-            y = this.editorElement.getY();
+            x = this.renderInsideFallback ? eleX + padding : eleX - this.getWidth() - padding;
+            y = this.renderInsideFallback ? eleY + padding : eleY;
             leftAligned = false;
         }
 
         float scale = this.getScale();
         int lineY = y;
-        int backgroundColor = UIBase.getUIColorTheme().layout_editor_element_border_display_line_background_color.getColorInt();
-        int textColor = UIBase.getUIColorTheme().layout_editor_element_border_display_line_text_color.getColorInt();
+        int backgroundColor = UIBase.getUITheme().layout_editor_element_border_display_line_background_color.getColorInt();
+        int textColor = UIBase.getUITheme().layout_editor_element_border_display_line_text_color.getColorInt();
+        float lineHeight = UIBase.getUITextHeightSmall();
+        float lineSpacing = 2.0F;
         graphics.pose().pushMatrix();
         graphics.pose().scale(scale, scale);
         for (Component c : this.renderLines) {
-            int lineWidth = this.font.width(c);
-            int lineX = leftAligned ? x : x + (this.getWidth() - (int)((float)lineWidth * scale));
+            float lineWidth = UIBase.getUITextWidthSmall(c);
+            int scaledLineWidth = (int)Math.ceil(lineWidth * scale);
+            int lineX = leftAligned ? x : x + (this.getWidth() - scaledLineWidth);
             int scaledLineX = (int)(lineX / scale);
             int scaledLineY = (int)(lineY / scale);
             int backgroundLeft = scaledLineX - LINE_BACKGROUND_HORIZONTAL_PADDING_FANCYMENU;
             int backgroundTop = scaledLineY - LINE_BACKGROUND_VERTICAL_PADDING_FANCYMENU;
-            int backgroundRight = scaledLineX + lineWidth + LINE_BACKGROUND_HORIZONTAL_PADDING_FANCYMENU;
-            int backgroundBottom = scaledLineY + this.font.lineHeight + LINE_BACKGROUND_VERTICAL_PADDING_FANCYMENU;
+            int backgroundRight = scaledLineX + (int)Math.ceil(lineWidth) + LINE_BACKGROUND_HORIZONTAL_PADDING_FANCYMENU;
+            int backgroundBottom = scaledLineY + (int)Math.ceil(lineHeight) + LINE_BACKGROUND_VERTICAL_PADDING_FANCYMENU;
             graphics.fill(backgroundLeft, backgroundTop, backgroundRight, backgroundBottom, backgroundColor);
-            graphics.text(this.font, c, scaledLineX, scaledLineY, textColor, false);
-            lineY += (this.font.lineHeight + 2) * scale;
+            UIBase.renderText(graphics, c, scaledLineX, scaledLineY, textColor, UIBase.getUITextSizeSmall());
+            lineY += (lineHeight + lineSpacing) * scale;
         }
         graphics.pose().popMatrix();
 
@@ -123,26 +129,33 @@ public class EditorElementBorderDisplay implements Renderable {
     }
 
     protected void updateDisplay() {
-        this.width = 0;
-        this.height = 0;
+        float maxWidth = 0.0F;
+        float totalHeight = 0.0F;
         this.renderLines.clear();
+        float lineHeight = UIBase.getUITextHeightSmall();
         for (Supplier<Component> s : this.lines.values()) {
             Component c = s.get();
             if (c != null) {
-                int w = this.font.width(c);
-                if (w > this.width) {
-                    this.width = w;
+                float w = UIBase.getUITextWidthSmall(c);
+                if (w > maxWidth) {
+                    maxWidth = w;
                 }
-                this.height += this.font.lineHeight + 2;
+                totalHeight += lineHeight + 2.0F;
                 this.renderLines.add(c);
             }
         }
-        this.height = (this.height > 0) ? this.height - 2 : 0;
-        this.currentPosition = this.findPosition();
+        if (totalHeight > 0.0F) {
+            totalHeight -= 2.0F;
+        }
+        this.width = (int)Math.ceil(maxWidth);
+        this.height = (int)Math.ceil(totalHeight);
+        List<DisplayPosition> possiblePositions = this.getPossiblePositions();
+        this.renderInsideFallback = possiblePositions.isEmpty();
+        this.currentPosition = this.findPosition(possiblePositions);
     }
 
     protected float getScale() {
-        return UIBase.getFixedUIScale();
+        return UIBase.getFixedUIRenderScale();
     }
 
     public int getWidth() {
@@ -155,9 +168,13 @@ public class EditorElementBorderDisplay implements Renderable {
 
     @NotNull
     protected DisplayPosition findPosition() {
+        return this.findPosition(this.getPossiblePositions());
+    }
+
+    @NotNull
+    protected DisplayPosition findPosition(@NotNull List<DisplayPosition> possiblePositions) {
         List<DisplayPosition> allowedPositions = new ArrayList<>(this.alternativePositions);
         allowedPositions.add(0, this.defaultPosition);
-        List<DisplayPosition> possiblePositions = this.getPossiblePositions();
         for (DisplayPosition p : allowedPositions) {
             if (possiblePositions.contains(p)) {
                 return p;
@@ -205,4 +222,3 @@ public class EditorElementBorderDisplay implements Renderable {
     }
 
 }
-

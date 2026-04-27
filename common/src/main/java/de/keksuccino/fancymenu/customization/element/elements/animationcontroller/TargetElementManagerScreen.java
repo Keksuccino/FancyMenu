@@ -2,13 +2,14 @@ package de.keksuccino.fancymenu.customization.element.elements.animationcontroll
 
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
@@ -28,40 +29,45 @@ public class TargetElementManagerScreen extends CellScreen {
 
     public TargetElementManagerScreen(@NotNull AnimationControllerEditorElement editorElement, @NotNull Consumer<List<AnimationControllerElement.TargetElement>> callback) {
         super(Component.translatable("fancymenu.elements.animation_controller.manage_targets"));
-        this.element = editorElement.getElement();
+        this.element = editorElement.element;
         this.parentLayoutEditor = editorElement.editor;
         this.callback = callback;
         this.targets = new ArrayList<>(this.element.targetElements);
+        this.setSearchBarEnabled(true);
     }
 
     @Override
     protected void initCells() {
 
-        this.addStartEndSpacerCell();
+        this.addCellGroupEndSpacerCell().setIgnoreSearch();
 
         // Header
         this.addLabelCell(Component.translatable("fancymenu.elements.animation_controller.manage_targets.info")
-                .setStyle(Style.EMPTY.withItalic(true)));
+                .setStyle(Style.EMPTY.withItalic(true)))
+                .setIgnoreSearch();
 
-        this.addCellGroupEndSpacerCell();
-        this.addCellGroupEndSpacerCell();
+        this.addCellGroupEndSpacerCell().setIgnoreSearch();
+        this.addCellGroupEndSpacerCell().setIgnoreSearch();
 
         // List current targets
         if (this.targets.isEmpty()) {
             this.addLabelCell(Component.translatable("fancymenu.elements.animation_controller.manage_targets.no_targets")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())));
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt())));
         } else {
             for (AnimationControllerElement.TargetElement target : this.targets) {
-                AbstractEditorElement e = this.parentLayoutEditor.getElementByInstanceIdentifier(target.targetElementId);
+                AbstractEditorElement<?,?> e = this.parentLayoutEditor.getElementByInstanceIdentifier(target.targetElementId);
                 MutableComponent label = (e != null) ? e.element.getDisplayName().copy() : Component.literal("---");
-                label = label.setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
-                label = label.append(Component.literal(" [" + target.targetElementId + "]").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().generic_text_base_color.getColorInt())));
+                label = label.setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
+                label = label.append(Component.literal(" [" + target.targetElementId + "]").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_generic_text_color.getColorInt())));
+                label = label.append(Component.literal(" ").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_generic_text_color.getColorInt())));
+                label = label.append(Component.translatable("fancymenu.elements.animation_controller.manage_targets.offset.label", target.timingOffsetMs)
+                        .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_color.getColorInt())));
                 this.addCell(new TargetEntryCell(target, label));
-                this.addCellGroupEndSpacerCell();
             }
         }
 
-        this.addStartEndSpacerCell();
+        this.addCellGroupEndSpacerCell().setIgnoreSearch();
+
     }
 
     @Override
@@ -77,9 +83,7 @@ public class TargetElementManagerScreen extends CellScreen {
                             String elementId = selectedElement.element.getInstanceIdentifier();
                             // Check if already in targets
                             if (this.targets.stream().anyMatch(t -> t.targetElementId.equals(elementId))) {
-                                Minecraft.getInstance().setScreen(ConfirmationScreen.warning(result -> {
-                                    Minecraft.getInstance().setScreen(this);
-                                }, LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.manage_targets.already_exists")));
+                                Dialogs.openMessage(Component.translatable("fancymenu.elements.animation_controller.manage_targets.already_exists"), MessageDialogStyle.WARNING);
                             } else {
                                 this.targets.add(new AnimationControllerElement.TargetElement(elementId));
                                 Minecraft.getInstance().setScreen(this);
@@ -93,8 +97,39 @@ public class TargetElementManagerScreen extends CellScreen {
         });
         this.addRightSideDefaultSpacer();
 
+        this.addRightSideButton(20, Component.translatable("fancymenu.elements.animation_controller.manage_targets.offset.edit"), button -> {
+            AnimationControllerElement.TargetElement target = this.getSelectedTarget();
+            if (target == null) return;
+            TextInputWindowBody inputScreen = new TextInputWindowBody(CharacterFilter.buildIntegerFilter(), result -> {
+                if (result != null) {
+                    String trimmed = result.trim();
+                    int offsetMs = 0;
+                    if (!trimmed.isEmpty()) {
+                        try {
+                            offsetMs = Integer.parseInt(trimmed);
+                        } catch (NumberFormatException ignored) {}
+                    }
+                    target.timingOffsetMs = offsetMs;
+                }
+                this.rebuild();
+            });
+            Dialogs.openGeneric(inputScreen,
+                    Component.translatable("fancymenu.elements.animation_controller.manage_targets.offset.input"),
+                    null, TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT).getSecond().setIcon(MaterialIcons.TEXT_FIELDS);
+            inputScreen.setText("" + target.timingOffsetMs);
+        }).setIsActiveSupplier(consumes -> (this.getSelectedTarget() != null));
+        this.addRightSideDefaultSpacer();
+
+        this.addRightSideButton(20, Component.translatable("fancymenu.elements.animation_controller.manage_targets.remove"), button -> {
+            AnimationControllerElement.TargetElement target = this.getSelectedTarget();
+            if (target == null) return;
+            this.targets.remove(target);
+            this.rebuild();
+        }).setIsActiveSupplier(consumes -> (this.getSelectedTarget() != null));
+        this.addRightSideDefaultSpacer();
+
         this.addRightSideButton(20, Component.translatable("fancymenu.elements.animation_controller.manage_targets.remove_by_id"), button -> {
-            TextInputScreen inputScreen = TextInputScreen.build(Component.translatable("fancymenu.elements.animation_controller.manage_targets.remove_by_id.input"), null, result -> {
+            TextInputWindowBody inputScreen = new TextInputWindowBody(null, result -> {
                 boolean removed = false;
                 if (result != null) {
                     String trimmed = result.trim();
@@ -102,12 +137,13 @@ public class TargetElementManagerScreen extends CellScreen {
                         removed = TargetElementManagerScreen.this.targets.removeIf(target -> target.targetElementId.equals(trimmed));
                     }
                 }
-                Minecraft.getInstance().setScreen(this);
                 if (removed) {
                     TargetElementManagerScreen.this.rebuild();
                 }
             });
-            Minecraft.getInstance().setScreen(inputScreen);
+            Dialogs.openGeneric(inputScreen,
+                    Component.translatable("fancymenu.elements.animation_controller.manage_targets.remove_by_id.input"),
+                    null, TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT).getSecond().setIcon(MaterialIcons.TEXT_FIELDS);
         });
         this.addRightSideDefaultSpacer();
     }
@@ -116,6 +152,21 @@ public class TargetElementManagerScreen extends CellScreen {
         List<String> ids = new ArrayList<>();
         this.targets.forEach(targetElement -> ids.add(targetElement.targetElementId));
         return ids;
+    }
+
+    protected AnimationControllerElement.TargetElement getSelectedTarget() {
+        RenderCell cell = this.getSelectedCell();
+        if (cell != null) {
+            String id = cell.getMemoryValue("target_id");
+            if (id != null) {
+                for (AnimationControllerElement.TargetElement target : this.targets) {
+                    if (id.equals(target.targetElementId)) {
+                        return target;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     @Override
@@ -132,37 +183,27 @@ public class TargetElementManagerScreen extends CellScreen {
 
         protected final AnimationControllerElement.TargetElement targetElement;
         protected final Component label;
-        protected final ExtendedButton removeButton;
 
         protected TargetEntryCell(@NotNull AnimationControllerElement.TargetElement targetElement, @NotNull Component label) {
             this.targetElement = targetElement;
             this.label = label;
-            this.removeButton = new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.elements.animation_controller.manage_targets.remove"), button -> {
-                TargetElementManagerScreen.this.targets.remove(this.targetElement);
-                TargetElementManagerScreen.this.rebuild();
-            });
-            UIBase.applyDefaultWidgetSkinTo(this.removeButton);
-            this.children().add(this.removeButton);
-            this.setSearchStringSupplier(() -> this.label.getString());
+            this.setSearchStringSupplier(this.label::getString);
+            this.putMemoryValue("target_id", targetElement.targetElementId);
+            this.setSelectable(true);
         }
 
         @Override
         public void renderCell(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
-            int buttonWidth = Minecraft.getInstance().font.width(this.removeButton.getMessage()) + 10;
-            if (buttonWidth < 80) buttonWidth = 80;
-            this.removeButton.setWidth(buttonWidth);
-            this.removeButton.setHeight(20);
-            this.removeButton.setX(this.getX() + this.getWidth() - this.removeButton.getWidth());
-            this.removeButton.setY(this.getY() + (this.getHeight() - this.removeButton.getHeight()) / 2);
-
-            int textY = this.getY() + (this.getHeight() - Minecraft.getInstance().font.lineHeight) / 2;
-            UIBase.drawElementLabel(graphics, Minecraft.getInstance().font, this.label, this.getX(), textY);
+            RenderingUtils.resetShaderColor(graphics);
+            int textY = (int) (this.getY() + (this.getHeight() - UIBase.getUITextHeightNormal()) / 2);
+            UIBase.renderText(graphics, this.label, this.getX(), textY);
+            RenderingUtils.resetShaderColor(graphics);
         }
 
         @Override
         protected void updateSize(@NotNull CellScrollEntry scrollEntry) {
             super.updateSize(scrollEntry);
-            this.setHeight(Math.max(Minecraft.getInstance().font.lineHeight + 4, 20));
+            this.setHeight((int) Math.max(UIBase.getUITextHeightNormal() + 4, 20));
         }
     }
 

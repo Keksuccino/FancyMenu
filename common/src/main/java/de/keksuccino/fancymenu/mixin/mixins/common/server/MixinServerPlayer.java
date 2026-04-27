@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.server;
 
 import de.keksuccino.fancymenu.networking.PacketHandler;
-import de.keksuccino.fancymenu.networking.packets.structures.StructureEventPacket;
+import de.keksuccino.fancymenu.networking.packets.structure.clientstructures.StructureEventPacket;
 import de.keksuccino.fancymenu.util.level.StructureUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;

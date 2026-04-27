@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
-import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -22,12 +21,14 @@ public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, 
 
     @Override
     public @NotNull InputFieldElement buildDefaultInstance() {
-        InputFieldElement e = new InputFieldElement(this);
-        e.baseWidth = 100;
-        e.baseHeight = 20;
-        e.editBox = new ExtendedEditBox(Minecraft.getInstance().font, e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteWidth(), e.getAbsoluteHeight(), Component.empty());
-        e.editBox.setCharacterFilter(e.type.filter);
-        return e;
+        InputFieldElement element = new InputFieldElement(this);
+        element.shouldBeAffectedByDecorationOverlays.setDefault(true).set(true);
+        element.baseWidth = 100;
+        element.baseHeight = 20;
+        element.editBox = new ExtendedEditBox(Minecraft.getInstance().font, element.getAbsoluteX(), element.getAbsoluteY(), element.getAbsoluteWidth(), element.getAbsoluteHeight(), Component.empty());
+        element.editBox.setCharacterFilter(element.type.filter);
+        element.editBox.setMaxLength(Math.max(1, element.maxTextLength.getInteger()));
+        return element;
     }
 
     @Override
@@ -45,19 +46,9 @@ public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, 
             }
         }
 
-        String maxLengthString = serialized.getValue("max_text_length");
-        if (maxLengthString != null) {
-            if (MathUtils.isInteger(maxLengthString)) {
-                element.maxTextLength = Integer.parseInt(maxLengthString);
-            }
-        }
-        if (element.maxTextLength <= 0) {
-            element.maxTextLength = 1;
-        }
-
         element.editBox = new ExtendedEditBox(Minecraft.getInstance().font, element.getAbsoluteX(), element.getAbsoluteY(), element.getAbsoluteWidth(), element.getAbsoluteHeight(), Component.empty());
         element.editBox.setCharacterFilter(element.type.filter);
-        element.editBox.setMaxLength(element.maxTextLength);
+        element.editBox.setMaxLength(Math.max(1, element.maxTextLength.getInteger()));
         if (element.linkedVariable != null) {
             if (VariableHandler.variableExists(element.linkedVariable)) {
                 String var = Objects.requireNonNull(VariableHandler.getVariable(element.linkedVariable)).getValue();
@@ -78,7 +69,6 @@ public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, 
             serializeTo.putProperty("linked_variable", element.linkedVariable);
         }
         serializeTo.putProperty("input_field_type", element.type.getName());
-        serializeTo.putProperty("max_text_length", "" + element.maxTextLength);
         serializeTo.putProperty("navigatable", "" + element.navigatable);
 
         return serializeTo;

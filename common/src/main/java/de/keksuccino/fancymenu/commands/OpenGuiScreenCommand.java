@@ -22,10 +22,10 @@ public class OpenGuiScreenCommand {
                     return openGui(stack.getSource(), StringArgumentType.getString(stack, "screen_identifier"), null);
                 })
                 .suggests((context, provider) -> {
-                    return CommandUtils.buildStringSuggestionsList(context, "<screen_identifier>");
+                    return CommandUtils.getStringSuggestions(provider, "<screen_identifier>");
                 })
                 .then(Commands.argument("target_players", EntityArgument.players())
-                        .requires(stack -> stack.permissions().hasPermission(Permissions.COMMANDS_ADMIN))
+                        .requires(stack -> stack.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER))
                         .executes(stack -> {
                             return openGui(stack.getSource(), StringArgumentType.getString(stack, "screen_identifier"), EntityArgument.getPlayers(stack, "target_players"));
                         }))

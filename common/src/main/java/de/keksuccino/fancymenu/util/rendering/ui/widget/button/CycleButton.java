@@ -32,7 +32,11 @@ public class CycleButton<T> extends ExtendedButton {
     }
 
     public CycleButton<T> setSelectedValue(@NotNull T value) {
-        this.cycle.setCurrentValue(Objects.requireNonNull(value));
+        return this.setSelectedValue(value, true);
+    }
+
+    public CycleButton<T> setSelectedValue(@NotNull T value, boolean notifyListeners) {
+        this.cycle.setCurrentValue(Objects.requireNonNull(value), notifyListeners);
         return this;
     }
 

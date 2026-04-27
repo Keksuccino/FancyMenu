@@ -1,12 +1,17 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
+import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidgetWithInactiveMessage;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.IExtendedWidget;
@@ -18,20 +23,15 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.WidgetSprites;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 
 @SuppressWarnings("unused")
 public class ExtendedButton extends Button implements IExtendedWidget, UniqueWidget, NavigatableWidget, FancyMenuWidget {
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
     public static final WidgetSprites SPRITES = new WidgetSprites(
             Identifier.parse("widget/button"),
@@ -44,10 +44,10 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     protected DrawableColor labelBaseColorNormal = DrawableColor.of(new Color(0xFFFFFF));
     protected DrawableColor labelBaseColorInactive = DrawableColor.of(new Color(0xA0A0A0));
     protected boolean labelShadow = true;
+    protected boolean renderLabelWithUiBase = false;
     @NotNull
     protected ConsumingSupplier<ExtendedButton, Component> labelSupplier = consumes -> Component.empty();
-    protected ConsumingSupplier<ExtendedButton, Tooltip> tooltipSupplier = null;
-    protected boolean forceDefaultTooltipStyle = false;
+    protected ConsumingSupplier<ExtendedButton, UITooltip> uiTooltipSupplier = null;
     @Nullable
     protected DrawableColor backgroundColorNormal;
     @Nullable
@@ -61,9 +61,17 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     @Nullable
     protected DrawableColor borderColorInactive;
     @Nullable
+    protected RenderableResource iconNormal;
+    @Nullable
+    protected RenderableResource iconHover;
+    @Nullable
+    protected RenderableResource iconInactive;
+    @Nullable
     protected ConsumingSupplier<ExtendedButton, Boolean> activeSupplier;
+    protected ConsumingSupplier<ExtendedButton, Boolean> visibilitySupplier;
     protected boolean focusable = true;
     protected boolean navigatable = true;
+    protected boolean roundedColorBackground = false;
     @Nullable
     protected String identifier;
 
@@ -90,82 +98,183 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     @Override
     protected void extractContents(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         this.updateIsActive();
+        this.updateVisibility();
         this.updateLabel();
-        Tooltip tooltip = this.getTooltipFancyMenu();
+        UITooltip tooltip = this.getUITooltip();
         if ((tooltip != null) && this.isHovered() && this.visible) {
-            if (this.forceDefaultTooltipStyle) {
-                tooltip.setDefaultStyle();
-            }
-            TooltipHandler.INSTANCE.addTooltip(tooltip, () -> true, false, true);
+            TooltipHandler.INSTANCE.addRenderTickTooltip(tooltip, () -> true);
         }
-        this.renderBackground(graphics);
+
+        GlStateManager._disableDepthTest();
+        RenderingUtils.setDepthTestLocked(true);
+
+        this.extractBackground(graphics, partial);
+        this.renderIcon(graphics);
         this.renderLabelText(graphics);
+
+        RenderingUtils.setDepthTestLocked(false);
+
     }
 
-    protected void renderBackground(@NotNull GuiGraphicsExtractor graphics) {
+    protected void extractBackground(@NotNull GuiGraphicsExtractor graphics, float partial) {
         //Renders the custom widget background if one is present or the Vanilla background if no custom background is present
         if (this.getExtendedAsCustomizableWidget().renderCustomBackgroundFancyMenu(this, graphics, this.getX(), this.getY(), this.getWidth(), this.getHeight())) {
-            if (this.renderColorBackground(graphics)) {
-                graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SPRITES.get(this.active, this.isHoveredOrFocused()), this.getX(), this.getY(), this.getWidth(), this.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.alpha));
+            if (this.renderColorBackground(graphics, partial)) {
+                RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, this.alpha);
+                GlStateManager._enableBlend();
+                graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SPRITES.get(this.active, this.isHoveredOrFocused()), this.getX(), this.getY(), this.getWidth(), this.getHeight());
+                RenderingUtils.resetShaderColor(graphics);
             }
+            RenderingUtils.resetShaderColor(graphics);
         }
     }
 
     /**
      * Returns if the button should render its Vanilla background (true) or not (false).
      */
-    protected boolean renderColorBackground(@NotNull GuiGraphicsExtractor graphics) {
+    protected boolean renderColorBackground(@NotNull GuiGraphicsExtractor graphics, float partial) {
+        GlStateManager._enableBlend();
+        DrawableColor background = null;
+        DrawableColor border = null;
         if (this.active) {
             if (this.isHoveredOrFocused()) {
-                if (this.backgroundColorHover != null) {
-                    graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.backgroundColorHover.getColorInt());
-                    if (this.borderColorHover != null) {
-                        UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.borderColorHover.getColorInt(), true, true, true, true);
-                    }
-                    return false;
-                }
+                background = this.backgroundColorHover;
+                border = this.borderColorHover;
             } else {
-                if (this.backgroundColorNormal != null) {
-                    graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.backgroundColorNormal.getColorInt());
-                    if (this.borderColorNormal != null) {
-                        UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.borderColorNormal.getColorInt(), true, true, true, true);
-                    }
-                    return false;
-                }
+                background = this.backgroundColorNormal;
+                border = this.borderColorNormal;
             }
         } else {
-            if (this.backgroundColorInactive != null) {
-                graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.backgroundColorInactive.getColorInt());
-                if (this.borderColorInactive != null) {
-                    UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.borderColorInactive.getColorInt(), true, true, true, true);
-                }
-                return false;
-            }
+            background = this.backgroundColorInactive;
+            border = this.borderColorInactive;
+        }
+
+        if (background != null) {
+            renderColoredBackground(graphics, background.getColorInt(), border, partial);
+            return false;
         }
         return true;
+    }
+
+    private void renderColoredBackground(@NotNull GuiGraphicsExtractor graphics, int backgroundColor, @Nullable DrawableColor borderColor, float partial) {
+        int x = this.getX();
+        int y = this.getY();
+        int width = this.getWidth();
+        int height = this.getHeight();
+        float radius = this.roundedColorBackground ? UIBase.getWidgetCornerRoundingRadius() : 0.0F;
+        int borderThickness = borderColor != null ? 1 : 0;
+        int innerX = x + borderThickness;
+        int innerY = y + borderThickness;
+        int innerWidth = width - (borderThickness * 2);
+        int innerHeight = height - (borderThickness * 2);
+        if (radius > 0.0F) {
+            if (innerWidth > 0 && innerHeight > 0) {
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+                        graphics,
+                        innerX,
+                        innerY,
+                        innerWidth,
+                        innerHeight,
+                        radius,
+                        radius,
+                        radius,
+                        radius,
+                        backgroundColor,
+                        partial
+                );
+            }
+            if (borderColor != null) {
+                float borderRadius = radius > 0.0F ? radius + borderThickness : 0.0F;
+                SmoothRectangleRenderer.renderSmoothBorderRoundAllCornersScaled(
+                        graphics,
+                        x,
+                        y,
+                        width,
+                        height,
+                        borderThickness,
+                        borderRadius,
+                        borderRadius,
+                        borderRadius,
+                        borderRadius,
+                        borderColor.getColorInt(),
+                        partial
+                );
+            }
+        } else {
+            if (innerWidth > 0 && innerHeight > 0) {
+                graphics.fill(innerX, innerY, innerX + innerWidth, innerY + innerHeight, backgroundColor);
+            }
+            if (borderColor != null) {
+                UIBase.renderBorder(graphics, x, y, x + width, y + height, 1, borderColor.getColorInt(), true, true, true, true);
+            }
+        }
     }
 
     protected void renderLabelText(@NotNull GuiGraphicsExtractor graphics) {
         if (this.enableLabel) {
             int k = this.active ? this.labelBaseColorNormal.getColorIntWithAlpha(this.alpha) : this.labelBaseColorInactive.getColorIntWithAlpha(this.alpha);
-            this.renderScrollingLabel(this, graphics, mc.font, 2, this.labelShadow, k);
+            boolean labelShadowFinal = this.labelShadow && GlobalCustomizationHandler.isGlobalButtonLabelShadowEnabled();
+            if (this.renderLabelWithUiBase) {
+                this.renderScrollingLabelUiBase(this, graphics, 2, k);
+            } else {
+                this.renderScrollingLabel(this, graphics, mc.font, 2, labelShadowFinal, k);
+            }
         }
+    }
+
+    protected void renderIcon(@NotNull GuiGraphicsExtractor graphics) {
+        RenderableResource icon = this.getCurrentIcon();
+        if (icon == null) return;
+        Identifier iconLocation = icon.getResourceLocation();
+        if (iconLocation == null) return;
+        int iconWidth = icon.getWidth();
+        int iconHeight = icon.getHeight();
+        if (iconWidth <= 0 || iconHeight <= 0) return;
+        int renderHeight = this.getHeight();
+        if (renderHeight <= 0) return;
+        int renderWidth = Math.max(1, (int) Math.round((double) renderHeight * ((double) iconWidth / (double) iconHeight)));
+        if (renderWidth <= 0) return;
+        int renderX = this.getX() + ((this.getWidth() - renderWidth) / 2);
+        RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, this.alpha);
+        GlStateManager._enableBlend();
+        GlStateManager._enableDepthTest();
+        graphics.blit(RenderPipelines.GUI_TEXTURED, iconLocation, renderX, this.getY(), 0.0F, 0.0F, renderWidth, renderHeight, renderWidth, renderHeight);
+        RenderingUtils.resetShaderColor(graphics);
+    }
+
+    @Nullable
+    protected RenderableResource getCurrentIcon() {
+        if (this.active) {
+            if (this.isHoveredOrFocused()) {
+                return this.iconHover;
+            }
+            return this.iconNormal;
+        }
+        return this.iconInactive;
     }
 
     protected void updateLabel() {
         Component c = this.labelSupplier.get(this);
         if (c == null) c = Component.literal("");
-        ((IMixinAbstractWidget)this).setMessageFieldFancyMenu(c);
-        Component inactiveLabel = c;
-        Component customLabel = this.getExtendedAsCustomizableWidget().getCustomLabelFancyMenu();
-        if (customLabel != null) inactiveLabel = customLabel;
-        ((IMixinAbstractWidgetWithInactiveMessage)this).setInactiveMessageFancyMenu(inactiveLabel);
+        this.setVanillaLabelFields(c);
+    }
+
+    private void setVanillaLabelFields(@NotNull Component label) {
+        ((IMixinAbstractWidget)this).setMessageFieldFancyMenu(label);
+        ((IMixinAbstractWidgetWithInactiveMessage)this).setInactiveMessageFancyMenu(label);
     }
 
     protected void updateIsActive() {
         if (this.activeSupplier != null) {
             Boolean b = this.activeSupplier.get(this);
             if (b != null) this.active = b;
+        }
+    }
+
+    protected void updateVisibility() {
+        if (this.visibilitySupplier != null) {
+            Boolean b = this.visibilitySupplier.get(this);
+            if (b != null) this.visible = b;
         }
     }
 
@@ -197,38 +306,29 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     }
 
     @Nullable
-    public ConsumingSupplier<ExtendedButton, Tooltip> getTooltipSupplier() {
-        return this.tooltipSupplier;
+    public ConsumingSupplier<ExtendedButton, UITooltip> getUITooltipSupplier() {
+        return this.uiTooltipSupplier;
     }
 
-    public ExtendedButton setTooltipSupplier(@Nullable ConsumingSupplier<ExtendedButton, Tooltip> tooltipSupplier) {
-        this.tooltipSupplier = tooltipSupplier;
+    public ExtendedButton setUITooltipSupplier(@Nullable ConsumingSupplier<ExtendedButton, UITooltip> tooltipSupplier) {
+        this.uiTooltipSupplier = tooltipSupplier;
         return this;
     }
 
     @Nullable
-    public Tooltip getTooltipFancyMenu() {
-        if (this.tooltipSupplier != null) {
-            return this.tooltipSupplier.get(this);
+    public UITooltip getUITooltip() {
+        if (this.uiTooltipSupplier != null) {
+            return this.uiTooltipSupplier.get(this);
         }
         return null;
     }
 
-    public ExtendedButton setTooltip(@Nullable Tooltip tooltip) {
+    public ExtendedButton setUITooltip(@Nullable UITooltip tooltip) {
         if (tooltip == null) {
-            this.tooltipSupplier = null;
+            this.uiTooltipSupplier = null;
         } else {
-            this.tooltipSupplier = (button) -> tooltip;
+            this.uiTooltipSupplier = (button) -> tooltip;
         }
-        return this;
-    }
-
-    public boolean isForceDefaultTooltipStyle() {
-        return this.forceDefaultTooltipStyle;
-    }
-
-    public ExtendedButton setForceDefaultTooltipStyle(boolean forceDefaultTooltipStyle) {
-        this.forceDefaultTooltipStyle = forceDefaultTooltipStyle;
         return this;
     }
 
@@ -246,14 +346,12 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
 
     public ExtendedButton setLabel(@NotNull Component label) {
         this.labelSupplier = (btn) -> label;
-        this.updateLabel();
+        this.setVanillaLabelFields(label);
         return this;
     }
 
     public ExtendedButton setLabel(@NotNull String label) {
-        this.labelSupplier = (btn) -> Component.literal(label);
-        this.updateLabel();
-        return this;
+        return this.setLabel(Component.literal(label));
     }
 
     public ExtendedButton setLabelSupplier(@NotNull ConsumingSupplier<ExtendedButton, Component> labelSupplier) {
@@ -308,6 +406,15 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         return this;
     }
 
+    public boolean isLabelRenderedWithUiBase() {
+        return this.renderLabelWithUiBase;
+    }
+
+    public ExtendedButton setLabelRenderedWithUiBase(boolean renderLabelWithUiBase) {
+        this.renderLabelWithUiBase = renderLabelWithUiBase;
+        return this;
+    }
+
     public ExtendedButton setIsActiveSupplier(@Nullable ConsumingSupplier<ExtendedButton, Boolean> isActiveSupplier) {
         this.activeSupplier = isActiveSupplier;
         return this;
@@ -316,6 +423,16 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     @Nullable
     public ConsumingSupplier<ExtendedButton, Boolean> getIsActiveSupplier() {
         return this.activeSupplier;
+    }
+
+    public ExtendedButton setVisibilitySupplier(@Nullable ConsumingSupplier<ExtendedButton, Boolean> visibilitySupplier) {
+        this.visibilitySupplier = visibilitySupplier;
+        return this;
+    }
+
+    @Nullable
+    public ConsumingSupplier<ExtendedButton, Boolean> getVisibilitySupplier() {
+        return this.visibilitySupplier;
     }
 
     @Nullable
@@ -381,6 +498,15 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         this.borderColorInactive = borderColorInactive;
     }
 
+    public boolean isRoundedColorBackgroundEnabled() {
+        return this.roundedColorBackground;
+    }
+
+    public ExtendedButton setRoundedColorBackgroundEnabled(boolean roundedColorBackground) {
+        this.roundedColorBackground = roundedColorBackground;
+        return this;
+    }
+
     @Nullable
     public RenderableResource getBackgroundNormal() {
         return this.getExtendedAsCustomizableWidget().getCustomBackgroundNormalFancyMenu();
@@ -411,6 +537,36 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         return this;
     }
 
+    @Nullable
+    public RenderableResource getIconNormal() {
+        return this.iconNormal;
+    }
+
+    public ExtendedButton setIconNormal(@Nullable RenderableResource icon) {
+        this.iconNormal = icon;
+        return this;
+    }
+
+    @Nullable
+    public RenderableResource getIconHover() {
+        return this.iconHover;
+    }
+
+    public ExtendedButton setIconHover(@Nullable RenderableResource icon) {
+        this.iconHover = icon;
+        return this;
+    }
+
+    @Nullable
+    public RenderableResource getIconInactive() {
+        return this.iconInactive;
+    }
+
+    public ExtendedButton setIconInactive(@Nullable RenderableResource icon) {
+        this.iconInactive = icon;
+        return this;
+    }
+
     public OnPress getPressAction() {
         return this.onPress;
     }
@@ -426,7 +582,11 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
 
     //This is to make the button work in FocuslessEventHandlers
     @Override
-    public boolean mouseReleased(MouseButtonEvent event) {
+    public boolean mouseReleased(net.minecraft.client.input.MouseButtonEvent event) {
+        return this.mouseReleased(event.x(), event.y(), event.button());
+    }
+    
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
         return false;
     }
 

@@ -1,20 +1,24 @@
 package de.keksuccino.fancymenu.customization.element.elements.ticker;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
+import de.keksuccino.fancymenu.util.properties.Property;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.awt.*;
 
 public class TickerElement extends AbstractElement implements ExecutableElement {
 
     @NotNull
     public volatile GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
-    public volatile long tickDelayMs = 0;
+    public final Property.LongProperty tickDelayMs = putProperty(Property.longProperty("tick_delay", 0L, "fancymenu.elements.ticker.tick_delay"));
     public volatile boolean isAsync = false;
     public volatile TickMode tickMode = TickMode.NORMAL;
     protected volatile boolean ready = false;
@@ -41,7 +45,8 @@ public class TickerElement extends AbstractElement implements ExecutableElement 
                 TickerElementBuilder.cachedOncePerSessionItems.remove(this.getInstanceIdentifier());
             }
             long now = System.currentTimeMillis();
-            if ((this.tickDelayMs <= 0) || ((this.lastTick + this.tickDelayMs) <= now)) {
+            long delayMs = Math.max(0L, this.tickDelayMs.getLong());
+            if ((delayMs <= 0) || ((this.lastTick + delayMs) <= now)) {
                 this.lastTick = now;
                 this.ticked = true;
                 this.actionExecutor.execute();
@@ -59,11 +64,12 @@ public class TickerElement extends AbstractElement implements ExecutableElement 
             int y = this.getAbsoluteY();
             int w = this.getAbsoluteWidth();
             int h = this.getAbsoluteHeight();
-             
-            graphics.fill(x, y, x + w, y + h, this.inEditorColor.getColorInt());
+            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+            graphics.fill(x, y, x + w, y + h, this.inEditorColor.getDrawable().getColorInt());
             graphics.enableScissor(x, y, x + w, y + h);
             graphics.centeredText(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
             graphics.disableScissor();
+            RenderingUtils.resetShaderColor(graphics);
         } else if (!this.isAsync) {
             this.tickerElementTick();
         }
@@ -91,6 +97,8 @@ public class TickerElement extends AbstractElement implements ExecutableElement 
         if (!this.isAsync && (this.asyncThreadController != null)) {
             this.asyncThreadController.running = false;
         }
+
+        de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, 1.0F);
 
     }
 

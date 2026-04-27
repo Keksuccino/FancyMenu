@@ -19,10 +19,6 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.CommandSuggestions;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
-import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.multiplayer.ClientSuggestionProvider;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -140,7 +136,7 @@ public class EditBoxSuggestions extends CommandSuggestions {
         int editBoxCursorPos = this.input.getCursorPosition();
         if (treatAsCommand) {
             if (this.minecraft.player != null) {
-                CommandDispatcher<ClientSuggestionProvider> commands = this.minecraft.player.connection.getCommands();
+                var commands = this.minecraft.player.connection.getCommands();
                 if (this.getCurrentParse() == null) {
                     this.setCurrentParse(commands.parse(valueReader, this.minecraft.player.connection.getSuggestionsProvider()));
                 }
@@ -203,11 +199,15 @@ public class EditBoxSuggestions extends CommandSuggestions {
     }
 
     @Override
-    public boolean keyPressed(KeyEvent event) {
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+    }
+    
+    public boolean keyPressed(int keycode, int scancode, int modifiers) {
         if (!this.input.isFocused()) return false;
-        if ((this.getSuggestions() != null) && this.getSuggestions().keyPressed(event)) {
+        if ((this.getSuggestions() != null) && this.getSuggestions().keyPressed(new net.minecraft.client.input.KeyEvent(keycode, scancode, modifiers))) {
             return true;
-        } else if (event.key() == 258) {
+        } else if (keycode == 258) {
             this.showSuggestions(true);
             return true;
         } else {
@@ -216,9 +216,13 @@ public class EditBoxSuggestions extends CommandSuggestions {
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent event) {
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event) {
         if (!this.input.isFocused()) return false;
         return super.mouseClicked(event);
+    }
+    
+    public boolean mouseClicked(double $$0, double $$1, int $$2) {
+        return this.mouseClicked(new net.minecraft.client.input.MouseButtonEvent($$0, $$1, new net.minecraft.client.input.MouseButtonInfo($$2, 0)));
     }
 
     @Override

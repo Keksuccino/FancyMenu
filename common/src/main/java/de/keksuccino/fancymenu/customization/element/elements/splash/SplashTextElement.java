@@ -1,9 +1,13 @@
 package de.keksuccino.fancymenu.customization.element.elements.splash;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinSplashRenderer;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -12,7 +16,6 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.SplashRenderer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,15 +29,17 @@ public class SplashTextElement extends AbstractElement {
     public String source = "Splash Text";
     @Nullable
     public ResourceSupplier<IText> textFileSupplier;
-    public float scale = 1.0F;
+    public final Property.FloatProperty scale = putProperty(Property.floatProperty("scale", 1.0F, "fancymenu.elements.splash.set_scale"));
     public boolean shadow = true;
     public boolean bounce = true;
-    public float rotation = 20.0F;
-    public DrawableColor baseColor = DrawableColor.of(new Color(255, 255, 0));
+    public final Property.FloatProperty rotation = putProperty(Property.floatProperty("rotation", 20.0F, "fancymenu.elements.splash.rotation"));
     public boolean refreshOnMenuReload = false;
     public Font font = Minecraft.getInstance().font;
+
+    public final Property.ColorProperty baseColor = putProperty(Property.hexColorProperty("base_color", DrawableColor.of(new Color(255, 255, 0)).getHex(), true, "fancymenu.elements.splash.basecolor"));
+
     protected float baseScale = 1.8F;
-    protected RenderText renderText = null;
+    protected String renderText = null;
     protected String lastSource = null;
     protected SourceMode lastSourceMode = null;
     protected boolean refreshedOnMenuLoad = false;
@@ -42,14 +47,23 @@ public class SplashTextElement extends AbstractElement {
     public SplashTextElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
         this.allowDepthTestManipulation = true;
+        this.scale.addValueSetListener((oldValue, newValue) -> this.updateSplash());
+        this.rotation.addValueSetListener((oldValue, newValue) -> this.updateSplash());
     }
 
     @Override
     public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
+
         if (this.shouldRender()) {
+
             this.updateSplash();
+
             this.renderSplash(graphics);
+
+            RenderingUtils.resetShaderColor(graphics);
+
         }
+
     }
 
     public void refresh() {
@@ -57,11 +71,8 @@ public class SplashTextElement extends AbstractElement {
         this.renderText = null;
     }
 
-    /**
-     * Updates the splash text content based on the source mode.
-     * This logic is safe and does not need changes.
-     */
     protected void updateSplash() {
+
         if (isEditor()) {
             if (!Objects.equals(this.lastSource, this.source) || !Objects.equals(this.lastSourceMode, this.sourceMode)) {
                 this.refresh();
@@ -84,8 +95,7 @@ public class SplashTextElement extends AbstractElement {
             //VANILLA
             if (this.sourceMode == SourceMode.VANILLA) {
                 SplashRenderer splashRenderer = Minecraft.getInstance().getSplashManager().getSplash();
-                // Assumes IMixinSplashRenderer correctly retrieves the splash text string
-                this.renderText = new RenderText((splashRenderer != null) ? ((IMixinSplashRenderer)splashRenderer).getSplashFancyMenu() : Component.empty(), null);
+                this.renderText = (splashRenderer != null) ? ((IMixinSplashRenderer)splashRenderer).getSplashFancyMenu().getString() : "";
             }
             //TEXT FILE
             if (this.sourceMode == SourceMode.TEXT_FILE) {
@@ -94,11 +104,11 @@ public class SplashTextElement extends AbstractElement {
                     if (text != null) {
                         List<String> l = text.getTextLines();
                         if (l != null) {
-                            if (!l.isEmpty() && ((l.size() > 1) || (!l.get(0).trim().isEmpty()))) {
+                            if (!l.isEmpty() && ((l.size() > 1) || (l.get(0).replace(" ", "").length() > 0))) {
                                 int i = MathUtils.getRandomNumberInRange(0, l.size() - 1);
-                                this.renderText = new RenderText(null, l.get(i));
+                                this.renderText = l.get(i);
                             } else {
-                                this.renderText = new RenderText(Component.literal("§cERROR: SPLASH FILE IS EMPTY"), null);
+                                this.renderText = "§cERROR: SPLASH FILE IS EMPTY";
                             }
                         }
                     }
@@ -106,68 +116,63 @@ public class SplashTextElement extends AbstractElement {
             }
             //DIRECT
             if (this.sourceMode == SourceMode.DIRECT_TEXT) {
-                this.renderText = new RenderText(null, this.source);
+                this.renderText = this.source;
             }
         }
 
         this.getBuilder().splashCache.put(this.getInstanceIdentifier(), this);
+
     }
 
-    /**
-     * Renders the splash text using the modern GuiGraphicsExtractor transformation stack.
-     *
-     * @param graphics The GuiGraphicsExtractor instance.
-     */
     protected void renderSplash(GuiGraphicsExtractor graphics) {
+
         if (this.renderText == null) {
             if (isEditor()) {
-                this.renderText = new RenderText(Component.literal("< empty splash element >"), null);
+                this.renderText = "< empty splash element >";
             } else {
                 return;
             }
         }
 
-        var renderTextComponent = this.renderText.buildForRenderTick();
+        Component renderTextComponent = buildComponent(this.renderText);
 
-        // Calculate the "bounce" effect scale, same logic as vanilla.
-        float bounceScale = this.baseScale;
+        float splashBaseScale = this.baseScale;
         if (this.bounce) {
-            bounceScale -= Mth.abs(Mth.sin((float) (System.currentTimeMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
+            splashBaseScale = splashBaseScale - Mth.abs(Mth.sin((float) (System.currentTimeMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
         }
-        // Adjust scale based on text length to prevent it from being too wide.
-        bounceScale *= 100.0F / (float) (font.width(renderTextComponent) + 32);
+        splashBaseScale = splashBaseScale * 100.0F / (float) (font.width(renderTextComponent) + 32);
 
-        // Calculate final color and alpha
-        int finalAlpha = Mth.ceil(this.opacity * 255.0F);
-        int finalColor = ARGB.color(finalAlpha, this.baseColor.getColorInt());
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
 
-        // --- NEW: Modern Transformation Logic ---
         graphics.pose().pushMatrix();
+        float resolvedScale = Math.max(0.0F, this.scale.getFloat());
+        graphics.pose().scale(resolvedScale, resolvedScale);
 
-        // 1. Translate to the center of the element's defined area. This becomes our origin.
-        graphics.pose().translate(this.getAbsoluteX() + (this.getAbsoluteWidth() / 2.0F), this.getAbsoluteY() + (this.getAbsoluteHeight() / 2.0F));
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(((this.getAbsoluteX() + (this.getAbsoluteWidth() / 2F)) / resolvedScale), this.getAbsoluteY() / resolvedScale);
+        graphics.pose().rotate((float)Math.toRadians(this.rotation.getFloat()));
+        graphics.pose().scale(splashBaseScale, splashBaseScale);
 
-        // 2. Rotate around the new origin. We negate the rotation to match vanilla's slant.
-        //    JOML's rotate method takes radians.
-        graphics.pose().rotate((float) Math.toRadians(-this.rotation));
+        DrawableColor c = this.baseColor.getDrawable();
+        int alpha = c.getColor().getAlpha();
+        int i = Mth.ceil(this.opacity * 255.0F);
+        if (i < alpha) {
+            alpha = i;
+        }
 
-        // 3. Apply the combined scale (user-defined scale * bounce scale).
-        float finalScale = this.scale * bounceScale;
-        graphics.pose().scale(finalScale, finalScale);
-
-        // 4. Draw the string. We use drawString to respect the 'shadow' property.
-        //    We center it manually around the new (0,0) origin.
-        int textWidth = font.width(renderTextComponent);
-        graphics.text(font, renderTextComponent, -textWidth / 2, -font.lineHeight / 2, finalColor, this.shadow);
+        graphics.text(font, renderTextComponent, -(font.width(renderTextComponent) / 2), 0, RenderingUtils.replaceAlphaInColor(c.getColorInt(), alpha), this.shadow);
 
         graphics.pose().popMatrix();
+        graphics.pose().popMatrix();
+
     }
 
-    protected SplashTextElementBuilder getBuilder() {
+    public SplashTextElementBuilder getBuilder() {
         return (SplashTextElementBuilder) this.builder;
     }
 
     public enum SourceMode {
+
         DIRECT_TEXT("direct"),
         TEXT_FILE("text_file"),
         VANILLA("vanilla");
@@ -190,13 +195,7 @@ public class SplashTextElement extends AbstractElement {
             }
             return null;
         }
-    }
 
-    protected record RenderText(@Nullable Component component, @Nullable String string) {
-        @NotNull
-        protected Component buildForRenderTick() {
-            return (this.component != null) ? this.component : buildComponent(Objects.requireNonNullElse(this.string, ""));
-        }
     }
 
 }

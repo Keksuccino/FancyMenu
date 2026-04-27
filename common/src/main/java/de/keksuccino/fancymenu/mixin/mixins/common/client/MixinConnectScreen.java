@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
 import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.WidgetifiedScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.TextWidget;
@@ -47,6 +48,11 @@ public abstract class MixinConnectScreen extends Screen {
     private static void onStartConnectingFancyMenu(Screen $$0, Minecraft $$1, ServerAddress address, ServerData $$3, boolean $$4, TransferState $$5, CallbackInfo ci) {
         if (address != null) {
             LastWorldHandler.setLastWorld(address.getHost() + ":" + address.getPort(), true);
+        }
+        if ($$3 != null && $$3.ip != null) {
+            SeamlessWorldLoadingHandler.beginServerLoad($$3.ip);
+        } else if (address != null) {
+            SeamlessWorldLoadingHandler.beginServerLoad(address.getHost() + ":" + address.getPort());
         }
     }
 

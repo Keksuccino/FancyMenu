@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -87,7 +87,7 @@ public class BrandingRenderer {
      * Renders the branding text at the default position.
      * @param graphics The GuiGraphicsExtractor to render with
      */
-    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics) {
+    public void render(@NotNull GuiGraphicsExtractor graphics) {
         extractRenderState(graphics, getDefaultPositionX(), getDefaultPositionY());
     }
 
@@ -107,6 +107,7 @@ public class BrandingRenderer {
 
         int currentY = y;
         for (Component line : lines) {
+            RenderingUtils.setShaderColor(graphics, 1.0f, 1.0f, 1.0f, 1.0f);
             graphics.text(font, line, x, currentY, DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
             currentY += font.lineHeight + 1;
         }

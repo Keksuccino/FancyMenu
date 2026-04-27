@@ -34,35 +34,38 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinLevelRenderer {
 
     @Inject(method = "renderLevel", at = @At("HEAD"))
-    private void before_renderLevel_FancyMenu(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean renderBlockOutline, CameraRenderState cameraState, Matrix4fc modelViewMatrix, GpuBufferSlice shaderFog, Vector4f fogColor, boolean renderSky, ChunkSectionsToRender chunkSectionsToRender, CallbackInfo ci) {
+    private void before_renderLevel_FancyMenu(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean renderBlockOutline, CameraRenderState cameraState, Matrix4fc modelViewMatrix, GpuBufferSlice shaderFog, Vector4f fogColor, boolean renderSky, ChunkSectionsToRender chunkSectionsToRender, CallbackInfo info) {
         Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.onRenderFrameStart();
     }
 
     @WrapOperation(method = "extractVisibleEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;extractEntity(Lnet/minecraft/world/entity/Entity;F)Lnet/minecraft/client/renderer/entity/state/EntityRenderState;"))
-    private EntityRenderState wrap_extractEntity_in_extractVisibleEntities_FancyMenu(LevelRenderer instance, Entity entity, float partialTicks, Operation<EntityRenderState> original, Camera camera, Frustum frustum, DeltaTracker deltaTracker, LevelRenderState renderState) {
-        double interpolatedX = Mth.lerp(partialTicks, entity.xo, entity.getX());
-        double interpolatedY = Mth.lerp(partialTicks, entity.yo, entity.getY());
-        double interpolatedZ = Mth.lerp(partialTicks, entity.zo, entity.getZ());
-        Vec3 entityPosition = new Vec3(interpolatedX, interpolatedY, interpolatedZ);
-        Vec3 cameraPosition = camera.position();
-        if (isEntityVisibleForListener_FancyMenu(entity, cameraPosition, entityPosition)) {
-            double distance = entityPosition.distanceTo(cameraPosition);
-            Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.onEntityVisible(entity, distance);
+	private EntityRenderState wrap_extractEntity_FancyMenu(LevelRenderer levelRenderer, Entity entity, float partialTicks, Operation<EntityRenderState> original, Camera camera, Frustum frustum, DeltaTracker deltaTracker, LevelRenderState levelRenderState) {
+		if (Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.shouldCheckVisibility()) {
+			double interpolatedX = Mth.lerp(partialTicks, entity.xo, entity.getX());
+            double interpolatedY = Mth.lerp(partialTicks, entity.yo, entity.getY());
+            double interpolatedZ = Mth.lerp(partialTicks, entity.zo, entity.getZ());
+            Vec3 entityPosition = new Vec3(interpolatedX, interpolatedY, interpolatedZ);
+            Vec3 cameraPosition = camera.position();
+            if (isEntityVisibleForListener_FancyMenu(entity, cameraPosition, entityPosition)) {
+                double distance = entityPosition.distanceTo(cameraPosition);
+                Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.onEntityVisible(entity, distance);
+            }
         }
-        return original.call(instance, entity, partialTicks);
+        return original.call(levelRenderer, entity, partialTicks);
     }
 
     @Inject(method = "renderLevel", at = @At("TAIL"))
-    private void after_renderLevel_FancyMenu(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean renderBlockOutline, CameraRenderState cameraState, Matrix4fc modelViewMatrix, GpuBufferSlice shaderFog, Vector4f fogColor, boolean renderSky, ChunkSectionsToRender chunkSectionsToRender, CallbackInfo ci) {
+    private void after_renderLevel_FancyMenu(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean renderBlockOutline, CameraRenderState cameraState, Matrix4fc modelViewMatrix, GpuBufferSlice shaderFog, Vector4f fogColor, boolean renderSky, ChunkSectionsToRender chunkSectionsToRender, CallbackInfo info) {
         Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.onRenderFrameEnd();
     }
 
     @Unique
     private static boolean isEntityVisibleForListener_FancyMenu(Entity entity, Vec3 cameraPosition, Vec3 entityPosition) {
-        double distanceToEntity = entityPosition.distanceTo(cameraPosition);
-        if (distanceToEntity > 200.0D) {
+        double distanceToEntitySqr = entityPosition.distanceToSqr(cameraPosition);
+        if (distanceToEntitySqr > 40000.0D) {
             return false;
         }
+        double distanceToEntity = Math.sqrt(distanceToEntitySqr);
 
         Minecraft minecraft = Minecraft.getInstance();
         Entity cameraEntity = minecraft.getCameraEntity();
@@ -99,4 +102,5 @@ public class MixinLevelRenderer {
         BlockState blockState = entity.level().getBlockState(hitResult.getBlockPos());
         return !blockState.canOcclude();
     }
+
 }

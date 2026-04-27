@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import de.keksuccino.fancymenu.util.Legacy;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.konkrete.input.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -40,6 +41,7 @@ public class PropertiesParser {
     /**
      * Returns the deserialized {@link PropertyContainerSet} or NULL if the given String was not a valid serialized set.
      */
+    @Legacy("This is basically the Konkrete deserializer and is _very_ outdated, so better rewrite this at some point.")
     @Nullable
     public static PropertyContainerSet deserializeSetFromFancyString(@NotNull String serializedFancyString) {
         try {

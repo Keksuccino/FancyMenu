@@ -42,7 +42,8 @@ public class LevelData {
         data.game_type = summary.getGameMode().getSerializedName();
         data.difficulty = summary.getSettings().difficultySettings().difficulty().getSerializedName();
         data.allow_commands = summary.getSettings().allowCommands();
-        data.settings_level_name = summary.getSettings().levelName();
+        String settingsLevelName = summary.getSettings().levelName();
+        data.settings_level_name = (settingsLevelName == null || settingsLevelName.isEmpty()) ? summary.getLevelName() : settingsLevelName;
         data.last_played = summary.getLastPlayed();
         data.level_data_version = summary.levelVersion().levelDataVersion();
         data.minecraft_version_name = summary.levelVersion().minecraftVersionName();

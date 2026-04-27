@@ -53,10 +53,14 @@ public class UniversalScreenIdentifierRegistry {
         register("realms_notifications_screen", RealmsNotificationsScreen.class.getName());
         register("realms_parental_consent_screen", RealmsParentalConsentScreen.class.getName());
         register("realms_pending_invites_screen", RealmsPendingInvitesScreen.class.getName());
+        registerIfPresent("realms_player_screen", "com.mojang.realmsclient.gui.screens.RealmsPlayerScreen");
+        registerIfPresent("realms_reset_normal_world_screen", "com.mojang.realmsclient.gui.screens.RealmsResetNormalWorldScreen");
         register("realms_reset_world_screen", RealmsResetWorldScreen.class.getName());
         register("realms_select_file_to_upload_screen", RealmsSelectFileToUploadScreen.class.getName());
         register("realms_select_world_template_screen", RealmsSelectWorldTemplateScreen.class.getName());
+        registerIfPresent("realms_settings_screen", "com.mojang.realmsclient.gui.screens.RealmsSettingsScreen");
         register("realms_slot_options_screen", RealmsSlotOptionsScreen.class.getName());
+        registerIfPresent("realms_subscription_info_screen", "com.mojang.realmsclient.gui.screens.RealmsSubscriptionInfoScreen");
         register("realms_terms_screen", RealmsTermsScreen.class.getName());
         register("realms_upload_screen", RealmsUploadScreen.class.getName());
         register("accessibility_onboarding_screen", AccessibilityOnboardingScreen.class.getName());
@@ -77,6 +81,7 @@ public class UniversalScreenIdentifierRegistry {
         register("demo_intro_screen", "net.minecraft.client.gui.screens.DemoIntroScreen");
         register("direct_join_server_screen", DirectJoinServerScreen.class.getName());
         register("disconnected_screen", DisconnectedScreen.class.getName());
+        register("edit_server_screen", ManageServerScreen.class.getName());
         register("error_screen", ErrorScreen.class.getName());
         register("generic_dirt_message_screen", GenericMessageScreen.class.getName());
         register("generic_waiting_screen", GenericWaitingScreen.class.getName());
@@ -114,6 +119,7 @@ public class UniversalScreenIdentifierRegistry {
         register("crafting_screen", CraftingScreen.class.getName());
         register("creative_mode_inventory_screen", CreativeModeInventoryScreen.class.getName());
         register("dispenser_screen", DispenserScreen.class.getName());
+        registerIfPresent("effect_rendering_inventory_screen", "net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen");
         register("enchantment_screen", EnchantmentScreen.class.getName());
         register("furnace_screen", FurnaceScreen.class.getName());
         register("grindstone_screen", GrindstoneScreen.class.getName());
@@ -159,6 +165,14 @@ public class UniversalScreenIdentifierRegistry {
             LOGGER.warn("[FANCYMENU] Universal identifier '" + universalIdentifier + "' already registered! Replacing identifier..");
         }
         UNIVERSAL_IDENTIFIERS.put(universalIdentifier, targetScreenClassPath);
+    }
+
+    private static void registerIfPresent(@NotNull String universalIdentifier, @NotNull String targetScreenClassPath) {
+        try {
+            Class.forName(targetScreenClassPath, false, UniversalScreenIdentifierRegistry.class.getClassLoader());
+            register(universalIdentifier, targetScreenClassPath);
+        } catch (ClassNotFoundException ignored) {
+        }
     }
 
     @Nullable

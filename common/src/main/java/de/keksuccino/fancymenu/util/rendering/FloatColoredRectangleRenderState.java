@@ -75,11 +75,13 @@ public record FloatColoredRectangleRenderState(RenderPipeline pipeline, TextureS
      */
     @Nullable
     private static ScreenRectangle getBounds(float minX, float minY, float maxX, float maxY, Matrix3x2f transform, @Nullable ScreenRectangle scissorRectangle) {
-        // Cast to int for ScreenRectangle, which is used for integer-based culling.
-        int x = (int)minX;
-        int y = (int)minY;
-        int width = (int)(maxX - minX);
-        int height = (int)(maxY - minY);
+        // Expand float coordinates outward so sub-GUI-pixel strips still survive culling.
+        int x = (int)Math.floor(Math.min(minX, maxX));
+        int y = (int)Math.floor(Math.min(minY, maxY));
+        int right = (int)Math.ceil(Math.max(minX, maxX));
+        int bottom = (int)Math.ceil(Math.max(minY, maxY));
+        int width = Math.max(1, right - x);
+        int height = Math.max(1, bottom - y);
 
         ScreenRectangle elementBounds = new ScreenRectangle(x, y, width, height).transformMaxBounds(transform);
         return scissorRectangle != null ? scissorRectangle.intersection(elementBounds) : elementBounds;

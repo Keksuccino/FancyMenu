@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.video.IVideoElement;
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
@@ -38,8 +39,10 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
     @Nullable
     public ResourceSource rawVideoUrlSource = null;
     public boolean loop = false;
+    public boolean preserveAspectRatio = true;
     /** Value between 0.0 and 1.0 **/
-    public float volume = 1.0F;
+    public final Property.FloatProperty volume = putProperty(Property.floatProperty("volume", 1.0F, "fancymenu.elements.video_mcef.volume",
+            Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 1.0F).build()));
     @NotNull
     public SoundSource soundSource = SoundSource.MASTER;
 
@@ -58,6 +61,7 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
     protected float cachedActualVolume = -10000F;
     protected float lastCachedActualVolume = -11000F;
     protected Boolean lastPausedState = null;
+    protected Boolean lastPreserveAspectRatio = null;
     protected volatile long lastRenderTickTime = -1L;
     protected final AtomicReference<Float> cachedDuration = new AtomicReference<>(0F);
     protected final AtomicReference<Float> cachedPlayTime = new AtomicReference<>(0F);
@@ -118,6 +122,7 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
                     videoPlayer = videoManager.getPlayer(playerId);
                     if (videoPlayer != null) {
                         videoPlayer.setFillScreen(true); // Enable fill screen by default
+                        videoPlayer.setPreserveAspectRatio(this.preserveAspectRatio);
                     }
                 }
             }
@@ -126,7 +131,7 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
 
             this.updateVolume();
             if ((this.lastCachedActualVolume == -11000F) || (this.cachedActualVolume != this.lastCachedActualVolume)) {
-                this.setVolume(this.volume, true);
+                this.setVolume(this.volume.getFloat(), true);
             }
             this.lastCachedActualVolume = this.cachedActualVolume;
 
@@ -134,6 +139,11 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
                 this.videoPlayer.setLooping(this.loop);
             }
             this.lastLoop = this.loop;
+
+            if ((this.lastPreserveAspectRatio == null) || !Objects.equals(this.preserveAspectRatio, this.lastPreserveAspectRatio)) {
+                this.videoPlayer.setPreserveAspectRatio(this.preserveAspectRatio);
+            }
+            this.lastPreserveAspectRatio = this.preserveAspectRatio;
 
             // Update size and position of player if needed
             if ((this.lastAbsoluteX != x) || (this.lastAbsoluteY != y) || (this.lastAbsoluteWidth != w) || (this.lastAbsoluteHeight != h)) {
@@ -173,6 +183,7 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
                 }
             }
 
+            this.tryApplyPendingControllerSeekTimeMs(finalVideoUrl != null);
             if ((this.lastPausedState == null) || !Objects.equals(pausedState, this.lastPausedState)) {
                 if (pausedState) {
                     this.videoPlayer.pause();
@@ -268,9 +279,8 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
      */
     protected void setVolume(float volume, boolean updatePlayer) {
         volume = Math.max(0.0F, Math.min(1.0F, volume));
-        this.volume = volume;
         if ((this.videoPlayer != null)) {
-            float actualVolume = this.volume;
+            float actualVolume = volume;
             float masterVolume = Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER);
             float soundSourceVolume = Minecraft.getInstance().options.getSoundSourceVolume(this.soundSource);
             if (this.soundSource != SoundSource.MASTER) {
@@ -286,7 +296,7 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
     }
 
     protected void updateVolume() {
-        this.setVolume(this.volume, false);
+        this.setVolume(this.volume.getFloat(), false);
     }
 
     /**
@@ -309,6 +319,19 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
         VideoElementController.VideoElementMeta meta = VideoElementController.getMeta(this.getInstanceIdentifier());
         if (meta == null) return false;
         return meta.paused;
+    }
+
+    protected void tryApplyPendingControllerSeekTimeMs(boolean hasVideoSource) {
+        if (!this.initialized || (this.videoPlayer == null) || !hasVideoSource) return;
+        if (this.cachedDuration.get() <= 0.0F) return;
+        Long pendingSeekTimeMs = VideoElementController.pollPendingSeekTimeMs(this.getInstanceIdentifier());
+        if (pendingSeekTimeMs == null) return;
+        try {
+            this.videoPlayer.setCurrentTimeMillis(Math.max(0L, pendingSeekTimeMs));
+            this.cachedPlayTime.set(Math.max(0.0F, pendingSeekTimeMs / 1000.0F));
+        } catch (Exception ex) {
+            LOGGER.warn("[FANCYMENU] Failed to apply pending seek time to MCEF video element. elementId: {}, seekTimeMs: {}", this.getInstanceIdentifier(), pendingSeekTimeMs, ex);
+        }
     }
 
     public void disposePlayer() {

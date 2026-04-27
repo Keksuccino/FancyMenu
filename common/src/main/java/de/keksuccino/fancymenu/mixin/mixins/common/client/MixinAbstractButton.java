@@ -14,10 +14,10 @@ import org.spongepowered.asm.mixin.injection.At;
 public class MixinAbstractButton {
 
     @WrapWithCondition(method = "extractDefaultSprite", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIII)V"))
-    private boolean wrapBlitSpriteFancyMenu(GuiGraphicsExtractor instance, RenderPipeline $$0, Identifier $$1, int $$2, int $$3, int $$4, int $$5, int $$6) {
+    private boolean wrapBlitSpriteFancyMenu(GuiGraphicsExtractor graphics, RenderPipeline pipeline, Identifier sprite, int x, int y, int width, int height, int color) {
 
         AbstractButton button = (AbstractButton)((Object)this);
-        return ((CustomizableWidget)(Object)this).renderCustomBackgroundFancyMenu(button, instance, button.getX(), button.getY(), button.getWidth(), button.getHeight());
+        return ((CustomizableWidget)(Object)this).renderCustomBackgroundFancyMenu(button, graphics, button.getX(), button.getY(), button.getWidth(), button.getHeight());
 
     }
 

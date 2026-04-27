@@ -76,7 +76,8 @@ public class ResourceSupplier<R extends Resource> {
      */
     @NotNull
     public static ResourceSupplier<IVideo> video(@NotNull String source) {
-        return new ResourceSupplier<>(IVideo.class, FileMediaType.VIDEO, source);
+        return new ResourceSupplier<>(IVideo.class, FileMediaType.VIDEO, source)
+                .setOnUpdateResourceTask(PlayableResource::stop);
     }
 
     /**
@@ -103,7 +104,7 @@ public class ResourceSupplier<R extends Resource> {
         if ((this.current != null) && this.current.isClosed()) {
             this.current = null;
         }
-        String getterSource = PlaceholderParser.replacePlaceholders(this.source, false);
+        String getterSource = PlaceholderParser.replacePlaceholders(this.source);
         if (!getterSource.equals(this.lastGetterSource)) {
             if ((this.onUpdateCurrent != null) && (this.current != null)) {
                 this.onUpdateCurrent.accept(this.current);
@@ -139,14 +140,14 @@ public class ResourceSupplier<R extends Resource> {
      * The {@link BiConsumer}'s {@link Resource} and {@link Identifier} is never NULL!<br><br>
      *
      * The {@link BiConsumer}'s {@link Identifier} is the {@link RenderableResource}'s
-     * current {@link Identifier} ({@link RenderableResource#getIdentifier()}).
-     * You should always use the provided location instead of calling {@link RenderableResource#getIdentifier()},
+     * current {@link Identifier} ({@link RenderableResource#getResourceLocation()}).
+     * You should always use the provided location instead of calling {@link RenderableResource#getResourceLocation()},
      * because some types of resources asynchronously change that method's return value.
      */
     public void forRenderable(@NotNull BiConsumer<R, Identifier> task) {
         R resource = this.get();
         if (resource instanceof RenderableResource r) {
-            Identifier loc = r.getIdentifier();
+            Identifier loc = r.getResourceLocation();
             if (loc != null) task.accept(resource, loc);
         }
     }
@@ -164,7 +165,7 @@ public class ResourceSupplier<R extends Resource> {
     @NotNull
     public ResourceSourceType getSourceType() {
         if (this.empty) return ResourceSourceType.LOCAL;
-        return ResourceSourceType.getSourceTypeOf(PlaceholderParser.replacePlaceholders(this.source, false));
+        return ResourceSourceType.getSourceTypeOf(PlaceholderParser.replacePlaceholders(this.source));
     }
 
     /**

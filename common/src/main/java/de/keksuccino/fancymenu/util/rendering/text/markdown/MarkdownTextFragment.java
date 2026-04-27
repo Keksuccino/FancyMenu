@@ -1,20 +1,17 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FontDescription;
 import net.minecraft.network.chat.MutableComponent;
@@ -26,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class MarkdownTextFragment implements Renderable, GuiEventListener, FancyMenuUiComponent {
+public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     protected static final int BULLET_LIST_SPACE_AFTER_INDENT = 5;
 
@@ -52,6 +49,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
     @NotNull
     public MarkdownRenderer.MarkdownLineAlignment alignment = MarkdownRenderer.MarkdownLineAlignment.LEFT;
     public Hyperlink hyperlink = null;
+    public TextClickEvent clickEvent = null;
+    public TextHoverEvent hoverEvent = null;
     @NotNull
     public HeadlineType headlineType = HeadlineType.NONE;
     public QuoteContext quoteContext = null;
@@ -64,7 +63,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
     public MarkdownTextFragment(@NotNull MarkdownRenderer parent, @NotNull String text) {
         this.parent = parent;
         this.text = text;
-        this.unscaledTextHeight = this.parent.font.lineHeight;
+        this.unscaledTextHeight = this.parent.getUnscaledTextHeight();
     }
 
     @Override
@@ -72,7 +71,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
 
         this.hovered = this.isMouseOver(mouseX, mouseY);
 
-        if ((this.hyperlink != null) && this.hovered) {
+        if (this.isLinkLike() && this.hovered) {
             CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
         }
 
@@ -84,20 +83,27 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
 
         if (this.imageSupplier != null) {
             this.imageSupplier.forRenderable((iTexture, location) -> {
-                RenderingUtils.blitF(graphics, RenderPipelines.GUI_TEXTURED, location, this.x, this.y, 0.0F, 0.0F, this.getRenderWidth(), this.getRenderHeight(), this.getRenderWidth(), this.getRenderHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.parent.textOpacity));
+                com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+                de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, this.parent.textOpacity);
+                RenderingUtils.blitF(graphics, location, this.x, this.y, 0.0F, 0.0F, this.getRenderWidth(), this.getRenderHeight(), this.getRenderWidth(), this.getRenderHeight());
+                RenderingUtils.resetShaderColor(graphics);
             });
         } else if (this.separationLine) {
 
+            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
             RenderingUtils.fillF(graphics, this.parent.x + this.parent.border, this.y, this.parent.x + this.parent.getRealWidth() - this.parent.border, this.y + this.getRenderHeight(), this.parent.separationLineColor.getColorIntWithAlpha(this.parent.textOpacity));
+            RenderingUtils.resetShaderColor(graphics);
 
         } else {
 
             this.renderCodeBlock(graphics);
 
+            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
             graphics.pose().pushMatrix();
             graphics.pose().scale(this.getScale(), this.getScale());
-            graphics.text(this.parent.font, this.buildRenderComponent(false), (int) this.getTextRenderX(), (int) this.getTextRenderY(), this.parent.textBaseColor.getColorIntWithAlpha(this.parent.textOpacity), this.parent.textShadow && (this.codeBlockContext == null));
+            this.parent.renderText(graphics, this.buildRenderComponent(false), this.getTextRenderX(), this.getTextRenderY(), this.parent.textBaseColor.getColorIntWithAlpha(this.parent.textOpacity), this.parent.textShadow && (this.codeBlockContext == null));
             graphics.pose().popMatrix();
+            RenderingUtils.resetShaderColor(graphics);
 
             this.renderQuoteLine(graphics);
 
@@ -122,6 +128,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
         
         // Use the actual table width for rendering (not the full area width)
         float actualTableWidth = this.tableContext.totalWidth;
+        
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
         
         // Render rows
         int dataRowIndex = 0; // Track data rows separately for alternating colors
@@ -201,7 +209,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
                             // Render the code block background
                             float endX = fragment.x + fragment.getRenderWidth() + 1;
                             if (fragment.text.endsWith(" ")) {
-                                endX -= (this.parent.font.width(" ") * fragment.getScale());
+                                endX -= (this.parent.getUnscaledTextWidth(" ") * fragment.getScale());
                             }
                             renderCodeBlockBackground(graphics, codeBlockStartX, fragment.y - 2, endX, 
                                 fragment.y + fragment.getTextRenderHeight(), 
@@ -220,7 +228,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
                     fragment.extractRenderState(graphics, mouseX, mouseY, partial); // Pass actual mouse coords for hover/click detection
                     
                     // Check if any hyperlink in the table is hovered
-                    if (fragment.hyperlink != null && fragment.hovered) {
+                    if (fragment.isLinkLike() && fragment.hovered) {
                         CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
                     }
                 }
@@ -259,7 +267,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
                 x += this.tableContext.columnWidths.get(i);
             }
         }
-
+        
+        RenderingUtils.resetShaderColor(graphics);
     }
 
     protected void renderCodeBlock(GuiGraphicsExtractor graphics) {
@@ -289,7 +298,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
             if (this.codeBlockContext.singleLine) {
                 float xEnd = end.x + end.getRenderWidth();
                 if (end.text.endsWith(" ")) {
-                    xEnd -= (this.parent.font.width(" ") * this.getScale());
+                    xEnd -= (this.parent.getUnscaledTextWidth(" ") * this.getScale());
                 }
                 renderCodeBlockBackground(graphics, this.x, this.y - 2, xEnd, this.y + this.getTextRenderHeight(), this.parent.codeBlockSingleLineColor.getColorIntWithAlpha(this.parent.textOpacity));
             } else {
@@ -299,17 +308,21 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
     }
 
     protected void renderCodeBlockBackground(GuiGraphicsExtractor graphics, float minX, float minY, float maxX, float maxY, int color) {
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
         RenderingUtils.fillF(graphics, minX+1, minY, maxX-1, minY+1, color);
         RenderingUtils.fillF(graphics, minX, minY+1, maxX, maxY-1, color);
         RenderingUtils.fillF(graphics, minX+1, maxY-1, maxX-1, maxY, color);
+        RenderingUtils.resetShaderColor(graphics);
     }
 
     protected void renderHeadlineUnderline(GuiGraphicsExtractor graphics) {
         if (this.startOfRenderLine && ((this.headlineType == HeadlineType.BIGGER) || (this.headlineType == HeadlineType.BIGGEST))) {
-            float scale = (this.parent.parentRenderScale != null) ? this.parent.parentRenderScale : (float)WindowHandler.getGuiScale();
+            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+            float scale = (this.parent.parentRenderScale != null) ? this.parent.parentRenderScale : (float)Minecraft.getInstance().getWindow().getGuiScale();
             float lineThickness = (scale > 1) ? 0.5f : 1f;
             float lineY = this.y + this.getTextRenderHeight() + 1;
             RenderingUtils.fillF(graphics, this.parent.x + this.parent.border, lineY, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, lineY + lineThickness, this.parent.headlineUnderlineColor.getColorIntWithAlpha(this.parent.textOpacity));
+            RenderingUtils.resetShaderColor(graphics);
         }
     }
 
@@ -317,16 +330,19 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
         if ((this.quoteContext != null) && (this.quoteContext.getQuoteEnd() != null) && (this.quoteContext.getQuoteEnd() == this)) {
             float yStart = Objects.requireNonNull(this.quoteContext.getQuoteStart()).y - 2;
             float yEnd = this.y + this.getRenderHeight() + 1;
+            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
             if (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) {
                 RenderingUtils.fillF(graphics, this.parent.x, yStart, this.parent.x + 2, yEnd, this.parent.quoteColor.getColorIntWithAlpha(this.parent.textOpacity));
             } else if (this.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT) {
                 RenderingUtils.fillF(graphics, this.parent.x + this.parent.getRealWidth() - this.parent.border - 2, yStart, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, yEnd, this.parent.quoteColor.getColorIntWithAlpha(this.parent.textOpacity));
             }
+            RenderingUtils.resetShaderColor(graphics);
         }
     }
 
     protected void renderBulletListDot(GuiGraphicsExtractor graphics) {
         if ((this.bulletListLevel > 0) && this.bulletListItemStart) {
+            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
             final float scale = this.getScale();
 
             // Calculate dimensions using scale
@@ -336,7 +352,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
             final float bulletX = this.x - (5 * scale) + (this.parent.bulletListIndent * (this.bulletListLevel) * scale);
 
             // Vertical centering using text baseline
-            final float textBaselineY = this.getTextY() + (Minecraft.getInstance().font.lineHeight * scale * 0.5f) - (bulletSize * 0.5f);
+            final float textBaselineY = this.getTextY() + (this.parent.getUnscaledTextHeight() * scale * 0.5f) - (bulletSize * 0.5f);
 
             RenderingUtils.fillF(graphics, bulletX, textBaselineY, bulletX + bulletSize, textBaselineY + bulletSize,
                     this.parent.bulletListDotColor.getColorIntWithAlpha(this.parent.textOpacity)
@@ -374,12 +390,24 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
                 style = style.withUnderlined(true);
             }
         }
+        if (this.clickEvent != null) {
+            style = style.withColor(this.parent.getTextClickEventColor().getColorInt());
+            if (this.clickEvent.isHovered()) {
+                style = style.withUnderlined(true);
+            }
+        }
+        if (this.hoverEvent != null) {
+            style = style.withColor(this.parent.getTextHoverEventColor().getColorInt());
+            if (this.hoverEvent.isHovered()) {
+                style = style.withUnderlined(true);
+            }
+        }
         boolean addSpaceComponentAtEnd = false;
         String t = this.text;
-        if ((this.hyperlink != null) && (this.naturalLineBreakAfter || this.autoLineBreakAfter) && t.endsWith(" ")) {
+        if (this.isLinkLike() && (this.naturalLineBreakAfter || this.autoLineBreakAfter) && t.endsWith(" ")) {
             //Remove spaces at line end that would look ugly when underlined
             t = t.substring(0, t.length()-1);
-        } else if ((this.hyperlink != null) && (ListUtils.getLast(this.hyperlink.hyperlinkFragments) == this) && t.endsWith(" ")) {
+        } else if (this.isLinkLike() && this.isLastLinkLikeFragment() && t.endsWith(" ")) {
             //Make space at the end not underlined without removing it completely
             t = t.substring(0, t.length()-1);
             addSpaceComponentAtEnd = true;
@@ -403,8 +431,25 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
         return comp;
     }
 
+    protected boolean isLinkLike() {
+        return (this.hyperlink != null) || (this.clickEvent != null) || (this.hoverEvent != null);
+    }
+
+    protected boolean isLastLinkLikeFragment() {
+        if (this.hyperlink != null) {
+            return ListUtils.getLast(this.hyperlink.hyperlinkFragments) == this;
+        }
+        if (this.clickEvent != null) {
+            return ListUtils.getLast(this.clickEvent.eventFragments) == this;
+        }
+        if (this.hoverEvent != null) {
+            return ListUtils.getLast(this.hoverEvent.eventFragments) == this;
+        }
+        return false;
+    }
+
     protected void updateWidth() {
-        this.unscaledTextWidth = this.parent.font.width(this.buildRenderComponent(true));
+        this.unscaledTextWidth = this.parent.getUnscaledTextWidth(this.buildRenderComponent(true));
     }
 
     public float getTextRenderX() {
@@ -582,14 +627,18 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean isDoubleClick) {
+        return this.mouseClicked(event.x(), event.y(), event.button());
+    }
+    
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
         // Handle clicks on table cells
         if (this.isTable() && this.tableContext != null) {
             // Check all cell fragments for clicks
             for (TableRow row : this.tableContext.rows) {
                 for (TableCell cell : row.cells) {
                     for (MarkdownTextFragment fragment : cell.fragments) {
-                        if (fragment.isMouseOver(event.x(), event.y()) && fragment.mouseClicked(event, isDoubleClick)) {
+                        if (fragment.isMouseOver(mouseX, mouseY) && fragment.mouseClicked(mouseX, mouseY, button)) {
                             return true;
                         }
                     }
@@ -598,6 +647,11 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
             return false;
         }
         
+        if ((this.clickEvent != null) && this.hovered) {
+            this.parent.fireTextClickEvent(this.clickEvent.identifier);
+            return true;
+        }
+
         // Handle regular hyperlink clicks
         if ((this.hyperlink != null) && this.hovered) {
             WebUtils.openWebLink(this.hyperlink.link);
@@ -626,6 +680,43 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
 
         public boolean isHovered() {
             for (MarkdownTextFragment f : this.hyperlinkFragments) {
+                if (f.hovered) return true;
+            }
+            return false;
+        }
+
+    }
+
+    public static class TextClickEvent {
+
+        public final String identifier;
+        public final List<MarkdownTextFragment> eventFragments = new ArrayList<>();
+
+        public TextClickEvent(@NotNull String identifier) {
+            this.identifier = identifier;
+        }
+
+        public boolean isHovered() {
+            for (MarkdownTextFragment f : this.eventFragments) {
+                if (f.hovered) return true;
+            }
+            return false;
+        }
+
+    }
+
+    public static class TextHoverEvent {
+
+        public final String identifier;
+        public final List<MarkdownTextFragment> eventFragments = new ArrayList<>();
+        public boolean wasHovered = false;
+
+        public TextHoverEvent(@NotNull String identifier) {
+            this.identifier = identifier;
+        }
+
+        public boolean isHovered() {
+            for (MarkdownTextFragment f : this.eventFragments) {
                 if (f.hovered) return true;
             }
             return false;
@@ -757,4 +848,3 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
     }
 
 }
-

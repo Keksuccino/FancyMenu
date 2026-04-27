@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.slideshow;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowRenderer;
@@ -8,16 +7,10 @@ import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.renderer.RenderPipelines;
-
 import net.minecraft.resources.Identifier;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class SlideshowElement extends AbstractElement {
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final Identifier MISSING = ITexture.MISSING_TEXTURE_LOCATION;
 
@@ -53,7 +46,7 @@ public class SlideshowElement extends AbstractElement {
             this.slideshow.width = this.getAbsoluteWidth();
             this.slideshow.height = this.getAbsoluteHeight();
 
-            this.slideshow.extractRenderState(graphics);
+            this.slideshow.render(graphics);
 
             this.slideshow.x = cachedX;
             this.slideshow.y = cachedY;
@@ -62,8 +55,10 @@ public class SlideshowElement extends AbstractElement {
             this.slideshow.slideshowOpacity = 1.0F;
 
         } else {
-            graphics.blit(RenderPipelines.GUI_TEXTURED, MISSING, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+            graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, MISSING, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
         }
+
+        de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, 1.0F);
 
     }
 

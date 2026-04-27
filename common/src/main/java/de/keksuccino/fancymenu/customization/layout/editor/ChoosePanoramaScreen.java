@@ -1,31 +1,37 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextListScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.input.KeyEvent;
-
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
 
-public class ChoosePanoramaScreen extends Screen {
+public class ChoosePanoramaScreen extends PiPWindowBody {
+
+    public static final int PIP_WINDOW_WIDTH = 640;
+    public static final int PIP_WINDOW_HEIGHT = 420;
+    private static final int LIST_ENTRY_TOP_DOWN_BORDER = 1;
+    private static final int LIST_ENTRY_OUTER_PADDING = 3;
+    private static final int LIST_TOP_SPACER_HEIGHT = 5;
 
     protected Consumer<String> callback;
     protected String selectedPanoramaName = null;
+    protected LocalTexturePanoramaRenderer selectedPanorama = null;
 
     protected ScrollArea panoramaListScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ExtendedButton doneButton;
@@ -53,65 +59,75 @@ public class ChoosePanoramaScreen extends Screen {
     @Override
     protected void init() {
 
-        super.init();
+        boolean blur = UIBase.shouldBlur();
+
+        this.panoramaListScrollArea.setSetupForBlurInterface(blur);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
-            this.callback.accept(this.selectedPanoramaName);
-        }) {
-            @Override
-            protected void extractContents(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
-                if (ChoosePanoramaScreen.this.selectedPanoramaName == null) {
-                    TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.panorama.choose.no_panorama_selected")).setDefaultStyle(), false, true);
-                    this.active = false;
-                } else {
-                    this.active = true;
-                }
-                super.extractContents(graphics, mouseX, mouseY, partial);
-            }
-        };
-        this.addWidget(this.doneButton);
-        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
+            this.closeWithResult(this.selectedPanoramaName);
+        }).setIsActiveSupplier(consumes -> ChoosePanoramaScreen.this.selectedPanoramaName != null)
+                .setUITooltipSupplier(consumes -> {
+                    if (ChoosePanoramaScreen.this.selectedPanoramaName == null) {
+                        return UITooltip.of(Component.translatable("fancymenu.panorama.choose.no_panorama_selected"));
+                    }
+                    return null;
+                });
+        this.addRenderableWidget(this.doneButton);
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton, blur);
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
-            this.callback.accept(null);
+            this.closeWithResult(null);
         });
-        this.addWidget(this.cancelButton);
-        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
+        this.addRenderableWidget(this.cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton, blur);
+
+        this.addRenderableWidget(this.panoramaListScrollArea);
 
     }
 
     @Override
-    public void onClose() {
+    public void onWindowClosedExternally() {
         this.callback.accept(null);
     }
 
     @Override
-    public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
+    public void renderBody(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
-         
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
 
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        float listAreaX = 20.0F;
+        float listLabelY = 50.0F;
+        float labelHeight = UIBase.getUITextHeightNormal();
+        float labelPadding = UIBase.getAreaLabelVerticalPadding();
+        float listAreaY = listLabelY + labelHeight + labelPadding;
+        UIBase.renderText(graphics, Component.translatable("fancymenu.panorama.choose.available_panoramas"), listAreaX, listLabelY, getGenericTextColor());
 
-        Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.text(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
-
-        graphics.text(this.font, Component.translatable("fancymenu.panorama.choose.available_panoramas"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
-
-        this.panoramaListScrollArea.setWidth((this.width / 2) - 40, true);
+        this.panoramaListScrollArea.setWidth(((float) this.width / 2) - 40, true);
         this.panoramaListScrollArea.setHeight(this.height - 85, true);
-        this.panoramaListScrollArea.setX(20, true);
-        this.panoramaListScrollArea.setY(50 + 15, true);
-        this.panoramaListScrollArea.extractRenderState(graphics, mouseX, mouseY, partial);
+        this.panoramaListScrollArea.setX(listAreaX, true);
+        this.panoramaListScrollArea.setY(listAreaY, true);
+
+        if (this.selectedPanorama != null) {
+            Component previewLabel = Component.translatable("fancymenu.panorama.choose.preview");
+            float previewLabelWidth = UIBase.getUITextWidthNormal(previewLabel);
+            float previewLabelX = this.width - 20 - previewLabelWidth;
+            float previewLabelY = listAreaY - labelHeight - labelPadding;
+            UIBase.renderText(graphics, previewLabel, previewLabelX, previewLabelY, getGenericTextColor());
+
+            int previewW = (this.width / 2) - 40;
+            int previewH = this.height / 2;
+            int previewX = this.width - 20 - previewW;
+            int previewY = (int) listAreaY;
+            graphics.fill(previewX, previewY, previewX + previewW, previewY + previewH, getAreaBackgroundColor());
+            this.selectedPanorama.renderInArea(graphics, previewX, previewY, previewW, previewH, partial);
+            UIBase.renderBorder(graphics, previewX, previewY, previewX + previewW, previewY + previewH, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUITheme().ui_interface_widget_border_color.getColor(), true, true, true, true);
+        }
 
         this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
         this.doneButton.setY(this.height - 20 - 20);
-        this.doneButton.extractRenderState(graphics, mouseX, mouseY, partial);
 
         this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
         this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
-        this.cancelButton.extractRenderState(graphics, mouseX, mouseY, partial);
-
-        super.extractRenderState(graphics, mouseX, mouseY, partial);
 
     }
 
@@ -122,55 +138,116 @@ public class ChoosePanoramaScreen extends Screen {
     protected void setSelectedPanorama(@Nullable ChoosePanoramaScreen.PanoramaScrollEntry entry) {
         if (entry == null) {
             this.selectedPanoramaName = null;
+            this.selectedPanorama = null;
             return;
         }
         this.selectedPanoramaName = entry.panorama;
+        this.selectedPanorama = PanoramaHandler.getPanorama(entry.panorama);
     }
 
     protected void updatePanoramaScrollAreaContent() {
         this.panoramaListScrollArea.clearEntries();
+        CellScreen.SpacerScrollAreaEntry spacer = new CellScreen.SpacerScrollAreaEntry(this.panoramaListScrollArea, LIST_TOP_SPACER_HEIGHT);
+        spacer.setSelectable(false);
+        spacer.selectOnClick = false;
+        spacer.setPlayClickSound(false);
+        spacer.setBackgroundColorNormal(() -> DrawableColor.FULLY_TRANSPARENT);
+        spacer.setBackgroundColorHover(() -> DrawableColor.FULLY_TRANSPARENT);
+        this.panoramaListScrollArea.addEntry(spacer);
+        boolean addedAny = false;
         for (String s : PanoramaHandler.getPanoramaNames()) {
-            PanoramaScrollEntry e = new PanoramaScrollEntry(this.panoramaListScrollArea, s, (entry) -> {
+            PanoramaScrollEntry e = new PanoramaScrollEntry(this.panoramaListScrollArea, s, getLabelTextColor(), (entry) -> {
                 this.setSelectedPanorama((PanoramaScrollEntry)entry);
             });
+            e.setHeight(this.getListEntryHeight());
             this.panoramaListScrollArea.addEntry(e);
+            addedAny = true;
         }
-        if (this.panoramaListScrollArea.getEntries().isEmpty()) {
-            this.panoramaListScrollArea.addEntry(new TextScrollAreaEntry(this.panoramaListScrollArea, Component.translatable("fancymenu.panorama.choose.no_panoramas"), (entry) -> {}));
+        if (!addedAny) {
+            TextScrollAreaEntry emptyEntry = new TextScrollAreaEntry(this.panoramaListScrollArea, Component.translatable("fancymenu.panorama.choose.no_panoramas"), (entry) -> {});
+            emptyEntry.setHeight(this.getListEntryHeight());
+            this.panoramaListScrollArea.addEntry(emptyEntry);
         }
-        int totalWidth = this.panoramaListScrollArea.getTotalEntryWidth();
+        float totalWidth = this.panoramaListScrollArea.getTotalEntryWidth();
         for (ScrollAreaEntry e : this.panoramaListScrollArea.getEntries()) {
             e.setWidth(totalWidth);
         }
     }
 
     @Override
-    public boolean keyPressed(KeyEvent event) {
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+    }
+    
+    public boolean keyPressed(int button, int $$1, int $$2) {
 
-        if (event.key() == InputConstants.KEY_ENTER) {
+        if (button == InputConstants.KEY_ENTER) {
             if (this.selectedPanoramaName != null) {
-                this.callback.accept(this.selectedPanoramaName);
+                this.closeWithResult(this.selectedPanoramaName);
                 return true;
             }
         }
 
-        return super.keyPressed(event);
+        return super.keyPressed(button, $$1, $$2);
 
     }
 
-    public static class PanoramaScrollEntry extends TextListScrollAreaEntry {
+    protected void closeWithResult(@Nullable String panoramaName) {
+        this.callback.accept(panoramaName);
+        this.closeWindow();
+    }
+
+    private int getGenericTextColor() {
+        return UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_generic_text_color.getColorInt()
+                : UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
+    }
+
+    private int getLabelTextColor() {
+        return UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt()
+                : UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt();
+    }
+
+    private int getAreaBackgroundColor() {
+        return UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_area_background_color_type_1.getColorInt()
+                : UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt();
+    }
+
+    private int getListEntryHeight() {
+        return (int)(UIBase.getUITextHeightNormal()
+                + (LIST_ENTRY_TOP_DOWN_BORDER * 2)
+                + (LIST_ENTRY_OUTER_PADDING * 2));
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull ChoosePanoramaScreen screen, @Nullable PiPWindow parentWindow) {
+        PiPWindow window = new PiPWindow(screen.getTitle())
+                .setScreen(screen)
+                .setForceFancyMenuUiScale(true)
+                .setAlwaysOnTop(true)
+                .setBlockMinecraftScreenInputs(true)
+                .setForceFocus(true)
+                .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
+                .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, parentWindow);
+        return window;
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull ChoosePanoramaScreen screen) {
+        return openInWindow(screen, null);
+    }
+
+    public static class PanoramaScrollEntry extends TextScrollAreaEntry {
 
         public String panorama;
 
-        public PanoramaScrollEntry(ScrollArea parent, @NotNull String panorama, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(panorama).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
+        public PanoramaScrollEntry(ScrollArea parent, @NotNull String panorama, int labelColor, @NotNull Consumer<TextScrollAreaEntry> onClick) {
+            super(parent, Component.literal(panorama), onClick);
+            this.setTextBaseColor(labelColor);
             this.panorama = panorama;
         }
 
     }
 
 }
-
-
-
-

@@ -50,7 +50,7 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
     @NotNull
     public ITexture get() {
         SkinMetadata playerNameSkinMetaFinal = this.playerNameSkinMeta;
-        String getterPlayerName = PlaceholderParser.replacePlaceholders(this.source, false);
+        String getterPlayerName = PlaceholderParser.replacePlaceholders(this.source);
         if (this.sourceIsPlayerName) {
             //If last player name is different one, reload supplier
             if (!getterPlayerName.equals(this.lastGetterPlayerName)) {
@@ -79,7 +79,7 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
         if ((this.current != null) && this.current.isClosed()) {
             this.current = null;
         }
-        String getterSource = PlaceholderParser.replacePlaceholders(this.source, false);
+        String getterSource = PlaceholderParser.replacePlaceholders(this.source);
         if (this.sourceIsPlayerName) {
             if ((playerNameSkinMetaFinal == null) || (playerNameSkinMetaFinal.resourceSource() == null)) {
                 return DEFAULT_SKIN;
@@ -163,7 +163,7 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
 
     @NotNull
     public Identifier getSkinLocation() {
-        Identifier loc = this.get().getIdentifier();
+        Identifier loc = this.get().getResourceLocation();
         return (loc != null) ? loc : DEFAULT_SKIN_LOCATION;
     }
 

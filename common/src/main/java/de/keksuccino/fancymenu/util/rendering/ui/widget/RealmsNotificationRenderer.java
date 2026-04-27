@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
-import de.keksuccino.fancymenu.accessor.client.IRealmsNotificationsScreenStatics;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinRealmsNotificationsScreen;
 import com.mojang.realmsclient.gui.screens.RealmsNotificationsScreen;
@@ -25,7 +24,6 @@ public class RealmsNotificationRenderer {
     private static final Identifier TRIAL_AVAILABLE_SPRITE = Identifier.withDefaultNamespace("icon/trial_available");
 
     private final IMixinRealmsNotificationsScreen screenAccess;
-    private final IRealmsNotificationsScreenStatics screenStatics;
     private final Minecraft minecraft;
     private final int screenWidth;
     private final int screenHeight;
@@ -37,7 +35,6 @@ public class RealmsNotificationRenderer {
      */
     public RealmsNotificationRenderer(@NotNull RealmsNotificationsScreen screen, int screenWidth, int screenHeight) {
         this.screenAccess = (IMixinRealmsNotificationsScreen)screen;
-        this.screenStatics = (IRealmsNotificationsScreenStatics)screen;
         this.minecraft = Minecraft.getInstance();
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
@@ -104,11 +101,11 @@ public class RealmsNotificationRenderer {
      * Renders the notification icons at the specified position.
      * Icons are rendered from left to right.
      *
-     * @param GuiGraphicsExtractor The GuiGraphicsExtractor instance to render with
+     * @param guiGraphics The GuiGraphicsExtractor instance to render with
      * @param x The x position to render at (leftmost edge of icon area)
      * @param y The y position to render at (top edge of icon area)
      */
-    public void renderIcons(GuiGraphicsExtractor GuiGraphicsExtractor, int x, int y, int color) {
+    public void renderIcons(GuiGraphicsExtractor guiGraphics, int x, int y, int color) {
 
         // Get current state from the screen
         boolean hasUnseenNotifications = this.hasUnseenNotifications();
@@ -121,22 +118,22 @@ public class RealmsNotificationRenderer {
 
         // Render icons in order from left to right
         if (trialAvailable && showOldNotifications) {
-            GuiGraphicsExtractor.blitSprite(RenderPipelines.GUI_TEXTURED, TRIAL_AVAILABLE_SPRITE, currentX, y + 4, 8, 8, color);
+            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, TRIAL_AVAILABLE_SPRITE, currentX, y + 4, 8, 8, color);
             currentX += 16;
         }
 
         if (pendingInvites > 0 && showOldNotifications) {
-            GuiGraphicsExtractor.blitSprite(RenderPipelines.GUI_TEXTURED, INVITE_SPRITE, currentX, y + 1, 14, 14, color);
+            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, INVITE_SPRITE, currentX, y + 1, 14, 14, color);
             currentX += 16;
         }
 
         if (hasUnreadNews && showOldNotifications) {
-            GuiGraphicsExtractor.blitSprite(RenderPipelines.GUI_TEXTURED, NEWS_SPRITE, currentX, y + 1, 14, 14, color);
+            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, NEWS_SPRITE, currentX, y + 1, 14, 14, color);
             currentX += 16;
         }
 
         if (hasUnseenNotifications) {
-            GuiGraphicsExtractor.blitSprite(RenderPipelines.GUI_TEXTURED, UNSEEN_NOTIFICATION_SPRITE, currentX, y + 3, 10, 10, color);
+            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, UNSEEN_NOTIFICATION_SPRITE, currentX, y + 3, 10, 10, color);
         }
 
     }
@@ -144,13 +141,13 @@ public class RealmsNotificationRenderer {
     /**
      * Renders the notification icons at the default position.
      *
-     * @param GuiGraphicsExtractor The GuiGraphicsExtractor instance to render with
+     * @param guiGraphics The GuiGraphicsExtractor instance to render with
      */
-    public void renderIcons(GuiGraphicsExtractor GuiGraphicsExtractor, int color) {
+    public void renderIcons(GuiGraphicsExtractor guiGraphics, int color) {
         // Check if client is valid before rendering
         boolean isValidClient = this.screenAccess.get_validClient_FancyMenu().getNow(false);
         if (isValidClient) {
-            renderIcons(GuiGraphicsExtractor, getDefaultPositionX(), getDefaultPositionY(), color);
+            renderIcons(guiGraphics, getDefaultPositionX(), getDefaultPositionY(), color);
         }
     }
 
@@ -186,7 +183,7 @@ public class RealmsNotificationRenderer {
      */
     public boolean hasUnseenNotifications() {
         if (isEditor()) return true;
-        return this.screenStatics.fancymenu$hasUnseenNotifications();
+        return IMixinRealmsNotificationsScreen.get_hasUnseenNotifications_FancyMenu();
     }
 
     /**
@@ -194,7 +191,7 @@ public class RealmsNotificationRenderer {
      */
     public boolean hasUnreadNews() {
         if (isEditor()) return true;
-        return this.screenStatics.fancymenu$hasUnreadNews();
+        return IMixinRealmsNotificationsScreen.get_hasUnreadNews_FancyMenu();
     }
 
     /**
@@ -202,7 +199,7 @@ public class RealmsNotificationRenderer {
      */
     public boolean isTrialAvailable() {
         if (isEditor()) return true;
-        return this.screenStatics.fancymenu$trialAvailable();
+        return IMixinRealmsNotificationsScreen.get_trialAvailable_FancyMenu();
     }
 
     protected static boolean isEditor() {
