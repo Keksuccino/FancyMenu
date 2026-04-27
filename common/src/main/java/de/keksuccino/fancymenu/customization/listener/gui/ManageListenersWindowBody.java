@@ -261,7 +261,7 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
         if (editingCell != null) {
             return editingCell.charTyped(codePoint, modifiers);
         }
-        return super.charTyped(new CharacterEvent(codePoint));
+        return super.charTyped(codePoint, modifiers);
     }
 
     @Override
