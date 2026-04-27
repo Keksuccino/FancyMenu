@@ -22,6 +22,7 @@ import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.properties.PropertyHolder;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderRotationUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
@@ -263,6 +264,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		// Apply transformations if needed
 		boolean transformationsApplied = false;
+		RenderRotationUtil.RotationState restoreRenderRotation = null;
 		float rotDegrees = this.getRotationDegrees();
 		float verticalTilt = this.getVerticalTiltDegrees();
 		float horizontalTilt = this.getHorizontalTiltDegrees();
@@ -271,6 +273,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		if ((this.shouldRender() || willStartFadeOutThisTick) && (hasRotation || hasTilt)) {
 
+			restoreRenderRotation = new RenderRotationUtil.RotationState(RenderRotationUtil.getCurrentAdditionalRenderRotation_FancyMenu());
 			graphics.pose().pushMatrix();
 			transformationsApplied = true;
 
@@ -281,12 +284,20 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			// Translate to center
 			graphics.pose().translate(centerX, centerY);
 
-			// Matrix3x2fStack only supports 2D GUI transforms. X/Y tilt is skipped here.
-
 			// Apply rotation (around Z axis)
 			if (hasRotation) {
 				graphics.pose().rotate((float)Math.toRadians(rotDegrees));
 			}
+
+			RenderRotationUtil.RotationState elementRenderRotation = new RenderRotationUtil.RotationState(restoreRenderRotation);
+			if (hasTilt) {
+				if (verticalTilt != 0.0F) elementRenderRotation.mul(Axis.XP.rotationDegrees(verticalTilt));
+				if (horizontalTilt != 0.0F) elementRenderRotation.mul(Axis.YP.rotationDegrees(horizontalTilt));
+			}
+			if (hasRotation) {
+				elementRenderRotation.mul(Axis.ZP.rotationDegrees(rotDegrees));
+			}
+			RenderRotationUtil.setActiveRenderRotation_FancyMenu(elementRenderRotation);
 
 			// Translate back
 			graphics.pose().translate(-centerX, -centerY);
@@ -320,6 +331,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		// Pop the transformations
 		if (transformationsApplied) {
 			graphics.pose().popMatrix();
+			if (restoreRenderRotation != null) RenderRotationUtil.setActiveRenderRotation_FancyMenu(restoreRenderRotation);
 		}
 
 		this.lastTickShouldRender = this.shouldRender();

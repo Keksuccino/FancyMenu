@@ -20,7 +20,7 @@ final class GuiPoseTransformUtil {
         float scale = resolveScale_FancyMenu(scaleX, scaleY);
         float translationX = finiteOrDefault_FancyMenu(pose.m20(), 0.0F);
         float translationY = finiteOrDefault_FancyMenu(pose.m21(), 0.0F);
-        RenderRotationUtil.Rotation2D rotation = resolveRotation_FancyMenu(pose, scaleX, scaleY);
+        RenderRotationUtil.Rotation2D rotation = RenderRotationUtil.getCurrentAdditionalRenderMaskRotation2D();
         return new PoseTransform(scale, translationX, translationY, pose.m00(), pose.m01(), pose.m10(), pose.m11(), rotation);
     }
 
@@ -38,22 +38,6 @@ final class GuiPoseTransformUtil {
             return scaleX;
         }
         return (scaleX + scaleY) * 0.5F;
-    }
-
-    @Nonnull
-    private static RenderRotationUtil.Rotation2D resolveRotation_FancyMenu(@Nonnull Matrix3x2fStack pose, float scaleX, float scaleY) {
-        if (scaleX <= 0.0F || scaleY <= 0.0F) {
-            return RenderRotationUtil.Rotation2D.identity();
-        }
-
-        float m00 = pose.m00() / scaleX;
-        float m01 = pose.m10() / scaleY;
-        float m10 = pose.m01() / scaleX;
-        float m11 = pose.m11() / scaleY;
-        if (!Float.isFinite(m00) || !Float.isFinite(m01) || !Float.isFinite(m10) || !Float.isFinite(m11)) {
-            return RenderRotationUtil.Rotation2D.identity();
-        }
-        return new RenderRotationUtil.Rotation2D(m00, m01, m10, m11);
     }
 
     private static float axisLength_FancyMenu(float x, float y) {
