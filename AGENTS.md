@@ -21,14 +21,15 @@
 
 ## Mixin Structurization
 - Place shared mixins under `common/src/main/java/de/keksuccino/fancymenu/mixin/mixins/common/<side>` and mirror the existing folder depth when adding new targets.
-- Declare `@Mixin` classes (and accessor interfaces) with imports grouped at the top, list `@Unique` members before any `@Shadow` declarations, and extend or implement the vanilla type when necessary; supply a suppressed dummy constructor when subclasses require it.
+- List `@Unique` members before any `@Shadow` declarations.
+- Extend or implement the vanilla type when necessary; supply a suppressed dummy constructor when subclasses require it.
 - Suffix every unique field or helper with `_FancyMenu`. Static finals use all caps with `_FANCYMENU`, and injected method names follow the `before/after/on/wrap/cancel_<VanillaMethod>_FancyMenu` pattern. Accessor/invoker methods also end in `_FancyMenu`.
 - Cluster related injections together (for example, all `setScreen` hooks in `MixinMinecraft`) and keep helper wrappers private unless a wider contract is required.
-- Use short `//` comments for quick reminders and `/** @reason ... */` blocks ahead of injections that change vanilla behaviour, matching the authoring tone in existing files.
 - FancyMenu has access to Mixin Extras.
 - Prefer using features from Mixin Extras instead of using normal Mixin redirects or overrides.
 - When leveraging Mixin Extras (`WrapOperation`, `WrapWithCondition`, etc.), name helpers after the intent (`wrap_..._FancyMenu`, `cancel_..._FancyMenu`) and call the provided `Operation` when returning to vanilla flow.
-- Keep Mixin classes lightweight and try to always describe what a Mixin does in its javadoc via `@reason ...`.
+- Keep Mixin classes lightweight.
+- Try to always describe what a Mixin does in its javadoc via `@reason ...`, but keep in mind `@reason` only works on methods, not class heads.
 - Always leave `require` at default for mixins! Never do `require = 0` or similar, unless the user tells you to do it.
 
 ## Localization
