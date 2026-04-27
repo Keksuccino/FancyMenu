@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.networking.packets.commands.variable.suggestions
 import de.keksuccino.fancymenu.networking.Packet;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
 
 public class VariableCommandSuggestionsPacket extends Packet {

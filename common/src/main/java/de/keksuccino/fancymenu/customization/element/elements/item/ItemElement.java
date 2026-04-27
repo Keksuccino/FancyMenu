@@ -1,29 +1,25 @@
 package de.keksuccino.fancymenu.customization.element.elements.item;
 
-import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphics;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.konkrete.input.StringUtils;
-import net.minecraft.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.*;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
@@ -44,8 +40,7 @@ public class ItemElement extends AbstractElement {
     @NotNull
     public String itemKey = "" + BuiltInRegistries.ITEM.getKey(Items.BARRIER);
     public boolean enchanted = false;
-    @NotNull
-    public String itemCount = "1";
+    public final Property.IntegerProperty itemCount = putProperty(Property.integerProperty("item_count", 1, "fancymenu.elements.item.item_count"));
     @Nullable
     public String lore = null;
     @Nullable
@@ -76,7 +71,7 @@ public class ItemElement extends AbstractElement {
 
             if ((this.cachedStack == null) || !keyFinal.equals(this.lastItemKey) || (this.enchanted != this.lastEnchanted) || !Objects.equals(loreFinal, this.lastLore) || !Objects.equals(nameFinal, this.lastItemName) || !Objects.equals(nbtFinal, this.lastNbtData)) {
 
-                Item item = BuiltInRegistries.ITEM.get(ResourceLocation.tryParse(keyFinal));
+                Item item = BuiltInRegistries.ITEM.get(new ResourceLocation(keyFinal));
 
                 this.cachedStack = new ItemStack(item);
 
@@ -116,26 +111,14 @@ public class ItemElement extends AbstractElement {
 
     }
 
-    /**
-     * Sets the lore on the given ItemStack.
-     *
-     * @param stack the ItemStack to modify
-     * @param loreLines a list of Component objects representing each line of lore
-     */
     protected static void setLore(@NotNull ItemStack stack, @NotNull List<Component> loreLines) {
-        // Get or create the "display" compound tag on the item
         CompoundTag displayTag = stack.getOrCreateTagElement("display");
-
-        // Create a new NbtList to hold the lore entries.
         ListTag loreList = new ListTag();
 
-        // Each lore line must be stored as a JSON string.
-        // Text.Serializer.toJson(text) converts the Text component into its JSON representation.
         for (Component line : loreLines) {
             loreList.add(StringTag.valueOf(Component.Serializer.toJson(line)));
         }
 
-        // Add the lore list to the "display" tag under the key "Lore"
         displayTag.put("Lore", loreList);
     }
 
@@ -165,7 +148,7 @@ public class ItemElement extends AbstractElement {
 
     protected void renderItem(GuiGraphics graphics, int x, int y, int width, int height, int mouseX, int mouseY, @NotNull ItemStack itemStack) {
 
-        int count = SerializationUtils.deserializeNumber(Integer.class, 1, PlaceholderParser.replacePlaceholders(this.itemCount));
+        int count = this.itemCount.getInteger();
 
         this.renderScaledItem(graphics, itemStack, x, y, width, height);
 

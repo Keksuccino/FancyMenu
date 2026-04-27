@@ -68,16 +68,26 @@ public class BrowserHandler {
     }
 
     public static void notifyHandler(@NotNull String identifier, @NotNull WrappedMCEFBrowser browser) {
-        if (!BROWSERS.containsKey(identifier)) {
-            BROWSERS.put(identifier, Pair.of(browser, System.currentTimeMillis()));
+        long now = System.currentTimeMillis();
+        Pair<WrappedMCEFBrowser, Long> cached = BROWSERS.get(identifier);
+        if ((cached == null) || (cached.getFirst() != browser)) {
+            if ((cached != null) && (cached.getFirst() != null) && (cached.getFirst() != browser) && !cached.getFirst().isClosed()) {
+                try {
+                    cached.getFirst().close();
+                } catch (Exception ex) {
+                    LOGGER.error("[FANCYMENU] Failed to close stale MCEFBrowser!", ex);
+                }
+            }
+            BROWSERS.put(identifier, Pair.of(browser, now));
+            return;
         }
-        BROWSERS.get(identifier).setValue(System.currentTimeMillis());
+        cached.setSecond(now);
     }
 
     @Nullable
     public static WrappedMCEFBrowser get(@NotNull String identifier) {
         Pair<WrappedMCEFBrowser, Long> browser = BROWSERS.get(identifier);
-        if (browser != null) return browser.getKey();
+        if (browser != null) return browser.getFirst();
         return null;
     }
 
@@ -85,7 +95,7 @@ public class BrowserHandler {
         try {
             if (close) {
                 Pair<WrappedMCEFBrowser, Long> browser = BROWSERS.get(identifier);
-                if (browser != null) browser.getKey().close();
+                if (browser != null) browser.getFirst().close();
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to force-close MCEFBrowser!", ex);
@@ -98,14 +108,14 @@ public class BrowserHandler {
         List<String> garbageCollect = new ArrayList<>();
         for (Map.Entry<String, Pair<WrappedMCEFBrowser, Long>> m : BROWSERS.entrySet()) {
             //Close browser after 5 seconds of inactivity
-            if ((m.getValue().getValue() + 5000) < now) {
+            if ((m.getValue().getSecond() + 5000) < now) {
                 garbageCollect.add(m.getKey());
             }
         }
         garbageCollect.forEach(s -> {
             try {
                 Pair<WrappedMCEFBrowser, Long> browser = BROWSERS.get(s);
-                if (browser != null) browser.getKey().close();
+                if (browser != null) browser.getFirst().close();
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to force-close MCEFBrowser!", ex);
             }
@@ -114,11 +124,11 @@ public class BrowserHandler {
     }
 
     public static void mouseMoved(double mouseX, double mouseY) {
-        BROWSERS.forEach((id, browser) -> browser.getKey().mouseMoved(mouseX, mouseY));
+        BROWSERS.forEach((id, browser) -> browser.getFirst().mouseMoved(mouseX, mouseY));
     }
 
     public static void onVolumeUpdated(SoundSource soundSource, float newVolume) {
-        BROWSERS.forEach((s, wrappedMCEFBrowserLongPair) -> wrappedMCEFBrowserLongPair.getKey().onVolumeUpdated(soundSource, newVolume));
+        BROWSERS.forEach((s, wrappedMCEFBrowserLongPair) -> wrappedMCEFBrowserLongPair.getFirst().onVolumeUpdated(soundSource, newVolume));
     }
 
 }

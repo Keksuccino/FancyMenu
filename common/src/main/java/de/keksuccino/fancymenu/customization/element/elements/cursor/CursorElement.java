@@ -3,13 +3,14 @@ package de.keksuccino.fancymenu.customization.element.elements.cursor;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resource.resources.texture.SimpleTexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -21,8 +22,8 @@ public class CursorElement extends AbstractElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public int hotspotX = 0;
-    public int hotspotY = 0;
+    public final Property.IntegerProperty hotspotX = putProperty(Property.integerProperty("hotspot_x", 0, "fancymenu.elements.cursor.hotspot_x"));
+    public final Property.IntegerProperty hotspotY = putProperty(Property.integerProperty("hotspot_y", 0, "fancymenu.elements.cursor.hotspot_y"));
     public boolean editorPreviewMode = false;
     @Nullable
     public ResourceSupplier<ITexture> textureSupplier;
@@ -77,15 +78,17 @@ public class CursorElement extends AbstractElement {
 
         if (this.textureSupplier != null) {
             ITexture t = this.textureSupplier.get();
-            if (t instanceof SimpleTexture s) {
+            if (t instanceof PngTexture s) {
                 ResourceLocation loc = t.getResourceLocation();
-                if ((loc != this.lastLocation) || (this.lastHotspotX != this.hotspotX) || (this.lastHotspotY != this.hotspotY)) {
+                int resolvedHotspotX = this.hotspotX.getInteger();
+                int resolvedHotspotY = this.hotspotY.getInteger();
+                if ((loc != this.lastLocation) || (this.lastHotspotX != resolvedHotspotX) || (this.lastHotspotY != resolvedHotspotY)) {
                     if (loc != null) {
                         this.cursorReady = false;
                         if (!isEditor() || this.editorPreviewMode) {
                             CursorHandler.CustomCursor cursor = CursorHandler.getCustomCursor(this.getCursorName());
-                            if ((cursor == null) || (cursor.texture != s) || (cursor.hotspotX != this.hotspotX) || (cursor.hotspotY != this.hotspotY)) {
-                                cursor = CursorHandler.CustomCursor.create(s, this.hotspotX, this.hotspotY, this.textureSupplier.getSourceWithPrefix());
+                            if ((cursor == null) || (cursor.texture != s) || (cursor.hotspotX != resolvedHotspotX) || (cursor.hotspotY != resolvedHotspotY)) {
+                                cursor = CursorHandler.CustomCursor.create(s, resolvedHotspotX, resolvedHotspotY, this.textureSupplier.getSourceWithPrefix());
                                 if (cursor != null) {
                                     CursorHandler.registerCustomCursor(this.getCursorName(), cursor);
                                     this.cursorReady = true;
@@ -97,8 +100,8 @@ public class CursorElement extends AbstractElement {
                     }
                 }
                 this.lastLocation = loc;
-                this.lastHotspotX = this.hotspotX;
-                this.lastHotspotY = this.hotspotY;
+                this.lastHotspotX = resolvedHotspotX;
+                this.lastHotspotY = resolvedHotspotY;
             }
         } else {
             this.lastLocation = null;

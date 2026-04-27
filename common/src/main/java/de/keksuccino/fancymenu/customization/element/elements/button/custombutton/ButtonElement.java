@@ -4,21 +4,28 @@ import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBloc
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
+import de.keksuccino.fancymenu.util.properties.Property;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtendedSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
@@ -40,25 +47,35 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     @Nullable
     private AbstractWidget widget;
     private final RangeSlider templateDummySlider = new RangeSlider(0, 0, 0, 0, Component.empty(), 0.0D, 1.0D, 0.5D);
+
     public ResourceSupplier<IAudio> clickSound;
     public ResourceSupplier<IAudio> hoverSound;
     @Nullable
     public String label;
     @Nullable
     public String hoverLabel;
+    public final Property.ColorProperty labelBaseColor = putProperty(Property.hexColorProperty("label_base_color", null, true, "fancymenu.elements.widgets.label.base_color"));
+    public final Property.ColorProperty labelHoverColor = putProperty(Property.hexColorProperty("label_hover_color", null, true, "fancymenu.elements.widgets.label.hover_color"));
+    public final Property.FloatProperty labelScale = putProperty(Property.floatProperty("label_scale", 1.0F, "fancymenu.elements.widgets.label.scale"));
+    public final Property.BooleanProperty labelShadow = putProperty(Property.booleanProperty("label_shadow", true, "fancymenu.elements.widgets.label.shadow"));
     public String tooltip;
     public ResourceSupplier<ITexture> backgroundTextureNormal;
     public ResourceSupplier<ITexture> backgroundTextureHover;
     public ResourceSupplier<ITexture> backgroundTextureInactive;
+    public ResourceSupplier<ITexture> iconTextureNormal;
+    public ResourceSupplier<ITexture> iconTextureHover;
+    public ResourceSupplier<ITexture> iconTextureInactive;
+    public boolean underlineLabelOnHover = false;
+    public boolean transparentBackground = false;
     public boolean restartBackgroundAnimationsOnHover = true;
     public boolean nineSliceCustomBackground = false;
-    public int nineSliceBorderX = 5;
-    public int nineSliceBorderY = 5;
+    public final Property.IntegerProperty nineSliceBorderX = putProperty(Property.integerProperty("nine_slice_border_x", 5, "fancymenu.elements.buttons.textures.nine_slice.border_x"));
+    public final Property.IntegerProperty nineSliceBorderY = putProperty(Property.integerProperty("nine_slice_border_y", 5, "fancymenu.elements.buttons.textures.nine_slice.border_y"));
     public boolean navigatable = true;
     @NotNull
     public GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
     @NotNull
-    public LoadingRequirementContainer activeStateSupplier = new LoadingRequirementContainer();
+    public RequirementContainer activeStateSupplier = new RequirementContainer();
     public boolean isTemplate = false;
     public boolean templateApplyWidth = false;
     public boolean templateApplyHeight = false;
@@ -72,8 +89,9 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public ResourceSupplier<ITexture> sliderBackgroundTextureNormal;
     public ResourceSupplier<ITexture> sliderBackgroundTextureHighlighted;
     public boolean nineSliceSliderHandle = false;
-    public int nineSliceSliderHandleBorderX = 5;
-    public int nineSliceSliderHandleBorderY = 5;
+    public final Property.IntegerProperty nineSliceSliderHandleBorderX = putProperty(Property.integerProperty("nine_slice_slider_handle_border_x", 5, "fancymenu.elements.slider.v2.handle.textures.nine_slice.border_x"));
+    public final Property.IntegerProperty nineSliceSliderHandleBorderY = putProperty(Property.integerProperty("nine_slice_slider_handle_border_y", 5, "fancymenu.elements.slider.v2.handle.textures.nine_slice.border_y"));
+    public final Property<ResourceSupplier<IAudio>> unhoverAudio = putProperty(Property.resourceSupplierProperty(IAudio.class, "unhover_audio", null, "fancymenu.elements.widgets.unhover_audio", true, true, true, null));
 
     protected static long lastTemplateUpdateButton = -1L;
     protected static ButtonElement lastTemplateButton = null;
@@ -86,18 +104,14 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     }
 
     @Override
-    public void tick() {
+    public void afterConstruction() {
+
+        resetTemplateCache();
 
         if (this.getWidget() == null) return;
-
         //This is mainly to make Vanilla buttons not flicker for the first frame when hidden
         this.updateWidget();
 
-    }
-
-    @Override
-    public void afterConstruction() {
-        resetTemplateCache();
     }
 
     @Override
@@ -153,20 +167,48 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
     @Override
     public int getAbsoluteWidth() {
+        int w = 1;
         if (!this.isTemplate && this.isTemplateActive()) {
             ButtonElement template = getTopActiveTemplateElement(this.isSlider());
-            if ((template != null) && template.templateApplyWidth) return template.getAbsoluteWidth();
+            if ((template != null) && template.templateApplyWidth) w = template.getAbsoluteWidth();
         }
-        return super.getAbsoluteWidth();
+        w = super.getAbsoluteWidth();
+        if (this.isCopyrightButton()) {
+            if (w < 60) {
+                w = 60;
+            }
+        }
+        return w;
     }
 
     @Override
     public int getAbsoluteHeight() {
+        int h = 1;
         if (!this.isTemplate && this.isTemplateActive()) {
             ButtonElement template = getTopActiveTemplateElement(this.isSlider());
-            if ((template != null) && template.templateApplyHeight) return template.getAbsoluteHeight();
+            if ((template != null) && template.templateApplyHeight) h = template.getAbsoluteHeight();
         }
-        return super.getAbsoluteHeight();
+        h = super.getAbsoluteHeight();
+        if (this.isCopyrightButton()) {
+            if (h < 6) {
+                h = 6;
+            }
+        }
+        return h;
+    }
+
+    @Override
+    protected int getAbsoluteX(boolean includeParallax) {
+        int x = super.getAbsoluteX(includeParallax);
+        if (this.isCopyrightButton()) {
+            if (x < 0) {
+                x = 0;
+            }
+            if (x > (getScreenWidth() - this.getAbsoluteWidth())) {
+                x = getScreenWidth() - this.getAbsoluteWidth();
+            }
+        }
+        return x;
     }
 
     @Override
@@ -179,12 +221,44 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     }
 
     @Override
+    public int getAbsoluteXWithoutParallax() {
+        if (!this.isTemplate && this.isTemplateActive()) {
+            ButtonElement template = getTopActiveTemplateElement(this.isSlider());
+            if ((template != null) && template.templateApplyPosX) return template.getAbsoluteXWithoutParallax();
+        }
+        return super.getAbsoluteXWithoutParallax();
+    }
+
+    @Override
+    protected int getAbsoluteY(boolean includeParallax) {
+        int y = super.getAbsoluteY(includeParallax);
+        if (this.isCopyrightButton()) {
+            if (y < 0) {
+                y = 0;
+            }
+            if (y > (getScreenHeight() - this.getAbsoluteHeight())) {
+                y = getScreenHeight() - this.getAbsoluteHeight();
+            }
+        }
+        return y;
+    }
+
+    @Override
     public int getAbsoluteY() {
         if (!this.isTemplate && this.isTemplateActive()) {
             ButtonElement template = getTopActiveTemplateElement(this.isSlider());
             if ((template != null) && template.templateApplyPosY) return template.getAbsoluteY();
         }
         return super.getAbsoluteY();
+    }
+
+    @Override
+    public int getAbsoluteYWithoutParallax() {
+        if (!this.isTemplate && this.isTemplateActive()) {
+            ButtonElement template = getTopActiveTemplateElement(this.isSlider());
+            if ((template != null) && template.templateApplyPosY) return template.getAbsoluteYWithoutParallax();
+        }
+        return super.getAbsoluteYWithoutParallax();
     }
 
     @Override
@@ -202,11 +276,18 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetAlpha();
         this.updateWidgetTooltip();
         this.updateWidgetLabels();
+        this.updateWidgetLabelUnderline();
+        this.updateWidgetLabelShadow();
+        this.updateWidgetLabelBaseColor();
+        this.updateWidgetLabelHoverColor();
+        this.updateWidgetLabelScale();
         this.updateWidgetHoverSound();
+        this.updateWidgetUnhoverSound();
         this.updateWidgetClickSound();
         this.updateWidgetTexture();
         this.updateWidgetSize();
         this.updateWidgetPosition();
+        this.updateWidgetHitboxRotation();
         this.updateWidgetNavigatable();
     }
 
@@ -238,6 +319,12 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         this.getWidget().setY(this.getAbsoluteY());
     }
 
+    public void updateWidgetHitboxRotation() {
+        if (this.getWidget() instanceof CustomizableWidget w) {
+            w.setHitboxRotationFancyMenu(this.getRotationDegrees(), this.getVerticalTiltDegrees(), this.getHorizontalTiltDegrees());
+        }
+    }
+
     public void updateWidgetSize() {
         if (this.getWidget() == null) return;
         this.getWidget().setWidth(this.getAbsoluteWidth());
@@ -265,9 +352,85 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         }
     }
 
+    public void updateWidgetLabelUnderline() {
+        if (this.getWidget() instanceof CustomizableWidget w) {
+            boolean underline = this.isUnderlineLabelOnHover();
+            if (underline || w.isUnderlineLabelOnHoverFancyMenu()) {
+                w.setUnderlineLabelOnHoverFancyMenu(underline);
+            }
+        }
+    }
+
+    public void updateWidgetLabelShadow() {
+        AbstractWidget widget = this.getWidget();
+        if (widget == null) return;
+        ButtonElement template = this.getPropertySource();
+        boolean templateAppliesLabel = (template != null) && template.templateApplyLabel && (template != this);
+        boolean shadow = this.isLabelShadowEnabled();
+        boolean shouldApply = templateAppliesLabel ? !template.labelShadow.isDefault() : !this.labelShadow.isDefault();
+        if (!shouldApply && (widget instanceof CustomizableWidget w)) {
+            shouldApply = w.isLabelShadowFancyMenu() != shadow;
+        }
+        if (shouldApply) {
+            if (widget instanceof ExtendedButton b) {
+                b.setLabelShadowEnabled(shadow);
+            }
+            if (widget instanceof AbstractExtendedSlider s) {
+                s.setLabelShadow(shadow);
+            }
+            if (widget instanceof CustomizableWidget w) {
+                w.setLabelShadowFancyMenu(shadow);
+            }
+        }
+    }
+
+    public void updateWidgetLabelHoverColor() {
+        if (this.getWidget() instanceof CustomizableWidget w) {
+            DrawableColor color = this.getLabelHoverColor();
+            if (color != null) {
+                w.setLabelHoverColorFancyMenu(color);
+            } else if (w.getLabelHoverColorFancyMenu() != null) {
+                w.setLabelHoverColorFancyMenu(null);
+            }
+        }
+    }
+
+    public void updateWidgetLabelBaseColor() {
+        if (this.getWidget() instanceof CustomizableWidget w) {
+            DrawableColor color = this.getLabelBaseColor();
+            if (color != null) {
+                w.setLabelBaseColorFancyMenu(color);
+            } else if (w.getLabelBaseColorFancyMenu() != null) {
+                w.setLabelBaseColorFancyMenu(null);
+            }
+        }
+    }
+
+    public void updateWidgetLabelScale() {
+        if (this.getWidget() instanceof CustomizableWidget w) {
+            ButtonElement template = this.getPropertySource();
+            boolean templateAppliesLabel = (template != null) && template.templateApplyLabel && (template != this);
+            float scale = this.getLabelScale();
+            boolean shouldApply = templateAppliesLabel ? !template.labelScale.isDefault() : !this.labelScale.isDefault();
+            if (!shouldApply && Float.compare(w.getLabelScaleFancyMenu(), scale) != 0) {
+                shouldApply = true;
+            }
+            if (shouldApply) {
+                w.setLabelScaleFancyMenu(scale);
+            }
+        }
+    }
+
     public void updateWidgetHoverSound() {
         if (this.getWidget() instanceof CustomizableWidget w) {
             w.setHoverSoundFancyMenu((this.getPropertySource().hoverSound != null) ? this.getPropertySource().hoverSound.get() : null);
+        }
+    }
+
+    public void updateWidgetUnhoverSound() {
+        if (this.getWidget() instanceof CustomizableWidget w) {
+            ResourceSupplier<IAudio> supplier = this.getPropertySource().unhoverAudio.get();
+            w.setUnhoverSoundFancyMenu((supplier != null) ? supplier.get() : null);
         }
     }
 
@@ -282,6 +445,11 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         RenderableResource backNormal = null;
         RenderableResource backHover = null;
         RenderableResource backInactive = null;
+        RenderableResource iconNormal = null;
+        RenderableResource iconHover = null;
+        RenderableResource iconInactive = null;
+        boolean transparentBackground = this.getPropertySource().transparentBackground;
+        RenderableResource transparentResource = null;
 
         //Normal
         if (this.getPropertySource().backgroundTextureNormal != null) {
@@ -295,21 +463,44 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         if (this.getPropertySource().backgroundTextureInactive != null) {
             backInactive = this.getPropertySource().backgroundTextureInactive.get();
         }
+        //Icon Normal
+        if (this.getPropertySource().iconTextureNormal != null) {
+            iconNormal = this.getPropertySource().iconTextureNormal.get();
+        }
+        //Icon Hover
+        if (this.getPropertySource().iconTextureHover != null) {
+            iconHover = this.getPropertySource().iconTextureHover.get();
+        }
+        //Icon Inactive
+        if (this.getPropertySource().iconTextureInactive != null) {
+            iconInactive = this.getPropertySource().iconTextureInactive.get();
+        }
+        if (transparentBackground && !(this.getWidget() instanceof CustomizableSlider)) {
+            transparentResource = PngTexture.FULLY_TRANSPARENT_PNG_TEXTURE_SUPPLIER.get();
+            backNormal = transparentResource;
+            backHover = transparentResource;
+            backInactive = transparentResource;
+        }
 
         if (this.getWidget() instanceof CustomizableWidget w) {
             if (this.getWidget() instanceof CustomizableSlider s) {
-                s.setNineSliceCustomSliderBackground_FancyMenu(this.getPropertySource().nineSliceCustomBackground);
-                s.setNineSliceSliderBackgroundBorderX_FancyMenu(this.getPropertySource().nineSliceBorderX);
-                s.setNineSliceSliderBackgroundBorderY_FancyMenu(this.getPropertySource().nineSliceBorderY);
+                s.setNineSliceCustomSliderBackground_FancyMenu(!transparentBackground && this.getPropertySource().nineSliceCustomBackground);
+                s.setNineSliceSliderBackgroundBorderX_FancyMenu(this.getPropertySource().nineSliceBorderX.getInteger());
+                s.setNineSliceSliderBackgroundBorderY_FancyMenu(this.getPropertySource().nineSliceBorderY.getInteger());
             } else {
-                w.setNineSliceCustomBackground_FancyMenu(this.getPropertySource().nineSliceCustomBackground);
-                w.setNineSliceBorderX_FancyMenu(this.getPropertySource().nineSliceBorderX);
-                w.setNineSliceBorderY_FancyMenu(this.getPropertySource().nineSliceBorderY);
+                w.setNineSliceCustomBackground_FancyMenu(!transparentBackground && this.getPropertySource().nineSliceCustomBackground);
+                w.setNineSliceBorderX_FancyMenu(this.getPropertySource().nineSliceBorderX.getInteger());
+                w.setNineSliceBorderY_FancyMenu(this.getPropertySource().nineSliceBorderY.getInteger());
             }
             w.setCustomBackgroundNormalFancyMenu(backNormal);
             w.setCustomBackgroundHoverFancyMenu(backHover);
             w.setCustomBackgroundInactiveFancyMenu(backInactive);
             w.setCustomBackgroundResetBehaviorFancyMenu(this.getPropertySource().restartBackgroundAnimationsOnHover ? CustomizableWidget.CustomBackgroundResetBehavior.RESET_ON_HOVER : CustomizableWidget.CustomBackgroundResetBehavior.RESET_NEVER);
+        }
+        if (this.getWidget() instanceof ExtendedButton b) {
+            b.setIconNormal(iconNormal);
+            b.setIconHover(iconHover);
+            b.setIconInactive(iconInactive);
         }
 
         //-------------------------------------
@@ -325,11 +516,18 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         if (this.getPropertySource().sliderBackgroundTextureHighlighted != null) {
             sliderBackHighlighted = this.getPropertySource().sliderBackgroundTextureHighlighted.get();
         }
+        if (transparentBackground && (this.getWidget() instanceof CustomizableSlider)) {
+            if (transparentResource == null) {
+                transparentResource = PngTexture.FULLY_TRANSPARENT_PNG_TEXTURE_SUPPLIER.get();
+            }
+            sliderBackNormal = transparentResource;
+            sliderBackHighlighted = transparentResource;
+        }
 
         if (this.getWidget() instanceof CustomizableSlider w) {
             w.setNineSliceCustomSliderHandle_FancyMenu(this.getPropertySource().nineSliceSliderHandle);
-            w.setNineSliceSliderHandleBorderX_FancyMenu(this.getPropertySource().nineSliceSliderHandleBorderX);
-            w.setNineSliceSliderHandleBorderY_FancyMenu(this.getPropertySource().nineSliceSliderHandleBorderY);
+            w.setNineSliceSliderHandleBorderX_FancyMenu(this.getPropertySource().nineSliceSliderHandleBorderX.getInteger());
+            w.setNineSliceSliderHandleBorderY_FancyMenu(this.getPropertySource().nineSliceSliderHandleBorderY.getInteger());
             w.setCustomSliderBackgroundNormalFancyMenu(sliderBackNormal);
             w.setCustomSliderBackgroundHighlightedFancyMenu(sliderBackHighlighted);
         }
@@ -361,6 +559,15 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         return (this.getWidget() instanceof CustomizableSlider);
     }
 
+    public boolean isCopyrightButton() {
+        if (this instanceof VanillaWidgetElement w) {
+            if (w.widgetMeta == null) return false;
+            String compId = ((UniqueWidget)w.widgetMeta.getWidget()).getWidgetIdentifierFancyMenu();
+            return ((compId != null) && compId.equals("title_screen_copyright_button"));
+        }
+        return false;
+    }
+
     public float getOpacity() {
         if (this.isTemplate) return this.opacity;
         ButtonElement template = getTopActiveTemplateElement(this.isSlider());
@@ -382,6 +589,53 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         ButtonElement template = getTopActiveTemplateElement(this.isSlider());
         if ((template != null) && template.templateApplyLabel) return template.hoverLabel;
         return this.hoverLabel;
+    }
+
+    public boolean isUnderlineLabelOnHover() {
+        if (this.isTemplate) return this.underlineLabelOnHover;
+        ButtonElement template = getTopActiveTemplateElement(this.isSlider());
+        if ((template != null) && template.templateApplyLabel) return template.underlineLabelOnHover;
+        return this.underlineLabelOnHover;
+    }
+
+    public boolean isLabelShadowEnabled() {
+        if (this.isTemplate) return this.labelShadow.getBoolean();
+        ButtonElement template = getTopActiveTemplateElement(this.isSlider());
+        if ((template != null) && template.templateApplyLabel) return template.labelShadow.getBoolean();
+        return this.labelShadow.getBoolean();
+    }
+
+    @Nullable
+    public DrawableColor getLabelHoverColor() {
+        if (this.isTemplate) {
+            return (this.labelHoverColor.get() != null) ? this.labelHoverColor.getDrawable() : null;
+        }
+        ButtonElement template = getTopActiveTemplateElement(this.isSlider());
+        if ((template != null) && template.templateApplyLabel) {
+            return (template.labelHoverColor.get() != null) ? template.labelHoverColor.getDrawable() : null;
+        }
+        return (this.labelHoverColor.get() != null) ? this.labelHoverColor.getDrawable() : null;
+    }
+
+    @Nullable
+    public DrawableColor getLabelBaseColor() {
+        if (this.isTemplate) {
+            return (this.labelBaseColor.get() != null) ? this.labelBaseColor.getDrawable() : null;
+        }
+        ButtonElement template = getTopActiveTemplateElement(this.isSlider());
+        if ((template != null) && template.templateApplyLabel) {
+            return (template.labelBaseColor.get() != null) ? template.labelBaseColor.getDrawable() : null;
+        }
+        return (this.labelBaseColor.get() != null) ? this.labelBaseColor.getDrawable() : null;
+    }
+
+    public float getLabelScale() {
+        if (this.isTemplate) return this.labelScale.getFloat();
+        ButtonElement template = getTopActiveTemplateElement(this.isSlider());
+        if ((template != null) && template.templateApplyLabel) {
+            return template.labelScale.getFloat();
+        }
+        return this.labelScale.getFloat();
     }
 
     @NotNull

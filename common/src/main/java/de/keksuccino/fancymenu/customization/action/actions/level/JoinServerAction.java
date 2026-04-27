@@ -2,9 +2,10 @@ package de.keksuccino.fancymenu.customization.action.actions.level;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinServerList;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableNotificationScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
+import de.keksuccino.fancymenu.util.ScreenUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.*;
@@ -20,7 +21,6 @@ import org.jetbrains.annotations.Nullable;
 public class JoinServerAction extends Action {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final boolean IS_LAN = false;
 
     private static long lastJoinErrorTrigger = -1;
 
@@ -44,20 +44,22 @@ public class JoinServerAction extends Action {
             long now = System.currentTimeMillis();
             if ((lastJoinErrorTrigger + 20000) < now) {
                 lastJoinErrorTrigger = now;
-                QueueableScreenHandler.addToQueue(new QueueableNotificationScreen(Component.translatable("fancymenu.actions.errors.cannot_join_world_while_in_world")));
+                MainThreadTaskExecutor.executeInMainThread(() -> {
+                    Dialogs.openMessage(Component.translatable("fancymenu.actions.errors.cannot_join_world_while_in_world"), MessageDialogStyle.ERROR);
+                }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
             }
             return;
         }
         if (value != null) {
             if (Minecraft.getInstance().screen instanceof DisconnectedScreen) {
-                Minecraft.getInstance().setScreen(new TitleScreen());
+                ScreenUtils.setScreen(new TitleScreen());
             }
             if (!(Minecraft.getInstance().screen instanceof JoinServerBridgeScreen) && !(Minecraft.getInstance().screen instanceof ConnectScreen)) {
                 try {
 
                     Screen current = Minecraft.getInstance().screen;
 
-                    Minecraft.getInstance().setScreen(new JoinServerBridgeScreen());
+                    ScreenUtils.setScreen(new JoinServerBridgeScreen());
 
                     String ip = value.replace(" ", "");
                     int port = 25565;
@@ -78,7 +80,7 @@ public class JoinServerAction extends Action {
                         }
                     }
                     if (d == null) {
-                        d = new ServerData(value.replace(" ", ""), value.replace(" ", ""), IS_LAN);
+                        d = new ServerData(value.replace(" ", ""), value.replace(" ", ""), false);
                         l.add(d, false);
                         l.save();
                     }
@@ -95,13 +97,13 @@ public class JoinServerAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.joinserver");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.joinserver.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.joinserver.desc");
     }
 
     @Override
@@ -110,7 +112,7 @@ public class JoinServerAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "exampleserver.com:25565";
     }
 

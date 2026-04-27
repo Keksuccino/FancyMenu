@@ -1,18 +1,17 @@
 package de.keksuccino.fancymenu.customization.element.elements.animationcontroller;
 
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
-import net.minecraft.client.Minecraft;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 
-public class AnimationControllerEditorElement extends AbstractEditorElement {
+public class AnimationControllerEditorElement extends AbstractEditorElement<AnimationControllerEditorElement, AnimationControllerElement> {
 
-    public AnimationControllerEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public AnimationControllerEditorElement(@NotNull AnimationControllerElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
         this.settings.setFadeable(false);
         this.settings.setAdvancedSizingSupported(false);
@@ -37,39 +36,63 @@ public class AnimationControllerEditorElement extends AbstractEditorElement {
         this.rightClickMenu.addClickableEntry("manage_keyframes", Component.translatable("fancymenu.elements.animation_controller.manage_keyframes"),
                         (menu, entry) -> {
                             KeyframeManagerScreen managerScreen = new KeyframeManagerScreen(
-                                    this.getElement(),
+                                    this.element,
                                     callback -> {
                                         if (callback != null) {
                                             this.editor.history.saveSnapshot();
-                                            this.getElement().keyframes = callback.keyframes();
-                                            this.getElement().offsetMode = callback.isOffsetMode();
+                                            this.element.keyframes = callback.keyframes();
+                                            this.element.offsetMode = callback.isOffsetMode();
                                         }
-                                        Minecraft.getInstance().setScreen(this.editor);
+                                        this.openContextMenuScreen(this.editor);
                                     }
                             );
-                            Minecraft.getInstance().setScreen(managerScreen);
-                        })
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.manage_keyframes.desc")))
-                .setStackable(false);
+            this.openContextMenuScreen(managerScreen);
+        })
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.manage_keyframes.desc")))
+                .setStackable(false)
+                .setIcon(MaterialIcons.ANIMATION);
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "loop", AnimationControllerEditorElement.class,
-                consumes -> consumes.getElement().loop,
-                (element, aBoolean) -> element.getElement().loop = aBoolean,
-                "fancymenu.elements.animation_controller.loop");
+                consumes -> consumes.element.loop,
+                (element, aBoolean) -> element.element.loop = aBoolean,
+                "fancymenu.elements.animation_controller.loop")
+                .setIcon(MaterialIcons.REPEAT);
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "ignore_size", AnimationControllerEditorElement.class,
-                        consumes -> consumes.getElement().ignoreSize,
-                        (element, aBoolean) -> element.getElement().ignoreSize = aBoolean,
+                        consumes -> consumes.element.ignoreSize,
+                        (element, aBoolean) -> element.element.ignoreSize = aBoolean,
                         "fancymenu.elements.animation_controller.ignore_size")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.ignore_size.desc")))
-                .setStackable(false);
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.ignore_size.desc")))
+                .setStackable(false)
+                .setIcon(MaterialIcons.STRAIGHTEN);
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "ignore_position", AnimationControllerEditorElement.class,
-                        consumes -> consumes.getElement().ignorePosition,
-                        (element, aBoolean) -> element.getElement().ignorePosition = aBoolean,
+                        consumes -> consumes.element.ignorePosition,
+                        (element, aBoolean) -> element.element.ignorePosition = aBoolean,
                         "fancymenu.elements.animation_controller.ignore_position")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.ignore_position.desc")))
-                .setStackable(false);
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.ignore_position.desc")))
+                .setStackable(false)
+                .setIcon(MaterialIcons.MOVE);
+
+        this.rightClickMenu.addSeparatorEntry("separator_before_random_timing_offsets");
+
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "random_timing_offsets", AnimationControllerEditorElement.class,
+                        consumes -> consumes.element.randomTimingOffsetMode,
+                        (element, aBoolean) -> element.element.randomTimingOffsetMode = aBoolean,
+                        "fancymenu.elements.animation_controller.random_timing_offsets")
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.random_timing_offsets.desc")))
+                .setStackable(false)
+                .setIcon(MaterialIcons.SHUFFLE);
+
+        this.element.randomTimingOffsetMinMs.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.random_timing_offsets.range.desc")))
+                .setStackable(false)
+                .setIcon(MaterialIcons.TIMER);
+
+        this.element.randomTimingOffsetMaxMs.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.random_timing_offsets.range.desc")))
+                .setStackable(false)
+                .setIcon(MaterialIcons.TIMER);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_manage");
 
@@ -80,20 +103,17 @@ public class AnimationControllerEditorElement extends AbstractEditorElement {
                                     callback -> {
                                         if (callback != null) {
                                             this.editor.history.saveSnapshot();
-                                            this.getElement().targetElements = new ArrayList<>(callback);
+                                            this.element.targetElements = new ArrayList<>(callback);
                                         }
-                                        Minecraft.getInstance().setScreen(this.editor);
+                                        this.openContextMenuScreen(this.editor);
                                     }
                             );
-                            Minecraft.getInstance().setScreen(managerScreen);
+                            this.openContextMenuScreen(managerScreen);
                         })
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.manage_targets.desc")))
-                .setStackable(false);
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.manage_targets.desc")))
+                .setStackable(false)
+                .setIcon(MaterialIcons.LINK);
 
-    }
-
-    protected AnimationControllerElement getElement() {
-        return (AnimationControllerElement) this.element;
     }
 
 }

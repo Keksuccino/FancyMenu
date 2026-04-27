@@ -107,6 +107,7 @@ public class BrandingRenderer {
 
         int currentY = y;
         for (Component line : lines) {
+            graphics.setColor(1.0f, 1.0f, 1.0f, 1.0f);
             graphics.drawString(font, line, x, currentY, DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
             currentY += font.lineHeight + 1;
         }

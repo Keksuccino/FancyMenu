@@ -1,0 +1,2244 @@
+package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
+
+import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.SmoothLineRenderer;
+import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FormattedCharSequence;
+import org.jetbrains.annotations.NotNull;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.function.Supplier;
+
+@SuppressWarnings("unused")
+public class PiPWindow extends AbstractContainerEventHandler implements Renderable {
+
+    public static final int DEFAULT_TITLE_BAR_HEIGHT = 21;
+    public static final int DEFAULT_BORDER_THICKNESS = 1;
+    public static final int DEFAULT_BUTTON_SIZE = 12;
+    public static final int DEFAULT_BUTTON_PADDING = 2;
+    public static final int DEFAULT_MIN_WIDTH = 120;
+    public static final int DEFAULT_MIN_HEIGHT = 80;
+    public static final int DEFAULT_RESIZE_MARGIN = 4;
+    private static final long TITLE_BAR_DOUBLE_CLICK_TIME_MS = 500;
+    private static final int DEFAULT_ICON_TEXTURE_SIZE = 8;
+    private static final int TITLE_BAR_ICON_PADDING_EXTRA = 2;
+    private static final ResourceLocation DEFAULT_CLOSE_BUTTON_ICON = new ResourceLocation("fancymenu", "textures/pip/pip_window_close.png");
+    private static final ResourceLocation DEFAULT_MAXIMIZE_BUTTON_ICON = new ResourceLocation("fancymenu", "textures/pip/pip_window_maximize.png");
+    private static final ResourceLocation DEFAULT_NORMALIZE_BUTTON_ICON = new ResourceLocation("fancymenu", "textures/pip/pip_window_restore.png");
+    private static final MaterialIcon DEFAULT_CLOSE_BUTTON_MATERIAL_ICON = MaterialIcons.CLOSE;
+    private static final MaterialIcon DEFAULT_MAXIMIZE_BUTTON_MATERIAL_ICON = MaterialIcons.OPEN_IN_FULL;
+    private static final MaterialIcon DEFAULT_NORMALIZE_BUTTON_MATERIAL_ICON = MaterialIcons.FULLSCREEN_EXIT;
+    private static final int DEFAULT_DOCK_OVERLAY_PADDING = 6;
+    private static final int DEFAULT_DOCK_OVERLAY_BORDER_THICKNESS = 1;
+
+    private final Minecraft minecraft = Minecraft.getInstance();
+    private final List<GuiEventListener> children = new ArrayList<>();
+    private final List<PiPWindow> childWindows = new ArrayList<>();
+
+    private Component title;
+    @Nullable
+    private ResourceLocation icon;
+    @Nullable
+    private MaterialIcon materialIcon;
+    @Nullable
+    private Screen screen;
+
+    private int x;
+    private int y;
+    private int width;
+    private int height;
+    private int minWidth = DEFAULT_MIN_WIDTH;
+    private int minHeight = DEFAULT_MIN_HEIGHT;
+    private int titleBarHeight = DEFAULT_TITLE_BAR_HEIGHT;
+    private int borderThickness = DEFAULT_BORDER_THICKNESS;
+    private int resizeMargin = DEFAULT_RESIZE_MARGIN;
+    private int buttonSize = DEFAULT_BUTTON_SIZE;
+    private int buttonPadding = DEFAULT_BUTTON_PADDING;
+    @NotNull
+    private ResourceLocation closeButtonIcon = DEFAULT_CLOSE_BUTTON_ICON;
+    @NotNull
+    private ResourceLocation maximizeButtonIcon = DEFAULT_MAXIMIZE_BUTTON_ICON;
+    @NotNull
+    private ResourceLocation normalizeButtonIcon = DEFAULT_NORMALIZE_BUTTON_ICON;
+    @Nullable
+    private MaterialIcon closeButtonMaterialIcon = DEFAULT_CLOSE_BUTTON_MATERIAL_ICON;
+    @Nullable
+    private MaterialIcon maximizeButtonMaterialIcon = DEFAULT_MAXIMIZE_BUTTON_MATERIAL_ICON;
+    @Nullable
+    private MaterialIcon normalizeButtonMaterialIcon = DEFAULT_NORMALIZE_BUTTON_MATERIAL_ICON;
+
+    private boolean visible = true;
+    private boolean resizable = true;
+    private boolean movable = true;
+    private boolean maximizable = true;
+    private boolean closable = true;
+    private boolean closeScreenWithWindow = true;
+    private boolean sizeScaledToGuiScale = true;
+    private boolean screenAutoScalingEnabled = true;
+    @Nullable
+    private Double customBodyScale;
+    private boolean forceFancyMenuUiScaleEnabled = true;
+    private double forcedFancyMenuUiScale = 1.0;
+    private boolean alwaysOnTop = false;
+    private boolean forceFocusEnabled = false;
+    private boolean titleBarIconTintEnabled = true;
+
+    private boolean maximized = false;
+    private int restoreX;
+    private int restoreY;
+    private int restoreRawWidth;
+    private int restoreRawHeight;
+
+    private boolean inputLocked = false;
+    private boolean inputLockedByChildren = false;
+    private boolean blockMinecraftScreenInputs = false;
+
+    @Nullable
+    private PiPWindow parentWindow;
+
+    private boolean draggingTitleBar = false;
+    private boolean pressedTitleBar = false;
+    private PiPWindowResizeHandle activeResizeHandle = PiPWindowResizeHandle.NONE;
+    private PiPWindowResizeHandle hoverResizeHandle = PiPWindowResizeHandle.NONE;
+    private double lastMouseX;
+    private double lastMouseY;
+    private boolean hasMousePosition = false;
+    private double dragOffsetX;
+    private double dragOffsetY;
+    private boolean dockOverlayVisible = false;
+    private double resizeStartMouseX;
+    private double resizeStartMouseY;
+    private int resizeStartX;
+    private int resizeStartY;
+    private int resizeStartWidth;
+    private int resizeStartHeight;
+    private long lastTitleBarClickTime = 0;
+
+    @Nullable
+    private Runnable closeCallback;
+    @Nullable
+    private CloseWindowCheck closeWindowCheck;
+    private boolean closeCheckInProgress = false;
+    private boolean closingFromScreen = false;
+    private boolean closingViaCallback = false;
+
+    private int lastScreenWidth = -1;
+    private int lastScreenHeight = -1;
+    private boolean screenRendering = false;
+
+    public PiPWindow(@NotNull Component title, int x, int y, int width, int height) {
+        this(title, x, y, width, height, null);
+    }
+
+    public PiPWindow(@NotNull Component title, int width, int height) {
+        this(title, 0, 0, width, height, null);
+    }
+
+    public PiPWindow(@NotNull Component title) {
+        this(title, 0, 0, 200, 200, null);
+    }
+
+    public PiPWindow(@Nullable Screen screen) {
+        this(Component.literal("Window"), 0, 0, 200, 200, screen);
+    }
+
+    public PiPWindow() {
+        this(Component.literal("Window"));
+    }
+
+    public PiPWindow(@NotNull Component title, int x, int y, int width, int height, @Nullable Screen screen) {
+        this.title = Objects.requireNonNull(title, "title");
+        this.x = x;
+        this.y = y;
+        this.width = Math.max(width, getRawMinimumWidth());
+        this.height = Math.max(height, getRawMinimumHeight());
+        clampWindowToScreenSize();
+        setScreen(screen);
+    }
+
+    @Override
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+        if (!this.visible) {
+            return;
+        }
+
+        UIBase.startUIScaleRendering();
+        try {
+            enforceMinimumSizeForBodyScale();
+
+            RenderSystem.enableBlend();
+
+            RenderSystem.disableDepthTest();
+            RenderingUtils.setDepthTestLocked(true);
+
+            if (shouldRenderDockOverlay()) {
+                renderDockOverlay(graphics, partial);
+            }
+
+            renderWindowBackground(graphics, partial);
+
+            renderBodyScreen(graphics, mouseX, mouseY, partial);
+            renderWindowForeground(graphics, mouseX, mouseY, partial);
+            if (this.isDebug()) {
+                renderDebugOverlay(graphics);
+            }
+            updateResizeCursor(mouseX, mouseY);
+
+            RenderingUtils.setDepthTestLocked(false);
+        } finally {
+            UIBase.stopUIScaleRendering();
+        }
+
+    }
+
+    private void renderWindowBackground(@NotNull GuiGraphics graphics, float partial) {
+        float frameX = this.x;
+        float frameY = this.y;
+        float frameWidth = getWidth();
+        float frameHeight = getHeight();
+        float right = frameX + frameWidth;
+        float bottom = frameY + frameHeight;
+        float border = getRenderBorderThickness();
+        float titleHeight = getRenderTitleBarHeight();
+        float innerLeft = frameX + border;
+        float innerTop = frameY + border + titleHeight;
+        float innerRight = right - border;
+        float innerBottom = bottom - border;
+        float innerWidth = frameWidth - border - border;
+        float innerHeight = frameHeight - titleHeight - border - border;
+        if (innerRight <= innerLeft || innerBottom <= innerTop) {
+            return;
+        }
+        float normalCornerRadius = getFrameCornerRadius();
+        UITheme theme = getTheme();
+        if (UIBase.shouldBlur()) {
+            if (titleHeight > 0.0F) {
+                GuiBlurRenderer.renderBlurAreaWithIntensityRoundBottomCorners(graphics, innerLeft, innerTop, innerWidth, innerHeight, UIBase.getBlurRadius(), normalCornerRadius, theme.ui_blur_interface_background_tint, partial);
+            } else {
+                GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCorners(graphics, innerLeft, innerTop, innerWidth, innerHeight, UIBase.getBlurRadius(), normalCornerRadius, normalCornerRadius, normalCornerRadius, normalCornerRadius, theme.ui_blur_interface_background_tint, partial);
+            }
+        } else {
+            if (titleHeight > 0.0F) {
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                        graphics,
+                        innerLeft,
+                        innerTop,
+                        innerWidth,
+                        innerHeight,
+                        0.0F,
+                        0.0F,
+                        normalCornerRadius,
+                        normalCornerRadius,
+                        theme.ui_interface_background_color.getColorInt(),
+                        partial
+                );
+            } else {
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                        graphics,
+                        innerLeft,
+                        innerTop,
+                        innerWidth,
+                        innerHeight,
+                        normalCornerRadius,
+                        normalCornerRadius,
+                        normalCornerRadius,
+                        normalCornerRadius,
+                        theme.ui_interface_background_color.getColorInt(),
+                        partial
+                );
+            }
+        }
+    }
+
+    private void renderBodyScreen(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        if (this.screen == null) {
+            return;
+        }
+
+        resizeScreenIfNeeded();
+
+        int bodyWidth = getBodyWidth();
+        int bodyHeight = getBodyHeight();
+        if (bodyWidth <= 0 || bodyHeight <= 0) {
+            return;
+        }
+
+        int bodyX = getBodyX();
+        int bodyY = getBodyY();
+        double renderScale = getScreenRenderScaleFactor();
+        double inputScale = renderScale <= 0.0 ? 1.0 : 1.0 / renderScale;
+        int localMouseX = (int) Math.floor((mouseX - bodyX) * inputScale);
+        int localMouseY = (int) Math.floor((mouseY - bodyY) * inputScale);
+        if (!PiPWindowHandler.INSTANCE.canMouseReachWindow(this, mouseX, mouseY)) {
+            localMouseX = -100000;
+            localMouseY = -100000;
+        }
+
+        graphics.enableScissor(bodyX, bodyY, bodyX + bodyWidth, bodyY + bodyHeight);
+        graphics.pose().pushPose();
+        graphics.pose().translate(bodyX, bodyY, 0);
+        if (renderScale != 1.0) {
+            graphics.pose().scale((float) renderScale, (float) renderScale, 1.0F);
+        }
+        PiPWindowHandler.INSTANCE.beginScreenRender(this, renderScale);
+        this.screenRendering = true;
+        try {
+            RenderingUtils.setVanillaMenuBlurringBlocked(true);
+            this.screen.renderWithTooltip(graphics, localMouseX, localMouseY, partial);
+            RenderingUtils.setVanillaMenuBlurringBlocked(false);
+        } finally {
+            this.screenRendering = false;
+            PiPWindowHandler.INSTANCE.endScreenRender(this);
+        }
+        graphics.pose().popPose();
+        graphics.disableScissor();
+    }
+
+    private void renderWindowForeground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        renderWindowFrame(graphics, partial);
+
+        float scale = getFrameScaleSafe();
+        float frameX = this.x;
+        float frameY = this.y;
+        float frameWidth = getWidth();
+        float border = getRenderBorderThickness();
+        float titleBarHeight = getRenderTitleBarHeight();
+        float titleBarY = frameY + border;
+        float titleBarX = frameX + border;
+        float titleBarRight = frameX + frameWidth - border;
+        float titleCenterY = titleBarY + Math.max(0.0F, (titleBarHeight - UIBase.getUITextHeightNormal() * scale) / 2.0F);
+
+        UITheme theme = getTheme();
+        float buttonSlotSize = getTitleBarButtonSlotSize();
+        float closeX = getCloseButtonX();
+        float buttonY = getButtonY();
+        float maximizeX = getMaximizeButtonX();
+        boolean maximizeHovered = this.maximizable && isPointInArea(mouseX, mouseY, maximizeX, buttonY, buttonSlotSize, titleBarHeight);
+        boolean closeHovered = this.closable && isPointInArea(mouseX, mouseY, closeX, buttonY, buttonSlotSize, titleBarHeight);
+        boolean hasBody = getBodyHeight() > 0;
+        float buttonSlotSizeUnscaled = resolveUnscaledSize(buttonSlotSize, scale);
+        float buttonIconSizeUnscaled = resolveButtonIconSize(buttonSlotSizeUnscaled, this.titleBarHeight);
+        float buttonIconSize = buttonIconSizeUnscaled * scale;
+
+        if (this.maximizable) {
+            boolean rightmost = !this.closable;
+            IconRenderData maximizeIcon = resolveButtonIconData(getActiveMaximizeButtonResourceIcon(), getActiveMaximizeButtonMaterialIcon(), buttonIconSizeUnscaled);
+            renderButton(graphics, theme, maximizeX, buttonY, buttonSlotSize, titleBarHeight, maximizeHovered, maximizeIcon, buttonIconSize, rightmost, hasBody, partial);
+        }
+
+        if (this.closable) {
+            IconRenderData closeIcon = resolveButtonIconData(this.closeButtonIcon, this.closeButtonMaterialIcon, buttonIconSizeUnscaled);
+            renderButton(graphics, theme, closeX, buttonY, buttonSlotSize, titleBarHeight, closeHovered, closeIcon, buttonIconSize, true, hasBody, partial);
+        }
+
+        float padding = getRenderButtonPadding();
+        float iconPadding = padding + TITLE_BAR_ICON_PADDING_EXTRA * scale;
+        float iconSize = Math.max(0.0F, Math.min(titleBarHeight - iconPadding * 2.0F, titleBarHeight));
+        float textStartX = titleBarX + padding + Math.max(1.0F, 2.0F * scale);
+        if (iconSize > 0.0F) {
+            float iconX = titleBarX + iconPadding;
+            float iconY = titleBarY + (titleBarHeight - iconSize) * 0.5F;
+            boolean renderedIcon = false;
+            float iconSizeUnscaled = resolveUnscaledSize(iconSize, scale);
+            IconRenderData iconData = resolveMaterialIconData(this.materialIcon, iconSizeUnscaled, iconSizeUnscaled);
+            boolean isMaterialIcon = iconData != null;
+            if (iconData == null && this.icon != null) {
+                iconData = new IconRenderData(this.icon, DEFAULT_ICON_TEXTURE_SIZE, DEFAULT_ICON_TEXTURE_SIZE);
+            }
+            if (iconData != null) {
+                if (isMaterialIcon && this.titleBarIconTintEnabled) {
+                    theme.setUITextureShaderColor(graphics, 1.0F);
+                } else {
+                    RenderingUtils.resetShaderColor(graphics);
+                }
+                blitScaledIcon(graphics, iconData, iconX, iconY, iconSize, iconSize);
+                if (isMaterialIcon && this.titleBarIconTintEnabled) {
+                    RenderingUtils.resetShaderColor(graphics);
+                }
+                renderedIcon = true;
+            }
+            if (renderedIcon) {
+                textStartX = iconX + iconSize + iconPadding;
+            }
+        }
+
+        float buttonsWidth = 0.0F;
+        if (this.maximizable) {
+            buttonsWidth += buttonSlotSize;
+        }
+        if (this.closable) {
+            buttonsWidth += buttonSlotSize;
+        }
+        float titleRightLimit = titleBarRight - buttonsWidth - padding;
+        float maxTitleWidth = Math.max(0.0F, titleRightLimit - textStartX);
+        float maxTitleWidthForFont = scale <= 0.0F ? maxTitleWidth : (maxTitleWidth / scale);
+        List<? extends Component> split = UIBase.lineWrapUIComponentsNormal(this.title, maxTitleWidthForFont);
+        Component titleText = !split.isEmpty() ? split.get(0) : Component.empty();
+        graphics.pose().pushPose();
+        if (scale != 1.0F) {
+            graphics.pose().scale(scale, scale, 1.0F);
+        }
+        UIBase.renderText(graphics, titleText, textStartX / scale, titleCenterY / scale, this.getLabelColor(theme));
+        graphics.pose().popPose();
+
+        if (titleBarHeight > 0.0F) {
+            float bottom = titleBarY + titleBarHeight;
+            float divider = border;
+            if (divider > 0.0F) {
+                SmoothLineRenderer.renderSmoothHorizontalLine(
+                        graphics,
+                        titleBarX,
+                        bottom - divider,
+                        titleBarRight - titleBarX,
+                        divider,
+                        this.getBorderColor(theme),
+                        partial
+                );
+            }
+        }
+    }
+
+    private void renderWindowFrame(@NotNull GuiGraphics graphics, float partial) {
+        float frameX = this.x;
+        float frameY = this.y;
+        float frameWidth = getWidth();
+        float frameHeight = getHeight();
+        float right = frameX + frameWidth;
+        float bottom = frameY + frameHeight;
+        UITheme theme = getTheme();
+        float border = getRenderBorderThickness();
+        float normalCornerRadius = getFrameCornerRadius();
+
+        float innerLeft = frameX + border;
+        float innerTop = frameY + border;
+        float innerRight = right - border;
+        float innerBottom = bottom - border;
+        float titleHeight = getRenderTitleBarHeight();
+        if (innerRight > innerLeft && innerBottom > innerTop && titleHeight > 0.0F) {
+            float titleBottom = innerTop + titleHeight;
+            if (UIBase.shouldBlur()) {
+                float blurWidth = innerRight - innerLeft;
+                float blurHeight = Math.min(titleBottom, innerBottom) - innerTop;
+                boolean hasBody = innerBottom > titleBottom;
+                if (hasBody) {
+                    GuiBlurRenderer.renderBlurAreaWithIntensityRoundTopCorners(graphics, innerLeft, innerTop, blurWidth, blurHeight, UIBase.getBlurRadius(), normalCornerRadius, theme.ui_blur_interface_title_bar_tint, partial);
+                } else {
+                    GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCorners(graphics, innerLeft, innerTop, blurWidth, blurHeight, UIBase.getBlurRadius(), normalCornerRadius, normalCornerRadius, normalCornerRadius, normalCornerRadius, theme.ui_blur_interface_title_bar_tint, partial);
+                }
+            } else {
+                float titleWidth = innerRight - innerLeft;
+                float titleHeightClamped = Math.min(titleBottom, innerBottom) - innerTop;
+                boolean hasBody = innerBottom > titleBottom;
+                if (hasBody) {
+                    SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                            graphics,
+                            innerLeft,
+                            innerTop,
+                            titleWidth,
+                            titleHeightClamped,
+                            normalCornerRadius,
+                            normalCornerRadius,
+                            0.0F,
+                            0.0F,
+                            theme.ui_interface_title_bar_color.getColorInt(),
+                            partial
+                    );
+                } else {
+                    SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                            graphics,
+                            innerLeft,
+                            innerTop,
+                            titleWidth,
+                            titleHeightClamped,
+                            normalCornerRadius,
+                            normalCornerRadius,
+                            normalCornerRadius,
+                            normalCornerRadius,
+                            theme.ui_interface_title_bar_color.getColorInt(),
+                            partial
+                    );
+                }
+            }
+        }
+
+        if (border > 0.0F) {
+            float borderThickness = border;
+            float smoothBorderCorner = normalCornerRadius > 0.0F ? normalCornerRadius + borderThickness : 0.0F;
+            SmoothRectangleRenderer.renderSmoothBorderRoundAllCorners(
+                    graphics,
+                    frameX,
+                    frameY,
+                    frameWidth,
+                    frameHeight,
+                    borderThickness,
+                    smoothBorderCorner,
+                    smoothBorderCorner,
+                    smoothBorderCorner,
+                    smoothBorderCorner,
+                    this.getBorderColor(theme),
+                    partial
+            );
+        }
+    }
+
+    private boolean shouldRenderDockOverlay() {
+        return this.dockOverlayVisible && this.draggingTitleBar && isDockingEnabled() && this.maximizable;
+    }
+
+    private void renderDockOverlay(@NotNull GuiGraphics graphics, float partial) {
+        int areaX = 0;
+        int areaY = getMenuBarHeight();
+        int areaWidth = getMaximumWidth();
+        int areaHeight = getMaximumHeight();
+        if (areaWidth <= 0 || areaHeight <= 0) {
+            return;
+        }
+
+        int padding = getDockOverlayPadding();
+        float x = areaX + padding;
+        float y = areaY + padding;
+        float width = areaWidth - padding * 2.0F;
+        float height = areaHeight - padding * 2.0F;
+        if (width <= 0.0F || height <= 0.0F) {
+            return;
+        }
+
+        float radius = Math.max(0.0F, UIBase.getInterfaceCornerRoundingRadius() * getFrameScaleSafe());
+        UITheme theme = getTheme();
+        SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                graphics,
+                x,
+                y,
+                width,
+                height,
+                radius,
+                radius,
+                radius,
+                radius,
+                theme.pip_docking_overlay_color.getColorInt(),
+                partial
+        );
+
+        float borderThickness = getDockOverlayBorderThickness();
+        if (borderThickness > 0.0F) {
+            float borderRadius = radius > 0.0F ? radius + borderThickness : 0.0F;
+            SmoothRectangleRenderer.renderSmoothBorderRoundAllCorners(
+                    graphics,
+                    x,
+                    y,
+                    width,
+                    height,
+                    borderThickness,
+                    borderRadius,
+                    borderRadius,
+                    borderRadius,
+                    borderRadius,
+                    theme.pip_docking_overlay_border_color.getColorInt(),
+                    partial
+            );
+        }
+    }
+
+    private void renderDebugOverlay(@NotNull GuiGraphics graphics) {
+        List<String> lines = new ArrayList<>();
+        String windowType = this.getClass().getSimpleName();
+        if (windowType.isEmpty()) {
+            windowType = this.getClass().getName();
+        }
+        lines.add("window_type: " + windowType);
+        String screenType = "null";
+        if (this.screen != null) {
+            screenType = this.screen.getClass().getSimpleName();
+            if (screenType.isEmpty()) {
+                screenType = this.screen.getClass().getName();
+            }
+        }
+        lines.add("screen_type: " + screenType);
+        double renderScale = getScreenRenderScaleFactor();
+        if (!Double.isFinite(renderScale) || renderScale <= 0.0) {
+            renderScale = 1.0;
+        }
+        lines.add("render_scale: " + String.format(Locale.ROOT, "%.3f", renderScale));
+        double guiScale = 1.0;
+        if (this.sizeScaledToGuiScale) {
+            guiScale = getMainGuiScale();
+            if (!Double.isFinite(guiScale) || guiScale <= 0.0) {
+                guiScale = 1.0;
+            }
+        }
+        double sizeDivisor = renderScale * guiScale;
+        if (!Double.isFinite(sizeDivisor) || sizeDivisor <= 0.0) {
+            sizeDivisor = 1.0;
+        }
+        int baseWidth = Math.max(1, (int) Math.floor(this.width / sizeDivisor));
+        int baseHeight = Math.max(1, (int) Math.floor(this.height / sizeDivisor));
+        lines.add("size: base " + baseWidth + "x" + baseHeight + " | scaled " + getWidth() + "x" + getHeight());
+        int rawMinWidth = getBaseMinimumWidth();
+        int rawMinHeight = getBaseMinimumHeight();
+        lines.add("min_size: base " + rawMinWidth + "x" + rawMinHeight + " | scaled " + getMinimumWidth() + "x" + getMinimumHeight());
+        int maxWidth = getMaximumWidth();
+        int maxHeight = getMaximumHeight();
+        if (maxWidth > 0 && maxHeight > 0) {
+            int rawMaxWidth = getRawSizeForScaled(maxWidth);
+            int rawMaxHeight = getRawSizeForScaled(maxHeight);
+            lines.add("max_size: raw " + rawMaxWidth + "x" + rawMaxHeight + " | scaled " + maxWidth + "x" + maxHeight);
+        }
+        int padding = 2;
+        float maxTextWidth = 0.0F;
+        for (String line : lines) {
+            maxTextWidth = Math.max(maxTextWidth, UIBase.getUITextWidth(line));
+        }
+        float lineHeight = UIBase.getUITextHeightNormal();
+        int boxWidth = (int)Math.ceil(maxTextWidth + padding * 2);
+        int boxHeight = (int)Math.ceil(lines.size() * lineHeight + padding * 2);
+        int x = getBodyX() + padding;
+        int y = getBodyY() + padding;
+        int backgroundColor = 0x88000000;
+        graphics.fill(x, y, x + boxWidth, y + boxHeight, backgroundColor);
+        int textColor = 0xFFFF0000;
+        float textX = x + padding;
+        float textY = y + padding;
+        for (String line : lines) {
+            UIBase.renderText(graphics, line, textX, textY, textColor);
+            textY += lineHeight;
+        }
+    }
+
+    private void renderButton(@NotNull GuiGraphics graphics, @NotNull UITheme theme, float x, float y, float width, float height, boolean hovered, @NotNull IconRenderData icon, float iconSize, boolean rightmost, boolean hasBody, float partial) {
+        if (hovered) {
+            int color = UIBase.shouldBlur() ? theme.ui_blur_interface_widget_background_color_hover_type_1.getColorInt() : theme.ui_interface_widget_background_color_hover_type_1.getColorInt();
+            float radius = getFrameCornerRadius();
+            float topRight = rightmost ? radius : 0.0F;
+            float bottomRight = (rightmost && !hasBody) ? radius : 0.0F;
+            if (topRight > 0.0F || bottomRight > 0.0F) {
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                        graphics,
+                        x,
+                        y,
+                        width,
+                        height,
+                        0.0F,
+                        topRight,
+                        bottomRight,
+                        0.0F,
+                        color,
+                        partial
+                );
+            } else {
+                RenderingUtils.fillF(graphics, x, y, x + width, y + height, color);
+            }
+        }
+        float safeIconSize = Math.max(1.0F, Math.min(iconSize, Math.min(width, height)));
+        float iconX = x + (width - safeIconSize) * 0.5F;
+        float iconY = y + (height - safeIconSize) * 0.5F;
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
+        blitScaledIcon(graphics, icon, iconX, iconY, safeIconSize, safeIconSize);
+        RenderingUtils.resetShaderColor(graphics);
+    }
+
+    private void blitScaledIcon(@NotNull GuiGraphics graphics, @NotNull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight) {
+        if (areaWidth <= 0.0F || areaHeight <= 0.0F || iconData.width <= 0 || iconData.height <= 0) {
+            return;
+        }
+        float scale = Math.min(areaWidth / (float) iconData.width, areaHeight / (float) iconData.height);
+        if (!Float.isFinite(scale) || scale <= 0.0F) {
+            return;
+        }
+        float scaledWidth = iconData.width * scale;
+        float scaledHeight = iconData.height * scale;
+        float drawX = areaX + (areaWidth - scaledWidth) * 0.5F;
+        float drawY = areaY + (areaHeight - scaledHeight) * 0.5F;
+        graphics.pose().pushPose();
+        graphics.pose().translate(drawX, drawY, 0.0F);
+        graphics.pose().scale(scale, scale, 1.0F);
+        graphics.blit(iconData.texture, 0, 0, 0.0F, 0.0F, iconData.width, iconData.height, iconData.width, iconData.height);
+        graphics.pose().popPose();
+    }
+
+    @Nullable
+    private IconRenderData resolveMaterialIconData(@Nullable MaterialIcon icon) {
+        if (icon == null) {
+            return null;
+        }
+        return resolveMaterialIconData(icon, DEFAULT_ICON_TEXTURE_SIZE, DEFAULT_ICON_TEXTURE_SIZE);
+    }
+
+    @Nullable
+    private IconRenderData resolveMaterialIconData(@Nullable MaterialIcon icon, float renderWidth, float renderHeight) {
+        if (icon == null) {
+            return null;
+        }
+        float safeRenderWidth = Math.max(1.0F, renderWidth);
+        float safeRenderHeight = Math.max(1.0F, renderHeight);
+        ResourceLocation location = icon.getTextureLocationForUI(safeRenderWidth, safeRenderHeight);
+        if (location == null) {
+            return null;
+        }
+        int size = icon.calculateBestTextureSizeForUI(safeRenderWidth, safeRenderHeight);
+        int width = icon.getWidth(size);
+        int height = icon.getHeight(size);
+        if (width <= 0 || height <= 0) {
+            return null;
+        }
+        return new IconRenderData(location, width, height);
+    }
+
+    @NotNull
+    private IconRenderData resolveButtonIconData(@NotNull ResourceLocation icon, @Nullable MaterialIcon materialIcon, float renderSize) {
+        IconRenderData data = resolveMaterialIconData(materialIcon, renderSize, renderSize);
+        return (data != null) ? data : new IconRenderData(icon, DEFAULT_ICON_TEXTURE_SIZE, DEFAULT_ICON_TEXTURE_SIZE);
+    }
+
+    @Nullable
+    private ResourceLocation resolveMaterialIconTexture(@Nullable MaterialIcon icon) {
+        if (icon == null) {
+            return null;
+        }
+        return icon.getTextureLocationForUI(DEFAULT_ICON_TEXTURE_SIZE, DEFAULT_ICON_TEXTURE_SIZE);
+    }
+
+    private float resolveButtonIconSize(float width, float height) {
+        float iconPadding = Math.max(0.0F, 4.0F);
+        float maxIconSize = Math.max(1.0F, DEFAULT_ICON_TEXTURE_SIZE);
+        float iconSize = Math.max(1.0F, Math.min(width - iconPadding, maxIconSize));
+        return Math.min(iconSize, Math.min(width, height));
+    }
+
+    private float resolveUnscaledSize(float scaledSize, float scale) {
+        if (!Float.isFinite(scale) || scale <= 0.0F) {
+            return scaledSize;
+        }
+        return scaledSize / scale;
+    }
+
+    private void drawScaledString(@NotNull GuiGraphics graphics, @NotNull Font font, @NotNull FormattedCharSequence text, int x, int y, int color, float scale) {
+        graphics.pose().pushPose();
+        graphics.pose().translate(x, y, 0);
+        if (scale != 1.0F) {
+            graphics.pose().scale(scale, scale, 1.0F);
+        }
+        graphics.drawString(font, text, 0, 0, color, false);
+        graphics.pose().popPose();
+    }
+
+    private void drawScaledString(@NotNull GuiGraphics graphics, @NotNull Font font, @NotNull String text, int x, int y, int color, float scale) {
+        graphics.pose().pushPose();
+        graphics.pose().translate(x, y, 0);
+        if (scale != 1.0F) {
+            graphics.pose().scale(scale, scale, 1.0F);
+        }
+        graphics.drawString(font, text, 0, 0, color, false);
+        graphics.pose().popPose();
+    }
+
+    private int getLabelColor(UITheme theme) {
+        if (UIBase.shouldBlur()) return theme.ui_blur_interface_widget_label_color_normal.getColorInt();
+        return theme.ui_interface_widget_label_color_normal.getColorInt();
+    }
+
+    private static final class IconRenderData {
+        private final ResourceLocation texture;
+        private final int width;
+        private final int height;
+
+        private IconRenderData(@NotNull ResourceLocation texture, int width, int height) {
+            this.texture = texture;
+            this.width = width;
+            this.height = height;
+        }
+    }
+
+    private int getBorderColor(UITheme theme) {
+        if (UIBase.shouldBlur()) return theme.ui_blur_interface_border_color.getColorInt();
+        return theme.ui_interface_border_color.getColorInt();
+    }
+
+    private float getFrameCornerRadius() {
+        float scale = getFrameScale();
+        if (!Float.isFinite(scale) || scale <= 0.0F) {
+            return 0.0F;
+        }
+        return Math.max(0.0F, UIBase.getInterfaceCornerRoundingRadius() * scale);
+    }
+
+    public void tick() {
+        clampWindowToScreenSize();
+        if (this.screen != null) {
+            this.screen.tick();
+        }
+    }
+
+    public PiPWindow setScreen(@Nullable Screen screen) {
+        if (this.screen == screen) {
+            return this;
+        }
+        if (this.screen != null) {
+            if (screen == Minecraft.getInstance().screen) {
+                return this; // We never open screens as PiP while they are open as actual screens
+            }
+            if (this.screen instanceof PipableScreen ps) {
+                ps.setWindow(null);
+                ps.onScreenClosed();
+            }
+            this.screen.removed(); // Legacy support for non-PiP screens
+        }
+        this.screen = screen;
+        if (this.screen != null) {
+            if (this.screen instanceof PipableScreen ps) {
+                ps.setWindow(this);
+            }
+            int screenWidth = getScreenWidth();
+            int screenHeight = getScreenHeight();
+            this.screen.init(this.minecraft, screenWidth, screenHeight);
+            this.lastScreenWidth = screenWidth;
+            this.lastScreenHeight = screenHeight;
+        }
+        return this;
+    }
+
+    @Nullable
+    public Screen getScreen() {
+        return this.screen;
+    }
+
+    public PiPWindow setTitle(@NotNull Component title) {
+        this.title = Objects.requireNonNull(title, "title");
+        return this;
+    }
+
+    public Component getTitle() {
+        return this.title;
+    }
+
+    public PiPWindow setIcon(@Nullable ResourceLocation icon) {
+        this.icon = icon;
+        this.materialIcon = null;
+        return this;
+    }
+
+    @Nullable
+    public ResourceLocation getIcon() {
+        ResourceLocation location = resolveMaterialIconTexture(this.materialIcon);
+        return (location != null) ? location : this.icon;
+    }
+
+    public PiPWindow setIcon(@Nullable MaterialIcon icon) {
+        this.materialIcon = icon;
+        if (icon != null) {
+            this.icon = null;
+        }
+        return this;
+    }
+
+    public PiPWindow setCloseButtonIcon(@NotNull ResourceLocation icon) {
+        this.closeButtonIcon = icon;
+        this.closeButtonMaterialIcon = null;
+        return this;
+    }
+
+    @NotNull
+    public ResourceLocation getCloseButtonIcon() {
+        ResourceLocation location = resolveMaterialIconTexture(this.closeButtonMaterialIcon);
+        return (location != null) ? location : this.closeButtonIcon;
+    }
+
+    public PiPWindow setCloseButtonIcon(@NotNull MaterialIcon icon) {
+        this.closeButtonMaterialIcon = Objects.requireNonNull(icon, "icon");
+        return this;
+    }
+
+    public PiPWindow setMaximizeButtonIcon(@NotNull ResourceLocation icon) {
+        this.maximizeButtonIcon = icon;
+        this.maximizeButtonMaterialIcon = null;
+        return this;
+    }
+
+    @NotNull
+    public ResourceLocation getMaximizeButtonIcon() {
+        ResourceLocation location = resolveMaterialIconTexture(this.maximizeButtonMaterialIcon);
+        return (location != null) ? location : this.maximizeButtonIcon;
+    }
+
+    public PiPWindow setMaximizeButtonIcon(@NotNull MaterialIcon icon) {
+        this.maximizeButtonMaterialIcon = Objects.requireNonNull(icon, "icon");
+        return this;
+    }
+
+    public PiPWindow setNormalizeButtonIcon(@NotNull ResourceLocation icon) {
+        this.normalizeButtonIcon = icon;
+        this.normalizeButtonMaterialIcon = null;
+        return this;
+    }
+
+    @NotNull
+    public ResourceLocation getNormalizeButtonIcon() {
+        ResourceLocation location = resolveMaterialIconTexture(this.normalizeButtonMaterialIcon);
+        return (location != null) ? location : this.normalizeButtonIcon;
+    }
+
+    public PiPWindow setNormalizeButtonIcon(@NotNull MaterialIcon icon) {
+        this.normalizeButtonMaterialIcon = Objects.requireNonNull(icon, "icon");
+        return this;
+    }
+
+    public PiPWindow setVisible(boolean visible) {
+        this.visible = visible;
+        return this;
+    }
+
+    public boolean isVisible() {
+        return this.visible;
+    }
+
+    public boolean isScreenRendering() {
+        return this.screenRendering;
+    }
+
+    public boolean isSizeScaledToGuiScale() {
+        return this.sizeScaledToGuiScale;
+    }
+
+    public PiPWindow setSizeScaledToGuiScale(boolean sizeScaledToGuiScale) {
+        this.sizeScaledToGuiScale = sizeScaledToGuiScale;
+        clampWindowToScreenSize();
+        resizeScreenIfNeeded();
+        return this;
+    }
+
+    public boolean isScreenAutoScalingEnabled() {
+        return this.screenAutoScalingEnabled;
+    }
+
+    public PiPWindow setScreenAutoScalingEnabled(boolean screenAutoScalingEnabled) {
+        this.screenAutoScalingEnabled = screenAutoScalingEnabled;
+        resizeScreenIfNeeded();
+        return this;
+    }
+
+    public @Nullable Double getCustomBodyScale() {
+        return this.customBodyScale;
+    }
+
+    public PiPWindow setCustomBodyScale(@Nullable Double customBodyScale) {
+        if (customBodyScale != null) {
+            if (!Double.isFinite(customBodyScale) || customBodyScale <= 0.0) {
+                customBodyScale = null;
+            }
+        }
+        this.customBodyScale = customBodyScale;
+        resizeScreenIfNeeded();
+        return this;
+    }
+
+    public boolean isForceFancyMenuUiScale() {
+        return this.forceFancyMenuUiScaleEnabled;
+    }
+
+    public PiPWindow setForceFancyMenuUiScale(boolean forceFancyMenuUiScaleEnabled) {
+        if (this.forceFancyMenuUiScaleEnabled == forceFancyMenuUiScaleEnabled) {
+            return this;
+        }
+        this.forceFancyMenuUiScaleEnabled = forceFancyMenuUiScaleEnabled;
+        if (this.forceFancyMenuUiScaleEnabled) {
+            updateForcedFancyMenuUiScale();
+        }
+        resizeScreenIfNeeded();
+        return this;
+    }
+
+    public boolean isAlwaysOnTop() {
+        return this.alwaysOnTop;
+    }
+
+    public PiPWindow setAlwaysOnTop(boolean alwaysOnTop) {
+        if (this.alwaysOnTop == alwaysOnTop) {
+            return this;
+        }
+        this.alwaysOnTop = alwaysOnTop;
+        PiPWindowHandler.INSTANCE.refreshWindowOrder(this);
+        return this;
+    }
+
+    public boolean isForceFocusEnabled() {
+        return this.forceFocusEnabled;
+    }
+
+    public PiPWindow setForceFocus(boolean forceFocusEnabled) {
+        if (this.forceFocusEnabled == forceFocusEnabled) {
+            return this;
+        }
+        this.forceFocusEnabled = forceFocusEnabled;
+        PiPWindowHandler.INSTANCE.refreshWindowOrder(this);
+        return this;
+    }
+
+    public boolean isTitleBarIconTintEnabled() {
+        return this.titleBarIconTintEnabled;
+    }
+
+    public PiPWindow setTitleBarIconTintEnabled(boolean titleBarIconTintEnabled) {
+        this.titleBarIconTintEnabled = titleBarIconTintEnabled;
+        return this;
+    }
+
+    public PiPWindow setResizable(boolean resizable) {
+        this.resizable = resizable;
+        return this;
+    }
+
+    public boolean isResizable() {
+        return this.resizable;
+    }
+
+    public PiPWindow setMovable(boolean movable) {
+        this.movable = movable;
+        return this;
+    }
+
+    public boolean isMovable() {
+        return this.movable;
+    }
+
+    public PiPWindow setMaximizable(boolean maximizable) {
+        this.maximizable = maximizable;
+        return this;
+    }
+
+    public boolean isMaximizable() {
+        return this.maximizable;
+    }
+
+    public PiPWindow setClosable(boolean closable) {
+        this.closable = closable;
+        return this;
+    }
+
+    public boolean isClosable() {
+        return this.closable;
+    }
+
+    public boolean shouldCloseScreenWithWindow() {
+        return closeScreenWithWindow;
+    }
+
+    public PiPWindow setCloseScreenWithWindow(boolean closeScreenWithWindow) {
+        this.closeScreenWithWindow = closeScreenWithWindow;
+        return this;
+    }
+
+    public void refreshScreen() {
+        if (this.screen == null) {
+            return;
+        }
+        int screenWidth = getScreenWidth();
+        int screenHeight = getScreenHeight();
+        this.lastScreenWidth = screenWidth;
+        this.lastScreenHeight = screenHeight;
+        this.screen.resize(this.minecraft, screenWidth, screenHeight);
+    }
+
+    public PiPWindow setCloseCallback(@Nullable Runnable closeCallback) {
+        this.closeCallback = closeCallback;
+        return this;
+    }
+
+    public PiPWindow setCloseWindowCheck(@Nullable CloseWindowCheck closeWindowCheck) {
+        this.closeWindowCheck = closeWindowCheck;
+        return this;
+    }
+
+    public void addCloseCallback(@NotNull Runnable closeCallback) {
+        Objects.requireNonNull(closeCallback, "closeCallback");
+        if (this.closeCallback == null) {
+            this.closeCallback = closeCallback;
+        } else {
+            Runnable existing = this.closeCallback;
+            this.closeCallback = () -> {
+                existing.run();
+                closeCallback.run();
+            };
+        }
+    }
+
+    public void close() {
+        if (this.closeWindowCheck != null) {
+            if (this.closeCheckInProgress) {
+                return;
+            }
+            this.closeCheckInProgress = true;
+            this.closeWindowCheck.check(this, new CloseWindowDecisionImpl());
+            return;
+        }
+        runCloseCallback();
+    }
+
+    void markClosingFromScreen() {
+        this.closingFromScreen = true;
+    }
+
+    void clearClosingFromScreen() {
+        this.closingFromScreen = false;
+    }
+
+    boolean consumeClosingFromScreen() {
+        boolean value = this.closingFromScreen;
+        this.closingFromScreen = false;
+        return value;
+    }
+
+    public void handleClosed() {
+        this.closingFromScreen = false;
+        if (this.screen != null) {
+            this.screen.removed();
+        }
+        if (!this.childWindows.isEmpty()) {
+            for (PiPWindow child : new ArrayList<>(this.childWindows)) {
+                child.parentWindow = null;
+            }
+            this.childWindows.clear();
+            this.inputLockedByChildren = false;
+        }
+    }
+
+    public PiPWindow setPosition(int x, int y) {
+        this.x = x;
+        this.y = y;
+        clampTitleBarToScreen();
+        return this;
+    }
+
+    boolean isClosingViaCallback() {
+        return this.closingViaCallback;
+    }
+
+    private void runCloseCallback() {
+        if (this.closeCallback == null) {
+            return;
+        }
+        this.closingViaCallback = true;
+        try {
+            this.closeCallback.run();
+        } finally {
+            this.closingViaCallback = false;
+        }
+    }
+
+    public interface CloseWindowDecision extends Supplier<Boolean> {
+        void supply(boolean shouldClose);
+    }
+
+    @FunctionalInterface
+    public interface CloseWindowCheck {
+        void check(@NotNull PiPWindow window, @NotNull CloseWindowDecision decision);
+    }
+
+    private final class CloseWindowDecisionImpl implements CloseWindowDecision {
+        @Nullable
+        private Boolean result;
+        private boolean supplied = false;
+
+        @Override
+        public void supply(boolean shouldClose) {
+            if (this.supplied) {
+                return;
+            }
+            this.supplied = true;
+            this.result = shouldClose;
+            PiPWindow.this.closeCheckInProgress = false;
+            if (!shouldClose) {
+                PiPWindow.this.clearClosingFromScreen();
+                return;
+            }
+            PiPWindow.this.runCloseCallback();
+        }
+
+        @Override
+        public Boolean get() {
+            return this.result;
+        }
+    }
+
+    /**
+     * Sets the window size using raw (scale 1) values. If
+     * {@link #setSizeScaledToGuiScale(boolean)} is enabled, the raw size is converted to on-screen
+     * size using Minecraft's GUI scale. The window frame (title bar, border, buttons) is rendered
+     * using FancyMenu's UI scale, and the body screen can still render at a different scale
+     * (auto/custom/forced).
+     * <p>
+     * When choosing a size, consider both the Minecraft GUI scale (affects the window's on-screen
+     * size) and the body render scale (affects how large the content appears).
+     */
+    public PiPWindow setSize(int width, int height) {
+        this.width = Math.max(width, getRawMinimumWidth());
+        this.height = Math.max(height, getRawMinimumHeight());
+        clampWindowToScreenSize();
+        resizeScreenIfNeeded();
+        return this;
+    }
+
+    public PiPWindow setBounds(int x, int y, int width, int height) {
+        this.x = x;
+        this.y = y;
+        this.width = Math.max(width, getRawMinimumWidth());
+        this.height = Math.max(height, getRawMinimumHeight());
+        clampWindowToScreenSize();
+        resizeScreenIfNeeded();
+        return this;
+    }
+
+    public int getX() {
+        return this.x;
+    }
+
+    public int getY() {
+        return this.y;
+    }
+
+    public int getWidth() {
+        return getScaledWidth();
+    }
+
+    public int getHeight() {
+        return getScaledHeight();
+    }
+
+    public int getBodyX() {
+        return this.x + getScaledBorderThickness();
+    }
+
+    public int getBodyY() {
+        return this.y + getScaledBorderThickness() + getScaledTitleBarHeight();
+    }
+
+    public int getBodyWidth() {
+        int border = getScaledBorderThickness();
+        return Math.max(0, getWidth() - border * 2);
+    }
+
+    public int getBodyHeight() {
+        int border = getScaledBorderThickness();
+        int titleHeight = getScaledTitleBarHeight();
+        return Math.max(0, getHeight() - border * 2 - titleHeight);
+    }
+
+    public int getMinimumWidth() {
+        return Math.max(1, getScaledMinimumWidthForBodyScale());
+    }
+
+    public int getMinimumHeight() {
+        int min = Math.max(1, getScaledMinimumHeightForBodyScale());
+        return Math.max(min, getLayoutMinimumHeight());
+    }
+
+    private int getMaximumWidth() {
+        return this.minecraft.getWindow().getGuiScaledWidth();
+    }
+
+    private int getMaximumHeight() {
+        int screenHeight = this.minecraft.getWindow().getGuiScaledHeight();
+        return Math.max(0, screenHeight - getMenuBarHeight());
+    }
+
+    private int getMenuBarHeight() {
+        return (int) ((float) MenuBar.PIXEL_SIZE * MenuBar.getRenderScale());
+    }
+
+    /**
+     * Sets the minimum window size using raw (scale 1) values. The minimum is scaled by the
+     * current body render scale (auto/custom/forced) and enforced every render tick, so the
+     * effective on-screen minimum can change if scaling changes.
+     * <p>
+     * The window's on-screen size is still affected by Minecraft's GUI scale when
+     * {@link #setSizeScaledToGuiScale(boolean)} is enabled, while the minimum itself is based on
+     * the body render scale.
+     */
+    public PiPWindow setMinSize(int minWidth, int minHeight) {
+        this.minWidth = Math.max(1, minWidth);
+        this.minHeight = Math.max(1, minHeight);
+        setSize(this.width, this.height);
+        return this;
+    }
+
+    public PiPWindow setTitleBarHeight(int titleBarHeight) {
+        this.titleBarHeight = Math.max(0, titleBarHeight);
+        setSize(this.width, this.height);
+        return this;
+    }
+
+    public PiPWindow setBorderThickness(int borderThickness) {
+        this.borderThickness = Math.max(0, borderThickness);
+        setSize(this.width, this.height);
+        return this;
+    }
+
+    public PiPWindow setResizeMargin(int resizeMargin) {
+        this.resizeMargin = Math.max(0, resizeMargin);
+        return this;
+    }
+
+    public PiPWindow setButtonSize(int buttonSize) {
+        this.buttonSize = Math.max(1, buttonSize);
+        return this;
+    }
+
+    public PiPWindow setButtonPadding(int buttonPadding) {
+        this.buttonPadding = Math.max(0, buttonPadding);
+        return this;
+    }
+
+    public boolean isMaximized() {
+        return this.maximized;
+    }
+
+    public void toggleMaximized() {
+        setMaximized(!this.maximized);
+    }
+
+    public PiPWindow setMaximized(boolean maximized) {
+        if (this.maximized == maximized) {
+            return this;
+        }
+        if (maximized) {
+            this.restoreX = this.x;
+            this.restoreY = this.y;
+            this.restoreRawWidth = this.width;
+            this.restoreRawHeight = this.height;
+            this.maximized = true;
+            int maxWidth = getMaximumWidth();
+            int maxHeight = getMaximumHeight();
+            setScaledBounds(0, getMenuBarHeight(), maxWidth, maxHeight);
+        } else {
+            this.maximized = false;
+            setBounds(this.restoreX, this.restoreY, this.restoreRawWidth, this.restoreRawHeight);
+        }
+        return this;
+    }
+
+    public PiPWindow setInputLocked(boolean inputLocked) {
+        this.inputLocked = inputLocked;
+        return this;
+    }
+
+    public PiPWindow setBlockMinecraftScreenInputs(boolean blockMinecraftScreenInputs) {
+        if (this.blockMinecraftScreenInputs == blockMinecraftScreenInputs) {
+            return this;
+        }
+        this.blockMinecraftScreenInputs = blockMinecraftScreenInputs;
+        PiPWindowHandler.INSTANCE.refreshWindowOrder(this);
+        return this;
+    }
+
+    public boolean isInputLocked() {
+        return this.inputLocked || this.inputLockedByChildren;
+    }
+
+    public boolean isBlockingMinecraftScreenInputs() {
+        return this.blockMinecraftScreenInputs;
+    }
+
+    @Nullable
+    public PiPWindow getParentWindow() {
+        return this.parentWindow;
+    }
+
+    public List<PiPWindow> getChildWindows() {
+        return Collections.unmodifiableList(this.childWindows);
+    }
+
+    void registerChildWindow(@NotNull PiPWindow child) {
+        if (this.childWindows.contains(child)) {
+            return;
+        }
+        this.childWindows.add(child);
+        this.inputLockedByChildren = true;
+        child.parentWindow = this;
+    }
+
+    void unregisterChildWindow(@NotNull PiPWindow child) {
+        if (this.childWindows.remove(child)) {
+            child.parentWindow = null;
+            this.inputLockedByChildren = !this.childWindows.isEmpty();
+        }
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        return handleMouseClicked(mouseX, mouseY, button, true);
+    }
+
+    public boolean mouseClickedWithoutScreen(double mouseX, double mouseY, int button) {
+        return handleMouseClicked(mouseX, mouseY, button, false);
+    }
+
+    private boolean handleMouseClicked(double mouseX, double mouseY, int button, boolean allowScreenInput) {
+        if (!this.visible || isInputLocked()) {
+            return false;
+        }
+
+        if (button == 0) {
+            this.pressedTitleBar = false;
+            PiPWindowResizeHandle handle = getResizeHandleForInput(mouseX, mouseY);
+            if (handle != PiPWindowResizeHandle.NONE) {
+                beginResize(handle, mouseX, mouseY);
+                return true;
+            }
+            float buttonSlotSize = getTitleBarButtonSlotSize();
+            float titleBarHeight = getRenderTitleBarHeight();
+            float buttonY = getButtonY();
+            if (this.closable && isPointInArea(mouseX, mouseY, getCloseButtonX(), buttonY, buttonSlotSize, titleBarHeight)) {
+                close();
+                return true;
+            }
+            if (this.maximizable && isPointInArea(mouseX, mouseY, getMaximizeButtonX(), buttonY, buttonSlotSize, titleBarHeight)) {
+                toggleMaximized();
+                return true;
+            }
+            boolean clickedTitleBar = isPointInTitleBar(mouseX, mouseY);
+            if (!clickedTitleBar) {
+                this.lastTitleBarClickTime = 0;
+            } else if (this.maximizable) {
+                long currentTime = System.currentTimeMillis();
+                if (currentTime - this.lastTitleBarClickTime < TITLE_BAR_DOUBLE_CLICK_TIME_MS) {
+                    this.lastTitleBarClickTime = 0;
+                    toggleMaximized();
+                    return true;
+                }
+                this.lastTitleBarClickTime = currentTime;
+            }
+            this.pressedTitleBar = clickedTitleBar;
+            if (this.movable && clickedTitleBar && !this.maximized) {
+                beginDrag(mouseX, mouseY);
+                return true;
+            }
+        }
+
+        if (super.mouseClicked(mouseX, mouseY, button)) {
+            return true;
+        }
+
+        if (allowScreenInput && this.screen != null && isPointInBody(mouseX, mouseY)) {
+            return this.screen.mouseClicked(toScreenMouseX(mouseX), toScreenMouseY(mouseY), button);
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (!this.visible || isInputLocked()) {
+            return false;
+        }
+
+        boolean wasDraggingTitleBar = this.draggingTitleBar;
+        boolean wasResizing = this.activeResizeHandle != PiPWindowResizeHandle.NONE;
+        boolean wasDragging = wasDraggingTitleBar || wasResizing;
+        if (button == 0) {
+            this.pressedTitleBar = false;
+            boolean shouldDock = wasDraggingTitleBar && this.dockOverlayVisible && isDockingEnabled() && this.maximizable;
+            this.draggingTitleBar = false;
+            this.activeResizeHandle = PiPWindowResizeHandle.NONE;
+            this.setDragging(false);
+            this.dockOverlayVisible = false;
+            if (shouldDock) {
+                setMaximized(true);
+            }
+        }
+        if (wasDragging) {
+            return true;
+        }
+
+        boolean handled = super.mouseReleased(mouseX, mouseY, button);
+        if (this.screen != null) {
+            handled = this.screen.mouseReleased(toScreenMouseX(mouseX), toScreenMouseY(mouseY), button) || handled;
+        }
+        return handled;
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (!this.visible || isInputLocked()) {
+            return false;
+        }
+
+        if (button == 0) {
+            if (this.draggingTitleBar) {
+                updateDragPosition(mouseX, mouseY);
+                return true;
+            }
+            if (this.activeResizeHandle != PiPWindowResizeHandle.NONE) {
+                updateResize(mouseX, mouseY);
+                return true;
+            }
+            if (this.pressedTitleBar && this.movable && this.maximized && this.maximizable) {
+                beginDragFromMaximized(mouseX, mouseY);
+                return true;
+            }
+        }
+
+        if (super.mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
+            return true;
+        }
+
+        if (this.screen != null) {
+            double inputScale = getScreenInputScaleFactor();
+            return this.screen.mouseDragged(toScreenMouseX(mouseX), toScreenMouseY(mouseY), button, dragX * inputScale, dragY * inputScale);
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaY) {
+        if (!this.visible || isInputLocked()) {
+            return false;
+        }
+
+        if (super.mouseScrolled(mouseX, mouseY, scrollDeltaY)) {
+            return true;
+        }
+
+        if (this.screen != null && isPointInBody(mouseX, mouseY)) {
+            return this.screen.mouseScrolled(toScreenMouseX(mouseX), toScreenMouseY(mouseY), scrollDeltaY);
+        }
+
+        return false;
+    }
+
+    @Override
+    public void mouseMoved(double mouseX, double mouseY) {
+        if (!this.visible) {
+            return;
+        }
+        this.lastMouseX = mouseX;
+        this.lastMouseY = mouseY;
+        this.hasMousePosition = true;
+        updateHoverResizeHandle(mouseX, mouseY);
+        for (GuiEventListener child : this.children) {
+            child.mouseMoved(mouseX, mouseY);
+        }
+        if (this.screen != null && !isInputLocked()) {
+            double screenMouseX = toScreenMouseX(mouseX);
+            double screenMouseY = toScreenMouseY(mouseY);
+            if (!PiPWindowHandler.INSTANCE.canMouseReachWindow(this, mouseX, mouseY)) {
+                screenMouseX = -100000;
+                screenMouseY = -100000;
+            }
+            this.screen.mouseMoved(screenMouseX, screenMouseY);
+        }
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (!this.visible || isInputLocked()) {
+            return false;
+        }
+        if (super.keyPressed(keyCode, scanCode, modifiers)) {
+            return true;
+        }
+        return this.screen != null && this.screen.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        if (!this.visible || isInputLocked()) {
+            return false;
+        }
+        if (super.keyReleased(keyCode, scanCode, modifiers)) {
+            return true;
+        }
+        return this.screen != null && this.screen.keyReleased(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (!this.visible || isInputLocked()) {
+            return false;
+        }
+        if (super.charTyped(codePoint, modifiers)) {
+            return true;
+        }
+        return this.screen != null && this.screen.charTyped(codePoint, modifiers);
+    }
+
+    @Override
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        return isPointInArea(mouseX, mouseY, this.x, this.y, getWidth(), getHeight());
+    }
+
+    @Override
+    public @NotNull List<? extends GuiEventListener> children() {
+        return this.children;
+    }
+
+    public void addChild(@NotNull GuiEventListener child) {
+        this.children.add(Objects.requireNonNull(child, "child"));
+    }
+
+    public void removeChild(@NotNull GuiEventListener child) {
+        this.children.remove(child);
+    }
+
+    private boolean isPointInTitleBar(double mouseX, double mouseY) {
+        float border = getRenderBorderThickness();
+        float titleHeight = getRenderTitleBarHeight();
+        float screenX = this.x + border;
+        float screenY = this.y + border;
+        float screenRight = this.x + getWidth() - border;
+        float screenBottom = screenY + titleHeight;
+        return isPointInArea(mouseX, mouseY, screenX, screenY, Math.max(0.0F, screenRight - screenX), Math.max(0.0F, screenBottom - screenY));
+    }
+
+    private boolean isPointInBody(double mouseX, double mouseY) {
+        return isPointInArea(mouseX, mouseY, getBodyX(), getBodyY(), getBodyWidth(), getBodyHeight());
+    }
+
+    private float getTitleBarButtonSlotSize() {
+        return Math.max(0.0F, getRenderTitleBarHeight());
+    }
+
+    private float getButtonY() {
+        return this.y + getRenderBorderThickness();
+    }
+
+    private float getCloseButtonX() {
+        float border = getRenderBorderThickness();
+        float buttonSlotSize = getTitleBarButtonSlotSize();
+        return this.x + getWidth() - border - buttonSlotSize;
+    }
+
+    private float getMaximizeButtonX() {
+        float buttonSlotSize = getTitleBarButtonSlotSize();
+        return getCloseButtonX() - buttonSlotSize;
+    }
+
+    @NotNull
+    private ResourceLocation getActiveMaximizeButtonResourceIcon() {
+        return this.maximized ? this.normalizeButtonIcon : this.maximizeButtonIcon;
+    }
+
+    @Nullable
+    private MaterialIcon getActiveMaximizeButtonMaterialIcon() {
+        return this.maximized ? this.normalizeButtonMaterialIcon : this.maximizeButtonMaterialIcon;
+    }
+
+    private String getMaximizeButtonLabel() {
+        return this.maximized ? "[]" : "[ ]";
+    }
+
+    private void updateResizeCursor(int mouseX, int mouseY) {
+        if (!this.visible) {
+            this.hoverResizeHandle = PiPWindowResizeHandle.NONE;
+            return;
+        }
+        if (!this.hasMousePosition) {
+            this.lastMouseX = mouseX;
+            this.lastMouseY = mouseY;
+            this.hasMousePosition = true;
+        }
+        updateHoverResizeHandle(this.lastMouseX, this.lastMouseY);
+        PiPWindowResizeHandle handle = this.hoverResizeHandle;
+        if (handle == PiPWindowResizeHandle.NONE) {
+            return;
+        }
+        switch (handle) {
+            case LEFT, RIGHT -> CursorHandler.setClientTickCursor(CursorHandler.CURSOR_RESIZE_HORIZONTAL);
+            case TOP, BOTTOM -> CursorHandler.setClientTickCursor(CursorHandler.CURSOR_RESIZE_VERTICAL);
+            case TOP_LEFT, BOTTOM_RIGHT -> CursorHandler.setClientTickCursor(CursorHandler.CURSOR_RESIZE_NWSE);
+            case TOP_RIGHT, BOTTOM_LEFT -> CursorHandler.setClientTickCursor(CursorHandler.CURSOR_RESIZE_NESW);
+            default -> {
+            }
+        }
+    }
+
+    private void updateHoverResizeHandle(double mouseX, double mouseY) {
+        if (!this.visible) {
+            this.hoverResizeHandle = PiPWindowResizeHandle.NONE;
+            return;
+        }
+        if (this.activeResizeHandle != PiPWindowResizeHandle.NONE) {
+            this.hoverResizeHandle = this.activeResizeHandle;
+            return;
+        }
+        if (!PiPWindowHandler.INSTANCE.isPointVisibleForWindow(this, mouseX, mouseY)) {
+            this.hoverResizeHandle = PiPWindowResizeHandle.NONE;
+            return;
+        }
+        this.hoverResizeHandle = getResizeHandleAt(mouseX, mouseY);
+    }
+
+    private PiPWindowResizeHandle getResizeHandleForInput(double mouseX, double mouseY) {
+        if (this.hoverResizeHandle != PiPWindowResizeHandle.NONE) {
+            return this.hoverResizeHandle;
+        }
+        return getResizeHandleAt(mouseX, mouseY);
+    }
+
+    private PiPWindowResizeHandle getResizeHandleAt(double mouseX, double mouseY) {
+        if (!this.resizable || this.maximized) {
+            return PiPWindowResizeHandle.NONE;
+        }
+        int screenLeft = this.x;
+        int screenTop = this.y;
+        int screenRight = this.x + getWidth();
+        int screenBottom = this.y + getHeight();
+        int margin = getScaledResizeMargin();
+        boolean left = mouseX >= screenLeft && mouseX <= screenLeft + margin;
+        boolean right = mouseX >= screenRight - margin && mouseX <= screenRight;
+        boolean top = mouseY >= screenTop && mouseY <= screenTop + margin;
+        boolean bottom = mouseY >= screenBottom - margin && mouseY <= screenBottom;
+
+        if (left && top) {
+            return PiPWindowResizeHandle.TOP_LEFT;
+        }
+        if (right && top) {
+            return PiPWindowResizeHandle.TOP_RIGHT;
+        }
+        if (left && bottom) {
+            return PiPWindowResizeHandle.BOTTOM_LEFT;
+        }
+        if (right && bottom) {
+            return PiPWindowResizeHandle.BOTTOM_RIGHT;
+        }
+        if (left) {
+            return PiPWindowResizeHandle.LEFT;
+        }
+        if (right) {
+            return PiPWindowResizeHandle.RIGHT;
+        }
+        if (top) {
+            return PiPWindowResizeHandle.TOP;
+        }
+        if (bottom) {
+            return PiPWindowResizeHandle.BOTTOM;
+        }
+        return PiPWindowResizeHandle.NONE;
+    }
+
+    private void beginDrag(double mouseX, double mouseY) {
+        this.draggingTitleBar = true;
+        this.dragOffsetX = mouseX - this.x;
+        this.dragOffsetY = mouseY - this.y;
+        this.dockOverlayVisible = false;
+        this.setDragging(true);
+    }
+
+    private void beginDragFromMaximized(double mouseX, double mouseY) {
+        if (!this.maximized || !this.maximizable) {
+            beginDrag(mouseX, mouseY);
+            return;
+        }
+        // Restore size under the cursor before starting the drag.
+        int restoreWidth = getScaledSize(this.restoreRawWidth);
+        int maxWidth = getMaximumWidth();
+        double ratioX = (maxWidth > 0) ? mouseX / (double) maxWidth : 0.5;
+        ratioX = Math.min(Math.max(ratioX, 0.0), 1.0);
+        int targetX = (int) Math.round(mouseX - ratioX * restoreWidth);
+        double border = getRenderBorderThickness();
+        double titleHeight = getRenderTitleBarHeight();
+        double offsetY = mouseY - (this.y + border);
+        if (titleHeight > 0.0) {
+            offsetY = Math.min(Math.max(offsetY, 0.0), titleHeight - 1.0);
+        } else {
+            offsetY = 0.0;
+        }
+        int targetY = (int) Math.round(mouseY - offsetY - border);
+        setMaximized(false);
+        setBounds(targetX, targetY, this.restoreRawWidth, this.restoreRawHeight);
+        beginDrag(mouseX, mouseY);
+    }
+
+    private void updateDragPosition(double mouseX, double mouseY) {
+        double effectiveMouseX = mouseX;
+        double effectiveMouseY = mouseY;
+        if (isDockingEnabled()) {
+            int screenWidth = this.minecraft.getWindow().getGuiScaledWidth();
+            int screenHeight = this.minecraft.getWindow().getGuiScaledHeight();
+            if (screenWidth > 0 && screenHeight > 0) {
+                effectiveMouseX = Math.min(Math.max(mouseX, 0.0), screenWidth - 1.0);
+                double topEdge = getMenuBarHeight();
+                effectiveMouseY = Math.min(Math.max(mouseY, topEdge), screenHeight - 1.0);
+            }
+        }
+        int targetX = (int) Math.round(effectiveMouseX - this.dragOffsetX);
+        int targetY = (int) Math.round(effectiveMouseY - this.dragOffsetY);
+        setPosition(targetX, targetY);
+        updateDockOverlayVisibility(mouseX, mouseY);
+    }
+
+    private void beginResize(@NotNull PiPWindowResizeHandle handle, double mouseX, double mouseY) {
+        this.activeResizeHandle = handle;
+        this.resizeStartMouseX = mouseX;
+        this.resizeStartMouseY = mouseY;
+        this.resizeStartX = this.x;
+        this.resizeStartY = this.y;
+        this.resizeStartWidth = getWidth();
+        this.resizeStartHeight = getHeight();
+        this.setDragging(true);
+    }
+
+    private void updateResize(double mouseX, double mouseY) {
+        int deltaX = (int) Math.round(mouseX - this.resizeStartMouseX);
+        int deltaY = (int) Math.round(mouseY - this.resizeStartMouseY);
+
+        int newX = this.resizeStartX;
+        int newY = this.resizeStartY;
+        int newWidth = this.resizeStartWidth;
+        int newHeight = this.resizeStartHeight;
+
+        // Keep the opposite edge anchored while resizing.
+        if (this.activeResizeHandle.hasLeftEdge()) {
+            newX += deltaX;
+            newWidth -= deltaX;
+        } else if (this.activeResizeHandle.hasRightEdge()) {
+            newWidth += deltaX;
+        }
+
+        if (this.activeResizeHandle.hasTopEdge()) {
+            newY += deltaY;
+            newHeight -= deltaY;
+        } else if (this.activeResizeHandle.hasBottomEdge()) {
+            newHeight += deltaY;
+        }
+
+        int minWidth = getMinimumWidth();
+        int minHeight = getMinimumHeight();
+        if (newWidth < minWidth) {
+            int diff = minWidth - newWidth;
+            newWidth = minWidth;
+            if (this.activeResizeHandle.hasLeftEdge()) {
+                newX -= diff;
+            }
+        }
+        if (newHeight < minHeight) {
+            int diff = minHeight - newHeight;
+            newHeight = minHeight;
+            if (this.activeResizeHandle.hasTopEdge()) {
+                newY -= diff;
+            }
+        }
+
+        setScaledBounds(newX, newY, newWidth, newHeight);
+    }
+
+    private void updateDockOverlayVisibility(double mouseX, double mouseY) {
+        if (!isDockingEnabled() || !this.draggingTitleBar || this.maximized || !this.maximizable) {
+            this.dockOverlayVisible = false;
+            return;
+        }
+        int screenWidth = this.minecraft.getWindow().getGuiScaledWidth();
+        int screenHeight = this.minecraft.getWindow().getGuiScaledHeight();
+        if (screenWidth <= 0 || screenHeight <= 0) {
+            this.dockOverlayVisible = false;
+            return;
+        }
+        int topEdge = getMenuBarHeight();
+        boolean atEdge = mouseX <= 0.0
+                || mouseX >= screenWidth - 1.0
+                || mouseY <= topEdge
+                || mouseY >= screenHeight - 1.0;
+        this.dockOverlayVisible = atEdge;
+    }
+
+    private double toScreenMouseX(double mouseX) {
+        return (mouseX - getBodyX()) * getScreenInputScaleFactor();
+    }
+
+    private double toScreenMouseY(double mouseY) {
+        return (mouseY - getBodyY()) * getScreenInputScaleFactor();
+    }
+
+    private int getScaledWidth() {
+        return getScaledSize(this.width);
+    }
+
+    private int getScaledHeight() {
+        int scaled = getScaledSize(this.height);
+        return Math.max(scaled, getLayoutMinimumHeight());
+    }
+
+    private float getFrameRenderScale() {
+        return MenuBar.getRenderScale();
+    }
+
+    private float getFrameScale() {
+        return getFrameRenderScale();
+    }
+
+    private float getFrameScaleSafe() {
+        float scale = getFrameScale();
+        if (!Float.isFinite(scale) || scale <= 0.0F) {
+            return 1.0F;
+        }
+        return scale;
+    }
+
+    private boolean isDockingEnabled() {
+        return FancyMenu.getOptions().pipWindowDocking.getValue();
+    }
+
+    private int getDockOverlayPadding() {
+        float scale = getFrameScaleSafe();
+        int padding = Math.round(DEFAULT_DOCK_OVERLAY_PADDING * scale);
+        return Math.max(0, padding);
+    }
+
+    private float getDockOverlayBorderThickness() {
+        float scale = getFrameScaleSafe();
+        return Math.max(0.0F, DEFAULT_DOCK_OVERLAY_BORDER_THICKNESS * scale);
+    }
+
+    private float getRenderBorderThickness() {
+        return Math.max(0.0F, this.borderThickness * getFrameScaleSafe());
+    }
+
+    private float getRenderTitleBarHeight() {
+        return Math.max(0.0F, this.titleBarHeight * getFrameScaleSafe());
+    }
+
+    private float getRenderButtonSize() {
+        return Math.max(1.0F, this.buttonSize * getFrameScaleSafe());
+    }
+
+    private float getRenderButtonPadding() {
+        return Math.max(0.0F, this.buttonPadding * getFrameScaleSafe());
+    }
+
+    private int scaleFrameSize(int value) {
+        if (value <= 0) {
+            return 0;
+        }
+        float scale = getFrameScale();
+        int scaled = Math.round(value * scale);
+        return Math.max(1, scaled);
+    }
+
+    private int getScaledBorderThickness() {
+        return scaleFrameSize(this.borderThickness);
+    }
+
+    private int getScaledTitleBarHeight() {
+        return scaleFrameSize(this.titleBarHeight);
+    }
+
+    private int getScaledButtonSize() {
+        return Math.max(1, scaleFrameSize(this.buttonSize));
+    }
+
+    private int getScaledButtonPadding() {
+        return scaleFrameSize(this.buttonPadding);
+    }
+
+    private int getScaledResizeMargin() {
+        return Math.max(1, scaleFrameSize(this.resizeMargin));
+    }
+
+    private int getScaledSize(int rawSize) {
+        if (!this.sizeScaledToGuiScale) {
+            return rawSize;
+        }
+        double scale = getMainGuiScale();
+        if (scale <= 1.0) {
+            return rawSize;
+        }
+        return Math.max(1, (int) Math.floor(rawSize / scale));
+    }
+
+    private int getRawSizeForScaled(int scaledSize) {
+        if (!this.sizeScaledToGuiScale) {
+            return scaledSize;
+        }
+        double scale = getMainGuiScale();
+        if (scale <= 1.0) {
+            return scaledSize;
+        }
+        return Math.max(1, (int) Math.round(scaledSize * scale));
+    }
+
+    private int getRawMinimumWidth() {
+        return getRawSizeForScaled(getMinimumWidth());
+    }
+
+    private int getRawMinimumHeight() {
+        return getRawSizeForScaled(getMinimumHeight());
+    }
+
+    private int getLayoutMinimumHeight() {
+        int titleHeight = getScaledTitleBarHeight();
+        int border = getScaledBorderThickness();
+        int divider = Math.max(1, Math.round(getFrameScale()));
+        int layoutMin = titleHeight + border * 2 + divider;
+        return Math.max(1, layoutMin);
+    }
+
+    private int getScaledMinimumWidthForBodyScale() {
+        return scaleRawByBodyScale(getBaseMinimumWidth());
+    }
+
+    private int getScaledMinimumHeightForBodyScale() {
+        return scaleRawByBodyScale(getBaseMinimumHeight());
+    }
+
+    private int scaleRawByBodyScale(int rawValue) {
+        double renderScale = getScreenRenderScaleFactor();
+        if (!Double.isFinite(renderScale) || renderScale <= 0.0) {
+            renderScale = 1.0;
+        }
+        double scaled = rawValue * renderScale;
+        int result = (int) scaled;
+        if (scaled > (double) result) {
+            result++;
+        }
+        return Math.max(1, result);
+    }
+
+    private int getBaseMinimumWidth() {
+        return Math.max(1, this.minWidth);
+    }
+
+    private int getBaseMinimumHeight() {
+        return Math.max(1, this.minHeight);
+    }
+
+    private int clampScaledWidth(int width) {
+        int minWidth = getMinimumWidth();
+        int maxWidth = getMaximumWidth();
+        if (maxWidth <= 0) {
+            return Math.max(1, Math.max(width, minWidth));
+        }
+        int clampedMin = Math.min(minWidth, maxWidth);
+        int clamped = Math.min(Math.max(width, clampedMin), maxWidth);
+        return Math.max(1, clamped);
+    }
+
+    private int clampScaledHeight(int height) {
+        int minHeight = getMinimumHeight();
+        int maxHeight = getMaximumHeight();
+        if (maxHeight <= 0) {
+            return Math.max(1, Math.max(height, minHeight));
+        }
+        int clampedMin = Math.min(minHeight, maxHeight);
+        int clamped = Math.min(Math.max(height, clampedMin), maxHeight);
+        return Math.max(1, clamped);
+    }
+
+    private int getScreenWidth() {
+        return getScaledScreenSize(getBodyWidth());
+    }
+
+    private int getScreenHeight() {
+        return getScaledScreenSize(getBodyHeight());
+    }
+
+    private int getScaledScreenSize(int bodySize) {
+        double renderScale = getScreenRenderScaleFactor();
+        if (!Double.isFinite(renderScale) || renderScale <= 0.0) {
+            renderScale = 1.0;
+        }
+        double scaledSize = (double) bodySize / renderScale;
+        int result = (int) scaledSize;
+        if (scaledSize > (double) result) {
+            result++;
+        }
+        return Math.max(1, result);
+    }
+
+    private double getScreenRenderScaleFactor() {
+        if (this.forceFancyMenuUiScaleEnabled) {
+            updateForcedFancyMenuUiScale();
+            return this.forcedFancyMenuUiScale;
+        }
+        Double customScale = this.customBodyScale;
+        if (customScale != null && Double.isFinite(customScale) && customScale > 0.0) {
+            return customScale;
+        }
+        if (!this.screenAutoScalingEnabled) {
+            return 1.0;
+        }
+        double mainScale = getMainGuiScale();
+        if (mainScale <= 0.0) {
+            return 1.0;
+        }
+        return getEmbeddedGuiScale() / mainScale;
+    }
+
+    private void updateForcedFancyMenuUiScale() {
+        double scale = UIBase.calculateFixedRenderScale(UIBase.getUIScale());
+        if (!Double.isFinite(scale) || scale <= 0.0) {
+            scale = 1.0;
+        }
+        this.forcedFancyMenuUiScale = scale;
+    }
+
+    private double getScreenInputScaleFactor() {
+        double renderScale = getScreenRenderScaleFactor();
+        if (renderScale <= 0.0) {
+            return 1.0;
+        }
+        return 1.0 / renderScale;
+    }
+
+    private double getEmbeddedGuiScale() {
+        int bodyWidth = getBodyWidth();
+        int bodyHeight = getBodyHeight();
+        int framebufferWidth = Math.max(1, (int) Math.round(bodyWidth * getMainGuiScale()));
+        int framebufferHeight = Math.max(1, (int) Math.round(bodyHeight * getMainGuiScale()));
+        int guiScaleSetting = this.minecraft.options.guiScale().get();
+        int scale = calculateGuiScale(guiScaleSetting, this.minecraft.isEnforceUnicode(), framebufferWidth, framebufferHeight);
+        return Math.max(1, scale);
+    }
+
+    private double getMainGuiScale() {
+        return this.minecraft.getWindow().getGuiScale();
+    }
+
+    private int calculateGuiScale(int guiScaleSetting, boolean forceUnicode, int framebufferWidth, int framebufferHeight) {
+        int scale = 1;
+        while (scale != guiScaleSetting
+                && scale < framebufferWidth
+                && scale < framebufferHeight
+                && framebufferWidth / (scale + 1) >= 320
+                && framebufferHeight / (scale + 1) >= 240) {
+            scale++;
+        }
+
+        if (forceUnicode && scale % 2 != 0) {
+            scale++;
+        }
+
+        return scale;
+    }
+
+    private void setScaledBounds(int x, int y, int width, int height) {
+        this.x = x;
+        this.y = y;
+        int scaledWidth = clampScaledWidth(width);
+        int scaledHeight = clampScaledHeight(height);
+        this.width = getRawSizeForScaled(scaledWidth);
+        this.height = getRawSizeForScaled(scaledHeight);
+        clampTitleBarToScreen();
+        resizeScreenIfNeeded();
+    }
+
+    private boolean isPointInArea(double mouseX, double mouseY, int areaX, int areaY, int areaWidth, int areaHeight) {
+        return mouseX >= areaX && mouseX < areaX + areaWidth && mouseY >= areaY && mouseY < areaY + areaHeight;
+    }
+
+    private boolean isPointInArea(double mouseX, double mouseY, float areaX, float areaY, float areaWidth, float areaHeight) {
+        return mouseX >= areaX && mouseX < areaX + areaWidth && mouseY >= areaY && mouseY < areaY + areaHeight;
+    }
+
+    private UITheme getTheme() {
+        return UIBase.getUITheme();
+    }
+
+    private void resizeScreenIfNeeded() {
+        if (this.screen == null) {
+            return;
+        }
+        int screenWidth = getScreenWidth();
+        int screenHeight = getScreenHeight();
+        if (screenWidth != this.lastScreenWidth || screenHeight != this.lastScreenHeight) {
+            this.lastScreenWidth = screenWidth;
+            this.lastScreenHeight = screenHeight;
+            this.screen.resize(this.minecraft, screenWidth, screenHeight);
+        }
+    }
+
+    private void clampWindowToScreenSize() {
+        int maxWidth = getMaximumWidth();
+        int maxHeight = getMaximumHeight();
+        if (maxWidth <= 0 || maxHeight <= 0) {
+            return;
+        }
+        int menuBarHeight = getMenuBarHeight();
+        if (this.maximized) {
+            if (this.x != 0 || this.y != menuBarHeight || getWidth() != maxWidth || getHeight() != maxHeight) {
+                setScaledBounds(0, menuBarHeight, maxWidth, maxHeight);
+            }
+            return;
+        }
+        int scaledWidth = getWidth();
+        int scaledHeight = getHeight();
+        int clampedWidth = clampScaledWidth(scaledWidth);
+        int clampedHeight = clampScaledHeight(scaledHeight);
+        if (clampedWidth != scaledWidth || clampedHeight != scaledHeight) {
+            setScaledBounds(this.x, this.y, clampedWidth, clampedHeight);
+        } else {
+            clampTitleBarToScreen();
+        }
+    }
+
+    private void enforceMinimumSizeForBodyScale() {
+        int minWidth = getMinimumWidth();
+        int minHeight = getMinimumHeight();
+        int width = getWidth();
+        int height = getHeight();
+        if (width < minWidth || height < minHeight) {
+            int targetWidth = Math.max(width, minWidth);
+            int targetHeight = Math.max(height, minHeight);
+            setScaledBounds(this.x, this.y, targetWidth, targetHeight);
+        }
+    }
+
+    private void clampTitleBarToScreen() {
+        int screenWidth = this.minecraft.getWindow().getGuiScaledWidth();
+        int screenHeight = this.minecraft.getWindow().getGuiScaledHeight();
+        if (screenWidth <= 0 || screenHeight <= 0) {
+            return;
+        }
+
+        int scaledWidth = getWidth();
+        int minVisible = Math.max(1, (int) Math.ceil(scaledWidth * 0.2F));
+        minVisible = Math.min(minVisible, scaledWidth);
+        minVisible = Math.min(minVisible, screenWidth);
+        int minX = minVisible - scaledWidth;
+        int maxX = screenWidth - minVisible;
+        if (this.x < minX) {
+            this.x = minX;
+        } else if (this.x > maxX) {
+            this.x = maxX;
+        }
+
+        int border = getScaledBorderThickness();
+        int titleHeight = getScaledTitleBarHeight();
+        int minY = getMenuBarHeight() - border;
+        int maxY = screenHeight - border - titleHeight;
+        if (maxY < minY) {
+            this.y = minY;
+        } else if (this.y < minY) {
+            this.y = minY;
+        } else if (this.y > maxY) {
+            this.y = maxY;
+        }
+    }
+
+    public boolean isDebug() {
+        return FancyMenu.getOptions().devShowPipWindowDebug.getValue();
+    }
+
+}

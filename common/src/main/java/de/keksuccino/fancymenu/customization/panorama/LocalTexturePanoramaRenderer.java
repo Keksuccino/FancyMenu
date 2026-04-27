@@ -9,6 +9,8 @@ import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.RenderScaleUtil;
+import de.keksuccino.fancymenu.util.rendering.RenderTranslationUtil;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -165,13 +167,75 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 			graphics.blit(ITexture.MISSING_TEXTURE_LOCATION, 0, 0, 0.0F, 0.0F, ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight(), ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight());
 			RenderingUtils.resetShaderColor(graphics);
 		} else {
-			this.renderRaw(graphics, this.opacity, partial);
+			this._render(graphics, Minecraft.getInstance(), this.opacity);
 		}
 	}
 
-	public void renderRaw(@NotNull GuiGraphics graphics, float panoramaAlpha, float partial) {
+	public void renderInArea(@NotNull GuiGraphics graphics, int x, int y, int width, int height, float partial) {
+		if (width <= 0 || height <= 0) {
+			return;
+		}
+		this.lastRenderCall = System.currentTimeMillis();
+		this.startTickerThreadIfNeeded();
+
+		if (this.panoramaImageSuppliers.size() < 6) {
+			RenderSystem.enableBlend();
+			RenderingUtils.resetShaderColor(graphics);
+			graphics.blit(ITexture.MISSING_TEXTURE_LOCATION, x, y, 0.0F, 0.0F, width, height, width, height);
+			RenderingUtils.resetShaderColor(graphics);
+			return;
+		}
 
 		Minecraft mc = Minecraft.getInstance();
+		int windowWidth = mc.getWindow().getWidth();
+		int windowHeight = mc.getWindow().getHeight();
+		if (windowWidth <= 0 || windowHeight <= 0) {
+			return;
+		}
+
+		float renderScale = RenderScaleUtil.getCurrentRenderScale();
+		if (renderScale <= 0.0F || !Float.isFinite(renderScale)) {
+			return;
+		}
+
+		float translationX = RenderTranslationUtil.getCurrentRenderTranslationX();
+		float translationY = RenderTranslationUtil.getCurrentRenderTranslationY();
+		int viewportX = Math.round(translationX + (x * renderScale));
+		int viewportY = Math.round(translationY + (y * renderScale));
+		int viewportWidth = Math.round(width * renderScale);
+		int viewportHeight = Math.round(height * renderScale);
+
+		viewportX = Math.max(0, viewportX);
+		viewportY = Math.max(0, viewportY);
+		viewportWidth = Math.min(viewportWidth, windowWidth - viewportX);
+		viewportHeight = Math.min(viewportHeight, windowHeight - viewportY);
+		if (viewportWidth <= 0 || viewportHeight <= 0) {
+			return;
+		}
+
+		graphics.flush();
+		RenderSystem.viewport(viewportX, windowHeight - (viewportY + viewportHeight), viewportWidth, viewportHeight);
+		try {
+			this.renderPanoramaCube(graphics, mc, this.opacity, viewportWidth, viewportHeight);
+		} finally {
+			RenderSystem.viewport(0, 0, windowWidth, windowHeight);
+		}
+
+		if (this.overlayTextureSupplier != null) {
+			ITexture texture = this.overlayTextureSupplier.get();
+			if (texture != null) {
+				ResourceLocation location = texture.getResourceLocation();
+				if (location != null) {
+					graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
+					RenderSystem.enableBlend();
+					graphics.blit(location, x, y, 0.0F, 0.0F, width, height, width, height);
+					RenderingUtils.resetShaderColor(graphics);
+				}
+			}
+		}
+	}
+
+	private void _render(@NotNull GuiGraphics graphics, Minecraft mc, float panoAlpha) {
 
 		int screenW = ScreenUtils.getScreenWidth();
 		int screenH = ScreenUtils.getScreenHeight();
@@ -180,38 +244,33 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 		float yaw = -this.currentRotation;
 		float fovF = ((float)this.fov * ((float)Math.PI / 180));
 
-		graphics.pose().pushPose();
-		RenderingUtils.resetShaderColor(graphics);
-
 		Tesselator tesselator = Tesselator.getInstance();
-		BufferBuilder bufferBuilder = tesselator.getBuilder();
-		Matrix4f matrix4f = new Matrix4f().setPerspective(fovF, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
+		Matrix4f $$5 = (new Matrix4f()).setPerspective(fovF, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
 		RenderSystem.backupProjectionMatrix();
-		RenderSystem.setProjectionMatrix(matrix4f, VertexSorting.DISTANCE_TO_ORIGIN);
+		RenderSystem.setProjectionMatrix($$5, VertexSorting.DISTANCE_TO_ORIGIN);
 		PoseStack modelViewStack = RenderSystem.getModelViewStack();
 		modelViewStack.pushPose();
-		modelViewStack.setIdentity();
-		modelViewStack.mulPose(Axis.XP.rotationDegrees(180.0f));
-		RenderSystem.applyModelViewMatrix();
+		modelViewStack.mulPose(Axis.XP.rotationDegrees(180.0F));
 		RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-		graphics.setColor(1.0f, 1.0f, 1.0f, this.opacity);
 		RenderSystem.enableBlend();
 		RenderSystem.disableCull();
 		RenderSystem.depthMask(false);
 		RenderSystem.disableDepthTest();
 
-		for(int j = 0; j < 4; ++j) {
+		for(int $$8 = 0; $$8 < 4; ++$$8) {
 			modelViewStack.pushPose();
-			float k = ((float)(j % 2) / 2.0f - 0.5f) / 256.0f;
-			float l = ((float)(j / 2) / 2.0f - 0.5f) / 256.0f;
-			modelViewStack.translate(k, l, 0.0f);
+			float $$9 = ((float)($$8 % 2) / 2.0F - 0.5F) / 256.0F;
+			float $$10 = ((float)($$8 / 2) / 2.0F - 0.5F) / 256.0F;
+			float $$11 = 0.0F;
+			modelViewStack.translate($$9, $$10, 0.0F);
 			modelViewStack.mulPose(Axis.XP.rotationDegrees(pitch));
 			modelViewStack.mulPose(Axis.YP.rotationDegrees(yaw));
 			RenderSystem.applyModelViewMatrix();
-			for (int n = 0; n < 6; ++n) {
+
+			for(int texNum = 0; texNum < 6; ++texNum) {
 				ResourceLocation location = null;
-				if (this.panoramaImageSuppliers.size() >= (n + 1)) {
-					ResourceSupplier<ITexture> texSupplier = this.panoramaImageSuppliers.get(n);
+				if (this.panoramaImageSuppliers.size() >= (texNum + 1)) {
+					ResourceSupplier<ITexture> texSupplier = this.panoramaImageSuppliers.get(texNum);
 					ITexture texture = texSupplier.get();
 					if (texture != null) {
 						location = texture.getResourceLocation();
@@ -219,48 +278,55 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 				}
 				if (location == null) location = ITexture.MISSING_TEXTURE_LOCATION;
 				RenderSystem.setShaderTexture(0, location);
+				BufferBuilder bufferBuilder = tesselator.getBuilder();
 				bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-				int o = Math.round(255.0F * panoramaAlpha) / (j + 1);
-				if (n == 0) {
-					bufferBuilder.vertex(-1.0, -1.0, 1.0).uv(0.0f, 0.0f).color(255, 255, 255, o).endVertex();
-					bufferBuilder.vertex(-1.0, 1.0, 1.0).uv(0.0f, 1.0f).color(255, 255, 255, o).endVertex();
-					bufferBuilder.vertex(1.0, 1.0, 1.0).uv(1.0f, 1.0f).color(255, 255, 255, o).endVertex();
-					bufferBuilder.vertex(1.0, -1.0, 1.0).uv(1.0f, 0.0f).color(255, 255, 255, o).endVertex();
+				int $$14 = Math.round(255.0F * panoAlpha) / ($$8 + 1);
+				if (texNum == 0) {
+					bufferBuilder.vertex(-1.0F, -1.0F, 1.0F).uv(0.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
+					bufferBuilder.vertex(-1.0F, 1.0F, 1.0F).uv(0.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+					bufferBuilder.vertex(1.0F, 1.0F, 1.0F).uv(1.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+					bufferBuilder.vertex(1.0F, -1.0F, 1.0F).uv(1.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
 				}
-				if (n == 1) {
-					bufferBuilder.vertex(1.0, -1.0, 1.0).uv(0.0f, 0.0f).color(255, 255, 255, o).endVertex();
-					bufferBuilder.vertex(1.0, 1.0, 1.0).uv(0.0f, 1.0f).color(255, 255, 255, o).endVertex();
-					bufferBuilder.vertex(1.0, 1.0, -1.0).uv(1.0f, 1.0f).color(255, 255, 255, o).endVertex();
-					bufferBuilder.vertex(1.0, -1.0, -1.0).uv(1.0f, 0.0f).color(255, 255, 255, o).endVertex();
+
+				if (texNum == 1) {
+					bufferBuilder.vertex(1.0F, -1.0F, 1.0F).uv(0.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
+					bufferBuilder.vertex(1.0F, 1.0F, 1.0F).uv(0.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+					bufferBuilder.vertex(1.0F, 1.0F, -1.0F).uv(1.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+					bufferBuilder.vertex(1.0F, -1.0F, -1.0F).uv(1.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
 				}
-				if (n == 2) {
-					bufferBuilder.vertex(1.0, -1.0, -1.0).uv(0.0f, 0.0f).color(255, 255, 255, o).endVertex();
-					bufferBuilder.vertex(1.0, 1.0, -1.0).uv(0.0f, 1.0f).color(255, 255, 255, o).endVertex();
-					bufferBuilder.vertex(-1.0, 1.0, -1.0).uv(1.0f, 1.0f).color(255, 255, 255, o).endVertex();
-					bufferBuilder.vertex(-1.0, -1.0, -1.0).uv(1.0f, 0.0f).color(255, 255, 255, o).endVertex();
+
+				if (texNum == 2) {
+					bufferBuilder.vertex(1.0F, -1.0F, -1.0F).uv(0.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
+					bufferBuilder.vertex(1.0F, 1.0F, -1.0F).uv(0.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+					bufferBuilder.vertex(-1.0F, 1.0F, -1.0F).uv(1.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+					bufferBuilder.vertex(-1.0F, -1.0F, -1.0F).uv(1.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
 				}
-				if (n == 3) {
-					bufferBuilder.vertex(-1.0, -1.0, -1.0).uv(0.0f, 0.0f).color(255, 255, 255, o).endVertex();
-					bufferBuilder.vertex(-1.0, 1.0, -1.0).uv(0.0f, 1.0f).color(255, 255, 255, o).endVertex();
-					bufferBuilder.vertex(-1.0, 1.0, 1.0).uv(1.0f, 1.0f).color(255, 255, 255, o).endVertex();
-					bufferBuilder.vertex(-1.0, -1.0, 1.0).uv(1.0f, 0.0f).color(255, 255, 255, o).endVertex();
+
+				if (texNum == 3) {
+					bufferBuilder.vertex(-1.0F, -1.0F, -1.0F).uv(0.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
+					bufferBuilder.vertex(-1.0F, 1.0F, -1.0F).uv(0.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+					bufferBuilder.vertex(-1.0F, 1.0F, 1.0F).uv(1.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+					bufferBuilder.vertex(-1.0F, -1.0F, 1.0F).uv(1.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
 				}
-				if (n == 4) {
-					bufferBuilder.vertex(-1.0, -1.0, -1.0).uv(0.0f, 0.0f).color(255, 255, 255, o).endVertex();
-					bufferBuilder.vertex(-1.0, -1.0, 1.0).uv(0.0f, 1.0f).color(255, 255, 255, o).endVertex();
-					bufferBuilder.vertex(1.0, -1.0, 1.0).uv(1.0f, 1.0f).color(255, 255, 255, o).endVertex();
-					bufferBuilder.vertex(1.0, -1.0, -1.0).uv(1.0f, 0.0f).color(255, 255, 255, o).endVertex();
+
+				if (texNum == 4) {
+					bufferBuilder.vertex(-1.0F, -1.0F, -1.0F).uv(0.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
+					bufferBuilder.vertex(-1.0F, -1.0F, 1.0F).uv(0.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+					bufferBuilder.vertex(1.0F, -1.0F, 1.0F).uv(1.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+					bufferBuilder.vertex(1.0F, -1.0F, -1.0F).uv(1.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
 				}
-				if (n == 5) {
-					bufferBuilder.vertex(-1.0, 1.0, 1.0).uv(0.0f, 0.0f).color(255, 255, 255, o).endVertex();
-					bufferBuilder.vertex(-1.0, 1.0, -1.0).uv(0.0f, 1.0f).color(255, 255, 255, o).endVertex();
-					bufferBuilder.vertex(1.0, 1.0, -1.0).uv(1.0f, 1.0f).color(255, 255, 255, o).endVertex();
-					bufferBuilder.vertex(1.0, 1.0, 1.0).uv(1.0f, 0.0f).color(255, 255, 255, o).endVertex();
+
+				if (texNum == 5) {
+					bufferBuilder.vertex(-1.0F, 1.0F, 1.0F).uv(0.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
+					bufferBuilder.vertex(-1.0F, 1.0F, -1.0F).uv(0.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+					bufferBuilder.vertex(1.0F, 1.0F, -1.0F).uv(1.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+					bufferBuilder.vertex(1.0F, 1.0F, 1.0F).uv(1.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
 				}
-				tesselator.end();
+
+				BufferUploader.drawWithShader(bufferBuilder.end());
 			}
+
 			modelViewStack.popPose();
-			RenderSystem.applyModelViewMatrix();
 			RenderSystem.colorMask(true, true, true, false);
 		}
 
@@ -272,8 +338,7 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 		RenderSystem.enableCull();
 		RenderSystem.enableDepthTest();
 
-		graphics.pose().popPose();
-		RenderSystem.defaultBlendFunc();
+		RenderingUtils.resetShaderColor(graphics);
 
 		if (this.overlayTextureSupplier != null) {
 			ITexture texture = this.overlayTextureSupplier.get();
@@ -290,6 +355,230 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 		RenderingUtils.resetShaderColor(graphics);
 
 	}
+
+	private void renderPanoramaCube(@NotNull GuiGraphics graphics, Minecraft mc, float panoAlpha, int viewportWidth, int viewportHeight) {
+		float pitch = this.angle;
+		float yaw = -this.currentRotation;
+		float fovF = ((float)this.fov * ((float)Math.PI / 180));
+
+		Tesselator tesselator = Tesselator.getInstance();
+		Matrix4f projection = (new Matrix4f()).setPerspective(fovF, (float)viewportWidth / (float)viewportHeight, 0.05F, 10.0F);
+		RenderSystem.backupProjectionMatrix();
+		RenderSystem.setProjectionMatrix(projection, VertexSorting.DISTANCE_TO_ORIGIN);
+		PoseStack modelViewStack = RenderSystem.getModelViewStack();
+		modelViewStack.pushPose();
+		try {
+			modelViewStack.mulPose(Axis.XP.rotationDegrees(180.0F));
+			RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+			RenderSystem.enableBlend();
+			RenderSystem.disableCull();
+			RenderSystem.depthMask(false);
+			RenderSystem.disableDepthTest();
+
+			for(int $$8 = 0; $$8 < 4; ++$$8) {
+				modelViewStack.pushPose();
+				float $$9 = ((float)($$8 % 2) / 2.0F - 0.5F) / 256.0F;
+				float $$10 = ((float)($$8 / 2) / 2.0F - 0.5F) / 256.0F;
+				modelViewStack.translate($$9, $$10, 0.0F);
+				modelViewStack.mulPose(Axis.XP.rotationDegrees(pitch));
+				modelViewStack.mulPose(Axis.YP.rotationDegrees(yaw));
+				RenderSystem.applyModelViewMatrix();
+
+				for(int texNum = 0; texNum < 6; ++texNum) {
+					ResourceLocation location = null;
+					if (this.panoramaImageSuppliers.size() >= (texNum + 1)) {
+						ResourceSupplier<ITexture> texSupplier = this.panoramaImageSuppliers.get(texNum);
+						ITexture texture = texSupplier.get();
+						if (texture != null) {
+							location = texture.getResourceLocation();
+						}
+					}
+					if (location == null) location = ITexture.MISSING_TEXTURE_LOCATION;
+					RenderSystem.setShaderTexture(0, location);
+					BufferBuilder bufferBuilder = tesselator.getBuilder();
+					bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+					int $$14 = Math.round(255.0F * panoAlpha) / ($$8 + 1);
+					if (texNum == 0) {
+						bufferBuilder.vertex(-1.0F, -1.0F, 1.0F).uv(0.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
+						bufferBuilder.vertex(-1.0F, 1.0F, 1.0F).uv(0.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+						bufferBuilder.vertex(1.0F, 1.0F, 1.0F).uv(1.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+						bufferBuilder.vertex(1.0F, -1.0F, 1.0F).uv(1.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
+					}
+
+					if (texNum == 1) {
+						bufferBuilder.vertex(1.0F, -1.0F, 1.0F).uv(0.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
+						bufferBuilder.vertex(1.0F, 1.0F, 1.0F).uv(0.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+						bufferBuilder.vertex(1.0F, 1.0F, -1.0F).uv(1.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+						bufferBuilder.vertex(1.0F, -1.0F, -1.0F).uv(1.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
+					}
+
+					if (texNum == 2) {
+						bufferBuilder.vertex(1.0F, -1.0F, -1.0F).uv(0.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
+						bufferBuilder.vertex(1.0F, 1.0F, -1.0F).uv(0.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+						bufferBuilder.vertex(-1.0F, 1.0F, -1.0F).uv(1.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+						bufferBuilder.vertex(-1.0F, -1.0F, -1.0F).uv(1.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
+					}
+
+					if (texNum == 3) {
+						bufferBuilder.vertex(-1.0F, -1.0F, -1.0F).uv(0.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
+						bufferBuilder.vertex(-1.0F, 1.0F, -1.0F).uv(0.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+						bufferBuilder.vertex(-1.0F, 1.0F, 1.0F).uv(1.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+						bufferBuilder.vertex(-1.0F, -1.0F, 1.0F).uv(1.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
+					}
+
+					if (texNum == 4) {
+						bufferBuilder.vertex(-1.0F, -1.0F, -1.0F).uv(0.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
+						bufferBuilder.vertex(-1.0F, -1.0F, 1.0F).uv(0.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+						bufferBuilder.vertex(1.0F, -1.0F, 1.0F).uv(1.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+						bufferBuilder.vertex(1.0F, -1.0F, -1.0F).uv(1.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
+					}
+
+					if (texNum == 5) {
+						bufferBuilder.vertex(-1.0F, 1.0F, 1.0F).uv(0.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
+						bufferBuilder.vertex(-1.0F, 1.0F, -1.0F).uv(0.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+						bufferBuilder.vertex(1.0F, 1.0F, -1.0F).uv(1.0F, 1.0F).color(255, 255, 255, $$14).endVertex();
+						bufferBuilder.vertex(1.0F, 1.0F, 1.0F).uv(1.0F, 0.0F).color(255, 255, 255, $$14).endVertex();
+					}
+
+					BufferUploader.drawWithShader(bufferBuilder.end());
+				}
+
+				modelViewStack.popPose();
+				RenderSystem.colorMask(true, true, true, false);
+			}
+		} finally {
+			RenderSystem.colorMask(true, true, true, true);
+			RenderSystem.restoreProjectionMatrix();
+			modelViewStack.popPose();
+			RenderSystem.applyModelViewMatrix();
+			RenderSystem.depthMask(true);
+			RenderSystem.enableCull();
+			RenderSystem.enableDepthTest();
+			RenderingUtils.resetShaderColor(graphics);
+		}
+	}
+
+//	public void renderRaw(@NotNull GuiGraphics graphics, float panoramaAlpha, float partial) {
+//
+//		Minecraft mc = Minecraft.getInstance();
+//
+//		int screenW = ScreenUtils.getScreenWidth();
+//		int screenH = ScreenUtils.getScreenHeight();
+//
+//		float pitch = this.angle;
+//		float yaw = -this.currentRotation;
+//		float fovF = ((float)this.fov * ((float)Math.PI / 180));
+//
+//		graphics.pose().pushPose();
+//		RenderingUtils.resetShaderColor(graphics);
+//
+//		Tesselator tesselator = Tesselator.getInstance();
+//		BufferBuilder bufferBuilder = tesselator.getBuilder();
+//		bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+//		Matrix4f matrix4f = new Matrix4f().setPerspective(fovF, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
+//		RenderSystem.backupProjectionMatrix();
+//		RenderSystem.setProjectionMatrix(matrix4f, VertexSorting.DISTANCE_TO_ORIGIN);
+//		Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();
+//		modelViewStack.pushMatrix();
+//		modelViewStack.rotationX((float) Math.PI);
+//		RenderSystem.applyModelViewMatrix();
+//		RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+//		graphics.setColor(1.0f, 1.0f, 1.0f, this.opacity);
+//		RenderSystem.enableBlend();
+//		RenderSystem.disableCull();
+//		RenderSystem.depthMask(false);
+//
+//		for(int j = 0; j < 4; ++j) {
+//			modelViewStack.pushMatrix();
+//			float k = ((float)(j % 2) / 2.0f - 0.5f) / 256.0f;
+//			float l = ((float)(j / 2) / 2.0f - 0.5f) / 256.0f;
+//			modelViewStack.translate(k, l, 0.0f);
+////			modelViewStack.mulPose(Axis.XP.rotationDegrees(pitch));
+////			modelViewStack.mulPose(Axis.YP.rotationDegrees(yaw));
+//			modelViewStack.rotateX(pitch * (float) (Math.PI / 180.0));
+//			modelViewStack.rotateY(yaw * (float) (Math.PI / 180.0));
+//			RenderSystem.applyModelViewMatrix();
+//			for (int n = 0; n < 6; ++n) {
+//				ResourceLocation location = null;
+//				if (this.panoramaImageSuppliers.size() >= (n + 1)) {
+//					ResourceSupplier<ITexture> texSupplier = this.panoramaImageSuppliers.get(n);
+//					ITexture texture = texSupplier.get();
+//					if (texture != null) {
+//						location = texture.getResourceLocation();
+//					}
+//				}
+//				if (location == null) location = ITexture.MISSING_TEXTURE_LOCATION;
+//				RenderSystem.setShaderTexture(0, location);
+//				int o = Math.round(255.0F * panoramaAlpha) / (j + 1);
+//				if (n == 0) {
+//					bufferBuilder.addVertex(-1.0f, -1.0f, 1.0f).setUv(0.0f, 0.0f).setColor(255, 255, 255, o);
+//					bufferBuilder.addVertex(-1.0f, 1.0f, 1.0f).setUv(0.0f, 1.0f).setColor(255, 255, 255, o);
+//					bufferBuilder.addVertex(1.0f, 1.0f, 1.0f).setUv(1.0f, 1.0f).setColor(255, 255, 255, o);
+//					bufferBuilder.addVertex(1.0f, -1.0f, 1.0f).setUv(1.0f, 0.0f).setColor(255, 255, 255, o);
+//				}
+//				if (n == 1) {
+//					bufferBuilder.addVertex(1.0f, -1.0f, 1.0f).setUv(0.0f, 0.0f).setColor(255, 255, 255, o);
+//					bufferBuilder.addVertex(1.0f, 1.0f, 1.0f).setUv(0.0f, 1.0f).setColor(255, 255, 255, o);
+//					bufferBuilder.addVertex(1.0f, 1.0f, -1.0f).setUv(1.0f, 1.0f).setColor(255, 255, 255, o);
+//					bufferBuilder.addVertex(1.0f, -1.0f, -1.0f).setUv(1.0f, 0.0f).setColor(255, 255, 255, o);
+//				}
+//				if (n == 2) {
+//					bufferBuilder.addVertex(1.0f, -1.0f, -1.0f).setUv(0.0f, 0.0f).setColor(255, 255, 255, o);
+//					bufferBuilder.addVertex(1.0f, 1.0f, -1.0f).setUv(0.0f, 1.0f).setColor(255, 255, 255, o);
+//					bufferBuilder.addVertex(-1.0f, 1.0f, -1.0f).setUv(1.0f, 1.0f).setColor(255, 255, 255, o);
+//					bufferBuilder.addVertex(-1.0f, -1.0f, -1.0f).setUv(1.0f, 0.0f).setColor(255, 255, 255, o);
+//				}
+//				if (n == 3) {
+//					bufferBuilder.addVertex(-1.0f, -1.0f, -1.0f).setUv(0.0f, 0.0f).setColor(255, 255, 255, o);
+//					bufferBuilder.addVertex(-1.0f, 1.0f, -1.0f).setUv(0.0f, 1.0f).setColor(255, 255, 255, o);
+//					bufferBuilder.addVertex(-1.0f, 1.0f, 1.0f).setUv(1.0f, 1.0f).setColor(255, 255, 255, o);
+//					bufferBuilder.addVertex(-1.0f, -1.0f, 1.0f).setUv(1.0f, 0.0f).setColor(255, 255, 255, o);
+//				}
+//				if (n == 4) {
+//					bufferBuilder.addVertex(-1.0f, -1.0f, -1.0f).setUv(0.0f, 0.0f).setColor(255, 255, 255, o);
+//					bufferBuilder.addVertex(-1.0f, -1.0f, 1.0f).setUv(0.0f, 1.0f).setColor(255, 255, 255, o);
+//					bufferBuilder.addVertex(1.0f, -1.0f, 1.0f).setUv(1.0f, 1.0f).setColor(255, 255, 255, o);
+//					bufferBuilder.addVertex(1.0f, -1.0f, -1.0f).setUv(1.0f, 0.0f).setColor(255, 255, 255, o);
+//				}
+//				if (n == 5) {
+//					bufferBuilder.addVertex(-1.0f, 1.0f, 1.0f).setUv(0.0f, 0.0f).setColor(255, 255, 255, o);
+//					bufferBuilder.addVertex(-1.0f, 1.0f, -1.0f).setUv(0.0f, 1.0f).setColor(255, 255, 255, o);
+//					bufferBuilder.addVertex(1.0f, 1.0f, -1.0f).setUv(1.0f, 1.0f).setColor(255, 255, 255, o);
+//					bufferBuilder.addVertex(1.0f, 1.0f, 1.0f).setUv(1.0f, 0.0f).setColor(255, 255, 255, o);
+//				}
+//			}
+//			BufferUploader.drawWithShader(bufferBuilder.end());
+//			modelViewStack.popMatrix();
+//			RenderSystem.applyModelViewMatrix();
+//			RenderSystem.colorMask(true, true, true, false);
+//		}
+//
+//		RenderSystem.colorMask(true, true, true, true);
+//		RenderSystem.restoreProjectionMatrix();
+//		modelViewStack.popMatrix();
+//		RenderSystem.applyModelViewMatrix();
+//		RenderSystem.depthMask(true);
+//		RenderSystem.enableCull();
+//		RenderSystem.enableDepthTest();
+//
+//		graphics.pose().popPose();
+//		RenderSystem.defaultBlendFunc();
+//
+//		if (this.overlayTextureSupplier != null) {
+//			ITexture texture = this.overlayTextureSupplier.get();
+//			if (texture != null) {
+//				ResourceLocation location = texture.getResourceLocation();
+//				if (location != null) {
+//					graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
+//					RenderSystem.enableBlend();
+//					graphics.blit(location, 0, 0, 0.0F, 0.0F, screenW, screenH, screenW, screenH);
+//				}
+//			}
+//		}
+//
+//		RenderingUtils.resetShaderColor(graphics);
+//
+//	}
 
 	public String getName() {
 		return this.name;

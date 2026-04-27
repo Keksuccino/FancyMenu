@@ -24,6 +24,4 @@ public interface IMixinScreen {
 
     @Invoker("init") void invoke_init_FancyMenu();
 
-    @Invoker("clearFocus") void invoke_clearFocus_FancyMenu();
-
 }

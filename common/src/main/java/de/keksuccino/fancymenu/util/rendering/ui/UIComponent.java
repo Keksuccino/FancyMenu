@@ -134,7 +134,7 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
      * This scale works against the actual GUI scale to make it possible to render the {@link UIComponent} in a different scale than the GUI scale.
      */
     public float getFixedComponentScale() {
-        return calculateFixedScale(this.getComponentScale());
+        return calculateFixedRenderScale(this.getComponentScale());
     }
 
     /**
@@ -237,17 +237,17 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
         this.dragging = dragging;
     }
 
-    protected boolean mouseScrolledComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, double scrollDelta) {
+    protected boolean mouseScrolledComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, double scrollDeltaY) {
         for(GuiEventListener child : this.children()) {
-            if (child.mouseScrolled(realMouseX, realMouseY, scrollDelta)) return true;
+            if (child.mouseScrolled(realMouseX, realMouseY, scrollDeltaY)) return true;
         }
         return false;
     }
 
     @Deprecated
     @Override
-    public boolean mouseScrolled(double ignoredMouseX, double ignoredMouseY, double scrollDelta) {
-        return this.mouseScrolledComponent(this.getRealMouseX(), this.getRealMouseY(), this.getTranslatedMouseX(), this.getTranslatedMouseY(), scrollDelta);
+    public boolean mouseScrolled(double ignoredMouseX, double ignoredMouseY, double scrollDeltaY) {
+        return this.mouseScrolledComponent(this.getRealMouseX(), this.getRealMouseY(), this.getTranslatedMouseX(), this.getTranslatedMouseY(), scrollDeltaY);
     }
 
     protected void mouseMovedComponent(double realMouseX, double realMouseY) {

@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.networking;
 
-import de.keksuccino.fancymenu.networking.packets.Packets;
 import de.keksuccino.fancymenu.networking.bridge.BridgePacketHandlerForge;
 import de.keksuccino.fancymenu.networking.bridge.BridgePacketMessageForge;
+import de.keksuccino.fancymenu.networking.packets.Packets;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.PacketDistributor;

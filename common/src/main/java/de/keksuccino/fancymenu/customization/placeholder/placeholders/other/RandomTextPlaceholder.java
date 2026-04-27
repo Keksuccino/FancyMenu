@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.other;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.Pair;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.TaskExecutor;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -44,7 +44,7 @@ public class RandomTextPlaceholder extends Placeholder {
 
         String sourceString = dps.values.get("source");
         if (sourceString == null) sourceString = dps.values.get("path");
-        long intervalRaw = SerializationUtils.deserializeNumber(Long.class, 10L, dps.values.get("interval"));
+        long intervalRaw = SerializationHelper.INSTANCE.deserializeNumber(Long.class, 10L, dps.values.get("interval"));
         
         if (sourceString == null) {
             return null;
@@ -91,12 +91,12 @@ public class RandomTextPlaceholder extends Placeholder {
         if (cached != null) {
             // For plain text, never expire the cache since it doesn't change
             if (isPlainText(pathOrUrl)) {
-                return cached.getValue();
+                return cached.getSecond();
             }
             
             // If cache is still valid, return it
-            if ((currentTime - cached.getKey()) < CONTENT_RELOAD_COOLDOWN_MS) {
-                return cached.getValue();
+            if ((currentTime - cached.getFirst()) < CONTENT_RELOAD_COOLDOWN_MS) {
+                return cached.getSecond();
             }
             
             // Cache expired, trigger async reload if not already loading
@@ -105,7 +105,7 @@ public class RandomTextPlaceholder extends Placeholder {
             }
             
             // Return existing cached content while reloading
-            return cached.getValue();
+            return cached.getSecond();
         }
         
         // No cache exists, trigger async load if not already loading

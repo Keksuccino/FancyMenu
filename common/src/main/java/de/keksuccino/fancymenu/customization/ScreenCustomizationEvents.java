@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
+import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.events.screen.CloseScreenEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
@@ -13,7 +14,6 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
-import de.keksuccino.fancymenu.events.widget.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.events.ScreenReloadEvent;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
@@ -105,8 +105,6 @@ public class ScreenCustomizationEvents {
 			WidgetLocatorHandler.clearCache();
 		}
 
-		ScreenCustomization.isCurrentScrollable = false;
-
 		//Stopping menu music when deactivated in config
 		if ((Minecraft.getInstance().level == null)) {
 			if (!FancyMenu.getOptions().playVanillaMenuMusic.getValue()) {
@@ -119,6 +117,7 @@ public class ScreenCustomizationEvents {
 	@SuppressWarnings("all")
 	@EventListener
 	public void onTick(ClientTickEvent.Pre e) {
+		GlobalCustomizationHandler.tickMenuMusic();
 
 		if (Minecraft.getInstance().screen == null) {
 			this.lastScreen = null;
@@ -162,16 +161,7 @@ public class ScreenCustomizationEvents {
 				}
 			}
 		}
-
-		if (Minecraft.getInstance().screen == null) {
-			ScreenCustomization.isCurrentScrollable = false;
-		}
 		
-	}
-
-	@EventListener
-	public void onRenderListBackground(RenderGuiListBackgroundEvent.Pre e) {
-		ScreenCustomization.isCurrentScrollable = true;
 	}
 	
 }

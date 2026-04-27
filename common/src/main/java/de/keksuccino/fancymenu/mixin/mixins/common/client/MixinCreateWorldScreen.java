@@ -6,8 +6,6 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
-import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
-import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -30,9 +28,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinCreateWorldScreen extends Screen {
 
     @Unique private boolean reInitialized_FancyMenu = false;
-    @Unique private int cached_mouseX_FancyMenu;
-    @Unique private int cached_mouseY_FancyMenu;
-    @Unique private float cached_partial_FancyMenu;
 
     protected MixinCreateWorldScreen(Component $$0) {
         super($$0);
@@ -74,19 +69,6 @@ public class MixinCreateWorldScreen extends Screen {
             }
         }
         return true;
-    }
-
-    @Inject(method = "render", at = @At("HEAD"))
-    private void before_render_FancyMenu(GuiGraphics guiGraphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
-        this.cached_mouseX_FancyMenu = mouseX;
-        this.cached_mouseY_FancyMenu = mouseY;
-        this.cached_partial_FancyMenu = partial;
-    }
-
-    //CreateWorldScreen overrides renderDirtBackground, so add back RenderedScreenBackgroundEvent
-    @Inject(method = "renderDirtBackground", at = @At("RETURN"))
-    private void afterRenderDirtBackgroundInCreateWorldFancyMenu(GuiGraphics graphics, CallbackInfo info) {
-        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, graphics, this.cached_mouseX_FancyMenu, this.cached_mouseY_FancyMenu, this.cached_partial_FancyMenu));
     }
 
     /**

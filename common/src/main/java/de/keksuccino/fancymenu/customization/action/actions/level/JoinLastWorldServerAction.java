@@ -3,13 +3,16 @@ package de.keksuccino.fancymenu.customization.action.actions.level;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinServerList;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableNotificationScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.queueable.QueueableScreenHandler;
+import de.keksuccino.fancymenu.util.ScreenUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ServerList;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
@@ -42,7 +45,9 @@ public class JoinLastWorldServerAction extends Action {
             long now = System.currentTimeMillis();
             if ((lastJoinErrorTrigger + 20000) < now) {
                 lastJoinErrorTrigger = now;
-                QueueableScreenHandler.addToQueue(new QueueableNotificationScreen(Component.translatable("fancymenu.actions.errors.cannot_join_world_while_in_world")));
+                MainThreadTaskExecutor.executeInMainThread(() -> {
+                    Dialogs.openMessage(Component.translatable("fancymenu.actions.errors.cannot_join_world_while_in_world"), MessageDialogStyle.ERROR);
+                }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
             }
             return;
         }
@@ -50,10 +55,11 @@ public class JoinLastWorldServerAction extends Action {
             if (!LastWorldHandler.isLastWorldServer()) { // CASE: SINGLEPLAYER WORLD
                 File f = new File(LastWorldHandler.getLastWorld());
                 if (Minecraft.getInstance().getLevelSource().levelExists(f.getName())) {
+                    Screen current = (Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen();
                     Minecraft.getInstance().forceSetScreen(new GenericDirtMessageScreen(Component.translatable("selectWorld.data_read")));
-                    Minecraft.getInstance().createWorldOpenFlows().loadLevel(Minecraft.getInstance().screen, f.getName());
+                    Minecraft.getInstance().createWorldOpenFlows().loadLevel(current, f.getName());
                 }
-            } else {
+            } else { //CASE: SERVER
                 String ipRaw = LastWorldHandler.getLastWorld().replace(" ", "");
                 String ip = ipRaw;
                 int port = 25565;
@@ -74,8 +80,7 @@ public class JoinLastWorldServerAction extends Action {
                     }
                 }
                 if (d == null) {
-                    boolean isLan = false;
-                    d = new ServerData(ipRaw, ipRaw, isLan);
+                    d = new ServerData(ipRaw, ipRaw, false);
                     l.add(d, false);
                     l.save();
                 }
@@ -86,13 +91,13 @@ public class JoinLastWorldServerAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.join_last_world");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.join_last_world.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.join_last_world.desc");
     }
 
     @Override
@@ -101,7 +106,7 @@ public class JoinLastWorldServerAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return null;
     }
 

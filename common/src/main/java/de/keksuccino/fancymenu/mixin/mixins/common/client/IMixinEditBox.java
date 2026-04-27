@@ -24,8 +24,6 @@ public interface IMixinEditBox {
 
     @Accessor("formatter") BiFunction<String, Integer, FormattedCharSequence> getFormatterFancyMenu();
 
-    @Accessor("shiftPressed") void setShiftPressedFancyMenu(boolean b);
-
     @Accessor("highlightPos") int getHighlightPosFancyMenu();
 
     @Invoker("deleteText") void invokeDeleteTextFancyMenu(int i);
@@ -34,7 +32,7 @@ public interface IMixinEditBox {
 
     @Accessor("textColorUneditable") int getTextColorUneditableFancyMenu();
 
-    @Accessor("frame") int getFrameFancyMenu();
+    @Accessor("frame") int getFocusedTimeFancyMenu();
 
     @Accessor("hint") Component getHintFancyMenu();
 

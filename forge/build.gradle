@@ -1,17 +1,15 @@
-
 plugins {
     id 'idea'
     id 'maven-publish'
     id 'net.minecraftforge.gradle' version '[6.0.24,6.2)'
     id 'org.spongepowered.mixin' version '0.7-SNAPSHOT'
 }
-
 base {
     archivesName = "${mod_id}"
 }
-
 mixin {
     add(sourceSets.main, "${mod_id}.refmap.json")
+
     config("${mod_id}.mixins.json")
     config("${mod_id}.forge.mixins.json")
 }
@@ -23,6 +21,9 @@ jarJar.enable()
 minecraft {
 
     mappings channel: 'official', version: minecraft_version
+
+    // Tell FG to not automtically create the reobf tasks, as we now use Official mappings at runtime, If you don't use them at dev time then you'll have to fix your reobf yourself.
+    reobf = false
 
     // This property allows configuring Gradle's ProcessResources task(s) to run on IDE output locations before launching the game.
     // It is REQUIRED to be set to true for this template to function.
@@ -65,6 +66,10 @@ minecraft {
 
 }
 
+repositories {
+    flatDir { dirs 'libs' }
+}
+
 sourceSets.main.resources.srcDir 'src/generated/resources'
 
 dependencies {
@@ -83,6 +88,7 @@ dependencies {
     minecraftLibrary(jarJar("com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7")) {
         jarJar.ranged(it, "[1.7,)")
     }
+    compileOnly "com.github.WaterMediaTeam:watermedia-v3:${watermedia_version}"
     implementation fg.deobf("maven.modrinth:konkrete:1.8.0-1.20-1.20.1-forge")
     implementation fg.deobf("maven.modrinth:melody:1.0.3-1.20.1-1.20.4-forge")
     //implementation "it.crystalnest:fancy-entity-renderer-forge:$fer_mc_version-$fer_version"
@@ -112,14 +118,15 @@ tasks.named("sourcesJar", Jar) {
 }
 
 processResources {
-    dependsOn(tasks.named("compileJava"))
-    from(project(":common").sourceSets.main.resources) {
-        exclude "${mod_id}.refmap.json"
+    from project(":common").sourceSets.main.resources
+    dependsOn tasks.named("compileJava")
+    from(layout.buildDirectory.dir("tmp/compileJava")) {
+        include "${mod_id}.refmap.json"
     }
 }
 
-jar.finalizedBy('reobfJar')
-//jar.finalizedBy('jarJar')
+//jar.finalizedBy('reobfJar')
+jar.finalizedBy('jarJar')
 
 publishing {
     publications {
@@ -134,6 +141,12 @@ publishing {
             url "file://" + System.getenv("local_maven")
         }
     }
+}
+
+sourceSets.each {
+    def dir = layout.buildDirectory.dir("sourcesSets/$it.name")
+    it.output.resourcesDir = dir
+    it.java.destinationDirectory = dir
 }
 
 jar {

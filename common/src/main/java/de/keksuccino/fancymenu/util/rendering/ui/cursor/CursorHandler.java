@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
-import de.keksuccino.fancymenu.util.resource.resources.texture.SimpleTexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,6 +31,8 @@ public class CursorHandler {
 
     public static final long CURSOR_RESIZE_HORIZONTAL = GLFW.glfwCreateStandardCursor(GLFW.GLFW_RESIZE_EW_CURSOR);
     public static final long CURSOR_RESIZE_VERTICAL = GLFW.glfwCreateStandardCursor(GLFW.GLFW_RESIZE_NS_CURSOR);
+    public static final long CURSOR_RESIZE_NWSE = GLFW.glfwCreateStandardCursor(GLFW.GLFW_RESIZE_NWSE_CURSOR);
+    public static final long CURSOR_RESIZE_NESW = GLFW.glfwCreateStandardCursor(GLFW.GLFW_RESIZE_NESW_CURSOR);
     public static final long CURSOR_RESIZE_ALL = GLFW.glfwCreateStandardCursor(GLFW.GLFW_RESIZE_ALL_CURSOR);
     public static final long CURSOR_WRITING = GLFW.glfwCreateStandardCursor(GLFW.GLFW_IBEAM_CURSOR);
     public static final long CURSOR_POINTING_HAND = GLFW.glfwCreateStandardCursor(GLFW.GLFW_POINTING_HAND_CURSOR);
@@ -40,6 +42,35 @@ public class CursorHandler {
 
     private static long clientTickCursor = -2;
     private static boolean initialized = false;
+
+    /**
+     * Returns the currently active GLFW cursor handle on the Minecraft window, or {@code -1} if unknown/not yet tracked.
+     * <p>
+     * Note: GLFW does not expose a cursor getter, this relies on mixin hooks tracking calls to {@code GLFW.glfwSetCursor(...)}.
+     */
+    public static long getActiveCursor() {
+        try {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc == null || mc.getWindow() == null) return -1L;
+            return GlfwCursorTracker.getActiveCursor(mc.getWindow().getWindow());
+        } catch (Exception ignored) {
+            return -1L;
+        }
+    }
+
+    /**
+     * Returns the standard GLFW cursor shape id of the currently active cursor, or {@code -1} if unknown/not a standard cursor.
+     */
+    public static int getActiveStandardCursorShape() {
+        long cursor = getActiveCursor();
+        if (cursor == 0L) {
+            return GLFW.GLFW_ARROW_CURSOR; // GLFW docs: NULL cursor switches back to default arrow cursor
+        }
+        if (cursor <= 0L) {
+            return -1;
+        }
+        return GlfwCursorTracker.getStandardCursorShape(cursor);
+    }
 
     public static void init() {
         if (initialized) return;
@@ -109,13 +140,13 @@ public class CursorHandler {
         public final int hotspotX;
         public final int hotspotY;
         @NotNull
-        public final SimpleTexture texture;
+        public final PngTexture texture;
         @NotNull
         public final String textureName;
 
         @SuppressWarnings("all")
         @Nullable
-        public static CustomCursor create(@NotNull SimpleTexture texture, int hotspotX, int hotspotY, @NotNull String textureName) {
+        public static CustomCursor create(@NotNull PngTexture texture, int hotspotX, int hotspotY, @NotNull String textureName) {
             CustomCursor customCursor = null;
             InputStream in = null;
             MemoryStack memStack = null;
@@ -173,7 +204,7 @@ public class CursorHandler {
             return customCursor;
         }
 
-        protected CustomCursor(long id_long, int hotspotX, int hotspotY, @NotNull SimpleTexture texture, @NotNull String textureName) {
+        protected CustomCursor(long id_long, int hotspotX, int hotspotY, @NotNull PngTexture texture, @NotNull String textureName) {
             this.id_long = id_long;
             this.hotspotX = hotspotX;
             this.hotspotY = hotspotY;

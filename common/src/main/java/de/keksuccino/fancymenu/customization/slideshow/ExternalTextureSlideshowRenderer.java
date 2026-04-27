@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import com.mojang.blaze3d.systems.RenderSystem;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -53,21 +53,21 @@ public class ExternalTextureSlideshowRenderer {
 		this.dir = slideshowDir;
 		File props = new File(this.dir + "/properties.txt");
 		if (!props.isFile()) props = new File(this.dir + "/properties.txt.txt");
-		
+
 		if (props.exists()) {
-			
+
 			PropertyContainerSet s = PropertiesParser.deserializeSetFromFile(props.getPath());
-			
+
 			if (s != null) {
 				List<PropertyContainer> l = s.getContainersOfType("slideshow-meta");
 				if (!l.isEmpty()) {
 					this.name = l.get(0).getValue("name");
-					
+
 					String dur = l.get(0).getValue("duration");
 					if ((dur != null) && MathUtils.isDouble(dur)) {
 						this.imageDuration = Double.parseDouble(dur);
 					}
-					
+
 					String fs = l.get(0).getValue("fadespeed");
 					if ((fs != null) && MathUtils.isFloat(fs)) {
 						float f = Float.parseFloat(fs);
@@ -76,48 +76,48 @@ public class ExternalTextureSlideshowRenderer {
 						}
 						this.fadeSpeed = f;
 					}
-					
+
 					String sx = l.get(0).getValue("x");
 					if ((sx != null) && MathUtils.isInteger(sx)) {
 						this.x = Integer.parseInt(sx);
 					}
-					
+
 					String sy = l.get(0).getValue("y");
 					if ((sy != null) && MathUtils.isInteger(sy)) {
 						this.y = Integer.parseInt(sy);
 					}
-					
+
 					String sw = l.get(0).getValue("width");
 					if ((sw != null) && MathUtils.isInteger(sw)) {
 						this.width = Integer.parseInt(sw);
 					}
-					
+
 					String sh = l.get(0).getValue("height");
 					if ((sh != null) && MathUtils.isInteger(sh)) {
 						this.height = Integer.parseInt(sh);
 					}
 
-					this.randomize = SerializationUtils.deserializeBoolean(this.randomize, l.get(0).getValue("randomize"));
-					
+					this.randomize = SerializationHelper.INSTANCE.deserializeBoolean(this.randomize, l.get(0).getValue("randomize"));
+
 				}
 			}
-			
+
 		}
 	}
-	
+
 	public void prepareSlideshow() {
 
 		if (!this.prepared && (this.name != null)) {
-			
+
 			File imagesDir = new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(this.dir + "/images"));
-			
+
 			if (imagesDir.exists() && imagesDir.isDirectory()) {
-				
+
 				String[] list = imagesDir.list();
 				List<String> images = (list != null) ? Arrays.asList(list) : new ArrayList<>();
-				
+
 				if (!images.isEmpty()) {
-					
+
 					images.sort(String.CASE_INSENSITIVE_ORDER);
 
 					for (String s : images) {
@@ -134,18 +134,18 @@ public class ExternalTextureSlideshowRenderer {
 							this.originalHeight = t.getHeight();
 						}
 					}
-					
+
 					File overlay = new File(this.dir + "/overlay.png");
 					if (overlay.exists()) {
 						this.overlayTexture = ResourceSupplier.image(overlay.getPath());
 					}
-					
+
 				}
-				
+
 				this.prepared = true;
-				
+
 			}
-			
+
 		}
 
 	}
@@ -162,15 +162,15 @@ public class ExternalTextureSlideshowRenderer {
 			LOGGER.error("[FANCYMENU] Failed to render slideshow!", ex);
 		}
 	}
-	
+
 	protected void tick() {
-		
+
 		if (!this.images.isEmpty()) {
-			
+
 			long time = System.currentTimeMillis();
 			long duration = (long) (1000 * this.imageDuration);
 			long opacityTickSpeed = 25;
-			
+
 			if (this.firstLoop) {
 				duration = duration / 2;
 			}
@@ -198,8 +198,7 @@ public class ExternalTextureSlideshowRenderer {
 				this.previous = this.current;
 				this.current = this.images.get(this.frameCounter);
 			}
-			//------------------------
-			
+
 			//lower opacity when prev image is set to fade it out
 			if ((this.previous != null) && (this.opacity > 0.0F)) {
 				this.firstLoop = false;
@@ -213,9 +212,9 @@ public class ExternalTextureSlideshowRenderer {
 			} else {
 				this.previous = null;
 			}
-			
+
 		}
-		
+
 	}
 
 	protected void renderPrevious(GuiGraphics graphics) {
@@ -260,7 +259,7 @@ public class ExternalTextureSlideshowRenderer {
 			}
 		}
 	}
-	
+
 	public String getName() {
 		return this.name;
 	}
@@ -268,14 +267,14 @@ public class ExternalTextureSlideshowRenderer {
 	public void setDuration(double duration) {
 		this.imageDuration = duration;
 	}
-	
+
 	public void setFadeSpeed(float speed) {
 		if (speed < 0.0F) {
 			speed = 0.0F;
 		}
 		this.fadeSpeed = speed;
 	}
-	
+
 	public boolean isReady() {
 		return this.prepared;
 	}

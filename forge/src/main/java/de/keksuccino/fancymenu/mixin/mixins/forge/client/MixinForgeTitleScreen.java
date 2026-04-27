@@ -17,10 +17,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import java.util.function.BiConsumer;
 
 @Mixin(TitleScreen.class)
-public abstract class MixinForgeTitleScreen {
+public class MixinForgeTitleScreen {
 
     @Nullable
-    @Unique private AbstractWidget cachedForgeModsButtonFancyMenu = null;
+    @Unique
+    private AbstractWidget cachedForgeModsButtonFancyMenu = null;
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/client/ForgeHooksClient;renderMainMenu(Lnet/minecraft/client/gui/screens/TitleScreen;Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/client/gui/Font;III)V", remap = false))
     private boolean cancelForgeWarningAboveLogoRenderingFancyMenu(TitleScreen gui, GuiGraphics guiGraphics, Font font, int width, int height, int alpha) {
@@ -28,7 +29,7 @@ public abstract class MixinForgeTitleScreen {
     }
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/internal/BrandingControl;forEachLine(ZZLjava/util/function/BiConsumer;)V", remap = false))
-    private boolean cancelForgeBrandingRenderingFancyMenu(boolean includeMC, boolean reverse, BiConsumer<Integer, String> lineConsumer) {
+    private boolean cancelForgeBrandingRenderingFancyMenu(boolean reverse, boolean includeMC, BiConsumer<Integer, String> lineConsumer) {
         return false;
     }
 

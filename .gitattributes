@@ -1,0 +1,45 @@
+# Normalize text files consistently across Windows and Linux checkouts.
+* text=auto eol=lf
+
+# Windows scripts should keep CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Common source/resource files should always use LF.
+*.java text eol=lf
+*.kt text eol=lf
+*.gradle text eol=lf
+*.properties text eol=lf
+*.json text eol=lf
+*.json5 text eol=lf
+*.mcmeta text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.xml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+*.cfg text eol=lf
+*.mixin text eol=lf
+*.accesswidener text eol=lf
+*.gitignore text eol=lf
+
+# Treat common packaged/generated artifacts as binary.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.jar binary
+*.zip binary
+*.fma binary
+*.afma binary
+*.wav binary
+*.mp3 binary
+*.mp4 binary
+*.ttf binary
+*.otf binary

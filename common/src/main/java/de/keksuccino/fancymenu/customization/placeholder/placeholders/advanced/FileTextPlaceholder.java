@@ -107,8 +107,8 @@ public class FileTextPlaceholder extends Placeholder {
         // Check if we have cached content
         if (cached != null) {
             // If cache is still valid, return it
-            if ((currentTime - cached.getKey()) < cooldownMs) {
-                return cached.getValue();
+            if ((currentTime - cached.getFirst()) < cooldownMs) {
+                return cached.getSecond();
             }
             
             // Cache expired, trigger async reload if not already loading
@@ -117,7 +117,7 @@ public class FileTextPlaceholder extends Placeholder {
             }
             
             // Return existing cached content while reloading
-            return cached.getValue();
+            return cached.getSecond();
         }
         
         // No cache exists, trigger async load if not already loading

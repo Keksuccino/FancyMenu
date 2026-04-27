@@ -1,10 +1,10 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
+import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.components.StringWidget;
+import net.minecraft.client.gui.screens.worldselection.SwitchGrid.SwitchBuilder;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
-import net.minecraft.client.gui.components.CycleButton;
-import net.minecraft.client.gui.screens.worldselection.SwitchGrid.SwitchBuilder;
-import net.minecraft.client.gui.components.StringWidget;
 
 /**
  * Gets applied to {@link CycleButton}s via Mixin.<br>

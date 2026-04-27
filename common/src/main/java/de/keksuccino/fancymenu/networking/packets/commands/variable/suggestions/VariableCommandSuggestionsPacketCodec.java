@@ -2,8 +2,8 @@ package de.keksuccino.fancymenu.networking.packets.commands.variable.suggestions
 
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
-import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.networking.PacketCodec;
+import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
@@ -12,6 +12,7 @@ import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import java.util.List;
 
 public class VariableCommandSuggestionsPacketCodec extends PacketCodec<VariableCommandSuggestionsPacket> {

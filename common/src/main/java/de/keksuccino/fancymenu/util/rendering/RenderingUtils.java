@@ -8,28 +8,72 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class RenderingUtils {
 
     private static final Logger LOGGER = LogManager.getLogger();
+
     public static final DrawableColor MISSING_TEXTURE_COLOR_MAGENTA = DrawableColor.of(Color.MAGENTA);
     public static final DrawableColor MISSING_TEXTURE_COLOR_BLACK = DrawableColor.BLACK;
     public static final ResourceLocation FULLY_TRANSPARENT_TEXTURE = new ResourceLocation("fancymenu", "textures/fully_transparent.png");
 
-    private static final List<DeferredScreenRenderingTask> DEFERRED_SCREEN_RENDERING_TASKS = new ArrayList<>();
-    private static boolean lockDepthTest = false;
-    private static boolean tooltipRenderingBlocked = false;
+    private static final List<RenderingTask> PRE_RENDER_CONTEXTS = new ArrayList<>();
+    private static final List<RenderingTask> POST_RENDER_CONTEXTS = new ArrayList<>();
+    private static final List<RenderingTask> DEFERRED_SCREEN_RENDERING_TASKS = new ArrayList<>();
+    private static int depthTestLockDepth = 0;
+    private static int blurBlockDepth = 0;
+    private static int tooltipRenderingBlockDepth = 0;
+    private static int overrideBackgroundBlurRadius = -1000;
+
+    public static void postPreRenderTask(@NotNull RenderingTask context) {
+        PRE_RENDER_CONTEXTS.add(Objects.requireNonNull(context));
+    }
+
+    public static void postPostRenderTask(@NotNull RenderingTask context) {
+        POST_RENDER_CONTEXTS.add(Objects.requireNonNull(context));
+    }
+
+    @ApiStatus.Internal
+    public static void executeAllPreRenderTasks(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        List<RenderingTask> copy = new ArrayList<>(PRE_RENDER_CONTEXTS);
+        PRE_RENDER_CONTEXTS.clear();
+        for (RenderingTask context : copy) {
+            try {
+                context.render(graphics, mouseX, mouseY, partial);
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to execute pre-screen-render task!", ex);
+            }
+        }
+        graphics.flush();
+    }
+
+    @ApiStatus.Internal
+    public static void executeAllPostRenderTasks(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        List<RenderingTask> copy = new ArrayList<>(POST_RENDER_CONTEXTS);
+        POST_RENDER_CONTEXTS.clear();
+        for (RenderingTask context : copy) {
+            try {
+                context.render(graphics, mouseX, mouseY, partial);
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to execute post-screen-render task!", ex);
+            }
+        }
+        graphics.flush();
+    }
 
     public static void renderMissing(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
         int partW = width / 2;
@@ -44,33 +88,75 @@ public class RenderingUtils {
         graphics.fill(x + partW, y + partH, x + width, y + height, MISSING_TEXTURE_COLOR_MAGENTA.getColorInt());
     }
 
+    public static void setOverrideBackgroundBlurRadius(int radius) {
+        overrideBackgroundBlurRadius = radius;
+    }
+
+    public static void resetOverrideBackgroundBlurRadius() {
+        overrideBackgroundBlurRadius = -1000;
+    }
+
+    public static boolean shouldOverrideBackgroundBlurRadius() {
+        return overrideBackgroundBlurRadius != -1000;
+    }
+
+    public static int getOverrideBackgroundBlurRadius() {
+        return overrideBackgroundBlurRadius;
+    }
+
     public static void setDepthTestLocked(boolean locked) {
-        lockDepthTest = locked;
+        if (locked) {
+            depthTestLockDepth++;
+            return;
+        }
+        if (depthTestLockDepth > 0) {
+            depthTestLockDepth--;
+        }
     }
 
     public static boolean isDepthTestLocked() {
-        return lockDepthTest;
+        return depthTestLockDepth > 0;
+    }
+
+    public static void setVanillaMenuBlurringBlocked(boolean blocked) {
+        if (blocked) {
+            blurBlockDepth++;
+            return;
+        }
+        if (blurBlockDepth > 0) {
+            blurBlockDepth--;
+        }
+    }
+
+    public static boolean isVanillaMenuBlurringBlocked() {
+        return blurBlockDepth > 0;
     }
 
     public static void setTooltipRenderingBlocked(boolean blocked) {
-        tooltipRenderingBlocked = blocked;
+        if (blocked) {
+            tooltipRenderingBlockDepth++;
+            return;
+        }
+        if (tooltipRenderingBlockDepth > 0) {
+            tooltipRenderingBlockDepth--;
+        }
     }
 
     public static boolean isTooltipRenderingBlocked() {
-        return tooltipRenderingBlocked;
+        return tooltipRenderingBlockDepth > 0;
     }
 
-    public static void addDeferredScreenRenderingTask(@NotNull DeferredScreenRenderingTask task) {
+    public static void addDeferredScreenRenderingTask(@NotNull RenderingUtils.RenderingTask task) {
         DEFERRED_SCREEN_RENDERING_TASKS.add(task);
     }
 
     @NotNull
-    public static List<DeferredScreenRenderingTask> getDeferredScreenRenderingTasks() {
+    public static List<RenderingTask> getDeferredScreenRenderingTasks() {
         return new ArrayList<>(DEFERRED_SCREEN_RENDERING_TASKS);
     }
 
     public static void executeAndClearDeferredScreenRenderingTasks(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        List<DeferredScreenRenderingTask> tasks = getDeferredScreenRenderingTasks();
+        List<RenderingTask> tasks = getDeferredScreenRenderingTasks();
         DEFERRED_SCREEN_RENDERING_TASKS.clear();
         tasks.forEach(task -> task.render(graphics, mouseX, mouseY, partial));
     }
@@ -158,10 +244,10 @@ public class RenderingUtils {
 
         // Add vertices with screen dimensions using renderWidth/renderHeight,
         // but texture coordinates (UVs) swapped horizontally (minU/maxU flipped)
-        consumer.vertex(matrix4f, (float)x,                 (float)y,                  0.0F).uv(maxU, minV).color(color); // Top-left screen -> Top-right texture UV (maxU, minV)
-        consumer.vertex(matrix4f, (float)x,                 (float)(y + renderHeight), 0.0F).uv(maxU, maxV).color(color); // Bottom-left screen -> Bottom-right texture UV (maxU, maxV)
-        consumer.vertex(matrix4f, (float)(x + renderWidth), (float)(y + renderHeight), 0.0F).uv(minU, maxV).color(color); // Bottom-right screen -> Bottom-left texture UV (minU, maxV)
-        consumer.vertex(matrix4f, (float)(x + renderWidth), (float)y,                  0.0F).uv(minU, minV).color(color); // Top-right screen -> Top-left texture UV (minU, minV)
+        consumer.vertex(matrix4f, (float)x,                 (float)y,                  0.0F).uv(maxU, minV).color(color).endVertex(); // Top-left screen -> Top-right texture UV (maxU, minV)
+        consumer.vertex(matrix4f, (float)x,                 (float)(y + renderHeight), 0.0F).uv(maxU, maxV).color(color).endVertex(); // Bottom-left screen -> Bottom-right texture UV (maxU, maxV)
+        consumer.vertex(matrix4f, (float)(x + renderWidth), (float)(y + renderHeight), 0.0F).uv(minU, maxV).color(color).endVertex(); // Bottom-right screen -> Bottom-left texture UV (minU, maxV)
+        consumer.vertex(matrix4f, (float)(x + renderWidth), (float)y,                  0.0F).uv(minU, minV).color(color).endVertex(); // Top-right screen -> Top-left texture UV (minU, minV)
 
         BufferUploader.drawWithShader(consumer.end());
         RenderSystem.disableBlend();
@@ -341,39 +427,31 @@ public class RenderingUtils {
     public static void fillF(@NotNull GuiGraphics graphics, float minX, float minY, float maxX, float maxY, float z, int color) {
         Matrix4f matrix4f = graphics.pose().last().pose();
         if (minX < maxX) {
-            float $$8 = minX;
+            float i = minX;
             minX = maxX;
-            maxX = $$8;
+            maxX = i;
         }
         if (minY < maxY) {
-            float $$9 = minY;
+            float i = minY;
             minY = maxY;
-            maxY = $$9;
+            maxY = i;
         }
-        float red = (float)FastColor.ARGB32.red(color) / 255.0F;
-        float green = (float)FastColor.ARGB32.green(color) / 255.0F;
-        float blue = (float)FastColor.ARGB32.blue(color) / 255.0F;
-        float alpha = (float) FastColor.ARGB32.alpha(color) / 255.0F;
-        BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
-        RenderSystem.enableBlend();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-        bufferBuilder.vertex(matrix4f, minX, minY, z).color(red, green, blue, alpha).endVertex();
-        bufferBuilder.vertex(matrix4f, minX, maxY, z).color(red, green, blue, alpha).endVertex();
-        bufferBuilder.vertex(matrix4f, maxX, maxY, z).color(red, green, blue, alpha).endVertex();
-        bufferBuilder.vertex(matrix4f, maxX, minY, z).color(red, green, blue, alpha).endVertex();
-        BufferUploader.drawWithShader(bufferBuilder.end());
-        RenderSystem.disableBlend();
+        VertexConsumer vertexConsumer = graphics.bufferSource().getBuffer(RenderType.gui());
+        vertexConsumer.vertex(matrix4f, (float)minX, (float)minY, (float)z).color(color).endVertex();
+        vertexConsumer.vertex(matrix4f, (float)minX, (float)maxY, (float)z).color(color).endVertex();
+        vertexConsumer.vertex(matrix4f, (float)maxX, (float)maxY, (float)z).color(color).endVertex();
+        vertexConsumer.vertex(matrix4f, (float)maxX, (float)minY, (float)z).color(color).endVertex();
+        // Flush RenderType.gui() so later textured blits do not get overdrawn by this untextured quad.
+        graphics.flush();
     }
 
     public static void blitF(@NotNull GuiGraphics graphics, ResourceLocation location, float x, float y, float f3, float f4, float width, float height, float width2, float height2, int color) {
         float red = (float)FastColor.ARGB32.red(color) / 255.0F;
         float green = (float)FastColor.ARGB32.green(color) / 255.0F;
         float blue = (float)FastColor.ARGB32.blue(color) / 255.0F;
-        float alpha = (float) FastColor.ARGB32.alpha(color) / 255.0F;
-        graphics.setColor(red, green, blue, alpha);
-        blit(graphics, location, x, y, width, height, f3, f4, width, height, width2, height2);
+        float alpha = (float)FastColor.ARGB32.alpha(color) / 255.0F;
         graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+        blit(graphics, location, x, y, width, height, f3, f4, width, height, width2, height2, red, green, blue, alpha);
     }
 
     public static void blitF(@NotNull GuiGraphics graphics, ResourceLocation location, float x, float y, float f3, float f4, float width, float height, float width2, float height2) {
@@ -382,6 +460,10 @@ public class RenderingUtils {
 
     private static void blit(GuiGraphics $$0, ResourceLocation location, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10) {
         blit($$0, location, $$1, $$1 + $$3, $$2, $$2 + $$4, 0, $$7, $$8, $$5, $$6, $$9, $$10);
+    }
+
+    private static void blit(GuiGraphics $$0, ResourceLocation location, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10, float red, float green, float blue, float alpha) {
+        blit($$0, location, $$1, $$1 + $$3, $$2, $$2 + $$4, 0, $$7, $$8, $$5, $$6, $$9, $$10, red, green, blue, alpha);
     }
 
     private static void blit(GuiGraphics graphics, ResourceLocation location, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10, float $$11) {
@@ -400,6 +482,26 @@ public class RenderingUtils {
         );
     }
 
+    private static void blit(GuiGraphics graphics, ResourceLocation location, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10, float $$11, float red, float green, float blue, float alpha) {
+        innerBlit(
+                graphics,
+                location,
+                $$1,
+                $$2,
+                $$3,
+                $$4,
+                $$5,
+                ($$8 + 0.0F) / (float)$$10,
+                ($$8 + (float)$$6) / (float)$$10,
+                ($$9 + 0.0F) / (float)$$11,
+                ($$9 + (float)$$7) / (float)$$11,
+                red,
+                green,
+                blue,
+                alpha
+        );
+    }
+
     private static void innerBlit(GuiGraphics graphics, ResourceLocation location, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9) {
         RenderSystem.setShaderTexture(0, location);
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
@@ -411,6 +513,24 @@ public class RenderingUtils {
         $$11.vertex($$10, $$2, $$4, $$5).uv($$7, $$9).endVertex();
         $$11.vertex($$10, $$2, $$3, $$5).uv($$7, $$8).endVertex();
         BufferUploader.drawWithShader($$11.end());
+        graphics.flush();
+    }
+
+    private static void innerBlit(GuiGraphics graphics, ResourceLocation location, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float red, float green, float blue, float alpha) {
+        RenderSystem.setShaderTexture(0, location);
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        Matrix4f $$10 = graphics.pose().last().pose();
+        BufferBuilder $$11 = Tesselator.getInstance().getBuilder();
+        $$11.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        $$11.vertex($$10, $$1, $$3, $$5).uv($$6, $$8).color(red, green, blue, alpha).endVertex();
+        $$11.vertex($$10, $$1, $$4, $$5).uv($$6, $$9).color(red, green, blue, alpha).endVertex();
+        $$11.vertex($$10, $$2, $$4, $$5).uv($$7, $$9).color(red, green, blue, alpha).endVertex();
+        $$11.vertex($$10, $$2, $$3, $$5).uv($$7, $$8).color(red, green, blue, alpha).endVertex();
+        BufferUploader.drawWithShader($$11.end());
+        RenderSystem.disableBlend();
+        graphics.flush();
     }
 
     public static void enableScissor(@NotNull GuiGraphics graphics, int minX, int minY, int maxX, int maxY) {
@@ -439,7 +559,7 @@ public class RenderingUtils {
     }
 
     @FunctionalInterface
-    public interface DeferredScreenRenderingTask {
+    public interface RenderingTask {
         void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
     }
 

@@ -10,9 +10,12 @@ import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.text.ComponentParser;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPCellWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -20,7 +23,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.toast.SimpleToast;
 import de.keksuccino.fancymenu.util.rendering.ui.toast.ToastHandler;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
@@ -88,13 +91,13 @@ public class ShowToastAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.show_toast");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.show_toast.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.show_toast.desc");
     }
 
     @Override
@@ -103,23 +106,52 @@ public class ShowToastAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return ToastConfig.defaultConfig().serialize();
     }
 
     @Override
-    public void editValue(@NotNull Screen parentScreen, @NotNull ActionInstance instance) {
+    public void editValue(@NotNull ActionInstance instance, @NotNull Action.ActionEditingCompletedFeedback onEditingCompleted, @NotNull Action.ActionEditingCanceledFeedback onEditingCanceled) {
+        String oldValue = instance.value;
+        boolean[] handled = {false};
         ToastConfig config = ToastConfig.parse(instance.value);
         if (config == null) {
             config = ToastConfig.defaultConfig();
         }
+        final PiPWindow[] windowHolder = new PiPWindow[1];
         ShowToastActionValueScreen s = new ShowToastActionValueScreen(config, value -> {
+            if (handled[0]) {
+                return;
+            }
+            handled[0] = true;
             if (value != null) {
                 instance.value = value;
+                onEditingCompleted.accept(instance, oldValue, value);
+            } else {
+                onEditingCanceled.accept(instance);
             }
-            Minecraft.getInstance().setScreen(parentScreen);
+            PiPWindow window = windowHolder[0];
+            if (window != null) {
+                window.close();
+            }
         });
-        Minecraft.getInstance().setScreen(s);
+        PiPWindow window = new PiPWindow(s.getTitle())
+                .setScreen(s)
+                .setForceFancyMenuUiScale(true)
+                .setAlwaysOnTop(true)
+                .setBlockMinecraftScreenInputs(true)
+                .setForceFocus(true)
+                .setMinSize(TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT)
+                .setSize(TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
+        windowHolder[0] = window;
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
+        window.addCloseCallback(() -> {
+            if (handled[0]) {
+                return;
+            }
+            handled[0] = true;
+            onEditingCanceled.accept(instance);
+        });
     }
 
     private Component parseOptionalComponent(@Nullable String raw) {
@@ -141,7 +173,7 @@ public class ShowToastAction extends Action {
         }
     }
 
-    public static class ShowToastActionValueScreen extends CellScreen {
+    public static class ShowToastActionValueScreen extends PiPCellWindowBody {
 
         private final Consumer<String> callback;
         private ToastConfig config;
@@ -160,18 +192,18 @@ public class ShowToastAction extends Action {
             this.addStartEndSpacerCell();
 
             this.addLabelCell(Component.translatable("fancymenu.actions.show_toast.edit.width"));
-            TextInputCell widthCell = this.addTextInputCell(CharacterFilter.buildIntegerFiler(), false, false)
+            TextInputCell widthCell = this.addTextInputCell(CharacterFilter.buildIntegerFilter(), false, false)
                     .setEditListener(s -> this.config.width = parseInteger(s, this.config.width, MIN_WIDTH, MAX_WIDTH))
                     .setText(String.valueOf(this.config.width));
-            widthCell.editBox.setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.show_toast.edit.width.desc")));
+            widthCell.editBox.setUITooltip(() -> UITooltip.of(Component.translatable("fancymenu.actions.show_toast.edit.width.desc")));
 
             this.addCellGroupEndSpacerCell();
 
             this.addLabelCell(Component.translatable("fancymenu.actions.show_toast.edit.duration"));
-            TextInputCell durationCell = this.addTextInputCell(CharacterFilter.buildIntegerFiler(), false, false)
+            TextInputCell durationCell = this.addTextInputCell(CharacterFilter.buildIntegerFilter(), false, false)
                     .setEditListener(s -> this.config.durationMs = parseLong(s, this.config.durationMs, MIN_DURATION_MS, MAX_DURATION_MS))
                     .setText(String.valueOf(this.config.durationMs));
-            durationCell.editBox.setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.show_toast.edit.duration.desc")));
+            durationCell.editBox.setUITooltip(() -> UITooltip.of(Component.translatable("fancymenu.actions.show_toast.edit.duration.desc")));
 
             this.addCellGroupEndSpacerCell();
 
@@ -179,7 +211,7 @@ public class ShowToastAction extends Action {
             TextInputCell titleCell = this.addTextInputCell(null, true, true)
                     .setEditListener(s -> this.config.title = s.replace("\\n", "\n"))
                     .setText(this.config.title.replace("\n", "\\n"));
-            titleCell.editBox.setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.show_toast.edit.title_text.desc")));
+            titleCell.editBox.setUITooltip(() -> UITooltip.of(Component.translatable("fancymenu.actions.show_toast.edit.title_text.desc")));
 
             this.addCellGroupEndSpacerCell();
 
@@ -188,7 +220,7 @@ public class ShowToastAction extends Action {
                     .setEditorMultiLineMode(true)
                     .setEditListener(s -> this.config.message = s.replace("\\n", "\n"))
                     .setText(this.config.message.replace("\n", "\\n"));
-            messageCell.editBox.setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.show_toast.edit.message.desc")));
+            messageCell.editBox.setUITooltip(() -> UITooltip.of(Component.translatable("fancymenu.actions.show_toast.edit.message.desc")));
 
             this.addCellGroupEndSpacerCell();
 
@@ -197,20 +229,19 @@ public class ShowToastAction extends Action {
                     .setEditListener(s -> this.config.iconSource = s.trim())
                     .setText(this.config.iconSource);
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.actions.show_toast.edit.choose_icon"), button -> {
-                ResourceChooserScreen<ITexture, ImageFileType> chooser = ResourceChooserScreen.image(null, source -> {
+                ResourceChooserWindowBody<ITexture, ImageFileType> chooser = ResourceChooserWindowBody.image(null, source -> {
                     if (source != null) {
                         this.config.iconSource = source;
                         this.iconSourceCell.setText(source);
                     }
-                    Minecraft.getInstance().setScreen(this);
                 });
                 chooser.setSource(this.config.iconSource.isBlank() ? null : this.config.iconSource, false);
-                Minecraft.getInstance().setScreen(chooser);
-            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.show_toast.edit.choose_icon.desc"))), true);
+                chooser.openInWindow(null);
+            }).setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.show_toast.edit.choose_icon.desc"))), true);
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.actions.show_toast.edit.clear_icon"), button -> {
                 this.config.iconSource = "";
                 this.iconSourceCell.setText("");
-            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.show_toast.edit.clear_icon.desc"))), true);
+            }).setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.show_toast.edit.clear_icon.desc"))), true);
 
             this.addCellGroupEndSpacerCell();
 
@@ -219,20 +250,19 @@ public class ShowToastAction extends Action {
                     .setEditListener(s -> this.config.backgroundSource = s.trim())
                     .setText(this.config.backgroundSource);
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.actions.show_toast.edit.choose_background"), button -> {
-                ResourceChooserScreen<ITexture, ImageFileType> chooser = ResourceChooserScreen.image(null, source -> {
+                ResourceChooserWindowBody<ITexture, ImageFileType> chooser = ResourceChooserWindowBody.image(null, source -> {
                     if (source != null) {
                         this.config.backgroundSource = source;
                         this.backgroundSourceCell.setText(source);
                     }
-                    Minecraft.getInstance().setScreen(this);
                 });
                 chooser.setSource(this.config.backgroundSource.isBlank() ? null : this.config.backgroundSource, false);
-                Minecraft.getInstance().setScreen(chooser);
-            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.show_toast.edit.choose_background.desc"))), true);
+                chooser.openInWindow(null);
+            }).setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.show_toast.edit.choose_background.desc"))), true);
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.actions.show_toast.edit.clear_background"), button -> {
                 this.config.backgroundSource = "";
                 this.backgroundSourceCell.setText("");
-            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.show_toast.edit.clear_background.desc"))), true);
+            }).setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.show_toast.edit.clear_background.desc"))), true);
 
             this.addStartEndSpacerCell();
 
@@ -252,6 +282,10 @@ public class ShowToastAction extends Action {
         @Override
         public boolean allowDone() {
             return true;
+        }
+
+        @Override
+        protected void autoScaleScreen(AbstractWidget topRightSideWidget) {
         }
 
         private static int parseInteger(@Nullable String raw, int fallback, int min, int max) {

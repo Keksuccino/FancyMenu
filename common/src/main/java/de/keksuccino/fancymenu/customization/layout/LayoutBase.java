@@ -2,8 +2,10 @@ package de.keksuccino.fancymenu.customization.layout;
 
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
-import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
+import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
+import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlayBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
+import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
@@ -19,7 +21,9 @@ import java.util.Map;
 public class LayoutBase {
 
     @NotNull
-    public final List<MenuBackground> menuBackgrounds = new ArrayList<>();
+    public final List<MenuBackground<?>> menuBackgrounds = new ArrayList<>();
+    @NotNull
+    public final List<Pair<AbstractDecorationOverlayBuilder<?>, AbstractDecorationOverlay<?>>> decorationOverlays = new ArrayList<>();
     public boolean preserveBackgroundAspectRatio = false;
     public ResourceSupplier<IAudio> openAudio;
     public ResourceSupplier<IAudio> closeAudio;
@@ -48,9 +52,9 @@ public class LayoutBase {
         if (layouts != null) {
             for (LayoutBase layout : layouts) {
 
-                if (!layout.menuBackgrounds.isEmpty()) {
-                    stacked.menuBackgrounds.addAll(layout.menuBackgrounds);
-                }
+                layout.menuBackgrounds.forEach(background -> {
+                    if (background.showBackground.tryGetNonNullElse(false)) stacked.menuBackgrounds.add(background);
+                });
                 if (layout.preserveBackgroundAspectRatio) {
                     stacked.preserveBackgroundAspectRatio = true;
                 }
@@ -108,6 +112,9 @@ public class LayoutBase {
                 if (!layout.closeScreenExecutableBlocks.isEmpty()) {
                     stacked.closeScreenExecutableBlocks.addAll(layout.closeScreenExecutableBlocks);
                 }
+                layout.decorationOverlays.forEach(pair -> {
+                    if (pair.getSecond().showOverlay.tryGetNonNullElse(false)) stacked.decorationOverlays.add(pair);
+                });
 
             }
         }
@@ -120,14 +127,6 @@ public class LayoutBase {
             e.putProperty(m.getKey(), m.getValue());
         }
         return e;
-    }
-
-    public static SerializedMenuBackground convertSectionToBackground(PropertyContainer section) {
-        SerializedMenuBackground b = new SerializedMenuBackground();
-        for (Map.Entry<String, String> m : section.getProperties().entrySet()) {
-            b.putProperty(m.getKey(), m.getValue());
-        }
-        return b;
     }
 
 }

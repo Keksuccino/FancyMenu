@@ -8,30 +8,31 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
+import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.events.widget.RenderedGuiListHeaderFooterEvent;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutBase;
 import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
-import de.keksuccino.fancymenu.events.widget.RenderGuiListHeaderFooterEvent;
 import de.keksuccino.fancymenu.events.widget.RenderTabNavigationBarHeaderBackgroundEvent;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSelectionList;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.TaskExecutor;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.screen.*;
-import de.keksuccino.fancymenu.events.widget.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.events.ModReloadEvent;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSelectionList;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.ScreenTitleUtils;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -40,7 +41,10 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractSelectionList;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.components.tabs.TabNavigationBar;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -55,6 +59,9 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
+	public static final ResourceLocation MENU_BACKGROUND = new ResourceLocation("textures/gui/menu_background.png");
+	public static final ResourceLocation INWORLD_MENU_BACKGROUND = new ResourceLocation("textures/gui/inworld_menu_background.png");
+
 	protected String screenIdentifier;
 	public LayoutBase layoutBase = new LayoutBase();
 	@NotNull
@@ -68,9 +75,12 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	public boolean backgroundDrawable;
 	public boolean forceDisableCustomMenuTitle = false;
 	public float backgroundOpacity = 1.0F;
-	public Map<LoadingRequirementContainer, Boolean> cachedLayoutWideLoadingRequirements = new HashMap<>();
+	public Map<RequirementContainer, Boolean> cachedLayoutWideLoadingRequirements = new HashMap<>();
 	@NotNull
 	public List<WidgetMeta> cachedScreenWidgetMetas = new ArrayList<>();
+	/** The first {@link TabNavigationBar} of the target {@link Screen}, if it has one. This is NULL if the {@link Screen} has no {@link TabNavigationBar}. **/
+	@Nullable
+	public TabNavigationBar cachedTabNavigationBar = null;
 	public boolean loadEarly = false;
 
 	public static Map<Class<?>, Component> cachedOriginalMenuTitles = new HashMap<>();
@@ -137,6 +147,19 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		this.layoutBase.menuBackgrounds.forEach(menuBackground -> menuBackground.onCloseScreen(e.getClosedScreen(), e.getNewScreen()));
 		this.layoutBase.menuBackgrounds.forEach(MenuBackground::onCloseScreen);
+		this.layoutBase.decorationOverlays.forEach(pair -> pair.getSecond().onCloseScreen(e.getClosedScreen(), e.getNewScreen()));
+
+		IMixinScreen closedScreenMixin = (IMixinScreen)e.getClosedScreen();
+		this.layoutBase.menuBackgrounds.forEach(menuBackground -> {
+			closedScreenMixin.getChildrenFancyMenu().remove(menuBackground);
+			closedScreenMixin.getRenderablesFancyMenu().remove(menuBackground);
+			closedScreenMixin.getNarratablesFancyMenu().remove(menuBackground);
+		});
+		this.layoutBase.decorationOverlays.forEach(pair -> {
+			closedScreenMixin.getChildrenFancyMenu().remove(pair.getSecond());
+			closedScreenMixin.getRenderablesFancyMenu().remove(pair.getSecond());
+			closedScreenMixin.getNarratablesFancyMenu().remove(pair.getSecond());
+		});
 
 		if (this.layoutBase.closeAudio != null) {
 			final ResourceSupplier<IAudio> closeAudioSupplier = this.layoutBase.closeAudio;
@@ -166,6 +189,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	@EventListener
 	public void onInitOrResizeScreenPre(InitOrResizeScreenEvent.Pre e) {
 
+		this.cachedTabNavigationBar = null;
+
 		for (ThreadCaller t : this.delayThreads) {
 			t.running.set(false);
 		}
@@ -183,7 +208,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		});
 
 		if (e.getInitializationPhase() == InitOrResizeScreenEvent.InitializationPhase.RESIZE) {
-			this.layoutBase.menuBackgrounds.forEach(MenuBackground::onBeforeResizeScreen);
+		this.layoutBase.menuBackgrounds.forEach(MenuBackground::onBeforeResizeScreen);
 		}
 
 		List<MenuBackground> oldMenuBackgrounds = new ArrayList<>(this.layoutBase.menuBackgrounds);
@@ -206,7 +231,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		for (Layout layout : rawLayouts) {
 
-			LoadingRequirementContainer layoutWideRequirementContainer = layout.layoutWideLoadingRequirementContainer;
+			RequirementContainer layoutWideRequirementContainer = layout.layoutWideRequirementContainer;
 			this.cachedLayoutWideLoadingRequirements.put(layoutWideRequirementContainer, layoutWideRequirementContainer.requirementsMet());
 			if (!layoutWideRequirementContainer.requirementsMet()) {
 				continue;
@@ -284,7 +309,16 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	@EventListener
 	public void onInitOrResizeScreenPost(InitOrResizeScreenEvent.Post e) {
 
+		this.cachedTabNavigationBar = null;
+
 		if (!this.shouldCustomize(e.getScreen())) return;
+
+		for (Renderable renderable : e.getRenderables()) {
+			if (renderable instanceof TabNavigationBar bar) {
+				this.cachedTabNavigationBar = bar;
+				break;
+			}
+		}
 
 		if (ScreenCustomization.isNewMenu() && (this.layoutBase.openAudio != null)) {
 			final ResourceSupplier<IAudio> openAudioSupplier = this.layoutBase.openAudio;
@@ -327,8 +361,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 					}
 				}
 			}
-			//Update vanilla widgets before render, so they don't get rendered uncustomized for one tick
-			if (ae instanceof VanillaWidgetElement v) {
+			//Update widgets before render, so they don't get rendered uncustomized for one tick
+			if (ae instanceof ButtonElement v) {
 				v.updateWidget();
 			}
 		}
@@ -341,13 +375,19 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		//Add menu background to screen's widget list
 		this.layoutBase.menuBackgrounds.forEach(menuBackground -> {
-			((IMixinScreen)e.getScreen()).getChildrenFancyMenu().add(0, menuBackground);
+			// Keep backgrounds at the end so normal screen widgets can consume input first.
+			((IMixinScreen)e.getScreen()).getChildrenFancyMenu().add(menuBackground);
 			if (e.getScreen() instanceof CustomizableScreen c) c.removeOnInitChildrenFancyMenu().add(menuBackground);
 		});
 
 		if (e.getInitializationPhase() == InitOrResizeScreenEvent.InitializationPhase.RESIZE) {
 			this.layoutBase.menuBackgrounds.forEach(MenuBackground::onAfterResizeScreen);
 		}
+
+        this.layoutBase.decorationOverlays.forEach(pair -> {
+            pair.getSecond().onScreenInitializedOrResized(e.getScreen(), this.allElements);
+            ((IMixinScreen)e.getScreen()).getChildrenFancyMenu().add(0, pair.getSecond());
+        });
 
 	}
 
@@ -362,6 +402,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			element.tick();
 		}
 
+		this.layoutBase.decorationOverlays.forEach(pair -> pair.getSecond().tick(e.getScreen(), this.allElements));
+
 	}
 
 	@EventListener(priority = EventPriority.VERY_HIGH)
@@ -370,7 +412,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		if (!this.shouldCustomize(e.getScreen())) return;
 
 		//Re-init screen if layout-wide loading requirements changed
-		for (Map.Entry<LoadingRequirementContainer, Boolean> m : this.cachedLayoutWideLoadingRequirements.entrySet()) {
+		for (Map.Entry<RequirementContainer, Boolean> m : this.cachedLayoutWideLoadingRequirements.entrySet()) {
 			if (m.getKey().requirementsMet() != m.getValue()) {
 				ScreenCustomization.reInitCurrentScreen();
 				break;
@@ -405,6 +447,10 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			element.renderInternal(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 		}
 
+        this.layoutBase.decorationOverlays.forEach(pair -> {
+            if (pair.getSecond().showOverlay.tryGetNonNullElse(false)) pair.getSecond()._render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
+        });
+
 	}
 
 	@EventListener
@@ -413,41 +459,45 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	}
 
 	@EventListener
-	public void onRenderListHeaderFooterPre(RenderGuiListHeaderFooterEvent.Pre e) {
+	public void onRenderListHeaderFooterPre(RenderedGuiListHeaderFooterEvent e) {
 
 		GuiGraphics graphics = e.getGraphics();
 
 		if (this.shouldCustomize(Minecraft.getInstance().screen)) {
 
-			e.setCanceled(true);
-
-			IMixinAbstractSelectionList access = e.getAccessor();
+			AbstractSelectionList<?> list = e.getList();
+			IMixinAbstractSelectionList listAccessor = (IMixinAbstractSelectionList) list;
+			int listX = listAccessor.getX0FancyMenu();
+			int listY = listAccessor.getY0FancyMenu();
+			int listRight = listAccessor.getX1FancyMenu();
+			int listBottom = listAccessor.getY1FancyMenu();
+			int listWidth = listAccessor.getWidthFancyMenu();
 
 			ITexture headerTexture = (this.layoutBase.scrollListHeaderTexture != null) ? this.layoutBase.scrollListHeaderTexture.get() : null;
 			ITexture footerTexture = (this.layoutBase.scrollListFooterTexture != null) ? this.layoutBase.scrollListFooterTexture.get() : null;
+
+			boolean canRenderCustom = (headerTexture != null) || (footerTexture != null) || !this.layoutBase.renderScrollListHeaderShadow || !this.layoutBase.renderScrollListFooterShadow;
+			if (!canRenderCustom) return;
 
 			if (headerTexture != null) {
 				ResourceLocation loc = headerTexture.getResourceLocation();
 				if (loc != null) {
 					RenderingUtils.resetShaderColor(graphics);
 					if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {
-						int[] headerSize = headerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(access.getWidthFancyMenu(), access.getY0FancyMenu());
+						int[] headerSize = headerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(listWidth, listY);
 						int headerWidth = headerSize[0];
 						int headerHeight = headerSize[1];
-						int headerX = access.getX0FancyMenu() + (access.getWidthFancyMenu() / 2) - (headerWidth / 2);
-						int headerY = (access.getY0FancyMenu() / 2) - (headerHeight / 2);
-						graphics.enableScissor(access.getX0FancyMenu(), 0, access.getX0FancyMenu() + access.getWidthFancyMenu(), access.getY0FancyMenu());
+						int headerX = listX + (listWidth / 2) - (headerWidth / 2);
+						int headerY = (listY / 2) - (headerHeight / 2);
+						graphics.enableScissor(listX, 0, listRight, listY);
 						graphics.blit(loc, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
 						graphics.disableScissor();
 					} else if (this.layoutBase.repeatScrollListHeaderTexture) {
-						RenderingUtils.blitRepeat(graphics, loc, access.getX0FancyMenu(), 0, access.getWidthFancyMenu(), access.getY0FancyMenu(), headerTexture.getWidth(), headerTexture.getHeight());
+						RenderingUtils.blitRepeat(graphics, loc, listX, 0, listWidth, listY, headerTexture.getWidth(), headerTexture.getHeight());
 					} else {
-						graphics.blit(loc, access.getX0FancyMenu(), 0, 0.0F, 0.0F, access.getWidthFancyMenu(), access.getY0FancyMenu(), access.getWidthFancyMenu(), access.getY0FancyMenu());
+						graphics.blit(loc, listX, 0, 0.0F, 0.0F, listWidth, listY, listWidth, listY);
 					}
 				}
-			} else {
-				graphics.setColor(0.25F, 0.25F, 0.25F, 1.0F);
-				graphics.blit(Screen.BACKGROUND_LOCATION, access.getX0FancyMenu(), 0, 0.0F, 0.0F, access.getWidthFancyMenu(), access.getY0FancyMenu(), 32, 32);
 			}
 
 			if (footerTexture != null) {
@@ -455,38 +505,27 @@ public class ScreenCustomizationLayer implements ElementFactory {
 				if (loc != null) {
 					RenderingUtils.resetShaderColor(graphics);
 					if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {
-						int footerOriginalHeight = access.getHeightFancyMenu() - access.getY1FancyMenu();
-						int[] footerSize = footerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(access.getWidthFancyMenu(), footerOriginalHeight);
+						int footerOriginalHeight = ScreenUtils.getScreenHeight() - listBottom;
+						if (footerOriginalHeight <= 0) footerOriginalHeight = 1;
+						int[] footerSize = footerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(listWidth, footerOriginalHeight);
 						int footerWidth = footerSize[0];
 						int footerHeight = footerSize[1];
-						int footerX = access.getX0FancyMenu() + (access.getWidthFancyMenu() / 2) - (footerWidth / 2);
-						int footerY = access.getY1FancyMenu() + (footerOriginalHeight / 2) - (footerHeight / 2);
-						graphics.enableScissor(access.getX0FancyMenu(), access.getY1FancyMenu(), access.getX0FancyMenu() + access.getWidthFancyMenu(), access.getY1FancyMenu() + footerOriginalHeight);
+						int footerX = listX + (listWidth / 2) - (footerWidth / 2);
+						int footerY = listBottom + (footerOriginalHeight / 2) - (footerHeight / 2);
+						graphics.enableScissor(listX, listBottom, listRight, listBottom + footerOriginalHeight);
 						graphics.blit(loc, footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
 						graphics.disableScissor();
 					} else if (this.layoutBase.repeatScrollListFooterTexture) {
-						int footerHeight = access.getHeightFancyMenu() - access.getY1FancyMenu();
-						RenderingUtils.blitRepeat(graphics, loc, access.getX0FancyMenu(), access.getY1FancyMenu(), access.getWidthFancyMenu(), footerHeight, footerTexture.getWidth(), footerTexture.getHeight());
+						int footerHeight = ScreenUtils.getScreenHeight() - listBottom;
+						if (footerHeight <= 0) footerHeight = 1;
+						RenderingUtils.blitRepeat(graphics, loc, listX, listBottom, listWidth, footerHeight, footerTexture.getWidth(), footerTexture.getHeight());
 					} else {
-						int footerHeight = access.getHeightFancyMenu() - access.getY1FancyMenu();
-						graphics.blit(loc, access.getX0FancyMenu(), access.getY1FancyMenu(), 0.0F, 0.0F, access.getWidthFancyMenu(), footerHeight, access.getWidthFancyMenu(), footerHeight);
+						int footerHeight = ScreenUtils.getScreenHeight() - listBottom;
+						if (footerHeight <= 0) footerHeight = 1;
+						graphics.blit(loc, listX, listBottom, 0.0F, 0.0F, listWidth, footerHeight, listWidth, footerHeight);
 					}
 				}
-			} else {
-				graphics.setColor(0.25F, 0.25F, 0.25F, 1.0F);
-				graphics.blit(Screen.BACKGROUND_LOCATION, access.getX0FancyMenu(), access.getY1FancyMenu(), 0.0F, (float)access.getY1FancyMenu(), access.getWidthFancyMenu(), access.getHeightFancyMenu() - access.getY1FancyMenu(), 32, 32);
 			}
-
-			RenderingUtils.resetShaderColor(graphics);
-
-			if (this.layoutBase.renderScrollListHeaderShadow) {
-				graphics.fillGradient(access.getX0FancyMenu(), access.getY0FancyMenu(), access.getX1FancyMenu(), access.getY0FancyMenu() + 4, -16777216, 0);
-			}
-			if (this.layoutBase.renderScrollListFooterShadow) {
-				graphics.fillGradient(access.getX0FancyMenu(), access.getY1FancyMenu() - 4, access.getX1FancyMenu(), access.getY1FancyMenu(), 0, -16777216);
-			}
-
-			RenderingUtils.resetShaderColor(graphics);
 
 		}
 
@@ -532,36 +571,49 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		if (!this.shouldCustomize(screen)) return;
 
-		this.layoutBase.menuBackgrounds.forEach(menuBackground -> {
+        if (!this.layoutBase.menuBackgrounds.isEmpty()) {
+            boolean show = false;
+            for (MenuBackground<?> background : this.layoutBase.menuBackgrounds) {
+                if (background.showBackground.tryGetNonNull()) {
+                    show = true;
+                    break;
+                }
+            }
+            if (show) {
+                RenderSystem.enableBlend();
+                graphics.fill(0, 0, screen.width, screen.height, DrawableColor.BLACK.getColorIntWithAlpha(this.backgroundOpacity));
+            }
+        }
 
-			RenderSystem.enableBlend();
+		this.layoutBase.menuBackgrounds.forEach(background -> {
 
-			menuBackground.keepBackgroundAspectRatio = this.layoutBase.preserveBackgroundAspectRatio;
-			menuBackground.opacity = this.backgroundOpacity;
-			menuBackground.render(graphics, mouseX, mouseY, partial);
-			menuBackground.opacity = 1.0F;
+			if (background.showBackground.tryGetNonNull()) {
 
-			//Restore render defaults
-			RenderSystem.colorMask(true, true, true, true);
-			RenderSystem.depthMask(true);
-			RenderSystem.enableCull();
-			RenderSystem.enableDepthTest();
-			RenderSystem.enableBlend();
-			graphics.flush();
+                RenderSystem.enableBlend();
+
+                background.keepBackgroundAspectRatio = this.layoutBase.preserveBackgroundAspectRatio;
+                background.opacity = this.backgroundOpacity;
+                background._render(graphics, mouseX, mouseY, partial);
+                background.opacity = 1.0F;
+
+                //Restore render defaults
+                RenderSystem.colorMask(true, true, true, true);
+                RenderSystem.depthMask(true);
+                RenderSystem.enableCull();
+                RenderSystem.enableDepthTest();
+                RenderSystem.enableBlend();
+                graphics.flush();
+
+            }
 
 		});
 
 		if (!this.layoutBase.menuBackgrounds.isEmpty()) {
 
-			if (this.layoutBase.applyVanillaBackgroundBlur) {
-//				Minecraft.getInstance().gameRenderer.processBlurEffect(partial);
-//				Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
-			}
-
 			if (this.layoutBase.showScreenBackgroundOverlayOnCustomBackground) {
-//				int overlayY = 0;
-//				if (this.cachedTabNavigationBar != null) overlayY = this.cachedTabNavigationBar.getRectangle().bottom();
-//				this._renderBackgroundOverlay(graphics, 0, overlayY, screen.width, screen.height);
+				int overlayY = 0;
+				if (this.cachedTabNavigationBar != null) overlayY = this.cachedTabNavigationBar.getRectangle().bottom();
+				this._renderBackgroundOverlay(graphics, 0, overlayY, screen.width, screen.height);
 			}
 
 		}
@@ -573,6 +625,16 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		this.backgroundDrawable = true;
 
+	}
+
+	protected void _renderBackgroundOverlay(GuiGraphics graphics, int x, int y, int width, int height) {
+		renderBackgroundOverlay(graphics, x, y, width, height);
+	}
+
+	public static void renderBackgroundOverlay(GuiGraphics graphics, int x, int y, int width, int height) {
+		ResourceLocation location = (Minecraft.getInstance().level == null) ? MENU_BACKGROUND : INWORLD_MENU_BACKGROUND;
+		RenderSystem.enableBlend();
+		graphics.blit(location, x, y, 0, 0.0F, 0.0F, width, height, 32, 32);
 	}
 
 	@Nullable

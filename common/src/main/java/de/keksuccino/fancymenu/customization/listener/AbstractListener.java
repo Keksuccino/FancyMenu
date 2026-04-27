@@ -55,6 +55,10 @@ public abstract class AbstractListener {
         }
     }
 
+    public boolean hasInstancesListening() {
+        return !this.instances.isEmpty();
+    }
+
     protected void notifyAllInstances() {
         this.instances.forEach((s, instance) -> {
             try {
