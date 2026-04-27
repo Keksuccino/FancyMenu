@@ -71,7 +71,8 @@ public final class GuiBlurRenderer {
 
     public static void renderBlurAreaScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float blurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
-        renderBlurArea(graphics, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), blurRadius * transform.scale(), cornerRadius * transform.scale(), tint, partial);
+        GuiPoseTransformUtil.TransformedArea area = transform.transformArea(x, y, width, height);
+        renderBlurArea(graphics, area.x(), area.y(), area.width(), area.height(), blurRadius * transform.scale(), cornerRadius * transform.scale(), tint, partial);
     }
 
     /**
@@ -83,7 +84,8 @@ public final class GuiBlurRenderer {
 
     public static void renderBlurAreaRoundTopCornersScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float blurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
-        renderBlurAreaRoundTopCorners(graphics, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), blurRadius * transform.scale(), cornerRadius * transform.scale(), tint, partial);
+        GuiPoseTransformUtil.TransformedArea area = transform.transformArea(x, y, width, height);
+        renderBlurAreaRoundTopCorners(graphics, area.x(), area.y(), area.width(), area.height(), blurRadius * transform.scale(), cornerRadius * transform.scale(), tint, partial);
     }
 
     /**
@@ -95,7 +97,8 @@ public final class GuiBlurRenderer {
 
     public static void renderBlurAreaRoundBottomCornersScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float blurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
-        renderBlurAreaRoundBottomCorners(graphics, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), blurRadius * transform.scale(), cornerRadius * transform.scale(), tint, partial);
+        GuiPoseTransformUtil.TransformedArea area = transform.transformArea(x, y, width, height);
+        renderBlurAreaRoundBottomCorners(graphics, area.x(), area.y(), area.width(), area.height(), blurRadius * transform.scale(), cornerRadius * transform.scale(), tint, partial);
     }
 
     /**
@@ -107,12 +110,13 @@ public final class GuiBlurRenderer {
 
     public static void renderBlurAreaRoundAllCornersScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float blurRadius, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, @Nonnull DrawableColor tint, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
+        GuiPoseTransformUtil.TransformedArea area = transform.transformArea(x, y, width, height);
         renderBlurAreaRoundAllCorners(
                 graphics,
-                transform.transformX(x),
-                transform.transformY(y),
-                width * transform.scale(),
-                height * transform.scale(),
+                area.x(),
+                area.y(),
+                area.width(),
+                area.height(),
                 blurRadius * transform.scale(),
                 topLeftRadius * transform.scale(),
                 topRightRadius * transform.scale(),
@@ -137,7 +141,8 @@ public final class GuiBlurRenderer {
 
     public static void renderBlurAreaCircleScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float blurRadius, float roundness, @Nonnull DrawableColor tint, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
-        renderBlurAreaCircle(graphics, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), blurRadius * transform.scale(), roundness, tint, partial);
+        GuiPoseTransformUtil.TransformedArea area = transform.transformArea(x, y, width, height);
+        renderBlurAreaCircle(graphics, area.x(), area.y(), area.width(), area.height(), blurRadius * transform.scale(), roundness, tint, partial);
     }
 
     /**
@@ -152,7 +157,8 @@ public final class GuiBlurRenderer {
 
     public static void renderBlurAreaWithIntensityScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float baseBlurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
-        renderBlurAreaWithIntensity(graphics, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), baseBlurRadius * transform.scale(), cornerRadius * transform.scale(), tint, partial);
+        GuiPoseTransformUtil.TransformedArea area = transform.transformArea(x, y, width, height);
+        renderBlurAreaWithIntensity(graphics, area.x(), area.y(), area.width(), area.height(), baseBlurRadius * transform.scale(), cornerRadius * transform.scale(), tint, partial);
     }
 
     /**
@@ -165,7 +171,8 @@ public final class GuiBlurRenderer {
 
     public static void renderBlurAreaWithIntensityRoundTopCornersScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float baseBlurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
-        renderBlurAreaWithIntensityRoundTopCorners(graphics, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), baseBlurRadius * transform.scale(), cornerRadius * transform.scale(), tint, partial);
+        GuiPoseTransformUtil.TransformedArea area = transform.transformArea(x, y, width, height);
+        renderBlurAreaWithIntensityRoundTopCorners(graphics, area.x(), area.y(), area.width(), area.height(), baseBlurRadius * transform.scale(), cornerRadius * transform.scale(), tint, partial);
     }
 
     /**
@@ -178,7 +185,8 @@ public final class GuiBlurRenderer {
 
     public static void renderBlurAreaWithIntensityRoundBottomCornersScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float baseBlurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
-        renderBlurAreaWithIntensityRoundBottomCorners(graphics, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), baseBlurRadius * transform.scale(), cornerRadius * transform.scale(), tint, partial);
+        GuiPoseTransformUtil.TransformedArea area = transform.transformArea(x, y, width, height);
+        renderBlurAreaWithIntensityRoundBottomCorners(graphics, area.x(), area.y(), area.width(), area.height(), baseBlurRadius * transform.scale(), cornerRadius * transform.scale(), tint, partial);
     }
 
     /**
@@ -191,12 +199,13 @@ public final class GuiBlurRenderer {
 
     public static void renderBlurAreaWithIntensityRoundAllCornersScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float baseBlurRadius, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, @Nonnull DrawableColor tint, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
+        GuiPoseTransformUtil.TransformedArea area = transform.transformArea(x, y, width, height);
         renderBlurAreaWithIntensityRoundAllCorners(
                 graphics,
-                transform.transformX(x),
-                transform.transformY(y),
-                width * transform.scale(),
-                height * transform.scale(),
+                area.x(),
+                area.y(),
+                area.width(),
+                area.height(),
                 baseBlurRadius * transform.scale(),
                 topLeftRadius * transform.scale(),
                 topRightRadius * transform.scale(),

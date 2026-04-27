@@ -86,7 +86,8 @@ public final class SmoothImageCircleRenderer {
 
     public static void renderSmoothImageCircleScaled(@Nonnull GuiGraphicsExtractor graphics, @Nonnull Identifier texture, float x, float y, float width, float height, float roundness, int color, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
-        renderSmoothImageCircle(graphics, texture, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), roundness, color, partial);
+        GuiPoseTransformUtil.TransformedArea area = transform.transformArea(x, y, width, height);
+        renderSmoothImageCircle(graphics, texture, area.x(), area.y(), area.width(), area.height(), roundness, color, partial);
     }
 
     public static void renderSmoothImageCircle(@Nonnull GuiGraphicsExtractor graphics, @Nonnull Identifier texture, float x, float y, float width, float height, float uOffset, float vOffset, float uWidth, float vHeight, float textureWidth, float textureHeight, float roundness, int color, float partial) {
@@ -95,7 +96,8 @@ public final class SmoothImageCircleRenderer {
 
     public static void renderSmoothImageCircleScaled(@Nonnull GuiGraphicsExtractor graphics, @Nonnull Identifier texture, float x, float y, float width, float height, float uOffset, float vOffset, float uWidth, float vHeight, float textureWidth, float textureHeight, float roundness, int color, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
-        renderSmoothImageCircle(graphics, texture, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), uOffset, vOffset, uWidth, vHeight, textureWidth, textureHeight, roundness, color, partial);
+        GuiPoseTransformUtil.TransformedArea area = transform.transformArea(x, y, width, height);
+        renderSmoothImageCircle(graphics, texture, area.x(), area.y(), area.width(), area.height(), uOffset, vOffset, uWidth, vHeight, textureWidth, textureHeight, roundness, color, partial);
     }
 
     private static void renderSmoothImageCircleInternal(@Nonnull GuiGraphicsExtractor graphics, @Nonnull Identifier texture, float x, float y, float width, float height, float roundness, @Nonnull TextureRegion textureRegion, int color) {

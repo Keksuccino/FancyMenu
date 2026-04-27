@@ -21,7 +21,7 @@ final class GuiPoseTransformUtil {
         float translationX = finiteOrDefault_FancyMenu(pose.m20(), 0.0F);
         float translationY = finiteOrDefault_FancyMenu(pose.m21(), 0.0F);
         RenderRotationUtil.Rotation2D rotation = resolveRotation_FancyMenu(pose, scaleX, scaleY);
-        return new PoseTransform(scale, translationX, translationY, rotation);
+        return new PoseTransform(scale, translationX, translationY, pose.m00(), pose.m01(), pose.m10(), pose.m11(), rotation);
     }
 
     private static float resolveScale_FancyMenu(float scaleX, float scaleY) {
@@ -65,7 +65,7 @@ final class GuiPoseTransformUtil {
         return Float.isFinite(value) ? value : fallback;
     }
 
-    record PoseTransform(float scale, float translationX, float translationY, RenderRotationUtil.Rotation2D rotation) {
+    record PoseTransform(float scale, float translationX, float translationY, float m00, float m01, float m10, float m11, RenderRotationUtil.Rotation2D rotation) {
 
         float transformX(float x) {
             return x * this.scale + this.translationX;
@@ -74,5 +74,29 @@ final class GuiPoseTransformUtil {
         float transformY(float y) {
             return y * this.scale + this.translationY;
         }
+
+        TransformedArea transformArea(float x, float y, float width, float height) {
+            float transformedWidth = width * this.scale;
+            float transformedHeight = height * this.scale;
+            float centerX = this.transformPositionX(x + (width * 0.5F), y + (height * 0.5F));
+            float centerY = this.transformPositionY(x + (width * 0.5F), y + (height * 0.5F));
+            return new TransformedArea(
+                    centerX - (transformedWidth * 0.5F),
+                    centerY - (transformedHeight * 0.5F),
+                    transformedWidth,
+                    transformedHeight
+            );
+        }
+
+        private float transformPositionX(float x, float y) {
+            return (x * this.m00) + (y * this.m10) + this.translationX;
+        }
+
+        private float transformPositionY(float x, float y) {
+            return (x * this.m01) + (y * this.m11) + this.translationY;
+        }
+    }
+
+    record TransformedArea(float x, float y, float width, float height) {
     }
 }

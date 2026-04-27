@@ -86,7 +86,8 @@ public final class SmoothCircleRenderer {
 
     public static void renderSmoothCircleScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float roundness, int color, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
-        renderSmoothCircle(graphics, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), roundness, color, partial);
+        GuiPoseTransformUtil.TransformedArea area = transform.transformArea(x, y, width, height);
+        renderSmoothCircle(graphics, area.x(), area.y(), area.width(), area.height(), roundness, color, partial);
     }
 
     /**
@@ -112,7 +113,8 @@ public final class SmoothCircleRenderer {
 
     public static void renderSmoothCircleBorderScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float borderThickness, float roundness, int color, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
-        renderSmoothCircleBorder(graphics, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), borderThickness * transform.scale(), roundness, color, partial);
+        GuiPoseTransformUtil.TransformedArea area = transform.transformArea(x, y, width, height);
+        renderSmoothCircleBorder(graphics, area.x(), area.y(), area.width(), area.height(), borderThickness * transform.scale(), roundness, color, partial);
     }
 
     /**
@@ -145,12 +147,13 @@ public final class SmoothCircleRenderer {
      */
     public static void renderSmoothCircleBorderArcScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float borderThickness, float roundness, float startAngleRadians, float endAngleRadians, boolean roundInside, int color, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
+        GuiPoseTransformUtil.TransformedArea area = transform.transformArea(x, y, width, height);
         renderSmoothCircleBorderArc(
                 graphics,
-                transform.transformX(x),
-                transform.transformY(y),
-                width * transform.scale(),
-                height * transform.scale(),
+                area.x(),
+                area.y(),
+                area.width(),
+                area.height(),
                 borderThickness * transform.scale(),
                 roundness,
                 startAngleRadians,
