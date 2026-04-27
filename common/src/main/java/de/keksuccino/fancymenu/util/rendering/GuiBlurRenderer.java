@@ -12,12 +12,17 @@ import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import javax.annotation.Nonnull;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public final class GuiBlurRenderer {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final String GUI_BOX_BLUR_SHADER_NAME_FANCYMENU = "fancymenu_gui_box_blur";
+    private static final int GL_NEAREST_FANCYMENU = 9728;
+    private static final int GL_LINEAR_FANCYMENU = 9729;
     private static final float SHAPE_TYPE_ROUNDED_RECT = 0.0F;
     private static final float SHAPE_TYPE_SUPERELLIPSE = 1.0F;
     // Keep shader files in the default 'minecraft' namespace so the vanilla resource manager finds them for every loader.
@@ -273,7 +278,7 @@ public final class GuiBlurRenderer {
         float margin = blurRadius * 4.0F;
         ScissorBounds scissor = resolveScissorBounds(area, margin, scissorRotation);
         graphics.enableScissor(scissor.minXInt(), scissor.minYInt(), scissor.maxXInt(), scissor.maxYInt());
-        postChain.process(partial);
+        processBlurPostChain(postChain, partial);
 
         RenderTarget finalTarget = getFinalTarget(postChain);
         minecraft.getMainRenderTarget().bindWrite(false);
@@ -320,12 +325,47 @@ public final class GuiBlurRenderer {
         }
     }
 
+    private static void processBlurPostChain(PostChain postChain, float partial) {
+        Map<RenderTarget, Integer> originalFilterModes = new IdentityHashMap<>();
+        try {
+            for (PostPass pass : ((IMixinPostChain) postChain).getPasses_FancyMenu()) {
+                if (GUI_BOX_BLUR_SHADER_NAME_FANCYMENU.equals(pass.getName()) || "fancymenu_gui_blur".equals(pass.getName())) {
+                    setLinearFilterMode(originalFilterModes, pass.inTarget);
+                    setLinearFilterMode(originalFilterModes, pass.outTarget);
+                }
+            }
+            postChain.process(partial);
+        } finally {
+            restoreFilterModes(originalFilterModes);
+        }
+    }
+
+    private static void setLinearFilterMode(Map<RenderTarget, Integer> originalFilterModes, RenderTarget target) {
+        if (target == null || originalFilterModes.containsKey(target)) {
+            return;
+        }
+        originalFilterModes.put(target, target.filterMode);
+        if (target.filterMode != GL_LINEAR_FANCYMENU) {
+            target.setFilterMode(GL_LINEAR_FANCYMENU);
+        }
+    }
+
+    private static void restoreFilterModes(Map<RenderTarget, Integer> originalFilterModes) {
+        for (Map.Entry<RenderTarget, Integer> entry : originalFilterModes.entrySet()) {
+            RenderTarget target = entry.getKey();
+            int originalFilterMode = entry.getValue() != null ? entry.getValue() : GL_NEAREST_FANCYMENU;
+            if (target.filterMode != originalFilterMode) {
+                target.setFilterMode(originalFilterMode);
+            }
+        }
+    }
+
     private static void applyUniforms(PostChain postChain, float x, float y, float width, float height, float blurRadius, CornerRadii cornerRadii, float shapeType, float roundness, RenderRotationUtil.Rotation2D rotation, DrawableColor.FloatColor tint) {
         List<PostPass> passes = ((IMixinPostChain) postChain).getPasses_FancyMenu();
         float[] blurMultipliers = new float[]{1.0F, 1.0F, 0.5F, 0.5F, 0.25F, 0.25F};
         int blurIndex = 0;
         for (PostPass pass : passes) {
-            if ("box_blur".equals(pass.getName()) && blurIndex < blurMultipliers.length) {
+            if (GUI_BOX_BLUR_SHADER_NAME_FANCYMENU.equals(pass.getName()) && blurIndex < blurMultipliers.length) {
                 pass.getEffect().safeGetUniform("Radius").set(blurRadius * blurMultipliers[blurIndex]);
                 blurIndex++;
                 continue;
