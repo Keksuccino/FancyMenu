@@ -57,11 +57,7 @@ public class FMMixinPlugin implements IMixinConfigPlugin {
     }
 
     private static boolean isWatermediaLoaded() {
-        try {
-            Class.forName("org.watermedia.bootstrap.NeoBootstrap", false, FMMixinPlugin.class.getClassLoader());
-            return true;
-        } catch (Exception ignore) {}
-        return false;
+        return FMMixinPlugin.class.getClassLoader().getResource("org/watermedia/bootstrap/NeoBootstrap.class") != null;
     }
 
 }

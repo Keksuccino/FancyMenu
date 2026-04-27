@@ -15,7 +15,7 @@ public class MixinWatermediaNeoBootstrap {
      * its NeoForge bootstrap. Redirect it through the active loader instance so WaterMedia can
      * finish bootstrapping on Minecraft 26.1.1.
      */
-    @WrapOperation(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/neoforged/fml/loading/FMLLoader;getDist()Lnet/neoforged/api/distmarker/Dist;", remap = false), remap = false, require = 0)
+    @WrapOperation(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/neoforged/fml/loading/FMLLoader;getDist()Lnet/neoforged/api/distmarker/Dist;", remap = false), remap = false)
     private Dist wrap_getDist_FancyMenu(Operation<Dist> original) {
         return FMLLoader.getCurrent().getDist();
     }
