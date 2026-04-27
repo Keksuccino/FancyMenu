@@ -67,3 +67,4 @@
 - Do not treat "the game is not crashing" as "everything works". When the client successfully launched in testing, check its log files for remaining errors and other problems/issues.
 - You are allowed to add temporary testing code and classes to project, to be able to better analyze and test specific parts. This can be simple debug logging (always use the INFO level), but it can also be code for you to automatically open menus, launch things, or whatever you need for testing. Just make sure to remove the testing code after.
 - You can take screenshots by using OS-level tools/utils, if needed.
+- Manually kill/close lingering game processes from running "run configurations". They do not automatically close, not even on timeout. They only close automatically when crashing (obviously).
