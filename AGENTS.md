@@ -12,11 +12,12 @@
 - Always keep in mind that you are an AI. Time does not work the same for you as it does for humans.
 - What would take humans weeks or more to implement/write will take you only some minutes, so you should never take the "faster" route just to get the job done quicker. Take the BEST route, even if it takes a bit longer.
 
-## Coding Style & Naming Conventions
+## Coding Style
 - Target Java 21 with 4-space indentation and UTF-8 encoding (WITHOUT BOM), matching the Gradle toolchain configuration.
 - Follow existing packages under `de.keksuccino.fancymenu`, mirroring existing sub-packages like `customization`, `events`, and `platform` to keep cross-loader boundaries clear.
 - Name resources with the `fancymenu` prefix (e.g., `fancymenu.mixins.json`, `fancymenu.accesswidener`) so Gradle and the loaders resolve them consistently.
 - Prefer explicit nullability annotations from `jsr305`.
+- Always use proper class imports. Don't call classes by their full classpath in code, if not needed.
 
 ## Mixin Structurization
 - Place shared mixins under `common/src/main/java/de/keksuccino/fancymenu/mixin/mixins/common/<side>` and mirror the existing folder depth when adding new targets.
@@ -28,7 +29,7 @@
 - Prefer using features from Mixin Extras instead of using normal Mixin redirects or overrides.
 - When leveraging Mixin Extras (`WrapOperation`, `WrapWithCondition`, etc.), name helpers after the intent (`wrap_..._FancyMenu`, `cancel_..._FancyMenu`) and call the provided `Operation` when returning to vanilla flow.
 - Keep Mixin classes lightweight and try to always describe what a Mixin does in its javadoc via `@reason ...`.
-- Always leave `require` at default for mixins! Never do `require = 0` or similar.
+- Always leave `require` at default for mixins! Never do `require = 0` or similar, unless the user tells you to do it.
 
 ## Localization
 - Always add en_us localizations for the features you add. Only en_us.
@@ -57,8 +58,12 @@
 - When porting code from a different Minecraft version, you should compare both Minecraft version's code to see what changed, how it works here and how to best port the code.
 
 ## Gradle
-- Do NOT run or compile the project, except the user explicitly tells you to do so.
+- Do NOT directly run or compile the project via Gradle, except the user explicitly tells you to do so. Using IntelliJ run configurations are an exception here.
 
 ## Testing
 - To check if the project compiles and to look for errors/issues in general, use the `get_run_configurations` and `execute_run_configuration` tools to get and execute the Fabric and NeoForge client run configurations inside the open IntelliJ IDE.
 - Never try to run the `common` module directly, because it is only the base for the `fabric` and `neoforge` ones.
+- When running a "run configuration", always set a timeout of 80 seconds by default, and only if that's not enough after trying the first time, add 30 more seconds and so on.
+- Do not treat "the game is not crashing" as "everything works". When the client successfully launched in testing, check its log files for remaining errors and other problems/issues.
+- You are allowed to add temporary testing code and classes to project, to be able to better analyze and test specific parts. This can be simple debug logging (always use the INFO level), but it can also be code for you to automatically open menus, launch things, or whatever you need for testing. Just make sure to remove the testing code after.
+- You can take screenshots by using OS-level tools/utils, if needed.
