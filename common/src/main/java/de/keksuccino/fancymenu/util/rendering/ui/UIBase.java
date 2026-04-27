@@ -443,6 +443,7 @@ public class UIBase extends RenderingUtils {
     }
 
     public static TextDimensions renderText(GuiGraphics graphics, Component text, float x, float y, int baseColor, float textSize) {
+        RenderingUtils.setupAlphaBlend();
         if (shouldUseMinecraftFontForUIRendering()) {
             int width = (int)getUITextWidthNormal(text);
             TextDimensions dimensions = new TextDimensions(width, Minecraft.getInstance().font.lineHeight);

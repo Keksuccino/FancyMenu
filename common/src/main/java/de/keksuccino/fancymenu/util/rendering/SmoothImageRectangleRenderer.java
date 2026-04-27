@@ -162,8 +162,7 @@ public final class SmoothImageRectangleRenderer {
         postChain.process(partial);
         RenderTarget finalTarget = getFinalTarget(postChain);
         minecraft.getMainRenderTarget().bindWrite(false);
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        RenderingUtils.setupAlphaBlend();
         if (finalTarget != null) {
             finalTarget.blitToScreen(minecraft.getWindow().getWidth(), minecraft.getWindow().getHeight(), false);
         }

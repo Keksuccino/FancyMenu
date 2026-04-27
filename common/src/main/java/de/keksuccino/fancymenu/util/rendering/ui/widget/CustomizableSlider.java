@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.ClassExtender;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -138,13 +137,14 @@ public interface CustomizableSlider {
         }
         if (location != null) {
             graphics.setColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)this).getAlphaFancyMenu());
-            RenderSystem.enableBlend();
+            RenderingUtils.setupAlphaBlend();
             if (this.isNineSliceCustomSliderBackground_FancyMenu()) {
                 RenderingUtils.blitNineSlicedTexture(graphics, location, widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight(), texture.getWidth(), texture.getHeight(),
                         this.getNineSliceSliderBackgroundBorderTop_FancyMenu(), this.getNineSliceSliderBackgroundBorderRight_FancyMenu(),
                         this.getNineSliceSliderBackgroundBorderBottom_FancyMenu(), this.getNineSliceSliderBackgroundBorderLeft_FancyMenu());
             } else {
-                graphics.blit(location, widget.getX(), widget.getY(), 0.0F, 0.0F, widget.getWidth(), widget.getHeight(), widget.getWidth(), widget.getHeight());
+                RenderingUtils.setupAlphaBlend();
+                RenderingUtils.blitAlphaTexture(graphics, location, widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight());
             }
             RenderingUtils.resetShaderColor(graphics);
             return false;

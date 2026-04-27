@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.ClassExtender;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -66,7 +65,7 @@ public interface CustomizableWidget {
             if (location != null) {
                 renderVanilla = false;
                 graphics.setColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)widget).getAlphaFancyMenu());
-                RenderSystem.enableBlend();
+                RenderingUtils.setupAlphaBlend();
                 graphics.setColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)widget).getAlphaFancyMenu());
                 if ((widget instanceof CustomizableSlider s) && s.isNineSliceCustomSliderHandle_FancyMenu()) {
                     RenderingUtils.blitNineSlicedTexture(graphics, location, x, y, width, height, customBackground.getWidth(), customBackground.getHeight(),
@@ -77,7 +76,8 @@ public interface CustomizableWidget {
                             getNineSliceCustomBackgroundBorderTop_FancyMenu(), getNineSliceCustomBackgroundBorderRight_FancyMenu(),
                             getNineSliceCustomBackgroundBorderBottom_FancyMenu(), getNineSliceCustomBackgroundBorderLeft_FancyMenu());
                 } else {
-                    graphics.blit(location, x, y, 0.0F, 0.0F, width, height, width, height);
+                    RenderingUtils.setupAlphaBlend();
+                    RenderingUtils.blitAlphaTexture(graphics, location, x, y, width, height);
                 }
                 RenderingUtils.resetShaderColor(graphics);
             }

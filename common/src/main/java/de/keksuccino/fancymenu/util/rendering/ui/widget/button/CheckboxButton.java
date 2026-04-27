@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -42,8 +42,8 @@ public class CheckboxButton extends ExtendedButton {
         super.renderWidget(graphics, mouseX, mouseY, partial);
 
         if (this.checkboxState && this.isActive()) {
-            RenderSystem.enableBlend();
-            graphics.blit(this.getCheckboxCheckmarkTexture(), this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+            RenderingUtils.setupAlphaBlend();
+            RenderingUtils.blitAlphaTexture(graphics, this.getCheckboxCheckmarkTexture(), this.getX(), this.getY(), this.getWidth(), this.getHeight());
         }
 
     }
@@ -51,8 +51,8 @@ public class CheckboxButton extends ExtendedButton {
     @Override
     protected void renderBackground(@NotNull GuiGraphics graphics, float partial) {
 
-        RenderSystem.enableBlend();
-        graphics.blit(this.getCheckboxBackground(), this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+        RenderingUtils.setupAlphaBlend();
+        RenderingUtils.blitAlphaTexture(graphics, this.getCheckboxBackground(), this.getX(), this.getY(), this.getWidth(), this.getHeight());
 
     }
 

@@ -1,9 +1,9 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.util.rendering.IconAnimation;
 import de.keksuccino.fancymenu.util.rendering.IconAnimations;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
 import net.minecraft.client.gui.GuiGraphics;
@@ -53,7 +53,7 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
         this.hovered = this.isMouseOver(mouseX, mouseY);
         this.updateHoverAnimation(wasHovered);
 
-        RenderSystem.enableBlend();
+        RenderingUtils.setupAlphaBlend();
         if (this.hovered) {
             UIBase.renderIconButtonHoverBackground(graphics, this.x, this.y, this.width, this.height);
         }
@@ -105,8 +105,7 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
         float drawX = baseX + offset.x();
         float drawY = baseY + offset.y();
 
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        RenderingUtils.setupAlphaBlend();
         UIBase.getUITheme().setUITextureShaderColor(graphics, this.iconAlpha);
         blitScaledIcon(graphics, iconData, drawX, drawY, areaWidth, areaHeight, offset.rotationDegrees());
         UIBase.resetShaderColor(graphics);
@@ -152,7 +151,8 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
             graphics.pose().mulPose(Axis.ZP.rotationDegrees(rotationDegrees));
             graphics.pose().translate(-iconData.width * 0.5F, -iconData.height * 0.5F, 0.0F);
         }
-        graphics.blit(iconData.texture, 0, 0, 0.0F, 0.0F, iconData.width, iconData.height, iconData.width, iconData.height);
+        RenderingUtils.setupAlphaBlend();
+        RenderingUtils.blitAlphaTexture(graphics, iconData.texture, 0, 0, iconData.width, iconData.height);
         graphics.pose().popPose();
     }
 

@@ -1,4 +1,11 @@
 {
+  "blend": {
+    "func": "add",
+    "srcrgb": "srcalpha",
+    "dstrgb": "1-srcalpha",
+    "srcalpha": "one",
+    "dstalpha": "1-srcalpha"
+  },
   "vertex": "fancymenu_gui_smooth_rect_local",
   "fragment": "fancymenu_gui_smooth_rect_local",
   "samplers": [],

@@ -401,7 +401,8 @@ public class ResourceChooserWindowBody<R extends Resource, F extends FileType<R>
                 int y = this.editBox.getY() + 2;
                 this.warningHovered = UIBase.isXYInArea(mouseX, mouseY, x, y, w, h);
                 RenderingUtils.setShaderColor(graphics, UIBase.getUITheme().warning_color, 1.0F);
-                graphics.blit(loc, x, y, 0.0F, 0.0F, w, h, w, h);
+                RenderingUtils.setupAlphaBlend();
+                RenderingUtils.blitAlphaTexture(graphics, loc, x, y, w, h);
                 RenderingUtils.resetShaderColor(graphics);
             }
         }

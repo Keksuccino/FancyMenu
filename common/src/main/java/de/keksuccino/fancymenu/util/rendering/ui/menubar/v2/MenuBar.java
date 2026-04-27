@@ -87,7 +87,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
             this.hovered = this.isMouseOver(mouseX, mouseY);
 
-            RenderSystem.enableBlend();
+            RenderingUtils.setupAlphaBlend();
 
             RenderSystem.disableDepthTest();
             RenderingUtils.setDepthTestLocked(true);
@@ -113,7 +113,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
                     e.height = PIXEL_SIZE;
                     e.hovered = e.isMouseOver(scaledMouseX, scaledMouseY);
                     if (e.isVisible()) {
-                        RenderSystem.enableBlend();
+                        RenderingUtils.setupAlphaBlend();
                         UIBase.resetShaderColor(graphics);
                         e.render(graphics, scaledMouseX, scaledMouseY, partial);
                     }
@@ -126,7 +126,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
                     e.height = PIXEL_SIZE;
                     e.hovered = e.isMouseOver(scaledMouseX, scaledMouseY);
                     if (e.isVisible()) {
-                        RenderSystem.enableBlend();
+                        RenderingUtils.setupAlphaBlend();
                         UIBase.resetShaderColor(graphics);
                         e.render(graphics, scaledMouseX, scaledMouseY, partial);
                     }
@@ -787,7 +787,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         }
 
         protected void renderLabelOrIcon(GuiGraphics graphics) {
-            RenderSystem.enableBlend();
+            RenderingUtils.setupAlphaBlend();
             Component label = this.getLabel();
             ITexture iconTexture = this.getIconTexture();
             if (iconTexture != null) {
@@ -853,7 +853,8 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
                         loc = (fallback != null) ? fallback : ITexture.MISSING_TEXTURE_LOCATION;
                     }
                 }
-                graphics.blit(loc, drawX, drawY, drawWidth, drawHeight, 0.0F, 0.0F, textureWidth, textureHeight, textureWidth, textureHeight);
+                RenderingUtils.setupAlphaBlend();
+                RenderingUtils.blitAlphaTextureRegion(graphics, loc, drawX, drawY, drawWidth, drawHeight, 0.0F, 0.0F, textureWidth, textureHeight, textureWidth, textureHeight);
             } else {
                 UIBase.renderText(graphics, label, this.x + ENTRY_LABEL_SPACE_LEFT_RIGHT, this.y + ((float) PIXEL_SIZE / 2) - (UIBase.getUITextHeightNormal() / 2), this.getLabelColor());
             }
@@ -1179,7 +1180,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
         @Override
         protected void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            RenderSystem.enableBlend();
+            RenderingUtils.setupAlphaBlend();
             UIBase.resetShaderColor(graphics);
             graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + PIXEL_SIZE, this.getColor().getColorInt());
             UIBase.resetShaderColor(graphics);

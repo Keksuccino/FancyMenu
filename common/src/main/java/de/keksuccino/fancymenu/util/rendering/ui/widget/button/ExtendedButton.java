@@ -116,7 +116,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         if (this.getExtendedAsCustomizableWidget().renderCustomBackgroundFancyMenu(this, graphics, this.getX(), this.getY(), this.getWidth(), this.getHeight())) {
             if (this.renderColorBackground(graphics, partial)) {
                 graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
-                RenderSystem.enableBlend();
+                RenderingUtils.setupAlphaBlend();
                 RenderSystem.enableDepthTest();
                 graphics.blitNineSliced(WIDGETS_LOCATION, this.getX(), this.getY(), this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());
                 RenderingUtils.resetShaderColor(graphics);
@@ -129,7 +129,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
      * Returns if the button should render its Vanilla background (true) or not (false).
      */
     protected boolean renderColorBackground(@NotNull GuiGraphics graphics, float partial) {
-        RenderSystem.enableBlend();
+        RenderingUtils.setupAlphaBlend();
         DrawableColor background = null;
         DrawableColor border = null;
         if (this.active) {
@@ -242,9 +242,9 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         if (renderWidth <= 0) return;
         int renderX = this.getX() + ((this.getWidth() - renderWidth) / 2);
         graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
-        RenderSystem.enableBlend();
+        RenderingUtils.setupAlphaBlend();
         RenderSystem.enableDepthTest();
-        graphics.blit(iconLocation, renderX, this.getY(), 0.0F, 0.0F, renderWidth, renderHeight, renderWidth, renderHeight);
+        RenderingUtils.blitAlphaTexture(graphics, iconLocation, renderX, this.getY(), renderWidth, renderHeight);
         RenderingUtils.resetShaderColor(graphics);
     }
 

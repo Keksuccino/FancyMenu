@@ -106,7 +106,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
      * Returns if the slider should render its Vanilla background (true) or not (false).
      */
     protected boolean renderColorBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        RenderSystem.enableBlend();
+        RenderingUtils.setupAlphaBlend();
         RenderingUtils.resetShaderColor(graphics);
         if ((this.isFocused() && !this.getAccessor().getCanChangeValueFancyMenu()) && (this.sliderBackgroundColorHighlighted != null)) {
             if (this.roundedColorBackground) {
@@ -200,8 +200,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
 
     protected void renderVanillaBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        RenderingUtils.setupAlphaBlend();
         RenderSystem.enableDepthTest();
         graphics.blitNineSliced(SLIDER_LOCATION, this.getX(), this.getY(), this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());
         RenderingUtils.resetShaderColor(graphics);
@@ -217,7 +216,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
      * Returns if the slider should render its Vanilla handle (true) or not (false).
      */
     protected boolean renderColorHandle(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        RenderSystem.enableBlend();
+        RenderingUtils.setupAlphaBlend();
         int handleX = this.getHandleX();
         int handleWidth = this.getHandleWidth();
         if (this.active) {
@@ -294,8 +293,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
 
     protected void renderVanillaHandle(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        RenderingUtils.setupAlphaBlend();
         RenderSystem.enableDepthTest();
         graphics.blitNineSliced(SLIDER_LOCATION, this.getHandleX(), this.getY(), this.getHandleWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getHandleTextureY());
         RenderingUtils.resetShaderColor(graphics);

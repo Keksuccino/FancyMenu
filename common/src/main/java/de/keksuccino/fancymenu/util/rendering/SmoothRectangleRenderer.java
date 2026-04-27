@@ -201,8 +201,7 @@ public final class SmoothRectangleRenderer {
         QuadBounds bounds = computeQuadBounds_FancyMenu(area, targetHeight, guiScale, scaledX, scaledY, scaledWidth, scaledHeight, rotation);
 
         graphics.flush();
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        RenderingUtils.setupAlphaBlend();
         RenderSystem.setShader(() -> shader);
         drawQuad_FancyMenu(bounds);
         RenderSystem.defaultBlendFunc();

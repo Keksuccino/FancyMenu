@@ -282,8 +282,7 @@ public final class GuiBlurRenderer {
 
         RenderTarget finalTarget = getFinalTarget(postChain);
         minecraft.getMainRenderTarget().bindWrite(false);
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        RenderingUtils.setupAlphaBlend();
         if (finalTarget != null) {
             // Compose the isolated blur result back onto the main target. The final shader outputs alpha = mask,
             // so normal alpha blending here preserves untouched pixels outside the rounded blur rect.

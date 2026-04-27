@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.toast;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphics;
@@ -51,9 +51,11 @@ public class SimpleToast implements Toast {
 
         ResourceLocation customBack = this.getCustomBackground();
         if (customBack == null) {
+            RenderingUtils.setupAlphaBlend();
             graphics.blit(TEXTURE, 0, 0, 0, 96, this.width(), this.height());
         } else {
-            graphics.blit(customBack, 0, 0, 0.0F, 0.0F, this.width(), this.height(), this.width(), this.height());
+            RenderingUtils.setupAlphaBlend();
+            RenderingUtils.blitAlphaTexture(graphics, customBack, 0, 0, this.width(), this.height());
         }
 
         this.icon.render(graphics, 6, 6);
@@ -152,8 +154,8 @@ public class SimpleToast implements Toast {
         public void render(GuiGraphics graphics, int x, int y) {
             ResourceLocation icon = this.getIcon();
             if (icon != null) {
-                RenderSystem.enableBlend();
-                graphics.blit(icon, x, y, 0.0F, 0.0F, 20, 20, 20, 20);
+                RenderingUtils.setupAlphaBlend();
+                RenderingUtils.blitAlphaTexture(graphics, icon, x, y, 20, 20);
             }
         }
 

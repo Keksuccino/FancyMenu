@@ -311,7 +311,8 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
         graphics.pose().pushPose();
         graphics.pose().translate(drawX, drawY, 0.0F);
         graphics.pose().scale(scale, scale, 1.0F);
-        graphics.blit(iconData.texture, 0, 0, 0.0F, 0.0F, iconData.width, iconData.height, iconData.width, iconData.height);
+        RenderingUtils.setupAlphaBlend();
+        RenderingUtils.blitAlphaTexture(graphics, iconData.texture, 0, 0, iconData.width, iconData.height);
         graphics.pose().popPose();
     }
 

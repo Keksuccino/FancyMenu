@@ -189,7 +189,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         try {
             enforceMinimumSizeForBodyScale();
 
-            RenderSystem.enableBlend();
+            RenderingUtils.setupAlphaBlend();
 
             RenderSystem.disableDepthTest();
             RenderingUtils.setDepthTestLocked(true);
@@ -654,8 +654,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         float safeIconSize = Math.max(1.0F, Math.min(iconSize, Math.min(width, height)));
         float iconX = x + (width - safeIconSize) * 0.5F;
         float iconY = y + (height - safeIconSize) * 0.5F;
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        RenderingUtils.setupAlphaBlend();
         UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
         blitScaledIcon(graphics, icon, iconX, iconY, safeIconSize, safeIconSize);
         RenderingUtils.resetShaderColor(graphics);
@@ -676,7 +675,8 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         graphics.pose().pushPose();
         graphics.pose().translate(drawX, drawY, 0.0F);
         graphics.pose().scale(scale, scale, 1.0F);
-        graphics.blit(iconData.texture, 0, 0, 0.0F, 0.0F, iconData.width, iconData.height, iconData.width, iconData.height);
+        RenderingUtils.setupAlphaBlend();
+        RenderingUtils.blitAlphaTexture(graphics, iconData.texture, 0, 0, iconData.width, iconData.height);
         graphics.pose().popPose();
     }
 

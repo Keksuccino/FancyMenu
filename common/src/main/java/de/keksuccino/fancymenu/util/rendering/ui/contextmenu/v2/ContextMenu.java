@@ -144,7 +144,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         RenderSystem.disableDepthTest();
         RenderingUtils.setDepthTestLocked(true);
 
-        RenderSystem.enableBlend();
+        RenderingUtils.setupAlphaBlend();
         graphics.pose().pushPose();
         graphics.pose().scale(renderScale, renderScale, renderScale);
 
@@ -358,7 +358,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
                 // Only render if visible
                 if (isVisible) {
-                    RenderSystem.enableBlend();
+                    RenderingUtils.setupAlphaBlend();
                     e.render(graphics, (int) scaledMouseX, (int) scaledMouseY, partial);
                 }
 
@@ -395,7 +395,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 );
 
                 // Render arrow centered
-                RenderSystem.enableBlend();
+                RenderingUtils.setupAlphaBlend();
                 UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
                 IconRenderData iconData = resolveMaterialIconData(SCROLL_UP_ICON, SCROLL_INDICATOR_ICON_SIZE, SCROLL_INDICATOR_ICON_SIZE);
                 if (iconData != null) {
@@ -429,7 +429,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 );
 
                 // Render arrow centered (with fixed position)
-                RenderSystem.enableBlend();
+                RenderingUtils.setupAlphaBlend();
                 UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
                 IconRenderData iconData = resolveMaterialIconData(SCROLL_DOWN_ICON, SCROLL_INDICATOR_ICON_SIZE, SCROLL_INDICATOR_ICON_SIZE);
                 if (iconData != null) {
@@ -2512,7 +2512,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             }
             float areaX = this.x + ICON_PADDING_LEFT + this.getIconWiggleOffsetX();
             float areaY = this.y + (this.getHeight() / 2.0F) - (ICON_WIDTH_HEIGHT / 2.0F);
-            RenderSystem.enableBlend();
+            RenderingUtils.setupAlphaBlend();
             UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
             this.blitScaledIcon(graphics, iconData, areaX, areaY, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
             RenderingUtils.resetShaderColor(graphics);
@@ -2564,7 +2564,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 graphics.pose().mulPose(Axis.ZP.rotationDegrees(rotationDegrees));
                 graphics.pose().translate(-iconData.width * 0.5F, -iconData.height * 0.5F, 0.0F);
             }
-            graphics.blit(iconData.texture, 0, 0, 0.0F, 0.0F, iconData.width, iconData.height, iconData.width, iconData.height);
+            RenderingUtils.setupAlphaBlend();
+            RenderingUtils.blitAlphaTexture(graphics, iconData.texture, 0, 0, iconData.width, iconData.height);
             graphics.pose().popPose();
         }
 
@@ -2609,7 +2610,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 }
                 this.tooltipActive = (this.tooltipIconHoverStart != -1) && ((this.tooltipIconHoverStart + 200) < System.currentTimeMillis());
 
-                RenderSystem.enableBlend();
+                RenderingUtils.setupAlphaBlend();
                 UIBase.getUITheme().ui_icon_texture_color.setAsShaderColor(graphics, this.tooltipIconHovered ? 1.0F : 0.2F);
                 IconRenderData iconData = this.resolveTooltipIconData();
                 if (iconData != null) {
@@ -2863,7 +2864,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         graphics.pose().pushPose();
         graphics.pose().translate(drawX, drawY, 0.0F);
         graphics.pose().scale(scale, scale, 1.0F);
-        graphics.blit(iconData.texture, 0, 0, 0.0F, 0.0F, iconData.width, iconData.height, iconData.width, iconData.height);
+        RenderingUtils.setupAlphaBlend();
+        RenderingUtils.blitAlphaTexture(graphics, iconData.texture, 0, 0, iconData.width, iconData.height);
         graphics.pose().popPose();
     }
 
@@ -2945,7 +2947,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         protected void renderSubMenuArrow(GuiGraphics graphics) {
-            RenderSystem.enableBlend();
+            RenderingUtils.setupAlphaBlend();
             UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
             IconRenderData iconData = this.resolveSubMenuArrowIconData();
             if (iconData != null) {
@@ -3419,7 +3421,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             }
             float areaX = this.x + ClickableContextMenuEntry.ICON_PADDING_LEFT;
             float areaY = this.y + (this.getHeight() / 2.0F) - (ClickableContextMenuEntry.ICON_WIDTH_HEIGHT / 2.0F);
-            RenderSystem.enableBlend();
+            RenderingUtils.setupAlphaBlend();
             UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
             this.blitScaledIcon(graphics, iconData, areaX, areaY, ClickableContextMenuEntry.ICON_WIDTH_HEIGHT, ClickableContextMenuEntry.ICON_WIDTH_HEIGHT);
             RenderingUtils.resetShaderColor(graphics);
@@ -3459,7 +3461,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             graphics.pose().pushPose();
             graphics.pose().translate(drawX, drawY, 0.0F);
             graphics.pose().scale(scale, scale, 1.0F);
-            graphics.blit(iconData.texture, 0, 0, 0.0F, 0.0F, iconData.width, iconData.height, iconData.width, iconData.height);
+            RenderingUtils.setupAlphaBlend();
+            RenderingUtils.blitAlphaTexture(graphics, iconData.texture, 0, 0, iconData.width, iconData.height);
             graphics.pose().popPose();
         }
 

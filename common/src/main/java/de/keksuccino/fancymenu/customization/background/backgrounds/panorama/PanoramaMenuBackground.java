@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.background.backgrounds.panorama;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.layout.editor.ChoosePanoramaScreen;
@@ -8,6 +7,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.util.properties.Property;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -86,7 +86,7 @@ public class PanoramaMenuBackground extends MenuBackground<PanoramaMenuBackgroun
             this.panorama.render(graphics, mouseX, mouseY, partial);
             this.panorama.opacity = 1.0F;
         } else {
-            RenderSystem.enableBlend();
+            RenderingUtils.setupAlphaBlend();
             graphics.blit(MISSING, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
         }
 

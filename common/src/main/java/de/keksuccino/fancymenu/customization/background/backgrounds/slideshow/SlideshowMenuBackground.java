@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.background.backgrounds.slideshow;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.layout.editor.ChooseSlideshowScreen;
@@ -9,6 +8,7 @@ import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowR
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -122,7 +122,7 @@ public class SlideshowMenuBackground extends MenuBackground<SlideshowMenuBackgro
             this.slideshow.slideshowOpacity = 1.0F;
 
         } else {
-            RenderSystem.enableBlend();
+            RenderingUtils.setupAlphaBlend();
             graphics.blit(MISSING, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
         }
 

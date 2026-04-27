@@ -1,14 +1,17 @@
 package de.keksuccino.fancymenu.util.rendering;
 
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinMinecraft;
+import de.keksuccino.fancymenu.util.MinecraftResourceReloadObserver;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
@@ -18,6 +21,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.lwjgl.opengl.GL14;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,9 +35,13 @@ public class RenderingUtils {
     public static final DrawableColor MISSING_TEXTURE_COLOR_BLACK = DrawableColor.BLACK;
     public static final ResourceLocation FULLY_TRANSPARENT_TEXTURE = new ResourceLocation("fancymenu", "textures/fully_transparent.png");
 
+    private static final String ALPHA_TEXTURE_SHADER_NAME_FANCYMENU = "fancymenu_gui_alpha_texture";
     private static final List<RenderingTask> PRE_RENDER_CONTEXTS = new ArrayList<>();
     private static final List<RenderingTask> POST_RENDER_CONTEXTS = new ArrayList<>();
     private static final List<RenderingTask> DEFERRED_SCREEN_RENDERING_TASKS = new ArrayList<>();
+    private static ShaderInstance alphaTextureShader_FancyMenu;
+    private static boolean alphaTextureShaderFailed_FancyMenu;
+    private static boolean alphaTextureShaderReloadListenerRegistered_FancyMenu;
     private static int depthTestLockDepth = 0;
     private static int blurBlockDepth = 0;
     private static int tooltipRenderingBlockDepth = 0;
@@ -233,9 +241,10 @@ public class RenderingUtils {
         float minV = (float)v / (float)textureHeight;
         float maxV = (float)(v + spriteHeight) / (float)textureHeight; // Use spriteHeight for UVs
 
+        graphics.flush();
         RenderSystem.setShaderTexture(0, atlasLocation);
-        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        RenderSystem.enableBlend();
+        RenderSystem.setShader(RenderingUtils::getAlphaTextureShader_FancyMenu);
+        setupAlphaBlend();
 
         // Access rendering internals
         Matrix4f matrix4f = graphics.pose().last().pose();
@@ -267,7 +276,7 @@ public class RenderingUtils {
      * @param texHeight The full height (in pixels) of the texture.
      */
     public static void blitRepeat(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, int x, int y, int areaRenderWidth, int areaRenderHeight, int texWidth, int texHeight) {
-        graphics.blit(location, x, y, 0.0F, 0.0F, areaRenderWidth, areaRenderHeight, texWidth, texHeight);
+        blitAlphaTexture(graphics, location, x, y, 0.0F, 0.0F, areaRenderWidth, areaRenderHeight, texWidth, texHeight);
     }
 
     /**
@@ -304,13 +313,13 @@ public class RenderingUtils {
 
         // Corner pieces
         // Top left
-        graphics.blit(texture, x, y, 0, 0, borderLeft, borderTop, textureWidth, textureHeight);
+        blitAlphaTexture(graphics, texture, x, y, 0.0F, 0.0F, borderLeft, borderTop, textureWidth, textureHeight);
         // Top right
-        graphics.blit(texture, x + width - borderRight, y, textureWidth - borderRight, 0, borderRight, borderTop, textureWidth, textureHeight);
+        blitAlphaTexture(graphics, texture, x + width - borderRight, y, textureWidth - borderRight, 0.0F, borderRight, borderTop, textureWidth, textureHeight);
         // Bottom left
-        graphics.blit(texture, x, y + height - borderBottom, 0, textureHeight - borderBottom, borderLeft, borderBottom, textureWidth, textureHeight);
+        blitAlphaTexture(graphics, texture, x, y + height - borderBottom, 0.0F, textureHeight - borderBottom, borderLeft, borderBottom, textureWidth, textureHeight);
         // Bottom right
-        graphics.blit(texture, x + width - borderRight, y + height - borderBottom, textureWidth - borderRight, textureHeight - borderBottom, borderRight, borderBottom, textureWidth, textureHeight);
+        blitAlphaTexture(graphics, texture, x + width - borderRight, y + height - borderBottom, textureWidth - borderRight, textureHeight - borderBottom, borderRight, borderBottom, textureWidth, textureHeight);
 
         // Edges - Tiled
         int centerWidth = textureWidth - borderLeft - borderRight;
@@ -319,25 +328,25 @@ public class RenderingUtils {
         // Top edge
         for (int i = borderLeft; i < width - borderRight; i += centerWidth) {
             int pieceWidth = Math.min(centerWidth, width - borderRight - i);
-            graphics.blit(texture, x + i, y, borderLeft, 0, pieceWidth, borderTop, textureWidth, textureHeight);
+            blitAlphaTexture(graphics, texture, x + i, y, borderLeft, 0.0F, pieceWidth, borderTop, textureWidth, textureHeight);
         }
 
         // Bottom edge
         for (int i = borderLeft; i < width - borderRight; i += centerWidth) {
             int pieceWidth = Math.min(centerWidth, width - borderRight - i);
-            graphics.blit(texture, x + i, y + height - borderBottom, borderLeft, textureHeight - borderBottom, pieceWidth, borderBottom, textureWidth, textureHeight);
+            blitAlphaTexture(graphics, texture, x + i, y + height - borderBottom, borderLeft, textureHeight - borderBottom, pieceWidth, borderBottom, textureWidth, textureHeight);
         }
 
         // Left edge
         for (int j = borderTop; j < height - borderBottom; j += centerHeight) {
             int pieceHeight = Math.min(centerHeight, height - borderBottom - j);
-            graphics.blit(texture, x, y + j, 0, borderTop, borderLeft, pieceHeight, textureWidth, textureHeight);
+            blitAlphaTexture(graphics, texture, x, y + j, 0.0F, borderTop, borderLeft, pieceHeight, textureWidth, textureHeight);
         }
 
         // Right edge
         for (int j = borderTop; j < height - borderBottom; j += centerHeight) {
             int pieceHeight = Math.min(centerHeight, height - borderBottom - j);
-            graphics.blit(texture, x + width - borderRight, y + j, textureWidth - borderRight, borderTop, borderRight, pieceHeight, textureWidth, textureHeight);
+            blitAlphaTexture(graphics, texture, x + width - borderRight, y + j, textureWidth - borderRight, borderTop, borderRight, pieceHeight, textureWidth, textureHeight);
         }
 
         // Center - Tiled
@@ -345,7 +354,7 @@ public class RenderingUtils {
             int pieceWidth = Math.min(centerWidth, width - borderRight - i);
             for (int j = borderTop; j < height - borderBottom; j += centerHeight) {
                 int pieceHeight = Math.min(centerHeight, height - borderBottom - j);
-                graphics.blit(texture, x + i, y + j, borderLeft, borderTop, pieceWidth, pieceHeight, textureWidth, textureHeight);
+                blitAlphaTexture(graphics, texture, x + i, y + j, borderLeft, borderTop, pieceWidth, pieceHeight, textureWidth, textureHeight);
             }
         }
 
@@ -370,6 +379,48 @@ public class RenderingUtils {
 
     public static void resetShaderColor(GuiGraphics graphics) {
         graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+    }
+
+    public static void setupAlphaBlend() {
+        RenderSystem.enableBlend();
+        RenderSystem.blendEquation(GL14.GL_FUNC_ADD);
+        RenderSystem.blendFuncSeparate(
+                GlStateManager.SourceFactor.SRC_ALPHA,
+                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+                GlStateManager.SourceFactor.ONE,
+                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA
+        );
+    }
+
+    public static void blitAlphaTexture(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, float x, float y, float width, float height) {
+        blitAlphaTexture(graphics, location, x, y, 0.0F, 0.0F, width, height, width, height);
+    }
+
+    public static void blitAlphaTexture(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, float x, float y, float width, float height, int color) {
+        blitAlphaTexture(graphics, location, x, y, 0.0F, 0.0F, width, height, width, height, color);
+    }
+
+    public static void blitAlphaTexture(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, float x, float y, float u, float v, float width, float height, float textureWidth, float textureHeight) {
+        blitAlphaTexture(graphics, location, x, y, u, v, width, height, textureWidth, textureHeight, -1);
+    }
+
+    public static void blitAlphaTexture(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, float x, float y, float u, float v, float width, float height, float textureWidth, float textureHeight, int color) {
+        blitAlphaTextureRegion(graphics, location, x, y, width, height, u, v, width, height, textureWidth, textureHeight, color);
+    }
+
+    public static void blitAlphaTextureRegion(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, float x, float y, float renderWidth, float renderHeight, float u, float v, float regionWidth, float regionHeight, float textureWidth, float textureHeight) {
+        blitAlphaTextureRegion(graphics, location, x, y, renderWidth, renderHeight, u, v, regionWidth, regionHeight, textureWidth, textureHeight, -1);
+    }
+
+    public static void blitAlphaTextureRegion(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, float x, float y, float renderWidth, float renderHeight, float u, float v, float regionWidth, float regionHeight, float textureWidth, float textureHeight, int color) {
+        if (renderWidth <= 0.0F || renderHeight <= 0.0F || regionWidth <= 0.0F || regionHeight <= 0.0F || textureWidth <= 0.0F || textureHeight <= 0.0F) {
+            return;
+        }
+        float minU = u / textureWidth;
+        float maxU = (u + regionWidth) / textureWidth;
+        float minV = v / textureHeight;
+        float maxV = (v + regionHeight) / textureHeight;
+        innerBlitAlphaTexture(graphics, location, x, x + renderWidth, y, y + renderHeight, 0.0F, minU, maxU, minV, maxV, color);
     }
 
     public static void setShaderColor(GuiGraphics graphics, DrawableColor color) {
@@ -502,25 +553,67 @@ public class RenderingUtils {
         );
     }
 
-    private static void innerBlit(GuiGraphics graphics, ResourceLocation location, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9) {
-        RenderSystem.setShaderTexture(0, location);
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        Matrix4f $$10 = graphics.pose().last().pose();
-        BufferBuilder $$11 = Tesselator.getInstance().getBuilder();
-        $$11.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        $$11.vertex($$10, $$1, $$3, $$5).uv($$6, $$8).endVertex();
-        $$11.vertex($$10, $$1, $$4, $$5).uv($$6, $$9).endVertex();
-        $$11.vertex($$10, $$2, $$4, $$5).uv($$7, $$9).endVertex();
-        $$11.vertex($$10, $$2, $$3, $$5).uv($$7, $$8).endVertex();
-        BufferUploader.drawWithShader($$11.end());
+    private static ShaderInstance getAlphaTextureShader_FancyMenu() {
+        ensureAlphaTextureShaderReloadListener_FancyMenu();
+        if (alphaTextureShaderFailed_FancyMenu) {
+            return GameRenderer.getPositionTexColorShader();
+        }
+        if (alphaTextureShader_FancyMenu == null) {
+            try {
+                alphaTextureShader_FancyMenu = new ShaderInstance(Minecraft.getInstance().getResourceManager(), ALPHA_TEXTURE_SHADER_NAME_FANCYMENU, DefaultVertexFormat.POSITION_TEX_COLOR);
+            } catch (Exception ex) {
+                alphaTextureShaderFailed_FancyMenu = true;
+                LOGGER.error("[FANCYMENU] Failed to load GUI alpha texture shader!", ex);
+                return GameRenderer.getPositionTexColorShader();
+            }
+        }
+        return alphaTextureShader_FancyMenu;
+    }
+
+    private static void ensureAlphaTextureShaderReloadListener_FancyMenu() {
+        if (alphaTextureShaderReloadListenerRegistered_FancyMenu) {
+            return;
+        }
+        alphaTextureShaderReloadListenerRegistered_FancyMenu = true;
+        MinecraftResourceReloadObserver.addReloadListener(action -> {
+            if (action == MinecraftResourceReloadObserver.ReloadAction.STARTING) {
+                RenderSystem.recordRenderCall(RenderingUtils::clearAlphaTextureShader_FancyMenu);
+            }
+        });
+    }
+
+    private static void clearAlphaTextureShader_FancyMenu() {
+        if (alphaTextureShader_FancyMenu != null) {
+            alphaTextureShader_FancyMenu.close();
+            alphaTextureShader_FancyMenu = null;
+        }
+        alphaTextureShaderFailed_FancyMenu = false;
+    }
+
+    private static void innerBlitAlphaTexture(GuiGraphics graphics, ResourceLocation location, float minX, float maxX, float minY, float maxY, float z, float minU, float maxU, float minV, float maxV, int color) {
         graphics.flush();
+        setupAlphaBlend();
+        RenderSystem.setShaderTexture(0, location);
+        RenderSystem.setShader(RenderingUtils::getAlphaTextureShader_FancyMenu);
+        Matrix4f matrix4f = graphics.pose().last().pose();
+        BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
+        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        bufferBuilder.vertex(matrix4f, minX, minY, z).uv(minU, minV).color(color).endVertex();
+        bufferBuilder.vertex(matrix4f, minX, maxY, z).uv(minU, maxV).color(color).endVertex();
+        bufferBuilder.vertex(matrix4f, maxX, maxY, z).uv(maxU, maxV).color(color).endVertex();
+        bufferBuilder.vertex(matrix4f, maxX, minY, z).uv(maxU, minV).color(color).endVertex();
+        BufferUploader.drawWithShader(bufferBuilder.end());
+    }
+
+    private static void innerBlit(GuiGraphics graphics, ResourceLocation location, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9) {
+        innerBlitAlphaTexture(graphics, location, $$1, $$2, $$3, $$4, $$5, $$6, $$7, $$8, $$9, -1);
     }
 
     private static void innerBlit(GuiGraphics graphics, ResourceLocation location, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float red, float green, float blue, float alpha) {
+        graphics.flush();
+        setupAlphaBlend();
         RenderSystem.setShaderTexture(0, location);
-        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShader(RenderingUtils::getAlphaTextureShader_FancyMenu);
         Matrix4f $$10 = graphics.pose().last().pose();
         BufferBuilder $$11 = Tesselator.getInstance().getBuilder();
         $$11.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
@@ -529,8 +622,6 @@ public class RenderingUtils {
         $$11.vertex($$10, $$2, $$4, $$5).uv($$7, $$9).color(red, green, blue, alpha).endVertex();
         $$11.vertex($$10, $$2, $$3, $$5).uv($$7, $$8).color(red, green, blue, alpha).endVertex();
         BufferUploader.drawWithShader($$11.end());
-        RenderSystem.disableBlend();
-        graphics.flush();
     }
 
     public static void enableScissor(@NotNull GuiGraphics graphics, int minX, int minY, int maxX, int maxY) {

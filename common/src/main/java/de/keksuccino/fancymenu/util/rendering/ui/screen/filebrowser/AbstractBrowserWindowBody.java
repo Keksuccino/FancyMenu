@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
@@ -292,7 +291,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
             this.fileTypeScrollArea.horizontalScrollBar.active = (textWidth > (this.fileTypeScrollArea.getInnerWidth() - 10));
         }
 
-        RenderSystem.enableBlend();
+        RenderingUtils.setupAlphaBlend();
 
         float labelY = this.getMainAreaLabelY();
         float contentTopY = this.getMainAreaTopY();
@@ -445,8 +444,8 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
                 UIBase.resetShaderColor(graphics);
                 graphics.fill(x, y, x + w, y + h, previewBackgroundColor);
                 RenderingUtils.resetShaderColor(graphics);
-                RenderSystem.enableBlend();
-                graphics.blit(loc, x, y, 0.0F, 0.0F, w, h, w, h);
+                RenderingUtils.setupAlphaBlend();
+                RenderingUtils.blitAlphaTexture(graphics, loc, x, y, w, h);
                 UIBase.resetShaderColor(graphics);
                 UIBase.renderBorder(graphics, x, y, x + w, y + h, UIBase.ELEMENT_BORDER_THICKNESS, previewBorderColor, true, true, true, true);
                 if (showAnimatedImageWatermediaRecommendation) {
@@ -1434,8 +1433,8 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         ResourceLocation location = (video != null) ? video.getResourceLocation() : null;
         if (location != null) {
             RenderingUtils.resetShaderColor(graphics);
-            RenderSystem.enableBlend();
-            graphics.blit(location, x, y, 0.0F, 0.0F, previewWidth, previewHeight, previewWidth, previewHeight);
+            RenderingUtils.setupAlphaBlend();
+            RenderingUtils.blitAlphaTexture(graphics, location, x, y, previewWidth, previewHeight);
             UIBase.resetShaderColor(graphics);
         }
 
@@ -1756,7 +1755,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         @Override
         public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-            RenderSystem.enableBlend();
+            RenderingUtils.setupAlphaBlend();
 
             int iconWidth = this.getIconRenderWidth();
             int iconHeight = this.getIconRenderHeight();
@@ -1813,7 +1812,8 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
             graphics.pose().pushPose();
             graphics.pose().translate(drawX, drawY, 0.0F);
             graphics.pose().scale(scale, scale, 1.0F);
-            graphics.blit(iconData.texture, 0, 0, 0.0F, 0.0F, iconData.width, iconData.height, iconData.width, iconData.height);
+            RenderingUtils.setupAlphaBlend();
+            RenderingUtils.blitAlphaTexture(graphics, iconData.texture, 0, 0, iconData.width, iconData.height);
             graphics.pose().popPose();
         }
 

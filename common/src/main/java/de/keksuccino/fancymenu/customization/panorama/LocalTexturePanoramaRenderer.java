@@ -162,7 +162,7 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 		this.lastRenderCall = System.currentTimeMillis();
 		this.startTickerThreadIfNeeded();
 		if (this.panoramaImageSuppliers.size() < 6) {
-			RenderSystem.enableBlend();
+			RenderingUtils.setupAlphaBlend();
 			RenderingUtils.resetShaderColor(graphics);
 			graphics.blit(ITexture.MISSING_TEXTURE_LOCATION, 0, 0, 0.0F, 0.0F, ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight(), ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight());
 			RenderingUtils.resetShaderColor(graphics);
@@ -179,7 +179,7 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 		this.startTickerThreadIfNeeded();
 
 		if (this.panoramaImageSuppliers.size() < 6) {
-			RenderSystem.enableBlend();
+			RenderingUtils.setupAlphaBlend();
 			RenderingUtils.resetShaderColor(graphics);
 			graphics.blit(ITexture.MISSING_TEXTURE_LOCATION, x, y, 0.0F, 0.0F, width, height, width, height);
 			RenderingUtils.resetShaderColor(graphics);
@@ -227,7 +227,7 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 				ResourceLocation location = texture.getResourceLocation();
 				if (location != null) {
 					graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
-					RenderSystem.enableBlend();
+					RenderingUtils.setupAlphaBlend();
 					graphics.blit(location, x, y, 0.0F, 0.0F, width, height, width, height);
 					RenderingUtils.resetShaderColor(graphics);
 				}
@@ -346,7 +346,7 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 				ResourceLocation location = texture.getResourceLocation();
 				if (location != null) {
 					graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
-					RenderSystem.enableBlend();
+					RenderingUtils.setupAlphaBlend();
 					graphics.blit(location, 0, 0, 0.0F, 0.0F, screenW, screenH, screenW, screenH);
 				}
 			}
