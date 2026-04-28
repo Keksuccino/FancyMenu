@@ -6,6 +6,7 @@
     "client.IMixinAbstractContainerScreen",
     "client.IMixinAbstractSliderButton",
     "client.IMixinAbstractWidget",
+    "client.IMixinBlendMode",
     "client.IMixinBossHealthOverlay",
     "client.IMixinButton",
     "client.IMixinChatScreen",
@@ -79,6 +80,7 @@
     "client.MixinRealmsNotificationsScreen",
     "client.MixinReceivingLevelScreen",
     "client.MixinRenderSystem",
+    "client.MixinRenderTarget",
     "client.MixinResourceLoadStateTracker",
     "client.MixinScreen",
     "client.MixinSoundEngine",
@@ -103,7 +105,6 @@
   "plugin": "de.keksuccino.fancymenu.mixin.FMMixinPlugin",
   "minVersion": "0.8"
 }
-
 
 
 

@@ -3,10 +3,11 @@ package de.keksuccino.fancymenu.util.rendering;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.shaders.BlendMode;
 import com.mojang.blaze3d.shaders.FogShape;
-import com.mojang.blaze3d.shaders.ProgramManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinBlendMode;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinMinecraft;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPostChain;
 import de.keksuccino.fancymenu.util.MinecraftResourceReloadObserver;
@@ -50,7 +51,9 @@ public class RenderingUtils {
     public static final ResourceLocation FULLY_TRANSPARENT_TEXTURE = new ResourceLocation("fancymenu", "textures/fully_transparent.png");
 
     private static final String ALPHA_TEXTURE_SHADER_NAME_FANCYMENU = "fancymenu_gui_alpha_texture";
-    private static final int GL_LINEAR_FANCYMENU = 9729;
+    private static final BlendMode OPAQUE_BLEND_MODE_FANCYMENU = new BlendMode();
+    private static final int GL_NEAREST_FANCYMENU = GL11.GL_NEAREST;
+    private static final int GL_LINEAR_FANCYMENU = GL11.GL_LINEAR;
     private static final List<RenderingTask> PRE_RENDER_CONTEXTS = new ArrayList<>();
     private static final List<RenderingTask> POST_RENDER_CONTEXTS = new ArrayList<>();
     private static final List<RenderingTask> DEFERRED_SCREEN_RENDERING_TASKS = new ArrayList<>();
@@ -407,13 +410,17 @@ public class RenderingUtils {
         );
     }
 
+    public static void assumeOpaqueShaderBlendMode() {
+        IMixinBlendMode.set_lastApplied_FancyMenu(OPAQUE_BLEND_MODE_FANCYMENU);
+    }
+
     public static void processPostChainRestoringRenderState(@NotNull PostChain postChain, float partial) {
         RenderStateSnapshot renderState = captureRenderState();
         Map<RenderTarget, Integer> originalFilterModes = capturePostChainFilterModes(postChain);
         try {
             // Minecraft 1.20.1 parses post chains before "use_linear_filter" existed.
-            // FancyMenu's GUI shaders rely on the 1.21.x behavior, where the screen target
-            // and all custom targets switch to linear filtering for linear passes.
+            // Mirror the 1.21.x behavior by applying linear filtering to the screen and
+            // temporary targets, then restoring every target to a valid filter afterwards.
             setPostChainFilterMode(postChain, GL_LINEAR_FANCYMENU);
             postChain.process(partial);
         } finally {
@@ -437,7 +444,7 @@ public class RenderingUtils {
 
     private static void rememberFilterMode(@NotNull Map<RenderTarget, Integer> filterModes, RenderTarget target) {
         if (target != null && !filterModes.containsKey(target)) {
-            filterModes.put(target, target.filterMode);
+            filterModes.put(target, normalizeFilterMode(target.filterMode));
         }
     }
 
@@ -456,9 +463,23 @@ public class RenderingUtils {
     }
 
     private static void setFilterMode(RenderTarget target, int filterMode) {
-        if (target != null && target.filterMode != filterMode) {
-            target.setFilterMode(filterMode);
+        if (target != null) {
+            int normalizedFilterMode = normalizeFilterMode(filterMode);
+            if (target.filterMode != normalizedFilterMode) {
+                target.setFilterMode(normalizedFilterMode);
+            }
         }
+    }
+
+    private static int normalizeFilterMode(int filterMode) {
+        if (filterMode == GL_LINEAR_FANCYMENU || filterMode == GL_NEAREST_FANCYMENU) {
+            return filterMode;
+        }
+
+        // Minecraft 1.20.1's MainTarget initializes its GL texture filter directly,
+        // leaving RenderTarget.filterMode at 0. Restoring that value would poison the
+        // main framebuffer texture with an invalid filter enum and make later blits black.
+        return GL_NEAREST_FANCYMENU;
     }
 
     public static void blitRenderTargetToScreenImmediate(@NotNull RenderTarget renderTarget) {
@@ -525,12 +546,24 @@ public class RenderingUtils {
         return RenderStateSnapshot.capture();
     }
 
+    private static void clearCoreShaderProgramCache_FancyMenu() {
+        ShaderInstance activeShader = RenderSystem.getShader();
+        if (activeShader != null) {
+            activeShader.clear();
+            return;
+        }
+
+        ShaderInstance fallbackShader = GameRenderer.getPositionShader();
+        if (fallbackShader != null) {
+            fallbackShader.clear();
+        }
+    }
+
     public static final class RenderStateSnapshot {
 
         private static final int SHADER_TEXTURE_COUNT_FANCYMENU = 12;
 
         private final int framebuffer;
-        private final int currentProgram;
         private final int activeTexture;
         private final int[] viewport = new int[4];
         private final int[] scissorBox = new int[4];
@@ -545,6 +578,7 @@ public class RenderingUtils {
         private final int blendDstRgb;
         private final int blendSrcAlpha;
         private final int blendDstAlpha;
+        private final BlendMode blendMode;
         private final boolean depthTestEnabled;
         private final int depthFunc;
         private final boolean depthMask;
@@ -559,7 +593,6 @@ public class RenderingUtils {
 
         private RenderStateSnapshot() {
             this.framebuffer = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
-            this.currentProgram = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
             this.activeTexture = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
             GL11.glGetIntegerv(GL11.GL_VIEWPORT, this.viewport);
             GL11.glGetIntegerv(GL11.GL_SCISSOR_BOX, this.scissorBox);
@@ -583,6 +616,7 @@ public class RenderingUtils {
             this.blendDstRgb = GL11.glGetInteger(GL14.GL_BLEND_DST_RGB);
             this.blendSrcAlpha = GL11.glGetInteger(GL14.GL_BLEND_SRC_ALPHA);
             this.blendDstAlpha = GL11.glGetInteger(GL14.GL_BLEND_DST_ALPHA);
+            this.blendMode = IMixinBlendMode.get_lastApplied_FancyMenu();
             this.depthTestEnabled = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
             this.depthFunc = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
             this.depthMask = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
@@ -608,6 +642,8 @@ public class RenderingUtils {
         }
 
         public void restore() {
+            clearCoreShaderProgramCache_FancyMenu();
+
             for (int i = 0; i < SHADER_TEXTURE_COUNT_FANCYMENU; i++) {
                 RenderSystem.setShaderTexture(i, this.shaderTextures[i]);
                 RenderSystem.activeTexture(GL13.GL_TEXTURE0 + i);
@@ -616,7 +652,6 @@ public class RenderingUtils {
             RenderSystem.activeTexture(this.activeTexture);
 
             RenderSystem.setShader(() -> this.shader);
-            ProgramManager.glUseProgram(this.currentProgram);
             GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, this.framebuffer);
             GlStateManager._viewport(this.viewport[0], this.viewport[1], this.viewport[2], this.viewport[3]);
 
@@ -633,6 +668,7 @@ public class RenderingUtils {
             }
             RenderSystem.blendEquation(this.blendEquation);
             RenderSystem.blendFuncSeparate(this.blendSrcRgb, this.blendDstRgb, this.blendSrcAlpha, this.blendDstAlpha);
+            IMixinBlendMode.set_lastApplied_FancyMenu(this.blendMode);
 
             if (this.depthTestEnabled) {
                 RenderSystem.enableDepthTest();
