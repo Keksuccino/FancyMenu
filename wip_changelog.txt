@@ -245,6 +245,7 @@ Thank you very much! 🙏
 - Context menu chains now try to avoid overlapping parent menus in the chain
 - The "World Day Time Hour" and "Realtime Hour" placeholders now have a value to control if they should return the hour in 12-hour or 24-hour format
 - All realtime-related placeholders now support a "timezone" value for defining a specific timezone other than the system timezone (#1555)
+- It's possible now to apply the "Vanilla" menu background blur in MC 1.20.1 (mimics modern MC's background blur in 1.20.1)
 
 ### Breaking Changes
 
