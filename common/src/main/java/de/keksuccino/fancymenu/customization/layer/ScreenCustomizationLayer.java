@@ -60,8 +60,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	public static final ResourceLocation MENU_BACKGROUND = new ResourceLocation("textures/gui/menu_background.png");
-	public static final ResourceLocation INWORLD_MENU_BACKGROUND = new ResourceLocation("textures/gui/inworld_menu_background.png");
+	private static final int BACKGROUND_OVERLAY_COLOR_FANCYMENU = 0x40000000;
 	private static final int VANILLA_BACKGROUND_BLUR_RADIUS_FANCYMENU = 5;
 
 	protected String screenIdentifier;
@@ -75,6 +74,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	public List<String> delayAppearanceFirstTime = new ArrayList<>();
 	public List<ScreenCustomizationLayer.ThreadCaller> delayThreads = new ArrayList<>();
 	public boolean backgroundDrawable;
+	private boolean backgroundRenderedThisFrame = false;
 	public boolean forceDisableCustomMenuTitle = false;
 	public float backgroundOpacity = 1.0F;
 	public Map<RequirementContainer, Boolean> cachedLayoutWideLoadingRequirements = new HashMap<>();
@@ -413,6 +413,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		if (!this.shouldCustomize(e.getScreen())) return;
 
+		this.backgroundRenderedThisFrame = false;
+
 		//Re-init screen if layout-wide loading requirements changed
 		for (Map.Entry<RequirementContainer, Boolean> m : this.cachedLayoutWideLoadingRequirements.entrySet()) {
 			if (m.getKey().requirementsMet() != m.getValue()) {
@@ -578,9 +580,10 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	protected void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial, Screen screen) {
 
 		if (!this.shouldCustomize(screen)) return;
+		this.backgroundRenderedThisFrame = true;
 
-        if (!this.layoutBase.menuBackgrounds.isEmpty()) {
-            boolean show = false;
+	    if (!this.layoutBase.menuBackgrounds.isEmpty()) {
+	        boolean show = false;
             for (MenuBackground<?> background : this.layoutBase.menuBackgrounds) {
                 if (background.showBackground.tryGetNonNull()) {
                     show = true;
@@ -639,14 +642,38 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	}
 
+	public boolean shouldRenderBackgroundFromScrollList() {
+		return !this.backgroundRenderedThisFrame && this.hasBackgroundSurfaceCustomizations();
+	}
+
+	public boolean shouldReplaceVanillaScrollListBackground() {
+		return this.hasVisibleMenuBackground() || !this.normalElements.backgroundElements.isEmpty() || this.layoutBase.applyVanillaBackgroundBlur;
+	}
+
+	public boolean shouldSuppressVanillaInWorldBackgroundOverlay() {
+		return this.hasBackgroundSurfaceCustomizations();
+	}
+
+	private boolean hasBackgroundSurfaceCustomizations() {
+		return !this.layoutBase.menuBackgrounds.isEmpty() || !this.normalElements.backgroundElements.isEmpty() || this.layoutBase.applyVanillaBackgroundBlur;
+	}
+
+	private boolean hasVisibleMenuBackground() {
+		for (MenuBackground<?> background : this.layoutBase.menuBackgrounds) {
+			if (background.showBackground.tryGetNonNull()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	protected void _renderBackgroundOverlay(GuiGraphics graphics, int x, int y, int width, int height) {
 		renderBackgroundOverlay(graphics, x, y, width, height);
 	}
 
 	public static void renderBackgroundOverlay(GuiGraphics graphics, int x, int y, int width, int height) {
-		ResourceLocation location = (Minecraft.getInstance().level == null) ? MENU_BACKGROUND : INWORLD_MENU_BACKGROUND;
 		RenderingUtils.setupAlphaBlend();
-		graphics.blit(location, x, y, 0, 0.0F, 0.0F, width, height, 32, 32);
+		graphics.fill(x, y, x + width, y + height, BACKGROUND_OVERLAY_COLOR_FANCYMENU);
 	}
 
 	public static void renderLayoutBackgroundBlur(GuiGraphics graphics, int width, int height, float partial) {
