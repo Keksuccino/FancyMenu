@@ -546,19 +546,6 @@ public class RenderingUtils {
         return RenderStateSnapshot.capture();
     }
 
-    private static void clearCoreShaderProgramCache_FancyMenu() {
-        ShaderInstance activeShader = RenderSystem.getShader();
-        if (activeShader != null) {
-            activeShader.clear();
-            return;
-        }
-
-        ShaderInstance fallbackShader = GameRenderer.getPositionShader();
-        if (fallbackShader != null) {
-            fallbackShader.clear();
-        }
-    }
-
     public static final class RenderStateSnapshot {
 
         private static final int SHADER_TEXTURE_COUNT_FANCYMENU = 12;
@@ -642,8 +629,6 @@ public class RenderingUtils {
         }
 
         public void restore() {
-            clearCoreShaderProgramCache_FancyMenu();
-
             for (int i = 0; i < SHADER_TEXTURE_COUNT_FANCYMENU; i++) {
                 RenderSystem.setShaderTexture(i, this.shaderTextures[i]);
                 RenderSystem.activeTexture(GL13.GL_TEXTURE0 + i);
