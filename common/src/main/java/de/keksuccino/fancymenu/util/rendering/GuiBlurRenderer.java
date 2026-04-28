@@ -19,6 +19,8 @@ public final class GuiBlurRenderer {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String GUI_BOX_BLUR_SHADER_NAME_FANCYMENU = "fancymenu_gui_box_blur";
+    private static final float BLUR_SCISSOR_RADIUS_MULTIPLIER_FANCYMENU = 4.0F;
+    private static final float BLUR_SCISSOR_AA_PADDING_PIXELS_FANCYMENU = 2.0F;
     private static final float SHAPE_TYPE_ROUNDED_RECT = 0.0F;
     private static final float SHAPE_TYPE_SUPERELLIPSE = 1.0F;
     // Keep shader files in the default 'minecraft' namespace so the vanilla resource manager finds them for every loader.
@@ -263,7 +265,6 @@ public final class GuiBlurRenderer {
 
         DrawableColor.FloatColor tint = area.tint.getAsFloats();
         RenderRotationUtil.Rotation2D maskRotation = RenderRotationUtil.getCurrentAdditionalRenderMaskRotation2D();
-        RenderRotationUtil.Rotation2D scissorRotation = RenderRotationUtil.getCurrentAdditionalRenderRotation2D();
         applyUniforms(postChain, scaledX, scaledY, scaledWidth, scaledHeight, blurRadius, scaledRadii, area.shapeType, area.roundness, maskRotation, tint);
 
         graphics.flush();
@@ -277,8 +278,17 @@ public final class GuiBlurRenderer {
             // darkening any translucent GUI content every time a blur area is drawn.
             RenderSystem.disableBlend();
 
-            float margin = Math.max(0.0F, area.blurRadius) * 4.0F;
-            ScissorBounds scissor = resolveScissorBounds(area, margin, scissorRotation);
+            ScissorBounds scissor = resolveScissorBounds(
+                    area,
+                    targetHeight,
+                    guiScale,
+                    scaledX,
+                    scaledY,
+                    scaledWidth,
+                    scaledHeight,
+                    blurRadius,
+                    maskRotation
+            );
             graphics.enableScissor(scissor.minXInt(), scissor.minYInt(), scissor.maxXInt(), scissor.maxYInt());
             scissorEnabled = true;
             processBlurPostChain(postChain, partial);
@@ -419,61 +429,67 @@ public final class GuiBlurRenderer {
         return Math.max(0.1F, roundness);
     }
 
-    private static ScissorBounds resolveScissorBounds(BlurArea area, float margin, RenderRotationUtil.Rotation2D rotation) {
-        float baseMinX = area.x - margin;
-        float baseMinY = area.y - margin;
-        float baseMaxX = area.x + area.width + margin;
-        float baseMaxY = area.y + area.height + margin;
+    private static ScissorBounds resolveScissorBounds(
+            BlurArea area,
+            int targetHeight,
+            float guiScale,
+            float scaledX,
+            float scaledY,
+            float scaledWidth,
+            float scaledHeight,
+            float blurRadius,
+            RenderRotationUtil.Rotation2D maskRotation
+    ) {
+        float padding = Math.max(0.0F, blurRadius) * BLUR_SCISSOR_RADIUS_MULTIPLIER_FANCYMENU + BLUR_SCISSOR_AA_PADDING_PIXELS_FANCYMENU;
+        float baseMinX = scaledX - padding;
+        float baseMaxX = scaledX + scaledWidth + padding;
+        float baseMinY = scaledY - padding;
+        float baseMaxY = scaledY + scaledHeight + padding;
 
-        if (rotation == null || isRotationIdentity(rotation)) {
-            return new ScissorBounds(baseMinX, baseMinY, baseMaxX, baseMaxY);
+        float minXInPixels = baseMinX;
+        float maxXInPixels = baseMaxX;
+        float minYInPixels = baseMinY;
+        float maxYInPixels = baseMaxY;
+
+        RenderRotationUtil.Rotation2D forwardRotation = invertRotation(maskRotation);
+        float halfWidth = scaledWidth * 0.5F;
+        float halfHeight = scaledHeight * 0.5F;
+        float extentX = Math.abs(forwardRotation.m00()) * halfWidth + Math.abs(forwardRotation.m01()) * halfHeight;
+        float extentY = Math.abs(forwardRotation.m10()) * halfWidth + Math.abs(forwardRotation.m11()) * halfHeight;
+        if (Float.isFinite(extentX) && Float.isFinite(extentY)) {
+            float centerX = scaledX + halfWidth;
+            float centerY = scaledY + halfHeight;
+
+            minXInPixels = Math.min(minXInPixels, centerX - extentX - padding);
+            maxXInPixels = Math.max(maxXInPixels, centerX + extentX + padding);
+            minYInPixels = Math.min(minYInPixels, centerY - extentY - padding);
+            maxYInPixels = Math.max(maxYInPixels, centerY + extentY + padding);
         }
 
-        float m00 = rotation.m00();
-        float m01 = rotation.m01();
-        float m10 = rotation.m10();
-        float m11 = rotation.m11();
-        if (!isFinite(m00) || !isFinite(m01) || !isFinite(m10) || !isFinite(m11)) {
-            return new ScissorBounds(baseMinX, baseMinY, baseMaxX, baseMaxY);
+        if (!Float.isFinite(minXInPixels) || !Float.isFinite(maxXInPixels) || !Float.isFinite(minYInPixels) || !Float.isFinite(maxYInPixels)) {
+            return new ScissorBounds(area.x, area.y, area.x + area.width, area.y + area.height);
         }
-
-        float halfWidth = area.width * 0.5F;
-        float halfHeight = area.height * 0.5F;
-        float boundHalfWidth = Math.abs(m00) * halfWidth + Math.abs(m01) * halfHeight;
-        float boundHalfHeight = Math.abs(m10) * halfWidth + Math.abs(m11) * halfHeight;
-        if (!Float.isFinite(boundHalfWidth) || !Float.isFinite(boundHalfHeight)) {
-            return new ScissorBounds(baseMinX, baseMinY, baseMaxX, baseMaxY);
-        }
-
-        float centerX = area.x + halfWidth;
-        float centerY = area.y + halfHeight;
-
-        float rotatedMinX = centerX - boundHalfWidth - margin;
-        float rotatedMaxX = centerX + boundHalfWidth + margin;
-        float rotatedMinY = centerY - boundHalfHeight - margin;
-        float rotatedMaxY = centerY + boundHalfHeight + margin;
 
         return new ScissorBounds(
-                Math.min(baseMinX, rotatedMinX),
-                Math.min(baseMinY, rotatedMinY),
-                Math.max(baseMaxX, rotatedMaxX),
-                Math.max(baseMaxY, rotatedMaxY)
+                minXInPixels / guiScale,
+                (targetHeight - maxYInPixels) / guiScale,
+                maxXInPixels / guiScale,
+                (targetHeight - minYInPixels) / guiScale
         );
     }
 
-    private static boolean isRotationIdentity(RenderRotationUtil.Rotation2D rotation) {
-        return nearlyEqual(rotation.m00(), 1.0F)
-                && nearlyEqual(rotation.m11(), 1.0F)
-                && nearlyEqual(rotation.m01(), 0.0F)
-                && nearlyEqual(rotation.m10(), 0.0F);
-    }
-
-    private static boolean nearlyEqual(float a, float b) {
-        return Math.abs(a - b) <= 1.0E-4F;
-    }
-
-    private static boolean isFinite(float value) {
-        return Float.isFinite(value);
+    private static RenderRotationUtil.Rotation2D invertRotation(RenderRotationUtil.Rotation2D rotation) {
+        float det = rotation.m00() * rotation.m11() - rotation.m01() * rotation.m10();
+        if (!Float.isFinite(det) || Math.abs(det) < 1.0E-6F) {
+            return RenderRotationUtil.Rotation2D.identity();
+        }
+        float invDet = 1.0F / det;
+        return new RenderRotationUtil.Rotation2D(
+                rotation.m11() * invDet,
+                -rotation.m01() * invDet,
+                -rotation.m10() * invDet,
+                rotation.m00() * invDet
+        );
     }
 
     private record ScissorBounds(float minX, float minY, float maxX, float maxY) {
