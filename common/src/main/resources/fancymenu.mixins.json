@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_17",
   "client": [
     "client.IMixinAbstractContainerScreen",
+    "client.IMixinAbstractSelectionList",
     "client.IMixinAbstractSliderButton",
     "client.IMixinAbstractWidget",
     "client.IMixinBlendMode",
@@ -54,6 +55,7 @@
     "client.MixinDisconnectedScreen",
     "client.MixinGameNarrator",
     "client.MixinGameRenderer",
+    "client.MixinGenericDirtMessageScreen",
     "client.MixinGLFW",
     "client.MixinGuiGraphics",
     "client.MixinImageButton",
