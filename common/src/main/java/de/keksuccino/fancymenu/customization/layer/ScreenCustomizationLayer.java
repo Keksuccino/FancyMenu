@@ -650,6 +650,13 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		return this.hasVisibleMenuBackground() || !this.normalElements.backgroundElements.isEmpty() || this.layoutBase.applyVanillaBackgroundBlur;
 	}
 
+	public boolean shouldReplaceVanillaScreenBackground() {
+		if (!this.layoutBase.menuBackgrounds.isEmpty()) {
+			return true;
+		}
+		return (Minecraft.getInstance().level != null) && this.shouldSuppressVanillaInWorldBackgroundOverlay();
+	}
+
 	public boolean shouldSuppressVanillaInWorldBackgroundOverlay() {
 		return this.hasBackgroundSurfaceCustomizations();
 	}

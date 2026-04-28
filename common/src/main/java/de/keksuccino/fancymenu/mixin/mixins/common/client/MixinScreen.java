@@ -114,21 +114,13 @@ public abstract class MixinScreen implements CustomizableScreen {
             return;
         }
         ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(instance);
-        if ((layer != null) && ScreenCustomization.isCustomizationEnabledForScreen(instance) && (this.shouldReplaceVanillaBackground_FancyMenu(layer))) {
+        if ((layer != null) && ScreenCustomization.isCustomizationEnabledForScreen(instance) && layer.shouldReplaceVanillaScreenBackground()) {
             RenderSystem.enableBlend();
             graphics.fill(0, 0, instance.width, instance.height, 0);
             RenderingUtils.resetShaderColor(graphics);
             EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(instance, graphics, this.cachedMouseX_FancyMenu, this.cachedMouseY_FancyMenu, this.cachedPartial_FancyMenu));
             info.cancel();
         }
-    }
-
-    @Unique
-    private boolean shouldReplaceVanillaBackground_FancyMenu(@NotNull ScreenCustomizationLayer layer) {
-        if (!layer.layoutBase.menuBackgrounds.isEmpty()) {
-            return true;
-        }
-        return (Minecraft.getInstance().level != null) && layer.shouldSuppressVanillaInWorldBackgroundOverlay();
     }
 
     @Inject(method = "renderBackground", at = @At("RETURN"))
