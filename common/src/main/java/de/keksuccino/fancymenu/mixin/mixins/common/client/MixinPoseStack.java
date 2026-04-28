@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.RenderScaleUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderRotationUtil;
@@ -25,6 +26,9 @@ public class MixinPoseStack {
 
     @Inject(method = "pushPose", at = @At("TAIL"))
     private void after_pushPose_FancyMenu(CallbackInfo info) {
+        if (this.isRenderSystemModelViewStack_FancyMenu()) {
+            return;
+        }
         ensureRenderScaleStackInitialized_FancyMenu();
         this.renderScaleStack_FancyMenu.addLast(this.renderScaleStack_FancyMenu.getLast());
         ensureRenderTranslationStackInitialized_FancyMenu();
@@ -44,6 +48,9 @@ public class MixinPoseStack {
 
     @Inject(method = "popPose", at = @At("TAIL"))
     private void after_popPose_FancyMenu(CallbackInfo info) {
+        if (this.isRenderSystemModelViewStack_FancyMenu()) {
+            return;
+        }
         ensureRenderScaleStackInitialized_FancyMenu();
         if (this.renderScaleStack_FancyMenu.size() > 1) {
             this.renderScaleStack_FancyMenu.removeLast();
@@ -63,6 +70,9 @@ public class MixinPoseStack {
 
     @Inject(method = "scale", at = @At("TAIL"))
     private void after_scale_FancyMenu(float x, float y, float z, CallbackInfo info) {
+        if (this.isRenderSystemModelViewStack_FancyMenu()) {
+            return;
+        }
         ensureRenderScaleStackInitialized_FancyMenu();
         float currentScale = this.renderScaleStack_FancyMenu.removeLast();
         float scaleFactor = RenderScaleUtil.getAbsoluteScaleFactor_FancyMenu(x, y, z);
@@ -72,6 +82,9 @@ public class MixinPoseStack {
 
     @Inject(method = "mulPose", at = @At("TAIL"))
     private void after_mulPose_FancyMenu(Quaternionf quaternion, CallbackInfo info) {
+        if (this.isRenderSystemModelViewStack_FancyMenu()) {
+            return;
+        }
         ensureRenderRotationStackInitialized_FancyMenu();
         RenderRotationUtil.RotationState currentRotation = this.renderRotationStack_FancyMenu.removeLast();
         currentRotation.mul(quaternion);
@@ -81,6 +94,9 @@ public class MixinPoseStack {
 
     @Inject(method = "translate(FFF)V", at = @At("TAIL"))
     private void after_translate_FancyMenu(float x, float y, float z, CallbackInfo info) {
+        if (this.isRenderSystemModelViewStack_FancyMenu()) {
+            return;
+        }
         ensureRenderTranslationStackInitialized_FancyMenu();
         RenderTranslationUtil.TranslationState currentTranslation = this.renderTranslationStack_FancyMenu.removeLast();
         float scaleFactor = RenderScaleUtil.getCurrentAdditionalRenderScale();
@@ -96,6 +112,11 @@ public class MixinPoseStack {
         if (this.renderScaleStack_FancyMenu.isEmpty()) {
             this.renderScaleStack_FancyMenu.addLast(1.0F);
         }
+    }
+
+    @Unique
+    private boolean isRenderSystemModelViewStack_FancyMenu() {
+        return RenderSystem.getModelViewStack() == (PoseStack)(Object)this;
     }
 
     @Unique

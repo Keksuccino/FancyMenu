@@ -33,6 +33,7 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSelectio
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.ScreenTitleUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -61,6 +62,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	public static final ResourceLocation MENU_BACKGROUND = new ResourceLocation("textures/gui/menu_background.png");
 	public static final ResourceLocation INWORLD_MENU_BACKGROUND = new ResourceLocation("textures/gui/inworld_menu_background.png");
+	private static final int VANILLA_BACKGROUND_BLUR_RADIUS_FANCYMENU = 5;
 
 	protected String screenIdentifier;
 	public LayoutBase layoutBase = new LayoutBase();
@@ -614,6 +616,10 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		});
 
+		if (this.layoutBase.applyVanillaBackgroundBlur) {
+			renderLayoutBackgroundBlur(graphics, screen.width, screen.height, partial);
+		}
+
 		if (!this.layoutBase.menuBackgrounds.isEmpty()) {
 
 			if (this.layoutBase.showScreenBackgroundOverlayOnCustomBackground) {
@@ -641,6 +647,22 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		ResourceLocation location = (Minecraft.getInstance().level == null) ? MENU_BACKGROUND : INWORLD_MENU_BACKGROUND;
 		RenderingUtils.setupAlphaBlend();
 		graphics.blit(location, x, y, 0, 0.0F, 0.0F, width, height, 32, 32);
+	}
+
+	public static void renderLayoutBackgroundBlur(GuiGraphics graphics, int width, int height, float partial) {
+		if (width <= 0 || height <= 0 || RenderingUtils.isVanillaMenuBlurringBlocked()) {
+			return;
+		}
+		int radius = RenderingUtils.shouldOverrideBackgroundBlurRadius()
+				? RenderingUtils.getOverrideBackgroundBlurRadius()
+				: VANILLA_BACKGROUND_BLUR_RADIUS_FANCYMENU;
+		if (radius < 1) {
+			return;
+		}
+		double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+		float blurRadius = guiScale > 0.0D ? (float)radius / (float)guiScale : (float)radius;
+		GuiBlurRenderer.renderBlurArea(graphics, 0.0F, 0.0F, width, height, blurRadius, 0.0F, DrawableColor.FULLY_TRANSPARENT, partial);
+		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 	}
 
 	@Nullable

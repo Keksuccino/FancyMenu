@@ -359,6 +359,10 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		});
 
+		if (this.layout.applyVanillaBackgroundBlur) {
+			ScreenCustomizationLayer.renderLayoutBackgroundBlur(graphics, this.width, this.height, partial);
+		}
+
 		if (!this.layout.menuBackgrounds.isEmpty()) {
 
 			if (this.layout.showScreenBackgroundOverlayOnCustomBackground) {

@@ -250,7 +250,9 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 		RenderSystem.setProjectionMatrix($$5, VertexSorting.DISTANCE_TO_ORIGIN);
 		PoseStack modelViewStack = RenderSystem.getModelViewStack();
 		modelViewStack.pushPose();
+		modelViewStack.setIdentity();
 		modelViewStack.mulPose(Axis.XP.rotationDegrees(180.0F));
+		RenderSystem.applyModelViewMatrix();
 		RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
 		RenderSystem.enableBlend();
 		RenderSystem.disableCull();
@@ -327,6 +329,7 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 			}
 
 			modelViewStack.popPose();
+			RenderSystem.applyModelViewMatrix();
 			RenderSystem.colorMask(true, true, true, false);
 		}
 
@@ -368,7 +371,9 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 		PoseStack modelViewStack = RenderSystem.getModelViewStack();
 		modelViewStack.pushPose();
 		try {
+			modelViewStack.setIdentity();
 			modelViewStack.mulPose(Axis.XP.rotationDegrees(180.0F));
+			RenderSystem.applyModelViewMatrix();
 			RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
 			RenderSystem.enableBlend();
 			RenderSystem.disableCull();
@@ -444,6 +449,7 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 				}
 
 				modelViewStack.popPose();
+				RenderSystem.applyModelViewMatrix();
 				RenderSystem.colorMask(true, true, true, false);
 			}
 		} finally {
