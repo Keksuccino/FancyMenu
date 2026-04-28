@@ -26,12 +26,15 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.lwjgl.system.MemoryStack;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import java.awt.*;
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -503,6 +506,21 @@ public class RenderingUtils {
         }
     }
 
+    public static void clearRenderTargetIgnoringScissor(RenderTarget renderTarget) {
+        if (renderTarget == null) {
+            return;
+        }
+        RenderStateSnapshot renderState = captureRenderState();
+        try {
+            RenderSystem.disableScissor();
+            GlStateManager._colorMask(true, true, true, true);
+            RenderSystem.depthMask(true);
+            renderTarget.clear(Minecraft.ON_OSX);
+        } finally {
+            renderState.restore();
+        }
+    }
+
     public static RenderStateSnapshot captureRenderState() {
         return RenderStateSnapshot.capture();
     }
@@ -518,6 +536,8 @@ public class RenderingUtils {
         private final int[] scissorBox = new int[4];
         private final int[] textureBindings = new int[SHADER_TEXTURE_COUNT_FANCYMENU];
         private final int[] shaderTextures = new int[SHADER_TEXTURE_COUNT_FANCYMENU];
+        private final boolean[] colorMask = new boolean[4];
+        private final float[] clearColor = new float[4];
         private final boolean scissorEnabled;
         private final boolean blendEnabled;
         private final int blendEquation;
@@ -528,6 +548,8 @@ public class RenderingUtils {
         private final boolean depthTestEnabled;
         private final int depthFunc;
         private final boolean depthMask;
+        private final float clearDepth;
+        private final boolean cullEnabled;
         private final float[] shaderColor = new float[4];
         private final float shaderFogStart;
         private final float shaderFogEnd;
@@ -541,6 +563,19 @@ public class RenderingUtils {
             this.activeTexture = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
             GL11.glGetIntegerv(GL11.GL_VIEWPORT, this.viewport);
             GL11.glGetIntegerv(GL11.GL_SCISSOR_BOX, this.scissorBox);
+            try (MemoryStack stack = MemoryStack.stackPush()) {
+                ByteBuffer colorMaskBuffer = stack.malloc(4);
+                GL11.glGetBooleanv(GL11.GL_COLOR_WRITEMASK, colorMaskBuffer);
+                for (int i = 0; i < this.colorMask.length; i++) {
+                    this.colorMask[i] = colorMaskBuffer.get(i) != 0;
+                }
+
+                FloatBuffer clearColorBuffer = stack.mallocFloat(4);
+                GL11.glGetFloatv(GL11.GL_COLOR_CLEAR_VALUE, clearColorBuffer);
+                for (int i = 0; i < this.clearColor.length; i++) {
+                    this.clearColor[i] = clearColorBuffer.get(i);
+                }
+            }
             this.scissorEnabled = GL11.glIsEnabled(GL11.GL_SCISSOR_TEST);
             this.blendEnabled = GL11.glIsEnabled(GL11.GL_BLEND);
             this.blendEquation = GL11.glGetInteger(GL20.GL_BLEND_EQUATION_RGB);
@@ -551,6 +586,8 @@ public class RenderingUtils {
             this.depthTestEnabled = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
             this.depthFunc = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
             this.depthMask = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
+            this.clearDepth = GL11.glGetFloat(GL11.GL_DEPTH_CLEAR_VALUE);
+            this.cullEnabled = GL11.glIsEnabled(GL11.GL_CULL_FACE);
             System.arraycopy(RenderSystem.getShaderColor(), 0, this.shaderColor, 0, this.shaderColor.length);
             this.shaderFogStart = RenderSystem.getShaderFogStart();
             this.shaderFogEnd = RenderSystem.getShaderFogEnd();
@@ -604,12 +641,19 @@ public class RenderingUtils {
             }
             RenderSystem.depthFunc(this.depthFunc);
             RenderSystem.depthMask(this.depthMask);
+            if (this.cullEnabled) {
+                RenderSystem.enableCull();
+            } else {
+                RenderSystem.disableCull();
+            }
             RenderSystem.setShaderColor(this.shaderColor[0], this.shaderColor[1], this.shaderColor[2], this.shaderColor[3]);
             RenderSystem.setShaderFogStart(this.shaderFogStart);
             RenderSystem.setShaderFogEnd(this.shaderFogEnd);
             RenderSystem.setShaderFogColor(this.shaderFogColor[0], this.shaderFogColor[1], this.shaderFogColor[2], this.shaderFogColor[3]);
             RenderSystem.setShaderFogShape(this.shaderFogShape);
-            GlStateManager._colorMask(true, true, true, true);
+            GlStateManager._clearColor(this.clearColor[0], this.clearColor[1], this.clearColor[2], this.clearColor[3]);
+            GlStateManager._clearDepth(this.clearDepth);
+            GlStateManager._colorMask(this.colorMask[0], this.colorMask[1], this.colorMask[2], this.colorMask[3]);
         }
 
     }

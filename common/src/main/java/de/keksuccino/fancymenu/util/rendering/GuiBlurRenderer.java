@@ -267,20 +267,22 @@ public final class GuiBlurRenderer {
         applyUniforms(postChain, scaledX, scaledY, scaledWidth, scaledHeight, blurRadius, scaledRadii, area.shapeType, area.roundness, maskRotation, tint);
 
         graphics.flush();
+        RenderTarget finalTarget = getFinalTarget(postChain);
         RenderingUtils.RenderStateSnapshot renderState = RenderingUtils.captureRenderState();
         boolean scissorEnabled = false;
         try {
+            RenderingUtils.clearRenderTargetIgnoringScissor(finalTarget);
+
             // Run the post chain with blending off; otherwise each full-screen pass would multiply existing alpha,
             // darkening any translucent GUI content every time a blur area is drawn.
             RenderSystem.disableBlend();
 
-            float margin = blurRadius * 4.0F;
+            float margin = Math.max(0.0F, area.blurRadius) * 4.0F;
             ScissorBounds scissor = resolveScissorBounds(area, margin, scissorRotation);
             graphics.enableScissor(scissor.minXInt(), scissor.minYInt(), scissor.maxXInt(), scissor.maxYInt());
             scissorEnabled = true;
             processBlurPostChain(postChain, partial);
 
-            RenderTarget finalTarget = getFinalTarget(postChain);
             minecraft.getMainRenderTarget().bindWrite(false);
             RenderingUtils.setupAlphaBlend();
             if (finalTarget != null) {
