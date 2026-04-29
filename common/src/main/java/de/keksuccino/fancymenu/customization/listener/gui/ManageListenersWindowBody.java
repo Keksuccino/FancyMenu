@@ -26,7 +26,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
-import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -230,6 +229,10 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        ListenerInstanceCell editingCell = this.getEditingInstanceCell();
+        if (editingCell != null && editingCell.keyPressed(keyCode, scanCode, modifiers)) {
+            return true;
+        }
         if (super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
@@ -238,6 +241,34 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        ListenerInstanceCell editingCell = this.getEditingInstanceCell();
+        if (editingCell != null && editingCell.charTyped(codePoint, modifiers)) {
+            return true;
+        }
+        return super.charTyped(codePoint, modifiers);
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        ListenerInstanceCell editingCell = this.getEditingInstanceCell();
+        if ((button == 0) && (editingCell != null) && !editingCell.isMouseOverEditBox(mouseX, mouseY)) {
+            editingCell.exitEditMode(true);
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Nullable
+    protected ListenerInstanceCell getEditingInstanceCell() {
+        for (RenderCell cell : this.allCells) {
+            if (cell instanceof ListenerInstanceCell instanceCell && instanceCell.editMode && instanceCell.editBox != null) {
+                return instanceCell;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -589,11 +620,6 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
                 this.editBox.setWidth(Math.min(this.getWidth(), 200));
                 this.editBox.setHeight((int)(UIBase.getUITextHeightNormal() + 1));
                 this.editBox.render(graphics, mouseX, mouseY, partial);
-                
-                // Check if user clicked outside or pressed enter
-                if (MouseInput.isLeftMouseDown() && !this.editBox.isHovered()) {
-                    this.exitEditMode(true);
-                }
             } else {
                 // Render label
                 RenderingUtils.resetShaderColor(graphics);
@@ -669,6 +695,10 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
             }
             return super.charTyped(codePoint, modifiers);
         }
+
+        protected boolean isMouseOverEditBox(double mouseX, double mouseY) {
+            return this.editBox != null && this.editBox.isMouseOver(mouseX, mouseY);
+        }
         
         protected void enterEditMode() {
             if (this.editMode) return; // Already in edit mode
@@ -695,13 +725,13 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
                 this.editBox.setValue("");
             }
             
-            this.editBox.setFocused(true);
             this.editBox.setCursorPosition(this.editBox.getValue().length());
             this.editBox.setHighlightPos(0);
             
             // Add to children for input handling
             this.children.clear();
             this.children.add(this.editBox);
+            ManageListenersWindowBody.this.focusTarget(this, this.editBox);
         }
         
         protected void exitEditMode(boolean save) {
@@ -721,6 +751,10 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
                 }
             }
             
+            this.setFocused(null);
+            if (ManageListenersWindowBody.this.getFocused() == this) {
+                ManageListenersWindowBody.this.setFocused(null);
+            }
             this.editMode = false;
             this.editBox = null;
             this.children.clear();

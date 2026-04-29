@@ -268,13 +268,32 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             }
 
             if (highlightPos != cursorPos) {
-                float highlightWidth = UIBase.getUITextWidth(text.substring(0, highlightPos));
+                float highlightWidth = this.getRenderedTextWidth(text, highlightPos, access.getDisplayPosFancyMenu(), renderWithUiBase);
                 int highlightEndX = (int) (textX + highlightWidth) - 1;
                 access.invokeRenderHighlightFancyMenu(graphics, (int) finalTextXAfterCursor, (int) (textY - 1), highlightEndX, (int) (textY + 1 + textHeight));
             }
 
         }
 
+    }
+
+    protected float getRenderedTextWidth(@NotNull String visibleText, int endIndex, int displayPos, boolean renderWithUiBase) {
+        endIndex = Mth.clamp(endIndex, 0, visibleText.length());
+        String text = visibleText.substring(0, endIndex);
+        if (text.isEmpty()) {
+            return 0.0F;
+        }
+        if (this.characterRenderFormatter == null) {
+            return renderWithUiBase ? UIBase.getUITextWidth(text) : this.font.width(text);
+        }
+
+        MutableComponent component = Component.literal("");
+        int characterRenderIndex = displayPos;
+        for (char c : text.toCharArray()) {
+            component.append(this.characterRenderFormatter.formatComponent(this, Component.literal(String.valueOf(c)), characterRenderIndex, c, visibleText, this.getValue()));
+            characterRenderIndex++;
+        }
+        return renderWithUiBase ? UIBase.getUITextWidthNormal(component) : this.font.width(component);
     }
 
     private void renderFancyHighlight(@NotNull GuiGraphics graphics, int minX, int minY, int maxX, int maxY, int textColor) {

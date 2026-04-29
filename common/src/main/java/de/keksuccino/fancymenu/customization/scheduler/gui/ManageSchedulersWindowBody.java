@@ -27,7 +27,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
-import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -283,6 +282,10 @@ public class ManageSchedulersWindowBody extends PiPCellWindowBody {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        SchedulerInstanceCell editingCell = this.getEditingInstanceCell();
+        if (editingCell != null && editingCell.keyPressed(keyCode, scanCode, modifiers)) {
+            return true;
+        }
         if (super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
@@ -291,6 +294,34 @@ public class ManageSchedulersWindowBody extends PiPCellWindowBody {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        SchedulerInstanceCell editingCell = this.getEditingInstanceCell();
+        if (editingCell != null && editingCell.charTyped(codePoint, modifiers)) {
+            return true;
+        }
+        return super.charTyped(codePoint, modifiers);
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        SchedulerInstanceCell editingCell = this.getEditingInstanceCell();
+        if ((button == 0) && (editingCell != null) && !editingCell.isMouseOverEditBox(mouseX, mouseY)) {
+            editingCell.exitEditMode(true);
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Nullable
+    protected SchedulerInstanceCell getEditingInstanceCell() {
+        for (RenderCell cell : this.allCells) {
+            if (cell instanceof SchedulerInstanceCell instanceCell && instanceCell.editMode && instanceCell.editBox != null) {
+                return instanceCell;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -638,10 +669,6 @@ public class ManageSchedulersWindowBody extends PiPCellWindowBody {
                 this.editBox.setWidth(Math.min(this.getWidth(), 200));
                 this.editBox.setHeight((int)(UIBase.getUITextHeightNormal() + 1));
                 this.editBox.render(graphics, mouseX, mouseY, partial);
-
-                if (MouseInput.isLeftMouseDown() && !this.editBox.isHovered()) {
-                    this.exitEditMode(true);
-                }
             } else {
                 RenderingUtils.resetShaderColor(graphics);
                 UIBase.renderText(graphics, this.labelComponent, this.getX(), this.getY() + TOP_DOWN_CELL_BORDER);
@@ -715,6 +742,10 @@ public class ManageSchedulersWindowBody extends PiPCellWindowBody {
             return super.charTyped(codePoint, modifiers);
         }
 
+        protected boolean isMouseOverEditBox(double mouseX, double mouseY) {
+            return this.editBox != null && this.editBox.isMouseOver(mouseX, mouseY);
+        }
+
         protected void enterEditMode() {
             if (this.editMode) return;
 
@@ -732,12 +763,12 @@ public class ManageSchedulersWindowBody extends PiPCellWindowBody {
 
             this.editBox.setValue(this.instance.getIdentifier());
 
-            this.editBox.setFocused(true);
             this.editBox.setCursorPosition(this.editBox.getValue().length());
             this.editBox.setHighlightPos(0);
 
             this.children.clear();
             this.children.add(this.editBox);
+            ManageSchedulersWindowBody.this.focusTarget(this, this.editBox);
         }
 
         protected void exitEditMode(boolean save) {
@@ -765,6 +796,10 @@ public class ManageSchedulersWindowBody extends PiPCellWindowBody {
                 }
             }
 
+            this.setFocused(null);
+            if (ManageSchedulersWindowBody.this.getFocused() == this) {
+                ManageSchedulersWindowBody.this.setFocused(null);
+            }
             this.editMode = false;
             this.editBox = null;
             this.children.clear();
