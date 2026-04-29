@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class MarkdownTextFragment implements Widget, GuiEventListener {
+public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     protected static final int BULLET_LIST_SPACE_AFTER_INDENT = 5;
 
@@ -655,12 +655,10 @@ public class MarkdownTextFragment implements Widget, GuiEventListener {
         return false;
     }
 
-    @Override
-    public void setFocused(boolean var1) {
+        public void setFocused(boolean var1) {
     }
 
-    @Override
-    public boolean isFocused() {
+        public boolean isFocused() {
         return false;
     }
     

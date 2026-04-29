@@ -4,25 +4,31 @@ import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.realmsclient.gui.screens.RealmsNotificationsScreen;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRenderer;
-import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.*;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.BrandingRenderer;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.MinecraftLogoRenderer;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.MinecraftSplashRenderer;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.RendererWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.*;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.PlainTextButton;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.renderer.PanoramaRenderer;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
@@ -36,16 +42,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(TitleScreen.class)
 public abstract class MixinTitleScreen extends Screen {
 
-    @Shadow @Final private static Component COPYRIGHT_TEXT;
+    @Shadow @Final public static Component COPYRIGHT_TEXT;
+    @Shadow @Final private static ResourceLocation MINECRAFT_LOGO;
+    @Shadow @Final private static ResourceLocation MINECRAFT_EDITION;
+    @Shadow @Nullable private RealmsNotificationsScreen realmsNotificationsScreen;
+    @Shadow @Nullable private String splash;
     @Shadow public boolean fading;
-    @Shadow private @Nullable RealmsNotificationsScreen realmsNotificationsScreen;
 
     @Unique private int cached_mouseX_FancyMenu = -1;
     @Unique private int cached_mouseY_FancyMenu = -1;
     @Unique private float cached_partial_FancyMenu = -1f;
-    @Unique @Nullable private GuiGraphics cached_graphics_FancyMenu;
 
-    //unused dummy constructor
     @SuppressWarnings("all")
     private MixinTitleScreen() {
         super(null);
@@ -53,21 +60,15 @@ public abstract class MixinTitleScreen extends Screen {
 
     @Inject(method = "init", at = @At("RETURN"))
     private void after_init_FancyMenu(CallbackInfo info) {
-
-        // Give the Copyright button and identifier
         this.children().forEach(guiEventListener -> {
-            if (guiEventListener instanceof PlainTextButton b) {
-                if (b.getMessage() == COPYRIGHT_TEXT) ((UniqueWidget)b).setWidgetIdentifierFancyMenu("title_screen_copyright_button");
+            if (guiEventListener instanceof PlainTextButton button && button.getMessage() == COPYRIGHT_TEXT) {
+                ((UniqueWidget)button).setWidgetIdentifierFancyMenu("title_screen_copyright_button");
             }
         });
 
-        // Add widgets for all Title screen elements to make them editable
-
         MinecraftLogoRenderer logo = MinecraftLogoRenderer.DEFAULT_INSTANCE;
-        this.addRenderableWidget(new RendererWidget((this.width / 2) - (logo.getWidth() / 2), 30, logo.getWidth(), logo.getHeight(),
-                        (graphics, mouseX, mouseY, partial, x, y, width, height, renderer) -> {
-                            logo.renderLogoAtPosition(graphics, x, y, renderer.getAlpha());
-                        }))
+        this.addRenderableWidget(new RendererWidget((this.width / 2) - (logo.getTotalWidth() / 2), 30, logo.getTotalWidth(), logo.getTotalHeight(),
+                        (graphics, mouseX, mouseY, partial, x, y, width, height, renderer) -> logo.render(graphics, x, y, renderer.getAlpha())))
                 .setWidgetIdentifierFancyMenu("minecraft_logo_widget")
                 .setMessage(Component.translatable("fancymenu.widgetified_screens.title_screen.logo"));
 
@@ -80,20 +81,8 @@ public abstract class MixinTitleScreen extends Screen {
                 .setWidgetIdentifierFancyMenu("minecraft_splash_widget")
                 .setMessage(Component.translatable("fancymenu.widgetified_screens.title_screen.splash"));
 
-        if (this.realmsNotificationsScreen != null) {
-            RealmsNotificationRenderer notifications = new RealmsNotificationRenderer(this.realmsNotificationsScreen, this.width, this.height);
-            int totalWidth = notifications.getTotalWidth();
-            if (totalWidth == 0) totalWidth = 50;
-            this.addRenderableWidget(new RendererWidget(notifications.getDefaultPositionX(), notifications.getDefaultPositionY(), totalWidth, notifications.getTotalHeight(),
-                            (graphics, mouseX, mouseY, partial, x, y, width, height, renderer) -> {
-                                notifications.renderIcons(graphics, x, y, DrawableColor.WHITE.getColorIntWithAlpha(renderer.getAlpha()));
-                            }))
-                    .setWidgetIdentifierFancyMenu("minecraft_realms_notification_icons_widget")
-                    .setMessage(Component.translatable("fancymenu.widgetified_screens.title_screen.realmsnotification"));
-        }
-
         BrandingRenderer branding = new BrandingRenderer(this.height);
-        this.addRenderableWidget(new RendererWidget(branding.getDefaultPositionX(), branding.getDefaultPositionY() + 1, branding.getTotalWidth(), branding.getTotalHeight(),
+        this.addRenderableWidget(new RendererWidget(branding.getDefaultPositionX(), branding.getDefaultPositionY(), branding.getTotalWidth(), branding.getTotalHeight(),
                         (graphics, mouseX, mouseY, partial, x, y, width, height, renderer) -> {
                             branding.setOpacity(renderer.getAlpha());
                             branding.render(graphics, x, y);
@@ -101,15 +90,14 @@ public abstract class MixinTitleScreen extends Screen {
                 .setWidgetIdentifierFancyMenu("minecraft_branding_widget")
                 .setMessage(Component.translatable("fancymenu.widgetified_screens.title_screen.branding"));
 
+        this.realmsNotificationsScreen = null;
     }
 
     @Inject(method = "render", at = @At("HEAD"))
-    private void before_render_FancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
+    private void before_render_FancyMenu(PoseStack poseStack, int mouseX, int mouseY, float partial, CallbackInfo info) {
         this.cached_mouseX_FancyMenu = mouseX;
         this.cached_mouseY_FancyMenu = mouseY;
         this.cached_partial_FancyMenu = partial;
-        this.cached_graphics_FancyMenu = graphics;
-        //Disable fading if customizations enabled, so FancyMenu can properly handle widget alpha
         if (ScreenCustomization.isCustomizationEnabledForScreen(this)) {
             this.fading = false;
         }
@@ -119,25 +107,15 @@ public abstract class MixinTitleScreen extends Screen {
      * @reason Manually fire FancyMenu's {@link RenderedScreenBackgroundEvent} in {@link TitleScreen}, because normal event doesn't work correctly here.
      */
     @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/PanoramaRenderer;render(FF)V"))
-    private void wrap_renderPanorama_FancyMenu(PanoramaRenderer instance, float partialTick, float alpha, Operation<Void> original) {
-        GuiGraphics graphics = this.cached_graphics_FancyMenu;
-        if (graphics == null) {
-            original.call(instance, partialTick, alpha);
-            return;
-        }
-
+    private void wrap_renderPanorama_FancyMenu(PanoramaRenderer instance, float deltaT, float alpha, Operation<Void> original) {
+        GuiGraphics graphics = GuiGraphics.currentGraphics();
         ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(this);
-        if ((layer != null) && ScreenCustomization.isCustomizationEnabledForScreen(this)) {
-            if (!layer.layoutBase.menuBackgrounds.isEmpty()) {
-                RenderSystem.enableBlend();
-                //Render a black background before the custom background gets rendered
-                graphics.fill(0, 0, this.width, this.height, 0);
-                RenderingUtils.resetShaderColor(graphics);
-            } else {
-                this.renderCustomOrVanillaPanorama_FancyMenu(graphics, partialTick, alpha, instance, original);
-            }
+        if ((layer != null) && ScreenCustomization.isCustomizationEnabledForScreen(this) && !layer.layoutBase.menuBackgrounds.isEmpty()) {
+            RenderSystem.enableBlend();
+            graphics.fill(0, 0, this.width, this.height, 0);
+            RenderingUtils.resetShaderColor(graphics);
         } else {
-            this.renderCustomOrVanillaPanorama_FancyMenu(graphics, partialTick, alpha, instance, original);
+            this.renderCustomOrVanillaPanorama_FancyMenu(graphics, deltaT, alpha, instance, original);
         }
         EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, graphics, this.cached_mouseX_FancyMenu, this.cached_mouseY_FancyMenu, this.cached_partial_FancyMenu));
     }
@@ -155,19 +133,34 @@ public abstract class MixinTitleScreen extends Screen {
         original.call(instance, partialTick, alpha);
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/realmsclient/gui/screens/RealmsNotificationsScreen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
-    private boolean cancel_VanillaRealmsNotificationRendering_FancyMenu(RealmsNotificationsScreen instance, GuiGraphics $$0, int $$1, int $$2, float $$3) {
+    /**
+     * @reason Cancel panorama overlay rendering when a custom background is active.
+     */
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/TitleScreen;blit(Lcom/mojang/blaze3d/vertex/PoseStack;IIIIFFIIII)V"))
+    private boolean wrap_blit_in_render_FancyMenu(PoseStack pose, int i1, int i2, int i3, int i4, float v5, float v6, int i7, int i8, int i9, int textureHeight) {
+        if (textureHeight == 128) {
+            ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(this);
+            if (GlobalCustomizationHandler.getCustomBackgroundPanorama() != null) return false;
+            if ((layer != null) && ScreenCustomization.isCustomizationEnabledForScreen(this) && !layer.layoutBase.menuBackgrounds.isEmpty()) return false;
+        }
+        return true;
+    }
+
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/realmsclient/gui/screens/RealmsNotificationsScreen;render(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V"))
+    private boolean cancel_VanillaRealmsNotificationRendering_FancyMenu(RealmsNotificationsScreen instance, PoseStack pose, int mouseX, int mouseY, float partial) {
         return false;
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/LogoRenderer;renderLogo(Lnet/minecraft/client/gui/GuiGraphics;IF)V"))
-    private boolean cancel_VanillaLogoRendering_FancyMenu(LogoRenderer instance, GuiGraphics $$0, int $$1, float $$2) {
-        return false;
+    @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderTexture(ILnet/minecraft/resources/ResourceLocation;)V"))
+    private void cancel_VanillaLogoRendering_FancyMenu(int slot, ResourceLocation texture, Operation<Void> original) {
+        if (texture == MINECRAFT_LOGO) texture = RenderingUtils.FULLY_TRANSPARENT_TEXTURE;
+        if (texture == MINECRAFT_EDITION) texture = RenderingUtils.FULLY_TRANSPARENT_TEXTURE;
+        original.call(slot, texture);
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/SplashRenderer;render(Lnet/minecraft/client/gui/GuiGraphics;ILnet/minecraft/client/gui/Font;I)V"))
-    private boolean cancel_VanillaSplashRendering_FancyMenu(SplashRenderer instance, GuiGraphics $$0, int $$1, Font $$2, int $$3) {
-        return false;
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/TitleScreen;drawCenteredString(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/gui/Font;Ljava/lang/String;III)V"))
+    private boolean cancel_VanillaSplashRendering_FancyMenu(PoseStack pose, Font font, String text, int x, int y, int color) {
+        return !text.equals(this.splash);
     }
 
     /**

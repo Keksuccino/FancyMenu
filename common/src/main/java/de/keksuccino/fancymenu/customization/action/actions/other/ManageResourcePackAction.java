@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
 import de.keksuccino.fancymenu.util.enums.LocalizedEnum;
+import de.keksuccino.fancymenu.util.rendering.gui.VanillaTooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.PiPCellStringBuilderWindowBody;
@@ -13,7 +14,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.server.packs.repository.Pack;
@@ -185,14 +185,7 @@ public class ManageResourcePackAction extends Action {
     }
 
     private void updateHighContrastOption(@NotNull Minecraft minecraft, @NotNull PackRepository repository) {
-        boolean highContrastEnabled = false;
-        for (Pack selected : repository.getSelectedPacks()) {
-            if ("high_contrast".equals(selected.getId())) {
-                highContrastEnabled = true;
-                break;
-            }
-        }
-        minecraft.options.highContrast().set(highContrastEnabled);
+        // Minecraft 1.19.2 does not expose the high contrast option yet.
     }
 
     @Nullable
@@ -279,7 +272,7 @@ public class ManageResourcePackAction extends Action {
             TextInputCell nameCell = this.addTextInputCell(null, true, true)
                     .setEditListener(text -> this.config.packName = text)
                     .setText(this.config.packName);
-            nameCell.editBox.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.manage_resource_pack.edit.pack_name.desc")));
+            nameCell.editBox.setVanillaTooltip_FancyMenu(VanillaTooltip.create(Component.translatable("fancymenu.actions.manage_resource_pack.edit.pack_name.desc")));
 
             this.addCellGroupEndSpacerCell();
 
@@ -290,7 +283,7 @@ public class ManageResourcePackAction extends Action {
             );
             modeCycle.setCurrentValue(this.config.mode, false);
             CycleButton<ResourcePackMode> modeButton = new CycleButton<>(0, 0, 20, 20, modeCycle, (selectedMode, button) -> this.config.mode = selectedMode);
-            modeButton.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.manage_resource_pack.edit.mode.desc")));
+            modeButton.setVanillaTooltip_FancyMenu(VanillaTooltip.create(Component.translatable("fancymenu.actions.manage_resource_pack.edit.mode.desc")));
             modeButton.setSelectedValue(this.config.mode);
             this.addWidgetCell(modeButton, true);
 
@@ -302,7 +295,7 @@ public class ManageResourcePackAction extends Action {
                     CommonCycles.cycleEnabledDisabled("fancymenu.actions.manage_resource_pack.edit.reload", this.config.reloadOnChange),
                     (state, button) -> this.config.reloadOnChange = state.getAsBoolean()
             );
-            reloadButton.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.manage_resource_pack.edit.reload.desc")));
+            reloadButton.setVanillaTooltip_FancyMenu(VanillaTooltip.create(Component.translatable("fancymenu.actions.manage_resource_pack.edit.reload.desc")));
             reloadButton.setSelectedValue(CommonCycles.CycleEnabledDisabled.getByBoolean(this.config.reloadOnChange));
             this.addWidgetCell(reloadButton, true);
 

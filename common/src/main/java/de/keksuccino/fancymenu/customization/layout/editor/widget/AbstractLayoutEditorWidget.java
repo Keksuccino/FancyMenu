@@ -19,7 +19,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -39,7 +39,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
-public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventHandler implements Widget, NarratableEntry {
+public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventHandler implements Renderable, NarratableEntry {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -639,12 +639,10 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
         this.visible = visible;
     }
 
-    @Override
-    public void setFocused(boolean focused) {
+        public void setFocused(boolean focused) {
     }
 
-    @Override
-    public boolean isFocused() {
+        public boolean isFocused() {
         return false;
     }
 

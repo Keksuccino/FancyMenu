@@ -38,7 +38,7 @@ public class CurrentWorldSeedPlaceholder extends Placeholder {
                 return "";
             }
 
-            return Long.toString(server.getWorldData().worldGenOptions().seed());
+            return Long.toString(server.getWorldData().worldGenSettings().seed());
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to get replacement for '" + this.getIdentifier() + "' placeholder.", ex);
         }

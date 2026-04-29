@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.Objects;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import com.mojang.math.Axis;
+import com.mojang.math.Matrix4f;
+import de.keksuccino.fancymenu.util.rendering.gui.Axis;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderScaleUtil;
@@ -21,17 +22,16 @@ import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
 
 @SuppressWarnings("unused")
-public class LocalTexturePanoramaRenderer implements Widget {
+public class LocalTexturePanoramaRenderer implements Renderable {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -245,9 +245,9 @@ public class LocalTexturePanoramaRenderer implements Widget {
 		float fovF = ((float)this.fov * ((float)Math.PI / 180));
 
 		Tesselator tesselator = Tesselator.getInstance();
-		Matrix4f $$5 = (new Matrix4f()).setPerspective(fovF, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
+		Matrix4f $$5 = Matrix4f.perspective(fovF, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
 		RenderSystem.backupProjectionMatrix();
-		RenderSystem.setProjectionMatrix($$5, VertexSorting.DISTANCE_TO_ORIGIN);
+		RenderSystem.setProjectionMatrix($$5);
 		PoseStack modelViewStack = RenderSystem.getModelViewStack();
 		modelViewStack.pushPose();
 		modelViewStack.setIdentity();
@@ -365,9 +365,9 @@ public class LocalTexturePanoramaRenderer implements Widget {
 		float fovF = ((float)this.fov * ((float)Math.PI / 180));
 
 		Tesselator tesselator = Tesselator.getInstance();
-		Matrix4f projection = (new Matrix4f()).setPerspective(fovF, (float)viewportWidth / (float)viewportHeight, 0.05F, 10.0F);
+		Matrix4f projection = Matrix4f.perspective(fovF, (float)viewportWidth / (float)viewportHeight, 0.05F, 10.0F);
 		RenderSystem.backupProjectionMatrix();
-		RenderSystem.setProjectionMatrix(projection, VertexSorting.DISTANCE_TO_ORIGIN);
+		RenderSystem.setProjectionMatrix(projection);
 		PoseStack modelViewStack = RenderSystem.getModelViewStack();
 		modelViewStack.pushPose();
 		try {

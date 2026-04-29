@@ -9,10 +9,11 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
@@ -20,9 +21,9 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
 @Deprecated
-public class TextEditorElement extends AbstractEditorElement {
+public class TextEditorElement extends AbstractEditorElement<TextEditorElement, TextElement> {
 
-    public TextEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public TextEditorElement(@NotNull TextElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
     }
 
@@ -49,7 +50,7 @@ public class TextEditorElement extends AbstractEditorElement {
                             }
                             return Components.translatable("fancymenu.customization.items.text.source_mode.mode.direct");
                         })
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.source_mode.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.source_mode.desc")));
 
         this.rightClickMenu.addClickableEntry("set_source", Components.literal(""), (menu, entry) ->
                 {
@@ -65,7 +66,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         Minecraft.getInstance().setScreen(s);
                     }
                     if ((this.getTextElement().sourceMode == TextElement.SourceMode.DIRECT) || (this.getTextElement().sourceMode == TextElement.SourceMode.WEB_SOURCE)) {
-                        TextEditorScreen s = new TextEditorScreen(entry.getLabel(), null, (call) -> {
+                        TextEditorWindowBody s = new TextEditorWindowBody(entry.getLabel(), null, (call) -> {
                             if (call != null) {
                                 this.editor.history.saveSnapshot();
                                 call = call.replace("\n", "%n%");
@@ -88,17 +89,17 @@ public class TextEditorElement extends AbstractEditorElement {
                                 s.setText(this.getTextElement().source);
                             }
                         }
-                        Minecraft.getInstance().setScreen(s);
+                        Dialogs.openGeneric(s, entry.getLabel(), null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
                     }
                 })
                 .setTooltipSupplier((menu, entry) -> {
                     if (this.getTextElement().sourceMode == TextElement.SourceMode.LOCAL_SOURCE) {
-                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.set_source.local.desc"));
+                        return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.set_source.local.desc"));
                     }
                     if (this.getTextElement().sourceMode == TextElement.SourceMode.WEB_SOURCE) {
-                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.set_source.web.desc"));
+                        return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.set_source.web.desc"));
                     }
-                    return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.set_source.direct.desc"));
+                    return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.set_source.direct.desc"));
                 })
                 .setLabelSupplier((menu, entry) -> {
                     if (this.getTextElement().sourceMode == TextElement.SourceMode.LOCAL_SOURCE) {
@@ -141,7 +142,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         true, 1.0F, null, null)
                 .setStackable(true);
 
-        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "set_shadow",
+        this.addGenericToggleContextMenuEntryTo(this.rightClickMenu, "set_shadow",
                         consumes -> (consumes instanceof TextEditorElement),
                         consumes -> ((TextElement)consumes.element).shadow,
                         (element1, aBoolean) -> {
@@ -180,7 +181,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         }, null, false, false, Components.translatable("fancymenu.customization.items.text.base_color"),
                         true, null, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.base_color.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.base_color.desc")));
 
         this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_border",
                         consumes -> (consumes instanceof TextEditorElement),
@@ -192,7 +193,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         Components.translatable("fancymenu.customization.items.text.text_border"),
                         true, 10, null, null)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.text_border.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.text_border.desc")));
 
         this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_line_spacing",
                         consumes -> (consumes instanceof TextEditorElement),
@@ -205,7 +206,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         true, 10, null, null)
                 .setStackable(true);
 
-        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "set_scrolling",
+        this.addGenericToggleContextMenuEntryTo(this.rightClickMenu, "set_scrolling",
                         consumes -> (consumes instanceof TextEditorElement),
                         consumes -> ((TextElement)consumes.element).enableScrolling,
                         (element1, aBoolean) -> {
@@ -250,7 +251,7 @@ public class TextEditorElement extends AbstractEditorElement {
         ContextMenu grabberColorMenu = new ContextMenu();
         this.rightClickMenu.addSubMenuEntry("grabber_color", Components.translatable("fancymenu.customization.items.text.scroll_grabber_color"), grabberColorMenu)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.scroll_grabber_color.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.scroll_grabber_color.desc")));
 
         this.addGenericStringInputContextMenuEntryTo(grabberColorMenu, "normal_grabber_color",
                         consumes -> (consumes instanceof TextEditorElement),

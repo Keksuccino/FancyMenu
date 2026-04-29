@@ -9,10 +9,19 @@ public interface IMixinRealmsNotificationsScreen {
 
     @Accessor("numberOfPendingInvites") int get_numberOfPendingInvites_FancyMenu();
 
-    @Accessor("trialAvailable") boolean get_trialAvailable_FancyMenu();
+    @Accessor("trialAvailable")
+    static boolean get_trialAvailable_FancyMenu() {
+        throw new AssertionError();
+    }
 
-    @Accessor("hasUnreadNews") boolean get_hasUnreadNews_FancyMenu();
+    @Accessor("hasUnreadNews")
+    static boolean get_hasUnreadNews_FancyMenu() {
+        throw new AssertionError();
+    }
 
-    @Accessor("validClient") boolean get_validClient_FancyMenu();
+    @Accessor("validClient")
+    static boolean get_validClient_FancyMenu() {
+        throw new AssertionError();
+    }
 
 }

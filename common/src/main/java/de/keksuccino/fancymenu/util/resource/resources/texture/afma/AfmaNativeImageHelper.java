@@ -73,7 +73,7 @@ public final class AfmaNativeImageHelper {
                 int green = rawBytes[rawIndex++] & 0xFF;
                 int blue = rawBytes[rawIndex++] & 0xFF;
                 int alpha = (channels == AfmaResidualPayloadHelper.RGBA_CHANNELS) ? (rawBytes[rawIndex++] & 0xFF) : 0xFF;
-                MemoryUtil.memPutInt(targetOffset + ((long) column * RGBA_BYTES_PER_PIXEL), FastColor.ABGR32.color(alpha, blue, green, red));
+                MemoryUtil.memPutInt(targetOffset + ((long) column * RGBA_BYTES_PER_PIXEL), abgr(alpha, blue, green, red));
             }
         }
 
@@ -104,7 +104,7 @@ public final class AfmaNativeImageHelper {
                 if (channels == AfmaResidualPayloadHelper.RGBA_CHANNELS) {
                     alpha = (alpha + (residualBytes[residualIndex++] & 0xFF)) & 0xFF;
                 }
-                MemoryUtil.memPutInt(pixelOffset, FastColor.ABGR32.color(alpha, blue, green, red));
+                MemoryUtil.memPutInt(pixelOffset, abgr(alpha, blue, green, red));
             }
         }
     }
@@ -196,7 +196,7 @@ public final class AfmaNativeImageHelper {
                 if (channels == AfmaResidualPayloadHelper.RGBA_CHANNELS) {
                     alpha = (alpha + (residualBytes[residualIndex++] & 0xFF)) & 0xFF;
                 }
-                MemoryUtil.memPutInt(pixelOffset, FastColor.ABGR32.color(alpha, blue, green, red));
+                MemoryUtil.memPutInt(pixelOffset, abgr(alpha, blue, green, red));
             }
         }
         if (residualIndex != (residualOffset + expectedResidualBytes)) {
@@ -317,12 +317,19 @@ public final class AfmaNativeImageHelper {
     }
 
     private static int argbToAbgr(int color) {
-        return FastColor.ABGR32.color(
+        return abgr(
                 FastColor.ARGB32.alpha(color),
                 FastColor.ARGB32.blue(color),
                 FastColor.ARGB32.green(color),
                 FastColor.ARGB32.red(color)
         );
+    }
+
+    private static int abgr(int alpha, int blue, int green, int red) {
+        return ((alpha & 0xFF) << 24)
+                | ((blue & 0xFF) << 16)
+                | ((green & 0xFF) << 8)
+                | (red & 0xFF);
     }
 
     private static long pixels(@NotNull NativeImage image) {

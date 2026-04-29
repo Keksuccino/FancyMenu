@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -23,7 +23,7 @@ import java.util.List;
  * It is possible to set a custom X and Y position to not render it at the mouse position.
  **/
 @SuppressWarnings("unused")
-public class UITooltip implements Widget {
+public class UITooltip implements Renderable {
 
     protected Font font = Minecraft.getInstance().font;
     protected List<Component> textLines = new ArrayList<>();

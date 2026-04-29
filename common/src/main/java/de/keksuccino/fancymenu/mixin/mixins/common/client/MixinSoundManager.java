@@ -9,6 +9,7 @@ import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.client.sounds.SoundEventListener;
 import net.minecraft.client.sounds.SoundManager;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -30,7 +31,7 @@ public abstract class MixinSoundManager {
     private SoundEventListener worldSoundEventBridge_FancyMenu;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void afterInitFancyMenu(Options options, CallbackInfo info) {
+    private void afterInitFancyMenu(ResourceManager resourceManager, Options options, CallbackInfo info) {
         if (this.worldSoundEventBridge_FancyMenu == null) {
             this.worldSoundEventBridge_FancyMenu = (sound, accessor) -> {
                 float audibleRange = Math.max(sound.getVolume(), 1.0F) * sound.getSound().getAttenuationDistance();
@@ -43,7 +44,7 @@ public abstract class MixinSoundManager {
     @Inject(method = "play", at = @At("HEAD"), cancellable = true)
     private void head_play_FancyMenu(SoundInstance sound, CallbackInfo info) {
         if (sound instanceof SimpleSoundInstance i) {
-            SoundEvent event = SoundEvents.UI_BUTTON_CLICK.value();
+            SoundEvent event = SoundEvents.UI_BUTTON_CLICK;
             if ((event != null) && (i.getLocation() == event.getLocation())) {
                 IAudio globalClickSound = GlobalCustomizationHandler.getCustomButtonClickSound();
                 if ((globalClickSound != null) && globalClickSound.isReady()) {

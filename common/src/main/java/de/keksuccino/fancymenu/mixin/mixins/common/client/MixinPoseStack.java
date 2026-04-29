@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.RenderScaleUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderRotationUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderTranslationUtil;
-import org.joml.Quaternionf;
+import com.mojang.math.Quaternion;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -81,7 +81,7 @@ public class MixinPoseStack {
     }
 
     @Inject(method = "mulPose", at = @At("TAIL"))
-    private void after_mulPose_FancyMenu(Quaternionf quaternion, CallbackInfo info) {
+    private void after_mulPose_FancyMenu(Quaternion quaternion, CallbackInfo info) {
         if (this.isRenderSystemModelViewStack_FancyMenu()) {
             return;
         }
@@ -92,17 +92,17 @@ public class MixinPoseStack {
         updateActiveRenderRotation_FancyMenu();
     }
 
-    @Inject(method = "translate(FFF)V", at = @At("TAIL"))
-    private void after_translate_FancyMenu(float x, float y, float z, CallbackInfo info) {
+    @Inject(method = "translate(DDD)V", at = @At("TAIL"))
+    private void after_translate_FancyMenu(double x, double y, double z, CallbackInfo info) {
         if (this.isRenderSystemModelViewStack_FancyMenu()) {
             return;
         }
         ensureRenderTranslationStackInitialized_FancyMenu();
         RenderTranslationUtil.TranslationState currentTranslation = this.renderTranslationStack_FancyMenu.removeLast();
         float scaleFactor = RenderScaleUtil.getCurrentAdditionalRenderScale();
-        currentTranslation.x += x * scaleFactor;
-        currentTranslation.y += y * scaleFactor;
-        currentTranslation.z += z * scaleFactor;
+        currentTranslation.x += (float)(x * scaleFactor);
+        currentTranslation.y += (float)(y * scaleFactor);
+        currentTranslation.z += (float)(z * scaleFactor);
         this.renderTranslationStack_FancyMenu.addLast(currentTranslation);
         updateActiveRenderTranslation_FancyMenu();
     }

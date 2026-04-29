@@ -19,7 +19,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public abstract class MenuBackground<B extends MenuBackground<?>> implements Widget, GuiEventListener, NarratableEntry, NavigatableWidget, ContextMenuBuilder<B>, PropertyHolder {
+public abstract class MenuBackground<B extends MenuBackground<?>> implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget, ContextMenuBuilder<B>, PropertyHolder {
 
     public final MenuBackgroundBuilder<?> builder;
     private final Map<String, Property<?>> propertyMap = new LinkedHashMap<>();
@@ -245,12 +245,10 @@ public abstract class MenuBackground<B extends MenuBackground<?>> implements Wid
         return AbstractElement.getScreenHeight();
     }
 
-    @Override
-    public void setFocused(boolean var1) {
+        public void setFocused(boolean var1) {
     }
 
-    @Override
-    public boolean isFocused() {
+        public boolean isFocused() {
         return false;
     }
 

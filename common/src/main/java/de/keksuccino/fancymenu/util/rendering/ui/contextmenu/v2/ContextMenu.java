@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.math.Axis;
+import de.keksuccino.fancymenu.util.rendering.gui.Axis;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.input.InputConstants;
@@ -25,7 +25,7 @@ import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -44,7 +44,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 @SuppressWarnings("all")
-public class ContextMenu implements Widget, GuiEventListener, NarratableEntry, NavigatableWidget, FancyMenuUiComponent {
+public class ContextMenu implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget, FancyMenuUiComponent {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -1740,12 +1740,10 @@ public class ContextMenu implements Widget, GuiEventListener, NarratableEntry, N
         return false;
     }
 
-    @Override
-    public void setFocused(boolean var1) {
+        public void setFocused(boolean var1) {
     }
 
-    @Override
-    public boolean isFocused() {
+        public boolean isFocused() {
         return false;
     }
 
@@ -2172,7 +2170,7 @@ public class ContextMenu implements Widget, GuiEventListener, NarratableEntry, N
         return l;
     }
 
-    public static abstract class ContextMenuEntry<T extends ContextMenuEntry<T>> implements Widget, GuiEventListener {
+    public static abstract class ContextMenuEntry<T extends ContextMenuEntry<T>> implements Renderable, GuiEventListener {
 
         protected String identifier;
         protected ContextMenu parent;
@@ -2791,12 +2789,10 @@ public class ContextMenu implements Widget, GuiEventListener, NarratableEntry, N
             return i;
         }
 
-        @Override
-        public void setFocused(boolean var1) {
+                public void setFocused(boolean var1) {
         }
 
-        @Override
-        public boolean isFocused() {
+                public boolean isFocused() {
             return false;
         }
 
@@ -3202,12 +3198,10 @@ public class ContextMenu implements Widget, GuiEventListener, NarratableEntry, N
             return i;
         }
 
-        @Override
-        public void setFocused(boolean var1) {
+                public void setFocused(boolean var1) {
         }
 
-        @Override
-        public boolean isFocused() {
+                public boolean isFocused() {
             return false;
         }
 
@@ -3241,12 +3235,10 @@ public class ContextMenu implements Widget, GuiEventListener, NarratableEntry, N
             return e;
         }
 
-        @Override
-        public void setFocused(boolean var1) {
+                public void setFocused(boolean var1) {
         }
 
-        @Override
-        public boolean isFocused() {
+                public boolean isFocused() {
             return false;
         }
 
@@ -3309,12 +3301,10 @@ public class ContextMenu implements Widget, GuiEventListener, NarratableEntry, N
             return copy;
         }
 
-        @Override
-        public void setFocused(boolean var1) {
+                public void setFocused(boolean var1) {
         }
 
-        @Override
-        public boolean isFocused() {
+                public boolean isFocused() {
             return false;
         }
 

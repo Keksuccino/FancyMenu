@@ -1,32 +1,37 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
-import com.mojang.math.Axis;
+import com.llamalad7.mixinextras.injector.WrapWithCondition;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.rendering.gui.Axis;
 import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderRotationUtil;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.VanillaTooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.IExtendedWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.WidgetWithVanillaTooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtendedSlider;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
-import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.AbstractButton;
-import net.minecraft.client.gui.ComponentPath;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ImageButton;
-import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.Mth;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -41,14 +46,17 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 @Mixin(value = AbstractWidget.class)
-public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueWidget {
+public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueWidget, IExtendedWidget, WidgetWithVanillaTooltip {
 
+	@Shadow @Final public static ResourceLocation WIDGETS_LOCATION;
 	@Shadow protected float alpha;
 	@Shadow public boolean visible;
 	@Shadow public boolean active;
 	@Shadow protected boolean isHovered;
 	@Shadow protected int height;
 	@Shadow protected int width;
+	@Shadow public int x;
+	@Shadow public int y;
 
 	@Unique @Nullable
 	private String widgetIdentifierFancyMenu;
@@ -124,6 +132,10 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	private Integer cachedOriginalWidthFancyMenu;
 	@Unique @Nullable
 	private Integer cachedOriginalHeightFancyMenu;
+	@Unique @Nullable
+	private Integer cachedOriginalXFancyMenu;
+	@Unique @Nullable
+	private Integer cachedOriginalYFancyMenu;
 	@Unique
 	private final List<Consumer<Boolean>> hoverStateListenersFancyMenu = new ArrayList<>();
 	@Unique
@@ -140,15 +152,14 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	private boolean widgetInitializedFancyMenu = false;
 	@Unique
 	private final List<Runnable> resetCustomizationsListenersFancyMenu = new ArrayList<>();
+	@Unique @Nullable
+	private VanillaTooltip vanillaTooltip_FancyMenu;
 	
 	@Inject(method = "render", at = @At(value = "HEAD"), cancellable = true)
-	private void beforeRenderFancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
+	private void beforeRenderFancyMenu(PoseStack pose, int mouseX, int mouseY, float partial, CallbackInfo info) {
 
 		if (!this.widgetInitializedFancyMenu) this.initWidgetFancyMenu();
 		this.widgetInitializedFancyMenu = true;
-
-		//Manually update isHovered before AbstractWidget, to correctly notify hover listeners
-		this.isHovered = this.isMouseOverFancyMenu_FancyMenu(mouseX, mouseY);
 
 		if ((this.customWidthFancyMenu != null) && (this.customWidthFancyMenu > 0)) {
 			if (this.cachedOriginalWidthFancyMenu == null) this.cachedOriginalWidthFancyMenu = this.width;
@@ -158,6 +169,17 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 			if (this.cachedOriginalHeightFancyMenu == null) this.cachedOriginalHeightFancyMenu = this.height;
 			this.height = this.customHeightFancyMenu;
 		}
+		if (this.customXFancyMenu != null) {
+			if (this.cachedOriginalXFancyMenu == null) this.cachedOriginalXFancyMenu = this.x;
+			this.x = this.customXFancyMenu;
+		}
+		if (this.customYFancyMenu != null) {
+			if (this.cachedOriginalYFancyMenu == null) this.cachedOriginalYFancyMenu = this.y;
+			this.y = this.customYFancyMenu;
+		}
+
+		//Manually update isHovered before AbstractWidget, to correctly notify hover listeners
+		this.isHovered = this.isMouseOverFancyMenu_FancyMenu(mouseX, mouseY);
 
 		//Handle Hidden State
 		if (this.hiddenFancyMenu) {
@@ -174,7 +196,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 
 		//Fire RenderWidgetEvent.Pre
 		try {
-			RenderWidgetEvent.Pre e = new RenderWidgetEvent.Pre(graphics, this.getWidgetFancyMenu(), this.alpha);
+			RenderWidgetEvent.Pre e = new RenderWidgetEvent.Pre(GuiGraphics.currentGraphics(), this.getWidgetFancyMenu(), this.alpha);
 			EventHandler.INSTANCE.postEvent(e);
 			this.alpha = e.getAlpha();
 			if (e.isCanceled()) {
@@ -185,24 +207,78 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		}
 
 	}
-	
-	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractWidget;renderWidget(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", shift = At.Shift.BEFORE))
-	private void before_renderWidget_FancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
-		this.isHovered = this.isMouseOverFancyMenu_FancyMenu(mouseX, mouseY);
-	}
 
 	@Inject(method = "render", at = @At(value = "RETURN"))
-	private void afterRenderFancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
+	private void afterRenderFancyMenu(PoseStack pose, int mouseX, int mouseY, float partial, CallbackInfo info) {
 
 		if (this.hiddenFancyMenu) return;
 
 		try {
-			RenderWidgetEvent.Post e = new RenderWidgetEvent.Post(graphics, this.getWidgetFancyMenu(), this.alpha);
+			RenderWidgetEvent.Post e = new RenderWidgetEvent.Post(GuiGraphics.currentGraphics(), this.getWidgetFancyMenu(), this.alpha);
 			EventHandler.INSTANCE.postEvent(e);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
+	}
+
+	@Unique @Nullable
+	private Boolean cachedRenderCustomBackgroundFancyMenu;
+
+	@WrapWithCondition(method = "renderButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractWidget;blit(Lcom/mojang/blaze3d/vertex/PoseStack;IIIIII)V"))
+	private boolean wrapBlitInRenderButtonFancyMenu(AbstractWidget instance, PoseStack pose, int x, int y, int uOffset, int vOffset, int uWidth, int vHeight) {
+		if (this.cachedRenderCustomBackgroundFancyMenu != null) {
+			this.cachedRenderCustomBackgroundFancyMenu = null;
+			return false;
+		}
+
+		AbstractWidget widget = this.getWidgetFancyMenu();
+		if ((widget instanceof CustomizableSlider slider) && ((Object)this instanceof AbstractSliderButton abstractSliderButton)) {
+			this.cachedRenderCustomBackgroundFancyMenu = slider.renderSliderBackgroundFancyMenu(GuiGraphics.currentGraphics(), abstractSliderButton, true);
+			RenderSystem.setShaderTexture(0, WIDGETS_LOCATION);
+		} else {
+			this.cachedRenderCustomBackgroundFancyMenu = this.renderCustomBackgroundFancyMenu(widget, GuiGraphics.currentGraphics(), widget.x, widget.y, widget.getWidth(), widget.getHeight());
+		}
+
+		if (this.cachedRenderCustomBackgroundFancyMenu) {
+			this.render119VanillaBackgroundFancyMenu();
+		}
+
+		return false;
+	}
+
+	/**
+	 * @reason Backport the modern nine-sliced widget background for 1.19.2's older two-blit button renderer.
+	 */
+	@Unique
+	private void render119VanillaBackgroundFancyMenu() {
+		GuiGraphics graphics = GuiGraphics.currentGraphics();
+		graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
+		RenderSystem.enableBlend();
+		RenderSystem.enableDepthTest();
+		graphics.blitNineSliced(WIDGETS_LOCATION, this.x, this.y, this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureYFancyMenu());
+		RenderingUtils.resetShaderColor(graphics);
+	}
+
+	@Unique
+	private int getTextureYFancyMenu() {
+		boolean slider = (Object)this instanceof AbstractSliderButton;
+		int state = 1;
+		if (!this.active || slider) {
+			state = 0;
+		} else if (this.isHoveredOrFocused()) {
+			state = 2;
+		}
+		return 46 + state * 20;
+	}
+
+	/**
+	 * @reason Backport the 1.19.4+ scrolling label renderer while keeping FancyMenu label customizations active on 1.19.2.
+	 */
+	@WrapWithCondition(method = "renderButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractWidget;drawCenteredString(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
+	private boolean wrapLabelRenderingFancyMenu(PoseStack pose, Font font, Component component, int x, int y, int color) {
+		this.renderScrollingLabel(this.getWidgetFancyMenu(), GuiGraphics.currentGraphics(), font, 2, this.resolveLabelShadow_FancyMenu(), color);
+		return false;
 	}
 	
 	@Inject(method = "playDownSound", at = @At(value = "HEAD"), cancellable = true)
@@ -261,69 +337,6 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		info.setReturnValue(result);
 	}
 
-	@Inject(method = "renderScrollingString(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/client/gui/Font;II)V", at = @At("HEAD"), cancellable = true)
-	private void before_renderScrollingString_FancyMenu(GuiGraphics graphics, Font font, int width, int color, CallbackInfo info) {
-		float scale = this.resolveLabelScaleFancyMenu();
-		boolean labelShadow = this.resolveLabelShadow_FancyMenu();
-		if (scale == 1.0F && labelShadow) return;
-		if (scale == 0.0F) {
-			info.cancel();
-			return;
-		}
-		AbstractWidget w = this.getWidgetFancyMenu();
-		Component text = w.getMessage();
-		int xMin = w.getX() + width;
-		int xMax = w.getX() + w.getWidth() - width;
-		int yMin = w.getY();
-		int yMax = w.getY() + w.getHeight();
-		if (scale == 1.0F) {
-			int textWidth = font.width(text);
-			int textPosY = (yMin + yMax - 9) / 2 + 1;
-			int maxTextWidth = xMax - xMin;
-			if (textWidth > maxTextWidth) {
-				int diffTextWidth = textWidth - maxTextWidth;
-				double scrollTime = (double) Util.getMillis() / 1000.0D;
-				double scrollDuration = Math.max((double) diffTextWidth * 0.5D, 3.0D);
-				double scrollAlpha = Math.sin((Math.PI / 2D) * Math.cos((Math.PI * 2D) * scrollTime / scrollDuration)) / 2.0D + 0.5D;
-				double textOffset = Mth.lerp(scrollAlpha, 0.0D, (double) diffTextWidth);
-				graphics.enableScissor(xMin, yMin, xMax, yMax);
-				graphics.drawString(font, text, xMin - (int) textOffset, textPosY, color, labelShadow);
-				graphics.disableScissor();
-			} else {
-				int textPosX = Mth.clamp((xMin + xMax) / 2, xMin + textWidth / 2, xMax - textWidth / 2);
-				graphics.drawString(font, text, textPosX - (textWidth / 2), textPosY, color, labelShadow);
-			}
-			info.cancel();
-			return;
-		}
-		float invScale = 1.0F / scale;
-		float scaledMinX = xMin * invScale;
-		float scaledMaxX = xMax * invScale;
-		float scaledMinY = yMin * invScale;
-		float scaledMaxY = yMax * invScale;
-		int textWidth = font.width(text);
-		float textPosY = (scaledMinY + scaledMaxY - font.lineHeight) / 2F + 1F;
-		float maxTextWidth = scaledMaxX - scaledMinX;
-
-		graphics.pose().pushPose();
-		graphics.pose().scale(scale, scale, 1.0F);
-		if (textWidth > maxTextWidth) {
-			float diffTextWidth = textWidth - maxTextWidth;
-			double scrollTime = (double) Util.getMillis() / 1000.0D;
-			double scrollDuration = Math.max(diffTextWidth * 0.5D, 3.0D);
-			double scrollAlpha = Math.sin((Math.PI / 2D) * Math.cos((Math.PI * 2D) * scrollTime / scrollDuration)) / 2.0D + 0.5D;
-			double textOffset = Mth.lerp(scrollAlpha, 0.0D, diffTextWidth);
-			graphics.enableScissor(xMin, yMin, xMax, yMax);
-			graphics.drawString(font, text, (int)(scaledMinX - (float)textOffset), (int)textPosY, color, labelShadow);
-			graphics.disableScissor();
-		} else {
-			float textPosX = ((scaledMinX + scaledMaxX) / 2F) - (textWidth / 2F);
-			graphics.drawString(font, text, (int)textPosX, (int)textPosY, color, labelShadow);
-		}
-		graphics.pose().popPose();
-		info.cancel();
-	}
-
 	@Inject(method = "isMouseOver", at = @At("HEAD"), cancellable = true)
 	private void beforeIsMouseOverFancyMenu(double $$0, double $$1, CallbackInfoReturnable<Boolean> info) {
 		if (this.hiddenFancyMenu) {
@@ -351,25 +364,6 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		if (this.hiddenFancyMenu) info.setReturnValue(false);
 	}
 
-	@Inject(method = "nextFocusPath", at = @At("HEAD"), cancellable = true)
-	private void beforeNextFocusPathFancyMenu(FocusNavigationEvent $$0, CallbackInfoReturnable<ComponentPath> info) {
-		if (this.hiddenFancyMenu) info.setReturnValue(null);
-	}
-
-	@Inject(method = "getX", at = @At("RETURN"), cancellable = true)
-	private void atReturnGetXFancyMenu(CallbackInfoReturnable<Integer> info) {
-		if (this.customXFancyMenu != null) {
-			info.setReturnValue(this.customXFancyMenu);
-		}
-	}
-
-	@Inject(method = "getY", at = @At("RETURN"), cancellable = true)
-	private void atReturnGetYFancyMenu(CallbackInfoReturnable<Integer> info) {
-		if (this.customYFancyMenu != null) {
-			info.setReturnValue(this.customYFancyMenu);
-		}
-	}
-
 	@Inject(method = "getWidth", at = @At("RETURN"), cancellable = true)
 	private void atReturnGetWidthFancyMenu(CallbackInfoReturnable<Integer> info) {
 		if (this.customWidthFancyMenu != null) {
@@ -389,10 +383,6 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Shadow public abstract boolean isFocused();
 
 	@Shadow public abstract boolean isHoveredOrFocused();
-
-	@Shadow public abstract int getX();
-
-	@Shadow public abstract int getY();
 
 	@Shadow public abstract int getWidth();
 
@@ -450,21 +440,21 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		if (this.hitboxRotationActive_FancyMenu) {
 			return this.isMouseOverRotated_FancyMenu(mouseX, mouseY);
 		}
-		int width = this.getWidth();
-		int height = this.getHeight();
+		int width = this.getEffectiveWidth_FancyMenu();
+		int height = this.getEffectiveHeight_FancyMenu();
 		if (width <= 0 || height <= 0) return false;
-		int x = this.getX();
-		int y = this.getY();
+		int x = this.getEffectiveX_FancyMenu();
+		int y = this.getEffectiveY_FancyMenu();
 		return mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height;
 	}
 
 	@Unique
 	private boolean isMouseOverRotated_FancyMenu(double mouseX, double mouseY) {
-		int width = this.getWidth();
-		int height = this.getHeight();
+		int width = this.getEffectiveWidth_FancyMenu();
+		int height = this.getEffectiveHeight_FancyMenu();
 		if (width <= 0 || height <= 0) return false;
-		float centerX = this.getX() + (width / 2.0F);
-		float centerY = this.getY() + (height / 2.0F);
+		float centerX = this.getEffectiveX_FancyMenu() + (width / 2.0F);
+		float centerY = this.getEffectiveY_FancyMenu() + (height / 2.0F);
 		float dx = (float) mouseX - centerX;
 		float dy = (float) mouseY - centerY;
 		float localX = (this.hitboxInverseRotation00_FancyMenu * dx) + (this.hitboxInverseRotation01_FancyMenu * dy);
@@ -472,6 +462,26 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		float halfWidth = width / 2.0F;
 		float halfHeight = height / 2.0F;
 		return localX >= -halfWidth && localX < halfWidth && localY >= -halfHeight && localY < halfHeight;
+	}
+
+	@Unique
+	private int getEffectiveX_FancyMenu() {
+		return this.customXFancyMenu != null ? this.customXFancyMenu : this.x;
+	}
+
+	@Unique
+	private int getEffectiveY_FancyMenu() {
+		return this.customYFancyMenu != null ? this.customYFancyMenu : this.y;
+	}
+
+	@Unique
+	private int getEffectiveWidth_FancyMenu() {
+		return (this.customWidthFancyMenu != null && this.customWidthFancyMenu > 0) ? this.customWidthFancyMenu : this.width;
+	}
+
+	@Unique
+	private int getEffectiveHeight_FancyMenu() {
+		return (this.customHeightFancyMenu != null && this.customHeightFancyMenu > 0) ? this.customHeightFancyMenu : this.height;
 	}
 
 	@SuppressWarnings("all")
@@ -598,6 +608,10 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		if (this.cachedOriginalHeightFancyMenu != null) this.height = this.cachedOriginalHeightFancyMenu;
 		this.cachedOriginalWidthFancyMenu = null;
 		this.cachedOriginalHeightFancyMenu = null;
+		if (this.cachedOriginalXFancyMenu != null) this.x = this.cachedOriginalXFancyMenu;
+		if (this.cachedOriginalYFancyMenu != null) this.y = this.cachedOriginalYFancyMenu;
+		this.cachedOriginalXFancyMenu = null;
+		this.cachedOriginalYFancyMenu = null;
 	}
 
 	@Unique
@@ -611,6 +625,10 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		if (this.cachedOriginalHeightFancyMenu != null) this.height = this.cachedOriginalHeightFancyMenu;
 		this.cachedOriginalWidthFancyMenu = null;
 		this.cachedOriginalHeightFancyMenu = null;
+		if (this.cachedOriginalXFancyMenu != null) this.x = this.cachedOriginalXFancyMenu;
+		if (this.cachedOriginalYFancyMenu != null) this.y = this.cachedOriginalYFancyMenu;
+		this.cachedOriginalXFancyMenu = null;
+		this.cachedOriginalYFancyMenu = null;
 		this.customWidthFancyMenu = null;
 		this.customHeightFancyMenu = null;
 		this.customXFancyMenu = null;
@@ -1224,6 +1242,18 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Override
 	public @Nullable String getWidgetIdentifierFancyMenu() {
 		return this.widgetIdentifierFancyMenu;
+	}
+
+	@Unique
+	@Override
+	public @Nullable VanillaTooltip getVanillaTooltip_FancyMenu() {
+		return this.vanillaTooltip_FancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setVanillaTooltip_FancyMenu(@Nullable VanillaTooltip tooltip) {
+		this.vanillaTooltip_FancyMenu = tooltip;
 	}
 
 }

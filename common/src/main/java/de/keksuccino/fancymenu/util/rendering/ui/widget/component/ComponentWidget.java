@@ -5,13 +5,13 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.ModernAbstractWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import de.keksuccino.fancymenu.util.rendering.text.smooth.TextDimensions;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
-public class ComponentWidget extends AbstractWidget implements NavigatableWidget, FancyMenuWidget {
+public class ComponentWidget extends ModernAbstractWidget implements NavigatableWidget, FancyMenuWidget {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -257,7 +257,7 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
     }
 
     @Override
-    protected void updateWidgetNarration(@NotNull NarrationElementOutput var1) {
+    public void updateNarration(@NotNull NarrationElementOutput var1) {
     }
 
     @Deprecated

@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -26,7 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
-public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOverlay<?>> implements Widget, ContainerEventHandler, NarratableEntry, PropertyHolder, ContextMenuBuilder<O>, FancyMenuUiComponent {
+public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOverlay<?>> implements Renderable, ContainerEventHandler, NarratableEntry, PropertyHolder, ContextMenuBuilder<O>, FancyMenuUiComponent {
 
     private final Map<String, Property<?>> propertyMap = new LinkedHashMap<>();
     private final List<ContextMenuBuilder.ContextMenuScreenOpenProcessor> contextMenuScreenOpenProcessorList = new ArrayList<>();
@@ -36,7 +37,7 @@ public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOver
     @ApiStatus.Internal
     public final Property<Boolean> showOverlay = putProperty(Property.booleanProperty("show_decoration_overlay", false, "fancymenu.decoration_overlay.show_overlay"));
     private final List<GuiEventListener> children = new ArrayList<>();
-    private final List<Widget> renderables = new ArrayList<>();
+    private final List<Renderable> renderables = new ArrayList<>();
 
     @NotNull
     public String getInstanceIdentifier() {
@@ -115,14 +116,14 @@ public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOver
         this.children.add(Objects.requireNonNull(child));
     }
 
-    protected <C extends Widget & GuiEventListener> void addRenderableChild(@NotNull C child) {
+    protected <C extends Renderable & GuiEventListener> void addRenderableChild(@NotNull C child) {
         this.children.add(Objects.requireNonNull(child));
         this.renderables.add(child);
     }
 
     protected void removeChild(@NotNull GuiEventListener child) {
         this.children.remove(child);
-        if (child instanceof Widget r) this.renderables.remove(r);
+        if (child instanceof Renderable r) this.renderables.remove(r);
     }
 
     @Override
@@ -218,9 +219,9 @@ public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOver
             return new CollisionAreaBounds(e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteWidth(), e.getAbsoluteHeight());
         }
         if (o instanceof PlainTextButton) return null;
-        if (o instanceof AbstractButton b) return new CollisionAreaBounds(b.getX(), b.getY(), b.getWidth(), b.getHeight());
-        if (o instanceof EditBox b) return new CollisionAreaBounds(b.getX(), b.getY(), b.getWidth(), b.getHeight());
-        if (o instanceof AbstractSliderButton s) return new CollisionAreaBounds(s.getX(), s.getY(), s.getWidth(), s.getHeight());
+        if (o instanceof AbstractButton b) return new CollisionAreaBounds(b.x, b.y, b.getWidth(), b.getHeight());
+        if (o instanceof EditBox b) return new CollisionAreaBounds(b.x, b.y, b.getWidth(), b.getHeight());
+        if (o instanceof AbstractSliderButton s) return new CollisionAreaBounds(s.x, s.y, s.getWidth(), s.getHeight());
         return null;
     }
 

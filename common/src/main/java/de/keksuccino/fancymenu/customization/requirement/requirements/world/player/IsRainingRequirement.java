@@ -51,7 +51,7 @@ public class IsRainingRequirement extends Requirement {
     private static boolean isRainingAt(@NotNull Level level, @NotNull BlockPos pos) {
         Biome biome = level.getBiome(pos).value();
         if (!level.isRaining()) return false;
-        return (biome.getPrecipitationAt(pos) == Biome.Precipitation.RAIN);
+        return (biome.getPrecipitation() != Biome.Precipitation.NONE) && !biome.coldEnoughToSnow(pos);
     }
 
     @Override

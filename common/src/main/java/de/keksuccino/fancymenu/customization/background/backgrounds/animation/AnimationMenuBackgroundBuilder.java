@@ -1,15 +1,12 @@
 package de.keksuccino.fancymenu.customization.background.backgrounds.animation;
 
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
-import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.function.Consumer;
 
 @Deprecated(forRemoval = true)
 public class AnimationMenuBackgroundBuilder extends MenuBackgroundBuilder<AnimationMenuBackground> {
@@ -24,50 +21,27 @@ public class AnimationMenuBackgroundBuilder extends MenuBackgroundBuilder<Animat
     }
 
     @Override
-    public void buildNewOrEditInstance(Screen currentScreen, @Nullable AnimationMenuBackground backgroundToEdit, @NotNull Consumer<AnimationMenuBackground> backgroundConsumer) {
-        AnimationMenuBackground back = (backgroundToEdit != null) ? (AnimationMenuBackground) backgroundToEdit.copy() : null;
-        if (back == null) {
-            back = new AnimationMenuBackground(this);
-        }
-        AnimationMenuBackgroundConfigScreen s = new AnimationMenuBackgroundConfigScreen(currentScreen, back, (call) -> {
-            if (call != null) {
-                backgroundConsumer.accept(call);
-            } else {
-                backgroundConsumer.accept(backgroundToEdit);
-            }
-        });
-        Minecraft.getInstance().setScreen(s);
+    public @NotNull AnimationMenuBackground buildDefaultInstance() {
+        return new AnimationMenuBackground(this);
     }
 
     @Override
-    public AnimationMenuBackground deserializeBackground(SerializedMenuBackground serializedMenuBackground) {
+    public void deserializeBackground(@NotNull PropertyContainer serializedBackground, @NotNull AnimationMenuBackground deserializeTo) {
+        deserializeTo.animationName = serializedBackground.getValue("animation_name");
 
-        AnimationMenuBackground b = new AnimationMenuBackground(this);
-
-        b.animationName = serializedMenuBackground.getValue("animation_name");
-
-        String restartOnLoad = serializedMenuBackground.getValue("restart_on_load");
+        String restartOnLoad = serializedBackground.getValue("restart_on_load");
         if ((restartOnLoad != null) && restartOnLoad.equals("true")) {
-            b.restartOnMenuLoad = true;
+            deserializeTo.restartOnMenuLoad = true;
         }
-
-        return b;
-
     }
 
     @Override
-    public SerializedMenuBackground serializedBackground(AnimationMenuBackground background) {
-
-        SerializedMenuBackground serialized = new SerializedMenuBackground();
-
+    public void serializeBackground(@NotNull AnimationMenuBackground background, @NotNull PropertyContainer serializeTo) {
         if (background.animationName != null) {
-            serialized.putProperty("animation_name", background.animationName);
+            serializeTo.putProperty("animation_name", background.animationName);
         }
 
-        serialized.putProperty("restart_on_load", "" + background.restartOnMenuLoad);
-
-        return serialized;
-
+        serializeTo.putProperty("restart_on_load", "" + background.restartOnMenuLoad);
     }
 
     @Override
@@ -76,8 +50,8 @@ public class AnimationMenuBackgroundBuilder extends MenuBackgroundBuilder<Animat
     }
 
     @Override
-    public @Nullable Component[] getDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.background.animation.desc");
+    public @Nullable Component getDescription() {
+        return Component.translatable("fancymenu.background.animation.desc");
     }
 
 }

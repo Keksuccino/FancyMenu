@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.core.registries.Registries;
+import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
@@ -144,7 +144,7 @@ public class IsEntityNearbyRequirement extends Requirement {
         try {
             ClientLevel level = Minecraft.getInstance().level;
             if (level != null) {
-                level.registryAccess().lookupOrThrow(Registries.ENTITY_TYPE).listElementIds().forEach(key -> types.add(key.location()));
+                Registry.ENTITY_TYPE.registryKeySet().forEach(key -> types.add(key.location()));
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to get entity types for 'Is Entity Nearby' loading requirement!", ex);

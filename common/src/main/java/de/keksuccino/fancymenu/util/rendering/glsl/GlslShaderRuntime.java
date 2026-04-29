@@ -1204,7 +1204,7 @@ public class GlslShaderRuntime {
             timeDelta *= Math.max(0.0F, settings.timeScale());
         }
 
-        float frameRate = minecraft.getFps();
+        float frameRate = RenderingUtils.getMinecraftFps();
         if (frameRate <= 0.0F && this.lastFrameRate > 0.0F) {
             frameRate = this.lastFrameRate;
         }

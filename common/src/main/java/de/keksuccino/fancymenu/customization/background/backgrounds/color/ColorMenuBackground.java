@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiRenderTypes;
 import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 
@@ -33,7 +33,7 @@ public class ColorMenuBackground extends MenuBackground<ColorMenuBackground> {
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         RenderSystem.enableBlend();
-        graphics.fill(RenderType.gui(), 0, 0, getScreenWidth(), getScreenHeight(), this.color.getDrawable().getColorIntWithAlpha(this.opacity));
+        graphics.fill(GuiRenderTypes.gui(), 0, 0, getScreenWidth(), getScreenHeight(), this.color.getDrawable().getColorIntWithAlpha(this.opacity));
         graphics.flush();
 
     }

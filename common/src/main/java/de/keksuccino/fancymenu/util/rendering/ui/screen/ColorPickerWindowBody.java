@@ -10,11 +10,11 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiRenderTypes;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
+import com.mojang.math.Matrix4f;
 import java.awt.Color;
 import java.util.function.Consumer;
 
@@ -421,7 +421,7 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
 
     private void fillGradientHorizontal(@NotNull GuiGraphics graphics, int x1, int y1, int x2, int y2, int colorLeft, int colorRight) {
         Matrix4f matrix = graphics.pose().last().pose();
-        VertexConsumer consumer = graphics.bufferSource().getBuffer(RenderType.gui());
+        VertexConsumer consumer = graphics.bufferSource().getBuffer(GuiRenderTypes.gui());
         consumer.vertex(matrix, (float) x1, (float) y1, 0.0F).color(colorLeft).endVertex();
         consumer.vertex(matrix, (float) x1, (float) y2, 0.0F).color(colorLeft).endVertex();
         consumer.vertex(matrix, (float) x2, (float) y2, 0.0F).color(colorRight).endVertex();

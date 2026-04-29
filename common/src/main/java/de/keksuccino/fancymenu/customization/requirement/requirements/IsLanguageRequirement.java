@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.language.LanguageInfo;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
@@ -118,7 +119,7 @@ public class IsLanguageRequirement extends Requirement {
 
             this.addCellGroupEndSpacerCell();
 
-            this.langIdSuggestions = EditBoxSuggestions.createWithCustomSuggestions(this, this.langIdCell.editBox, EditBoxSuggestions.SuggestionsRenderPosition.ABOVE_EDIT_BOX, new ArrayList<>(Minecraft.getInstance().getLanguageManager().getLanguages().keySet()));
+            this.langIdSuggestions = EditBoxSuggestions.createWithCustomSuggestions(this, this.langIdCell.editBox, EditBoxSuggestions.SuggestionsRenderPosition.ABOVE_EDIT_BOX, Minecraft.getInstance().getLanguageManager().getLanguages().stream().map(LanguageInfo::getCode).toList());
             UIBase.applyDefaultWidgetSkinTo(this.langIdSuggestions);
             this.langIdCell.editBox.setResponder(s -> this.langIdSuggestions.updateCommandInfo());
 

@@ -8,14 +8,14 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
-public abstract class ScrollAreaEntry extends UIBase implements Widget {
+public abstract class ScrollAreaEntry extends UIBase implements Renderable {
 
     public ScrollArea parent;
     protected float x;

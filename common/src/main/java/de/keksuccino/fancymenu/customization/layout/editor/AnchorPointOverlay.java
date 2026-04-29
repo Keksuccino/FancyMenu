@@ -17,7 +17,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Style;
 import org.apache.commons.lang3.StringUtils;
@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class AnchorPointOverlay implements Widget, GuiEventListener {
+public class AnchorPointOverlay implements Renderable, GuiEventListener {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -471,12 +471,10 @@ public class AnchorPointOverlay implements Widget, GuiEventListener {
 
     }
 
-    @Override
-    public void setFocused(boolean var1) {
+        public void setFocused(boolean var1) {
     }
 
-    @Override
-    public boolean isFocused() {
+        public boolean isFocused() {
         return false;
     }
 
@@ -535,7 +533,7 @@ public class AnchorPointOverlay implements Widget, GuiEventListener {
 
     }
 
-    public class AnchorPointArea implements Widget, GuiEventListener {
+    public class AnchorPointArea implements Renderable, GuiEventListener {
 
         public final ElementAnchorPoint anchorPoint;
         private int x;
@@ -607,12 +605,10 @@ public class AnchorPointOverlay implements Widget, GuiEventListener {
             return UIBase.isXYInArea((int) mouseX, (int) mouseY, this.getX(), this.getY(), this.getWidth(), this.getWidth());
         }
 
-        @Override
-        public void setFocused(boolean var1) {
+                public void setFocused(boolean var1) {
         }
 
-        @Override
-        public boolean isFocused() {
+                public boolean isFocused() {
             return false;
         }
 

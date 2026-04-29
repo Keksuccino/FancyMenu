@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandl
 import de.keksuccino.fancymenu.util.properties.Property;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiRenderTypes;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +46,7 @@ public class AnimationControllerElement extends AbstractElement {
                 int w = this.getAbsoluteWidth();
                 int h = this.getAbsoluteHeight();
                 RenderSystem.enableBlend();
-                graphics.fill(RenderType.guiOverlay(), x, y, x + w, y + h, this.inEditorColor.getDrawable().getColorInt());
+                graphics.fill(GuiRenderTypes.guiOverlay(), x, y, x + w, y + h, this.inEditorColor.getDrawable().getColorInt());
                 graphics.enableScissor(x, y, x + w, y + h);
                 graphics.drawCenteredString(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
                 graphics.disableScissor();

@@ -14,7 +14,7 @@ import de.keksuccino.fancymenu.util.rendering.entity.FancyEntityRendererUtils;
 import de.keksuccino.fancymenu.util.rendering.entity.WrappedFancyPlayerWidget;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Pose;
@@ -214,9 +214,9 @@ public class PlayerEntityElement extends AbstractElement {
             if (!this.hasParrotOnShoulder) {
                 this.widget.setParrots(null, null);
             } else if (this.parrotOnLeftShoulder) {
-                this.widget.setParrots(Parrot.Variant.RED_BLUE, null);
+                this.widget.setParrots(0, null);
             } else {
-                this.widget.setParrots(null, Parrot.Variant.RED_BLUE);
+                this.widget.setParrots(null, 0);
             }
         }
     }
@@ -465,7 +465,7 @@ public class PlayerEntityElement extends AbstractElement {
                     this.lastEnchanted = enchanted;
 
                     ResourceLocation itemLocation = ResourceLocation.tryParse(keyFinal);
-                    Item item = itemLocation != null ? BuiltInRegistries.ITEM.get(itemLocation) : Items.AIR;
+                    Item item = itemLocation != null ? Registry.ITEM.get(itemLocation) : Items.AIR;
                     this.cachedStack = new ItemStack(item);
                     if (this.enchanted) {
                         this.cachedStack.enchant(Enchantments.UNBREAKING, 1);

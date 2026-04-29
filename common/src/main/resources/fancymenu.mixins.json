@@ -5,7 +5,6 @@
   "client": [
     "client.IMixinAbstractContainerScreen",
     "client.IMixinAbstractSelectionList",
-    "client.IMixinAbstractSliderButton",
     "client.IMixinAbstractWidget",
     "client.IMixinBlendMode",
     "client.IMixinBossHealthOverlay",
@@ -17,7 +16,6 @@
     "client.IMixinEditBox",
     "client.IMixinGameRenderer",
     "client.IMixinGui",
-    "client.IMixinGuiGraphics",
     "client.IMixinLevelLoadingScreen",
     "client.IMixinMinecraft",
     "client.IMixinMusicManager",
@@ -25,7 +23,6 @@
     "client.IMixinOptions",
     "client.IMixinPauseScreen",
     "client.IMixinPostChain",
-    "client.IMixinPathPackResources",
     "client.IMixinPlayerModel",
     "client.IMixinProgressScreen",
     "client.IMixinRealmsNotificationsScreen",
@@ -33,10 +30,7 @@
     "client.IMixinScreen",
     "client.IMixinSpectatorGui",
     "client.IMixinServerList",
-    "client.IMixinSplashRenderer",
     "client.IMixinSuggestionsList",
-    "client.IMixinVanillaPackResources",
-    "client.MixinAbstractButton",
     "client.MixinAbstractContainerEventHandler",
     "client.MixinAbstractContainerScreen",
     "client.MixinAbstractSelectionList",
@@ -45,14 +39,9 @@
     "client.MixinChatListener",
     "client.MixinClientPacketListener",
     "client.MixinConnectScreen",
-    "client.MixinCreateWorldScreen",
-    "client.MixinCreateWorldScreen_GameTab",
-    "client.MixinCreateWorldScreen_MoreTab",
-    "client.MixinCreateWorldScreen_WorldTab",
     "client.MixinCreativeModeInventoryScreen",
     "client.MixinCycleButton",
     "client.MixinDeathScreen",
-    "client.MixinDisconnectedScreen",
     "client.MixinGameNarrator",
     "client.MixinGameRenderer",
     "client.MixinGenericDirtMessageScreen",
@@ -78,7 +67,6 @@
     "client.MixinPlainTextButton",
     "client.MixinPlayer",
     "client.MixinProgressScreen",
-    "client.MixinQuickPlay",
     "client.MixinRealmsNotificationsScreen",
     "client.MixinReceivingLevelScreen",
     "client.MixinRenderSystem",
@@ -88,8 +76,6 @@
     "client.MixinSoundEngine",
     "client.MixinSoundManager",
     "client.MixinStringDecomposer",
-    "client.MixinSwitchGrid_SwitchBuilder",
-    "client.MixinTabNavigationBar",
     "client.MixinTitleScreen",
     "client.MixinSelectWorldScreen",
     "client.MixinWorldOpenFlows",
@@ -107,7 +93,3 @@
   "plugin": "de.keksuccino.fancymenu.mixin.FMMixinPlugin",
   "minVersion": "0.8"
 }
-
-
-
-

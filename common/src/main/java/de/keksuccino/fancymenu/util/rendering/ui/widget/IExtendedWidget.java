@@ -13,15 +13,15 @@ import org.jetbrains.annotations.NotNull;
 public interface IExtendedWidget {
 
     default void renderScrollingLabel(@NotNull AbstractWidget widget, @NotNull GuiGraphics graphics, @NotNull Font font, int spaceLeftRight, boolean labelShadow, int textColor) {
-        int xMin = widget.getX() + spaceLeftRight;
-        int xMax = widget.getX() + widget.getWidth() - spaceLeftRight;
+        int xMin = widget.x + spaceLeftRight;
+        int xMax = widget.x + widget.getWidth() - spaceLeftRight;
         float scale = this.resolveLabelScale(widget);
         if (scale == 0.0F) return;
         //Use getMessage() here to not break custom label handling of CustomizableWidget
         if (scale == 1.0F) {
-            this.renderScrollingLabelInternal(graphics, font, widget.getMessage(), xMin, widget.getY(), xMax, widget.getY() + widget.getHeight(), labelShadow, textColor);
+            this.renderScrollingLabelInternal(graphics, font, widget.getMessage(), xMin, widget.y, xMax, widget.y + widget.getHeight(), labelShadow, textColor);
         } else {
-            this.renderScrollingLabelInternalScaled(graphics, font, widget.getMessage(), xMin, widget.getY(), xMax, widget.getY() + widget.getHeight(), labelShadow, textColor, scale);
+            this.renderScrollingLabelInternalScaled(graphics, font, widget.getMessage(), xMin, widget.y, xMax, widget.y + widget.getHeight(), labelShadow, textColor, scale);
         }
     }
 
@@ -44,17 +44,17 @@ public interface IExtendedWidget {
     }
 
     default void renderScrollingLabelUiBase(@NotNull AbstractWidget widget, @NotNull GuiGraphics graphics, int spaceLeftRight, int textColor) {
-        int xMin = widget.getX() + spaceLeftRight;
-        int xMax = widget.getX() + widget.getWidth() - spaceLeftRight;
+        int xMin = widget.x + spaceLeftRight;
+        int xMax = widget.x + widget.getWidth() - spaceLeftRight;
         float scale = this.resolveLabelScale(widget);
         if (scale == 0.0F) return;
         //Use getMessage() here to not break custom label handling of CustomizableWidget
         if (scale == 1.0F) {
-            this.renderScrollingLabelInternalUiBase(graphics, widget.getMessage(), xMin, widget.getY(), xMax, widget.getY() + widget.getHeight(), textColor);
+            this.renderScrollingLabelInternalUiBase(graphics, widget.getMessage(), xMin, widget.y, xMax, widget.y + widget.getHeight(), textColor);
         } else if (UIBase.shouldUseMinecraftFontForUIRendering()) {
-            this.renderScrollingLabelInternalScaled(graphics, Minecraft.getInstance().font, widget.getMessage(), xMin, widget.getY(), xMax, widget.getY() + widget.getHeight(), false, textColor, scale);
+            this.renderScrollingLabelInternalScaled(graphics, Minecraft.getInstance().font, widget.getMessage(), xMin, widget.y, xMax, widget.y + widget.getHeight(), false, textColor, scale);
         } else {
-            this.renderScrollingLabelInternalUiBaseScaled(graphics, widget.getMessage(), xMin, widget.getY(), xMax, widget.getY() + widget.getHeight(), textColor, scale);
+            this.renderScrollingLabelInternalUiBaseScaled(graphics, widget.getMessage(), xMin, widget.y, xMax, widget.y + widget.getHeight(), textColor, scale);
         }
     }
 

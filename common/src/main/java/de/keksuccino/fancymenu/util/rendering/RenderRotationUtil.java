@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering;
 
+import com.mojang.math.Quaternion;
 import org.jetbrains.annotations.ApiStatus;
-import org.joml.Quaternionf;
 
 public final class RenderRotationUtil {
 
@@ -118,11 +118,11 @@ public final class RenderRotationUtil {
             this.w = 1.0F;
         }
 
-        public void mul(Quaternionf quaternion) {
-            float qx = quaternion.x();
-            float qy = quaternion.y();
-            float qz = quaternion.z();
-            float qw = quaternion.w();
+        public void mul(Quaternion quaternion) {
+            float qx = quaternion.i();
+            float qy = quaternion.j();
+            float qz = quaternion.k();
+            float qw = quaternion.r();
 
             float nx = this.w * qx + this.x * qw + this.y * qz - this.z * qy;
             float ny = this.w * qy - this.x * qz + this.y * qw + this.z * qx;

@@ -10,6 +10,8 @@ public interface IMixinAbstractWidget {
 
     @Accessor("alpha") float getAlphaFancyMenu();
 
+    @Accessor("isHovered") boolean getIsHoveredFancyMenu();
+
     @Accessor("height") void setHeightFancyMenu(int height);
 
     @Accessor("message") void setMessageFieldFancyMenu(Component message);

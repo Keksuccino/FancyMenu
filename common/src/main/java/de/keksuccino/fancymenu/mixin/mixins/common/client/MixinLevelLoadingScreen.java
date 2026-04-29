@@ -1,12 +1,13 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.WidgetifiedScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.RendererWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.TextWidget;
 import net.minecraft.client.gui.Font;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -57,19 +58,20 @@ public abstract class MixinLevelLoadingScreen extends Screen {
 
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/LevelLoadingScreen;renderChunks(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/server/level/progress/StoringChunkProgressListener;IIII)V"))
-    private boolean wrapRenderChunksFancyMenu(GuiGraphics $$0, StoringChunkProgressListener $$1, int $$2, int $$3, int $$4, int $$5) {
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/LevelLoadingScreen;renderChunks(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/server/level/progress/StoringChunkProgressListener;IIII)V"))
+    private boolean wrapRenderChunksFancyMenu(PoseStack $$0, StoringChunkProgressListener $$1, int $$2, int $$3, int $$4, int $$5) {
         return !this.isCustomizableFancyMenu();
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;drawCenteredString(Lnet/minecraft/client/gui/Font;Ljava/lang/String;III)V"))
-    private boolean wrapRenderPercentStringFancyMenu(GuiGraphics instance, Font font, String text, int x, int y, int color) {
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/LevelLoadingScreen;drawCenteredString(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/gui/Font;Ljava/lang/String;III)V"))
+    private boolean wrapRenderPercentStringFancyMenu(PoseStack instance, Font font, String text, int x, int y, int color) {
         return !this.isCustomizableFancyMenu();
     }
 
     @Inject(method = "render", at = @At("RETURN"))
-    private void afterRenderFancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
+    private void afterRenderFancyMenu(PoseStack poseStack, int mouseX, int mouseY, float partial, CallbackInfo info) {
         if (this.isCustomizableFancyMenu()) {
+            GuiGraphics graphics = GuiGraphics.currentGraphics();
             if (this.chunkRendererFancyMenu != null) this.chunkRendererFancyMenu.render(graphics, mouseX, mouseY, partial);
             if (this.percentageTextFancyMenu != null) {
                 this.percentageTextFancyMenu.setMessage(this.getFormattedProgressFancyMenu());
@@ -80,7 +82,7 @@ public abstract class MixinLevelLoadingScreen extends Screen {
 
     @Unique
     private void renderChunkBoxFancyMenu(@NotNull GuiGraphics graphics, int xCenter, int yCenter, StoringChunkProgressListener listener) {
-        LevelLoadingScreen.renderChunks(graphics, listener, xCenter, yCenter, 2, 0);
+        LevelLoadingScreen.renderChunks(graphics.pose(), listener, xCenter, yCenter, 2, 0);
     }
 
     @Unique

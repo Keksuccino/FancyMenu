@@ -198,7 +198,7 @@ public class FmDataCommand {
 
         int finalFancyMenuClientCount = fancyMenuClientCount;
         int finalTargetedCount = targetedCount;
-        source.sendSuccess(() -> Component.literal("[FancyMenu] Sent data identifier '")
+        source.sendSuccess(Component.literal("[FancyMenu] Sent data identifier '")
                 .append(Component.literal(dataIdentifier).withStyle(ChatFormatting.YELLOW))
                 .append(Component.literal("' to "))
                 .append(Component.literal(String.valueOf(finalFancyMenuClientCount)).withStyle(ChatFormatting.GREEN))
@@ -233,7 +233,7 @@ public class FmDataCommand {
             return 0;
         }
 
-        source.sendSuccess(() -> Component.literal("[FancyMenu] Added listener '")
+        source.sendSuccess(Component.literal("[FancyMenu] Added listener '")
                 .append(Component.literal(listenerName).withStyle(ChatFormatting.GREEN))
                 .append(Component.literal("'.")), false);
         return 1;
@@ -259,7 +259,7 @@ public class FmDataCommand {
             return 0;
         }
 
-        source.sendSuccess(() -> Component.literal("[FancyMenu] Updated listener '")
+        source.sendSuccess(Component.literal("[FancyMenu] Updated listener '")
                 .append(Component.literal(listenerName).withStyle(ChatFormatting.GREEN))
                 .append(Component.literal("'.")), false);
         return 1;
@@ -274,7 +274,7 @@ public class FmDataCommand {
             return 0;
         }
 
-        source.sendSuccess(() -> Component.literal("[FancyMenu] Removed listener '")
+        source.sendSuccess(Component.literal("[FancyMenu] Removed listener '")
                 .append(Component.literal(listenerName).withStyle(ChatFormatting.GREEN))
                 .append(Component.literal("'.")), false);
         return 1;
@@ -283,24 +283,24 @@ public class FmDataCommand {
     private static int listListeners(@NotNull CommandSourceStack source) {
         List<FmDataServerListener> listeners = FmDataServerListenerHandler.getListeners();
 
-        source.sendSuccess(() -> Component.literal("---------------------------------------------").withStyle(style -> style.withColor(COLOR_LIST_SEPARATOR).withStrikethrough(true)), false);
-        source.sendSuccess(() -> Component.literal("FancyMenu FMData Server Listeners").withStyle(style -> style.withColor(COLOR_LIST_TITLE).withBold(true)), false);
-        source.sendSuccess(() -> Component.literal("Total listeners: ").withStyle(style -> style.withColor(COLOR_LIST_TOTAL_LABEL))
+        source.sendSuccess(Component.literal("---------------------------------------------").withStyle(style -> style.withColor(COLOR_LIST_SEPARATOR).withStrikethrough(true)), false);
+        source.sendSuccess(Component.literal("FancyMenu FMData Server Listeners").withStyle(style -> style.withColor(COLOR_LIST_TITLE).withBold(true)), false);
+        source.sendSuccess(Component.literal("Total listeners: ").withStyle(style -> style.withColor(COLOR_LIST_TOTAL_LABEL))
                 .append(Component.literal(String.valueOf(listeners.size())).withStyle(style -> style.withColor(COLOR_LIST_TOTAL_VALUE))), false);
 
         if (listeners.isEmpty()) {
-            source.sendSuccess(() -> Component.literal("No server-side FMData listeners configured yet.").withStyle(style -> style.withColor(COLOR_LIST_EMPTY)), false);
-            source.sendSuccess(() -> Component.literal("Use /fmdata listener add ... to create one.").withStyle(style -> style.withColor(COLOR_LIST_HINT)), false);
-            source.sendSuccess(() -> Component.literal("---------------------------------------------").withStyle(style -> style.withColor(COLOR_LIST_SEPARATOR).withStrikethrough(true)), false);
+            source.sendSuccess(Component.literal("No server-side FMData listeners configured yet.").withStyle(style -> style.withColor(COLOR_LIST_EMPTY)), false);
+            source.sendSuccess(Component.literal("Use /fmdata listener add ... to create one.").withStyle(style -> style.withColor(COLOR_LIST_HINT)), false);
+            source.sendSuccess(Component.literal("---------------------------------------------").withStyle(style -> style.withColor(COLOR_LIST_SEPARATOR).withStrikethrough(true)), false);
             return 1;
         }
 
         int index = 1;
         for (FmDataServerListener listener : listeners) {
             int entryIndex = index;
-            source.sendSuccess(() -> Component.literal(entryIndex + ") ").withStyle(style -> style.withColor(COLOR_ENTRY_INDEX).withBold(true))
+            source.sendSuccess(Component.literal(entryIndex + ") ").withStyle(style -> style.withColor(COLOR_ENTRY_INDEX).withBold(true))
                     .append(Component.literal(listener.listener_name).withStyle(style -> style.withColor(COLOR_ENTRY_NAME).withBold(true))), false);
-            source.sendSuccess(() -> buildMatchLine(
+            source.sendSuccess(buildMatchLine(
                     "Identifier Match",
                     listener.matchingTypeIdentifierNormalized(),
                     listener.listen_for_identifier,
@@ -308,7 +308,7 @@ public class FmDataCommand {
                     COLOR_IDENTIFIER_LABEL,
                     COLOR_IDENTIFIER_VALUE
             ), false);
-            source.sendSuccess(() -> buildMatchLine(
+            source.sendSuccess(buildMatchLine(
                     "Data Match",
                     listener.matchingTypeDataNormalized(),
                     listener.listen_for_data,
@@ -316,19 +316,19 @@ public class FmDataCommand {
                     COLOR_DATA_LABEL,
                     COLOR_DATA_VALUE
             ), false);
-            source.sendSuccess(() -> Component.literal("   Fire For Player: ").withStyle(style -> style.withColor(COLOR_FIRE_LABEL))
+            source.sendSuccess(Component.literal("   Fire For Player: ").withStyle(style -> style.withColor(COLOR_FIRE_LABEL))
                     .append(Component.literal(listener.describePlayerFilter()).withStyle(style -> style.withColor(COLOR_FIRE_VALUE))), false);
-            source.sendSuccess(() -> Component.literal("   Commands on Fire: ").withStyle(style -> style.withColor(COLOR_COMMANDS_LABEL))
+            source.sendSuccess(Component.literal("   Commands on Fire: ").withStyle(style -> style.withColor(COLOR_COMMANDS_LABEL))
                     .append(Component.literal(String.valueOf(listener.commands_to_execute_on_fire.size())).withStyle(style -> style.withColor(COLOR_COMMANDS_VALUE))), false);
 
             for (String command : listener.commands_to_execute_on_fire) {
-                source.sendSuccess(() -> Component.literal("      - " + command).withStyle(style -> style.withColor(COLOR_COMMAND_ENTRY)), false);
+                source.sendSuccess(Component.literal("      - " + command).withStyle(style -> style.withColor(COLOR_COMMAND_ENTRY)), false);
             }
 
             index++;
         }
 
-        source.sendSuccess(() -> Component.literal("---------------------------------------------").withStyle(style -> style.withColor(COLOR_LIST_SEPARATOR).withStrikethrough(true)), false);
+        source.sendSuccess(Component.literal("---------------------------------------------").withStyle(style -> style.withColor(COLOR_LIST_SEPARATOR).withStrikethrough(true)), false);
         return listeners.size();
     }
 
@@ -356,7 +356,7 @@ public class FmDataCommand {
             return 0;
         }
 
-        source.sendSuccess(() -> Component.literal("[FancyMenu] Added welcome data '")
+        source.sendSuccess(Component.literal("[FancyMenu] Added welcome data '")
                 .append(Component.literal(welcomeDataName).withStyle(ChatFormatting.GREEN))
                 .append(Component.literal("'.")), false);
         return 1;
@@ -382,7 +382,7 @@ public class FmDataCommand {
             return 0;
         }
 
-        source.sendSuccess(() -> Component.literal("[FancyMenu] Updated welcome data '")
+        source.sendSuccess(Component.literal("[FancyMenu] Updated welcome data '")
                 .append(Component.literal(welcomeDataName).withStyle(ChatFormatting.GREEN))
                 .append(Component.literal("'.")), false);
         return 1;
@@ -397,7 +397,7 @@ public class FmDataCommand {
             return 0;
         }
 
-        source.sendSuccess(() -> Component.literal("[FancyMenu] Removed welcome data '")
+        source.sendSuccess(Component.literal("[FancyMenu] Removed welcome data '")
                 .append(Component.literal(welcomeDataName).withStyle(ChatFormatting.GREEN))
                 .append(Component.literal("'.")), false);
         return 1;
@@ -406,33 +406,33 @@ public class FmDataCommand {
     private static int listWelcomeData(@NotNull CommandSourceStack source) {
         List<FmDataWelcomeData> entries = FmDataWelcomeDataHandler.getWelcomeDataEntries();
 
-        source.sendSuccess(() -> Component.literal("---------------------------------------------").withStyle(style -> style.withColor(COLOR_LIST_SEPARATOR).withStrikethrough(true)), false);
-        source.sendSuccess(() -> Component.literal("FancyMenu FMData Welcome Data").withStyle(style -> style.withColor(COLOR_LIST_TITLE).withBold(true)), false);
-        source.sendSuccess(() -> Component.literal("Total entries: ").withStyle(style -> style.withColor(COLOR_LIST_TOTAL_LABEL))
+        source.sendSuccess(Component.literal("---------------------------------------------").withStyle(style -> style.withColor(COLOR_LIST_SEPARATOR).withStrikethrough(true)), false);
+        source.sendSuccess(Component.literal("FancyMenu FMData Welcome Data").withStyle(style -> style.withColor(COLOR_LIST_TITLE).withBold(true)), false);
+        source.sendSuccess(Component.literal("Total entries: ").withStyle(style -> style.withColor(COLOR_LIST_TOTAL_LABEL))
                 .append(Component.literal(String.valueOf(entries.size())).withStyle(style -> style.withColor(COLOR_LIST_TOTAL_VALUE))), false);
 
         if (entries.isEmpty()) {
-            source.sendSuccess(() -> Component.literal("No FMData welcome data configured yet.").withStyle(style -> style.withColor(COLOR_LIST_EMPTY)), false);
-            source.sendSuccess(() -> Component.literal("Use /fmdata welcome_data add ... to create one.").withStyle(style -> style.withColor(COLOR_LIST_HINT)), false);
-            source.sendSuccess(() -> Component.literal("---------------------------------------------").withStyle(style -> style.withColor(COLOR_LIST_SEPARATOR).withStrikethrough(true)), false);
+            source.sendSuccess(Component.literal("No FMData welcome data configured yet.").withStyle(style -> style.withColor(COLOR_LIST_EMPTY)), false);
+            source.sendSuccess(Component.literal("Use /fmdata welcome_data add ... to create one.").withStyle(style -> style.withColor(COLOR_LIST_HINT)), false);
+            source.sendSuccess(Component.literal("---------------------------------------------").withStyle(style -> style.withColor(COLOR_LIST_SEPARATOR).withStrikethrough(true)), false);
             return 1;
         }
 
         int index = 1;
         for (FmDataWelcomeData entry : entries) {
             int entryIndex = index;
-            source.sendSuccess(() -> Component.literal(entryIndex + ") ").withStyle(style -> style.withColor(COLOR_ENTRY_INDEX).withBold(true))
+            source.sendSuccess(Component.literal(entryIndex + ") ").withStyle(style -> style.withColor(COLOR_ENTRY_INDEX).withBold(true))
                     .append(Component.literal(entry.welcome_data_name).withStyle(style -> style.withColor(COLOR_ENTRY_NAME).withBold(true))), false);
-            source.sendSuccess(() -> Component.literal("   Target Players: ").withStyle(style -> style.withColor(COLOR_WELCOME_TARGET_LABEL))
+            source.sendSuccess(Component.literal("   Target Players: ").withStyle(style -> style.withColor(COLOR_WELCOME_TARGET_LABEL))
                     .append(Component.literal(entry.describeTargetPlayer()).withStyle(style -> style.withColor(COLOR_WELCOME_TARGET_VALUE))), false);
-            source.sendSuccess(() -> Component.literal("   Data Identifier: ").withStyle(style -> style.withColor(COLOR_WELCOME_IDENTIFIER_LABEL))
+            source.sendSuccess(Component.literal("   Data Identifier: ").withStyle(style -> style.withColor(COLOR_WELCOME_IDENTIFIER_LABEL))
                     .append(Component.literal(entry.data_identifier).withStyle(style -> style.withColor(COLOR_WELCOME_IDENTIFIER_VALUE))), false);
-            source.sendSuccess(() -> Component.literal("   Data: ").withStyle(style -> style.withColor(COLOR_WELCOME_DATA_LABEL))
+            source.sendSuccess(Component.literal("   Data: ").withStyle(style -> style.withColor(COLOR_WELCOME_DATA_LABEL))
                     .append(Component.literal(entry.data).withStyle(style -> style.withColor(COLOR_WELCOME_DATA_VALUE))), false);
             index++;
         }
 
-        source.sendSuccess(() -> Component.literal("---------------------------------------------").withStyle(style -> style.withColor(COLOR_LIST_SEPARATOR).withStrikethrough(true)), false);
+        source.sendSuccess(Component.literal("---------------------------------------------").withStyle(style -> style.withColor(COLOR_LIST_SEPARATOR).withStrikethrough(true)), false);
         return entries.size();
     }
 

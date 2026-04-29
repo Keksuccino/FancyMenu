@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui;
 
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class UIComponent extends UIBase implements FocuslessContainerEventHandler, Widget, NarratableEntry {
+public abstract class UIComponent extends UIBase implements FocuslessContainerEventHandler, Renderable, NarratableEntry {
 
     public float posZ = 0f;
     protected boolean hovered = false;
@@ -270,12 +270,10 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
         return this.isMouseOver();
     }
 
-    @Override
-    public void setFocused(boolean var1) {
+        public void setFocused(boolean var1) {
     }
 
-    @Override
-    public boolean isFocused() {
+        public boolean isFocused() {
         return false;
     }
 

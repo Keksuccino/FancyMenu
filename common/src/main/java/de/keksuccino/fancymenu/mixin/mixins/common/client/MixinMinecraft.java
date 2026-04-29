@@ -26,6 +26,7 @@ import de.keksuccino.fancymenu.util.resource.preload.ResourcePreLoader;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import java.net.SocketAddress;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import net.minecraft.client.gui.screens.DeathScreen;
 import net.minecraft.client.gui.screens.Overlay;
@@ -86,14 +87,15 @@ public class MixinMinecraft {
 		}
 	}
 
-	@Inject(method = "doWorldLoad(Ljava/lang/String;Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lnet/minecraft/server/packs/repository/PackRepository;Lnet/minecraft/server/WorldStem;Z)V", at = @At("HEAD"))
-	private void before_doWorldLoad_FancyMenu(String levelId, LevelStorageAccess levelStorage, PackRepository packRepository, WorldStem worldStem, boolean newWorld, CallbackInfo info) {
+	@Inject(method = "doWorldLoad(Ljava/lang/String;Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lnet/minecraft/server/packs/repository/PackRepository;Lnet/minecraft/server/WorldStem;)V", at = @At("HEAD"))
+	private void before_doWorldLoad_FancyMenu(String levelId, LevelStorageAccess levelStorage, PackRepository packRepository, WorldStem worldStem, CallbackInfo info) {
 		try {
 			if (levelStorage != null && worldStem != null) {
 				Path savePath = levelStorage.getLevelPath(LevelResource.ROOT).toAbsolutePath();
 				String iconPath = levelStorage.getIconFile().map(path -> path.toAbsolutePath().toString()).orElse(null);
 				String worldName = worldStem.worldData().getLevelName();
-				WorldSessionTracker.prepareSession(worldName, savePath.toString(), iconPath, newWorld);
+				boolean firstJoin = !Files.exists(levelStorage.getLevelPath(LevelResource.LEVEL_DATA_FILE));
+				WorldSessionTracker.prepareSession(worldName, savePath.toString(), iconPath, firstJoin);
 			} else {
 				WorldSessionTracker.clearSession();
 			}
@@ -335,7 +337,7 @@ public class MixinMinecraft {
 		}
 	}
 
-	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;added()V"))
+	@Inject(method = "setScreen", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;", opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER))
 	private void beforeScreenAddedFancyMenu(Screen screen, CallbackInfo info) {
 		if (this.screen == null) return;
 		EventHandler.INSTANCE.postEvent(new OpenScreenEvent(this.screen));

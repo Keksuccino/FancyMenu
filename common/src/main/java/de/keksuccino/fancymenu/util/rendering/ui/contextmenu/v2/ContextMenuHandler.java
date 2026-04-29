@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2;
 
 import de.keksuccino.fancymenu.util.rendering.ui.Tickable;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.jetbrains.annotations.NotNull;
@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class ContextMenuHandler extends AbstractContainerEventHandler implements Widget, Tickable {
+public class ContextMenuHandler extends AbstractContainerEventHandler implements Renderable, Tickable {
 
     public static final ContextMenuHandler INSTANCE = new ContextMenuHandler();
 
@@ -136,8 +136,7 @@ public class ContextMenuHandler extends AbstractContainerEventHandler implements
         return this.children;
     }
 
-    @Override
-    public boolean isFocused() {
+        public boolean isFocused() {
         return false;
     }
 

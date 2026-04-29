@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiRenderTypes;
 import java.awt.Color;
 import java.util.*;
 
@@ -72,7 +72,7 @@ public class IndentationGuideRenderer {
                 }
 
                 // Draw the guide line
-                graphics.fill(RenderType.gui(), xPos, yPos, xPos + 1, yPos + height, guideColor.getRGB());
+                graphics.fill(GuiRenderTypes.gui(), xPos, yPos, xPos + 1, yPos + height, guideColor.getRGB());
             }
         }
     }

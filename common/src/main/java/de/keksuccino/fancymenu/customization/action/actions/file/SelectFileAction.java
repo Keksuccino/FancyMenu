@@ -11,8 +11,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPCellWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
+import de.keksuccino.fancymenu.util.rendering.gui.VanillaTooltip;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -336,7 +336,7 @@ public class SelectFileAction extends Action {
             TextInputCell targetPathCell = this.addTextInputCell(null, true, true)
                     .setEditListener(text -> this.config.targetPath = text)
                     .setText(this.config.targetPath);
-            targetPathCell.editBox.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.select_file.edit.target_path.desc")));
+            targetPathCell.editBox.setVanillaTooltip_FancyMenu(VanillaTooltip.create(Component.translatable("fancymenu.actions.select_file.edit.target_path.desc")));
 
             this.addCellGroupEndSpacerCell();
 
@@ -344,7 +344,7 @@ public class SelectFileAction extends Action {
             TextInputCell filterDescriptionCell = this.addTextInputCell(null, true, true)
                     .setEditListener(text -> this.config.filterDescription = text)
                     .setText(this.config.filterDescription);
-            filterDescriptionCell.editBox.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.select_file.edit.filter_description.desc")));
+            filterDescriptionCell.editBox.setVanillaTooltip_FancyMenu(VanillaTooltip.create(Component.translatable("fancymenu.actions.select_file.edit.filter_description.desc")));
 
             this.addCellGroupEndSpacerCell();
 
@@ -352,14 +352,14 @@ public class SelectFileAction extends Action {
             TextInputCell extensionsCell = this.addTextInputCell(null, true, true)
                     .setEditListener(text -> this.config.extensionsRaw = text)
                     .setText(this.config.extensionsRaw);
-            extensionsCell.editBox.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.select_file.edit.extensions.desc")));
+            extensionsCell.editBox.setVanillaTooltip_FancyMenu(VanillaTooltip.create(Component.translatable("fancymenu.actions.select_file.edit.extensions.desc")));
 
             this.addCellGroupEndSpacerCell();
 
             CycleButton<CommonCycles.CycleEnabledDisabled> overwriteButton = new CycleButton<>(0, 0, 20, 20,
                     CommonCycles.cycleEnabledDisabled("fancymenu.actions.select_file.edit.overwrite", this.config.overwriteExisting),
                     (cycleValue, button) -> this.config.overwriteExisting = cycleValue.getAsBoolean());
-            overwriteButton.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.select_file.edit.overwrite.desc")));
+            overwriteButton.setVanillaTooltip_FancyMenu(VanillaTooltip.create(Component.translatable("fancymenu.actions.select_file.edit.overwrite.desc")));
             this.addWidgetCell(overwriteButton, true);
 
             this.addStartEndSpacerCell();

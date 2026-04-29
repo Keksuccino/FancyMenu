@@ -13,7 +13,7 @@ import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.util.FastColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.joml.Matrix4f;
+import com.mojang.math.Matrix4f;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -24,7 +24,7 @@ public final class SmoothRectangleRenderer {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String SMOOTH_RECT_LOCAL_SHADER_NAME_FANCYMENU = "fancymenu_gui_smooth_rect_local";
     private static final float QUAD_AA_PADDING_PIXELS_FANCYMENU = 2.0F;
-    private static final Matrix4f IDENTITY_POSE_FANCYMENU = new Matrix4f().identity();
+    private static final Matrix4f IDENTITY_POSE_FANCYMENU = Matrix4f.createScaleMatrix(1.0F, 1.0F, 1.0F);
 
     @Nullable
     private static ShaderInstance smoothRectLocalShader_FancyMenu;

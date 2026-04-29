@@ -2,10 +2,10 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.authlib.GameProfile;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import net.minecraft.client.GuiMessageTag;
 import net.minecraft.client.gui.components.ChatComponent;
+import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.multiplayer.chat.ChatListener;
 import net.minecraft.network.chat.ChatType;
 import net.minecraft.network.chat.Component;
@@ -37,15 +37,15 @@ public class MixinChatListener {
         ChatType.Bound boundChatType,
         PlayerChatMessage chatMessage,
         Component decoratedServerContent,
-        GameProfile gameProfile,
+        PlayerInfo playerInfo,
         boolean onlyShowSecureChat,
         Instant timestamp
     ) {
         operation.call(instance, component, messageSignature, guiMessageTag);
 
-        UUID senderUuid = gameProfile != null ? gameProfile.getId() : null;
-        Component senderNameComponent = (gameProfile != null && gameProfile.getName() != null)
-            ? Component.literal(gameProfile.getName())
+        UUID senderUuid = playerInfo != null ? playerInfo.getProfile().getId() : chatMessage.signer().profileId();
+        Component senderNameComponent = (playerInfo != null && playerInfo.getProfile().getName() != null)
+            ? Component.literal(playerInfo.getProfile().getName())
             : null;
 
         Listeners.ON_CHAT_MESSAGE_RECEIVED.onChatMessageReceived(component, senderUuid, senderNameComponent);

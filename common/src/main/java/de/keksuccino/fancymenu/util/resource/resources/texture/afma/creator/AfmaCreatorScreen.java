@@ -487,8 +487,8 @@ public class AfmaCreatorScreen extends ModernScreen {
 
     protected void layoutWidget(@Nullable AbstractWidget widget, int x, int y, int width, int height) {
         if (widget == null) return;
-        widget.setX(x);
-        widget.setY(y);
+        widget.x = x;
+        widget.y = y;
         widget.setWidth(width);
         ((IMixinAbstractWidget) widget).setHeightFancyMenu(height);
     }
@@ -594,7 +594,7 @@ public class AfmaCreatorScreen extends ModernScreen {
             this.contentScrollBar.render(graphics, mouseX, mouseY, partialTick);
         }
         for (AbstractWidget widget : this.fixedWidgets) {
-            widget.render(graphics, mouseX, mouseY, partialTick);
+            widget.render(graphics.pose(), mouseX, mouseY, partialTick);
         }
     }
 
@@ -664,8 +664,8 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
     protected void drawInlineLabel(@NotNull GuiGraphics graphics, @Nullable AbstractWidget widget, @NotNull Component component, int labelWidth) {
         if (widget == null) return;
         float textWidth = UIBase.getUITextWidthNormal(component);
-        float labelX = widget.getX() - INLINE_LABEL_GAP - labelWidth + Math.max(0.0F, labelWidth - textWidth);
-        float labelY = widget.getY() + ((FIELD_HEIGHT - UIBase.getUITextHeightNormal()) / 2.0F);
+        float labelX = widget.x - INLINE_LABEL_GAP - labelWidth + Math.max(0.0F, labelWidth - textWidth);
+        float labelY = widget.y + ((FIELD_HEIGHT - UIBase.getUITextHeightNormal()) / 2.0F);
         UIBase.renderText(graphics, component, labelX, labelY, this.getThemeLabelColor(true), UIBase.getUITextSizeNormal());
     }
 
@@ -1152,7 +1152,7 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
 
         graphics.enableScissor(scissorMinX, scissorMinY, scissorMaxX, scissorMaxY);
         for (AbstractWidget widget : this.scrollableWidgets) {
-            widget.render(graphics, mouseX, mouseY, partialTick);
+            widget.render(graphics.pose(), mouseX, mouseY, partialTick);
         }
         this.renderFieldLabels(graphics);
         this.renderDiagnostics(graphics);
@@ -1259,8 +1259,8 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
 
         int viewportTop = this.getContentStartY();
         int viewportBottom = viewportTop + this.getScrollableViewportHeight();
-        int widgetTop = widget.getY();
-        int widgetBottom = widget.getY() + widget.getHeight();
+        int widgetTop = widget.y;
+        int widgetBottom = widget.y + widget.getHeight();
         int scrollRange = this.getScrollableContentScrollRange();
         if (scrollRange <= 0) return;
 

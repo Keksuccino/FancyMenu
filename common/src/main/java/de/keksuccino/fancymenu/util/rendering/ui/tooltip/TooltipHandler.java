@@ -1,8 +1,9 @@
 package de.keksuccino.fancymenu.util.rendering.ui.tooltip;
 
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 
-public class TooltipHandler implements Widget {
+public class TooltipHandler implements Renderable {
 
     public static final TooltipHandler INSTANCE = new TooltipHandler();
 
@@ -43,7 +44,7 @@ public class TooltipHandler implements Widget {
         if (this.widgetTooltips.containsKey(widget)) {
             this.removeTooltip(this.widgetTooltips.get(widget));
         }
-        HandledTooltip t = this.addRenderTickTooltip(UITooltip, () -> widget.isHovered() && widget.visible);
+        HandledTooltip t = this.addRenderTickTooltip(UITooltip, () -> ((IMixinAbstractWidget)widget).getIsHoveredFancyMenu() && widget.visible);
         t.widget = widget;
         this.widgetTooltips.put(widget, t);
         return t;

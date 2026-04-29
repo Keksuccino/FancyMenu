@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -88,7 +88,7 @@ public class MixinAbstractContainerScreen extends Screen {
     }
 
     @Inject(method = "render", at = @At("TAIL"))
-    private void after_render_FancyMenu(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick, CallbackInfo info) {
+    private void after_render_FancyMenu(PoseStack poseStack, int mouseX, int mouseY, float partialTick, CallbackInfo info) {
         Slot hoveredSlot = this.hoveredSlot;
         if (hoveredSlot == null || !hoveredSlot.hasItem()) {
             Listeners.ON_ITEM_HOVERED_IN_INVENTORY.clearCurrentItem();

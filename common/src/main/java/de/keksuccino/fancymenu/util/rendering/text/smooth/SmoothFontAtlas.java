@@ -8,7 +8,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.FastColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -287,7 +286,7 @@ final class SmoothFontAtlas implements AutoCloseable {
                 int g = rgba[index++] & 0xFF;
                 int b = rgba[index++] & 0xFF;
                 int a = rgba[index++] & 0xFF;
-                int color = FastColor.ABGR32.color(a, b, g, r);
+                int color = (a << 24) | (b << 16) | (g << 8) | r;
                 atlasImage.setPixelRGBA(atlasX + x, atlasY + y, color);
             }
         }

@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.gameintro;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
@@ -71,7 +72,6 @@ public class GameIntroOverlay extends Overlay {
         this.intro.waitForReady(5000);
     }
 
-    @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
@@ -110,7 +110,7 @@ public class GameIntroOverlay extends Overlay {
         if (this.endOfIntroReached()) {
             RenderingUtils.executeAllPreRenderTasks(graphics, mouseX, mouseY, partial);
             EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(this.fadeTo, graphics, mouseX, mouseY, partial));
-            this.fadeTo.render(graphics, mouseX, mouseY, partial);
+            this.fadeTo.render(graphics.pose(), mouseX, mouseY, partial);
             EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(this.fadeTo, graphics, mouseX, mouseY, partial));
             RenderingUtils.executeAllPostRenderTasks(graphics, mouseX, mouseY, partial);
         } else {
@@ -130,6 +130,11 @@ public class GameIntroOverlay extends Overlay {
 
         this.renderSkipText(graphics, mouseX, mouseY, partial);
 
+    }
+
+    @Override
+    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        this.render(GuiGraphics.currentGraphics(), mouseX, mouseY, partial);
     }
 
     protected void renderIntro(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {

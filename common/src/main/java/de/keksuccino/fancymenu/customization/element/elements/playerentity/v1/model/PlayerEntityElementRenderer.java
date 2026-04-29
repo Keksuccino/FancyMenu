@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.m
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Axis;
+import de.keksuccino.fancymenu.util.rendering.gui.Axis;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.model.layers.PlayerEntityRenderLayer;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.model.layers.PlayerEntityShoulderParrotLayer;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.model.layers.PlayerEntityCapeLayer;
@@ -33,7 +33,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
+import com.mojang.math.Matrix4f;
 
 @SuppressWarnings("all")
 public class PlayerEntityElementRenderer extends PlayerRenderer {
@@ -247,9 +247,9 @@ public class PlayerEntityElementRenderer extends PlayerRenderer {
         Font font = this.getFont();
         float f2 = (float)(-font.width(nameComponent) / 2);
 
-        font.drawInBatch(nameComponent, f2, (float)i, 553648127, false, matrix4f, bufferSource, flag ? Font.DisplayMode.SEE_THROUGH : Font.DisplayMode.NORMAL, j, i1);
+        font.drawInBatch(nameComponent, f2, (float)i, 553648127, false, matrix4f, bufferSource, flag, j, i1);
         if (flag) {
-            font.drawInBatch(nameComponent, f2, (float)i, -1, false, matrix4f, bufferSource, Font.DisplayMode.NORMAL, 0, i1);
+            font.drawInBatch(nameComponent, f2, (float)i, -1, false, matrix4f, bufferSource, false, 0, i1);
         }
         pose.popPose();
     }

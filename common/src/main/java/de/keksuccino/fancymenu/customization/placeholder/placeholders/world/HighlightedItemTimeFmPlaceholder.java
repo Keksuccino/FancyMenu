@@ -18,7 +18,7 @@ public class HighlightedItemTimeFmPlaceholder extends AbstractWorldPlaceholder {
         if ((Minecraft.getInstance().player != null) && Minecraft.getInstance().player.isSpectator()) {
             IMixinSpectatorGui spectatorGui = (IMixinSpectatorGui) Minecraft.getInstance().gui.getSpectatorGui();
             if (spectatorGui.invoke_getHotbarAlpha_FancyMenu() > 0.0F) {
-                time = (int) (40.0 * Minecraft.getInstance().options.notificationDisplayTime().get());
+                time = 40;
             } else {
                 time = 0;
             }

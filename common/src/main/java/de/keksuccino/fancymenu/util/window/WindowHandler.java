@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.window;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -13,7 +14,8 @@ import com.mojang.blaze3d.platform.TextureUtil;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.server.packs.resources.IoSupplier;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -88,7 +90,9 @@ public class WindowHandler {
 					LOGGER.error("[FANCYMENU] Unable to set custom window icons! 16x16 icon or 32x32 icon not found!");
 					return;
 				}
-				MacosUtil.loadIcon(IoSupplier.create(iMacOS.toPath()));
+                try (InputStream iconStream = new FileInputStream(iMacOS)) {
+                    MacosUtil.loadIcon(iconStream);
+                }
 			} catch (Exception ex) {
 				LOGGER.error("[FANCYMENU] Failed to set custom window icon!");
 				ex.printStackTrace();
@@ -115,7 +119,9 @@ public class WindowHandler {
 					LOGGER.error("[FANCYMENU] Unable to set custom window icons! 32x32 icon has wrong resolution! Has To be exactly 32x32 pixels!");
 					return;
 				}
-				setIcon(IoSupplier.create(i16.toPath()), IoSupplier.create(i32.toPath()));
+                try (InputStream icon16Stream = new FileInputStream(i16); InputStream icon32Stream = new FileInputStream(i32)) {
+                    setIcon(icon16Stream, icon32Stream);
+                }
 				LOGGER.info("[FANCYMENU] Custom window icon successfully updated!");
 			} catch (Exception e) {
 				LOGGER.error("[FANCYMENU] Failed to set custom window icon!");
@@ -124,7 +130,7 @@ public class WindowHandler {
 		}
 	}
 
-	protected static void setIcon(IoSupplier<InputStream> $$0, IoSupplier<InputStream> $$1) {
+	protected static void setIcon(InputStream $$0, InputStream $$1) {
 		try (MemoryStack $$2 = MemoryStack.stackPush()) {
 			IntBuffer $$3 = $$2.mallocInt(1);
 			IntBuffer $$4 = $$2.mallocInt(1);
@@ -157,14 +163,15 @@ public class WindowHandler {
 	}
 
 	@Nullable
-	protected static ByteBuffer readIconPixels(IoSupplier<InputStream> $$0, IntBuffer $$1, IntBuffer $$2, IntBuffer $$3) throws IOException {
+	protected static ByteBuffer readIconPixels(InputStream $$0, IntBuffer $$1, IntBuffer $$2, IntBuffer $$3) throws IOException {
 		ByteBuffer $$4 = null;
 		ByteBuffer var7;
-		try (InputStream $$5 = $$0.get()) {
-			$$4 = TextureUtil.readResource($$5);
+		try {
+			$$4 = TextureUtil.readResource($$0);
 			$$4.rewind();
 			var7 = STBImage.stbi_load_from_memory($$4, $$1, $$2, $$3, 0);
 		} finally {
+            $$0.close();
 			if ($$4 != null) {
 				MemoryUtil.memFree($$4);
 			}
@@ -184,13 +191,13 @@ public class WindowHandler {
 		}
 	}
 
-	private static IoSupplier<InputStream> getVanillaWindowIconFile(String... $$0) throws IOException {
-		IoSupplier<InputStream> $$1 = Minecraft.getInstance().getVanillaPackResources().getRootResource($$0);
-		if ($$1 == null) {
-			throw new FileNotFoundException(String.join("/", $$0));
-		} else {
-			return $$1;
-		}
+	private static InputStream getVanillaWindowIconFile(String... $$0) throws IOException {
+        String path = String.join("/", $$0);
+        InputStream stream = Minecraft.getInstance().getClientPackSource().getVanillaPack().getResource(PackType.CLIENT_RESOURCES, new ResourceLocation(path));
+        if (stream == null) {
+            throw new FileNotFoundException(path);
+        }
+        return stream;
 	}
 
 	public static void updateWindowTitle() {

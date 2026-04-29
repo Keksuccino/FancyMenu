@@ -52,6 +52,11 @@ public abstract class ModernAbstractWidget extends AbstractWidget {
         this.y = y;
     }
 
+    public void setPosition(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+
     public boolean isHovered() {
         return this.isHovered;
     }

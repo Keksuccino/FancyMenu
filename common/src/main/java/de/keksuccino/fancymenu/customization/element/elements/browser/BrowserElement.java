@@ -17,7 +17,7 @@ import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.RenderType;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiRenderTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
@@ -144,7 +144,7 @@ public class BrowserElement extends AbstractElement {
             } else {
 
                 RenderSystem.enableBlend();
-                graphics.fill(RenderType.guiOverlay(), x, y, x + w, y + h, ERROR_BACKGROUND_COLOR.getColorInt());
+                graphics.fill(GuiRenderTypes.guiOverlay(), x, y, x + w, y + h, ERROR_BACKGROUND_COLOR.getColorInt());
                 graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.elements.browser.mcef_not_loaded.line_1").setStyle(Style.EMPTY.withBold(true)), x + (w / 2), y + (h / 2) - Minecraft.getInstance().font.lineHeight - 2, -1);
                 graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.elements.browser.mcef_not_loaded.line_2").setStyle(Style.EMPTY.withBold(true)), x + (w / 2), y + (h / 2) + 2, -1);
 

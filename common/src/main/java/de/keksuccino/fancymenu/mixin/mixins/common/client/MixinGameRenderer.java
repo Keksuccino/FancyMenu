@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
@@ -8,9 +10,11 @@ import de.keksuccino.fancymenu.customization.listener.listeners.OnStartLookingAt
 import de.keksuccino.fancymenu.customization.listener.listeners.OnStopLookingAtBlockListener;
 import de.keksuccino.fancymenu.customization.listener.listeners.OnStopLookingAtEntityListener;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.RenderBuffers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
@@ -27,6 +31,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GameRenderer.class)
@@ -38,6 +43,17 @@ public class MixinGameRenderer {
     private static final double BLOCK_LOOK_DISTANCE_FANCYMENU = OnStartLookingAtBlockListener.MAX_LOOK_DISTANCE;
 
     @Shadow @Final Minecraft minecraft;
+    @Shadow @Final private RenderBuffers renderBuffers;
+
+    /**
+     * @reason Backports the 1.20.1 GuiGraphics render context to 1.19.2 screen rendering.
+     */
+    @WrapOperation(method = "render", at = @At(value = "NEW", target = "()Lcom/mojang/blaze3d/vertex/PoseStack;", ordinal = 0), slice = @Slice(from = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Lighting;setupFor3DItems()V")))
+    private PoseStack wrap_new_PoseStack_FancyMenu(Operation<PoseStack> original) {
+        PoseStack pose = original.call();
+        GuiGraphics.updateGraphicsAndGet(pose, this.renderBuffers.bufferSource());
+        return pose;
+    }
 
     @Inject(method = "render", at = @At("HEAD"))
     private void before_render_FancyMenu(float partialTicks, long nanoTime, boolean renderLevel, CallbackInfo info) {

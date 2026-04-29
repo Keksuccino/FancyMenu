@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser;
 
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
@@ -641,7 +642,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     protected boolean isWidgetHovered() {
         for (GuiEventListener l : this.children()) {
             if (l instanceof AbstractWidget w) {
-                if (w.isHovered()) return true;
+                if (((IMixinAbstractWidget)w).getIsHoveredFancyMenu()) return true;
             }
         }
         if (this.previewAudioSupplier != null && this.audioPreviewToggleButton != null && this.audioPreviewToggleButton.isHovered()) {

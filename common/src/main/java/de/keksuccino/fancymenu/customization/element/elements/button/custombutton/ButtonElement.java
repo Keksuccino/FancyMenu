@@ -10,14 +10,17 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandl
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.VanillaTooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.WidgetWithVanillaTooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtendedSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
@@ -30,7 +33,7 @@ import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -124,16 +127,17 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         if (!this.shouldRender()) return;
 
         if (isEditor()) {
-            net.minecraft.client.gui.components.Tooltip cachedVanillaTooltip = this.getWidget().getTooltip();
+            IMixinButton buttonAccessor = (this.getWidget() instanceof Button button) ? (IMixinButton)button : null;
+            Button.OnTooltip cachedVanillaTooltip = (buttonAccessor != null) ? buttonAccessor.get_onTooltip_FancyMenu() : null;
             boolean cachedVisible = this.getWidget().visible;
             boolean cachedActive = this.getWidget().active;
             this.getWidget().visible = true;
             this.getWidget().active = true;
-            this.getWidget().setTooltip(null);
+            if (buttonAccessor != null) buttonAccessor.set_onTooltip_FancyMenu((button, poseStack, i, j) -> {});
             MainThreadTaskExecutor.executeInMainThread(() -> {
                 this.getWidget().visible = cachedVisible;
                 this.getWidget().active = cachedActive;
-                this.getWidget().setTooltip(cachedVanillaTooltip);
+                if (buttonAccessor != null) buttonAccessor.set_onTooltip_FancyMenu(cachedVanillaTooltip);
             }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         }
 
@@ -154,7 +158,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
             //Prevents crashes related to dividing by zero
             if (this.getWidget().getHeight() <= 0) return;
             if (this.getWidget().getWidth() <= 0) return;
-            this.getWidget().render(graphics, mouseX, mouseY, partial);
+            this.getWidget().render(graphics.pose(), mouseX, mouseY, partial);
         }
     }
 
@@ -315,8 +319,8 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
     public void updateWidgetPosition() {
         if (this.getWidget() == null) return;
-        this.getWidget().setX(this.getAbsoluteX());
-        this.getWidget().setY(this.getAbsoluteY());
+        this.getWidget().x = this.getAbsoluteX();
+        this.getWidget().y = this.getAbsoluteY();
     }
 
     public void updateWidgetHitboxRotation() {
@@ -332,9 +336,9 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     }
 
     public void updateWidgetTooltip() {
-        if ((this.tooltip != null) && (this.getWidget() != null) && this.shouldRender() && !isEditor()) {
+        if ((this.getWidget() instanceof WidgetWithVanillaTooltip widgetWithVanillaTooltip) && (this.tooltip != null) && this.shouldRender() && !isEditor()) {
             String t = PlaceholderParser.replacePlaceholders(this.tooltip).replace("%n%", "\n").replace("\\n", "\n");
-            this.getWidget().setTooltip(Tooltip.create(Component.literal(t)));
+            widgetWithVanillaTooltip.setVanillaTooltip_FancyMenu(VanillaTooltip.create(Component.literal(t)));
         }
     }
 

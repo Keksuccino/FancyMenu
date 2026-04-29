@@ -3,14 +3,14 @@ package de.keksuccino.fancymenu.customization.element.editor;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.Supplier;
 
-public class EditorElementBorderDisplay implements Widget {
+public class EditorElementBorderDisplay implements Renderable {
 
     private static final int LINE_BACKGROUND_HORIZONTAL_PADDING_FANCYMENU = 2;
     private static final int LINE_BACKGROUND_VERTICAL_PADDING_FANCYMENU = 1;

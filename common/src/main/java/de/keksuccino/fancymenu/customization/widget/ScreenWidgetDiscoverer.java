@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.widget;
 import java.util.*;
 import de.keksuccino.fancymenu.customization.widget.identification.WidgetIdentifierHandler;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -79,7 +80,7 @@ public class ScreenWidgetDiscoverer {
 			});
 
 			//This is to avoid NullPointers
-			if (!((IMixinScreen)screen).get_initialized_FancyMenu()) {
+			if (!((CustomizableScreen)screen).get_initialized_FancyMenu()) {
 				screen.init(Minecraft.getInstance(), screenWidth, screenHeight);
 			} else {
 				screen.resize(Minecraft.getInstance(), screenWidth, screenHeight);
@@ -106,7 +107,7 @@ public class ScreenWidgetDiscoverer {
 	}
 
 	private static long generateBaseId(@NotNull AbstractWidget widget) {
-		String s = Math.abs(widget.getX()) + "" + Math.abs(widget.getY());
+		String s = Math.abs(widget.x) + "" + Math.abs(widget.y);
 		if (!MathUtils.isLong(s)) {
 			LOGGER.error("[FANCYMENU] Widget ID is not a Long!", new NumberFormatException("Failed to parse widget identifier to Long!"));
 			return 0L;

@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
@@ -48,7 +49,7 @@ public class CustomGuiBaseScreen extends ModernScreen {
         try {
             if (this.parentScreen != null) {
                 this.withPopupMenuBackgroundScreen(this.parentScreen, () -> {
-                    boolean initialized = ((IMixinScreen)this.parentScreen).get_initialized_FancyMenu();
+                    boolean initialized = ((CustomizableScreen)this.parentScreen).get_initialized_FancyMenu();
                     InitOrResizeScreenEvent.InitializationPhase phase = initialized ? InitOrResizeScreenEvent.InitializationPhase.RESIZE : InitOrResizeScreenEvent.InitializationPhase.INIT;
                     EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(this.parentScreen, phase));
                     EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(this.parentScreen, phase));
@@ -128,8 +129,7 @@ public class CustomGuiBaseScreen extends ModernScreen {
         CustomGui.isCurrentlyRenderingPopupBackgroundScreen = true;
         try {
             this.withPopupMenuBackgroundScreen(this.parentScreen, () -> {
-                // FancyMenu's render events get fired in renderWithTooltip, so they should fire here automatically
-                this.parentScreen.renderWithTooltip(graphics, -500, -500, partial);
+                this.parentScreen.render(graphics.pose(), -500, -500, partial);
             });
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to render popup menu background screen of Custom GUI!", ex);

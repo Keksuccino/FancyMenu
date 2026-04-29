@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.core.registries.Registries;
+import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -117,7 +117,7 @@ public class IsPlayerInDimensionRequirement extends Requirement {
         try {
             ClientLevel level = Minecraft.getInstance().level;
             if (level != null) {
-                level.registryAccess().lookupOrThrow(Registries.DIMENSION_TYPE).listElementIds().forEach(dimensionTypeResourceKey -> types.add(dimensionTypeResourceKey.location()));
+                level.registryAccess().registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY).registryKeySet().forEach(dimensionTypeResourceKey -> types.add(dimensionTypeResourceKey.location()));
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to get dimension types for 'Is Player In Dimension' loading requirement!", ex);

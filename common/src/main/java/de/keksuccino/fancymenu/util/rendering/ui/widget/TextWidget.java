@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.sounds.SoundManager;
@@ -17,7 +16,7 @@ import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class TextWidget extends AbstractWidget implements UniqueWidget, NavigatableWidget, FancyMenuWidget {
+public class TextWidget extends ModernAbstractWidget implements UniqueWidget, NavigatableWidget, FancyMenuWidget {
 
     @Nullable
     protected String widgetIdentifier;
@@ -211,7 +210,7 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
     }
 
     @Override
-    protected void updateWidgetNarration(@NotNull NarrationElementOutput var1) {
+    public void updateNarration(@NotNull NarrationElementOutput var1) {
     }
 
     @Override

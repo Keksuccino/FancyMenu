@@ -18,4 +18,6 @@ public interface CustomizableScreen {
     @NotNull
     List<GuiEventListener> removeOnInitChildrenFancyMenu();
 
+    boolean get_initialized_FancyMenu();
+
 }

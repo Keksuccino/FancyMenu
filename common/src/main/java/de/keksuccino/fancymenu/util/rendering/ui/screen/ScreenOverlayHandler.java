@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import de.keksuccino.fancymenu.util.rendering.ui.Tickable;
@@ -19,9 +19,9 @@ import java.util.function.Predicate;
 public class ScreenOverlayHandler {
 
     public static final ScreenOverlayHandler INSTANCE = new ScreenOverlayHandler();
-    private static final Widget PLACEHOLDER_OVERLAY = (graphics, mouseX, mouseY, partial) -> {};
+    private static final Renderable PLACEHOLDER_OVERLAY = (graphics, mouseX, mouseY, partial) -> {};
 
-    private final Map<Long, Widget> overlays = new LinkedHashMap<>();
+    private final Map<Long, Renderable> overlays = new LinkedHashMap<>();
     private final Map<Long, OverlayVisibilityController> visibilityControllers = new LinkedHashMap<>();
     private final Map<Long, OverlayInputConsumptionController> inputConsumptionControllers = new LinkedHashMap<>();
     private long id = 0;
@@ -29,7 +29,7 @@ public class ScreenOverlayHandler {
     private ScreenOverlayHandler() {
     }
 
-    public long addOverlay(@NotNull Widget overlay) {
+    public long addOverlay(@NotNull Renderable overlay) {
         id++;
         this.overlays.put(id, overlay);
         return id;
@@ -41,9 +41,9 @@ public class ScreenOverlayHandler {
         return id;
     }
 
-    public long addOverlayFirst(@NotNull Widget overlay) {
+    public long addOverlayFirst(@NotNull Renderable overlay) {
         id++;
-        LinkedHashMap<Long, Widget> reordered = new LinkedHashMap<>();
+        LinkedHashMap<Long, Renderable> reordered = new LinkedHashMap<>();
         reordered.put(id, overlay);
         reordered.putAll(this.overlays);
         this.overlays.clear();
@@ -53,7 +53,7 @@ public class ScreenOverlayHandler {
 
     public long addPlaceholderFirst() {
         id++;
-        LinkedHashMap<Long, Widget> reordered = new LinkedHashMap<>();
+        LinkedHashMap<Long, Renderable> reordered = new LinkedHashMap<>();
         reordered.put(id, PLACEHOLDER_OVERLAY);
         reordered.putAll(this.overlays);
         this.overlays.clear();
@@ -61,7 +61,7 @@ public class ScreenOverlayHandler {
         return id;
     }
 
-    public void addOverlayWithId(long overlayId, @NotNull Widget body) {
+    public void addOverlayWithId(long overlayId, @NotNull Renderable body) {
         if (id <= overlayId) {
             id = (overlayId + 10);
         }
@@ -104,15 +104,15 @@ public class ScreenOverlayHandler {
     }
 
     @Nullable
-    public Widget getOverlay(long overlayId) {
-        Widget overlay = this.overlays.get(overlayId);
+    public Renderable getOverlay(long overlayId) {
+        Renderable overlay = this.overlays.get(overlayId);
         return (overlay == null || isPlaceholder(overlay)) ? null : overlay;
     }
 
     @NotNull
-    public List<Widget> getOverlays() {
-        List<Widget> filtered = new ArrayList<>();
-        for (Widget overlay : overlays.values()) {
+    public List<Renderable> getOverlays() {
+        List<Renderable> filtered = new ArrayList<>();
+        for (Renderable overlay : overlays.values()) {
             if (!isPlaceholder(overlay)) {
                 filtered.add(overlay);
             }
@@ -121,9 +121,9 @@ public class ScreenOverlayHandler {
     }
 
     @NotNull
-    public List<Widget> getOverlays(@NotNull Predicate<Widget> filter) {
-        List<Widget> filtered = new ArrayList<>();
-        for (Widget overlay : overlays.values()) {
+    public List<Renderable> getOverlays(@NotNull Predicate<Renderable> filter) {
+        List<Renderable> filtered = new ArrayList<>();
+        for (Renderable overlay : overlays.values()) {
             if (!isPlaceholder(overlay) && filter.test(overlay)) {
                 filtered.add(overlay);
             }
@@ -132,8 +132,8 @@ public class ScreenOverlayHandler {
     }
 
     public void renderAll(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        for (Map.Entry<Long, Widget> entry : overlays.entrySet()) {
-            Widget renderable = entry.getValue();
+        for (Map.Entry<Long, Renderable> entry : overlays.entrySet()) {
+            Renderable renderable = entry.getValue();
             if (!isOverlayVisible(entry.getKey(), renderable)) {
                 continue;
             }
@@ -174,10 +174,10 @@ public class ScreenOverlayHandler {
     }
 
     public void tick() {
-        List<Map.Entry<Long, Widget>> ordered = new ArrayList<>(overlays.entrySet());
+        List<Map.Entry<Long, Renderable>> ordered = new ArrayList<>(overlays.entrySet());
         for (int i = ordered.size() - 1; i >= 0; i--) {
-            Map.Entry<Long, Widget> entry = ordered.get(i);
-            Widget overlay = entry.getValue();
+            Map.Entry<Long, Renderable> entry = ordered.get(i);
+            Renderable overlay = entry.getValue();
             if (!isOverlayVisible(entry.getKey(), overlay)) {
                 continue;
             }
@@ -188,10 +188,10 @@ public class ScreenOverlayHandler {
     }
 
     private boolean dispatchBooleanEvent(@NotNull OverlayEvent handler) {
-        List<Map.Entry<Long, Widget>> ordered = new ArrayList<>(overlays.entrySet());
+        List<Map.Entry<Long, Renderable>> ordered = new ArrayList<>(overlays.entrySet());
         for (int i = ordered.size() - 1; i >= 0; i--) {
-            Map.Entry<Long, Widget> entry = ordered.get(i);
-            Widget overlay = entry.getValue();
+            Map.Entry<Long, Renderable> entry = ordered.get(i);
+            Renderable overlay = entry.getValue();
             if (!isOverlayVisible(entry.getKey(), overlay)) {
                 continue;
             }
@@ -206,10 +206,10 @@ public class ScreenOverlayHandler {
     }
 
     private void dispatchVoidEvent(@NotNull Consumer<GuiEventListener> handler) {
-        List<Map.Entry<Long, Widget>> ordered = new ArrayList<>(overlays.entrySet());
+        List<Map.Entry<Long, Renderable>> ordered = new ArrayList<>(overlays.entrySet());
         for (int i = ordered.size() - 1; i >= 0; i--) {
-            Map.Entry<Long, Widget> entry = ordered.get(i);
-            Widget overlay = entry.getValue();
+            Map.Entry<Long, Renderable> entry = ordered.get(i);
+            Renderable overlay = entry.getValue();
             if (!isOverlayVisible(entry.getKey(), overlay)) {
                 continue;
             }
@@ -222,7 +222,7 @@ public class ScreenOverlayHandler {
         }
     }
 
-    private boolean isOverlayVisible(long overlayId, @NotNull Widget overlay) {
+    private boolean isOverlayVisible(long overlayId, @NotNull Renderable overlay) {
         if (isPlaceholder(overlay)) {
             return false;
         }
@@ -237,7 +237,7 @@ public class ScreenOverlayHandler {
         return controller.isVisible(screen);
     }
 
-    private boolean isOverlayInputEnabled(long overlayId, @NotNull Widget overlay) {
+    private boolean isOverlayInputEnabled(long overlayId, @NotNull Renderable overlay) {
         if (isPlaceholder(overlay)) {
             return false;
         }
@@ -252,7 +252,7 @@ public class ScreenOverlayHandler {
         return controller.canConsumeInput(screen);
     }
 
-    private boolean isPlaceholder(@NotNull Widget overlay) {
+    private boolean isPlaceholder(@NotNull Renderable overlay) {
         return overlay == PLACEHOLDER_OVERLAY;
     }
 

@@ -10,7 +10,7 @@ import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.EntityType;
@@ -87,7 +87,7 @@ public class FabricPlatformHelper implements IPlatformHelper {
     @Override
     public @Nullable ResourceLocation getItemKey(@NotNull Item item) {
         try {
-            return BuiltInRegistries.ITEM.getKey(item);
+            return Registry.ITEM.getKey(item);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -97,7 +97,7 @@ public class FabricPlatformHelper implements IPlatformHelper {
     @Override
     public @Nullable ResourceLocation getEffectKey(@NotNull MobEffect effect) {
         try {
-            return BuiltInRegistries.MOB_EFFECT.getKey(effect);
+            return Registry.MOB_EFFECT.getKey(effect);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -107,7 +107,7 @@ public class FabricPlatformHelper implements IPlatformHelper {
     @Override
     public @Nullable ResourceLocation getEntityKey(@NotNull EntityType<?> type) {
         try {
-            return BuiltInRegistries.ENTITY_TYPE.getKey(type);
+            return Registry.ENTITY_TYPE.getKey(type);
         } catch (Exception ex) {
             ex.printStackTrace();
         }

@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.browser;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.math.Axis;
+import de.keksuccino.fancymenu.util.rendering.gui.Axis;
 import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -17,10 +17,10 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.RenderType;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiRenderTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
@@ -177,7 +177,7 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
             return;
         }
         RenderSystem.enableBlend();
-        graphics.fill(RenderType.guiOverlay(), 0, 0, width, height, ERROR_BACKGROUND_COLOR.getColorInt());
+        graphics.fill(GuiRenderTypes.guiOverlay(), 0, 0, width, height, ERROR_BACKGROUND_COLOR.getColorInt());
         graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.decoration_overlays.browser.mcef_not_loaded.line_1").setStyle(Style.EMPTY.withBold(true)), width / 2, (height / 2) - Minecraft.getInstance().font.lineHeight - 2, -1);
         graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.decoration_overlays.browser.mcef_not_loaded.line_2").setStyle(Style.EMPTY.withBold(true)), width / 2, (height / 2) + 2, -1);
     }
@@ -385,7 +385,7 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
 
     private void renderEditorPreview(@NotNull GuiGraphics graphics, int width, int height) {
         RenderSystem.enableBlend();
-        graphics.fill(RenderType.guiOverlay(), 0, 0, width, height, EDITOR_PREVIEW_BACKGROUND_COLOR.getColorIntWithAlpha(0.35F));
+        graphics.fill(GuiRenderTypes.guiOverlay(), 0, 0, width, height, EDITOR_PREVIEW_BACKGROUND_COLOR.getColorIntWithAlpha(0.35F));
 
         graphics.pose().pushPose();
         graphics.pose().translate(width / 2.0F, height / 2.0F, 0.0F);
@@ -520,7 +520,7 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
         return this.consumeKeyboardPresses.tryGetNonNullElse(true);
     }
 
-    private class InputCaptureOverlay implements Widget, GuiEventListener {
+    private class InputCaptureOverlay implements Renderable, GuiEventListener {
 
         private boolean focused = false;
 
@@ -569,13 +569,11 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
             return true;
         }
 
-        @Override
-        public void setFocused(boolean focused) {
+                public void setFocused(boolean focused) {
             this.focused = focused;
         }
 
-        @Override
-        public boolean isFocused() {
+                public boolean isFocused() {
             return this.focused;
         }
     }

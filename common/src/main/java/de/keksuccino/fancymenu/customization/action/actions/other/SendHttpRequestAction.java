@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedGenericValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.gui.VanillaTooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPCellWindowBody;
@@ -16,7 +17,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
@@ -441,7 +441,7 @@ public class SendHttpRequestAction extends Action {
             this.addTextInputCell(CharacterFilter.buildResourceNameFilter(), false, false)
                     .setEditListener(s -> this.config.responseVariable = s)
                     .setText(this.config.responseVariable)
-                    .editBox.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.send_http_request.edit.response_variable.desc")));
+                    .editBox.setVanillaTooltip_FancyMenu(VanillaTooltip.create(Component.translatable("fancymenu.actions.send_http_request.edit.response_variable.desc")));
 
             this.addCellGroupEndSpacerCell();
 

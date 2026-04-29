@@ -1,10 +1,9 @@
 package de.keksuccino.fancymenu.customization.element.elements.splash;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.math.Axis;
+import de.keksuccino.fancymenu.util.rendering.gui.Axis;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinSplashRenderer;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -14,7 +13,6 @@ import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.SplashRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
@@ -94,8 +92,8 @@ public class SplashTextElement extends AbstractElement {
         if (this.renderText == null) {
             //VANILLA
             if (this.sourceMode == SourceMode.VANILLA) {
-                SplashRenderer splashRenderer = Minecraft.getInstance().getSplashManager().getSplash();
-                this.renderText = (splashRenderer != null) ? ((IMixinSplashRenderer)splashRenderer).getSplashFancyMenu() : "";
+                String splash = Minecraft.getInstance().getSplashManager().getSplash();
+                this.renderText = (splash != null) ? splash : "";
             }
             //TEXT FILE
             if (this.sourceMode == SourceMode.TEXT_FILE) {

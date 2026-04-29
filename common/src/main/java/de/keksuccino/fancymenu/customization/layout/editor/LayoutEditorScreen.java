@@ -41,6 +41,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
@@ -48,7 +49,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -234,7 +235,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 
     @Nullable
     public MenuBar getCurrentMenuBar() {
-        Widget menuBarRaw = ScreenOverlayHandler.INSTANCE.getOverlay(ScreenOverlays.LAYOUT_EDITOR_MENU_BAR);
+        Renderable menuBarRaw = ScreenOverlayHandler.INSTANCE.getOverlay(ScreenOverlays.LAYOUT_EDITOR_MENU_BAR);
         return (menuBarRaw instanceof MenuBar b) ? b : null;
     }
 
@@ -1551,7 +1552,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 		this.layout.decorationOverlays.forEach(pair -> pair.getSecond().onCloseScreen(null, null));
 		currentInstance = null;
 		if (this.layoutTargetScreen != null) {
-			if (!((IMixinScreen)this.layoutTargetScreen).get_initialized_FancyMenu()) {
+			if (!((CustomizableScreen)this.layoutTargetScreen).get_initialized_FancyMenu()) {
 				Minecraft.getInstance().setScreen(this.layoutTargetScreen);
 			} else {
 				Minecraft.getInstance().setScreen(new GenericDirtMessageScreen(Component.literal("Closing editor..")));

@@ -11,7 +11,7 @@ import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -25,7 +25,7 @@ import java.util.Map;
 /**
  * A screen that displays and allows management of the buddy's leveling stats.
  */
-public class BuddyStatusScreen implements Widget {
+public class BuddyStatusScreen implements Renderable {
 
     private static final Logger LOGGER = LogManager.getLogger();
 

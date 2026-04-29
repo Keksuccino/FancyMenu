@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -52,16 +53,25 @@ public class TextEditorLine extends AdvancedTextField {
         this.moveCursorTo(this.getValue().length(), selecting);
     }
 
-    @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         //Only render line if inside the editor area (for performance reasons)
         if (this.isInEditorArea()) {
-            super.render(graphics, mouseX, mouseY, partial);
+            super.render(graphics.pose(), mouseX, mouseY, partial);
         }
 
         this.lastTickValue = this.getValue();
 
+    }
+
+    @Override
+    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        this.render(GuiGraphics.currentGraphics(), mouseX, mouseY, partial);
+    }
+
+    @Override
+    public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        this.renderWidget(GuiGraphics.currentGraphics(), mouseX, mouseY, partial);
     }
 
     protected MutableComponent getFormattedText(String text) {
@@ -85,7 +95,6 @@ public class TextEditorLine extends AdvancedTextField {
         return comp;
     }
 
-    @Override
     public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.currentCharacterRenderIndex = 0;
@@ -171,10 +180,6 @@ public class TextEditorLine extends AdvancedTextField {
                 }
             }
 
-            if (this.getAsAccessor().getHintFancyMenu() != null && text.isEmpty() && !this.isFocused()) {
-                UIBase.renderText(graphics, this.getAsAccessor().getHintFancyMenu(), textXAfterCursor, textY, textColorInt);
-            }
-
             if (!isCursorNotAtEndOfLine && this.getAsAccessor().getSuggestionFancyMenu() != null) {
                 UIBase.renderText(graphics, this.getAsAccessor().getSuggestionFancyMenu(), cursorPosRender - 1, textY, -8355712);
             }
@@ -191,7 +196,7 @@ public class TextEditorLine extends AdvancedTextField {
                 float highlightWidth = UIBase.getUITextWidth(text.substring(0, highlightPos));
                 this.currentHighlightPosXStart = (int) cursorPosRender;
                 this.currentHighlightPosXEnd = (int) (textX + highlightWidth) - 1;
-                this.getAsAccessor().invokeRenderHighlightFancyMenu(graphics, this.currentHighlightPosXStart, (int) (textY - 1), this.currentHighlightPosXEnd, (int) (textY + 1 + textHeight));
+                this.getAsAccessor().invokeRenderHighlightFancyMenu(this.currentHighlightPosXStart, (int) (textY - 1), this.currentHighlightPosXEnd, (int) (textY + 1 + textHeight));
             } else {
                 this.currentHighlightPosXStart = 0;
                 this.currentHighlightPosXEnd = 0;

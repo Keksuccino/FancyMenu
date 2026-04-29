@@ -1,10 +1,9 @@
 package de.keksuccino.fancymenu.util.rendering.gui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.gui.components.Widget;
 import org.jetbrains.annotations.NotNull;
 
-public interface Widget extends Widget {
+public interface Renderable extends net.minecraft.client.gui.components.Widget {
 
     void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
 

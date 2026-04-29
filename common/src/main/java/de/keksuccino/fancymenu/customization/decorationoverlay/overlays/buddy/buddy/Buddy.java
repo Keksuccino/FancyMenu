@@ -15,10 +15,10 @@ import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.navigation.ScreenRectangle;
+import de.keksuccino.fancymenu.util.rendering.gui.ScreenRectangle;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,7 +35,7 @@ import static de.keksuccino.fancymenu.customization.decorationoverlay.overlays.b
  * to decoration overlays. It walks along the bottom of the screen,
  * has needs, and reacts to your interactions.
  */
-public class Buddy extends AbstractContainerEventHandler implements Widget, FancyMenuUiComponent {
+public class Buddy extends AbstractContainerEventHandler implements Renderable, FancyMenuUiComponent {
 
     public static final Logger LOGGER = LogManager.getLogger();
 
@@ -1728,7 +1728,6 @@ public class Buddy extends AbstractContainerEventHandler implements Widget, Fanc
         return children;
     }
 
-    @Override
     public @NotNull ScreenRectangle getRectangle() {
         return new ScreenRectangle(buddyPosX, buddyPosY, SPRITE_WIDTH, SPRITE_HEIGHT);
     }

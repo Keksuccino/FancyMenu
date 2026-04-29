@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
@@ -15,6 +16,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.ModernAbstractWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
@@ -23,14 +25,13 @@ import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.gui.navigation.FocusNavigationEvent;
-import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.*;
 import org.lwjgl.glfw.GLFW;
@@ -353,14 +354,14 @@ public abstract class CellScreen extends ModernScreen implements InitialWidgetFo
                     UIBase.applyDefaultWidgetSkinTo(w);
                     this.addRenderableWidget(w);
                 }
-                w.setX(widgetX);
+                w.x = widgetX;
                 w.setWidth(widgetWidth);
             }
             if (!w.visible) {
                 continue;
             }
             if (!(w instanceof RightSideSpacer)) {
-                w.setY(widgetY - w.getHeight());
+                w.y = widgetY - w.getHeight();
                 topRightSideWidget = w;
             }
             widgetY -= w.getHeight() + this.getRightSideDefaultSpaceBetweenWidgets();
@@ -375,13 +376,13 @@ public abstract class CellScreen extends ModernScreen implements InitialWidgetFo
         this.lastWidth = window.getScreenWidth();
         this.lastHeight = window.getScreenHeight();
         //Adjust GUI scale to make all right-side buttons fit in the screen
-        if ((topRightSideWidget != null) && (topRightSideWidget.getY() < 20) && (window.getGuiScale() > 1)) {
+        if ((topRightSideWidget != null) && (topRightSideWidget.y < 20) && (window.getGuiScale() > 1)) {
             double newScale = window.getGuiScale();
             newScale--;
             if (newScale < 1) newScale = 1;
             window.setGuiScale(newScale);
             this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
-        } else if ((topRightSideWidget != null) && (topRightSideWidget.getY() >= 20) && resized) {
+        } else if ((topRightSideWidget != null) && (topRightSideWidget.y >= 20) && resized) {
             RenderingUtils.resetGuiScale();
             this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
         }
@@ -872,9 +873,17 @@ public final void renderBackground(GuiGraphics graphics, int mouseX, int mouseY,
             }
         }
         targets.sort(Comparator
-                .comparingInt((GuiEventListener listener) -> listener.getRectangle().top())
-                .thenComparingInt(listener -> listener.getRectangle().left()));
+                .comparingInt((GuiEventListener listener) -> getListenerY(listener))
+                .thenComparingInt(listener -> getListenerX(listener)));
         return targets;
+    }
+
+    protected static int getListenerX(@NotNull GuiEventListener listener) {
+        return (listener instanceof AbstractWidget widget) ? widget.x : 0;
+    }
+
+    protected static int getListenerY(@NotNull GuiEventListener listener) {
+        return (listener instanceof AbstractWidget widget) ? widget.y : 0;
     }
 
     @Nullable
@@ -1018,11 +1027,17 @@ public final void renderBackground(GuiGraphics graphics, int mouseX, int mouseY,
             if (child instanceof AbstractContainerEventHandler container) {
                 GuiEventListener focusedChild = container.getFocused();
                 if (focusedChild != null) {
-                    focusedChild.setFocused(false);
+                    clearWidgetFocus(focusedChild);
                 }
                 container.setFocused(null);
             }
-            child.setFocused(false);
+            clearWidgetFocus(child);
+        }
+    }
+
+    protected static void clearWidgetFocus(@Nullable GuiEventListener listener) {
+        if (listener instanceof AbstractWidget widget) {
+            widget.setFocused(false);
         }
     }
 
@@ -1075,16 +1090,6 @@ public final void renderBackground(GuiGraphics graphics, int mouseX, int mouseY,
             this.searchBar.setFocused(false);
         }
         return super.mouseClicked($$0, $$1, $$2);
-    }
-
-    @Override
-    public FocusNavigationEvent.ArrowNavigation createArrowEvent(ScreenDirection $$0) {
-        return null;
-    }
-
-    @Override
-    public FocusNavigationEvent.TabNavigation createTabEvent() {
-        return null;
     }
 
     protected class CellScrollEntry extends ScrollAreaEntry {
@@ -1224,8 +1229,8 @@ public final void renderBackground(GuiGraphics graphics, int mouseX, int mouseY,
 
         @Override
         public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            this.widget.setX(this.getX());
-            this.widget.setY(this.getY());
+            this.widget.x = this.getX();
+            this.widget.y = this.getY();
             this.widget.setWidth(this.getWidth());
         }
 
@@ -1399,7 +1404,7 @@ public final void renderBackground(GuiGraphics graphics, int mouseX, int mouseY,
 
     }
 
-    public abstract class RenderCell extends AbstractContainerEventHandler implements Widget, NarratableEntry {
+    public abstract class RenderCell extends AbstractContainerEventHandler implements Renderable, NarratableEntry {
 
         protected int x;
         protected int y;
@@ -1435,7 +1440,7 @@ public final void renderBackground(GuiGraphics graphics, int mouseX, int mouseY,
 
             for (GuiEventListener l : this.children) {
                 if (l instanceof Widget r) {
-                    r.render(graphics, mouseX, mouseY, partial);
+                    r.render(graphics.pose(), mouseX, mouseY, partial);
                 }
             }
 
@@ -1629,27 +1634,25 @@ public final void renderBackground(GuiGraphics graphics, int mouseX, int mouseY,
 
     }
 
-    protected class RightSideSpacer extends AbstractWidget {
+    protected class RightSideSpacer extends ModernAbstractWidget {
 
         protected RightSideSpacer(int height) {
             super(0, 0, 0, height, Component.empty());
         }
 
-        @Override
-        public void setFocused(boolean var1) {
+                public void setFocused(boolean var1) {
         }
 
         @Override
         public void renderWidget(GuiGraphics graphics, int var2, int var3, float var4) {
         }
 
-        @Override
-        public boolean isFocused() {
+                public boolean isFocused() {
             return false;
         }
 
         @Override
-        protected void updateWidgetNarration(NarrationElementOutput var1) {
+        public void updateNarration(NarrationElementOutput var1) {
         }
 
     }

@@ -37,7 +37,7 @@ public class IsPlayerJumpingRequirement extends Requirement {
             ClientLevel level = Minecraft.getInstance().level;
             LocalPlayer player = Minecraft.getInstance().player;
             if ((level != null) && (player != null)) {
-                return !player.onGround() && !player.isSwimming() && !player.isInWaterOrBubble() && !player.isInLava() && !player.isFallFlying() && !player.isSleeping() && !player.isVisuallySwimming() && !player.isVisuallyCrawling();
+                return !player.isOnGround() && !player.isSwimming() && !player.isInWaterOrBubble() && !player.isInLava() && !player.isFallFlying() && !player.isSleeping() && !player.isVisuallySwimming() && !player.isVisuallyCrawling();
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to handle '" + this.getIdentifier() + "' loading requirement!", ex);

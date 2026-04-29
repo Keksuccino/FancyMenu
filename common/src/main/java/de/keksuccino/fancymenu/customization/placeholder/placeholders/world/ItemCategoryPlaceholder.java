@@ -1,15 +1,10 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders.world;
 
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.NonNullList;
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.flag.FeatureFlagSet;
-import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -38,8 +33,6 @@ public class ItemCategoryPlaceholder extends AbstractWorldPlaceholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        if (Minecraft.getInstance().player == null || Minecraft.getInstance().level == null) return "";
-
         String key = dps.values.get("item");
         if (key == null || key.isEmpty()) return UNKNOWN;
 
@@ -49,10 +42,8 @@ public class ItemCategoryPlaceholder extends AbstractWorldPlaceholder {
         ResourceLocation itemId = ResourceLocation.tryParse(key);
         if (itemId == null) return UNKNOWN;
 
-        Optional<Item> itemOptional = BuiltInRegistries.ITEM.getOptional(itemId);
+        Optional<Item> itemOptional = Registry.ITEM.getOptional(itemId);
         if (itemOptional.isEmpty()) return UNKNOWN;
-
-        if (!ensureTabsBuilt()) return "";
 
         Item item = itemOptional.get();
         String cached = asKey ? CATEGORY_KEY_CACHE.get(item) : CATEGORY_DISPLAY_CACHE.get(item);
@@ -67,33 +58,17 @@ public class ItemCategoryPlaceholder extends AbstractWorldPlaceholder {
         return category;
     }
 
-    private static boolean ensureTabsBuilt() {
-        Minecraft minecraft = Minecraft.getInstance();
-        LocalPlayer player = minecraft.player;
-        ClientLevel level = minecraft.level;
-        if (player == null || level == null) return false;
-
-        FeatureFlagSet enabledFeatures = player.connection != null ? player.connection.enabledFeatures() : FeatureFlags.DEFAULT_FLAGS;
-        boolean hasPermissions = player.canUseGameMasterBlocks() && minecraft.options.operatorItemsTab().get();
-
-        boolean rebuilt = CreativeModeTabs.tryRebuildTabContents(enabledFeatures, hasPermissions, level.registryAccess());
-        if (rebuilt) {
-            CATEGORY_DISPLAY_CACHE.clear();
-            CATEGORY_KEY_CACHE.clear();
-        }
-
-        return true;
-    }
-
     @NotNull
     private static String findItemCategory(@NotNull Item item, boolean asKey) {
-        for (CreativeModeTab tab : CreativeModeTabs.tabs()) {
-            if (tab.getType() != CreativeModeTab.Type.CATEGORY) continue;
+        for (CreativeModeTab tab : CreativeModeTab.TABS) {
+            if (tab == null || tab == CreativeModeTab.TAB_SEARCH || tab == CreativeModeTab.TAB_HOTBAR || tab == CreativeModeTab.TAB_INVENTORY) continue;
 
-            for (ItemStack stack : tab.getSearchTabDisplayItems()) {
+            NonNullList<ItemStack> stacks = NonNullList.create();
+            tab.fillItemList(stacks);
+            for (ItemStack stack : stacks) {
                 if (stack.getItem() == item) {
                     if (asKey) {
-                        return BuiltInRegistries.CREATIVE_MODE_TAB.getResourceKey(tab).map(k -> k.location().toString()).orElse(UNKNOWN);
+                        return "minecraft:" + tab.getRecipeFolderName();
                     }
                     return tab.getDisplayName().getString();
                 }

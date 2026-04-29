@@ -4233,12 +4233,10 @@ public final class MaterialIcons {
     }
 
     private static int argbToAbgr(int color) {
-        return FastColor.ABGR32.color(
-                FastColor.ARGB32.alpha(color),
-                FastColor.ARGB32.blue(color),
-                FastColor.ARGB32.green(color),
-                FastColor.ARGB32.red(color)
-        );
+        return (FastColor.ARGB32.alpha(color) << 24)
+                | (FastColor.ARGB32.blue(color) << 16)
+                | (FastColor.ARGB32.green(color) << 8)
+                | FastColor.ARGB32.red(color);
     }
 
     static {

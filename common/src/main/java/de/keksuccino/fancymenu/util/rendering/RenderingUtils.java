@@ -13,10 +13,11 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPostChain;
 import de.keksuccino.fancymenu.util.MinecraftResourceReloadObserver;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.navigation.ScreenRectangle;
+import de.keksuccino.fancymenu.util.rendering.gui.MatrixUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.ScreenRectangle;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.PostChain;
-import net.minecraft.client.renderer.RenderType;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiRenderTypes;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
@@ -25,8 +26,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import com.mojang.math.Matrix4f;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
@@ -758,6 +759,17 @@ public class RenderingUtils {
         return replaceAlphaInColor(color, (int)(newAlpha * 255.0F));
     }
 
+    public static int getMinecraftFps() {
+        try {
+            String fpsString = Minecraft.getInstance().fpsString;
+            if (fpsString == null || fpsString.isBlank()) return 0;
+            String fps = fpsString.contains(" ") ? fpsString.split(" ", 2)[0] : fpsString;
+            return Integer.parseInt(fps);
+        } catch (Exception ignored) {
+            return 0;
+        }
+    }
+
     public static void fillF(@NotNull GuiGraphics graphics, float minX, float minY, float maxX, float maxY, int color) {
         fillF(graphics, minX, minY, maxX, maxY, 0F, color);
     }
@@ -774,12 +786,12 @@ public class RenderingUtils {
             minY = maxY;
             maxY = i;
         }
-        VertexConsumer vertexConsumer = graphics.bufferSource().getBuffer(RenderType.gui());
+        VertexConsumer vertexConsumer = graphics.bufferSource().getBuffer(GuiRenderTypes.gui());
         vertexConsumer.vertex(matrix4f, (float)minX, (float)minY, (float)z).color(color).endVertex();
         vertexConsumer.vertex(matrix4f, (float)minX, (float)maxY, (float)z).color(color).endVertex();
         vertexConsumer.vertex(matrix4f, (float)maxX, (float)maxY, (float)z).color(color).endVertex();
         vertexConsumer.vertex(matrix4f, (float)maxX, (float)minY, (float)z).color(color).endVertex();
-        // Flush RenderType.gui() so later textured blits do not get overdrawn by this untextured quad.
+        // Flush GuiRenderTypes.gui() so later textured blits do not get overdrawn by this untextured quad.
         graphics.flush();
     }
 
@@ -926,14 +938,15 @@ public class RenderingUtils {
         if (isMatrixIdentity(pose)) {
             return toTransform;
         } else {
-            Vector3f vector3f = pose.transformPosition((float)toTransform.left(), (float)toTransform.top(), 0.0F, new Vector3f());
-            Vector3f vector3f2 = pose.transformPosition((float)toTransform.right(), (float)toTransform.bottom(), 0.0F, new Vector3f());
+            org.joml.Matrix4f jomlPose = MatrixUtils.convertToJoml(pose);
+            Vector3f vector3f = jomlPose.transformPosition((float)toTransform.left(), (float)toTransform.top(), 0.0F, new Vector3f());
+            Vector3f vector3f2 = jomlPose.transformPosition((float)toTransform.right(), (float)toTransform.bottom(), 0.0F, new Vector3f());
             return new ScreenRectangle(Mth.floor(vector3f.x), Mth.floor(vector3f.y), Mth.floor(vector3f2.x - vector3f.x), Mth.floor(vector3f2.y - vector3f.y));
         }
     }
 
     public static boolean isMatrixIdentity(Matrix4f matrix) {
-        return (matrix.properties() & 4) != 0;
+        return MatrixUtils.isMatrixIdentityMojang(matrix);
     }
 
     @FunctionalInterface

@@ -1,17 +1,20 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
-import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtendedSlider;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -24,7 +27,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(AbstractSliderButton.class)
 public abstract class MixinAbstractSliderButton extends AbstractWidget implements CustomizableSlider {
 
-    @Shadow private boolean canChangeValue;
     @Shadow protected double value;
 
     @Unique @Nullable
@@ -62,59 +64,76 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
     @Unique
     private int nineSliceSliderHandleBorderLeft_FancyMenu = 5;
 
-    public MixinAbstractSliderButton(int $$0, int $$1, int $$2, int $$3, Component $$4) {
-        super($$0, $$1, $$2, $$3, $$4);
+    public MixinAbstractSliderButton(int x, int y, int width, int height, Component message) {
+        super(x, y, width, height, message);
     }
 
-    @Inject(method = "renderWidget", at = @At("HEAD"))
-    private void beforeRenderWidgetFancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo ci) {
+    @Override
+    public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
         if (!this.sliderInitializedFancyMenu) this.initializeSliderFancyMenu();
         this.sliderInitializedFancyMenu = true;
+        super.renderButton(pose, mouseX, mouseY, partial);
     }
 
     /**
-     * @reason This is to add support for custom textures to the slider.
+     * @reason Render custom FancyMenu slider handles on the 1.19.2 renderBg path.
      */
-    @WrapWithCondition(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitNineSliced(Lnet/minecraft/resources/ResourceLocation;IIIIIIIIII)V"))
-    private boolean wrap_blitNineSliced_FancyMenu(GuiGraphics graphics, ResourceLocation atlasLocation, int x, int y, int width, int height, int sliceWidth, int sliceHeight, int uWidth, int vHeight, int textureX, int textureY) {
-        CustomizableWidget cus = this.getAsCustomizableWidgetFancyMenu();
-        boolean isHandle = (width == 8);
-        boolean renderVanilla;
-        if (isHandle) {
-            int handleX = this.getX() + (int)(this.value * (double)(this.getWidth() - 8));
-            //For sliders, the normal widget background is the slider handle texture
-            renderVanilla = cus.renderCustomBackgroundFancyMenu(this, graphics, handleX, this.getY(), 8, this.getHeight());
-        } else {
-            renderVanilla = this.renderSliderBackgroundFancyMenu(graphics, (AbstractSliderButton)((Object)this), this.canChangeValue);
-        }
+    @Inject(method = "renderBg", at = @At("HEAD"), cancellable = true)
+    private void beforeRenderHandleFancyMenu(PoseStack pose, Minecraft minecraft, int mouseX, int mouseY, CallbackInfo info) {
+        CustomizableWidget customizable = this.getAsCustomizableWidgetFancyMenu();
+        int handleX = this.getSliderHandleXFancyMenu();
+        boolean renderVanilla = customizable.renderCustomBackgroundFancyMenu(this, GuiGraphics.currentGraphics(), handleX, this.y, 8, this.getHeight());
+        RenderSystem.setShaderTexture(0, WIDGETS_LOCATION);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
+        if (renderVanilla) this.render119VanillaHandleFancyMenu();
+        info.cancel();
+    }
+
+    @Unique
+    private void render119VanillaHandleFancyMenu() {
+        GuiGraphics graphics = GuiGraphics.currentGraphics();
         graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
-        return renderVanilla;
+        RenderSystem.enableBlend();
+        RenderSystem.enableDepthTest();
+        graphics.blitNineSliced(WIDGETS_LOCATION, this.getSliderHandleXFancyMenu(), this.y, 8, this.getHeight(), 20, 4, 200, 20, 0, this.getHandleTextureYFancyMenu());
+        RenderingUtils.resetShaderColor(graphics);
+    }
+
+    @Unique
+    private int getSliderHandleXFancyMenu() {
+        return this.x + (int)(this.value * (double)(this.getWidth() - 8));
+    }
+
+    @Unique
+    private int getHandleTextureYFancyMenu() {
+        int state = 1;
+        if (this.isHoveredOrFocused()) {
+            state = 2;
+        }
+        return 46 + state * 20;
     }
 
     @Unique
     private void initializeSliderFancyMenu() {
-
-        CustomizableWidget cus = this.getAsCustomizableWidgetFancyMenu();
-
-        cus.addResetCustomizationsListenerFancyMenu(() -> {
-            if (this.getCustomSliderBackgroundNormalFancyMenu() instanceof PlayableResource p) p.stop();
-            if (this.getCustomSliderBackgroundHighlightedFancyMenu() instanceof PlayableResource p) p.stop();
+        CustomizableWidget customizable = this.getAsCustomizableWidgetFancyMenu();
+        customizable.addResetCustomizationsListenerFancyMenu(() -> {
+            if (this.getCustomSliderBackgroundNormalFancyMenu() instanceof PlayableResource playable) playable.stop();
+            if (this.getCustomSliderBackgroundHighlightedFancyMenu() instanceof PlayableResource playable) playable.stop();
             this.setCustomSliderBackgroundNormalFancyMenu(null);
             this.setCustomSliderBackgroundHighlightedFancyMenu(null);
         });
 
-        cus.addHoverOrFocusStateListenerFancyMenu(hoveredOrFocused -> {
-            CustomizableWidget.CustomBackgroundResetBehavior behavior = cus.getCustomBackgroundResetBehaviorFancyMenu();
+        customizable.addHoverOrFocusStateListenerFancyMenu(hoveredOrFocused -> {
+            CustomizableWidget.CustomBackgroundResetBehavior behavior = customizable.getCustomBackgroundResetBehaviorFancyMenu();
             if (hoveredOrFocused && ((behavior == CustomizableWidget.CustomBackgroundResetBehavior.RESET_ON_HOVER) || (behavior == CustomizableWidget.CustomBackgroundResetBehavior.RESET_ON_HOVER_AND_UNHOVER))) {
-                if (this.getCustomSliderBackgroundNormalFancyMenu() instanceof PlayableResource p) p.stop();
-                if (this.getCustomSliderBackgroundHighlightedFancyMenu() instanceof PlayableResource p) p.stop();
+                if (this.getCustomSliderBackgroundNormalFancyMenu() instanceof PlayableResource playable) playable.stop();
+                if (this.getCustomSliderBackgroundHighlightedFancyMenu() instanceof PlayableResource playable) playable.stop();
             }
             if (!hoveredOrFocused && ((behavior == CustomizableWidget.CustomBackgroundResetBehavior.RESET_ON_UNHOVER) || (behavior == CustomizableWidget.CustomBackgroundResetBehavior.RESET_ON_HOVER_AND_UNHOVER))) {
-                if (this.getCustomSliderBackgroundNormalFancyMenu() instanceof PlayableResource p) p.stop();
-                if (this.getCustomSliderBackgroundHighlightedFancyMenu() instanceof PlayableResource p) p.stop();
+                if (this.getCustomSliderBackgroundNormalFancyMenu() instanceof PlayableResource playable) playable.stop();
+                if (this.getCustomSliderBackgroundHighlightedFancyMenu() instanceof PlayableResource playable) playable.stop();
             }
         });
-
     }
 
     @Unique
@@ -131,30 +150,30 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
 
     @Unique
     @Override
-    public void setNineSliceSliderBackgroundBorderX_FancyMenu(int nineSliceSliderBorderX_FancyMenu) {
-        this.nineSliceSliderBackgroundBorderX_FancyMenu = nineSliceSliderBorderX_FancyMenu;
-        this.nineSliceSliderBackgroundBorderLeft_FancyMenu = nineSliceSliderBorderX_FancyMenu;
-        this.nineSliceSliderBackgroundBorderRight_FancyMenu = nineSliceSliderBorderX_FancyMenu;
+    public void setNineSliceSliderBackgroundBorderX_FancyMenu(int borderX) {
+        this.nineSliceSliderBackgroundBorderX_FancyMenu = borderX;
+        this.nineSliceSliderBackgroundBorderLeft_FancyMenu = borderX;
+        this.nineSliceSliderBackgroundBorderRight_FancyMenu = borderX;
     }
 
     @Unique
     @Override
     public int getNineSliceSliderBackgroundBorderX_FancyMenu() {
-        return nineSliceSliderBackgroundBorderX_FancyMenu;
+        return this.nineSliceSliderBackgroundBorderX_FancyMenu;
     }
 
     @Unique
     @Override
-    public void setNineSliceSliderBackgroundBorderY_FancyMenu(int nineSliceSliderBorderY_FancyMenu) {
-        this.nineSliceSliderBackgroundBorderY_FancyMenu = nineSliceSliderBorderY_FancyMenu;
-        this.nineSliceSliderBackgroundBorderTop_FancyMenu = nineSliceSliderBorderY_FancyMenu;
-        this.nineSliceSliderBackgroundBorderBottom_FancyMenu = nineSliceSliderBorderY_FancyMenu;
+    public void setNineSliceSliderBackgroundBorderY_FancyMenu(int borderY) {
+        this.nineSliceSliderBackgroundBorderY_FancyMenu = borderY;
+        this.nineSliceSliderBackgroundBorderTop_FancyMenu = borderY;
+        this.nineSliceSliderBackgroundBorderBottom_FancyMenu = borderY;
     }
 
     @Unique
     @Override
     public int getNineSliceSliderBackgroundBorderY_FancyMenu() {
-        return nineSliceSliderBackgroundBorderY_FancyMenu;
+        return this.nineSliceSliderBackgroundBorderY_FancyMenu;
     }
 
     @Unique
@@ -219,30 +238,30 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
 
     @Unique
     @Override
-    public void setNineSliceSliderHandleBorderX_FancyMenu(int nineSliceSliderHandleBorderX_FancyMenu) {
-        this.nineSliceSliderHandleBorderX_FancyMenu = nineSliceSliderHandleBorderX_FancyMenu;
-        this.nineSliceSliderHandleBorderLeft_FancyMenu = nineSliceSliderHandleBorderX_FancyMenu;
-        this.nineSliceSliderHandleBorderRight_FancyMenu = nineSliceSliderHandleBorderX_FancyMenu;
+    public void setNineSliceSliderHandleBorderX_FancyMenu(int borderX) {
+        this.nineSliceSliderHandleBorderX_FancyMenu = borderX;
+        this.nineSliceSliderHandleBorderLeft_FancyMenu = borderX;
+        this.nineSliceSliderHandleBorderRight_FancyMenu = borderX;
     }
 
     @Unique
     @Override
     public int getNineSliceSliderHandleBorderX_FancyMenu() {
-        return nineSliceSliderHandleBorderX_FancyMenu;
+        return this.nineSliceSliderHandleBorderX_FancyMenu;
     }
 
     @Unique
     @Override
-    public void setNineSliceSliderHandleBorderY_FancyMenu(int nineSliceSliderHandleBorderY_FancyMenu) {
-        this.nineSliceSliderHandleBorderY_FancyMenu = nineSliceSliderHandleBorderY_FancyMenu;
-        this.nineSliceSliderHandleBorderTop_FancyMenu = nineSliceSliderHandleBorderY_FancyMenu;
-        this.nineSliceSliderHandleBorderBottom_FancyMenu = nineSliceSliderHandleBorderY_FancyMenu;
+    public void setNineSliceSliderHandleBorderY_FancyMenu(int borderY) {
+        this.nineSliceSliderHandleBorderY_FancyMenu = borderY;
+        this.nineSliceSliderHandleBorderTop_FancyMenu = borderY;
+        this.nineSliceSliderHandleBorderBottom_FancyMenu = borderY;
     }
 
     @Unique
     @Override
     public int getNineSliceSliderHandleBorderY_FancyMenu() {
-        return nineSliceSliderHandleBorderY_FancyMenu;
+        return this.nineSliceSliderHandleBorderY_FancyMenu;
     }
 
     @Unique
@@ -303,13 +322,9 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
     @Override
     public @Nullable RenderableResource getCustomSliderBackgroundNormalFancyMenu() {
         if (this.customSliderBackgroundNormalFancyMenu != null) return this.customSliderBackgroundNormalFancyMenu;
-        if ((Object)this instanceof AbstractExtendedSlider slider) {
-            if (slider.getSliderBackgroundColorNormal() != null) return null;
-        }
+        if ((Object)this instanceof AbstractExtendedSlider slider && slider.getSliderBackgroundColorNormal() != null) return null;
         RenderableResource resource = GlobalCustomizationHandler.getCustomSliderBackground();
-        if (resource != null) {
-            this.applyGlobalSliderBackgroundNineSlice_FancyMenu();
-        }
+        if (resource != null) this.applyGlobalSliderBackgroundNineSlice_FancyMenu();
         return resource;
     }
 
@@ -323,13 +338,9 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
     @Override
     public @Nullable RenderableResource getCustomSliderBackgroundHighlightedFancyMenu() {
         if (this.customSliderBackgroundHighlightedFancyMenu != null) return this.customSliderBackgroundHighlightedFancyMenu;
-        if ((Object)this instanceof AbstractExtendedSlider slider) {
-            if (slider.getSliderBackgroundColorHighlighted() != null) return null;
-        }
+        if ((Object)this instanceof AbstractExtendedSlider slider && slider.getSliderBackgroundColorHighlighted() != null) return null;
         RenderableResource resource = GlobalCustomizationHandler.getCustomSliderBackground();
-        if (resource != null) {
-            this.applyGlobalSliderBackgroundNineSlice_FancyMenu();
-        }
+        if (resource != null) this.applyGlobalSliderBackgroundNineSlice_FancyMenu();
         return resource;
     }
 
@@ -344,7 +355,7 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
 
     @Unique
     private CustomizableWidget getAsCustomizableWidgetFancyMenu() {
-        return (CustomizableWidget) this;
+        return (CustomizableWidget)this;
     }
 
 }

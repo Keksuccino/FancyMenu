@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
+import de.keksuccino.fancymenu.util.rendering.gui.Axis;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
@@ -862,7 +863,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         graphics.pose().scale(scale, scale, 1.0F);
         if (rotationDegrees != 0.0F) {
             graphics.pose().translate(iconData.width * 0.5F, iconData.height * 0.5F, 0.0F);
-            graphics.pose().mulPose(com.mojang.math.Axis.ZP.rotationDegrees(rotationDegrees));
+            graphics.pose().mulPose(Axis.ZP.rotationDegrees(rotationDegrees));
             graphics.pose().translate(-iconData.width * 0.5F, -iconData.height * 0.5F, 0.0F);
         }
         RenderingUtils.blitAlphaTexture(graphics, iconData.texture, 0, 0, iconData.width, iconData.height);

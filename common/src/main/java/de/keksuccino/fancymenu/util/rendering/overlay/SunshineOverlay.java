@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.util.rendering.overlay;
 
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.ModernAbstractWidget;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FastColor;
@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SunshineOverlay extends AbstractWidget implements NavigatableWidget {
+public class SunshineOverlay extends ModernAbstractWidget implements NavigatableWidget {
 
     private static final int MIN_RAYS = 8;
     private static final int MAX_RAYS = 38;
@@ -70,7 +70,7 @@ public class SunshineOverlay extends AbstractWidget implements NavigatableWidget
     }
 
     @Override
-    protected void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         int overlayX = this.getX();
         int overlayY = this.getY();
         int overlayWidth = this.getWidth();
@@ -171,7 +171,7 @@ public class SunshineOverlay extends AbstractWidget implements NavigatableWidget
         float angleRadians = (float)Math.toRadians(this.angleDegrees);
         float dirX = baseX * Mth.cos(angleRadians) - baseY * Mth.sin(angleRadians);
         float dirY = baseX * Mth.sin(angleRadians) + baseY * Mth.cos(angleRadians);
-        float invLen = Mth.invSqrt(dirX * dirX + dirY * dirY);
+        float invLen = Mth.fastInvSqrt(dirX * dirX + dirY * dirY);
         dirX *= invLen;
         dirY *= invLen;
 
@@ -206,7 +206,7 @@ public class SunshineOverlay extends AbstractWidget implements NavigatableWidget
             float angle = ray.angleOffset;
             float dirX = basis.dirX * Mth.cos(angle) - basis.dirY * Mth.sin(angle);
             float dirY = basis.dirX * Mth.sin(angle) + basis.dirY * Mth.cos(angle);
-            float invLen = Mth.invSqrt(dirX * dirX + dirY * dirY);
+            float invLen = Mth.fastInvSqrt(dirX * dirX + dirY * dirY);
             dirX *= invLen;
             dirY *= invLen;
             renderRay(graphics, overlayX, overlayY, overlayWidth, overlayHeight, basis.originX, basis.originY, dirX, dirY, rayLength, ray.width, alpha, baseRgb);
@@ -275,7 +275,7 @@ public class SunshineOverlay extends AbstractWidget implements NavigatableWidget
 
 
     @Override
-    protected void updateWidgetNarration(@NotNull NarrationElementOutput narrationElementOutput) {
+    public void updateNarration(@NotNull NarrationElementOutput narrationElementOutput) {
     }
 
     @Override

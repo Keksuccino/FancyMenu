@@ -16,6 +16,8 @@ import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.client.multiplayer.ClientAdvancements;
 import net.minecraft.client.resources.language.LanguageManager;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.packs.repository.Pack;
+import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -47,8 +49,8 @@ public class ScreenInstanceFactory {
 		DEFAULT_PARAMETERS.put(Float.class, 0F);
 
 		ScreenInstanceFactory.registerScreenProvider(PackSelectionScreen.class.getName(),
-				() -> new PackSelectionScreen(Minecraft.getInstance().getResourcePackRepository(), (repo) -> {
-					Minecraft.getInstance().options.updateResourcePacks(repo);
+				() -> new PackSelectionScreen(Minecraft.getInstance().screen, Minecraft.getInstance().getResourcePackRepository(), (repo) -> {
+					updateResourcePacks(Minecraft.getInstance().options, repo);
 					Minecraft.getInstance().setScreen(Minecraft.getInstance().screen);
 				}, Minecraft.getInstance().getResourcePackDirectory(), Component.translatable("resourcePack.title"))
 		);
@@ -64,6 +66,20 @@ public class ScreenInstanceFactory {
 
 	public static void registerScreenProvider(@NotNull String screenClassPath, @NotNull Supplier<? extends Screen> provider) {
 		SCREEN_INSTANCE_PROVIDERS.put(screenClassPath, provider);
+	}
+
+	private static void updateResourcePacks(@NotNull Options options, @NotNull PackRepository repository) {
+		options.resourcePacks.clear();
+		options.incompatibleResourcePacks.clear();
+		for (Pack selected : repository.getSelectedPacks()) {
+			if (!selected.isFixedPosition()) {
+				options.resourcePacks.add(selected.getId());
+				if (!selected.getCompatibility().isCompatible()) {
+					options.incompatibleResourcePacks.add(selected.getId());
+				}
+			}
+		}
+		options.save();
 	}
 
 	@Nullable

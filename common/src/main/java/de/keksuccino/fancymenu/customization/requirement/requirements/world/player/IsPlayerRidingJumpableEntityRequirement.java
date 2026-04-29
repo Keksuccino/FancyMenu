@@ -37,7 +37,7 @@ public class IsPlayerRidingJumpableEntityRequirement extends Requirement {
             ClientLevel level = Minecraft.getInstance().level;
             LocalPlayer player = Minecraft.getInstance().player;
             if ((level != null) && (player != null)) {
-                return (player.jumpableVehicle() != null);
+                return player.isRidingJumpable();
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to handle '" + this.getIdentifier() + "' loading requirement!", ex);

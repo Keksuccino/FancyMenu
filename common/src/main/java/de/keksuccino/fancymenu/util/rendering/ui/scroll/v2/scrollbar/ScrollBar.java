@@ -4,7 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
-public class ScrollBar extends UIBase implements GuiEventListener, Widget, NarratableEntry {
+public class ScrollBar extends UIBase implements GuiEventListener, Renderable, NarratableEntry {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -297,12 +297,10 @@ public class ScrollBar extends UIBase implements GuiEventListener, Widget, Narra
         return this.isMouseInsideScrollArea(mouseX, mouseY, true);
     }
 
-    @Override
-    public void setFocused(boolean var1) {
+        public void setFocused(boolean var1) {
     }
 
-    @Override
-    public boolean isFocused() {
+        public boolean isFocused() {
         return false;
     }
 

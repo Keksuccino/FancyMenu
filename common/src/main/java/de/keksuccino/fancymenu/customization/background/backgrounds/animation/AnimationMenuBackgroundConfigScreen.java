@@ -3,10 +3,12 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.animation;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.layout.editor.ChooseAnimationScreen;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.ChatFormatting;
@@ -82,7 +84,7 @@ public class AnimationMenuBackgroundConfigScreen extends ModernScreen {
             public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
                 this.active = AnimationMenuBackgroundConfigScreen.this.background.animationName != null;
                 if (!this.active) {
-                    TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.background.animation.configure.no_animation_chosen")).setDefaultStyle(), false, true);
+                    TooltipHandler.INSTANCE.addWidgetTooltip(this, UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.background.animation.configure.no_animation_chosen")), false, true);
                 }
                 super.render(pose, mouseX, mouseY, partial);
             }
@@ -99,34 +101,34 @@ public class AnimationMenuBackgroundConfigScreen extends ModernScreen {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         RenderSystem.enableBlend();
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
 
         int centerX = this.width / 2;
         int centerY = this.height / 2;
 
         MutableComponent title = this.title.copy().withStyle(ChatFormatting.BOLD);
         int titleWidth = this.font.width(title);
-        this.font.draw(pose, title, (float)centerX - ((float)titleWidth / 2F), 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, title, centerX - (titleWidth / 2), 20, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
 
         this.chooseAnimationButton.x = centerX - (this.chooseAnimationButton.getWidth() / 2);
         this.chooseAnimationButton.y = centerY - 20 - 3;
-        this.chooseAnimationButton.render(pose, mouseX, mouseY, partial);
+        this.chooseAnimationButton.render(graphics, mouseX, mouseY, partial);
 
         this.toggleRestartOnLoadButton.x = centerX - (this.toggleRestartOnLoadButton.getWidth() / 2);
         this.toggleRestartOnLoadButton.y = centerY + 2;
-        this.toggleRestartOnLoadButton.render(pose, mouseX, mouseY, partial);
+        this.toggleRestartOnLoadButton.render(graphics, mouseX, mouseY, partial);
 
         this.doneButton.x = (this.width / 2) - this.doneButton.getWidth() - 5;
         this.doneButton.y = this.height - 40;
-        this.doneButton.render(pose, mouseX, mouseY, partial);
+        this.doneButton.render(graphics, mouseX, mouseY, partial);
 
         this.cancelButton.x = (this.width / 2) + 5;
         this.cancelButton.y = this.height - 40;
-        this.cancelButton.render(pose, mouseX, mouseY, partial);
+        this.cancelButton.render(graphics, mouseX, mouseY, partial);
 
     }
 

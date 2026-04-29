@@ -1909,7 +1909,7 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
             int j = editBox.getCursorPosition() - b.getDisplayPosFancyMenu();
             boolean flag = j >= 0 && j <= s.length();
             boolean flag2 = editBox.getCursorPosition() < editBox.getValue().length() || editBox.getValue().length() >= b.getMaxLengthFancyMenu();
-            int l = b.getBorderedFancyMenu() ? editBox.getX() + 4 : editBox.getX();
+            int l = b.getBorderedFancyMenu() ? editBox.x + 4 : editBox.x;
             int j1 = l;
             if (!s.isEmpty()) {
                 String s1 = flag ? s.substring(0, j) : s;

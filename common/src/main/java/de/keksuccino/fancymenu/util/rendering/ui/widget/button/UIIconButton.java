@@ -1,13 +1,13 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
-import com.mojang.math.Axis;
+import de.keksuccino.fancymenu.util.rendering.gui.Axis;
 import de.keksuccino.fancymenu.util.rendering.IconAnimation;
 import de.keksuccino.fancymenu.util.rendering.IconAnimations;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -18,7 +18,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
-public class UIIconButton implements Widget, GuiEventListener, NarratableEntry {
+public class UIIconButton implements Renderable, GuiEventListener, NarratableEntry {
 
     private static final float DEFAULT_ICON_PADDING = 4.0F;
     private float x;
@@ -272,13 +272,11 @@ public class UIIconButton implements Widget, GuiEventListener, NarratableEntry {
         return UIBase.isXYInArea(mouseX, mouseY, this.x, this.y, this.width, this.height);
     }
 
-    @Override
-    public void setFocused(boolean focused) {
+        public void setFocused(boolean focused) {
         this.focused = focused;
     }
 
-    @Override
-    public boolean isFocused() {
+        public boolean isFocused() {
         return this.focused;
     }
 

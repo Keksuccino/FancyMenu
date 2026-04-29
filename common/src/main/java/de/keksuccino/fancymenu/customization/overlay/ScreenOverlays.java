@@ -1,10 +1,10 @@
 package de.keksuccino.fancymenu.customization.overlay;
 
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
-import net.minecraft.client.gui.components.Widget;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
@@ -58,7 +58,7 @@ public class ScreenOverlays {
         // empty dummy just for having something to call on init (yes, it's useless, but it makes me feel better, okay?)
     }
 
-    private static long register(@Nullable Widget overlay, boolean setDefaultInputController) {
+    private static long register(@Nullable Renderable overlay, boolean setDefaultInputController) {
         long id;
         if (overlay != null) {
             id = ScreenOverlayHandler.INSTANCE.addOverlay(overlay);

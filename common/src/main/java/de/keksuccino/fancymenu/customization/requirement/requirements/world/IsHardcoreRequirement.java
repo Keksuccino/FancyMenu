@@ -36,7 +36,7 @@ public class IsHardcoreRequirement extends Requirement {
         try {
             LocalPlayer player = Minecraft.getInstance().player;
             if (player == null) return false;
-            return player.level().getLevelData().isHardcore();
+            return player.level.getLevelData().isHardcore();
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to handle '" + this.getIdentifier() + "' loading requirement!", ex);
             return false;

@@ -18,7 +18,7 @@ public class StructuresPacketLogic {
     protected static boolean handleOnServer(@NotNull StructuresPacket packet, @NotNull ServerPlayer sender) {
         StructuresPacket answer = new StructuresPacket();
         List<String> keys = new ArrayList<>();
-        StructureUtils.getAllStructureKeys(sender.level().registryAccess()).forEach(structureResourceKey -> keys.add(structureResourceKey.location().toString()));
+        StructureUtils.getAllStructureKeys(sender.getLevel().registryAccess()).forEach(structureResourceKey -> keys.add(structureResourceKey.location().toString()));
         answer.keys = keys;
         PacketHandler.sendToClient(sender, answer);
         return true;

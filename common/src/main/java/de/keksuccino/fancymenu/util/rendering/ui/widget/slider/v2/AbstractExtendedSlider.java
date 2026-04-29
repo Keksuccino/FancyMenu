@@ -1,33 +1,32 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSliderButton;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
+import de.keksuccino.fancymenu.util.rendering.gui.VanillaTooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.IExtendedWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.WidgetWithVanillaTooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 
 @SuppressWarnings("unused")
-public abstract class AbstractExtendedSlider extends AbstractSliderButton implements IExtendedWidget, NavigatableWidget, FancyMenuWidget {
-
-    public static final ResourceLocation SLIDER_LOCATION = new ResourceLocation("textures/gui/slider.png");
+public abstract class AbstractExtendedSlider extends AbstractSliderButton implements IExtendedWidget, NavigatableWidget, FancyMenuWidget, WidgetWithVanillaTooltip {
 
     @Nullable
     protected DrawableColor sliderBackgroundColorNormal;
@@ -59,9 +58,27 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     @Nullable
     protected ConsumingSupplier<AbstractExtendedSlider, Boolean> isActiveSupplier = null;
     protected boolean leftMouseDown = false;
+    @Nullable
+    protected VanillaTooltip vanillaTooltip;
 
     public AbstractExtendedSlider(int x, int y, int width, int height, Component label, double value) {
         super(x, y, width, height, label, value);
+    }
+
+    public int getX() {
+        return this.x;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public int getY() {
+        return this.y;
+    }
+
+    public void setY(int y) {
+        this.y = y;
     }
 
     public void setHeight(int height) {
@@ -69,14 +86,15 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     }
 
     public int getTextureY() {
-        return (this.isFocused() && !((IMixinAbstractSliderButton)this).getCanChangeValueFancyMenu() ? 1 : 0) * 20;
+        return 46;
     }
 
     public int getHandleTextureY() {
-        return (!this.isHovered && !((IMixinAbstractSliderButton)this).getCanChangeValueFancyMenu() ? 2 : 3) * 20;
+        int state = 1;
+        if (this.isHoveredOrFocused()) state = 2;
+        return 46 + state * 20;
     }
 
-    @Override
     public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.renderBackground(graphics, mouseX, mouseY, partial);
@@ -90,15 +108,25 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
 
     }
 
-    @Override
     public void render(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
         if (this.isActiveSupplier != null) this.active = this.isActiveSupplier.get(this);
-        super.render($$0, $$1, $$2, $$3);
+        super.render($$0.pose(), $$1, $$2, $$3);
+    }
+
+    @Deprecated
+    @Override
+    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        this.render(GuiGraphics.currentGraphics(), mouseX, mouseY, partial);
+    }
+
+    @Override
+    public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        this.renderWidget(GuiGraphics.currentGraphics(), mouseX, mouseY, partial);
     }
 
     protected void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         boolean renderVanilla = this.renderColorBackground(graphics, mouseX, mouseY, partial);
-        if (renderVanilla) renderVanilla = this.getAsCustomizableSlider().renderSliderBackgroundFancyMenu(graphics, this, this.getAccessor().getCanChangeValueFancyMenu());
+        if (renderVanilla) renderVanilla = this.getAsCustomizableSlider().renderSliderBackgroundFancyMenu(graphics, this, true);
         if (renderVanilla) this.renderVanillaBackground(graphics, mouseX, mouseY, partial);
     }
 
@@ -108,7 +136,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     protected boolean renderColorBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         RenderingUtils.setupAlphaBlend();
         RenderingUtils.resetShaderColor(graphics);
-        if ((this.isFocused() && !this.getAccessor().getCanChangeValueFancyMenu()) && (this.sliderBackgroundColorHighlighted != null)) {
+        if (this.isFocused() && (this.sliderBackgroundColorHighlighted != null)) {
             if (this.roundedColorBackground) {
                 float radius = UIBase.getWidgetCornerRoundingRadius();
                 SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
@@ -202,7 +230,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
         graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
         RenderingUtils.setupAlphaBlend();
         RenderSystem.enableDepthTest();
-        graphics.blitNineSliced(SLIDER_LOCATION, this.getX(), this.getY(), this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());
+        graphics.blitNineSliced(WIDGETS_LOCATION, this.getX(), this.getY(), this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());
         RenderingUtils.resetShaderColor(graphics);
     }
 
@@ -295,7 +323,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
         graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
         RenderingUtils.setupAlphaBlend();
         RenderSystem.enableDepthTest();
-        graphics.blitNineSliced(SLIDER_LOCATION, this.getHandleX(), this.getY(), this.getHandleWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getHandleTextureY());
+        graphics.blitNineSliced(WIDGETS_LOCATION, this.getHandleX(), this.getY(), this.getHandleWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getHandleTextureY());
         RenderingUtils.resetShaderColor(graphics);
     }
 
@@ -536,10 +564,6 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
         return this;
     }
 
-    public IMixinAbstractSliderButton getAccessor() {
-        return (IMixinAbstractSliderButton) this;
-    }
-
     public CustomizableSlider getAsCustomizableSlider() {
         return (CustomizableSlider) this;
     }
@@ -592,6 +616,20 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
 
     protected boolean canClick() {
         return (this.isHovered() && this.isActive() && this.visible);
+    }
+
+    public boolean isHovered() {
+        return this.isHovered;
+    }
+
+    @Override
+    public @Nullable VanillaTooltip getVanillaTooltip_FancyMenu() {
+        return this.vanillaTooltip;
+    }
+
+    @Override
+    public void setVanillaTooltip_FancyMenu(@Nullable VanillaTooltip tooltip) {
+        this.vanillaTooltip = tooltip;
     }
 
     @FunctionalInterface

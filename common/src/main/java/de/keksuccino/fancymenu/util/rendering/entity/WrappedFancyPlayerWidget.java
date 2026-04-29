@@ -2,12 +2,11 @@ package de.keksuccino.fancymenu.util.rendering.entity;
 
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.ModernAbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Pose;
-import net.minecraft.world.entity.animal.Parrot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -16,7 +15,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.UUID;
 
-public class WrappedFancyPlayerWidget extends AbstractWidget implements NavigatableWidget {
+public class WrappedFancyPlayerWidget extends ModernAbstractWidget implements NavigatableWidget {
 
     private static final String FER_PLAYER_WIDGET_CLASS = "it.crystalnest.fancy_entity_renderer.api.entity.player.FancyPlayerWidget";
 
@@ -39,12 +38,12 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
     }
 
     @Override
-    protected void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.invoke("render", graphics, mouseX, mouseY, partial);
     }
 
     @Override
-    protected void updateWidgetNarration(@NotNull NarrationElementOutput output) {
+    public void updateNarration(@NotNull NarrationElementOutput output) {
         this.invoke("updateNarration", output);
     }
 
@@ -242,7 +241,7 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
         return this;
     }
 
-    public WrappedFancyPlayerWidget setParrots(@Nullable Parrot.Variant leftParrot, @Nullable Parrot.Variant rightParrot) {
+    public WrappedFancyPlayerWidget setParrots(@Nullable Integer leftParrot, @Nullable Integer rightParrot) {
         this.invoke("setParrots", leftParrot, rightParrot);
         return this;
     }

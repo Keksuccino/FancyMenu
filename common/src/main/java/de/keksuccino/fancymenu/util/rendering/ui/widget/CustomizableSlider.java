@@ -139,12 +139,12 @@ public interface CustomizableSlider {
             graphics.setColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)this).getAlphaFancyMenu());
             RenderingUtils.setupAlphaBlend();
             if (this.isNineSliceCustomSliderBackground_FancyMenu()) {
-                RenderingUtils.blitNineSlicedTexture(graphics, location, widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight(), texture.getWidth(), texture.getHeight(),
+                RenderingUtils.blitNineSlicedTexture(graphics, location, widget.x, widget.y, widget.getWidth(), widget.getHeight(), texture.getWidth(), texture.getHeight(),
                         this.getNineSliceSliderBackgroundBorderTop_FancyMenu(), this.getNineSliceSliderBackgroundBorderRight_FancyMenu(),
                         this.getNineSliceSliderBackgroundBorderBottom_FancyMenu(), this.getNineSliceSliderBackgroundBorderLeft_FancyMenu());
             } else {
                 RenderingUtils.setupAlphaBlend();
-                RenderingUtils.blitAlphaTexture(graphics, location, widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight());
+                RenderingUtils.blitAlphaTexture(graphics, location, widget.x, widget.y, widget.getWidth(), widget.getHeight());
             }
             RenderingUtils.resetShaderColor(graphics);
             return false;

@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastComponent;
 import net.minecraft.network.chat.Component;
@@ -47,6 +48,11 @@ public class SimpleToast implements Toast {
 
     @NotNull
     @Override
+    public Toast.Visibility render(@NotNull PoseStack poseStack, @NotNull ToastComponent toastComponent, long progressTime) {
+        return this.render(GuiGraphics.currentGraphics(), toastComponent, progressTime);
+    }
+
+    @NotNull
     public Toast.Visibility render(@NotNull GuiGraphics graphics, @NotNull ToastComponent toastComponent, long progressTime) {
 
         ResourceLocation customBack = this.getCustomBackground();

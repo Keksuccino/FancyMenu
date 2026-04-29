@@ -11,7 +11,7 @@ import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.core.registries.Registries;
+import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -122,7 +122,7 @@ public class IsEffectActiveRequirement extends Requirement {
         try {
             ClientLevel level = Minecraft.getInstance().level;
             if (level != null) {
-                level.registryAccess().lookupOrThrow(Registries.MOB_EFFECT).listElementIds().forEach(key -> keys.add(key.location()));
+                Registry.MOB_EFFECT.registryKeySet().forEach(key -> keys.add(key.location()));
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to get effect keys for 'Is Effect Active' loading requirement!", ex);

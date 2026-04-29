@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
@@ -8,6 +9,7 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
+import de.keksuccino.fancymenu.util.rendering.gui.VanillaTooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
@@ -15,6 +17,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.IExtendedWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.WidgetWithVanillaTooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.Minecraft;
@@ -27,7 +30,7 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 
 @SuppressWarnings("unused")
-public class ExtendedButton extends Button implements IExtendedWidget, UniqueWidget, NavigatableWidget, FancyMenuWidget {
+public class ExtendedButton extends Button implements IExtendedWidget, UniqueWidget, NavigatableWidget, FancyMenuWidget, WidgetWithVanillaTooltip {
 
     protected final Minecraft mc = Minecraft.getInstance();
     protected boolean enableLabel = true;
@@ -64,28 +67,55 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     protected boolean roundedColorBackground = false;
     @Nullable
     protected String identifier;
+    @Nullable
+    protected VanillaTooltip vanillaTooltip;
 
     public ExtendedButton(int x, int y, int width, int height, @NotNull String label, @NotNull OnPress onPress) {
-        super(x, y, width, height, Component.literal(""), onPress, DEFAULT_NARRATION);
-        this.setLabel(Component.literal(label));
+        this(x, y, width, height, Component.literal(label), onPress, NO_TOOLTIP);
     }
 
-    public ExtendedButton(int x, int y, int width, int height, @NotNull String label, @NotNull OnPress onPress, CreateNarration narration) {
-        super(x, y, width, height, Component.literal(""), onPress, narration);
+    public ExtendedButton(int x, int y, int width, int height, @NotNull String label, @NotNull OnPress onPress, OnTooltip tooltip) {
+        super(x, y, width, height, Component.literal(""), onPress, tooltip);
         this.setLabel(Component.literal(label));
     }
 
     public ExtendedButton(int x, int y, int width, int height, @NotNull Component label, @NotNull OnPress onPress) {
-        super(x, y, width, height, Component.literal(""), onPress, DEFAULT_NARRATION);
+        this(x, y, width, height, label, onPress, NO_TOOLTIP);
+    }
+
+    public ExtendedButton(int x, int y, int width, int height, @NotNull Component label, @NotNull OnPress onPress, OnTooltip tooltip) {
+        super(x, y, width, height, Component.literal(""), onPress, tooltip);
         this.setLabel(label);
     }
 
-    public ExtendedButton(int x, int y, int width, int height, @NotNull Component label, @NotNull OnPress onPress, CreateNarration narration) {
-        super(x, y, width, height, Component.literal(""), onPress, narration);
-        this.setLabel(label);
+    public int getX() {
+        return this.x;
     }
 
-    @Override
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public int getY() {
+        return this.y;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    public int getHeight() {
+        return this.height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
+    public boolean isHovered() {
+        return this.isHovered;
+    }
+
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.updateIsActive();
         this.updateVisibility();
@@ -94,10 +124,15 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         if ((tooltip != null) && this.isHovered() && this.visible) {
             TooltipHandler.INSTANCE.addRenderTickTooltip(tooltip, () -> true);
         }
-        super.render(graphics, mouseX, mouseY, partial);
+        super.render(graphics.pose(), mouseX, mouseY, partial);
     }
 
+    @Deprecated
     @Override
+    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        this.render(GuiGraphics.currentGraphics(), mouseX, mouseY, partial);
+    }
+
     public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         RenderSystem.disableDepthTest();
@@ -109,6 +144,11 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
 
         RenderingUtils.setDepthTestLocked(false);
 
+    }
+
+    @Override
+    public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        this.renderWidget(GuiGraphics.currentGraphics(), mouseX, mouseY, partial);
     }
 
     protected void renderBackground(@NotNull GuiGraphics graphics, float partial) {
@@ -277,10 +317,6 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
             Boolean b = this.visibilitySupplier.get(this);
             if (b != null) this.visible = b;
         }
-    }
-
-    public void setHeight(int height) {
-        this.height = height;
     }
 
     protected int getHoverState() {
@@ -582,20 +618,28 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         return (CustomizableWidget) this;
     }
 
+    @Override
+    public @Nullable VanillaTooltip getVanillaTooltip_FancyMenu() {
+        return this.vanillaTooltip;
+    }
+
+    @Override
+    public void setVanillaTooltip_FancyMenu(@Nullable VanillaTooltip tooltip) {
+        this.vanillaTooltip = tooltip;
+    }
+
     //This is to make the button work in FocuslessEventHandlers
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         return false;
     }
 
-    @Override
-    public boolean isFocused() {
+        public boolean isFocused() {
         if (!this.focusable) return false;
         return super.isFocused();
     }
 
-    @Override
-    public void setFocused(boolean $$0) {
+        public void setFocused(boolean $$0) {
         if (!this.focusable) {
             super.setFocused(false);
             return;

@@ -30,7 +30,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -47,7 +47,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?>, N extends AbstractElement> implements Widget, GuiEventListener, ContextMenuBuilder<E>, PropertyHolder {
+public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?>, N extends AbstractElement> implements Renderable, GuiEventListener, ContextMenuBuilder<E>, PropertyHolder {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -1606,11 +1606,9 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         return UIBase.isXYInArea((int) mouseX, (int) mouseY, this.getX(), this.getY(), this.getWidth(), this.getHeight());
     }
 
-    @Override
-    public void setFocused(boolean var1) {}
+        public void setFocused(boolean var1) {}
 
-    @Override
-    public boolean isFocused() {
+        public boolean isFocused() {
         return false;
     }
 
@@ -1971,7 +1969,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         LEFT
     }
 
-    public class RotationGrabber implements Widget {
+    public class RotationGrabber implements Renderable {
 
         protected int size = RESIZE_INDICATOR_SIZE; // Size of the grabber
         protected boolean hovered = false;
@@ -2050,7 +2048,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
     }
 
-    public class VerticalTiltGrabber implements Widget {
+    public class VerticalTiltGrabber implements Renderable {
 
         protected int size = RESIZE_INDICATOR_SIZE; // Size of the grabber
         protected boolean hovered = false;
@@ -2118,7 +2116,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
     }
 
-    public class HorizontalTiltGrabber implements Widget {
+    public class HorizontalTiltGrabber implements Renderable {
 
         protected int size = RESIZE_INDICATOR_SIZE; // Size of the grabber
         protected boolean hovered = false;

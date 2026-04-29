@@ -21,7 +21,7 @@ import de.keksuccino.fancymenu.util.ScreenUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -39,7 +39,7 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
-public class MenuBar implements Widget, GuiEventListener, NarratableEntry, NavigatableWidget {
+public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -479,12 +479,10 @@ public class MenuBar implements Widget, GuiEventListener, NarratableEntry, Navig
         return this;
     }
 
-    @Override
-    public void setFocused(boolean var1) {
+        public void setFocused(boolean var1) {
     }
 
-    @Override
-    public boolean isFocused() {
+        public boolean isFocused() {
         return false;
     }
 
@@ -635,7 +633,7 @@ public class MenuBar implements Widget, GuiEventListener, NarratableEntry, Navig
         }
     }
 
-    public static abstract class MenuBarEntry implements Widget, GuiEventListener {
+    public static abstract class MenuBarEntry implements Renderable, GuiEventListener {
 
         protected final String identifier;
         @NotNull
@@ -723,12 +721,10 @@ public class MenuBar implements Widget, GuiEventListener, NarratableEntry, Navig
             return this.identifier;
         }
 
-        @Override
-        public void setFocused(boolean var1) {
+                public void setFocused(boolean var1) {
         }
 
-        @Override
-        public boolean isFocused() {
+                public boolean isFocused() {
             return false;
         }
 

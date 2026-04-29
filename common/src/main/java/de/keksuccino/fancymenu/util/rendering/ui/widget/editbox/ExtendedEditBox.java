@@ -1,16 +1,20 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.editbox;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
+import de.keksuccino.fancymenu.util.rendering.gui.VanillaTooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.WidgetWithVanillaTooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.Util;
@@ -31,7 +35,7 @@ import java.awt.Color;
 import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
-public class ExtendedEditBox extends EditBox implements UniqueWidget, NavigatableWidget, FancyMenuWidget {
+public class ExtendedEditBox extends EditBox implements UniqueWidget, NavigatableWidget, FancyMenuWidget, WidgetWithVanillaTooltip {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -70,6 +74,8 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     protected Supplier<UITooltip> uiTooltip;
     @Nullable
     protected ConsumingSupplier<ExtendedEditBox, Component> hintFancymenu = null;
+    @Nullable
+    protected VanillaTooltip vanillaTooltip;
 
     public ExtendedEditBox(Font font, int x, int y, int width, int height, Component narrationMessage) {
         super(font, x, y, width, height, narrationMessage);
@@ -93,7 +99,6 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         this.moveCursorTo(this.getValue().length(), selecting);
     }
 
-    @Override
     public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         IMixinEditBox access = ((IMixinEditBox)this);
@@ -223,20 +228,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
                 }
             }
 
-            // Vanilla Hint
-            Component hint = access.getHintFancyMenu();
             boolean vanillaHintRendered = false;
-            if ((hint != null) && text.isEmpty() && !this.isFocused()) {
-                graphics.enableScissor(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight());
-                if (this.renderLabelWithUiBase) {
-                    float hintY = this.getY() + (this.getHeight() / 2F) - (UIBase.getUITextHeightNormal() / 2F);
-                    UIBase.renderText(graphics, hint, textXAfterCursor, hintY, textColor);
-                } else {
-                    graphics.drawString(this.font, hint, (int) textXAfterCursor, (int) textY, textColor, this.textShadow);
-                }
-                graphics.disableScissor();
-                vanillaHintRendered = true;
-            }
 
             // FancyMenu's Custom Hint Implementation
             Component hintFm = this.getHintFancyMenu();
@@ -270,7 +262,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             if (highlightPos != cursorPos) {
                 float highlightWidth = this.getRenderedTextWidth(text, highlightPos, access.getDisplayPosFancyMenu(), renderWithUiBase);
                 int highlightEndX = (int) (textX + highlightWidth) - 1;
-                access.invokeRenderHighlightFancyMenu(graphics, (int) finalTextXAfterCursor, (int) (textY - 1), highlightEndX, (int) (textY + 1 + textHeight));
+                access.invokeRenderHighlightFancyMenu((int) finalTextXAfterCursor, (int) (textY - 1), highlightEndX, (int) (textY + 1 + textHeight));
             }
 
         }
@@ -322,22 +314,32 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         graphics.fill(minX, minY, maxX, maxY, highlightColor);
     }
 
-    @Override
     public void render(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
 
         if (this.isActiveSupplier != null) this.active = this.isActiveSupplier.get(this);
 
         if (this.isVisibleSupplier != null) this.visible = this.isVisibleSupplier.get(this);
 
-        super.render($$0, $$1, $$2, $$3);
+        super.render($$0.pose(), $$1, $$2, $$3);
 
-        if ((this.uiTooltip != null) && this.visible && this.isHovered()) {
+        if ((this.uiTooltip != null) && this.visible && ((IMixinAbstractWidget)this).getIsHoveredFancyMenu()) {
             UITooltip tt = this.uiTooltip.get();
             if (tt != null) {
                 TooltipHandler.INSTANCE.addRenderTickTooltip(tt, () -> true);
             }
         }
 
+    }
+
+    @Deprecated
+    @Override
+    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        this.render(GuiGraphics.currentGraphics(), mouseX, mouseY, partial);
+    }
+
+    @Override
+    public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        this.renderWidget(GuiGraphics.currentGraphics(), mouseX, mouseY, partial);
     }
 
     @Override
@@ -353,6 +355,36 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
 
     public void setHeight(int height) {
         this.height = height;
+    }
+
+    public int getX() {
+        return this.x;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public int getY() {
+        return this.y;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    public boolean isHovered() {
+        return ((IMixinAbstractWidget)this).getIsHoveredFancyMenu();
+    }
+
+    @Override
+    public @Nullable VanillaTooltip getVanillaTooltip_FancyMenu() {
+        return this.vanillaTooltip;
+    }
+
+    @Override
+    public void setVanillaTooltip_FancyMenu(@Nullable VanillaTooltip tooltip) {
+        this.vanillaTooltip = tooltip;
     }
 
     public int getDisplayPosition() {
@@ -789,8 +821,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         return this.identifier;
     }
 
-    @Override
-    public void setFocused(boolean focused) {
+        public void setFocused(boolean focused) {
         if (!this.focusable) {
             super.setFocused(false);
             return;
@@ -798,8 +829,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         super.setFocused(focused);
     }
 
-    @Override
-    public boolean isFocused() {
+        public boolean isFocused() {
         if (!this.focusable) return false;
         return super.isFocused();
     }

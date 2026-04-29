@@ -9,6 +9,7 @@ import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinCommandSuggestions;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinSuggestionsList;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -95,18 +96,26 @@ public class EditBoxSuggestions extends CommandSuggestions {
         this.anchorToBottom = anchorToBottom;
     }
 
-    @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
         if (!this.input.isFocused()) {
             this.setSuggestions(null);
         }
-        super.render(graphics, mouseX, mouseY);
+        super.render(graphics.pose(), mouseX, mouseY);
     }
 
     @Override
+    public void render(@NotNull PoseStack pose, int mouseX, int mouseY) {
+        this.render(GuiGraphics.currentGraphics(), mouseX, mouseY);
+    }
+
     public void renderUsage(@NotNull GuiGraphics graphics) {
         if (!this.isAllowRenderUsage()) return;
-        super.renderUsage(graphics);
+        super.renderUsage(graphics.pose());
+    }
+
+    @Override
+    public void renderUsage(@NotNull PoseStack pose) {
+        this.renderUsage(GuiGraphics.currentGraphics());
     }
 
     @Override
@@ -183,10 +192,10 @@ public class EditBoxSuggestions extends CommandSuggestions {
                 int listY = this.anchorToBottom ? this.screen.height - 12 : 72;
                 int listHeight = Math.min(sortedSuggestions.size(), this.suggestionLineLimit) * 12;
                 if (this.renderPosition == SuggestionsRenderPosition.ABOVE_EDIT_BOX) {
-                    listY = this.input.getY() - listHeight - 2;
+                    listY = this.input.y - listHeight - 2;
                 }
                 if (this.renderPosition == SuggestionsRenderPosition.BELOW_EDIT_BOX) {
-                    listY = this.input.getY() + this.input.getHeight() + 2;
+                    listY = this.input.y + this.input.getHeight() + 2;
                 }
                 this.setSuggestions(new EditBoxSuggestionsList(listX, listY, totalSuggestionsWidth, sortedSuggestions, someNarratingRelatedBoolean));
 
@@ -367,7 +376,6 @@ public class EditBoxSuggestions extends CommandSuggestions {
             this.suggestionList = suggestionList;
         }
 
-        @Override
         public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
             Message message;
             int suggestionLineCount = Math.min(this.suggestionList.size(), EditBoxSuggestions.this.suggestionLineLimit);
@@ -410,6 +418,11 @@ public class EditBoxSuggestions extends CommandSuggestions {
             if (bl52 && (message = this.suggestionList.get(this.getCurrent()).getTooltip()) != null) {
                 graphics.renderTooltip(EditBoxSuggestions.this.font, ComponentUtils.fromMessage(message), mouseX, mouseY);
             }
+        }
+
+        @Override
+        public void render(@NotNull PoseStack pose, int mouseX, int mouseY) {
+            this.render(GuiGraphics.currentGraphics(), mouseX, mouseY);
         }
 
         public Rect2i getRect() {

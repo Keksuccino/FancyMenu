@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.background.backgrounds.browser;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.math.Axis;
+import de.keksuccino.fancymenu.util.rendering.gui.Axis;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -18,7 +18,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.RenderType;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiRenderTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
@@ -179,7 +179,7 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
         }
 
         RenderSystem.enableBlend();
-        graphics.fill(RenderType.guiOverlay(), 0, 0, width, height, ERROR_BACKGROUND_COLOR.getColorIntWithAlpha(this.opacity));
+        graphics.fill(GuiRenderTypes.guiOverlay(), 0, 0, width, height, ERROR_BACKGROUND_COLOR.getColorIntWithAlpha(this.opacity));
         graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.backgrounds.browser.mcef_not_loaded.line_1").setStyle(Style.EMPTY.withBold(true)), width / 2, (height / 2) - Minecraft.getInstance().font.lineHeight - 2, -1);
         graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.backgrounds.browser.mcef_not_loaded.line_2").setStyle(Style.EMPTY.withBold(true)), width / 2, (height / 2) + 2, -1);
     }
@@ -273,8 +273,7 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
         return true;
     }
 
-    @Override
-    public void setFocused(boolean focused) {
+        public void setFocused(boolean focused) {
         this.focused = focused;
         WrappedMCEFBrowser wrappedBrowser = this.browser;
         if (wrappedBrowser != null) {
@@ -282,8 +281,7 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
         }
     }
 
-    @Override
-    public boolean isFocused() {
+        public boolean isFocused() {
         return this.focused;
     }
 
@@ -428,7 +426,7 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
 
     private void renderEditorPreview(@NotNull GuiGraphics graphics, int width, int height) {
         RenderSystem.enableBlend();
-        graphics.fill(RenderType.guiOverlay(), 0, 0, width, height, EDITOR_PREVIEW_BACKGROUND_COLOR.getColorIntWithAlpha(0.35F));
+        graphics.fill(GuiRenderTypes.guiOverlay(), 0, 0, width, height, EDITOR_PREVIEW_BACKGROUND_COLOR.getColorIntWithAlpha(0.35F));
 
         graphics.pose().pushPose();
         graphics.pose().translate(width / 2.0F, height / 2.0F, 0.0F);

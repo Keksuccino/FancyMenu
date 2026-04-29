@@ -36,7 +36,7 @@ public class VideoElementController {
 
             if (json.toString().isBlank()) return;
 
-            List<VideoElementMeta> metasList = GSON.fromJson(json.toString(), new TypeToken<>(){});
+            List<VideoElementMeta> metasList = GSON.fromJson(json.toString(), new TypeToken<List<VideoElementMeta>>(){}.getType());
             metasList.forEach(videoElementMeta -> METAS.put(Objects.requireNonNull(videoElementMeta.element_identifier), videoElementMeta));
 
         } catch (Exception ex) {

@@ -5,6 +5,8 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Quaternion;
+import com.mojang.math.Vector3f;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.util.file.FileFilter;
@@ -26,13 +28,12 @@ import net.minecraft.client.renderer.block.model.BlockElementFace;
 import net.minecraft.client.renderer.block.model.BlockModel;
 import net.minecraft.client.renderer.block.model.FaceBakery;
 import net.minecraft.client.renderer.block.model.ItemModelGenerator;
+import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.metadata.animation.AnimationMetadataSection;
-import net.minecraft.client.resources.metadata.animation.FrameSize;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.BlockModelRotation;
 import net.minecraft.client.resources.model.Material;
@@ -41,13 +42,10 @@ import net.minecraft.client.resources.model.SimpleBakedModel;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.item.ItemDisplayContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
 
 import java.awt.Color;
 import java.util.HashMap;
@@ -141,10 +139,10 @@ public class JsonModelElement extends AbstractElement {
         pose.scale(scale, scale, scale);
 
         if (this.useModelDisplayTransform.getBoolean()) {
-            this.cachedModel.getTransforms().getTransform(ItemDisplayContext.GUI).apply(false, pose);
+            this.cachedModel.getTransforms().getTransform(ItemTransforms.TransformType.GUI).apply(false, pose);
         }
 
-        pose.mulPose(new Quaternionf().rotationXYZ(
+        pose.mulPose(Quaternion.fromXYZ(
                 (float) Math.toRadians(this.modelRotationX.getFloat()),
                 (float) Math.toRadians(this.modelRotationY.getFloat()),
                 (float) Math.toRadians(this.modelRotationZ.getFloat())
@@ -193,13 +191,13 @@ public class JsonModelElement extends AbstractElement {
         Vector3f light0 = new Vector3f(this.light0X.getFloat(), this.light0Y.getFloat(), this.light0Z.getFloat());
         Vector3f light1 = new Vector3f(this.light1X.getFloat(), this.light1Y.getFloat(), this.light1Z.getFloat());
 
-        Quaternionf rotation = new Quaternionf().rotationXYZ(
+        Quaternion rotation = Quaternion.fromXYZ(
                 (float) Math.toRadians(this.lightRotationX.getFloat()),
                 (float) Math.toRadians(this.lightRotationY.getFloat()),
                 (float) Math.toRadians(this.lightRotationZ.getFloat())
         );
-        rotation.transform(light0);
-        rotation.transform(light1);
+        light0.transform(rotation);
+        light1.transform(rotation);
         light0.normalize();
         light1.normalize();
         RenderSystem.setShaderLights(light0, light1);
@@ -288,7 +286,7 @@ public class JsonModelElement extends AbstractElement {
         try {
             BlockModel model = BlockModel.fromString(json);
             model.name = (this.lastModelSource != null) ? this.lastModelSource : "fancymenu_json_model";
-            model.resolveParents(this::resolveParentModel);
+            model.getMaterials(this::resolveParentModel, new java.util.HashSet<>());
 
             TextureData overrideTexture = null;
             if (override) {
@@ -336,7 +334,7 @@ public class JsonModelElement extends AbstractElement {
             } else if ("builtin/missing".equals(path)) {
                 model = BlockModel.fromString(ModelBakery.MISSING_MODEL_MESH);
             } else {
-                ResourceLocation fileLocation = ModelBakery.MODEL_LISTER.idToFile(location);
+                ResourceLocation fileLocation = new ResourceLocation(location.getNamespace(), "models/" + location.getPath() + ".json");
                 try (var stream = Minecraft.getInstance().getResourceManager().open(fileLocation)) {
                     model = BlockModel.fromStream(new java.io.InputStreamReader(stream));
                 }
@@ -408,18 +406,19 @@ public class JsonModelElement extends AbstractElement {
     private static final class ModelTextureSprite extends TextureAtlasSprite implements AutoCloseable {
 
         private ModelTextureSprite(@NotNull ResourceLocation textureLocation, int width, int height) {
-            super(textureLocation,
-                    new SpriteContents(textureLocation, new FrameSize(width, height),
-                            new NativeImage(width, height, true), AnimationMetadataSection.EMPTY),
+            super(Minecraft.getInstance().getModelManager().getAtlas(TextureAtlas.LOCATION_BLOCKS),
+                    new TextureAtlasSprite.Info(textureLocation, width, height, AnimationMetadataSection.EMPTY),
+                    0,
                     width,
                     height,
                     0,
-                    0);
+                    0,
+                    new NativeImage(width, height, true));
         }
 
         @Override
         public void close() {
-            this.contents().close();
+            super.close();
         }
     }
 

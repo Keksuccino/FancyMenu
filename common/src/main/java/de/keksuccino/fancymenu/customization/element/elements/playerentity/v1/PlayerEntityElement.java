@@ -3,7 +3,8 @@ package de.keksuccino.fancymenu.customization.element.elements.playerentity.v1;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
+import com.mojang.math.Quaternion;
+import de.keksuccino.fancymenu.util.rendering.gui.Axis;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.model.PlayerEntityElementRenderer;
@@ -20,7 +21,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Quaternionf;
 
 public class PlayerEntityElement extends AbstractElement {
     
@@ -165,8 +165,8 @@ public class PlayerEntityElement extends AbstractElement {
         innerPoseStack.translate(0.0F, 0.0F, 1000.0F);
         innerPoseStack.scale((float)scale, (float)scale, (float)scale);
 
-        Quaternionf quat1 = this.bodyFollowsMouse ? new Quaternionf().rotateZ((float)Math.PI) : Axis.ZP.rotationDegrees(180.0F);
-        Quaternionf quat2 = this.bodyFollowsMouse ? new Quaternionf().rotateX(angleYComponent * 20.0F * ((float)Math.PI / 180F)) : Axis.XP.rotationDegrees(bodyYRot);
+        Quaternion quat1 = this.bodyFollowsMouse ? Axis.ZP.rotation((float)Math.PI) : Axis.ZP.rotationDegrees(180.0F);
+        Quaternion quat2 = this.bodyFollowsMouse ? Axis.XP.rotation(angleYComponent * 20.0F * ((float)Math.PI / 180F)) : Axis.XP.rotationDegrees(bodyYRot);
         quat1.mul(quat2);
         innerPoseStack.mulPose(quat1);
 
@@ -203,7 +203,7 @@ public class PlayerEntityElement extends AbstractElement {
 
         Lighting.setupForEntityInInventory();
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
-        quat2.conjugate();
+        quat2.conj();
         dispatcher.overrideCameraOrientation(quat2);
         dispatcher.setRenderShadow(false);
         MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();

@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.UISounds;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class PiPWindowHandler implements GuiEventListener, Tickable, Widget {
+public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable {
 
     public static final PiPWindowHandler INSTANCE = new PiPWindowHandler();
     private static final double DEFAULT_WINDOW_SIZE_SCALE_WIDTH = 0.4;
@@ -478,12 +478,10 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Widget {
         return true;
     }
 
-    @Override
-    public void setFocused(boolean focused) {
+        public void setFocused(boolean focused) {
     }
 
-    @Override
-    public boolean isFocused() {
+        public boolean isFocused() {
         return false;
     }
 

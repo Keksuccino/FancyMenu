@@ -1,13 +1,13 @@
 package de.keksuccino.fancymenu.customization.element.elements.dragger;
 
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.ModernAbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
-public class DraggerWidget extends AbstractWidget {
+public class DraggerWidget extends ModernAbstractWidget {
 
     @NotNull
     public DraggingCallback draggingCallback;
@@ -22,11 +22,11 @@ public class DraggerWidget extends AbstractWidget {
     }
 
     @Override
-    protected void renderWidget(@NotNull GuiGraphics guiGraphics, int i, int i1, float v) {
+    public void renderWidget(@NotNull GuiGraphics guiGraphics, int i, int i1, float v) {
     }
 
     @Override
-    protected void updateWidgetNarration(@NotNull NarrationElementOutput narrationElementOutput) {
+    public void updateNarration(@NotNull NarrationElementOutput narrationElementOutput) {
     }
 
     @Override

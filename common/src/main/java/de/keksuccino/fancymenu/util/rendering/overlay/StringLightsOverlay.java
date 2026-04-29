@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.util.rendering.overlay;
 
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.ModernAbstractWidget;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FastColor;
@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 
-public class StringLightsOverlay extends AbstractWidget implements NavigatableWidget {
+public class StringLightsOverlay extends ModernAbstractWidget implements NavigatableWidget {
 
     private static final float BASE_BULB_SPACING = 30.0F;
     private static final float BASE_BULB_SIZE = 5.5F;
@@ -137,7 +137,7 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
     }
 
     @Override
-    protected void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         int overlayX = this.getX();
         int overlayY = this.getY();
         int overlayWidth = this.getWidth();
@@ -363,7 +363,7 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
     }
 
     @Override
-    protected void updateWidgetNarration(@NotNull NarrationElementOutput narrationElementOutput) {
+    public void updateNarration(@NotNull NarrationElementOutput narrationElementOutput) {
     }
 
     @Override

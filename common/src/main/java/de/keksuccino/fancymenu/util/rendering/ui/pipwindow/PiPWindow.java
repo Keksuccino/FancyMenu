@@ -15,7 +15,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.VanillaTooltip;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -32,7 +33,7 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
-public class PiPWindow extends AbstractContainerEventHandler implements Widget {
+public class PiPWindow extends AbstractContainerEventHandler implements Renderable {
 
     public static final int DEFAULT_TITLE_BAR_HEIGHT = 21;
     public static final int DEFAULT_BORDER_THICKNESS = 1;
@@ -307,7 +308,8 @@ public class PiPWindow extends AbstractContainerEventHandler implements Widget {
         this.screenRendering = true;
         try {
             RenderingUtils.setVanillaMenuBlurringBlocked(true);
-            this.screen.renderWithTooltip(graphics, localMouseX, localMouseY, partial);
+            this.screen.render(graphics.pose(), localMouseX, localMouseY, partial);
+            VanillaTooltip.renderScreenTooltips(this.screen, graphics.pose(), localMouseX, localMouseY, partial);
             RenderingUtils.setVanillaMenuBlurringBlocked(false);
         } finally {
             this.screenRendering = false;

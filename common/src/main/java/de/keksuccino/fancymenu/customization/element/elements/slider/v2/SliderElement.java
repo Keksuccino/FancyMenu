@@ -23,7 +23,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.gui.VanillaTooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -239,7 +239,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public void updateWidgetTooltip() {
         if ((this.tooltip != null) && (this.slider != null) && this.shouldRender() && !isEditor()) {
             String t = PlaceholderParser.replacePlaceholders(this.tooltip).replace("%n%", "\n").replace("\\n", "\n");
-            this.slider.setTooltip(Tooltip.create(Component.literal(t)));
+            this.slider.setVanillaTooltip_FancyMenu(VanillaTooltip.create(Component.literal(t)));
         }
     }
 

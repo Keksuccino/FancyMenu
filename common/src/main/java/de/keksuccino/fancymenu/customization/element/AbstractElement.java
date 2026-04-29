@@ -5,7 +5,7 @@ import com.google.gson.JsonParser;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
+import de.keksuccino.fancymenu.util.rendering.gui.Axis;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
@@ -25,7 +25,7 @@ import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -41,7 +41,7 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
-public abstract class AbstractElement implements Widget, GuiEventListener, NarratableEntry, NavigatableWidget, PropertyHolder {
+public abstract class AbstractElement implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget, PropertyHolder {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -1136,12 +1136,10 @@ public abstract class AbstractElement implements Widget, GuiEventListener, Narra
 		throw new IllegalStateException("Deserialized component was NULL!");
 	}
 
-	@Override
-	public void setFocused(boolean var1) {
+		public void setFocused(boolean var1) {
 	}
 
-	@Override
-	public boolean isFocused() {
+		public boolean isFocused() {
 		return false;
 	}
 

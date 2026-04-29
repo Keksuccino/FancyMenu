@@ -36,7 +36,7 @@ public class AudioElementController {
 
             if (json.toString().isBlank()) return;
 
-            List<AudioElementMeta> metasList = GSON.fromJson(json.toString(), new TypeToken<>(){});
+            List<AudioElementMeta> metasList = GSON.fromJson(json.toString(), new TypeToken<List<AudioElementMeta>>(){}.getType());
             metasList.forEach(audioElementMeta -> METAS.put(Objects.requireNonNull(audioElementMeta.element_identifier), audioElementMeta));
 
         } catch (Exception ex) {

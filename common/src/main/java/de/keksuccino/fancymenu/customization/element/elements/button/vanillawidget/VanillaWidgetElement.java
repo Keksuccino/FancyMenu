@@ -34,7 +34,7 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
         int automatedClicks = this.automatedButtonClicks.getInteger();
         if (!isEditor() && !this.automatedButtonClicksDone && (automatedClicks > 0)) {
             for (int i = 0; i < automatedClicks; i++) {
-                if (this.getWidget() != null) this.getWidget().onClick(this.getWidget().getX() + 1, this.getWidget().getY() + 1);
+                if (this.getWidget() != null) this.getWidget().onClick(this.getWidget().x + 1, this.getWidget().y + 1);
             }
             this.automatedButtonClicksDone = true;
         }
@@ -145,8 +145,8 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
 
     public void mirrorVanillaWidgetPosition() {
         if (this.getWidget() == null) return;
-        this.posOffsetX = this.getWidget().getX();
-        this.posOffsetY = this.getWidget().getY();
+        this.posOffsetX = this.getWidget().x;
+        this.posOffsetY = this.getWidget().y;
     }
 
     public void resetVanillaWidgetSizeAndPosition() {

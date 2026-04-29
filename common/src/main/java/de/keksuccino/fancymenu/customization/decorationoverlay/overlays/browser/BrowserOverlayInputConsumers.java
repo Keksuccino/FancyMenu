@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.browser
 import de.keksuccino.fancymenu.customization.overlay.ScreenOverlays;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.jetbrains.annotations.NotNull;
 
@@ -51,7 +51,7 @@ public final class BrowserOverlayInputConsumers {
         return false;
     }
 
-    private static final class Dispatcher implements Widget, GuiEventListener {
+    private static final class Dispatcher implements Renderable, GuiEventListener {
 
         private boolean focused = false;
 
@@ -100,13 +100,11 @@ public final class BrowserOverlayInputConsumers {
             return true;
         }
 
-        @Override
-        public void setFocused(boolean focused) {
+                public void setFocused(boolean focused) {
             this.focused = focused;
         }
 
-        @Override
-        public boolean isFocused() {
+                public boolean isFocused() {
             return this.focused;
         }
     }

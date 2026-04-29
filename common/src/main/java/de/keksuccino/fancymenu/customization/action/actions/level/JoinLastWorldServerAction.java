@@ -84,8 +84,7 @@ public class JoinLastWorldServerAction extends Action {
                     l.add(d, false);
                     l.save();
                 }
-                boolean isQuickPlay = false;
-                ConnectScreen.startConnecting(Minecraft.getInstance().screen, Minecraft.getInstance(), new ServerAddress(ip, port), d, isQuickPlay);
+                ConnectScreen.startConnecting(Minecraft.getInstance().screen, Minecraft.getInstance(), new ServerAddress(ip, port), d);
             }
         }
     }

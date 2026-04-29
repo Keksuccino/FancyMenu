@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowR
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.PerformanceUtils;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -124,14 +125,14 @@ public class DebugOverlayBuilder {
         if (!FancyMenu.getOptions().debugOverlayShowSystemCategory.getValue()) return;
 
         overlay.addLine("frames_per_second", DebugOverlay.LinePosition.TOP_LEFT, consumes -> {
-            int fps = Minecraft.getInstance().getFps();
+            int fps = RenderingUtils.getMinecraftFps();
             MutableComponent fpsComp = Component.literal("" + fps);
             if (fps < 20) fpsComp = fpsComp.setStyle(Style.EMPTY.withColor(ChatFormatting.GOLD));
             if (fps < 10) fpsComp = fpsComp.setStyle(Style.EMPTY.withColor(ChatFormatting.RED));
             return Component.translatable("fancymenu.overlay.debug.fps", fpsComp);
         });
         overlay.addGraphLine("frames_per_second_graph", DebugOverlay.LinePosition.TOP_LEFT,
-                        () -> (double)Minecraft.getInstance().getFps(),
+                        () -> (double)RenderingUtils.getMinecraftFps(),
                         0.0D, 240.0D)
                 .setInvertColorGradient(true);
         overlay.addLine("ram_usage", DebugOverlay.LinePosition.TOP_LEFT, consumes -> {

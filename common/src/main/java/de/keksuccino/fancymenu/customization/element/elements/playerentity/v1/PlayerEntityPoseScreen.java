@@ -428,8 +428,8 @@ public class PlayerEntityPoseScreen extends CellScreen {
 
             int toggleModeButtonWidth = Minecraft.getInstance().font.width(this.toggleModeButton.getLabelSupplier().get(this.toggleModeButton)) + 6;
 
-            this.activeWidget.setX(this.getX());
-            this.activeWidget.setY(this.getY());
+            this.activeWidget.x = this.getX();
+            this.activeWidget.y = this.getY();
             this.activeWidget.setWidth(this.getWidth() - toggleModeButtonWidth - 5);
 
             this.toggleModeButton.setX(this.getX() + this.getWidth() - toggleModeButtonWidth);

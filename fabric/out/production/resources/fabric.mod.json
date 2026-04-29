@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "id": "${mod_id}",
+  "version": "${mod_version}",
+  "name": "${mod_name}",
+  "description": "${mod_description}",
+  "environment": "*",
+  "authors": [
+    "${mod_authors}"
+  ],
+  "contributors": [
+  ],
+  "contact": {},
+  "license": "${mod_license}",
+  "icon": "fancymenu_logo_128x128.png",
+  "entrypoints": {
+    "main": [
+      "de.keksuccino.fancymenu.FancyMenuFabric"
+    ],
+    "client": [],
+    "server": []
+  },
+  "mixins": [
+    "fancymenu.mixins.json",
+    "fancymenu.fabric.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.15.2",
+    "fabric": ">=0.77.0",
+    "konkrete": ">=1.6.1",
+    "melody": ">=1.0.0",
+    "minecraft": ">=1.19.2",
+    "java": ">=17"
+  },
+  "suggests": {
+    "fancy_entity_renderer": ">=${fer_version}"
+  },
+  "breaks": {
+    "drippyloadingscreen": "<3.0.0",
+    "fmextension_audio": "*",
+    "fmextension_video": "*",
+    "rrls": "<4.0.1"
+  },
+  "accessWidener": "fancymenu.accesswidener"
+}

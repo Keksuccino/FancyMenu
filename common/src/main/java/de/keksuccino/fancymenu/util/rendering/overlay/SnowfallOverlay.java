@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.util.rendering.overlay;
 
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.ModernAbstractWidget;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FastColor;
@@ -17,7 +17,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SnowfallOverlay extends AbstractWidget implements NavigatableWidget {
+public class SnowfallOverlay extends ModernAbstractWidget implements NavigatableWidget {
 
     private static final int AREA_PER_SNOWFLAKE = 9000;
     private static final int MIN_SNOWFLAKES = 80;
@@ -115,7 +115,7 @@ public class SnowfallOverlay extends AbstractWidget implements NavigatableWidget
     }
 
     @Override
-    protected void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         int overlayX = this.getX();
         int overlayY = this.getY();
@@ -426,7 +426,7 @@ public class SnowfallOverlay extends AbstractWidget implements NavigatableWidget
     }
 
     @Override
-    protected void updateWidgetNarration(@NotNull NarrationElementOutput narrationElementOutput) {
+    public void updateNarration(@NotNull NarrationElementOutput narrationElementOutput) {
     }
 
     @Override

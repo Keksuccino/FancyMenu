@@ -41,27 +41,25 @@ public class DisconnectAction extends Action {
             try {
                 Screen current = Minecraft.getInstance().screen;
                 if (current == null) current = new TitleScreen();
-                mc.getReportingContext().draftReportHandled(mc, current, () -> {
-                    if ((mc.level != null) && (mc.player != null)) {
-                        boolean isSinglePlayer = mc.isLocalServer();
-                        Screen openAfter;
-                        if (CustomGuiHandler.guiExists(value)) {
-                            openAfter = CustomGuiHandler.constructInstance(value, null, null);
-                        } else {
-                            openAfter = ScreenInstanceFactory.tryConstruct(ScreenIdentifierHandler.tryFixInvalidIdentifierWithNonUniversal(value));
-                        }
-                        if (openAfter == null) {
-                            openAfter = new TitleScreen();
-                        }
-                        mc.level.disconnect();
-                        if (isSinglePlayer) {
-                            mc.clearLevel(new GenericDirtMessageScreen(SAVING_LEVEL));
-                        } else {
-                            mc.clearLevel();
-                        }
-                        ScreenUtils.setScreen(openAfter);
+                if ((mc.level != null) && (mc.player != null)) {
+                    boolean isSinglePlayer = mc.isLocalServer();
+                    Screen openAfter;
+                    if (CustomGuiHandler.guiExists(value)) {
+                        openAfter = CustomGuiHandler.constructInstance(value, null, null);
+                    } else {
+                        openAfter = ScreenInstanceFactory.tryConstruct(ScreenIdentifierHandler.tryFixInvalidIdentifierWithNonUniversal(value));
                     }
-                }, true);
+                    if (openAfter == null) {
+                        openAfter = new TitleScreen();
+                    }
+                    mc.level.disconnect();
+                    if (isSinglePlayer) {
+                        mc.clearLevel(new GenericDirtMessageScreen(SAVING_LEVEL));
+                    } else {
+                        mc.clearLevel();
+                    }
+                    ScreenUtils.setScreen(openAfter);
+                }
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to execute Disconnect action!", ex);
             }

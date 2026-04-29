@@ -7,6 +7,11 @@ import org.joml.Quaternionf;
 public class QuaternionUtils {
 
     @NotNull
+    public static Quaternion toMojangQuaternion(@NotNull Quaternion quaternion) {
+        return quaternion;
+    }
+
+    @NotNull
     public static Quaternion toMojangQuaternion(@NotNull Quaternionf jomlQuaternionf) {
         return new Quaternion(
                 jomlQuaternionf.x(), // Corresponds to Mojang's i

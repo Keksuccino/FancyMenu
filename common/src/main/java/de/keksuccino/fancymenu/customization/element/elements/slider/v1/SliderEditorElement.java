@@ -1,12 +1,11 @@
 package de.keksuccino.fancymenu.customization.element.elements.slider.v1;
 
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.konkrete.input.StringUtils;
@@ -16,9 +15,9 @@ import java.util.Arrays;
 import java.util.List;
 
 @Deprecated
-public class SliderEditorElement extends AbstractEditorElement {
+public class SliderEditorElement extends AbstractEditorElement<SliderEditorElement, SliderElement> {
 
-    public SliderEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public SliderEditorElement(@NotNull SliderElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
     }
 
@@ -33,7 +32,7 @@ public class SliderEditorElement extends AbstractEditorElement {
                         (element, varName) -> ((SliderElement)element.element).linkedVariable = varName,
                         null, false, false, Components.translatable("fancymenu.customization.items.slider.editor.set_variable"),
                         false, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.set_variable.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.set_variable.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"));
 
         this.rightClickMenu.addSeparatorEntry("slider_separator_1");
@@ -52,7 +51,7 @@ public class SliderEditorElement extends AbstractEditorElement {
                             }
                             return Components.translatable("fancymenu.customization.items.slider.editor.type.range");
                         })
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.type.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.type.desc")));
 
         this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "set_list_values",
                         consumes -> (consumes instanceof SliderEditorElement),
@@ -76,7 +75,7 @@ public class SliderEditorElement extends AbstractEditorElement {
                         }, null, true, true,
                         Components.translatable("fancymenu.customization.items.slider.editor.list.set_list_values"),
                         false, "", TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.list.set_list_values.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.list.set_list_values.desc")))
                 .setIsVisibleSupplier((menu, entry) -> ((SliderElement)this.element).type == SliderElement.SliderType.LIST);
 
         this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_min_range_value",
@@ -113,7 +112,7 @@ public class SliderEditorElement extends AbstractEditorElement {
                         null, false, false, Components.translatable("fancymenu.customization.items.slider.editor.set_label_prefix"),
                         true, null, null, null)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.set_label_prefix.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.set_label_prefix.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("text"));
 
         this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "set_label_suffix",
@@ -126,7 +125,7 @@ public class SliderEditorElement extends AbstractEditorElement {
                         null, false, false, Components.translatable("fancymenu.customization.items.slider.editor.set_label_suffix"),
                         true, null, null, null)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.set_label_suffix.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.set_label_suffix.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("text"));
 
         this.rightClickMenu.addSeparatorEntry("slider_separator_3").setStackable(true);

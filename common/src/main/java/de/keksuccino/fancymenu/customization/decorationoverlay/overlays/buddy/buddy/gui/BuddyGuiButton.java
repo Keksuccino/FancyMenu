@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.bu
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,7 +14,7 @@ import java.util.function.Supplier;
 /**
  * Represents a button in the buddy GUI
  */
-public class BuddyGuiButton implements Widget {
+public class BuddyGuiButton implements Renderable {
 
     public static final ResourceLocation DEFAULT_BUTTON_NORMAL = new ResourceLocation("fancymenu", "textures/buddy/gui/default_button_normal.png");
     public static final ResourceLocation DEFAULT_BUTTON_HOVER = new ResourceLocation("fancymenu", "textures/buddy/gui/default_button_hover.png");

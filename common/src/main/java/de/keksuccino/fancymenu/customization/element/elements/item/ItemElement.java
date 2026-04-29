@@ -13,7 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
@@ -38,7 +38,7 @@ public class ItemElement extends AbstractElement {
     @Nullable
     public ItemStack cachedStack = null;
     @NotNull
-    public String itemKey = "" + BuiltInRegistries.ITEM.getKey(Items.BARRIER);
+    public String itemKey = "" + Registry.ITEM.getKey(Items.BARRIER);
     public boolean enchanted = false;
     public final Property.IntegerProperty itemCount = putProperty(Property.integerProperty("item_count", 1, "fancymenu.elements.item.item_count"));
     @Nullable
@@ -71,7 +71,7 @@ public class ItemElement extends AbstractElement {
 
             if ((this.cachedStack == null) || !keyFinal.equals(this.lastItemKey) || (this.enchanted != this.lastEnchanted) || !Objects.equals(loreFinal, this.lastLore) || !Objects.equals(nameFinal, this.lastItemName) || !Objects.equals(nbtFinal, this.lastNbtData)) {
 
-                Item item = BuiltInRegistries.ITEM.get(new ResourceLocation(keyFinal));
+                Item item = Registry.ITEM.get(new ResourceLocation(keyFinal));
 
                 this.cachedStack = new ItemStack(item);
 
@@ -207,7 +207,8 @@ public class ItemElement extends AbstractElement {
     }
 
     protected void renderItemTooltip(@NotNull GuiGraphics graphics, int mouseX, int mouseY, @NotNull ItemStack itemStack) {
-        graphics.renderTooltip(this.font, Screen.getTooltipFromItem(Minecraft.getInstance(), itemStack), itemStack.getTooltipImage(), mouseX, mouseY);
+        Screen screen = Minecraft.getInstance().screen;
+        graphics.renderTooltip(this.font, (screen != null ? screen : GuiGraphics.DUMMY_SCREEN).getTooltipFromItem(itemStack), itemStack.getTooltipImage(), mouseX, mouseY);
     }
 
 }

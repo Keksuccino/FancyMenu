@@ -42,6 +42,7 @@ import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIThemes;
@@ -312,7 +313,7 @@ public class ScreenCustomization {
             if (resetScale) RenderingUtils.resetGuiScale();
             EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
             EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
-            if (!((IMixinScreen)Minecraft.getInstance().screen).get_initialized_FancyMenu()) {
+            if (!((CustomizableScreen)Minecraft.getInstance().screen).get_initialized_FancyMenu()) {
                 if (setScreenOnFirstInit) {
                     Minecraft.getInstance().setScreen(Minecraft.getInstance().screen);
                 } else {

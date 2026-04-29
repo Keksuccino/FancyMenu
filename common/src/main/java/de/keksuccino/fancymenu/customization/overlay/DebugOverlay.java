@@ -19,7 +19,7 @@ import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -38,7 +38,7 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 @SuppressWarnings("all")
-public class DebugOverlay implements Widget, NarratableEntry, ContainerEventHandler {
+public class DebugOverlay implements Renderable, NarratableEntry, ContainerEventHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -507,12 +507,10 @@ public class DebugOverlay implements Widget, NarratableEntry, ContainerEventHand
         return false;
     }
 
-    @Override
-    public void setFocused(boolean var1) {
+        public void setFocused(boolean var1) {
     }
 
-    @Override
-    public boolean isFocused() {
+        public boolean isFocused() {
         return false;
     }
 

@@ -6,12 +6,12 @@ import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.gui.navigation.ScreenRectangle;
+import de.keksuccino.fancymenu.util.rendering.gui.ScreenRectangle;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * Wrapper to integrate the TamagotchiBuddy with any Minecraft screen
  */
-public class BuddyWidget extends AbstractContainerEventHandler implements Widget, NarratableEntry, FancyMenuUiComponent {
+public class BuddyWidget extends AbstractContainerEventHandler implements Renderable, NarratableEntry, FancyMenuUiComponent {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -135,7 +135,6 @@ public class BuddyWidget extends AbstractContainerEventHandler implements Widget
         return unusedDummyChildren;
     }
 
-    @Override
     public ScreenRectangle getRectangle() {
         return new ScreenRectangle(0, 0, screenWidth, screenHeight);
     }

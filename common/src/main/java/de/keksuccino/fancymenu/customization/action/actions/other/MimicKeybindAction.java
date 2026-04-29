@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
+import de.keksuccino.fancymenu.util.rendering.gui.VanillaTooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.PiPCellStringBuilderWindowBody;
@@ -312,7 +313,7 @@ public class MimicKeybindAction extends Action {
             TextInputCell durationInput = this.addTextInputCell(null, true, true)
                     .setEditListener(s -> this.config.pressedDurationMs = s)
                     .setText(this.config.pressedDurationMs);
-            durationInput.editBox.setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.translatable("fancymenu.actions.mimic_keybind.edit.pressed_duration.desc")));
+            durationInput.editBox.setVanillaTooltip_FancyMenu(VanillaTooltip.create(Component.translatable("fancymenu.actions.mimic_keybind.edit.pressed_duration.desc")));
             durationInput.editBox.moveCursorToStart();
             this.durationCell = durationInput;
             updateDurationFieldState();
@@ -445,4 +446,3 @@ public class MimicKeybindAction extends Action {
     }
 
 }
-

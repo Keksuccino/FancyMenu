@@ -1,0 +1,392 @@
+[
+  {
+    "resource_location": "assets/minecraft/sounds/music/menu/mutation.ogg",
+    "display_name": "Mutation",
+    "artist": "C418",
+    "duration": "3:05"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/menu/moog_city_2.ogg",
+    "display_name": "Moog City 2",
+    "artist": "C418",
+    "duration": "3:00"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/menu/floating_trees.ogg",
+    "display_name": "Floating Trees",
+    "artist": "C418",
+    "duration": "4:04"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/menu/beginning_2.ogg",
+    "display_name": "Beginning 2",
+    "artist": "C418",
+    "duration": "2:56"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/yakusoku.ogg",
+    "display_name": "Yakusoku",
+    "artist": "Kumi Tanioka",
+    "duration": "4:31"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/wet_hands.ogg",
+    "display_name": "Wet Hands",
+    "artist": "C418",
+    "duration": "1:30"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/wending.ogg",
+    "display_name": "Wending",
+    "artist": "Lena Raine",
+    "duration": "4:43"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/water/shuniji.ogg",
+    "display_name": "Shuniji",
+    "artist": "C418",
+    "duration": "4:45"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/water/dragon_fish.ogg",
+    "display_name": "Dragon Fish",
+    "artist": "C418",
+    "duration": "6:14"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/water/axolotl.ogg",
+    "display_name": "Axolotl",
+    "artist": "C418",
+    "duration": "5:59"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/watcher.ogg",
+    "display_name": "Watcher",
+    "artist": "Aaron Cherof",
+    "duration": "5:32"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/sweden.ogg",
+    "display_name": "Sweden",
+    "artist": "C418",
+    "duration": "3:35"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/swamp/labyrinthine.ogg",
+    "display_name": "Labyrinthine",
+    "artist": "Lena Raine",
+    "duration": "5:45"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/swamp/firebugs.ogg",
+    "display_name": "Firebugs",
+    "artist": "Lena Raine",
+    "duration": "2:48"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/swamp/aerie.ogg",
+    "display_name": "Aerie",
+    "artist": "Lena Raine",
+    "duration": "4:47"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/subwoofer_lullaby.ogg",
+    "display_name": "Subwoofer Lullaby",
+    "artist": "C418",
+    "duration": "3:28"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/stand_tall.ogg",
+    "display_name": "Stand Tall",
+    "artist": "Lena Raine",
+    "duration": "3:52"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/puzzlebox.ogg",
+    "display_name": "Puzzlebox",
+    "artist": "Aaron Cherof",
+    "duration": "4:59"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/pokopoko.ogg",
+    "display_name": "Pokopoko",
+    "artist": "Kumi Tanioka",
+    "duration": "5:04"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/oxygene.ogg",
+    "display_name": "Oxygène",
+    "artist": "C418",
+    "duration": "1:05"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/os_piano.ogg",
+    "display_name": "O's Piano",
+    "artist": "Amos Roddy",
+    "duration": "4:35"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/one_more_day.ogg",
+    "display_name": "One More Day",
+    "artist": "Lena Raine",
+    "duration": "3:34"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/nether/warmth.ogg",
+    "display_name": "Warmth",
+    "artist": "Lena Raine",
+    "duration": "3:59"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/nether/soulsand_valley/so_below.ogg",
+    "display_name": "So Below",
+    "artist": "Lena Raine",
+    "duration": "5:18"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/nether/nether_wastes/rubedo.ogg",
+    "display_name": "Rubedo",
+    "artist": "Lena Raine",
+    "duration": "5:21"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/nether/dead_voxel.ogg",
+    "display_name": "Dead Voxel",
+    "artist": "C418",
+    "duration": "4:56"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/nether/crimson_forest/chrysopoeia.ogg",
+    "display_name": "Chrysopoeia",
+    "artist": "Lena Raine",
+    "duration": "4:58"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/nether/concrete_halls.ogg",
+    "display_name": "Concrete Halls",
+    "artist": "C418",
+    "duration": "4:14"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/nether/ballad_of_the_cats.ogg",
+    "display_name": "Ballad of the Cats",
+    "artist": "C418",
+    "duration": "4:35"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/minecraft.ogg",
+    "display_name": "Minecraft",
+    "artist": "C418",
+    "duration": "4:14"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/mice_on_venus.ogg",
+    "display_name": "Mice on Venus",
+    "artist": "C418",
+    "duration": "4:41"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/living_mice.ogg",
+    "display_name": "Living Mice",
+    "artist": "C418",
+    "duration": "2:57"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/lilypad.ogg",
+    "display_name": "Lilypad",
+    "artist": "Amos Roddy",
+    "duration": "3:54"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/left_to_bloom.ogg",
+    "display_name": "Left to Bloom",
+    "artist": "Lena Raine",
+    "duration": "5:10"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/komorebi.ogg",
+    "display_name": "Komorebi",
+    "artist": "Kumi Tanioka",
+    "duration": "4:47"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/key.ogg",
+    "display_name": "Key",
+    "artist": "C418",
+    "duration": "1:05"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/infinite_amethyst.ogg",
+    "display_name": "Infinite Amethyst",
+    "artist": "Lena Raine",
+    "duration": "5:32"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/haggstrom.ogg",
+    "display_name": "Haggstrom",
+    "artist": "C418",
+    "duration": "3:24"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/floating_dream.ogg",
+    "display_name": "Floating Dream",
+    "artist": "Kumi Tanioka",
+    "duration": "3:25"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/fireflies.ogg",
+    "display_name": "Fireflies",
+    "artist": "Amos Roddy",
+    "duration": "3:42"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/featherfall.ogg",
+    "display_name": "Featherfall",
+    "artist": "Aaron Cherof",
+    "duration": "5:44"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/endless.ogg",
+    "display_name": "Endless",
+    "artist": "Lena Raine",
+    "duration": "6:42"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/end/the_end.ogg",
+    "display_name": "The End",
+    "artist": "C418",
+    "duration": "15:04"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/end/boss.ogg",
+    "display_name": "Boss",
+    "artist": "C418",
+    "duration": "5:45"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/end/alpha.ogg",
+    "display_name": "Alpha",
+    "artist": "C418",
+    "duration": "10:03"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/eld_unknown.ogg",
+    "display_name": "Eld Unknown",
+    "artist": "Lena Raine",
+    "duration": "4:56"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/echo_in_the_wind.ogg",
+    "display_name": "Echo in the Wind",
+    "artist": "Aaron Cherof",
+    "duration": "4:56"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/dry_hands.ogg",
+    "display_name": "Dry Hands",
+    "artist": "C418",
+    "duration": "1:08"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/deeper.ogg",
+    "display_name": "Deeper",
+    "artist": "Lena Raine",
+    "duration": "5:03"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/danny.ogg",
+    "display_name": "Danny",
+    "artist": "C418",
+    "duration": "4:14"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/crescent_dunes.ogg",
+    "display_name": "Crescent Dunes",
+    "artist": "Aaron Cherof",
+    "duration": "4:08"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/creative/taswell.ogg",
+    "display_name": "Taswell",
+    "artist": "C418",
+    "duration": "8:35"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/creative/haunt_muskie.ogg",
+    "display_name": "Haunt Muskie",
+    "artist": "C418",
+    "duration": "6:01"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/creative/dreiton.ogg",
+    "display_name": "Dreiton",
+    "artist": "C418",
+    "duration": "8:17"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/creative/blind_spots.ogg",
+    "display_name": "Blind Spots",
+    "artist": "C418",
+    "duration": "5:32"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/creative/biome_fest.ogg",
+    "display_name": "Biome Fest",
+    "artist": "C418",
+    "duration": "6:18"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/creative/aria_math.ogg",
+    "display_name": "Aria Math",
+    "artist": "C418",
+    "duration": "5:10"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/comforting_memories.ogg",
+    "display_name": "Comforting Memories",
+    "artist": "Kumi Tanioka",
+    "duration": "4:35"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/clark.ogg",
+    "display_name": "Clark",
+    "artist": "C418",
+    "duration": "3:11"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/bromeliad.ogg",
+    "display_name": "Bromeliad",
+    "artist": "Aaron Cherof",
+    "duration": "5:12"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/broken_clocks.ogg",
+    "display_name": "Broken Clocks",
+    "artist": "Amos Roddy",
+    "duration": "3:34"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/below_and_above.ogg",
+    "display_name": "Below and Above",
+    "artist": "Amos Roddy",
+    "duration": "3:46"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/ancestry.ogg",
+    "display_name": "Ancestry",
+    "artist": "Lena Raine",
+    "duration": "5:32"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/an_ordinary_day.ogg",
+    "display_name": "An Ordinary Day",
+    "artist": "Kumi Tanioka",
+    "duration": "5:31"
+  },
+  {
+    "resource_location": "assets/minecraft/sounds/music/game/a_familiar_room.ogg",
+    "display_name": "A Familiar Room",
+    "artist": "Aaron Cherof",
+    "duration": "4:07"
+  }
+]

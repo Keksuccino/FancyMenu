@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.util.rendering.overlay;
 
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.ModernAbstractWidget;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FastColor;
@@ -17,7 +17,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class RainOverlay extends AbstractWidget implements NavigatableWidget {
+public class RainOverlay extends ModernAbstractWidget implements NavigatableWidget {
 
     private static final int AREA_PER_DROP = 5200;
     private static final int MIN_DROPS = 120;
@@ -157,7 +157,7 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
     }
 
     @Override
-    protected void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         int overlayX = this.getX();
         int overlayY = this.getY();
         int overlayWidth = this.getWidth();
@@ -769,7 +769,7 @@ public class RainOverlay extends AbstractWidget implements NavigatableWidget {
     }
 
     @Override
-    protected void updateWidgetNarration(@NotNull NarrationElementOutput narrationElementOutput) {
+    public void updateNarration(@NotNull NarrationElementOutput narrationElementOutput) {
     }
 
     @Override
