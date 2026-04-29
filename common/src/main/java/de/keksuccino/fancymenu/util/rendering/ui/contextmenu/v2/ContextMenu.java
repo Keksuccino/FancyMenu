@@ -3154,19 +3154,19 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         @Override
         public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            float renderScale = UIBase.calculateFixedRenderScale(this.parent.getScale());
-            float lineThickness = renderScale > 0.0F ? (0.5F / renderScale) : 0.5F;
-            float uiScale = UIBase.getUIScale();
-            float thinnessT = (uiScale - 1.0F) / 1.5F;
+            float contextMenuScale = this.parent.getScale();
+            if (!Float.isFinite(contextMenuScale) || (contextMenuScale <= 0.0F)) {
+                contextMenuScale = 1.0F;
+            }
+            float lineThickness = 2.0F / contextMenuScale;
+            float thinnessT = (contextMenuScale - 1.0F) / 1.5F;
             thinnessT = Math.min(1.0F, Math.max(0.0F, thinnessT));
             float alphaFactor = 0.55F + (0.45F * thinnessT);
             float minX = this.x + 10.0F;
             float maxX = this.x + this.width - 10.0F;
             float minY = this.y + 4.0F;
-            if (renderScale > 0.0F) {
-                float snappedPixelY = (float) Math.round(minY * renderScale);
-                minY = snappedPixelY / renderScale;
-            }
+            float snappedPixelY = (float) Math.round(minY * contextMenuScale);
+            minY = snappedPixelY / contextMenuScale;
             float maxY = minY + lineThickness;
             int lineColor = UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_overlay_border_color.getColorInt() : UIBase.getUITheme().ui_overlay_border_color.getColorInt();
             if (alphaFactor < 0.999F) {

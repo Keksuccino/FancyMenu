@@ -208,6 +208,14 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 
 	}
 
+	/**
+	 * @reason Vanilla updates hovered state inside render with its unrotated rectangle.
+	 */
+	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractWidget;renderButton(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V", shift = At.Shift.BEFORE))
+	private void before_renderButton_FancyMenu(PoseStack pose, int mouseX, int mouseY, float partial, CallbackInfo info) {
+		this.isHovered = this.isMouseOverFancyMenu_FancyMenu(mouseX, mouseY);
+	}
+
 	@Inject(method = "render", at = @At(value = "RETURN"))
 	private void afterRenderFancyMenu(PoseStack pose, int mouseX, int mouseY, float partial, CallbackInfo info) {
 
