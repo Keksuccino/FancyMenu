@@ -242,10 +242,9 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 
 		float pitch = this.angle;
 		float yaw = -this.currentRotation;
-		float fovF = ((float)this.fov * ((float)Math.PI / 180));
 
 		Tesselator tesselator = Tesselator.getInstance();
-		Matrix4f $$5 = Matrix4f.perspective(fovF, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
+		Matrix4f $$5 = Matrix4f.perspective(this.fov, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
 		RenderSystem.backupProjectionMatrix();
 		RenderSystem.setProjectionMatrix($$5);
 		PoseStack modelViewStack = RenderSystem.getModelViewStack();
@@ -362,10 +361,9 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 	private void renderPanoramaCube(@NotNull GuiGraphics graphics, Minecraft mc, float panoAlpha, int viewportWidth, int viewportHeight) {
 		float pitch = this.angle;
 		float yaw = -this.currentRotation;
-		float fovF = ((float)this.fov * ((float)Math.PI / 180));
 
 		Tesselator tesselator = Tesselator.getInstance();
-		Matrix4f projection = Matrix4f.perspective(fovF, (float)viewportWidth / (float)viewportHeight, 0.05F, 10.0F);
+		Matrix4f projection = Matrix4f.perspective(this.fov, (float)viewportWidth / (float)viewportHeight, 0.05F, 10.0F);
 		RenderSystem.backupProjectionMatrix();
 		RenderSystem.setProjectionMatrix(projection);
 		PoseStack modelViewStack = RenderSystem.getModelViewStack();
