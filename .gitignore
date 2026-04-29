@@ -1,0 +1,9 @@
+/.gradle/
+/common/.gradle/
+/common/build/
+/fabric/.gradle/
+/fabric/build/
+/fabric/run_client/
+/forge/build/
+/.idea/
+/build/
