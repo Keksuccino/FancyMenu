@@ -285,5 +285,6 @@ Thank you very much! 🙏
 - Fixed being able to hide the Copyright notice by using button templates, Parallax, and other stuff (#1550)
 - Fixed Inventory GUI container textures get hidden by custom backgrounds (#1556)
 - Fixed custom menu backgrounds not working in screens with scroll areas in MC 1.20.1 (#1543)
+- Fixed game crashing when joining server via Ticker element in Fabric 1.20.1 (#1558)
 
 %changelog:end%
