@@ -5,8 +5,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.SerializationUtils;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,11 +36,10 @@ public class ItemElementBuilder extends ElementBuilder<ItemElement, ItemEditorEl
         ItemElement element = this.buildDefaultInstance();
 
         element.itemKey = Objects.requireNonNullElse(serialized.getValue("item_key"), element.itemKey);
-        element.itemCount = Objects.requireNonNullElse(serialized.getValue("item_count"), element.itemCount);
-        element.enchanted = SerializationUtils.deserializeBoolean(element.enchanted, serialized.getValue("enchanted"));
+        element.enchanted = SerializationHelper.INSTANCE.deserializeBoolean(element.enchanted, serialized.getValue("enchanted"));
         element.itemName = serialized.getValue("item_name");
         element.lore = serialized.getValue("lore");
-        element.showTooltip = SerializationUtils.deserializeBoolean(element.showTooltip, serialized.getValue("show_tooltip"));
+        element.showTooltip = SerializationHelper.INSTANCE.deserializeBoolean(element.showTooltip, serialized.getValue("show_tooltip"));
         element.nbtData = serialized.getValue("custom_nbt_data");
 
         return element;
@@ -52,7 +50,6 @@ public class ItemElementBuilder extends ElementBuilder<ItemElement, ItemEditorEl
     protected SerializedElement serializeElement(@NotNull ItemElement element, @NotNull SerializedElement serializeTo) {
 
         serializeTo.putProperty("item_key", element.itemKey);
-        serializeTo.putProperty("item_count", element.itemCount);
         serializeTo.putProperty("enchanted", "" + element.enchanted);
         if (element.itemName != null) serializeTo.putProperty("item_name", element.itemName);
         if (element.lore != null) serializeTo.putProperty("lore", element.lore);

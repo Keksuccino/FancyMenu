@@ -10,20 +10,19 @@ import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public class FabricPlatformHelper implements IPlatformHelper {
 
@@ -125,6 +124,18 @@ public class FabricPlatformHelper implements IPlatformHelper {
             mods.add(new UniversalModContainer(m.getId(), m.getName(), m.getDescription(), String.join("\n", m.getLicense()), authors));
         });
         return mods;
+    }
+
+    @Override
+    public @NotNull Set<ResourceLocation> getLoadedClientResourceLocations() {
+        Set<ResourceLocation> output = new HashSet<>();
+        if (!this.isOnClient()) return output;
+        try {
+            output.addAll(Minecraft.getInstance().getResourceManager().listResources("", location -> true).keySet());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return output;
     }
 
 }

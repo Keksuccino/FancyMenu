@@ -6,7 +6,6 @@ import de.keksuccino.fancymenu.util.resource.ResourceHandler;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.List;
 
 /**

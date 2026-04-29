@@ -1,16 +1,26 @@
 package de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
+import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
+import de.keksuccino.fancymenu.util.rendering.IconAnimation;
+import de.keksuccino.fancymenu.util.rendering.IconAnimations;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -30,6 +40,7 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 @SuppressWarnings("all")
@@ -37,12 +48,16 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final ResourceLocation SUB_CONTEXT_MENU_ARROW_ICON = new ResourceLocation("fancymenu", "textures/contextmenu/context_menu_sub_arrow.png");
-    private static final ResourceLocation CONTEXT_MENU_TOOLTIP_ICON = new ResourceLocation("fancymenu", "textures/contextmenu/context_menu_tooltip.png");
-    private static final ResourceLocation SCROLL_UP_ARROW = new ResourceLocation("fancymenu", "textures/contextmenu/scroll_up_arrow.png");
-    private static final ResourceLocation SCROLL_DOWN_ARROW = new ResourceLocation("fancymenu", "textures/contextmenu/scroll_down_arrow.png");
+    private static final MaterialIcon SUB_CONTEXT_MENU_ARROW_ICON = MaterialIcons.CHEVRON_RIGHT;
+    private static final MaterialIcon SCROLL_UP_ICON = MaterialIcons.ARROW_DROP_UP;
+    private static final MaterialIcon SCROLL_DOWN_ICON = MaterialIcons.ARROW_DROP_DOWN;
+    private static final MaterialIcon CONTEXT_MENU_TOOLTIP_ICON = MaterialIcons.INFO;
     private static final DrawableColor SHADOW_COLOR = DrawableColor.of(new Color(43, 43, 43, 100));
     private static final int SCROLL_INDICATOR_HEIGHT = 12; // Space reserved for arrows
+    private static final int SCROLL_INDICATOR_ICON_SIZE = 10;
+    private static final float SCROLL_INDICATOR_BACKGROUND_ICON_MIX = 0.12F;
+    private static final String SEARCH_ENTRY_IDENTIFIER = "context_menu_search";
+    private static final String SEARCH_SEPARATOR_IDENTIFIER = "context_menu_search_separator";
 
     protected final List<ContextMenuEntry<?>> entries = new ArrayList<>();
     protected float scale = UIBase.getUIScale();
@@ -54,56 +69,124 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     protected float rawHeight; // without border
     protected SubMenuContextMenuEntry parentEntry = null;
     protected SubMenuOpeningSide subMenuOpeningSide = SubMenuOpeningSide.RIGHT;
-    protected boolean shadow = true;
+    protected boolean shadow = false;
     protected boolean keepDistanceToEdges = true;
-    protected boolean forceDefaultTooltipStyle = true;
     protected boolean forceRawXY = false;
     protected boolean forceSide = false;
     protected boolean forceSideSubMenus = true;
+    protected boolean roundTopLeftCorner = true;
+    protected boolean roundTopRightCorner = true;
+    protected boolean roundBottomLeftCorner = true;
+    protected boolean roundBottomRightCorner = true;
+    protected boolean openAnimationEnabled = true;
     protected float scrollPosition = 0.0f; // Current scroll position
     private boolean needsScrolling = false; // Flag to track if menu is scrollable
     private float displayHeight = 0; // Adjusted height when scrollable
+    private static final float OPEN_ANIMATION_GROW_TIME_MS = 120.0F;
+    private static final float OPEN_ANIMATION_MIN_SCALE = 0.78F;
+    private long openAnimationStartMs = 0L;
+    private boolean openAnimationActive = false;
+    private boolean supressOpenAnimationNextOpen = false;
+    protected int renderMouseX = 0;
+    protected int renderMouseY = 0;
+    private final SearchContextMenuEntry searchEntry;
+    private final SeparatorContextMenuEntry searchSeparator;
+    private boolean searchEntryRequested = false;
+    private boolean searchEntryVisibleLast = false;
+    private boolean alwaysShowSearchBar = false;
+    private ContextMenu cachedSearchMenu = null;
+    private boolean arrowNavigationActive = false;
+    @Nullable
+    private ContextMenu arrowNavigationMenu = null;
+    @Nullable
+    private ContextMenuEntry<?> arrowNavigationEntry = null;
+    private int arrowNavigationMouseX = Integer.MIN_VALUE;
+    private int arrowNavigationMouseY = Integer.MIN_VALUE;
+
+    public ContextMenu() {
+        this.searchEntry = new SearchContextMenuEntry(SEARCH_ENTRY_IDENTIFIER, this);
+        this.searchSeparator = new SeparatorContextMenuEntry(SEARCH_SEPARATOR_IDENTIFIER, this);
+        this.entries.add(this.searchEntry);
+        this.entries.add(this.searchSeparator);
+        this.searchEntry.addIsVisibleSupplier((menu, entry) -> this.isSearchEntryVisible());
+        this.searchSeparator.addIsVisibleSupplier((menu, entry) -> this.isSearchEntryVisible());
+        this.searchEntryVisibleLast = this.isSearchEntryVisible();
+    }
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+        this.renderMouseX = mouseX;
+        this.renderMouseY = mouseY;
+
         if (!this.isOpen()) return;
+
+        UIBase.startUIScaleRendering();
+        try {
+
+        this.updateSearchVisibilityState(false);
+
+        ContextMenu root = this.getRootMenu();
+        if (root == this) {
+            this.updateArrowNavigationMouseState(mouseX, mouseY);
+            this.clearArrowNavigationIfMenuClosed();
+            this.validateArrowNavigationSelection();
+        }
 
         if (this.forceUIScale) this.scale = UIBase.getUIScale();
 
-        float scale = UIBase.calculateFixedScale(this.getScale());
+        boolean animationsEnabled = UIBase.shouldPlayAnimations() && this.openAnimationEnabled;
+        boolean openingAnimation = animationsEnabled && this.isTopLevelOpenAnimationRunning();
+        float uiScale = UIBase.calculateFixedRenderScale(this.getScale());
+        float animationScale = animationsEnabled ? this.getOpenAnimationScale(partial) : 1.0F;
+        float renderScale = uiScale * animationScale;
 
-        RenderSystem.enableBlend();
+        RenderSystem.disableDepthTest();
+        RenderingUtils.setDepthTestLocked(true);
+
+        RenderingUtils.setupAlphaBlend();
         graphics.pose().pushPose();
-        graphics.pose().scale(scale, scale, scale);
-        graphics.pose().translate(0.0F, 0.0F, 500.0F / scale);
+        graphics.pose().scale(renderScale, renderScale, renderScale);
 
         List<ContextMenuEntry<?>> renderEntries = new ArrayList<>();
         renderEntries.add(new SpacerContextMenuEntry("unregistered_spacer_top", this));
 
         //Check if icon space should get added to entries
-        boolean addIconSpace = false;
-        for (ContextMenuEntry<?> e : this.entries) {
-            if (e instanceof ClickableContextMenuEntry<?> c) {
-                if (c.icon != null) {
-                    addIconSpace = true;
-                    break;
-                }
-            }
-        }
+        boolean addIconSpace = this.shouldAddIconSpaceForEntries();
 
         this.rawWidth = 20;
         this.rawHeight = 0;
-        ContextMenuEntry<?> prev = null;
+
+        String searchText = this.getActiveSearchText();
+        String searchLower = (searchText != null) ? searchText.toLowerCase(Locale.ROOT) : null;
+        boolean filterActive = (searchLower != null) && !searchLower.isBlank();
+        List<ContextMenuEntry<?>> visibleEntries = new ArrayList<>();
         for (ContextMenuEntry<?> e : this.entries) {
             e.addSpaceForIcon = addIconSpace;
-            //Don't render separator entries at the start and end of the menu OR if the previous entry was also a separator entry
-            if ((e instanceof SeparatorContextMenuEntry) && ((prev instanceof SeparatorContextMenuEntry) || ((e == this.entries.get(0)) || (e == this.entries.get(this.entries.size()-1))))) {
-                prev = e;
-                continue;
+            if (e.isVisible() && (!filterActive || this.matchesSearchFilter(e, searchLower))) {
+                visibleEntries.add(e);
             }
-            //Don't render if hidden
-            if (!e.isVisible()) {
-                prev = e;
+        }
+        for (ContextMenuEntry<?> e : this.entries) {
+            if (!visibleEntries.contains(e)) {
+                e.setHovered(false);
+            }
+        }
+
+        int startIndex = 0;
+        int endIndex = visibleEntries.size() - 1;
+        while (startIndex <= endIndex && visibleEntries.get(startIndex) instanceof SeparatorContextMenuEntry) {
+            startIndex++;
+        }
+        while (endIndex >= startIndex && visibleEntries.get(endIndex) instanceof SeparatorContextMenuEntry && visibleEntries.get(endIndex) != this.searchSeparator) {
+            endIndex--;
+        }
+
+        ContextMenuEntry<?> prev = null;
+        for (int i = startIndex; i <= endIndex; i++) {
+            ContextMenuEntry<?> e = visibleEntries.get(i);
+            //Merge separator entries when they would render in a row
+            if (e instanceof SeparatorContextMenuEntry && prev instanceof SeparatorContextMenuEntry) {
                 continue;
             }
             //Pre-tick
@@ -125,37 +208,98 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         // Calculate max height considering both menu scale and GUI scale
         double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
-        float menuScale = UIBase.calculateFixedScale(this.scale);
+        float menuScale = UIBase.calculateFixedRenderScale(this.scale);
         float maxMenuHeight = (getScreenHeight() / menuScale) * 0.7f;
 
         this.needsScrolling = this.rawHeight > maxMenuHeight;
 
         // If scrollable, adjust displayed height
         this.displayHeight = needsScrolling ? maxMenuHeight : this.rawHeight;
+        boolean renderContent = !openingAnimation;
 
         float x = this.getActualX();
         float y = this.getActualY();
-        float scaledX = (float)((float)x/scale) + this.getBorderThickness();
-        float scaledY = (float)((float)y/scale) + this.getBorderThickness();
-        float scaledMouseX = (float) ((float)mouseX / scale);
-        float scaledMouseY = (float) ((float)mouseY / scale);
+        float scaledX = (float)((float)x/ renderScale) + this.getBorderThickness();
+        float scaledY = (float)((float)y/ renderScale) + this.getBorderThickness();
+        float scaledMouseX = (float) ((float)mouseX / renderScale);
+        float scaledMouseY = (float) ((float)mouseY / renderScale);
         boolean navigatingInSub = this.isUserNavigatingInSubMenu();
+        boolean arrowNavigationActive = root.arrowNavigationActive;
+        ContextMenu arrowNavigationMenu = root.arrowNavigationMenu;
+        ContextMenuEntry<?> arrowNavigationEntry = root.arrowNavigationEntry;
+        float normalRoundingRadius = UIBase.getInterfaceCornerRoundingRadius();
+        float normalCornerTopLeft = this.roundTopLeftCorner ? normalRoundingRadius : 0.0F;
+        float normalCornerTopRight = this.roundTopRightCorner ? normalRoundingRadius : 0.0F;
+        float normalCornerBottomLeft = this.roundBottomLeftCorner ? normalRoundingRadius : 0.0F;
+        float normalCornerBottomRight = this.roundBottomRightCorner ? normalRoundingRadius : 0.0F;
+        float smoothScale = renderScale;
+        float smoothX = scaledX * smoothScale;
+        float smoothY = scaledY * smoothScale;
+        float smoothWidth = this.getWidth() * smoothScale;
+        float smoothHeight = displayHeight * smoothScale;
+        float smoothCornerTopLeft = normalCornerTopLeft * smoothScale;
+        float smoothCornerTopRight = normalCornerTopRight * smoothScale;
+        float smoothCornerBottomLeft = normalCornerBottomLeft * smoothScale;
+        float smoothCornerBottomRight = normalCornerBottomRight * smoothScale;
 
         //Render shadow
         if (this.hasShadow()) {
-            RenderingUtils.fillF(graphics, (float) (scaledX + 4), (float) (scaledY + 4),
-                    (float) (scaledX + this.getWidth() + 4),
-                    (float) (scaledY + displayHeight + 4), SHADOW_COLOR.getColorInt());
+            SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                    graphics,
+                    (scaledX + 4.0F) * smoothScale,
+                    (scaledY + 4.0F) * smoothScale,
+                    smoothWidth,
+                    smoothHeight,
+                    smoothCornerTopLeft,
+                    smoothCornerTopRight,
+                    smoothCornerBottomRight,
+                    smoothCornerBottomLeft,
+                    SHADOW_COLOR.getColorInt(),
+                    partial
+            );
         }
 
-        //Render background
-        RenderingUtils.fillF(graphics, (float) scaledX, (float) scaledY,
-                (float) (scaledX + this.getWidth()),
-                (float) (scaledY + displayHeight),
-                UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
+        if (UIBase.shouldBlur()) {
+            // Render blur background
+            float blurX = smoothX;
+            float blurY = smoothY;
+            float blurWidth = smoothWidth;
+            float blurHeight = smoothHeight;
+            if (blurWidth > 0.0F && blurHeight > 0.0F) {
+                GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCorners(
+                        graphics,
+                        blurX,
+                        blurY,
+                        blurWidth,
+                        blurHeight,
+                        UIBase.getBlurRadius(),
+                        smoothCornerTopLeft,
+                        smoothCornerTopRight,
+                        smoothCornerBottomRight,
+                        smoothCornerBottomLeft,
+                        UIBase.getUITheme().ui_blur_overlay_background_tint,
+                        partial
+                );
+            }
+        } else {
+            //Render normal background
+            SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                    graphics,
+                    smoothX,
+                    smoothY,
+                    smoothWidth,
+                    smoothHeight,
+                    smoothCornerTopLeft,
+                    smoothCornerTopRight,
+                    smoothCornerBottomRight,
+                    smoothCornerBottomLeft,
+                    UIBase.getUITheme().ui_overlay_background_color.getColorInt(),
+                    partial
+            );
+        }
 
         // Enable scissoring if scrollable
-        if (needsScrolling) {
+        if (needsScrolling && renderContent) {
             // Calculate scissor boundaries IN THE SCALED CONTEXT
             float scissorTopInScaledContext = scaledY + SCROLL_INDICATOR_HEIGHT;
             float scissorBottomInScaledContext = scaledY + displayHeight - SCROLL_INDICATOR_HEIGHT;
@@ -163,133 +307,165 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             float scissorRightInScaledContext = scaledX + this.getWidth();
 
             // Convert coordinates from the scaled context to the UNscaled logical GUI space
-            // The 'scale' variable is the one used in graphics.pose().scale()
-            float logicalMinX = scissorLeftInScaledContext * scale;
-            float logicalMinY = scissorTopInScaledContext * scale;
-            float logicalMaxX = scissorRightInScaledContext * scale;
-            float logicalMaxY = scissorBottomInScaledContext * scale;
+            // The 'renderScale' variable is the one used in graphics.pose().scale()
+            float logicalMinX = scissorLeftInScaledContext * renderScale;
+            float logicalMinY = scissorTopInScaledContext * renderScale;
+            float logicalMaxX = scissorRightInScaledContext * renderScale;
+            float logicalMaxY = scissorBottomInScaledContext * renderScale;
 
             // enableScissor expects unscaled logical GUI coordinates
-            graphics.enableScissor(
-                    (int)logicalMinX,
-                    (int)logicalMinY,
-                    (int)logicalMaxX,
-                    (int)logicalMaxY
-            );
+            graphics.enableScissor((int)logicalMinX, (int)logicalMinY, (int)logicalMaxX, (int)logicalMaxY);
         }
 
         //Update + render entries
-        float entryY = scaledY;
-        if (needsScrolling) {
-            // Add space for scroll indicator and apply scroll position
-            entryY += SCROLL_INDICATOR_HEIGHT - scrollPosition;
-        }
-
-        for (ContextMenuEntry<?> e : renderEntries) {
-            e.x = scaledX;
-            e.y = entryY; //already scaled
-            e.width = this.getWidth(); //don't scale, because already scaled via graphics.pose().scale()
-
-            boolean isVisible = true;
+        if (renderContent) {
+            float entryY = scaledY;
             if (needsScrolling) {
-                // Check if entry is visible in the scrollable area
-                float entryBottom = entryY + e.getHeight();
-                float visibleTop = scaledY + SCROLL_INDICATOR_HEIGHT;
-                float visibleBottom = scaledY + displayHeight - SCROLL_INDICATOR_HEIGHT;
-
-                // Entry is visible if it's at least partially within the visible area
-                isVisible = (entryY < visibleBottom && entryBottom > visibleTop);
+                // Add space for scroll indicator and apply scroll position
+                entryY += SCROLL_INDICATOR_HEIGHT - scrollPosition;
             }
 
-            boolean hover = e.isHovered();
-            // Only set hover if the entry is visible in the scroll area
-            e.setHovered(isVisible && !navigatingInSub && UIBase.isXYInArea(scaledMouseX, scaledMouseY, e.x, e.y, e.width, e.getHeight()));
+            for (ContextMenuEntry<?> e : renderEntries) {
+                e.x = scaledX;
+                e.y = entryY; //already scaled
+                e.width = this.getWidth(); //don't scale, because already scaled via graphics.pose().scale()
 
-            //Run hover action of element if its hover state changed to hovered
-            if (!hover && e.isHovered() && (e.hoverAction != null)) {
-                e.hoverAction.run(this, e, false);
+                boolean isVisible = true;
+                if (needsScrolling) {
+                    // Check if entry is visible in the scrollable area
+                    float entryBottom = entryY + e.getHeight();
+                    float visibleTop = scaledY + SCROLL_INDICATOR_HEIGHT;
+                    float visibleBottom = scaledY + displayHeight - SCROLL_INDICATOR_HEIGHT;
+
+                    // Entry is visible if it's at least partially within the visible area
+                    isVisible = (entryY < visibleBottom && entryBottom > visibleTop);
+                }
+
+                boolean hover = e.isHovered();
+                boolean shouldHover;
+                if (arrowNavigationActive) {
+                    shouldHover = (arrowNavigationMenu == this) && (arrowNavigationEntry == e);
+                } else {
+                    shouldHover = !navigatingInSub && UIBase.isXYInArea(scaledMouseX, scaledMouseY, e.x, e.y, e.width, e.getHeight());
+                }
+                // Only set hover if the entry is visible in the scroll area
+                e.setHovered(isVisible && shouldHover);
+
+                //Run hover action of element if its hover state changed to hovered
+                if (!hover && e.isHovered() && (e.hoverAction != null)) {
+                    e.hoverAction.run(this, e, false);
+                }
+
+                // Only render if visible
+                if (isVisible) {
+                    RenderingUtils.setupAlphaBlend();
+                    e.render(graphics, (int) scaledMouseX, (int) scaledMouseY, partial);
+                }
+
+                entryY += e.getHeight(); //don't scale this, because already scaled via graphics.pose().scale()
             }
-
-            // Only render if visible
-            if (isVisible) {
-                RenderSystem.enableBlend();
-                e.render(graphics, (int) scaledMouseX, (int) scaledMouseY, partial);
-            }
-
-            entryY += e.getHeight(); //don't scale this, because already scaled via graphics.pose().scale()
+        } else {
+            this.unhoverAllEntries();
         }
 
         // Disable scissoring and render arrow indicators if needed
-        if (needsScrolling) {
+        if (needsScrolling && renderContent) {
             graphics.disableScissor();
 
             // Calculate max scroll position
             float maxScrollPosition = this.rawHeight - (displayHeight - SCROLL_INDICATOR_HEIGHT * 2);
 
-            // Create a darker version of the background color (about 10% darker)
-            Color bgColor = UIBase.getUIColorTheme().element_background_color_normal.getColor();
-            Color darkerBgColor = new Color(
-                    Math.max(0, (int)(bgColor.getRed() * 0.9)),
-                    Math.max(0, (int)(bgColor.getGreen() * 0.9)),
-                    Math.max(0, (int)(bgColor.getBlue() * 0.9)),
-                    bgColor.getAlpha()
-            );
-            int darkerBackgroundColor = darkerBgColor.getRGB();
+            int scrollIndicatorBackgroundColor = this.getScrollIndicatorBackgroundColor();
 
             // Render up arrow background and arrow if scrolled down
             if (scrollPosition > 0) {
-                // Fill background
-                RenderingUtils.fillF(graphics,
-                        scaledX,
-                        scaledY,
-                        scaledX + this.getWidth(),
-                        scaledY + SCROLL_INDICATOR_HEIGHT,
-                        darkerBackgroundColor);
+                // Fill background with rounded top corners
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                        graphics,
+                        smoothX,
+                        smoothY,
+                        smoothWidth,
+                        SCROLL_INDICATOR_HEIGHT * smoothScale,
+                        smoothCornerTopLeft,
+                        smoothCornerTopRight,
+                        0.0F,
+                        0.0F,
+                        scrollIndicatorBackgroundColor,
+                        partial
+                );
 
                 // Render arrow centered
-                RenderSystem.enableBlend();
-                UIBase.getUIColorTheme().ui_texture_color.setAsShaderColor(graphics);
-                graphics.blit(
-                        SCROLL_UP_ARROW,
-                        (int)(scaledX + this.getWidth()/2 - 5),
-                        (int)(scaledY + (SCROLL_INDICATOR_HEIGHT - 10) / 2), // Center vertically
-                        0.0F, 0.0F, 10, 10, 10, 10
-                );
+                RenderingUtils.setupAlphaBlend();
+                UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
+                IconRenderData iconData = resolveMaterialIconData(SCROLL_UP_ICON, SCROLL_INDICATOR_ICON_SIZE, SCROLL_INDICATOR_ICON_SIZE);
+                if (iconData != null) {
+                    blitScaledIcon(
+                            graphics,
+                            iconData,
+                            scaledX + this.getWidth() / 2.0F - (SCROLL_INDICATOR_ICON_SIZE / 2.0F),
+                            scaledY + (SCROLL_INDICATOR_HEIGHT - SCROLL_INDICATOR_ICON_SIZE) / 2.0F, // Center vertically
+                            SCROLL_INDICATOR_ICON_SIZE,
+                            SCROLL_INDICATOR_ICON_SIZE
+                    );
+                }
                 RenderingUtils.resetShaderColor(graphics);
             }
 
             // Render down arrow background and arrow if can scroll further
             if (scrollPosition < maxScrollPosition) {
-                // Fill background
-                RenderingUtils.fillF(graphics,
-                        scaledX,
-                        scaledY + displayHeight - SCROLL_INDICATOR_HEIGHT,
-                        scaledX + this.getWidth(),
-                        scaledY + displayHeight,
-                        darkerBackgroundColor);
+                // Fill background with rounded bottom corners
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                        graphics,
+                        smoothX,
+                        (scaledY + displayHeight - SCROLL_INDICATOR_HEIGHT) * smoothScale,
+                        smoothWidth,
+                        SCROLL_INDICATOR_HEIGHT * smoothScale,
+                        0.0F,
+                        0.0F,
+                        smoothCornerBottomRight,
+                        smoothCornerBottomLeft,
+                        scrollIndicatorBackgroundColor,
+                        partial
+                );
 
                 // Render arrow centered (with fixed position)
-                RenderSystem.enableBlend();
-                UIBase.getUIColorTheme().ui_texture_color.setAsShaderColor(graphics);
-                graphics.blit(
-                        SCROLL_DOWN_ARROW,
-                        (int)(scaledX + this.getWidth()/2 - 5),
-                        (int)(scaledY + displayHeight - SCROLL_INDICATOR_HEIGHT + (SCROLL_INDICATOR_HEIGHT - 10) / 2), // Centered in area
-                        0.0F, 0.0F, 10, 10, 10, 10
-                );
+                RenderingUtils.setupAlphaBlend();
+                UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
+                IconRenderData iconData = resolveMaterialIconData(SCROLL_DOWN_ICON, SCROLL_INDICATOR_ICON_SIZE, SCROLL_INDICATOR_ICON_SIZE);
+                if (iconData != null) {
+                    blitScaledIcon(
+                            graphics,
+                            iconData,
+                            scaledX + this.getWidth() / 2.0F - (SCROLL_INDICATOR_ICON_SIZE / 2.0F),
+                            scaledY + displayHeight - SCROLL_INDICATOR_HEIGHT + (SCROLL_INDICATOR_HEIGHT - SCROLL_INDICATOR_ICON_SIZE) / 2.0F, // Centered in area
+                            SCROLL_INDICATOR_ICON_SIZE,
+                            SCROLL_INDICATOR_ICON_SIZE
+                    );
+                }
                 RenderingUtils.resetShaderColor(graphics);
             }
         }
 
         //Render border
-        UIBase.renderBorder(graphics,
-                (float) (scaledX - this.getBorderThickness()),
-                (float) (scaledY - this.getBorderThickness()),
-                (float) (scaledX + this.getWidth() + this.getBorderThickness()),
-                (float) (scaledY + displayHeight + this.getBorderThickness()),
-                (float) this.getBorderThickness(),
-                UIBase.getUIColorTheme().element_border_color_normal.getColorInt(),
-                true, true, true, true);
+        float smoothBorderThickness = this.getBorderThickness() * smoothScale;
+        float smoothBorderCornerTopLeft = normalCornerTopLeft > 0.0F ? (normalCornerTopLeft + this.getBorderThickness()) * smoothScale : 0.0F;
+        float smoothBorderCornerTopRight = normalCornerTopRight > 0.0F ? (normalCornerTopRight + this.getBorderThickness()) * smoothScale : 0.0F;
+        float smoothBorderCornerBottomRight = normalCornerBottomRight > 0.0F ? (normalCornerBottomRight + this.getBorderThickness()) * smoothScale : 0.0F;
+        float smoothBorderCornerBottomLeft = normalCornerBottomLeft > 0.0F ? (normalCornerBottomLeft + this.getBorderThickness()) * smoothScale : 0.0F;
+        SmoothRectangleRenderer.renderSmoothBorderRoundAllCorners(
+                graphics,
+                (scaledX - this.getBorderThickness()) * smoothScale,
+                (scaledY - this.getBorderThickness()) * smoothScale,
+                (this.getWidth() + (this.getBorderThickness() * 2.0F)) * smoothScale,
+                (displayHeight + (this.getBorderThickness() * 2.0F)) * smoothScale,
+                smoothBorderThickness,
+                smoothBorderCornerTopLeft,
+                smoothBorderCornerTopRight,
+                smoothBorderCornerBottomRight,
+                smoothBorderCornerBottomLeft,
+                UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_overlay_border_color.getColorInt() : UIBase.getUITheme().ui_overlay_border_color.getColorInt(),
+                partial
+        );
 
         //Post-tick
         for (ContextMenuEntry<?> e : renderEntries) {
@@ -299,6 +475,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         graphics.pose().popPose();
+
+        RenderingUtils.setDepthTestLocked(false);
 
         //Render sub context menus
         for (ContextMenuEntry<?> e : renderEntries) {
@@ -311,6 +489,30 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 s.subContextMenu.render(graphics, mouseX, mouseY, partial);
             }
         }
+
+        } finally {
+            UIBase.stopUIScaleRendering();
+        }
+
+    }
+
+    private int getScrollIndicatorBackgroundColor() {
+        boolean blur = UIBase.shouldBlur();
+        UITheme theme = UIBase.getUITheme();
+        Color backgroundColor = blur ? theme.ui_blur_overlay_background_tint.getColor() : theme.ui_overlay_background_color.getColor();
+        Color iconColor = blur ? theme.ui_blur_icon_texture_color.getColor() : theme.ui_icon_texture_color.getColor();
+        return mixRgb(backgroundColor, iconColor, SCROLL_INDICATOR_BACKGROUND_ICON_MIX).getRGB();
+    }
+
+    private static @NotNull Color mixRgb(@NotNull Color baseColor, @NotNull Color mixColor, float mixFactor) {
+        float clampedMixFactor = Math.max(0.0F, Math.min(1.0F, mixFactor));
+        float baseFactor = 1.0F - clampedMixFactor;
+        return new Color(
+                Math.round((baseColor.getRed() * baseFactor) + (mixColor.getRed() * clampedMixFactor)),
+                Math.round((baseColor.getGreen() * baseFactor) + (mixColor.getGreen() * clampedMixFactor)),
+                Math.round((baseColor.getBlue() * baseFactor) + (mixColor.getBlue() * clampedMixFactor)),
+                baseColor.getAlpha()
+        );
     }
 
     @NotNull
@@ -358,7 +560,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     @NotNull
     public SeparatorContextMenuEntry addSeparatorEntry(@NotNull String identifier) {
         SeparatorContextMenuEntry e = new SeparatorContextMenuEntry(identifier, this);
-        return this.addEntry(e);
+        return this.addEntry(e).setStackable(true);
     }
 
     @NotNull
@@ -438,15 +640,27 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     @NotNull
     public <T extends ContextMenuEntry<?>> T addEntryAt(int index, @NotNull T entry) {
+        if ((entry instanceof SearchContextMenuEntry) && (entry != this.searchEntry)) {
+            LOGGER.error("[FANCYMENU] Failed to add ContextMenu search entry! Only one search entry is allowed per menu.");
+            return entry;
+        }
         if (this.hasEntry(entry.identifier)) {
             LOGGER.error("[FANCYMENU] Failed to add ContextMenu entry! Identifier already in use: " + entry.identifier);
         } else {
+            if (!this.isProtectedEntry(entry)) {
+                int minIndex = this.getProtectedEntriesCount();
+                if (index < minIndex) index = minIndex;
+            }
             this.entries.add(index, entry);
         }
         return entry;
     }
 
     public ContextMenu removeEntry(String identifier) {
+        if (this.isProtectedEntryIdentifier(identifier)) {
+            LOGGER.error("[FANCYMENU] Failed to remove ContextMenu entry! Entry is protected: " + identifier);
+            return this;
+        }
         ContextMenuEntry<?> e = this.getEntry(identifier);
         if (e != null) {
             this.entries.remove(e);
@@ -457,10 +671,33 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     public ContextMenu clearEntries() {
         this.closeMenu();
-        for (ContextMenuEntry<?> e : this.entries) {
+        List<ContextMenuEntry<?>> entriesToRemove = new ArrayList<>(this.entries);
+        for (ContextMenuEntry<?> e : entriesToRemove) {
+            if (this.isProtectedEntry(e)) continue;
+            this.entries.remove(e);
             e.onRemoved();
         }
-        this.entries.clear();
+        this.resetSearchState();
+        return this;
+    }
+
+    /**
+     * Clears all non-protected entries without closing the menu.
+     */
+    public ContextMenu clearEntriesKeepOpen() {
+        this.closeSubMenus();
+        this.unhoverAllEntries();
+        ContextMenu root = this.getRootMenu();
+        if (root.arrowNavigationMenu == this || root == this) {
+            root.resetArrowNavigationState();
+        }
+        List<ContextMenuEntry<?>> entriesToRemove = new ArrayList<>(this.entries);
+        for (ContextMenuEntry<?> e : entriesToRemove) {
+            if (this.isProtectedEntry(e)) continue;
+            this.entries.remove(e);
+            e.onRemoved();
+        }
+        this.resetSearchState();
         return this;
     }
 
@@ -501,6 +738,20 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         return this.scale;
     }
 
+    public boolean isOpenAnimationEnabled() {
+        return this.openAnimationEnabled;
+    }
+
+    public ContextMenu setOpenAnimationEnabled(boolean openAnimationEnabled) {
+        this.openAnimationEnabled = openAnimationEnabled;
+        return this;
+    }
+
+    public ContextMenu supressOpenAnimationForNextOpen() {
+        this.supressOpenAnimationNextOpen = true;
+        return this;
+    }
+
     public ContextMenu setScale(float scale) {
         if (this.forceUIScale) LOGGER.error("[FANCYMENU] Unable to set scale of ContextMenu while ContextMenu#isForceUIScale()!");
         this.scale = scale;
@@ -516,42 +767,163 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         return this;
     }
 
+    public boolean isAlwaysShowSearchBar() {
+        return this.alwaysShowSearchBar;
+    }
+
+    public ContextMenu setAlwaysShowSearchBar(boolean alwaysShowSearchBar) {
+        this.alwaysShowSearchBar = alwaysShowSearchBar;
+        this.updateSearchVisibilityState(false);
+        return this;
+    }
+
+    private boolean isTopLevelOpenAnimationRunning() {
+        if (!UIBase.shouldPlayAnimations() || !this.openAnimationEnabled) return false;
+        if (this.isSubMenu() || !this.openAnimationActive) return false;
+        float elapsedMs = (float) (net.minecraft.Util.getMillis() - this.openAnimationStartMs);
+        if (elapsedMs >= OPEN_ANIMATION_GROW_TIME_MS) {
+            this.openAnimationActive = false;
+            return false;
+        }
+        return true;
+    }
+
+    private float getOpenAnimationScale(float partial) {
+        if (!UIBase.shouldPlayAnimations() || !this.openAnimationEnabled) return 1.0F;
+        if (this.isSubMenu() || !this.isOpen()) return 1.0F;
+        if (!this.isTopLevelOpenAnimationRunning()) return 1.0F;
+
+        float elapsedMs = (float) (net.minecraft.Util.getMillis() - this.openAnimationStartMs);
+        float growT = Math.min(elapsedMs / OPEN_ANIMATION_GROW_TIME_MS, 1.0F);
+        // Ease-out cubic for a quick pop
+        float easedGrow = 1.0F - (float) Math.pow(1.0F - growT, 3);
+        float baseScale = OPEN_ANIMATION_MIN_SCALE + (1.0F - OPEN_ANIMATION_MIN_SCALE) * easedGrow;
+        return Math.max(baseScale, 0.01F);
+    }
+
     protected float getMinDistanceToScreenEdge() {
         if (!this.keepDistanceToEdges) return 0;
         return 5;
     }
 
+    protected float clampActualXToScreen(float x, float width) {
+        float minX = this.getMinDistanceToScreenEdge();
+        float maxX = getScreenWidth() - width - this.getMinDistanceToScreenEdge() - 1;
+        if (maxX < minX) {
+            return minX;
+        }
+        return Math.max(minX, Math.min(x, maxX));
+    }
+
+    protected float getProjectedSubMenuActualX(@NotNull SubMenuOpeningSide side) {
+        float scale = UIBase.calculateFixedRenderScale(this.scale);
+        float scaledOffsetX = 5.0F * scale;
+        if (side == SubMenuOpeningSide.LEFT) {
+            return this.parentEntry.parent.getActualX() - this.getScaledWidth() + scaledOffsetX;
+        }
+        return this.parentEntry.parent.getActualX() + this.parentEntry.parent.getScaledWidth() - scaledOffsetX;
+    }
+
+    protected boolean isProjectedSubMenuWithinScreenBounds(@NotNull SubMenuOpeningSide side) {
+        float projectedX = this.getProjectedSubMenuActualX(side);
+        float clampedX = this.clampActualXToScreen(projectedX, this.getScaledWidthWithBorder());
+        return Math.abs(projectedX - clampedX) < 0.01F;
+    }
+
+    protected float getProjectedSubMenuChainOverlapArea(@NotNull SubMenuOpeningSide side) {
+        float projectedX = this.clampActualXToScreen(this.getProjectedSubMenuActualX(side), this.getScaledWidthWithBorder());
+        float projectedY = this.getActualY();
+        float projectedWidth = this.getScaledWidthWithBorder();
+        float projectedHeight = this.getScaledHeightWithBorder();
+        float overlapArea = 0.0F;
+        for (ContextMenu openAncestor : this.getOpenAncestorMenusForOverlapChecks()) {
+            overlapArea += this.getMenuOverlapArea(
+                    projectedX,
+                    projectedY,
+                    projectedWidth,
+                    projectedHeight,
+                    openAncestor.getActualX(),
+                    openAncestor.getActualY(),
+                    openAncestor.getScaledWidthWithBorder(),
+                    openAncestor.getScaledHeightWithBorder()
+            );
+        }
+        return overlapArea;
+    }
+
+    protected float getMenuOverlapArea(float firstX, float firstY, float firstWidth, float firstHeight, float secondX, float secondY, float secondWidth, float secondHeight) {
+        float overlapWidth = Math.max(0.0F, Math.min(firstX + firstWidth, secondX + secondWidth) - Math.max(firstX, secondX));
+        float overlapHeight = Math.max(0.0F, Math.min(firstY + firstHeight, secondY + secondHeight) - Math.max(firstY, secondY));
+        return overlapWidth * overlapHeight;
+    }
+
+    @NotNull
+    protected List<ContextMenu> getOpenAncestorMenusForOverlapChecks() {
+        List<ContextMenu> openAncestors = new ArrayList<>();
+        if (!this.isSubMenu()) {
+            return openAncestors;
+        }
+
+        // Ignore the direct parent overlap because sub menus intentionally attach to it.
+        ContextMenu current = this.parentEntry.parent;
+        boolean skipDirectParent = true;
+        while (current != null) {
+            if (!skipDirectParent && current.isOpen()) {
+                openAncestors.add(current);
+            }
+            skipDirectParent = false;
+            SubMenuContextMenuEntry currentParentEntry = current.parentEntry;
+            current = (currentParentEntry != null) ? currentParentEntry.parent : null;
+        }
+        return openAncestors;
+    }
+
+    @Nullable
+    protected SubMenuOpeningSide getPreferredNonOverlappingSubMenuOpeningSide() {
+        if (!this.isSubMenu()) {
+            return null;
+        }
+
+        SubMenuOpeningSide chainSide = null;
+        ContextMenu current = this.parentEntry.parent;
+        while (current != null && current.isSubMenu() && current.isOpen()) {
+            SubMenuOpeningSide currentSide = current.getPossibleSubMenuOpeningSide();
+            if (chainSide == null) {
+                chainSide = currentSide;
+            } else if (chainSide != currentSide) {
+                return null;
+            }
+            SubMenuContextMenuEntry currentParentEntry = current.parentEntry;
+            current = (currentParentEntry != null) ? currentParentEntry.parent : null;
+        }
+
+        if (chainSide == null) {
+            return null;
+        }
+        return this.getOppositeSubMenuOpeningSide(chainSide);
+    }
+
+    @NotNull
+    protected SubMenuOpeningSide getOppositeSubMenuOpeningSide(@NotNull SubMenuOpeningSide side) {
+        return side == SubMenuOpeningSide.LEFT ? SubMenuOpeningSide.RIGHT : SubMenuOpeningSide.LEFT;
+    }
+
     protected float getActualX() {
         if (this.isSubMenu()) {
-            float cachedScale = this.parentEntry.parent.scale;
-            float scale = UIBase.calculateFixedScale(this.scale);
-            float scaledOffsetX = (float) (5.0F * scale);
             SubMenuOpeningSide side = this.getPossibleSubMenuOpeningSide();
-            if (side == SubMenuOpeningSide.LEFT) {
-                float actualX = this.parentEntry.parent.getActualX() - this.getScaledWidth() + scaledOffsetX;
-                this.parentEntry.parent.scale = cachedScale;
-                return actualX;
-            }
-            if (side == SubMenuOpeningSide.RIGHT) {
-                float actualX = this.parentEntry.parent.getActualX() + this.parentEntry.parent.getScaledWidth() - scaledOffsetX;
-                this.parentEntry.parent.scale = cachedScale;
-                return actualX;
-            }
+            float actualX = this.getProjectedSubMenuActualX(side);
+            return this.clampActualXToScreen(actualX, this.getScaledWidthWithBorder());
         }
         if (this.forceRawXY) {
             return this.getX();
         }
-        //Force the menu to stay on screen
-        if ((this.getX() + this.getScaledWidthWithBorder()) >= (getScreenWidth() - this.getMinDistanceToScreenEdge())) {
-            return getScreenWidth() - this.getScaledWidthWithBorder() - this.getMinDistanceToScreenEdge() - 1;
-        }
-        return Math.max(this.getX(), this.getMinDistanceToScreenEdge());
+        return this.clampActualXToScreen(this.getX(), this.getScaledWidthWithBorder());
     }
 
     protected float getActualY() {
         float y = this.getY();
         if (this.isSubMenu()) {
-            float scale = UIBase.calculateFixedScale(this.scale);
+            float scale = UIBase.calculateFixedRenderScale(this.scale);
             int scaledOffsetY = (int) (10.0F * scale);
             y = (float) ((float)this.parentEntry.y * scale);
             y += scaledOffsetY;
@@ -561,7 +933,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         // Calculate the actual height to use for positioning considering scaling
-        float menuScale = UIBase.calculateFixedScale(this.scale);
+        float menuScale = UIBase.calculateFixedRenderScale(this.scale);
         float heightToUse;
 
         if (this.needsScrolling) {
@@ -585,16 +957,28 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         if (this.forceSide) {
             return this.subMenuOpeningSide;
         }
-        if (this.isSubMenu()) {
-            float potentialX = this.parentEntry.parent.getActualX() - this.getScaledWidth() + 5;
-            if ((this.subMenuOpeningSide == SubMenuOpeningSide.LEFT) && (potentialX < 5)) {
-                return SubMenuOpeningSide.RIGHT;
-            }
-            potentialX = this.parentEntry.parent.getActualX() + this.parentEntry.parent.getScaledWidth() - 5 + this.getScaledWidth();
-            if ((this.subMenuOpeningSide == SubMenuOpeningSide.RIGHT) && (potentialX > (getScreenWidth() - 5))) {
-                return SubMenuOpeningSide.LEFT;
-            }
+        if (!this.isSubMenu()) {
+            return this.subMenuOpeningSide;
         }
+
+        boolean canOpenLeft = this.isProjectedSubMenuWithinScreenBounds(SubMenuOpeningSide.LEFT);
+        boolean canOpenRight = this.isProjectedSubMenuWithinScreenBounds(SubMenuOpeningSide.RIGHT);
+        if (canOpenLeft != canOpenRight) {
+            return canOpenLeft ? SubMenuOpeningSide.LEFT : SubMenuOpeningSide.RIGHT;
+        }
+
+        float leftOverlapArea = this.getProjectedSubMenuChainOverlapArea(SubMenuOpeningSide.LEFT);
+        float rightOverlapArea = this.getProjectedSubMenuChainOverlapArea(SubMenuOpeningSide.RIGHT);
+        int overlapCompare = Float.compare(leftOverlapArea, rightOverlapArea);
+        if (overlapCompare != 0) {
+            return leftOverlapArea < rightOverlapArea ? SubMenuOpeningSide.LEFT : SubMenuOpeningSide.RIGHT;
+        }
+
+        SubMenuOpeningSide preferredSide = this.getPreferredNonOverlappingSubMenuOpeningSide();
+        if (preferredSide != null) {
+            return preferredSide;
+        }
+
         return this.subMenuOpeningSide;
     }
 
@@ -603,7 +987,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     }
 
     public float getScaledBorderThickness() {
-        float scale = UIBase.calculateFixedScale(this.scale);
+        float scale = UIBase.calculateFixedRenderScale(this.scale);
         return (float)((float)this.getBorderThickness() * scale);
     }
 
@@ -624,7 +1008,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     }
 
     public float getScaledWidth() {
-        float scale = UIBase.calculateFixedScale(this.scale);
+        float scale = UIBase.calculateFixedRenderScale(this.scale);
         return (float) ((float)this.getWidth() * scale);
     }
 
@@ -641,7 +1025,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     }
 
     public float getScaledHeight() {
-        float scale = UIBase.calculateFixedScale(this.scale);
+        float scale = UIBase.calculateFixedRenderScale(this.scale);
         if (this.needsScrolling) {
             return (float)((float)this.displayHeight * scale);
         }
@@ -676,15 +1060,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         return this;
     }
 
-    public boolean isForceDefaultTooltipStyle() {
-        return this.forceDefaultTooltipStyle;
-    }
-
-    public ContextMenu setForceDefaultTooltipStyle(boolean forceDefaultTooltipStyle) {
-        this.forceDefaultTooltipStyle = forceDefaultTooltipStyle;
-        return this;
-    }
-
     public boolean isKeepDistanceToEdges() {
         return this.keepDistanceToEdges;
     }
@@ -700,6 +1075,14 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     public ContextMenu setForceRawXY(boolean forceRawXY) {
         this.forceRawXY = forceRawXY;
+        return this;
+    }
+
+    public ContextMenu setRoundedCorners(boolean topLeft, boolean topRight, boolean bottomLeft, boolean bottomRight) {
+        this.roundTopLeftCorner = topLeft;
+        this.roundTopRightCorner = topRight;
+        this.roundBottomLeftCorner = bottomLeft;
+        this.roundBottomRightCorner = bottomRight;
         return this;
     }
 
@@ -741,6 +1124,11 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         return this.parentEntry;
     }
 
+    public ContextMenu detachFromParentEntry() {
+        this.parentEntry = null;
+        return this;
+    }
+
     public boolean isSubMenuHovered() {
         if (!this.isOpen()) return false;
         for (ContextMenuEntry<?> e : this.entries) {
@@ -771,9 +1159,21 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     public ContextMenu openMenuAt(float x, float y, @Nullable List<String> entryPath) {
         this.closeSubMenus();
         this.unhoverAllEntries();
+        this.resetSearchState();
+        if (!this.isSubMenu()) {
+            this.resetArrowNavigationState();
+        }
         this.rawX = x;
         this.rawY = y;
         this.open = true;
+        boolean supressOpenAnimation = this.supressOpenAnimationNextOpen;
+        this.supressOpenAnimationNextOpen = false;
+        if (!this.isSubMenu() && UIBase.shouldPlayAnimations() && this.openAnimationEnabled && !supressOpenAnimation) {
+            this.openAnimationStartMs = net.minecraft.Util.getMillis();
+            this.openAnimationActive = true;
+        } else {
+            this.openAnimationActive = false;
+        }
         this.scrollPosition = 0.0f; // Reset scroll position when opening menu
         if ((entryPath != null) && !entryPath.isEmpty()) {
             String firstId = entryPath.get(0);
@@ -811,17 +1211,57 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         return this.openMenuAtMouse(null);
     }
 
+    /**
+     * Closes this menu, clears hover state, and closes any open sub-menus attached to it.
+     */
     public ContextMenu closeMenu() {
         this.closeSubMenus();
         this.unhoverAllEntries();
         this.open = false;
+        this.openAnimationActive = false;
+        this.resetSearchState();
+        ContextMenu root = this.getRootMenu();
+        if (root.arrowNavigationMenu == this || root == this) {
+            root.resetArrowNavigationState();
+        }
+        if (root.cachedSearchMenu == this) {
+            root.cachedSearchMenu = null;
+        }
         return this;
     }
 
+    /**
+     * Closes this menu and every parent menu in the chain up to the root.
+     * This also closes any open sub-menus on each menu in the chain.
+     */
+    public ContextMenu closeMenuChain() {
+        ContextMenu current = this;
+        while (current != null) {
+            current.closeMenu();
+            SubMenuContextMenuEntry parent = current.parentEntry;
+            current = (parent != null) ? parent.parent : null;
+        }
+        return this;
+    }
+
+    /**
+     * Closes all sub-menus that belong to this menu without closing the menu itself.
+     */
     public ContextMenu closeSubMenus() {
         for (ContextMenuEntry<?> e : this.entries) {
             if (e instanceof SubMenuContextMenuEntry s) {
                 s.subContextMenu.closeMenu();
+            }
+        }
+        return this;
+    }
+
+    protected ContextMenu closeSubMenusExcept(@Nullable SubMenuContextMenuEntry keepOpen) {
+        for (ContextMenuEntry<?> e : this.entries) {
+            if (e instanceof SubMenuContextMenuEntry s) {
+                if (keepOpen == null || s != keepOpen) {
+                    s.subContextMenu.closeMenu();
+                }
             }
         }
         return this;
@@ -832,11 +1272,13 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     }
 
     public boolean isUserNavigatingInMenu() {
-        // If the menu is scrollable and the mouse is over it, consider it as navigating
-        if (this.needsScrolling && this.isOpen() && this.isMouseOverMenu(MouseInput.getMouseX(), MouseInput.getMouseY())) {
+        if (!this.isOpen()) return false;
+        if (UIBase.shouldPlayAnimations() && this.openAnimationEnabled && this.isTopLevelOpenAnimationRunning()) {
             return true;
         }
-        return this.isHovered() || this.isUserNavigatingInSubMenu();
+        int mouseX = MouseInput.getMouseX();
+        int mouseY = MouseInput.getMouseY();
+        return this.getMenuUnderCursor(mouseX, mouseY) != null;
     }
 
     public boolean isUserNavigatingInSubMenu() {
@@ -861,7 +1303,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     private boolean isEntryVisible(ContextMenuEntry<?> entry) {
         if (!this.needsScrolling) return true;
 
-        float scale = UIBase.calculateFixedScale(this.getScale());
+        float scale = UIBase.calculateFixedRenderScale(this.getScale());
         float scaledY = (float)((float)this.getActualY()/scale) + this.getBorderThickness();
 
         float entryTop = entry.y;
@@ -872,12 +1314,265 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         return entryTop < visibleBottom && entryBottom > visibleTop;
     }
 
+    private boolean isArrowKey(int keyCode) {
+        return keyCode == InputConstants.KEY_UP
+                || keyCode == InputConstants.KEY_DOWN
+                || keyCode == InputConstants.KEY_LEFT
+                || keyCode == InputConstants.KEY_RIGHT;
+    }
+
+    private boolean isTabKey(int keyCode) {
+        return keyCode == InputConstants.KEY_TAB;
+    }
+
+    private boolean isEnterKey(int keyCode) {
+        return keyCode == InputConstants.KEY_ENTER
+                || keyCode == InputConstants.KEY_NUMPADENTER;
+    }
+
+    private boolean isEscapeKey(int keyCode) {
+        return keyCode == InputConstants.KEY_ESCAPE;
+    }
+
+    private boolean isNavigationConsumeKey(int keyCode) {
+        return this.isArrowKey(keyCode) || this.isTabKey(keyCode) || this.isEnterKey(keyCode) || this.isEscapeKey(keyCode);
+    }
+
+    private void updateArrowNavigationMouseState(int mouseX, int mouseY) {
+        if (!this.arrowNavigationActive) {
+            this.arrowNavigationMouseX = mouseX;
+            this.arrowNavigationMouseY = mouseY;
+            return;
+        }
+        if (mouseX != this.arrowNavigationMouseX || mouseY != this.arrowNavigationMouseY) {
+            if (this.getMenuUnderCursor(mouseX, mouseY) != null) {
+                this.resetArrowNavigationState();
+            }
+            this.arrowNavigationMouseX = mouseX;
+            this.arrowNavigationMouseY = mouseY;
+        }
+    }
+
+    private void clearArrowNavigationIfMenuClosed() {
+        if (this.arrowNavigationMenu != null && !this.arrowNavigationMenu.isOpen()) {
+            this.resetArrowNavigationState();
+        }
+    }
+
+    private void validateArrowNavigationSelection() {
+        if (!this.arrowNavigationActive || this.arrowNavigationMenu == null) {
+            return;
+        }
+        List<ContextMenuEntry<?>> navigable = this.arrowNavigationMenu.getNavigableEntries();
+        if (this.arrowNavigationEntry != null && !navigable.contains(this.arrowNavigationEntry)) {
+            this.arrowNavigationMenu.unhoverAllEntries();
+            this.arrowNavigationEntry = null;
+        }
+    }
+
+    private void resetArrowNavigationState() {
+        if (this.arrowNavigationMenu != null) {
+            this.arrowNavigationMenu.unhoverAllEntries();
+        }
+        this.arrowNavigationActive = false;
+        this.arrowNavigationMenu = null;
+        this.arrowNavigationEntry = null;
+    }
+
+    private void onSearchFilterChanged() {
+        ContextMenu root = this.getRootMenu();
+        if (!this.isSearchEntryVisible()) {
+            return;
+        }
+        String searchText = this.getActiveSearchText();
+        if (searchText == null || searchText.isBlank()) {
+            return;
+        }
+        if (!root.arrowNavigationActive || root.arrowNavigationMenu != this) {
+            root.activateArrowNavigation(this);
+        }
+        List<ContextMenuEntry<?>> navigable = this.getNavigableEntries();
+        ContextMenuEntry<?> first = navigable.isEmpty() ? null : navigable.get(0);
+        root.setArrowNavigationSelection(this, first);
+    }
+
+    private void activateArrowNavigation(@NotNull ContextMenu menu) {
+        if (!this.arrowNavigationActive) {
+            this.cachedSearchMenu = null;
+        }
+        if (this.arrowNavigationMenu != menu) {
+            if (this.arrowNavigationMenu != null) {
+                this.arrowNavigationMenu.unhoverAllEntries();
+            }
+            this.arrowNavigationMenu = menu;
+            this.arrowNavigationEntry = null;
+        }
+        menu.unhoverAllEntries();
+        this.arrowNavigationActive = true;
+        this.arrowNavigationMouseX = MouseInput.getMouseX();
+        this.arrowNavigationMouseY = MouseInput.getMouseY();
+    }
+
+    private void setArrowNavigationSelection(@NotNull ContextMenu menu, @Nullable ContextMenuEntry<?> entry) {
+        if (this.arrowNavigationMenu != menu) {
+            if (this.arrowNavigationMenu != null) {
+                this.arrowNavigationMenu.unhoverAllEntries();
+            }
+            this.arrowNavigationMenu = menu;
+        }
+        if (this.arrowNavigationEntry == entry && this.arrowNavigationMenu == menu) {
+            this.arrowNavigationActive = true;
+            this.arrowNavigationMouseX = MouseInput.getMouseX();
+            this.arrowNavigationMouseY = MouseInput.getMouseY();
+            return;
+        }
+        this.arrowNavigationEntry = entry;
+        this.arrowNavigationActive = true;
+        this.arrowNavigationMouseX = MouseInput.getMouseX();
+        this.arrowNavigationMouseY = MouseInput.getMouseY();
+
+        menu.unhoverAllEntries();
+        if (entry != null) {
+            entry.setHovered(true);
+            if (entry.hoverAction != null) {
+                entry.hoverAction.run(menu, entry, false);
+            }
+            menu.scrollEntryIntoView(entry);
+            if (entry instanceof SubMenuContextMenuEntry sub) {
+                menu.closeSubMenusExcept(sub);
+                if (sub.isActive() && !sub.subContextMenu.isOpen()) {
+                    sub.openSubMenu();
+                }
+            } else {
+                menu.closeSubMenusExcept(null);
+            }
+        }
+    }
+
+    private void moveArrowSelection(@NotNull ContextMenu menu, int direction) {
+        List<ContextMenuEntry<?>> navigable = menu.getNavigableEntries();
+        if (navigable.isEmpty()) {
+            this.setArrowNavigationSelection(menu, null);
+            return;
+        }
+        int index = -1;
+        if (this.arrowNavigationMenu == menu && this.arrowNavigationEntry != null) {
+            index = navigable.indexOf(this.arrowNavigationEntry);
+        }
+        if (index < 0) {
+            index = direction > 0 ? 0 : navigable.size() - 1;
+        } else {
+            int size = navigable.size();
+            int nextIndex = index + direction;
+            if (nextIndex < 0) {
+                nextIndex = size - 1;
+            } else if (nextIndex >= size) {
+                nextIndex = 0;
+            }
+            index = nextIndex;
+        }
+        this.setArrowNavigationSelection(menu, navigable.get(index));
+    }
+
+    private void handleArrowHorizontalNavigation(@NotNull ContextMenu menu, int keyCode) {
+        boolean goLeft = keyCode == InputConstants.KEY_LEFT;
+        boolean goRight = keyCode == InputConstants.KEY_RIGHT;
+
+        if (menu.isSubMenu()) {
+            SubMenuContextMenuEntry parentEntry = menu.getParentEntry();
+            if (parentEntry != null) {
+                boolean opensRight = menu.getPossibleSubMenuOpeningSide() == SubMenuOpeningSide.RIGHT;
+                if ((opensRight && goLeft) || (!opensRight && goRight)) {
+                    menu.closeMenu();
+                    this.setArrowNavigationSelection(parentEntry.parent, parentEntry);
+                    return;
+                }
+            }
+        }
+
+        if (this.arrowNavigationEntry instanceof SubMenuContextMenuEntry sub) {
+            boolean opensRight = sub.subContextMenu.getPossibleSubMenuOpeningSide() == SubMenuOpeningSide.RIGHT;
+            if ((opensRight && goRight) || (!opensRight && goLeft)) {
+                if (sub.isActive()) {
+                    if (!sub.subContextMenu.isOpen()) {
+                        menu.closeSubMenusExcept(sub);
+                        sub.openSubMenu();
+                    }
+                    this.jumpToSubMenu(sub);
+                }
+            }
+        }
+    }
+
+    private void jumpToSubMenu(@NotNull SubMenuContextMenuEntry entry) {
+        ContextMenu subMenu = entry.getSubContextMenu();
+        List<ContextMenuEntry<?>> navigable = subMenu.getNavigableEntries();
+        if (navigable.isEmpty()) {
+            this.setArrowNavigationSelection(subMenu, null);
+            return;
+        }
+        this.setArrowNavigationSelection(subMenu, navigable.get(0));
+    }
+
+    private void performArrowNavigationClick() {
+        if (this.arrowNavigationMenu == null || this.arrowNavigationEntry == null) {
+            return;
+        }
+        ContextMenuEntry<?> entry = this.arrowNavigationEntry;
+        if (!entry.isVisible()) {
+            return;
+        }
+        entry.setHovered(true);
+        entry.mouseClicked(entry.x + 1.0F, entry.y + 1.0F, 0);
+    }
+
+    private void scrollEntryIntoView(@NotNull ContextMenuEntry<?> entry) {
+        if (!this.needsScrolling) {
+            return;
+        }
+        float scale = UIBase.calculateFixedRenderScale(this.getScale());
+        float scaledY = (float)((float)this.getActualY()/scale) + this.getBorderThickness();
+        float visibleTop = scaledY + SCROLL_INDICATOR_HEIGHT;
+        float visibleBottom = scaledY + this.displayHeight - SCROLL_INDICATOR_HEIGHT;
+        float entryTop = entry.y;
+        float entryBottom = entry.y + entry.getHeight();
+        float maxScrollPosition = this.rawHeight - (this.displayHeight - SCROLL_INDICATOR_HEIGHT * 2);
+        if (maxScrollPosition < 0.0F) {
+            maxScrollPosition = 0.0F;
+        }
+
+        if (entryTop < visibleTop) {
+            this.scrollPosition = Math.max(0.0F, this.scrollPosition - (visibleTop - entryTop));
+        } else if (entryBottom > visibleBottom) {
+            this.scrollPosition = Math.min(maxScrollPosition, this.scrollPosition + (entryBottom - visibleBottom));
+        }
+    }
+
+    @NotNull
+    private List<ContextMenuEntry<?>> getNavigableEntries() {
+        String searchText = this.getActiveSearchText();
+        String searchLower = (searchText != null) ? searchText.toLowerCase(Locale.ROOT) : null;
+        boolean filterActive = (searchLower != null) && !searchLower.isBlank();
+        List<ContextMenuEntry<?>> navigable = new ArrayList<>();
+        for (ContextMenuEntry<?> entry : this.entries) {
+            if (!entry.isVisible()) continue;
+            if (filterActive && !this.matchesSearchFilter(entry, searchLower)) continue;
+            if (entry instanceof SeparatorContextMenuEntry || entry instanceof SpacerContextMenuEntry || entry instanceof SearchContextMenuEntry) continue;
+            if (!entry.isActive()) continue;
+            navigable.add(entry);
+        }
+        return navigable;
+    }
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (this.isUserNavigatingInMenu()) {
-            float scale = UIBase.calculateFixedScale(this.scale);
+            float scale = UIBase.calculateFixedRenderScale(this.scale) * this.getOpenAnimationScale(0.0F);
             int scaledMouseX = (int) ((float)mouseX / scale);
             int scaledMouseY = (int) ((float)mouseY / scale);
+            String searchText = this.getActiveSearchText();
+            String searchLower = (searchText != null) ? searchText.toLowerCase(Locale.ROOT) : null;
+            boolean filterActive = (searchLower != null) && !searchLower.isBlank();
 
             // Check if click is on scroll arrow areas first
             if (button == 0 && this.needsScrolling && this.isMouseOverMenu(mouseX, mouseY)) {
@@ -917,6 +1612,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
             // Process entries only if they're visible in the scroll area
             for (ContextMenuEntry<?> entry : this.entries) {
+                if (!entry.isVisible()) continue;
+                if (filterActive && !this.matchesSearchFilter(entry, searchLower)) continue;
                 if (!this.needsScrolling || isEntryVisible(entry)) {
                     entry.mouseClicked(scaledMouseX, scaledMouseY, button);
                 }
@@ -931,6 +1628,62 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return true;
         }
         return GuiEventListener.super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (this.isUserNavigatingInMenu()) {
+            float scale = UIBase.calculateFixedRenderScale(this.scale) * this.getOpenAnimationScale(0.0F);
+            int scaledMouseX = (int) ((float)mouseX / scale);
+            int scaledMouseY = (int) ((float)mouseY / scale);
+            String searchText = this.getActiveSearchText();
+            String searchLower = (searchText != null) ? searchText.toLowerCase(Locale.ROOT) : null;
+            boolean filterActive = (searchLower != null) && !searchLower.isBlank();
+
+            for (ContextMenuEntry<?> entry : this.entries) {
+                if (!entry.isVisible()) continue;
+                if (filterActive && !this.matchesSearchFilter(entry, searchLower)) continue;
+                if (!this.needsScrolling || isEntryVisible(entry)) {
+                    entry.mouseReleased(scaledMouseX, scaledMouseY, button);
+                }
+            }
+            for (ContextMenuEntry<?> e : this.entries) {
+                if (e instanceof SubMenuContextMenuEntry s) {
+                    s.subContextMenu.mouseReleased(mouseX, mouseY, button);
+                }
+            }
+            return true;
+        }
+        return GuiEventListener.super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (this.isUserNavigatingInMenu()) {
+            float scale = UIBase.calculateFixedRenderScale(this.scale) * this.getOpenAnimationScale(0.0F);
+            int scaledMouseX = (int) ((float)mouseX / scale);
+            int scaledMouseY = (int) ((float)mouseY / scale);
+            double scaledDragX = dragX / scale;
+            double scaledDragY = dragY / scale;
+            String searchText = this.getActiveSearchText();
+            String searchLower = (searchText != null) ? searchText.toLowerCase(Locale.ROOT) : null;
+            boolean filterActive = (searchLower != null) && !searchLower.isBlank();
+
+            for (ContextMenuEntry<?> entry : this.entries) {
+                if (!entry.isVisible()) continue;
+                if (filterActive && !this.matchesSearchFilter(entry, searchLower)) continue;
+                if (!this.needsScrolling || isEntryVisible(entry)) {
+                    entry.mouseDragged(scaledMouseX, scaledMouseY, button, scaledDragX, scaledDragY);
+                }
+            }
+            for (ContextMenuEntry<?> e : this.entries) {
+                if (e instanceof SubMenuContextMenuEntry s) {
+                    s.subContextMenu.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+                }
+            }
+            return true;
+        }
+        return GuiEventListener.super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
 
     @Override
@@ -969,7 +1722,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     // It's important to not use the real isMouseOver() method, because that would break FM's GUIs
     public boolean isMouseOverMenu(double mouseX, double mouseY) {
-        float scale = UIBase.calculateFixedScale(this.getScale());
+        float scale = UIBase.calculateFixedRenderScale(this.getScale()) * this.getOpenAnimationScale(0.0F);
         float actualX = this.getActualX() / scale + this.getBorderThickness();
         float actualY = this.getActualY() / scale + this.getBorderThickness();
         float width = this.getWidth();
@@ -994,6 +1747,131 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     @Override
     public boolean isFocused() {
         return false;
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (!this.isOpen()) return false;
+        ContextMenu root = this.getRootMenu();
+        root.clearCachedSearchMenuIfClosed();
+        root.clearArrowNavigationIfMenuClosed();
+        root.validateArrowNavigationSelection();
+        int mouseX = MouseInput.getMouseX();
+        int mouseY = MouseInput.getMouseY();
+        ContextMenu hoverMenu = root.getMenuUnderCursor(mouseX, mouseY);
+        ContextMenu targetMenu = (hoverMenu != null) ? hoverMenu : ((root.cachedSearchMenu != null) ? root.cachedSearchMenu : root);
+        if (root.arrowNavigationActive && root.arrowNavigationMenu != null) {
+            targetMenu = root.arrowNavigationMenu;
+        }
+        if (root.isNavigationConsumeKey(keyCode)) {
+            if (root.isEscapeKey(keyCode)) {
+                root.closeMenuChain();
+                return true;
+            }
+            if (root.isEnterKey(keyCode)) {
+                root.performArrowNavigationClick();
+                return true;
+            }
+            if (root.isArrowKey(keyCode)) {
+                ContextMenu activeMenu = (root.arrowNavigationActive && root.arrowNavigationMenu != null) ? root.arrowNavigationMenu : targetMenu;
+                root.activateArrowNavigation(activeMenu);
+                if (keyCode == InputConstants.KEY_UP) {
+                    root.moveArrowSelection(activeMenu, -1);
+                } else if (keyCode == InputConstants.KEY_DOWN) {
+                    root.moveArrowSelection(activeMenu, 1);
+                } else {
+                    root.handleArrowHorizontalNavigation(activeMenu, keyCode);
+                }
+                return true;
+            }
+            if (root.isTabKey(keyCode)) {
+                ContextMenu activeMenu = (root.arrowNavigationActive && root.arrowNavigationMenu != null) ? root.arrowNavigationMenu : targetMenu;
+                root.activateArrowNavigation(activeMenu);
+                int direction = Screen.hasShiftDown() ? -1 : 1;
+                root.moveArrowSelection(activeMenu, direction);
+                return true;
+            }
+        }
+        if (targetMenu.isCtrlF(keyCode)) {
+            if (!root.arrowNavigationActive && hoverMenu != null) {
+                root.cachedSearchMenu = hoverMenu;
+            }
+            if (targetMenu.isAlwaysShowSearchBar()) {
+                targetMenu.showSearchEntry(true);
+            } else if (targetMenu.isSearchEntryVisible()) {
+                targetMenu.hideSearchEntry();
+            } else {
+                targetMenu.showSearchEntry(true);
+            }
+            return true;
+        }
+        if (targetMenu.searchEntry.isVisible() && targetMenu.searchEntry.keyPressed(keyCode, scanCode, modifiers)) {
+            if (!root.arrowNavigationActive && hoverMenu != null) {
+                root.cachedSearchMenu = hoverMenu;
+            }
+            return true;
+        }
+        if (targetMenu != root && root.searchEntry.isVisible() && root.searchEntry.keyPressed(keyCode, scanCode, modifiers)) {
+            return true;
+        }
+        return GuiEventListener.super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        if (!this.isOpen()) return false;
+        ContextMenu root = this.getRootMenu();
+        root.clearCachedSearchMenuIfClosed();
+        if (root.isNavigationConsumeKey(keyCode)) {
+            return true;
+        }
+        int mouseX = MouseInput.getMouseX();
+        int mouseY = MouseInput.getMouseY();
+        ContextMenu hoverMenu = root.getMenuUnderCursor(mouseX, mouseY);
+        ContextMenu targetMenu = (hoverMenu != null) ? hoverMenu : ((root.cachedSearchMenu != null) ? root.cachedSearchMenu : root);
+        if (root.arrowNavigationActive && root.arrowNavigationMenu != null) {
+            targetMenu = root.arrowNavigationMenu;
+        }
+        if (targetMenu.searchEntry.isVisible() && targetMenu.searchEntry.keyReleased(keyCode, scanCode, modifiers)) {
+            if (!root.arrowNavigationActive && hoverMenu != null) {
+                root.cachedSearchMenu = hoverMenu;
+            }
+            return true;
+        }
+        if (targetMenu != root && root.searchEntry.isVisible() && root.searchEntry.keyReleased(keyCode, scanCode, modifiers)) {
+            return true;
+        }
+        return GuiEventListener.super.keyReleased(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (!this.isOpen()) return false;
+        ContextMenu root = this.getRootMenu();
+        root.clearCachedSearchMenuIfClosed();
+        int mouseX = MouseInput.getMouseX();
+        int mouseY = MouseInput.getMouseY();
+        ContextMenu hoverMenu = root.getMenuUnderCursor(mouseX, mouseY);
+        ContextMenu targetMenu = (hoverMenu != null) ? hoverMenu : ((root.cachedSearchMenu != null) ? root.cachedSearchMenu : root);
+        if (root.arrowNavigationActive && root.arrowNavigationMenu != null) {
+            targetMenu = root.arrowNavigationMenu;
+        }
+        if (!targetMenu.searchEntry.isVisible() && !Character.isISOControl(codePoint)) {
+            if (!root.arrowNavigationActive && hoverMenu != null) {
+                root.cachedSearchMenu = hoverMenu;
+            }
+            targetMenu.showSearchEntry(true);
+        }
+        if (targetMenu.searchEntry.isVisible() && targetMenu.searchEntry.charTyped(codePoint, modifiers)) {
+            if (!root.arrowNavigationActive && hoverMenu != null) {
+                root.cachedSearchMenu = hoverMenu;
+            }
+            return true;
+        }
+        if (targetMenu != root && root.searchEntry.isVisible() && root.searchEntry.charTyped(codePoint, modifiers)) {
+            return true;
+        }
+        return GuiEventListener.super.charTyped(codePoint, modifiers);
     }
 
     @Override
@@ -1041,8 +1919,163 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         return 1;
     }
 
+    protected boolean isSearchEntryVisible() {
+        return this.alwaysShowSearchBar || this.searchEntryRequested;
+    }
+
+    protected void showSearchEntry(boolean focus) {
+        this.searchEntryRequested = true;
+        this.scrollPosition = 0.0F;
+        this.searchEntry.prepareForImmediateInput(this.shouldAddIconSpaceForEntries());
+        this.updateSearchVisibilityState(focus);
+    }
+
+    protected void hideSearchEntry() {
+        this.searchEntryRequested = false;
+        this.updateSearchVisibilityState(false);
+    }
+
+    protected void resetSearchState() {
+        this.searchEntryRequested = false;
+        this.searchEntry.resetSearchValue();
+        this.searchEntryVisibleLast = this.isSearchEntryVisible();
+    }
+
+    protected void updateSearchVisibilityState(boolean focusOnShow) {
+        boolean visible = this.isSearchEntryVisible();
+        if (visible != this.searchEntryVisibleLast) {
+            if (!visible) {
+                this.searchEntry.resetSearchValue();
+            } else if (focusOnShow) {
+                this.searchEntry.focusAndSelectAll();
+            }
+        } else if (visible && focusOnShow) {
+            this.searchEntry.focusAndSelectAll();
+        }
+        this.searchEntryVisibleLast = visible;
+    }
+
+    @Nullable
+    protected String getActiveSearchText() {
+        if (!this.isSearchEntryVisible()) return null;
+        String value = this.searchEntry.getSearchValue();
+        return value.isBlank() ? null : value;
+    }
+
+    protected boolean shouldAddIconSpaceForEntries() {
+        for (ContextMenuEntry<?> e : this.entries) {
+            if (e instanceof ClickableContextMenuEntry<?> c) {
+                if (c.hasIconAssigned()) {
+                    return true;
+                }
+            }
+            if (e instanceof SearchContextMenuEntry s) {
+                if (s.hasIconAssigned() && s.isVisible()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    protected boolean matchesSearchFilter(@NotNull ContextMenuEntry<?> entry, @NotNull String searchLower) {
+        if ((entry == this.searchEntry) || (entry == this.searchSeparator)) {
+            return true;
+        }
+        if (entry instanceof SeparatorContextMenuEntry || entry instanceof SpacerContextMenuEntry) {
+            return true;
+        }
+        if (entry instanceof ClickableContextMenuEntry<?> clickable) {
+            Component label = clickable.getLabel();
+            String labelLower = label.getString().toLowerCase(Locale.ROOT);
+            if (labelLower.contains(searchLower)) {
+                return true;
+            }
+            String trimmedSearch = searchLower.trim();
+            if (trimmedSearch.isEmpty()) {
+                return true;
+            }
+            String[] parts = trimmedSearch.split("\\s+");
+            if (parts.length <= 1) {
+                return false;
+            }
+            for (String part : parts) {
+                if (part.isEmpty()) {
+                    continue;
+                }
+                if (!labelLower.contains(part)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    protected boolean isCtrlF(int keyCode) {
+        return keyCode == InputConstants.KEY_F && Screen.hasControlDown();
+    }
+
+    protected void clearCachedSearchMenuIfClosed() {
+        if (this.cachedSearchMenu != null && !this.cachedSearchMenu.isOpen()) {
+            this.cachedSearchMenu = null;
+        }
+    }
+
+    @Nullable
+    protected ContextMenu getMenuUnderCursor(int mouseX, int mouseY) {
+        if (!this.isOpen()) return null;
+        ContextMenu hovered = this.isMouseOverMenu(mouseX, mouseY) ? this : null;
+        for (ContextMenuEntry<?> e : this.entries) {
+            if (e instanceof SubMenuContextMenuEntry s && s.subContextMenu.isOpen()) {
+                ContextMenu subHovered = s.subContextMenu.getMenuUnderCursor(mouseX, mouseY);
+                if (subHovered != null) {
+                    hovered = subHovered;
+                }
+            }
+        }
+        return hovered;
+    }
+
+    @NotNull
+    protected ContextMenu getRootMenu() {
+        ContextMenu current = this;
+        while (current.parentEntry != null) {
+            current = current.parentEntry.parent;
+        }
+        return current;
+    }
+
+    protected boolean isProtectedEntryIdentifier(@NotNull String identifier) {
+        return SEARCH_ENTRY_IDENTIFIER.equals(identifier)
+                || SEARCH_SEPARATOR_IDENTIFIER.equals(identifier);
+    }
+
+    protected boolean isProtectedEntry(@NotNull ContextMenuEntry<?> entry) {
+        return entry == this.searchEntry
+                || entry == this.searchSeparator
+                || this.isProtectedEntryIdentifier(entry.identifier);
+    }
+
+    protected int getProtectedEntriesCount() {
+        int count = 0;
+        if (this.searchEntry != null) count++;
+        if (this.searchSeparator != null) count++;
+        return count;
+    }
+
     /**
-     * Will stack all stackable settings and all stackable ACTIVE {@link ContextMenuEntry}s of the given {@link ContextMenu}s and returns them as a new (stacked) instance.
+     * Stacks the given context menus into a single menu.
+     * <p>
+     * Only entries that are {@link ContextMenuEntry#isStackable()} and {@link ContextMenuEntry#isActive()}
+     * in every menu are included. Stacked entries are linked via
+     * {@link ContextMenuStackMeta#getNextInStack()}, with the first entry being the visible one.
+     *
+     * <p><b>Example (multi-select)</b>
+     * <pre>{@code
+     * ContextMenu stacked = ContextMenu.stackContextMenus(menu1, menu2, menu3);
+     * stacked.openMenuAt(mouseX, mouseY);
+     * }</pre>
      */
     @NotNull
     public static ContextMenu stackContextMenus(@NotNull List<ContextMenu> menusToStack) {
@@ -1050,7 +2083,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     }
 
     /**
-     * Will stack all stackable settings and all stackable ACTIVE {@link ContextMenuEntry}s of the given {@link ContextMenu}s and returns them as a new (stacked) instance.
+     * Stacks the given context menus into a single menu.
+     * <p>
+     * This copies stackable entries from each menu, links them through {@link ContextMenuStackMeta},
+     * and shares a single {@link RuntimePropertyContainer} across the stack.
+     *
+     * <p>Sub-menus are stacked recursively.
      */
     @NotNull
     public static ContextMenu stackContextMenus(@NotNull ContextMenu... menusToStack) {
@@ -1062,7 +2100,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             stacked.scale = menusToStack[0].scale;
             stacked.subMenuOpeningSide = menusToStack[0].subMenuOpeningSide;
             stacked.shadow = menusToStack[0].shadow;
-            stacked.forceDefaultTooltipStyle = menusToStack[0].forceDefaultTooltipStyle;
             stacked.forceUIScale = menusToStack[0].forceUIScale;
             stacked.keepDistanceToEdges = menusToStack[0].keepDistanceToEdges;
             stacked.forceRawXY = menusToStack[0].forceRawXY;
@@ -1150,14 +2187,37 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         protected EntryTask tickAction;
         protected EntryTask hoverAction;
         protected boolean hovered = false;
+        /**
+         * Stack metadata for this entry.
+         * <p>
+         * This metadata is populated when menus are stacked via {@link ContextMenu#stackContextMenus(ContextMenu...)}.
+         */
         protected ContextMenuStackMeta stackMeta = new ContextMenuStackMeta();
         protected List<BooleanSupplier> activeStateSuppliers = new ArrayList<>();
         protected List<BooleanSupplier> visibleStateSuppliers = new ArrayList<>();
         @Nullable
-        protected Supplier<Tooltip> tooltipSupplier;
+        protected Supplier<UITooltip> tooltipSupplier;
         protected Font font = Minecraft.getInstance().font;
         protected boolean addSpaceForIcon = false;
         protected boolean changeBackgroundColorOnHover = true;
+        /**
+         * Optional applier used by stack-aware builders to apply values across the stack.
+         * See {@link ContextMenuBuilder#applyStackAppliers(ContextMenuEntry, Object)}.
+         */
+        @Nullable
+        protected StackApplier stackApplier;
+        /**
+         * Optional value supplier used to read the current value for mixed-state detection.
+         * See {@link ContextMenuBuilder#resolveStackValue(ContextMenuEntry)}.
+         */
+        @Nullable
+        protected StackValueSupplier stackValueSupplier;
+        /**
+         * Optional group key used by {@link ContextMenuBuilder#runStackedClickActions(ContextMenu.ClickableContextMenuEntry)}
+         * to avoid duplicate actions when multiple entries represent the same logical action.
+         */
+        @Nullable
+        protected Object stackGroupKey;
 
         public ContextMenuEntry(@NotNull String identifier, @NotNull ContextMenu parent) {
             this.identifier = identifier;
@@ -1266,28 +2326,108 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return (T) this;
         }
 
-        public T setTooltipSupplier(@Nullable Supplier<Tooltip> tooltipSupplier) {
+        public T setTooltipSupplier(@Nullable Supplier<UITooltip> tooltipSupplier) {
             this.tooltipSupplier = tooltipSupplier;
             return (T) this;
         }
 
         @Nullable
-        public Tooltip getTooltip() {
+        public UITooltip getTooltip() {
             return (this.tooltipSupplier != null) ? this.tooltipSupplier.get(this.parent, this) : null;
         }
 
+        /**
+         * Marks this entry as stackable, allowing it to be included in stacked menus.
+         */
         public T setStackable(boolean stackable) {
             this.getStackMeta().setStackable(stackable);
             return (T) this;
         }
 
+        /**
+         * @return true if this entry may be stacked with the same entry across menus.
+         */
         public boolean isStackable() {
             return this.getStackMeta().isStackable();
         }
 
+        /**
+         * Returns the stack metadata for this entry.
+         * <p>
+         * Use {@link ContextMenuStackMeta#getNextInStack()} to walk the stack.
+         */
         @NotNull
         public ContextMenuStackMeta getStackMeta() {
             return this.stackMeta;
+        }
+
+        /**
+         * @return the stack applier assigned to this entry, or null if none.
+         */
+        @Nullable
+        public StackApplier getStackApplier() {
+            return this.stackApplier;
+        }
+
+        /**
+         * Sets the stack applier for this entry.
+         * <p>
+         * The applier should only mutate the entry's {@link ContextMenuBuilder#self()} instance,
+         * because it will be invoked once per stack entry.
+         *
+         * <p><b>Example</b>
+         * <pre>{@code
+         * entry.setStackApplier((stackEntry, value) -> {
+         *     if (value instanceof Boolean b) {
+         *         builder.self().setEnabled(b);
+         *     }
+         * });
+         * }</pre>
+         */
+        @NotNull
+        public T setStackApplier(@Nullable StackApplier stackApplier) {
+            this.stackApplier = stackApplier;
+            return (T) this;
+        }
+
+        /**
+         * @return the stack value supplier for this entry, or null if none.
+         */
+        @Nullable
+        public StackValueSupplier getStackValueSupplier() {
+            return this.stackValueSupplier;
+        }
+
+        /**
+         * Sets the stack value supplier for this entry.
+         * <p>
+         * This supplier is used by {@link ContextMenuBuilder#resolveStackValue(ContextMenuEntry)}
+         * to detect mixed values.
+         */
+        @NotNull
+        public T setStackValueSupplier(@Nullable StackValueSupplier stackValueSupplier) {
+            this.stackValueSupplier = stackValueSupplier;
+            return (T) this;
+        }
+
+        /**
+         * @return the optional stack group key for this entry.
+         */
+        @Nullable
+        public Object getStackGroupKey() {
+            return this.stackGroupKey;
+        }
+
+        /**
+         * Sets the optional stack group key for this entry.
+         * <p>
+         * Entries with the same group key are treated as a single logical action in
+         * {@link ContextMenuBuilder#runStackedClickActions(ContextMenu.ClickableContextMenuEntry)}.
+         */
+        @NotNull
+        public T setStackGroupKey(@Nullable Object stackGroupKey) {
+            this.stackGroupKey = stackGroupKey;
+            return (T) this;
         }
 
         protected void onRemoved() {
@@ -1315,6 +2455,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     public static class ClickableContextMenuEntry<T extends ClickableContextMenuEntry<T>> extends ContextMenuEntry<T> {
 
         protected static final int ICON_WIDTH_HEIGHT = 10;
+        protected static final int ICON_PADDING_LEFT = 10;
+        protected static final int ICON_LABEL_SPACING = 20;
 
         @NotNull
         protected ClickAction clickAction;
@@ -1324,10 +2466,14 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         protected Supplier<Component> shortcutTextSupplier;
         @Nullable
         protected ResourceLocation icon;
+        @Nullable
+        protected MaterialIcon materialIcon;
         protected boolean tooltipIconHovered = false;
         protected boolean tooltipActive = false;
         protected long tooltipIconHoverStart = -1;
         protected boolean enableClickSound = true;
+        @NotNull
+        protected IconAnimation.Instance iconWiggleAnimation = IconAnimations.SHORT_WIGGLE_LEFT_RIGHT.createInstance();
 
         public ClickableContextMenuEntry(@NotNull String identifier, @NotNull ContextMenu parent, @NotNull Component label, @NotNull ClickAction clickAction) {
             super(identifier, parent);
@@ -1340,41 +2486,121 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
             this.renderBackground(graphics);
 
-            int labelX = (int) (this.x + 10);
-            if ((this.icon != null) || this.addSpaceForIcon) labelX += 20;
-            int labelY = (int) (this.y + (this.height / 2) - (this.font.lineHeight / 2));
-            UIBase.drawElementLabel(graphics, this.font, this.getLabel(), labelX, labelY, this.isActive() ? UIBase.getUIColorTheme().element_label_color_normal.getColorInt() : UIBase.getUIColorTheme().element_label_color_inactive.getColorInt());
+            int labelX = this.getLabelX();
+            int labelY = (int) (this.y + (this.height / 2) - (UIBase.getUITextHeightNormal() / 2));
+            UIBase.renderText(graphics, this.getLabel(), labelX, labelY, this.getLabelColor());
 
             int shortcutTextWidth = 0;
             Component shortcutText = this.getShortcutText();
             if (shortcutText != null) {
-                shortcutTextWidth = this.font.width(shortcutText);
+                shortcutTextWidth = (int) UIBase.getUITextWidthSmall(shortcutText);
                 int shortcutX = (int) (this.x + this.width - 10 - shortcutTextWidth);
-                UIBase.drawElementLabel(graphics, this.font, shortcutText, shortcutX, labelY, this.isActive() ? UIBase.getUIColorTheme().element_label_color_normal.getColorInt() : UIBase.getUIColorTheme().element_label_color_inactive.getColorInt());
+                int shortcutY = (int) (this.y + (this.height / 2) - (UIBase.getUITextHeightSmall() / 2));
+                UIBase.renderText(graphics, shortcutText, shortcutX, shortcutY, this.getLabelColor(), UIBase.getUITextSizeSmall());
             }
 
             this.renderIcon(graphics);
 
-            this.renderTooltipIconAndRegisterTooltip(graphics, mouseX, mouseY, (shortcutTextWidth > 0) ? -(shortcutTextWidth + 8) : 0);
+            this.renderTooltipIconAndRegisterTooltip(graphics, mouseX, mouseY);
 
         }
 
         protected void renderIcon(GuiGraphics graphics) {
+            IconRenderData iconData = this.resolveIconData();
+            if (iconData == null) {
+                return;
+            }
+            float areaX = this.x + ICON_PADDING_LEFT + this.getIconWiggleOffsetX();
+            float areaY = this.y + (this.getHeight() / 2.0F) - (ICON_WIDTH_HEIGHT / 2.0F);
+            RenderingUtils.setupAlphaBlend();
+            UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
+            this.blitScaledIcon(graphics, iconData, areaX, areaY, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
+            RenderingUtils.resetShaderColor(graphics);
+        }
+
+        @Nullable
+        protected IconRenderData resolveIconData() {
+            if (this.materialIcon != null) {
+                float renderSize = ICON_WIDTH_HEIGHT;
+                ResourceLocation location = this.materialIcon.getTextureLocationForUI(renderSize, renderSize);
+                if (location == null) {
+                    return null;
+                }
+                int iconSize = this.materialIcon.calculateBestTextureSizeForUI(renderSize, renderSize);
+                int width = this.materialIcon.getWidth(iconSize);
+                int height = this.materialIcon.getHeight(iconSize);
+                if (width <= 0 || height <= 0) {
+                    return null;
+                }
+                return new IconRenderData(location, width, height);
+            }
             if (this.icon != null) {
-                RenderSystem.enableBlend();
-                UIBase.getUIColorTheme().ui_texture_color.setAsShaderColor(graphics);
-                graphics.blit(this.icon, (int) (this.x + 10), (int) (this.y + (this.getHeight() / 2) - (ICON_WIDTH_HEIGHT / 2)), 0.0F, 0.0F, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
-                RenderingUtils.resetShaderColor(graphics);
+                return new IconRenderData(this.icon, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
+            }
+            return null;
+        }
+
+        protected void blitScaledIcon(@NotNull GuiGraphics graphics, @NotNull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight) {
+            this.blitScaledIcon(graphics, iconData, areaX, areaY, areaWidth, areaHeight, 0.0F);
+        }
+
+        protected void blitScaledIcon(@NotNull GuiGraphics graphics, @NotNull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight, float rotationDegrees) {
+            if (areaWidth <= 0.0F || areaHeight <= 0.0F) {
+                return;
+            }
+            float scale = Math.min(areaWidth / (float) iconData.width, areaHeight / (float) iconData.height);
+            if (!Float.isFinite(scale) || scale <= 0.0F) {
+                return;
+            }
+            float scaledWidth = iconData.width * scale;
+            float scaledHeight = iconData.height * scale;
+            float drawX = areaX + (areaWidth - scaledWidth) * 0.5F;
+            float drawY = areaY + (areaHeight - scaledHeight) * 0.5F;
+            graphics.pose().pushPose();
+            graphics.pose().translate(drawX, drawY, 0.0F);
+            graphics.pose().scale(scale, scale, 1.0F);
+            if (rotationDegrees != 0.0F) {
+                graphics.pose().translate(iconData.width * 0.5F, iconData.height * 0.5F, 0.0F);
+                graphics.pose().mulPose(Axis.ZP.rotationDegrees(rotationDegrees));
+                graphics.pose().translate(-iconData.width * 0.5F, -iconData.height * 0.5F, 0.0F);
+            }
+            RenderingUtils.setupAlphaBlend();
+            RenderingUtils.blitAlphaTexture(graphics, iconData.texture, 0, 0, iconData.width, iconData.height);
+            graphics.pose().popPose();
+        }
+
+        protected boolean hasIconAssigned() {
+            return this.icon != null || this.materialIcon != null;
+        }
+
+        @Override
+        protected void setHovered(boolean hovered) {
+            boolean wasHovered = this.hovered;
+            super.setHovered(hovered);
+            if (!wasHovered && hovered && this.isActive() && UIBase.shouldPlayAnimations()) {
+                this.iconWiggleAnimation.start();
             }
         }
 
-        protected void renderTooltipIconAndRegisterTooltip(GuiGraphics graphics, int mouseX, int mouseY, int offsetX) {
+        protected float getIconWiggleOffsetX() {
+            if (!UIBase.shouldPlayAnimations()) {
+                this.iconWiggleAnimation.reset();
+                return 0.0F;
+            }
+            if (!this.isActive()) {
+                this.iconWiggleAnimation.reset();
+                return 0.0F;
+            }
+            return this.iconWiggleAnimation.getOffsetX();
+        }
 
-            Tooltip tooltip = this.getTooltip();
+        protected void renderTooltipIconAndRegisterTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
+
+            UITooltip tooltip = this.getTooltip();
 
             if (tooltip != null) {
 
-                this.tooltipIconHovered = this.isTooltipIconHovered(mouseX, mouseY, offsetX);
+                this.tooltipIconHovered = this.isTooltipIconHovered(mouseX, mouseY);
                 if (this.tooltipIconHovered) {
                     if (this.tooltipIconHoverStart == -1) {
                         this.tooltipIconHoverStart = System.currentTimeMillis();
@@ -1384,17 +2610,16 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 }
                 this.tooltipActive = (this.tooltipIconHoverStart != -1) && ((this.tooltipIconHoverStart + 200) < System.currentTimeMillis());
 
-                RenderSystem.enableBlend();
-                UIBase.getUIColorTheme().ui_texture_color.setAsShaderColor(graphics, this.tooltipIconHovered ? 1.0F : 0.2F);
-                graphics.blit(CONTEXT_MENU_TOOLTIP_ICON, this.getTooltipIconX() + offsetX, this.getTooltipIconY(), 0.0F, 0.0F, 10, 10, 10, 10);
+                RenderingUtils.setupAlphaBlend();
+                UIBase.getUITheme().ui_icon_texture_color.setAsShaderColor(graphics, this.tooltipIconHovered ? 1.0F : 0.2F);
+                IconRenderData iconData = this.resolveTooltipIconData();
+                if (iconData != null) {
+                    this.blitScaledIcon(graphics, iconData, this.getTooltipIconX(), this.getTooltipIconY(), ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
+                }
                 RenderingUtils.resetShaderColor(graphics);
 
                 if (this.tooltipActive) {
-                    if (this.parent.isForceDefaultTooltipStyle()) {
-                        tooltip.setDefaultStyle();
-                    }
-                    tooltip.setScale(this.parent.scale);
-                    TooltipHandler.INSTANCE.addTooltip(tooltip, () ->this.tooltipActive, false, true);
+                    TooltipHandler.INSTANCE.addRenderTickTooltip(tooltip, () -> true);
                 }
 
             } else {
@@ -1404,34 +2629,86 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         }
 
-        protected boolean isTooltipIconHovered(int mouseX, int mouseY, int offsetX) {
-            return UIBase.isXYInArea(mouseX, mouseY, this.getTooltipIconX() + offsetX, this.getTooltipIconY(), 10, 10);
+        protected boolean isTooltipIconHovered(int mouseX, int mouseY) {
+            return UIBase.isXYInArea(mouseX, mouseY, this.getTooltipIconX(), this.getTooltipIconY(), ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
+        }
+
+        protected int getLabelX() {
+            int labelX = (int) (this.x + ICON_PADDING_LEFT);
+            if (this.hasIconAssigned() || this.addSpaceForIcon) {
+                labelX += ICON_LABEL_SPACING;
+            }
+            return labelX;
         }
 
         protected int getTooltipIconX() {
-            return (int) (this.x + this.width - 20);
+            int labelX = this.getLabelX();
+            int labelWidth = (int) UIBase.getUITextWidthNormal(this.getLabel());
+            int gap = Math.round(ICON_WIDTH_HEIGHT * (2.0F / 3.0F));
+            return labelX + labelWidth + gap;
         }
 
         protected int getTooltipIconY() {
             return (int) (this.y + 5);
         }
 
+        @Nullable
+        protected IconRenderData resolveTooltipIconData() {
+            float renderSize = ICON_WIDTH_HEIGHT;
+            ResourceLocation location = CONTEXT_MENU_TOOLTIP_ICON.getTextureLocationForUI(renderSize, renderSize);
+            if (location == null) {
+                return null;
+            }
+            int iconSize = CONTEXT_MENU_TOOLTIP_ICON.calculateBestTextureSizeForUI(renderSize, renderSize);
+            int width = CONTEXT_MENU_TOOLTIP_ICON.getWidth(iconSize);
+            int height = CONTEXT_MENU_TOOLTIP_ICON.getHeight(iconSize);
+            if (width <= 0 || height <= 0) {
+                return null;
+            }
+            return new IconRenderData(location, width, height);
+        }
+
         protected void renderBackground(@NotNull GuiGraphics graphics) {
             if (this.isChangeBackgroundColorOnHover() && this.isHovered() && this.isActive()) {
-                RenderingUtils.fillF(graphics, (float) this.x, (float) this.y, (float) (this.x + this.width), (float) (this.y + this.height), UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
+                int backColor = UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_interface_widget_background_color_hover_type_1.getColorInt() : UIBase.getUITheme().ui_interface_widget_background_color_hover_type_1.getColorInt();
+                RenderingUtils.fillF(graphics, (float) this.x, (float) this.y, (float) (this.x + this.width), (float) (this.y + this.height), backColor);
             }
+        }
+
+        protected int getLabelColor() {
+            if (UIBase.shouldBlur()) {
+                return this.isActive() ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt() : UIBase.getUITheme().ui_blur_interface_widget_label_color_inactive.getColorInt();
+            }
+            return this.isActive() ? UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt() : UIBase.getUITheme().ui_interface_widget_label_color_inactive.getColorInt();
         }
 
         @Nullable
         public ResourceLocation getIcon() {
-            return this.icon;
+            if (this.icon != null) {
+                return this.icon;
+            }
+            if (this.materialIcon != null) {
+                float renderSize = ICON_WIDTH_HEIGHT;
+                return this.materialIcon.getTextureLocationForUI(renderSize, renderSize);
+            }
+            return null;
         }
 
         /**
-         * Icons should be 10x10 pixels and completely white. No other colors should be used.
+         * Icons should be completely white. No other colors should be used.
          */
         public T setIcon(@Nullable ResourceLocation icon) {
             this.icon = icon;
+            this.materialIcon = null;
+            return (T) this;
+        }
+
+        /**
+         * Icons should be completely white. No other colors should be used.
+         */
+        public T setIcon(@Nullable MaterialIcon icon) {
+            this.materialIcon = icon;
+            this.icon = null;
             return (T) this;
         }
 
@@ -1454,6 +2731,10 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             Objects.requireNonNull(clickAction);
             this.clickAction = clickAction;
             return (T) this;
+        }
+
+        public void runClickAction() {
+            this.clickAction.onClick(this.parent, this);
         }
 
         @Nullable
@@ -1486,21 +2767,26 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             copy.tooltipSupplier = this.tooltipSupplier;
             copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
             copy.icon = this.icon;
+            copy.materialIcon = this.materialIcon;
+            copy.iconWiggleAnimation = this.iconWiggleAnimation.getAnimation().createInstance();
+            copy.stackApplier = this.stackApplier;
+            copy.stackValueSupplier = this.stackValueSupplier;
+            copy.stackGroupKey = this.stackGroupKey;
             return copy;
         }
 
         @Override
         public float getMinWidth() {
-            int i = Minecraft.getInstance().font.width(this.getLabel()) + 20;
+            int i = (int) (UIBase.getUITextWidthNormal(this.getLabel()) + 20);
             if (this.tooltipSupplier != null) {
                 i += 30;
             }
             Component shortcutText = this.getShortcutText();
             if (shortcutText != null) {
-                i += Minecraft.getInstance().font.width(shortcutText) + 30;
+                i += UIBase.getUITextWidthSmall(shortcutText) + 30;
             }
-            if ((this.icon != null) || this.addSpaceForIcon) {
-                i += 20;
+            if (this.hasIconAssigned() || this.addSpaceForIcon) {
+                i += ICON_LABEL_SPACING;
             }
             return i;
         }
@@ -1531,6 +2817,56 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             void onClick(ContextMenu menu, ClickableContextMenuEntry<?> entry);
         }
 
+    }
+
+    protected static final class IconRenderData {
+        final ResourceLocation texture;
+        final int width;
+        final int height;
+
+        private IconRenderData(@NotNull ResourceLocation texture, int width, int height) {
+            this.texture = texture;
+            this.width = width;
+            this.height = height;
+        }
+    }
+
+    @Nullable
+    private static IconRenderData resolveMaterialIconData(@Nullable MaterialIcon icon, float renderWidth, float renderHeight) {
+        if (icon == null) {
+            return null;
+        }
+        ResourceLocation location = icon.getTextureLocationForUI(renderWidth, renderHeight);
+        if (location == null) {
+            return null;
+        }
+        int iconSize = icon.calculateBestTextureSizeForUI(renderWidth, renderHeight);
+        int width = icon.getWidth(iconSize);
+        int height = icon.getHeight(iconSize);
+        if (width <= 0 || height <= 0) {
+            return null;
+        }
+        return new IconRenderData(location, width, height);
+    }
+
+    private static void blitScaledIcon(@NotNull GuiGraphics graphics, @NotNull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight) {
+        if (areaWidth <= 0.0F || areaHeight <= 0.0F) {
+            return;
+        }
+        float scale = Math.min(areaWidth / (float) iconData.width, areaHeight / (float) iconData.height);
+        if (!Float.isFinite(scale) || scale <= 0.0F) {
+            return;
+        }
+        float scaledWidth = iconData.width * scale;
+        float scaledHeight = iconData.height * scale;
+        float drawX = areaX + (areaWidth - scaledWidth) * 0.5F;
+        float drawY = areaY + (areaHeight - scaledHeight) * 0.5F;
+        graphics.pose().pushPose();
+        graphics.pose().translate(drawX, drawY, 0.0F);
+        graphics.pose().scale(scale, scale, 1.0F);
+        RenderingUtils.setupAlphaBlend();
+        RenderingUtils.blitAlphaTexture(graphics, iconData.texture, 0, 0, iconData.width, iconData.height);
+        graphics.pose().popPose();
     }
 
     public static class ValueCycleContextMenuEntry<V> extends ClickableContextMenuEntry<ValueCycleContextMenuEntry<V>> {
@@ -1570,6 +2906,11 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             copy.tooltipSupplier = this.tooltipSupplier;
             copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
             copy.icon = this.icon;
+            copy.materialIcon = this.materialIcon;
+            copy.iconWiggleAnimation = this.iconWiggleAnimation.getAnimation().createInstance();
+            copy.stackApplier = this.stackApplier;
+            copy.stackValueSupplier = this.stackValueSupplier;
+            copy.stackGroupKey = this.stackGroupKey;
             return copy;
         }
 
@@ -1584,13 +2925,14 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         protected long parentMenuHoverStartTime = -1;
         protected long entryHoverStartTime = -1;
         protected long entryNotHoveredStartTime = -1;
+        @NotNull
+        protected IconAnimation.Instance subMenuArrowSpin = IconAnimations.SHORT_SPIN_UP_SUBTLE.createInstance();
 
         public SubMenuContextMenuEntry(@NotNull String identifier, @NotNull ContextMenu parent, @NotNull Component label, @NotNull ContextMenu subContextMenu) {
             super(identifier, parent, label, ((menu, entry) -> {}));
             this.subContextMenu = subContextMenu;
             this.subContextMenu.parentEntry = this;
-            this.subContextMenu.forceDefaultTooltipStyle = parent.forceDefaultTooltipStyle;
-            this.clickAction = (menu, entry) -> this.openSubMenu();
+            this.clickAction = (menu, entry) -> ((SubMenuContextMenuEntry) entry).openSubMenu();
         }
 
         @Override
@@ -1605,15 +2947,41 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         protected void renderSubMenuArrow(GuiGraphics graphics) {
-            RenderSystem.enableBlend();
-            UIBase.getUIColorTheme().ui_texture_color.setAsShaderColor(graphics);
-            graphics.blit(SUB_CONTEXT_MENU_ARROW_ICON, (int) (this.x + this.width - 20), (int) (this.y + 5), 0.0F, 0.0F, 10, 10, 10, 10);
+            RenderingUtils.setupAlphaBlend();
+            UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
+            IconRenderData iconData = this.resolveSubMenuArrowIconData();
+            if (iconData != null) {
+                this.blitScaledIcon(graphics, iconData, (int) (this.x + this.width - 20), (int) (this.y + 5), ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, this.getSubMenuArrowRotation());
+            }
             RenderingUtils.resetShaderColor(graphics);
         }
 
-        @Override
-        protected int getTooltipIconX() {
-            return super.getTooltipIconX() - 15;
+        protected float getSubMenuArrowRotation() {
+            if (!UIBase.shouldPlayAnimations()) {
+                this.subMenuArrowSpin.reset();
+                return 0.0F;
+            }
+            if (!this.isActive()) {
+                this.subMenuArrowSpin.reset();
+                return 0.0F;
+            }
+            return this.subMenuArrowSpin.getRotationDegrees();
+        }
+
+        @Nullable
+        protected IconRenderData resolveSubMenuArrowIconData() {
+            float renderSize = ICON_WIDTH_HEIGHT;
+            ResourceLocation location = SUB_CONTEXT_MENU_ARROW_ICON.getTextureLocationForUI(renderSize, renderSize);
+            if (location == null) {
+                return null;
+            }
+            int iconSize = SUB_CONTEXT_MENU_ARROW_ICON.calculateBestTextureSizeForUI(renderSize, renderSize);
+            int width = SUB_CONTEXT_MENU_ARROW_ICON.getWidth(iconSize);
+            int height = SUB_CONTEXT_MENU_ARROW_ICON.getHeight(iconSize);
+            if (width <= 0 || height <= 0) {
+                return null;
+            }
+            return new IconRenderData(location, width, height);
         }
 
         @Override
@@ -1685,6 +3053,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
          * @param entryPath The {@link SubMenuContextMenuEntry} path of menus to open.
          */
         public void openSubMenu(@NotNull List<String> entryPath) {
+            if (this.isActive() && !this.subContextMenu.isOpen()) {
+                this.subMenuArrowSpin.start();
+            }
             this.subContextMenu.openMenuAt(0, 0, entryPath);
         }
 
@@ -1692,6 +3063,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
          * Opens the {@link ContextMenu} of this {@link SubMenuContextMenuEntry}.
          */
         public void openSubMenu() {
+            if (this.isActive() && !this.subContextMenu.isOpen()) {
+                this.subMenuArrowSpin.start();
+            }
             this.subContextMenu.openMenuAt(0, 0);
         }
 
@@ -1705,7 +3079,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             this.subContextMenu.parentEntry = null;
             this.subContextMenu = subContextMenu;
             this.subContextMenu.parentEntry = this;
-            this.subContextMenu.forceDefaultTooltipStyle = this.parent.forceDefaultTooltipStyle;
         }
 
         @NotNull
@@ -1726,7 +3099,13 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             copy.tooltipSupplier = this.tooltipSupplier;
             copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
             copy.labelSupplier = this.labelSupplier;
+            copy.clickAction = this.clickAction;
             copy.icon = this.icon;
+            copy.materialIcon = this.materialIcon;
+            copy.iconWiggleAnimation = this.iconWiggleAnimation.getAnimation().createInstance();
+            copy.stackApplier = this.stackApplier;
+            copy.stackValueSupplier = this.stackValueSupplier;
+            copy.stackGroupKey = this.stackGroupKey;
             return copy;
         }
 
@@ -1779,7 +3158,27 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         @Override
         public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            RenderingUtils.fillF(graphics, (float) (this.x + 10), (float) (this.y + 4), (float) (this.x + this.width - 10), (float) (this.y + 5), UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
+            float renderScale = UIBase.calculateFixedRenderScale(this.parent.getScale());
+            float lineThickness = renderScale > 0.0F ? (0.5F / renderScale) : 0.5F;
+            float uiScale = UIBase.getUIScale();
+            float thinnessT = (uiScale - 1.0F) / 1.5F;
+            thinnessT = Math.min(1.0F, Math.max(0.0F, thinnessT));
+            float alphaFactor = 0.55F + (0.45F * thinnessT);
+            float minX = this.x + 10.0F;
+            float maxX = this.x + this.width - 10.0F;
+            float minY = this.y + 4.0F;
+            if (renderScale > 0.0F) {
+                float snappedPixelY = (float) Math.round(minY * renderScale);
+                minY = snappedPixelY / renderScale;
+            }
+            float maxY = minY + lineThickness;
+            int lineColor = UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_overlay_border_color.getColorInt() : UIBase.getUITheme().ui_overlay_border_color.getColorInt();
+            if (alphaFactor < 0.999F) {
+                int baseAlpha = (lineColor >>> 24) & 0xFF;
+                int adjustedAlpha = Math.round(baseAlpha * alphaFactor);
+                lineColor = RenderingUtils.replaceAlphaInColor(lineColor, adjustedAlpha);
+            }
+            RenderingUtils.fillF(graphics, minX, minY, maxX, maxY, lineColor);
         }
 
         @Override
@@ -1787,8 +3186,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             SeparatorContextMenuEntry copy = new SeparatorContextMenuEntry(this.identifier, this.parent);
             copy.height = this.height;
             copy.tickAction = this.tickAction;
+            copy.tickAction = this.tickAction;
             copy.tooltipSupplier = this.tooltipSupplier;
             copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
+            copy.stackApplier = this.stackApplier;
+            copy.stackValueSupplier = this.stackValueSupplier;
+            copy.stackGroupKey = this.stackGroupKey;
             return copy;
         }
 
@@ -1832,6 +3235,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         public SpacerContextMenuEntry copy() {
             SpacerContextMenuEntry e = new SpacerContextMenuEntry(this.identifier, this.parent);
             e.height = this.height;
+            e.stackApplier = this.stackApplier;
+            e.stackValueSupplier = this.stackValueSupplier;
+            e.stackGroupKey = this.stackGroupKey;
             return e;
         }
 
@@ -1846,6 +3252,243 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     }
 
+    public static class SearchContextMenuEntry extends ContextMenuEntry<SearchContextMenuEntry> {
+
+        private static final int FIELD_VERTICAL_PADDING = 2;
+        private static final int FIELD_HORIZONTAL_PADDING = 10;
+        private static final int MIN_FIELD_WIDTH = 40;
+        private static final int MIN_FIELD_HEIGHT = 12;
+        @Nullable
+        private MaterialIcon icon = MaterialIcons.SEARCH;
+        private final ExtendedEditBox searchBox;
+        private boolean lastBlurState = UIBase.shouldBlur();
+
+        public SearchContextMenuEntry(@NotNull String identifier, @NotNull ContextMenu parent) {
+            super(identifier, parent);
+            this.height = 20;
+            this.searchBox = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 0, 0, Component.empty());
+            this.searchBox.setResponder(value -> {
+                parent.closeSubMenus();
+                parent.onSearchFilterChanged();
+            });
+            this.applyDefaultSkin();
+            this.setChangeBackgroundColorOnHover(false);
+        }
+
+        @Override
+        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            this.applySkinIfNeeded();
+            this.updateSearchBoxBounds();
+            this.renderIcon(graphics);
+            this.searchBox.render(graphics, mouseX, mouseY, partial);
+        }
+
+        @Override
+        public float getMinWidth() {
+            Component hint = Component.translatable("fancymenu.ui.generic.search");
+            float width = UIBase.getUITextWidthNormal(hint) + (FIELD_HORIZONTAL_PADDING * 2.0F);
+            if (this.addSpaceForIcon) {
+                width += ClickableContextMenuEntry.ICON_LABEL_SPACING;
+            }
+            return Math.max(width, 120.0F);
+        }
+
+        @Override
+        public SearchContextMenuEntry copy() {
+            SearchContextMenuEntry copy = new SearchContextMenuEntry(this.identifier, this.parent);
+            copy.height = this.height;
+            copy.tickAction = this.tickAction;
+            copy.tooltipSupplier = this.tooltipSupplier;
+            copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
+            copy.visibleStateSuppliers = new ArrayList<>(this.visibleStateSuppliers);
+            copy.stackApplier = this.stackApplier;
+            copy.stackValueSupplier = this.stackValueSupplier;
+            copy.stackGroupKey = this.stackGroupKey;
+            copy.icon = this.icon;
+            copy.searchBox.setValue(this.searchBox.getValue());
+            return copy;
+        }
+
+        @Override
+        public void setFocused(boolean var1) {
+        }
+
+        @Override
+        public boolean isFocused() {
+            return false;
+        }
+
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (!this.isVisible()) return false;
+            this.updateSearchBoxBounds();
+            return this.searchBox.mouseClicked(mouseX, mouseY, button);
+        }
+
+        @Override
+        public boolean mouseReleased(double mouseX, double mouseY, int button) {
+            if (!this.isVisible()) return false;
+            this.updateSearchBoxBounds();
+            return this.searchBox.mouseReleased(mouseX, mouseY, button);
+        }
+
+        @Override
+        public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+            if (!this.isVisible()) return false;
+            this.updateSearchBoxBounds();
+            return this.searchBox.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        }
+
+        @Override
+        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            if (!this.isVisible()) return false;
+            return this.searchBox.keyPressed(keyCode, scanCode, modifiers);
+        }
+
+        @Override
+        public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+            if (!this.isVisible()) return false;
+            return this.searchBox.keyReleased(keyCode, scanCode, modifiers);
+        }
+
+        @Override
+        public boolean charTyped(char codePoint, int modifiers) {
+            if (!this.isVisible()) return false;
+            if (this.parent.needsScrolling) {
+                this.parent.scrollPosition = 0.0F;
+            }
+            return this.searchBox.charTyped(codePoint, modifiers);
+        }
+
+        public void resetSearchValue() {
+            this.searchBox.setValue("");
+            this.searchBox.setFocused(false);
+        }
+
+        public void focusAndSelectAll() {
+            this.searchBox.setFocused(true);
+            this.searchBox.moveCursorToEnd(false);
+            this.searchBox.setHighlightPos(0);
+        }
+
+        @NotNull
+        public String getSearchValue() {
+            return this.searchBox.getValue();
+        }
+
+        public boolean hasIconAssigned() {
+            return this.icon != null;
+        }
+
+        public SearchContextMenuEntry setIcon(@Nullable MaterialIcon icon) {
+            this.icon = icon;
+            return this;
+        }
+
+        public void prepareForImmediateInput(boolean addIconSpace) {
+            this.addSpaceForIcon = addIconSpace;
+            if (this.width <= 0.0F) {
+                float fallbackWidth = Math.max(this.parent.getWidth(), this.getMinWidth());
+                if (fallbackWidth <= 0.0F) {
+                    fallbackWidth = this.getMinWidth();
+                }
+                this.width = fallbackWidth;
+            }
+            if (this.height <= 0.0F) {
+                this.height = 20;
+            }
+            this.updateSearchBoxBounds();
+            this.searchBox.setHighlightPos(this.searchBox.getCursorPosition());
+        }
+
+        private void updateSearchBoxBounds() {
+            int paddingLeft = FIELD_HORIZONTAL_PADDING + (this.addSpaceForIcon ? ClickableContextMenuEntry.ICON_LABEL_SPACING : 0);
+            int paddingRight = FIELD_HORIZONTAL_PADDING;
+            int x = Math.round(this.x + paddingLeft);
+            int y = Math.round(this.y + FIELD_VERTICAL_PADDING);
+            int width = Math.max(MIN_FIELD_WIDTH, Math.round(this.width - paddingLeft - paddingRight));
+            int height = Math.max(MIN_FIELD_HEIGHT, Math.round(this.height - FIELD_VERTICAL_PADDING * 2));
+            this.searchBox.setX(x);
+            this.searchBox.setY(y);
+            this.searchBox.setWidth(width);
+            this.searchBox.setHeight(height);
+        }
+
+        private void renderIcon(@NotNull GuiGraphics graphics) {
+            IconRenderData iconData = this.resolveIconData();
+            if (iconData == null) {
+                return;
+            }
+            float areaX = this.x + ClickableContextMenuEntry.ICON_PADDING_LEFT;
+            float areaY = this.y + (this.getHeight() / 2.0F) - (ClickableContextMenuEntry.ICON_WIDTH_HEIGHT / 2.0F);
+            RenderingUtils.setupAlphaBlend();
+            UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
+            this.blitScaledIcon(graphics, iconData, areaX, areaY, ClickableContextMenuEntry.ICON_WIDTH_HEIGHT, ClickableContextMenuEntry.ICON_WIDTH_HEIGHT);
+            RenderingUtils.resetShaderColor(graphics);
+        }
+
+        @Nullable
+        private IconRenderData resolveIconData() {
+            if (this.icon == null) {
+                return null;
+            }
+            float renderSize = ClickableContextMenuEntry.ICON_WIDTH_HEIGHT;
+            ResourceLocation location = this.icon.getTextureLocationForUI(renderSize, renderSize);
+            if (location == null) {
+                return null;
+            }
+            int iconSize = this.icon.calculateBestTextureSizeForUI(renderSize, renderSize);
+            int width = this.icon.getWidth(iconSize);
+            int height = this.icon.getHeight(iconSize);
+            if (width <= 0 || height <= 0) {
+                return null;
+            }
+            return new IconRenderData(location, width, height);
+        }
+
+        private void blitScaledIcon(@NotNull GuiGraphics graphics, @NotNull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight) {
+            if (areaWidth <= 0.0F || areaHeight <= 0.0F) {
+                return;
+            }
+            float scale = Math.min(areaWidth / (float) iconData.width, areaHeight / (float) iconData.height);
+            if (!Float.isFinite(scale) || scale <= 0.0F) {
+                return;
+            }
+            float scaledWidth = iconData.width * scale;
+            float scaledHeight = iconData.height * scale;
+            float drawX = areaX + (areaWidth - scaledWidth) * 0.5F;
+            float drawY = areaY + (areaHeight - scaledHeight) * 0.5F;
+            graphics.pose().pushPose();
+            graphics.pose().translate(drawX, drawY, 0.0F);
+            graphics.pose().scale(scale, scale, 1.0F);
+            RenderingUtils.setupAlphaBlend();
+            RenderingUtils.blitAlphaTexture(graphics, iconData.texture, 0, 0, iconData.width, iconData.height);
+            graphics.pose().popPose();
+        }
+
+        private void applySkinIfNeeded() {
+            boolean blur = UIBase.shouldBlur();
+            if (blur != this.lastBlurState) {
+                this.lastBlurState = blur;
+                this.applyDefaultSkin();
+            }
+        }
+
+        private void applyDefaultSkin() {
+            UIBase.applyDefaultWidgetSkinTo(this.searchBox, this.lastBlurState);
+            this.searchBox.setBackgroundColor(DrawableColor.FULLY_TRANSPARENT);
+            this.searchBox.setBorderNormalColor(DrawableColor.FULLY_TRANSPARENT);
+            this.searchBox.setBorderFocusedColor(DrawableColor.FULLY_TRANSPARENT);
+        }
+
+    }
+
+    /**
+     * Metadata for a stacked entry chain.
+     * <p>
+     * Each entry in a stacked menu has a {@link ContextMenuStackMeta} instance. All entries in
+     * the same stack share the same {@link #properties} object for coordination.
+     */
     public static class ContextMenuStackMeta {
 
         protected RuntimePropertyContainer properties = new RuntimePropertyContainer();
@@ -1856,31 +3499,55 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         protected ContextMenuEntry<?> nextInStack;
 
         /**
-         * This is a shared instance. Every entry in the stack has access to the same {@link RuntimePropertyContainer} instance.
+         * This is a shared instance. Every entry in the stack has access to the same
+         * {@link RuntimePropertyContainer} instance.
          */
         @NotNull
         public RuntimePropertyContainer getProperties() {
             return this.properties;
         }
 
+        /**
+         * @return true if this entry is part of a stack.
+         */
         public boolean isPartOfStack() {
             return this.partOfStack;
         }
 
+        /**
+         * @return true if this is the first entry in the stack (the one rendered in the menu).
+         */
         public boolean isFirstInStack() {
             return this.firstInStack;
         }
 
+        /**
+         * @return true if this is the last entry in the stack.
+         */
         public boolean isLastInStack() {
             return this.lastInStack;
         }
 
+        /**
+         * @return true if this entry is marked as stackable.
+         */
         public boolean isStackable() {
             return this.stackable;
         }
 
+        /**
+         * Sets whether this entry can be stacked.
+         */
         public void setStackable(boolean stackable) {
             this.stackable = stackable;
+        }
+
+        /**
+         * @return the next entry in the stack chain, or null if this is the last.
+         */
+        @Nullable
+        public ContextMenuEntry<?> getNextInStack() {
+            return this.nextInStack;
         }
 
     }
@@ -1895,9 +3562,41 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         T get(ContextMenu menu, ContextMenuEntry<?> entry);
     }
 
+    /**
+     * Stack applier used to apply a new value on a stack entry.
+     * <p>
+     * The entry argument is the specific stack entry being applied.
+     *
+     * <p><b>Example</b>
+     * <pre>{@code
+     * entry.setStackApplier((stackEntry, value) -> {
+     *     if (value instanceof Integer i) {
+     *         builder.self().setPadding(i);
+     *     }
+     * });
+     * }</pre>
+     */
+    @FunctionalInterface
+    public interface StackApplier {
+        void apply(ContextMenuEntry<?> entry, @Nullable Object value);
+    }
+
+    /**
+     * Supplies the current value for a stack entry, used to detect mixed state.
+     *
+     * <p><b>Example</b>
+     * <pre>{@code
+     * entry.setStackValueSupplier(stackEntry -> builder.self().getPadding());
+     * }</pre>
+     */
+    @FunctionalInterface
+    public interface StackValueSupplier {
+        @Nullable
+        Object get(ContextMenuEntry<?> entry);
+    }
+
     @FunctionalInterface
     public interface BooleanSupplier extends Supplier<Boolean> {
-
         default boolean getBoolean(ContextMenu menu, ContextMenuEntry<?> entry) {
             Boolean b = this.get(menu, entry);
             if (b != null) {
@@ -1905,7 +3604,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             }
             return false;
         }
-
     }
 
     public static class IconFactory {
@@ -1914,4 +3612,5 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return new ResourceLocation("fancymenu", "textures/contextmenu/icons/" + iconName + ".png");
         }
     }
+
 }

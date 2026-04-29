@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.advanced;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import net.minecraft.client.resources.language.I18n;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,8 +26,8 @@ public class SplitTextPlaceholder extends Placeholder {
 
             String input = dps.values.get("input");
             String regex = dps.values.get("regex");
-            int maxParts = SerializationUtils.deserializeNumber(Integer.class, -1, dps.values.get("max_parts"));
-            int splitIndex = SerializationUtils.deserializeNumber(Integer.class, -1, dps.values.get("split_index"));
+            int maxParts = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, -1, dps.values.get("max_parts"));
+            int splitIndex = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, -1, dps.values.get("split_index"));
 
             if ((maxParts > 0) && (maxParts-1 < splitIndex)) {
                 LOGGER.error("[FANCYMENU] Failed to parse 'Split Text' placeholder! Max_parts is smaller than split_index!");

@@ -113,7 +113,8 @@ public class ScrollScreenNormalizer {
         return builder;
     }
 
-    public static boolean isBlacklisted(@NotNull Screen screen) {
+    public static boolean isBlacklisted(Screen screen) {
+        if (screen == null) return false;
         for (ScrollableScreenBlacklistRule e : SCROLLABLE_SCREEN_BLACKLIST) {
             if (e.isBlacklisted(screen)) return true;
         }

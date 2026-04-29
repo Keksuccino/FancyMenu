@@ -3,9 +3,11 @@
   "package": "de.keksuccino.fancymenu.mixin.mixins.common",
   "compatibilityLevel": "JAVA_17",
   "client": [
+    "client.IMixinAbstractContainerScreen",
     "client.IMixinAbstractSelectionList",
     "client.IMixinAbstractSliderButton",
     "client.IMixinAbstractWidget",
+    "client.IMixinBlendMode",
     "client.IMixinBossHealthOverlay",
     "client.IMixinButton",
     "client.IMixinChatScreen",
@@ -13,21 +15,27 @@
     "client.IMixinCommandSuggestions",
     "client.IMixinConnectScreen",
     "client.IMixinEditBox",
+    "client.IMixinGameRenderer",
     "client.IMixinGui",
     "client.IMixinGuiGraphics",
     "client.IMixinLevelLoadingScreen",
     "client.IMixinMinecraft",
     "client.IMixinMusicManager",
+    "client.IMixinNativeImage",
     "client.IMixinOptions",
     "client.IMixinPauseScreen",
+    "client.IMixinPostChain",
+    "client.IMixinPathPackResources",
     "client.IMixinPlayerModel",
     "client.IMixinProgressScreen",
     "client.IMixinRealmsNotificationsScreen",
     "client.IMixinReceivingLevelScreen",
     "client.IMixinScreen",
+    "client.IMixinSpectatorGui",
     "client.IMixinServerList",
     "client.IMixinSplashRenderer",
     "client.IMixinSuggestionsList",
+    "client.IMixinVanillaPackResources",
     "client.MixinAbstractButton",
     "client.MixinAbstractContainerEventHandler",
     "client.MixinAbstractContainerScreen",
@@ -47,8 +55,11 @@
     "client.MixinDisconnectedScreen",
     "client.MixinGameNarrator",
     "client.MixinGameRenderer",
+    "client.MixinGenericDirtMessageScreen",
+    "client.MixinGLFW",
     "client.MixinGuiGraphics",
     "client.MixinImageButton",
+    "client.MixinJoinMultiplayerScreen",
     "client.MixinKeyboardHandler",
     "client.MixinLevelLoadingScreen",
     "client.MixinLevelLoadStatusManager",
@@ -63,12 +74,15 @@
     "client.MixinMusicManager",
     "client.MixinOnlineServerEntry",
     "client.MixinPauseScreen",
+    "client.MixinPoseStack",
+    "client.MixinPlainTextButton",
     "client.MixinPlayer",
     "client.MixinProgressScreen",
     "client.MixinQuickPlay",
     "client.MixinRealmsNotificationsScreen",
     "client.MixinReceivingLevelScreen",
     "client.MixinRenderSystem",
+    "client.MixinRenderTarget",
     "client.MixinResourceLoadStateTracker",
     "client.MixinScreen",
     "client.MixinSoundEngine",
@@ -77,6 +91,8 @@
     "client.MixinSwitchGrid_SwitchBuilder",
     "client.MixinTabNavigationBar",
     "client.MixinTitleScreen",
+    "client.MixinSelectWorldScreen",
+    "client.MixinWorldOpenFlows",
     "client.MixinWorldListEntry"
   ],
   "mixins": [
@@ -91,10 +107,6 @@
   "plugin": "de.keksuccino.fancymenu.mixin.FMMixinPlugin",
   "minVersion": "0.8"
 }
-
-
-
-
 
 
 

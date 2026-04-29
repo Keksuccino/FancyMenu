@@ -17,12 +17,12 @@ public class PanoramaHandler {
 	private static final Logger LOGGER = LogManager.getLogger();
 	private static final Map<String, LocalTexturePanoramaRenderer> PANORAMAS = new HashMap<>();
 	public static final File PANORAMA_DIR = FileUtils.createDirectory(new File(FancyMenu.MOD_DIR, "panoramas"));
-	
+
 	public static void init() {
 		updatePanoramas();
 		EventHandler.INSTANCE.registerListenersOf(new PanoramaHandler());
 	}
-	
+
 	public static void updatePanoramas() {
 		PANORAMAS.clear();
 		File[] files = Objects.requireNonNullElse(PANORAMA_DIR.listFiles(), new File[0]);
@@ -85,11 +85,11 @@ public class PanoramaHandler {
 	public static List<String> getPanoramaNames() {
 		return new ArrayList<>(PANORAMAS.keySet());
 	}
-	
+
 	public static boolean panoramaExists(@NotNull String name) {
 		return PANORAMAS.containsKey(Objects.requireNonNull(name));
 	}
-	
+
 	@EventListener
 	public void onMenuReload(ModReloadEvent e) {
 		LOGGER.info("[FANCYMENU] Reloading panoramas..");

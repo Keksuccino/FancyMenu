@@ -6,11 +6,15 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinChatScreen;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinMinecraft;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.PiPCellStringBuilderWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -67,13 +71,13 @@ public class PasteToChatAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.paste_to_chat");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.paste_to_chat.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.paste_to_chat.desc");
     }
 
     @Override
@@ -82,22 +86,51 @@ public class PasteToChatAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "true:Hi my name is Fred.";
     }
 
     @Override
-    public void editValue(@NotNull Screen parentScreen, @NotNull ActionInstance instance) {
-        PasteToChatActionValueScreen s = new PasteToChatActionValueScreen(Objects.requireNonNullElse(instance.value, this.getValueExample()), value -> {
+    public void editValue(@NotNull ActionInstance instance, @NotNull Action.ActionEditingCompletedFeedback onEditingCompleted, @NotNull Action.ActionEditingCanceledFeedback onEditingCanceled) {
+        String oldValue = instance.value;
+        boolean[] handled = {false};
+        final PiPWindow[] windowHolder = new PiPWindow[1];
+        PasteToChatActionValueScreen s = new PasteToChatActionValueScreen(Objects.requireNonNullElse(instance.value, this.getValuePreset()), value -> {
+            if (handled[0]) {
+                return;
+            }
+            handled[0] = true;
             if (value != null) {
                 instance.value = value;
+                onEditingCompleted.accept(instance, oldValue, value);
+            } else {
+                onEditingCanceled.accept(instance);
             }
-            Minecraft.getInstance().setScreen(parentScreen);
+            PiPWindow window = windowHolder[0];
+            if (window != null) {
+                window.close();
+            }
         });
-        Minecraft.getInstance().setScreen(s);
+        PiPWindow window = new PiPWindow(s.getTitle())
+                .setScreen(s)
+                .setForceFancyMenuUiScale(true)
+                .setAlwaysOnTop(true)
+                .setBlockMinecraftScreenInputs(true)
+                .setForceFocus(true)
+                .setMinSize(TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT)
+                .setSize(TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
+        windowHolder[0] = window;
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
+        window.addCloseCallback(() -> {
+            if (handled[0]) {
+                return;
+            }
+            handled[0] = true;
+            onEditingCanceled.accept(instance);
+        });
     }
 
-    public static class PasteToChatActionValueScreen extends StringBuilderScreen {
+    public static class PasteToChatActionValueScreen extends PiPCellStringBuilderWindowBody {
 
         protected boolean append = false;
         protected String msg = "";
@@ -123,7 +156,7 @@ public class PasteToChatAction extends Action {
 
             this.addWidgetCell(new CycleButton<>(0, 0, 20, 20, CommonCycles.cycleEnabledDisabled("fancymenu.actions.paste_to_chat.append", this.append), (value, button) -> {
                 this.append = value.getAsBoolean();
-            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.paste_to_chat.append.desc"))), true);
+            }).setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.actions.paste_to_chat.append.desc"))), true);
 
             this.addSpacerCell(20);
 
@@ -132,6 +165,10 @@ public class PasteToChatAction extends Action {
         @Override
         public @NotNull String buildString() {
             return this.append + ":" + this.msg;
+        }
+
+        @Override
+        protected void autoScaleScreen(AbstractWidget topRightSideWidget) {
         }
 
     }

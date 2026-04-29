@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.platform.services.IPlatformHelper;
 import de.keksuccino.fancymenu.util.mod.UniversalModContainer;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.EntityType;
@@ -19,8 +20,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public class ForgePlatformHelper implements IPlatformHelper {
 
@@ -119,6 +122,18 @@ public class ForgePlatformHelper implements IPlatformHelper {
             mods.add(new UniversalModContainer(mod.getModId(), mod.getDisplayName(), mod.getDescription(), mod.getOwningFile().getLicense(), null));
         });
         return mods;
+    }
+
+    @Override
+    public @NotNull Set<ResourceLocation> getLoadedClientResourceLocations() {
+        Set<ResourceLocation> output = new HashSet<>();
+        if (!this.isOnClient()) return output;
+        try {
+            output.addAll(Minecraft.getInstance().getResourceManager().listResources("", location -> true).keySet());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return output;
     }
 
 }

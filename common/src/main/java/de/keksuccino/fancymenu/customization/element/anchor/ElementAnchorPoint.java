@@ -44,20 +44,28 @@ public class ElementAnchorPoint {
     }
 
     public int getResizePositionOffsetX(@NotNull AbstractElement element, int mouseTravelX, @NotNull AbstractEditorElement.ResizeGrabberType resizeGrabberType) {
-        if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.RIGHT) {
+        if ((resizeGrabberType == AbstractEditorElement.ResizeGrabberType.RIGHT)
+                || (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.TOP_RIGHT)
+                || (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.BOTTOM_RIGHT)) {
             return 0;
         }
-        if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.LEFT) {
+        if ((resizeGrabberType == AbstractEditorElement.ResizeGrabberType.LEFT)
+                || (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.TOP_LEFT)
+                || (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.BOTTOM_LEFT)) {
             return mouseTravelX;
         }
         return 0;
     }
 
     public int getResizePositionOffsetY(@NotNull AbstractElement element, int mouseTravelY, @NotNull AbstractEditorElement.ResizeGrabberType resizeGrabberType) {
-        if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.TOP) {
+        if ((resizeGrabberType == AbstractEditorElement.ResizeGrabberType.TOP)
+                || (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.TOP_LEFT)
+                || (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.TOP_RIGHT)) {
             return mouseTravelY;
         }
-        if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.BOTTOM) {
+        if ((resizeGrabberType == AbstractEditorElement.ResizeGrabberType.BOTTOM)
+                || (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.BOTTOM_LEFT)
+                || (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.BOTTOM_RIGHT)) {
             return 0;
         }
         return 0;
@@ -65,13 +73,17 @@ public class ElementAnchorPoint {
 
     public int getStickyResizePositionCorrectionX(@NotNull AbstractElement element, int mouseTravelX, int oldOffsetX, int newOffsetX, int oldPosX, int newPosX, int oldWidth, int newWidth, AbstractEditorElement.@NotNull ResizeGrabberType resizeGrabberType) {
         // When using LEFT grabber: Keep right edge in place
-        if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.LEFT) {
+        if ((resizeGrabberType == AbstractEditorElement.ResizeGrabberType.LEFT)
+                || (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.TOP_LEFT)
+                || (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.BOTTOM_LEFT)) {
             int newPosXRight = newPosX + newWidth;
             int oldPosXRight = oldPosX + oldWidth;
             return oldPosXRight - newPosXRight;
         }
         // When using RIGHT grabber: Keep left edge in place
-        if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.RIGHT) {
+        if ((resizeGrabberType == AbstractEditorElement.ResizeGrabberType.RIGHT)
+                || (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.TOP_RIGHT)
+                || (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.BOTTOM_RIGHT)) {
             return oldPosX - newPosX;
         }
         return 0;
@@ -79,13 +91,17 @@ public class ElementAnchorPoint {
 
     public int getStickyResizePositionCorrectionY(@NotNull AbstractElement element, int mouseTravelY, int oldOffsetY, int newOffsetY, int oldPosY, int newPosY, int oldHeight, int newHeight, AbstractEditorElement.@NotNull ResizeGrabberType resizeGrabberType) {
         // When using TOP grabber: Keep bottom edge in place
-        if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.TOP) {
+        if ((resizeGrabberType == AbstractEditorElement.ResizeGrabberType.TOP)
+                || (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.TOP_LEFT)
+                || (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.TOP_RIGHT)) {
             int newPosYBottom = newPosY + newHeight;
             int oldPosYBottom = oldPosY + oldHeight;
             return oldPosYBottom - newPosYBottom;
         }
         // When using BOTTOM grabber: Keep top edge in place
-        if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.BOTTOM) {
+        if ((resizeGrabberType == AbstractEditorElement.ResizeGrabberType.BOTTOM)
+                || (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.BOTTOM_LEFT)
+                || (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.BOTTOM_RIGHT)) {
             return oldPosY - newPosY;
         }
         return 0;

@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholder
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinBossHealthOverlay;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.LerpingBossEvent;
@@ -31,8 +31,8 @@ public class BossNamePlaceholder extends Placeholder {
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         LocalPlayer player = Minecraft.getInstance().player;
         ClientLevel level = Minecraft.getInstance().level;
-        int index = SerializationUtils.deserializeNumber(Integer.class, 0, dps.values.get("boss_index"));
-        boolean asJson = SerializationUtils.deserializeBoolean(false, dps.values.get("as_json"));
+        int index = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, 0, dps.values.get("boss_index"));
+        boolean asJson = SerializationHelper.INSTANCE.deserializeBoolean(false, dps.values.get("as_json"));
         if ((player != null) && (level != null)) {
             Map<UUID, LerpingBossEvent> bosses = ((IMixinBossHealthOverlay)Minecraft.getInstance().gui.getBossOverlay()).get_events_FancyMenu(); // this is a linked hash map, so indexes should work fine
             if (bosses.size() >= (index + 1)) {

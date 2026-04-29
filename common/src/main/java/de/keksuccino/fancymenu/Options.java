@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu;
 
 import de.keksuccino.fancymenu.util.AbstractOptions;
 import de.keksuccino.konkrete.config.Config;
+import net.minecraft.sounds.SoundSource;
 
 public class Options extends AbstractOptions {
 
@@ -19,6 +20,8 @@ public class Options extends AbstractOptions {
     public final Option<Boolean> gameIntroAllowSkip = new Option<>(config, "allow_game_intro_skip", true, "loading");
     public final Option<Boolean> gameIntroFadeOut = new Option<>(config, "game_intro_fade_out", true, "loading");
     public final Option<String> gameIntroCustomSkipText = new Option<>(config, "custom_game_intro_skip_text", "", "loading");
+    public final Option<Float> gameIntroVolume = new Option<>(config, "game_intro_volume", 1.0F, "loading");
+    public final Option<String> gameIntroSoundChannel = new Option<>(config, "game_intro_sound_channel", SoundSource.MASTER.getName(), "loading");
     public final Option<String> preLoadResources = new Option<>(config, "preload_resources", "", "loading");
 
     public final Option<Boolean> showCustomWindowIcon = new Option<>(config, "show_custom_window_icon", false, "window");
@@ -26,6 +29,47 @@ public class Options extends AbstractOptions {
     public final Option<String> customWindowIcon32 = new Option<>(config, "custom_window_icon_32", "", "window");
     public final Option<String> customWindowIconMacOS = new Option<>(config, "custom_window_icon_macos", "", "window");
     public final Option<String> customWindowTitle = new Option<>(config, "custom_window_title", "", "window");
+    public final Option<String> globalButtonBackgroundNormal = new Option<>(config, "global_button_background_normal", "", "global_customizations");
+    public final Option<String> globalButtonBackgroundHover = new Option<>(config, "global_button_background_hover", "", "global_customizations");
+    public final Option<String> globalButtonBackgroundInactive = new Option<>(config, "global_button_background_inactive", "", "global_customizations");
+    public final Option<Boolean> globalButtonBackgroundTransparent = new Option<>(config, "global_button_background_transparent", false, "global_customizations");
+    public final Option<Boolean> globalButtonBackgroundNineSlice = new Option<>(config, "global_button_background_nine_slice", false, "global_customizations");
+    public final Option<Integer> globalButtonBackgroundNineSliceBorderTop = new Option<>(config, "global_button_background_nine_slice_border_top", 5, "global_customizations");
+    public final Option<Integer> globalButtonBackgroundNineSliceBorderRight = new Option<>(config, "global_button_background_nine_slice_border_right", 5, "global_customizations");
+    public final Option<Integer> globalButtonBackgroundNineSliceBorderBottom = new Option<>(config, "global_button_background_nine_slice_border_bottom", 5, "global_customizations");
+    public final Option<Integer> globalButtonBackgroundNineSliceBorderLeft = new Option<>(config, "global_button_background_nine_slice_border_left", 5, "global_customizations");
+    public final Option<Boolean> globalButtonLabelUnderlineOnHover = new Option<>(config, "global_button_label_underline_on_hover", false, "global_customizations");
+    public final Option<String> globalButtonLabelBaseColor = new Option<>(config, "global_button_label_base_color", "", "global_customizations");
+    public final Option<String> globalButtonLabelHoverColor = new Option<>(config, "global_button_label_hover_color", "", "global_customizations");
+    public final Option<Float> globalButtonLabelScale = new Option<>(config, "global_button_label_scale", 1.0F, "global_customizations");
+    public final Option<String> globalButtonLabelScaleRaw = new Option<>(config, "global_button_label_scale_raw", "", "global_customizations");
+    public final Option<Boolean> globalButtonLabelShadow = new Option<>(config, "global_button_label_shadow", true, "global_customizations");
+    public final Option<String> globalSliderBackground = new Option<>(config, "global_slider_background", "", "global_customizations");
+    public final Option<Boolean> globalSliderBackgroundTransparent = new Option<>(config, "global_slider_background_transparent", false, "global_customizations");
+    public final Option<Boolean> globalSliderBackgroundNineSlice = new Option<>(config, "global_slider_background_nine_slice", false, "global_customizations");
+    public final Option<Integer> globalSliderBackgroundNineSliceBorderTop = new Option<>(config, "global_slider_background_nine_slice_border_top", 5, "global_customizations");
+    public final Option<Integer> globalSliderBackgroundNineSliceBorderRight = new Option<>(config, "global_slider_background_nine_slice_border_right", 5, "global_customizations");
+    public final Option<Integer> globalSliderBackgroundNineSliceBorderBottom = new Option<>(config, "global_slider_background_nine_slice_border_bottom", 5, "global_customizations");
+    public final Option<Integer> globalSliderBackgroundNineSliceBorderLeft = new Option<>(config, "global_slider_background_nine_slice_border_left", 5, "global_customizations");
+    public final Option<Boolean> globalSliderLabelUnderlineOnHover = new Option<>(config, "global_slider_label_underline_on_hover", false, "global_customizations");
+    public final Option<String> globalSliderLabelBaseColor = new Option<>(config, "global_slider_label_base_color", "", "global_customizations");
+    public final Option<String> globalSliderLabelHoverColor = new Option<>(config, "global_slider_label_hover_color", "", "global_customizations");
+    public final Option<Float> globalSliderLabelScale = new Option<>(config, "global_slider_label_scale", 1.0F, "global_customizations");
+    public final Option<String> globalSliderLabelScaleRaw = new Option<>(config, "global_slider_label_scale_raw", "", "global_customizations");
+    public final Option<Boolean> globalSliderLabelShadow = new Option<>(config, "global_slider_label_shadow", true, "global_customizations");
+    public final Option<String> globalSliderHandleNormal = new Option<>(config, "global_slider_handle_normal", "", "global_customizations");
+    public final Option<String> globalSliderHandleHover = new Option<>(config, "global_slider_handle_hover", "", "global_customizations");
+    public final Option<String> globalSliderHandleInactive = new Option<>(config, "global_slider_handle_inactive", "", "global_customizations");
+    public final Option<Boolean> globalSliderHandleNineSlice = new Option<>(config, "global_slider_handle_nine_slice", false, "global_customizations");
+    public final Option<Integer> globalSliderHandleNineSliceBorderTop = new Option<>(config, "global_slider_handle_nine_slice_border_top", 5, "global_customizations");
+    public final Option<Integer> globalSliderHandleNineSliceBorderRight = new Option<>(config, "global_slider_handle_nine_slice_border_right", 5, "global_customizations");
+    public final Option<Integer> globalSliderHandleNineSliceBorderBottom = new Option<>(config, "global_slider_handle_nine_slice_border_bottom", 5, "global_customizations");
+    public final Option<Integer> globalSliderHandleNineSliceBorderLeft = new Option<>(config, "global_slider_handle_nine_slice_border_left", 5, "global_customizations");
+    public final Option<String> globalBackgroundPanorama = new Option<>(config, "global_background_panorama", "", "global_customizations");
+    public final Option<String> globalMenuMusicTracks = new Option<>(config, "global_menu_music_tracks", "", "global_customizations");
+    public final Option<String> globalButtonClickSound = new Option<>(config, "global_button_click_sound", "", "global_customizations");
+    public final Option<String> globalMenuBackgroundTexture = new Option<>(config, "global_menu_background_texture", "", "global_customizations");
+    public final Option<Boolean> seamlessWorldLoading = new Option<>(config, "seamless_world_loading", false, "global_customizations");
 
     public final Option<Boolean> showMultiplayerScreenServerIcons = new Option<>(config, "show_multiplayer_screen_server_icons", true, "multiplayer_screen");
 
@@ -45,15 +89,19 @@ public class Options extends AbstractOptions {
     public final Option<String> anchorOverlayColorBorderOverride = new Option<>(config, "anchor_overlay_color_border_override", "", "layout_editor");
     public final Option<String> anchorOverlayVisibilityMode = new Option<>(config, "anchor_overlay_visibility_mode", "dragging", "layout_editor");
     public final Option<Double> anchorOverlayHoverChargingTimeSeconds = new Option<>(config, "anchor_overlay_hover_charging_time_seconds", 2.0D, "layout_editor");
-    public final Option<Boolean> enableBuddy = new Option<>(config, "enable_buddy", true, "layout_editor");
     public final Option<Boolean> enableElementRotationControls = new Option<>(config, "enable_element_rotation_controls", true, "layout_editor");
     public final Option<Boolean> enableElementTiltingControls = new Option<>(config, "enable_element_tilting_controls", true, "layout_editor");
 
-    public final Option<Float> uiScale = new Option<>(config, "ui_scale", 4.0F, "ui");
+    public final Option<String> uiScale = new Option<>(config, "ui_scale_v2", "auto", "ui");
     public final Option<Boolean> playUiClickSounds = new Option<>(config, "play_ui_click_sounds", true, "ui");
-    public final Option<Boolean> enableUiTextShadow = new Option<>(config, "enable_ui_text_shadow", false, "ui");
     public final Option<Integer> contextMenuHoverOpenSpeed = new Option<>(config, "context_menu_hover_open_speed", 1, "ui");
     public final Option<String> uiTheme = new Option<>(config, "ui_theme", "dark", "ui");
+    public final Option<Boolean> enableUiBlur = new Option<>(config, "enable_ui_blur", false, "ui");
+    public final Option<Float> uiBlurIntensity = new Option<>(config, "ui_blur_intensity", 3.0F, "ui");
+    public final Option<Boolean> useMinecraftFont = new Option<>(config, "use_minecraft_font", false, "ui");
+    public final Option<Boolean> smoothFontMultilineRendering = new Option<>(config, "smooth_font_multiline_rendering", false, "ui");
+    public final Option<Boolean> enableUiAnimations = new Option<>(config, "enable_ui_animations", true, "ui");
+    public final Option<Boolean> pipWindowDocking = new Option<>(config, "pip_window_docking", true, "ui");
 
     public final Option<Boolean> showDebugOverlay = new Option<>(config, "show_debug_overlay", false, "debug_overlay");
     public final Option<Boolean> debugOverlayShowBasicScreenCategory = new Option<>(config, "debug_overlay_show_basic_screen_category", true, "debug_overlay");
@@ -67,6 +115,12 @@ public class Options extends AbstractOptions {
 
     public final Option<Long> placeholderCachingDurationMs = new Option<>(config, "placeholder_caching_duration_ms", 30L, "advanced");
     public final Option<Long> requirementCachingDurationMs = new Option<>(config, "requirement_caching_duration_ms", 0L, "advanced");
+
+    public final Option<Boolean> devShowPipWindowDebug = new Option<>(config, "dev_pip_window_debug", false, "dev");
+    public final Option<Boolean> devForceWatermediaMissing = new Option<>(config, "dev_force_watermedia_missing", false, "dev");
+    public final Option<Boolean> devForceMcefMissing = new Option<>(config, "dev_force_mcef_missing", false, "dev");
+    public final Option<Boolean> mcpServerEnabled = new Option<>(config, "mcp_server_enabled", false, "dev");
+    public final Option<Integer> mcpServerPort = new Option<>(config, "mcp_server_port", 48561, "dev");
 
     public Options() {
         this.config.syncConfig();

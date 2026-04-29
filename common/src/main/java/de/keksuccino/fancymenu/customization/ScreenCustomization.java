@@ -5,13 +5,16 @@ import java.util.*;
 import de.keksuccino.fancymenu.Compat;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.DecorationOverlays;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementMemories;
 import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.AnimationControllerHandler;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.widgets.LayoutEditorWidgets;
 import de.keksuccino.fancymenu.customization.listener.ListenerHandler;
+import de.keksuccino.fancymenu.customization.scheduler.SchedulerHandler;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
+import de.keksuccino.fancymenu.customization.overlay.ScreenOverlays;
 import de.keksuccino.fancymenu.customization.screen.dummyscreen.DummyScreens;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.identifier.UniversalScreenIdentifierRegistry;
@@ -22,7 +25,7 @@ import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.element.elements.Elements;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
-import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.LoadingRequirements;
+import de.keksuccino.fancymenu.customization.requirement.requirements.Requirements;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.Placeholders;
@@ -40,8 +43,8 @@ import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIThemes;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
@@ -65,7 +68,6 @@ public class ScreenCustomization {
 	private static final List<ScreenBlacklistRule> SCREEN_BLACKLIST_RULES = new ArrayList<>();
 
 	private static PropertyContainerSet customizableScreens;
-	protected static boolean isCurrentScrollable = false;
 	protected static boolean isNewMenu = true;
 	protected static ScreenCustomizationEvents eventsInstance = new ScreenCustomizationEvents();
 	protected static boolean screenCustomizationEnabled = true;
@@ -84,17 +86,21 @@ public class ScreenCustomization {
 
 		addDefaultScreenBlacklistRules();
 
+        ScreenOverlays.registerDefaults();
+
 		ElementMemories.init();
 
 		ScreenCustomizationLayerHandler.init();
 
 		Actions.registerAll();
 
-		LoadingRequirements.registerAll();
+		Requirements.registerAll();
 
 		Placeholders.registerAll();
 
 		MenuBackgrounds.registerAll();
+
+        DecorationOverlays.registerAll();
 
 		Elements.registerAll();
 
@@ -122,6 +128,7 @@ public class ScreenCustomization {
 
 		Listeners.registerAll();
 		ListenerHandler.init();
+		SchedulerHandler.init();
 
 		initialized = true;
 
@@ -206,10 +213,10 @@ public class ScreenCustomization {
 		if (screen instanceof CustomGuiBaseScreen) {
 			return true;
 		}
-        // This makes the clear version of the Pause screen not get customized
-        if (screen instanceof PauseScreen p) {
-            if (!((IMixinPauseScreen)p).get_showPauseMenu_FancyMenu()) return false;
-        }
+		// This makes the clear version of the Pause screen not get customized
+		if (screen instanceof PauseScreen) {
+			if (!((IMixinPauseScreen) screen).get_showPauseMenu_FancyMenu()) return false;
+		}
 		// Always use the screen class path here! NEVER universal identifiers!
 		List<PropertyContainer> s = customizableScreens.getContainersOfType(screen.getClass().getName());
 		return !s.isEmpty();
@@ -273,10 +280,6 @@ public class ScreenCustomization {
 		eventsInstance.lastScreen = null;
 	}
 
-	public static boolean isCurrentMenuScrollable() {
-		return isCurrentScrollable;
-	}
-
 	public static void reloadCurrentScreen() {
 		Screen s = Minecraft.getInstance().screen;
 		if (s != null) {
@@ -291,11 +294,11 @@ public class ScreenCustomization {
 	public static void reloadFancyMenu() {
 		FancyMenu.reloadOptions();
 		ResourceHandlers.reloadAll();
-		UIColorThemes.reloadThemes();
+		UIThemes.reloadThemes();
 		LayoutHandler.reloadLayouts();
 		AnimationControllerHandler.stopAllAnimations();
 		AnimationControllerHandler.clearMemory();
-		TextEditorScreen.clearCompiledSingleLineCache();
+		TextEditorWindowBody.clearCompiledSingleLineCache();
 		EventHandler.INSTANCE.postEvent(new ModReloadEvent(Minecraft.getInstance().screen));
 		reInitCurrentScreen();
 	}

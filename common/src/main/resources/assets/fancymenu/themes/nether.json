@@ -17,7 +17,7 @@
   "scroll_grabber_color_normal": { "hex": "#6B5A5E64" },
   "scroll_grabber_color_hover":  { "hex": "#8C7A7E64" },
 
-  "screen_background_color":        { "hex": "#1A1214FF" },
+  "interface_background_color":        { "hex": "#1A1214FF" },
   "screen_background_color_darker": { "hex": "#120B0DFF" },
 
   "element_border_color_normal": { "hex": "#3A2B2DFF" },

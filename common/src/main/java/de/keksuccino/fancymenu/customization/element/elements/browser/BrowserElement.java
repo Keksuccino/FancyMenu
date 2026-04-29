@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
@@ -37,7 +38,7 @@ public class BrowserElement extends AbstractElement {
     public boolean hideVideoControls = false;
     public boolean loopVideos = false;
     public boolean muteMedia = false;
-    public float mediaVolume = 1.0F;
+    public final Property.FloatProperty mediaVolume = putProperty(Property.floatProperty("media_volume", 1.0F, "fancymenu.elements.browser.media_volume"));
     @Nullable
     public WrappedMCEFBrowser browser = null;
     public int lastTickWidth = -1;
@@ -101,9 +102,10 @@ public class BrowserElement extends AbstractElement {
                 if (!this.browser.isMuteAllMediaOnLoad() && this.muteMedia) this.browser.setMuteAllMediaOnLoad(true);
                 if (this.browser.isMuteAllMediaOnLoad() && !this.muteMedia) this.browser.setMuteAllMediaOnLoad(false);
 
-                if (this.mediaVolume > 1.0F) this.mediaVolume = 1.0F;
-                if (this.mediaVolume < 0.0F) this.mediaVolume = 0.0F;
-                if (this.browser.getVolume() != this.mediaVolume) this.browser.setVolume(this.mediaVolume);
+                float resolvedVolume = this.mediaVolume.getFloat();
+                if (resolvedVolume > 1.0F) resolvedVolume = 1.0F;
+                if (resolvedVolume < 0.0F) resolvedVolume = 0.0F;
+                if (this.browser.getVolume() != resolvedVolume) this.browser.setVolume(resolvedVolume);
 
                 this.browser.setOpacity(this.opacity);
 

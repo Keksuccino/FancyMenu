@@ -45,11 +45,11 @@ public class UIColorThemeSerializer {
     };
 
     @Nullable
-    public static UIColorTheme deserializeTheme(@NotNull String json) {
+    public static UITheme deserializeTheme(@NotNull String json) {
         Objects.requireNonNull(json);
         try {
             Gson gson = buildGsonInstance();
-            return gson.fromJson(json, UIColorTheme.class);
+            return gson.fromJson(json, UITheme.class);
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to deserialize FancyMenu theme!", ex);
         }
@@ -57,7 +57,7 @@ public class UIColorThemeSerializer {
     }
 
     @Nullable
-    public static UIColorTheme deserializeThemeFromResource(@NotNull ResourceLocation resource) {
+    public static UITheme deserializeThemeFromResource(@NotNull ResourceLocation resource) {
         InputStream in = null;
         try {
             StringBuilder json = new StringBuilder();
@@ -75,7 +75,7 @@ public class UIColorThemeSerializer {
     }
 
     @Nullable
-    public static UIColorTheme deserializeThemeFromFile(@NotNull File file) {
+    public static UITheme deserializeThemeFromFile(@NotNull File file) {
         StringBuilder json = new StringBuilder();
         for (String s : FileUtils.getFileLines(file)) {
             json.append(s);
@@ -84,7 +84,7 @@ public class UIColorThemeSerializer {
     }
 
     @Nullable
-    public static String serializeTheme(@NotNull UIColorTheme theme) {
+    public static String serializeTheme(@NotNull UITheme theme) {
         Objects.requireNonNull(theme);
         try {
             Gson gson = buildGsonInstance();
@@ -95,7 +95,7 @@ public class UIColorThemeSerializer {
         return null;
     }
 
-    public static void serializeThemeToFile(@NotNull UIColorTheme theme, @NotNull File file) {
+    public static void serializeThemeToFile(@NotNull UITheme theme, @NotNull File file) {
         Objects.requireNonNull(theme);
         Objects.requireNonNull(file);
         try {

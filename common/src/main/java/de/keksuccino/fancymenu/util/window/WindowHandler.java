@@ -10,7 +10,6 @@ import java.nio.IntBuffer;
 import javax.imageio.ImageIO;
 import com.mojang.blaze3d.platform.MacosUtil;
 import com.mojang.blaze3d.platform.TextureUtil;
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import net.minecraft.client.Minecraft;
@@ -126,7 +125,6 @@ public class WindowHandler {
 	}
 
 	protected static void setIcon(IoSupplier<InputStream> $$0, IoSupplier<InputStream> $$1) {
-		RenderSystem.assertInInitPhase();
 		try (MemoryStack $$2 = MemoryStack.stackPush()) {
 			IntBuffer $$3 = $$2.mallocInt(1);
 			IntBuffer $$4 = $$2.mallocInt(1);
@@ -160,7 +158,6 @@ public class WindowHandler {
 
 	@Nullable
 	protected static ByteBuffer readIconPixels(IoSupplier<InputStream> $$0, IntBuffer $$1, IntBuffer $$2, IntBuffer $$3) throws IOException {
-		RenderSystem.assertInInitPhase();
 		ByteBuffer $$4 = null;
 		ByteBuffer var7;
 		try (InputStream $$5 = $$0.get()) {

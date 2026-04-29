@@ -65,6 +65,11 @@ public abstract class AbstractExecutableBlock implements Executable, ValuePlaceh
         }
     }
 
+    public AbstractExecutableBlock addValuePlaceholderToBlock(@NotNull String placeholder, @NotNull Supplier<String> replaceWithSupplier) {
+        this.addValuePlaceholder(placeholder, replaceWithSupplier);
+        return this;
+    }
+
     @NotNull
     @Override
     public Map<String, Supplier<String>> getValuePlaceholders() {

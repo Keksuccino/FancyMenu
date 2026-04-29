@@ -6,9 +6,12 @@ import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.resource.resources.audio.ALAudio;
 import de.keksuccino.fancymenu.util.resource.resources.audio.AudioPlayTimeTracker;
+import de.keksuccino.fancymenu.util.resource.resources.audio.AudioResourceReloadTracker;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
+import de.keksuccino.fancymenu.util.resource.resources.audio.OpenAlAudioClipFactory;
 import de.keksuccino.melody.resources.audio.openal.ALAudioBuffer;
 import de.keksuccino.melody.resources.audio.openal.ALAudioClip;
+import de.keksuccino.melody.resources.audio.openal.ALErrorHandler;
 import de.keksuccino.melody.resources.audio.openal.ALUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
@@ -18,12 +21,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.openal.AL10;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -32,6 +35,7 @@ import java.util.function.Consumer;
 public class WavAudio implements IAudio, ALAudio {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final int AL_SEC_OFFSET_FANCYMENU = 0x1024;
 
     @Nullable
     protected volatile ALAudioClip clip;
@@ -45,6 +49,7 @@ public class WavAudio implements IAudio, ALAudio {
     protected volatile boolean decoded = false;
     protected volatile boolean loadingCompleted = false;
     protected volatile boolean loadingFailed = false;
+    protected volatile boolean retryWhenOpenAlReady = false;
     protected volatile boolean closed = false;
 
     @NotNull
@@ -63,23 +68,14 @@ public class WavAudio implements IAudio, ALAudio {
         //Clips need to get created on the main thread, so make sure we're in the correct thread
         RenderSystem.assertOnRenderThread();
 
-        if (!ALUtils.isOpenAlReady()) {
-            audio.loadingFailed = true;
-            LOGGER.error("[FANCYMENU] Failed to read WAV audio! OpenAL not ready! Returning empty audio for: " + location);
+        if (isOpenAlNotReadyOrReloading()) {
+            failBecauseOpenAlNotReady(audio, location.toString());
             return audio;
         }
 
-        ALAudioClip clip;
-        try {
-            clip = ALAudioClip.create();
-        } catch (Exception ex) {
-            audio.loadingFailed = true;
-            LOGGER.error("[FANCYMENU] Failed to read WAV audio! Failed to create clip: " + location, ex);
-            return audio;
-        }
+        ALAudioClip clip = OpenAlAudioClipFactory.createSafe();
         if (clip == null) {
-            audio.loadingFailed = true;
-            LOGGER.error("[FANCYMENU] Failed to read WAV audio! Clip was NULL: " + location);
+            failBecauseOpenAlReload(audio, location.toString(), "failed to allocate OpenAL source");
             return audio;
         }
 
@@ -120,23 +116,14 @@ public class WavAudio implements IAudio, ALAudio {
         //Clips need to get created on the main thread, so make sure we're in the correct thread
         RenderSystem.assertOnRenderThread();
 
-        if (!ALUtils.isOpenAlReady()) {
-            audio.loadingFailed = true;
-            LOGGER.error("[FANCYMENU] Failed to read WAV audio! OpenAL not ready! Returning empty audio for: " + wavAudioFile.getPath());
+        if (isOpenAlNotReadyOrReloading()) {
+            failBecauseOpenAlNotReady(audio, wavAudioFile.getPath());
             return audio;
         }
 
-        ALAudioClip clip;
-        try {
-            clip = ALAudioClip.create();
-        } catch (Exception ex) {
-            audio.loadingFailed = true;
-            LOGGER.error("[FANCYMENU] Failed to read WAV audio! Failed to create clip: " + wavAudioFile.getPath(), ex);
-            return audio;
-        }
+        ALAudioClip clip = OpenAlAudioClipFactory.createSafe();
         if (clip == null) {
-            audio.loadingFailed = true;
-            LOGGER.error("[FANCYMENU] Failed to read WAV audio! Clip was NULL: " + wavAudioFile.getPath());
+            failBecauseOpenAlReload(audio, wavAudioFile.getPath(), "failed to allocate OpenAL source");
             return audio;
         }
 
@@ -174,23 +161,14 @@ public class WavAudio implements IAudio, ALAudio {
         //Clips need to get created on the main thread, so make sure we're in the correct thread
         RenderSystem.assertOnRenderThread();
 
-        if (!ALUtils.isOpenAlReady()) {
-            audio.loadingFailed = true;
-            LOGGER.error("[FANCYMENU] Failed to read WAV audio! OpenAL not ready! Returning empty audio for: " + wavAudioURL);
+        if (isOpenAlNotReadyOrReloading()) {
+            failBecauseOpenAlNotReady(audio, wavAudioURL);
             return audio;
         }
 
-        ALAudioClip clip;
-        try {
-            clip = ALAudioClip.create();
-        } catch (Exception ex) {
-            audio.loadingFailed = true;
-            LOGGER.error("[FANCYMENU] Failed to read WAV audio! Failed to create clip: " + wavAudioURL, ex);
-            return audio;
-        }
+        ALAudioClip clip = OpenAlAudioClipFactory.createSafe();
         if (clip == null) {
-            audio.loadingFailed = true;
-            LOGGER.error("[FANCYMENU] Failed to read WAV audio! Clip was NULL: " + wavAudioURL);
+            failBecauseOpenAlReload(audio, wavAudioURL, "failed to allocate OpenAL source");
             return audio;
         }
 
@@ -217,24 +195,20 @@ public class WavAudio implements IAudio, ALAudio {
         // Clips need to get created on the main thread, so make sure we're in the correct thread
         if (clip == null) RenderSystem.assertOnRenderThread();
 
-        if (!ALUtils.isOpenAlReady()) {
-            audio.loadingFailed = true;
-            LOGGER.error("[FANCYMENU] Failed to read WAV audio! OpenAL not ready! Returning empty audio for: " + name);
+        if (isOpenAlNotReadyOrReloading()) {
+            CloseableUtils.closeQuietly(clip);
+            failBecauseOpenAlNotReady(audio, name);
             return audio;
         }
 
-        try {
-            audio.clip = (clip != null) ? clip : ALAudioClip.create();
-        } catch (Exception ex) {
-            audio.loadingFailed = true;
-            LOGGER.error("[FANCYMENU] Failed to read WAV audio! Failed to create clip: " + name, ex);
-            return audio;
-        }
+        audio.clip = (clip != null) ? clip : OpenAlAudioClipFactory.createSafe();
 
         ALAudioClip cachedClip = audio.clip;
         if (cachedClip == null) {
-            audio.loadingFailed = true;
-            LOGGER.error("[FANCYMENU] Failed to read WAV audio! Clip was NULL: " + name);
+            failBecauseOpenAlReload(audio, name, "failed to allocate OpenAL source");
+            return audio;
+        }
+        if (!audio.configureNonPositionalSource(name)) {
             return audio;
         }
 
@@ -273,12 +247,19 @@ public class WavAudio implements IAudio, ALAudio {
                 }
 
                 // Continue with normal audio loading
+                if (!audio.canContinueBackgroundLoading(cachedClip, name)) {
+                    return;
+                }
                 byteIn = new ByteArrayInputStream(fullData);
                 stream = AudioSystem.getAudioInputStream(byteIn);
                 ByteBuffer byteBuffer = ALUtils.readStreamIntoBuffer(stream);
                 ALAudioBuffer audioBuffer = new ALAudioBuffer(byteBuffer, stream.getFormat());
                 audio.audioBuffer = audioBuffer;
-                cachedClip.setStaticBuffer(audioBuffer);
+                if (!audio.tryAttachDecodedBuffer(cachedClip, audioBuffer, name)) {
+                    return;
+                }
+                audio.loadingFailed = false;
+                audio.retryWhenOpenAlReady = false;
                 audio.decoded = true;
                 audio.loadingCompleted = true;
             } catch (Exception ex) {
@@ -299,6 +280,11 @@ public class WavAudio implements IAudio, ALAudio {
     }
 
     protected WavAudio() {
+        AudioResourceReloadTracker.registerAudioInstance_FancyMenu(this);
+    }
+
+    private static boolean isOpenAlNotReadyOrReloading() {
+        return !ALUtils.isOpenAlReady();
     }
 
     @Nullable
@@ -401,9 +387,52 @@ public class WavAudio implements IAudio, ALAudio {
         return this.playTimeTracker.getCurrentPlayTime();
     }
 
+    @Override
+    public void setPlayTime(float playTime) {
+        float clamped = playTime;
+        if (!Float.isFinite(clamped) || clamped < 0.0F) clamped = 0.0F;
+        float duration = this.getDuration();
+        if (duration > 0.0F) {
+            clamped = Math.min(clamped, duration);
+        }
+        ALAudioClip cachedClip = this.clip;
+        if (cachedClip == null || cachedClip.isClosed() || !cachedClip.isValidOpenAlSource()) {
+            return;
+        }
+        int source = this.getALSource();
+        if (source == 0) {
+            return;
+        }
+        boolean playing = this.isPlaying();
+        boolean paused = this.isPaused();
+        try {
+            AL10.alSourcef(source, AL_SEC_OFFSET_FANCYMENU, clamped);
+            ALErrorHandler.checkOpenAlError();
+            this.playTimeTracker.setPlayTime(clamped, paused || !playing);
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to seek WAV audio preview play time!", ex);
+        }
+    }
+
     protected void forClip(@NotNull Consumer<ALAudioClip> clip) {
         ALAudioClip cached = this.clip;
         if (cached != null) clip.accept(cached);
+    }
+
+    private static void failBecauseOpenAlNotReady(@NotNull WavAudio audio, @NotNull String sourceName) {
+        audio.loadingFailed = true;
+        audio.loadingCompleted = false;
+        audio.decoded = false;
+        audio.retryWhenOpenAlReady = true;
+        LOGGER.warn("[FANCYMENU] Delaying WAV audio load because OpenAL is not ready yet or still reloading. It will retry automatically once ready again: " + sourceName);
+    }
+
+    private static void failBecauseOpenAlReload(@NotNull WavAudio audio, @NotNull String sourceName, @NotNull String reason) {
+        audio.loadingFailed = true;
+        audio.loadingCompleted = false;
+        audio.decoded = false;
+        audio.retryWhenOpenAlReady = true;
+        LOGGER.warn("[FANCYMENU] Delaying WAV audio load because OpenAL is reloading (" + reason + "). It will retry automatically once ready again: " + sourceName);
     }
 
     @Override
@@ -452,21 +481,85 @@ public class WavAudio implements IAudio, ALAudio {
         return 0;
     }
 
+    private boolean configureNonPositionalSource(@NotNull String sourceName) {
+        ALAudioClip cachedClip = this.clip;
+        if ((cachedClip == null) || this.closed || cachedClip.isClosed()) return false;
+        if (isOpenAlNotReadyOrReloading()) {
+            failBecauseOpenAlNotReady(this, sourceName);
+            return false;
+        }
+        if (!cachedClip.isValidOpenAlSource()) {
+            failBecauseOpenAlReload(this, sourceName, "OpenAL source became invalid");
+            return false;
+        }
+        int source = this.getALSource();
+        if (source == 0) {
+            failBecauseOpenAlReload(this, sourceName, "OpenAL source handle was 0");
+            return false;
+        }
+        try {
+            AL10.alSourcei(source, AL10.AL_SOURCE_RELATIVE, AL10.AL_TRUE);
+            AL10.alSource3f(source, AL10.AL_POSITION, 0.0F, 0.0F, 0.0F);
+            AL10.alSourcef(source, AL10.AL_ROLLOFF_FACTOR, 0.0F);
+            ALErrorHandler.checkOpenAlError();
+            return true;
+        } catch (Exception ex) {
+            failBecauseOpenAlReload(this, sourceName, "failed to configure non-positional source");
+            LOGGER.debug("[FANCYMENU] WAV source configuration error details: " + sourceName, ex);
+        }
+        return false;
+    }
+
+    private boolean canContinueBackgroundLoading(@NotNull ALAudioClip targetClip, @NotNull String sourceName) {
+        if (this.closed || (this.clip != targetClip) || targetClip.isClosed()) return false;
+        if (isOpenAlNotReadyOrReloading()) {
+            failBecauseOpenAlNotReady(this, sourceName);
+            return false;
+        }
+        if (!targetClip.isValidOpenAlSource()) {
+            failBecauseOpenAlReload(this, sourceName, "OpenAL source became invalid");
+            return false;
+        }
+        return true;
+    }
+
+    private boolean tryAttachDecodedBuffer(@NotNull ALAudioClip targetClip, @NotNull ALAudioBuffer decodedBuffer, @NotNull String sourceName) {
+        if (!this.canContinueBackgroundLoading(targetClip, sourceName)) return false;
+        Integer preparedBuffer = decodedBuffer.getSource();
+        if ((preparedBuffer == null) || !decodedBuffer.isValidOpenAlSource()) {
+            failBecauseOpenAlReload(this, sourceName, "failed to prepare OpenAL buffer");
+            return false;
+        }
+        try {
+            targetClip.setStaticBuffer(decodedBuffer);
+            if (!targetClip.isValidOpenAlSource()) {
+                failBecauseOpenAlReload(this, sourceName, "OpenAL source became invalid while attaching decoded audio");
+                return false;
+            }
+            return true;
+        } catch (Exception ex) {
+            failBecauseOpenAlReload(this, sourceName, "failed to attach decoded audio buffer");
+            LOGGER.debug("[FANCYMENU] WAV buffer attach error details: " + sourceName, ex);
+        }
+        return false;
+    }
+
     @Override
     public void close() {
         this.closed = true;
+        this.retryWhenOpenAlReady = false;
         try {
             ALAudioClip cachedClip = this.clip;
             if (cachedClip != null) cachedClip.close();
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to close OGG audio clip!", ex);
+            LOGGER.error("[FANCYMENU] Failed to close WAV audio clip!", ex);
         }
         this.clip = null;
         try {
             ALAudioBuffer cachedBuffer = this.audioBuffer;
             if (cachedBuffer != null) cachedBuffer.delete();
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to delete OGG audio buffer!", ex);
+            LOGGER.error("[FANCYMENU] Failed to delete WAV audio buffer!", ex);
         }
         this.audioBuffer = null;
         this.decoded = false;
@@ -475,6 +568,14 @@ public class WavAudio implements IAudio, ALAudio {
     @Override
     public boolean isClosed() {
         if (!this.closed) {
+            if (this.retryWhenOpenAlReady) {
+                try {
+                    if (!isOpenAlNotReadyOrReloading()) {
+                        this.close();
+                    }
+                } catch (Exception ignored) {
+                }
+            }
             ALAudioClip cachedClip = this.clip;
             if ((cachedClip != null) && !cachedClip.isValidOpenAlSource()) {
                 this.close();

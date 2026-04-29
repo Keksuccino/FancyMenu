@@ -12,8 +12,8 @@ import org.spongepowered.asm.mixin.injection.At;
 public class MixinWorldListEntry {
 
     @WrapWithCondition(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/ResourceLocation;IIFFIIII)V"), method = "render")
-    private boolean wrapBlitInRenderFancyMenu(GuiGraphics graphics, ResourceLocation loc, int p_93135_, int p_93136_, float p_93137_, float p_93138_, int p_93139_, int p_93140_, int p_93141_, int p_93142_) {
-        if (p_93142_ == 32) {
+    private boolean wrapBlitInRenderFancyMenu(GuiGraphics graphics, ResourceLocation loc, int p_93135_, int p_93136_, float p_93137_, float p_93138_, int p_93139_, int p_93140_, int p_93141_, int i) {
+        if (i == 32) {
             return FancyMenu.getOptions().showSingleplayerScreenWorldIcons.getValue();
         }
         return true;

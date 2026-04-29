@@ -2,13 +2,13 @@ package de.keksuccino.fancymenu.customization.widget.identification.identificati
 
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 
 /**
  * {@link WidgetIdentificationContext}s can help FancyMenu to better handle screens if their default widget layout changes,

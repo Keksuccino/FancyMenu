@@ -6,11 +6,14 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.realmsclient.gui.screens.RealmsNotificationsScreen;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
+import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -19,10 +22,9 @@ import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.renderer.PanoramaRenderer;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -31,20 +33,17 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import javax.annotation.Nullable;
-
 @Mixin(TitleScreen.class)
 public abstract class MixinTitleScreen extends Screen {
 
-    @Shadow @Final public static Component COPYRIGHT_TEXT;
-    @Shadow @Final private static ResourceLocation PANORAMA_OVERLAY;
-    @Shadow @Nullable private RealmsNotificationsScreen realmsNotificationsScreen;
+    @Shadow @Final private static Component COPYRIGHT_TEXT;
     @Shadow public boolean fading;
+    @Shadow private @Nullable RealmsNotificationsScreen realmsNotificationsScreen;
 
-    @Unique private GuiGraphics cached_graphics_FancyMenu = null;
     @Unique private int cached_mouseX_FancyMenu = -1;
     @Unique private int cached_mouseY_FancyMenu = -1;
     @Unique private float cached_partial_FancyMenu = -1f;
+    @Unique @Nullable private GuiGraphics cached_graphics_FancyMenu;
 
     //unused dummy constructor
     @SuppressWarnings("all")
@@ -109,47 +108,51 @@ public abstract class MixinTitleScreen extends Screen {
         this.cached_mouseX_FancyMenu = mouseX;
         this.cached_mouseY_FancyMenu = mouseY;
         this.cached_partial_FancyMenu = partial;
+        this.cached_graphics_FancyMenu = graphics;
         //Disable fading if customizations enabled, so FancyMenu can properly handle widget alpha
         if (ScreenCustomization.isCustomizationEnabledForScreen(this)) {
             this.fading = false;
         }
-        this.cached_graphics_FancyMenu = graphics;
     }
 
     /**
      * @reason Manually fire FancyMenu's {@link RenderedScreenBackgroundEvent} in {@link TitleScreen}, because normal event doesn't work correctly here.
      */
     @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/PanoramaRenderer;render(FF)V"))
-    private void wrap_renderPanorama_FancyMenu(PanoramaRenderer instance, float deltaT, float alpha, Operation<Void> original) {
-        ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen(this);
-        if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this)) {
-            if (!l.layoutBase.menuBackgrounds.isEmpty()) {
+    private void wrap_renderPanorama_FancyMenu(PanoramaRenderer instance, float partialTick, float alpha, Operation<Void> original) {
+        GuiGraphics graphics = this.cached_graphics_FancyMenu;
+        if (graphics == null) {
+            original.call(instance, partialTick, alpha);
+            return;
+        }
+
+        ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(this);
+        if ((layer != null) && ScreenCustomization.isCustomizationEnabledForScreen(this)) {
+            if (!layer.layoutBase.menuBackgrounds.isEmpty()) {
                 RenderSystem.enableBlend();
                 //Render a black background before the custom background gets rendered
-                this.cached_graphics_FancyMenu.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, 0);
+                graphics.fill(0, 0, this.width, this.height, 0);
+                RenderingUtils.resetShaderColor(graphics);
             } else {
-                original.call(instance, deltaT, alpha);
+                this.renderCustomOrVanillaPanorama_FancyMenu(graphics, partialTick, alpha, instance, original);
             }
         } else {
-            original.call(instance, deltaT, alpha);
+            this.renderCustomOrVanillaPanorama_FancyMenu(graphics, partialTick, alpha, instance, original);
         }
-        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, this.cached_graphics_FancyMenu, this.cached_mouseX_FancyMenu, this.cached_mouseY_FancyMenu, this.cached_partial_FancyMenu));
+        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, graphics, this.cached_mouseX_FancyMenu, this.cached_mouseY_FancyMenu, this.cached_partial_FancyMenu));
     }
 
-    /**
-     * @reason Cancel panorama overlay rendering when a custom background is active.
-     */
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/ResourceLocation;IIIIFFIIII)V"))
-    private boolean wrap_blit_in_render_FancyMenu(GuiGraphics instance, ResourceLocation location, int p_283671_, int p_282377_, int p_282058_, int p_281939_, float p_282285_, float p_283199_, int p_282186_, int p_282322_, int p_282481_, int p_281887_) {
-        if (location == PANORAMA_OVERLAY) {
-            ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen(this);
-            if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this)) {
-                if (!l.layoutBase.menuBackgrounds.isEmpty()) {
-                    return false;
-                }
-            }
+    @Unique
+    private void renderCustomOrVanillaPanorama_FancyMenu(GuiGraphics graphics, float partialTick, float alpha, PanoramaRenderer instance, Operation<Void> original) {
+        LocalTexturePanoramaRenderer panorama = GlobalCustomizationHandler.getCustomBackgroundPanorama();
+        if (panorama != null) {
+            float previousOpacity = panorama.opacity;
+            panorama.opacity = alpha;
+            panorama.render(graphics, 0, 0, partialTick);
+            panorama.opacity = previousOpacity;
+            return;
         }
-        return true;
+        original.call(instance, partialTick, alpha);
     }
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/realmsclient/gui/screens/RealmsNotificationsScreen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))

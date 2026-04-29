@@ -7,7 +7,6 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -19,7 +18,7 @@ public class PlayerUuidPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        return Minecraft.getInstance().getUser().getUuid();
+        return Minecraft.getInstance().getUser().getProfileId().toString();
     }
 
     @Override

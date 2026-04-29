@@ -67,6 +67,10 @@ public class DraggerWidget extends AbstractWidget {
         return (this.isHovered() && this.isActive() && this.visible);
     }
 
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
     @FunctionalInterface
     public interface DraggingCallback {
         void onDrag(double mouseX, double mouseY, double dragX, double dragY);

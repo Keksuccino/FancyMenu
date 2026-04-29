@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
+import de.keksuccino.fancymenu.util.rendering.text.smooth.TextDimensions;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -31,7 +32,7 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
     protected ConsumingSupplier<ComponentWidget, MutableComponent> textSupplier;
     protected boolean shadow = true;
     @NotNull
-    protected ConsumingSupplier<ComponentWidget, DrawableColor> baseColorSupplier = (var) -> UIBase.getUIColorTheme().generic_text_base_color;
+    protected ConsumingSupplier<ComponentWidget, DrawableColor> baseColorSupplier = (var) -> UIBase.getUITheme().ui_interface_generic_text_color;
     protected Consumer<ComponentWidget> onHoverOrFocusStart;
     protected Consumer<ComponentWidget> onHoverOrFocusEnd;
     protected Consumer<ComponentWidget> onClick;
@@ -42,6 +43,7 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
     protected Font font;
     protected boolean isCurrentlyHoveredOrFocused = false;
     protected int endX;
+    protected boolean useUIRendering = false;
 
     public static ComponentWidget of(@NotNull MutableComponent component, int x, int y) {
         return new ComponentWidget(Minecraft.getInstance().font, x, y, component);
@@ -84,7 +86,16 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
         RenderSystem.enableBlend();
 
         this.endX = this.getX();
-        this.endX = graphics.drawString(this.font, this.getText(), this.getX(), this.getY(), this.getBaseColor().getColorInt(), this.shadow);
+        if (this.useUIRendering) {
+            if (UIBase.shouldUseMinecraftFontForUIRendering()) {
+                this.endX = graphics.drawString(Minecraft.getInstance().font, this.getText(), this.getX(), this.getY(), this.getBaseColor().getColorInt(), this.shadow);
+            } else {
+                TextDimensions dimensions = UIBase.renderText(graphics, this.getText(), this.getX(), this.getY(), this.getBaseColor().getColorInt());
+                this.endX = this.getX() + (int) Math.ceil(dimensions.width());
+            }
+        } else {
+            this.endX = graphics.drawString(this.font, this.getText(), this.getX(), this.getY(), this.getBaseColor().getColorInt(), this.shadow);
+        }
 
         for (ComponentWidget c : this.children) {
             c.setX(this.endX);
@@ -97,6 +108,7 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
 
     public ComponentWidget append(@NotNull ComponentWidget child) {
         child.parent = this;
+        child.useUIRendering = this.useUIRendering;
         this.children.add(child);
         return this;
     }
@@ -140,6 +152,14 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
         this.shadow = shadow;
         for (ComponentWidget w : this.children) {
             w.shadow = shadow;
+        }
+        return this;
+    }
+
+    public ComponentWidget setUseUIFont(boolean useUIRendering) {
+        this.useUIRendering = useUIRendering;
+        for (ComponentWidget w : this.children) {
+            w.useUIRendering = useUIRendering;
         }
         return this;
     }
@@ -189,7 +209,9 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
 
     @Override
     public int getWidth() {
-        int w = this.font.width(this.getText());
+        int w = this.useUIRendering
+                ? (int) Math.ceil(UIBase.getUITextWidthNormal(this.getText()))
+                : this.font.width(this.getText());
         for (ComponentWidget c : this.children) {
             w += c.getWidth();
         }
@@ -198,6 +220,9 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
 
     @Override
     public int getHeight() {
+        if (this.useUIRendering) {
+            return (int) Math.ceil(UIBase.getUITextHeightNormal());
+        }
         return this.font.lineHeight;
     }
 

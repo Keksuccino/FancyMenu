@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.action.blocks.statements;
 
 import de.keksuccino.fancymenu.customization.action.Executable;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,7 +17,7 @@ public class WhileExecutableBlock extends AbstractExecutableBlock {
     private static final long TIMEOUT_MILLIS = 3000; // 3 seconds timeout
 
     @NotNull
-    public LoadingRequirementContainer condition = new LoadingRequirementContainer().forceRequirementsMet(true);
+    public RequirementContainer condition = new RequirementContainer().forceRequirementsMet(true);
 
     private long loopStartTime = 0;
     private boolean hasTimedOut = false;
@@ -26,7 +26,7 @@ public class WhileExecutableBlock extends AbstractExecutableBlock {
     public WhileExecutableBlock() {
     }
 
-    public WhileExecutableBlock(@NotNull LoadingRequirementContainer condition) {
+    public WhileExecutableBlock(@NotNull RequirementContainer condition) {
         this.condition = Objects.requireNonNull(condition);
     }
 
@@ -120,7 +120,7 @@ public class WhileExecutableBlock extends AbstractExecutableBlock {
         b.identifier = identifier;
         for (Map.Entry<String, String> m : serialized.getProperties().entrySet()) {
             if (m.getKey().equals("[while_executable_block_body:" + identifier + "]")) {
-                LoadingRequirementContainer lrc = LoadingRequirementContainer.deserializeWithIdentifier(m.getValue(), serialized);
+                RequirementContainer lrc = RequirementContainer.deserializeWithIdentifier(m.getValue(), serialized);
                 if (lrc != null) {
                     b.condition = lrc;
                 }

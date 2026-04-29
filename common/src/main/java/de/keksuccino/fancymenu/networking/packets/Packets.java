@@ -7,11 +7,17 @@ import de.keksuccino.fancymenu.networking.packets.commands.layout.suggestions.La
 import de.keksuccino.fancymenu.networking.packets.commands.opengui.OpenGuiCommandPacketCodec;
 import de.keksuccino.fancymenu.networking.packets.commands.variable.command.VariableCommandPacketCodec;
 import de.keksuccino.fancymenu.networking.packets.commands.variable.suggestions.VariableCommandSuggestionsPacketCodec;
+import de.keksuccino.fancymenu.networking.packets.fmdata.FmDataToClientPacketCodec;
+import de.keksuccino.fancymenu.networking.packets.fmdata.FmDataToServerPacketCodec;
 import de.keksuccino.fancymenu.networking.packets.handshake.HandshakePacketCodec;
+import de.keksuccino.fancymenu.networking.packets.placeholders.gamerule.ServerGameruleValueRequestPacketCodec;
+import de.keksuccino.fancymenu.networking.packets.placeholders.gamerule.ServerGameruleValueResponsePacketCodec;
 import de.keksuccino.fancymenu.networking.packets.placeholders.nbt.ServerNbtDataRequestPacketCodec;
 import de.keksuccino.fancymenu.networking.packets.placeholders.nbt.ServerNbtDataResponsePacketCodec;
-import de.keksuccino.fancymenu.networking.packets.structures.StructureEventPacketCodec;
+import de.keksuccino.fancymenu.networking.packets.structure.clientstructures.StructureEventPacketCodec;
 import de.keksuccino.fancymenu.networking.packets.entities.EntityEventPacketCodec;
+import de.keksuccino.fancymenu.networking.packets.structure.playerpos.PlayerPosStructuresPacketCodec;
+import de.keksuccino.fancymenu.networking.packets.structure.structures.StructuresPacketCodec;
 
 public class Packets {
 
@@ -24,8 +30,14 @@ public class Packets {
     public static final HandshakePacketCodec HANDSHAKE_PACKET_CODEC = new HandshakePacketCodec();
     public static final StructureEventPacketCodec STRUCTURE_EVENT_PACKET_CODEC = new StructureEventPacketCodec();
     public static final EntityEventPacketCodec ENTITY_EVENT_PACKET_CODEC = new EntityEventPacketCodec();
+    public static final ServerGameruleValueRequestPacketCodec SERVER_GAMERULE_VALUE_REQUEST_PACKET_CODEC = new ServerGameruleValueRequestPacketCodec();
+    public static final ServerGameruleValueResponsePacketCodec SERVER_GAMERULE_VALUE_RESPONSE_PACKET_CODEC = new ServerGameruleValueResponsePacketCodec();
     public static final ServerNbtDataRequestPacketCodec SERVER_NBT_DATA_REQUEST_PACKET_CODEC = new ServerNbtDataRequestPacketCodec();
     public static final ServerNbtDataResponsePacketCodec SERVER_NBT_DATA_RESPONSE_PACKET_CODEC = new ServerNbtDataResponsePacketCodec();
+    public static final StructuresPacketCodec STRUCTURES_PACKET_CODEC = new StructuresPacketCodec();
+    public static final PlayerPosStructuresPacketCodec PLAYER_POS_STRUCTURES_PACKET_CODEC = new PlayerPosStructuresPacketCodec();
+    public static final FmDataToClientPacketCodec FMDATA_TO_CLIENT_PACKET_CODEC = new FmDataToClientPacketCodec();
+    public static final FmDataToServerPacketCodec FMDATA_TO_SERVER_PACKET_CODEC = new FmDataToServerPacketCodec();
 
     public static void registerAll() {
 
@@ -38,8 +50,14 @@ public class Packets {
         PacketRegistry.register(HANDSHAKE_PACKET_CODEC);
         PacketRegistry.register(STRUCTURE_EVENT_PACKET_CODEC);
         PacketRegistry.register(ENTITY_EVENT_PACKET_CODEC);
+        PacketRegistry.register(SERVER_GAMERULE_VALUE_REQUEST_PACKET_CODEC);
+        PacketRegistry.register(SERVER_GAMERULE_VALUE_RESPONSE_PACKET_CODEC);
         PacketRegistry.register(SERVER_NBT_DATA_REQUEST_PACKET_CODEC);
         PacketRegistry.register(SERVER_NBT_DATA_RESPONSE_PACKET_CODEC);
+        PacketRegistry.register(STRUCTURES_PACKET_CODEC);
+        PacketRegistry.register(PLAYER_POS_STRUCTURES_PACKET_CODEC);
+        PacketRegistry.register(FMDATA_TO_CLIENT_PACKET_CODEC);
+        PacketRegistry.register(FMDATA_TO_SERVER_PACKET_CODEC);
 
     }
 

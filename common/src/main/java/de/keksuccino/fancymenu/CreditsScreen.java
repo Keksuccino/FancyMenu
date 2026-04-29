@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.ScrollableMarkdownRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -14,7 +13,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
@@ -47,9 +45,12 @@ public class CreditsScreen extends Screen {
         } else {
             this.markdownRenderer.rebuild((float)(centerX - (scrollWidth / 2)), this.headerHeight, scrollWidth, scrollHeight);
         }
-        this.markdownRenderer.getMarkdownRenderer().setHeadlineLineColor(UIBase.getUIColorTheme().screen_background_color_darker);
-        this.markdownRenderer.getMarkdownRenderer().setTextBaseColor(UIBase.getUIColorTheme().generic_text_base_color);
+        // Allow markdown to render once to measure its size before entry culling.
+        this.markdownRenderer.getScrollArea().setRenderOnlyEntriesInArea(false);
+        this.markdownRenderer.getMarkdownRenderer().setHeadlineLineColor(UIBase.getUITheme().ui_interface_background_color);
+        this.markdownRenderer.getMarkdownRenderer().setTextBaseColor(UIBase.getUITheme().ui_interface_generic_text_color);
         this.markdownRenderer.getMarkdownRenderer().setTextShadow(false);
+        this.markdownRenderer.getMarkdownRenderer().setUIFontRenderingEnabled(true);
         this.addRenderableWidget(this.markdownRenderer);
 
         UIBase.applyDefaultWidgetSkinTo(this.addRenderableWidget(new ExtendedButton(centerX - 100, this.height - (this.footerHeight / 2) - 10, 200, 20, Component.translatable("fancymenu.common.close"), var1 -> this.onClose())));
@@ -77,20 +78,23 @@ public class CreditsScreen extends Screen {
         RenderSystem.enableBlend();
 
         //Background
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
         RenderingUtils.resetShaderColor(graphics);
 
         //Footer
-        graphics.fill(0, this.height - this.footerHeight, this.width, this.height, UIBase.getUIColorTheme().area_background_color.getColorInt());
+        graphics.fill(0, this.height - this.footerHeight, this.width, this.height, UIBase.getUITheme().ui_interface_area_background_color_type_1.getColorInt());
         RenderingUtils.resetShaderColor(graphics);
 
         super.render(graphics, mouseX, mouseY, partial);
 
     }
 
+public void renderBackground(@NotNull GuiGraphics graphics, int $$1, int $$2, float $$3) {
+    }
+
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDelta) {
-        return this.markdownRenderer.mouseScrolled(mouseX, mouseY, scrollDelta);
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaY) {
+        return this.markdownRenderer.mouseScrolled(mouseX, mouseY, scrollDeltaY);
     }
 
     @Override

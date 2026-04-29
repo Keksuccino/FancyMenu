@@ -11,6 +11,7 @@ import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.progress.StoringChunkProgressListener;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -62,7 +63,7 @@ public abstract class MixinLevelLoadingScreen extends Screen {
     }
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;drawCenteredString(Lnet/minecraft/client/gui/Font;Ljava/lang/String;III)V"))
-    private boolean wrapRenderPercentStringFancyMenu(GuiGraphics instance, Font $$0, String $$1, int $$2, int $$3, int $$4) {
+    private boolean wrapRenderPercentStringFancyMenu(GuiGraphics instance, Font font, String text, int x, int y, int color) {
         return !this.isCustomizableFancyMenu();
     }
 
@@ -71,7 +72,7 @@ public abstract class MixinLevelLoadingScreen extends Screen {
         if (this.isCustomizableFancyMenu()) {
             if (this.chunkRendererFancyMenu != null) this.chunkRendererFancyMenu.render(graphics, mouseX, mouseY, partial);
             if (this.percentageTextFancyMenu != null) {
-                this.percentageTextFancyMenu.setMessage(Component.literal(this.getFormattedProgress()));
+                this.percentageTextFancyMenu.setMessage(this.getFormattedProgressFancyMenu());
                 this.percentageTextFancyMenu.render(graphics, mouseX, mouseY, partial);
             }
         }
@@ -83,10 +84,13 @@ public abstract class MixinLevelLoadingScreen extends Screen {
     }
 
     @Unique
+    private Component getFormattedProgressFancyMenu() {
+        return Component.literal(Mth.clamp(this.progressListener.getProgress(), 0, 100) + "%");
+    }
+
+    @Unique
     private boolean isCustomizableFancyMenu() {
         return ScreenCustomization.isCustomizationEnabledForScreen(this);
     }
-
-    @Shadow protected abstract String getFormattedProgress();
 
 }

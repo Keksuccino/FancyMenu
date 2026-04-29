@@ -31,6 +31,10 @@ public class OnEntityStartsBeingInSightListener extends AbstractListener {
         this.stopListener = stopListener;
     }
 
+    public boolean shouldCheckVisibility() {
+        return this.hasInstancesListening() || this.stopListener.hasInstancesListening();
+    }
+
     public void onRenderFrameStart() {
         this.seenThisFrame.clear();
     }
@@ -119,24 +123,14 @@ public class OnEntityStartsBeingInSightListener extends AbstractListener {
         return List.of(LocalizationUtils.splitLocalizedLines("fancymenu.listeners.on_entity_starts_being_in_sight.desc"));
     }
 
-    public record EntitySightData(@Nullable String entityKey,
-                                  double distanceToPlayer,
-                                  double entityPosX,
-                                  double entityPosY,
-                                  double entityPosZ,
-                                  @NotNull UUID entityUuid) {
+    public record EntitySightData(@Nullable String entityKey, double distanceToPlayer, double entityPosX, double entityPosY, double entityPosZ, @NotNull UUID entityUuid) {
 
         public static @NotNull EntitySightData from(@NotNull Entity entity, double distanceToPlayer) {
             ResourceLocation entityTypeKey = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
             String keyString = (entityTypeKey != null) ? entityTypeKey.toString() : null;
-            return new EntitySightData(
-                keyString,
-                distanceToPlayer,
-                entity.getX(),
-                entity.getY(),
-                entity.getZ(),
-                entity.getUUID()
-            );
+            return new EntitySightData(keyString, distanceToPlayer, entity.getX(), entity.getY(), entity.getZ(), entity.getUUID());
         }
+
     }
+
 }

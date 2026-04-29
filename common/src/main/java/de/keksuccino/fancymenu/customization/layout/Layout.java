@@ -3,14 +3,16 @@ package de.keksuccino.fancymenu.customization.layout;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.ExecutableBlockDeserializer;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
+import de.keksuccino.fancymenu.customization.decorationoverlay.DecorationOverlayRegistry;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.Pair;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundRegistry;
-import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
 import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageMenuBackground;
 import de.keksuccino.fancymenu.customization.background.backgrounds.panorama.PanoramaMenuBackground;
 import de.keksuccino.fancymenu.customization.background.backgrounds.slideshow.SlideshowMenuBackground;
@@ -23,10 +25,9 @@ import de.keksuccino.fancymenu.customization.element.elements.Elements;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.image.ImageElement;
-import de.keksuccino.fancymenu.customization.element.elements.shape.ShapeElement;
+import de.keksuccino.fancymenu.customization.element.elements.shape.rectangle.RectangleShapeElement;
 import de.keksuccino.fancymenu.customization.element.elements.slideshow.SlideshowElement;
 import de.keksuccino.fancymenu.customization.element.elements.splash.SplashTextElement;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
@@ -40,15 +41,18 @@ import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Style;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.*;
 import java.util.function.Supplier;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused","unchecked"})
 public class Layout extends LayoutBase {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final String UNIVERSAL_LAYOUT_IDENTIFIER = "%fancymenu:universal_layout%";
 
     @NotNull
@@ -65,10 +69,11 @@ public class Layout extends LayoutBase {
     public boolean randomOnlyFirstTime = false;
     public List<String> universalLayoutMenuWhitelist = new ArrayList<>();
     public List<String> universalLayoutMenuBlacklist = new ArrayList<>();
-    public LoadingRequirementContainer layoutWideLoadingRequirementContainer = new LoadingRequirementContainer();
+    public RequirementContainer layoutWideRequirementContainer = new RequirementContainer();
     public List<SerializedElement> serializedElements = new ArrayList<>();
     public List<SerializedElement> serializedVanillaButtonElements = new ArrayList<>();
     public List<SerializedElement> serializedDeepElements = new ArrayList<>();
+    public List<LayerGroup> layerGroups = new ArrayList<>();
     @Legacy("Remove this in the future.")
     public boolean legacyLayout = false;
 
@@ -121,18 +126,18 @@ public class Layout extends LayoutBase {
         meta.putProperty("layout_index", "" + this.layoutIndex);
 
         if (!this.universalLayoutMenuWhitelist.isEmpty()) {
-            String wl = "";
+            StringBuilder wl = new StringBuilder();
             for (String s : this.universalLayoutMenuWhitelist) {
-                wl += s + ";";
+                wl.append(s).append(";");
             }
-            meta.putProperty("universal_layout_whitelist", wl);
+            meta.putProperty("universal_layout_whitelist", wl.toString());
         }
         if (!this.universalLayoutMenuBlacklist.isEmpty()) {
-            String bl = "";
+            StringBuilder bl = new StringBuilder();
             for (String s : this.universalLayoutMenuBlacklist) {
-                bl += s + ";";
+                bl.append(s).append(";");
             }
-            meta.putProperty("universal_layout_blacklist", bl);
+            meta.putProperty("universal_layout_blacklist", bl.toString());
         }
 
         if (this.customMenuTitle != null) {
@@ -154,13 +159,16 @@ public class Layout extends LayoutBase {
             set.putContainer(ps);
         }
 
-        //Normal layouts always have at max 1 background in the list, so we just get the first one from the list
-        if (!this.menuBackgrounds.isEmpty()) {
-            SerializedMenuBackground serializedMenuBackground = this.menuBackgrounds.get(0).builder.serializedBackgroundInternal(this.menuBackgrounds.get(0));
-            if (serializedMenuBackground != null) {
-                set.putContainer(serializedMenuBackground);
-            }
-        }
+        // Menu Backgrounds
+        this.menuBackgrounds.forEach(background -> {
+            PropertyContainer serialized = background.builder._serializeBackground(background);
+            if (serialized != null) set.putContainer(serialized);
+        });
+
+        // Decoration Overlays
+        this.decorationOverlays.forEach(pair -> {
+            set.putContainer(pair.getFirst()._serialize(pair.getSecond()));
+        });
 
         if (this.openAudio != null) {
             PropertyContainer ps = new PropertyContainer("customization");
@@ -211,7 +219,32 @@ public class Layout extends LayoutBase {
         }
         set.putContainer(executableBlocks);
 
-        this.layoutWideLoadingRequirementContainer.serializeToExistingPropertyContainer(meta);
+        this.layoutWideRequirementContainer.serializeToExistingPropertyContainer(meta);
+
+        for (LayerGroup group : this.layerGroups) {
+            if (group == null) {
+                continue;
+            }
+            PropertyContainer groupContainer = new PropertyContainer("layer_group");
+            if (group.name != null) {
+                groupContainer.putProperty("group_name", group.name);
+            }
+            if (group.collapsed) {
+                groupContainer.putProperty("collapsed", "true");
+            }
+            if (!group.elementInstanceIdentifiers.isEmpty()) {
+                StringBuilder ids = new StringBuilder();
+                for (String id : group.elementInstanceIdentifiers) {
+                    if (id != null && !id.isEmpty()) {
+                        ids.append(id).append(";");
+                    }
+                }
+                if (ids.length() > 0) {
+                    groupContainer.putProperty("element_ids", ids.toString());
+                }
+            }
+            set.putContainer(groupContainer);
+        }
 
         this.serializedElements.forEach(set::putContainer);
         if (!this.isUniversalLayout()) {
@@ -241,7 +274,7 @@ public class Layout extends LayoutBase {
 
                 layout.setScreenIdentifier(meta.getValue("identifier"));
 
-                layout.layoutIndex = SerializationUtils.deserializeNumber(Integer.class, layout.layoutIndex, meta.getValue("layout_index"));
+                layout.layoutIndex = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, layout.layoutIndex, meta.getValue("layout_index"));
 
                 String defaultRandomLayoutGroup = "-100397";
                 String randomMode = meta.getValue("randommode");
@@ -272,7 +305,7 @@ public class Layout extends LayoutBase {
 
                 layout.customMenuTitle = meta.getValue("custom_menu_title");
 
-                layout.layoutWideLoadingRequirementContainer = LoadingRequirementContainer.deserializeToSingleContainer(meta);
+                layout.layoutWideRequirementContainer = RequirementContainer.deserializeToSingleContainer(meta);
 
                 String renderBehindVanilla = meta.getValue("render_custom_elements_behind_vanilla");
                 if (renderBehindVanilla == null) {
@@ -290,14 +323,14 @@ public class Layout extends LayoutBase {
                     String blacklistRaw = meta.getValue("universal_layout_blacklist");
                     if ((whitelistRaw != null) && whitelistRaw.contains(";")) {
                         for (String s : whitelistRaw.split(";")) {
-                            if (s.length() > 0) {
+                            if (!s.isEmpty()) {
                                 layout.universalLayoutMenuWhitelist.add(ScreenIdentifierHandler.getBestIdentifier(s));
                             }
                         }
                     }
                     if ((blacklistRaw != null) && blacklistRaw.contains(";")) {
                         for (String s : blacklistRaw.split(";")) {
-                            if (s.length() > 0) {
+                            if (!s.isEmpty()) {
                                 layout.universalLayoutMenuBlacklist.add(ScreenIdentifierHandler.getBestIdentifier(s));
                             }
                         }
@@ -306,10 +339,28 @@ public class Layout extends LayoutBase {
 
             }
 
+            for (PropertyContainer sec : serialized.getContainersOfType("layer_group")) {
+                LayerGroup group = new LayerGroup();
+                group.name = sec.getValue("group_name");
+                group.collapsed = SerializationHelper.INSTANCE.deserializeBoolean(group.collapsed, sec.getValue("collapsed"));
+                String rawIds = sec.getValue("element_ids");
+                if (rawIds == null) {
+                    rawIds = sec.getValue("elements");
+                }
+                if (rawIds != null) {
+                    for (String id : rawIds.split(";")) {
+                        if (!id.isEmpty()) {
+                            group.elementInstanceIdentifiers.add(id);
+                        }
+                    }
+                }
+                layout.layerGroups.add(group);
+            }
+
             // Convert old deep elements to their new widget versions
             for (PropertyContainer c : serialized.getContainersOfType("deep_element")) {
                 String elementType = c.getValue("element_type");
-                boolean hidden = SerializationUtils.deserializeBoolean(false, c.getValue("is_hidden"));
+                boolean hidden = SerializationHelper.INSTANCE.deserializeBoolean(false, c.getValue("is_hidden"));
                 if (hidden) {
                     PropertyContainer dummy = new PropertyContainer("vanilla_button");
                     dummy.putProperty("element_type", "vanilla_button");
@@ -370,7 +421,6 @@ public class Layout extends LayoutBase {
                         if (actionId == null) actionId = s.getValue("instance_identifier");
                         if ((actionId != null) && actionId.equals(identifier)) {
                             combined.add(s);
-                            continue;
                         }
                     }
                     for (SerializedElement e : legacyElements) {
@@ -378,7 +428,6 @@ public class Layout extends LayoutBase {
                         if (actionId == null) actionId = e.getValue("instance_identifier");
                         if ((actionId != null) && actionId.equals(identifier)) {
                             combined.add(e);
-                            continue;
                         }
                     }
                 }
@@ -389,24 +438,45 @@ public class Layout extends LayoutBase {
                 layout.serializedElements.addAll(combined);
             }
 
-            //Handle menu backgrounds
-            List<PropertyContainer> menuBackgroundSections = serialized.getContainersOfType("menu_background");
-            if (!menuBackgroundSections.isEmpty()) {
-                PropertyContainer menuBack = menuBackgroundSections.get(0);
-                String backgroundIdentifier = menuBack.getValue("background_type");
-                if (backgroundIdentifier != null) {
-                    MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder(backgroundIdentifier);
-                    if (builder != null) {
-                        MenuBackground back = builder.deserializeBackgroundInternal(convertSectionToBackground(menuBack));
-                        if ((back != null) && layout.menuBackgrounds.isEmpty()) layout.menuBackgrounds.add(back);
+            // Menu Backgrounds
+            layout.menuBackgrounds.clear();
+            List<MenuBackground<?>> deserializedBackgrounds = new ArrayList<>();
+            if (layout.legacyLayout) {
+                MenuBackground<?> legacyBackground = convertLegacyMenuBackground(serialized);
+                if (legacyBackground != null) deserializedBackgrounds.add(legacyBackground);
+            } else {
+                List<PropertyContainer> serializedMenuBackgrounds = serialized.getContainersOfType("menu_background");
+                serializedMenuBackgrounds.forEach(container -> {
+                    String backgroundIdentifier = container.getValue("background_type");
+                    if (backgroundIdentifier != null) {
+                        MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder(backgroundIdentifier);
+                        if (builder != null) {
+                            MenuBackground<?> background = builder._deserializeBackground(container);
+                            if (background != null) deserializedBackgrounds.add(background);
+                        }
+                    }
+                });
+            }
+            // The menuBackgrounds list of Layouts always holds exactly one instance of each background type for normal (non-stacked) layouts, so we can safely do the following
+            MenuBackgroundRegistry.getBuilders().forEach(builder -> {
+                MenuBackground<?> back = null;
+                for (MenuBackground<?> background : deserializedBackgrounds) {
+                    if (background.builder == builder) {
+                        back = background;
+                        break;
                     }
                 }
-            }
-            //Convert legacy backgrounds
-            if (layout.legacyLayout) {
-                MenuBackground legacyBackground = convertLegacyMenuBackground(serialized);
-                if ((legacyBackground != null) && layout.menuBackgrounds.isEmpty()) layout.menuBackgrounds.add(legacyBackground);
-            }
+                if (back == null) back = builder.buildDefaultInstance();
+                layout.menuBackgrounds.add(back);
+            });
+
+            // Decoration Overlays
+            DecorationOverlayRegistry.getAll().forEach(builder -> {
+                // Always add one instance of each overlay type, even if the layout does not contain a saved instance for the overlay type
+                var overlayInstances = builder._deserializeAll(serialized);
+                if (overlayInstances.isEmpty()) overlayInstances = List.of(builder.buildDefaultInstance());
+                layout.decorationOverlays.add(Pair.of(builder, overlayInstances.get(0)));
+            });
 
             //Handle Scroll List Customizations
             PropertyContainer scrollListCustomizations = serialized.getFirstContainerOfType("scroll_list_customization");
@@ -416,8 +486,8 @@ public class Layout extends LayoutBase {
                     if (preserveScrollHeaderFooterAspect.equals("true")) layout.preserveScrollListHeaderFooterAspectRatio = true;
                     if (preserveScrollHeaderFooterAspect.equals("false")) layout.preserveScrollListHeaderFooterAspectRatio = false;
                 }
-                layout.scrollListHeaderTexture = SerializationUtils.deserializeImageResourceSupplier(scrollListCustomizations.getValue("scroll_list_header_texture"));
-                layout.scrollListFooterTexture = SerializationUtils.deserializeImageResourceSupplier(scrollListCustomizations.getValue("scroll_list_footer_texture"));
+                layout.scrollListHeaderTexture = SerializationHelper.INSTANCE.deserializeImageResourceSupplier(scrollListCustomizations.getValue("scroll_list_header_texture"));
+                layout.scrollListFooterTexture = SerializationHelper.INSTANCE.deserializeImageResourceSupplier(scrollListCustomizations.getValue("scroll_list_footer_texture"));
                 String renderScrollHeaderShadow = scrollListCustomizations.getValue("render_scroll_list_header_shadow");
                 if (renderScrollHeaderShadow != null) {
                     if (renderScrollHeaderShadow.equals("true")) layout.renderScrollListHeaderShadow = true;
@@ -433,9 +503,10 @@ public class Layout extends LayoutBase {
                     if (showListHeaderFooter.equals("true")) layout.showScrollListHeaderFooterPreviewInEditor = true;
                     if (showListHeaderFooter.equals("false")) layout.showScrollListHeaderFooterPreviewInEditor = false;
                 }
-                layout.repeatScrollListHeaderTexture = SerializationUtils.deserializeBoolean(layout.repeatScrollListHeaderTexture, scrollListCustomizations.getValue("repeat_scroll_list_header_texture"));
-                layout.repeatScrollListFooterTexture = SerializationUtils.deserializeBoolean(layout.repeatScrollListFooterTexture, scrollListCustomizations.getValue("repeat_scroll_list_footer_texture"));
-                layout.applyVanillaBackgroundBlur = SerializationUtils.deserializeBoolean(layout.applyVanillaBackgroundBlur, scrollListCustomizations.getValue("apply_vanilla_background_blur"));
+                layout.showScreenBackgroundOverlayOnCustomBackground = SerializationHelper.INSTANCE.deserializeBoolean(layout.showScreenBackgroundOverlayOnCustomBackground, scrollListCustomizations.getValue("show_screen_background_overlay_on_custom_background"));
+                layout.repeatScrollListHeaderTexture = SerializationHelper.INSTANCE.deserializeBoolean(layout.repeatScrollListHeaderTexture, scrollListCustomizations.getValue("repeat_scroll_list_header_texture"));
+                layout.repeatScrollListFooterTexture = SerializationHelper.INSTANCE.deserializeBoolean(layout.repeatScrollListFooterTexture, scrollListCustomizations.getValue("repeat_scroll_list_footer_texture"));
+                layout.applyVanillaBackgroundBlur = SerializationHelper.INSTANCE.deserializeBoolean(layout.applyVanillaBackgroundBlur, scrollListCustomizations.getValue("apply_vanilla_background_blur"));
             }
 
             PropertyContainer executableBlocks = serialized.getFirstContainerOfType("layout_action_executable_blocks");
@@ -496,11 +567,11 @@ public class Layout extends LayoutBase {
                 }
 
                 if ((action != null) && action.equalsIgnoreCase("setcloseaudio")) {
-                    layout.closeAudio = SerializationUtils.deserializeAudioResourceSupplier(sec.getValue("path"));
+                    layout.closeAudio = SerializationHelper.INSTANCE.deserializeAudioResourceSupplier(sec.getValue("path"));
                 }
 
                 if ((action != null) && action.equalsIgnoreCase("setopenaudio")) {
-                    layout.openAudio = SerializationUtils.deserializeAudioResourceSupplier(sec.getValue("path"));
+                    layout.openAudio = SerializationHelper.INSTANCE.deserializeAudioResourceSupplier(sec.getValue("path"));
                 }
 
             }
@@ -568,8 +639,8 @@ public class Layout extends LayoutBase {
     }
 
     public boolean layoutWideLoadingRequirementsMet() {
-        if (this.layoutWideLoadingRequirementContainer != null) {
-            return this.layoutWideLoadingRequirementContainer.requirementsMet();
+        if (this.layoutWideRequirementContainer != null) {
+            return this.layoutWideRequirementContainer.requirementsMet();
         }
         return true;
     }
@@ -638,7 +709,7 @@ public class Layout extends LayoutBase {
                     ImageElement e = Elements.IMAGE.deserializeElementInternal(convertContainerToSerializedElement(sec));
                     if (e != null) {
                         e.stayOnScreen = false;
-                        e.textureSupplier = SerializationUtils.deserializeImageResourceSupplier(sec.getValue("path"));
+                        e.textureSupplier.set(SerializationHelper.INSTANCE.deserializeImageResourceSupplier(sec.getValue("path")));
                         elements.add(Elements.IMAGE.serializeElementInternal(e));
                         elementOrder.add(e.getInstanceIdentifier());
                     }
@@ -648,19 +719,19 @@ public class Layout extends LayoutBase {
                     ImageElement e = Elements.IMAGE.deserializeElementInternal(convertContainerToSerializedElement(sec));
                     if (e != null) {
                         e.stayOnScreen = false;
-                        e.textureSupplier = SerializationUtils.deserializeImageResourceSupplier(sec.getValue("url"));
+                        e.textureSupplier.set(SerializationHelper.INSTANCE.deserializeImageResourceSupplier(sec.getValue("url")));
                         elements.add(Elements.IMAGE.serializeElementInternal(e));
                         elementOrder.add(e.getInstanceIdentifier());
                     }
                 }
 
                 if (action.equalsIgnoreCase("addshape")) {
-                    ShapeElement e = Elements.SHAPE.deserializeElementInternal(convertContainerToSerializedElement(sec));
+                    RectangleShapeElement e = Elements.RECTANGLE_SHAPE.deserializeElementInternal(convertContainerToSerializedElement(sec));
                     if (e != null) {
                         e.stayOnScreen = false;
                         String c = sec.getValue("color");
-                        if (c != null) e.color = DrawableColor.of(c);
-                        elements.add(Elements.SHAPE.serializeElementInternal(e));
+                        if (c != null) e.color.set(DrawableColor.of(c).getHex());
+                        elements.add(Elements.RECTANGLE_SHAPE.serializeElementInternal(e));
                         elementOrder.add(e.getInstanceIdentifier());
                     }
                 }
@@ -704,7 +775,7 @@ public class Layout extends LayoutBase {
                         }
                         String baseColor = sec.getValue("basecolor");
                         if (baseColor != null) {
-                            e.baseColor = DrawableColor.of(baseColor);
+                            e.baseColor.set(DrawableColor.of(baseColor).getHex());
                         }
                         e.stayOnScreen = false;
                         elements.add(Elements.SPLASH_TEXT.serializeElementInternal(e));
@@ -737,7 +808,8 @@ public class Layout extends LayoutBase {
                             MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder("slideshow");
                             if (builder != null) {
                                 SlideshowMenuBackground b = new SlideshowMenuBackground((MenuBackgroundBuilder<SlideshowMenuBackground>)builder);
-                                b.slideshowName = name;
+                                b.showBackground.set(true);
+                                b.slideshowName.set(name);
                                 return b;
                             }
                         }
@@ -749,8 +821,9 @@ public class Layout extends LayoutBase {
                         if (PanoramaHandler.panoramaExists(name)) {
                             MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder("panorama");
                             if (builder != null) {
-                                PanoramaMenuBackground b = new PanoramaMenuBackground((MenuBackgroundBuilder<PanoramaMenuBackground>)builder);
-                                b.panoramaName = name;
+                                PanoramaMenuBackground b = (PanoramaMenuBackground) builder.buildDefaultInstance();
+                                b.showBackground.set(true);
+                                b.panoramaName.set(name);
                                 return b;
                             }
                         }
@@ -763,8 +836,9 @@ public class Layout extends LayoutBase {
                         MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder("image");
                         if (builder != null) {
                             ImageMenuBackground b = new ImageMenuBackground((MenuBackgroundBuilder<ImageMenuBackground>)builder);
-                            b.textureSupplier = SerializationUtils.deserializeImageResourceSupplier(value);
-                            b.slideLeftRight = (pano != null) && pano.equalsIgnoreCase("true");
+                            b.showBackground.set(true);
+                            b.textureSupplier.set(SerializationHelper.INSTANCE.deserializeImageResourceSupplier(value));
+                            b.slideLeftRight.set((pano != null) && pano.equalsIgnoreCase("true"));
                             return b;
                         }
                     }
@@ -804,7 +878,7 @@ public class Layout extends LayoutBase {
                 boolean addElement = false;
 
                 if (action.equalsIgnoreCase("addhoversound")) {
-                    element.hoverSound = SerializationUtils.deserializeAudioResourceSupplier(sec.getValue("path"));
+                    element.hoverSound = SerializationHelper.INSTANCE.deserializeAudioResourceSupplier(sec.getValue("path"));
                     if (element.hoverSound != null) {
                         addElement = true;
                     }
@@ -825,10 +899,10 @@ public class Layout extends LayoutBase {
                 }
 
                 if (action.equalsIgnoreCase("resizebutton")) {
-                    element.baseWidth = SerializationUtils.deserializeNumber(Integer.class, 5, sec.getValue("width"));
-                    element.baseHeight = SerializationUtils.deserializeNumber(Integer.class, 5, sec.getValue("height"));
-                    element.advancedWidth = sec.getValue("advanced_width");
-                    element.advancedHeight = sec.getValue("advanced_height");
+                    element.baseWidth = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, 5, sec.getValue("width"));
+                    element.baseHeight = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, 5, sec.getValue("height"));
+                    element.advancedWidth.setManualInput(sec.getValue("advanced_width"));
+                    element.advancedHeight.setManualInput(sec.getValue("advanced_height"));
                     addElement = true;
                 }
 
@@ -882,7 +956,7 @@ public class Layout extends LayoutBase {
                         element.appearanceDelay = AbstractElement.AppearanceDelay.EVERY_TIME;
                     }
                     if ((seconds != null) && MathUtils.isFloat(seconds)) {
-                        element.appearanceDelayInSeconds = Float.parseFloat(seconds);
+                        element.appearanceDelaySeconds.set(Float.parseFloat(seconds));
                     }
                     if ((fadeIn != null) && fadeIn.equalsIgnoreCase("true")) {
                         if ((fadeInSpeed != null) && MathUtils.isFloat(fadeInSpeed)) {
@@ -891,7 +965,7 @@ public class Layout extends LayoutBase {
                             } else if (element.appearanceDelay == AbstractElement.AppearanceDelay.EVERY_TIME) {
                                 element.fadeIn = AbstractElement.Fading.EVERY_TIME;
                             }
-                            element.fadeInSpeed = Float.parseFloat(fadeInSpeed);
+                            element.fadeInSpeed.set(Float.parseFloat(fadeInSpeed));
                         }
                     }
                     addElement = true;
@@ -907,27 +981,27 @@ public class Layout extends LayoutBase {
                     if ((restartBackAnimationsOnHover != null) && restartBackAnimationsOnHover.equalsIgnoreCase("false")) {
                         element.restartBackgroundAnimationsOnHover = false;
                     }
-                    element.backgroundTextureNormal = SerializationUtils.deserializeImageResourceSupplier(sec.getValue("backgroundnormal"));
-                    element.backgroundTextureHover = SerializationUtils.deserializeImageResourceSupplier(sec.getValue("backgroundhovered"));
+                    element.backgroundTextureNormal = SerializationHelper.INSTANCE.deserializeImageResourceSupplier(sec.getValue("backgroundnormal"));
+                    element.backgroundTextureHover = SerializationHelper.INSTANCE.deserializeImageResourceSupplier(sec.getValue("backgroundhovered"));
                     addElement = true;
                 }
 
                 if (action.equalsIgnoreCase("setbuttonclicksound")) {
-                    element.clickSound = SerializationUtils.deserializeAudioResourceSupplier(sec.getValue("path"));
+                    element.clickSound = SerializationHelper.INSTANCE.deserializeAudioResourceSupplier(sec.getValue("path"));
                     if (element.clickSound != null) {
                         addElement = true;
                     }
                 }
 
                 if (action.equalsIgnoreCase("vanilla_button_visibility_requirements")) {
-                    element.loadingRequirementContainer = LoadingRequirementContainer.deserializeToSingleContainer(sec);
+                    element.requirementContainer = RequirementContainer.deserializeToSingleContainer(sec);
                     addElement = true;
                 }
 
                 if (action.equalsIgnoreCase("clickbutton")) {
                     String clicks = sec.getValue("clicks");
                     if ((clicks != null) && (MathUtils.isInteger(clicks))) {
-                        element.automatedButtonClicks = Integer.parseInt(clicks);
+                        element.automatedButtonClicks.set(Integer.parseInt(clicks));
                         addElement = true;
                     }
                 }
@@ -956,6 +1030,16 @@ public class Layout extends LayoutBase {
 
         public List<AbstractElement> foregroundElements = new ArrayList<>();
         public List<AbstractElement> backgroundElements = new ArrayList<>();
+
+    }
+
+    public static class LayerGroup {
+
+        @Nullable
+        public String name = null;
+        @NotNull
+        public List<String> elementInstanceIdentifiers = new ArrayList<>();
+        public boolean collapsed = false;
 
     }
 

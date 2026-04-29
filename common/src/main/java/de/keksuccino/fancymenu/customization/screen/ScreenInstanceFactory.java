@@ -1,18 +1,18 @@
 package de.keksuccino.fancymenu.customization.screen;
 
 import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.identifier.UniversalScreenIdentifierRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
+import net.minecraft.client.gui.screens.AccessibilityOptionsScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.packs.PackSelectionScreen;
+import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.client.multiplayer.ClientAdvancements;
 import net.minecraft.client.resources.language.LanguageManager;
 import net.minecraft.network.chat.Component;
@@ -52,6 +52,13 @@ public class ScreenInstanceFactory {
 					Minecraft.getInstance().setScreen(Minecraft.getInstance().screen);
 				}, Minecraft.getInstance().getResourcePackDirectory(), Component.translatable("resourcePack.title"))
 		);
+
+		ScreenInstanceFactory.registerScreenProvider(CreateWorldScreen.class.getName(), () ->
+				new ExecuteOnRenderScreen(() -> CreateWorldScreen.openFresh(Minecraft.getInstance(), new TitleScreen()), true));
+
+        ScreenInstanceFactory.registerScreenProvider(AccessibilityOptionsScreen.class.getName(), () -> {
+            return new AccessibilityOptionsScreen(Minecraft.getInstance().screen, Minecraft.getInstance().options);
+        });
 
 	}
 

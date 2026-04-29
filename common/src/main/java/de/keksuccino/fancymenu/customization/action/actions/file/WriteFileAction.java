@@ -2,15 +2,16 @@ package de.keksuccino.fancymenu.customization.action.actions.file;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPCellWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -96,13 +97,13 @@ public class WriteFileAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.write_file");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.write_file.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.write_file.desc");
     }
 
     @Override
@@ -111,21 +112,50 @@ public class WriteFileAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "/config/mymod/output.txt|||Hello World!\\nThis is a new line.|||false";
     }
 
     @Override
-    public void editValue(@NotNull Screen parentScreen, @NotNull ActionInstance instance) {
+    public void editValue(@NotNull ActionInstance instance, @NotNull Action.ActionEditingCompletedFeedback onEditingCompleted, @NotNull Action.ActionEditingCanceledFeedback onEditingCanceled) {
+        String oldValue = instance.value;
+        boolean[] handled = {false};
+        final PiPWindow[] windowHolder = new PiPWindow[1];
         WriteFileActionValueScreen s = new WriteFileActionValueScreen(
-                Objects.requireNonNullElse(instance.value, this.getValueExample()), 
+                Objects.requireNonNullElse(instance.value, this.getValuePreset()),
                 value -> {
+                    if (handled[0]) {
+                        return;
+                    }
+                    handled[0] = true;
                     if (value != null) {
                         instance.value = value;
+                        onEditingCompleted.accept(instance, oldValue, value);
+                    } else {
+                        onEditingCanceled.accept(instance);
                     }
-                    Minecraft.getInstance().setScreen(parentScreen);
+                    PiPWindow window = windowHolder[0];
+                    if (window != null) {
+                        window.close();
+                    }
                 });
-        Minecraft.getInstance().setScreen(s);
+        PiPWindow window = new PiPWindow(s.getTitle())
+                .setScreen(s)
+                .setForceFancyMenuUiScale(true)
+                .setAlwaysOnTop(true)
+                .setBlockMinecraftScreenInputs(true)
+                .setForceFocus(true)
+                .setMinSize(TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT)
+                .setSize(TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
+        windowHolder[0] = window;
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
+        window.addCloseCallback(() -> {
+            if (handled[0]) {
+                return;
+            }
+            handled[0] = true;
+            onEditingCanceled.accept(instance);
+        });
     }
 
     public static class WriteFileConfig {
@@ -157,7 +187,7 @@ public class WriteFileAction extends Action {
         }
     }
 
-    public static class WriteFileActionValueScreen extends CellScreen {
+    public static class WriteFileActionValueScreen extends PiPCellWindowBody {
 
         protected WriteFileConfig config;
         protected Consumer<String> callback;
@@ -219,6 +249,10 @@ public class WriteFileAction extends Action {
         @Override
         protected void onDone() {
             this.callback.accept(this.config.serialize());
+        }
+
+        @Override
+        protected void autoScaleScreen(AbstractWidget topRightSideWidget) {
         }
 
     }
