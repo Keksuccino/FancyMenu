@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.platform;
 
 import de.keksuccino.fancymenu.platform.services.IPlatformCompatibilityLayer;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
@@ -23,7 +22,7 @@ public class FabricCompatibilityLayer implements IPlatformCompatibilityLayer {
             branding = branding + I18n.get("menu.modded");
         }
         List<Component> lines = new ArrayList<>();
-        lines.add(Components.literal(branding));
+        lines.add(Component.literal(branding));
         return lines;
     }
 

@@ -1,43 +1,43 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import de.keksuccino.fancymenu.util.rendering.gui.VanillaTooltip;
+import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.*;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.IExtendedWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.Minecraft;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 
 @SuppressWarnings("unused")
-public class ExtendedButton extends Button implements IExtendedWidget, UniqueWidget, NavigatableWidget, FancyMenuWidget, WidgetWithVanillaTooltip {
-
-    private static final Logger LOGGER = LogManager.getLogger();
+public class ExtendedButton extends Button implements IExtendedWidget, UniqueWidget, NavigatableWidget, FancyMenuWidget {
 
     protected final Minecraft mc = Minecraft.getInstance();
     protected boolean enableLabel = true;
     protected DrawableColor labelBaseColorNormal = DrawableColor.of(new Color(0xFFFFFF));
     protected DrawableColor labelBaseColorInactive = DrawableColor.of(new Color(0xA0A0A0));
     protected boolean labelShadow = true;
+    protected boolean renderLabelWithUiBase = false;
     @NotNull
     protected ConsumingSupplier<ExtendedButton, Component> labelSupplier = consumes -> Component.empty();
-    protected ConsumingSupplier<ExtendedButton, Tooltip> tooltipSupplier = null;
-    protected boolean forceDefaultTooltipStyle = false;
+    protected ConsumingSupplier<ExtendedButton, UITooltip> uiTooltipSupplier = null;
     @Nullable
     protected DrawableColor backgroundColorNormal;
     @Nullable
@@ -51,94 +51,74 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     @Nullable
     protected DrawableColor borderColorInactive;
     @Nullable
+    protected RenderableResource iconNormal;
+    @Nullable
+    protected RenderableResource iconHover;
+    @Nullable
+    protected RenderableResource iconInactive;
+    @Nullable
     protected ConsumingSupplier<ExtendedButton, Boolean> activeSupplier;
+    protected ConsumingSupplier<ExtendedButton, Boolean> visibilitySupplier;
     protected boolean focusable = true;
     protected boolean navigatable = true;
+    protected boolean roundedColorBackground = false;
     @Nullable
     protected String identifier;
-    @Nullable
-    protected VanillaTooltip vanillaTooltip;
 
     public ExtendedButton(int x, int y, int width, int height, @NotNull String label, @NotNull OnPress onPress) {
-        super(x, y, width, height, Component.literal(""), onPress);
+        super(x, y, width, height, Component.literal(""), onPress, DEFAULT_NARRATION);
+        this.setLabel(Component.literal(label));
+    }
+
+    public ExtendedButton(int x, int y, int width, int height, @NotNull String label, @NotNull OnPress onPress, CreateNarration narration) {
+        super(x, y, width, height, Component.literal(""), onPress, narration);
         this.setLabel(Component.literal(label));
     }
 
     public ExtendedButton(int x, int y, int width, int height, @NotNull Component label, @NotNull OnPress onPress) {
-        super(x, y, width, height, Component.literal(""), onPress);
+        super(x, y, width, height, Component.literal(""), onPress, DEFAULT_NARRATION);
         this.setLabel(label);
     }
 
-    public int getX() {
-        return this.x;
+    public ExtendedButton(int x, int y, int width, int height, @NotNull Component label, @NotNull OnPress onPress, CreateNarration narration) {
+        super(x, y, width, height, Component.literal(""), onPress, narration);
+        this.setLabel(label);
     }
 
-    public void setX(int x) {
-        this.x = x;
-    }
-
-    public int getY() {
-        return this.y;
-    }
-
-    public void setY(int y) {
-        this.y = y;
-    }
-
-    public int getWidth() {
-        return this.width;
-    }
-
-    public void setWidth(int width) {
-        this.width = width;
-    }
-
-    public int getHeight() {
-        return this.height;
-    }
-
-    public void setHeight(int height) {
-        this.height = height;
-    }
-
+    @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.updateIsActive();
+        this.updateVisibility();
         this.updateLabel();
-        Tooltip tooltip = this.getTooltipFancyMenu();
-        if ((tooltip != null) && ((IMixinAbstractWidget)this).getIsHoveredFancyMenu() && this.visible) {
-            if (this.forceDefaultTooltipStyle) {
-                tooltip.setDefaultStyle();
-            }
-            TooltipHandler.INSTANCE.addTooltip(tooltip, () -> true, false, true);
+        UITooltip tooltip = this.getUITooltip();
+        if ((tooltip != null) && this.isHovered() && this.visible) {
+            TooltipHandler.INSTANCE.addRenderTickTooltip(tooltip, () -> true);
         }
-        super.render(graphics.pose(), mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
     }
 
-    @Deprecated
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        this.render(GuiGraphics.currentGraphics(), mouseX, mouseY, partial);
-    }
-
     public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        this.renderBackground(GuiGraphics.currentGraphics());
-        this.renderLabelText(GuiGraphics.currentGraphics());
+
+        RenderSystem.disableDepthTest();
+        RenderingUtils.setDepthTestLocked(true);
+
+        this.renderBackground(graphics, partial);
+        this.renderIcon(graphics);
+        this.renderLabelText(graphics);
+
+        RenderingUtils.setDepthTestLocked(false);
+
     }
 
-    @Deprecated
-    @Override
-    public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        this.renderWidget(GuiGraphics.currentGraphics(), mouseX, mouseY, partial);
-    }
-
-    protected void renderBackground(@NotNull GuiGraphics graphics) {
+    protected void renderBackground(@NotNull GuiGraphics graphics, float partial) {
         //Renders the custom widget background if one is present or the Vanilla background if no custom background is present
-        if (this.getExtendedAsCustomizableWidget().renderCustomBackgroundFancyMenu(this, graphics, this.x, this.y, this.getWidth(), this.getHeight())) {
-            if (this.renderColorBackground(graphics)) {
+        if (this.getExtendedAsCustomizableWidget().renderCustomBackgroundFancyMenu(this, graphics, this.getX(), this.getY(), this.getWidth(), this.getHeight())) {
+            if (this.renderColorBackground(graphics, partial)) {
                 graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
-                RenderSystem.enableBlend();
+                RenderingUtils.setupAlphaBlend();
                 RenderSystem.enableDepthTest();
-                graphics.blitNineSliced(WIDGETS_LOCATION, this.x, this.y, this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());
+                graphics.blitNineSliced(WIDGETS_LOCATION, this.getX(), this.getY(), this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());
                 RenderingUtils.resetShaderColor(graphics);
             }
             RenderingUtils.resetShaderColor(graphics);
@@ -148,43 +128,135 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     /**
      * Returns if the button should render its Vanilla background (true) or not (false).
      */
-    protected boolean renderColorBackground(@NotNull GuiGraphics graphics) {
-        RenderSystem.enableBlend();
+    protected boolean renderColorBackground(@NotNull GuiGraphics graphics, float partial) {
+        RenderingUtils.setupAlphaBlend();
+        DrawableColor background = null;
+        DrawableColor border = null;
         if (this.active) {
             if (this.isHoveredOrFocused()) {
-                if (this.backgroundColorHover != null) {
-                    graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), this.backgroundColorHover.getColorInt());
-                    if (this.borderColorHover != null) {
-                        UIBase.renderBorder(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), 1, this.borderColorHover.getColorInt(), true, true, true, true);
-                    }
-                    return false;
-                }
+                background = this.backgroundColorHover;
+                border = this.borderColorHover;
             } else {
-                if (this.backgroundColorNormal != null) {
-                    graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), this.backgroundColorNormal.getColorInt());
-                    if (this.borderColorNormal != null) {
-                        UIBase.renderBorder(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), 1, this.borderColorNormal.getColorInt(), true, true, true, true);
-                    }
-                    return false;
-                }
+                background = this.backgroundColorNormal;
+                border = this.borderColorNormal;
             }
         } else {
-            if (this.backgroundColorInactive != null) {
-                graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), this.backgroundColorInactive.getColorInt());
-                if (this.borderColorInactive != null) {
-                    UIBase.renderBorder(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), 1, this.borderColorInactive.getColorInt(), true, true, true, true);
-                }
-                return false;
-            }
+            background = this.backgroundColorInactive;
+            border = this.borderColorInactive;
+        }
+
+        if (background != null) {
+            renderColoredBackground(graphics, background.getColorInt(), border, partial);
+            return false;
         }
         return true;
+    }
+
+    protected int getTextureY() {
+        int i = 1;
+        if (!this.active) {
+            i = 0;
+        } else if (this.isHoveredOrFocused()) {
+            i = 2;
+        }
+        return 46 + i * 20;
+    }
+
+    private void renderColoredBackground(@NotNull GuiGraphics graphics, int backgroundColor, @Nullable DrawableColor borderColor, float partial) {
+        int x = this.getX();
+        int y = this.getY();
+        int width = this.getWidth();
+        int height = this.getHeight();
+        float radius = this.roundedColorBackground ? UIBase.getWidgetCornerRoundingRadius() : 0.0F;
+        int borderThickness = borderColor != null ? 1 : 0;
+        int innerX = x + borderThickness;
+        int innerY = y + borderThickness;
+        int innerWidth = width - (borderThickness * 2);
+        int innerHeight = height - (borderThickness * 2);
+        if (radius > 0.0F) {
+            if (innerWidth > 0 && innerHeight > 0) {
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
+                        graphics,
+                        innerX,
+                        innerY,
+                        innerWidth,
+                        innerHeight,
+                        radius,
+                        radius,
+                        radius,
+                        radius,
+                        backgroundColor,
+                        partial
+                );
+            }
+            if (borderColor != null) {
+                float borderRadius = radius > 0.0F ? radius + borderThickness : 0.0F;
+                SmoothRectangleRenderer.renderSmoothBorderRoundAllCornersScaled(
+                        graphics,
+                        x,
+                        y,
+                        width,
+                        height,
+                        borderThickness,
+                        borderRadius,
+                        borderRadius,
+                        borderRadius,
+                        borderRadius,
+                        borderColor.getColorInt(),
+                        partial
+                );
+            }
+        } else {
+            if (innerWidth > 0 && innerHeight > 0) {
+                graphics.fill(innerX, innerY, innerX + innerWidth, innerY + innerHeight, backgroundColor);
+            }
+            if (borderColor != null) {
+                UIBase.renderBorder(graphics, x, y, x + width, y + height, 1, borderColor.getColorInt(), true, true, true, true);
+            }
+        }
     }
 
     protected void renderLabelText(@NotNull GuiGraphics graphics) {
         if (this.enableLabel) {
             int k = this.active ? this.labelBaseColorNormal.getColorIntWithAlpha(this.alpha) : this.labelBaseColorInactive.getColorIntWithAlpha(this.alpha);
-            this.renderScrollingLabel(this, graphics, mc.font, 2, this.labelShadow, k);
+            boolean labelShadowFinal = this.labelShadow && GlobalCustomizationHandler.isGlobalButtonLabelShadowEnabled();
+            if (this.renderLabelWithUiBase) {
+                this.renderScrollingLabelUiBase(this, graphics, 2, k);
+            } else {
+                this.renderScrollingLabel(this, graphics, mc.font, 2, labelShadowFinal, k);
+            }
         }
+    }
+
+    protected void renderIcon(@NotNull GuiGraphics graphics) {
+        RenderableResource icon = this.getCurrentIcon();
+        if (icon == null) return;
+        ResourceLocation iconLocation = icon.getResourceLocation();
+        if (iconLocation == null) return;
+        int iconWidth = icon.getWidth();
+        int iconHeight = icon.getHeight();
+        if (iconWidth <= 0 || iconHeight <= 0) return;
+        int renderHeight = this.getHeight();
+        if (renderHeight <= 0) return;
+        int renderWidth = Math.max(1, (int) Math.round((double) renderHeight * ((double) iconWidth / (double) iconHeight)));
+        if (renderWidth <= 0) return;
+        int renderX = this.getX() + ((this.getWidth() - renderWidth) / 2);
+        graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
+        RenderingUtils.setupAlphaBlend();
+        RenderSystem.enableDepthTest();
+        RenderingUtils.blitAlphaTexture(graphics, iconLocation, renderX, this.getY(), renderWidth, renderHeight);
+        RenderingUtils.resetShaderColor(graphics);
+    }
+
+    @Nullable
+    protected RenderableResource getCurrentIcon() {
+        if (this.active) {
+            if (this.isHoveredOrFocused()) {
+                return this.iconHover;
+            }
+            return this.iconNormal;
+        }
+        return this.iconInactive;
     }
 
     protected void updateLabel() {
@@ -200,19 +272,20 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         }
     }
 
+    protected void updateVisibility() {
+        if (this.visibilitySupplier != null) {
+            Boolean b = this.visibilitySupplier.get(this);
+            if (b != null) this.visible = b;
+        }
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
     protected int getHoverState() {
         if (this.isHovered) return 1;
         return 0;
-    }
-
-    protected int getTextureY() {
-        int i = 1;
-        if (!this.active) {
-            i = 0;
-        } else if (this.isHoveredOrFocused()) {
-            i = 2;
-        }
-        return 46 + i * 20;
     }
 
     public boolean isFocusable() {
@@ -234,38 +307,29 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     }
 
     @Nullable
-    public ConsumingSupplier<ExtendedButton, Tooltip> getTooltipSupplier() {
-        return this.tooltipSupplier;
+    public ConsumingSupplier<ExtendedButton, UITooltip> getUITooltipSupplier() {
+        return this.uiTooltipSupplier;
     }
 
-    public ExtendedButton setTooltipSupplier(@Nullable ConsumingSupplier<ExtendedButton, Tooltip> tooltipSupplier) {
-        this.tooltipSupplier = tooltipSupplier;
+    public ExtendedButton setUITooltipSupplier(@Nullable ConsumingSupplier<ExtendedButton, UITooltip> tooltipSupplier) {
+        this.uiTooltipSupplier = tooltipSupplier;
         return this;
     }
 
     @Nullable
-    public Tooltip getTooltipFancyMenu() {
-        if (this.tooltipSupplier != null) {
-            return this.tooltipSupplier.get(this);
+    public UITooltip getUITooltip() {
+        if (this.uiTooltipSupplier != null) {
+            return this.uiTooltipSupplier.get(this);
         }
         return null;
     }
 
-    public ExtendedButton setTooltip(@Nullable Tooltip tooltip) {
+    public ExtendedButton setUITooltip(@Nullable UITooltip tooltip) {
         if (tooltip == null) {
-            this.tooltipSupplier = null;
+            this.uiTooltipSupplier = null;
         } else {
-            this.tooltipSupplier = (button) -> tooltip;
+            this.uiTooltipSupplier = (button) -> tooltip;
         }
-        return this;
-    }
-
-    public boolean isForceDefaultTooltipStyle() {
-        return this.forceDefaultTooltipStyle;
-    }
-
-    public ExtendedButton setForceDefaultTooltipStyle(boolean forceDefaultTooltipStyle) {
-        this.forceDefaultTooltipStyle = forceDefaultTooltipStyle;
         return this;
     }
 
@@ -344,6 +408,15 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         return this;
     }
 
+    public boolean isLabelRenderedWithUiBase() {
+        return this.renderLabelWithUiBase;
+    }
+
+    public ExtendedButton setLabelRenderedWithUiBase(boolean renderLabelWithUiBase) {
+        this.renderLabelWithUiBase = renderLabelWithUiBase;
+        return this;
+    }
+
     public ExtendedButton setIsActiveSupplier(@Nullable ConsumingSupplier<ExtendedButton, Boolean> isActiveSupplier) {
         this.activeSupplier = isActiveSupplier;
         return this;
@@ -352,6 +425,16 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     @Nullable
     public ConsumingSupplier<ExtendedButton, Boolean> getIsActiveSupplier() {
         return this.activeSupplier;
+    }
+
+    public ExtendedButton setVisibilitySupplier(@Nullable ConsumingSupplier<ExtendedButton, Boolean> visibilitySupplier) {
+        this.visibilitySupplier = visibilitySupplier;
+        return this;
+    }
+
+    @Nullable
+    public ConsumingSupplier<ExtendedButton, Boolean> getVisibilitySupplier() {
+        return this.visibilitySupplier;
     }
 
     @Nullable
@@ -417,6 +500,15 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         this.borderColorInactive = borderColorInactive;
     }
 
+    public boolean isRoundedColorBackgroundEnabled() {
+        return this.roundedColorBackground;
+    }
+
+    public ExtendedButton setRoundedColorBackgroundEnabled(boolean roundedColorBackground) {
+        this.roundedColorBackground = roundedColorBackground;
+        return this;
+    }
+
     @Nullable
     public RenderableResource getBackgroundNormal() {
         return this.getExtendedAsCustomizableWidget().getCustomBackgroundNormalFancyMenu();
@@ -444,6 +536,36 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
 
     public ExtendedButton setBackgroundInactive(@Nullable RenderableResource background) {
         this.getExtendedAsCustomizableWidget().setCustomBackgroundInactiveFancyMenu(background);
+        return this;
+    }
+
+    @Nullable
+    public RenderableResource getIconNormal() {
+        return this.iconNormal;
+    }
+
+    public ExtendedButton setIconNormal(@Nullable RenderableResource icon) {
+        this.iconNormal = icon;
+        return this;
+    }
+
+    @Nullable
+    public RenderableResource getIconHover() {
+        return this.iconHover;
+    }
+
+    public ExtendedButton setIconHover(@Nullable RenderableResource icon) {
+        this.iconHover = icon;
+        return this;
+    }
+
+    @Nullable
+    public RenderableResource getIconInactive() {
+        return this.iconInactive;
+    }
+
+    public ExtendedButton setIconInactive(@Nullable RenderableResource icon) {
+        this.iconInactive = icon;
         return this;
     }
 
@@ -490,16 +612,6 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     @Override
     public @Nullable String getWidgetIdentifierFancyMenu() {
         return this.identifier;
-    }
-
-    @Override
-    public @Nullable VanillaTooltip getVanillaTooltip_FancyMenu() {
-        return this.vanillaTooltip;
-    }
-
-    @Override
-    public void setVanillaTooltip_FancyMenu(@Nullable VanillaTooltip tooltip) {
-        this.vanillaTooltip = tooltip;
     }
 
 }

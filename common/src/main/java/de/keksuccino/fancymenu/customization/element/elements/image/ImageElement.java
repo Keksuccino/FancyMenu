@@ -3,37 +3,42 @@ package de.keksuccino.fancymenu.customization.element.elements.image;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.SmoothImageRectangleRenderer;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import net.minecraft.util.FastColor;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.awt.Color;
 
 public class ImageElement extends AbstractElement {
 
-    private static final Logger LOGGER = LogManager.getLogger();
+    public final Property<ResourceSupplier<ITexture>> textureSupplier = putProperty(Property.resourceSupplierProperty(ITexture.class, "source", null, "fancymenu.elements.image.set_source", true, true, true, null));
+    public final Property.BooleanProperty repeat = putProperty(Property.booleanProperty("repeat_texture", false, "fancymenu.elements.image.repeat"));
+    public final Property.BooleanProperty nineSlice = putProperty(Property.booleanProperty("nine_slice_texture", false, "fancymenu.elements.image.nine_slice"));
+    public final Property.IntegerProperty nineSliceBorderX = putProperty(Property.integerProperty("nine_slice_texture_border_x", 5, "fancymenu.elements.image.nine_slice.border_x", Property.NumericInputBehavior.<Integer>builder().rangeInput(1, 100).build()));
+    public final Property.IntegerProperty nineSliceBorderY = putProperty(Property.integerProperty("nine_slice_texture_border_y", 5, "fancymenu.elements.image.nine_slice.border_y", Property.NumericInputBehavior.<Integer>builder().rangeInput(1, 100).build()));
+    public final Property.BooleanProperty restartAnimatedOnMenuLoad = putProperty(Property.booleanProperty("restart_animated_on_menu_load", false, "fancymenu.elements.image.restart_animated_on_menu_load"));
+    public final Property.ColorProperty imageTint = putProperty(Property.hexColorProperty("image_tint", "#FFFFFF", true, "fancymenu.elements.image.tint"));
+    public final Property.FloatProperty roundingRadiusTopLeft = putProperty(Property.floatProperty("rounding_radius_top_left", 0, "fancymenu.elements.image.rounding_radius.top_left", Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 100.0F).build()));
+    public final Property.FloatProperty roundingRadiusTopRight = putProperty(Property.floatProperty("rounding_radius_top_right", 0, "fancymenu.elements.image.rounding_radius.top_right", Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 100.0F).build()));
+    public final Property.FloatProperty roundingRadiusBottomRight = putProperty(Property.floatProperty("rounding_radius_bottom_right", 0, "fancymenu.elements.image.rounding_radius.bottom_right", Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 100.0F).build()));
+    public final Property.FloatProperty roundingRadiusBottomLeft = putProperty(Property.floatProperty("rounding_radius_bottom_left", 0, "fancymenu.elements.image.rounding_radius.bottom_left", Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 100.0F).build()));
 
     @Nullable
-    public ResourceSupplier<ITexture> textureSupplier;
-    public boolean repeat = false;
-    public boolean nineSlice = false;
-    public int nineSliceBorderX = 5;
-    public int nineSliceBorderY = 5;
-    public boolean restartAnimatedOnMenuLoad = false;
-    @NotNull
-    public String imageTint = "#FFFFFF";
-    @Nullable
-    public String lastImageTint;
-    @Nullable
-    private DrawableColor currentImageTint;
+    protected DrawableColor currentImageTint;
+    protected float resolvedRoundingRadiusTopLeft;
+    protected float resolvedRoundingRadiusTopRight;
+    protected float resolvedRoundingRadiusBottomRight;
+    protected float resolvedRoundingRadiusBottomLeft;
 
     public ImageElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -46,30 +51,28 @@ public class ImageElement extends AbstractElement {
         super.onOpenScreen();
 
         // Restart animated textures on menu load if enabled
-        if (this.restartAnimatedOnMenuLoad && (this.textureSupplier != null)) {
-            ITexture texture = this.textureSupplier.get();
-            if (texture instanceof PlayableResource r) {
-                r.stop();
-                r.play();
+        if (this.restartAnimatedOnMenuLoad.getBoolean()) {
+            ResourceSupplier<ITexture> supplier = this.textureSupplier.get();
+            if (supplier != null) {
+                ITexture texture = supplier.get();
+                if (texture instanceof PlayableResource r) {
+                    r.stop();
+                    r.play();
+                }
             }
         }
 
     }
 
     protected void tickImageTint() {
+        this.currentImageTint = this.imageTint.getDrawable();
+    }
 
-        String tint = PlaceholderParser.replacePlaceholders(this.imageTint);
-        if (!tint.equals(this.lastImageTint)) {
-            this.currentImageTint = DrawableColor.of(tint);
-            if (this.currentImageTint == DrawableColor.EMPTY) {
-                this.currentImageTint = DrawableColor.of("#FFFFFF");
-                LOGGER.error("[FANCYMENU] Failed to parse tint color for ImageElement! Defaulting to WHITE as tint because parsing failed for: " + tint + " (RAW: " + this.imageTint + ")", new IllegalStateException("Failed to parse image tint color"));
-            }
-        }
-        this.lastImageTint = tint;
-
-        if (this.currentImageTint == null) this.currentImageTint = DrawableColor.of("#FFFFFF");
-
+    protected void tickRoundingRadius() {
+        this.resolvedRoundingRadiusTopLeft = this.roundingRadiusTopLeft.getFloat();
+        this.resolvedRoundingRadiusTopRight = this.roundingRadiusTopRight.getFloat();
+        this.resolvedRoundingRadiusBottomRight = this.roundingRadiusBottomRight.getFloat();
+        this.resolvedRoundingRadiusBottomLeft = this.roundingRadiusBottomLeft.getFloat();
     }
 
     @Override
@@ -78,6 +81,7 @@ public class ImageElement extends AbstractElement {
         if (this.shouldRender()) {
 
             this.tickImageTint();
+            this.tickRoundingRadius();
             if (this.currentImageTint == null) return;
 
             int x = this.getAbsoluteX();
@@ -85,25 +89,42 @@ public class ImageElement extends AbstractElement {
 
             RenderSystem.enableBlend();
 
-            this.currentImageTint.setAsShaderColor(graphics, this.opacity);
-
             ITexture t = this.getTextureResource();
             if ((t != null) && t.isReady()) {
                 ResourceLocation loc = t.getResourceLocation();
                 if (loc != null) {
-                    if (this.repeat) {
+                    if (this.repeat.getBoolean()) {
+                        this.currentImageTint.setAsShaderColor(graphics, Mth.clamp(this.opacity, 0.0F, 1.0F));
                         RenderingUtils.blitRepeat(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight());
-                    } else if (this.nineSlice) {
-                        RenderingUtils.blitNineSlicedTexture(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight(), this.nineSliceBorderY, this.nineSliceBorderX, this.nineSliceBorderY, this.nineSliceBorderX);
+                        this.currentImageTint.resetShaderColor(graphics);
+                    } else if (this.nineSlice.getBoolean()) {
+                        this.currentImageTint.setAsShaderColor(graphics, Mth.clamp(this.opacity, 0.0F, 1.0F));
+                        int borderX = this.nineSliceBorderX.getInteger();
+                        int borderY = this.nineSliceBorderY.getInteger();
+                        RenderingUtils.blitNineSlicedTexture(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight(), borderY, borderX, borderY, borderX);
+                        this.currentImageTint.resetShaderColor(graphics);
                     } else {
-                        graphics.blit(loc, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+                        int color = resolveTintColor(this.currentImageTint, Mth.clamp(this.opacity, 0.0F, 1.0F));
+                        SmoothImageRectangleRenderer.renderSmoothImageRectRoundAllCornersScaled(
+                                graphics,
+                                loc,
+                                x,
+                                y,
+                                this.getAbsoluteWidth(),
+                                this.getAbsoluteHeight(),
+                                this.resolvedRoundingRadiusTopLeft,
+                                this.resolvedRoundingRadiusTopRight,
+                                this.resolvedRoundingRadiusBottomRight,
+                                this.resolvedRoundingRadiusBottomLeft,
+                                color,
+                                partial
+                        );
                     }
                 }
             } else if (isEditor()) {
                 RenderingUtils.renderMissing(graphics, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
             }
 
-            this.currentImageTint.resetShaderColor(graphics);
             RenderSystem.disableBlend();
 
         }
@@ -112,14 +133,20 @@ public class ImageElement extends AbstractElement {
 
     @Nullable
     public ITexture getTextureResource() {
-        if (this.textureSupplier != null) return this.textureSupplier.get();
-        return null;
+        ResourceSupplier<ITexture> supplier = this.textureSupplier.get();
+        return (supplier != null) ? supplier.get() : null;
     }
 
     public void restoreAspectRatio() {
         ITexture t = this.getTextureResource();
         AspectRatio ratio = (t != null) ? t.getAspectRatio() : new AspectRatio(10, 10);
         this.baseWidth = ratio.getAspectRatioWidth(this.getAbsoluteHeight());
+    }
+
+    private static int resolveTintColor(@NotNull DrawableColor tint, float opacity) {
+        Color color = tint.getColor();
+        int alpha = Mth.clamp((int) (opacity * 255.0F), 0, 255);
+        return FastColor.ARGB32.color(alpha, color.getRed(), color.getGreen(), color.getBlue());
     }
 
 }

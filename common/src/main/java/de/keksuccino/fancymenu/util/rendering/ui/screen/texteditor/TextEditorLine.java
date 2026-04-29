@@ -1,19 +1,19 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
+import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.MouseInput;
+import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -21,12 +21,9 @@ import java.util.List;
 
 public class TextEditorLine extends AdvancedTextField {
 
-    private static final Logger LOGGER = LogManager.getLogger();
-
-    public TextEditorScreen parent;
+    public TextEditorWindowBody parent;
     protected String lastTickValue = "";
     public boolean isInMouseHighlightingMode = false;
-    protected final Font font2;
     protected final boolean handleSelf2;
     public int textWidth = 0;
     public int lineIndex = 0;
@@ -36,20 +33,31 @@ public class TextEditorLine extends AdvancedTextField {
 
     protected static boolean leftRightArrowWasDown = false;
 
-    public TextEditorLine(Font font, int x, int y, int width, int height, boolean handleSelf, @Nullable CharacterFilter characterFilter, TextEditorScreen parent) {
+    public TextEditorLine(Font font, int x, int y, int width, int height, boolean handleSelf, @Nullable CharacterFilter characterFilter, TextEditorWindowBody parent) {
         super(font, x, y, width, height, handleSelf, characterFilter);
         this.parent = parent;
-        this.font2 = font;
         this.handleSelf2 = handleSelf;
         this.setBordered(false);
     }
 
+    public void moveCursorTo(int pos, boolean selecting) {
+        int previousHighlight = ((IMixinEditBox)this).getHighlightPosFancyMenu();
+        super.moveCursorTo(pos);
+        if (selecting) {
+            this.setHighlightPos(previousHighlight);
+        }
+    }
+
+    public void moveCursorToEnd(boolean selecting) {
+        this.moveCursorTo(this.getValue().length(), selecting);
+    }
+
     @Override
-    public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         //Only render line if inside the editor area (for performance reasons)
         if (this.isInEditorArea()) {
-            super.render(matrix, mouseX, mouseY, partial);
+            super.render(graphics, mouseX, mouseY, partial);
         }
 
         this.lastTickValue = this.getValue();
@@ -66,11 +74,11 @@ public class TextEditorLine extends AdvancedTextField {
                     style = rs.applyTo(style);
                 }
             }
-            chars.add(Components.literal(String.valueOf(c)).withStyle(style));
+            chars.add(Component.literal(String.valueOf(c)).withStyle(style));
             this.currentCharacterRenderIndex++;
             this.parent.currentRenderCharacterIndexTotal++;
         }
-        MutableComponent comp = Components.literal("");
+        MutableComponent comp = Component.literal("");
         for (Component c : chars) {
             comp.append(c);
         }
@@ -78,68 +86,112 @@ public class TextEditorLine extends AdvancedTextField {
     }
 
     @Override
-    public void renderButton(PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.currentCharacterRenderIndex = 0;
 
-        this.setTextColor(this.parent.textColor.getRGB());
-        this.setTextColorUneditable(this.parent.textColor.getRGB());
+        this.setTextColor(this.parent.textColor.get().getColorInt());
+        this.setTextColorUneditable(this.parent.textColor.get().getColorInt());
 
         if (this.isVisible()) {
 
             if (this.isFocused()) {
                 //Render focused background
-                fill(matrix, 0, this.getY(), this.parent.width, this.getY() + this.height, this.parent.focusedLineColor.getRGB());
+                int lineX = this.parent.getEditorAreaX();
+                int lineY = this.getY();
+                int lineWidth = this.parent.getEditorAreaWidth();
+                int lineHeight = this.height;
+                int lineColor = this.parent.focusedLineColor.get().getColorInt();
+                int areaY = this.parent.getEditorAreaY();
+                int areaBottom = areaY + this.parent.getEditorAreaHeight();
+                int visibleTop = Math.max(lineY, areaY);
+                int visibleBottom = Math.min(lineY + lineHeight, areaBottom);
+                int visibleHeight = visibleBottom - visibleTop;
+                if (visibleHeight > 0) {
+                    boolean roundTop = lineY <= areaY + 5;
+                    boolean roundBottom = (lineY + lineHeight) >= areaBottom - 5;
+                    if (roundTop || roundBottom) {
+                        float radius = UIBase.getInterfaceCornerRoundingRadius();
+                        if (roundTop && roundBottom) {
+                            SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(graphics, lineX, visibleTop, lineWidth, visibleHeight, radius, radius, radius, radius, lineColor, partial);
+                        } else if (roundTop) {
+                            SmoothRectangleRenderer.renderSmoothRectRoundTopCornersScaled(graphics, lineX, visibleTop, lineWidth, visibleHeight, radius, lineColor, partial);
+                        } else {
+                            SmoothRectangleRenderer.renderSmoothRectRoundBottomCornersScaled(graphics, lineX, visibleTop, lineWidth, visibleHeight, radius, lineColor, partial);
+                        }
+                    } else {
+                        graphics.fill(lineX, visibleTop, lineX + lineWidth, visibleTop + visibleHeight, lineColor);
+                    }
+                }
             }
 
             int textColorInt = this.isEditable() ? this.getAsAccessor().getTextColorFancyMenu() : this.getAsAccessor().getTextColorUneditableFancyMenu();
             int cursorPos = this.getCursorPosition() - this.getAsAccessor().getDisplayPosFancyMenu();
             int highlightPos = this.getAsAccessor().getHighlightPosFancyMenu() - this.getAsAccessor().getDisplayPosFancyMenu();
             String text = this.getValue();
-            boolean isCursorNotAtStartOrEnd = cursorPos >= 0 && cursorPos <= text.length();
-            boolean renderCursor = this.isFocused() && this.getAsAccessor().getFrameFancyMenu() / 6 % 2 == 0 && isCursorNotAtStartOrEnd;
-            int textX = this.getAsAccessor().getBorderedFancyMenu() ? this.getX() + 4 : this.getX() + 1;
-            int textY = this.getAsAccessor().getBorderedFancyMenu() ? this.getY() + (this.height - 8) / 2 : (this.getY() + Math.max(0, (this.getHeight() / 2)) - (this.font2.lineHeight / 2));
-            int textXRender = textX;
+            boolean isCursorInsideVisibleText = cursorPos >= 0 && cursorPos <= text.length();
+            boolean renderCursor = this.isFocused() && (Util.getMillis() - this.getAsAccessor().getFocusedTimeFancyMenu()) / 300L % 2L == 0L && isCursorInsideVisibleText;
+            float textHeight = UIBase.getUITextHeightNormal();
+            float textX = this.getAsAccessor().getBorderedFancyMenu() ? this.getX() + 4.0F : this.getX() + 1.0F;
+            float textY = this.getAsAccessor().getBorderedFancyMenu()
+                    ? this.getY() + (this.height - textHeight) / 2F
+                    : this.getY() + Math.max(0.0F, (this.getHeight() / 2F)) - (textHeight / 2F);
+            float textXAfterCursor = textX;
             if (highlightPos > text.length()) {
                 highlightPos = text.length();
             }
 
+            MutableComponent beforeCursorComp = null;
+            MutableComponent afterCursorComp = null;
+            boolean renderAfterCursor = false;
+
             if (!text.isEmpty()) {
-                String textBeforeCursor = isCursorNotAtStartOrEnd ? text.substring(0, cursorPos) : text;
-                //Render text before cursor
-                textXRender = this.font2.draw(matrix, this.getFormattedText(textBeforeCursor), (float)textX, (float)textY, textColorInt);
+                String textBeforeCursor = isCursorInsideVisibleText ? text.substring(0, cursorPos) : text;
+                beforeCursorComp = this.getFormattedText(textBeforeCursor);
+                textXAfterCursor = textX + UIBase.getUITextWidthNormal(beforeCursorComp);
+
+                if (isCursorInsideVisibleText && cursorPos < text.length()) {
+                    afterCursorComp = this.getFormattedText(text.substring(cursorPos));
+                    renderAfterCursor = true;
+                }
             }
 
             boolean isCursorNotAtEndOfLine = this.getCursorPosition() < this.getValue().length() || this.getValue().length() >= this.getAsAccessor().getMaxLengthFancyMenu();
-            int cursorPosRender = textXRender;
-            if (!isCursorNotAtStartOrEnd) {
+            float cursorPosRender = textXAfterCursor;
+            if (!isCursorInsideVisibleText) {
                 cursorPosRender = cursorPos > 0 ? textX + this.width : textX;
             } else if (isCursorNotAtEndOfLine) {
-                cursorPosRender = textXRender - 1;
+                cursorPosRender = textXAfterCursor - 1;
             }
 
-            if (!text.isEmpty() && isCursorNotAtStartOrEnd && cursorPos < text.length()) {
-                //Render text after cursor
-                this.font2.draw(matrix, this.getFormattedText(text.substring(cursorPos)), (float)textXRender, (float)textY, textColorInt);
+            if (!text.isEmpty() && beforeCursorComp != null) {
+                UIBase.renderText(graphics, beforeCursorComp, textX, textY, textColorInt);
+                if (renderAfterCursor && afterCursorComp != null) {
+                    UIBase.renderText(graphics, afterCursorComp, textXAfterCursor, textY, textColorInt);
+                }
+            }
+
+            if (this.getAsAccessor().getHintFancyMenu() != null && text.isEmpty() && !this.isFocused()) {
+                UIBase.renderText(graphics, this.getAsAccessor().getHintFancyMenu(), textXAfterCursor, textY, textColorInt);
             }
 
             if (!isCursorNotAtEndOfLine && this.getAsAccessor().getSuggestionFancyMenu() != null) {
-                this.font2.draw(matrix, this.getAsAccessor().getSuggestionFancyMenu(), (float)(cursorPosRender - 1), (float)textY, -8355712);
+                UIBase.renderText(graphics, this.getAsAccessor().getSuggestionFancyMenu(), cursorPosRender - 1, textY, -8355712);
             }
 
             if (renderCursor) {
                 if (isCursorNotAtEndOfLine) {
-                    fill(matrix, cursorPosRender, textY - 1, cursorPosRender + 1, textY + 1 + 9, textColorInt);
+                    graphics.fill((int) cursorPosRender, (int) (textY - 1), (int) cursorPosRender + 1, (int) (textY + 1 + textHeight), textColorInt);
                 } else {
-                    this.font2.draw(matrix, "_", (float)cursorPosRender, (float)textY, textColorInt);
+                    graphics.fill((int) cursorPosRender, (int) (textY + textHeight - 1), (int) cursorPosRender + 5, (int) (textY + textHeight), textColorInt);
                 }
             }
 
             if (highlightPos != cursorPos) {
-                this.currentHighlightPosXStart = cursorPosRender;
-                this.currentHighlightPosXEnd = textX + this.font2.width(text.substring(0, highlightPos)) - 1;
-                this.getAsAccessor().invokeRenderHighlightFancyMenu(this.currentHighlightPosXStart, textY - 1, this.currentHighlightPosXEnd, textY + 1 + 9);
+                float highlightWidth = UIBase.getUITextWidth(text.substring(0, highlightPos));
+                this.currentHighlightPosXStart = (int) cursorPosRender;
+                this.currentHighlightPosXEnd = (int) (textX + highlightWidth) - 1;
+                this.getAsAccessor().invokeRenderHighlightFancyMenu(graphics, this.currentHighlightPosXStart, (int) (textY - 1), this.currentHighlightPosXEnd, (int) (textY + 1 + textHeight));
             } else {
                 this.currentHighlightPosXStart = 0;
                 this.currentHighlightPosXEnd = 0;
@@ -155,7 +207,7 @@ public class TextEditorLine extends AdvancedTextField {
 
     public boolean isHighlightedHovered() {
         if (this.isInEditorArea() && (this.currentHighlightPosXStart != this.currentHighlightPosXEnd) && this.isHovered()) {
-            int mouseX = MouseInput.getMouseX();
+            int mouseX = this.parent.getRenderMouseX();
             return ((mouseX >= Math.min(this.currentHighlightPosXStart, this.currentHighlightPosXEnd)) && (mouseX <= Math.max(this.currentHighlightPosXStart, this.currentHighlightPosXEnd)));
         }
         return false;
@@ -176,7 +228,7 @@ public class TextEditorLine extends AdvancedTextField {
     @Override
     public void setCursorPosition(int newPos) {
 
-        this.textWidth = this.font2.width(this.getValue());
+        this.textWidth = Math.round(this.parent.getTextWidthAtUIScale(this.getValue()));
 
         super.setCursorPosition(newPos);
 
@@ -189,14 +241,11 @@ public class TextEditorLine extends AdvancedTextField {
 
     }
 
-    @Override
     public void tick() {
 
         if (!MouseInput.isLeftMouseDown() && this.isInMouseHighlightingMode) {
             this.isInMouseHighlightingMode = false;
         }
-
-        super.tick();
 
         leftRightArrowWasDown = false;
 
@@ -222,7 +271,11 @@ public class TextEditorLine extends AdvancedTextField {
                 if (this.parent.isLineFocused() && (this.parent.getFocusedLine() == this) && (this.getCursorPosition() <= 0) && (this.parent.getLineIndex(this) > 0)) {
                     leftRightArrowWasDown = true;
                     this.parent.goUpLine();
-                    this.parent.getFocusedLine().moveCursorTo(this.parent.getFocusedLine().getValue().length());
+                    if (Screen.hasShiftDown()) {
+                        this.parent.getFocusedLine().setCursorPosition(this.parent.getFocusedLine().getValue().length());
+                    } else {
+                        this.parent.getFocusedLine().moveCursorTo(this.parent.getFocusedLine().getValue().length(), false);
+                    }
                     this.parent.correctYScroll(0);
                     return true;
                 }
@@ -236,7 +289,11 @@ public class TextEditorLine extends AdvancedTextField {
                 if (this.parent.isLineFocused() && (this.parent.getFocusedLine() == this) && (this.getCursorPosition() >= this.getValue().length()) && (this.parent.getLineIndex(this) < this.parent.getLineCount() - 1)) {
                     leftRightArrowWasDown = true;
                     this.parent.goDownLine(false);
-                    this.parent.getFocusedLine().moveCursorTo(0);
+                    if (Screen.hasShiftDown()) {
+                        this.parent.getFocusedLine().setCursorPosition(0);
+                    } else {
+                        this.parent.getFocusedLine().moveCursorTo(0, false);
+                    }
                     this.parent.correctYScroll(0);
                     return true;
                 }
@@ -256,7 +313,7 @@ public class TextEditorLine extends AdvancedTextField {
                 int lastLineIndex = this.parent.getFocusedLineIndex();
                 this.parent.justSwitchedLineByWordDeletion = true;
                 this.parent.goUpLine();
-                this.parent.getFocusedLine().moveCursorToEnd();
+                this.parent.getFocusedLine().moveCursorToEnd(false);
                 this.parent.getFocusedLine().insertText(this.getValue());
                 this.parent.getFocusedLine().setCursorPosition(this.parent.getFocusedLine().getCursorPosition()-this.getValue().length());
                 this.parent.getFocusedLine().setHighlightPos(this.parent.getFocusedLine().getCursorPosition());
@@ -268,7 +325,7 @@ public class TextEditorLine extends AdvancedTextField {
                 super.deleteChars(i);
             }
         }
-        this.textWidth = this.font2.width(this.getValue());
+        this.textWidth = Math.round(this.parent.getTextWidthAtUIScale(this.getValue()));
     }
 
     @Override
@@ -285,7 +342,8 @@ public class TextEditorLine extends AdvancedTextField {
             this.isInMouseHighlightingMode = true;
             this.parent.setFocusedLine(Math.max(0, this.parent.getLineIndex(this)));
             super.mouseClicked(mouseX, mouseY, mouseButton);
-            this.getAsAccessor().setShiftPressedFancyMenu(false);
+            int cursorPos = this.parent.getCursorPosFromMouseX(this, mouseX);
+            this.moveCursorTo(cursorPos, false);
             this.setHighlightPos(this.getCursorPosition());
         } else if ((mouseButton == 0) && !this.isHovered()) {
             //Clear highlighting when left-clicked in another line, etc.
@@ -302,19 +360,19 @@ public class TextEditorLine extends AdvancedTextField {
     @Override
     public void setValue(String p_94145_) {
         super.setValue(p_94145_);
-        this.textWidth = this.font2.width(this.getValue());
+        this.textWidth = Math.round(this.parent.getTextWidthAtUIScale(this.getValue()));
     }
 
     @Override
     public void insertText(String textToWrite) {
         super.insertText(textToWrite);
-        this.textWidth = this.font2.width(this.getValue());
+        this.textWidth = Math.round(this.parent.getTextWidthAtUIScale(this.getValue()));
     }
 
     @Override
     public void setMaxLength(int p_94200_) {
         super.setMaxLength(p_94200_);
-        this.textWidth = this.font2.width(this.getValue());
+        this.textWidth = Math.round(this.parent.getTextWidthAtUIScale(this.getValue()));
     }
 
 }

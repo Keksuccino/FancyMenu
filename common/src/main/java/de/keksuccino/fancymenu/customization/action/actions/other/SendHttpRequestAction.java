@@ -3,20 +3,20 @@ package de.keksuccino.fancymenu.customization.action.actions.other;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedGenericValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
-import de.keksuccino.fancymenu.util.rendering.gui.VanillaTooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPCellWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
@@ -177,13 +177,13 @@ public class SendHttpRequestAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.send_http_request");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.send_http_request.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.send_http_request.desc");
     }
 
     @Override
@@ -192,19 +192,48 @@ public class SendHttpRequestAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "https://api.example.com|||POST|||{\"key\":\"value\"}|||application/json|||10|||true||||||true|||NONE|||||||||||||";
     }
 
     @Override
-    public void editValue(@NotNull Screen parentScreen, @NotNull ActionInstance instance) {
-        SendHttpRequestActionValueScreen s = new SendHttpRequestActionValueScreen(Objects.requireNonNullElse(instance.value, this.getValueExample()), value -> {
+    public void editValue(@NotNull ActionInstance instance, @NotNull Action.ActionEditingCompletedFeedback onEditingCompleted, @NotNull Action.ActionEditingCanceledFeedback onEditingCanceled) {
+        String oldValue = instance.value;
+        boolean[] handled = {false};
+        final PiPWindow[] windowHolder = new PiPWindow[1];
+        SendHttpRequestActionValueScreen s = new SendHttpRequestActionValueScreen(Objects.requireNonNullElse(instance.value, this.getValuePreset()), value -> {
+            if (handled[0]) {
+                return;
+            }
+            handled[0] = true;
             if (value != null) {
                 instance.value = value;
+                onEditingCompleted.accept(instance, oldValue, value);
+            } else {
+                onEditingCanceled.accept(instance);
             }
-            Minecraft.getInstance().setScreen(parentScreen);
+            PiPWindow window = windowHolder[0];
+            if (window != null) {
+                window.close();
+            }
         });
-        Minecraft.getInstance().setScreen(s);
+        PiPWindow window = new PiPWindow(s.getTitle())
+                .setScreen(s)
+                .setForceFancyMenuUiScale(true)
+                .setAlwaysOnTop(true)
+                .setBlockMinecraftScreenInputs(true)
+                .setForceFocus(true)
+                .setMinSize(TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT)
+                .setSize(TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
+        windowHolder[0] = window;
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
+        window.addCloseCallback(() -> {
+            if (handled[0]) {
+                return;
+            }
+            handled[0] = true;
+            onEditingCanceled.accept(instance);
+        });
     }
 
     public enum HttpMethod {
@@ -324,7 +353,7 @@ public class SendHttpRequestAction extends Action {
         }
     }
 
-    public static class SendHttpRequestActionValueScreen extends CellScreen {
+    public static class SendHttpRequestActionValueScreen extends PiPCellWindowBody {
 
         protected HttpRequestConfig config;
         protected Consumer<String> callback;
@@ -365,7 +394,7 @@ public class SendHttpRequestAction extends Action {
             List<HttpMethod> methods = Arrays.asList(HttpMethod.values());
             LocalizedGenericValueCycle<HttpMethod> methodCycle = LocalizedGenericValueCycle.of("fancymenu.actions.send_http_request.edit.method", methods.toArray(new HttpMethod[0]));
             methodCycle.setCurrentValue(HttpMethod.valueOf(this.config.method));
-            methodCycle.setValueComponentStyleSupplier(consumes -> Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
+            methodCycle.setValueComponentStyleSupplier(consumes -> Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
             this.addCycleButtonCell(methodCycle, true, (value, button) -> this.config.method = value.name());
 
             this.addCellGroupEndSpacerCell();
@@ -392,7 +421,7 @@ public class SendHttpRequestAction extends Action {
 
             // Timeout
             this.addLabelCell(Component.translatable("fancymenu.actions.send_http_request.edit.timeout"));
-            this.addTextInputCell(CharacterFilter.buildIntegerFiler(), false, false)
+            this.addTextInputCell(CharacterFilter.buildIntegerFilter(), false, false)
                     .setEditListener(s -> {
                         try {
                             this.config.timeout = Integer.parseInt(s);
@@ -412,7 +441,7 @@ public class SendHttpRequestAction extends Action {
             this.addTextInputCell(CharacterFilter.buildResourceNameFilter(), false, false)
                     .setEditListener(s -> this.config.responseVariable = s)
                     .setText(this.config.responseVariable)
-                    .editBox.setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.send_http_request.edit.response_variable.desc")));
+                    .editBox.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.send_http_request.edit.response_variable.desc")));
 
             this.addCellGroupEndSpacerCell();
 
@@ -432,7 +461,7 @@ public class SendHttpRequestAction extends Action {
             LocalizedGenericValueCycle<AuthType> authCycle = LocalizedGenericValueCycle.of("fancymenu.actions.send_http_request.edit.auth_type", authTypes.toArray(new AuthType[0]));
             // Set a custom value name supplier that returns the localized name
             authCycle.setValueNameSupplier(authType -> Component.translatable(authType.getLocalizationKey()).getString());
-            authCycle.setValueComponentStyleSupplier(consumes -> Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
+            authCycle.setValueComponentStyleSupplier(consumes -> Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
             authCycle.setCurrentValue(this.config.authType);
             
             this.addCycleButtonCell(authCycle, true, (value, button) -> {
@@ -571,6 +600,10 @@ public class SendHttpRequestAction extends Action {
             }
             
             this.callback.accept(this.config.serialize());
+        }
+
+        @Override
+        protected void autoScaleScreen(AbstractWidget topRightSideWidget) {
         }
 
         protected static class HeaderEditRow {

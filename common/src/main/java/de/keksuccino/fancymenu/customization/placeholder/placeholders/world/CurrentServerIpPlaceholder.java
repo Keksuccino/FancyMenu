@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
 import org.jetbrains.annotations.NotNull;
@@ -28,9 +27,8 @@ public class CurrentServerIpPlaceholder extends Placeholder {
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         LocalPlayer player = Minecraft.getInstance().player;
         ClientLevel level = Minecraft.getInstance().level;
-        ServerData data = Minecraft.getInstance().getCurrentServer();
-        if ((player != null) && (level != null) && (player.connection != null) && (data != null) && (data.ip != null)) {
-            return data.ip;
+        if ((player != null) && (level != null) && (player.connection != null) && (player.connection.getServerData() != null) && (player.connection.getServerData().ip != null)) {
+            return player.connection.getServerData().ip;
         }
         return "";
     }

@@ -8,9 +8,7 @@ import net.minecraft.client.Options;
 import net.minecraft.world.entity.player.PlayerModelPart;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 public class MinecraftOptions {

@@ -1,19 +1,19 @@
 package de.keksuccino.fancymenu.customization.element.elements.inputfield;
 
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.input.TextValidators;
-import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
-public class InputFieldEditorElement extends AbstractEditorElement {
+public class InputFieldEditorElement extends AbstractEditorElement<InputFieldEditorElement, InputFieldElement> {
 
-    public InputFieldEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public InputFieldEditorElement(@NotNull InputFieldElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
     }
 
@@ -24,20 +24,20 @@ public class InputFieldEditorElement extends AbstractEditorElement {
 
         this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "set_variable",
                         consumes -> (consumes instanceof InputFieldEditorElement),
-                        consumes -> ((InputFieldElement)consumes.element).linkedVariable,
-                        (element, varName) -> ((InputFieldElement)element.element).linkedVariable = varName,
+                        consumes -> consumes.element.linkedVariable,
+                        (element, varName) -> element.element.linkedVariable = varName,
                         null, false, false, Component.translatable("fancymenu.elements.input_field.editor.set_variable"),
                         true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.editor.set_variable.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("script"));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.editor.set_variable.desc")))
+                .setIcon(MaterialIcons.VARIABLES);
 
         this.rightClickMenu.addSeparatorEntry("input_field_separator_1");
 
         this.addGenericCycleContextMenuEntryTo(this.rightClickMenu, "set_type",
                         ListUtils.of(InputFieldElement.InputFieldType.TEXT, InputFieldElement.InputFieldType.URL, InputFieldElement.InputFieldType.INTEGER_ONLY, InputFieldElement.InputFieldType.DECIMAL_ONLY),
                         consumes -> (consumes instanceof InputFieldEditorElement),
-                        consumes -> ((InputFieldElement)consumes.element).type,
-                        (element, type) -> ((InputFieldElement)element.element).type = type,
+                        consumes -> consumes.element.type,
+                        (element, type) -> element.element.type = type,
                         (menu, entry, switcherValue) -> {
                             if (switcherValue == InputFieldElement.InputFieldType.TEXT) {
                                 return Component.translatable("fancymenu.elements.input_field.type.text");
@@ -50,29 +50,71 @@ public class InputFieldEditorElement extends AbstractEditorElement {
                             }
                             return Component.translatable("fancymenu.elements.input_field.type.url");
                         })
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.editor.set_type.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.editor.set_type.desc")))
+                .setIcon(MaterialIcons.TUNE);
 
 
-        this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_max_length",
-                        consumes -> (consumes instanceof InputFieldEditorElement),
-                        consumes -> ((InputFieldElement)consumes.element).maxTextLength,
-                        (element, length) -> ((InputFieldElement)element.element).maxTextLength = length,
-                        Component.translatable("fancymenu.elements.input_field.editor.set_max_length"),
-                        true, 10000, null, null)
-                .setStackable(true);
+        this.element.maxTextLength.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setStackable(true)
+                .setIcon(MaterialIcons.SHORT_TEXT);
+
+        this.element.hintText.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.hint_text.desc")))
+                .setIcon(MaterialIcons.TEXT_FIELDS);
+
+        this.rightClickMenu.addSeparatorEntry("separator_after_hint_text");
+
+        this.element.textColor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.text_color.desc")))
+                .setIcon(MaterialIcons.PALETTE);
+
+        this.element.hintTextColor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.hint_text_color.desc")))
+                .setIcon(MaterialIcons.PALETTE);
+
+        this.rightClickMenu.addSeparatorEntry("separator_after_hint_colors");
+
+        this.element.backgroundColor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.background_color.desc")))
+                .setIcon(MaterialIcons.PALETTE);
+
+        ContextMenu borderColorMenu = new ContextMenu();
+        this.rightClickMenu.addSubMenuEntry("border_color", Component.translatable("fancymenu.elements.input_field.border_color_group"), borderColorMenu)
+                .setIcon(MaterialIcons.BORDER_COLOR);
+
+        this.element.borderColorNormal.buildContextMenuEntryAndAddTo(borderColorMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.border_color.desc")))
+                .setIcon(MaterialIcons.BORDER_COLOR);
+
+        this.element.borderColorFocused.buildContextMenuEntryAndAddTo(borderColorMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.border_color_focused.desc")))
+                .setIcon(MaterialIcons.BORDER_COLOR);
+
+        this.element.borderRoundingRadius.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.border_rounding_radius.desc")))
+                .setIcon(MaterialIcons.ROUNDED_CORNER);
+
+        this.rightClickMenu.addSeparatorEntry("separator_before_audios");
+
+        this.element.hoverSound.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setIcon(MaterialIcons.VOLUME_UP);
+
+        this.element.unhoverAudio.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setIcon(MaterialIcons.VOLUME_UP);
+
+        this.element.clickSound.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setIcon(MaterialIcons.VOLUME_UP);
 
         this.rightClickMenu.addSeparatorEntry("separator_before_navigatable");
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "toggle_navigatable", InputFieldEditorElement.class,
-                        consumes -> consumes.getElement().navigatable,
-                        (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().navigatable = aBoolean,
+                        consumes -> consumes.element.navigatable,
+                        (buttonEditorElement, aBoolean) -> buttonEditorElement.element.navigatable = aBoolean,
                         "fancymenu.elements.widgets.generic.navigatable")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")));
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")))
+                .setIcon(MaterialIcons.MOUSE);
 
     }
 
-    public InputFieldElement getElement() {
-        return (InputFieldElement) this.element;
-    }
 
 }

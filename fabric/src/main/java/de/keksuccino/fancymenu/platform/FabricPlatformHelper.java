@@ -9,16 +9,20 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.core.Registry;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public class FabricPlatformHelper implements IPlatformHelper {
 
@@ -83,7 +87,7 @@ public class FabricPlatformHelper implements IPlatformHelper {
     @Override
     public @Nullable ResourceLocation getItemKey(@NotNull Item item) {
         try {
-            return Registry.ITEM.getKey(item);
+            return BuiltInRegistries.ITEM.getKey(item);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -93,7 +97,7 @@ public class FabricPlatformHelper implements IPlatformHelper {
     @Override
     public @Nullable ResourceLocation getEffectKey(@NotNull MobEffect effect) {
         try {
-            return Registry.MOB_EFFECT.getKey(effect);
+            return BuiltInRegistries.MOB_EFFECT.getKey(effect);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -103,7 +107,7 @@ public class FabricPlatformHelper implements IPlatformHelper {
     @Override
     public @Nullable ResourceLocation getEntityKey(@NotNull EntityType<?> type) {
         try {
-            return Registry.ENTITY_TYPE.getKey(type);
+            return BuiltInRegistries.ENTITY_TYPE.getKey(type);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -120,6 +124,18 @@ public class FabricPlatformHelper implements IPlatformHelper {
             mods.add(new UniversalModContainer(m.getId(), m.getName(), m.getDescription(), String.join("\n", m.getLicense()), authors));
         });
         return mods;
+    }
+
+    @Override
+    public @NotNull Set<ResourceLocation> getLoadedClientResourceLocations() {
+        Set<ResourceLocation> output = new HashSet<>();
+        if (!this.isOnClient()) return output;
+        try {
+            output.addAll(Minecraft.getInstance().getResourceManager().listResources("", location -> true).keySet());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return output;
     }
 
 }

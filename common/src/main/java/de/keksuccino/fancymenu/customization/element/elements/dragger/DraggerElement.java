@@ -3,10 +3,9 @@ package de.keksuccino.fancymenu.customization.element.elements.dragger;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.Minecraft;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -58,7 +57,7 @@ public class DraggerElement extends AbstractElement {
     }
 
     protected void onDraggerElementClickedOrReleased(double mouseX, double mouseY, boolean released) {
-        if (!isEditor() && ((IMixinAbstractWidget)this.widget).getIsHoveredFancyMenu()) {
+        if (!isEditor() && this.widget.isHovered()) {
             this.leftMouseDownOnElement = !released;
             this.mouseDownX = (int) mouseX;
             this.mouseDownY = (int) mouseY;
@@ -106,15 +105,15 @@ public class DraggerElement extends AbstractElement {
             int w = this.getAbsoluteWidth();
             int h = this.getAbsoluteHeight();
 
-            this.widget.x = (x);
-            this.widget.y = (y);
+            this.widget.setX(x);
+            this.widget.setY(y);
             this.widget.setWidth(w);
-            ((IMixinAbstractWidget)this.widget).setHeightFancyMenu(h);
-            this.widget.render(graphics.pose(), mouseX, mouseY, partial);
+            this.widget.setHeight(h);
+            this.widget.render(graphics, mouseX, mouseY, partial);
 
             if (isEditor()) {
                 RenderSystem.enableBlend();
-                graphics.fill(x, y, x + w, y + h, this.inEditorColor.getColorInt());
+                graphics.fill(x, y, x + w, y + h, this.inEditorColor.getDrawable().getColorInt());
                 graphics.enableScissor(x, y, x + w, y + h);
                 graphics.drawCenteredString(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
                 graphics.disableScissor();
@@ -146,6 +145,20 @@ public class DraggerElement extends AbstractElement {
         return i;
     }
 
+    @Override
+    public int getAbsoluteXWithoutParallax() {
+        int i = super.getAbsoluteXWithoutParallax() + ((!isEditor()) ? this.userDragOffsetX : 0);
+        if (this.stayOnScreen) {
+            if (i < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
+                i = STAY_ON_SCREEN_EDGE_ZONE_SIZE;
+            }
+            if (i > (getScreenWidth() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteWidth())) {
+                i = getScreenWidth() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteWidth();
+            }
+        }
+        return i;
+    }
+
     protected int _getAbsoluteX() {
         return super.getAbsoluteX() + ((!isEditor()) ? this.userDragOffsetX : 0);
     }
@@ -153,6 +166,20 @@ public class DraggerElement extends AbstractElement {
     @Override
     public int getAbsoluteY() {
         int i = this._getAbsoluteY();
+        if (this.stayOnScreen) {
+            if (i < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
+                i = STAY_ON_SCREEN_EDGE_ZONE_SIZE;
+            }
+            if (i > (getScreenHeight() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteHeight())) {
+                i = getScreenHeight() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteHeight();
+            }
+        }
+        return i;
+    }
+
+    @Override
+    public int getAbsoluteYWithoutParallax() {
+        int i = super.getAbsoluteYWithoutParallax() + ((!isEditor()) ? this.userDragOffsetY : 0);
         if (this.stayOnScreen) {
             if (i < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
                 i = STAY_ON_SCREEN_EDGE_ZONE_SIZE;

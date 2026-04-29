@@ -1,11 +1,19 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
+import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.WidgetifiedScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.TextWidget;
 import net.minecraft.client.gui.Font;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -30,9 +38,27 @@ public class MixinGenericDirtMessageScreen extends Screen {
 
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/GenericDirtMessageScreen;drawCenteredString(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
-    private boolean wrapDrawCenteredStringInRenderFancyMenu(PoseStack poseStack, Font font, Component component, int i1, int i2, int i3) {
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;drawCenteredString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
+    private boolean wrapDrawCenteredStringInRenderFancyMenu(GuiGraphics instance, Font $$0, Component $$1, int $$2, int $$3, int $$4) {
         return !ScreenCustomization.isCustomizationEnabledForScreen(this);
+    }
+
+    @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/GenericDirtMessageScreen;renderDirtBackground(Lnet/minecraft/client/gui/GuiGraphics;)V"))
+    private void wrapRenderDirtBackgroundInRenderFancyMenu(GenericDirtMessageScreen instance, GuiGraphics graphics, Operation<Void> original, GuiGraphics renderGraphics, int mouseX, int mouseY, float partial) {
+        ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(this);
+        if ((layer == null) || !ScreenCustomization.isCustomizationEnabledForScreen(this)) {
+            original.call(instance, graphics);
+            return;
+        }
+
+        if (layer.shouldReplaceVanillaScreenBackground()) {
+            RenderSystem.enableBlend();
+            graphics.fill(0, 0, this.width, this.height, 0);
+            RenderingUtils.resetShaderColor(graphics);
+        } else {
+            original.call(instance, graphics);
+        }
+        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, graphics, mouseX, mouseY, partial));
     }
 
 }

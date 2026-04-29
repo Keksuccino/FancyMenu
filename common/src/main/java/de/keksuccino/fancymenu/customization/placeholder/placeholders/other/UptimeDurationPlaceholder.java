@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.other;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import net.minecraft.client.resources.language.I18n;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,7 +34,7 @@ public class UptimeDurationPlaceholder extends Placeholder {
         if (uptimeMs < 0L) {
             uptimeMs = 0L;
         }
-        if (SerializationUtils.deserializeBoolean(false, dps.values.get("output_as_millis"))) {
+        if (SerializationHelper.INSTANCE.deserializeBoolean(false, dps.values.get("output_as_millis"))) {
             return Long.toString(uptimeMs);
         }
         return Long.toString(uptimeMs / 1000L);

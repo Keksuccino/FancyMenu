@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
+import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.events.screen.CloseScreenEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
@@ -13,7 +14,6 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
-import de.keksuccino.fancymenu.events.widget.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.events.ScreenReloadEvent;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
@@ -74,42 +74,36 @@ public class ScreenCustomizationEvents {
 	@EventListener
 	public void onInitStarting(InitOrResizeScreenStartingEvent e) {
 
-		if (e.getScreen() != null) {
-
-			//Reset customizable widgets before init/resize (in case the screen doesn't rebuild its widgets on init/resize)
-			for (GuiEventListener l : e.getScreen().children()) {
-				if (l instanceof CustomizableWidget w) {
-					w.resetWidgetCustomizationsFancyMenu();
-				}
+		//Reset customizable widgets before init/resize (in case the screen doesn't rebuild its widgets on init/resize)
+		for (GuiEventListener l : e.getScreen().children()) {
+			if (l instanceof CustomizableWidget w) {
+				w.resetWidgetCustomizationsFancyMenu();
 			}
+		}
 
-			//Remove all remove-on-init widgets from the screen's widgets
-			if (e.getScreen() instanceof CustomizableScreen c) {
-				for (GuiEventListener l : c.removeOnInitChildrenFancyMenu()) {
-					((IMixinScreen)e.getScreen()).getChildrenFancyMenu().remove(l);
-					if (l instanceof Widget r) ((IMixinScreen)e.getScreen()).getRenderablesFancyMenu().remove(r);
-					if (l instanceof NarratableEntry n) ((IMixinScreen)e.getScreen()).getNarratablesFancyMenu().remove(n);
-				}
-				c.removeOnInitChildrenFancyMenu().clear();
+		//Remove all remove-on-init widgets from the screen's widgets
+		if (e.getScreen() instanceof CustomizableScreen c) {
+			for (GuiEventListener l : c.removeOnInitChildrenFancyMenu()) {
+				((IMixinScreen)e.getScreen()).getChildrenFancyMenu().remove(l);
+				if (l instanceof Widget r) ((IMixinScreen)e.getScreen()).getRenderablesFancyMenu().remove(r);
+				if (l instanceof NarratableEntry n) ((IMixinScreen)e.getScreen()).getNarratablesFancyMenu().remove(n);
 			}
+			c.removeOnInitChildrenFancyMenu().clear();
+		}
 
-			if (this.lastScreen != null) {
-				ScreenCustomization.isNewMenu = !this.lastScreen.getClass().getName().equals(e.getScreen().getClass().getName());
-				if ((this.lastScreen instanceof CustomGuiBaseScreen cLast) && (e.getScreen() instanceof CustomGuiBaseScreen cNow)) {
-					ScreenCustomization.isNewMenu = !cLast.getIdentifier().equals(cNow.getIdentifier());
-				}
-			} else {
-				ScreenCustomization.isNewMenu = true;
+		if (this.lastScreen != null) {
+			ScreenCustomization.isNewMenu = !this.lastScreen.getClass().getName().equals(e.getScreen().getClass().getName());
+			if ((this.lastScreen instanceof CustomGuiBaseScreen cLast) && (e.getScreen() instanceof CustomGuiBaseScreen cNow)) {
+				ScreenCustomization.isNewMenu = !cLast.getIdentifier().equals(cNow.getIdentifier());
 			}
-
+		} else {
+			ScreenCustomization.isNewMenu = true;
 		}
 
 		this.lastScreen = e.getScreen();
 		if (ScreenCustomization.isNewMenu) {
 			WidgetLocatorHandler.clearCache();
 		}
-
-		ScreenCustomization.isCurrentScrollable = false;
 
 		//Stopping menu music when deactivated in config
 		if ((Minecraft.getInstance().level == null)) {
@@ -123,6 +117,7 @@ public class ScreenCustomizationEvents {
 	@SuppressWarnings("all")
 	@EventListener
 	public void onTick(ClientTickEvent.Pre e) {
+		GlobalCustomizationHandler.tickMenuMusic();
 
 		if (Minecraft.getInstance().screen == null) {
 			this.lastScreen = null;
@@ -166,16 +161,7 @@ public class ScreenCustomizationEvents {
 				}
 			}
 		}
-
-		if (Minecraft.getInstance().screen == null) {
-			ScreenCustomization.isCurrentScrollable = false;
-		}
 		
-	}
-
-	@EventListener
-	public void onRenderListBackground(RenderGuiListBackgroundEvent.Pre e) {
-		ScreenCustomization.isCurrentScrollable = true;
 	}
 	
 }

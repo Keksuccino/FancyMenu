@@ -1,12 +1,12 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextListScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
 
-public class ChooseAnimationScreen extends Screen {
+public class ChooseAnimationScreen extends ModernScreen {
 
     protected Consumer<String> callback;
     protected String selectedAnimationName = null;
@@ -32,7 +32,9 @@ public class ChooseAnimationScreen extends Screen {
     protected void init() {}
 
     @Override
-    public void render(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {}
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {}
+
+public void renderBackground(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {}
 
     protected void setSelectedAnimation(@Nullable AnimationScrollEntry entry) {}
 
@@ -43,7 +45,7 @@ public class ChooseAnimationScreen extends Screen {
         public String animation;
 
         public AnimationScrollEntry(ScrollArea parent, @NotNull String animation, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Components.literal(animation).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
+            super(parent, Component.literal(animation).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt())), UIBase.getUITheme().bullet_list_dot_color_1, onClick);
             this.animation = animation;
         }
 

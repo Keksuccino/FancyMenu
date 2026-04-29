@@ -1,13 +1,8 @@
 package de.keksuccino.fancymenu.util.rendering.ui.tooltip;
 
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
-import de.keksuccino.fancymenu.util.event.acara.EventHandler;
-import de.keksuccino.fancymenu.util.event.acara.EventListener;
-import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
-import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import net.minecraft.client.gui.components.Widget;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,55 +10,52 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 
-public class TooltipHandler {
+public class TooltipHandler implements Widget {
 
-    private static final Logger LOGGER = LogManager.getLogger();
-
-    /** Default instance. **/
     public static final TooltipHandler INSTANCE = new TooltipHandler();
 
     private final List<HandledTooltip> tooltips = new ArrayList<>();
     private final Map<AbstractWidget, HandledTooltip> widgetTooltips = new HashMap<>();
 
-    public TooltipHandler() {
-        EventHandler.INSTANCE.registerListenersOf(this);
+    private TooltipHandler() {
     }
 
-    @EventListener(priority = -1000)
-    public void onScreenRenderPost(RenderScreenEvent.Post e) {
+    @Override
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         HandledTooltip renderTooltip = null;
         for (HandledTooltip t : new ArrayList<>(this.tooltips)) {
             if (t.shouldRender.getAsBoolean()) {
                 renderTooltip = t;
             }
-            if (t.removeAfterScreenRender) {
-                t.remove();
-            }
+            t.remove();
         }
         if (renderTooltip != null) {
-            renderTooltip.tooltip.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());
+            renderTooltip.UITooltip.render(graphics, mouseX, mouseY, partial);
         }
     }
 
-    @EventListener(priority = 1000)
-    public void onScreenInitResizePre(InitOrResizeScreenEvent.Pre e) {
-        for (HandledTooltip t : new ArrayList<>(this.tooltips)) {
-            if (t.removeOnScreenInitOrResize) t.remove();
-        }
+    @Deprecated
+    public HandledTooltip addWidgetTooltip(@NotNull AbstractWidget widget, @NotNull UITooltip UITooltip, boolean unusedBoolean1, boolean unusedBoolean2) {
+        return addRenderTickWidgetTooltip(widget, UITooltip);
     }
 
-    public HandledTooltip addWidgetTooltip(@NotNull AbstractWidget widget, @NotNull Tooltip tooltip, boolean removeOnScreenInitOrResize, boolean removeAfterScreenRender) {
+    public HandledTooltip addRenderTickWidgetTooltip(@NotNull AbstractWidget widget, @NotNull UITooltip UITooltip) {
         if (this.widgetTooltips.containsKey(widget)) {
             this.removeTooltip(this.widgetTooltips.get(widget));
         }
-        HandledTooltip t = this.addTooltip(tooltip, () -> ((IMixinAbstractWidget)widget).getIsHoveredFancyMenu() && widget.visible, removeOnScreenInitOrResize, removeAfterScreenRender);
+        HandledTooltip t = this.addRenderTickTooltip(UITooltip, () -> widget.isHovered() && widget.visible);
         t.widget = widget;
         this.widgetTooltips.put(widget, t);
         return t;
     }
 
-    public HandledTooltip addTooltip(@NotNull Tooltip tooltip, @NotNull BooleanSupplier shouldRender, boolean removeOnScreenInitOrResize, boolean removeAfterScreenRender) {
-        HandledTooltip t = new HandledTooltip(this, tooltip, shouldRender, removeOnScreenInitOrResize, removeAfterScreenRender);
+    @Deprecated
+    public HandledTooltip addTooltip(@NotNull UITooltip UITooltip, @NotNull BooleanSupplier shouldRender, boolean unusedBoolean1, boolean unusedBoolean2) {
+        return addRenderTickTooltip(UITooltip, shouldRender);
+    }
+
+    public HandledTooltip addRenderTickTooltip(@NotNull UITooltip UITooltip, @NotNull BooleanSupplier shouldRender) {
+        HandledTooltip t = new HandledTooltip(this, UITooltip, shouldRender);
         this.tooltips.add(t);
         return t;
     }
@@ -78,18 +70,14 @@ public class TooltipHandler {
     public static class HandledTooltip {
 
         private final TooltipHandler parent;
-        public final Tooltip tooltip;
+        public final UITooltip UITooltip;
         public final BooleanSupplier shouldRender;
-        public final boolean removeOnScreenInitOrResize;
-        public final boolean removeAfterScreenRender;
         protected AbstractWidget widget = null;
 
-        private HandledTooltip(TooltipHandler parent, Tooltip tooltip, BooleanSupplier shouldRender, boolean removeOnScreenInitOrResize, boolean removeAfterScreenRender) {
+        private HandledTooltip(TooltipHandler parent, UITooltip UITooltip, BooleanSupplier shouldRender) {
             this.parent = parent;
-            this.tooltip = tooltip;
+            this.UITooltip = UITooltip;
             this.shouldRender = shouldRender;
-            this.removeOnScreenInitOrResize = removeOnScreenInitOrResize;
-            this.removeAfterScreenRender = removeAfterScreenRender;
         }
 
         /** Removes the tooltip from its handler. **/

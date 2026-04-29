@@ -1,14 +1,15 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class RendererWidget extends ModernAbstractWidget implements UniqueWidget, NavigatableWidget, FancyMenuWidget {
+public class RendererWidget extends AbstractWidget implements UniqueWidget, NavigatableWidget, FancyMenuWidget {
 
     @NotNull
     protected RendererWidgetBody body;
@@ -26,7 +27,7 @@ public class RendererWidget extends ModernAbstractWidget implements UniqueWidget
     }
 
     @Override
-    public void updateNarration(@NotNull NarrationElementOutput narrationElementOutput) {
+    protected void updateWidgetNarration(@NotNull NarrationElementOutput var1) {
     }
 
     public RendererWidget setBody(@NotNull RendererWidgetBody body) {

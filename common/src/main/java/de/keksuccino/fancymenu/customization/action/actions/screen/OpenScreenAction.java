@@ -5,9 +5,9 @@ import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
+import de.keksuccino.fancymenu.util.ScreenUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
@@ -47,19 +47,16 @@ public class OpenScreenAction extends Action {
                 if (value.equals(CreateWorldScreen.class.getName())) {
                     CreateWorldScreen.openFresh(Minecraft.getInstance(), Minecraft.getInstance().screen);
                 } else {
-                    if (CustomGuiHandler.guiExists(value)) {
-                        Screen custom = CustomGuiHandler.constructInstance(value, Minecraft.getInstance().screen, null);
-                        if (custom != null) Minecraft.getInstance().setScreen(custom);
+                        if (CustomGuiHandler.guiExists(value)) {
+                            Screen custom = CustomGuiHandler.constructInstance(value, Minecraft.getInstance().screen, null);
+                        if (custom != null) ScreenUtils.setScreen(custom);
                     } else {
                         Screen s = ScreenInstanceFactory.tryConstruct(value);
                         if (s != null) {
-                            Minecraft.getInstance().setScreen(s);
+                            ScreenUtils.setScreen(s);
                         } else {
                             LOGGER.error("[FANCYMENU] Unable to construct screen instance for '" + value + "'!", new Exception());
-                            Screen current = Minecraft.getInstance().screen;
-                            Minecraft.getInstance().setScreen(NotificationScreen.error(aBoolean -> {
-                                Minecraft.getInstance().setScreen(current);
-                            }, LocalizationUtils.splitLocalizedLines("fancymenu.actions.open_screen.error")));
+                            Dialogs.openMessage(Component.translatable("fancymenu.actions.open_screen.error"), MessageDialogStyle.ERROR);
                         }
                     }
                 }
@@ -68,7 +65,7 @@ public class OpenScreenAction extends Action {
                 if ((lastErrorTriggered + 60000) < now) {
                     lastErrorTriggered = now;
                     MainThreadTaskExecutor.executeInMainThread(
-                            () -> Minecraft.getInstance().setScreen(new GenericDirtMessageScreen(Component.translatable("fancymenu.actions.generic.async_error", this.getActionDisplayName()))),
+                            () -> ScreenUtils.setScreen(new GenericDirtMessageScreen(Component.translatable("fancymenu.actions.generic.async_error", this.getDisplayName()))),
                             MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                 }
             }
@@ -76,13 +73,13 @@ public class OpenScreenAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.opengui");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.opengui.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.opengui.desc");
     }
 
     @Override
@@ -91,7 +88,7 @@ public class OpenScreenAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "example.menu.identifier";
     }
 

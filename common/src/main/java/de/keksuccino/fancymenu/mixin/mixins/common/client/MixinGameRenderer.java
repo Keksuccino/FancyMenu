@@ -1,19 +1,16 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.customization.listener.listeners.OnStartLookingAtBlockListener;
 import de.keksuccino.fancymenu.customization.listener.listeners.OnStartLookingAtEntityListener;
 import de.keksuccino.fancymenu.customization.listener.listeners.OnStopLookingAtBlockListener;
 import de.keksuccino.fancymenu.customization.listener.listeners.OnStopLookingAtEntityListener;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.RenderBuffers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
@@ -30,31 +27,42 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GameRenderer.class)
 public class MixinGameRenderer {
 
-    @Unique private static final double ENTITY_LOOK_DISTANCE_FANCYMENU = 20.0D;
-    @Unique private static final double BLOCK_LOOK_DISTANCE_FANCYMENU = OnStartLookingAtBlockListener.MAX_LOOK_DISTANCE;
+    @Unique
+    private static final double ENTITY_LOOK_DISTANCE_FANCYMENU = 20.0D;
+    @Unique
+    private static final double BLOCK_LOOK_DISTANCE_FANCYMENU = OnStartLookingAtBlockListener.MAX_LOOK_DISTANCE;
 
-    @Shadow @Final private Minecraft minecraft;
-    @Shadow @Final private RenderBuffers renderBuffers;
-
-    /**
-     * @reason This basically ports the 1.20.1 GuiGraphics to >=1.19.2.
-     */
-    @WrapOperation(method = "render", at = @At(value = "NEW", target = "()Lcom/mojang/blaze3d/vertex/PoseStack;", ordinal = 0), slice = @Slice(from = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Lighting;setupFor3DItems()V")))
-    private PoseStack wrap_new_PoseStack_FancyMenu(Operation<PoseStack> original) {
-        PoseStack pose = original.call();
-        GuiGraphics.updateGraphicsAndGet(pose, this.renderBuffers.bufferSource());
-        return pose;
-    }
+    @Shadow @Final Minecraft minecraft;
 
     @Inject(method = "render", at = @At("HEAD"))
     private void before_render_FancyMenu(float partialTicks, long nanoTime, boolean renderLevel, CallbackInfo info) {
         ScreenCustomization.onPreGameRenderTick();
+    }
+
+    @Inject(
+        method = "renderLevel",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/renderer/GameRenderer;renderItemInHand(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/Camera;F)V",
+            shift = At.Shift.BEFORE
+        )
+    )
+    private void beforeRenderItemInHand_FancyMenu(float partialTicks, long finishTimeNano, PoseStack poseStack, CallbackInfo info) {
+        if (this.minecraft != null && this.minecraft.level != null) {
+            SeamlessWorldLoadingHandler.captureFrameIfNeeded(this.minecraft.getMainRenderTarget());
+        }
+    }
+
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/pipeline/RenderTarget;bindWrite(Z)V", shift = At.Shift.AFTER))
+    private void afterRenderLevel_FancyMenu(float partialTicks, long nanoTime, boolean renderLevel, CallbackInfo info) {
+        if (this.minecraft != null && this.minecraft.level != null) {
+            SeamlessWorldLoadingHandler.captureFrameIfNeeded(this.minecraft.getMainRenderTarget());
+        }
     }
 
     @Inject(method = "pick(F)V", at = @At("TAIL"))
@@ -83,61 +91,76 @@ public class MixinGameRenderer {
             return;
         }
 
+        boolean checkEntity = startLookingListener.shouldCheckLookingAt();
+        boolean checkBlock = startBlockListener.shouldCheckLookingAt();
+
+        if (!checkEntity && !checkBlock) {
+            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
+            stopLooking_FancyMenu(startLookingListener, stopLookingListener);
+            return;
+        }
+
         Vec3 eyePosition = cameraEntity.getEyePosition(partialTicks);
 
-        EntityHitResult extendedEntityHit = findExtendedEntityHit_FancyMenu(cameraEntity, partialTicks);
+        if (checkEntity) {
+            EntityHitResult extendedEntityHit = findExtendedEntityHit_FancyMenu(cameraEntity, partialTicks);
 
-        if (extendedEntityHit == null && hitResult instanceof EntityHitResult vanillaEntityHit) {
-            extendedEntityHit = vanillaEntityHit;
-        }
-
-        if (extendedEntityHit != null) {
-            Entity targetEntity = extendedEntityHit.getEntity();
-            double distance = extendedEntityHit.getLocation().distanceTo(eyePosition);
-            startLookingListener.onLookAtEntity(targetEntity, distance);
-            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
-            return;
-        }
-
-        stopLooking_FancyMenu(startLookingListener, stopLookingListener);
-
-        ClientLevel clientLevel = this.minecraft.level;
-
-        if (clientLevel == null) {
-            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
-            return;
-        }
-
-        HitResult blockPickResult = cameraEntity.pick(BLOCK_LOOK_DISTANCE_FANCYMENU, partialTicks, false);
-        if (!(blockPickResult instanceof BlockHitResult blockHitResult) || blockHitResult.getType() != HitResult.Type.BLOCK) {
-            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
-            return;
-        }
-
-        BlockPos blockPos = blockHitResult.getBlockPos();
-        BlockState blockState = clientLevel.getBlockState(blockPos);
-        if (blockState.isAir()) {
-            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
-            return;
-        }
-
-        double distance = blockHitResult.getLocation().distanceTo(eyePosition);
-        if (distance > BLOCK_LOOK_DISTANCE_FANCYMENU) {
-            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
-            return;
-        }
-
-        OnStartLookingAtBlockListener.LookedBlockData previousBlock = startBlockListener.getCurrentBlockData();
-        if (previousBlock != null) {
-            boolean sameBlock = previousBlock.blockPos().equals(blockPos)
-                && previousBlock.blockState().equals(blockState)
-                && previousBlock.levelKey().equals(clientLevel.dimension());
-            if (!sameBlock) {
-                stopBlockListener.onStopLooking(previousBlock);
+            if (extendedEntityHit == null && hitResult instanceof EntityHitResult vanillaEntityHit) {
+                extendedEntityHit = vanillaEntityHit;
             }
+
+            if (extendedEntityHit != null) {
+                Entity targetEntity = extendedEntityHit.getEntity();
+                double distance = extendedEntityHit.getLocation().distanceTo(eyePosition);
+                startLookingListener.onLookAtEntity(targetEntity, distance);
+                stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
+                return;
+            }
+            stopLooking_FancyMenu(startLookingListener, stopLookingListener);
+        } else {
+            stopLooking_FancyMenu(startLookingListener, stopLookingListener);
         }
 
-        startBlockListener.onLookAtBlock(clientLevel, blockHitResult, distance);
+        if (checkBlock) {
+            ClientLevel clientLevel = this.minecraft.level;
+            if (clientLevel == null) {
+                stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
+                return;
+            }
+
+            HitResult blockPickResult = cameraEntity.pick(BLOCK_LOOK_DISTANCE_FANCYMENU, partialTicks, false);
+            if (!(blockPickResult instanceof BlockHitResult blockHitResult) || blockHitResult.getType() != HitResult.Type.BLOCK) {
+                stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
+                return;
+            }
+
+            BlockPos blockPos = blockHitResult.getBlockPos();
+            BlockState blockState = clientLevel.getBlockState(blockPos);
+            if (blockState.isAir()) {
+                stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
+                return;
+            }
+
+            double distanceSqr = blockHitResult.getLocation().distanceToSqr(eyePosition);
+            if (distanceSqr > BLOCK_LOOK_DISTANCE_FANCYMENU * BLOCK_LOOK_DISTANCE_FANCYMENU) {
+                stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
+                return;
+            }
+
+            OnStartLookingAtBlockListener.LookedBlockData previousBlock = startBlockListener.getCurrentBlockData();
+            if (previousBlock != null) {
+                boolean sameBlock = previousBlock.blockPos().equals(blockPos)
+                        && previousBlock.blockState().equals(blockState)
+                        && previousBlock.levelKey().equals(clientLevel.dimension());
+                if (!sameBlock) {
+                    stopBlockListener.onStopLooking(previousBlock);
+                }
+            }
+
+            startBlockListener.onLookAtBlock(clientLevel, blockHitResult, Math.sqrt(distanceSqr));
+        } else {
+            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
+        }
 
     }
 

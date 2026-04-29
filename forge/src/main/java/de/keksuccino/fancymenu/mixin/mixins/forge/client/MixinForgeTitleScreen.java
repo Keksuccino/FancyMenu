@@ -3,9 +3,9 @@ package de.keksuccino.fancymenu.mixin.mixins.forge.client;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import net.minecraft.client.gui.Font;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -23,13 +23,13 @@ public class MixinForgeTitleScreen {
     @Unique
     private AbstractWidget cachedForgeModsButtonFancyMenu = null;
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/client/ForgeHooksClient;renderMainMenu(Lnet/minecraft/client/gui/screens/TitleScreen;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/gui/Font;III)V", remap = false))
-    private boolean cancelForgeWarningAboveLogoRenderingFancyMenu(TitleScreen line, PoseStack gui, Font poseStack, int font, int width, int height) {
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/client/ForgeHooksClient;renderMainMenu(Lnet/minecraft/client/gui/screens/TitleScreen;Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/client/gui/Font;III)V", remap = false))
+    private boolean cancelForgeWarningAboveLogoRenderingFancyMenu(TitleScreen gui, GuiGraphics guiGraphics, Font font, int width, int height, int alpha) {
         return false;
     }
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/internal/BrandingControl;forEachLine(ZZLjava/util/function/BiConsumer;)V", remap = false))
-    private boolean cancelForgeBrandingRenderingFancyMenu(boolean includeMC, boolean reverse, BiConsumer<Integer, String> lineConsumer) {
+    private boolean cancelForgeBrandingRenderingFancyMenu(boolean reverse, boolean includeMC, BiConsumer<Integer, String> lineConsumer) {
         return false;
     }
 
@@ -44,8 +44,8 @@ public class MixinForgeTitleScreen {
         return original.call(guiMainMenu, modButton);
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/client/gui/TitleScreenModUpdateIndicator;render(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V"))
-    private boolean wrapForgeModUpdateIndicatorRenderingFancyMenu(TitleScreenModUpdateIndicator instance, PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/client/gui/TitleScreenModUpdateIndicator;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
+    private boolean wrapForgeModUpdateIndicatorRenderingFancyMenu(TitleScreenModUpdateIndicator instance, GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         if (this.cachedForgeModsButtonFancyMenu instanceof CustomizableWidget w) {
             //Don't render update indicator if Mods button is hidden
             if (w.isHiddenFancyMenu()) return false;

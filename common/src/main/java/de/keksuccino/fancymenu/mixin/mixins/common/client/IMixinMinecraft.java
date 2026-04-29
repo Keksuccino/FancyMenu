@@ -9,14 +9,10 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 @Mixin(Minecraft.class)
 public interface IMixinMinecraft {
 
-    @Accessor("fps") static int getFpsFancyMenu() {
-        return 0;
-    }
-
     @Invoker("openChatScreen") void openChatScreenFancyMenu(String msg);
 
-    @Accessor("pausePartialTick") float getPausePartialTickFancyMenu();
-
     @Accessor("reloadStateTracker") ResourceLoadStateTracker getReloadStateTrackerFancyMenu();
+
+    @Accessor("pausePartialTick") float getPausePartialTickFancyMenu();
 
 }

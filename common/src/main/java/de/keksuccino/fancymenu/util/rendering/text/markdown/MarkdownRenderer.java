@@ -3,15 +3,18 @@ package de.keksuccino.fancymenu.util.rendering.text.markdown;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import de.keksuccino.fancymenu.util.rendering.ui.FocuslessContainerEventHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.FastColor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,11 +23,13 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @SuppressWarnings("unused")
-public class MarkdownRenderer implements Renderable, FocuslessContainerEventHandler, NarratableEntry, NavigatableWidget {
+public class MarkdownRenderer implements Widget, FocuslessContainerEventHandler, NarratableEntry, NavigatableWidget {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -60,6 +65,10 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     @NotNull
     protected DrawableColor hyperlinkColor = DrawableColor.of(new Color(7, 113, 252));
     @NotNull
+    protected DrawableColor textClickEventColor = DrawableColor.of(new Color(7, 113, 252));
+    @NotNull
+    protected DrawableColor textHoverEventColor = DrawableColor.of(new Color(7, 113, 252));
+    @NotNull
     protected DrawableColor quoteColor = DrawableColor.of(new Color(129, 129, 129));
     protected float quoteIndent = 8;
     protected boolean quoteItalic = false;
@@ -75,6 +84,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected boolean autoLineBreaks = true;
     protected boolean removeHtmlBreaks = true;
     protected boolean textShadow = true;
+    protected boolean uiFontRenderingEnabled = false;
     protected float textOpacity = 1.0F;
     protected float lineSpacing = 2;
     protected float border = 2;
@@ -97,6 +107,9 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected boolean tableAlternateRowColors = true;
     protected boolean tableShowHeader = true;
     protected boolean dragging;
+    @Nullable
+    protected TextEventHandler textEventHandler = null;
+    protected final Set<String> hoveredTextEventIds = new HashSet<>();
     protected final List<MarkdownTextLine> lines = new ArrayList<>();
     protected final List<MarkdownTextFragment> fragments = new ArrayList<>();
     protected final List<ConsumingSupplier<MarkdownTextLine, Boolean>> lineRenderValidators = new ArrayList<>();
@@ -105,6 +118,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.tick();
         this.onRender(graphics, mouseX, mouseY, partial, true);
+        this.updateTextHoverEvents();
     }
 
     protected void onRender(GuiGraphics graphics, int mouseX, int mouseY, float partial, boolean shouldRender) {
@@ -330,7 +344,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         } else {
             this.text = text;
             StringBuilder builder = new StringBuilder();
-            for (PlaceholderParser.ParsedPlaceholder p : PlaceholderParser.findPlaceholders(this.text, new HashMap<>(), false)) {
+            for (PlaceholderParser.ParsedPlaceholder p : PlaceholderParser.findPlaceholders(this.text, new HashMap<>())) {
                 builder.append(p.placeholderString);
             }
             this.textPlaceholders = builder.toString();
@@ -459,6 +473,26 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     @NotNull
+    public DrawableColor getTextClickEventColor() {
+        return this.textClickEventColor;
+    }
+
+    public MarkdownRenderer setTextClickEventColor(@NotNull DrawableColor textClickEventColor) {
+        this.textClickEventColor = Objects.requireNonNull(textClickEventColor);
+        return this;
+    }
+
+    @NotNull
+    public DrawableColor getTextHoverEventColor() {
+        return this.textHoverEventColor;
+    }
+
+    public MarkdownRenderer setTextHoverEventColor(@NotNull DrawableColor textHoverEventColor) {
+        this.textHoverEventColor = Objects.requireNonNull(textHoverEventColor);
+        return this;
+    }
+
+    @NotNull
     public DrawableColor getQuoteColor() {
         return this.quoteColor;
     }
@@ -573,6 +607,16 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         return this;
     }
 
+    public boolean isUIFontRenderingEnabled() {
+        return this.uiFontRenderingEnabled;
+    }
+
+    public MarkdownRenderer setUIFontRenderingEnabled(boolean enabled) {
+        this.uiFontRenderingEnabled = enabled;
+        this.refreshRenderer();
+        return this;
+    }
+
     public float getLineSpacing() {
         return this.lineSpacing;
     }
@@ -679,8 +723,116 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         return this;
     }
 
+    protected float getUnscaledTextWidth(@NotNull Component text) {
+        if (this.uiFontRenderingEnabled) {
+            return UIBase.getUITextWidth(text, UIBase.getUITextSizeNormal());
+        }
+        return this.font.width(text);
+    }
+
+    protected float getUnscaledTextWidth(@NotNull String text) {
+        if (this.uiFontRenderingEnabled) {
+            return UIBase.getUITextWidth(text, UIBase.getUITextSizeNormal());
+        }
+        return this.font.width(text);
+    }
+
+    protected float getUnscaledTextHeight() {
+        if (this.uiFontRenderingEnabled) {
+            return UIBase.getUITextHeight(UIBase.getUITextSizeNormal());
+        }
+        return this.font.lineHeight;
+    }
+
+    protected void renderText(@NotNull GuiGraphics graphics, @NotNull Component text, float x, float y, int color, boolean shadow) {
+        if (this.uiFontRenderingEnabled) {
+            UIBase.renderText(graphics, text, x, y, color, UIBase.getUITextSizeNormal());
+            return;
+        }
+        graphics.drawString(this.font, text, (int)x, (int)y, color, shadow);
+    }
+
+    protected int darkenColor(int color) {
+        int alpha = FastColor.ARGB32.alpha(color);
+        int red = (int)(FastColor.ARGB32.red(color) * 0.25F);
+        int green = (int)(FastColor.ARGB32.green(color) * 0.25F);
+        int blue = (int)(FastColor.ARGB32.blue(color) * 0.25F);
+        return FastColor.ARGB32.color(alpha, red, green, blue);
+    }
+
     public void resetHovered() {
-        this.fragments.forEach(markdownTextFragment -> markdownTextFragment.hovered = false);
+        this.resetHovered(this.fragments);
+        this.hoveredTextEventIds.clear();
+    }
+
+    protected void resetHovered(@NotNull List<MarkdownTextFragment> fragments) {
+        for (MarkdownTextFragment fragment : fragments) {
+            fragment.hovered = false;
+            if (fragment.hoverEvent != null) {
+                fragment.hoverEvent.wasHovered = false;
+            }
+            if (fragment.isTable() && fragment.tableContext != null) {
+                for (MarkdownTextFragment.TableRow row : fragment.tableContext.rows) {
+                    for (MarkdownTextFragment.TableCell cell : row.cells) {
+                        this.resetHovered(cell.fragments);
+                    }
+                }
+            }
+        }
+    }
+
+    protected void updateTextHoverEvents() {
+        if (this.textEventHandler == null) {
+            this.hoveredTextEventIds.clear();
+            return;
+        }
+        List<MarkdownTextFragment.TextHoverEvent> hoverEvents = new ArrayList<>();
+        this.collectHoverEvents(this.fragments, hoverEvents);
+        Set<String> currentlyHovered = new HashSet<>();
+        for (MarkdownTextFragment.TextHoverEvent hoverEvent : hoverEvents) {
+            if (hoverEvent.isHovered()) {
+                currentlyHovered.add(hoverEvent.identifier);
+            }
+        }
+        for (String eventId : currentlyHovered) {
+            if (!this.hoveredTextEventIds.contains(eventId)) {
+                this.fireTextHoverEvent(eventId);
+            }
+        }
+        this.hoveredTextEventIds.clear();
+        this.hoveredTextEventIds.addAll(currentlyHovered);
+    }
+
+    protected void collectHoverEvents(@NotNull List<MarkdownTextFragment> fragments, @NotNull List<MarkdownTextFragment.TextHoverEvent> events) {
+        for (MarkdownTextFragment fragment : fragments) {
+            if (fragment.hoverEvent != null && !events.contains(fragment.hoverEvent)) {
+                events.add(fragment.hoverEvent);
+            }
+            if (fragment.isTable() && fragment.tableContext != null) {
+                for (MarkdownTextFragment.TableRow row : fragment.tableContext.rows) {
+                    for (MarkdownTextFragment.TableCell cell : row.cells) {
+                        this.collectHoverEvents(cell.fragments, events);
+                    }
+                }
+            }
+        }
+    }
+
+    public MarkdownRenderer setTextEventHandler(@Nullable TextEventHandler textEventHandler) {
+        this.textEventHandler = textEventHandler;
+        return this;
+    }
+
+    protected void fireTextClickEvent(@NotNull String eventId) {
+        if (this.textEventHandler != null) {
+            this.textEventHandler.onTextClickEvent(eventId);
+        }
+    }
+
+    protected void fireTextHoverEvent(@NotNull String eventId) {
+        if (this.textEventHandler != null) {
+            this.textEventHandler.onTextHoverEvent(eventId);
+        }
     }
 
     @Override
@@ -697,6 +849,15 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     @Override
     public void setDragging(boolean dragging) {
         this.dragging = dragging;
+    }
+
+    @Override
+    public void setFocused(boolean var1) {
+    }
+
+    @Override
+    public boolean isFocused() {
+        return false;
     }
 
     @Override
@@ -726,6 +887,11 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     @Override
     public void setNavigatable(boolean navigatable) {
         throw new RuntimeException("MarkdownRenderers are not navigatable.");
+    }
+
+    public interface TextEventHandler {
+        void onTextClickEvent(@NotNull String eventId);
+        void onTextHoverEvent(@NotNull String eventId);
     }
 
     public enum TextCase {

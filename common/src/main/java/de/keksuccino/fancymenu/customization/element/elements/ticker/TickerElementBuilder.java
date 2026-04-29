@@ -16,7 +16,6 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -82,7 +81,7 @@ public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEd
         TickerElement i = new TickerElement(this);
         i.baseWidth = 70;
         i.baseHeight = 70;
-        i.inEditorColor = DrawableColor.of(Color.ORANGE);
+        i.inEditorColor.setDefault(DrawableColor.of(Color.ORANGE).getHex()).set(DrawableColor.of(Color.ORANGE).getHex());
         return i;
     }
 
@@ -102,11 +101,6 @@ public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEd
             GenericExecutableBlock g = new GenericExecutableBlock();
             g.getExecutables().addAll(ActionInstance.deserializeAll(serialized));
             element.actionExecutor = g;
-        }
-
-        String tickDelayMsString = serialized.getValue("tick_delay");
-        if ((tickDelayMsString != null) && MathUtils.isLong(tickDelayMsString)) {
-            element.tickDelayMs = Long.parseLong(tickDelayMsString);
         }
 
         String isAsyncString = serialized.getValue("is_async");
@@ -130,7 +124,6 @@ public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEd
     protected SerializedElement serializeElement(@NotNull TickerElement element, @NotNull SerializedElement serializeTo) {
 
         serializeTo.putProperty("is_async", "" + element.isAsync);
-        serializeTo.putProperty("tick_delay", "" + element.tickDelayMs);
         serializeTo.putProperty("tick_mode", element.tickMode.name);
 
         serializeTo.putProperty("ticker_element_executable_block_identifier", element.actionExecutor.identifier);

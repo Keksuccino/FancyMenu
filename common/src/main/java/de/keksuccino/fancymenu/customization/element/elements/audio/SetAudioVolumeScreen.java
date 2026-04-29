@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.audio;
 
-import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import net.minecraft.network.chat.Component;
@@ -13,7 +12,7 @@ public class SetAudioVolumeScreen extends CellScreen {
     protected float current;
 
     protected SetAudioVolumeScreen(float preset, @NotNull Consumer<Float> callback) {
-        super(Components.translatable("fancymenu.elements.audio.set_volume"));
+        super(Component.translatable("fancymenu.elements.audio.set_volume"));
         if (preset > 1.0F) preset = 1.0F;
         if (preset < 0.0F) preset = 0.0F;
         this.current = preset;
@@ -25,9 +24,9 @@ public class SetAudioVolumeScreen extends CellScreen {
 
         this.addStartEndSpacerCell();
 
-        RangeSlider slider = new RangeSlider(0, 0, 20, 20, Components.empty(), 0.0D, 1.0D, this.current);
+        RangeSlider slider = new RangeSlider(0, 0, 20, 20, Component.empty(), 0.0D, 1.0D, this.current);
         slider.setRoundingDecimalPlace(2);
-        slider.setLabelSupplier(consumes -> Components.translatable("fancymenu.elements.audio.set_volume.track_volume", Components.literal("" + this.getPercentage() + "%")));
+        slider.setLabelSupplier(consumes -> Component.translatable("fancymenu.elements.audio.set_volume.track_volume", Component.literal("" + this.getPercentage() + "%")));
         slider.setSliderValueUpdateListener((slider1, valueDisplayText, value) -> this.current = (float)((RangeSlider)slider1).getRangeValue());
         this.addWidgetCell(slider, true);
 

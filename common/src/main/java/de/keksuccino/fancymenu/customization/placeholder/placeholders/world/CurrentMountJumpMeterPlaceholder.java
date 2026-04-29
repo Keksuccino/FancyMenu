@@ -13,7 +13,8 @@ public class CurrentMountJumpMeterPlaceholder extends AbstractWorldIntegerPlaceh
 
     @Override
     protected int getIntegerValue(@NotNull LocalPlayer player, @NotNull ClientLevel level) {
-        if (player.isRidingJumpable()) return (int)(player.getJumpRidingScale() * 100.0F);
+        PlayerRideableJumping mount = player.jumpableVehicle();
+        if (mount != null) return (int)(player.getJumpRidingScale() * 100.0F);
         return 0;
     }
 

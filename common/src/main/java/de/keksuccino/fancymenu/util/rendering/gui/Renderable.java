@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Widget;
 import org.jetbrains.annotations.NotNull;
 
-public interface Renderable extends Widget {
+public interface Widget extends Widget {
 
     void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
 

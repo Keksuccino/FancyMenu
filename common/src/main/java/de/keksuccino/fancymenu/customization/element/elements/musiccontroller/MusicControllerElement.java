@@ -4,8 +4,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.Minecraft;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -45,7 +45,7 @@ public class MusicControllerElement extends AbstractElement {
             int w = this.getAbsoluteWidth();
             int h = this.getAbsoluteHeight();
             RenderSystem.enableBlend();
-            graphics.fill(x, y, x + w, y + h, this.inEditorColor.getColorInt());
+            graphics.fill(x, y, x + w, y + h, this.inEditorColor.getDrawable().getColorInt());
             graphics.enableScissor(x, y, x + w, y + h);
             graphics.drawCenteredString(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
             graphics.disableScissor();

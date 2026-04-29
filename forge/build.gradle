@@ -93,8 +93,10 @@ dependencies {
         // Drop JetBrains annotations coming from Kotlin so we don't get a second module
         exclude group: 'org.jetbrains', module: 'annotations'
     }
+    compileOnly "com.github.WaterMediaTeam:watermedia-v3:${watermedia_version}"
     implementation fg.deobf("maven.modrinth:konkrete:1.8.0-1.19-1.19.2-forge")
     implementation fg.deobf("maven.modrinth:melody:1.0.1-1.19.2-forge")
+    compileOnly fg.deobf("com.cinemamod:mcef:2.1.6-1.20.1")
     //This is only to fix the missing dependency error in-dev
     implementation (group: 'ca.weblite', name: 'java-objc-bridge', version: '1.1')
     compileOnly project(":common")

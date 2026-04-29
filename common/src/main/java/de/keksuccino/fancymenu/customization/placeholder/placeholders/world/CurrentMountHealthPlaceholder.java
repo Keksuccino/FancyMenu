@@ -14,7 +14,7 @@ public class CurrentMountHealthPlaceholder extends AbstractWorldFloatPlaceholder
 
     @Override
     protected float getFloatValue(@NotNull LocalPlayer player, @NotNull ClientLevel level) {
-        Entity mount = player.getVehicle();
+        Entity mount = player.getControlledVehicle();
         if (mount instanceof LivingEntity l) return l.getHealth();
         return 0.0F;
     }

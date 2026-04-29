@@ -14,14 +14,14 @@ public class CurrentMountHealthPercentagePlaceholder extends AbstractWorldPercen
 
     @Override
     protected float getCurrentFloatValue(@NotNull LocalPlayer player, @NotNull ClientLevel level) {
-        Entity mount = player.getVehicle();
+        Entity mount = player.getControlledVehicle();
         if (mount instanceof LivingEntity l) return l.getHealth();
         return 0.0F;
     }
 
     @Override
     protected float getMaxFloatValue(@NotNull LocalPlayer player, @NotNull ClientLevel level) {
-        Entity mount = player.getVehicle();
+        Entity mount = player.getControlledVehicle();
         if (mount instanceof LivingEntity l) return l.getMaxHealth();
         return 0.0F;
     }

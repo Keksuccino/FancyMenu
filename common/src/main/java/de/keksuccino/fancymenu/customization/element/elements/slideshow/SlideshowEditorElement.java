@@ -1,22 +1,19 @@
 package de.keksuccino.fancymenu.customization.element.elements.slideshow;
 
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.ChooseSlideshowScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.ObjectUtils;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
-import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import net.minecraft.client.Minecraft;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class SlideshowEditorElement extends AbstractEditorElement {
+public class SlideshowEditorElement extends AbstractEditorElement<SlideshowEditorElement, SlideshowElement> {
 
-    public SlideshowEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public SlideshowEditorElement(@NotNull SlideshowElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
     }
 
@@ -25,8 +22,8 @@ public class SlideshowEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        this.rightClickMenu.addClickableEntry("choose_slideshow", Components.translatable("fancymenu.elements.slideshow.set_slideshow"), (menu, entry) -> {
-            List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof SlideshowEditorElement));
+        this.rightClickMenu.addClickableEntry("choose_slideshow", Component.translatable("fancymenu.elements.slideshow.set_slideshow"), (menu, entry) -> {
+            List<AbstractEditorElement<?,?>> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof SlideshowEditorElement));
             String preSelectedSlideshow = null;
             List<String> allSlideshows = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> ((SlideshowElement)consumes.element).slideshowName);
             if (!allSlideshows.isEmpty() && ListUtils.allInListEqual(allSlideshows)) {
@@ -35,23 +32,24 @@ public class SlideshowEditorElement extends AbstractEditorElement {
             ChooseSlideshowScreen s = new ChooseSlideshowScreen(preSelectedSlideshow, (call) -> {
                 if (call != null) {
                     this.editor.history.saveSnapshot();
-                    for (AbstractEditorElement e : selectedElements) {
+                    for (AbstractEditorElement<?,?> e : selectedElements) {
                         ((SlideshowElement)e.element).slideshowName = call;
                     }
                 }
-                Minecraft.getInstance().setScreen(this.editor);
             });
-            Minecraft.getInstance().setScreen(s);
-        }).setStackable(true);
+            menu.closeMenuChain();
+            ChooseSlideshowScreen.openInWindow(s);
+        }).setStackable(true)
+                .setIcon(MaterialIcons.SLIDESHOW);
 
-        this.rightClickMenu.addClickableEntry("restore_aspect_ratio", Components.translatable("fancymenu.elements.slideshow.restore_aspect_ratio"), (menu, entry) -> {
-            List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof SlideshowEditorElement));
+        this.rightClickMenu.addClickableEntry("restore_aspect_ratio", Component.translatable("fancymenu.elements.slideshow.restore_aspect_ratio"), (menu, entry) -> {
+            List<AbstractEditorElement<?,?>> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof SlideshowEditorElement));
             this.editor.history.saveSnapshot();
-            for (AbstractEditorElement e : selectedElements) {
+            for (AbstractEditorElement<?,?> e : selectedElements) {
                 ((SlideshowElement)e.element).restoreAspectRatio();
             }
         }).setStackable(true)
-                .setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"));
+                .setIcon(MaterialIcons.ASPECT_RATIO);
 
     }
 

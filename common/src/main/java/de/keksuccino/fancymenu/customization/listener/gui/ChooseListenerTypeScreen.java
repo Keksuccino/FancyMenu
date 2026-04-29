@@ -1,21 +1,22 @@
 package de.keksuccino.fancymenu.customization.listener.gui;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.listener.AbstractListener;
 import de.keksuccino.fancymenu.customization.listener.ListenerRegistry;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
-import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.InitialWidgetFocusScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -25,7 +26,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ChooseListenerTypeScreen extends ModernScreen {
+public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWidgetFocusScreen {
+
+    public static final int PIP_WINDOW_WIDTH = 640;
+    public static final int PIP_WINDOW_HEIGHT = 420;
+    private static final int LIST_ENTRY_TOP_DOWN_BORDER = 1;
+    private static final int LIST_ENTRY_OUTER_PADDING = 3;
+    private static final int LIST_TOP_SPACER_HEIGHT = 5;
 
     @NotNull
     protected final Consumer<AbstractListener> callback;
@@ -36,6 +43,7 @@ public class ChooseListenerTypeScreen extends ModernScreen {
     protected ScrollArea descriptionScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ExtendedEditBox searchBar;
     protected ExtendedButton copyVariablesButton;
+    protected ExtendedButton popOutDescriptionButton;
 
     public ChooseListenerTypeScreen(@NotNull Consumer<AbstractListener> callback) {
         super(Component.translatable("fancymenu.listeners.choose_type"));
@@ -44,7 +52,8 @@ public class ChooseListenerTypeScreen extends ModernScreen {
 
     @Override
     protected void init() {
-        
+        boolean blur = UIBase.shouldBlur();
+
         // Initialize search bar
         String oldSearchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
         this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 20 + 1, 50 + 15 + 1, (this.width / 2) - 40 - 2, 20 - 2, Component.empty());
@@ -52,16 +61,18 @@ public class ChooseListenerTypeScreen extends ModernScreen {
         this.searchBar.setValue(oldSearchValue);
         this.searchBar.setResponder(s -> this.updateListenersList());
         this.addRenderableWidget(this.searchBar);
-        UIBase.applyDefaultWidgetSkinTo(this.searchBar);
-        this.setInitialFocus(this.searchBar);
+        UIBase.applyDefaultWidgetSkinTo(this.searchBar, blur);
+        this.setupInitialFocusWidget(this, this.searchBar);
         
         // Set positions for scroll areas
+        this.listenersScrollArea.setSetupForBlurInterface(blur);
         this.listenersScrollArea.setWidth((this.width / 2) - 40, true);
         this.listenersScrollArea.setHeight(this.height - 85 - 25, true);
         this.listenersScrollArea.setX(20, true);
         this.listenersScrollArea.setY(50 + 15 + 25, true);
         this.addRenderableWidget(this.listenersScrollArea);
         
+        this.descriptionScrollArea.setSetupForBlurInterface(blur);
         this.descriptionScrollArea.setWidth((this.width / 2) - 40, true);
         this.descriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
         this.descriptionScrollArea.setX(this.width - 20 - this.descriptionScrollArea.getWidthWithBorder(), true);
@@ -81,7 +92,19 @@ public class ChooseListenerTypeScreen extends ModernScreen {
                 button -> this.copyVariablesToClipboard()
         ).setIsActiveSupplier(consumes -> this.selectedListener != null);
         this.addRenderableWidget(this.copyVariablesButton);
-        UIBase.applyDefaultWidgetSkinTo(this.copyVariablesButton);
+        UIBase.applyDefaultWidgetSkinTo(this.copyVariablesButton, blur);
+
+        int popOutButtonY = copyButtonY + 5 + 20;
+        this.popOutDescriptionButton = new ExtendedButton(
+                copyButtonX,
+                popOutButtonY,
+                copyButtonWidth,
+                20,
+                Component.translatable("fancymenu.listeners.choose_type.pop_out_description"),
+                button -> this.openDescriptionPopout()
+        ).setIsActiveSupplier(consumes -> this.selectedListener != null);
+        this.addRenderableWidget(this.popOutDescriptionButton);
+        UIBase.applyDefaultWidgetSkinTo(this.popOutDescriptionButton, blur);
         
         // Done button
         ExtendedButton doneButton = new ExtendedButton(
@@ -89,12 +112,10 @@ public class ChooseListenerTypeScreen extends ModernScreen {
                 this.height - 20 - 20, 
                 150, 20, 
                 Component.translatable("fancymenu.common_components.done"), 
-                button -> {
-                    this.callback.accept(this.selectedListener);
-                }
+                button -> this.closeWithResult(this.selectedListener)
         ).setIsActiveSupplier(consumes -> this.selectedListener != null);
         this.addRenderableWidget(doneButton);
-        UIBase.applyDefaultWidgetSkinTo(doneButton);
+        UIBase.applyDefaultWidgetSkinTo(doneButton, blur);
         
         // Cancel button
         ExtendedButton cancelButton = new ExtendedButton(
@@ -102,12 +123,10 @@ public class ChooseListenerTypeScreen extends ModernScreen {
                 this.height - 20 - 20 - 5 - 20,
                 150, 20,
                 Component.translatable("fancymenu.common_components.cancel"),
-                button -> {
-                    this.callback.accept(null);
-                }
+                button -> this.closeWithResult(null)
         );
         this.addRenderableWidget(cancelButton);
-        UIBase.applyDefaultWidgetSkinTo(cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(cancelButton, blur);
         
         this.updateListenersList();
         this.setDescription(this.selectedListener);
@@ -115,31 +134,44 @@ public class ChooseListenerTypeScreen extends ModernScreen {
     }
 
     @Override
-    public void onClose() {
+    public void onWindowClosedExternally() {
         this.callback.accept(null);
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+    public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        RenderSystem.enableBlend();
         
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        UIBase.renderText(graphics, titleComp, 20, 20, this.getGenericTextColor());
         
-        graphics.drawString(this.font, Component.translatable("fancymenu.listeners.choose_type.available"), 
-                20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        float labelTextHeight = UIBase.getUITextHeightNormal();
+        int listenersAreaTop = (this.searchBar != null) ? this.searchBar.getY() : (50 + 15 + 1);
+        float listenersLabelY = listenersAreaTop - labelTextHeight - UIBase.getAreaLabelVerticalPadding();
+        UIBase.renderText(
+                graphics,
+                Component.translatable("fancymenu.listeners.choose_type.available"),
+                20,
+                listenersLabelY,
+                this.getGenericTextColor()
+        );
         
         Component descLabel = Component.translatable("fancymenu.listeners.choose_type.description");
-        int descLabelWidth = this.font.width(descLabel);
-        graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, 
-                UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
-        
-        super.render(graphics, mouseX, mouseY, partial);
+        float descLabelWidth = UIBase.getUITextWidthNormal(descLabel);
+        float descAreaTop = (this.descriptionScrollArea != null) ? this.descriptionScrollArea.getYWithBorder() : (50 + 15);
+        float descLabelY = descAreaTop - labelTextHeight - UIBase.getAreaLabelVerticalPadding();
+        UIBase.renderText(
+                graphics,
+                descLabel,
+                this.width - 20 - descLabelWidth,
+                descLabelY,
+                this.getGenericTextColor()
+        );
+
+        this.performInitialWidgetFocusActionInRender();
     }
 
-    @Override
-    public void renderBackground(@NotNull GuiGraphics graphics) {
+public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
     }
 
     protected void updateListenersList() {
@@ -147,23 +179,31 @@ public class ChooseListenerTypeScreen extends ModernScreen {
         if (searchValue.isBlank()) searchValue = null;
         
         this.listenersScrollArea.clearEntries();
+        CellScreen.SpacerScrollAreaEntry spacer = new CellScreen.SpacerScrollAreaEntry(this.listenersScrollArea, LIST_TOP_SPACER_HEIGHT);
+        spacer.setSelectable(false);
+        spacer.selectOnClick = false;
+        spacer.setPlayClickSound(false);
+        spacer.setBackgroundColorNormal(() -> DrawableColor.FULLY_TRANSPARENT);
+        spacer.setBackgroundColorHover(() -> DrawableColor.FULLY_TRANSPARENT);
+        this.listenersScrollArea.addEntry(spacer);
         
         for (AbstractListener listener : ListenerRegistry.getListeners()) {
             if (!this.listenerFitsSearchValue(listener, searchValue)) continue;
             
             ListenerScrollEntry entry = new ListenerScrollEntry(
                     this.listenersScrollArea,
-                    ((MutableComponent)listener.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt())),
-                    UIBase.getUIColorTheme().listing_dot_color_1,
+                    listener.getDisplayName().copy(),
                     e -> {
                         this.selectedListener = listener;
                         this.setDescription(listener);
                     }
             );
             entry.listener = listener;
+            entry.setTextBaseColor(this.getLabelTextColor());
+            entry.setHeight(this.getListEntryHeight());
             entry.setDoubleClickAction(() -> {
                 if (this.selectedListener == listener) {
-                    this.callback.accept(this.selectedListener);
+                    this.closeWithResult(this.selectedListener);
                 }
             });
             this.listenersScrollArea.addEntry(entry);
@@ -197,21 +237,14 @@ public class ChooseListenerTypeScreen extends ModernScreen {
     }
 
     protected void addDescriptionLine(@NotNull Component line) {
-        List<Component> lines = new ArrayList<>();
-        int maxWidth = (int)(this.descriptionScrollArea.getInnerWidth() - 15F);
-        if (this.font.width(line) > maxWidth) {
-            this.font.getSplitter().splitLines(line, maxWidth, Style.EMPTY).forEach(formatted -> {
-                lines.add(TextFormattingUtils.convertFormattedTextToComponent(formatted));
-            });
-        } else {
-            lines.add(line);
-        }
+        float maxWidth = this.descriptionScrollArea.getInnerWidth() - 15F;
+        List<MutableComponent> lines = UIBase.lineWrapUIComponentsNormal(line, maxWidth);
         lines.forEach(component -> {
             TextScrollAreaEntry e = new TextScrollAreaEntry(this.descriptionScrollArea, component, (entry) -> {});
             e.setSelectable(false);
             e.setBackgroundColorHover(e.getBackgroundColorNormal());
             e.setPlayClickSound(false);
-            e.setTextBaseColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt());
+            e.setTextBaseColor(this.getLabelTextColor());
             this.descriptionScrollArea.addEntry(e);
         });
     }
@@ -228,6 +261,16 @@ public class ChooseListenerTypeScreen extends ModernScreen {
             builder.append("$$").append(variables.get(i).name());
         }
         Minecraft.getInstance().keyboardHandler.setClipboard(builder.toString());
+    }
+
+    protected void openDescriptionPopout() {
+        if (this.selectedListener == null) return;
+
+        AbstractListener listener = this.selectedListener;
+        List<Component> cachedDescription = (listener.getDescription() != null) ? listener.getDescription() : List.of();
+        Component title = Component.translatable("fancymenu.listeners.choose_type.description.popout_title", listener.getDisplayName().copy());
+        ListenerDescriptionPopoutBody popout = new ListenerDescriptionPopoutBody(title, cachedDescription);
+        ListenerDescriptionPopoutBody.openInWindow(popout, this.getWindow());
     }
 
     protected boolean listenerFitsSearchValue(@NotNull AbstractListener listener, @Nullable String searchValue) {
@@ -251,7 +294,149 @@ public class ChooseListenerTypeScreen extends ModernScreen {
         return false;
     }
 
-    public class ListenerScrollEntry extends TextListScrollAreaEntry {
+    protected void closeWithResult(@Nullable AbstractListener listener) {
+        this.callback.accept(listener);
+        this.closeWindow();
+    }
+
+    private int getGenericTextColor() {
+        return UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_generic_text_color.getColorInt()
+                : UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
+    }
+
+    private int getLabelTextColor() {
+        return UIBase.shouldBlur()
+                ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt()
+                : UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt();
+    }
+
+    private int getListEntryHeight() {
+        return (int)(UIBase.getUITextHeightNormal()
+                + (LIST_ENTRY_TOP_DOWN_BORDER * 2)
+                + (LIST_ENTRY_OUTER_PADDING * 2));
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull ChooseListenerTypeScreen screen, @Nullable PiPWindow parentWindow) {
+        PiPWindow window = new PiPWindow(screen.getTitle())
+                .setScreen(screen)
+                .setForceFancyMenuUiScale(true)
+                .setAlwaysOnTop(false)
+                .setBlockMinecraftScreenInputs(false)
+                .setForceFocus(false)
+                .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
+                .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, parentWindow);
+        return window;
+    }
+
+    public static @NotNull PiPWindow openInWindow(@NotNull ChooseListenerTypeScreen screen) {
+        return openInWindow(screen, null);
+    }
+
+    public static class ListenerDescriptionPopoutBody extends PiPWindowBody {
+
+        public static final int PIP_WINDOW_WIDTH = 360;
+        public static final int PIP_WINDOW_HEIGHT = 260;
+
+        @NotNull
+        private final List<Component> descriptionLines;
+        protected final ScrollArea descriptionScrollArea = new ScrollArea(0, 0, 0, 0);
+
+        public ListenerDescriptionPopoutBody(@NotNull Component title, @NotNull List<Component> descriptionLines) {
+            super(title);
+            this.descriptionLines = new ArrayList<>(descriptionLines.size());
+            for (Component component : descriptionLines) {
+                if (component != null) {
+                    this.descriptionLines.add(component.copy());
+                }
+            }
+        }
+
+        @Override
+        protected void init() {
+            boolean blur = UIBase.shouldBlur();
+
+            this.descriptionScrollArea.setSetupForBlurInterface(blur);
+            this.descriptionScrollArea.setWidth(this.width - 40, true);
+            this.descriptionScrollArea.setHeight(this.height - 40, true);
+            this.descriptionScrollArea.setX(20, true);
+            this.descriptionScrollArea.setY(20, true);
+            this.descriptionScrollArea.horizontalScrollBar.active = false;
+            this.addRenderableWidget(this.descriptionScrollArea);
+
+            this.populateDescription();
+        }
+
+public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        }
+
+        private void populateDescription() {
+            this.descriptionScrollArea.clearEntries();
+            this.descriptionScrollArea.addEntry(new CellScreen.SpacerScrollAreaEntry(this.descriptionScrollArea, 5));
+            for (Component line : this.descriptionLines) {
+                this.addDescriptionLine(line);
+            }
+            this.descriptionScrollArea.addEntry(new CellScreen.SpacerScrollAreaEntry(this.descriptionScrollArea, 5));
+        }
+
+        private void addDescriptionLine(@NotNull Component line) {
+            float maxWidth = this.descriptionScrollArea.getInnerWidth() - 15F;
+            List<MutableComponent> lines = UIBase.lineWrapUIComponentsNormal(line, maxWidth);
+            int textColor = this.getLabelTextColor();
+            lines.forEach(component -> {
+                TextScrollAreaEntry e = new TextScrollAreaEntry(this.descriptionScrollArea, component, (entry) -> {});
+                e.setSelectable(false);
+                e.setBackgroundColorHover(e.getBackgroundColorNormal());
+                e.setPlayClickSound(false);
+                e.setTextBaseColor(textColor);
+                this.descriptionScrollArea.addEntry(e);
+            });
+        }
+
+        private int getLabelTextColor() {
+            return UIBase.shouldBlur()
+                    ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt()
+                    : UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt();
+        }
+
+        public static @NotNull PiPWindow openInWindow(@NotNull ListenerDescriptionPopoutBody screen, @Nullable PiPWindow anchorWindow) {
+            PiPWindow window = new PiPWindow(screen.getTitle())
+                    .setScreen(screen)
+                    .setForceFancyMenuUiScale(true)
+                    .setBlockMinecraftScreenInputs(false)
+                    .setMinSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT)
+                    .setSize(PIP_WINDOW_WIDTH, PIP_WINDOW_HEIGHT);
+            if (anchorWindow != null) {
+                int screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+                int screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+                int offset = 10;
+                int x = anchorWindow.getX() + anchorWindow.getWidth() + offset;
+                int y = anchorWindow.getY();
+                if (x + window.getWidth() > screenWidth) {
+                    x = anchorWindow.getX() - window.getWidth() - offset;
+                }
+                if (x < 0) {
+                    x = Math.max(0, screenWidth - window.getWidth());
+                }
+                if (y + window.getHeight() > screenHeight) {
+                    y = Math.max(0, screenHeight - window.getHeight());
+                }
+                window.setPosition(x, y);
+                PiPWindowHandler.INSTANCE.openWindow(window, null);
+                return window;
+            }
+            PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
+            return window;
+        }
+
+        public static @NotNull PiPWindow openInWindow(@NotNull ListenerDescriptionPopoutBody screen) {
+            return openInWindow(screen, null);
+        }
+
+    }
+
+    public class ListenerScrollEntry extends TextScrollAreaEntry {
         
         @Nullable
         public AbstractListener listener;
@@ -260,8 +445,8 @@ public class ChooseListenerTypeScreen extends ModernScreen {
         @Nullable
         protected Runnable doubleClickAction;
         
-        public ListenerScrollEntry(ScrollArea parent, @NotNull Component text, @NotNull DrawableColor listDotColor, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, text, listDotColor, onClick);
+        public ListenerScrollEntry(ScrollArea parent, @NotNull Component text, @NotNull Consumer<TextScrollAreaEntry> onClick) {
+            super(parent, text, onClick);
         }
         
         public void setDoubleClickAction(@Nullable Runnable action) {

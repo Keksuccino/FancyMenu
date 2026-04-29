@@ -26,7 +26,7 @@ public class DraggerElementBuilder extends ElementBuilder<DraggerElement, Dragge
         DraggerElement i = new DraggerElement(this);
         i.baseWidth = 100;
         i.baseHeight = 100;
-        i.inEditorColor = DrawableColor.of(new Color(227, 14, 35));
+        i.inEditorColor.setDefault(DrawableColor.of(new Color(227, 14, 35)).getHex()).set(DrawableColor.of(new Color(227, 14, 35)).getHex());
         return i;
     }
 

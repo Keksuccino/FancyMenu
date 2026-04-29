@@ -1,22 +1,22 @@
 package de.keksuccino.fancymenu.customization.element.elements.splash;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Vector3f;
+import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinSplashRenderer;
+import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import net.minecraft.client.gui.components.SplashRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
@@ -25,19 +25,19 @@ import java.util.Objects;
 
 public class SplashTextElement extends AbstractElement {
 
-    private static final Logger LOGGER = LogManager.getLogger();
-
     public SourceMode sourceMode = SourceMode.DIRECT_TEXT;
     public String source = "Splash Text";
     @Nullable
     public ResourceSupplier<IText> textFileSupplier;
-    public float scale = 1.0F;
+    public final Property.FloatProperty scale = putProperty(Property.floatProperty("scale", 1.0F, "fancymenu.elements.splash.set_scale"));
     public boolean shadow = true;
     public boolean bounce = true;
-    public float rotation = 20.0F;
-    public DrawableColor baseColor = DrawableColor.of(new Color(255, 255, 0));
+    public final Property.FloatProperty rotation = putProperty(Property.floatProperty("rotation", 20.0F, "fancymenu.elements.splash.rotation"));
     public boolean refreshOnMenuReload = false;
     public Font font = Minecraft.getInstance().font;
+
+    public final Property.ColorProperty baseColor = putProperty(Property.hexColorProperty("base_color", DrawableColor.of(new Color(255, 255, 0)).getHex(), true, "fancymenu.elements.splash.basecolor"));
+
     protected float baseScale = 1.8F;
     protected String renderText = null;
     protected String lastSource = null;
@@ -47,6 +47,8 @@ public class SplashTextElement extends AbstractElement {
     public SplashTextElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
         this.allowDepthTestManipulation = true;
+        this.scale.addValueSetListener((oldValue, newValue) -> this.updateSplash());
+        this.rotation.addValueSetListener((oldValue, newValue) -> this.updateSplash());
     }
 
     @Override
@@ -56,7 +58,7 @@ public class SplashTextElement extends AbstractElement {
 
             this.updateSplash();
 
-            this.renderSplash(graphics.pose());
+            this.renderSplash(graphics);
 
             RenderingUtils.resetShaderColor(graphics);
 
@@ -92,7 +94,8 @@ public class SplashTextElement extends AbstractElement {
         if (this.renderText == null) {
             //VANILLA
             if (this.sourceMode == SourceMode.VANILLA) {
-                this.renderText = Minecraft.getInstance().getSplashManager().getSplash();
+                SplashRenderer splashRenderer = Minecraft.getInstance().getSplashManager().getSplash();
+                this.renderText = (splashRenderer != null) ? ((IMixinSplashRenderer)splashRenderer).getSplashFancyMenu() : "";
             }
             //TEXT FILE
             if (this.sourceMode == SourceMode.TEXT_FILE) {
@@ -121,7 +124,7 @@ public class SplashTextElement extends AbstractElement {
 
     }
 
-    protected void renderSplash(PoseStack pose) {
+    protected void renderSplash(GuiGraphics graphics) {
 
         if (this.renderText == null) {
             if (isEditor()) {
@@ -141,32 +144,30 @@ public class SplashTextElement extends AbstractElement {
 
         RenderSystem.enableBlend();
 
-        pose.pushPose();
-        pose.scale(this.scale, this.scale, this.scale);
+        graphics.pose().pushPose();
+        float resolvedScale = Math.max(0.0F, this.scale.getFloat());
+        graphics.pose().scale(resolvedScale, resolvedScale, resolvedScale);
 
-        pose.pushPose();
-        pose.translate(((this.getAbsoluteX() + (this.getAbsoluteWidth() / 2F)) / this.scale), this.getAbsoluteY() / this.scale, 0.0F);
-        pose.mulPose(Vector3f.ZP.rotationDegrees(this.rotation));
-        pose.scale(splashBaseScale, splashBaseScale, splashBaseScale);
+        graphics.pose().pushPose();
+        graphics.pose().translate(((this.getAbsoluteX() + (this.getAbsoluteWidth() / 2F)) / resolvedScale), this.getAbsoluteY() / resolvedScale, 0.0F);
+        graphics.pose().mulPose(Axis.ZP.rotationDegrees(this.rotation.getFloat()));
+        graphics.pose().scale(splashBaseScale, splashBaseScale, splashBaseScale);
 
-        int alpha = this.baseColor.getColor().getAlpha();
+        DrawableColor c = this.baseColor.getDrawable();
+        int alpha = c.getColor().getAlpha();
         int i = Mth.ceil(this.opacity * 255.0F);
         if (i < alpha) {
             alpha = i;
         }
 
-        if (this.shadow) {
-            font.drawShadow(pose, renderTextComponent, -((float)font.width(renderTextComponent) / 2F), 0F, RenderingUtils.replaceAlphaInColor(this.baseColor.getColorInt(), alpha));
-        } else {
-            font.draw(pose, renderTextComponent, -((float)font.width(renderTextComponent) / 2F), 0F, RenderingUtils.replaceAlphaInColor(this.baseColor.getColorInt(), alpha));
-        }
+        graphics.drawString(font, renderTextComponent, -(font.width(renderTextComponent) / 2), 0, RenderingUtils.replaceAlphaInColor(c.getColorInt(), alpha), this.shadow);
 
-        pose.popPose();
-        pose.popPose();
+        graphics.pose().popPose();
+        graphics.pose().popPose();
 
     }
 
-    protected SplashTextElementBuilder getBuilder() {
+    public SplashTextElementBuilder getBuilder() {
         return (SplashTextElementBuilder) this.builder;
     }
 

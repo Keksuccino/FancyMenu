@@ -1,12 +1,11 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.ClassExtender;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
@@ -29,6 +28,38 @@ public interface CustomizableSlider {
 
     int getNineSliceSliderBackgroundBorderY_FancyMenu();
 
+    default void setNineSliceSliderBackgroundBorderTop_FancyMenu(int borderTop) {
+        setNineSliceSliderBackgroundBorderY_FancyMenu(borderTop);
+    }
+
+    default int getNineSliceSliderBackgroundBorderTop_FancyMenu() {
+        return getNineSliceSliderBackgroundBorderY_FancyMenu();
+    }
+
+    default void setNineSliceSliderBackgroundBorderRight_FancyMenu(int borderRight) {
+        setNineSliceSliderBackgroundBorderX_FancyMenu(borderRight);
+    }
+
+    default int getNineSliceSliderBackgroundBorderRight_FancyMenu() {
+        return getNineSliceSliderBackgroundBorderX_FancyMenu();
+    }
+
+    default void setNineSliceSliderBackgroundBorderBottom_FancyMenu(int borderBottom) {
+        setNineSliceSliderBackgroundBorderY_FancyMenu(borderBottom);
+    }
+
+    default int getNineSliceSliderBackgroundBorderBottom_FancyMenu() {
+        return getNineSliceSliderBackgroundBorderY_FancyMenu();
+    }
+
+    default void setNineSliceSliderBackgroundBorderLeft_FancyMenu(int borderLeft) {
+        setNineSliceSliderBackgroundBorderX_FancyMenu(borderLeft);
+    }
+
+    default int getNineSliceSliderBackgroundBorderLeft_FancyMenu() {
+        return getNineSliceSliderBackgroundBorderX_FancyMenu();
+    }
+
     void setNineSliceCustomSliderHandle_FancyMenu(boolean nineSlice);
 
     boolean isNineSliceCustomSliderHandle_FancyMenu();
@@ -40,6 +71,38 @@ public interface CustomizableSlider {
     void setNineSliceSliderHandleBorderY_FancyMenu(int borderY);
 
     int getNineSliceSliderHandleBorderY_FancyMenu();
+
+    default void setNineSliceSliderHandleBorderTop_FancyMenu(int borderTop) {
+        setNineSliceSliderHandleBorderY_FancyMenu(borderTop);
+    }
+
+    default int getNineSliceSliderHandleBorderTop_FancyMenu() {
+        return getNineSliceSliderHandleBorderY_FancyMenu();
+    }
+
+    default void setNineSliceSliderHandleBorderRight_FancyMenu(int borderRight) {
+        setNineSliceSliderHandleBorderX_FancyMenu(borderRight);
+    }
+
+    default int getNineSliceSliderHandleBorderRight_FancyMenu() {
+        return getNineSliceSliderHandleBorderX_FancyMenu();
+    }
+
+    default void setNineSliceSliderHandleBorderBottom_FancyMenu(int borderBottom) {
+        setNineSliceSliderHandleBorderY_FancyMenu(borderBottom);
+    }
+
+    default int getNineSliceSliderHandleBorderBottom_FancyMenu() {
+        return getNineSliceSliderHandleBorderY_FancyMenu();
+    }
+
+    default void setNineSliceSliderHandleBorderLeft_FancyMenu(int borderLeft) {
+        setNineSliceSliderHandleBorderX_FancyMenu(borderLeft);
+    }
+
+    default int getNineSliceSliderHandleBorderLeft_FancyMenu() {
+        return getNineSliceSliderHandleBorderX_FancyMenu();
+    }
 
     void setCustomSliderBackgroundNormalFancyMenu(@Nullable RenderableResource background);
 
@@ -74,11 +137,14 @@ public interface CustomizableSlider {
         }
         if (location != null) {
             graphics.setColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)this).getAlphaFancyMenu());
-            RenderSystem.enableBlend();
+            RenderingUtils.setupAlphaBlend();
             if (this.isNineSliceCustomSliderBackground_FancyMenu()) {
-                RenderingUtils.blitNineSlicedTexture(graphics, location, widget.x, widget.y, widget.getWidth(), widget.getHeight(), texture.getWidth(), texture.getHeight(), this.getNineSliceSliderBackgroundBorderY_FancyMenu(), this.getNineSliceSliderBackgroundBorderX_FancyMenu(), this.getNineSliceSliderBackgroundBorderY_FancyMenu(), this.getNineSliceSliderBackgroundBorderX_FancyMenu());
+                RenderingUtils.blitNineSlicedTexture(graphics, location, widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight(), texture.getWidth(), texture.getHeight(),
+                        this.getNineSliceSliderBackgroundBorderTop_FancyMenu(), this.getNineSliceSliderBackgroundBorderRight_FancyMenu(),
+                        this.getNineSliceSliderBackgroundBorderBottom_FancyMenu(), this.getNineSliceSliderBackgroundBorderLeft_FancyMenu());
             } else {
-                graphics.blit(location, widget.x, widget.y, 0.0F, 0.0F, widget.getWidth(), widget.getHeight(), widget.getWidth(), widget.getHeight());
+                RenderingUtils.setupAlphaBlend();
+                RenderingUtils.blitAlphaTexture(graphics, location, widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight());
             }
             RenderingUtils.resetShaderColor(graphics);
             return false;

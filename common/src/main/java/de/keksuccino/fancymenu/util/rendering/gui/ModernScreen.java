@@ -25,6 +25,14 @@ public class ModernScreen extends Screen {
         super.renderBackground(graphics.pose());
     }
 
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        this.renderBackground(graphics);
+    }
+
+    public void renderDirtBackground(@NotNull GuiGraphics graphics) {
+        super.renderDirtBackground(0);
+    }
+
     @Deprecated
     @Override
     public final void renderBackground(@NotNull PoseStack pose) {

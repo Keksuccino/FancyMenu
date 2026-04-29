@@ -1,0 +1,43 @@
+package de.keksuccino.fancymenu.customization.decorationoverlay.overlays;
+
+import de.keksuccino.fancymenu.customization.decorationoverlay.DecorationOverlayRegistry;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.browser.BrowserDecorationOverlayBuilder;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.BuddyDecorationOverlayBuilder;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.confetti.ConfettiDecorationOverlayBuilder;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.firefly.FireflyDecorationOverlayBuilder;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.fireworks.FireworksDecorationOverlayBuilder;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.glsl.GlslDecorationOverlayBuilder;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.leaves.LeavesDecorationOverlayBuilder;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.rain.RainDecorationOverlayBuilder;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.snow.SnowDecorationOverlayBuilder;
+import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.stringlights.StringLightsDecorationOverlayBuilder;
+
+public class DecorationOverlays {
+
+    public static final SnowDecorationOverlayBuilder SNOW = new SnowDecorationOverlayBuilder();
+    public static final RainDecorationOverlayBuilder RAIN = new RainDecorationOverlayBuilder();
+    public static final FireflyDecorationOverlayBuilder FIREFLIES = new FireflyDecorationOverlayBuilder();
+    public static final FireworksDecorationOverlayBuilder FIREWORKS = new FireworksDecorationOverlayBuilder();
+    public static final StringLightsDecorationOverlayBuilder STRING_LIGHTS = new StringLightsDecorationOverlayBuilder();
+    public static final LeavesDecorationOverlayBuilder LEAVES = new LeavesDecorationOverlayBuilder();
+    public static final ConfettiDecorationOverlayBuilder CONFETTI = new ConfettiDecorationOverlayBuilder();
+    public static final BuddyDecorationOverlayBuilder BUDDY = new BuddyDecorationOverlayBuilder();
+    public static final BrowserDecorationOverlayBuilder BROWSER = new BrowserDecorationOverlayBuilder();
+    public static final GlslDecorationOverlayBuilder GLSL = new GlslDecorationOverlayBuilder();
+
+    public static void registerAll() {
+
+        DecorationOverlayRegistry.register(BROWSER); // Browser should be the first one, so other overlays can render in front of it
+        DecorationOverlayRegistry.register(GLSL); // Keep GLSL near the back so overlays can render in front when needed
+        DecorationOverlayRegistry.register(BUDDY);
+        DecorationOverlayRegistry.register(STRING_LIGHTS);
+        DecorationOverlayRegistry.register(FIREWORKS);
+        DecorationOverlayRegistry.register(SNOW);
+        DecorationOverlayRegistry.register(RAIN);
+        DecorationOverlayRegistry.register(FIREFLIES);
+        DecorationOverlayRegistry.register(LEAVES);
+        DecorationOverlayRegistry.register(CONFETTI);
+
+    }
+
+}

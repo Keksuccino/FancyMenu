@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util;
 
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinClientLanguage;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.resources.language.ClientLanguage;
 import net.minecraft.client.resources.language.I18n;
@@ -21,7 +20,7 @@ public class LocalizationUtils {
     public static Component[] splitLocalizedLines(@NotNull String localizationKey, String... placeholderReplacements) {
         List<Component> l = new ArrayList<>();
         for (String s : splitLocalizedStringLines(localizationKey, placeholderReplacements)) {
-            l.add(Components.literal(s));
+            l.add(Component.literal(s));
         }
         return l.toArray(new Component[]{});
     }

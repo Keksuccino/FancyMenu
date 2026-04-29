@@ -17,7 +17,7 @@ public class CurrentPlayerAbsorptionHealthPercentagePlaceholder extends Abstract
 
     @Override
     protected float getMaxFloatValue(@NotNull LocalPlayer player, @NotNull ClientLevel level) {
-        return player.getAbsorptionAmount(); //TODO fix this !!!
+        return player.getAbsorptionAmount();
     }
 
     @Override

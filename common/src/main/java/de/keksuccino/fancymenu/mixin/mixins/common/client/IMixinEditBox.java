@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
@@ -24,8 +24,6 @@ public interface IMixinEditBox {
 
     @Accessor("formatter") BiFunction<String, Integer, FormattedCharSequence> getFormatterFancyMenu();
 
-    @Accessor("shiftPressed") void setShiftPressedFancyMenu(boolean b);
-
     @Accessor("highlightPos") int getHighlightPosFancyMenu();
 
     @Invoker("deleteText") void invokeDeleteTextFancyMenu(int i);
@@ -34,12 +32,12 @@ public interface IMixinEditBox {
 
     @Accessor("textColorUneditable") int getTextColorUneditableFancyMenu();
 
-    @Accessor("frame") int getFrameFancyMenu();
+    @Accessor("frame") int getFocusedTimeFancyMenu();
 
-//    @Accessor("hint") Component getHintFancyMenu();
+    @Accessor("hint") Component getHintFancyMenu();
 
     @Accessor("suggestion") String getSuggestionFancyMenu();
 
-    @Invoker("renderHighlight") void invokeRenderHighlightFancyMenu(int xStart, int yStart, int xEnd, int yEnd);
+    @Invoker("renderHighlight") void invokeRenderHighlightFancyMenu(GuiGraphics graphics, int xStart, int yStart, int xEnd, int yEnd);
 
 }

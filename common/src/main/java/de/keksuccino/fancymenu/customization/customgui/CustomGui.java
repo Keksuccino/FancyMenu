@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.customgui;
 
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -65,11 +65,11 @@ public class CustomGui {
             if (allowEsc.equals("false")) gui.allowEsc = false;
         }
 
-        gui.worldBackground = SerializationUtils.deserializeBoolean(gui.worldBackground, serialized.getValue("transparent_world_background"));
-        gui.worldBackgroundOverlay = SerializationUtils.deserializeBoolean(gui.worldBackgroundOverlay, serialized.getValue("transparent_world_background_overlay"));
-        gui.pauseGame = SerializationUtils.deserializeBoolean(gui.pauseGame, serialized.getValue("pause_game"));
-        gui.popupMode = SerializationUtils.deserializeBoolean(gui.popupMode, serialized.getValue("popup_mode"));
-        gui.popupModeBackgroundOverlay = SerializationUtils.deserializeBoolean(gui.popupModeBackgroundOverlay, serialized.getValue("popup_mode_background_overlay"));
+        gui.worldBackground = SerializationHelper.INSTANCE.deserializeBoolean(gui.worldBackground, serialized.getValue("transparent_world_background"));
+        gui.worldBackgroundOverlay = SerializationHelper.INSTANCE.deserializeBoolean(gui.worldBackgroundOverlay, serialized.getValue("transparent_world_background_overlay"));
+        gui.pauseGame = SerializationHelper.INSTANCE.deserializeBoolean(gui.pauseGame, serialized.getValue("pause_game"));
+        gui.popupMode = SerializationHelper.INSTANCE.deserializeBoolean(gui.popupMode, serialized.getValue("popup_mode"));
+        gui.popupModeBackgroundOverlay = SerializationHelper.INSTANCE.deserializeBoolean(gui.popupModeBackgroundOverlay, serialized.getValue("popup_mode_background_overlay"));
 
         return gui;
 

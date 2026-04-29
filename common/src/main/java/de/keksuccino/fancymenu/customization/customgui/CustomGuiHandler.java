@@ -21,6 +21,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings("unused")
 public class CustomGuiHandler {
 
 	private static final Logger LOGGER = LogManager.getLogger();
@@ -74,7 +75,7 @@ public class CustomGuiHandler {
 			}
 
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			LOGGER.error("[FANCYMENU] Failed to reload CustomGuiHandler!", ex);
 		}
 	}
 
@@ -98,7 +99,7 @@ public class CustomGuiHandler {
 			PropertiesParser.serializeSetToFile(set, CUSTOM_GUIS_FILE.getAbsolutePath());
 
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			LOGGER.error("[FANCYMENU] Failed to save changes in CustomGuiHandler!", ex);
 		}
 	}
 
@@ -243,8 +244,7 @@ public class CustomGuiHandler {
 				File renamedDir = FileUtils.generateUniqueFileName(new File(LEGACY_CUSTOM_GUIS_DIR.getPath() + "_old"), true);
 				org.apache.commons.io.FileUtils.moveDirectory(LEGACY_CUSTOM_GUIS_DIR, renamedDir);
 			} catch (Exception ex) {
-				LOGGER.error("[FANCYMENU] Failed to rename old FMv2 'customguis' directory!");
-				ex.printStackTrace();
+				LOGGER.error("[FANCYMENU] Failed to rename old FMv2 'customguis' directory!", ex);
 			}
 		}
 		return guis;

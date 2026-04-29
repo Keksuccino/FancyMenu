@@ -1,12 +1,10 @@
 package de.keksuccino.fancymenu.util.cycle;
 
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
-import java.security.InvalidParameterException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -24,8 +22,8 @@ public class LocalizedGenericValueCycle<T> extends ValueCycle<T> implements ILoc
     public static <T> LocalizedGenericValueCycle<T> of(@NotNull String cycleLocalizationKey, @NotNull T... values) {
         Objects.requireNonNull(values);
         List<T> valueList = Arrays.asList(values);
-        if (valueList.size() < 2) {
-            throw new InvalidParameterException("Failed to create LocalizedGenericValueCycle! Value list size too small (<2)!");
+        if (valueList.isEmpty()) {
+            throw new IllegalArgumentException("Failed to create LocalizedGenericValueCycle! Value list size too small (empty)!");
         }
         LocalizedGenericValueCycle<T> valueCycle = new LocalizedGenericValueCycle<>(cycleLocalizationKey);
         valueCycle.values.addAll(valueList);
@@ -42,11 +40,11 @@ public class LocalizedGenericValueCycle<T> extends ValueCycle<T> implements ILoc
     }
 
     public MutableComponent getCycleComponent() {
-        return Components.translatable(this.getCycleLocalizationKey(), this.getCurrentValueComponent()).withStyle(this.cycleStyle.get(this.current()));
+        return Component.translatable(this.getCycleLocalizationKey(), this.getCurrentValueComponent()).withStyle(this.cycleStyle.get(this.current()));
     }
 
     public MutableComponent getCurrentValueComponent() {
-        return Components.literal(this.valueNameSupplier.get(this.current())).withStyle(this.valueStyle.get(this.current()));
+        return Component.literal(this.valueNameSupplier.get(this.current())).withStyle(this.valueStyle.get(this.current()));
     }
 
     public LocalizedGenericValueCycle<T> setValueNameSupplier(@NotNull ConsumingSupplier<T, String> supplier) {

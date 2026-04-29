@@ -1,10 +1,11 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
+import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
-public class LogicExecutorScreen extends Screen {
+public class LogicExecutorScreen extends ModernScreen {
 
     @NotNull
     protected Runnable task;

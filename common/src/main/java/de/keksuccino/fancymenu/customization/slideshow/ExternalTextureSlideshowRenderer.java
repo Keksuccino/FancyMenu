@@ -5,15 +5,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import com.mojang.blaze3d.systems.RenderSystem;
-import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -97,7 +97,7 @@ public class ExternalTextureSlideshowRenderer {
 						this.height = Integer.parseInt(sh);
 					}
 
-					this.randomize = SerializationUtils.deserializeBoolean(this.randomize, l.get(0).getValue("randomize"));
+					this.randomize = SerializationHelper.INSTANCE.deserializeBoolean(this.randomize, l.get(0).getValue("randomize"));
 
 				}
 			}
@@ -198,7 +198,6 @@ public class ExternalTextureSlideshowRenderer {
 				this.previous = this.current;
 				this.current = this.images.get(this.frameCounter);
 			}
-			//------------------------
 
 			//lower opacity when prev image is set to fade it out
 			if ((this.previous != null) && (this.opacity > 0.0F)) {

@@ -6,7 +6,6 @@ import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.resources.language.I18n;
@@ -70,32 +69,6 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
             }
         }
 
-        String scaleString = serialized.getValue("scale");
-        if (scaleString != null) {
-            if (MathUtils.isFloat(scaleString)) {
-                element.markdownRenderer.setTextBaseScale(Float.parseFloat(scaleString));
-            }
-        }
-
-        String baseColorString = serialized.getValue("base_color");
-        if (baseColorString != null) {
-            DrawableColor c = DrawableColor.of(baseColorString);
-            element.markdownRenderer.setTextBaseColor(c);
-        }
-
-        String textBorderString = serialized.getValue("text_border");
-        if ((textBorderString != null) && MathUtils.isInteger(textBorderString)) {
-            element.markdownRenderer.setBorder(Integer.parseInt(textBorderString));
-        }
-
-        String lineSpacingString = serialized.getValue("line_spacing");
-        if ((lineSpacingString != null) && MathUtils.isInteger(lineSpacingString)) {
-            element.markdownRenderer.setLineSpacing(Integer.parseInt(lineSpacingString));
-        }
-
-        element.scrollGrabberColorHexNormal = serialized.getValue("grabber_color_normal");
-        element.scrollGrabberColorHexHover = serialized.getValue("grabber_color_hover");
-
         element.verticalScrollGrabberTextureNormal = deserializeImageResourceSupplier(serialized.getValue("grabber_texture_normal"));
         element.verticalScrollGrabberTextureHover = deserializeImageResourceSupplier(serialized.getValue("grabber_texture_hover"));
         element.horizontalScrollGrabberTextureNormal = deserializeImageResourceSupplier(serialized.getValue("horizontal_grabber_texture_normal"));
@@ -141,14 +114,18 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         if (hyperlinkColor != null) {
             element.markdownRenderer.setHyperlinkColor(DrawableColor.of(hyperlinkColor));
         }
+        String clickEventColor = serialized.getValue("click_event_color");
+        if (clickEventColor != null) {
+            element.markdownRenderer.setTextClickEventColor(DrawableColor.of(clickEventColor));
+        }
+        String hoverEventColor = serialized.getValue("hover_event_color");
+        if (hoverEventColor != null) {
+            element.markdownRenderer.setTextHoverEventColor(DrawableColor.of(hoverEventColor));
+        }
 
         String quoteColor = serialized.getValue("quote_color");
         if (quoteColor != null) {
             element.markdownRenderer.setQuoteColor(DrawableColor.of(quoteColor));
-        }
-        String quoteIndent = serialized.getValue("quote_indent");
-        if ((quoteIndent != null) && MathUtils.isInteger(quoteIndent)) {
-            element.markdownRenderer.setQuoteIndent(Integer.parseInt(quoteIndent));
         }
         String quoteItalic = serialized.getValue("quote_italic");
         if (quoteItalic != null) {
@@ -160,15 +137,6 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         if (bulletListDotColor != null) {
             element.markdownRenderer.setBulletListDotColor(DrawableColor.of(bulletListDotColor));
         }
-        String bulletListIndent = serialized.getValue("bullet_list_indent");
-        if ((bulletListIndent != null) && MathUtils.isInteger(bulletListIndent)) {
-            element.markdownRenderer.setBulletListIndent(Integer.parseInt(bulletListIndent));
-        }
-        String bulletListSpacing = serialized.getValue("bullet_list_spacing");
-        if ((bulletListSpacing != null) && MathUtils.isInteger(bulletListSpacing)) {
-            element.markdownRenderer.setBulletListSpacing(Integer.parseInt(bulletListSpacing));
-        }
-
         element.markdownRenderer.setParseMarkdown(deserializeBoolean(true, serialized.getValue("parse_markdown")));
 
         // Table properties
@@ -202,21 +170,6 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
             element.markdownRenderer.setTableAlternateRowColor(DrawableColor.of(tableAlternateRowColor));
         }
 
-        String tableLineThickness = serialized.getValue("table_line_thickness");
-        if ((tableLineThickness != null) && MathUtils.isFloat(tableLineThickness)) {
-            element.markdownRenderer.setTableLineThickness(Float.parseFloat(tableLineThickness));
-        }
-
-        String tableCellPadding = serialized.getValue("table_cell_padding");
-        if ((tableCellPadding != null) && MathUtils.isFloat(tableCellPadding)) {
-            element.markdownRenderer.setTableCellPadding(Float.parseFloat(tableCellPadding));
-        }
-
-        String tableMargin = serialized.getValue("table_margin");
-        if ((tableMargin != null) && MathUtils.isFloat(tableMargin)) {
-            element.markdownRenderer.setTableMargin(Float.parseFloat(tableMargin));
-        }
-
         element.markdownRenderer.refreshRenderer();
 
         element.setSource(element.sourceMode, element.source);
@@ -240,16 +193,6 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         } else if (element.markdownRenderer.getTextCase() == MarkdownRenderer.TextCase.ALL_UPPER) {
             serializeTo.putProperty("case_mode", "upper");
         }
-        serializeTo.putProperty("scale", "" + element.markdownRenderer.getTextBaseScale());
-        serializeTo.putProperty("base_color", element.markdownRenderer.getTextBaseColor().getHex());
-        serializeTo.putProperty("text_border", "" + (int)element.markdownRenderer.getBorder());
-        serializeTo.putProperty("line_spacing", "" + (int)element.markdownRenderer.getLineSpacing());
-        if (element.scrollGrabberColorHexNormal != null) {
-            serializeTo.putProperty("grabber_color_normal", element.scrollGrabberColorHexNormal);
-        }
-        if (element.scrollGrabberColorHexHover != null) {
-            serializeTo.putProperty("grabber_color_hover", element.scrollGrabberColorHexHover);
-        }
         if (element.verticalScrollGrabberTextureNormal != null) {
             serializeTo.putProperty("grabber_texture_normal", element.verticalScrollGrabberTextureNormal.getSourceWithPrefix());
         }
@@ -270,12 +213,11 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         serializeTo.putProperty("headline_line_color", element.markdownRenderer.getHeadlineUnderlineColor().getHex());
         serializeTo.putProperty("separation_line_color", element.markdownRenderer.getSeparationLineColor().getHex());
         serializeTo.putProperty("hyperlink_color", element.markdownRenderer.getHyperlinkColor().getHex());
+        serializeTo.putProperty("click_event_color", element.markdownRenderer.getTextClickEventColor().getHex());
+        serializeTo.putProperty("hover_event_color", element.markdownRenderer.getTextHoverEventColor().getHex());
         serializeTo.putProperty("quote_color", element.markdownRenderer.getQuoteColor().getHex());
-        serializeTo.putProperty("quote_indent", "" + element.markdownRenderer.getQuoteIndent());
         serializeTo.putProperty("quote_italic", "" + element.markdownRenderer.isQuoteItalic());
         serializeTo.putProperty("bullet_list_dot_color", element.markdownRenderer.getBulletListDotColor().getHex());
-        serializeTo.putProperty("bullet_list_indent", "" + element.markdownRenderer.getBulletListIndent());
-        serializeTo.putProperty("bullet_list_spacing", "" + element.markdownRenderer.getBulletListSpacing());
 
         serializeTo.putProperty("parse_markdown", "" + element.markdownRenderer.isParseMarkdown());
 
@@ -286,9 +228,6 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         serializeTo.putProperty("table_header_background_color", element.markdownRenderer.getTableHeaderBackgroundColor().getHex());
         serializeTo.putProperty("table_row_background_color", element.markdownRenderer.getTableRowBackgroundColor().getHex());
         serializeTo.putProperty("table_alternate_row_color", element.markdownRenderer.getTableAlternateRowColor().getHex());
-        serializeTo.putProperty("table_line_thickness", "" + element.markdownRenderer.getTableLineThickness());
-        serializeTo.putProperty("table_cell_padding", "" + element.markdownRenderer.getTableCellPadding());
-        serializeTo.putProperty("table_margin", "" + element.markdownRenderer.getTableMargin());
 
         return serializeTo;
         

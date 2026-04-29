@@ -1,14 +1,14 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
+import net.minecraft.client.gui.components.Widget;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MarkdownTextLine implements Renderable {
+public class MarkdownTextLine implements Widget {
 
     public MarkdownRenderer parent;
     public float offsetX;
@@ -102,7 +102,7 @@ public class MarkdownTextLine implements Renderable {
         }
         if (last != null) {
             if (last.text.endsWith(" ")) {
-                f -= (this.parent.font.width(" ") * last.getScale());
+                f -= (this.parent.getUnscaledTextWidth(" ") * last.getScale());
             }
         }
         if (f < 0) {

@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.world;
 
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import org.jetbrains.annotations.NotNull;
 
 public class MaxPlayerAbsorptionHealthPlaceholder extends AbstractWorldFloatPlaceholder {
@@ -13,7 +12,7 @@ public class MaxPlayerAbsorptionHealthPlaceholder extends AbstractWorldFloatPlac
 
     @Override
     protected float getFloatValue(@NotNull LocalPlayer player, @NotNull ClientLevel level) {
-        return 0F; //TODO fix this !!!
+        return player.getAbsorptionAmount();
     }
 
     @Override

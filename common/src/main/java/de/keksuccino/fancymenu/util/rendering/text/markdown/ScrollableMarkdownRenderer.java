@@ -3,10 +3,10 @@ package de.keksuccino.fancymenu.util.rendering.text.markdown;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHandler, NarratableEntry {
+public class ScrollableMarkdownRenderer implements Widget, ContainerEventHandler, NarratableEntry {
 
     @NotNull
     protected ScrollArea scrollArea = new ScrollArea(0,0,0,0);
@@ -64,6 +64,8 @@ public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHan
         this.scrollArea.borderColor = () -> DrawableColor.of(0,0,0,0);
 
         this.scrollArea.addEntry(new MarkdownRendererEntry(this.scrollArea, this.markdownRenderer));
+
+        this.scrollArea.setRenderOnlyEntriesInArea(false);
 
         //Don't render markdown lines outside visible area (for performance reasons)
         this.markdownRenderer.addLineRenderValidator(line -> {
@@ -165,8 +167,8 @@ public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHan
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDelta) {
-        return this.scrollArea.mouseScrolled(mouseX, mouseY, scrollDelta);
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaY) {
+        return this.scrollArea.mouseScrolled(mouseX, mouseY, scrollDeltaY);
     }
 
     @Override

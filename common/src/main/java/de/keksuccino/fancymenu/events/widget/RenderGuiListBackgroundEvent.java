@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.events.widget;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.event.acara.EventBase;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSelectionList;
@@ -9,11 +8,11 @@ import net.minecraft.client.gui.components.AbstractSelectionList;
 public class RenderGuiListBackgroundEvent extends EventBase {
 	
 	protected AbstractSelectionList list;
-	protected PoseStack matrix;
+	protected GuiGraphics graphics;
 	
-	public RenderGuiListBackgroundEvent(PoseStack matrix, AbstractSelectionList list) {
+	public RenderGuiListBackgroundEvent(GuiGraphics graphics, AbstractSelectionList list) {
 		this.list = list;
-		this.matrix = matrix;
+		this.graphics = graphics;
 	}
 	
 	@Override
@@ -26,25 +25,21 @@ public class RenderGuiListBackgroundEvent extends EventBase {
 	}
 
 	public GuiGraphics getGraphics() {
-		return GuiGraphics.currentGraphics();
+		return graphics;
 	}
 
-	public PoseStack getPoseStack() {
-		return this.matrix;
-	}
-	
 	public static class Pre extends RenderGuiListBackgroundEvent {
 
-		public Pre(PoseStack matrix, AbstractSelectionList list) {
-			super(matrix, list);
+		public Pre(GuiGraphics graphics, AbstractSelectionList list) {
+			super(graphics, list);
 		}
 
 	}
 	
 	public static class Post extends RenderGuiListBackgroundEvent {
 
-		public Post(PoseStack matrix, AbstractSelectionList list) {
-			super(matrix, list);
+		public Post(GuiGraphics graphics, AbstractSelectionList list) {
+			super(graphics, list);
 		}
 		
 	}

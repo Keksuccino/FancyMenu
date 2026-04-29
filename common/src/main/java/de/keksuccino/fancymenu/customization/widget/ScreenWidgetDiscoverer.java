@@ -3,14 +3,12 @@ package de.keksuccino.fancymenu.customization.widget;
 import java.util.*;
 import de.keksuccino.fancymenu.customization.widget.identification.WidgetIdentifierHandler;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.screens.Screen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -81,14 +79,10 @@ public class ScreenWidgetDiscoverer {
 			});
 
 			//This is to avoid NullPointers
-			if (screen instanceof CustomizableScreen c) {
-				if (!c.isScreenInitialized_FancyMenu()) {
-					screen.init(Minecraft.getInstance(), screenWidth, screenHeight);
-				} else {
-					screen.resize(Minecraft.getInstance(), screenWidth, screenHeight);
-				}
-			} else {
+			if (!((IMixinScreen)screen).get_initialized_FancyMenu()) {
 				screen.init(Minecraft.getInstance(), screenWidth, screenHeight);
+			} else {
+				screen.resize(Minecraft.getInstance(), screenWidth, screenHeight);
 			}
 
 			ScrollScreenNormalizer.normalizeScrollableScreen(screen);
@@ -112,7 +106,7 @@ public class ScreenWidgetDiscoverer {
 	}
 
 	private static long generateBaseId(@NotNull AbstractWidget widget) {
-		String s = Math.abs(widget.x) + "" + Math.abs(widget.y);
+		String s = Math.abs(widget.getX()) + "" + Math.abs(widget.getY());
 		if (!MathUtils.isLong(s)) {
 			LOGGER.error("[FANCYMENU] Widget ID is not a Long!", new NumberFormatException("Failed to parse widget identifier to Long!"));
 			return 0L;

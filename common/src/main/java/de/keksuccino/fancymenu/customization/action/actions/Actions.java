@@ -5,8 +5,10 @@ import de.keksuccino.fancymenu.customization.action.actions.animation.EnableElem
 import de.keksuccino.fancymenu.customization.action.actions.animation.ResetElementAnimatorAction;
 import de.keksuccino.fancymenu.customization.action.actions.animation.ToggleElementAnimatorAction;
 import de.keksuccino.fancymenu.customization.action.actions.audio.NextTrackAction;
+import de.keksuccino.fancymenu.customization.action.actions.audio.PlayAudioAction;
 import de.keksuccino.fancymenu.customization.action.actions.audio.PreviousTrackAction;
 import de.keksuccino.fancymenu.customization.action.actions.audio.SetAudioElementVolumeAction;
+import de.keksuccino.fancymenu.customization.action.actions.audio.StopAllActionAudiosAction;
 import de.keksuccino.fancymenu.customization.action.actions.audio.TogglePlayTrackAction;
 import de.keksuccino.fancymenu.customization.action.actions.file.*;
 import de.keksuccino.fancymenu.customization.action.actions.layout.DisableLayoutAction;
@@ -24,6 +26,12 @@ import de.keksuccino.fancymenu.customization.action.actions.screen.UpdateScreenA
 import de.keksuccino.fancymenu.customization.action.actions.variables.ClearVariablesAction;
 import de.keksuccino.fancymenu.customization.action.actions.variables.SetVariableAction;
 import de.keksuccino.fancymenu.customization.action.ActionRegistry;
+import de.keksuccino.fancymenu.customization.action.actions.video.background.SetVideoMenuBackgroundPlayTimeAction;
+import de.keksuccino.fancymenu.customization.action.actions.video.background.SetVideoMenuBackgroundVolumeAction;
+import de.keksuccino.fancymenu.customization.action.actions.video.background.ToggleVideoMenuBackgroundPauseStateAction;
+import de.keksuccino.fancymenu.customization.action.actions.video.element.SetVideoElementPlayTimeAction;
+import de.keksuccino.fancymenu.customization.action.actions.video.element.SetVideoElementVolumeAction;
+import de.keksuccino.fancymenu.customization.action.actions.video.element.ToggleVideoElementPauseStateAction;
 
 public class Actions {
 
@@ -34,6 +42,12 @@ public class Actions {
     public static final EnableLayoutAction ENABLE_LAYOUT = new EnableLayoutAction();
     public static final DisableLayoutAction DISABLE_LAYOUT = new DisableLayoutAction();
     public static final SendMessageAction SEND_MESSAGE = new SendMessageAction();
+    public static final SendFmDataToServerAction SEND_FM_DATA_TO_SERVER = new SendFmDataToServerAction();
+    public static final ConnectToRemoteServerAction CONNECT_TO_REMOTE_SERVER = new ConnectToRemoteServerAction();
+    public static final SendDataToRemoteServerAction SEND_DATA_TO_REMOTE_SERVER = new SendDataToRemoteServerAction();
+    public static final CloseAllRemoteServerConnectionsAction CLOSE_ALL_REMOTE_SERVER_CONNECTIONS = new CloseAllRemoteServerConnectionsAction();
+    public static final CloseRemoteServerConnectionAction CLOSE_REMOTE_SERVER_CONNECTION = new CloseRemoteServerConnectionAction();
+    public static final ExecuteCommandAsIntegratedServerAction EXECUTE_COMMAND_AS_INTEGRATED_SERVER = new ExecuteCommandAsIntegratedServerAction();
     public static final QuitGameAction QUIT_GAME = new QuitGameAction();
     public static final JoinServerAction JOIN_SERVER = new JoinServerAction();
     public static final EnterWorldAction ENTER_WORLD = new EnterWorldAction();
@@ -48,11 +62,20 @@ public class Actions {
     public static final MimicButtonAction MIMIC_BUTTON = new MimicButtonAction();
     public static final MimicKeybindAction MIMIC_KEYBIND = new MimicKeybindAction();
     public static final EditMinecraftOptionAction EDIT_MINECRAFT_OPTION = new EditMinecraftOptionAction();
+    public static final SetTextInputFieldValueAction SET_TEXT_INPUT_FIELD_VALUE = new SetTextInputFieldValueAction();
     public static final SetAudioElementVolumeAction SET_AUDIO_ELEMENT_VOLUME = new SetAudioElementVolumeAction();
     public static final NextTrackAction NEXT_AUDIO_ELEMENT_TRACK = new NextTrackAction();
     public static final PreviousTrackAction PREVIOUS_AUDIO_ELEMENT_TRACK = new PreviousTrackAction();
     public static final TogglePlayTrackAction TOGGLE_PLAY_AUDIO_ELEMENT_TRACK = new TogglePlayTrackAction();
+    public static final PlayAudioAction PLAY_AUDIO = new PlayAudioAction();
+    public static final StopAllActionAudiosAction STOP_ALL_ACTION_AUDIOS = new StopAllActionAudiosAction();
     public static final BackToLastScreenAction BACK_TO_LAST_SCREEN = new BackToLastScreenAction();
+    public static final SetVideoElementVolumeAction SET_VIDEO_ELEMENT_VOLUME = new SetVideoElementVolumeAction();
+    public static final SetVideoElementPlayTimeAction SET_VIDEO_ELEMENT_PLAY_TIME = new SetVideoElementPlayTimeAction();
+    public static final ToggleVideoElementPauseStateAction TOGGLE_VIDEO_ELEMENT_PAUSE_STATE = new ToggleVideoElementPauseStateAction();
+    public static final SetVideoMenuBackgroundVolumeAction SET_VIDEO_MENU_BACKGROUND_VOLUME = new SetVideoMenuBackgroundVolumeAction();
+    public static final SetVideoMenuBackgroundPlayTimeAction SET_VIDEO_MENU_BACKGROUND_PLAY_TIME = new SetVideoMenuBackgroundPlayTimeAction();
+    public static final ToggleVideoMenuBackgroundPauseStateAction TOGGLE_VIDEO_MENU_BACKGROUND_PAUSE_STATE = new ToggleVideoMenuBackgroundPauseStateAction();
     public static final ToggleElementAnimatorAction TOGGLE_ELEMENT_ANIMATOR = new ToggleElementAnimatorAction();
     public static final EnableElementAnimatorAction ENABLE_ELEMENT_ANIMATOR = new EnableElementAnimatorAction();
     public static final DisableElementAnimatorAction DISABLE_ELEMENT_ANIMATOR = new DisableElementAnimatorAction();
@@ -61,11 +84,15 @@ public class Actions {
     public static final PrintToLogAction PRINT_TO_LOG = new PrintToLogAction();
     public static final DisplayInChatClientSideAction DISPLAY_IN_CHAT_CLIENT_SIDE = new DisplayInChatClientSideAction();
     public static final ShowToastAction SHOW_TOAST = new ShowToastAction();
+    public static final StartSchedulerAction START_SCHEDULER = new StartSchedulerAction();
+    public static final StopSchedulerAction STOP_SCHEDULER = new StopSchedulerAction();
     public static final DeleteFileAction DELETE_FILE = new DeleteFileAction();
     public static final MoveFileAction MOVE_FILE = new MoveFileAction();
+    public static final OpenFileFolderAction OPEN_FILE_FOLDER = new OpenFileFolderAction();
     public static final CopyFileAction COPY_FILE = new CopyFileAction();
     public static final RenameFileAction RENAME_FILE = new RenameFileAction();
     public static final DownloadFileAction DOWNLOAD_FILE = new DownloadFileAction();
+    public static final ExtractZipFileAction EXTRACT_ZIP_FILE = new ExtractZipFileAction();
     public static final WriteFileAction WRITE_FILE = new WriteFileAction();
     public static final CreateFileAction CREATE_FILE = new CreateFileAction();
     public static final SelectFileAction SELECT_FILE = new SelectFileAction();
@@ -81,6 +108,12 @@ public class Actions {
         ActionRegistry.register(ENABLE_LAYOUT);
         ActionRegistry.register(DISABLE_LAYOUT);
         ActionRegistry.register(SEND_MESSAGE);
+        ActionRegistry.register(SEND_FM_DATA_TO_SERVER);
+        ActionRegistry.register(CONNECT_TO_REMOTE_SERVER);
+        ActionRegistry.register(SEND_DATA_TO_REMOTE_SERVER);
+        ActionRegistry.register(CLOSE_ALL_REMOTE_SERVER_CONNECTIONS);
+        ActionRegistry.register(CLOSE_REMOTE_SERVER_CONNECTION);
+        ActionRegistry.register(EXECUTE_COMMAND_AS_INTEGRATED_SERVER);
         ActionRegistry.register(QUIT_GAME);
         ActionRegistry.register(JOIN_SERVER);
         ActionRegistry.register(ENTER_WORLD);
@@ -95,11 +128,20 @@ public class Actions {
         ActionRegistry.register(MIMIC_BUTTON);
         ActionRegistry.register(MIMIC_KEYBIND);
         ActionRegistry.register(EDIT_MINECRAFT_OPTION);
+        ActionRegistry.register(SET_TEXT_INPUT_FIELD_VALUE);
         ActionRegistry.register(SET_AUDIO_ELEMENT_VOLUME);
         ActionRegistry.register(NEXT_AUDIO_ELEMENT_TRACK);
         ActionRegistry.register(PREVIOUS_AUDIO_ELEMENT_TRACK);
         ActionRegistry.register(TOGGLE_PLAY_AUDIO_ELEMENT_TRACK);
+        ActionRegistry.register(PLAY_AUDIO);
+        ActionRegistry.register(STOP_ALL_ACTION_AUDIOS);
         ActionRegistry.register(BACK_TO_LAST_SCREEN);
+        ActionRegistry.register(SET_VIDEO_ELEMENT_VOLUME);
+        ActionRegistry.register(SET_VIDEO_ELEMENT_PLAY_TIME);
+        ActionRegistry.register(TOGGLE_VIDEO_ELEMENT_PAUSE_STATE);
+        ActionRegistry.register(SET_VIDEO_MENU_BACKGROUND_VOLUME);
+        ActionRegistry.register(SET_VIDEO_MENU_BACKGROUND_PLAY_TIME);
+        ActionRegistry.register(TOGGLE_VIDEO_MENU_BACKGROUND_PAUSE_STATE);
         ActionRegistry.register(TOGGLE_ELEMENT_ANIMATOR);
         ActionRegistry.register(ENABLE_ELEMENT_ANIMATOR);
         ActionRegistry.register(DISABLE_ELEMENT_ANIMATOR);
@@ -108,11 +150,15 @@ public class Actions {
         ActionRegistry.register(PRINT_TO_LOG);
         ActionRegistry.register(DISPLAY_IN_CHAT_CLIENT_SIDE);
         ActionRegistry.register(SHOW_TOAST);
+        ActionRegistry.register(START_SCHEDULER);
+        ActionRegistry.register(STOP_SCHEDULER);
         ActionRegistry.register(DELETE_FILE);
         ActionRegistry.register(MOVE_FILE);
+        ActionRegistry.register(OPEN_FILE_FOLDER);
         ActionRegistry.register(COPY_FILE);
         ActionRegistry.register(RENAME_FILE);
         ActionRegistry.register(DOWNLOAD_FILE);
+        ActionRegistry.register(EXTRACT_ZIP_FILE);
         ActionRegistry.register(WRITE_FILE);
         ActionRegistry.register(CREATE_FILE);
         ActionRegistry.register(SELECT_FILE);
@@ -122,8 +168,4 @@ public class Actions {
     }
 
 }
-
-
-
-
 

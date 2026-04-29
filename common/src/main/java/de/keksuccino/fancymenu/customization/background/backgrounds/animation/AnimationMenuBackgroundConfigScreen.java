@@ -20,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
 
 @Deprecated(forRemoval = true)
-public class AnimationMenuBackgroundConfigScreen extends Screen {
+public class AnimationMenuBackgroundConfigScreen extends ModernScreen {
 
     protected Screen parent;
     protected AnimationMenuBackground background;

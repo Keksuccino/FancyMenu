@@ -3,15 +3,16 @@ package de.keksuccino.fancymenu.customization.action.actions.file;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPCellWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -78,7 +79,7 @@ public class SelectFileAction extends Action {
 
         String dialogTitle = Component.translatable("fancymenu.actions.select_file.dialog_title").getString();
         if (dialogTitle.isBlank()) {
-            dialogTitle = this.getActionDisplayName().getString();
+            dialogTitle = this.getDisplayName().getString();
         }
 
         List<String> filterPatterns = config.buildFilterPatterns();
@@ -143,13 +144,13 @@ public class SelectFileAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.select_file");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.select_file.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.select_file.desc");
     }
 
     @Override
@@ -158,21 +159,50 @@ public class SelectFileAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "/config/fancymenu/assets/background.png|||Image Files (*.png;*.jpg)|||png;jpg|||true";
     }
 
     @Override
-    public void editValue(@NotNull Screen parentScreen, @NotNull ActionInstance instance) {
+    public void editValue(@NotNull ActionInstance instance, @NotNull Action.ActionEditingCompletedFeedback onEditingCompleted, @NotNull Action.ActionEditingCanceledFeedback onEditingCanceled) {
+        String oldValue = instance.value;
+        boolean[] handled = {false};
+        final PiPWindow[] windowHolder = new PiPWindow[1];
         SelectFileActionValueScreen screen = new SelectFileActionValueScreen(
-                Objects.requireNonNullElse(instance.value, this.getValueExample()),
+                Objects.requireNonNullElse(instance.value, this.getValuePreset()),
                 value -> {
+                    if (handled[0]) {
+                        return;
+                    }
+                    handled[0] = true;
                     if (value != null) {
                         instance.value = value;
+                        onEditingCompleted.accept(instance, oldValue, value);
+                    } else {
+                        onEditingCanceled.accept(instance);
                     }
-                    Minecraft.getInstance().setScreen(parentScreen);
+                    PiPWindow window = windowHolder[0];
+                    if (window != null) {
+                        window.close();
+                    }
                 });
-        Minecraft.getInstance().setScreen(screen);
+        PiPWindow window = new PiPWindow(screen.getTitle())
+                .setScreen(screen)
+                .setForceFancyMenuUiScale(true)
+                .setAlwaysOnTop(true)
+                .setBlockMinecraftScreenInputs(true)
+                .setForceFocus(true)
+                .setMinSize(TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT)
+                .setSize(TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
+        windowHolder[0] = window;
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
+        window.addCloseCallback(() -> {
+            if (handled[0]) {
+                return;
+            }
+            handled[0] = true;
+            onEditingCanceled.accept(instance);
+        });
     }
 
     private @NotNull Path resolveTargetPath(@NotNull String targetPath) throws IOException {
@@ -286,7 +316,7 @@ public class SelectFileAction extends Action {
         }
     }
 
-    public static class SelectFileActionValueScreen extends CellScreen {
+    public static class SelectFileActionValueScreen extends PiPCellWindowBody {
 
         protected SelectFileConfig config;
         protected final Consumer<String> callback;
@@ -306,7 +336,7 @@ public class SelectFileAction extends Action {
             TextInputCell targetPathCell = this.addTextInputCell(null, true, true)
                     .setEditListener(text -> this.config.targetPath = text)
                     .setText(this.config.targetPath);
-            targetPathCell.editBox.setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.select_file.edit.target_path.desc")));
+            targetPathCell.editBox.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.select_file.edit.target_path.desc")));
 
             this.addCellGroupEndSpacerCell();
 
@@ -314,7 +344,7 @@ public class SelectFileAction extends Action {
             TextInputCell filterDescriptionCell = this.addTextInputCell(null, true, true)
                     .setEditListener(text -> this.config.filterDescription = text)
                     .setText(this.config.filterDescription);
-            filterDescriptionCell.editBox.setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.select_file.edit.filter_description.desc")));
+            filterDescriptionCell.editBox.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.select_file.edit.filter_description.desc")));
 
             this.addCellGroupEndSpacerCell();
 
@@ -322,14 +352,14 @@ public class SelectFileAction extends Action {
             TextInputCell extensionsCell = this.addTextInputCell(null, true, true)
                     .setEditListener(text -> this.config.extensionsRaw = text)
                     .setText(this.config.extensionsRaw);
-            extensionsCell.editBox.setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.select_file.edit.extensions.desc")));
+            extensionsCell.editBox.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.select_file.edit.extensions.desc")));
 
             this.addCellGroupEndSpacerCell();
 
             CycleButton<CommonCycles.CycleEnabledDisabled> overwriteButton = new CycleButton<>(0, 0, 20, 20,
                     CommonCycles.cycleEnabledDisabled("fancymenu.actions.select_file.edit.overwrite", this.config.overwriteExisting),
                     (cycleValue, button) -> this.config.overwriteExisting = cycleValue.getAsBoolean());
-            overwriteButton.setTooltip(Tooltip.of(Component.translatable("fancymenu.actions.select_file.edit.overwrite.desc")));
+            overwriteButton.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.select_file.edit.overwrite.desc")));
             this.addWidgetCell(overwriteButton, true);
 
             this.addStartEndSpacerCell();
@@ -348,6 +378,10 @@ public class SelectFileAction extends Action {
         @Override
         protected void onDone() {
             this.callback.accept(this.config.serialize());
+        }
+
+        @Override
+        protected void autoScaleScreen(AbstractWidget topRightSideWidget) {
         }
     }
 }

@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.animationcontroller;
 
 import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -11,7 +10,6 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
@@ -19,15 +17,15 @@ import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import net.minecraft.client.Minecraft;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderType;
@@ -81,10 +79,10 @@ public class KeyframeManagerScreen extends ModernScreen {
     protected static final long RECORDING_BLINK_INTERVAL = 600; // 600ms blink interval
     protected static final int NOTIFICATION_PADDING = 10;
 
-    protected static final Component KEYFRAME_ADDED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.keyframe_added").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
-    protected static final Component KEYFRAME_DELETED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.keyframe_deleted").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
-    protected static final Component PLAYING_STARTED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.playing_started").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
-    protected static final Component PLAYING_STOPPED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.playing_stopped").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
+    protected static final Component KEYFRAME_ADDED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.keyframe_added").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_color.getColorInt()));
+    protected static final Component KEYFRAME_DELETED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.keyframe_deleted").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
+    protected static final Component PLAYING_STARTED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.playing_started").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_color.getColorInt()));
+    protected static final Component PLAYING_STOPPED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.playing_stopped").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
 
     protected final AnimationControllerElement controller;
     protected final Consumer<AnimationControllerMetadata> resultCallback;
@@ -155,7 +153,7 @@ public class KeyframeManagerScreen extends ModernScreen {
         timelineDuration += TIMELINE_PADDING_DURATION;
 
         // Create dummy element for preview
-        this.previewElement = new PreviewElement(controller.builder);
+        this.previewElement = new PreviewElement(controller.getBuilder());
         this.previewElement.baseWidth = 50;
         this.previewElement.baseHeight = 50;
         this.previewElement.posOffsetX = 0;
@@ -255,14 +253,14 @@ public class KeyframeManagerScreen extends ModernScreen {
                 Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.smoothing"),
                 button -> toggleSmoothingInput()));
         this.smoothingButton.setIsActiveSupplier(consumes -> !this.isPlaying && !this.isRecording && (this.selectedKeyframes.size() > 1) && !this.isShowingTimestampInput);
-        this.smoothingButton.setTooltipSupplier(consumes -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.keyframe_manager.smoothing.desc")));
+        this.smoothingButton.setUITooltipSupplier(consumes -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.keyframe_manager.smoothing.desc")));
         this.addBottomWidget(1, 0, this.smoothingButton);
 
         // Offset Mode button
         CycleButton<?> offsetModeButton = new CycleButton<>(0, 0, buttonBaseWidth, 0,
                 CommonCycles.cycleEnabledDisabled("fancymenu.elements.animation_controller.keyframe_manager.offset_mode", this.isOffsetMode),
                 (value, button) -> this.setOffsetMode(value.getAsBoolean()));
-        offsetModeButton.setTooltipSupplier(consumes -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.keyframe_manager.offset_mode.desc")));
+        offsetModeButton.setUITooltipSupplier(consumes -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.keyframe_manager.offset_mode.desc")));
         this.addBottomWidget(1, 0, offsetModeButton);
 
         // BOTTOM BUTTON ROW 2 ------------------------------------>
@@ -288,7 +286,7 @@ public class KeyframeManagerScreen extends ModernScreen {
         this.anchorButton = new CycleButton<>(0, 0, buttonBaseWidth + 105, 0,
                 CommonCycles.cycle("fancymenu.elements.animation_controller.keyframe_manager.anchor_point_cycle", anchorPoints, ElementAnchorPoints.TOP_LEFT)
                         .setValueNameSupplier(ElementAnchorPoint::getName)
-                        .setValueComponentStyleSupplier(consumes -> Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())),
+                        .setValueComponentStyleSupplier(consumes -> Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt())),
                 (value, button) -> this.setAnchorPoint(value));
         this.anchorButton.setIsActiveSupplier(consumes -> ((this.selectedKeyframes.size() == 1) || this.isRecording) && !this.isOffsetMode);
         this.addBottomWidget(2, 0, this.anchorButton);
@@ -305,31 +303,30 @@ public class KeyframeManagerScreen extends ModernScreen {
                 Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.timestamp_edit"),
                 button -> toggleTimestampInput()));
         timestampButton.setIsActiveSupplier(consumes -> !this.isPlaying && !this.isRecording && (this.selectedKeyframes.size() == 1) && !this.isShowingSmoothingInput);
-        timestampButton.setTooltipSupplier(consumes -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.keyframe_manager.timestamp_edit.desc")));
+        timestampButton.setUITooltipSupplier(consumes -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.keyframe_manager.timestamp_edit.desc")));
         this.addBottomWidget(2, 0, timestampButton);
 
         // Preview moving toggle
         CycleButton<?> previewMovingButton = new CycleButton<>(0, 0, buttonBaseWidth + 65, 0,
                 CommonCycles.cycleEnabledDisabled("fancymenu.elements.animation_controller.keyframe_manager.move_preview_with_arrow_keys", FancyMenu.getOptions().arrowKeysMovePreview.getValue()),
                 (value, button) -> FancyMenu.getOptions().arrowKeysMovePreview.setValue(value.getAsBoolean()));
-        previewMovingButton.setTooltipSupplier(consumes -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.keyframe_manager.move_preview_with_arrow_keys.desc")));
+        previewMovingButton.setUITooltipSupplier(consumes -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.keyframe_manager.move_preview_with_arrow_keys.desc")));
         this.addBottomWidget(2, 0, previewMovingButton);
 
         // ---------------------------------------------------------
 
         // Smoothing input box
-        this.smoothingDistanceInput = new ExtendedEditBox(Minecraft.getInstance().font, (this.width / 2) - 50, this.stickyButton.y - 40, 100, 20, Component.empty()) {
+        this.smoothingDistanceInput = new ExtendedEditBox(Minecraft.getInstance().font, (this.width / 2) - 50, this.stickyButton.getY() - 40, 100, 20, Component.empty()) {
             @Override
-            public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-                GuiGraphics graphics = GuiGraphics.currentGraphics();
+            public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
                 MutableComponent c = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.smoothing.input");
                 int cW = Minecraft.getInstance().font.width(c);
                 graphics.drawString(Minecraft.getInstance().font, c,
-                        this.x + (this.getWidth() / 2) - (cW / 2), this.y - Minecraft.getInstance().font.lineHeight - 5, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
-                super.render(pose, mouseX, mouseY, partial);
+                        this.getX() + (this.getWidth() / 2) - (cW / 2), this.getY() - Minecraft.getInstance().font.lineHeight - 5, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
+                super.renderWidget(graphics, mouseX, mouseY, partial);
             }
         };
-        this.smoothingDistanceInput.setCharacterFilter(CharacterFilter.buildIntegerFiler());
+        this.smoothingDistanceInput.setCharacterFilter(CharacterFilter.buildIntegerFilter());
         this.smoothingDistanceInput.setIsVisibleSupplier(consumes -> this.isShowingSmoothingInput);
         this.smoothingDistanceInput.setMaxLength(6); // Reasonable limit for ms value
         UIBase.applyDefaultWidgetSkinTo(this.smoothingDistanceInput);
@@ -340,15 +337,15 @@ public class KeyframeManagerScreen extends ModernScreen {
         // Timestamp input box
         this.timestampInput = new ExtendedEditBox(Minecraft.getInstance().font, (this.width / 2) - 50, this.stickyButton.getY() - 40, 100, 20, Component.empty()) {
             @Override
-            public void renderButton(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
+            public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
                 MutableComponent c = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.timestamp_edit.input");
                 int cW = Minecraft.getInstance().font.width(c);
-                GuiGraphics.currentGraphics().drawString(Minecraft.getInstance().font, c,
-                        this.getX() + (this.getWidth() / 2) - (cW / 2), this.getY() - Minecraft.getInstance().font.lineHeight - 5, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
-                super.renderButton(graphics, mouseX, mouseY, partial);
+                graphics.drawString(Minecraft.getInstance().font, c,
+                        this.getX() + (this.getWidth() / 2) - (cW / 2), this.getY() - Minecraft.getInstance().font.lineHeight - 5, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
+                super.renderWidget(graphics, mouseX, mouseY, partial);
             }
         };
-        this.timestampInput.setCharacterFilter(CharacterFilter.buildIntegerFiler());
+        this.timestampInput.setCharacterFilter(CharacterFilter.buildIntegerFilter());
         this.timestampInput.setIsVisibleSupplier(consumes -> this.isShowingTimestampInput);
         this.timestampInput.setMaxLength(20);
         UIBase.applyDefaultWidgetSkinTo(this.timestampInput);
@@ -365,7 +362,7 @@ public class KeyframeManagerScreen extends ModernScreen {
         boolean resized = (window.getScreenWidth() != this.lastGuiScaleCorrectionWidth) || (window.getScreenHeight() != this.lastGuiScaleCorrectionHeight);
         this.lastGuiScaleCorrectionWidth = window.getScreenWidth();
         this.lastGuiScaleCorrectionHeight = window.getScreenHeight();
-        boolean tooFarRight = (farRightWidget.x + farRightWidget.getWidth()) >= (this.width - 100);
+        boolean tooFarRight = (farRightWidget.getX() + farRightWidget.getWidth()) >= (this.width - 100);
 
         //Adjust GUI scale to make all buttons fit in the screen
         if (tooFarRight && (window.getGuiScale() > 1)) {
@@ -396,8 +393,8 @@ public class KeyframeManagerScreen extends ModernScreen {
         int currentX = this.cachedWidgetRowCurrentX.get(row);
         int y = this.timelineY - 25 - (25 * (row-1));
         int buttonSpacing = 5 + spacingAfterButtonOffset;
-        widget.x = (currentX);
-        widget.y = (y);
+        widget.setX(currentX);
+        widget.setY(y);
         ((IMixinAbstractWidget)widget).setHeightFancyMenu(20);
         int labelWidth = Minecraft.getInstance().font.width(widget.getMessage());
         if ((labelWidth + 10) > widget.getWidth()) widget.setWidth(labelWidth + 10);
@@ -418,10 +415,7 @@ public class KeyframeManagerScreen extends ModernScreen {
                 this.setFocused(this.smoothingDistanceInput);
             }
         } else {
-            if (this.smoothingDistanceInput == this.getFocused()) {
-                this.smoothingDistanceInput.setFocused(false);
-                this.setFocused(null);
-            }
+            if (this.smoothingDistanceInput == this.getFocused()) this.setFocused(null);
         }
 
         if (this.isShowingTimestampInput && (this.selectedKeyframes.size() != 1)) {
@@ -433,10 +427,7 @@ public class KeyframeManagerScreen extends ModernScreen {
                 this.setFocused(this.timestampInput);
             }
         } else {
-            if (this.timestampInput == this.getFocused()) {
-                this.timestampInput.setFocused(false);
-                this.setFocused(null);
-            }
+            if (this.timestampInput == this.getFocused()) this.setFocused(null);
         }
 
         long actualEndTime = timelineDuration - TIMELINE_PADDING_DURATION;
@@ -469,7 +460,7 @@ public class KeyframeManagerScreen extends ModernScreen {
         }
 
         // Render screen background
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
 
         LayoutEditorScreen.renderGrid(graphics, this.width, this.height);
 
@@ -553,14 +544,16 @@ public class KeyframeManagerScreen extends ModernScreen {
         float usableWidth = timelineWidth * ((float)Math.max(actualEndTime + TIMELINE_PADDING_DURATION, MIN_TIMELINE_DURATION) / timelineDuration);
 
         // Draw main timeline background
-        graphics.fill(timelineX, timelineY,
+        graphics.fill(RenderType.gui(),
+                timelineX, timelineY,
                 timelineX + (int)((float)actualEndTime / timelineDuration * usableWidth),
                 timelineY + TIMELINE_HEIGHT,
                 TIMELINE_COLOR.getColorInt());
 
         // Draw padding area
         int paddingStartX = timelineX + (int)((float)actualEndTime / timelineDuration * usableWidth);
-        graphics.fill(paddingStartX, timelineY,
+        graphics.fill(RenderType.gui(),
+                paddingStartX, timelineY,
                 timelineX + (int)usableWidth,
                 timelineY + TIMELINE_HEIGHT,
                 TIMELINE_PADDING_COLOR.getColorInt());
@@ -580,7 +573,8 @@ public class KeyframeManagerScreen extends ModernScreen {
             DrawableColor color = selectedKeyframes.contains(keyframe) ?
                     KEYFRAME_COLOR_SELECTED : KEYFRAME_COLOR;
 
-            graphics.fill(lineX - KEYFRAME_LINE_WIDTH/2,
+            graphics.fill(RenderType.gui(),
+                    lineX - KEYFRAME_LINE_WIDTH/2,
                     timelineY + (TIMELINE_HEIGHT - KEYFRAME_LINE_HEIGHT)/2,
                     lineX + KEYFRAME_LINE_WIDTH/2,
                     timelineY + (TIMELINE_HEIGHT + KEYFRAME_LINE_HEIGHT)/2,
@@ -696,7 +690,8 @@ public class KeyframeManagerScreen extends ModernScreen {
             progressX = timelineX + (int)(timelineWidth * newProgress);
         }
 
-        graphics.fill(progressX - PROGRESS_LINE_WIDTH/2,
+        graphics.fill(RenderType.gui(),
+                progressX - PROGRESS_LINE_WIDTH/2,
                 timelineY,
                 progressX + PROGRESS_LINE_WIDTH/2,
                 timelineY + TIMELINE_HEIGHT,
@@ -712,15 +707,15 @@ public class KeyframeManagerScreen extends ModernScreen {
 
         // Determine current time color
         int currentTimeColor = currentPlayOrRecordPosition > actualEndTime ?
-                UIBase.getUIColorTheme().warning_text_color.getColorInt() :
-                UIBase.getUIColorTheme().generic_text_base_color.getColorInt();
+                UIBase.getUITheme().warning_color.getColorInt() :
+                UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
 
         MutableComponent currentTimeComp = Component.literal(currentTimeStr).setStyle(Style.EMPTY.withColor(currentTimeColor));
         MutableComponent totalTimeComp = Component.literal(totalTimeStr);
         MutableComponent baseComp = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.time", currentTimeComp, totalTimeComp);
 
         graphics.drawString(Minecraft.getInstance().font, baseComp, timelineX, timelineY + TIMELINE_HEIGHT + 5,
-                UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+                UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
 
     }
 
@@ -743,7 +738,7 @@ public class KeyframeManagerScreen extends ModernScreen {
 
             int yOffset = 10 + 20 + 10;
             for (Component line : lines) {
-                graphics.drawString(Minecraft.getInstance().font, line, 10, yOffset, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+                graphics.drawString(Minecraft.getInstance().font, line, 10, yOffset, UIBase.getUITheme().ui_interface_generic_text_color.getColorInt(), false);
                 yOffset += 10;
             }
 
@@ -790,7 +785,7 @@ public class KeyframeManagerScreen extends ModernScreen {
             // Draw indicator rectangle
             if (recordingBlinkState) {
                 int rectX = recordingTextX + recordingTextWidth + padding;
-                graphics.fill(rectX, yOffset, rectX + rectSize, yOffset + rectSize, RECORDING_COLOR.getColorInt());
+                graphics.fill(RenderType.gui(), rectX, yOffset, rectX + rectSize, yOffset + rectSize, RECORDING_COLOR.getColorInt());
             }
 
         }
@@ -813,7 +808,7 @@ public class KeyframeManagerScreen extends ModernScreen {
                 continue;
             }
             notification.updateOpacity();
-            int textColor = UIBase.getUIColorTheme().generic_text_base_color.getColorIntWithAlpha(notification.opacity); // Base color with fade
+            int textColor = UIBase.getUITheme().ui_interface_generic_text_color.getColorIntWithAlpha(notification.opacity); // Base color with fade
             graphics.drawString(
                     Minecraft.getInstance().font,
                     notification.message,
@@ -857,7 +852,7 @@ public class KeyframeManagerScreen extends ModernScreen {
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics graphics) {
+    public void renderBackground(GuiGraphics $$0) {
     }
 
     @Override
@@ -892,7 +887,7 @@ public class KeyframeManagerScreen extends ModernScreen {
         }
         if (isOverProgressLine((int)mouseX, (int)mouseY) && this.isRecording && !this.isRecordingPaused) {
             this.displayNotification(Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.pause_recording_to_drag_progress")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), 6000);
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt())), 6000);
             return true;
         }
 
@@ -905,7 +900,7 @@ public class KeyframeManagerScreen extends ModernScreen {
         }
         if (this.isRecording && !this.isRecordingPaused && (clickedIndex >= 0)) {
             this.displayNotification(Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.pause_recording_to_edit_keyframe")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), 6000);
+                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt())), 6000);
             return true;
         }
         if (clickedIndex >= 0) {
@@ -1556,12 +1551,12 @@ public class KeyframeManagerScreen extends ModernScreen {
 
     }
 
-    protected class PreviewEditorElement extends AbstractEditorElement {
+    protected class PreviewEditorElement extends AbstractEditorElement<PreviewEditorElement, PreviewElement> {
 
         protected boolean elementMovingStarted = false;
         protected boolean resizingStarted = false;
 
-        public PreviewEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+        public PreviewEditorElement(@NotNull PreviewElement element, @NotNull LayoutEditorScreen editor) {
             super(element, editor);
             // Only allow resizing, disable all other editor features
             this.settings.setFadeable(false);
@@ -1601,7 +1596,8 @@ public class KeyframeManagerScreen extends ModernScreen {
             DrawableColor c = PREVIEW_COLOR_NORMAL;
             if (KeyframeManagerScreen.this.isRecording) c = RECORDING_COLOR;
             if (KeyframeManagerScreen.this.selectedKeyframes.size() == 1) c = KEYFRAME_COLOR_SELECTED;
-            graphics.fill(this.element.getAbsoluteX(),
+            graphics.fill(RenderType.gui(),
+                    this.element.getAbsoluteX(),
                     this.element.getAbsoluteY(),
                     this.element.getAbsoluteX() + this.element.getAbsoluteWidth(),
                     this.element.getAbsoluteY() + this.element.getAbsoluteHeight(),

@@ -17,7 +17,6 @@ import de.keksuccino.fancymenu.util.Trio;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.client.Minecraft;
@@ -129,7 +128,7 @@ public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEdito
         AudioElement i = new AudioElement(this);
         i.baseWidth = 100;
         i.baseHeight = 100;
-        i.inEditorColor = DrawableColor.of(new Color(92, 166, 239));
+        i.inEditorColor.setDefault(DrawableColor.of(new Color(92, 166, 239)).getHex()).set(DrawableColor.of(new Color(92, 166, 239)).getHex());
         return i;
     }
 
@@ -150,7 +149,6 @@ public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEdito
         element.setLooping(deserializeBoolean(element.loop, serialized.getValue("looping")), false);
 
         element.lastControllerVolume = element.getControllerVolume();
-        element.volume = deserializeNumber(Float.class, element.volume, serialized.getValue("volume"));
         element.updateVolume();
 
         String soundSource = serialized.getValue("sound_source");
@@ -177,8 +175,6 @@ public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEdito
 
         serializeTo.putProperty("looping", "" + element.loop);
 
-        serializeTo.putProperty("volume", "" + element.volume);
-
         serializeTo.putProperty("sound_source", element.soundSource.getName());
 
         return serializeTo;
@@ -192,7 +188,7 @@ public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEdito
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Components.translatable("fancymenu.elements.audio");
+        return Component.translatable("fancymenu.elements.audio");
     }
 
     @Override

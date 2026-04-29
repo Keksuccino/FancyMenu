@@ -1,9 +1,7 @@
 package de.keksuccino.fancymenu.customization.action.actions.screen;
 
 import de.keksuccino.fancymenu.customization.action.Action;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
-import net.minecraft.client.Minecraft;
+import de.keksuccino.fancymenu.util.ScreenUtils;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,17 +24,17 @@ public class CloseScreenAction extends Action {
 
     @Override
     public void execute(@Nullable String value) {
-        Minecraft.getInstance().setScreen(null);
+        ScreenUtils.setScreen(null);
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.close_screen");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.close_screen.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.close_screen.desc");
     }
 
     @Override
@@ -45,7 +43,7 @@ public class CloseScreenAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return null;
     }
 

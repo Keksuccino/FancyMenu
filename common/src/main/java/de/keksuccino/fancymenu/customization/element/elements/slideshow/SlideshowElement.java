@@ -5,17 +5,14 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class SlideshowElement extends AbstractElement {
 
-    private static final Logger LOGGER = LogManager.getLogger();
-
-    private static final ResourceLocation MISSING = new ResourceLocation("missing_texture");
+    private static final ResourceLocation MISSING = ITexture.MISSING_TEXTURE_LOCATION;
 
     public String slideshowName;
 

@@ -1,18 +1,18 @@
 package de.keksuccino.fancymenu.customization.action.actions.other;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.minecraftoptions.MinecraftOptions;
 import de.keksuccino.fancymenu.util.minecraftoptions.MinecraftOption;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.PiPCellStringBuilderWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
@@ -75,37 +75,66 @@ public class EditMinecraftOptionAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
-        return Components.translatable("fancymenu.actions.edit_minecraft_option");
+    public @NotNull Component getDisplayName() {
+        return Component.translatable("fancymenu.actions.edit_minecraft_option");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.edit_minecraft_option.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.edit_minecraft_option.desc");
     }
 
     @Override
     public Component getValueDisplayName() {
-        return Components.empty();
+        return Component.empty();
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "option_name:set_to_value";
     }
 
     @Override
-    public void editValue(@NotNull Screen parentScreen, @NotNull ActionInstance instance) {
-        EditMinecraftOptionActionValueScreen s = new EditMinecraftOptionActionValueScreen(Objects.requireNonNullElse(instance.value, this.getValueExample()), value -> {
+    public void editValue(@NotNull ActionInstance instance, @NotNull Action.ActionEditingCompletedFeedback onEditingCompleted, @NotNull Action.ActionEditingCanceledFeedback onEditingCanceled) {
+        String oldValue = instance.value;
+        boolean[] handled = {false};
+        final PiPWindow[] windowHolder = new PiPWindow[1];
+        EditMinecraftOptionActionValueScreen s = new EditMinecraftOptionActionValueScreen(Objects.requireNonNullElse(instance.value, this.getValuePreset()), value -> {
+            if (handled[0]) {
+                return;
+            }
+            handled[0] = true;
             if (value != null) {
                 instance.value = value;
+                onEditingCompleted.accept(instance, oldValue, value);
+            } else {
+                onEditingCanceled.accept(instance);
             }
-            Minecraft.getInstance().setScreen(parentScreen);
+            PiPWindow window = windowHolder[0];
+            if (window != null) {
+                window.close();
+            }
         });
-        Minecraft.getInstance().setScreen(s);
+        PiPWindow window = new PiPWindow(s.getTitle())
+                .setScreen(s)
+                .setForceFancyMenuUiScale(true)
+                .setAlwaysOnTop(true)
+                .setBlockMinecraftScreenInputs(true)
+                .setForceFocus(true)
+                .setMinSize(TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT)
+                .setSize(TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
+        windowHolder[0] = window;
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
+        window.addCloseCallback(() -> {
+            if (handled[0]) {
+                return;
+            }
+            handled[0] = true;
+            onEditingCanceled.accept(instance);
+        });
     }
 
-    public static class EditMinecraftOptionActionValueScreen extends StringBuilderScreen {
+    public static class EditMinecraftOptionActionValueScreen extends PiPCellStringBuilderWindowBody {
 
         @NotNull
         protected String name = "";
@@ -129,7 +158,7 @@ public class EditMinecraftOptionAction extends Action {
 
             this.addStartEndSpacerCell();
 
-            this.addLabelCell(Components.translatable("fancymenu.actions.edit_minecraft_option.edit.option_name"));
+            this.addLabelCell(Component.translatable("fancymenu.actions.edit_minecraft_option.edit.option_name"));
             TextInputCell nameCell = this.addTextInputCell(null, true, true).setText(this.name);
 
             this.optionNameSuggestions = EditBoxSuggestions.createWithCustomSuggestions(this, nameCell.editBox, EditBoxSuggestions.SuggestionsRenderPosition.ABOVE_EDIT_BOX, getSupportedOptionNames());
@@ -144,7 +173,7 @@ public class EditMinecraftOptionAction extends Action {
 
             this.addCellGroupEndSpacerCell();
 
-            this.addLabelCell(Components.translatable("fancymenu.actions.edit_minecraft_option.edit.set_to_value"));
+            this.addLabelCell(Component.translatable("fancymenu.actions.edit_minecraft_option.edit.set_to_value"));
             this.addTextInputCell(null, true, true).setEditListener(s -> this.setTo = s).setText(this.setTo);
 
             this.addCellGroupEndSpacerCell();
@@ -160,14 +189,13 @@ public class EditMinecraftOptionAction extends Action {
             MinecraftOption instance = MinecraftOptions.getOption(this.name);
             String current = (instance != null) ? instance.get() : "-----";
             if (current == null) current = "-----";
-            Component curComp = Components.literal(current).setStyle(Style.EMPTY.withBold(false));
-            return Components.translatable("fancymenu.actions.edit_minecraft_option.edit.current_value", curComp).setStyle(Style.EMPTY.withBold(true));
+            Component curComp = Component.literal(current).setStyle(Style.EMPTY.withBold(false));
+            return Component.translatable("fancymenu.actions.edit_minecraft_option.edit.current_value", curComp).setStyle(Style.EMPTY.withBold(true));
         }
 
         @Override
-        public void render(GuiGraphics pose, int mouseX, int mouseY, float partial) {
-            super.render(pose, mouseX, mouseY, partial);
-            this.optionNameSuggestions.render(pose.pose(), mouseX, mouseY);
+        public void renderLateBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            this.optionNameSuggestions.render(graphics, mouseX, mouseY);
         }
 
         @Override
@@ -177,9 +205,9 @@ public class EditMinecraftOptionAction extends Action {
         }
 
         @Override
-        public boolean mouseScrolled(double $$0, double $$1, double $$2) {
-            if (this.optionNameSuggestions.mouseScrolled($$2)) return true;
-            return super.mouseScrolled($$0, $$1, $$2);
+        public boolean mouseScrolled(double $$0, double $$1, double scrollDeltaY) {
+            if (this.optionNameSuggestions.mouseScrolled(scrollDeltaY)) return true;
+            return super.mouseScrolled($$0, $$1, scrollDeltaY);
         }
 
         @Override
@@ -191,6 +219,10 @@ public class EditMinecraftOptionAction extends Action {
         @Override
         public @NotNull String buildString() {
             return this.name + ":" + this.setTo;
+        }
+
+        @Override
+        protected void autoScaleScreen(AbstractWidget topRightSideWidget) {
         }
 
     }

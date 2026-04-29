@@ -1,10 +1,9 @@
 package de.keksuccino.fancymenu.util.rendering.ui.toast;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastComponent;
 import net.minecraft.network.chat.Component;
@@ -48,18 +47,15 @@ public class SimpleToast implements Toast {
 
     @NotNull
     @Override
-    public Visibility render(@NotNull PoseStack poseStack, @NotNull ToastComponent toastComponent, long timeSinceLastVisible) {
-        return this.render(GuiGraphics.currentGraphics(), toastComponent, timeSinceLastVisible);
-    }
-
-    @NotNull
-    protected Toast.Visibility render(@NotNull GuiGraphics graphics, @NotNull ToastComponent toastComponent, long progressTime) {
+    public Toast.Visibility render(@NotNull GuiGraphics graphics, @NotNull ToastComponent toastComponent, long progressTime) {
 
         ResourceLocation customBack = this.getCustomBackground();
         if (customBack == null) {
+            RenderingUtils.setupAlphaBlend();
             graphics.blit(TEXTURE, 0, 0, 0, 96, this.width(), this.height());
         } else {
-            graphics.blit(customBack, 0, 0, 0.0F, 0.0F, this.width(), this.height(), this.width(), this.height());
+            RenderingUtils.setupAlphaBlend();
+            RenderingUtils.blitAlphaTexture(graphics, customBack, 0, 0, this.width(), this.height());
         }
 
         this.icon.render(graphics, 6, 6);
@@ -158,8 +154,8 @@ public class SimpleToast implements Toast {
         public void render(GuiGraphics graphics, int x, int y) {
             ResourceLocation icon = this.getIcon();
             if (icon != null) {
-                RenderSystem.enableBlend();
-                graphics.blit(icon, x, y, 0.0F, 0.0F, 20, 20, 20, 20);
+                RenderingUtils.setupAlphaBlend();
+                RenderingUtils.blitAlphaTexture(graphics, icon, x, y, 20, 20);
             }
         }
 

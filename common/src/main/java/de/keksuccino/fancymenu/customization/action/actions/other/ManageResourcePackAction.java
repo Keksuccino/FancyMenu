@@ -2,16 +2,18 @@ package de.keksuccino.fancymenu.customization.action.actions.other;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
 import de.keksuccino.fancymenu.util.enums.LocalizedEnum;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.PiPCellStringBuilderWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.server.packs.repository.Pack;
@@ -20,6 +22,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -87,6 +90,7 @@ public class ManageResourcePackAction extends Action {
             repository.setSelected(selectedIds);
 
             refreshOptions(minecraft.options, repository);
+            updateHighContrastOption(minecraft, repository);
 
             if (config.reloadOnChange) {
                 minecraft.reloadResourcePacks();
@@ -97,13 +101,13 @@ public class ManageResourcePackAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.manage_resource_pack");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.manage_resource_pack.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.manage_resource_pack.desc");
     }
 
     @Override
@@ -112,22 +116,51 @@ public class ManageResourcePackAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "Programmer Art|||TOGGLE|||true";
     }
 
     @Override
-    public void editValue(@NotNull Screen parentScreen, @NotNull ActionInstance instance) {
+    public void editValue(@NotNull ActionInstance instance, @NotNull Action.ActionEditingCompletedFeedback onEditingCompleted, @NotNull Action.ActionEditingCanceledFeedback onEditingCanceled) {
+        String oldValue = instance.value;
+        boolean[] handled = {false};
+        final PiPWindow[] windowHolder = new PiPWindow[1];
         ManageResourcePackActionValueScreen screen = new ManageResourcePackActionValueScreen(
-                Objects.requireNonNullElse(instance.value, this.getValueExample()),
+                Objects.requireNonNullElse(instance.value, this.getValuePreset()),
                 editedValue -> {
+                    if (handled[0]) {
+                        return;
+                    }
+                    handled[0] = true;
                     if (editedValue != null) {
                         instance.value = editedValue;
+                        onEditingCompleted.accept(instance, oldValue, editedValue);
+                    } else {
+                        onEditingCanceled.accept(instance);
                     }
-                    Minecraft.getInstance().setScreen(parentScreen);
+                    PiPWindow window = windowHolder[0];
+                    if (window != null) {
+                        window.close();
+                    }
                 }
         );
-        Minecraft.getInstance().setScreen(screen);
+        PiPWindow window = new PiPWindow(screen.getTitle())
+                .setScreen(screen)
+                .setForceFancyMenuUiScale(true)
+                .setAlwaysOnTop(true)
+                .setBlockMinecraftScreenInputs(true)
+                .setForceFocus(true)
+                .setMinSize(TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT)
+                .setSize(TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT);
+        windowHolder[0] = window;
+        PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
+        window.addCloseCallback(() -> {
+            if (handled[0]) {
+                return;
+            }
+            handled[0] = true;
+            onEditingCanceled.accept(instance);
+        });
     }
 
     private void refreshOptions(@NotNull Options options, @NotNull PackRepository repository) {
@@ -149,6 +182,17 @@ public class ManageResourcePackAction extends Action {
         if (changed) {
             options.save();
         }
+    }
+
+    private void updateHighContrastOption(@NotNull Minecraft minecraft, @NotNull PackRepository repository) {
+        boolean highContrastEnabled = false;
+        for (Pack selected : repository.getSelectedPacks()) {
+            if ("high_contrast".equals(selected.getId())) {
+                highContrastEnabled = true;
+                break;
+            }
+        }
+        minecraft.options.highContrast().set(highContrastEnabled);
     }
 
     @Nullable
@@ -214,7 +258,7 @@ public class ManageResourcePackAction extends Action {
 
     }
 
-    public static class ManageResourcePackActionValueScreen extends StringBuilderScreen {
+    public static class ManageResourcePackActionValueScreen extends PiPCellStringBuilderWindowBody {
 
         protected ResourcePackConfig config;
 
@@ -235,7 +279,7 @@ public class ManageResourcePackAction extends Action {
             TextInputCell nameCell = this.addTextInputCell(null, true, true)
                     .setEditListener(text -> this.config.packName = text)
                     .setText(this.config.packName);
-            nameCell.editBox.setTooltip(() -> Tooltip.of(Component.translatable("fancymenu.actions.manage_resource_pack.edit.pack_name.desc")));
+            nameCell.editBox.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.manage_resource_pack.edit.pack_name.desc")));
 
             this.addCellGroupEndSpacerCell();
 
@@ -246,7 +290,7 @@ public class ManageResourcePackAction extends Action {
             );
             modeCycle.setCurrentValue(this.config.mode, false);
             CycleButton<ResourcePackMode> modeButton = new CycleButton<>(0, 0, 20, 20, modeCycle, (selectedMode, button) -> this.config.mode = selectedMode);
-            modeButton.setTooltip(Tooltip.of(Component.translatable("fancymenu.actions.manage_resource_pack.edit.mode.desc")));
+            modeButton.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.manage_resource_pack.edit.mode.desc")));
             modeButton.setSelectedValue(this.config.mode);
             this.addWidgetCell(modeButton, true);
 
@@ -258,7 +302,7 @@ public class ManageResourcePackAction extends Action {
                     CommonCycles.cycleEnabledDisabled("fancymenu.actions.manage_resource_pack.edit.reload", this.config.reloadOnChange),
                     (state, button) -> this.config.reloadOnChange = state.getAsBoolean()
             );
-            reloadButton.setTooltip(Tooltip.of(Component.translatable("fancymenu.actions.manage_resource_pack.edit.reload.desc")));
+            reloadButton.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.manage_resource_pack.edit.reload.desc")));
             reloadButton.setSelectedValue(CommonCycles.CycleEnabledDisabled.getByBoolean(this.config.reloadOnChange));
             this.addWidgetCell(reloadButton, true);
 
@@ -275,6 +319,10 @@ public class ManageResourcePackAction extends Action {
         public @NotNull String buildString() {
             this.config.packName = this.config.packName.trim();
             return this.config.serialize();
+        }
+
+        @Override
+        protected void autoScaleScreen(AbstractWidget topRightSideWidget) {
         }
 
     }
@@ -360,4 +408,3 @@ public class ManageResourcePackAction extends Action {
     }
 
 }
-

@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
@@ -37,20 +37,22 @@ public class CheckboxButton extends ExtendedButton {
     }
 
     @Override
-    public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        super.renderButton(pose, mouseX, mouseY, partial);
+        super.renderWidget(graphics, mouseX, mouseY, partial);
 
         if (this.checkboxState && this.isActive()) {
-            GuiGraphics.currentGraphics().blit(this.getCheckboxCheckmarkTexture(), this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+            RenderingUtils.setupAlphaBlend();
+            RenderingUtils.blitAlphaTexture(graphics, this.getCheckboxCheckmarkTexture(), this.getX(), this.getY(), this.getWidth(), this.getHeight());
         }
 
     }
 
     @Override
-    protected void renderBackground(@NotNull GuiGraphics graphics) {
+    protected void renderBackground(@NotNull GuiGraphics graphics, float partial) {
 
-        graphics.blit(this.getCheckboxBackground(), this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+        RenderingUtils.setupAlphaBlend();
+        RenderingUtils.blitAlphaTexture(graphics, this.getCheckboxBackground(), this.getX(), this.getY(), this.getWidth(), this.getHeight());
 
     }
 

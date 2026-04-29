@@ -2,8 +2,6 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroOverlay;
@@ -16,11 +14,10 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenRenderUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import net.minecraft.client.Minecraft;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.LoadingOverlay;
 import net.minecraft.client.gui.screens.Screen;
 import org.spongepowered.asm.mixin.Mixin;
@@ -32,23 +29,21 @@ import java.util.Objects;
 @Mixin(LoadingOverlay.class)
 public abstract class MixinLoadingOverlay {
 
-	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V"))
-	private void beforeRenderScreenFancyMenu(PoseStack pose, int mouseX, int mouseY, float partial, CallbackInfo info) {
+	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
+	private void beforeRenderScreenFancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		//Fire RenderPre event for current screen in loading overlay
 		if (ScreenUtils.getScreen() != null) {
-			GuiGraphics graphics = GuiGraphics.currentGraphics();
-			ScreenRenderUtils.executeAllPreRenderTasks(graphics, mouseX, mouseY, partial);
-			EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(ScreenUtils.getScreen(), graphics.pose(), mouseX, mouseY, partial));
+			RenderingUtils.executeAllPreRenderTasks(graphics, mouseX, mouseY, partial);
+			EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(ScreenUtils.getScreen(), graphics, mouseX, mouseY, partial));
 		}
 	}
 
-	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V", shift = At.Shift.AFTER))
-	private void afterRenderScreenFancyMenu(PoseStack pose, int mouseX, int mouseY, float partial, CallbackInfo info) {
+	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", shift = At.Shift.AFTER))
+	private void afterRenderScreenFancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		//Fire RenderPost event for current screen in loading overlay
 		if (ScreenUtils.getScreen() != null) {
-			GuiGraphics graphics = GuiGraphics.currentGraphics();
-			EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(ScreenUtils.getScreen(), graphics.pose(), mouseX, mouseY, partial));
-			ScreenRenderUtils.executeAllPostRenderTasks(graphics, mouseX, mouseY, partial);
+			EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(ScreenUtils.getScreen(), graphics, mouseX, mouseY, partial));
+			RenderingUtils.executeAllPostRenderTasks(graphics, mouseX, mouseY, partial);
 		}
 	}
 

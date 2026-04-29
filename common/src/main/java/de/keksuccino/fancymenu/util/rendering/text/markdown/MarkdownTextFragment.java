@@ -5,12 +5,12 @@ import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class MarkdownTextFragment implements Renderable, GuiEventListener {
+public class MarkdownTextFragment implements Widget, GuiEventListener {
 
     protected static final int BULLET_LIST_SPACE_AFTER_INDENT = 5;
 
@@ -48,6 +48,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     @NotNull
     public MarkdownRenderer.MarkdownLineAlignment alignment = MarkdownRenderer.MarkdownLineAlignment.LEFT;
     public Hyperlink hyperlink = null;
+    public TextClickEvent clickEvent = null;
+    public TextHoverEvent hoverEvent = null;
     @NotNull
     public HeadlineType headlineType = HeadlineType.NONE;
     public QuoteContext quoteContext = null;
@@ -60,7 +62,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     public MarkdownTextFragment(@NotNull MarkdownRenderer parent, @NotNull String text) {
         this.parent = parent;
         this.text = text;
-        this.unscaledTextHeight = this.parent.font.lineHeight;
+        this.unscaledTextHeight = this.parent.getUnscaledTextHeight();
     }
 
     @Override
@@ -68,7 +70,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
         this.hovered = this.isMouseOver(mouseX, mouseY);
 
-        if ((this.hyperlink != null) && this.hovered) {
+        if (this.isLinkLike() && this.hovered) {
             CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
         }
 
@@ -98,7 +100,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             RenderSystem.enableBlend();
             graphics.pose().pushPose();
             graphics.pose().scale(this.getScale(), this.getScale(), this.getScale());
-            graphics.drawString(this.parent.font, this.buildRenderComponent(false), (int) this.getTextRenderX(), (int) this.getTextRenderY(), this.parent.textBaseColor.getColorIntWithAlpha(this.parent.textOpacity), this.parent.textShadow && (this.codeBlockContext == null));
+            this.parent.renderText(graphics, this.buildRenderComponent(false), this.getTextRenderX(), this.getTextRenderY(), this.parent.textBaseColor.getColorIntWithAlpha(this.parent.textOpacity), this.parent.textShadow && (this.codeBlockContext == null));
             graphics.pose().popPose();
             RenderingUtils.resetShaderColor(graphics);
 
@@ -206,7 +208,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                             // Render the code block background
                             float endX = fragment.x + fragment.getRenderWidth() + 1;
                             if (fragment.text.endsWith(" ")) {
-                                endX -= (this.parent.font.width(" ") * fragment.getScale());
+                                endX -= (this.parent.getUnscaledTextWidth(" ") * fragment.getScale());
                             }
                             renderCodeBlockBackground(graphics, codeBlockStartX, fragment.y - 2, endX, 
                                 fragment.y + fragment.getTextRenderHeight(), 
@@ -225,7 +227,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                     fragment.render(graphics, mouseX, mouseY, partial); // Pass actual mouse coords for hover/click detection
                     
                     // Check if any hyperlink in the table is hovered
-                    if (fragment.hyperlink != null && fragment.hovered) {
+                    if (fragment.isLinkLike() && fragment.hovered) {
                         CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
                     }
                 }
@@ -295,7 +297,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             if (this.codeBlockContext.singleLine) {
                 float xEnd = end.x + end.getRenderWidth();
                 if (end.text.endsWith(" ")) {
-                    xEnd -= (this.parent.font.width(" ") * this.getScale());
+                    xEnd -= (this.parent.getUnscaledTextWidth(" ") * this.getScale());
                 }
                 renderCodeBlockBackground(graphics, this.x, this.y - 2, xEnd, this.y + this.getTextRenderHeight(), this.parent.codeBlockSingleLineColor.getColorIntWithAlpha(this.parent.textOpacity));
             } else {
@@ -349,7 +351,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             final float bulletX = this.x - (5 * scale) + (this.parent.bulletListIndent * (this.bulletListLevel) * scale);
 
             // Vertical centering using text baseline
-            final float textBaselineY = this.getTextY() + (Minecraft.getInstance().font.lineHeight * scale * 0.5f) - (bulletSize * 0.5f);
+            final float textBaselineY = this.getTextY() + (this.parent.getUnscaledTextHeight() * scale * 0.5f) - (bulletSize * 0.5f);
 
             RenderingUtils.fillF(graphics, bulletX, textBaselineY, bulletX + bulletSize, textBaselineY + bulletSize,
                     this.parent.bulletListDotColor.getColorIntWithAlpha(this.parent.textOpacity)
@@ -387,12 +389,24 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                 style = style.withUnderlined(true);
             }
         }
+        if (this.clickEvent != null) {
+            style = style.withColor(this.parent.getTextClickEventColor().getColorInt());
+            if (this.clickEvent.isHovered()) {
+                style = style.withUnderlined(true);
+            }
+        }
+        if (this.hoverEvent != null) {
+            style = style.withColor(this.parent.getTextHoverEventColor().getColorInt());
+            if (this.hoverEvent.isHovered()) {
+                style = style.withUnderlined(true);
+            }
+        }
         boolean addSpaceComponentAtEnd = false;
         String t = this.text;
-        if ((this.hyperlink != null) && (this.naturalLineBreakAfter || this.autoLineBreakAfter) && t.endsWith(" ")) {
+        if (this.isLinkLike() && (this.naturalLineBreakAfter || this.autoLineBreakAfter) && t.endsWith(" ")) {
             //Remove spaces at line end that would look ugly when underlined
             t = t.substring(0, t.length()-1);
-        } else if ((this.hyperlink != null) && (ListUtils.getLast(this.hyperlink.hyperlinkFragments) == this) && t.endsWith(" ")) {
+        } else if (this.isLinkLike() && this.isLastLinkLikeFragment() && t.endsWith(" ")) {
             //Make space at the end not underlined without removing it completely
             t = t.substring(0, t.length()-1);
             addSpaceComponentAtEnd = true;
@@ -416,8 +430,25 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         return comp;
     }
 
+    protected boolean isLinkLike() {
+        return (this.hyperlink != null) || (this.clickEvent != null) || (this.hoverEvent != null);
+    }
+
+    protected boolean isLastLinkLikeFragment() {
+        if (this.hyperlink != null) {
+            return ListUtils.getLast(this.hyperlink.hyperlinkFragments) == this;
+        }
+        if (this.clickEvent != null) {
+            return ListUtils.getLast(this.clickEvent.eventFragments) == this;
+        }
+        if (this.hoverEvent != null) {
+            return ListUtils.getLast(this.hoverEvent.eventFragments) == this;
+        }
+        return false;
+    }
+
     protected void updateWidth() {
-        this.unscaledTextWidth = this.parent.font.width(this.buildRenderComponent(true));
+        this.unscaledTextWidth = this.parent.getUnscaledTextWidth(this.buildRenderComponent(true));
     }
 
     public float getTextRenderX() {
@@ -611,11 +642,25 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             return false;
         }
         
+        if ((this.clickEvent != null) && this.hovered) {
+            this.parent.fireTextClickEvent(this.clickEvent.identifier);
+            return true;
+        }
+
         // Handle regular hyperlink clicks
         if ((this.hyperlink != null) && this.hovered) {
             WebUtils.openWebLink(this.hyperlink.link);
             return true;
         }
+        return false;
+    }
+
+    @Override
+    public void setFocused(boolean var1) {
+    }
+
+    @Override
+    public boolean isFocused() {
         return false;
     }
     
@@ -630,6 +675,43 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
         public boolean isHovered() {
             for (MarkdownTextFragment f : this.hyperlinkFragments) {
+                if (f.hovered) return true;
+            }
+            return false;
+        }
+
+    }
+
+    public static class TextClickEvent {
+
+        public final String identifier;
+        public final List<MarkdownTextFragment> eventFragments = new ArrayList<>();
+
+        public TextClickEvent(@NotNull String identifier) {
+            this.identifier = identifier;
+        }
+
+        public boolean isHovered() {
+            for (MarkdownTextFragment f : this.eventFragments) {
+                if (f.hovered) return true;
+            }
+            return false;
+        }
+
+    }
+
+    public static class TextHoverEvent {
+
+        public final String identifier;
+        public final List<MarkdownTextFragment> eventFragments = new ArrayList<>();
+        public boolean wasHovered = false;
+
+        public TextHoverEvent(@NotNull String identifier) {
+            this.identifier = identifier;
+        }
+
+        public boolean isHovered() {
+            for (MarkdownTextFragment f : this.eventFragments) {
                 if (f.hovered) return true;
             }
             return false;

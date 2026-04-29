@@ -1,14 +1,13 @@
 package de.keksuccino.fancymenu.customization.element.elements.dragger;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.ModernAbstractWidget;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
-public class DraggerWidget extends ModernAbstractWidget {
+public class DraggerWidget extends AbstractWidget {
 
     @NotNull
     public DraggingCallback draggingCallback;
@@ -23,11 +22,11 @@ public class DraggerWidget extends ModernAbstractWidget {
     }
 
     @Override
-    public void renderButton(@NotNull PoseStack guiGraphics, int i, int i1, float v) {
+    protected void renderWidget(@NotNull GuiGraphics guiGraphics, int i, int i1, float v) {
     }
 
     @Override
-    public void updateNarration(@NotNull NarrationElementOutput narrationElementOutput) {
+    protected void updateWidgetNarration(@NotNull NarrationElementOutput narrationElementOutput) {
     }
 
     @Override
@@ -66,6 +65,10 @@ public class DraggerWidget extends ModernAbstractWidget {
 
     protected boolean canClick() {
         return (this.isHovered() && this.isActive() && this.visible);
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
     }
 
     @FunctionalInterface

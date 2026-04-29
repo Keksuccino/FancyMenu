@@ -33,14 +33,11 @@ public class AudioElementController {
             List<String> jsonList = FileUtils.readTextLinesFrom(METAS_FILE);
             StringBuilder json = new StringBuilder();
             jsonList.forEach(json::append);
-            String jsonString = json.toString();
 
-            if (jsonString.isBlank()) return;
+            if (json.toString().isBlank()) return;
 
-            List<AudioElementMeta> metasList = GSON.fromJson(jsonString, new TypeToken<List<AudioElementMeta>>(){}.getType());
-            for (AudioElementMeta meta : metasList) {
-                METAS.put(Objects.requireNonNull(meta.element_identifier), meta);
-            }
+            List<AudioElementMeta> metasList = GSON.fromJson(json.toString(), new TypeToken<>(){});
+            metasList.forEach(audioElementMeta -> METAS.put(Objects.requireNonNull(audioElementMeta.element_identifier), audioElementMeta));
 
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to read Audio element controller metas from file!", ex);

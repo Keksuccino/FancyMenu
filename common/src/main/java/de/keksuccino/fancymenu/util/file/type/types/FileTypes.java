@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.file.type.types;
 import de.keksuccino.fancymenu.util.file.type.FileCodec;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.FileTypeRegistry;
+import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
@@ -10,19 +11,20 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.ogg.OggAudio;
 import de.keksuccino.fancymenu.util.resource.resources.audio.wav.WavAudio;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.text.PlainText;
-import de.keksuccino.fancymenu.util.resource.resources.texture.ApngTexture;
-import de.keksuccino.fancymenu.util.resource.resources.texture.GifTexture;
-import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resource.resources.texture.SimpleTexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.*;
+import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaTexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.fma.FmaTexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
+import de.keksuccino.fancymenu.util.resource.resources.video.Mp4Video;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 public class FileTypes {
@@ -39,10 +41,10 @@ public class FileTypes {
     };
 
     public static final ImageFileType JPEG_IMAGE = new ImageFileType(
-            FileCodec.advanced(ITexture.class, SimpleTexture::of, SimpleTexture::location, SimpleTexture::local, SimpleTexture::web),
+            FileCodec.advanced(ITexture.class, JpegTexture::of, JpegTexture::location, JpegTexture::local, JpegTexture::web),
             "image/jpeg", "jpg", "jpeg");
     public static final ImageFileType PNG_IMAGE = new ImageFileType(
-            FileCodec.advanced(ITexture.class, SimpleTexture::of, SimpleTexture::location, SimpleTexture::local, SimpleTexture::web),
+            FileCodec.advanced(ITexture.class, PngTexture::of, PngTexture::location, PngTexture::local, PngTexture::web),
             "image/png", "png");
     public static final ImageFileType GIF_IMAGE = new ImageFileType(
             FileCodec.advanced(ITexture.class, GifTexture::of, GifTexture::location, GifTexture::local, GifTexture::web),
@@ -58,6 +60,11 @@ public class FileTypes {
             "image/fma", "fma")
             .setCustomDisplayName(Component.translatable("fancymenu.file_types.fma"))
             .setAnimated(true);
+    public static final ImageFileType AFMA_IMAGE = new ImageFileType(
+            FileCodec.advanced(ITexture.class, AfmaTexture::of, AfmaTexture::location, AfmaTexture::local, AfmaTexture::web),
+            "image/afma", "afma")
+            .setCustomDisplayName(Component.translatable("fancymenu.file_types.afma"))
+            .setAnimated(true);
 
     public static final AudioFileType OGG_AUDIO = new AudioFileType(
             FileCodec.advanced(IAudio.class, OggAudio::of, OggAudio::location, OggAudio::local, OggAudio::web),
@@ -66,9 +73,19 @@ public class FileTypes {
             FileCodec.advanced(IAudio.class, WavAudio::of, WavAudio::location, WavAudio::local, WavAudio::web),
             "audio/wav", "wav");
 
-//    public static final VideoFileType MPEG_VIDEO = new VideoFileType(FileCodec.basic(IVideo.class, consumes -> null, consumes -> null), "video/mpeg", "mpeg", "mpg");
-    public static final VideoFileType MP4_VIDEO = new VideoFileType(FileCodec.basic(IVideo.class, consumes -> null, consumes -> null), "video/mp4", "mp4");
-//    public static final VideoFileType AVI_VIDEO = new VideoFileType(FileCodec.basic(IVideo.class, consumes -> null, consumes -> null), "video/x-msvideo", "avi");
+    public static final VideoFileType MP4_VIDEO = new VideoFileType(
+            FileCodec.advanced(IVideo.class, Mp4Video::of, Mp4Video::location, Mp4Video::local, Mp4Video::web),
+            "video/mp4", "mp4") {
+        @Override
+        public boolean isFileTypeWeb(@NotNull String fileUrl) {
+            return super.isFileTypeWeb(fileUrl) || isYouTubeVideoUrl(fileUrl);
+        }
+
+        @Override
+        public boolean isFileTypeWebAdvanced(@NotNull String fileUrl) {
+            return isYouTubeVideoUrl(fileUrl) || super.isFileTypeWebAdvanced(fileUrl);
+        }
+    };
 
     public static final TextFileType TXT_TEXT = new TextFileType(
             FileCodec.advanced(IText.class, PlainText::of, PlainText::location, PlainText::local, PlainText::web),
@@ -114,13 +131,12 @@ public class FileTypes {
         FileTypeRegistry.register("gif", GIF_IMAGE);
         FileTypeRegistry.register("apng", APNG_IMAGE);
         FileTypeRegistry.register("fma", FMA_IMAGE);
+        FileTypeRegistry.register("afma", AFMA_IMAGE);
 
         FileTypeRegistry.register("ogg", OGG_AUDIO);
         FileTypeRegistry.register("wav", WAV_AUDIO);
 
-//        FileTypeRegistry.register("mpeg", MPEG_VIDEO);
         FileTypeRegistry.register("mp4", MP4_VIDEO);
-//        FileTypeRegistry.register("avi", AVI_VIDEO);
 
         FileTypeRegistry.register("txt", TXT_TEXT);
         FileTypeRegistry.register("markdown", MARKDOWN_TEXT);
@@ -256,6 +272,41 @@ public class FileTypes {
             }
         }
         return null;
+    }
+
+    protected static boolean isYouTubeVideoUrl(@NotNull String url) {
+        if (!TextValidators.BASIC_URL_TEXT_VALIDATOR.get(url)) return false;
+        try {
+            URI uri = new URI(url.trim());
+            String host = uri.getHost();
+            if (host == null) return false;
+            host = host.toLowerCase(Locale.ROOT);
+            if (host.startsWith("www.")) {
+                host = host.substring(4);
+            }
+            String path = Objects.requireNonNullElse(uri.getPath(), "").toLowerCase(Locale.ROOT);
+            String query = Objects.requireNonNullElse(uri.getQuery(), "").toLowerCase(Locale.ROOT);
+
+            if (host.equals("youtu.be")) {
+                return path.length() > 1;
+            }
+
+            boolean isYouTubeHost = host.equals("youtube.com")
+                    || host.endsWith(".youtube.com")
+                    || host.equals("youtube-nocookie.com")
+                    || host.endsWith(".youtube-nocookie.com");
+            if (!isYouTubeHost) return false;
+
+            if (path.equals("/watch")) {
+                return query.contains("v=");
+            }
+
+            return path.startsWith("/embed/")
+                    || path.startsWith("/shorts/")
+                    || path.startsWith("/live/");
+        } catch (Exception ignore) {
+            return false;
+        }
     }
 
 }

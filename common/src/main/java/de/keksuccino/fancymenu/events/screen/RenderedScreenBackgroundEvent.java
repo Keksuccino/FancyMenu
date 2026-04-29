@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.events.screen;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.event.acara.EventBase;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
@@ -32,16 +31,14 @@ public class RenderedScreenBackgroundEvent extends EventBase {
         this.partial = partial;
     }
 
+    @NotNull
     public Screen getScreen() {
         return this.screen;
     }
 
+    @NotNull
     public GuiGraphics getGraphics() {
-        return GuiGraphics.currentGraphics();
-    }
-
-    public PoseStack getPoseStack() {
-        return this.graphics.pose();
+        return graphics;
     }
 
     public int getMouseX() {

@@ -3,8 +3,6 @@ package de.keksuccino.fancymenu.customization.action.actions.layout;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -40,13 +38,13 @@ public class EnableLayoutAction extends Action {
     }
 
     @Override
-    public @NotNull Component getActionDisplayName() {
+    public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.actions.enable_layout");
     }
 
     @Override
-    public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.enable_layout.desc");
+    public @NotNull Component getDescription() {
+        return Component.translatable("fancymenu.actions.enable_layout.desc");
     }
 
     @Override
@@ -55,7 +53,7 @@ public class EnableLayoutAction extends Action {
     }
 
     @Override
-    public String getValueExample() {
+    public String getValuePreset() {
         return "my_cool_main_menu_layout";
     }
 

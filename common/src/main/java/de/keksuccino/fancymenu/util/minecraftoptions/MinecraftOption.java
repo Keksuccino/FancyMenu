@@ -14,7 +14,6 @@ import net.minecraft.client.OptionInstance;
 import net.minecraft.world.entity.player.PlayerModelPart;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.StringReader;
 import java.util.Set;
 

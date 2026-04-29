@@ -18,15 +18,14 @@ import de.keksuccino.fancymenu.customization.layer.ElementFactory;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.BuddyWidget;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRegistry;
+import de.keksuccino.fancymenu.customization.overlay.ScreenOverlays;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.ObjectUtils;
 import de.keksuccino.fancymenu.util.ScreenTitleUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
@@ -35,16 +34,21 @@ import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
+import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -57,12 +61,9 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import java.util.*;
 
-@SuppressWarnings("all")
 public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 
 	private static final Logger LOGGER = LogManager.getLogger();
-
-	public static final boolean FORCE_DISABLE_BUDDY = true;
 
 	protected static final Map<SerializedElement, ElementBuilder<?,?>> COPIED_ELEMENTS_CLIPBOARD = new LinkedHashMap<>();
 	public static final int ELEMENT_DRAG_CRUMPLE_ZONE = 5;
@@ -74,10 +75,9 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	public Screen layoutTargetScreen;
 	@NotNull
 	public Layout layout;
-	public List<AbstractEditorElement> normalEditorElements = new ArrayList<>();
+	public List<AbstractEditorElement<?, ?>> normalEditorElements = new ArrayList<>();
 	public List<VanillaWidgetEditorElement> vanillaWidgetEditorElements = new ArrayList<>();
 	public LayoutEditorHistory history = new LayoutEditorHistory(this);
-	public MenuBar menuBar;
 	public AnchorPointOverlay anchorPointOverlay = new AnchorPointOverlay(this);
 	public ContextMenu rightClickMenu;
 	public ContextMenu activeElementContextMenu = null;
@@ -90,14 +90,14 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	protected boolean elementMovingStarted = false;
 	protected boolean elementResizingStarted = false;
 	protected boolean mouseDraggingStarted = false;
-	protected List<AbstractEditorElement> currentlyDraggedElements = new ArrayList<>();
+	protected List<AbstractEditorElement<?, ?>> currentlyDraggedElements = new ArrayList<>();
 	protected int rightClickMenuOpenPosX = -1000;
 	protected int rightClickMenuOpenPosY = -1000;
 	protected LayoutEditorHistory.Snapshot preDragElementSnapshot;
 	public final List<WidgetMeta> cachedVanillaWidgetMetas = new ArrayList<>();
 	public boolean unsavedChanges = false;
-	protected final BuddyWidget buddyWidget = new BuddyWidget(0, 0);
 	public boolean justOpened = true;
+    protected final LayoutEditorUI layoutEditorUI = new LayoutEditorUI(this);
 
 	public LayoutEditorScreen(@NotNull Layout layout) {
 		this(null, layout);
@@ -131,6 +131,8 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	@Override
 	protected void init() {
 
+        ContextMenuHandler.INSTANCE.removeCurrent();
+
 		this.currentlyDraggedElements.clear();
 
 		this.anchorPointOverlay.resetOverlay();
@@ -147,17 +149,12 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 		}
 
 		this.closeRightClickMenu();
-		this.rightClickMenu = LayoutEditorUI.buildRightClickContextMenu(this);
-		this.addWidget(this.rightClickMenu);
+		this.rightClickMenu = this.layoutEditorUI.buildRightClickContextMenu();
 
-		if (this.menuBar != null) {
-			this.menuBar.closeAllContextMenus();
-		}
-		this.menuBar = LayoutEditorUI.buildMenuBar(this, (this.menuBar == null) || this.menuBar.isExpanded());
-		this.addWidget(this.menuBar);
+        this.refreshMenuBar();
 
 		for (AbstractLayoutEditorWidget w : Lists.reverse(new ArrayList<>(this.layoutEditorWidgets))) {
-			this.addWidget(w);
+			this.addWidget(Objects.requireNonNull(w));
 		}
 
 		this.isMouseSelection = false;
@@ -167,31 +164,31 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 
 		this.serializeElementInstancesToLayoutInstance();
 
+        Window window = Minecraft.getInstance().getWindow();
+
 		//Handle forced GUI scale
 		if (this.layout.forcedScale != 0) {
 			float newscale = this.layout.forcedScale;
 			if (newscale <= 0) {
 				newscale = 1;
 			}
-			Window m = Minecraft.getInstance().getWindow();
-			m.setGuiScale(newscale);
-			this.width = m.getGuiScaledWidth();
-			this.height = m.getGuiScaledHeight();
+			window.setGuiScale(newscale);
+			this.width = window.getGuiScaledWidth();
+			this.height = window.getGuiScaledHeight();
 		}
 
 		//Handle auto-scaling
 		if ((this.layout.autoScalingWidth != 0) && (this.layout.autoScalingHeight != 0)) {
-			Window m = Minecraft.getInstance().getWindow();
-			double guiWidth = this.width * m.getGuiScale();
-			double guiHeight = this.height * m.getGuiScale();
+			double guiWidth = this.width * window.getGuiScale();
+			double guiHeight = this.height * window.getGuiScale();
 			double percentX = (guiWidth / (double)this.layout.autoScalingWidth) * 100.0D;
 			double percentY = (guiHeight / (double)this.layout.autoScalingHeight) * 100.0D;
-			double newScaleX = (percentX / 100.0D) * m.getGuiScale();
-			double newScaleY = (percentY / 100.0D) * m.getGuiScale();
+			double newScaleX = (percentX / 100.0D) * window.getGuiScale();
+			double newScaleY = (percentY / 100.0D) * window.getGuiScale();
 			double newScale = Math.min(newScaleX, newScaleY);
-			m.setGuiScale(newScale);
-			this.width = m.getGuiScaledWidth();
-			this.height = m.getGuiScaledHeight();
+			window.setGuiScale(newScale);
+			this.width = window.getGuiScaledWidth();
+			this.height = window.getGuiScaledHeight();
 		}
 
 		this.getAllElements().forEach(element -> {
@@ -207,22 +204,48 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 
 		if (!this.justOpened) this.layout.menuBackgrounds.forEach(MenuBackground::onAfterResizeScreen);
 
+        this.layout.decorationOverlays.forEach(pair -> {
+            pair.getSecond().onScreenInitializedOrResized(this, List.of());
+            this.addWidget(pair.getSecond());
+        });
+
 		this.layout.menuBackgrounds.forEach(MenuBackground::onAfterEnable);
 
 		for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
 			w.refresh();
 		}
 
-		if (FancyMenu.getOptions().enableBuddy.getValue() && !FORCE_DISABLE_BUDDY) {
-			this.addWidget(this.buddyWidget);
-			this.buddyWidget.setScreenSize(this.width, this.height);
-		}
-
 		this.justOpened = false;
 
 	}
 
-	@Override
+    public void refreshMenuBar() {
+        MenuBar oldMenuBar = this.getCurrentMenuBar();
+        MenuBar menuBar = this.layoutEditorUI.buildMenuBar((oldMenuBar == null) || oldMenuBar.isExpanded());
+        menuBar.addClickListener((button, state) -> {
+           if (this.rightClickMenu != null) this.rightClickMenu.closeMenu();
+           if (this.activeElementContextMenu != null) this.activeElementContextMenu.closeMenu();
+        });
+        ScreenOverlayHandler.INSTANCE.addOverlayWithId(ScreenOverlays.LAYOUT_EDITOR_MENU_BAR, menuBar);
+        ScreenOverlayHandler.INSTANCE.setVisibilityControllerFor(ScreenOverlays.LAYOUT_EDITOR_MENU_BAR, screen -> {
+            return (screen instanceof LayoutEditorScreen);
+        });
+    }
+
+    @Nullable
+    public MenuBar getCurrentMenuBar() {
+        Widget menuBarRaw = ScreenOverlayHandler.INSTANCE.getOverlay(ScreenOverlays.LAYOUT_EDITOR_MENU_BAR);
+        return (menuBarRaw instanceof MenuBar b) ? b : null;
+    }
+
+    @Override
+    public void removed() {
+        this.closeActiveElementMenu(true);
+        this.closeRightClickMenu(true);
+        PiPWindowHandler.INSTANCE.forceCloseAllWindows();
+    }
+
+    @Override
 	public boolean shouldCloseOnEsc() {
 		return false;
 	}
@@ -230,15 +253,11 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	@Override
 	public void tick() {
 
-		if (FancyMenu.getOptions().enableBuddy.getValue() && !FORCE_DISABLE_BUDDY) {
-			this.buddyWidget.tick();
-		}
-
 		for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
 			w.tick();
 		}
 
-		for (AbstractEditorElement e : this.getAllElements()) {
+		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 			e.element.tick();
 		}
 
@@ -258,24 +277,15 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 
 		this.renderElements(graphics, mouseX, mouseY, partial);
 
+        this.layout.decorationOverlays.forEach(pair -> {
+            if (pair.getSecond().showOverlay.tryGetNonNullElse(false)) pair.getSecond()._render(graphics, mouseX, mouseY, partial);
+        });
+
 		this.renderMouseSelectionRectangle(graphics, mouseX, mouseY);
 
 		this.anchorPointOverlay.render(graphics, mouseX, mouseY, partial);
 
 		this.renderLayoutEditorWidgets(graphics, mouseX, mouseY, partial);
-
-		if (FancyMenu.getOptions().enableBuddy.getValue() && !FORCE_DISABLE_BUDDY) {
-			this.buddyWidget.render(graphics, mouseX, mouseY, partial);
-		}
-
-		this.menuBar.render(graphics, mouseX, mouseY, partial);
-
-		this.rightClickMenu.render(graphics, mouseX, mouseY, partial);
-
-		//Render active element context menu
-		if (this.activeElementContextMenu != null) {
-			this.activeElementContextMenu.render(graphics, mouseX, mouseY, partial);
-		}
 
 	}
 
@@ -291,8 +301,8 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 			int startY = Math.min(this.mouseSelectionStartY, mouseY);
 			int endX = Math.max(this.mouseSelectionStartX, mouseX);
 			int endY = Math.max(this.mouseSelectionStartY, mouseY);
-			graphics.fill(startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(UIBase.getUIColorTheme().layout_editor_mouse_selection_rectangle_color.getColorInt(), 70));
-			UIBase.renderBorder(graphics, startX, startY, endX, endY, 1, UIBase.getUIColorTheme().layout_editor_mouse_selection_rectangle_color.getColor(), true, true, true, true);
+			graphics.fill(startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(UIBase.getUITheme().layout_editor_mouse_selection_rectangle_color.getColorInt(), 70));
+			UIBase.renderBorder(graphics, startX, startY, endX, endY, 1, UIBase.getUITheme().layout_editor_mouse_selection_rectangle_color.getColor(), true, true, true, true);
 			graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 		}
 	}
@@ -301,7 +311,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 
 		//Render normal elements behind vanilla if renderBehindVanilla
 		if (this.layout.renderElementsBehindVanilla) {
-			for (AbstractEditorElement e : new ArrayList<>(this.normalEditorElements)) {
+			for (AbstractEditorElement<?, ?> e : new ArrayList<>(this.normalEditorElements)) {
 				if (!e.isSelected()) e.render(graphics, mouseX, mouseY, partial);
 			}
 		}
@@ -311,50 +321,53 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 		}
 		//Render normal elements before vanilla if NOT renderBehindVanilla
 		if (!this.layout.renderElementsBehindVanilla) {
-			for (AbstractEditorElement e : new ArrayList<>(this.normalEditorElements)) {
+			for (AbstractEditorElement<?, ?> e : new ArrayList<>(this.normalEditorElements)) {
 				if (!e.isSelected()) e.render(graphics, mouseX, mouseY, partial);
 			}
 		}
 
 		//Render selected elements last, so they're always visible
-		List<AbstractEditorElement> selected = this.getSelectedElements();
-		for (AbstractEditorElement e : selected) {
+		List<AbstractEditorElement<?, ?>> selected = this.getSelectedElements();
+		for (AbstractEditorElement<?, ?> e : selected) {
 			e.render(graphics, mouseX, mouseY, partial);
 		}
 
 	}
 
-	protected void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+	public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-		graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
+		graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
 
-		this.layout.menuBackgrounds.forEach(menuBackground -> {
+		this.layout.menuBackgrounds.forEach(background -> {
 
-			RenderSystem.enableBlend();
+			if (background.showBackground.tryGetNonNull()) {
 
-			menuBackground.keepBackgroundAspectRatio = this.layout.preserveBackgroundAspectRatio;
-			menuBackground.opacity = 1.0F;
-			menuBackground.render(graphics, mouseX, mouseY, partial);
+                RenderSystem.enableBlend();
 
-			//Restore render defaults
-			RenderSystem.colorMask(true, true, true, true);
-			RenderSystem.depthMask(true);
-			RenderSystem.enableCull();
-			RenderSystem.enableDepthTest();
-			RenderSystem.enableBlend();
-			graphics.flush();
+                background.keepBackgroundAspectRatio = this.layout.preserveBackgroundAspectRatio;
+                background.opacity = 1.0F;
+                background._render(graphics, mouseX, mouseY, partial);
+
+                //Restore render defaults
+                RenderSystem.colorMask(true, true, true, true);
+                RenderSystem.depthMask(true);
+                RenderSystem.enableCull();
+                RenderSystem.enableDepthTest();
+                RenderSystem.enableBlend();
+                graphics.flush();
+
+            }
 
 		});
 
+		if (this.layout.applyVanillaBackgroundBlur) {
+			ScreenCustomizationLayer.renderLayoutBackgroundBlur(graphics, this.width, this.height, partial);
+		}
+
 		if (!this.layout.menuBackgrounds.isEmpty()) {
 
-			if (this.layout.applyVanillaBackgroundBlur) {
-//				Minecraft.getInstance().gameRenderer.processBlurEffect(partial);
-//				Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
-			}
-
 			if (this.layout.showScreenBackgroundOverlayOnCustomBackground) {
-//				ScreenCustomizationLayer.renderBackgroundOverlay(graphics, 0, 0, this.width, this.height);
+				ScreenCustomizationLayer.renderBackgroundOverlay(graphics, 0, 0, this.width, this.height);
 			}
 
 		}
@@ -400,9 +413,6 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 						graphics.blit(loc, x0, 0, 0.0F, 0.0F, this.width, y0, this.width, y0);
 					}
 				}
-			} else {
-				graphics.setColor(0.25F, 0.25F, 0.25F, 1.0F);
-				graphics.blit(Screen.BACKGROUND_LOCATION, x0, 0, 0.0F, 0.0F, this.width, y0, 32, 32);
 			}
 			//Footer Texture
 			if (footerTexture != null) {
@@ -427,21 +437,14 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 						graphics.blit(loc, x0, y1, 0.0F, 0.0F, this.width, footerHeight, this.width, footerHeight);
 					}
 				}
-			} else {
-				graphics.setColor(0.25F, 0.25F, 0.25F, 1.0F);
-				graphics.blit(Screen.BACKGROUND_LOCATION, x0, y1, 0.0F, (float) y1, this.width, this.height - y1, 32, 32);
 			}
 
 			RenderingUtils.resetShaderColor(graphics);
 
-			//Header Shadow
-			if (this.layout.renderScrollListHeaderShadow) {
-				graphics.fillGradient(x0, y0, x1, y0 + 4, -16777216, 0);
-			}
-			//Footer Shadow
-			if (this.layout.renderScrollListFooterShadow) {
-				graphics.fillGradient(x0, y1 - 4, x1, y1, 0, -16777216);
-			}
+			RenderSystem.enableBlend();
+			int separatorColor = UIBase.getUITheme().ui_interface_area_border_color.getColorInt();
+			graphics.fill(0, y0 - 2, this.width, y0, separatorColor);
+			graphics.fill(0, y1, this.width, y1 + 2, separatorColor);
 
 			RenderingUtils.resetShaderColor(graphics);
 
@@ -454,7 +457,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 
 		if (FancyMenu.getOptions().showLayoutEditorGrid.getValue()) {
 
-			float scale = UIBase.calculateFixedScale(1.0F);
+			float scale = UIBase.calculateFixedRenderScale(1.0F);
 			int scaledWidth = (int)((float)screenWidth / scale);
 			int scaledHeight = (int)((float)screenHeight / scale);
 
@@ -465,7 +468,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 			int lineThickness = 1;
 
 			//Draw centered vertical line
-			graphics.fill((scaledWidth / 2) - 1, 0, (scaledWidth / 2) + 1, scaledHeight, UIBase.getUIColorTheme().layout_editor_grid_color_center.getColorInt());
+			graphics.fill((scaledWidth / 2) - 1, 0, (scaledWidth / 2) + 1, scaledHeight, UIBase.getUITheme().layout_editor_grid_color_center.getColorInt());
 
 			//Draw vertical lines center -> left
 			int linesVerticalToLeftPosX = (scaledWidth / 2) - gridSize - 1;
@@ -473,7 +476,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 				int minY = 0;
 				int maxY = scaledHeight;
 				int maxX = linesVerticalToLeftPosX + lineThickness;
-				graphics.fill(linesVerticalToLeftPosX, minY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
+				graphics.fill(linesVerticalToLeftPosX, minY, maxX, maxY, UIBase.getUITheme().layout_editor_grid_color_normal.getColorInt());
 				linesVerticalToLeftPosX -= gridSize;
 			}
 
@@ -483,12 +486,12 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 				int minY = 0;
 				int maxY = scaledHeight;
 				int maxX = linesVerticalToRightPosX + lineThickness;
-				graphics.fill(linesVerticalToRightPosX, minY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
+				graphics.fill(linesVerticalToRightPosX, minY, maxX, maxY, UIBase.getUITheme().layout_editor_grid_color_normal.getColorInt());
 				linesVerticalToRightPosX += gridSize;
 			}
 
 			//Draw centered horizontal line
-			graphics.fill(0, (scaledHeight / 2) - 1, scaledWidth, (scaledHeight / 2) + 1, UIBase.getUIColorTheme().layout_editor_grid_color_center.getColorInt());
+			graphics.fill(0, (scaledHeight / 2) - 1, scaledWidth, (scaledHeight / 2) + 1, UIBase.getUITheme().layout_editor_grid_color_center.getColorInt());
 
 			//Draw horizontal lines center -> top
 			int linesHorizontalToTopPosY = (scaledHeight / 2) - gridSize - 1;
@@ -496,7 +499,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 				int minX = 0;
 				int maxX = scaledWidth;
 				int maxY = linesHorizontalToTopPosY + lineThickness;
-				graphics.fill(minX, linesHorizontalToTopPosY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
+				graphics.fill(minX, linesHorizontalToTopPosY, maxX, maxY, UIBase.getUITheme().layout_editor_grid_color_normal.getColorInt());
 				linesHorizontalToTopPosY -= gridSize;
 			}
 
@@ -506,7 +509,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 				int minX = 0;
 				int maxX = scaledWidth;
 				int maxY = linesHorizontalToBottomPosY + lineThickness;
-				graphics.fill(minX, linesHorizontalToBottomPosY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
+				graphics.fill(minX, linesHorizontalToBottomPosY, maxX, maxY, UIBase.getUITheme().layout_editor_grid_color_normal.getColorInt());
 				linesHorizontalToBottomPosY += gridSize;
 			}
 
@@ -519,7 +522,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	protected void constructElementInstances() {
 
 		//Clear element lists
-		for (AbstractEditorElement e : this.getAllElements()) {
+		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 			e.resetElementStates();
 		}
 		this.normalEditorElements.clear();
@@ -542,7 +545,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 
 		//Wrap normal elements
 		for (AbstractElement e : ListUtils.mergeLists(normalElements.backgroundElements, normalElements.foregroundElements)) {
-			AbstractEditorElement editorElement = e.builder.wrapIntoEditorElementInternal(e, this);
+			AbstractEditorElement<?, ?> editorElement = e.getBuilder().wrapIntoEditorElementInternal(e, this);
 			if (editorElement != null) {
 				this.normalEditorElements.add(editorElement);
 			}
@@ -557,6 +560,8 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 			}
 		}
 
+		this.sanitizeLayerGroups();
+
 	}
 
 	protected void serializeElementInstancesToLayoutInstance() {
@@ -564,10 +569,11 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 		this.layout.serializedElements.clear();
 		this.layout.serializedVanillaButtonElements.clear();
 		this.layout.serializedDeepElements.clear();
+		this.updateLayerGroupElementOrder();
 
 		//Serialize normal elements
-		for (AbstractEditorElement e : this.normalEditorElements) {
-			SerializedElement serialized = e.element.builder.serializeElementInternal(e.element);
+		for (AbstractEditorElement<?, ?> e : this.normalEditorElements) {
+			SerializedElement serialized = e.element.getBuilder().serializeElementInternal(e.element);
 			if (serialized != null) {
 				this.layout.serializedElements.add(serialized);
 			}
@@ -583,10 +589,10 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	}
 
 	@NotNull
-	public List<AbstractEditorElement> getAllElements() {
-		List<AbstractEditorElement> elements = new ArrayList<>();
-		List<AbstractEditorElement> selected = new ArrayList<>();
-		List<AbstractEditorElement> elementsFinal = new ArrayList<>();
+	public List<AbstractEditorElement<?, ?>> getAllElements() {
+		List<AbstractEditorElement<?, ?>> elements = new ArrayList<>();
+		List<AbstractEditorElement<?, ?>> selected = new ArrayList<>();
+		List<AbstractEditorElement<?, ?>> elementsFinal = new ArrayList<>();
 		if (this.layout.renderElementsBehindVanilla) {
 			elements.addAll(this.normalEditorElements);
 		}
@@ -595,7 +601,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 			elements.addAll(this.normalEditorElements);
 		}
 		//Put selected elements at the end, because they are always on top
-		for (AbstractEditorElement e : elements) {
+		for (AbstractEditorElement<?, ?> e : elements) {
 			if (!e.isSelected()) {
 				elementsFinal.add(e);
 			} else {
@@ -607,9 +613,9 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	}
 
 	@NotNull
-	public List<AbstractEditorElement> getHoveredElements() {
-		List<AbstractEditorElement> elements = new ArrayList<>();
-		for (AbstractEditorElement e : this.getAllElements()) {
+	public List<AbstractEditorElement<?, ?>> getHoveredElements() {
+		List<AbstractEditorElement<?, ?>> elements = new ArrayList<>();
+		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 			if (e.isHovered()) {
 				if (e.element.layerHiddenInEditor) continue;
 				boolean hidden = (e instanceof HideableElement h) && h.isHidden();
@@ -620,14 +626,14 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	}
 
 	@Nullable
-	public AbstractEditorElement getTopHoveredElement() {
-		List<AbstractEditorElement> hoveredElements = this.getHoveredElements();
-		return !hoveredElements.isEmpty() ? hoveredElements.get(hoveredElements.size()-1) : null;
+	public AbstractEditorElement<?, ?> getTopHoveredElement() {
+		List<AbstractEditorElement<?, ?>> hoveredElements = this.getHoveredElements();
+		return (!hoveredElements.isEmpty()) ? hoveredElements.get(hoveredElements.size()-1) : null;
 	}
 
 	@NotNull
-	public List<AbstractEditorElement> getSelectedElements() {
-		List<AbstractEditorElement> l = new ArrayList<>();
+	public List<AbstractEditorElement<?, ?>> getSelectedElements() {
+		List<AbstractEditorElement<?, ?>> l = new ArrayList<>();
 		this.getAllElements().forEach(element -> {
 			if (element.isSelected()) l.add(element);
 		});
@@ -636,9 +642,9 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 
 	@SuppressWarnings("all")
 	@NotNull
-	protected <E extends AbstractEditorElement> List<E> getSelectedElementsOfType(@NotNull Class<E> type) {
+	protected <E extends AbstractEditorElement<?, ?>> List<E> getSelectedElementsOfType(@NotNull Class<E> type) {
 		List<E> l = new ArrayList<>();
-		for (AbstractEditorElement e : this.getSelectedElements()) {
+		for (AbstractEditorElement<?, ?> e : this.getSelectedElements()) {
 			if (type.isAssignableFrom(e.getClass())) {
 				l.add((E)e);
 			}
@@ -647,9 +653,9 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	}
 
 	@Nullable
-	public AbstractEditorElement getElementByInstanceIdentifier(@NotNull String instanceIdentifier) {
+	public AbstractEditorElement<?, ?> getElementByInstanceIdentifier(@NotNull String instanceIdentifier) {
 		instanceIdentifier = instanceIdentifier.replace("vanillabtn:", "").replace("button_compatibility_id:", "");
-		for (AbstractEditorElement e : this.getAllElements()) {
+		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 			if (e.element.getInstanceIdentifier().equals(instanceIdentifier)) {
 				return e;
 			}
@@ -657,25 +663,117 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 		return null;
 	}
 
+	@Nullable
+	public Layout.LayerGroup getLayerGroupForElement(@NotNull AbstractEditorElement<?, ?> element) {
+		return this.getLayerGroupForInstanceIdentifier(element.element.getInstanceIdentifier());
+	}
+
+	@Nullable
+	public Layout.LayerGroup getLayerGroupForInstanceIdentifier(@NotNull String instanceIdentifier) {
+		for (Layout.LayerGroup group : this.layout.layerGroups) {
+			if (group.elementInstanceIdentifiers.contains(instanceIdentifier)) {
+				return group;
+			}
+		}
+		return null;
+	}
+
+	@NotNull
+	public List<AbstractEditorElement<?, ?>> getElementsInGroup(@NotNull Layout.LayerGroup group) {
+		List<AbstractEditorElement<?, ?>> elements = new ArrayList<>();
+		for (AbstractEditorElement<?, ?> element : this.normalEditorElements) {
+			if (group.elementInstanceIdentifiers.contains(element.element.getInstanceIdentifier())) {
+				elements.add(element);
+			}
+		}
+		return elements;
+	}
+
+	public void removeElementsFromLayerGroups(@NotNull Collection<String> elementIds) {
+		for (Layout.LayerGroup group : this.layout.layerGroups) {
+			group.elementInstanceIdentifiers.removeIf(elementIds::contains);
+		}
+	}
+
+	public void addElementsToLayerGroup(@NotNull Collection<String> elementIds, @NotNull Layout.LayerGroup group) {
+		this.removeElementsFromLayerGroups(elementIds);
+		for (String id : elementIds) {
+			if (!group.elementInstanceIdentifiers.contains(id)) {
+				group.elementInstanceIdentifiers.add(id);
+			}
+		}
+	}
+
+	public void sanitizeLayerGroups() {
+		Set<String> validIds = new HashSet<>();
+		for (AbstractEditorElement<?, ?> element : this.normalEditorElements) {
+			validIds.add(element.element.getInstanceIdentifier());
+		}
+		Set<String> seen = new HashSet<>();
+		for (Layout.LayerGroup group : this.layout.layerGroups) {
+			List<String> cleaned = new ArrayList<>();
+			for (String id : group.elementInstanceIdentifiers) {
+				if (validIds.contains(id) && seen.add(id)) {
+					cleaned.add(id);
+				}
+			}
+			group.elementInstanceIdentifiers = cleaned;
+		}
+		this.updateLayerGroupElementOrder();
+	}
+
+	public void updateLayerGroupElementOrder() {
+		Map<String, Integer> indexMap = new HashMap<>();
+		for (int i = 0; i < this.normalEditorElements.size(); i++) {
+			indexMap.put(this.normalEditorElements.get(i).element.getInstanceIdentifier(), i);
+		}
+		List<Layout.LayerGroup> withElements = new ArrayList<>();
+		List<Layout.LayerGroup> empty = new ArrayList<>();
+		Map<Layout.LayerGroup, Integer> groupIndex = new HashMap<>();
+		for (Layout.LayerGroup group : this.layout.layerGroups) {
+			group.elementInstanceIdentifiers.sort(Comparator.comparingInt(id -> indexMap.getOrDefault(id, Integer.MAX_VALUE)));
+			int minIndex = Integer.MAX_VALUE;
+			for (String id : group.elementInstanceIdentifiers) {
+				Integer idx = indexMap.get(id);
+				if (idx != null) {
+					minIndex = Math.min(minIndex, idx);
+				}
+			}
+			if (minIndex == Integer.MAX_VALUE) {
+				empty.add(group);
+			} else {
+				withElements.add(group);
+				groupIndex.put(group, minIndex);
+			}
+		}
+		withElements.sort(Comparator.comparingInt(groupIndex::get));
+		this.layout.layerGroups.clear();
+		this.layout.layerGroups.addAll(withElements);
+		this.layout.layerGroups.addAll(empty);
+	}
+
 	public void selectAllElements() {
-		for (AbstractEditorElement e : this.getAllElements()) {
+		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 			if (e.element.layerHiddenInEditor) continue;
 			e.setSelected(true);
 		}
 	}
 
 	public void deselectAllElements() {
-		for (AbstractEditorElement e : this.getAllElements()) {
+		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 			e.setSelected(false);
 		}
 	}
 
 	@SuppressWarnings("all")
-	public boolean deleteElement(@NotNull AbstractEditorElement element) {
+	public boolean deleteElement(@NotNull AbstractEditorElement<?, ?> element) {
 		if (element.settings.isDestroyable()) {
 			if (!element.settings.shouldHideInsteadOfDestroy()) {
+				element.element.onDestroyElement();
+				this.removeElementsFromLayerGroups(List.of(element.element.getInstanceIdentifier()));
 				this.normalEditorElements.remove(element);
 				this.vanillaWidgetEditorElements.remove(element);
+				this.updateLayerGroupElementOrder();
 				for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
 					w.editorElementRemovedOrHidden(element);
 				}
@@ -688,7 +786,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 		return false;
 	}
 
-	protected boolean isElementOverlappingArea(@NotNull AbstractEditorElement element, int xStart, int yStart, int xEnd, int yEnd) {
+	protected boolean isElementOverlappingArea(@NotNull AbstractEditorElement<?, ?> element, int xStart, int yStart, int xEnd, int yEnd) {
 		int elementStartX = element.getX();
 		int elementStartY = element.getY();
 		int elementEndX = element.getX() + element.getWidth();
@@ -697,20 +795,32 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	}
 
 	public boolean allSelectedElementsMovable() {
-		for (AbstractEditorElement e : this.getSelectedElements()) {
+		for (AbstractEditorElement<?, ?> e : this.getSelectedElements()) {
 			if (e.element.layerHiddenInEditor) return false;
 			if (!e.settings.isMovable()) return false;
 		}
 		return true;
 	}
 
-	public boolean canMoveLayerUp(AbstractEditorElement element) {
+	public boolean canMoveLayerUp(AbstractEditorElement<?, ?> element) {
+		Layout.LayerGroup group = this.getLayerGroupForElement(element);
+		if (group != null) {
+			List<AbstractEditorElement<?, ?>> groupElements = this.getElementsInGroup(group);
+			int groupIndex = groupElements.indexOf(element);
+			return groupIndex != -1 && groupIndex < groupElements.size() - 1;
+		}
 		int index = this.normalEditorElements.indexOf(element);
 		if (index == -1) return false;
 		return index < this.normalEditorElements.size()-1;
 	}
 
-	public boolean canMoveLayerDown(AbstractEditorElement element) {
+	public boolean canMoveLayerDown(AbstractEditorElement<?, ?> element) {
+		Layout.LayerGroup group = this.getLayerGroupForElement(element);
+		if (group != null) {
+			List<AbstractEditorElement<?, ?>> groupElements = this.getElementsInGroup(group);
+			int groupIndex = groupElements.indexOf(element);
+			return groupIndex > 0;
+		}
 		int index = this.normalEditorElements.indexOf(element);
 		return index > 0;
 	}
@@ -719,15 +829,41 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	 * Returns the element the given one was moved above or NULL if there was no element above the given one.
 	 */
 	@Nullable
-	public AbstractEditorElement moveLayerUp(@NotNull AbstractEditorElement element) {
-		AbstractEditorElement movedAbove = null;
+	public AbstractEditorElement<?, ?> moveLayerUp(@NotNull AbstractEditorElement<?, ?> element) {
+		AbstractEditorElement<?, ?> movedAbove = null;
 		try {
-			if (this.normalEditorElements.contains(element)) {
-				List<AbstractEditorElement> newNormalEditorElements = new ArrayList<>();
+			Layout.LayerGroup group = this.getLayerGroupForElement(element);
+			if (group != null) {
+				List<AbstractEditorElement<?, ?>> groupElements = this.getElementsInGroup(group);
+				int groupIndex = groupElements.indexOf(element);
+				if (groupIndex >= 0 && groupIndex < groupElements.size() - 1) {
+					AbstractEditorElement<?, ?> above = groupElements.get(groupIndex + 1);
+					int targetIndex = this.normalEditorElements.indexOf(above) + 1;
+					List<AbstractEditorElement<?, ?>> newNormalEditorElements = new ArrayList<>(this.normalEditorElements);
+					int sourceIndex = newNormalEditorElements.indexOf(element);
+					if (sourceIndex != -1) {
+						newNormalEditorElements.remove(element);
+						int adjustedTargetIndex = targetIndex;
+						if (sourceIndex < targetIndex) {
+							adjustedTargetIndex--;
+						}
+						if (adjustedTargetIndex < 0) {
+							adjustedTargetIndex = 0;
+						}
+						if (adjustedTargetIndex > newNormalEditorElements.size()) {
+							adjustedTargetIndex = newNormalEditorElements.size();
+						}
+						newNormalEditorElements.add(adjustedTargetIndex, element);
+						this.normalEditorElements = newNormalEditorElements;
+					}
+					movedAbove = above;
+				}
+			} else if (this.normalEditorElements.contains(element)) {
+				List<AbstractEditorElement<?, ?>> newNormalEditorElements = new ArrayList<>();
 				int index = this.normalEditorElements.indexOf(element);
 				int i = 0;
 				if (index < (this.normalEditorElements.size() - 1)) {
-					for (AbstractEditorElement e : this.normalEditorElements) {
+					for (AbstractEditorElement<?, ?> e : this.normalEditorElements) {
 						if (e != element) {
 							newNormalEditorElements.add(e);
 							if (i == index+1) {
@@ -738,10 +874,17 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 						i++;
 					}
 					this.normalEditorElements = newNormalEditorElements;
+					if (movedAbove != null) {
+						Layout.LayerGroup targetGroup = this.getLayerGroupForElement(movedAbove);
+						if (targetGroup != null) {
+							this.addElementsToLayerGroup(List.of(element.element.getInstanceIdentifier()), targetGroup);
+						}
+					}
 				}
 			}
+			this.updateLayerGroupElementOrder();
 		} catch (Exception ex) {
-			ex.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to move element one layer up in the editor!", ex);
 		}
 		return movedAbove;
 	}
@@ -750,15 +893,41 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	 * Returns the element the given one was moved behind or NULL if there was no element behind the given one.
 	 */
 	@Nullable
-	public AbstractEditorElement moveLayerDown(AbstractEditorElement element) {
-		AbstractEditorElement movedBehind = null;
+	public AbstractEditorElement<?, ?> moveLayerDown(AbstractEditorElement<?, ?> element) {
+		AbstractEditorElement<?, ?> movedBehind = null;
 		try {
-			if (this.normalEditorElements.contains(element)) {
-				List<AbstractEditorElement> newNormalEditorElements = new ArrayList<>();
+			Layout.LayerGroup group = this.getLayerGroupForElement(element);
+			if (group != null) {
+				List<AbstractEditorElement<?, ?>> groupElements = this.getElementsInGroup(group);
+				int groupIndex = groupElements.indexOf(element);
+				if (groupIndex > 0) {
+					AbstractEditorElement<?, ?> below = groupElements.get(groupIndex - 1);
+					int targetIndex = this.normalEditorElements.indexOf(below);
+					List<AbstractEditorElement<?, ?>> newNormalEditorElements = new ArrayList<>(this.normalEditorElements);
+					int sourceIndex = newNormalEditorElements.indexOf(element);
+					if (sourceIndex != -1) {
+						newNormalEditorElements.remove(element);
+						int adjustedTargetIndex = targetIndex;
+						if (sourceIndex < targetIndex) {
+							adjustedTargetIndex--;
+						}
+						if (adjustedTargetIndex < 0) {
+							adjustedTargetIndex = 0;
+						}
+						if (adjustedTargetIndex > newNormalEditorElements.size()) {
+							adjustedTargetIndex = newNormalEditorElements.size();
+						}
+						newNormalEditorElements.add(adjustedTargetIndex, element);
+						this.normalEditorElements = newNormalEditorElements;
+					}
+					movedBehind = below;
+				}
+			} else if (this.normalEditorElements.contains(element)) {
+				List<AbstractEditorElement<?, ?>> newNormalEditorElements = new ArrayList<>();
 				int index = this.normalEditorElements.indexOf(element);
 				int i = 0;
 				if (index > 0) {
-					for (AbstractEditorElement e : this.normalEditorElements) {
+					for (AbstractEditorElement<?, ?> e : this.normalEditorElements) {
 						if (e != element) {
 							if (i == index-1) {
 								newNormalEditorElements.add(element);
@@ -769,10 +938,17 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 						i++;
 					}
 					this.normalEditorElements = newNormalEditorElements;
+					if (movedBehind != null) {
+						Layout.LayerGroup targetGroup = this.getLayerGroupForElement(movedBehind);
+						if (targetGroup != null) {
+							this.addElementsToLayerGroup(List.of(element.element.getInstanceIdentifier()), targetGroup);
+						}
+					}
 				}
 			}
+			this.updateLayerGroupElementOrder();
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			LOGGER.error("[FANCYMENU] Failed to move element one layer down in the editor!", ex);
 		}
 		return movedBehind;
 	}
@@ -784,7 +960,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	 * @param targetIndex The index to move the element to (in the normalEditorElements list)
 	 * @return true if the move was successful, false otherwise
 	 */
-	public boolean moveLayerToPosition(AbstractEditorElement element, int targetIndex) {
+	public boolean moveLayerToPosition(AbstractEditorElement<?, ?> element, int targetIndex) {
 		try {
 			if (this.normalEditorElements.contains(element)) {
 				int sourceIndex = this.normalEditorElements.indexOf(element);
@@ -795,7 +971,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 				}
 
 				// Create a new list for the reordered elements
-				List<AbstractEditorElement> newNormalEditorElements = new ArrayList<>(this.normalEditorElements);
+				List<AbstractEditorElement<?, ?>> newNormalEditorElements = new ArrayList<>(this.normalEditorElements);
 
 				// Remove the element from its current position
 				newNormalEditorElements.remove(element);
@@ -817,6 +993,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 
 				// Update the elements list
 				this.normalEditorElements = newNormalEditorElements;
+				this.updateLayerGroupElementOrder();
 
 				// Notify widgets about the change
 				boolean movedUp = sourceIndex > targetIndex;
@@ -833,16 +1010,16 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 		return false;
 	}
 
-	public void copyElementsToClipboard(AbstractEditorElement... elements) {
+	public void copyElementsToClipboard(AbstractEditorElement<?, ?>... elements) {
 		if ((elements != null) && (elements.length > 0)) {
 			COPIED_ELEMENTS_CLIPBOARD.clear();
-			for (AbstractEditorElement e : elements) {
+			for (AbstractEditorElement<?, ?> e : elements) {
 				if (e.element.layerHiddenInEditor) continue;
 				if (e.settings.isCopyable()) {
-					SerializedElement serialized = e.element.builder.serializeElementInternal(e.element);
+					SerializedElement serialized = e.element.getBuilder().serializeElementInternal(e.element);
 					if (serialized != null) {
 						serialized.putProperty("instance_identifier", ScreenCustomization.generateUniqueIdentifier());
-						COPIED_ELEMENTS_CLIPBOARD.put(serialized, e.element.builder);
+						COPIED_ELEMENTS_CLIPBOARD.put(serialized, e.element.getBuilder());
 					}
 				}
 			}
@@ -856,7 +1033,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 				m.getKey().putProperty("instance_identifier", ScreenCustomization.generateUniqueIdentifier());
 				AbstractElement deserialized = m.getValue().deserializeElementInternal(m.getKey());
 				if (deserialized != null) {
-					AbstractEditorElement deserializedEditorElement = m.getValue().wrapIntoEditorElementInternal(deserialized, this);
+					AbstractEditorElement<?, ?> deserializedEditorElement = m.getValue().wrapIntoEditorElementInternal(deserialized, this);
 					if (deserializedEditorElement != null) {
 						this.normalEditorElements.add(deserializedEditorElement);
 						this.layoutEditorWidgets.forEach(widget -> widget.editorElementAdded(deserializedEditorElement));
@@ -873,9 +1050,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 			this.layout.updateLastEditedTime();
 			this.serializeElementInstancesToLayoutInstance();
 			if (!this.layout.saveToFileIfPossible()) {
-				Minecraft.getInstance().setScreen(NotificationScreen.error((call) -> {
-					Minecraft.getInstance().setScreen(this);
-				}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
+				Dialogs.openMessage(Component.translatable("fancymenu.editor.saving_failed.generic"), MessageDialogStyle.ERROR);
 			} else {
 				this.unsavedChanges = false;
 				LayoutHandler.reloadLayouts();
@@ -896,7 +1071,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 		if (this.layout.layoutFile != null) {
 			fileNamePreset = this.layout.layoutFile.getName();
 		}
-		SaveFileScreen s = (SaveFileScreen) SaveFileScreen.build(LayoutHandler.LAYOUT_DIR, fileNamePreset, "txt", (call) -> {
+		SaveFileWindowBody s = (SaveFileWindowBody) SaveFileWindowBody.build(LayoutHandler.LAYOUT_DIR, fileNamePreset, "txt", (call) -> {
 			if (call != null) {
 				try {
 					this.layout.updateLastEditedTime();
@@ -908,32 +1083,27 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 						if (old != null) old.delete(false);
 					}
 					if (!this.layout.saveToFileIfPossible()) {
-						Minecraft.getInstance().setScreen(NotificationScreen.error((call2) -> {
-							Minecraft.getInstance().setScreen(this);
-						}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
+						Dialogs.openMessage(Component.translatable("fancymenu.editor.saving_failed.generic"), MessageDialogStyle.ERROR);
 					} else {
 						this.unsavedChanges = false;
 						LayoutHandler.reloadLayouts();
 					}
 				} catch (Exception ex) {
-					ex.printStackTrace();
-					Minecraft.getInstance().setScreen(NotificationScreen.error((call2) -> {
-						Minecraft.getInstance().setScreen(this);
-					}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
+					LOGGER.error("[FANCYMENU] Error while saving layout in editor!", ex);
+					Dialogs.openMessage(Component.translatable("fancymenu.editor.saving_failed.generic"), MessageDialogStyle.ERROR);
 				}
 			}
-			Minecraft.getInstance().setScreen(this);
-		}).setVisibleDirectoryLevelsAboveRoot(2).setShowSubDirectories(false);
+		}).setVisibleDirectoryLevelsAboveRoot(2).setShowSubDirectories(true);
 		FileTypeGroup<?> fileTypeGroup = FileTypeGroup.of(FileTypes.TXT_TEXT);
 		fileTypeGroup.setDisplayName(Component.translatable("fancymenu.file_types.groups.text"));
 		s.setFileTypes(fileTypeGroup);
-		Minecraft.getInstance().setScreen(s);
+		s.openInWindow(null);
 	}
 
 	public void onUpdateSelectedElements() {
-		List<AbstractEditorElement> selected = this.getSelectedElements();
+		List<AbstractEditorElement<?, ?>> selected = this.getSelectedElements();
 		if (selected.size() > 1) {
-			for (AbstractEditorElement e : selected) {
+			for (AbstractEditorElement<?, ?> e : selected) {
 				e.setMultiSelected(true);
 			}
 		} else if (selected.size() == 1) {
@@ -942,34 +1112,38 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	}
 
 	public void openRightClickMenuAtMouse(int mouseX, int mouseY) {
+        this.closeActiveElementMenu();
 		if (this.rightClickMenu != null) {
 			this.rightClickMenuOpenPosX = mouseX;
 			this.rightClickMenuOpenPosY = mouseY;
-			this.rightClickMenu.openMenuAtMouse();
+			ContextMenuHandler.INSTANCE.setAndOpenAtMouse(this.rightClickMenu);
 		}
 	}
 
-	public void closeRightClickMenu() {
+	public void closeRightClickMenu(boolean forceClose) {
 		if (this.rightClickMenu != null) {
-			if (this.rightClickMenu.isUserNavigatingInMenu()) return;
+			if (!forceClose && this.rightClickMenu.isUserNavigatingInMenu()) return;
 			this.rightClickMenuOpenPosX = -1000;
 			this.rightClickMenuOpenPosY = -1000;
 			this.rightClickMenu.closeMenu();
 		}
 	}
 
+    public void closeRightClickMenu() {
+        this.closeRightClickMenu(false);
+    }
+
 	public void openElementContextMenuAtMouseIfPossible() {
 		this.closeActiveElementMenu();
-		List<AbstractEditorElement> selectedElements = this.getSelectedElements();
+        this.closeRightClickMenu();
+		List<AbstractEditorElement<?, ?>> selectedElements = this.getSelectedElements();
 		if (selectedElements.size() == 1) {
 			this.activeElementContextMenu = selectedElements.get(0).rightClickMenu;
-			((IMixinScreen)this).getChildrenFancyMenu().add(0, this.activeElementContextMenu);
-			this.activeElementContextMenu.openMenuAtMouse();
+            ContextMenuHandler.INSTANCE.setAndOpenAtMouse(this.activeElementContextMenu);
 		} else if (selectedElements.size() > 1) {
 			List<ContextMenu> menus = ObjectUtils.getOfAll(ContextMenu.class, selectedElements, consumes -> consumes.rightClickMenu);
 			this.activeElementContextMenu = ContextMenu.stackContextMenus(menus);
-			((IMixinScreen)this).getChildrenFancyMenu().add(0, this.activeElementContextMenu);
-			this.activeElementContextMenu.openMenuAtMouse();
+            ContextMenuHandler.INSTANCE.setAndOpenAtMouse(this.activeElementContextMenu);
 		}
 	}
 
@@ -977,7 +1151,6 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 		if (this.activeElementContextMenu != null) {
 			if (!forceClose && this.activeElementContextMenu.isUserNavigatingInMenu()) return;
 			this.activeElementContextMenu.closeMenu();
-			this.removeWidget(this.activeElementContextMenu);
 		}
 		this.activeElementContextMenu = null;
 	}
@@ -1001,7 +1174,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	}
 
 	@NotNull
-	public List<AbstractEditorElement> getCurrentlyDraggedElements() {
+	public List<AbstractEditorElement<?, ?>> getCurrentlyDraggedElements() {
 		return this.currentlyDraggedElements;
 	}
 
@@ -1009,11 +1182,11 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	 * Returns NULL if there was an error while trying to get the element chain.
 	 */
 	@Nullable
-	protected List<AbstractEditorElement> getElementChildChainOfExcluding(@NotNull AbstractEditorElement element) {
+	protected List<AbstractEditorElement<?, ?>> getElementChildChainOfExcluding(@NotNull AbstractEditorElement<?, ?> element) {
 		Objects.requireNonNull(element);
-		List<AbstractEditorElement> chain = new ArrayList<>();
+		List<AbstractEditorElement<?, ?>> chain = new ArrayList<>();
 		try {
-			AbstractEditorElement e = element;
+			AbstractEditorElement<?, ?> e = element;
 			while (true) {
 				e = this.getChildElementOf(e);
 				if (e == null) break;
@@ -1029,8 +1202,8 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	}
 
 	@Nullable
-	protected AbstractEditorElement getChildElementOf(@NotNull AbstractEditorElement element) {
-		for (AbstractEditorElement e : this.getAllElements()) {
+	protected AbstractEditorElement<?, ?> getChildElementOf(@NotNull AbstractEditorElement<?, ?> element) {
+		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 			String parentOfE = e.element.getAnchorPointElementIdentifier();
 			if ((parentOfE != null) && parentOfE.equals(element.element.getInstanceIdentifier())) return e;
 		}
@@ -1038,12 +1211,12 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	}
 
 	protected void moveSelectedElementsByXYOffset(int offsetX, int offsetY) {
-		List<AbstractEditorElement> selected = this.getSelectedElements();
-		if (!selected.isEmpty() && this.allSelectedElementsMovable()) {
+		List<AbstractEditorElement<?, ?>> selected = this.getSelectedElements();
+		if ((!selected.isEmpty()) && this.allSelectedElementsMovable()) {
 			this.history.saveSnapshot();
 		}
 		boolean multiSelect = selected.size() > 1;
-		for (AbstractEditorElement e : selected) {
+		for (AbstractEditorElement<?, ?> e : selected) {
 			if (this.allSelectedElementsMovable()) {
 				if (!multiSelect || !e.isElementAnchorAndParentIsSelected()) {
 					e.element.posOffsetX = e.element.posOffsetX + offsetX;
@@ -1062,7 +1235,8 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 		this.leftMouseDownPosX = (int) mouseX;
 		this.leftMouseDownPosY = (int) mouseY;
 
-		boolean menuBarContextOpen = (this.menuBar != null) && this.menuBar.isEntryContextMenuOpen();
+        MenuBar menuBar = getCurrentMenuBar();
+		boolean menuBarContextOpen = (menuBar != null) && menuBar.isEntryContextMenuOpen();
 
 		if (super.mouseClicked(mouseX, mouseY, button)) {
 			this.closeRightClickMenu();
@@ -1073,7 +1247,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 		//Skip the first click out of the menu bar context menus
 		if (menuBarContextOpen) return true;
 
-		AbstractEditorElement topHoverElement = this.getTopHoveredElement();
+		AbstractEditorElement<?, ?> topHoverElement = this.getTopHoveredElement();
 
 		boolean topHoverGotSelected = false;
 		if (topHoverElement != null) {
@@ -1088,9 +1262,9 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 		}
 		boolean canStartMouseSelection = true;
 		//Handle mouse click for elements
-		for (AbstractEditorElement e : this.getAllElements()) {
+		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 			e.mouseClicked(mouseX, mouseY, button);
-			if (e.isHovered() || e.isGettingResized() || (e.getHoveredResizeGrabber() != null)) {
+			if (e.isHovered() || e.isGettingResized() || (e.getHoveredResizeType() != null)) {
 				canStartMouseSelection = false;
 			}
 		}
@@ -1103,7 +1277,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 		//Deselect all elements
 		if (!this.rightClickMenu.isUserNavigatingInMenu() && ((this.activeElementContextMenu == null) || !this.activeElementContextMenu.isUserNavigatingInMenu()) && !hasControlDown()) {
 			if ((button == 0) || ((button == 1) && ((topHoverElement == null) || topHoverGotSelected))) {
-				for (AbstractEditorElement e : this.getAllElements()) {
+				for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 					if (!e.isGettingResized() && ((topHoverElement == null) || (e != topHoverElement))) e.setSelected(false);
 				}
 			}
@@ -1157,19 +1331,16 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 			if (child.mouseReleased(mouseX, mouseY, button)) return true;
 		}
 
-		List<AbstractEditorElement> hoveredElements = this.getHoveredElements();
-		AbstractEditorElement topHoverElement = !hoveredElements.isEmpty() ? hoveredElements.get(hoveredElements.size()-1) : null;
+		List<AbstractEditorElement<?, ?>> hoveredElements = this.getHoveredElements();
+		AbstractEditorElement<?, ?> topHoverElement = !hoveredElements.isEmpty() ? hoveredElements.get(hoveredElements.size()-1) : null;
 
 		//Deselect hovered element on left-click if CTRL pressed
 		if (!mouseWasInDraggingMode && !cachedMouseSelection && (button == 0) && (topHoverElement != null) && topHoverElement.isSelected() && !topHoverElement.recentlyMovedByDragging && !topHoverElement.recentlyLeftClickSelected && hasControlDown()) {
 			topHoverElement.setSelected(false);
 		}
 
-		boolean elementRecentlyMovedByDragging = false;
-
 		//Handle mouse released for all elements
-		for (AbstractEditorElement e : this.getAllElements()) {
-			if (e.recentlyMovedByDragging) elementRecentlyMovedByDragging = true;
+		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 			e.mouseReleased(mouseX, mouseY, button);
 			e.recentlyLeftClickSelected = false;
 		}
@@ -1190,7 +1361,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 		if (super.mouseDragged(mouseX, mouseY, button, $$3, $$4)) return true;
 
 		if (this.isMouseSelection) {
-			for (AbstractEditorElement e : this.getAllElements()) {
+			for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 				if (e.element.layerHiddenInEditor) continue;
 				boolean b = this.isElementOverlappingArea(e, Math.min(this.mouseSelectionStartX, (int)mouseX), Math.min(this.mouseSelectionStartY, (int)mouseY), Math.max(this.mouseSelectionStartX, (int)mouseX), Math.max(this.mouseSelectionStartY, (int)mouseY));
 				if (!b && hasControlDown()) continue; //skip deselect if CTRL pressed
@@ -1204,7 +1375,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 			this.mouseDraggingStarted = true;
 		}
 
-		List<AbstractEditorElement> allElements = this.getAllElements();
+		List<AbstractEditorElement<?, ?>> allElements = this.getAllElements();
 
 		if (!this.elementResizingStarted) {
 			allElements.forEach(element -> element.updateResizingStartPos((int)mouseX, (int)mouseY));
@@ -1227,7 +1398,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 			}
 			this.elementMovingStarted = true;
 		}
-		for (AbstractEditorElement e : allElements) {
+		for (AbstractEditorElement<?, ?> e : allElements) {
 			if (e.mouseDragged(mouseX, mouseY, button, $$3, $$4)) {
 				break;
 			}
@@ -1238,15 +1409,8 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	}
 
 	@Override
-	public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX) {
-		boolean handled = false;
-		if (FancyMenu.getOptions().enableBuddy.getValue() && !FORCE_DISABLE_BUDDY) {
-			handled = this.buddyWidget.mouseScrolled(mouseX, mouseY, scrollDeltaX);
-		}
-		if (!handled && super.mouseScrolled(mouseX, mouseY, scrollDeltaX)) {
-			return true;
-		}
-		return handled;
+	public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaY) {
+		return super.mouseScrolled(mouseX, mouseY, scrollDeltaY);
 	}
 
 	@Override
@@ -1256,9 +1420,9 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 
 		if (super.keyPressed(keycode, scancode, modifiers)) return true;
 
-		for (AbstractEditorElement abstractEditorElement : this.getAllElements()) {
-			if (abstractEditorElement.element.layerHiddenInEditor) continue;
-			if (abstractEditorElement.keyPressed(keycode, scancode, modifiers)) return true;
+		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
+			if (e.element.layerHiddenInEditor) continue;
+			if (e.keyPressed(keycode, scancode, modifiers)) return true;
 		}
 
 		String key = GLFW.glfwGetKeyName(keycode, scancode);
@@ -1295,7 +1459,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 
 		//CTRL + C
 		if (key.equals("c") && hasControlDown()) {
-			this.copyElementsToClipboard(this.getSelectedElements().toArray(new AbstractEditorElement[0]));
+			this.copyElementsToClipboard(this.getSelectedElements().toArray(new AbstractEditorElement<?, ?>[0]));
 			return true;
 		}
 
@@ -1314,12 +1478,14 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 		//CTRL + Z
 		if (key.equals("z") && hasControlDown()) {
 			this.history.stepBack();
+            this.resize(Minecraft.getInstance(), this.width, this.height);
 			return true;
 		}
 
 		//CTRL + Y
 		if (key.equals("y") && hasControlDown()) {
 			this.history.stepForward();
+            this.resize(Minecraft.getInstance(), this.width, this.height);
 			return true;
 		}
 
@@ -1327,8 +1493,8 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 		if (key.equals("g") && hasControlDown()) {
 			try {
 				FancyMenu.getOptions().showLayoutEditorGrid.setValue(!FancyMenu.getOptions().showLayoutEditorGrid.getValue());
-			} catch (Exception e) {
-				e.printStackTrace();
+			} catch (Exception ex) {
+				LOGGER.error("[FANCYMENU] Failed to toggle layout editor grid!", ex);
 			}
 			return true;
 		}
@@ -1336,7 +1502,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 		//DEL
 		if (keycode == InputConstants.KEY_DELETE) {
 			this.history.saveSnapshot();
-			for (AbstractEditorElement e : this.getSelectedElements()) {
+			for (AbstractEditorElement<?, ?> e : this.getSelectedElements()) {
 				if (e.element.layerHiddenInEditor) continue;
 				e.deleteElement();
 			}
@@ -1352,17 +1518,29 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 
 		this.anchorPointOverlay.keyReleased(keycode, scancode, modifiers);
 
-		for (AbstractEditorElement abstractEditorElement : this.getAllElements()) {
-			if (abstractEditorElement.keyReleased(keycode, scancode, modifiers)) return true;
+		for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
+			if (e.keyReleased(keycode, scancode, modifiers)) return true;
 		}
 
 		return super.keyReleased(keycode, scancode, modifiers);
 
 	}
 
+    public void openChildScreen(@NotNull Screen screen) {
+        this.beforeOpenChildScreen(screen);
+        Minecraft.getInstance().setScreen(screen);
+    }
+
+    public void beforeOpenChildScreen(@NotNull Screen screen) {
+        this.removed();
+    }
+
+	@SuppressWarnings("deprecation")
 	public void closeEditor() {
+        PiPWindowHandler.INSTANCE.forceCloseAllWindows();
+        this.closeActiveElementMenu(true);
+        this.closeRightClickMenu(true);
 		this.saveWidgetSettings();
-		this.buddyWidget.cleanup();
 		this.getAllElements().forEach(element -> {
 			element.element.onDestroyElement();
 			element.element.onCloseScreen(null, null);
@@ -1370,11 +1548,16 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 		});
 		this.layout.menuBackgrounds.forEach(menuBackground -> menuBackground.onCloseScreen(null, null));
 		this.layout.menuBackgrounds.forEach(MenuBackground::onCloseScreen);
+		this.layout.decorationOverlays.forEach(pair -> pair.getSecond().onCloseScreen(null, null));
 		currentInstance = null;
 		if (this.layoutTargetScreen != null) {
-			Minecraft.getInstance().setScreen(new GenericDirtMessageScreen(Component.literal("Closing editor..")));
-			Minecraft.getInstance().setScreen(this.layoutTargetScreen);
-			ScreenCustomization.reInitCurrentScreen();
+			if (!((IMixinScreen)this.layoutTargetScreen).get_initialized_FancyMenu()) {
+				Minecraft.getInstance().setScreen(this.layoutTargetScreen);
+			} else {
+				Minecraft.getInstance().setScreen(new GenericDirtMessageScreen(Component.literal("Closing editor..")));
+				Minecraft.getInstance().screen = this.layoutTargetScreen;
+				ScreenCustomization.reInitCurrentScreen();
+			}
 		} else {
 			Minecraft.getInstance().setScreen(null);
 		}

@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.ExecutableBlockDeseri
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
-import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -31,6 +31,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
     @Override
     public @NotNull ButtonElement buildDefaultInstance() {
         ButtonElement element = new ButtonElement(this);
+        element.shouldBeAffectedByDecorationOverlays.setDefault(true).set(true);
         element.baseWidth = 100;
         element.baseHeight = 20;
         element.label = "New Button";
@@ -80,20 +81,28 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
         element.backgroundTextureInactive = deserializeImageResourceSupplier(serialized.getValue("background_texture_inactive"));
 
+        element.iconTextureNormal = deserializeImageResourceSupplier(serialized.getValue("iconnormal"));
+
+        element.iconTextureHover = deserializeImageResourceSupplier(serialized.getValue("iconhovered"));
+
+        element.iconTextureInactive = deserializeImageResourceSupplier(serialized.getValue("icon_texture_inactive"));
+
+        element.underlineLabelOnHover = deserializeBoolean(element.underlineLabelOnHover, serialized.getValue("underline_label_on_hover"));
+
+        element.transparentBackground = deserializeBoolean(element.transparentBackground, serialized.getValue("transparent_background"));
+
         String restartBackAnimationsOnHover = serialized.getValue("restartbackgroundanimations");
         if ((restartBackAnimationsOnHover != null) && restartBackAnimationsOnHover.equalsIgnoreCase("false")) {
             element.restartBackgroundAnimationsOnHover = false;
         }
 
         element.nineSliceCustomBackground = deserializeBoolean(element.nineSliceCustomBackground, serialized.getValue("nine_slice_custom_background"));
-        element.nineSliceBorderX = deserializeNumber(Integer.class, element.nineSliceBorderX, serialized.getValue("nine_slice_border_x"));
-        element.nineSliceBorderY = deserializeNumber(Integer.class, element.nineSliceBorderY, serialized.getValue("nine_slice_border_y"));
 
         element.navigatable = deserializeBoolean(element.navigatable, serialized.getValue("navigatable"));
 
         String activeStateRequirementContainerIdentifier = serialized.getValue("widget_active_state_requirement_container_identifier");
         if (activeStateRequirementContainerIdentifier != null) {
-            LoadingRequirementContainer c = LoadingRequirementContainer.deserializeWithIdentifier(activeStateRequirementContainerIdentifier, serialized);
+            RequirementContainer c = RequirementContainer.deserializeWithIdentifier(activeStateRequirementContainerIdentifier, serialized);
             if (c != null) {
                 element.activeStateSupplier = c;
             }
@@ -113,8 +122,6 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         element.sliderBackgroundTextureHighlighted = deserializeImageResourceSupplier(serialized.getValue("slider_background_texture_highlighted"));
 
         element.nineSliceSliderHandle = deserializeBoolean(element.nineSliceSliderHandle, serialized.getValue("nine_slice_slider_handle"));
-        element.nineSliceSliderHandleBorderX = deserializeNumber(Integer.class, element.nineSliceSliderHandleBorderX, serialized.getValue("nine_slice_slider_handle_border_x"));
-        element.nineSliceSliderHandleBorderY = deserializeNumber(Integer.class, element.nineSliceSliderHandleBorderY, serialized.getValue("nine_slice_slider_handle_border_y"));
 
         return element;
 
@@ -135,10 +142,19 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         if (element.backgroundTextureInactive != null) {
             serializeTo.putProperty("background_texture_inactive", element.backgroundTextureInactive.getSourceWithPrefix());
         }
+        if (element.iconTextureNormal != null) {
+            serializeTo.putProperty("iconnormal", element.iconTextureNormal.getSourceWithPrefix());
+        }
+        if (element.iconTextureHover != null) {
+            serializeTo.putProperty("iconhovered", element.iconTextureHover.getSourceWithPrefix());
+        }
+        if (element.iconTextureInactive != null) {
+            serializeTo.putProperty("icon_texture_inactive", element.iconTextureInactive.getSourceWithPrefix());
+        }
+        serializeTo.putProperty("underline_label_on_hover", "" + element.underlineLabelOnHover);
+        serializeTo.putProperty("transparent_background", "" + element.transparentBackground);
         serializeTo.putProperty("restartbackgroundanimations", "" + element.restartBackgroundAnimationsOnHover);
         serializeTo.putProperty("nine_slice_custom_background", "" + element.nineSliceCustomBackground);
-        serializeTo.putProperty("nine_slice_border_x", "" + element.nineSliceBorderX);
-        serializeTo.putProperty("nine_slice_border_y", "" + element.nineSliceBorderY);
         if (element.hoverSound != null) {
             serializeTo.putProperty("hoversound", element.hoverSound.getSourceWithPrefix());
         }
@@ -177,8 +193,6 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         }
 
         serializeTo.putProperty("nine_slice_slider_handle", "" + element.nineSliceSliderHandle);
-        serializeTo.putProperty("nine_slice_slider_handle_border_x", "" + element.nineSliceSliderHandleBorderX);
-        serializeTo.putProperty("nine_slice_slider_handle_border_y", "" + element.nineSliceSliderHandleBorderY);
 
         return serializeTo;
 

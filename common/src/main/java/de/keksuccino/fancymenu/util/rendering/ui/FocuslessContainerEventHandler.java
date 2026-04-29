@@ -29,9 +29,9 @@ public interface FocuslessContainerEventHandler extends ContainerEventHandler {
     }
 
     @Override
-    default boolean mouseScrolled(double mouseX, double mouseY, double scrollDelta) {
+    default boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaY) {
         for(GuiEventListener child : this.children()) {
-            if (child.mouseScrolled(mouseX, mouseY, scrollDelta)) return true;
+            if (child.mouseScrolled(mouseX, mouseY, scrollDeltaY)) return true;
         }
         return false;
     }
@@ -68,6 +68,10 @@ public interface FocuslessContainerEventHandler extends ContainerEventHandler {
 
     @Override
     default void setFocused(@Nullable GuiEventListener var1) {
+    }
+
+    @Override
+    default void setFocused(boolean $$0) {
     }
 
 }

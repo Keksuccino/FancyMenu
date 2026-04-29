@@ -17,8 +17,15 @@ import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.ram.
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.player.LastDeathMessagePlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.player.PlayerNamePlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.player.PlayerUuidPlaceholder;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.background.VideoMenuBackgroundDurationPlaceholder;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.background.VideoMenuBackgroundPausedStatePlaceholder;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.background.VideoMenuBackgroundPlaytimePlaceholder;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.background.VideoMenuBackgroundVolumePlaceholder;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.element.VideoElementDurationPlaceholder;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.element.VideoElementPausedStatePlaceholder;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.element.VideoElementPlaytimePlaceholder;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.element.VideoElementVolumePlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.world.*;
-import de.keksuccino.fancymenu.customization.placeholder.placeholders.scoreboard.*;
 
 public class Placeholders {
 
@@ -39,6 +46,8 @@ public class Placeholders {
     public static final ElementPosYPlaceholder ELEMENT_POS_Y = new ElementPosYPlaceholder();
     public static final MousePosXPlaceholder MOUSE_POS_X = new MousePosXPlaceholder();
     public static final MousePosYPlaceholder MOUSE_POS_Y = new MousePosYPlaceholder();
+    public static final ClicksPerSecondPlaceholder CLICKS_PER_SECOND = new ClicksPerSecondPlaceholder();
+    public static final TextInputFieldValuePlaceholder TEXT_INPUT_FIELD_VALUE = new TextInputFieldValuePlaceholder();
     public static final GuiScalePlaceholder GUI_SCALE = new GuiScalePlaceholder();
     public static final VanillaButtonLabelPlaceholder VANILLA_BUTTON_LABEL = new VanillaButtonLabelPlaceholder();
     public static final PlayerNamePlaceholder PLAYER_NAME = new PlayerNamePlaceholder();
@@ -57,6 +66,8 @@ public class Placeholders {
     public static final RealtimeSecondPlaceholder REALTIME_SECOND = new RealtimeSecondPlaceholder();
     public static final UnixTimestampPlaceholder UNIX_TIMESTAMP = new UnixTimestampPlaceholder();
     public static final StringifyPlaceholder STRINGIFY = new StringifyPlaceholder();
+    public static final Base64EncodePlaceholder BASE64_ENCODE = new Base64EncodePlaceholder();
+    public static final Base64DecodePlaceholder BASE64_DECODE = new Base64DecodePlaceholder();
     public static final JsonPlaceholder JSON = new JsonPlaceholder();
     public static final GetVariablePlaceholder GET_VARIABLE = new GetVariablePlaceholder();
     public static final LocalizationPlaceholder LOCALIZATION = new LocalizationPlaceholder();
@@ -92,7 +103,15 @@ public class Placeholders {
     public static final ActiveHotbarSlotPlaceholder ACTIVE_HOTBAR_SLOT = new ActiveHotbarSlotPlaceholder();
     public static final CurrentPlayerHealthPlaceholder CURRENT_PLAYER_HEALTH = new CurrentPlayerHealthPlaceholder();
     public static final GameTimePlaceholder GAME_TIME = new GameTimePlaceholder();
+    public static final GameruleValuePlaceholder GAMERULE_VALUE = new GameruleValuePlaceholder();
     public static final SlotItemPlaceholder SLOT_ITEM = new SlotItemPlaceholder();
+    public static final InventoryItemCountPlaceholder INVENTORY_ITEM_COUNT = new InventoryItemCountPlaceholder();
+    public static final SlotItemCountPlaceholder SLOT_ITEM_COUNT = new SlotItemCountPlaceholder();
+    public static final SlotItemDurabilityPlaceholder SLOT_ITEM_DURABILITY = new SlotItemDurabilityPlaceholder();
+    public static final SlotItemDisplayNameFmPlaceholder SLOT_ITEM_DISPLAY_NAME_FM = new SlotItemDisplayNameFmPlaceholder();
+    public static final InventorySlotFoodPointRestoreAmountPlaceholder INVENTORY_SLOT_FOOD_POINT_RESTORE_AMOUNT = new InventorySlotFoodPointRestoreAmountPlaceholder();
+    public static final ItemCategoryPlaceholder ITEM_CATEGORY = new ItemCategoryPlaceholder();
+    public static final HoveredInventoryItemPlaceholder HOVERED_INVENTORY_ITEM = new HoveredInventoryItemPlaceholder();
     public static final WorldDayTimePlaceholder WORLD_DAY_TIME = new WorldDayTimePlaceholder();
     public static final WorldDayTimeHourPlaceholder WORLD_DAY_TIME_HOUR = new WorldDayTimeHourPlaceholder();
     public static final WorldDayTimeMinutePlaceholder WORLD_DAY_TIME_MINUTE = new WorldDayTimeMinutePlaceholder();
@@ -103,9 +122,11 @@ public class Placeholders {
     public static final MaxPlayerAbsorptionHealthPlaceholder MAX_PLAYER_ABSORPTION_HEALTH = new MaxPlayerAbsorptionHealthPlaceholder();
     public static final CurrentPlayerAbsorptionHealthPercentagePlaceholder CURRENT_PLAYER_ABSORPTION_HEALTH_PERCENTAGE = new CurrentPlayerAbsorptionHealthPercentagePlaceholder();
     public static final CurrentPlayerHungerPlaceholder CURRENT_PLAYER_HUNGER = new CurrentPlayerHungerPlaceholder();
+    public static final CurrentPlayerHungerSaturationPlaceholder CURRENT_PLAYER_HUNGER_SATURATION = new CurrentPlayerHungerSaturationPlaceholder();
     public static final MaxPlayerHungerPlaceholder MAX_PLAYER_HUNGER = new MaxPlayerHungerPlaceholder();
     public static final CurrentPlayerHungerPercentagePlaceholder CURRENT_PLAYER_HUNGER_PERCENTAGE = new CurrentPlayerHungerPercentagePlaceholder();
     public static final CurrentPlayerArmorPlaceholder CURRENT_PLAYER_ARMOR = new CurrentPlayerArmorPlaceholder();
+    public static final PlayerArmorToughnessPlaceholder PLAYER_ARMOR_TOUGHNESS = new PlayerArmorToughnessPlaceholder();
     public static final MaxPlayerArmorPlaceholder MAX_PLAYER_ARMOR = new MaxPlayerArmorPlaceholder();
     public static final CurrentPlayerArmorPercentagePlaceholder CURRENT_PLAYER_ARMOR_PERCENTAGE = new CurrentPlayerArmorPercentagePlaceholder();
     public static final CurrentPlayerExpProgressPlaceholder CURRENT_PLAYER_EXP_PROGRESS = new CurrentPlayerExpProgressPlaceholder();
@@ -120,11 +141,25 @@ public class Placeholders {
     public static final BossCountPlaceholder BOSS_COUNT = new BossCountPlaceholder();
     public static final ActiveEffectsCountPlaceholder ACTIVE_EFFECTS_COUNT = new ActiveEffectsCountPlaceholder();
     public static final ActiveEffectPlaceholder ACTIVE_EFFECT = new ActiveEffectPlaceholder();
+    public static final ActionBarMessageFmPlaceholder ACTION_BAR_MESSAGE_FM = new ActionBarMessageFmPlaceholder();
+    public static final ActionBarMessageTimeFmPlaceholder ACTION_BAR_MESSAGE_TIME_FM = new ActionBarMessageTimeFmPlaceholder();
+    public static final HighlightedItemTimeFmPlaceholder HIGHLIGHTED_ITEM_TIME_FM = new HighlightedItemTimeFmPlaceholder();
     public static final CurrentTitlePlaceholder CURRENT_TITLE = new CurrentTitlePlaceholder();
+    public static final CameraRotationXFmPlaceholder CAMERA_ROTATION_X_FM = new CameraRotationXFmPlaceholder();
+    public static final CameraRotationYFmPlaceholder CAMERA_ROTATION_Y_FM = new CameraRotationYFmPlaceholder();
+    public static final CameraRotationDeltaXFmPlaceholder CAMERA_ROTATION_DELTA_X_FM = new CameraRotationDeltaXFmPlaceholder();
+    public static final CameraRotationDeltaYFmPlaceholder CAMERA_ROTATION_DELTA_Y_FM = new CameraRotationDeltaYFmPlaceholder();
     public static final PlayerXCoordinatePlaceholder PLAYER_X_COORDINATE = new PlayerXCoordinatePlaceholder();
     public static final PlayerYCoordinatePlaceholder PLAYER_Y_COORDINATE = new PlayerYCoordinatePlaceholder();
     public static final PlayerZCoordinatePlaceholder PLAYER_Z_COORDINATE = new PlayerZCoordinatePlaceholder();
+    public static final PlayerPositionDeltaXFmPlaceholder PLAYER_POSITION_DELTA_X_FM = new PlayerPositionDeltaXFmPlaceholder();
+    public static final PlayerPositionDeltaYFmPlaceholder PLAYER_POSITION_DELTA_Y_FM = new PlayerPositionDeltaYFmPlaceholder();
+    public static final PlayerPositionDeltaZFmPlaceholder PLAYER_POSITION_DELTA_Z_FM = new PlayerPositionDeltaZFmPlaceholder();
+    public static final PlayerItemUseProgressFmPlaceholder PLAYER_ITEM_USE_PROGRESS_FM = new PlayerItemUseProgressFmPlaceholder();
     public static final CurrentServerIpPlaceholder CURRENT_SERVER_IP = new CurrentServerIpPlaceholder();
+    public static final CurrentDimensionPlaceholder CURRENT_DIMENSION = new CurrentDimensionPlaceholder();
+    public static final CurrentBiomePlaceholder CURRENT_BIOME = new CurrentBiomePlaceholder();
+    public static final CurrentWorldSeedPlaceholder CURRENT_WORLD_SEED = new CurrentWorldSeedPlaceholder();
     public static final PlayerAttackStrengthPercentagePlaceholder PLAYER_ATTACK_STRENGTH_PERCENTAGE = new PlayerAttackStrengthPercentagePlaceholder();
     public static final PlayerGamemodePlaceholder PLAYER_GAMEMODE = new PlayerGamemodePlaceholder();
     public static final PlayerViewDirectionPlaceholder PLAYER_VIEW_DIRECTION = new PlayerViewDirectionPlaceholder();
@@ -133,6 +168,12 @@ public class Placeholders {
     public static final TrimTextPlaceholder TRIM_TEXT = new TrimTextPlaceholder();
     public static final UppercaseTextPlaceholder UPPERCASE_TEXT = new UppercaseTextPlaceholder();
     public static final LowercaseTextPlaceholder LOWERCASE_TEXT = new LowercaseTextPlaceholder();
+    public static final TitleCaseTextPlaceholder TITLE_CASE_TEXT = new TitleCaseTextPlaceholder();
+    public static final SentenceCaseTextPlaceholder SENTENCE_CASE_TEXT = new SentenceCaseTextPlaceholder();
+    public static final SnakeCaseTextPlaceholder SNAKE_CASE_TEXT = new SnakeCaseTextPlaceholder();
+    public static final KebabCaseTextPlaceholder KEBAB_CASE_TEXT = new KebabCaseTextPlaceholder();
+    public static final AlternatingCaseTextPlaceholder ALTERNATING_CASE_TEXT = new AlternatingCaseTextPlaceholder();
+    public static final ToggleCaseTextPlaceholder TOGGLE_CASE_TEXT = new ToggleCaseTextPlaceholder();
     public static final CropTextPlaceholder CROP_TEXT = new CropTextPlaceholder();
     public static final MathCeilPlaceholder MATH_CEIL = new MathCeilPlaceholder();
     public static final MathFloorPlaceholder MATH_FLOOR = new MathFloorPlaceholder();
@@ -149,25 +190,20 @@ public class Placeholders {
     public static final MaxPlayerOxygenPlaceholder MAX_PLAYER_OXYGEN = new MaxPlayerOxygenPlaceholder();
     public static final CurrentPlayerOxygenPercentagePlaceholder CURRENT_PLAYER_OXYGEN_PERCENTAGE = new CurrentPlayerOxygenPercentagePlaceholder();
     public static final LastWorldOrServerPlaceholder LAST_WORLD_OR_SERVER = new LastWorldOrServerPlaceholder();
+    public static final VideoElementVolumePlaceholder VIDEO_ELEMENT_VOLUME = new VideoElementVolumePlaceholder();
+    public static final VideoElementDurationPlaceholder VIDEO_ELEMENT_DURATION = new VideoElementDurationPlaceholder();
+    public static final VideoElementPausedStatePlaceholder VIDEO_ELEMENT_PAUSED_STATE = new VideoElementPausedStatePlaceholder();
+    public static final VideoElementPlaytimePlaceholder VIDEO_ELEMENT_PLAYTIME = new VideoElementPlaytimePlaceholder();
+    public static final VideoMenuBackgroundVolumePlaceholder VIDEO_MENU_BACKGROUND_VOLUME = new VideoMenuBackgroundVolumePlaceholder();
+    public static final VideoMenuBackgroundDurationPlaceholder VIDEO_MENU_BACKGROUND_DURATION = new VideoMenuBackgroundDurationPlaceholder();
+    public static final VideoMenuBackgroundPausedStatePlaceholder VIDEO_MENU_BACKGROUND_PAUSED_STATE = new VideoMenuBackgroundPausedStatePlaceholder();
+    public static final VideoMenuBackgroundPlaytimePlaceholder VIDEO_MENU_BACKGROUND_PLAYTIME = new VideoMenuBackgroundPlaytimePlaceholder();
     public static final TextCharacterCountPlaceholder TEXT_CHARACTER_COUNT = new TextCharacterCountPlaceholder();
     public static final TextWidthPlaceholder TEXT_WIDTH = new TextWidthPlaceholder();
     public static final ClipboardContentPlaceholder CLIPBOARD_CONTENT = new ClipboardContentPlaceholder();
-    public static final ScoreboardPlayerTeamPlaceholder SCOREBOARD_PLAYER_TEAM = new ScoreboardPlayerTeamPlaceholder();
     public static final ClientSideNbtDataGetPlaceholder NBT_DATA_GET = new ClientSideNbtDataGetPlaceholder();
     public static final ServerSideNbtDataGetPlaceholder NBT_DATA_GET_SERVER = new ServerSideNbtDataGetPlaceholder();
     public static final WorldPlayersListPlaceholder WORLD_PLAYERS_LIST = new WorldPlayersListPlaceholder();
-    public static final ScoreboardScorePlaceholder SCOREBOARD_SCORE = new ScoreboardScorePlaceholder();
-    public static final ScoreboardObjectivesListPlaceholder SCOREBOARD_OBJECTIVES_LIST = new ScoreboardObjectivesListPlaceholder();
-    public static final ScoreboardTrackedPlayersPlaceholder SCOREBOARD_TRACKED_PLAYERS = new ScoreboardTrackedPlayersPlaceholder();
-    public static final ScoreboardDisplaySlotPlaceholder SCOREBOARD_DISPLAY_SLOT = new ScoreboardDisplaySlotPlaceholder();
-    public static final ScoreboardHasScorePlaceholder SCOREBOARD_HAS_SCORE = new ScoreboardHasScorePlaceholder();
-    public static final ScoreboardObjectiveDisplayNamePlaceholder SCOREBOARD_OBJECTIVE_DISPLAY_NAME = new ScoreboardObjectiveDisplayNamePlaceholder();
-    public static final ScoreboardObjectiveCriteriaPlaceholder SCOREBOARD_OBJECTIVE_CRITERIA = new ScoreboardObjectiveCriteriaPlaceholder();
-    public static final ScoreboardObjectiveRenderTypePlaceholder SCOREBOARD_OBJECTIVE_RENDER_TYPE = new ScoreboardObjectiveRenderTypePlaceholder();
-    public static final ScoreboardPlayerScoresListPlaceholder SCOREBOARD_PLAYER_SCORES_LIST = new ScoreboardPlayerScoresListPlaceholder();
-    public static final ScoreboardObjectiveCountPlaceholder SCOREBOARD_OBJECTIVE_COUNT = new ScoreboardObjectiveCountPlaceholder();
-    public static final PlayerHasTagPlaceholder PLAYER_HAS_TAG = new PlayerHasTagPlaceholder();
-    public static final PlayerTagsListPlaceholder PLAYER_TAGS_LIST = new PlayerTagsListPlaceholder();
     public static final FileTextPlaceholder FILE_TEXT = new FileTextPlaceholder();
     public static final WorldSaveNamesPlaceholder LEVEL_SAVE_NAMES = new WorldSaveNamesPlaceholder();
     public static final WorldSaveDataPlaceholder LEVEL_SAVE_DATA = new WorldSaveDataPlaceholder();
@@ -197,6 +233,8 @@ public class Placeholders {
         PlaceholderRegistry.register(ELEMENT_POS_Y);
         PlaceholderRegistry.register(MOUSE_POS_X);
         PlaceholderRegistry.register(MOUSE_POS_Y);
+        PlaceholderRegistry.register(CLICKS_PER_SECOND);
+        PlaceholderRegistry.register(TEXT_INPUT_FIELD_VALUE);
         PlaceholderRegistry.register(GUI_SCALE);
         PlaceholderRegistry.register(VANILLA_BUTTON_LABEL);
 
@@ -214,9 +252,11 @@ public class Placeholders {
         PlaceholderRegistry.register(MAX_PLAYER_ABSORPTION_HEALTH);
         PlaceholderRegistry.register(CURRENT_PLAYER_ABSORPTION_HEALTH_PERCENTAGE);
         PlaceholderRegistry.register(CURRENT_PLAYER_HUNGER);
+        PlaceholderRegistry.register(CURRENT_PLAYER_HUNGER_SATURATION);
         PlaceholderRegistry.register(MAX_PLAYER_HUNGER);
         PlaceholderRegistry.register(CURRENT_PLAYER_HUNGER_PERCENTAGE);
         PlaceholderRegistry.register(CURRENT_PLAYER_ARMOR);
+        PlaceholderRegistry.register(PLAYER_ARMOR_TOUGHNESS);
         PlaceholderRegistry.register(MAX_PLAYER_ARMOR);
         PlaceholderRegistry.register(CURRENT_PLAYER_ARMOR_PERCENTAGE);
         PlaceholderRegistry.register(CURRENT_PLAYER_EXP_PROGRESS);
@@ -227,7 +267,15 @@ public class Placeholders {
         PlaceholderRegistry.register(CURRENT_MOUNT_HEALTH_PERCENTAGE);
         PlaceholderRegistry.register(CURRENT_MOUNT_JUMP_METER);
         PlaceholderRegistry.register(GAME_TIME);
+        PlaceholderRegistry.register(GAMERULE_VALUE);
         PlaceholderRegistry.register(SLOT_ITEM);
+        PlaceholderRegistry.register(INVENTORY_ITEM_COUNT);
+        PlaceholderRegistry.register(SLOT_ITEM_COUNT);
+        PlaceholderRegistry.register(SLOT_ITEM_DURABILITY);
+        PlaceholderRegistry.register(SLOT_ITEM_DISPLAY_NAME_FM);
+        PlaceholderRegistry.register(INVENTORY_SLOT_FOOD_POINT_RESTORE_AMOUNT);
+        PlaceholderRegistry.register(ITEM_CATEGORY);
+        PlaceholderRegistry.register(HOVERED_INVENTORY_ITEM);
         PlaceholderRegistry.register(WORLD_DAY_TIME);
         PlaceholderRegistry.register(WORLD_DAY_TIME_HOUR);
         PlaceholderRegistry.register(WORLD_DAY_TIME_MINUTE);
@@ -237,11 +285,25 @@ public class Placeholders {
         PlaceholderRegistry.register(BOSS_COUNT);
         PlaceholderRegistry.register(ACTIVE_EFFECTS_COUNT);
         PlaceholderRegistry.register(ACTIVE_EFFECT);
+        PlaceholderRegistry.register(ACTION_BAR_MESSAGE_FM);
+        PlaceholderRegistry.register(ACTION_BAR_MESSAGE_TIME_FM);
+        PlaceholderRegistry.register(HIGHLIGHTED_ITEM_TIME_FM);
         PlaceholderRegistry.register(CURRENT_TITLE);
+        PlaceholderRegistry.register(CAMERA_ROTATION_X_FM);
+        PlaceholderRegistry.register(CAMERA_ROTATION_Y_FM);
+        PlaceholderRegistry.register(CAMERA_ROTATION_DELTA_X_FM);
+        PlaceholderRegistry.register(CAMERA_ROTATION_DELTA_Y_FM);
         PlaceholderRegistry.register(PLAYER_X_COORDINATE);
         PlaceholderRegistry.register(PLAYER_Y_COORDINATE);
         PlaceholderRegistry.register(PLAYER_Z_COORDINATE);
+        PlaceholderRegistry.register(PLAYER_POSITION_DELTA_X_FM);
+        PlaceholderRegistry.register(PLAYER_POSITION_DELTA_Y_FM);
+        PlaceholderRegistry.register(PLAYER_POSITION_DELTA_Z_FM);
+        PlaceholderRegistry.register(PLAYER_ITEM_USE_PROGRESS_FM);
         PlaceholderRegistry.register(CURRENT_SERVER_IP);
+        PlaceholderRegistry.register(CURRENT_DIMENSION);
+        PlaceholderRegistry.register(CURRENT_BIOME);
+        PlaceholderRegistry.register(CURRENT_WORLD_SEED);
         PlaceholderRegistry.register(PLAYER_ATTACK_STRENGTH_PERCENTAGE);
         PlaceholderRegistry.register(PLAYER_GAMEMODE);
         PlaceholderRegistry.register(PLAYER_VIEW_DIRECTION);
@@ -249,8 +311,6 @@ public class Placeholders {
         PlaceholderRegistry.register(MAX_PLAYER_OXYGEN);
         PlaceholderRegistry.register(CURRENT_PLAYER_OXYGEN_PERCENTAGE);
         PlaceholderRegistry.register(WORLD_PLAYERS_LIST);
-        PlaceholderRegistry.register(PLAYER_HAS_TAG);
-        PlaceholderRegistry.register(PLAYER_TAGS_LIST);
         PlaceholderRegistry.register(LEVEL_SAVE_NAMES);
         PlaceholderRegistry.register(LEVEL_SAVE_DATA);
 
@@ -272,6 +332,8 @@ public class Placeholders {
 
         //Advanced
         PlaceholderRegistry.register(STRINGIFY);
+        PlaceholderRegistry.register(BASE64_ENCODE);
+        PlaceholderRegistry.register(BASE64_DECODE);
         PlaceholderRegistry.register(JSON);
         PlaceholderRegistry.register(GET_VARIABLE);
         PlaceholderRegistry.register(LOCALIZATION);
@@ -292,6 +354,12 @@ public class Placeholders {
         PlaceholderRegistry.register(TRIM_TEXT);
         PlaceholderRegistry.register(UPPERCASE_TEXT);
         PlaceholderRegistry.register(LOWERCASE_TEXT);
+        PlaceholderRegistry.register(TITLE_CASE_TEXT);
+        PlaceholderRegistry.register(SENTENCE_CASE_TEXT);
+        PlaceholderRegistry.register(SNAKE_CASE_TEXT);
+        PlaceholderRegistry.register(KEBAB_CASE_TEXT);
+        PlaceholderRegistry.register(ALTERNATING_CASE_TEXT);
+        PlaceholderRegistry.register(TOGGLE_CASE_TEXT);
         PlaceholderRegistry.register(CROP_TEXT);
         PlaceholderRegistry.register(MATH_CEIL);
         PlaceholderRegistry.register(MATH_FLOOR);
@@ -313,6 +381,16 @@ public class Placeholders {
         PlaceholderRegistry.register(AUDIO_ELEMENT_PLAYTIME);
         PlaceholderRegistry.register(AUDIO_ELEMENT_PLAYING_STATE);
 
+        //Video
+        PlaceholderRegistry.register(VIDEO_ELEMENT_VOLUME);
+        PlaceholderRegistry.register(VIDEO_ELEMENT_DURATION);
+        PlaceholderRegistry.register(VIDEO_ELEMENT_PAUSED_STATE);
+        PlaceholderRegistry.register(VIDEO_ELEMENT_PLAYTIME);
+        PlaceholderRegistry.register(VIDEO_MENU_BACKGROUND_VOLUME);
+        PlaceholderRegistry.register(VIDEO_MENU_BACKGROUND_DURATION);
+        PlaceholderRegistry.register(VIDEO_MENU_BACKGROUND_PAUSED_STATE);
+        PlaceholderRegistry.register(VIDEO_MENU_BACKGROUND_PLAYTIME);
+
         //Other
         PlaceholderRegistry.register(PERCENT_RAM);
         PlaceholderRegistry.register(USED_RAM);
@@ -333,19 +411,6 @@ public class Placeholders {
         PlaceholderRegistry.register(TEXT_CHARACTER_COUNT);
         PlaceholderRegistry.register(TEXT_WIDTH);
         PlaceholderRegistry.register(CLIPBOARD_CONTENT);
-
-        //Scoreboard
-        PlaceholderRegistry.register(SCOREBOARD_SCORE);
-        PlaceholderRegistry.register(SCOREBOARD_OBJECTIVES_LIST);
-        PlaceholderRegistry.register(SCOREBOARD_TRACKED_PLAYERS);
-        PlaceholderRegistry.register(SCOREBOARD_DISPLAY_SLOT);
-        PlaceholderRegistry.register(SCOREBOARD_HAS_SCORE);
-        PlaceholderRegistry.register(SCOREBOARD_OBJECTIVE_DISPLAY_NAME);
-        PlaceholderRegistry.register(SCOREBOARD_OBJECTIVE_CRITERIA);
-        PlaceholderRegistry.register(SCOREBOARD_OBJECTIVE_RENDER_TYPE);
-        PlaceholderRegistry.register(SCOREBOARD_PLAYER_SCORES_LIST);
-        PlaceholderRegistry.register(SCOREBOARD_OBJECTIVE_COUNT);
-        PlaceholderRegistry.register(SCOREBOARD_PLAYER_TEAM);
 
     }
 
