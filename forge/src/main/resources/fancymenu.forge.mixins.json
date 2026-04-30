@@ -5,6 +5,7 @@
   "mixins": [
   ],
   "client": [
+    "client.IMixinForgeDelegatingPackResources",
     "client.MixinForgeGameRenderer",
     "client.MixinForgeKeyboardHandler",
     "client.MixinForgeMouseHandler",

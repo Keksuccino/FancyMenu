@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_17",
   "client": [
     "client.IMixinAbstractContainerScreen",
+    "client.IMixinAbstractPackResources",
     "client.IMixinAbstractSelectionList",
     "client.IMixinAbstractWidget",
     "client.IMixinBlendMode",
@@ -14,6 +15,7 @@
     "client.IMixinCommandSuggestions",
     "client.IMixinConnectScreen",
     "client.IMixinEditBox",
+    "client.IMixinFilePackResources",
     "client.IMixinGameRenderer",
     "client.IMixinGui",
     "client.IMixinLevelLoadingScreen",
@@ -31,6 +33,7 @@
     "client.IMixinSpectatorGui",
     "client.IMixinServerList",
     "client.IMixinSuggestionsList",
+    "client.IMixinVanillaPackResources",
     "client.MixinAbstractContainerEventHandler",
     "client.MixinAbstractContainerScreen",
     "client.MixinAbstractSelectionList",

@@ -5,6 +5,7 @@
   "mixins": [
   ],
   "client": [
+    "client.IMixinFabricModNioPackResources",
     "client.MixinFabricGameRenderer",
     "client.MixinFabricKeyboardHandler",
     "client.MixinFabricMouseHandler",
