@@ -157,14 +157,13 @@ public class ForgePlatformHelper implements IPlatformHelper {
     }
 
     private void collectLocationsFromPack(@NotNull PackResources pack, @NotNull Set<ResourceLocation> output) {
-        if (pack instanceof IForgePackResources forgePack) {
-            Collection<PackResources> children = forgePack.getChildren();
-            if ((children != null) && !children.isEmpty()) {
-                for (PackResources child : children) {
-                    collectLocationsFromPack(child, output);
-                }
-                return;
+        IForgePackResources forgePack = (IForgePackResources) pack;
+        Collection<PackResources> children = forgePack.getChildren();
+        if ((children != null) && !children.isEmpty()) {
+            for (PackResources child : children) {
+                collectLocationsFromPack(child, output);
             }
+            return;
         }
         if (pack instanceof FilePackResources filePack) {
             collectLocationsFromFilePack(filePack, output);
