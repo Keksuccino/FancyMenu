@@ -1,15 +1,25 @@
 package de.keksuccino.fancymenu.platform;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinFilePackResources;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPathPackResources;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinVanillaPackResources;
 import de.keksuccino.fancymenu.platform.services.IPlatformHelper;
 import de.keksuccino.fancymenu.util.mod.UniversalModContainer;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.FilePackResources;
+import net.minecraft.server.packs.PackResources;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.PathPackResources;
+import net.minecraft.server.packs.VanillaPackResources;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.common.extensions.IForgePackResources;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLEnvironment;
@@ -19,11 +29,20 @@ import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public class ForgePlatformHelper implements IPlatformHelper {
 
@@ -129,11 +148,110 @@ public class ForgePlatformHelper implements IPlatformHelper {
         Set<ResourceLocation> output = new HashSet<>();
         if (!this.isOnClient()) return output;
         try {
-            output.addAll(Minecraft.getInstance().getResourceManager().listResources("", location -> true).keySet());
+            ResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
+            resourceManager.listPacks().forEach(pack -> collectLocationsFromPack(pack, output));
         } catch (Exception ex) {
             ex.printStackTrace();
         }
         return output;
+    }
+
+    private void collectLocationsFromPack(@NotNull PackResources pack, @NotNull Set<ResourceLocation> output) {
+        if (pack instanceof IForgePackResources forgePack) {
+            Collection<PackResources> children = forgePack.getChildren();
+            if ((children != null) && !children.isEmpty()) {
+                for (PackResources child : children) {
+                    collectLocationsFromPack(child, output);
+                }
+                return;
+            }
+        }
+        if (pack instanceof FilePackResources filePack) {
+            collectLocationsFromFilePack(filePack, output);
+            return;
+        }
+        if (pack instanceof PathPackResources pathPack) {
+            collectLocationsFromPathPack(pathPack, output);
+            return;
+        }
+        if (pack instanceof VanillaPackResources vanillaPack) {
+            collectLocationsFromVanillaPack(vanillaPack, output);
+        }
+    }
+
+    private void collectLocationsFromPathPack(@NotNull PathPackResources pack, @NotNull Set<ResourceLocation> output) {
+        Path root = ((IMixinPathPackResources) pack).getRoot_FancyMenu();
+        if (root == null) return;
+        collectLocationsFromRoot(root.resolve(PackType.CLIENT_RESOURCES.getDirectory()), output);
+    }
+
+    private void collectLocationsFromVanillaPack(@NotNull VanillaPackResources pack, @NotNull Set<ResourceLocation> output) {
+        IMixinVanillaPackResources accessor = (IMixinVanillaPackResources) pack;
+        boolean collected = false;
+        List<Path> roots = accessor.getPathsForType_FancyMenu().get(PackType.CLIENT_RESOURCES);
+        if (roots != null) {
+            for (Path root : roots) {
+                if (Files.isDirectory(root)) {
+                    collectLocationsFromRoot(root, output);
+                    collected = true;
+                } else {
+                    Path parent = root.getParent();
+                    if ((parent != null) && Files.isDirectory(parent)) {
+                        collectLocationsFromRoot(parent, output);
+                        collected = true;
+                    }
+                }
+            }
+        }
+        if (!collected) {
+            List<Path> rootPaths = accessor.getRootPaths_FancyMenu();
+            if (rootPaths == null) return;
+            for (Path root : rootPaths) {
+                collectLocationsFromRoot(root.resolve(PackType.CLIENT_RESOURCES.getDirectory()), output);
+            }
+        }
+    }
+
+    private void collectLocationsFromRoot(@NotNull Path assetsRoot, @NotNull Set<ResourceLocation> output) {
+        if (!Files.isDirectory(assetsRoot)) return;
+        try (DirectoryStream<Path> namespaces = Files.newDirectoryStream(assetsRoot)) {
+            for (Path namespaceDir : namespaces) {
+                if (!Files.isDirectory(namespaceDir)) continue;
+                String namespace = namespaceDir.getFileName().toString();
+                try (Stream<Path> files = Files.walk(namespaceDir)) {
+                    files.filter(Files::isRegularFile).forEach(file -> {
+                        String path = namespaceDir.relativize(file).toString().replace(File.separatorChar, '/');
+                        if (path.isEmpty() || path.endsWith(".mcmeta")) return;
+                        ResourceLocation location = ResourceLocation.tryBuild(namespace, path);
+                        if (location != null) output.add(location);
+                    });
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void collectLocationsFromFilePack(@NotNull FilePackResources pack, @NotNull Set<ResourceLocation> output) {
+        ZipFile zipFile = ((IMixinFilePackResources) pack).getOrCreateZipFile_FancyMenu();
+        if (zipFile == null) return;
+        String assetsPrefix = PackType.CLIENT_RESOURCES.getDirectory() + "/";
+        Enumeration<? extends ZipEntry> entries = zipFile.entries();
+        while (entries.hasMoreElements()) {
+            ZipEntry entry = entries.nextElement();
+            if (entry.isDirectory()) continue;
+            String name = entry.getName();
+            if (!name.startsWith(assetsPrefix)) continue;
+            String remainder = name.substring(assetsPrefix.length());
+            if (remainder.isEmpty()) continue;
+            int slashIndex = remainder.indexOf('/');
+            if (slashIndex <= 0) continue;
+            String namespace = remainder.substring(0, slashIndex);
+            String path = remainder.substring(slashIndex + 1);
+            if (path.isEmpty() || path.endsWith(".mcmeta")) continue;
+            ResourceLocation location = ResourceLocation.tryBuild(namespace, path);
+            if (location != null) output.add(location);
+        }
     }
 
 }

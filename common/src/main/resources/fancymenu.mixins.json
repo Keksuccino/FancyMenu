@@ -15,6 +15,7 @@
     "client.IMixinCommandSuggestions",
     "client.IMixinConnectScreen",
     "client.IMixinEditBox",
+    "client.IMixinFilePackResources",
     "client.IMixinGameRenderer",
     "client.IMixinGui",
     "client.IMixinGuiGraphics",
@@ -107,7 +108,6 @@
   "plugin": "de.keksuccino.fancymenu.mixin.FMMixinPlugin",
   "minVersion": "0.8"
 }
-
 
 
 
