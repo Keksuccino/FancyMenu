@@ -88,6 +88,7 @@ subprojects {
                 includeGroup 'com.cinemamod'
             }
         }
+        maven { url = "https://keksuccino.github.io/maven/" }
         maven {
             name = 'ParchmentMC Maven'
             url = 'https://maven.parchmentmc.org'

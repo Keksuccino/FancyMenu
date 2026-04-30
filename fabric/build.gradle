@@ -29,10 +29,7 @@ dependencies {
     modImplementation "maven.modrinth:melody:1.0.4-1.20.1-1.20.4-fabric"
     modImplementation "maven.modrinth:konkrete:1.8.1-1.20.1-fabric"
     modImplementation "maven.modrinth:modmenu:7.2.2"
-    //modImplementation "maven.modrinth:fancy-entity-renderer:JjeSIcya"
-    modCompileOnly 'com.cinemamod:mcef:2.1.6-1.20.1'
-    //modImplementation "maven.modrinth:drippy-loading-screen:3.0.12-1.21.1-fabric"
-    //modImplementation "maven.modrinth:spiffyhud:3.0.0-1.21.1-fabric"
+    modImplementation "de.keksuccino:mcef-fabric:2.2.0-1.20.1"
 
 }
 
