@@ -32,7 +32,7 @@ dependencies {
     compileOnly "com.github.WaterMediaTeam:watermedia-v3:${watermedia_version}"
     modCompileOnly "maven.modrinth:melody:1.0.1-1.19.2-fabric"
     modCompileOnly "maven.modrinth:konkrete:1.8.0-1.19.1-1.19.2-fabric"
-    modCompileOnly 'com.cinemamod:mcef:2.1.6-1.20.1'
+    modCompileOnly "de.keksuccino:mcef-fabric:2.2.0-1.19.2"
     //implementation "it.crystalnest:fancy-entity-renderer-common:$fer_mc_version-$fer_version"
     //This is only to fix the missing dependency error in-dev
     compileOnly group: 'ca.weblite', name: 'java-objc-bridge', version: '1.1'
