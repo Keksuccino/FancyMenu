@@ -9,6 +9,7 @@
     "client.MixinFabricGameRenderer",
     "client.MixinFabricKeyboardHandler",
     "client.MixinFabricMouseHandler",
+    "client.MixinRenderSystem",
     "client.MixinFabricTitleScreen"
   ],
   "injectors": {

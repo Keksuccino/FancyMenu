@@ -9,6 +9,7 @@
     "client.MixinForgeKeyboardHandler",
     "client.MixinForgeLoadingOverlay",
     "client.MixinForgeMouseHandler",
+    "client.MixinRenderSystem",
     "client.MixinForgeTitleScreen"
   ],
   "injectors": {

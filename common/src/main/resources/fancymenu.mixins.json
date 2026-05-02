@@ -82,7 +82,6 @@
     "client.MixinQuickPlay",
     "client.MixinRealmsNotificationsScreen",
     "client.MixinReceivingLevelScreen",
-    "client.MixinRenderSystem",
     "client.MixinRenderTarget",
     "client.MixinResourceLoadStateTracker",
     "client.MixinScreen",
@@ -108,6 +107,5 @@
   "plugin": "de.keksuccino.fancymenu.mixin.FMMixinPlugin",
   "minVersion": "0.8"
 }
-
 
 
