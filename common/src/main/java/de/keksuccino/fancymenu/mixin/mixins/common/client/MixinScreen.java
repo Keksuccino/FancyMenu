@@ -47,12 +47,8 @@ public abstract class MixinScreen implements CustomizableScreen {
     @Unique private float cachedPartial_FancyMenu = -1.0F;
 
 	@Shadow @Final private List<GuiEventListener> children;
-
-    @Shadow
-    public int width;
-
-    @Shadow
-    public int height;
+    @Shadow public int width;
+    @Shadow public int height;
 
     @WrapOperation(method = "renderWithTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
     private void wrap_render_in_renderWithTooltip_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {

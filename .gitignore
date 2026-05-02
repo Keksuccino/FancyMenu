@@ -32,3 +32,6 @@
 /neoforge/jar_output/
 __pycache__/
 /afma_files/
+/forge/config.txt
+/forge/launcher.exe
+/forge/jar_output/
