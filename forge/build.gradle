@@ -22,9 +22,6 @@ minecraft {
 
     mappings channel: 'official', version: minecraft_version
 
-    // Tell FG to not automtically create the reobf tasks, as we now use Official mappings at runtime, If you don't use them at dev time then you'll have to fix your reobf yourself.
-    reobf = false
-
     // This property allows configuring Gradle's ProcessResources task(s) to run on IDE output locations before launching the game.
     // It is REQUIRED to be set to true for this template to function.
     // See https://docs.gradle.org/current/dsl/org.gradle.language.jvm.tasks.ProcessResources.html
@@ -126,8 +123,10 @@ processResources {
     }
 }
 
-//jar.finalizedBy('reobfJar')
-jar.finalizedBy('jarJar')
+jar.finalizedBy('reobfJar')
+tasks.named('jarJar').configure {
+    finalizedBy('reobfJarJar')
+}
 
 publishing {
     publications {
