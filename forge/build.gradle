@@ -116,10 +116,9 @@ tasks.named("sourcesJar", Jar) {
 }
 
 processResources {
-    from project(":common").sourceSets.main.resources
-    dependsOn tasks.named("compileJava")
-    from(layout.buildDirectory.dir("tmp/compileJava")) {
-        include "${mod_id}.refmap.json"
+    dependsOn(tasks.named("compileJava"))
+    from(project(":common").sourceSets.main.resources) {
+        exclude "${mod_id}.refmap.json"
     }
 }
 
