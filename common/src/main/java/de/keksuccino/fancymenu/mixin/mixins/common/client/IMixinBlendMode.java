@@ -4,7 +4,7 @@ import com.mojang.blaze3d.shaders.BlendMode;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(value = BlendMode.class, remap = false)
+@Mixin(value = BlendMode.class)
 public interface IMixinBlendMode {
 
     @Accessor("lastApplied")
