@@ -10,12 +10,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(RenderSystem.class)
 public class MixinRenderSystem {
 
-    @Inject(method = "enableDepthTest", at = @At("HEAD"), remap = false, cancellable = true)
+    @Inject(method = "enableDepthTest", at = @At("HEAD"), cancellable = true)
     private static void head_enableDepthTest_FancyMenu(CallbackInfo info) {
         if (RenderingUtils.isDepthTestLocked()) info.cancel();
     }
 
-    @Inject(method = "disableDepthTest", at = @At("HEAD"), remap = false, cancellable = true)
+    @Inject(method = "disableDepthTest", at = @At("HEAD"), cancellable = true)
     private static void head_disableDepthTest_FancyMenu(CallbackInfo info) {
         if (RenderingUtils.isDepthTestLocked()) info.cancel();
     }
