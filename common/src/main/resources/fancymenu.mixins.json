@@ -72,7 +72,6 @@
     "client.MixinProgressScreen",
     "client.MixinRealmsNotificationsScreen",
     "client.MixinReceivingLevelScreen",
-    "client.MixinRenderSystem",
     "client.MixinRenderTarget",
     "client.MixinResourceLoadStateTracker",
     "client.MixinScreen",
