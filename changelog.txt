@@ -8,6 +8,8 @@ If you notice any bugs, especially when using other Minecraft versions than 1.21
 makes it impossible for me (and even the testing team) to catch all bugs and other issues.
 Thank you very much! 🙏
 
+Also please make sure to BACKUP YOUR SETUP before using this version! It is NOT FULLY STABLE yet and could corrupt or straight up delete your layouts!
+
 ### New Features and Improvements
 
 - FancyMenu's UI got a complete overhaul
