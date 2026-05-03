@@ -1,3 +1,13 @@
+---
+title: GLSL Shader API
+description: Write FancyMenu GLSL shaders for backgrounds, elements, and decoration overlays.
+published: true
+date: 2026-05-03T11:01:52.000Z
+tags:
+editor: markdown
+dateCreated: 2026-05-03T11:01:52.000Z
+---
+
 # FancyMenu GLSL Shader API
 
 This document describes the GLSL runtime used by FancyMenu's:

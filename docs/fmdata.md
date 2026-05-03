@@ -1,6 +1,11 @@
 ---
 title: Client <-> Server Data Sharing
 description: Send and receive custom data between server and client with FancyMenu.
+published: true
+date: 2026-05-03T11:01:52.000Z
+tags:
+editor: markdown
+dateCreated: 2026-05-03T11:01:52.000Z
 ---
 
 # FM Data

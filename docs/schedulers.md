@@ -1,6 +1,11 @@
 ---
 title: Schedulers
 description: Run FancyMenu action scripts on a timer, even in the background.
+published: true
+date: 2026-05-03T11:01:52.000Z
+tags:
+editor: markdown
+dateCreated: 2026-05-03T11:01:52.000Z
 ---
 
 # Schedulers

@@ -1,6 +1,11 @@
 ---
 title: Decoration Overlays
 description: Add fullscreen visual overlays to menus in the FancyMenu layout editor.
+published: true
+date: 2026-05-03T11:01:52.000Z
+tags:
+editor: markdown
+dateCreated: 2026-05-03T11:01:52.000Z
 ---
 
 # Decoration Overlays

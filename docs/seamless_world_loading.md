@@ -1,6 +1,11 @@
 ---
 title: Seamless World Loading
 description: Use your last world/server view as the next loading background.
+published: true
+date: 2026-05-03T11:01:52.000Z
+tags:
+editor: markdown
+dateCreated: 2026-05-03T11:01:52.000Z
 ---
 
 # Seamless World Loading

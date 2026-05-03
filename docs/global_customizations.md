@@ -1,6 +1,11 @@
 ---
 title: Global Customizations
 description: Apply global FancyMenu tweaks that affect all screens.
+published: true
+date: 2026-05-03T11:01:52.000Z
+tags:
+editor: markdown
+dateCreated: 2026-05-03T11:01:52.000Z
 ---
 
 # Global Customizations

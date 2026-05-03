@@ -1,6 +1,11 @@
 ---
 title: Remote Server Communication
 description: Send and receive custom text data between FancyMenu clients and external servers.
+published: true
+date: 2026-05-03T11:01:52.000Z
+tags:
+editor: markdown
+dateCreated: 2026-05-03T11:01:52.000Z
 ---
 
 # Remote Server Communication
