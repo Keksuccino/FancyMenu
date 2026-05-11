@@ -3189,6 +3189,8 @@ public class Property<T> {
         @Override
         protected @Nullable Integer parseInput(@NotNull String input) {
             if (MathUtils.isInteger(input)) return Integer.parseInt(input);
+            if (MathUtils.isDouble(input)) return (int) Double.parseDouble(input);
+            if (MathUtils.isFloat(input)) return (int) Float.parseFloat(input);
             return null;
         }
 
