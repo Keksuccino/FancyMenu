@@ -510,7 +510,7 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
         }
         for (RequirementInstance i : block.condition.getInstances()) {
             if (!requirements.isEmpty()) requirements += ", ";
-            requirements += i.requirement.getDisplayName();
+            requirements += i.requirement.getDisplayName().getString();
         }
         return requirements.isEmpty() ? "none" : requirements;
     }
@@ -524,7 +524,7 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
         }
         for (RequirementInstance i : block.condition.getInstances()) {
             if (!requirements.isEmpty()) requirements += ", ";
-            requirements += i.requirement.getDisplayName();
+            requirements += i.requirement.getDisplayName().getString();
         }
         return requirements.isEmpty() ? "none" : requirements;
     }
@@ -538,7 +538,7 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
         }
         for (RequirementInstance i : block.condition.getInstances()) {
             if (!requirements.isEmpty()) requirements += ", ";
-            requirements += i.requirement.getDisplayName();
+            requirements += i.requirement.getDisplayName().getString();
         }
         return requirements.isEmpty() ? "none" : requirements;
     }
