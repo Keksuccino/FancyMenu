@@ -14,5 +14,6 @@
 - Fixed custom button click sound set via Global Customizations not working the very first time a button gets clicked (#1586)
 - Fixed crash related to the smooth font renderer, triggered by, for example, moving the game window to a monitor with a different solution than the previous one (#1576)
 - Fixed Text in Text elements is getting cropped off, when a too small text border is set (#1567)
+- Fixed left-clicking while in a world opens the last edited menu (#1561)
 
 %changelog:end%
