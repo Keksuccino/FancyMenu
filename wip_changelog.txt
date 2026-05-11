@@ -1,5 +1,5 @@
 
-## CHANGELOG | FANCYMENU v3.X.X [ W I P !! Not public yet !! ]
+## CHANGELOG | FANCYMENU v3.9.1 [ W I P !! Not public yet !! ]
 
 ### New Features and Improvements
 
@@ -11,6 +11,6 @@
 
 ### Bug Fixes
 
-- 
+- Fixed custom button click sound set via Global Customizations not working the very first time a button gets clicked (#1586)
 
 %changelog:end%
