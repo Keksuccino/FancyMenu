@@ -12,6 +12,9 @@
 - Always keep in mind that you are an AI. Time does not work the same for you as it does for humans.
 - What would take humans weeks or more to implement/write will take you only some minutes, so you should never take the "faster" route just to get the job done quicker. Take the BEST route, even if it takes longer.
 
+## Missing Promised Information
+- If you are unable to locate promised files, or you miss promised information in general, end/stop your turn and tell the user about the missing information. Do not try to work around the missing information/files.
+
 ## Coding Style
 - Target Java 21 with 4-space indentation and UTF-8 encoding (WITHOUT BOM), matching the Gradle toolchain configuration.
 - Follow existing packages under `de.keksuccino.fancymenu`, mirroring existing sub-packages like `customization`, `events`, and `platform` to keep cross-loader boundaries clear.
