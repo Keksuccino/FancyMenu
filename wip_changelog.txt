@@ -18,5 +18,6 @@
 - Fixed legacy Realtime placeholders (and possibly some others) don't get parsed anymore (because of new timezone value) (#1593)
 - Fixed WHILE and ELSE-IF action blocks showing raw translatable requirement text instead of localized requirement names
 - Fixed listener and scheduler action previews showing raw translatable requirement text instead of localized requirement names
+- Fixed "Element Settings" context menu of hidden elements in the layout editor's "Layers" widget closes instantly when moving the mouse
 
 %changelog:end%
