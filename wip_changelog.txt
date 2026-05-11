@@ -16,5 +16,7 @@
 - Fixed Text in Text elements is getting cropped off, when a too small text border is set (#1567)
 - Fixed left-clicking while in a world opens the last edited menu (#1561)
 - Fixed legacy Realtime placeholders (and possibly some others) don't get parsed anymore (because of new timezone value) (#1593)
+- Fixed WHILE and ELSE-IF action blocks showing raw translatable requirement text instead of localized requirement names
+- Fixed listener and scheduler action previews showing raw translatable requirement text instead of localized requirement names
 
 %changelog:end%
