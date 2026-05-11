@@ -12,5 +12,6 @@
 ### Bug Fixes
 
 - Fixed custom button click sound set via Global Customizations not working the very first time a button gets clicked (#1586)
+- Fixed crash related to the smooth font renderer, triggered by, for example, moving the game window to a monitor with a different solution than the previous one (#1576)
 
 %changelog:end%
