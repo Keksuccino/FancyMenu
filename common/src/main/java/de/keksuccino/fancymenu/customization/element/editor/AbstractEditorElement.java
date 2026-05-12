@@ -769,7 +769,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (this.element.layerHiddenInEditor) {
-            if (this.rightClickMenu.isOpen()) {
+            if (this.rightClickMenu.isOpen() && !this.rightClickMenu.isSubMenu()) {
                 this.rightClickMenu.closeMenu();
             }
             return;

@@ -211,27 +211,30 @@ final class SmoothFontAtlas implements AutoCloseable {
 
         LOGGER.info("[FANCYMENU] Resizing smooth font atlas '{}' ({}): {}x{} -> {}x{}", debugName, sizeLabel, logicalWidth, logicalHeight, targetWidth, targetHeight);
 
+        NativeImage oldImage = atlasImage;
         NativeImage newImage = new NativeImage(NativeImage.Format.RGBA, targetWidth, targetHeight, true);
         
         // Manual copy to avoid potential issues with NativeImage.copyFrom
-        int oldWidth = atlasImage.getWidth();
-        int oldHeight = atlasImage.getHeight();
+        int oldWidth = oldImage.getWidth();
+        int oldHeight = oldImage.getHeight();
         for (int y = 0; y < oldHeight; y++) {
             for (int x = 0; x < oldWidth; x++) {
-                newImage.setPixel(x, y, atlasImage.getPixel(x, y));
+                newImage.setPixel(x, y, oldImage.getPixel(x, y));
             }
         }
         
-        atlasImage.close();
         atlasImage = newImage;
         logicalWidth = targetWidth;
         logicalHeight = targetHeight;
-        dynamicTexture.setPixels(atlasImage);
+        replaceTexture();
+    }
 
-        final int finalTargetWidth = targetWidth;
-        final int finalTargetHeight = targetHeight;
-
-        dynamicTexture.upload();
+    private void replaceTexture() {
+        NativeImage resizedImage = atlasImage;
+        DynamicTexture newTexture = new DynamicTexture(() -> "fancymenu_smooth_font_" + debugName, resizedImage);
+        Minecraft.getInstance().getTextureManager().register(textureLocation, newTexture);
+        dynamicTexture = newTexture;
+        textureId = 0;
         applyLinearFilter();
     }
 
@@ -251,10 +254,6 @@ final class SmoothFontAtlas implements AutoCloseable {
                 atlasImage.setPixel(atlasX + x, atlasY + y, color);
             }
         }
-    }
-
-    private void upload() {
-        dynamicTexture.upload();
     }
 
     private void upload(int x, int y, int width, int height) {
