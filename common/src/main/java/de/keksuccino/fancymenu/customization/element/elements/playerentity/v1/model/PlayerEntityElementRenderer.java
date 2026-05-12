@@ -1,12 +1,11 @@
-package de.keksuccino.fancymenu.customization.element.elements.playerentity.model;
+package de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.model;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Matrix4f;
-import com.mojang.math.Vector3f;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.model.layers.PlayerEntityRenderLayer;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.model.layers.PlayerEntityShoulderParrotLayer;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.model.layers.PlayerEntityCapeLayer;
+import de.keksuccino.fancymenu.util.rendering.gui.Axis;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.model.layers.PlayerEntityRenderLayer;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.model.layers.PlayerEntityShoulderParrotLayer;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.model.layers.PlayerEntityCapeLayer;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
@@ -34,6 +33,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
+import com.mojang.math.Matrix4f;
 
 @SuppressWarnings("all")
 public class PlayerEntityElementRenderer extends PlayerRenderer {
@@ -77,9 +77,9 @@ public class PlayerEntityElementRenderer extends PlayerRenderer {
         this.innerRender(f11, f12, matrix, bufferSource, i11);
     }
 
-    protected void innerRender(float f11, float f12, PoseStack matrix, MultiBufferSource bufferSource, int i11) {
+    protected void innerRender(float f11, float f12, PoseStack pose, MultiBufferSource bufferSource, int i11) {
 
-        matrix.pushPose();
+        pose.pushPose();
 
         boolean shouldSit = this.properties.shouldSit;
         this.playerModel.riding = shouldSit;
@@ -94,15 +94,15 @@ public class PlayerEntityElementRenderer extends PlayerRenderer {
             Direction direction = this.properties.getBedOrientation();
             if (direction != null) {
                 float f4 = this.properties.getEyeHeight(Pose.STANDING) - 0.1F;
-                matrix.translate((float)(-direction.getStepX()) * f4, 0.0F, (float)(-direction.getStepZ()) * f4);
+                pose.translate((float)(-direction.getStepX()) * f4, 0.0F, (float)(-direction.getStepZ()) * f4);
             }
         }
 
         float f7 = f12;
-        this.setupRotations(matrix, f7, f, f12);
-        matrix.scale(-1.0F, -1.0F, 1.0F);
-        this.scale(matrix, f12);
-        matrix.translate(0.0F, -1.501F, 0.0F);
+        this.setupRotations(pose, f7, f, f12);
+        pose.scale(-1.0F, -1.0F, 1.0F);
+        this.scale(pose, f12);
+        pose.translate(0.0F, -1.501F, 0.0F);
         float f8 = 0.0F;
         float f5 = 0.0F;
         if (!shouldSit) {
@@ -124,21 +124,21 @@ public class PlayerEntityElementRenderer extends PlayerRenderer {
         if (rendertype != null) {
             VertexConsumer vertexconsumer = bufferSource.getBuffer(rendertype);
             int i = OverlayTexture.pack(OverlayTexture.u(this.getWhiteOverlayProgress(null, f12)), OverlayTexture.v(false));
-            this.playerModel.renderToBuffer(matrix, vertexconsumer, i11, i, 1.0F, 1.0F, 1.0F, flag1 ? 0.15F : 1.0F);
+            this.playerModel.renderToBuffer(pose, vertexconsumer, i11, i, 1.0F, 1.0F, 1.0F, 1.0F);
         }
 
         if (!this.properties.isSpectator()) {
             for(RenderLayer<?,?> renderlayer : this.layers) {
                 if (renderlayer instanceof PlayerEntityRenderLayer pl) {
-                    pl.render(matrix, bufferSource, i11, null, f5, f8, f12, f7, f2, f6);
+                    pl.render(pose, bufferSource, i11, null, f5, f8, f12, f7, f2, f6);
                 }
             }
         }
 
-        matrix.popPose();
+        pose.popPose();
 
         if (this.properties.showDisplayName) {
-            this.renderNameTag(null, this.properties.displayName, matrix, bufferSource, i11);
+            this.renderNameTag(null, this.properties.displayName, pose, bufferSource, i11);
         }
 
     }
@@ -201,6 +201,9 @@ public class PlayerEntityElementRenderer extends PlayerRenderer {
                 if (useanim == UseAnim.SPYGLASS) {
                     return HumanoidModel.ArmPose.SPYGLASS;
                 }
+                if (useanim == UseAnim.TOOT_HORN) {
+                    return HumanoidModel.ArmPose.TOOT_HORN;
+                }
             } else if (itemstack.getItem() instanceof CrossbowItem && CrossbowItem.isCharged(itemstack)) {
                 return HumanoidModel.ArmPose.CROSSBOW_HOLD;
             }
@@ -231,30 +234,29 @@ public class PlayerEntityElementRenderer extends PlayerRenderer {
     }
 
     @Override
-    protected void renderNameTag(@Nullable AbstractClientPlayer entity, Component content, PoseStack matrix, MultiBufferSource bufferSource, int p_114502_) {
+    protected void renderNameTag(AbstractClientPlayer $$0, Component nameComponent, PoseStack pose, MultiBufferSource bufferSource, int i1) {
         boolean flag = !this.properties.isCrouching();
         float f = this.properties.getDimensions().height + 0.5F;
         int i = 0;
-        matrix.pushPose();
-        matrix.translate(0.0F, f, 0.0F);
-        matrix.scale(-0.025F, -0.025F, 0.025F);
-        Matrix4f matrix4f = matrix.last().pose();
+        pose.pushPose();
+        pose.translate(0.0F, f, 0.0F);
+        pose.scale(-0.025F, -0.025F, 0.025F);
+        Matrix4f matrix4f = pose.last().pose();
         float f1 = Minecraft.getInstance().options.getBackgroundOpacity(0.25F);
         int j = (int)(f1 * 255.0F) << 24;
         Font font = this.getFont();
-        float f2 = (float)(-font.width(content) / 2);
-        
-        font.drawInBatch(content, f2, (float)i, 553648127, false, matrix4f, bufferSource, flag, j, p_114502_);
+        float f2 = (float)(-font.width(nameComponent) / 2);
+
+        font.drawInBatch(nameComponent, f2, (float)i, 553648127, false, matrix4f, bufferSource, flag, j, i1);
         if (flag) {
-            font.drawInBatch(content, f2, (float)i, -1, false, matrix4f, bufferSource, false, 0, p_114502_);
+            font.drawInBatch(nameComponent, f2, (float)i, -1, false, matrix4f, bufferSource, false, 0, i1);
         }
-        
-        matrix.popPose();
+        pose.popPose();
     }
 
     protected void setupRotations(PoseStack matrix, float f11, float f12, float f13) {
         if (!this.properties.hasPose(Pose.SLEEPING)) {
-            matrix.mulPose(Vector3f.YP.rotationDegrees(180.0F - f12));
+            matrix.mulPose(Axis.YP.rotationDegrees(180.0F - f12));
         }
     }
 

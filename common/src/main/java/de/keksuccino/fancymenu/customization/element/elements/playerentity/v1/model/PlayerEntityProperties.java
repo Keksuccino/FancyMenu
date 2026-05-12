@@ -1,6 +1,5 @@
-package de.keksuccino.fancymenu.customization.element.elements.playerentity.model;
+package de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.model;
 
-import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -73,7 +72,7 @@ public class PlayerEntityProperties {
     public int shoulderParrotVariant = 0;
     public boolean parrotOnLeftShoulder = false;
     public boolean showDisplayName = true;
-    public Component displayName = Components.literal("Steve");
+    public Component displayName = Component.literal("Steve");
 
     private final boolean slim;
 

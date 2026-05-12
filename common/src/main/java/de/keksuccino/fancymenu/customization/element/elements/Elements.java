@@ -14,7 +14,7 @@ import de.keksuccino.fancymenu.customization.element.elements.inputfield.InputFi
 import de.keksuccino.fancymenu.customization.element.elements.item.ItemElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.jsonmodel.JsonModelElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.musiccontroller.MusicControllerElementBuilder;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.PlayerEntityElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.PlayerEntityElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.progressbar.ProgressBarElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.shape.circle.CircleShapeElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.shape.rectangle.RectangleShapeElementBuilder;

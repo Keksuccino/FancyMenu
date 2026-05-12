@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.element.elements.playerentity.model;
+package de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.model;
 
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPlayerModel;
 import net.minecraft.client.model.AnimationUtils;
@@ -92,11 +92,11 @@ public class PlayerEntityModel extends PlayerModel {
             this.rightArm.y = 2.0F;
         }
 
-        if (this.rightArmPose != ArmPose.SPYGLASS) {
+        if (this.rightArmPose != HumanoidModel.ArmPose.SPYGLASS) {
             AnimationUtils.bobModelPart(this.rightArm, someFloatThatsAlways1, 1.0F);
         }
 
-        if (this.leftArmPose != ArmPose.SPYGLASS) {
+        if (this.leftArmPose != HumanoidModel.ArmPose.SPYGLASS) {
             AnimationUtils.bobModelPart(this.leftArm, someFloatThatsAlways1, -1.0F);
         }
 

@@ -1,19 +1,19 @@
-package de.keksuccino.fancymenu.customization.element.elements.playerentity;
+package de.keksuccino.fancymenu.customization.element.elements.playerentity.v1;
 
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Quaternion;
-import com.mojang.math.Vector3f;
+import de.keksuccino.fancymenu.util.rendering.gui.Axis;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.model.PlayerEntityElementRenderer;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.model.PlayerEntityProperties;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.textures.*;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.model.PlayerEntityElementRenderer;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.model.PlayerEntityProperties;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.textures.*;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.Minecraft;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.resources.ResourceLocation;
@@ -84,6 +84,8 @@ public class PlayerEntityElement extends AbstractElement {
 
     public PlayerEntityElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.supportsRotation = false;
+        this.supportsTilting = false;
     }
 
     @Nullable
@@ -163,10 +165,8 @@ public class PlayerEntityElement extends AbstractElement {
         innerPoseStack.translate(0.0F, 0.0F, 1000.0F);
         innerPoseStack.scale((float)scale, (float)scale, (float)scale);
 
-        float $$7 = (float)Math.atan((double)(angleYComponent / 40.0F));
-//        Quaternion quat1 = this.bodyFollowsMouse ? Vector3f.rotateZ((float)Math.PI) : Vector3f.ZP.rotationDegrees(180.0F);
-        Quaternion quat1 = Vector3f.ZP.rotationDegrees(180.0F);
-        Quaternion quat2 = this.bodyFollowsMouse ? Vector3f.XP.rotationDegrees($$7 * 20.0F) : Vector3f.XP.rotationDegrees(bodyYRot);
+        Quaternion quat1 = this.bodyFollowsMouse ? Axis.ZP.rotation((float)Math.PI) : Axis.ZP.rotationDegrees(180.0F);
+        Quaternion quat2 = this.bodyFollowsMouse ? Axis.XP.rotation(angleYComponent * 20.0F * ((float)Math.PI / 180F)) : Axis.XP.rotationDegrees(bodyYRot);
         quat1.mul(quat2);
         innerPoseStack.mulPose(quat1);
 
