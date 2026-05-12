@@ -1539,6 +1539,8 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	@SuppressWarnings("deprecation")
 	public void closeEditor() {
         PiPWindowHandler.INSTANCE.forceCloseAllWindows();
+        ContextMenuHandler.INSTANCE.removeCurrent();
+        ScreenOverlayHandler.INSTANCE.removeOverlay(ScreenOverlays.LAYOUT_EDITOR_MENU_BAR, true, false);
         this.closeActiveElementMenu(true);
         this.closeRightClickMenu(true);
 		this.saveWidgetSettings();

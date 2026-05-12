@@ -628,11 +628,11 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     public float getBorder() {
-        return this.border;
+        return Math.max(2.0F, this.border); // Cap min border size at 2, so text doesn't get cut off
     }
 
     public MarkdownRenderer setBorder(float border) {
-        this.border = border;
+        this.border = Math.max(2.0F, border); // Cap min border size at 2, so text doesn't get cut off
         this.refreshRenderer();
         return this;
     }

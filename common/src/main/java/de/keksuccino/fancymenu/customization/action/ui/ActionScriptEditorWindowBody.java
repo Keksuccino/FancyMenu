@@ -3169,18 +3169,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 this.displayNameComponent = i.action.getDisplayName().copy().setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 this.updateValueComponent();
             } else if (this.executable instanceof IfExecutableBlock b) {
-                MutableComponent requirements = Component.empty();
-                boolean isRequirementsEmpty = true;
-                for (RequirementGroup g : b.condition.getGroups()) {
-                    if (!isRequirementsEmpty) requirements.append(Component.literal(", "));
-                    requirements.append(Component.literal(g.identifier));
-                    isRequirementsEmpty = false;
-                }
-                for (RequirementInstance i : b.condition.getInstances()) {
-                    if (!isRequirementsEmpty) requirements.append(Component.literal(", "));
-                    requirements.append(i.requirement.getDisplayName());
-                    isRequirementsEmpty = false;
-                }
+                MutableComponent requirements = this.buildRequirementsComponent(b.condition);
                 MutableComponent display = Component.translatable("fancymenu.actions.blocks.if", requirements).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 if (b.isCollapsed()) {
                     display = display.append(this.createCollapsedSuffixComponent(theme));
@@ -3188,31 +3177,15 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 this.displayNameComponent = display;
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof ElseIfExecutableBlock b) {
-                String requirements = "";
-                for (RequirementGroup g : b.condition.getGroups()) {
-                    if (!requirements.isEmpty()) requirements += ", ";
-                    requirements += g.identifier;
-                }
-                for (RequirementInstance i : b.condition.getInstances()) {
-                    if (!requirements.isEmpty()) requirements += ", ";
-                    requirements += i.requirement.getDisplayName();
-                }
-                this.displayNameComponent = Component.translatable("fancymenu.actions.blocks.else_if", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
+                MutableComponent requirements = this.buildRequirementsComponent(b.condition);
+                this.displayNameComponent = Component.translatable("fancymenu.actions.blocks.else_if", requirements).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof ElseExecutableBlock) {
                 this.displayNameComponent = Component.translatable("fancymenu.actions.blocks.else").setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof WhileExecutableBlock b) {
-                String requirements = "";
-                for (RequirementGroup g : b.condition.getGroups()) {
-                    if (!requirements.isEmpty()) requirements += ", ";
-                    requirements += g.identifier;
-                }
-                for (RequirementInstance i : b.condition.getInstances()) {
-                    if (!requirements.isEmpty()) requirements += ", ";
-                    requirements += i.requirement.getDisplayName();
-                }
-                MutableComponent display = Component.translatable("fancymenu.actions.blocks.while", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
+                MutableComponent requirements = this.buildRequirementsComponent(b.condition);
+                MutableComponent display = Component.translatable("fancymenu.actions.blocks.while", requirements).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 if (b.isCollapsed()) {
                     display = display.append(this.createCollapsedSuffixComponent(theme));
                 }
@@ -3256,6 +3229,23 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 this.displayNameComponent = Component.literal("[UNKNOWN EXECUTABLE]").withStyle(ChatFormatting.RED);
                 this.valueComponent = Component.empty();
             }
+        }
+
+        @NotNull
+        private MutableComponent buildRequirementsComponent(@NotNull RequirementContainer condition) {
+            MutableComponent requirements = Component.empty();
+            boolean isRequirementsEmpty = true;
+            for (RequirementGroup g : condition.getGroups()) {
+                if (!isRequirementsEmpty) requirements.append(Component.literal(", "));
+                requirements.append(Component.literal(g.identifier));
+                isRequirementsEmpty = false;
+            }
+            for (RequirementInstance i : condition.getInstances()) {
+                if (!isRequirementsEmpty) requirements.append(Component.literal(", "));
+                requirements.append(i.requirement.getDisplayName());
+                isRequirementsEmpty = false;
+            }
+            return requirements;
         }
 
         @Override
