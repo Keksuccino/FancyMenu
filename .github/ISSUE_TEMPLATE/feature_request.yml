@@ -12,7 +12,7 @@ body:
   - type: textarea
     id: feature-description
     attributes:
-      label: Detailed feature description
+      label: Detailed Feature Description
       description: Please describe the feature you would like to see added.
       placeholder: |
         Describe your feature request in detail.
