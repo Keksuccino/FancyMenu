@@ -1,0 +1,22 @@
+name: Feature request
+description: Suggest an idea or improvement.
+labels: ["feature request"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please make sure your feature request fits within the scope of this mod.
+        Requests that are out of scope may be ignored.
+
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Detailed feature description
+      description: Please describe the feature you would like to see added.
+      placeholder: |
+        Describe your feature request in detail.
+        What should be added or changed?
+        Why would this be useful?
+    validations:
+      required: true
