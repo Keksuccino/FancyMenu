@@ -1,16 +1,19 @@
 # Repository Guidelines
 
-## Project Structure & Module Organization
-- FancyMenu is a Minecraft Java 1.21.11 mod that uses the MultiLoader layout with shared logic under `common` and loader-specific wrappers under `fabric` and `neoforge`.
-- Place shared Java sources in `common/src/main/java` and assets such as menu JSON, translations, or textures in `common/src/main/resources` so they ship with every loader build.
-- Loader-only hooks belong inside each module's `src/main/java` tree; keep local run directories like `run_client` and `run_server` for iterative testing but never depend on them for assets.
+## Project Description and Structure
+- This project is "FancyMenu", which is a Minecraft Java 1.21.11 mod that uses the MultiLoader layout with shared logic under `common` and loader-specific wrappers under `fabric` and `neoforge`.
+- Place shared Java sources in `common/src/main/java`, and assets such as menu JSON, translations, or textures in `common/src/main/resources`, so they ship with every loader build.
+- Loader-only hooks belong inside each module's `/src/main/java` tree.
 
 ## Environment
 - You are running inside WSL on a Windows machine.
 
 ## General Guidelines and Reminders
 - Always keep in mind that you are an AI. Time does not work the same for you as it does for humans.
-- What would take humans weeks or more to implement/write will take you only some minutes, so you should never take the "faster" route just to get the job done quicker. Take the BEST route, even if it takes a bit longer.
+- What would take humans weeks or more to implement/write will take you only some minutes, so you should never take the "faster" route just to get the job done quicker. Take the BEST route, even if it takes longer.
+
+## Missing Promised Information
+- If you are unable to locate promised files, or you miss promised information in general, end/stop your turn and tell the user about the missing information. Do not try to work around the missing information/files.
 
 ## Coding Style
 - Target Java 21 with 4-space indentation and UTF-8 encoding (WITHOUT BOM), matching the Gradle toolchain configuration.
@@ -58,13 +61,4 @@
 - When porting code from a different Minecraft version, you should compare both Minecraft version's code to see what changed, how it works here and how to best port the code.
 
 ## Gradle
-- Do NOT directly run or compile the project via Gradle, except the user explicitly tells you to do so. Using IntelliJ run configurations are an exception here.
-
-## Testing
-- To check if the project compiles and to look for errors/issues in general, use the `get_run_configurations` and `execute_run_configuration` tools to get and execute the Fabric and NeoForge client run configurations inside the open IntelliJ IDE.
-- Never try to run the `common` module directly, because it is only the base for the `fabric` and `neoforge` ones.
-- When running a "run configuration", always set a timeout of 80 seconds by default, and only if that's not enough after trying the first time, add 30 more seconds and so on.
-- Do not treat "the game is not crashing" as "everything works". When the client successfully launched in testing, check its log files for remaining errors and other problems/issues.
-- You are allowed to add temporary testing code and classes to the project, to be able to better analyze and test specific parts. This can be simple debug logging (always use the INFO level), but it can also be code for you to automatically open menus, launch things, or whatever you need for testing. Just make sure to remove the testing code after.
-- You can take screenshots by using OS-level tools/utils, if needed.
-- Manually kill/close lingering game processes from running "run configurations". They do not automatically close, not even on timeout. They only close automatically when crashing (obviously).
+- Do NOT directly run or compile the project via Gradle, except the user explicitly tells you to do so.
