@@ -1,0 +1,99 @@
+name: Bug report
+description: Report a bug or unexpected behavior.
+title: ""
+labels: ["bug"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill out the information below as completely as possible.
+
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Detailed bug description
+      description: Please describe what happened and what you expected to happen.
+      placeholder: |
+        Describe the bug in detail here.
+        What happened?
+        What did you expect to happen instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: How to reproduce the bug
+      description: Please explain step by step how this issue can be reproduced.
+      placeholder: |
+        1. Install ...
+        2. Start Minecraft with ...
+        3. Open ...
+        4. See the issue ...
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: installed-mods
+    attributes:
+      label: Installed compatibility mods
+      description: Please select all that apply.
+      options:
+        - label: Essential mod installed?
+        - label: Optifine installed?
+        - label: Sinytra Connector mod installed?
+
+  - type: input
+    id: minecraft-version
+    attributes:
+      label: Minecraft version
+      description: Which Minecraft version are you using?
+      placeholder: "Example: 1.20.1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mod-loader
+    attributes:
+      label: Mod loader
+      description: Which mod loader are you using?
+      options:
+        - Fabric
+        - Forge
+        - NeoForge
+        - Quilt
+    validations:
+      required: true
+
+  - type: input
+    id: mod-loader-version
+    attributes:
+      label: Mod loader version
+      description: Which version of the selected mod loader are you using?
+      placeholder: "Example: 0.15.11, 47.2.0, 21.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: fabric-api-version
+    attributes:
+      label: Fabric API version
+      description: Optional. Only fill this in if you are using Fabric.
+      placeholder: "Example: 0.92.2+1.20.1"
+    validations:
+      required: false
+
+  - type: upload
+    id: latest-log
+    attributes:
+      label: Latest log file
+      description: |
+        Optional. Please upload your `/logs/latest.log` file.
+
+        The log should be grabbed and uploaded immediately after experiencing the issue, for example right after seeing something not work as intended.
+
+        If the log file is too large to upload here, please upload it to https://gist.github.com instead and add the link to the detailed bug description above.
+    validations:
+      required: false
+      accept: ".log,.txt"
