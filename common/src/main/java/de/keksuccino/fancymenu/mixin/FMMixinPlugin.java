@@ -23,7 +23,9 @@ public class FMMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        return isKonkreteLoaded();
+        if (!isKonkreteLoaded()) return false;
+        if (isFancyEntityRendererMixin(targetClassName, mixinClassName)) return isFancyEntityRendererLoaded();
+        return true;
     }
 
     @Override
@@ -49,8 +51,17 @@ public class FMMixinPlugin implements IMixinConfigPlugin {
         try {
             Class.forName("de.keksuccino.konkrete.Konkrete", false, FMMixinPlugin.class.getClassLoader());
             return true;
-        } catch (Exception e) {}
+        } catch (Throwable ignored) {}
         return false;
+    }
+
+    private static boolean isFancyEntityRendererLoaded() {
+        return FMMixinPlugin.class.getClassLoader().getResource("it/crystalnest/fancy_entity_renderer/api/entity/player/FancyPlayerWidget.class") != null;
+    }
+
+    private static boolean isFancyEntityRendererMixin(String targetClassName, String mixinClassName) {
+        if ((targetClassName != null) && targetClassName.startsWith("it.crystalnest.fancy_entity_renderer.")) return true;
+        return (mixinClassName != null) && mixinClassName.endsWith(".MixinFancyPlayerWidget");
     }
 
 }

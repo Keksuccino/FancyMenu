@@ -4,7 +4,6 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -23,8 +22,7 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
 
     @Override
     public boolean isDeprecated() {
-        // Deprecated everywhere except on (Lex)Forge
-        return !Services.PLATFORM.getPlatformName().equals("forge");
+        return true;
     }
 
     @Override

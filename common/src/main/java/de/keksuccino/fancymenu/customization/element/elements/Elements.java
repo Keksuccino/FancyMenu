@@ -67,10 +67,7 @@ public class Elements {
         ElementRegistry.register(TOOLTIP);
         ElementRegistry.register(TICKER);
         ElementRegistry.register(PLAYER_ENTITY_V1);
-        // Don't load the new player entity on (Lex)Forge, since FER is not available for Forge
-        if (!Services.PLATFORM.getPlatformName().equals("forge")) {
-            ElementRegistry.register(PLAYER_ENTITY_V2);
-        }
+        ElementRegistry.register(PLAYER_ENTITY_V2);
         ElementRegistry.register(IMAGE);
         ElementRegistry.register(GLSL_SHADER);
         ElementRegistry.register(JSON_MODEL);

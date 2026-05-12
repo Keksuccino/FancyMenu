@@ -2,8 +2,8 @@ package de.keksuccino.fancymenu.customization.element.elements.playerentity;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.textures.CapeResourceSupplier;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.textures.SkinResourceSupplier;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.textures.CapeResourceSupplier;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.textures.SkinResourceSupplier;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinOptions;
 import de.keksuccino.fancymenu.util.SerializationHelper;
@@ -29,6 +29,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
+import java.util.Objects;
 import java.util.Set;
 
 public class PlayerEntityElement extends AbstractElement {
@@ -109,6 +110,12 @@ public class PlayerEntityElement extends AbstractElement {
     protected WrappedFancyPlayerWidget widget = null;
     protected Exception widgetConstructionFirstFail = null;
     protected Exception widgetConstructionSecondFail = null;
+    @Nullable
+    protected ResourceLocation lastAppliedSkinLocation = null;
+    @Nullable
+    protected ResourceLocation lastAppliedCapeLocation = null;
+    protected boolean lastAppliedSlim = false;
+    protected boolean appliedSkinAndCape = false;
 
     public PlayerEntityElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -272,7 +279,13 @@ public class PlayerEntityElement extends AbstractElement {
             capeLoc = this.capeTextureSupplier.getCapeLocation();
             if (capeLoc == CapeResourceSupplier.DEFAULT_CAPE_LOCATION) capeLoc = null;
         }
-        this.widget.setSkin(skinLoc, capeLoc, this.slim);
+        if (!this.appliedSkinAndCape || !skinLoc.equals(this.lastAppliedSkinLocation) || !Objects.equals(capeLoc, this.lastAppliedCapeLocation) || (this.slim != this.lastAppliedSlim)) {
+            this.widget.setSkin(skinLoc, capeLoc, this.slim);
+            this.lastAppliedSkinLocation = skinLoc;
+            this.lastAppliedCapeLocation = capeLoc;
+            this.lastAppliedSlim = this.slim;
+            this.appliedSkinAndCape = true;
+        }
     }
 
     protected void updateModelPartVisibility() {

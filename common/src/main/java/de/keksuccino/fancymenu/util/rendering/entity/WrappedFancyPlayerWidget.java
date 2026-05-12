@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.entity;
 
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -68,13 +69,13 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
 
     public void setHeight(int height) {
         this.height = height;
-        this.invoke("setHeight", height);
+        this.setWrappedHeight(height);
     }
 
     public void setSize(int width, int height) {
         this.setWidth(width);
         this.height = height;
-        this.invoke("setSize", width, height);
+        this.setWrappedHeight(height);
     }
 
     @Override
@@ -143,7 +144,8 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
     }
 
     public WrappedFancyPlayerWidget setSkin(@NotNull ResourceLocation skin, @Nullable ResourceLocation cape, boolean slim) {
-        this.invoke("setSkin", skin, cape, slim);
+        this.invoke("setSkin", skin, slim);
+        this.setCape(cape);
         return this;
     }
 
@@ -248,7 +250,7 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
     }
 
     public WrappedFancyPlayerWidget setBodyMovement(boolean shouldMove) {
-        this.invoke("setBodyMovement", shouldMove);
+        this.invoke("setMoving", shouldMove);
         return this;
     }
 
@@ -327,14 +329,16 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
         return this;
     }
 
-    private void invoke(@NotNull String methodName, Object... args) {
+    private boolean invoke(@NotNull String methodName, Object... args) {
         try {
             Method method = this.findMethod(methodName, args);
             if (method != null) {
                 method.setAccessible(true);
                 method.invoke(this.wrapped, args);
+                return true;
             }
         } catch (Throwable ignored) {}
+        return false;
     }
 
     @Nullable
@@ -357,6 +361,16 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
             }
         }
         return null;
+    }
+
+    private void setWrappedHeight(int height) {
+        ((IMixinAbstractWidget) this.wrapped).setHeightFancyMenu(height);
+    }
+
+    private void setCape(@Nullable ResourceLocation cape) {
+        try {
+            ((FancyPlayerWidgetBridge) this.wrapped).setCape_FancyMenu(cape);
+        } catch (Throwable ignored) {}
     }
 
     @NotNull
