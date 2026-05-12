@@ -471,12 +471,10 @@ public class PlaceholderParser {
             if (p == null) return this.placeholderString;
             if (!p.checkAsync()) return this.placeholderString;
             HashMap<String, String> values = this.getValues();
-            if (this.hasValues() && ((values == null) || values.isEmpty())) return this.placeholderString;
+            if (values == null) return this.placeholderString;
             DeserializedPlaceholderString deserialized = new DeserializedPlaceholderString(identifier, null, this.placeholderString);
-            if (values != null) {
-                for (Map.Entry<String, String> value : values.entrySet()) {
-                    deserialized.values.put(value.getKey(), replacePlaceholders(value.getValue(), this.parsed));
-                }
+            for (Map.Entry<String, String> value : values.entrySet()) {
+                deserialized.values.put(value.getKey(), replacePlaceholders(value.getValue(), this.parsed));
             }
             return p.getReplacementFor(deserialized);
         }
@@ -486,13 +484,14 @@ public class PlaceholderParser {
             HashMap<String, String> values = new HashMap<>();
             try {
                 Placeholder placeholder = this.getPlaceholder();
-                if ((placeholder == null) || !this.hasValues()) {
+                if (placeholder == null) {
                     return null;
                 }
+                if (!this.hasValues()) return values;
                 String normalized = this.getNormalizedString();
                 // Check if there's actually a comma (indicating values section exists)
                 if (!normalized.contains(COMMA)) {
-                    return null;
+                    return values;
                 }
                 String[] parts = StringUtils.split(normalized, COMMA, 2);
                 if (parts.length < 2) {

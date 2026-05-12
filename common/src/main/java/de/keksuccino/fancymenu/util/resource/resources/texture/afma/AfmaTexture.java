@@ -1163,10 +1163,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
     public void play() {
         if (this.closed.get() || this.loadingFailed.get()) return;
 
-        if (this.maxLoopsReached) {
-            this.reset();
-            return;
-        }
+        if (this.maxLoopsReached) return;
 
         if (this.pausedRequested) {
             this.playbackFrameStartMs = System.currentTimeMillis();

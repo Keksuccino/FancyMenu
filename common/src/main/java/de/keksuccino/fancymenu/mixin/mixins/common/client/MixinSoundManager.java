@@ -43,11 +43,16 @@ public abstract class MixinSoundManager {
         if (sound instanceof SimpleSoundInstance i) {
             SoundEvent event = SoundEvents.UI_BUTTON_CLICK.value();
             if ((event != null) && i.getIdentifier().equals(event.location())) {
-                IAudio globalClickSound = GlobalCustomizationHandler.getCustomButtonClickSound();
-                if ((globalClickSound != null) && globalClickSound.isReady()) {
-                    globalClickSound.setSoundChannel(SoundSource.MASTER);
-                    globalClickSound.stop();
-                    globalClickSound.play();
+                if (GlobalCustomizationHandler.hasCustomButtonClickSound()) {
+                    IAudio globalClickSound = GlobalCustomizationHandler.getCustomButtonClickSound();
+                    if (globalClickSound != null) {
+                        globalClickSound.waitForLoadingCompletedOrFailed(1500);
+                        if (globalClickSound.isReady()) {
+                            globalClickSound.setSoundChannel(SoundSource.MASTER);
+                            globalClickSound.stop();
+                            globalClickSound.play();
+                        }
+                    }
                     info.setReturnValue(SoundEngine.PlayResult.NOT_STARTED);
                 }
             }
