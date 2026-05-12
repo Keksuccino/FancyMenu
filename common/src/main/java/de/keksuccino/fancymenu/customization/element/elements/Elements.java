@@ -14,7 +14,7 @@ import de.keksuccino.fancymenu.customization.element.elements.inputfield.InputFi
 import de.keksuccino.fancymenu.customization.element.elements.item.ItemElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.jsonmodel.JsonModelElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.musiccontroller.MusicControllerElementBuilder;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.PlayerEntityElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.PlayerEntityElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.progressbar.ProgressBarElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.shape.circle.CircleShapeElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.shape.rectangle.RectangleShapeElementBuilder;
@@ -26,7 +26,6 @@ import de.keksuccino.fancymenu.customization.element.elements.slider.v2.SliderEl
 import de.keksuccino.fancymenu.customization.element.elements.tooltip.TooltipElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.video.mcef.MCEFVideoElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.video.nativevideo.NativeVideoElementBuilder;
-import de.keksuccino.fancymenu.platform.Services;
 
 public class Elements {
 
@@ -38,7 +37,6 @@ public class Elements {
     public static final TooltipElementBuilder TOOLTIP = new TooltipElementBuilder();
     public static final TickerElementBuilder TICKER = new TickerElementBuilder();
     public static final PlayerEntityElementBuilder PLAYER_ENTITY_V1 = new PlayerEntityElementBuilder();
-    public static final de.keksuccino.fancymenu.customization.element.elements.playerentity.PlayerEntityElementBuilder PLAYER_ENTITY_V2 = new de.keksuccino.fancymenu.customization.element.elements.playerentity.PlayerEntityElementBuilder();
     public static final ImageElementBuilder IMAGE = new ImageElementBuilder();
     public static final GlslElementBuilder GLSL_SHADER = new GlslElementBuilder();
     public static final JsonModelElementBuilder JSON_MODEL = new JsonModelElementBuilder();
@@ -67,10 +65,6 @@ public class Elements {
         ElementRegistry.register(TOOLTIP);
         ElementRegistry.register(TICKER);
         ElementRegistry.register(PLAYER_ENTITY_V1);
-        // Don't load the new player entity on (Lex)Forge, since FER is not available for Forge
-        if (!Services.PLATFORM.getPlatformName().equals("forge")) {
-            ElementRegistry.register(PLAYER_ENTITY_V2);
-        }
         ElementRegistry.register(IMAGE);
         ElementRegistry.register(GLSL_SHADER);
         ElementRegistry.register(JSON_MODEL);

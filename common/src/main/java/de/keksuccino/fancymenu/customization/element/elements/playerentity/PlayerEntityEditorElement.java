@@ -1,26 +1,25 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity;
 
+import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
-import de.keksuccino.fancymenu.customization.element.elements.item.ItemKeyScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.ConsumingSupplier;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
-import net.minecraft.client.gui.screens.Screen;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-import java.util.List;
-import java.util.Objects;
-import java.util.function.BiConsumer;
 
-public class PlayerEntityEditorElement extends AbstractEditorElement<PlayerEntityEditorElement, PlayerEntityElement> {
+@SuppressWarnings("all")
+public class PlayerEntityEditorElement extends AbstractEditorElement {
 
-    public PlayerEntityEditorElement(@NotNull PlayerEntityElement element, @NotNull LayoutEditorScreen editor) {
+    public PlayerEntityEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
         this.settings.setFadeable(false);
         this.settings.setOpacityChangeable(false);
+        this.settings.setResizeable(false);
+        this.settings.setAdvancedSizingSupported(false);
     }
 
     @Override
@@ -28,21 +27,20 @@ public class PlayerEntityEditorElement extends AbstractEditorElement<PlayerEntit
 
         super.init();
 
-        this.addToggleContextMenuEntryTo(this.rightClickMenu, "copy_client_player",
-                        PlayerEntityEditorElement.class,
-                        element -> element.element.copyClientPlayer,
-                        (element, s) -> element.element.setCopyClientPlayer(s),
+        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "copy_client_player",
+                        consumes -> (consumes instanceof PlayerEntityEditorElement),
+                        consumes -> ((PlayerEntityElement) consumes.element).copyClientPlayer,
+                        (element1, s) -> ((PlayerEntityElement) element1.element).setCopyClientPlayer(s),
                         "fancymenu.elements.player_entity.copy_client_player")
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.desc")))
-                .setIcon(MaterialIcons.PERSON);
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.desc")));
 
         this.rightClickMenu.addSeparatorEntry("separator_after_copy_client_player");
 
         this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "set_player_name",
                         consumes -> (consumes instanceof PlayerEntityEditorElement),
-                        consumes -> consumes.element.playerName,
+                        consumes -> ((PlayerEntityElement) consumes.element).playerName,
                         (element1, s) -> {
-                            PlayerEntityElement i = element1.element;
+                            PlayerEntityElement i = ((PlayerEntityElement) element1.element);
                             i.setPlayerName(s);
                             if (i.autoCape) {
                                 i.setCapeByPlayerName();
@@ -53,140 +51,131 @@ public class PlayerEntityEditorElement extends AbstractEditorElement<PlayerEntit
                         },
                         null, false, true, Component.translatable("fancymenu.elements.player_entity.set_player_name"),
                         true, null, null, null)
-                .addIsActiveSupplier((menu, entry) -> !this.element.copyClientPlayer)
+                .setIsActiveSupplier((menu, entry) -> !((PlayerEntityElement) this.element).copyClientPlayer)
                 .setTooltipSupplier((menu, entry) -> {
                     if (entry.isActive()) {
-                        return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.set_player_name.desc"));
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.set_player_name.desc"));
                     }
-                    return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
-                })
-                .setIcon(MaterialIcons.BADGE);
+                    return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
+                });
 
-        this.addToggleContextMenuEntryTo(this.rightClickMenu, "show_name",
-                        PlayerEntityEditorElement.class,
-                        element -> element.element.showPlayerName,
-                        (element, s) -> element.element.setShowPlayerName(s),
+        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "show_name",
+                        consumes -> (consumes instanceof PlayerEntityEditorElement),
+                        consumes -> ((PlayerEntityElement) consumes.element).showPlayerName,
+                        (element1, s) -> ((PlayerEntityElement) element1.element).setShowPlayerName(s),
                         "fancymenu.elements.player_entity.show_name")
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.show_name.desc")))
-                .setIcon(MaterialIcons.VISIBILITY);
-
-        this.element.nametagRotation.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.nametag_rotation.desc")))
-                .setIcon(MaterialIcons.ROTATE_RIGHT);
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.show_name.desc")));
 
         this.rightClickMenu.addSeparatorEntry("player_entity_separator_1");
 
-        this.addToggleContextMenuEntryTo(this.rightClickMenu, "auto_skin",
-                        PlayerEntityEditorElement.class,
-                        element -> element.element.autoSkin,
-                        (element, auto) -> {
-                            element.element.autoSkin = auto;
+        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "auto_skin",
+                        consumes -> (consumes instanceof PlayerEntityEditorElement),
+                        consumes -> ((PlayerEntityElement) consumes.element).autoSkin,
+                        (element1, auto) -> {
+                            ((PlayerEntityElement) element1.element).autoSkin = auto;
                             if (auto) {
-                                element.element.setSkinByPlayerName();
+                                ((PlayerEntityElement) element1.element).setSkinByPlayerName();
                             } else {
-                                element.element.skinTextureSupplier = null;
+                                ((PlayerEntityElement) element1.element).skinTextureSupplier = null;
                             }
                         },
                         "fancymenu.elements.player_entity.skin.auto")
-                .addIsActiveSupplier((menu, entry) -> !this.element.copyClientPlayer)
+                .setIsActiveSupplier((menu, entry) -> !((PlayerEntityElement) this.element).copyClientPlayer)
                 .setTooltipSupplier((menu, entry) -> {
                     if (entry.isActive()) {
-                        return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.skin.auto.desc"));
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.skin.auto.desc"));
                     }
-                    return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
-                })
-                .setIcon(MaterialIcons.AUTO_AWESOME);
+                    return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
+                });
 
-        this.addToggleContextMenuEntryTo(this.rightClickMenu, "slim_skin",
-                        PlayerEntityEditorElement.class,
-                        element -> element.element.slim,
-                        (element, s) -> element.element.slim = s,
+        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "slim_skin",
+                        consumes -> (consumes instanceof PlayerEntityEditorElement),
+                        consumes -> ((PlayerEntityElement) consumes.element).slim,
+                        (element1, s) -> ((PlayerEntityElement) element1.element).slim = s,
                         "fancymenu.elements.player_entity.slim")
-                .addIsActiveSupplier((menu, entry) -> (!this.element.copyClientPlayer && !this.element.autoSkin))
+                .setIsActiveSupplier((menu, entry) -> (!((PlayerEntityElement) this.element).copyClientPlayer && !((PlayerEntityElement) this.element).autoSkin))
                 .setTooltipSupplier((menu, entry) -> {
                     if (entry.isActive()) {
-                        return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.slim.desc"));
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.slim.desc"));
                     } else {
-                        if (this.element.autoSkin) {
-                            return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.skin.auto.blocked_until_disabled"));
+                        if (((PlayerEntityElement) this.element).autoSkin) {
+                            return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.skin.auto.blocked_until_disabled"));
                         }
-                        if (this.element.copyClientPlayer) {
-                            return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
+                        if (((PlayerEntityElement) this.element).copyClientPlayer) {
+                            return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
                         }
                     }
                     return null;
-                })
-                .setIcon(MaterialIcons.STRAIGHTEN);
+                });
 
         this.addImageResourceChooserContextMenuEntryTo(this.rightClickMenu, "set_skin_texture", PlayerEntityEditorElement.class,
                         null,
-                        consumes -> consumes.element.skinTextureSupplier,
+                        consumes -> consumes.getElement().skinTextureSupplier,
                         (element, supplier) -> {
                             if (supplier != null) {
-                                element.element.setSkinBySource(supplier.getSourceWithPrefix());
+                                element.getElement().setSkinBySource(supplier.getSourceWithPrefix());
                             } else {
-                                element.element.skinTextureSupplier = null;
+                                element.getElement().skinTextureSupplier = null;
                             }
                         },
-                        Component.translatable("fancymenu.elements.player_entity.skin_texture"),
+                        Components.translatable("fancymenu.elements.player_entity.skin_texture"),
                         true, null, true, true, true)
                 .setStackable(false)
-                .setIcon(MaterialIcons.IMAGE)
-                .addIsActiveSupplier((menu, entry) -> (!this.element.copyClientPlayer && !this.element.autoSkin))
+                .setIcon(ContextMenu.IconFactory.getIcon("image"))
+                .setIsActiveSupplier((menu, entry) -> (!this.getElement().copyClientPlayer && !this.getElement().autoSkin))
                 .setTooltipSupplier((menu, entry) -> {
-                    if (this.element.autoSkin) {
-                        return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.skin.auto.blocked_until_disabled"));
+                    if (this.getElement().autoSkin) {
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.skin.auto.blocked_until_disabled"));
                     }
-                    if (this.element.copyClientPlayer) {
-                        return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
+                    if (this.getElement().copyClientPlayer) {
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
                     }
                     return null;
                 });
 
         this.rightClickMenu.addSeparatorEntry("player_entity_separator_2");
 
-        this.addToggleContextMenuEntryTo(this.rightClickMenu, "auto_cape",
-                        PlayerEntityEditorElement.class,
-                        element -> element.element.autoCape,
-                        (element, auto) -> {
-                            element.element.autoCape = auto;
+        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "auto_cape",
+                        consumes -> (consumes instanceof PlayerEntityEditorElement),
+                        consumes -> ((PlayerEntityElement) consumes.element).autoCape,
+                        (element1, auto) -> {
+                            ((PlayerEntityElement) element1.element).autoCape = auto;
                             if (auto) {
-                                element.element.setCapeByPlayerName();
+                                ((PlayerEntityElement) element1.element).setCapeByPlayerName();
                             } else {
-                                element.element.capeTextureSupplier = null;
+                                ((PlayerEntityElement) element1.element).capeTextureSupplier = null;
                             }
                         },
                         "fancymenu.elements.player_entity.cape.auto")
-                .addIsActiveSupplier((menu, entry) -> !this.element.copyClientPlayer)
+                .setIsActiveSupplier((menu, entry) -> !((PlayerEntityElement) this.element).copyClientPlayer)
                 .setTooltipSupplier((menu, entry) -> {
                     if (entry.isActive()) {
-                        return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.cape.auto.desc"));
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.cape.auto.desc"));
                     }
-                    return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
-                })
-                .setIcon(MaterialIcons.AUTO_AWESOME);
+                    return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
+                });
 
         this.addImageResourceChooserContextMenuEntryTo(this.rightClickMenu, "set_cape_texture", PlayerEntityEditorElement.class,
                         null,
-                        consumes -> consumes.element.capeTextureSupplier,
+                        consumes -> consumes.getElement().capeTextureSupplier,
                         (element, supplier) -> {
                             if (supplier != null) {
-                                element.element.setCapeBySource(supplier.getSourceWithPrefix());
+                                element.getElement().setCapeBySource(supplier.getSourceWithPrefix());
                             } else {
-                                element.element.capeTextureSupplier = null;
+                                element.getElement().capeTextureSupplier = null;
                             }
                         },
-                        Component.translatable("fancymenu.elements.player_entity.cape_texture"),
+                        Components.translatable("fancymenu.elements.player_entity.cape_texture"),
                         true, null, true, true, true)
                 .setStackable(false)
-                .setIcon(MaterialIcons.IMAGE)
-                .addIsActiveSupplier((menu, entry) -> (!this.element.copyClientPlayer && !this.element.autoCape))
+                .setIcon(ContextMenu.IconFactory.getIcon("image"))
+                .setIsActiveSupplier((menu, entry) -> (!this.getElement().copyClientPlayer && !this.getElement().autoCape))
                 .setTooltipSupplier((menu, entry) -> {
-                    if (this.element.autoCape) {
-                        return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.cape.auto.blocked_until_disabled"));
+                    if (this.getElement().autoCape) {
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.cape.auto.blocked_until_disabled"));
                     }
-                    if (this.element.copyClientPlayer) {
-                        return UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
+                    if (this.getElement().copyClientPlayer) {
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.copy_client_player.blocked_until_disabled"));
                     }
                     return null;
                 });
@@ -194,126 +183,64 @@ public class PlayerEntityEditorElement extends AbstractEditorElement<PlayerEntit
         this.rightClickMenu.addSeparatorEntry("separator_after_set_cape");
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "head_follows_mouse", PlayerEntityEditorElement.class,
-                element -> element.element.headFollowsMouse,
-                (element, follow) -> element.element.headFollowsMouse = follow,
-                "fancymenu.elements.player_entity.head_follows_mouse")
-                .setIcon(MaterialIcons.MOUSE);
+                element -> element.getElement().headFollowsMouse,
+                (element, follow) -> element.getElement().headFollowsMouse = follow,
+                "fancymenu.elements.player_entity.head_follows_mouse");
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "body_follows_mouse", PlayerEntityEditorElement.class,
-                element -> element.element.bodyFollowsMouse,
-                (element, follow) -> element.element.bodyFollowsMouse = follow,
-                "fancymenu.elements.player_entity.body_follows_mouse")
-                .setIcon(MaterialIcons.MOUSE);
-
-        this.addCycleContextMenuEntryTo(this.rightClickMenu, "base_pose", List.of(PlayerEntityElement.PlayerPose.values()), PlayerEntityEditorElement.class,
-                        consumes -> consumes.element.pose,
-                        (playerEntityEditorElement, playerPose) -> playerEntityEditorElement.element.pose = playerPose,
-                        (menu, entry, switcherValue) -> switcherValue.getCycleComponent())
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.pose.desc")))
-                .setIcon(MaterialIcons.ACCESSIBILITY_NEW);
-
-        this.addToggleContextMenuEntryTo(this.rightClickMenu, "body_movement", PlayerEntityEditorElement.class,
-                        consumes -> consumes.element.bodyMovement,
-                        (playerEntityEditorElement, aBoolean) -> playerEntityEditorElement.element.bodyMovement = aBoolean,
-                        "fancymenu.elements.player_entity.body_movement")
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.body_movement.desc")))
-                .setIcon(MaterialIcons.DIRECTIONS_RUN);
+                element -> element.getElement().bodyFollowsMouse,
+                (element, follow) -> element.getElement().bodyFollowsMouse = follow,
+                "fancymenu.elements.player_entity.body_follows_mouse");
 
         this.rightClickMenu.addClickableEntry("entity_pose", Component.translatable("fancymenu.elements.player_entity.edit_pose"),
                 (menu, entry) -> {
-                    PlayerEntityPoseScreen screen = new PlayerEntityPoseScreen(this.element, this.editor);
-                    menu.closeMenuChain();
-                    PlayerEntityPoseScreen.openInWindow(screen);
-                })
-                .setIcon(MaterialIcons.EDIT);
+                    Minecraft.getInstance().setScreen(new PlayerEntityPoseScreen(this.getElement(), this.editor, () -> {
+                        Minecraft.getInstance().setScreen(this.editor);
+                    }));
+                });
+
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "entity_scale", PlayerEntityEditorElement.class,
+                consumes -> consumes.getElement().scale,
+                (playerEntityEditorElement, s) -> playerEntityEditorElement.getElement().scale = s,
+                null, false, true, Component.translatable("fancymenu.elements.player_entity.scale"),
+                true, "30", null, null);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_entity_scale");
 
-        ContextMenu wearablesMenu = new ContextMenu();
-        this.rightClickMenu.addSubMenuEntry("wearables_menu", Component.translatable("fancymenu.elements.player_entity.wearables"), wearablesMenu)
-                .setIcon(MaterialIcons.CHECKROOM);
+        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "crouching",
+                        consumes -> (consumes instanceof PlayerEntityEditorElement),
+                        consumes -> ((PlayerEntityElement) consumes.element).crouching,
+                        (element1, s) -> ((PlayerEntityElement) element1.element).setCrouching(s),
+                        "fancymenu.elements.player_entity.crouching")
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.crouching.desc")));
 
-        this.addWearableEntrySet(wearablesMenu, this.element.leftHandWearable, "left_hand");
-        this.addWearableEntrySet(wearablesMenu, this.element.rightHandWearable, "right_hand");
-        this.addWearableEntrySet(wearablesMenu, this.element.headWearable, "head");
-        this.addWearableEntrySet(wearablesMenu, this.element.chestWearable, "chest");
-        this.addWearableEntrySet(wearablesMenu, this.element.legsWearable, "legs");
-        this.addWearableEntrySet(wearablesMenu, this.element.feetWearable, "feet");
-
-        this.rightClickMenu.addSeparatorEntry("separator_after_wearables");
-
-        this.addToggleContextMenuEntryTo(this.rightClickMenu, "is_baby",
-                        PlayerEntityEditorElement.class,
-                        element -> element.element.isBaby,
-                        (element, s) -> element.element.setIsBaby(s),
+        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "is_baby",
+                        consumes -> (consumes instanceof PlayerEntityEditorElement),
+                        consumes -> ((PlayerEntityElement)consumes.element).isBaby,
+                        (element1, s) -> ((PlayerEntityElement)element1.element).setIsBaby(s),
                         "fancymenu.elements.player_entity.baby")
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.baby.desc")))
-                .setIcon(MaterialIcons.CHILD_FRIENDLY);
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.baby.desc")));
 
         this.rightClickMenu.addSeparatorEntry("player_entity_separator_5");
 
-        this.addToggleContextMenuEntryTo(this.rightClickMenu, "parrot",
-                        PlayerEntityEditorElement.class,
-                        element -> element.element.hasParrotOnShoulder,
-                        (element, s) -> element.element.setHasParrotOnShoulder(s, element.element.parrotOnLeftShoulder),
+        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "parrot",
+                        consumes -> (consumes instanceof PlayerEntityEditorElement),
+                        consumes -> ((PlayerEntityElement) consumes.element).hasParrotOnShoulder,
+                        (element1, s) -> ((PlayerEntityElement) element1.element).setHasParrotOnShoulder(s, ((PlayerEntityElement) element1.element).parrotOnLeftShoulder),
                         "fancymenu.elements.player_entity.parrot")
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.parrot.desc")))
-                .setIcon(MaterialIcons.PETS);
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.parrot.desc")));
 
-        this.addToggleContextMenuEntryTo(this.rightClickMenu, "parrot_on_left",
-                        PlayerEntityEditorElement.class,
-                        element -> element.element.parrotOnLeftShoulder,
-                        (element, s) -> element.element.setHasParrotOnShoulder(element.element.hasParrotOnShoulder, s),
+        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "parrot_on_left",
+                        consumes -> (consumes instanceof PlayerEntityEditorElement),
+                        consumes -> ((PlayerEntityElement) consumes.element).parrotOnLeftShoulder,
+                        (element1, s) -> ((PlayerEntityElement) element1.element).setHasParrotOnShoulder(((PlayerEntityElement) element1.element).hasParrotOnShoulder, s),
                         "fancymenu.elements.player_entity.parrot_left")
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.parrot_left.desc")))
-                .setIcon(MaterialIcons.PETS);
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.parrot_left.desc")));
 
     }
 
-    protected void addWearableEntrySet(@NotNull ContextMenu contextMenu, @NotNull PlayerEntityElement.Wearable wearable, @NotNull String wearableIdentifier) {
-
-        ConsumingSupplier<PlayerEntityEditorElement, String> itemKeyTargetFieldGetter = consumes -> wearable.isEmpty() ? null : wearable.itemKey;
-        BiConsumer<PlayerEntityEditorElement, String> itemKeyTargetFieldSetter = (itemEditorElement, s) -> wearable.itemKey = Objects.requireNonNullElse(s, PlayerEntityElement.Wearable.WEARABLE_EMPTY_KEY);
-
-        ContextMenu.ClickableContextMenuEntry<?> itemKeyEntry = this.addStringInputContextMenuEntryTo(contextMenu, "wearable_entry_" + wearableIdentifier, PlayerEntityEditorElement.class,
-                        itemKeyTargetFieldGetter,
-                        itemKeyTargetFieldSetter,
-                        null, false, true, Component.translatable("fancymenu.elements.player_entity.wearables." + wearableIdentifier),
-                        true, null, null, null)
-                .setStackable(false)
-                .setIcon(MaterialIcons.INVENTORY);
-
-        if (itemKeyEntry instanceof ContextMenu.SubMenuContextMenuEntry subMenuEntry) {
-
-            subMenuEntry.getSubContextMenu().removeEntry("input_value");
-
-            subMenuEntry.getSubContextMenu().addClickableEntryAt(0, "input_value", Component.translatable("fancymenu.common_components.set"), (menu, entry) ->
-            {
-                if (entry.getStackMeta().isFirstInStack()) {
-                    Screen inputScreen = new ItemKeyScreen(itemKeyTargetFieldGetter.get(this), callback -> {
-                        if (callback != null) {
-                            this.editor.history.saveSnapshot();
-                            itemKeyTargetFieldSetter.accept(this, callback);
-                        }
-                        menu.closeMenu();
-                        this.openContextMenuScreen(this.editor);
-                    });
-                    this.openContextMenuScreen(inputScreen);
-                }
-            }).setStackable(false)
-                    .setIcon(MaterialIcons.EDIT);
-
-        }
-
-        this.addToggleContextMenuEntryTo(contextMenu, "toggle_enchant_" + wearableIdentifier, PlayerEntityEditorElement.class,
-                consumes -> wearable.enchanted,
-                (playerEntityEditorElement, aBoolean) -> wearable.enchanted = aBoolean,
-                "fancymenu.elements.player_entity.wearables." + wearableIdentifier + ".enchant")
-                .setIcon(MaterialIcons.AUTO_AWESOME);
-
-        contextMenu.addSeparatorEntry("separator_after_" + wearableIdentifier);
-
+    public PlayerEntityElement getElement() {
+        return (PlayerEntityElement) this.element;
     }
-
 
 }

@@ -10,13 +10,12 @@ import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.SimpleTexture;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,7 +25,7 @@ public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
 
     private static final Logger LOGGER = LogManager.getLogger();
     public static final ResourceLocation DEFAULT_CAPE_LOCATION = new ResourceLocation("fancymenu", "textures/player_entity/default_cape_texture.png");
-    public static final PngTexture DEFAULT_CAPE = PngTexture.location(DEFAULT_CAPE_LOCATION);
+    public static final SimpleTexture DEFAULT_CAPE = SimpleTexture.location(DEFAULT_CAPE_LOCATION);
     protected static final Map<String, String> CACHED_PLAYER_NAME_CAPE_URLS = new HashMap<>();
 
     protected boolean sourceIsPlayerName;
@@ -46,7 +45,7 @@ public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
     @NotNull
     public ITexture get() {
         String playerNameCapeUrlCached = this.playerNameCapeUrl;
-        String getterPlayerName = PlaceholderParser.replacePlaceholders(this.source);
+        String getterPlayerName = PlaceholderParser.replacePlaceholders(this.source, false);
         if (this.sourceIsPlayerName) {
             if (!getterPlayerName.equals(this.lastGetterPlayerName)) {
                 this.startedFindingPlayerNameCapeUrl = false;
@@ -71,7 +70,7 @@ public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
         if ((this.current != null) && this.current.isClosed()) {
             this.current = null;
         }
-        String getterSource = PlaceholderParser.replacePlaceholders(this.source);
+        String getterSource = PlaceholderParser.replacePlaceholders(this.source, false);
         if (this.sourceIsPlayerName && (playerNameCapeUrlCached == null)) {
             return DEFAULT_CAPE;
         }
