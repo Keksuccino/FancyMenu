@@ -21,5 +21,6 @@
 - Fixed "Element Settings" context menu of hidden elements in the layout editor's "Layers" widget closes instantly when moving the mouse
 - Fixed advanced sizing and positioning of elements breaking when decimal numbers are used instead of whole numbers (#1575)
 - Fixed FMA/AFMA files set as button background textures loop even when loop count is set to 1 (#1595)
+- Fixed "Player Entity" element asking for FER in MC 1.19.2
 
 %changelog:end%
