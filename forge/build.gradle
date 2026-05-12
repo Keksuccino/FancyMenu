@@ -93,6 +93,7 @@ dependencies {
 //        exclude group: 'net.fabricmc', module: 'fabric-loader'
 //    }
     implementation(fg.deobf("de.keksuccino:mcef-forge:2.2.0-1.20.1"))
+    implementation "it.crystalnest:fancy-entity-renderer-forge:$fer_mc_version-$fer_version"
     compileOnly project(":common")
 }
 
