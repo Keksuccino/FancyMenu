@@ -225,6 +225,10 @@ public final class GlobalCustomizationHandler {
         return (supplier != null) ? supplier.get() : null;
     }
 
+    public static boolean hasCustomButtonClickSound() {
+        return !FancyMenu.getOptions().globalButtonClickSound.getValue().isBlank();
+    }
+
     @Nullable
     public static ResourceSupplier<ITexture> getCustomButtonBackgroundNormalSupplier() {
         return BUTTON_BACKGROUND_NORMAL.get(FancyMenu.getOptions().globalButtonBackgroundNormal.getValue());

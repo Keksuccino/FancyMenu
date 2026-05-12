@@ -35,3 +35,4 @@ __pycache__/
 /forge/config.txt
 /forge/launcher.exe
 /forge/jar_output/
+/.idea/

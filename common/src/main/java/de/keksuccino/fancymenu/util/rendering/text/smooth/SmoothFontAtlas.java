@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.text.smooth;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.platform.TextureUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.client.Minecraft;
@@ -231,36 +230,38 @@ final class SmoothFontAtlas implements AutoCloseable {
 
         LOGGER.info("[FANCYMENU] Resizing smooth font atlas '{}' ({}): {}x{} -> {}x{}", debugName, sizeLabel, logicalWidth, logicalHeight, targetWidth, targetHeight);
 
+        NativeImage oldImage = atlasImage;
         NativeImage newImage = new NativeImage(NativeImage.Format.RGBA, targetWidth, targetHeight, true);
         
         // Manual copy to avoid potential issues with NativeImage.copyFrom
-        int oldWidth = atlasImage.getWidth();
-        int oldHeight = atlasImage.getHeight();
+        int oldWidth = oldImage.getWidth();
+        int oldHeight = oldImage.getHeight();
         for (int y = 0; y < oldHeight; y++) {
             for (int x = 0; x < oldWidth; x++) {
-                newImage.setPixelRGBA(x, y, atlasImage.getPixelRGBA(x, y));
+                newImage.setPixelRGBA(x, y, oldImage.getPixelRGBA(x, y));
             }
         }
         
-        atlasImage.close();
         atlasImage = newImage;
         logicalWidth = targetWidth;
         logicalHeight = targetHeight;
-        dynamicTexture.setPixels(atlasImage);
+        replaceTexture();
+    }
 
-        final int finalTargetWidth = targetWidth;
-        final int finalTargetHeight = targetHeight;
-
-        Runnable uploadTask = () -> {
-            TextureUtil.prepareImage(dynamicTexture.getId(), finalTargetWidth, finalTargetHeight);
-            dynamicTexture.upload();
+    private void replaceTexture() {
+        NativeImage resizedImage = atlasImage;
+        Runnable action = () -> {
+            DynamicTexture newTexture = new DynamicTexture(resizedImage);
+            Minecraft.getInstance().getTextureManager().register(textureLocation, newTexture);
+            dynamicTexture = newTexture;
+            textureId = newTexture.getId();
             applyLinearFilter();
         };
 
         if (RenderSystem.isOnRenderThread()) {
-            uploadTask.run();
+            action.run();
         } else {
-            RenderSystem.recordRenderCall(uploadTask::run);
+            RenderSystem.recordRenderCall(action::run);
         }
     }
 
@@ -290,14 +291,6 @@ final class SmoothFontAtlas implements AutoCloseable {
                 int color = FastColor.ABGR32.color(a, b, g, r);
                 atlasImage.setPixelRGBA(atlasX + x, atlasY + y, color);
             }
-        }
-    }
-
-    private void upload() {
-        if (RenderSystem.isOnRenderThread()) {
-            dynamicTexture.upload();
-        } else {
-            RenderSystem.recordRenderCall(dynamicTexture::upload);
         }
     }
 
