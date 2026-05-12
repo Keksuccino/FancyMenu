@@ -22,5 +22,6 @@
 - Fixed advanced sizing and positioning of elements breaking when decimal numbers are used instead of whole numbers (#1575)
 - Fixed FMA/AFMA files set as button background textures loop even when loop count is set to 1 (#1595)
 - Fixed "Player Entity" element asking for FER in MC 1.19.2
+- Fixed FER-powered "Player Entity" element not working correctly in MC 1.20.1
 
 %changelog:end%
