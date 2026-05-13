@@ -673,6 +673,10 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        return this.handleMouseClicked(event, isDoubleClick);
+    }
+
+    private boolean handleMouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         if (!this.canConsumeUserInput) return false;
         boolean handled = super.mouseClicked(event, isDoubleClick);
         if (handled && event.button() == 0) this.leftMouseDown = true;
@@ -680,7 +684,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        return this.mouseClicked(VanillaEvents.mouseButtonEvent(mouseX, mouseY, button, 0), false);
+        return this.handleMouseClicked(VanillaEvents.mouseButtonEvent(mouseX, mouseY, button, 0), false);
     }
 
     //This is to make the edit box work in FocuslessEventHandlers

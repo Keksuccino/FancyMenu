@@ -2,7 +2,9 @@ package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
 
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -104,6 +106,32 @@ public abstract class PiPWindowBody extends Screen implements PipableScreen {
             return true;
         }
         return super.keyPressed(new net.minecraft.client.input.KeyEvent(keyCode, scanCode, modifiers));
+    }
+
+    @Override
+    public boolean mouseClicked(@NotNull MouseButtonEvent event, boolean isDoubleClick) {
+        for (GuiEventListener listener : this.children()) {
+            if (listener.mouseClicked(event, isDoubleClick)) {
+                if (listener.shouldTakeFocusAfterInteraction()) {
+                    this.setFocused(listener);
+                    if (event.button() == 0) {
+                        this.setDragging(true);
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
+        for (GuiEventListener listener : this.children()) {
+            if (listener.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
