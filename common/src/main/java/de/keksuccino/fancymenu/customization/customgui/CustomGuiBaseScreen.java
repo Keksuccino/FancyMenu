@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.customgui;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
+import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -84,6 +85,8 @@ public class CustomGuiBaseScreen extends Screen {
     @Override
 	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
+        this.renderBackground(graphics, mouseX, mouseY, partial);
+
 		super.render(graphics, mouseX, mouseY, partial);
 
 		String title = PlaceholderParser.replacePlaceholders(this.getTitleString());
@@ -118,6 +121,7 @@ public class CustomGuiBaseScreen extends Screen {
         if (!popup && renderBackgroundOverlay) {
             this.renderDirtBackground(graphics);
         }
+        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, graphics, mouseX, mouseY, partial));
     }
 
     protected void renderPopupMenuBackgroundScreen(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
