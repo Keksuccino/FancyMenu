@@ -275,8 +275,8 @@ public class PlayerEntityElement extends AbstractElement {
             capeLoc = this.capeTextureSupplier.getCapeLocation();
             if (capeLoc == CapeResourceSupplier.DEFAULT_CAPE_LOCATION) capeLoc = null;
         }
-        ClientAsset.ResourceTexture skinTexture = new ClientAsset.ResourceTexture(skinLoc);
-        ClientAsset.ResourceTexture capeTexture = capeLoc != null ? new ClientAsset.ResourceTexture(capeLoc) : null;
+        ClientAsset.ResourceTexture skinTexture = new ClientAsset.ResourceTexture(skinLoc, skinLoc);
+        ClientAsset.ResourceTexture capeTexture = capeLoc != null ? new ClientAsset.ResourceTexture(capeLoc, capeLoc) : null;
         this.widget.setSkin(PlayerSkin.insecure(skinTexture, capeTexture, null, this.slim ? PlayerModelType.SLIM : PlayerModelType.WIDE));
     }
 
