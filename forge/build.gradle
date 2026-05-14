@@ -89,7 +89,7 @@ dependencies {
     implementation fg.deobf("maven.modrinth:konkrete:1.8.0-1.20-1.20.1-forge")
     implementation fg.deobf("maven.modrinth:melody:1.0.3-1.20.1-1.20.4-forge")
     implementation(fg.deobf("de.keksuccino:mcef-forge:2.2.0-1.20.1"))
-    compileOnly(fg.deobf("maven.modrinth:fancy-entity-renderer:nC3OBHwC"))
+    implementation(fg.deobf("maven.modrinth:fancy-entity-renderer:nC3OBHwC"))
     compileOnly project(":common")
 }
 
