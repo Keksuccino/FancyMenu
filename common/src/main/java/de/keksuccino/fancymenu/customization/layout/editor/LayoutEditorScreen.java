@@ -369,7 +369,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		if (!this.layout.menuBackgrounds.isEmpty()) {
 
 			if (this.layout.applyVanillaBackgroundBlur) {
-				Minecraft.getInstance().gameRenderer.processBlurEffect();
+                RenderingUtils.extractVanillaLikeFullscreenBlur(graphics, this, partial);
 			}
 
 			if (this.layout.showScreenBackgroundOverlayOnCustomBackground) {

@@ -68,7 +68,17 @@ public abstract class MixinScreen implements CustomizableScreen {
 
     @Inject(method = "renderBlurredBackground", at = @At("HEAD"), cancellable = true)
     private void head_renderBlurredBackground_FancyMenu(GuiGraphics graphics, CallbackInfo info) {
-        if (RenderingUtils.isVanillaMenuBlurringBlocked()) info.cancel();
+        if (RenderingUtils.isVanillaMenuBlurringBlocked()) {
+            info.cancel();
+            return;
+        }
+        Screen instance = Screen.class.cast(this);
+        ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(instance);
+        if ((layer != null) && ScreenCustomization.isCustomizationEnabledForScreen(instance)) {
+            if (!layer.layoutBase.menuBackgrounds.isEmpty() && layer.layoutBase.applyVanillaBackgroundBlur) {
+                info.cancel(); // This is to not apply Vanilla blur multiple times in the same render tick
+            }
+        }
     }
 
     @Inject(method = "renderPanorama", at = @At("HEAD"), cancellable = true)
