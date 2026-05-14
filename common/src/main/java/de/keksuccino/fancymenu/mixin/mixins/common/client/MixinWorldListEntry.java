@@ -12,16 +12,22 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(WorldSelectionList.WorldListEntry.class)
 public class MixinWorldListEntry {
 
-    @WrapWithCondition(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V"), method = "renderContent")
-    private boolean wrapBlitInRenderFancyMenu(GuiGraphicsExtractor graphics, RenderPipeline pipeline, Identifier loc, int x, int y, float u, float v, int width, int height, int textureWidth, int textureHeight) {
+    /**
+     * @reason Allows FancyMenu to suppress vanilla world icon rendering.
+     */
+    @WrapWithCondition(method = "extractContent", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V"))
+    private boolean wrap_blitInExtractContent_FancyMenu(GuiGraphicsExtractor graphics, RenderPipeline pipeline, Identifier loc, int x, int y, float u, float v, int width, int height, int textureWidth, int textureHeight) {
         if (textureHeight == 32) {
             return FancyMenu.getOptions().showSingleplayerScreenWorldIcons.getValue();
         }
         return true;
     }
 
-    @WrapWithCondition(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fill(IIIII)V"), method = "renderContent")
-    private boolean wrapFillInRenderFancyMenu(GuiGraphicsExtractor graphics, int p_93174_, int p_93175_, int p_93176_, int p_93177_, int p_93178_) {
+    /**
+     * @reason Allows FancyMenu to suppress vanilla world icon rendering.
+     */
+    @WrapWithCondition(method = "extractContent", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fill(IIIII)V"))
+    private boolean wrap_fillInExtractContent_FancyMenu(GuiGraphicsExtractor graphics, int p_93174_, int p_93175_, int p_93176_, int p_93177_, int p_93178_) {
         return FancyMenu.getOptions().showSingleplayerScreenWorldIcons.getValue();
     }
 
