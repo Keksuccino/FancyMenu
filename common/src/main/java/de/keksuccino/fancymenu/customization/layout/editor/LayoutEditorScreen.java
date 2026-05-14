@@ -35,6 +35,8 @@ import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -370,7 +372,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		if (!this.layout.menuBackgrounds.isEmpty()) {
 
 			if (this.layout.applyVanillaBackgroundBlur) {
-				Minecraft.getInstance().gameRenderer.processBlurEffect();
+				RenderingUtils.extractVanillaLikeFullscreenBlur(graphics, this, partial);
 			}
 
 			if (this.layout.showScreenBackgroundOverlayOnCustomBackground) {

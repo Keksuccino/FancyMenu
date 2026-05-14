@@ -11,6 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.resources.Identifier;
@@ -34,6 +35,7 @@ public class RenderingUtils {
     public static final DrawableColor MISSING_TEXTURE_COLOR_MAGENTA = DrawableColor.of(Color.MAGENTA);
     public static final DrawableColor MISSING_TEXTURE_COLOR_BLACK = DrawableColor.BLACK;
     public static final Identifier FULLY_TRANSPARENT_TEXTURE = Identifier.fromNamespaceAndPath("fancymenu", "textures/fully_transparent.png");
+    public static final float VANILLA_BACKGROUND_BLUR_TO_GUI_BLUR_MULTIPLIER = 1.5F;
 
     private static final List<RenderingTask> PRE_RENDER_CONTEXTS = new ArrayList<>();
     private static final List<RenderingTask> POST_RENDER_CONTEXTS = new ArrayList<>();
@@ -43,6 +45,23 @@ public class RenderingUtils {
     private static int tooltipRenderingBlockDepth = 0;
     private static int overrideBackgroundBlurRadius = -1000;
     private static int shaderColor = -1;
+
+    public static void extractVanillaLikeFullscreenBlur(@NotNull GuiGraphicsExtractor graphics, @NotNull Screen screen, float partial) {
+        float blurRadius = convertVanillaBackgroundBlurrinessToGuiBlurRadius();
+        if (blurRadius > 0.0F) {
+            GuiBlurRenderer.renderBlurArea(graphics, 0.0F, 0.0F, screen.width, screen.height, blurRadius, 0.0F, DrawableColor.FULLY_TRANSPARENT, partial);
+        }
+    }
+
+    public static float convertVanillaBackgroundBlurrinessToGuiBlurRadius() {
+        int backgroundBlurriness = Minecraft.getInstance().options.getMenuBackgroundBlurriness();
+        if (backgroundBlurriness < 1) {
+            return 0.0F;
+        }
+        double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+        float convertedBackgroundBlurriness = (float)backgroundBlurriness * VANILLA_BACKGROUND_BLUR_TO_GUI_BLUR_MULTIPLIER;
+        return guiScale > 0.0D ? convertedBackgroundBlurriness / (float)guiScale : convertedBackgroundBlurriness;
+    }
 
     public static void setShaderColor(@NotNull GuiGraphicsExtractor graphics, float red, float green, float blue, float alpha) {
         shaderColor = ARGB.colorFromFloat(alpha, red, green, blue);

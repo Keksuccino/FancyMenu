@@ -44,10 +44,10 @@ public abstract class MixinScreen implements CustomizableScreen {
 
     @Unique private static final Identifier DIRT_TEXTURE_FANCYMENU = Identifier.withDefaultNamespace("textures/block/dirt.png");
 
-	@Unique private final List<GuiEventListener> removeOnInitChildrenFancyMenu = new ArrayList<>();
-	@Unique private boolean nextFocusPath_called_FancyMenu = false;
+    @Unique private final List<GuiEventListener> removeOnInitChildrenFancyMenu = new ArrayList<>();
+    @Unique private boolean nextFocusPath_called_FancyMenu = false;
 
-	@Shadow @Final private List<GuiEventListener> children;
+    @Shadow @Final private List<GuiEventListener> children;
 
     @Shadow
     public int width;
@@ -69,7 +69,17 @@ public abstract class MixinScreen implements CustomizableScreen {
 
     @Inject(method = "extractBlurredBackground", at = @At("HEAD"), cancellable = true)
     private void head_extractBlurredBackground_FancyMenu(GuiGraphicsExtractor graphics, CallbackInfo info) {
-        if (RenderingUtils.isVanillaMenuBlurringBlocked()) info.cancel();
+        if (RenderingUtils.isVanillaMenuBlurringBlocked()) {
+            info.cancel();
+            return;
+        }
+        Screen instance = Screen.class.cast(this);
+        ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(instance);
+        if ((layer != null) && ScreenCustomization.isCustomizationEnabledForScreen(instance)) {
+            if (!layer.layoutBase.menuBackgrounds.isEmpty() && layer.layoutBase.applyVanillaBackgroundBlur) {
+                info.cancel(); // This is to not apply Vanilla blur multiple times in the same render tick
+            }
+        }
     }
 
     @Inject(method = "extractPanorama", at = @At("HEAD"), cancellable = true)
@@ -119,83 +129,83 @@ public abstract class MixinScreen implements CustomizableScreen {
         info.cancel();
     }
 
-		@WrapOperation(method = "extractRenderStateWithTooltipAndSubtitles", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;extractBackground(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V"))
-		private void wrap_extractBackground_in_extractRenderStateWithTooltipAndSubtitles_FancyMenu(Screen instance, GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {
-		//Don't fire the event in the TitleScreen, because it gets handled differently there
-		if (instance instanceof TitleScreen) {
-			original.call(instance, graphics, mouseX, mouseY, partial);
-			return;
-		}
-		ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen(instance);
-		if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(instance)) {
-			if (!l.layoutBase.menuBackgrounds.isEmpty()) {
-					GlStateManager._enableBlend();
-				//Render a black background before the custom background gets rendered
-				graphics.fill(0, 0, instance.width, instance.height, 0);
-				RenderingUtils.resetShaderColor(graphics);
-			} else {
-				original.call(instance, graphics, mouseX, mouseY, partial);
-			}
-		} else {
-			original.call(instance, graphics, mouseX, mouseY, partial);
-		}
-		EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(instance, graphics, mouseX, mouseY, partial));
-	}
+    @WrapOperation(method = "extractRenderStateWithTooltipAndSubtitles", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;extractBackground(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V"))
+    private void wrap_extractBackground_in_extractRenderStateWithTooltipAndSubtitles_FancyMenu(Screen instance, GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {
+        //Don't fire the event in the TitleScreen, because it gets handled differently there
+        if (instance instanceof TitleScreen) {
+            original.call(instance, graphics, mouseX, mouseY, partial);
+            return;
+        }
+        ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen(instance);
+        if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(instance)) {
+            if (!l.layoutBase.menuBackgrounds.isEmpty()) {
+                GlStateManager._enableBlend();
+                //Render a black background before the custom background gets rendered
+                graphics.fill(0, 0, instance.width, instance.height, 0);
+                RenderingUtils.resetShaderColor(graphics);
+            } else {
+                original.call(instance, graphics, mouseX, mouseY, partial);
+            }
+        } else {
+            original.call(instance, graphics, mouseX, mouseY, partial);
+        }
+        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(instance, graphics, mouseX, mouseY, partial));
+    }
 
-		@Inject(method = "keyPressed", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/events/AbstractContainerEventHandler;nextFocusPath(Lnet/minecraft/client/gui/navigation/FocusNavigationEvent;)Lnet/minecraft/client/gui/ComponentPath;"))
-		private void beforeNextFocusPathInKeyPressedFancyMenu(KeyEvent event, CallbackInfoReturnable<Boolean> info) {
-			this.nextFocusPath_called_FancyMenu = true;
-		}
+    @Inject(method = "keyPressed", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/events/AbstractContainerEventHandler;nextFocusPath(Lnet/minecraft/client/gui/navigation/FocusNavigationEvent;)Lnet/minecraft/client/gui/ComponentPath;"))
+    private void beforeNextFocusPathInKeyPressedFancyMenu(KeyEvent event, CallbackInfoReturnable<Boolean> info) {
+        this.nextFocusPath_called_FancyMenu = true;
+    }
 
-		@Inject(method = "keyPressed", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/events/AbstractContainerEventHandler;nextFocusPath(Lnet/minecraft/client/gui/navigation/FocusNavigationEvent;)Lnet/minecraft/client/gui/ComponentPath;", shift = At.Shift.AFTER))
-		private void afterNextFocusPathInKeyPressedFancyMenu(KeyEvent event, CallbackInfoReturnable<Boolean> info) {
-			this.nextFocusPath_called_FancyMenu = false;
-		}
+    @Inject(method = "keyPressed", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/events/AbstractContainerEventHandler;nextFocusPath(Lnet/minecraft/client/gui/navigation/FocusNavigationEvent;)Lnet/minecraft/client/gui/ComponentPath;", shift = At.Shift.AFTER))
+    private void afterNextFocusPathInKeyPressedFancyMenu(KeyEvent event, CallbackInfoReturnable<Boolean> info) {
+        this.nextFocusPath_called_FancyMenu = false;
+    }
 
-	@Inject(method = "setInitialFocus(Lnet/minecraft/client/gui/components/events/GuiEventListener;)V", at = @At("HEAD"))
-	private void beforeSetInitialFocusFancyMenu(GuiEventListener $$0, CallbackInfo info) {
-		this.nextFocusPath_called_FancyMenu = true;
-	}
+    @Inject(method = "setInitialFocus(Lnet/minecraft/client/gui/components/events/GuiEventListener;)V", at = @At("HEAD"))
+    private void beforeSetInitialFocusFancyMenu(GuiEventListener $$0, CallbackInfo info) {
+        this.nextFocusPath_called_FancyMenu = true;
+    }
 
-	@Inject(method = "setInitialFocus(Lnet/minecraft/client/gui/components/events/GuiEventListener;)V", at = @At("RETURN"))
-	private void afterSetInitialFocusFancyMenu(GuiEventListener $$0, CallbackInfo info) {
-		this.nextFocusPath_called_FancyMenu = false;
-	}
+    @Inject(method = "setInitialFocus(Lnet/minecraft/client/gui/components/events/GuiEventListener;)V", at = @At("RETURN"))
+    private void afterSetInitialFocusFancyMenu(GuiEventListener $$0, CallbackInfo info) {
+        this.nextFocusPath_called_FancyMenu = false;
+    }
 
-	@Inject(method = "setInitialFocus()V", at = @At("HEAD"))
-	private void beforeSetInitialFocus_2_FancyMenu(CallbackInfo info) {
-		this.nextFocusPath_called_FancyMenu = true;
-	}
+    @Inject(method = "setInitialFocus()V", at = @At("HEAD"))
+    private void beforeSetInitialFocus_2_FancyMenu(CallbackInfo info) {
+        this.nextFocusPath_called_FancyMenu = true;
+    }
 
-	@Inject(method = "setInitialFocus()V", at = @At("RETURN"))
-	private void afterSetInitialFocus_2_FancyMenu(CallbackInfo info) {
-		this.nextFocusPath_called_FancyMenu = false;
-	}
+    @Inject(method = "setInitialFocus()V", at = @At("RETURN"))
+    private void afterSetInitialFocus_2_FancyMenu(CallbackInfo info) {
+        this.nextFocusPath_called_FancyMenu = false;
+    }
 
-	@Inject(method = "children", at = @At("RETURN"), cancellable = true)
-	private void atReturnChildrenFancyMenu(CallbackInfoReturnable<List<? extends GuiEventListener>> info) {
-		if (this.nextFocusPath_called_FancyMenu) {
-			List<GuiEventListener> filtered = new ArrayList<>(this.children);
-			filtered.removeIf(guiEventListener -> (guiEventListener instanceof NavigatableWidget n) && (!n.isFocusable() || !n.isNavigatable()));
-			info.setReturnValue(filtered);
-		}
-	}
+    @Inject(method = "children", at = @At("RETURN"), cancellable = true)
+    private void atReturnChildrenFancyMenu(CallbackInfoReturnable<List<? extends GuiEventListener>> info) {
+        if (this.nextFocusPath_called_FancyMenu) {
+            List<GuiEventListener> filtered = new ArrayList<>(this.children);
+            filtered.removeIf(guiEventListener -> (guiEventListener instanceof NavigatableWidget n) && (!n.isFocusable() || !n.isNavigatable()));
+            info.setReturnValue(filtered);
+        }
+    }
 
-	/**
-	 * @reason This is to make the Title screen not constantly update the alpha of its widgets, so FancyMenu can properly handle it.
-	 */
-	@WrapWithCondition(method = "fadeWidgets", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractWidget;setAlpha(F)V"))
-	private boolean cancel_setAlpha_FancyMenu(AbstractWidget instance, float alpha) {
-		if (((Object)this) instanceof TitleScreen s) {
-			return !ScreenCustomization.isCustomizationEnabledForScreen(s);
-		}
-		return true;
-	}
+    /**
+     * @reason This is to make the Title screen not constantly update the alpha of its widgets, so FancyMenu can properly handle it.
+     */
+    @WrapWithCondition(method = "fadeWidgets", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractWidget;setAlpha(F)V"))
+    private boolean cancel_setAlpha_FancyMenu(AbstractWidget instance, float alpha) {
+        if (((Object)this) instanceof TitleScreen s) {
+            return !ScreenCustomization.isCustomizationEnabledForScreen(s);
+        }
+        return true;
+    }
 
-	@Unique
-	@Override
-	public @NotNull List<GuiEventListener> removeOnInitChildrenFancyMenu() {
-		return this.removeOnInitChildrenFancyMenu;
-	}
+    @Unique
+    @Override
+    public @NotNull List<GuiEventListener> removeOnInitChildrenFancyMenu() {
+        return this.removeOnInitChildrenFancyMenu;
+    }
 
 }
