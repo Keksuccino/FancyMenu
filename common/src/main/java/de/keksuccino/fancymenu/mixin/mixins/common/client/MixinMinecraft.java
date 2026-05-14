@@ -1,5 +1,8 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.mojang.blaze3d.platform.Window;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.WelcomeWindowBody;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
@@ -301,6 +304,7 @@ public class MixinMinecraft {
 	private void beforeLevelClearedWorldLeftFancyMenu(Screen screen, boolean keepDownloadedResourcePacks, boolean updateLevelInEngines, CallbackInfo info) {
 		WorldSessionTracker.handleWorldLeft((Minecraft)(Object)this);
 	}
+
 	@Inject(method = "clearClientLevel", at = @At("HEAD"))
 	private void beforeClearClientLevelFancyMenu(Screen nextScreen, CallbackInfo info) {
 		WorldSessionTracker.captureSnapshot((Minecraft) (Object) this);
@@ -313,12 +317,13 @@ public class MixinMinecraft {
 		SeamlessWorldLoadingHandler.clearCapture();
 	}
 
-	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init(II)V", shift = At.Shift.BEFORE))
-	private void beforeInitCurrentScreenFancyMenu(Screen screen, CallbackInfo info) {
-		if (screen != null) {
-			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(screen, InitOrResizeScreenEvent.InitializationPhase.INIT));
-			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(screen, InitOrResizeScreenEvent.InitializationPhase.INIT));
-		}
+	/** @reason Init.Pre listeners may change the GUI scale, so init needs the refreshed scaled dimensions. */
+	@WrapOperation(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init(II)V"))
+	private void wrap_init_FancyMenu(Screen instance, int width, int height, Operation<Void> original) {
+		EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(instance, InitOrResizeScreenEvent.InitializationPhase.INIT));
+		EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(instance, InitOrResizeScreenEvent.InitializationPhase.INIT));
+		Window window = Minecraft.getInstance().getWindow();
+		original.call(instance, window.getGuiScaledWidth(), window.getGuiScaledHeight());
 	}
 
 	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;updateTitle()V"))
