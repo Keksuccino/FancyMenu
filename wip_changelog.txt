@@ -26,6 +26,6 @@
 - Fixed menu background not working in custom GUIs in MC 1.19.2 and 1.20.1 (causes rendered stuff above it to get "burned" into the background) (#1588)
 - Fixed skins of "Player Entity" element not rendering in MC 1.21.11 (#1562)
 - Fixed some UI elements in windows not clickable in MC 1.21.11+ (like the placeholders in the placeholder picker) (#1598, #1569)
-- Fixed menu background blur not working in MC 26.1.X (#1580)
+- Fixed menu background blur not working in MC 1.21.11+ (#1580)
 
 %changelog:end%
