@@ -29,5 +29,6 @@
 - Fixed menu background blur not working in MC 1.21.11+ (#1580)
 - Fixed crash caused by an invalid Mixin in the SelectWorldScreen in MC 26.1.X (#1594)
 - Fixed Forced GUI Scale not working correctly in MC 1.21.11+ (#1565)
+- Fixed armor applied to "Player Entity" elements not visible in MC 26.1.X (#1590)
 
 %changelog:end%
