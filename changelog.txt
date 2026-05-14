@@ -1,4 +1,34 @@
 
+## CHANGELOG | FANCYMENU v3.9.1
+
+### Bug Fixes
+
+- Fixed custom button click sound set via Global Customizations not working the very first time a button gets clicked (#1586)
+- Fixed crash related to the smooth font renderer, triggered by, for example, moving the game window to a monitor with a different solution than the previous one (#1576)
+- Fixed Text in Text elements is getting cropped off, when a too small text border is set (#1567)
+- Fixed left-clicking while in a world opens the last edited menu (#1561)
+- Fixed legacy Realtime placeholders (and possibly some others) don't get parsed anymore (because of new timezone value) (#1593)
+- Fixed WHILE and ELSE-IF action blocks showing raw translatable requirement text instead of localized requirement names
+- Fixed listener and scheduler action previews showing raw translatable requirement text instead of localized requirement names
+- Fixed "Element Settings" context menu of hidden elements in the layout editor's "Layers" widget closes instantly when moving the mouse
+- Fixed advanced sizing and positioning of elements breaking when decimal numbers are used instead of whole numbers (#1575)
+- Fixed FMA/AFMA files set as button background textures loop even when loop count is set to 1 (#1595)
+- Fixed "Player Entity" element asking for FER in MC 1.19.2
+- Fixed FER-powered "Player Entity" element not working correctly in MC 1.20.1
+- Fixed menu background not working in custom GUIs in MC 1.19.2 and 1.20.1 (causes rendered stuff above it to get "burned" into the background) (#1588)
+- Fixed skins of "Player Entity" element not rendering in MC 1.21.11 (#1562)
+- Fixed some UI elements in windows not clickable in MC 1.21.11+ (like the placeholders in the placeholder picker) (#1598, #1569)
+- Fixed menu background blur not working in MC 1.21.11+ (#1580)
+- Fixed crash caused by an invalid Mixin in the SelectWorldScreen in MC 26.1.X (#1594)
+- Fixed Forced GUI Scale not working correctly in MC 1.21.11+ (#1565)
+- Fixed armor applied to "Player Entity" elements not visible in MC 26.1.X (#1590)
+- Fixed crash when using JSON-related features in Fabric 26.1.X (fixed in KONKRETE, so the Fabric version of FancyMenu now wants Konkrete v1.10.2+)
+
+%changelog:end%
+
+
+
+
 ## CHANGELOG | FANCYMENU v3.9.0
 
 ### Important
