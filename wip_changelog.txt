@@ -30,5 +30,6 @@
 - Fixed crash caused by an invalid Mixin in the SelectWorldScreen in MC 26.1.X (#1594)
 - Fixed Forced GUI Scale not working correctly in MC 1.21.11+ (#1565)
 - Fixed armor applied to "Player Entity" elements not visible in MC 26.1.X (#1590)
+- Fixed crash when using JSON-related features in Fabric 26.1.X (fixed in KONKRETE, so the Fabric version of FancyMenu now wants Konkrete v1.10.2+)
 
 %changelog:end%
