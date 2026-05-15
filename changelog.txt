@@ -1,4 +1,15 @@
 
+## CHANGELOG | FANCYMENU v3.9.3
+
+### Bug Fixes
+
+- Fixed startup crash on Forge 1.20.1
+
+%changelog:end%
+
+
+
+
 ## CHANGELOG | FANCYMENU v3.9.1
 
 ### Bug Fixes
