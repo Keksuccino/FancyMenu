@@ -18,6 +18,8 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 jarJar.enable()
 
+def generatedRefmap = layout.buildDirectory.file("generated/refmaps/${mod_id}.refmap.json")
+
 minecraft {
 
     mappings channel: 'official', version: minecraft_version
@@ -105,6 +107,17 @@ configurations {
 tasks.withType(JavaCompile).configureEach {
     source(project(":common").sourceSets.main.allSource)
 }
+gradle.projectsEvaluated {
+    tasks.named("compileJava", JavaCompile).configure {
+        def refmapFile = generatedRefmap.get().asFile
+        options.compilerArgs.removeAll { it.toString().startsWith("-AoutRefMapFile=") }
+        options.compilerArgs.add("-AoutRefMapFile=${refmapFile.canonicalPath}")
+        outputs.file(refmapFile)
+        doFirst {
+            refmapFile.parentFile.mkdirs()
+        }
+    }
+}
 tasks.withType(Javadoc).configureEach {
     source(project(":common").sourceSets.main.allJava)
 }
@@ -114,6 +127,7 @@ tasks.named("sourcesJar", Jar) {
 
 processResources {
     dependsOn(tasks.named("compileJava"))
+    from(generatedRefmap)
     from(project(":common").sourceSets.main.resources) {
         exclude "${mod_id}.refmap.json"
     }
