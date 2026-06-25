@@ -38,14 +38,14 @@ public class MixinGameRenderer {
     )
     private void beforeRenderItemInHand_FancyMenu(DeltaTracker $$0, CallbackInfo info) {
         if (this.minecraft != null && this.minecraft.level != null) {
-            SeamlessWorldLoadingHandler.captureFrameIfNeeded(this.minecraft.getMainRenderTarget());
+            SeamlessWorldLoadingHandler.captureFrameIfNeeded(this.minecraft.gameRenderer.mainRenderTarget());
         }
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;renderLevel(Lnet/minecraft/client/DeltaTracker;)V", shift = At.Shift.AFTER))
     private void afterRenderLevel_FancyMenu(DeltaTracker $$0, boolean $$1, CallbackInfo info) {
         if (this.minecraft != null && this.minecraft.level != null) {
-            SeamlessWorldLoadingHandler.captureFrameIfNeeded(this.minecraft.getMainRenderTarget());
+            SeamlessWorldLoadingHandler.captureFrameIfNeeded(this.minecraft.gameRenderer.mainRenderTarget());
         }
     }
 

@@ -271,7 +271,7 @@ public class BuddyStatusScreen implements Renderable {
 
         if (!isVisible) return;
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         BuddyTextures textures = buddy.getTextures();
 
         // Push pose stack and move to z=400 for rendering on top of everything

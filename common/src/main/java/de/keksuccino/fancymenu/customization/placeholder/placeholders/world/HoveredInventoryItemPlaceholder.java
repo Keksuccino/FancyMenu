@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders.world;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractContainerScreen;
 import de.keksuccino.fancymenu.platform.Services;
@@ -18,7 +20,7 @@ public class HoveredInventoryItemPlaceholder extends AbstractWorldPlaceholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        Screen screen = Minecraft.getInstance().screen;
+        Screen screen = ScreenUtils.getScreen();
         if (!(screen instanceof AbstractContainerScreen<?> containerScreen)) return "";
 
         Slot hoveredSlot = ((IMixinAbstractContainerScreen) containerScreen).get_hoveredSlot_FancyMenu();

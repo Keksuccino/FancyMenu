@@ -220,7 +220,7 @@ public class ExternalTextureSlideshowRenderer {
 	protected void renderPrevious(GuiGraphicsExtractor graphics) {
 		if ((this.previous != null) && (this.current != this.previous)) {
 			graphics.pose().pushMatrix();
-			com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+			com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
 			float o = this.opacity;
 			if (o > this.slideshowOpacity) {
 				o = this.slideshowOpacity;
@@ -238,7 +238,7 @@ public class ExternalTextureSlideshowRenderer {
 
 	protected void renderCurrent(GuiGraphicsExtractor graphics) {
 		if (this.current != null) {
-			com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+			com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
 			de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, this.slideshowOpacity);
 			ITexture t = this.current.get();
 			Identifier loc = (t != null) ? t.getResourceLocation() : null;
@@ -250,7 +250,7 @@ public class ExternalTextureSlideshowRenderer {
 
 	protected void renderOverlay(GuiGraphicsExtractor graphics) {
 		if (this.overlayTexture != null) {
-			com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+			com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
 			de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, 1.0F);
 			ITexture t = this.overlayTexture.get();
 			Identifier loc = (t != null) ? t.getResourceLocation() : null;

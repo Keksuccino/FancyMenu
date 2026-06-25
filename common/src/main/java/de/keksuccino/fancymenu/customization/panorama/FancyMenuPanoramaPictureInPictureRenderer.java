@@ -1,21 +1,21 @@
 package de.keksuccino.fancymenu.customization.panorama;
 
+import com.mojang.blaze3d.GpuFormat;
 import com.mojang.blaze3d.systems.GpuDevice;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuTextureView;
-import com.mojang.blaze3d.textures.TextureFormat;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.render.TextureSetup;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.state.gui.BlitRenderState;
 import net.minecraft.client.renderer.state.gui.GuiRenderState;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Vector4f;
 
 public class FancyMenuPanoramaPictureInPictureRenderer implements AutoCloseable {
 
-	private final MultiBufferSource.BufferSource bufferSource;
 	@Nullable
 	private GpuTexture texture;
 	@Nullable
@@ -25,8 +25,7 @@ public class FancyMenuPanoramaPictureInPictureRenderer implements AutoCloseable 
 	@Nullable
 	private GpuTextureView depthTextureView;
 
-	public FancyMenuPanoramaPictureInPictureRenderer(MultiBufferSource.BufferSource bufferSource) {
-		this.bufferSource = bufferSource;
+	public FancyMenuPanoramaPictureInPictureRenderer() {
 	}
 
 	public void prepare(FancyMenuPanoramaRenderState renderState, GuiRenderState guiRenderState, int guiScale) {
@@ -42,7 +41,6 @@ public class FancyMenuPanoramaPictureInPictureRenderer implements AutoCloseable 
 		RenderSystem.outputDepthTextureOverride = this.depthTextureView;
 		try {
 			renderState.panoramaRenderer().renderToCurrentOutput_FancyMenu(renderState.pitch(), renderState.yaw(), width, height);
-			this.bufferSource.endBatch();
 		} finally {
 			RenderSystem.outputColorTextureOverride = null;
 			RenderSystem.outputDepthTextureOverride = null;
@@ -96,13 +94,14 @@ public class FancyMenuPanoramaPictureInPictureRenderer implements AutoCloseable 
 
 		GpuDevice device = RenderSystem.getDevice();
 		if (this.texture == null) {
-			this.texture = device.createTexture(() -> "UI fancymenu_panorama texture", 13, TextureFormat.RGBA8, width, height, 1, 1);
+			this.texture = device.createTexture(() -> "UI fancymenu_panorama texture", 13, GpuFormat.RGBA8_UNORM, width, height, 1, 1);
 			this.textureView = device.createTextureView(this.texture);
-			this.depthTexture = device.createTexture(() -> "UI fancymenu_panorama depth texture", 9, TextureFormat.DEPTH32, width, height, 1, 1);
+			GpuFormat depthFormat = Minecraft.getInstance().gameRenderer.mainRenderTarget().getDepthTexture().getFormat();
+			this.depthTexture = device.createTexture(() -> "UI fancymenu_panorama depth texture", 9, depthFormat, width, height, 1, 1);
 			this.depthTextureView = device.createTextureView(this.depthTexture);
 		}
 
-		device.createCommandEncoder().clearColorAndDepthTextures(this.texture, 0, this.depthTexture, 1.0);
+		device.createCommandEncoder().clearColorAndDepthTextures(this.texture, new Vector4f(0.0F, 0.0F, 0.0F, 0.0F), this.depthTexture, 1.0);
 	}
 
 	@Override

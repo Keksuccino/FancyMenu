@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders.world;
 
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGui;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinHud;
 import de.keksuccino.fancymenu.util.rendering.text.ComponentParser;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -15,7 +15,7 @@ public class ActionBarMessageFmPlaceholder extends AbstractWorldPlaceholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        Component message = ((IMixinGui) Minecraft.getInstance().gui).get_overlayMessageString_FancyMenu();
+        Component message = ((IMixinHud) Minecraft.getInstance().gui.hud).get_overlayMessageString_FancyMenu();
         return message != null ? ComponentParser.toJson(message) : "";
     }
 

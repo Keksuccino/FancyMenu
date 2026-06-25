@@ -18,11 +18,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.system.MemoryUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -35,6 +37,8 @@ public class AfmaTexture implements ITexture, PlayableResource {
     private static final long MIN_FRAME_DELAY_MS = 10L;
     private static final long INACTIVITY_TIMEOUT_MS = 10000L;
     private static final long IDLE_SLEEP_MS = 10L;
+    private static final int MAX_RETAINED_DIRTY_UPLOAD_BYTES_FANCYMENU = 1024 * 1024;
+    private static final int FULL_UPLOAD_DIRTY_AREA_PERCENT_FANCYMENU = 80;
 
     protected volatile int width = 10;
     protected volatile int height = 10;
@@ -90,6 +94,8 @@ public class AfmaTexture implements ITexture, PlayableResource {
     protected volatile boolean sequenceUsesBlockInter = false;
     @Nullable
     protected volatile NativeImage blockInterReferenceCanvas = null;
+    @Nullable
+    protected ByteBuffer dirtyUploadScratchBuffer = null;
     protected volatile boolean playbackInitialized = false;
     protected volatile boolean playbackIntro = false;
     protected volatile int playbackIndex = -1;
@@ -865,11 +871,76 @@ public class AfmaTexture implements ITexture, PlayableResource {
     }
 
     protected void uploadDirtyRect(@NotNull DynamicTexture texture, @NotNull NativeImage canvas, @NotNull AfmaRect dirtyRect) {
+        if ((dirtyRect.width() <= 0) || (dirtyRect.height() <= 0)) {
+            return;
+        }
         if ((dirtyRect.width() >= canvas.getWidth()) && (dirtyRect.height() >= canvas.getHeight())) {
             texture.upload();
             return;
         }
-        RenderSystem.getDevice().createCommandEncoder().writeToTexture(texture.getTexture(), canvas, 0, 0, dirtyRect.x(), dirtyRect.y(), dirtyRect.width(), dirtyRect.height(), dirtyRect.x(), dirtyRect.y());
+
+        int bytesPerPixel = canvas.format().components();
+        int rowBytes = dirtyRect.width() * bytesPerPixel;
+        int canvasRowBytes = canvas.getWidth() * bytesPerPixel;
+        int requiredBytes = rowBytes * dirtyRect.height();
+        int canvasBytes = canvasRowBytes * canvas.getHeight();
+
+        if ((long)requiredBytes * 100L >= (long)canvasBytes * FULL_UPLOAD_DIRTY_AREA_PERCENT_FANCYMENU) {
+            texture.upload();
+            return;
+        }
+
+        ByteBuffer canvasPixels = canvas.getPixelBytes();
+        int sourceOffset = ((dirtyRect.y() * canvas.getWidth()) + dirtyRect.x()) * bytesPerPixel;
+        if (dirtyRect.width() == canvas.getWidth()) {
+            ByteBuffer sourceSlice = canvasPixels.duplicate();
+            sourceSlice.position(sourceOffset);
+            sourceSlice.limit(sourceOffset + requiredBytes);
+            RenderSystem.getDevice().createCommandEncoder().writeToTexture(texture.getTexture(), sourceSlice.slice(), 0, 0, dirtyRect.x(), dirtyRect.y(), dirtyRect.width(), dirtyRect.height());
+            return;
+        }
+
+        long sourceAddress = MemoryUtil.memAddress(canvasPixels);
+        int maxRowsPerChunk = Math.max(1, MAX_RETAINED_DIRTY_UPLOAD_BYTES_FANCYMENU / Math.max(1, rowBytes));
+        for (int row = 0; row < dirtyRect.height(); row += maxRowsPerChunk) {
+            int rowsThisChunk = Math.min(maxRowsPerChunk, dirtyRect.height() - row);
+            int chunkBytes = rowBytes * rowsThisChunk;
+            ByteBuffer scratchBuffer = this.ensureDirtyUploadScratchBuffer(chunkBytes);
+            scratchBuffer.clear();
+            long scratchAddress = MemoryUtil.memAddress(scratchBuffer);
+            for (int chunkRow = 0; chunkRow < rowsThisChunk; chunkRow++) {
+                long sourceRowAddress = sourceAddress + sourceOffset + (long)(row + chunkRow) * canvasRowBytes;
+                long targetRowAddress = scratchAddress + (long)chunkRow * rowBytes;
+                MemoryUtil.memCopy(sourceRowAddress, targetRowAddress, rowBytes);
+            }
+            scratchBuffer.position(0);
+            scratchBuffer.limit(chunkBytes);
+            RenderSystem.getDevice().createCommandEncoder().writeToTexture(texture.getTexture(), scratchBuffer, 0, 0, dirtyRect.x(), dirtyRect.y() + row, dirtyRect.width(), rowsThisChunk);
+        }
+    }
+
+    @NotNull
+    protected ByteBuffer ensureDirtyUploadScratchBuffer(int requiredBytes) {
+        ByteBuffer scratchBuffer = this.dirtyUploadScratchBuffer;
+        if ((scratchBuffer != null) && (scratchBuffer.capacity() >= requiredBytes)) {
+            return scratchBuffer;
+        }
+
+        if (scratchBuffer != null) {
+            MemoryUtil.memFree(scratchBuffer);
+        }
+
+        int capacity = Math.max(requiredBytes, Math.min(MAX_RETAINED_DIRTY_UPLOAD_BYTES_FANCYMENU, Math.max(1, this.width * 4)));
+        this.dirtyUploadScratchBuffer = MemoryUtil.memAlloc(capacity);
+        return this.dirtyUploadScratchBuffer;
+    }
+
+    protected void releaseDirtyUploadScratchBuffer() {
+        ByteBuffer scratchBuffer = this.dirtyUploadScratchBuffer;
+        this.dirtyUploadScratchBuffer = null;
+        if (scratchBuffer != null) {
+            MemoryUtil.memFree(scratchBuffer);
+        }
     }
 
     protected void copyPayloadIntoCanvas(@NotNull PixelPayload payload, @NotNull NativeImage canvas, int dstX, int dstY) {
@@ -1337,6 +1408,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
     }
 
     protected void releaseStreamingTexture(@Nullable Identifier resourceLocation, @Nullable DynamicTexture texture) {
+        this.releaseDirtyUploadScratchBuffer();
         if (resourceLocation != null) {
             Minecraft.getInstance().getTextureManager().release(resourceLocation);
         }

@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.elements.text.v2;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -78,7 +80,7 @@ public class TextElement extends AbstractElement {
             public void updateScrollArea() {
                 super.updateScrollArea();
                 //Manually update scroll bar area size, so the grabbers are outside the area
-                if (Minecraft.getInstance().screen != null) {
+                if (ScreenUtils.getScreen() != null) {
                     this.verticalScrollBar.scrollAreaEndX = TextElement.this.getAbsoluteX() + TextElement.this.getAbsoluteWidth() + 12;
                     this.horizontalScrollBar.scrollAreaEndY = TextElement.this.getAbsoluteY() + TextElement.this.getAbsoluteHeight() + 12;
                 }
@@ -164,7 +166,7 @@ public class TextElement extends AbstractElement {
 
                 this.markdownRenderer.setTextOpacity(this.opacity);
 
-                com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+                com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
                 this.scrollArea.setX(this.getAbsoluteX(), true);
                 this.scrollArea.setY(this.getAbsoluteY(), true);
                 this.scrollArea.setWidth(this.getAbsoluteWidth(), true);

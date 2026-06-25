@@ -154,7 +154,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
             if (this.autoHandle) BrowserHandler.notifyHandler(this.genericIdentifier.toString(), this);
 
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
 
             de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, this.opacity);
 

@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.networking.packets.commands.layout.suggestions;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.networking.PacketCodec;
@@ -31,7 +33,7 @@ public class LayoutCommandSuggestionsPacketCodec extends PacketCodec<LayoutComma
     @EventListener
     public void onClientTick(ClientTickEvent.Post e) {
         try {
-            Screen s = Minecraft.getInstance().screen;
+            Screen s = ScreenUtils.getScreen();
             if ((s instanceof ChatScreen) && ((lastScreen == null) || (lastScreen != s))) {
                 LayoutCommandSuggestionsPacket packet = new LayoutCommandSuggestionsPacket();
                 packet.layout_suggestions = getLayoutNameSuggestions();

@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.elements.ticker;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.action.blocks.ExecutableBlockDeserializer;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
@@ -44,8 +46,8 @@ public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEd
     @EventListener
     public void onClientTickPost(ClientTickEvent.Post e) {
         List<TickerElement.TickerElementThreadController> activeControllers = new ArrayList<>();
-        if (Minecraft.getInstance().screen != null) {
-            ScreenCustomizationLayer m = ScreenCustomizationLayerHandler.getLayerOfScreen(Minecraft.getInstance().screen);
+        if (ScreenUtils.getScreen() != null) {
+            ScreenCustomizationLayer m = ScreenCustomizationLayerHandler.getLayerOfScreen(ScreenUtils.getScreen());
             if (m != null) {
                 List<AbstractElement> elements = new ArrayList<>();
                 elements.addAll(m.normalElements.backgroundElements);

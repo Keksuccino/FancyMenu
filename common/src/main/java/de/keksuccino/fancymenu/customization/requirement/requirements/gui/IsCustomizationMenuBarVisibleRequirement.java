@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.requirement.requirements.gui;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
@@ -26,7 +28,7 @@ public class IsCustomizationMenuBarVisibleRequirement extends Requirement {
 
     @Override
     public boolean isRequirementMet(@Nullable String value) {
-        Screen screen = Minecraft.getInstance().screen;
+        Screen screen = ScreenUtils.getScreen();
         if (screen == null) {
             return false;
         }

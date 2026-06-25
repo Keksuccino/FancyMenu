@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.util.auth;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.mod.UniversalModContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -74,7 +76,7 @@ public class ModValidator {
 
     public static void renderInvalidError(GuiGraphicsExtractor graphics) {
 
-        Screen current = Minecraft.getInstance().screen;
+        Screen current = ScreenUtils.getScreen();
         if (current == null) return;
 
         //Do not render the error in non-Minecraft screens

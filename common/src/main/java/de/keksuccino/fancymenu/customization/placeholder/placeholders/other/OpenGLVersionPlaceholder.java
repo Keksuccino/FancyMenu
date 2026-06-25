@@ -23,7 +23,7 @@ public class OpenGLVersionPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        return RenderSystem.getDevice().getVersion();
+        return RenderSystem.getDevice().getDeviceInfo().driverInfo();
     }
 
     @Override

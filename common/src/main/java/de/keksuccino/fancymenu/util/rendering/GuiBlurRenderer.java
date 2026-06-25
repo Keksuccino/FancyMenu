@@ -281,7 +281,7 @@ public final class GuiBlurRenderer {
         // The final post pass writes a masked mix back into the main target, so no extra blit is needed here.
         ACTIVE_POST_PASS_SCISSOR_FANCYMENU.set(scissor);
         try {
-            postChain.process(minecraft.getMainRenderTarget(), getResourceAllocator(minecraft));
+            postChain.process(minecraft.gameRenderer.mainRenderTarget(), getResourceAllocator(minecraft));
         } finally {
             ACTIVE_POST_PASS_SCISSOR_FANCYMENU.remove();
         }

@@ -37,7 +37,7 @@ public class BossNamePlaceholder extends Placeholder {
         int index = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, 0, dps.values.get("boss_index"));
         boolean asJson = SerializationHelper.INSTANCE.deserializeBoolean(false, dps.values.get("as_json"));
         if ((player != null) && (level != null)) {
-            Map<UUID, LerpingBossEvent> bosses = ((IMixinBossHealthOverlay)Minecraft.getInstance().gui.getBossOverlay()).get_events_FancyMenu(); // this is a linked hash map, so indexes should work fine
+            Map<UUID, LerpingBossEvent> bosses = ((IMixinBossHealthOverlay)Minecraft.getInstance().gui.hud.getBossOverlay()).get_events_FancyMenu(); // this is a linked hash map, so indexes should work fine
             if (bosses.size() >= (index + 1)) {
                 int i = 0;
                 for (Map.Entry<UUID, LerpingBossEvent> m : bosses.entrySet()) {

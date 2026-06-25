@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.requirement.requirements.gui;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
@@ -42,7 +44,7 @@ public class IsMenuTitleRequirement extends Requirement {
     public boolean isRequirementMet(@Nullable String value) {
 
         if (value != null) {
-            Screen s = Minecraft.getInstance().screen;
+            Screen s = ScreenUtils.getScreen();
             if (s != null) {
                 String key = null;
                 String text;

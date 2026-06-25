@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import java.io.File;
 import java.io.IOException;
 import de.keksuccino.fancymenu.FancyMenu;
@@ -119,11 +121,11 @@ public class ScreenCustomizationEvents {
 	public void onTick(ClientTickEvent.Pre e) {
 		GlobalCustomizationHandler.tickMenuMusic();
 
-		if (Minecraft.getInstance().screen == null) {
+		if (ScreenUtils.getScreen() == null) {
 			this.lastScreen = null;
 		}
 
-		if ((Minecraft.getInstance().level != null) && (Minecraft.getInstance().screen == null) && this.resumeWorldMusic) {
+		if ((Minecraft.getInstance().level != null) && (ScreenUtils.getScreen() == null) && this.resumeWorldMusic) {
 			Minecraft.getInstance().getSoundManager().resume();
 			this.resumeWorldMusic = false;
 		}

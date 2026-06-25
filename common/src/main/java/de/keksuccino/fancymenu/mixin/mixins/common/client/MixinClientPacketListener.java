@@ -102,7 +102,7 @@ public class MixinClientPacketListener {
     }
 
     /** @reason Fire FancyMenu listener after the death screen opened for the local player. */
-    @Inject(method = "handlePlayerCombatKill", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V", shift = At.Shift.AFTER))
+    @Inject(method = "handlePlayerCombatKill", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V", shift = At.Shift.AFTER))
     private void after_handlePlayerCombatKillSetScreen_FancyMenu(ClientboundPlayerCombatKillPacket packet, CallbackInfo ci) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.player == null) {

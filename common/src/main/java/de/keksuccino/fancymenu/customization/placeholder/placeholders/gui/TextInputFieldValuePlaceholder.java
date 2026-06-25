@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders.gui;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
@@ -31,7 +33,7 @@ public class TextInputFieldValuePlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        if (Minecraft.getInstance().screen == null) {
+        if (ScreenUtils.getScreen() == null) {
             return "";
         }
 
@@ -63,16 +65,16 @@ public class TextInputFieldValuePlaceholder extends Placeholder {
 
     @Nullable
     private AbstractElement findElement(@NotNull String id) {
-        if (Minecraft.getInstance().screen == null) {
+        if (ScreenUtils.getScreen() == null) {
             return null;
         }
 
-        if (Minecraft.getInstance().screen instanceof LayoutEditorScreen editor) {
+        if (ScreenUtils.getScreen() instanceof LayoutEditorScreen editor) {
             AbstractEditorElement e = editor.getElementByInstanceIdentifier(id);
             return e != null ? e.element : null;
         }
 
-        ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(Minecraft.getInstance().screen);
+        ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(ScreenUtils.getScreen());
         if (layer == null) {
             return null;
         }

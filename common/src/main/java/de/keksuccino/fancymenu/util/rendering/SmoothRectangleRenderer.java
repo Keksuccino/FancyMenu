@@ -1,11 +1,13 @@
 package de.keksuccino.fancymenu.util.rendering;
 
+import com.mojang.blaze3d.GpuFormat;
+import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import java.util.Optional;
-import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinBufferBuilder;
@@ -14,6 +16,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
+import net.minecraft.client.renderer.BindGroupLayouts;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
@@ -28,38 +32,40 @@ public final class SmoothRectangleRenderer {
 
     private static final float QUAD_AA_PADDING_PIXELS_FANCYMENU = 2.0F;
     private static final Matrix3x2f IDENTITY_POSE_FANCYMENU = new Matrix3x2f();
-    private static final VertexFormatElement RECT_INFO_0_FANCYMENU = registerNextVertexFormatElement_FancyMenu();
-    private static final VertexFormatElement RECT_INFO_1_FANCYMENU = registerNextVertexFormatElement_FancyMenu();
-    private static final VertexFormatElement RECT_INFO_2_FANCYMENU = registerNextVertexFormatElement_FancyMenu();
-    private static final VertexFormat SMOOTH_RECT_VERTEX_FORMAT_FANCYMENU = VertexFormat.builder()
-            .add("Position", VertexFormatElement.POSITION)
-            .add("Color", VertexFormatElement.COLOR)
-            .add("UV0", VertexFormatElement.UV0)
-            .add("RectInfo0", RECT_INFO_0_FANCYMENU)
-            .add("RectInfo1", RECT_INFO_1_FANCYMENU)
-            .add("RectInfo2", RECT_INFO_2_FANCYMENU)
+    private static final String RECT_INFO_0_NAME_FANCYMENU = "RectInfo0";
+    private static final String RECT_INFO_1_NAME_FANCYMENU = "RectInfo1";
+    private static final String RECT_INFO_2_NAME_FANCYMENU = "RectInfo2";
+    private static final VertexFormat SMOOTH_RECT_VERTEX_FORMAT_FANCYMENU = VertexFormat.builder(0)
+            .addAttribute(DefaultVertexFormat.POSITION_SEMANTIC_NAME, GpuFormat.RGB32_FLOAT)
+            .addAttribute(DefaultVertexFormat.COLOR_SEMANTIC_NAME, GpuFormat.RGBA8_UNORM)
+            .addAttribute(DefaultVertexFormat.UV0_SEMANTIC_NAME, GpuFormat.RG32_FLOAT)
+            .addAttribute(RECT_INFO_0_NAME_FANCYMENU, GpuFormat.RGBA32_FLOAT)
+            .addAttribute(RECT_INFO_1_NAME_FANCYMENU, GpuFormat.RGBA32_FLOAT)
+            .addAttribute(RECT_INFO_2_NAME_FANCYMENU, GpuFormat.RGBA32_FLOAT)
             .build();
-    private static final RenderPipeline SMOOTH_RECT_PIPELINE_FANCYMENU = RenderPipeline.builder()
+    private static final VertexFormatElement RECT_INFO_0_FANCYMENU = getVertexFormatElement_FancyMenu(SMOOTH_RECT_VERTEX_FORMAT_FANCYMENU, RECT_INFO_0_NAME_FANCYMENU);
+    private static final VertexFormatElement RECT_INFO_1_FANCYMENU = getVertexFormatElement_FancyMenu(SMOOTH_RECT_VERTEX_FORMAT_FANCYMENU, RECT_INFO_1_NAME_FANCYMENU);
+    private static final VertexFormatElement RECT_INFO_2_FANCYMENU = getVertexFormatElement_FancyMenu(SMOOTH_RECT_VERTEX_FORMAT_FANCYMENU, RECT_INFO_2_NAME_FANCYMENU);
+    private static final RenderPipeline SMOOTH_RECT_PIPELINE_FANCYMENU = RenderPipeline.builder().withBindGroupLayout(BindGroupLayouts.GLOBALS)
+            .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
             .withLocation(Identifier.withDefaultNamespace("pipeline/fancymenu_gui_smooth_rect"))
-            .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
-            .withUniform("Projection", UniformType.UNIFORM_BUFFER)
             .withVertexShader("core/fancymenu_gui_smooth_rect")
             .withFragmentShader("core/fancymenu_gui_smooth_rect")
             .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
             .withDepthStencilState(Optional.empty())
-            .withVertexFormat(SMOOTH_RECT_VERTEX_FORMAT_FANCYMENU, VertexFormat.Mode.QUADS)
+            .withVertexBinding(0, SMOOTH_RECT_VERTEX_FORMAT_FANCYMENU)
+            .withPrimitiveTopology(PrimitiveTopology.QUADS)
             .build();
 
     private SmoothRectangleRenderer() {
     }
 
-    private static VertexFormatElement registerNextVertexFormatElement_FancyMenu() {
-        for (int i = 0; i < VertexFormatElement.MAX_COUNT; i++) {
-            if (VertexFormatElement.byId(i) == null) {
-                return VertexFormatElement.register(i, 0, VertexFormatElement.Type.FLOAT, false, 4);
-            }
+    private static VertexFormatElement getVertexFormatElement_FancyMenu(@Nonnull VertexFormat format, @Nonnull String attributeName) {
+        VertexFormatElement element = format.getElement(attributeName);
+        if (element == null) {
+            throw new IllegalStateException("Missing vertex format element: " + attributeName);
         }
-        throw new IllegalStateException("VertexFormatElement count limit exceeded");
+        return element;
     }
 
     public static void renderSmoothRect(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float cornerRadius, int color, float partial) {
@@ -339,14 +345,15 @@ public final class SmoothRectangleRenderer {
     }
 
     private static void writeVec4_FancyMenu(@Nonnull VertexConsumer consumer, @Nonnull VertexFormatElement element, float x, float y, float z, float w) {
-        long pointer = ((IMixinBufferBuilder)consumer).invoke_beginElement_FancyMenu(element);
+        long pointer = ((IMixinBufferBuilder)consumer).get_vertexPointer_FancyMenu();
         if (pointer == -1L) {
             return;
         }
-        MemoryUtil.memPutFloat(pointer, x);
-        MemoryUtil.memPutFloat(pointer + 4L, y);
-        MemoryUtil.memPutFloat(pointer + 8L, z);
-        MemoryUtil.memPutFloat(pointer + 12L, w);
+        long elementPointer = pointer + element.offset();
+        MemoryUtil.memPutFloat(elementPointer, x);
+        MemoryUtil.memPutFloat(elementPointer + 4L, y);
+        MemoryUtil.memPutFloat(elementPointer + 8L, z);
+        MemoryUtil.memPutFloat(elementPointer + 12L, w);
     }
 
     private static void fillPixelSpan_FancyMenu(@Nonnull GuiGraphicsExtractor graphics, float left, float top, float right, float bottom, int color, float guiScale) {

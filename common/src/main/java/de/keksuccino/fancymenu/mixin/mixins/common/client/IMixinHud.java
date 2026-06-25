@@ -1,12 +1,12 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
-import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.Hud;
 import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(Gui.class)
-public interface IMixinGui {
+@Mixin(Hud.class)
+public interface IMixinHud {
 
     @Accessor("title") Component get_title_FancyMenu();
 

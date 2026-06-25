@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.elements.animationcontroller;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
@@ -86,14 +88,14 @@ public class TargetElementManagerScreen extends CellScreen {
                                 Dialogs.openMessage(Component.translatable("fancymenu.elements.animation_controller.manage_targets.already_exists"), MessageDialogStyle.WARNING);
                             } else {
                                 this.targets.add(new AnimationControllerElement.TargetElement(elementId));
-                                Minecraft.getInstance().setScreen(this);
+                                ScreenUtils.setScreen(this);
                             }
                         } else {
-                            Minecraft.getInstance().setScreen(this);
+                            ScreenUtils.setScreen(this);
                         }
                     }
             );
-            Minecraft.getInstance().setScreen(selector);
+            ScreenUtils.setScreen(selector);
         });
         this.addRightSideDefaultSpacer();
 

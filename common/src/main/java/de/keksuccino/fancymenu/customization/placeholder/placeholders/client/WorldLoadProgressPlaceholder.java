@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders.client;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinLevelLoadingScreen;
@@ -28,7 +30,7 @@ public class WorldLoadProgressPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        Screen s = Minecraft.getInstance().screen;
+        Screen s = ScreenUtils.getScreen();
         if (s instanceof ProgressScreen p) {
             return "" + ((IMixinProgressScreen)p).getProgressFancyMenu();
         }

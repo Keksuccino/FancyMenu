@@ -123,7 +123,7 @@ public abstract class MixinTitleScreen extends Screen {
             panorama.extractRenderState(graphics, 0, 0, partial);
         } else if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this)) {
             if (!l.layoutBase.menuBackgrounds.isEmpty()) {
-                GlStateManager._enableBlend();
+                GlStateManager._enableBlend(0);
                 //Render a black background before the custom background gets rendered
                 graphics.fill(0, 0, this.width, this.height, 0);
                 RenderingUtils.resetShaderColor(graphics);

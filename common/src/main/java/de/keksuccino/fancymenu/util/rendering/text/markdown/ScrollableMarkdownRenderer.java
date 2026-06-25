@@ -101,7 +101,7 @@ public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHan
 
         this.tick();
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         this.scrollArea.extractRenderState(graphics, mouseX, mouseY, partial);
         RenderingUtils.resetShaderColor(graphics);
 

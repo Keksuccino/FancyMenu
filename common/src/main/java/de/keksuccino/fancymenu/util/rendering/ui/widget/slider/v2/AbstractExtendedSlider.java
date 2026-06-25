@@ -107,7 +107,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
      * Returns if the slider should render its Vanilla background (true) or not (false).
      */
     protected boolean renderColorBackground(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         RenderingUtils.resetShaderColor(graphics);
         if ((this.isFocused() && !this.getAccessor().getCanChangeValueFancyMenu()) && (this.sliderBackgroundColorHighlighted != null)) {
             if (this.roundedColorBackground) {
@@ -201,7 +201,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
 
     protected void renderVanillaBackground(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, this.alpha);
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         de.keksuccino.fancymenu.util.rendering.RenderingUtils.defaultBlendFunc();
         com.mojang.blaze3d.opengl.GlStateManager._enableDepthTest();
         graphics.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, this.getSprite(), this.getX(), this.getY(), this.getWidth(), this.getHeight());
@@ -218,7 +218,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
      * Returns if the slider should render its Vanilla handle (true) or not (false).
      */
     protected boolean renderColorHandle(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         int handleX = this.getHandleX();
         int handleWidth = this.getHandleWidth();
         if (this.active) {
@@ -295,7 +295,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
 
     protected void renderVanillaHandle(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, this.alpha);
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         de.keksuccino.fancymenu.util.rendering.RenderingUtils.defaultBlendFunc();
         com.mojang.blaze3d.opengl.GlStateManager._enableDepthTest();
         graphics.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, this.getHandleSprite(), this.getHandleX(), this.getY(), this.getHandleWidth(), this.getHeight());

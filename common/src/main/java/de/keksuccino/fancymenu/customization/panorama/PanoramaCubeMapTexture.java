@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.panorama;
 
+import com.mojang.blaze3d.GpuFormat;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.GpuDevice;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -7,7 +8,6 @@ import com.mojang.blaze3d.textures.AddressMode;
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuTextureView;
-import com.mojang.blaze3d.textures.TextureFormat;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
@@ -16,6 +16,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Objects;
 
@@ -123,7 +124,7 @@ public class PanoramaCubeMapTexture extends AbstractTexture {
         this.texture = device.createTexture(
             () -> "CustomCubeMap_" + this.name,
             21, // Cube map target type
-            TextureFormat.RGBA8,
+            GpuFormat.RGBA8_UNORM,
             width,
             height,
             6, // 6 layers for cube map
@@ -135,15 +136,15 @@ public class PanoramaCubeMapTexture extends AbstractTexture {
         FilterMode filterMode = blur ? FilterMode.LINEAR : FilterMode.NEAREST;
         this.sampler = RenderSystem.getSamplerCache().getSampler(addressMode, addressMode, filterMode, filterMode, false);
         
-        // Write each face to its layer
+        int bytesPerFace = width * height * image.format().components();
+        ByteBuffer imagePixels = image.getPixelBytes();
+
+        // Write each face to its layer without allocating per-face images.
         for (int i = 0; i < 6; i++) {
-            device.createCommandEncoder().writeToTexture(
-                this.texture, 
-                image,
-                0, i, 0, 0,  // mip level, layer, x, y
-                width, height,
-                0, height * i // source x, source y
-            );
+            ByteBuffer facePixels = imagePixels.duplicate();
+            facePixels.position(bytesPerFace * i);
+            facePixels.limit(bytesPerFace * (i + 1));
+            device.createCommandEncoder().writeToTexture(this.texture, facePixels.slice(), 0, i, 0, 0, width, height);
         }
     }
     

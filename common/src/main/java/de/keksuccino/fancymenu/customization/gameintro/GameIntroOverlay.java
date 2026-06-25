@@ -145,7 +145,7 @@ public class GameIntroOverlay extends Overlay {
 
             Identifier location = r.getResourceLocation();
             if (location != null) {
-                com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+                com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
                 de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, this.opacity);
                 graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, location, x, y, 0.0F, 0.0F, aspectWidth, aspectHeight, aspectWidth, aspectHeight);
             }
@@ -166,7 +166,7 @@ public class GameIntroOverlay extends Overlay {
             Component skipComp = customSkipText.isEmpty() ? Component.translatable("fancymenu.game_intro.press_any_key") : Component.literal(customSkipText);
             graphics.pose().pushMatrix();
             graphics.pose().scale(scale, scale);
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
             RenderingUtils.resetShaderColor(graphics);
             int normalizedWidth = (int)(this.width / scale);
             int normalizedHeight = (int)(this.height / scale);
@@ -246,7 +246,7 @@ public class GameIntroOverlay extends Overlay {
     protected void close() {
         this.intro.stop();
         if (!this.fadeToInitialized) this.initFadeToScreen();
-        Minecraft.getInstance().setOverlay(null);
+        Minecraft.getInstance().gui.setOverlay(null);
     }
 
     public void keyPressed(int keycode, int scancode, int modifiers) {

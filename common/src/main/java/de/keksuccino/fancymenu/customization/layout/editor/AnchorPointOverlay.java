@@ -162,7 +162,7 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
         this.tickAreaMouseOver(mouseX, mouseY);
 
         RenderingUtils.resetShaderColor(graphics);
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         //Invert color of overlay based on what's rendered behind it
         if (this.invertOverlayColors()) {
             GlStateManager._blendFuncSeparate(775, 769, 1, 0);
@@ -269,7 +269,7 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
             horizontalX += lineThickness;
         }
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         UIBase.resetShaderColor(graphics);
         //Horizontal Line
         graphics.fill(horizontalX, horizontalY, horizontalX + horizontalWidth, horizontalY + lineThickness, color);

@@ -97,7 +97,7 @@ public class UniversalScreenIdentifierRegistry {
         register("popup_screen", PopupScreen.class.getName());
         register("preset_flat_world_screen", PresetFlatWorldScreen.class.getName());
         register("progress_screen", ProgressScreen.class.getName());
-        register("share_to_lan_screen", ShareToLanScreen.class.getName());
+        register("share_to_lan_screen", MultiplayerOptionsScreen.class.getName());
         register("skin_customization_screen", SkinCustomizationScreen.class.getName());
         register("sound_options_screen", SoundOptionsScreen.class.getName());
         register("video_settings_screen", VideoSettingsScreen.class.getName());

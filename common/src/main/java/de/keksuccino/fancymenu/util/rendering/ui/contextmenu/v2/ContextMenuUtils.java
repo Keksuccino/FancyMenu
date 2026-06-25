@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.file.FileFilter;
@@ -161,7 +163,7 @@ public class ContextMenuUtils {
                 startDir = new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(path)).getParentFile();
                 if (startDir == null) startDir = LayoutHandler.ASSETS_DIR;
             }
-            Screen current = Minecraft.getInstance().screen;
+            Screen current = ScreenUtils.getScreen();
             ChooseFileWindowBody fileChooser = new ChooseFileWindowBody(LayoutHandler.ASSETS_DIR, startDir, (call) -> {
                 if (call != null) {
                     setter.accept(call.getPath());
@@ -303,7 +305,7 @@ public class ContextMenuUtils {
     @NotNull
     public static ContextMenu.ClickableContextMenuEntry<?> addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<String> getter, @NotNull Consumer<String> setter, boolean addResetOption, String defaultValue, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback, @Nullable BiConsumer<Screen, String> onCloseEditor) {
         return addGenericInputContextMenuEntryTo(addTo, entryIdentifier, label, getter, setter, addResetOption, defaultValue, valueSetter -> {
-            Screen current = Minecraft.getInstance().screen;
+            Screen current = ScreenUtils.getScreen();
             Screen inputScreen;
             if (!multiLineInput && !allowPlaceholders) {
                 TextInputWindowBody s = new TextInputWindowBody(inputCharacterFilter, call -> {
@@ -347,7 +349,7 @@ public class ContextMenuUtils {
                 inputScreen = null;
             }
             if (inputScreen != null) {
-                Minecraft.getInstance().setScreen(inputScreen);
+                ScreenUtils.setScreen(inputScreen);
             }
         });
     }

@@ -86,7 +86,7 @@ public class PanoramaMenuBackground extends MenuBackground<PanoramaMenuBackgroun
             this.panorama.extractRenderState(graphics, mouseX, mouseY, partial);
             this.panorama.opacity = 1.0F;
         } else {
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
             graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, MISSING, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
         }
 

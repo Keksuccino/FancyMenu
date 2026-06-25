@@ -319,7 +319,7 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
         float scissorX = this.getBorderThickness() - 1;
         float scissorY = this.getBorderThickness() - 1;
         UIBase.resetShaderColor(graphics);
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         graphics.pose().pushMatrix();
         graphics.enableScissor(
                 (int)Math.floor(scissorX),
@@ -1029,7 +1029,7 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
                 Identifier location = icon.getResourceLocation();
                 if (location != null) {
                     UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
-                    com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+                    com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
                     RenderingUtils.blitF(graphics, location, this.x, this.y, 0.0F, 0.0F, (int) this.width, (int) this.parent.getTitleBarHeight(), (int) this.width, (int) this.parent.getTitleBarHeight());
                     UIBase.resetShaderColor(graphics);
                 }

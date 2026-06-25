@@ -254,7 +254,7 @@ public class BuddyDecorationOverlay extends AbstractDecorationOverlay<BuddyDecor
     private void resetTickCounter() {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft != null && minecraft.gui != null) {
-            this.lastGuiTick = minecraft.gui.getGuiTicks();
+            this.lastGuiTick = minecraft.gui.hud.getGuiTicks();
         } else {
             this.lastGuiTick = -1;
         }
@@ -265,7 +265,7 @@ public class BuddyDecorationOverlay extends AbstractDecorationOverlay<BuddyDecor
         if (minecraft == null || minecraft.gui == null) {
             return;
         }
-        int guiTick = minecraft.gui.getGuiTicks();
+        int guiTick = minecraft.gui.hud.getGuiTicks();
         if (this.lastGuiTick < 0 || guiTick < this.lastGuiTick) {
             this.lastGuiTick = guiTick;
             return;

@@ -94,7 +94,7 @@ public class SplashTextElement extends AbstractElement {
         if (this.renderText == null) {
             //VANILLA
             if (this.sourceMode == SourceMode.VANILLA) {
-                SplashRenderer splashRenderer = Minecraft.getInstance().getSplashManager().getSplash();
+                SplashRenderer splashRenderer = Minecraft.getInstance().gui.splashManager().getSplash();
                 this.renderText = (splashRenderer != null) ? ((IMixinSplashRenderer)splashRenderer).getSplashFancyMenu().getString() : "";
             }
             //TEXT FILE
@@ -142,7 +142,7 @@ public class SplashTextElement extends AbstractElement {
         }
         splashBaseScale = splashBaseScale * 100.0F / (float) (font.width(renderTextComponent) + 32);
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
 
         graphics.pose().pushMatrix();
         float resolvedScale = Math.max(0.0F, this.scale.getFloat());

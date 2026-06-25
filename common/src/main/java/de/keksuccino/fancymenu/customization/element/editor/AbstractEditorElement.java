@@ -841,7 +841,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
     protected void renderDraggingNotAllowedOverlay(GuiGraphicsExtractor graphics) {
         if (this.renderMovingNotAllowedTime >= System.currentTimeMillis()) {
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
             graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), UIBase.getUITheme().layout_editor_element_dragging_not_allowed_color.getColorInt());
             AspectRatio ratio = new AspectRatio(32, 32);
             int[] size = ratio.getAspectRatioSizeByMaximumSize(this.getWidth(), this.getHeight());
@@ -855,7 +855,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
     protected void renderDeprecatedIndicator(GuiGraphicsExtractor graphics) {
         if (this.element.getBuilder().isDeprecated()) {
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
             AspectRatio ratio = new AspectRatio(32, 32);
             int[] size = ratio.getAspectRatioSizeByMaximumSize(this.getWidth() / 3, this.getHeight() / 3);
             int texW = size[0];

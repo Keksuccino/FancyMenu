@@ -36,7 +36,7 @@ public class BackToLastScreenAction extends Action {
 
     @Override
     public void execute(@Nullable String value) {
-        if (Minecraft.getInstance().screen instanceof CustomGuiBaseScreen c) {
+        if (ScreenUtils.getScreen() instanceof CustomGuiBaseScreen c) {
             if (c.getParentScreen() != null) {
                 ScreenUtils.setScreen(c.getParentScreen());
                 return;

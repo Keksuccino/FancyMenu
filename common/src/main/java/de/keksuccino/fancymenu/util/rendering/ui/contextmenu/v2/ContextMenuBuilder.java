@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.ObjectUtils;
@@ -169,7 +171,7 @@ public interface ContextMenuBuilder<O> {
                 processor.beforeOpen(screen);
             }
         }
-        Minecraft.getInstance().setScreen(screen);
+        ScreenUtils.setScreen(screen);
     }
 
     /**

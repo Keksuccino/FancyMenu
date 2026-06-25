@@ -37,7 +37,7 @@ public class FancyMenuFabricClientEvents {
                 ScreenKeyPressedEvent event = new ScreenKeyPressedEvent(screen1, key, scancode, modifiers);
                 EventHandler.INSTANCE.postEvent(event);
 
-                if (Minecraft.getInstance().getOverlay() instanceof GameIntroOverlay o) o.keyPressed(key, scancode, modifiers);
+                if (Minecraft.getInstance().gui.overlay() instanceof GameIntroOverlay o) o.keyPressed(key, scancode, modifiers);
 
             });
 

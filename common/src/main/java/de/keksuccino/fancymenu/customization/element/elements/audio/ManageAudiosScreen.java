@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.elements.audio;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -124,11 +126,11 @@ public class ManageAudiosScreen extends CellScreen {
                 if (source != null) {
                     AudioElement.AudioInstance instance = this.findAudio(source);
                     if (instance != null) {
-                        Minecraft.getInstance().setScreen(new SetAudioWeightScreen(instance.weight, weight -> {
+                        ScreenUtils.setScreen(new SetAudioWeightScreen(instance.weight, weight -> {
                             if (weight != null) {
                                 instance.weight = weight;
                             }
-                            Minecraft.getInstance().setScreen(this);
+                            ScreenUtils.setScreen(this);
                         }));
                     }
                 }
@@ -174,7 +176,7 @@ public class ManageAudiosScreen extends CellScreen {
 
     @Override
     protected void onCancel() {
-        Minecraft.getInstance().setScreen(this.editor);
+        ScreenUtils.setScreen(this.editor);
     }
 
     @Override
@@ -182,7 +184,7 @@ public class ManageAudiosScreen extends CellScreen {
         this.audios.clear();
         this.audios.addAll(this.tempAudios);
         this.element.resetAudioElementKeepAudios();
-        Minecraft.getInstance().setScreen(this.editor);
+        ScreenUtils.setScreen(this.editor);
     }
 
 }

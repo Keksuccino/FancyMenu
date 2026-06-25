@@ -35,7 +35,7 @@ public class CurrentBossHealthPlaceholder extends Placeholder {
         String indexString = dps.values.get("boss_index");
         if ((player != null) && (level != null) && MathUtils.isInteger(indexString)) {
             int index = Integer.parseInt(indexString);
-            Map<UUID, LerpingBossEvent> bosses = ((IMixinBossHealthOverlay)Minecraft.getInstance().gui.getBossOverlay()).get_events_FancyMenu(); // this is a linked hash map, so indexes should work fine
+            Map<UUID, LerpingBossEvent> bosses = ((IMixinBossHealthOverlay)Minecraft.getInstance().gui.hud.getBossOverlay()).get_events_FancyMenu(); // this is a linked hash map, so indexes should work fine
             if (bosses.size() >= (index + 1)) {
                 int i = 0;
                 for (Map.Entry<UUID, LerpingBossEvent> m : bosses.entrySet()) {

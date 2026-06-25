@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders.world;
 
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGui;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinHud;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 
@@ -13,7 +13,7 @@ public class ActionBarMessageTimeFmPlaceholder extends AbstractWorldPlaceholder 
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        return String.valueOf(((IMixinGui) Minecraft.getInstance().gui).get_overlayMessageTime_FancyMenu());
+        return String.valueOf(((IMixinHud) Minecraft.getInstance().gui.hud).get_overlayMessageTime_FancyMenu());
     }
 
     @Override

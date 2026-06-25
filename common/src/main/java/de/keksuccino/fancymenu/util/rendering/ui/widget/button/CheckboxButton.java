@@ -42,7 +42,7 @@ public class CheckboxButton extends ExtendedButton {
         super.extractContents(graphics, mouseX, mouseY, partial);
 
         if (this.checkboxState && this.isActive()) {
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
             graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, this.getCheckboxCheckmarkTexture(), this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
         }
 
@@ -51,7 +51,7 @@ public class CheckboxButton extends ExtendedButton {
     @Override
     protected void extractBackground(@NotNull GuiGraphicsExtractor graphics, float partial) {
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, this.getCheckboxBackground(), this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
 
     }

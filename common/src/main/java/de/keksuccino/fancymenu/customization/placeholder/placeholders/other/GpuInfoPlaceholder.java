@@ -23,7 +23,7 @@ public class GpuInfoPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        return RenderSystem.getDevice().getRenderer();
+        return RenderSystem.getDevice().getDeviceInfo().name();
     }
 
     @Override

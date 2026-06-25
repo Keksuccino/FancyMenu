@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders.gui;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -22,7 +24,7 @@ public class MousePosXPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        Screen s = Minecraft.getInstance().screen;
+        Screen s = ScreenUtils.getScreen();
         if (s instanceof LayoutEditorScreen) {
             return "10";
         }

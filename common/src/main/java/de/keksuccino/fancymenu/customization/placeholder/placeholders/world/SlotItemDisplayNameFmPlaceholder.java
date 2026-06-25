@@ -31,7 +31,7 @@ public class SlotItemDisplayNameFmPlaceholder extends AbstractWorldPlaceholder {
             int slotInt = Integer.parseInt(slot);
             ItemStack stack = Minecraft.getInstance().player.getInventory().getItem(slotInt);
             if (Minecraft.getInstance().player.isSpectator() && (slotInt >= 0) && (slotInt <= 8) && !ignoreSpectator) {
-                IMixinSpectatorGui accessor = (IMixinSpectatorGui) Minecraft.getInstance().gui.getSpectatorGui();
+                IMixinSpectatorGui accessor = (IMixinSpectatorGui) Minecraft.getInstance().gui.hud.getSpectatorGui();
                 SpectatorMenu menu = accessor.get_menu_FancyMenu();
                 if (menu != null) {
                     SpectatorMenuItem spectatorMenuItem = menu.getSelectedItem();

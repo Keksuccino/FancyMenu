@@ -15,8 +15,6 @@ public class FabricCompatibilityLayer implements IPlatformCompatibilityLayer {
         String branding = "Minecraft " + SharedConstants.getCurrentVersion().name();
         if (Minecraft.getInstance().isDemo()) {
             branding = branding + " Demo";
-        } else {
-            branding = branding + ("release".equalsIgnoreCase(Minecraft.getInstance().getVersionType()) ? "" : "/" + Minecraft.getInstance().getVersionType());
         }
         if (Minecraft.checkModStatus().shouldReportAsModified()) {
             branding = branding + I18n.get("menu.modded");

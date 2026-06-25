@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.events.screen.ScreenMouseMoveEvent;
 import de.keksuccino.fancymenu.events.screen.ScreenMouseScrollEvent;
 import de.keksuccino.fancymenu.util.MouseUtil;
+import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.VanillaEvents;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.input.ClicksPerSecondTracker;
@@ -97,7 +98,7 @@ public class MixinMouseHandler {
         double scrollDeltaY = (isDiscrete ? Math.signum(scrollY) : scrollY) * wheelSensitivity;
         double mX = this.xpos * (double)this.mc_FancyMenu.getWindow().getGuiScaledWidth() / (double)this.mc_FancyMenu.getWindow().getScreenWidth();
         double mY = this.ypos * (double)this.mc_FancyMenu.getWindow().getGuiScaledHeight() / (double)this.mc_FancyMenu.getWindow().getScreenHeight();
-        ScreenMouseScrollEvent.Pre e = new ScreenMouseScrollEvent.Pre(mc_FancyMenu.screen, mX, mY, scrollDeltaX, scrollDeltaY);
+        ScreenMouseScrollEvent.Pre e = new ScreenMouseScrollEvent.Pre(ScreenUtils.getScreen(), mX, mY, scrollDeltaX, scrollDeltaY);
         EventHandler.INSTANCE.postEvent(e);
         if (e.isCanceled()) info.cancel();
     }
@@ -110,11 +111,11 @@ public class MixinMouseHandler {
         double scrollDeltaY = (isDiscrete ? Math.signum(scrollY) : scrollY) * wheelSensitivity;
         double mX = this.xpos * (double)this.mc_FancyMenu.getWindow().getGuiScaledWidth() / (double)this.mc_FancyMenu.getWindow().getScreenWidth();
         double mY = this.ypos * (double)this.mc_FancyMenu.getWindow().getGuiScaledHeight() / (double)this.mc_FancyMenu.getWindow().getScreenHeight();
-        ScreenMouseScrollEvent.Post e = new ScreenMouseScrollEvent.Post(mc_FancyMenu.screen, mX, mY, scrollDeltaX, scrollDeltaY);
+        ScreenMouseScrollEvent.Post e = new ScreenMouseScrollEvent.Post(ScreenUtils.getScreen(), mX, mY, scrollDeltaX, scrollDeltaY);
         EventHandler.INSTANCE.postEvent(e);
     }
 
-    @Inject(method = "onButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;getOverlay()Lnet/minecraft/client/gui/screens/Overlay;"), cancellable = true)
+    @Inject(method = "onButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;overlay()Lnet/minecraft/client/gui/screens/Overlay;"), cancellable = true)
     private void before_getOverlay_in_onButton_FancyMenu(long window, MouseButtonInfo buttonInfo, int action, CallbackInfo info) {
         int button = (this.mappedButtonOnPress_FancyMenu != -1) ? this.mappedButtonOnPress_FancyMenu : buttonInfo.button();
 
@@ -122,7 +123,7 @@ public class MixinMouseHandler {
         double mouseX = this.xpos * (double)Minecraft.getInstance().getWindow().getGuiScaledWidth() / (double)Minecraft.getInstance().getWindow().getScreenWidth();
         double mouseY = this.ypos * (double)Minecraft.getInstance().getWindow().getGuiScaledHeight() / (double)Minecraft.getInstance().getWindow().getScreenHeight();
 
-        if (Minecraft.getInstance().getOverlay() instanceof GameIntroOverlay o) {
+        if (Minecraft.getInstance().gui.overlay() instanceof GameIntroOverlay o) {
             // Consume all mouse button events while the intro overlay is active.
             if (clicked) {
                 int mappedButton = (this.mappedButtonOnPress_FancyMenu != -1) ? this.mappedButtonOnPress_FancyMenu : button;
@@ -185,7 +186,7 @@ public class MixinMouseHandler {
         double deltaX = this.accumulatedDX * guiWidth / screenWidth;
         double deltaY = this.accumulatedDY * guiHeight / screenHeight;
 
-        EventHandler.INSTANCE.postEvent(new ScreenMouseMoveEvent(this.mc_FancyMenu.screen, mouseX, mouseY, deltaX, deltaY));
+        EventHandler.INSTANCE.postEvent(new ScreenMouseMoveEvent(ScreenUtils.getScreen(), mouseX, mouseY, deltaX, deltaY));
         GlslRuntimeEventTracker.onMouseMoved(mouseX, mouseY, deltaX, deltaY);
         if (MCEFUtil.isMCEFLoaded()) BrowserHandler.mouseMoved(mouseX, mouseY);
         ScreenOverlayHandler.INSTANCE.mouseMoved(mouseX, mouseY);

@@ -70,7 +70,7 @@ dependencies {
 	implementation "maven.modrinth:konkrete:1.11.0-26.2-neoforge"
 	implementation "maven.modrinth:melody:1.0.17-26.2-neoforge"
 	// implementation "it.crystalnest:fancy-entity-renderer-neoforge:$fer_mc_version-$fer_version"
-	// implementation "flatdir:fer:0.5.4"
+	compileOnly "flatdir:fer:0.5.4"
 	implementation "de.keksuccino:mcef-neoforge:2.2.1-26.2"
 	runtimeOnly "maven.modrinth:watermedia:${watermedia_version}"
 	runtimeOnly "maven.modrinth:watermedia-binaries:${watermedia_binaries_version}"

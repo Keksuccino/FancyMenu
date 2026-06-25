@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.networking.packets.commands.variable.suggestions;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.networking.PacketCodec;
@@ -31,7 +33,7 @@ public class VariableCommandSuggestionsPacketCodec extends PacketCodec<VariableC
     @EventListener
     public void onClientTick(ClientTickEvent.Post e) {
         try {
-            Screen s = Minecraft.getInstance().screen;
+            Screen s = ScreenUtils.getScreen();
             if ((s instanceof ChatScreen) && ((lastScreen == null) || (lastScreen != s))) {
                 VariableCommandSuggestionsPacket packet = new VariableCommandSuggestionsPacket();
                 packet.variable_suggestions = getVariableNameSuggestions();

@@ -51,12 +51,12 @@ public class JoinLastWorldServerAction extends Action {
             }
             return;
         }
-        if (!LastWorldHandler.getLastWorld().isEmpty() && (Minecraft.getInstance().screen != null)) {
+        if (!LastWorldHandler.getLastWorld().isEmpty() && (ScreenUtils.getScreen() != null)) {
             if (!LastWorldHandler.isLastWorldServer()) { // CASE: SINGLEPLAYER WORLD
                 File f = new File(LastWorldHandler.getLastWorld());
                 if (Minecraft.getInstance().getLevelSource().levelExists(f.getName())) {
-                    Screen current = (Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen();
-                    Minecraft.getInstance().setScreen(new GenericMessageScreen(Component.translatable("selectWorld.data_read")));
+                    Screen current = (ScreenUtils.getScreen() != null) ? ScreenUtils.getScreen() : new TitleScreen();
+                    ScreenUtils.setScreen(new GenericMessageScreen(Component.translatable("selectWorld.data_read")));
                     Minecraft.getInstance().createWorldOpenFlows().openWorld(f.getName(), () -> {
                         ScreenUtils.setScreen(current);
                     });
@@ -87,7 +87,7 @@ public class JoinLastWorldServerAction extends Action {
                     l.save();
                 }
                 boolean isQuickPlay = false;
-                ConnectScreen.startConnecting(Minecraft.getInstance().screen, Minecraft.getInstance(), new ServerAddress(ip, port), d, isQuickPlay, null);
+                ConnectScreen.startConnecting(ScreenUtils.getScreen(), Minecraft.getInstance(), new ServerAddress(ip, port), d, isQuickPlay, null);
             }
         }
     }

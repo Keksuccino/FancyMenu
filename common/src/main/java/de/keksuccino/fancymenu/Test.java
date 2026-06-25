@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
@@ -25,11 +27,11 @@ public class Test {
     @EventListener
     public void onInitScreenPost(InitOrResizeScreenCompletedEvent e) {
 
-//        final Screen current = Minecraft.getInstance().screen;
+//        final Screen current = ScreenUtils.getScreen();
 //        e.addRenderableWidget(new ExtendedButton(20, 20, 100, 20, "Download FFMPEG", button -> {
-//            Minecraft.getInstance().setScreen(new FFMPEGDownloaderScreen(ffmpegDownloaderScreenResult -> {
+//            ScreenUtils.setScreen(new FFMPEGDownloaderScreen(ffmpegDownloaderScreenResult -> {
 //                LOGGER.info("FFMPEG DOWNLOADER CLOSED WITH RESULT: " + ffmpegDownloaderScreenResult.outcome());
-//                Minecraft.getInstance().setScreen(current);
+//                ScreenUtils.setScreen(current);
 //            }));
 //        }));
 

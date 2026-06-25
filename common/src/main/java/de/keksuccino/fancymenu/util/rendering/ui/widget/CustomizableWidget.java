@@ -66,7 +66,7 @@ public interface CustomizableWidget {
             if (location != null) {
                 renderVanilla = false;
                 de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)widget).getAlphaFancyMenu());
-                com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+                com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
                 de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)widget).getAlphaFancyMenu());
                 if ((widget instanceof CustomizableSlider s) && s.isNineSliceCustomSliderHandle_FancyMenu()) {
                     RenderingUtils.blitNineSlicedTexture(graphics, location, x, y, width, height, customBackground.getWidth(), customBackground.getHeight(),

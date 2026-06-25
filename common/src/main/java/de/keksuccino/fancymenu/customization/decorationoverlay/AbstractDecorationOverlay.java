@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.decorationoverlay;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.HideableElement;
@@ -197,7 +199,7 @@ public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOver
 
     @Nullable
     protected static Screen getScreen() {
-        return Minecraft.getInstance().screen;
+        return ScreenUtils.getScreen();
     }
 
     protected static int getScreenWidth() {

@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.action.actions.other;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinChatScreen;
@@ -55,10 +57,10 @@ public class PasteToChatAction extends Action {
             msg = StringUtils.convertFormatCodes(msg, "§", "&");
             if (Minecraft.getInstance().level != null) {
                 if (Minecraft.getInstance().player != null) {
-                    Screen s = Minecraft.getInstance().screen;
+                    Screen s = ScreenUtils.getScreen();
                     if (!(s instanceof ChatScreen)) {
-                        Minecraft.getInstance().openChatScreen(ChatComponent.ChatMethod.MESSAGE);
-                        if (Minecraft.getInstance().screen instanceof ChatScreen chatScreen) {
+                        Minecraft.getInstance().gui.hud.getChat().openScreen(ChatComponent.ChatMethod.MESSAGE, ChatScreen::new);
+                        if (ScreenUtils.getScreen() instanceof ChatScreen chatScreen) {
                             ((IMixinChatScreen)chatScreen).getInputFancyMenu().setValue(msg);
                         }
                     } else {

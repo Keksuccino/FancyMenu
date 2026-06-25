@@ -7,11 +7,13 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.mojang.blaze3d.GpuFormat;
+import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinBufferBuilder;
@@ -32,6 +34,7 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
+import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -48,23 +51,24 @@ import org.lwjgl.system.MemoryUtil;
 public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 
 	private static final Logger LOGGER = LogManager.getLogger();
-	private static final VertexFormatElement PANORAMA_INFO_FANCYMENU = registerNextVertexFormatElement_FancyMenu();
-	private static final VertexFormat PANORAMA_VERTEX_FORMAT_FANCYMENU = VertexFormat.builder()
-			.add("Position", VertexFormatElement.POSITION)
-			.add("Color", VertexFormatElement.COLOR)
-			.add("UV0", VertexFormatElement.UV0)
-			.add("PanoramaInfo", PANORAMA_INFO_FANCYMENU)
+	private static final String PANORAMA_INFO_NAME_FANCYMENU = "PanoramaInfo";
+	private static final VertexFormat PANORAMA_VERTEX_FORMAT_FANCYMENU = VertexFormat.builder(0)
+			.addAttribute(DefaultVertexFormat.POSITION_SEMANTIC_NAME, GpuFormat.RGB32_FLOAT)
+			.addAttribute(DefaultVertexFormat.COLOR_SEMANTIC_NAME, GpuFormat.RGBA8_UNORM)
+			.addAttribute(DefaultVertexFormat.UV0_SEMANTIC_NAME, GpuFormat.RG32_FLOAT)
+			.addAttribute(PANORAMA_INFO_NAME_FANCYMENU, GpuFormat.RGBA32_FLOAT)
 			.build();
-	private static final RenderPipeline PANORAMA_PIPELINE_FANCYMENU = RenderPipeline.builder()
+	private static final VertexFormatElement PANORAMA_INFO_FANCYMENU = getVertexFormatElement_FancyMenu(PANORAMA_VERTEX_FORMAT_FANCYMENU, PANORAMA_INFO_NAME_FANCYMENU);
+	private static final RenderPipeline PANORAMA_PIPELINE_FANCYMENU = RenderPipeline.builder().withBindGroupLayout(BindGroupLayouts.GLOBALS)
+			.withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
+			.withBindGroupLayout(BindGroupLayouts.SAMPLER0)
 			.withLocation(Identifier.withDefaultNamespace("pipeline/fancymenu_panorama"))
-			.withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
-			.withUniform("Projection", UniformType.UNIFORM_BUFFER)
 			.withVertexShader("core/fancymenu_gui_panorama")
 			.withFragmentShader("core/fancymenu_gui_panorama")
-			.withSampler("Sampler0")
-			.withColorTargetState(new ColorTargetState(Optional.of(BlendFunction.TRANSLUCENT), ColorTargetState.WRITE_COLOR))
+			.withColorTargetState(new ColorTargetState(Optional.of(BlendFunction.TRANSLUCENT), GpuFormat.RGBA8_UNORM, ColorTargetState.WRITE_COLOR))
 			.withDepthStencilState(Optional.empty())
-			.withVertexFormat(PANORAMA_VERTEX_FORMAT_FANCYMENU, VertexFormat.Mode.QUADS)
+			.withVertexBinding(0, PANORAMA_VERTEX_FORMAT_FANCYMENU)
+			.withPrimitiveTopology(PrimitiveTopology.QUADS)
 			.build();
 
 	@NotNull
@@ -338,24 +342,24 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 		));
 	}
 
-	private static VertexFormatElement registerNextVertexFormatElement_FancyMenu() {
-		for (int i = 0; i < VertexFormatElement.MAX_COUNT; i++) {
-			if (VertexFormatElement.byId(i) == null) {
-				return VertexFormatElement.register(i, 0, VertexFormatElement.Type.FLOAT, false, 4);
-			}
+	private static VertexFormatElement getVertexFormatElement_FancyMenu(@NotNull VertexFormat format, @NotNull String attributeName) {
+		VertexFormatElement element = format.getElement(attributeName);
+		if (element == null) {
+			throw new IllegalStateException("Missing vertex format element: " + attributeName);
 		}
-		throw new IllegalStateException("VertexFormatElement count limit exceeded");
+		return element;
 	}
 
 	private static void writeVec4_FancyMenu(@NotNull VertexConsumer consumer, @NotNull VertexFormatElement element, float x, float y, float z, float w) {
-		long pointer = ((IMixinBufferBuilder)consumer).invoke_beginElement_FancyMenu(element);
+		long pointer = ((IMixinBufferBuilder)consumer).get_vertexPointer_FancyMenu();
 		if (pointer == -1L) {
 			return;
 		}
-		MemoryUtil.memPutFloat(pointer, x);
-		MemoryUtil.memPutFloat(pointer + 4L, y);
-		MemoryUtil.memPutFloat(pointer + 8L, z);
-		MemoryUtil.memPutFloat(pointer + 12L, w);
+		long elementPointer = pointer + element.offset();
+		MemoryUtil.memPutFloat(elementPointer, x);
+		MemoryUtil.memPutFloat(elementPointer + 4L, y);
+		MemoryUtil.memPutFloat(elementPointer + 8L, z);
+		MemoryUtil.memPutFloat(elementPointer + 12L, w);
 	}
 
 	public String getName() {

@@ -1,15 +1,18 @@
 package de.keksuccino.fancymenu.util.mcef;
 
+import com.mojang.blaze3d.GpuFormat;
+import com.mojang.blaze3d.opengl.FrameBufferCache;
 import com.mojang.blaze3d.opengl.GlTexture;
-import com.mojang.blaze3d.textures.TextureFormat;
 
 public class BrowserGlTexture extends GlTexture {
+
+    private static final FrameBufferCache FRAME_BUFFER_CACHE_FANCYMENU = new FrameBufferCache();
 
     protected int width;
     protected int height;
 
-    public BrowserGlTexture(int usage, String label, TextureFormat texFormat, int width, int height, int depthOrLayers, int mipLevels, int glId) {
-        super(usage, label, texFormat, width, height, depthOrLayers, mipLevels, glId);
+    public BrowserGlTexture(int usage, String label, GpuFormat format, int width, int height, int depthOrLayers, int mipLevels, int glId) {
+        super(usage, label, format, width, height, depthOrLayers, mipLevels, glId, FRAME_BUFFER_CACHE_FANCYMENU);
         this.width = width;
         this.height = height;
     }

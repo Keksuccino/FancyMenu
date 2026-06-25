@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
@@ -35,8 +37,8 @@ public class MixinTabNavigationBar {
             return false;
         }
         if (this.isBarPartOfCurrentScreen_FancyMenu()) {
-            if (ScreenCustomization.isCustomizationEnabledForScreen(Minecraft.getInstance().screen)) {
-                ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(Minecraft.getInstance().screen);
+            if (ScreenCustomization.isCustomizationEnabledForScreen(ScreenUtils.getScreen())) {
+                ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(ScreenUtils.getScreen());
                 if (layer != null) {
                     return layer.layoutBase.renderScrollListHeaderShadow;
                 }
@@ -77,8 +79,8 @@ public class MixinTabNavigationBar {
     //Without this FancyMenu wouldn't be able to customize Tab screens (even with this it's still not fully working, but at least it doesn't completely break everything anymore)
     @Unique
     private void reInitScreenAfterTabChanged_FancyMenu() {
-        if (Minecraft.getInstance().screen != null) {
-            if (ScreenCustomization.isCustomizationEnabledForScreen(Minecraft.getInstance().screen) && this.isBarPartOfCurrentScreen_FancyMenu()) {
+        if (ScreenUtils.getScreen() != null) {
+            if (ScreenCustomization.isCustomizationEnabledForScreen(ScreenUtils.getScreen()) && this.isBarPartOfCurrentScreen_FancyMenu()) {
                 ScreenCustomization.reInitCurrentScreen();
             }
         }
@@ -86,8 +88,8 @@ public class MixinTabNavigationBar {
 
     @Unique
     private boolean isBarPartOfCurrentScreen_FancyMenu() {
-        if (Minecraft.getInstance().screen == null) return false;
-        return ((IMixinScreen)Minecraft.getInstance().screen).getChildrenFancyMenu().contains(this.getBar_FancyMenu());
+        if (ScreenUtils.getScreen() == null) return false;
+        return ((IMixinScreen)ScreenUtils.getScreen()).getChildrenFancyMenu().contains(this.getBar_FancyMenu());
     }
 
     @Unique

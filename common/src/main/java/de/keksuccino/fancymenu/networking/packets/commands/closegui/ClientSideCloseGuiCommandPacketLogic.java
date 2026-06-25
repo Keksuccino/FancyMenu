@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.networking.packets.commands.closegui;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -13,7 +15,7 @@ public class ClientSideCloseGuiCommandPacketLogic {
     protected static boolean handle(@NotNull CloseGuiCommandPacket packet) {
         if (Minecraft.getInstance().player == null) return false;
         try {
-            Minecraft.getInstance().setScreen(null);
+            ScreenUtils.setScreen(null);
             return true;
         } catch (Exception ex) {
             packet.sendChatFeedback(Component.translatable("fancymenu.commands.closeguiscreen.error"), true);

@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.requirement.requirements.world;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractContainerScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
@@ -37,7 +39,7 @@ public class IsItemHoveredInInventoryRequirement extends Requirement {
     @Override
     public boolean isRequirementMet(@Nullable String value) {
         try {
-            Screen screen = Minecraft.getInstance().screen;
+            Screen screen = ScreenUtils.getScreen();
             if (!(screen instanceof AbstractContainerScreen<?>)) return false;
             Slot hoveredSlot = ((IMixinAbstractContainerScreen) screen).get_hoveredSlot_FancyMenu();
             return (hoveredSlot != null) && hoveredSlot.hasItem();

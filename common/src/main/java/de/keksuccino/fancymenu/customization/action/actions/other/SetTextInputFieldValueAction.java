@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.action.actions.other;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
@@ -56,7 +58,7 @@ public class SetTextInputFieldValueAction extends Action {
                 return;
             }
 
-            Screen screen = Minecraft.getInstance().screen;
+            Screen screen = ScreenUtils.getScreen();
             if (screen == null) {
                 return;
             }
@@ -92,7 +94,7 @@ public class SetTextInputFieldValueAction extends Action {
 
     @Nullable
     private static AbstractElement findElement(@NotNull String id) {
-        Screen screen = Minecraft.getInstance().screen;
+        Screen screen = ScreenUtils.getScreen();
         if (screen == null) {
             return null;
         }

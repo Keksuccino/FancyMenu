@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.util.properties;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.ExecutableBlockDeserializer;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
@@ -1734,8 +1736,8 @@ public class Property<T> {
                                                 builder.applyStackAppliers(entry, drawable);
                                             }
                                         });
-                                int centerX = (Minecraft.getInstance().screen != null) ? (Minecraft.getInstance().screen.width / 2) : 100;
-                                int centerY = (Minecraft.getInstance().screen != null) ? (Minecraft.getInstance().screen.height / 2) : 100;
+                                int centerX = (ScreenUtils.getScreen() != null) ? (ScreenUtils.getScreen().width / 2) : 100;
+                                int centerY = (ScreenUtils.getScreen() != null) ? (ScreenUtils.getScreen().height / 2) : 100;
                                 contextMenu.closeMenuChain();
                                 PiPWindow window = new PiPWindow(Component.translatable("fancymenu.ui.color_picker.title"))
                                         .setScreen(picker)

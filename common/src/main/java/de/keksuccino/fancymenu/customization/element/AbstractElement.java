@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.element;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -1086,7 +1088,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	@Nullable
 	public static Screen getScreen() {
 		if (LayoutEditorScreen.getCurrentInstance() != null) return LayoutEditorScreen.getCurrentInstance();
-		return Minecraft.getInstance().screen;
+		return ScreenUtils.getScreen();
 	}
 
 	public static int getScreenWidth() {

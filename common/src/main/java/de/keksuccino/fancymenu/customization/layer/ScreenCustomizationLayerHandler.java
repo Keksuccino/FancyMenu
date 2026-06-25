@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.layer;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import java.util.HashMap;
 import java.util.Map;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
@@ -105,7 +107,7 @@ public class ScreenCustomizationLayerHandler {
 
 	@Nullable
 	public static ScreenCustomizationLayer getActiveLayer() {
-		Screen s = Minecraft.getInstance().screen;
+		Screen s = ScreenUtils.getScreen();
 		if ((s != null) && !ScreenCustomization.isScreenBlacklisted(s)) {
 			return getLayerOfScreen(s);
 		}

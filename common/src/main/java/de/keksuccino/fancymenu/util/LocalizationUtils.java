@@ -42,7 +42,7 @@ public class LocalizationUtils {
 
     public static boolean isLocalizationKey(String key) {
         if (key == null) return false;
-        return I18n.exists(key);
+        return Language.getInstance().has(key);
     }
 
     @Nullable

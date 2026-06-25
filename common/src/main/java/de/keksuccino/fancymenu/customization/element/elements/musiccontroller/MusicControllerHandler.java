@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.elements.musiccontroller;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinMusicManager;
@@ -37,7 +39,7 @@ public class MusicControllerHandler {
     @EventListener
     public void onClientTickPost(ClientTickEvent.Post e) {
 
-        boolean screenOpen = (Minecraft.getInstance().screen != null);
+        boolean screenOpen = (ScreenUtils.getScreen() != null);
 
         //Set updated to false and remove controllers that did not get updated
         List<ActiveController> cachedControllers = new ArrayList<>(CONTROLLERS.values());
@@ -105,7 +107,7 @@ public class MusicControllerHandler {
             }
             //Resume world music (in menu) if no controller is disabling it anymore and the current screen isn't pausing the game
             if (isWorldLoaded() && worldMusicManuallyStopped) {
-                if (((Minecraft.getInstance().screen != null) && !Minecraft.getInstance().screen.isPauseScreen()) || WorldUtils.isMultiplayer()) {
+                if (((ScreenUtils.getScreen() != null) && !ScreenUtils.getScreen().isPauseScreen()) || WorldUtils.isMultiplayer()) {
                     Minecraft.getInstance().getSoundManager().resume();
                     //LOGGER.info("############ WORLD MUSIC RESUMED BECAUSE: NO ACTIVE CONTROLLERS");
                 }

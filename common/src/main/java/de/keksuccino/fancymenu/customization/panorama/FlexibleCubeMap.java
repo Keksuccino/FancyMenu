@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.panorama;
 
 import com.mojang.blaze3d.ProjectionType;
+import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
@@ -12,7 +13,6 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.MeshData;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.Projection;
 import net.minecraft.client.renderer.ProjectionMatrixBuffer;
@@ -25,8 +25,8 @@ import org.joml.Matrix4fStack;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
+import java.util.Optional;
 import java.util.OptionalDouble;
-import java.util.OptionalInt;
 
 public class FlexibleCubeMap implements AutoCloseable {
 
@@ -49,7 +49,7 @@ public class FlexibleCubeMap implements AutoCloseable {
 			GpuTextureView colorTexture = getOutputColorTexture();
 			GpuTextureView depthTexture = getOutputDepthTexture();
 			RenderPipeline renderPipeline = RenderPipelines.PANORAMA;
-			RenderSystem.AutoStorageIndexBuffer indices = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
+			RenderSystem.AutoStorageIndexBuffer indices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
 			GpuBuffer indexBuffer = indices.getBuffer(36);
 			Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();
 			modelViewStack.pushMatrix();
@@ -66,15 +66,15 @@ public class FlexibleCubeMap implements AutoCloseable {
 
 			try (RenderPass renderPass = RenderSystem.getDevice()
 				.createCommandEncoder()
-				.createRenderPass(() -> "FancyMenu Cubemap", colorTexture, OptionalInt.empty(), depthTexture, OptionalDouble.empty())) {
+				.createRenderPass(() -> "FancyMenu Cubemap", colorTexture, Optional.empty(), depthTexture, OptionalDouble.empty())) {
 				renderPass.setPipeline(renderPipeline);
 				RenderSystem.bindDefaultUniforms(renderPass);
-				renderPass.setVertexBuffer(0, this.vertexBuffer);
+				renderPass.setVertexBuffer(0, this.vertexBuffer.slice());
 				renderPass.setIndexBuffer(indexBuffer, indices.type());
 				renderPass.setUniform("DynamicTransforms", dynamicTransforms);
 				AbstractTexture texture = Minecraft.getInstance().getTextureManager().getTexture(this.location);
 				renderPass.bindTexture("Sampler0", texture.getTextureView(), texture.getSampler());
-				renderPass.drawIndexed(0, 0, 36, 1);
+				renderPass.drawIndexed(36, 1, 0, 0, 0);
 			}
 		} finally {
 			RenderSystem.restoreProjectionMatrix();
@@ -84,7 +84,7 @@ public class FlexibleCubeMap implements AutoCloseable {
 	@NotNull
 	private static GpuBuffer initializeVertices() {
 		try (ByteBufferBuilder byteBufferBuilder = ByteBufferBuilder.exactlySized(DefaultVertexFormat.POSITION.getVertexSize() * 4 * 6)) {
-			BufferBuilder bufferBuilder = new BufferBuilder(byteBufferBuilder, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+			BufferBuilder bufferBuilder = new BufferBuilder(byteBufferBuilder, PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION);
 			bufferBuilder.addVertex(-1.0F, -1.0F, 1.0F);
 			bufferBuilder.addVertex(-1.0F, 1.0F, 1.0F);
 			bufferBuilder.addVertex(1.0F, 1.0F, 1.0F);
@@ -123,7 +123,7 @@ public class FlexibleCubeMap implements AutoCloseable {
 			return outputColorTexture;
 		}
 
-		RenderTarget mainRenderTarget = Minecraft.getInstance().getMainRenderTarget();
+		RenderTarget mainRenderTarget = Minecraft.getInstance().gameRenderer.mainRenderTarget();
 		return mainRenderTarget.getColorTextureView();
 	}
 
@@ -134,7 +134,7 @@ public class FlexibleCubeMap implements AutoCloseable {
 			return outputDepthTexture;
 		}
 
-		RenderTarget mainRenderTarget = Minecraft.getInstance().getMainRenderTarget();
+		RenderTarget mainRenderTarget = Minecraft.getInstance().gameRenderer.mainRenderTarget();
 		return mainRenderTarget.getDepthTextureView();
 	}
 

@@ -51,13 +51,13 @@ public class JoinServerAction extends Action {
             return;
         }
         if (value != null) {
-            if (Minecraft.getInstance().screen instanceof DisconnectedScreen) {
+            if (ScreenUtils.getScreen() instanceof DisconnectedScreen) {
                 ScreenUtils.setScreen(new TitleScreen());
             }
-            if (!(Minecraft.getInstance().screen instanceof JoinServerBridgeScreen) && !(Minecraft.getInstance().screen instanceof ConnectScreen)) {
+            if (!(ScreenUtils.getScreen() instanceof JoinServerBridgeScreen) && !(ScreenUtils.getScreen() instanceof ConnectScreen)) {
                 try {
 
-                    Screen current = Minecraft.getInstance().screen;
+                    Screen current = ScreenUtils.getScreen();
 
                     ScreenUtils.setScreen(new JoinServerBridgeScreen());
 

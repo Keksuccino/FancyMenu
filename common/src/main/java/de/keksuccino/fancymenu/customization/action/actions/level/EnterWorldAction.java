@@ -45,8 +45,8 @@ public class EnterWorldAction extends Action {
         }
         if (value != null) {
             if (Minecraft.getInstance().getLevelSource().levelExists(value)) {
-                Screen current = (Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen();
-                Minecraft.getInstance().setScreen(new GenericMessageScreen(Component.translatable("selectWorld.data_read")));
+                Screen current = (ScreenUtils.getScreen() != null) ? ScreenUtils.getScreen() : new TitleScreen();
+                ScreenUtils.setScreen(new GenericMessageScreen(Component.translatable("selectWorld.data_read")));
                 Minecraft.getInstance().createWorldOpenFlows().openWorld(value, () -> {
                     ScreenUtils.setScreen(current);
                 });

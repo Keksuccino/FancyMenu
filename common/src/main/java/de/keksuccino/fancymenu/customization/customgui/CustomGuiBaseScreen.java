@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.customgui;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
@@ -11,6 +13,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
+import de.keksuccino.konkrete.rendering.GuiUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
@@ -68,7 +71,7 @@ public class CustomGuiBaseScreen extends Screen {
 
     @Override
 	public void onClose() {
-		Minecraft.getInstance().setScreen(this.parentScreen);
+		ScreenUtils.setScreen(this.parentScreen);
 	}
 	
 	@Override
@@ -149,12 +152,12 @@ public class CustomGuiBaseScreen extends Screen {
 
     protected void withPopupMenuBackgroundScreen(@NotNull Screen backgroundScreen, @NotNull Runnable action) {
         Minecraft minecraft = Minecraft.getInstance();
-        Screen current = minecraft.screen;
-        minecraft.screen = backgroundScreen;
+        Screen current = ScreenUtils.getScreen();
+        GuiUtils.setScreenDirect(backgroundScreen);
         try {
             action.run();
         } finally {
-            minecraft.screen = current;
+            GuiUtils.setScreenDirect(current);
         }
     }
 

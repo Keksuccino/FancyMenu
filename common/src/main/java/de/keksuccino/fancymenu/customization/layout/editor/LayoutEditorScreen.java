@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
@@ -50,6 +52,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileWind
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
+import de.keksuccino.konkrete.rendering.GuiUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Renderable;
@@ -351,7 +354,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 			if (background.showBackground.tryGetNonNull()) {
 
-                GlStateManager._enableBlend();
+                GlStateManager._enableBlend(0);
 
                 background.keepBackgroundAspectRatio = this.layout.preserveBackgroundAspectRatio;
                 background.opacity = 1.0F;
@@ -362,7 +365,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
                 GlStateManager._depthMask(true);
                 GlStateManager._enableCull();
                 GlStateManager._enableDepthTest();
-                GlStateManager._enableBlend();
+                GlStateManager._enableBlend(0);
                 
 
             }
@@ -450,7 +453,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 			RenderingUtils.resetShaderColor(graphics);
 
-			GlStateManager._enableBlend();
+			GlStateManager._enableBlend(0);
 			graphics.blit(RenderPipelines.GUI_TEXTURED, Screen.HEADER_SEPARATOR, 0, y0 - 2, 0.0F, 0.0F, this.width, 2, 32, 2);
 			graphics.blit(RenderPipelines.GUI_TEXTURED, Screen.FOOTER_SEPARATOR, 0, y1, 0.0F, 0.0F, this.width, 2, 32, 2);
 
@@ -1556,7 +1559,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
     public void openChildScreen(@NotNull Screen screen) {
         this.beforeOpenChildScreen(screen);
-        Minecraft.getInstance().setScreen(screen);
+        ScreenUtils.setScreen(screen);
     }
 
     public void beforeOpenChildScreen(@NotNull Screen screen) {
@@ -1582,14 +1585,14 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		currentInstance = null;
 		if (this.layoutTargetScreen != null) {
 			if (!((IMixinScreen)this.layoutTargetScreen).get_initialized_FancyMenu()) {
-				Minecraft.getInstance().setScreen(this.layoutTargetScreen);
+				ScreenUtils.setScreen(this.layoutTargetScreen);
 			} else {
-				Minecraft.getInstance().setScreen(new GenericMessageScreen(Component.literal("Closing editor..")));
-				Minecraft.getInstance().screen = this.layoutTargetScreen;
+				ScreenUtils.setScreen(new GenericMessageScreen(Component.literal("Closing editor..")));
+				GuiUtils.setScreenDirect(this.layoutTargetScreen);
 				ScreenCustomization.reInitCurrentScreen();
 			}
 		} else {
-			Minecraft.getInstance().setScreen(null);
+			ScreenUtils.setScreen(null);
 		}
 	}
 

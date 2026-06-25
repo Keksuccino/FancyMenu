@@ -140,7 +140,7 @@ public class ProgressBarElement extends AbstractElement {
         lastRenderedProgressHeight = progressHeight;
 
         // Enable blending for transparency.
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
 
         // Render using a texture if available.
         if (barTextureSupplier != null) {
@@ -185,7 +185,7 @@ public class ProgressBarElement extends AbstractElement {
      * Renders the background of the progress bar element.
      */
     protected void extractBackground(@NotNull GuiGraphicsExtractor graphics) {
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         if (backgroundTextureSupplier != null) {
             backgroundTextureSupplier.forRenderable((texture, location) -> {
                 DrawableColor.WHITE.setAsShaderColor(graphics, this.opacity);

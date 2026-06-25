@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.fabric.client;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.events.screen.ScreenCharTypedEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
@@ -29,7 +31,7 @@ public class MixinFabricKeyboardHandler {
     @Inject(method = "keyPress", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;keyPressed(Lnet/minecraft/client/input/KeyEvent;)Z"), cancellable = true)
     private void before_keyPressed_in_keyPress_FancyMenu(long window, int action, KeyEvent event, CallbackInfo info) {
         Minecraft minecraft = Minecraft.getInstance();
-        Screen screen = minecraft.screen;
+        Screen screen = ScreenUtils.getScreen();
         if (screen != null) {
             for (GuiEventListener listener : screen.children()) {
                 if (listener instanceof WrappedMCEFBrowser) {
@@ -54,7 +56,7 @@ public class MixinFabricKeyboardHandler {
     @Inject(method = "keyPress", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;keyReleased(Lnet/minecraft/client/input/KeyEvent;)Z"), cancellable = true)
     private void before_keyReleased_in_keyPress_FancyMenu(long window, int action, KeyEvent event, CallbackInfo info) {
         Minecraft minecraft = Minecraft.getInstance();
-        Screen screen = minecraft.screen;
+        Screen screen = ScreenUtils.getScreen();
         if (screen != null) {
             for (GuiEventListener listener : screen.children()) {
                 if (listener instanceof WrappedMCEFBrowser) {
@@ -80,7 +82,7 @@ public class MixinFabricKeyboardHandler {
     private void head_charTyped_FancyMenu(long window, CharacterEvent event, CallbackInfo info) {
 
         Minecraft minecraft = Minecraft.getInstance();
-        Screen screen = minecraft.screen;
+        Screen screen = ScreenUtils.getScreen();
         if (screen != null) {
             for (GuiEventListener listener : screen.children()) {
                 if (listener instanceof WrappedMCEFBrowser) {
@@ -104,7 +106,7 @@ public class MixinFabricKeyboardHandler {
 
     @Inject(method = "charTyped", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;charTyped(Lnet/minecraft/client/input/CharacterEvent;)Z"))
     private void before_Screen_charTyped_in_charTyped_FancyMenu(long window, CharacterEvent event, CallbackInfo info) {
-        EventHandler.INSTANCE.postEvent(new ScreenCharTypedEvent(Objects.requireNonNull(Minecraft.getInstance().screen), event));
+        EventHandler.INSTANCE.postEvent(new ScreenCharTypedEvent(Objects.requireNonNull(ScreenUtils.getScreen()), event));
     }
 
 }

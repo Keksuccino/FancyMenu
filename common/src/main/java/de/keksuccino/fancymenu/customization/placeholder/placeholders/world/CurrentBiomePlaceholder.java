@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders.world;
 
+import net.minecraft.locale.Language;
+
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import net.minecraft.util.Util;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -42,7 +44,7 @@ public class CurrentBiomePlaceholder extends AbstractWorldPlaceholder {
 
         if (!asKey) {
             String translationKey = Util.makeDescriptionId("biome", biomeId);
-            if (I18n.exists(translationKey)) {
+            if (Language.getInstance().has(translationKey)) {
                 return I18n.get(translationKey);
             }
         }

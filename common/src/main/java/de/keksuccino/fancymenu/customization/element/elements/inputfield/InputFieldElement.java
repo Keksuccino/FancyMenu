@@ -57,7 +57,7 @@ public class InputFieldElement extends AbstractElement {
 
         if (this.shouldRender()) {
 
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
 
             //Handle editor mode for text field
             if (isEditor()) {

@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.requirement.requirements.gui;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
@@ -36,7 +38,7 @@ public class IsAnyElementHoveredRequirement extends Requirement {
 
     @Override
     public boolean isRequirementMet(@Nullable String value) {
-        Screen s = Minecraft.getInstance().screen;
+        Screen s = ScreenUtils.getScreen();
         if (s != null) {
             ScreenCustomizationLayer handler = ScreenCustomizationLayerHandler.getLayerOfScreen(s);
             if (handler != null) {

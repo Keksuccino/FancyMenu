@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.background;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementMemories;
@@ -239,7 +241,7 @@ public abstract class MenuBackground<B extends MenuBackground<?>> implements Ren
     }
 
     public static boolean isEditor() {
-        return (Minecraft.getInstance().screen instanceof LayoutEditorScreen);
+        return (ScreenUtils.getScreen() instanceof LayoutEditorScreen);
     }
 
     public static int getScreenWidth() {

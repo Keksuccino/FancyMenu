@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.overlay;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import com.mojang.blaze3d.platform.GLX;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
@@ -41,7 +43,7 @@ public class DebugOverlayBuilder {
         overlay.setTopYOffsetSupplier(() -> menuBarHeight + 10);
         overlay.setBottomYOffsetSupplier(() -> -10);
 
-        Screen current = Minecraft.getInstance().screen;
+        Screen current = ScreenUtils.getScreen();
         if (current == null) return overlay;
         ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(current);
         if (layer == null) return overlay;
@@ -193,8 +195,8 @@ public class DebugOverlayBuilder {
         overlay.addLine("gpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes ->
                 Component.translatable(
                         "fancymenu.overlay.debug.gpu",
-                        safeReadSystemInfo("gpu_renderer", () -> RenderSystem.getDevice().getRenderer()),
-                        safeReadSystemInfo("gpu_opengl", () -> RenderSystem.getDevice().getVersion())
+                        safeReadSystemInfo("gpu_renderer", () -> RenderSystem.getDevice().getDeviceInfo().name()),
+                        safeReadSystemInfo("gpu_opengl", () -> RenderSystem.getDevice().getDeviceInfo().driverInfo())
                 )
         );
 

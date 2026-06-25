@@ -106,7 +106,7 @@ public class ColorPickerWindowBody extends PiPWindowBody {
     public void renderBody(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         UITheme theme = UIBase.getUITheme();
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
 
         this.updateLayout();
 

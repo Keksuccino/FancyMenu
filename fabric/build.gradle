@@ -33,7 +33,7 @@ dependencies {
     implementation "maven.modrinth:konkrete:1.11.0-26.2-fabric"
     implementation "maven.modrinth:modmenu:20.0.0-beta.4"
     // implementation "it.crystalnest:fancy-entity-renderer-fabric:$fer_mc_version-$fer_version"
-    // implementation "flatdir:fer:0.5.4"
+    compileOnly "flatdir:fer:0.5.4"
     implementation "de.keksuccino:mcef-fabric:2.2.1-26.2"
 
 }

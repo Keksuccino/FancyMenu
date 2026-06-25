@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.customgui;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import java.io.File;
 import java.util.*;
 import javax.annotation.Nullable;
@@ -116,7 +118,7 @@ public class CustomGuiHandler {
 			CustomGui gui = getGuiForOverriddenScreen(screen);
 			if (gui != null) {
 				LOGGER.info("[FANCYMENU] Overriding '" + screen.getClass().getName() + "' with custom GUI '" + gui.identifier + "'..");
-				return constructInstance(gui, Minecraft.getInstance().screen, screen);
+				return constructInstance(gui, ScreenUtils.getScreen(), screen);
 			}
 		}
 		return null;

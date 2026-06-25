@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Renderable;
@@ -227,7 +229,7 @@ public class ScreenOverlayHandler {
         if (isPlaceholder(overlay)) {
             return false;
         }
-        Screen screen = Minecraft.getInstance().screen;
+        Screen screen = ScreenUtils.getScreen();
         if (screen == null) {
             return true;
         }
@@ -242,7 +244,7 @@ public class ScreenOverlayHandler {
         if (isPlaceholder(overlay)) {
             return false;
         }
-        Screen screen = Minecraft.getInstance().screen;
+        Screen screen = ScreenUtils.getScreen();
         if (screen == null) {
             return true;
         }

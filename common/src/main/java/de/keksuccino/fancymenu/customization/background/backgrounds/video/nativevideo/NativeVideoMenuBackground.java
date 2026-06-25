@@ -269,7 +269,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
 
         this.lastRenderTickTime = System.currentTimeMillis();
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
 
         float[] parallaxOffset = calculateParallaxOffset(mouseX, mouseY, parallaxIntensityX, parallaxIntensityY);
         int x = 0;
@@ -301,13 +301,13 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         if (showWatermediaWarning) {
             this.renderWatermediaMissingOverlay_FancyMenu(graphics, resolvedMouseX_FancyMenu, resolvedMouseY_FancyMenu);
             RenderingUtils.resetShaderColor(graphics);
-            com.mojang.blaze3d.opengl.GlStateManager._disableBlend();
+            com.mojang.blaze3d.opengl.GlStateManager._disableBlend(0);
             return;
         }
         this.resetWatermediaDownloadLinkBounds_FancyMenu();
 
         if (this.video == null) {
-            com.mojang.blaze3d.opengl.GlStateManager._disableBlend();
+            com.mojang.blaze3d.opengl.GlStateManager._disableBlend(0);
             return;
         }
 
@@ -359,7 +359,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
 
         RenderingUtils.resetShaderColor(graphics);
 
-        com.mojang.blaze3d.opengl.GlStateManager._disableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._disableBlend(0);
 
     }
 

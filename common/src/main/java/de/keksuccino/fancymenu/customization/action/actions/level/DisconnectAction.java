@@ -40,7 +40,7 @@ public class DisconnectAction extends Action {
         if (value != null) {
             Minecraft mc = Minecraft.getInstance();
             try {
-                Screen current = Minecraft.getInstance().screen;
+                Screen current = ScreenUtils.getScreen();
                 if (current == null) current = new TitleScreen();
                 mc.getReportingContext().draftReportHandled(mc, current, () -> {
                     if ((mc.level != null) && (mc.player != null)) {

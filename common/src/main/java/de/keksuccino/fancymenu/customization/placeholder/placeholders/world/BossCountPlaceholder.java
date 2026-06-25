@@ -29,7 +29,7 @@ public class BossCountPlaceholder extends Placeholder {
         LocalPlayer player = Minecraft.getInstance().player;
         ClientLevel level = Minecraft.getInstance().level;
         if ((player != null) && (level != null)) {
-            Map<UUID, LerpingBossEvent> bosses = ((IMixinBossHealthOverlay)Minecraft.getInstance().gui.getBossOverlay()).get_events_FancyMenu();
+            Map<UUID, LerpingBossEvent> bosses = ((IMixinBossHealthOverlay)Minecraft.getInstance().gui.hud.getBossOverlay()).get_events_FancyMenu();
             return "" + bosses.size();
         }
         return "0";

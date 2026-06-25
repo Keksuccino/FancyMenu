@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.customgui;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
@@ -78,7 +80,7 @@ public class ManageCustomGuisScreen extends PiPCellWindowBody {
                     if (!g.identifier.replace(" ", "").isEmpty()) CustomGuiHandler.CUSTOM_GUI_SCREENS.put(g.identifier, g);
                 }
                 CustomGuiHandler.saveChanges();
-                Minecraft.getInstance().setScreen(CustomGuiHandler.constructInstance(selected, Minecraft.getInstance().screen, null));
+                ScreenUtils.setScreen(CustomGuiHandler.constructInstance(selected, ScreenUtils.getScreen(), null));
             }
         }).setIsActiveSupplier(consumes -> this.selected != null);
 

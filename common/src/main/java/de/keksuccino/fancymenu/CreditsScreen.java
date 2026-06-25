@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.ScrollableMarkdownRenderer;
@@ -75,7 +77,7 @@ public class CreditsScreen extends Screen {
             }
         }
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
 
         //Background
         graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
@@ -109,7 +111,7 @@ public class CreditsScreen extends Screen {
 
     @Override
     public void onClose() {
-        Minecraft.getInstance().setScreen(this.parent);
+        ScreenUtils.setScreen(this.parent);
     }
 
     @Override

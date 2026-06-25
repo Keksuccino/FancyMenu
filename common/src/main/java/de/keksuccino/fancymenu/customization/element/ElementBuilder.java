@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.element;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import com.google.common.collect.Lists;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
@@ -438,7 +440,7 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
     }
 
     protected static boolean isEditor() {
-        return (Minecraft.getInstance().screen instanceof LayoutEditorScreen);
+        return (ScreenUtils.getScreen() instanceof LayoutEditorScreen);
     }
 
 }

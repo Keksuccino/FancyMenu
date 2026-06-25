@@ -23,11 +23,11 @@ public class ScreenUtils {
 
     @Nullable
     public static Screen getScreen() {
-        return Minecraft.getInstance().screen;
+        return Minecraft.getInstance().gui.screen();
     }
 
     public static void setScreen(@Nullable Screen screen) {
-        Minecraft.getInstance().setScreen(screen);
+        Minecraft.getInstance().gui.setScreen(screen);
     }
 
     public static int getScreenWidth() {

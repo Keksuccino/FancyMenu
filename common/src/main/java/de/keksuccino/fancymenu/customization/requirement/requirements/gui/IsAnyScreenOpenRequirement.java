@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.requirement.requirements.gui;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import net.minecraft.client.Minecraft;
@@ -26,7 +28,7 @@ public class IsAnyScreenOpenRequirement extends Requirement {
 
     @Override
     public boolean isRequirementMet(@Nullable String value) {
-        return (Minecraft.getInstance().screen != null);
+        return (ScreenUtils.getScreen() != null);
     }
 
     @Override

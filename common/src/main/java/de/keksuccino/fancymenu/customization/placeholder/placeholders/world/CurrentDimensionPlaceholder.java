@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders.world;
 
+import net.minecraft.locale.Language;
+
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.resources.language.I18n;
@@ -35,7 +37,7 @@ public class CurrentDimensionPlaceholder extends AbstractWorldPlaceholder {
             if ("minecraft".equals(dimensionId.getNamespace())) {
                 if ("overworld".equals(dimensionId.getPath()) || "the_nether".equals(dimensionId.getPath()) || "the_end".equals(dimensionId.getPath())) {
                     String fancyMenuKey = "fancymenu.dimensions.minecraft." + dimensionId.getPath();
-                    if (I18n.exists(fancyMenuKey)) {
+                    if (Language.getInstance().has(fancyMenuKey)) {
                         return I18n.get(fancyMenuKey);
                     }
                 }
@@ -43,7 +45,7 @@ public class CurrentDimensionPlaceholder extends AbstractWorldPlaceholder {
 
             // Fallback: if some environment provides dimension translations, use them.
             String fallbackTranslationKey = "dimension." + dimensionId.getNamespace() + "." + dimensionId.getPath();
-            if (I18n.exists(fallbackTranslationKey)) {
+            if (Language.getInstance().has(fallbackTranslationKey)) {
                 return I18n.get(fallbackTranslationKey);
             }
         }

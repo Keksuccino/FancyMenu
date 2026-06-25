@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.layout;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import java.io.File;
 import java.util.*;
 import com.google.common.io.Files;
@@ -274,7 +276,7 @@ public class LayoutHandler {
 	public static void openLayoutEditor(@NotNull Layout layout, @Nullable Screen layoutTargetScreen) {
 		try {
             ContextMenuHandler.INSTANCE.removeCurrent();
-			Minecraft.getInstance().setScreen(new LayoutEditorScreen(layoutTargetScreen, layout).setAsCurrentInstance());
+			ScreenUtils.setScreen(new LayoutEditorScreen(layoutTargetScreen, layout).setAsCurrentInstance());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

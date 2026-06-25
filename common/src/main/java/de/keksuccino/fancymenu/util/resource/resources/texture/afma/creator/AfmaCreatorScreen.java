@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.VanillaEvents;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
@@ -814,7 +816,7 @@ public class AfmaCreatorScreen extends Screen {
     @Override
     public void onClose() {
         this.state.cancelCurrentJob();
-        Minecraft.getInstance().setScreen(this.parentScreen);
+        ScreenUtils.setScreen(this.parentScreen);
     }
 
     @Override

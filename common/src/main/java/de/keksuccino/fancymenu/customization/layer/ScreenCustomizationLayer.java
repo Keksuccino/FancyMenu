@@ -466,7 +466,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		GuiGraphicsExtractor graphics = e.getGraphics();
 
-		if (this.shouldCustomize(Minecraft.getInstance().screen)) {
+		if (this.shouldCustomize(ScreenUtils.getScreen())) {
 
 			AbstractSelectionList<?> list = e.getList();
 
@@ -533,7 +533,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		GuiGraphicsExtractor graphics = e.getGraphics();
 
-		if (this.shouldCustomize(Minecraft.getInstance().screen)) {
+		if (this.shouldCustomize(ScreenUtils.getScreen())) {
 
 			ITexture headerTexture = (this.layoutBase.scrollListHeaderTexture != null) ? this.layoutBase.scrollListHeaderTexture.get() : null;
 
@@ -577,7 +577,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
                 }
             }
             if (show) {
-                GlStateManager._enableBlend();
+                GlStateManager._enableBlend(0);
                 graphics.fill(0, 0, screen.width, screen.height, DrawableColor.BLACK.getColorIntWithAlpha(this.backgroundOpacity));
             }
         }
@@ -586,7 +586,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 			if (background.showBackground.tryGetNonNull()) {
 
-                GlStateManager._enableBlend();
+                GlStateManager._enableBlend(0);
 
                 background.keepBackgroundAspectRatio = this.layoutBase.preserveBackgroundAspectRatio;
                 background.opacity = this.backgroundOpacity;
@@ -598,7 +598,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
                 GlStateManager._depthMask(true);
                 GlStateManager._enableCull();
                 GlStateManager._enableDepthTest();
-                GlStateManager._enableBlend();
+                GlStateManager._enableBlend(0);
                 
 
             }
@@ -634,7 +634,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	public static void renderBackgroundOverlay(GuiGraphicsExtractor graphics, int x, int y, int width, int height) {
 		Identifier location = (Minecraft.getInstance().level == null) ? MENU_BACKGROUND : INWORLD_MENU_BACKGROUND;
-		GlStateManager._enableBlend();
+		GlStateManager._enableBlend(0);
 		graphics.blit(RenderPipelines.GUI_TEXTURED, location, x, y, 0.0F, 0.0F, width, height, 32, 32);
 	}
 

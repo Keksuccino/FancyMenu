@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.widget;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
@@ -41,7 +43,7 @@ public class WidgetLocatorHandler {
             screenIdentifier = Objects.requireNonNull(UniversalScreenIdentifierRegistry.getScreenForUniversalIdentifier(screenIdentifier));
         }
         if (!CACHED_WIDGETS.containsKey(screenIdentifier) || overrideCache) {
-            Screen current = Minecraft.getInstance().screen;
+            Screen current = ScreenUtils.getScreen();
             if (current == screen) {
                 if (!ScreenCustomization.isCustomizationEnabledForScreen(current)) return;
                 ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(current);
@@ -69,7 +71,7 @@ public class WidgetLocatorHandler {
             }
             screenIdentifier = ScreenIdentifierHandler.tryFixInvalidIdentifierWithNonUniversal(screenIdentifier);
             String widgetIdentifier = widgetLocator.split(":", 2)[1];
-            Screen current = Minecraft.getInstance().screen;
+            Screen current = ScreenUtils.getScreen();
             //Check if the button locator is pointing to a button in the current screen
             if ((current != null) && ScreenIdentifierHandler.isIdentifierOfScreen(screenIdentifier, current)) {
                 if (ScreenCustomization.isCustomizationEnabledForScreen(current)) {

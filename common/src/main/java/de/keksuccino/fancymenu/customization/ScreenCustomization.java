@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import java.io.File;
 import java.util.*;
 import de.keksuccino.fancymenu.Compat;
@@ -280,7 +282,7 @@ public class ScreenCustomization {
 	}
 
 	public static void reloadCurrentScreen() {
-		Screen s = Minecraft.getInstance().screen;
+		Screen s = ScreenUtils.getScreen();
 		if (s != null) {
 			if (isCustomizationEnabledForScreen(s)) {
 				ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(s);
@@ -298,7 +300,7 @@ public class ScreenCustomization {
 		AnimationControllerHandler.stopAllAnimations();
 		AnimationControllerHandler.clearMemory();
 		TextEditorWindowBody.clearCompiledSingleLineCache();
-		EventHandler.INSTANCE.postEvent(new ModReloadEvent(Minecraft.getInstance().screen));
+		EventHandler.INSTANCE.postEvent(new ModReloadEvent(ScreenUtils.getScreen()));
 		reInitCurrentScreen();
 	}
 
@@ -307,22 +309,22 @@ public class ScreenCustomization {
 	}
 
     public static void reInitCurrentScreen(boolean resetScale, boolean setScreenOnFirstInit) {
-        if (Minecraft.getInstance().screen != null) {
+        if (ScreenUtils.getScreen() != null) {
             if (resetScale) RenderingUtils.resetGuiScale();
-            EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
-            EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
-            if (!((IMixinScreen)Minecraft.getInstance().screen).get_initialized_FancyMenu()) {
+            EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(ScreenUtils.getScreen(), InitOrResizeScreenEvent.InitializationPhase.RESIZE));
+            EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(ScreenUtils.getScreen(), InitOrResizeScreenEvent.InitializationPhase.RESIZE));
+            if (!((IMixinScreen)ScreenUtils.getScreen()).get_initialized_FancyMenu()) {
                 if (setScreenOnFirstInit) {
-                    Minecraft.getInstance().setScreen(Minecraft.getInstance().screen);
+                    ScreenUtils.setScreen(ScreenUtils.getScreen());
                 } else {
-                    Minecraft.getInstance().screen.init(Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
+                    ScreenUtils.getScreen().init(Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
                 }
             } else {
-                Minecraft.getInstance().screen.resize(Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
+                ScreenUtils.getScreen().resize(Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
             }
-            ScrollScreenNormalizer.normalizeScrollableScreen(Minecraft.getInstance().screen);
-            EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
-            EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
+            ScrollScreenNormalizer.normalizeScrollableScreen(ScreenUtils.getScreen());
+            EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(ScreenUtils.getScreen(), InitOrResizeScreenEvent.InitializationPhase.RESIZE));
+            EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(ScreenUtils.getScreen(), InitOrResizeScreenEvent.InitializationPhase.RESIZE));
         }
     }
 

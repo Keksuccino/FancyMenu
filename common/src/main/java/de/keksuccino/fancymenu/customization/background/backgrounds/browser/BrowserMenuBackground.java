@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.background.backgrounds.browser;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
@@ -70,7 +72,7 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
             this.autoFocusPending = nowEnabled;
             if (nowEnabled) {
                 if (this.attachedScreen == null) {
-                    this.attachedScreen = Minecraft.getInstance().screen;
+                    this.attachedScreen = ScreenUtils.getScreen();
                 }
                 if (this.attachedScreen != null) {
                     if (this.isEditorScreenActive()) {
@@ -149,7 +151,7 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
         int height = getScreenHeight();
 
         if (this.attachedScreen == null) {
-            this.attachedScreen = Minecraft.getInstance().screen;
+            this.attachedScreen = ScreenUtils.getScreen();
         }
 
         if (this.isEditorScreenActive()) {
@@ -170,7 +172,7 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
             try {
                 BrowserHandler.notifyHandler(this.getInstanceIdentifier(), this.browser);
                 this.syncBrowserSettings(width, height);
-                com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+                com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
                 this.browser.extractRenderState(graphics, mouseX, mouseY, partial);
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to render browser instance of BrowserMenuBackground!", ex);
@@ -179,7 +181,7 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
             return;
         }
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         graphics.fill(0, 0, width, height, ERROR_BACKGROUND_COLOR.getColorIntWithAlpha(this.opacity));
         graphics.centeredText(Minecraft.getInstance().font, Component.translatable("fancymenu.backgrounds.browser.mcef_not_loaded.line_1").setStyle(Style.EMPTY.withBold(true)), width / 2, (height / 2) - Minecraft.getInstance().font.lineHeight - 2, -1);
         graphics.centeredText(Minecraft.getInstance().font, Component.translatable("fancymenu.backgrounds.browser.mcef_not_loaded.line_2").setStyle(Style.EMPTY.withBold(true)), width / 2, (height / 2) + 2, -1);
@@ -201,7 +203,7 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
     }
 
     private void onScreenInitializedOrResized() {
-        this.attachedScreen = Minecraft.getInstance().screen;
+        this.attachedScreen = ScreenUtils.getScreen();
         this.autoFocusPending = true;
         if (this.isEditorScreenActive()) {
             this.destroyBrowser();
@@ -444,7 +446,7 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
         if (this.isEditorScreenActive()) {
             return false;
         }
-        return Minecraft.getInstance().screen == this.attachedScreen;
+        return ScreenUtils.getScreen() == this.attachedScreen;
     }
 
     private boolean isEditorScreenActive() {
@@ -452,7 +454,7 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
     }
 
     private void renderEditorPreview(@NotNull GuiGraphicsExtractor graphics, int width, int height) {
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         graphics.fill(0, 0, width, height, EDITOR_PREVIEW_BACKGROUND_COLOR.getColorIntWithAlpha(0.35F));
 
         graphics.pose().pushMatrix();

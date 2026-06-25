@@ -55,7 +55,7 @@ public abstract class MixinLoadingOverlay {
 			GameIntroHandler.introPlayed = true;
 			PlayableResource intro = GameIntroHandler.getIntro();
 			if (intro != null) {
-				Minecraft.getInstance().setOverlay(new GameIntroOverlay(instance, intro));
+				Minecraft.getInstance().gui.setOverlay(new GameIntroOverlay(instance, intro));
 				return;
 			}
 		}

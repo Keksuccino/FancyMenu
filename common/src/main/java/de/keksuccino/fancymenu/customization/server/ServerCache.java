@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.server;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -24,7 +26,7 @@ public class ServerCache {
         new Thread(() -> {
             while (true) {
                 try {
-                    if (ScreenCustomization.isCustomizationEnabledForScreen(Minecraft.getInstance().screen)) {
+                    if (ScreenCustomization.isCustomizationEnabledForScreen(ScreenUtils.getScreen())) {
                         pingServers();
                     }
                 } catch (Exception e) {

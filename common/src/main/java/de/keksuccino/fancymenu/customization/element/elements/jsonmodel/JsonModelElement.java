@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.jsonmodel;
 
 import com.mojang.blaze3d.platform.Lighting;
-import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.QuadInstance;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -17,7 +16,7 @@ import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.block.dispatch.BlockModelRotation;
@@ -177,24 +176,20 @@ public class JsonModelElement extends AbstractElement {
             a = (color.getAlpha() / 255.0F) * this.opacity;
         }
 
-        GlStateManager._enableBlend();
-        GlStateManager._enableDepthTest();
-        GlStateManager._disableCull();
-
         RenderType renderType = this.renderTranslucent.getBoolean()
                 ? RenderTypes.entityTranslucent(this.cachedRenderTexture)
                 : RenderTypes.entityCutout(this.cachedRenderTexture);
 
-        MultiBufferSource.BufferSource buffer = Minecraft.getInstance().renderBuffers().bufferSource();
-        VertexConsumer consumer = buffer.getBuffer(renderType);
-        renderModelQuads(this.cachedModel.quads(), pose, consumer, r, g, b, a);
-        buffer.endBatch();
+        SubmitNodeStorage submitNodeStorage = new SubmitNodeStorage();
+        QuadCollection quads = this.cachedModel.quads();
+        float red = r;
+        float green = g;
+        float blue = b;
+        float alpha = a;
+        submitNodeStorage.submitCustomGeometry(pose, renderType, (modelPose, consumer) -> renderModelQuads(quads, modelPose, consumer, red, green, blue, alpha));
+        Minecraft.getInstance().gameRenderer.featureRenderDispatcher().renderAllFeatures(submitNodeStorage);
 
-        GlStateManager._enableCull();
-        GlStateManager._disableDepthTest();
-        GlStateManager._disableBlend();
-
-        Minecraft.getInstance().gameRenderer.getLighting().setupFor(Lighting.Entry.ITEMS_3D);
+        Minecraft.getInstance().gameRenderer.lighting().setupFor(Lighting.Entry.ITEMS_3D);
         RenderingUtils.resetShaderColor(graphics);
         pose.popPose();
     }
@@ -212,7 +207,7 @@ public class JsonModelElement extends AbstractElement {
         rotation.transform(light1);
         light0.normalize();
         light1.normalize();
-        Minecraft.getInstance().gameRenderer.getLighting().setupFor(Lighting.Entry.ITEMS_3D);
+        Minecraft.getInstance().gameRenderer.lighting().setupFor(Lighting.Entry.ITEMS_3D);
     }
 
     private static void applyDisplayTransform(@NotNull ItemTransform transform, @NotNull PoseStack poseStack, boolean leftHand) {
@@ -236,12 +231,11 @@ public class JsonModelElement extends AbstractElement {
         poseStack.scale(transform.scale().x(), transform.scale().y(), transform.scale().z());
     }
 
-    private void renderModelQuads(@NotNull QuadCollection quads, @NotNull PoseStack poseStack, @NotNull VertexConsumer consumer, float r, float g, float b, float a) {
+    private static void renderModelQuads(@NotNull QuadCollection quads, @NotNull PoseStack.Pose pose, @NotNull VertexConsumer consumer, float r, float g, float b, float a) {
         QuadInstance instance = new QuadInstance();
         instance.setColor(ARGB.colorFromFloat(a, r, g, b));
         instance.setLightCoords(LightCoordsUtil.FULL_BRIGHT);
         instance.setOverlayCoords(OverlayTexture.NO_OVERLAY);
-        PoseStack.Pose pose = poseStack.last();
 
         for (net.minecraft.core.Direction direction : net.minecraft.core.Direction.values()) {
             List<BakedQuad> directionQuads = quads.getQuads(direction);
@@ -482,9 +476,10 @@ public class JsonModelElement extends AbstractElement {
                     return material;
                 }
             };
-            private final MaterialBaker materialBaker = new MaterialBaker() {
+            private final TextureAtlasSprite missingBlockSprite = Minecraft.getInstance().getAtlasManager().getAtlasOrThrow(AtlasIds.BLOCKS).missingSprite();
+            private final MaterialBaker materialBaker = new MaterialBaker(this.missingBlockSprite) {
                 @Override
-                public Material.Baked get(Material material, ModelDebugName name) {
+                protected Material.Baked bake(Material material) {
                     TextureAtlasSprite itemSprite = spriteGetter.get(new SpriteId(TextureAtlas.LOCATION_ITEMS, material.sprite()));
                     TextureAtlasSprite missingItemSprite = Minecraft.getInstance().getAtlasManager().getAtlasOrThrow(AtlasIds.ITEMS).missingSprite();
                     if (itemSprite != missingItemSprite) {
@@ -495,7 +490,7 @@ public class JsonModelElement extends AbstractElement {
 
                 @Override
                 public Material.Baked reportMissingReference(String reference, ModelDebugName name) {
-                    return new Material.Baked(Minecraft.getInstance().getAtlasManager().getAtlasOrThrow(AtlasIds.BLOCKS).missingSprite(), false);
+                    return new Material.Baked(missingBlockSprite, false);
                 }
             };
 

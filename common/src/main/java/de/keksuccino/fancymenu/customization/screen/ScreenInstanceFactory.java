@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.screen;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.function.Supplier;
@@ -49,15 +51,15 @@ public class ScreenInstanceFactory {
 		ScreenInstanceFactory.registerScreenProvider(PackSelectionScreen.class.getName(),
 				() -> new PackSelectionScreen(Minecraft.getInstance().getResourcePackRepository(), (repo) -> {
 					Minecraft.getInstance().options.updateResourcePacks(repo);
-					Minecraft.getInstance().setScreen(Minecraft.getInstance().screen);
+					ScreenUtils.setScreen(ScreenUtils.getScreen());
 				}, Minecraft.getInstance().getResourcePackDirectory(), Component.translatable("resourcePack.title"))
 		);
 
 		ScreenInstanceFactory.registerScreenProvider(CreateWorldScreen.class.getName(), () ->
-				new ExecuteOnRenderScreen(() -> CreateWorldScreen.openFresh(Minecraft.getInstance(), () -> Minecraft.getInstance().setScreen(new TitleScreen())), true));
+				new ExecuteOnRenderScreen(() -> CreateWorldScreen.openFresh(Minecraft.getInstance(), () -> ScreenUtils.setScreen(new TitleScreen())), true));
 
         ScreenInstanceFactory.registerScreenProvider(AccessibilityOptionsScreen.class.getName(), () -> {
-            return new AccessibilityOptionsScreen(Minecraft.getInstance().screen, Minecraft.getInstance().options);
+            return new AccessibilityOptionsScreen(ScreenUtils.getScreen(), Minecraft.getInstance().options);
         });
 
 	}
@@ -85,7 +87,7 @@ public class ScreenInstanceFactory {
 				return null;
 			}
 			//Update last screen
-			DEFAULT_PARAMETERS.put(Screen.class, Minecraft.getInstance().screen);
+			DEFAULT_PARAMETERS.put(Screen.class, ScreenUtils.getScreen());
 			//Update player
 			DEFAULT_PARAMETERS.put(Player.class, Minecraft.getInstance().player);
 			if (Minecraft.getInstance().player != null) {

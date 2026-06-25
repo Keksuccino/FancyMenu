@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.world;
 
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGui;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinHud;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
@@ -36,7 +36,7 @@ public class CurrentTitlePlaceholder extends Placeholder {
         boolean isSubtitle = SerializationHelper.INSTANCE.deserializeBoolean(false, dps.values.get("is_subtitle"));
         boolean asJson = SerializationHelper.INSTANCE.deserializeBoolean(false, dps.values.get("as_json"));
         if ((player != null) && (level != null)) {
-            Component component = isSubtitle ? ((IMixinGui)Minecraft.getInstance().gui).get_subtitle_FancyMenu() : ((IMixinGui)Minecraft.getInstance().gui).get_title_FancyMenu();
+            Component component = isSubtitle ? ((IMixinHud)Minecraft.getInstance().gui.hud).get_subtitle_FancyMenu() : ((IMixinHud)Minecraft.getInstance().gui.hud).get_title_FancyMenu();
             if (component != null) {
                 if (asJson) {
                     RegistryOps<com.google.gson.JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, level.registryAccess());

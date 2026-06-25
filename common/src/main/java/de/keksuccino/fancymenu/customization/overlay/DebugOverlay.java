@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.overlay;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
@@ -65,13 +67,13 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
     @Override
     public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
-        if (Minecraft.getInstance().screen == null) return;
+        if (ScreenUtils.getScreen() == null) return;
 
         com.mojang.blaze3d.opengl.GlStateManager._disableDepthTest();
         RenderingUtils.setDepthTestLocked(true);
 
         try {
-            this.renderWidgetOverlays(graphics, Minecraft.getInstance().screen, mouseX, mouseY, partial);
+            this.renderWidgetOverlays(graphics, ScreenUtils.getScreen(), mouseX, mouseY, partial);
         } catch (Throwable ex) {
             LOGGER.error("[FANCYMENU] Failed to render debug overlay widget highlights", ex);
         }
@@ -82,7 +84,7 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
         int scaledMouseY = (int)((float)mouseY / uiScale);
 
         int leftX = 0;
-        int rightX = (int)((float)Minecraft.getInstance().screen.width / uiScale);
+        int rightX = (int)((float)ScreenUtils.getScreen().width / uiScale);
 
         int topYOffset = this.safeGetYOffset(this.topYOffsetSupplier, "top");
         int bottomYOffset = this.safeGetYOffset(this.bottomYOffsetSupplier, "bottom");
@@ -91,7 +93,7 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
         int bottomLeftY = (int)((float)bottomYOffset / uiScale);
         int bottomRightY = (int)((float)bottomYOffset / uiScale);
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         graphics.pose().pushMatrix();
         graphics.pose().scale(uiScale, uiScale);
 
@@ -156,7 +158,7 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
         }
         //Render right-click context menu
         if (this.rightClickMenu != null) {
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
             graphics.pose().pushMatrix();
             try {
                 this.rightClickMenu.extractRenderState(graphics, mouseX, mouseY, partial);
@@ -194,7 +196,7 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
     }
 
     protected void renderLineBackground(@NotNull GuiGraphicsExtractor graphics, int x, int y, int width, int height) {
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         graphics.fill(x, y, x + width, y + height, this.lineBackgroundColor.getColorInt());
         RenderingUtils.resetShaderColor(graphics);
     }
@@ -222,7 +224,7 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
     }
 
     protected void renderGraphLine(@NotNull GuiGraphicsExtractor graphics, @NotNull DebugOverlayGraphLine graphLine, int x, int y, int width, int height) {
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
 
         int backgroundColor = graphLine.getBackgroundColor(this.lineBackgroundColor.getColorInt());
         graphics.fill(x, y, x + width, y + height, backgroundColor);

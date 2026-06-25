@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.browser;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
@@ -168,7 +170,7 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
             try {
                 BrowserHandler.notifyHandler(this.getInstanceIdentifier(), this.browser);
                 this.syncBrowserSettings(width, height);
-                com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+                com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
                 this.browser.extractRenderState(graphics, mouseX, mouseY, partial);
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to render browser instance of BrowserDecorationOverlay!", ex);
@@ -176,7 +178,7 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
             RenderingUtils.setDepthTestLocked(false);
             return;
         }
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         graphics.fill(0, 0, width, height, ERROR_BACKGROUND_COLOR.getColorInt());
         graphics.centeredText(Minecraft.getInstance().font, Component.translatable("fancymenu.decoration_overlays.browser.mcef_not_loaded.line_1").setStyle(Style.EMPTY.withBold(true)), width / 2, (height / 2) - Minecraft.getInstance().font.lineHeight - 2, -1);
         graphics.centeredText(Minecraft.getInstance().font, Component.translatable("fancymenu.decoration_overlays.browser.mcef_not_loaded.line_2").setStyle(Style.EMPTY.withBold(true)), width / 2, (height / 2) + 2, -1);
@@ -382,7 +384,7 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
         if (this.isEditorScreenActive()) {
             return false;
         }
-        return Minecraft.getInstance().screen == this.attachedScreen;
+        return ScreenUtils.getScreen() == this.attachedScreen;
     }
 
     private void ensureInputCaptureOverlayRegistered() {
@@ -408,7 +410,7 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
     }
 
     private void renderEditorPreview(@NotNull GuiGraphicsExtractor graphics, int width, int height) {
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         graphics.fill(0, 0, width, height, EDITOR_PREVIEW_BACKGROUND_COLOR.getColorIntWithAlpha(0.35F));
 
         graphics.pose().pushMatrix();

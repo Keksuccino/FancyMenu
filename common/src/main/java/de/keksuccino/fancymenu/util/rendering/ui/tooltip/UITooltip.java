@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.tooltip;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -65,7 +67,7 @@ public class UITooltip implements Renderable {
 
         if (RenderingUtils.isTooltipRenderingBlocked()) return;
 
-        Screen screen = Minecraft.getInstance().screen;
+        Screen screen = ScreenUtils.getScreen();
 
         if (!this.isEmpty() && (screen != null)) {
             UIBase.startUIScaleRendering();
@@ -78,7 +80,7 @@ public class UITooltip implements Renderable {
             com.mojang.blaze3d.opengl.GlStateManager._disableDepthTest();
             RenderingUtils.setDepthTestLocked(true);
 
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
 
             graphics.pose().pushMatrix();
             graphics.pose().scale(scale, scale);

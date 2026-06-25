@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
@@ -195,7 +197,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         try {
             enforceMinimumSizeForBodyScale();
 
-            GlStateManager._enableBlend();
+            GlStateManager._enableBlend(0);
 
             GlStateManager._disableDepthTest();
             RenderingUtils.setDepthTestLocked(true);
@@ -660,7 +662,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         float safeIconSize = Math.max(1.0F, Math.min(iconSize, Math.min(width, height)));
         float iconX = x + (width - safeIconSize) * 0.5F;
         float iconY = y + (height - safeIconSize) * 0.5F;
-        GlStateManager._enableBlend();
+        GlStateManager._enableBlend(0);
         RenderingUtils.defaultBlendFunc();
         UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
         blitScaledIcon(graphics, icon, iconX, iconY, safeIconSize, safeIconSize);
@@ -804,7 +806,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             return this;
         }
         if (this.screen != null) {
-            if (screen == Minecraft.getInstance().screen) {
+            if (screen == ScreenUtils.getScreen()) {
                 return this; // We never open screens as PiP while they are open as actual screens
             }
             if (this.screen instanceof PipableScreen ps) {

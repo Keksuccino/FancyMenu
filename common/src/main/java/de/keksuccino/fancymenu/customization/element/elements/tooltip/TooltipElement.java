@@ -107,7 +107,7 @@ public class TooltipElement extends AbstractElement {
             int paddingX = 6;
             int paddingY = 6;
             
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
             
             // Render tooltip background
             if (this.backgroundTexture != null) {

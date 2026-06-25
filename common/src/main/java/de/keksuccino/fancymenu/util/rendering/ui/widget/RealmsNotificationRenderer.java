@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinRealmsNotificationsScreen;
 import com.mojang.realmsclient.gui.screens.RealmsNotificationsScreen;
@@ -160,7 +162,7 @@ public class RealmsNotificationRenderer {
         if (isEditor()) return true;
         // This mimics the logic in RealmsNotificationsScreen.getConfiguration()
         boolean isValidClient = this.screenAccess.get_validClient_FancyMenu().getNow(false);
-        boolean inTitleScreen = this.minecraft.screen instanceof TitleScreen;
+        boolean inTitleScreen = ScreenUtils.getScreen() instanceof TitleScreen;
 
         if (!isValidClient || !inTitleScreen) {
             return false;
@@ -203,7 +205,7 @@ public class RealmsNotificationRenderer {
     }
 
     protected static boolean isEditor() {
-        return (Minecraft.getInstance().screen instanceof LayoutEditorScreen);
+        return (ScreenUtils.getScreen() instanceof LayoutEditorScreen);
     }
 
 }

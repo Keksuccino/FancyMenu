@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders.gui;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -24,8 +26,8 @@ public class ScreenWidthPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        if (Minecraft.getInstance().screen != null) {
-            return "" + Minecraft.getInstance().screen.width;
+        if (ScreenUtils.getScreen() != null) {
+            return "" + ScreenUtils.getScreen().width;
         }
         return "1";
     }

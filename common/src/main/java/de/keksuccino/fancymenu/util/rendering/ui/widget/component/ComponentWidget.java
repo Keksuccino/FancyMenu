@@ -78,7 +78,7 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
 
         this.handleComponentHover();
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
 
         this.endX = this.getX();
         if (this.useUIRendering) {

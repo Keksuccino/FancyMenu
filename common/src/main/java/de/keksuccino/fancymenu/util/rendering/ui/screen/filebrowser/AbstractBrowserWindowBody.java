@@ -295,7 +295,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
             this.fileTypeScrollArea.horizontalScrollBar.active = (textWidth > (this.fileTypeScrollArea.getInnerWidth() - 10));
         }
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
 
         float labelY = this.getMainAreaLabelY();
         float contentTopY = this.getMainAreaTopY();
@@ -452,7 +452,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
                 UIBase.resetShaderColor(graphics);
                 graphics.fill(x, y, x + w, y + h, previewBackgroundColor);
                 RenderingUtils.resetShaderColor(graphics);
-                com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+                com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
                 graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, loc, x, y, 0.0F, 0.0F, w, h, w, h);
                 UIBase.resetShaderColor(graphics);
                 UIBase.renderBorder(graphics, x, y, x + w, y + h, UIBase.ELEMENT_BORDER_THICKNESS, previewBorderColor, true, true, true, true);
@@ -1453,7 +1453,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         Identifier location = (video != null) ? video.getResourceLocation() : null;
         if (location != null) {
             RenderingUtils.resetShaderColor(graphics);
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
             graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, location, x, y, 0.0F, 0.0F, previewWidth, previewHeight, previewWidth, previewHeight);
             UIBase.resetShaderColor(graphics);
         }
@@ -1775,7 +1775,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         @Override
         public void renderEntry(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
 
             int iconWidth = this.getIconRenderWidth();
             int iconHeight = this.getIconRenderHeight();

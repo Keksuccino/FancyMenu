@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders.gui;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
@@ -33,7 +35,7 @@ public class ElementPosYPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        if (Minecraft.getInstance().screen == null) return "1";
+        if (ScreenUtils.getScreen() == null) return "1";
         String id = dps.values.get("id");
         if (id != null) {
             AbstractElement element = findElement(id);
@@ -47,9 +49,9 @@ public class ElementPosYPlaceholder extends Placeholder {
     }
 
     private AbstractElement findElement(String id) {
-        if (Minecraft.getInstance().screen != null) {
-            if (!(Minecraft.getInstance().screen instanceof LayoutEditorScreen editor)) {
-                ScreenCustomizationLayer mh = ScreenCustomizationLayerHandler.getLayerOfScreen(Minecraft.getInstance().screen);
+        if (ScreenUtils.getScreen() != null) {
+            if (!(ScreenUtils.getScreen() instanceof LayoutEditorScreen editor)) {
+                ScreenCustomizationLayer mh = ScreenCustomizationLayerHandler.getLayerOfScreen(ScreenUtils.getScreen());
                 if (mh != null) {
                     return mh.getElementByInstanceIdentifier(id);
                 }

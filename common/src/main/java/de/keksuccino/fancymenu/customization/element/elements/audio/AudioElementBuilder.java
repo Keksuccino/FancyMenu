@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.elements.audio;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
@@ -47,7 +49,7 @@ public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEdito
     @EventListener
     public void onClientTickPre(ClientTickEvent.Pre e) {
         //Stop all audios if screen is null
-        if ((Minecraft.getInstance().screen == null) && !screenIsNull) {
+        if ((ScreenUtils.getScreen() == null) && !screenIsNull) {
             screenIsNull = true;
             stopAllActiveAudios();
         }

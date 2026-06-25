@@ -173,7 +173,7 @@ public class DualTextInputWindowBody extends PiPWindowBody implements InitialWid
     @Override
     public void extractBackground(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         this.performInitialWidgetFocusActionInRender();
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
+        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
     }
 
     @Override

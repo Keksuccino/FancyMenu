@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders.world;
 
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGui;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinHud;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinSpectatorGui;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
@@ -14,9 +14,9 @@ public class HighlightedItemTimeFmPlaceholder extends AbstractWorldPlaceholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        int time = ((IMixinGui) Minecraft.getInstance().gui).get_toolHighlightTimer_FancyMenu();
+        int time = ((IMixinHud) Minecraft.getInstance().gui.hud).get_toolHighlightTimer_FancyMenu();
         if ((Minecraft.getInstance().player != null) && Minecraft.getInstance().player.isSpectator()) {
-            IMixinSpectatorGui spectatorGui = (IMixinSpectatorGui) Minecraft.getInstance().gui.getSpectatorGui();
+            IMixinSpectatorGui spectatorGui = (IMixinSpectatorGui) Minecraft.getInstance().gui.hud.getSpectatorGui();
             if (spectatorGui.invoke_getHotbarAlpha_FancyMenu() > 0.0F) {
                 time = (int) (40.0 * Minecraft.getInstance().options.notificationDisplayTime().get());
             } else {

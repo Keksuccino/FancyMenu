@@ -2,15 +2,12 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import de.keksuccino.fancymenu.customization.panorama.FancyMenuPanoramaPictureInPictureRenderer;
 import de.keksuccino.fancymenu.customization.panorama.FancyMenuPanoramaRenderState;
 import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
@@ -19,9 +16,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.GuiRenderer;
 import net.minecraft.client.gui.render.TextureSetup;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.Projection;
 import net.minecraft.client.renderer.ProjectionMatrixBuffer;
+import net.minecraft.client.renderer.StagedVertexBuffer;
 import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
 import net.minecraft.client.renderer.state.gui.GuiRenderState;
 import org.spongepowered.asm.mixin.Final;
@@ -35,8 +32,8 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalDouble;
-import java.util.OptionalInt;
 import java.util.function.Supplier;
 
 @Mixin(GuiRenderer.class)
@@ -48,20 +45,14 @@ public abstract class MixinGuiRenderer {
     @Unique private GuiRenderState.TraverseRange activeTraverseRange_FancyMenu = GuiRenderState.TraverseRange.ALL;
     @Unique private int nextRenderPhaseBlurActionOrder_FancyMenu;
 
-    @Shadow @Final private MultiBufferSource.BufferSource bufferSource;
     @Shadow @Final private GuiRenderState renderState;
     @Shadow @Final private List<?> draws;
-    @Shadow @Final private List<?> meshesToDraw;
+    @Shadow @Final private StagedVertexBuffer vertexBuffer;
     @Shadow @Nullable private ScreenRectangle previousScissorArea;
     @Shadow @Nullable private RenderPipeline previousPipeline;
     @Shadow @Nullable private TextureSetup previousTextureSetup;
-    @Shadow @Nullable private BufferBuilder bufferBuilder;
+    @Shadow @Nullable private StagedVertexBuffer.Draw previousDraw;
     @Shadow private int firstDrawIndexAfterBlur;
-
-    @Shadow
-    private void recordMesh(BufferBuilder bufferBuilder, RenderPipeline pipeline, TextureSetup textureSetup, @Nullable ScreenRectangle scissorArea) {
-        throw new AssertionError();
-    }
 
     @Shadow
     private void enableScissor(ScreenRectangle rectangle, RenderPass renderPass) {
@@ -70,16 +61,16 @@ public abstract class MixinGuiRenderer {
 
     @Inject(method = "<init>", at = @At("TAIL"))
     private void after_init_FancyMenu(CallbackInfo info) {
-        this.panoramaPictureInPictureRenderer_FancyMenu = new FancyMenuPanoramaPictureInPictureRenderer(this.bufferSource);
+        this.panoramaPictureInPictureRenderer_FancyMenu = new FancyMenuPanoramaPictureInPictureRenderer();
     }
 
     @Inject(method = "render", at = @At("HEAD"))
-    private void before_render_FancyMenu(GpuBufferSlice fogBuffer, CallbackInfo info) {
+    private void before_render_FancyMenu(CallbackInfo info) {
         this.clearRenderPhaseBlurActions_FancyMenu();
     }
 
     @Inject(method = "render", at = @At("TAIL"))
-    private void after_render_FancyMenu(GpuBufferSlice fogBuffer, CallbackInfo info) {
+    private void after_render_FancyMenu(CallbackInfo info) {
         this.clearRenderPhaseBlurActions_FancyMenu();
     }
 
@@ -90,7 +81,7 @@ public abstract class MixinGuiRenderer {
 			return;
 		}
 
-		int guiScale = Minecraft.getInstance().gameRenderer.getGameRenderState().windowRenderState.guiScale;
+		int guiScale = Minecraft.getInstance().gameRenderer.gameRenderState().windowRenderState.guiScale;
 		this.renderState.forEachPictureInPicture(picturesInPictureState -> {
 			if (picturesInPictureState instanceof FancyMenuPanoramaRenderState panoramaRenderState) {
 				this.panoramaPictureInPictureRenderer_FancyMenu.prepare(panoramaRenderState, this.renderState, guiScale);
@@ -114,16 +105,12 @@ public abstract class MixinGuiRenderer {
             return;
         }
 
-        if (this.bufferBuilder != null) {
-            this.recordMesh(this.bufferBuilder, this.previousPipeline, this.previousTextureSetup, this.previousScissorArea);
-        }
-
-        this.bufferBuilder = null;
+        this.previousDraw = null;
         this.previousPipeline = null;
         this.previousTextureSetup = null;
         this.previousScissorArea = null;
         this.renderPhaseBlurActions_FancyMenu.add(new RenderPhaseBlurAction_FancyMenu(
-                this.meshesToDraw.size(),
+                this.draws.size(),
                 this.nextRenderPhaseBlurActionOrder_FancyMenu++,
                 this.activeTraverseRange_FancyMenu,
                 blurRenderState.queuedBlurArea()
@@ -132,7 +119,7 @@ public abstract class MixinGuiRenderer {
     }
 
     @Inject(method = "draw", at = @At("HEAD"))
-    private void before_draw_FancyMenu(GpuBufferSlice fogBuffer, CallbackInfo info) {
+    private void before_draw_FancyMenu(CallbackInfo info) {
         if (!this.draws.isEmpty() || this.renderPhaseBlurActions_FancyMenu.isEmpty()) {
             return;
         }
@@ -143,7 +130,7 @@ public abstract class MixinGuiRenderer {
     }
 
     @Inject(method = "executeDrawRange", at = @At("HEAD"), cancellable = true)
-    private void before_executeDrawRange_FancyMenu(Supplier<String> label, RenderTarget mainRenderTarget, GpuBufferSlice fogBuffer, GpuBufferSlice dynamicTransforms, GpuBuffer indexBuffer, VertexFormat.IndexType indexType, int startIndex, int endIndex, CallbackInfo info) {
+    private void before_executeDrawRange_FancyMenu(Supplier<String> label, RenderTarget mainRenderTarget, GpuBufferSlice dynamicTransforms, int startIndex, int endIndex, CallbackInfo info) {
         GuiRenderState.TraverseRange executeRange = this.resolveExecuteRange_FancyMenu(startIndex);
         List<RenderPhaseBlurAction_FancyMenu> actions = this.renderPhaseBlurActions_FancyMenu.stream()
                 .filter(action -> action.range_FancyMenu() == executeRange)
@@ -158,12 +145,12 @@ public abstract class MixinGuiRenderer {
         int currentIndex = startIndex;
         for (RenderPhaseBlurAction_FancyMenu action : actions) {
             int actionIndex = Math.max(startIndex, Math.min(endIndex, action.drawIndex_FancyMenu()));
-            this.executePlainDrawRange_FancyMenu(label, mainRenderTarget, fogBuffer, dynamicTransforms, indexBuffer, indexType, currentIndex, actionIndex);
+            this.executePlainDrawRange_FancyMenu(label, mainRenderTarget, dynamicTransforms, currentIndex, actionIndex);
             GuiBlurRenderer.executeQueuedBlurArea_FancyMenu(action.queuedBlurArea_FancyMenu());
             currentIndex = actionIndex;
         }
 
-        this.executePlainDrawRange_FancyMenu(label, mainRenderTarget, fogBuffer, dynamicTransforms, indexBuffer, indexType, currentIndex, endIndex);
+        this.executePlainDrawRange_FancyMenu(label, mainRenderTarget, dynamicTransforms, currentIndex, endIndex);
     }
 
     @WrapOperation(method = "draw", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ProjectionMatrixBuffer;getBuffer(Lnet/minecraft/client/renderer/Projection;)Lcom/mojang/blaze3d/buffers/GpuBufferSlice;"))
@@ -215,7 +202,7 @@ public abstract class MixinGuiRenderer {
     }
 
     @Unique
-    private void executePlainDrawRange_FancyMenu(Supplier<String> label, RenderTarget mainRenderTarget, GpuBufferSlice fogBuffer, GpuBufferSlice dynamicTransforms, GpuBuffer indexBuffer, VertexFormat.IndexType indexType, int startIndex, int endIndex) {
+    private void executePlainDrawRange_FancyMenu(Supplier<String> label, RenderTarget mainRenderTarget, GpuBufferSlice dynamicTransforms, int startIndex, int endIndex) {
         if (startIndex >= endIndex) {
             return;
         }
@@ -225,27 +212,30 @@ public abstract class MixinGuiRenderer {
                 .createRenderPass(
                         label,
                         mainRenderTarget.getColorTextureView(),
-                        OptionalInt.empty(),
+                        Optional.empty(),
                         mainRenderTarget.useDepth ? mainRenderTarget.getDepthTextureView() : null,
                         OptionalDouble.empty()
                 )) {
             RenderSystem.bindDefaultUniforms(renderPass);
-            renderPass.setUniform("Fog", fogBuffer);
             renderPass.setUniform("DynamicTransforms", dynamicTransforms);
 
             for (int i = startIndex; i < endIndex; i++) {
-                this.executeDraw_FancyMenu(this.draws.get(i), renderPass, indexBuffer, indexType);
+                this.executeDraw_FancyMenu(this.draws.get(i), renderPass);
             }
         }
     }
 
     @Unique
-    private void executeDraw_FancyMenu(Object drawObject, RenderPass renderPass, GpuBuffer indexBuffer, VertexFormat.IndexType indexType) {
+    private void executeDraw_FancyMenu(Object drawObject, RenderPass renderPass) {
         IMixinGuiRendererDraw draw = (IMixinGuiRendererDraw) drawObject;
+        StagedVertexBuffer.ExecuteInfo executeInfo = this.vertexBuffer.getExecuteInfo(draw.get_draw_FancyMenu());
+        if (executeInfo == null) {
+            return;
+        }
+
         TextureSetup textureSetup = draw.get_textureSetup_FancyMenu();
         renderPass.setPipeline(draw.get_pipeline_FancyMenu());
-        renderPass.setVertexBuffer(0, draw.get_vertexBuffer_FancyMenu());
-
+        renderPass.setVertexBuffer(0, executeInfo.vertexBuffer().slice());
         ScreenRectangle scissorArea = draw.get_scissorArea_FancyMenu();
         if (scissorArea != null) {
             this.enableScissor(scissorArea, renderPass);
@@ -265,8 +255,8 @@ public abstract class MixinGuiRenderer {
             renderPass.bindTexture("Sampler2", textureSetup.texure2(), textureSetup.sampler2());
         }
 
-        renderPass.setIndexBuffer(indexBuffer, indexType);
-        renderPass.drawIndexed(draw.get_baseVertex_FancyMenu(), 0, draw.get_indexCount_FancyMenu(), 1);
+        renderPass.setIndexBuffer(executeInfo.indexBuffer(), executeInfo.indexType());
+        renderPass.drawIndexed(executeInfo.indexCount(), 1, executeInfo.firstIndex(), executeInfo.baseVertex(), 0);
     }
 
     @Unique

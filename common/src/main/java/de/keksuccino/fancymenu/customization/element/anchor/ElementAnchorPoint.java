@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.anchor;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import com.mojang.logging.LogUtils;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
@@ -116,7 +118,7 @@ public class ElementAnchorPoint {
     }
 
     protected static boolean isEditor() {
-        return Minecraft.getInstance().screen instanceof LayoutEditorScreen;
+        return ScreenUtils.getScreen() instanceof LayoutEditorScreen;
     }
 
     // ---------------------------------

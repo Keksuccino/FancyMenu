@@ -8,7 +8,6 @@
     "client.MixinMinecraft",
     "client.MixinNeoForgeGameRenderer",
     "client.MixinNeoForgeKeyboardHandler",
-    "client.MixinNeoForgeLoadingOverlay",
     "client.MixinNeoForgeTitleScreen",
     "client.MixinWatermediaNeoBootstrap"
   ],
