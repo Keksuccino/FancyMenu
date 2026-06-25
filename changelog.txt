@@ -1,4 +1,14 @@
 
+## CHANGELOG | FANCYMENU v3.9.4
+
+- Ported the mod to Minecraft 26.2.0
+
+%changelog:end%
+
+
+
+
+
 ## CHANGELOG | FANCYMENU v3.9.3
 
 ### Bug Fixes
@@ -6,6 +16,7 @@
 - Fixed startup crash on Forge 1.20.1
 
 %changelog:end%
+
 
 
 
