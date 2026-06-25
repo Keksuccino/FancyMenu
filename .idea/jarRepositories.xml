@@ -121,5 +121,20 @@
       <option name="name" value="LoomLocalMinecraft" />
       <option name="url" value="file:/$PROJECT_DIR$/../../Minecraft%20Mods/fancymenu-26.1.1/.gradle/loom-cache/minecraftMaven/" />
     </remote-repository>
+    <remote-repository>
+      <option name="id" value="LoomLocalRemappedMods" />
+      <option name="name" value="LoomLocalRemappedMods" />
+      <option name="url" value="file:$PROJECT_DIR$/../../Minecraft%20Mods/fancymenu-26.2.0/.gradle/loom-cache/remapped_mods/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="LoomGlobalMinecraft" />
+      <option name="name" value="LoomGlobalMinecraft" />
+      <option name="url" value="file:$PROJECT_DIR$/../../../../.GRADLE/caches/fabric-loom/minecraftMaven/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="LoomLocalMinecraft" />
+      <option name="name" value="LoomLocalMinecraft" />
+      <option name="url" value="file:$PROJECT_DIR$/../../Minecraft%20Mods/fancymenu-26.2.0/.gradle/loom-cache/minecraftMaven/" />
+    </remote-repository>
   </component>
 </project>
