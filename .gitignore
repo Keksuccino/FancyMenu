@@ -1,3 +1,4 @@
+.DS_Store
 /run_server/
 /run_client/
 /common/.gradle/
