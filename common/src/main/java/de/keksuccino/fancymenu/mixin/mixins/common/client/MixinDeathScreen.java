@@ -28,9 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(DeathScreen.class)
 public abstract class MixinDeathScreen extends Screen {
 
-    @Unique private TextWidget titleTextFancyMenu;
     @Unique @Nullable private TextWidget causeOfDeathTextFancyMenu;
-    @Unique private TextWidget deathScoreTextFancyMenu;
 
     @Shadow @Final @Nullable private Component causeOfDeath;
     @Shadow @Final private Component deathScore;
@@ -43,8 +41,10 @@ public abstract class MixinDeathScreen extends Screen {
 
     @Inject(method = "init", at = @At("RETURN"))
     private void after_init_FancyMenu(CallbackInfo info) {
+        TextWidget titleTextFancyMenu;
+        TextWidget deathScoreTextFancyMenu;
         if (this.isCustomizableFancyMenu()) {
-            this.titleTextFancyMenu = this.addRenderableWidget(new TextWidget(0, 60, this.width, this.font.lineHeight, this.font, this.getTitle()))
+            titleTextFancyMenu = this.addRenderableWidget(new TextWidget(0, 60, this.width, this.font.lineHeight, this.font, this.getTitle()))
                     .setTextAlignment(TextWidget.TextAlignment.CENTER)
                     .setScale(2.0F)
                     .setWidgetIdentifierFancyMenu("death_screen_title");
@@ -57,13 +57,13 @@ public abstract class MixinDeathScreen extends Screen {
                 this.causeOfDeathTextFancyMenu = null;
             }
 
-            this.deathScoreTextFancyMenu = this.addRenderableWidget(new TextWidget(0, 100, this.width, this.font.lineHeight, this.font, this.deathScore))
+            deathScoreTextFancyMenu = this.addRenderableWidget(new TextWidget(0, 100, this.width, this.font.lineHeight, this.font, this.deathScore))
                     .setTextAlignment(TextWidget.TextAlignment.CENTER)
                     .setWidgetIdentifierFancyMenu("death_screen_score");
         } else {
-            this.titleTextFancyMenu = null;
+            titleTextFancyMenu = null;
             this.causeOfDeathTextFancyMenu = null;
-            this.deathScoreTextFancyMenu = null;
+            deathScoreTextFancyMenu = null;
         }
     }
 

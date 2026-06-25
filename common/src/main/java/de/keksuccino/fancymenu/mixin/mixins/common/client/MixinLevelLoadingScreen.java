@@ -31,9 +31,6 @@ public abstract class MixinLevelLoadingScreen extends Screen {
     @Shadow private LevelLoadTracker loadTracker;
     @Shadow private float smoothedProgress;
 
-    @Unique private TextWidget downloadingTerrainText_FancyMenu;
-    @Unique private RendererWidget chunkRenderer_FancyMenu;
-    @Unique private RendererWidget progressBar_FancyMenu;
     @Unique private boolean worldEnteredNotified_FancyMenu;
 
     protected MixinLevelLoadingScreen(Component component) {
@@ -46,9 +43,12 @@ public abstract class MixinLevelLoadingScreen extends Screen {
     @Override
     protected void init() {
 
+        TextWidget downloadingTerrainText_FancyMenu;
+        RendererWidget chunkRenderer_FancyMenu;
+        RendererWidget progressBar_FancyMenu;
         if (this.isCustomizableFancyMenu()) {
 
-            this.chunkRenderer_FancyMenu = this.addRenderableWidget(new RendererWidget((this.width / 2) - 50, (this.height / 2) + 30 - 50, 100, 100,
+            chunkRenderer_FancyMenu = this.addRenderableWidget(new RendererWidget((this.width / 2) - 50, (this.height / 2) + 30 - 50, 100, 100,
                     (graphics, mouseX, mouseY, partial, x, y, width1, height1, renderer) -> {
                         this.renderChunkBox_FancyMenu(graphics, x + 50, y + 50);
                     }
@@ -66,21 +66,21 @@ public abstract class MixinLevelLoadingScreen extends Screen {
             }
             int progressDefaultX = progressScreenCenterX - 100;
 
-            this.progressBar_FancyMenu = this.addRenderableWidget(new RendererWidget(progressDefaultX, progressDefaultY + 9 + 3, 200, 2, (graphics, mouseX, mouseY, partial, x, y, width1, height1, renderer) -> {
+            progressBar_FancyMenu = this.addRenderableWidget(new RendererWidget(progressDefaultX, progressDefaultY + 9 + 3, 200, 2, (graphics, mouseX, mouseY, partial, x, y, width1, height1, renderer) -> {
                 if (this.loadTracker.hasProgress()) {
                     this.drawProgressBar(graphics, x, y, width1, height1, this.smoothedProgress);
                 }
             })).setWidgetIdentifierFancyMenu("progress_bar");
 
-            this.downloadingTerrainText_FancyMenu = this.addRenderableWidget(TextWidget.of(DOWNLOADING_TERRAIN_TEXT, 0, progressDefaultY, 400))
+            downloadingTerrainText_FancyMenu = this.addRenderableWidget(TextWidget.of(DOWNLOADING_TERRAIN_TEXT, 0, progressDefaultY, 400))
                     .setTextAlignment(TextWidget.TextAlignment.CENTER)
                     .centerWidget(this)
                     .setWidgetIdentifierFancyMenu("downloading_terrain_text");
 
         } else {
-            this.chunkRenderer_FancyMenu = null;
-            this.downloadingTerrainText_FancyMenu = null;
-            this.progressBar_FancyMenu = null;
+            chunkRenderer_FancyMenu = null;
+            downloadingTerrainText_FancyMenu = null;
+            progressBar_FancyMenu = null;
         }
 
     }

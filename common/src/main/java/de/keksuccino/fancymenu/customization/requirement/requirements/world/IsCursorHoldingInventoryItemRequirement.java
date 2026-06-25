@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.requirement.requirements.world;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractContainerScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -43,10 +42,7 @@ public class IsCursorHoldingInventoryItemRequirement extends Requirement {
             if (!(screen instanceof AbstractContainerScreen<?> containerScreen)) return false;
 
             ItemStack carried = containerScreen.getMenu().getCarried();
-            if (!carried.isEmpty()) return true;
-
-            ItemStack dragging = ((IMixinAbstractContainerScreen) containerScreen).get_draggingItem_FancyMenu();
-            return !dragging.isEmpty();
+            return !carried.isEmpty();
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to handle '" + this.getIdentifier() + "' loading requirement!", ex);
             return false;

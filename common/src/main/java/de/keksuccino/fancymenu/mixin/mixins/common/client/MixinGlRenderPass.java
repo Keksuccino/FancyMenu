@@ -10,8 +10,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(targets = "com.mojang.blaze3d.opengl.GlRenderPass")
 public class MixinGlRenderPass {
 
-    @Inject(method = "draw(II)V", at = @At("HEAD"))
-    private void before_draw_FancyMenu(int firstVertex, int vertexCount, CallbackInfo info) {
+    @Inject(method = "draw(IIII)V", at = @At("HEAD"))
+    private void before_draw_FancyMenu(int vertexCount, int instanceCount, int firstVertex, int firstInstance, CallbackInfo info) {
         GuiBlurRenderer.PostPassScissor scissor = GuiBlurRenderer.getActivePostPassScissor_FancyMenu();
         if (scissor != null) {
             ((RenderPassBackend) (Object) this).enableScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());

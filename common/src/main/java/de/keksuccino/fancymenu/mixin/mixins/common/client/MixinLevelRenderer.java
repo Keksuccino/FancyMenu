@@ -2,17 +2,13 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.chunk.ChunkSectionsToRender;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
-import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.renderer.extract.LevelExtractor;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
@@ -22,24 +18,22 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import org.joml.Matrix4fc;
-import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(LevelRenderer.class)
+@Mixin(LevelExtractor.class)
 public class MixinLevelRenderer {
 
-    @Inject(method = "renderLevel", at = @At("HEAD"))
-    private void before_renderLevel_FancyMenu(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean renderBlockOutline, CameraRenderState cameraState, Matrix4fc modelViewMatrix, GpuBufferSlice shaderFog, Vector4f fogColor, boolean renderSky, ChunkSectionsToRender chunkSectionsToRender, CallbackInfo info) {
+    @Inject(method = "extract", at = @At("HEAD"))
+    private void before_extract_FancyMenu(DeltaTracker deltaTracker, Camera camera, float deltaPartialTick, CallbackInfo info) {
         Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.onRenderFrameStart();
     }
 
-    @WrapOperation(method = "extractVisibleEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;extractEntity(Lnet/minecraft/world/entity/Entity;F)Lnet/minecraft/client/renderer/entity/state/EntityRenderState;"))
-	private EntityRenderState wrap_extractEntity_FancyMenu(LevelRenderer levelRenderer, Entity entity, float partialTicks, Operation<EntityRenderState> original, Camera camera, Frustum frustum, DeltaTracker deltaTracker, LevelRenderState levelRenderState) {
+    @WrapOperation(method = "extractVisibleEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/extract/LevelExtractor;extractEntity(Lnet/minecraft/world/entity/Entity;F)Lnet/minecraft/client/renderer/entity/state/EntityRenderState;"))
+	private EntityRenderState wrap_extractEntity_FancyMenu(LevelExtractor levelExtractor, Entity entity, float partialTicks, Operation<EntityRenderState> original, Camera camera, Frustum frustum, DeltaTracker deltaTracker, LevelRenderState levelRenderState) {
 		if (Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.shouldCheckVisibility()) {
 			double interpolatedX = Mth.lerp(partialTicks, entity.xo, entity.getX());
             double interpolatedY = Mth.lerp(partialTicks, entity.yo, entity.getY());
@@ -51,11 +45,11 @@ public class MixinLevelRenderer {
                 Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.onEntityVisible(entity, distance);
             }
         }
-        return original.call(levelRenderer, entity, partialTicks);
+        return original.call(levelExtractor, entity, partialTicks);
     }
 
-    @Inject(method = "renderLevel", at = @At("TAIL"))
-    private void after_renderLevel_FancyMenu(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean renderBlockOutline, CameraRenderState cameraState, Matrix4fc modelViewMatrix, GpuBufferSlice shaderFog, Vector4f fogColor, boolean renderSky, ChunkSectionsToRender chunkSectionsToRender, CallbackInfo info) {
+    @Inject(method = "extract", at = @At("RETURN"))
+    private void after_extract_FancyMenu(DeltaTracker deltaTracker, Camera camera, float deltaPartialTick, CallbackInfo info) {
         Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.onRenderFrameEnd();
     }
 

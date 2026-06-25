@@ -13,14 +13,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ServerSelectionList.OnlineServerEntry.class)
 public class MixinOnlineServerEntry {
 
-    @Inject(at = @At("HEAD"), method = "drawIcon", cancellable = true)
+    @Inject(at = @At("HEAD"), method = "extractIcon", cancellable = true)
     private void onDrawIconFancyMenu(GuiGraphicsExtractor $$0, int $$1, int $$2, Identifier $$3, CallbackInfo info) {
         if (!FancyMenu.getOptions().showMultiplayerScreenServerIcons.getValue()) {
             info.cancel();
         }
     }
 
-    @WrapWithCondition(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fill(IIIII)V"), method = "renderContent")
+    @WrapWithCondition(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fill(IIIII)V"), method = "extractContent")
     private boolean onFillInRenderFancyMenu(GuiGraphicsExtractor instance, int $$0, int $$1, int $$2, int $$3, int $$4) {
         if (FancyMenu.getOptions().showMultiplayerScreenServerIcons.getValue()) {
             instance.fill($$0, $$1, $$2, $$3, $$4);

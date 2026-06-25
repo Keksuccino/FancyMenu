@@ -13,7 +13,7 @@ import java.nio.file.Path;
 @Mixin(LevelStorageSource.LevelStorageAccess.class)
 public class MixinLevelStorageAccess {
 
-    @Shadow @Final LevelStorageSource.LevelDirectory levelDirectory;
+    @Shadow @Final private LevelStorageSource.LevelDirectory levelDirectory;
 
     @Inject(method = "<init>", at = @At("TAIL"))
     private void onConstructFancyMenu(LevelStorageSource $$0, String $$1, Path $$2, CallbackInfo ci) {

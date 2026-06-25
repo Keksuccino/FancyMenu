@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 import com.mojang.realmsclient.client.RealmsClient;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.platform.Services;
+import net.minecraft.client.GameLoadCookie;
 import net.minecraft.client.main.GameConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -10,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(targets = "net.minecraft.client.Minecraft$GameLoadCookie", remap = true)
+@Mixin(GameLoadCookie.class)
 public class MixinGameLoadCookie {
 
     @Unique private static boolean called_FancyMenu = false;

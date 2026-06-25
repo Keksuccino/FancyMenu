@@ -172,12 +172,25 @@ public abstract class MixinGuiRenderer {
         double precise = fancyWindow.getPreciseGuiScale_FancyMenu();
         if (precise > 0) {
             info.cancel();
-            int h = w.getHeight();
-            double d1 = ((double)screenRectangle.left() * precise);
-            double d2 = ((double)h - screenRectangle.bottom() * precise);
-            double d3 = ((double)screenRectangle.width() * precise);
-            double d4 = ((double)screenRectangle.height() * precise);
-            renderPass.enableScissor((int)d1, (int)d2, Math.max(0, (int)d3), Math.max(0, (int)d4));
+            int windowWidth = w.getWidth();
+            int windowHeight = w.getHeight();
+            double left = Math.max(0.0, (double)screenRectangle.left() * precise);
+            double top = Math.max(0.0, (double)screenRectangle.top() * precise);
+            double right = Math.min((double)windowWidth, (double)screenRectangle.right() * precise);
+            double bottom = Math.min((double)windowHeight, (double)screenRectangle.bottom() * precise);
+            int scissorLeft = (int)left;
+            int scissorTop = (int)top;
+            int scissorRight = (int)right;
+            int scissorBottom = (int)bottom;
+            int scissorWidth = scissorRight - scissorLeft;
+            int scissorHeight = scissorBottom - scissorTop;
+            if (scissorWidth > 0 && scissorHeight > 0) {
+                renderPass.enableScissor(scissorLeft, windowHeight - scissorBottom, scissorWidth, scissorHeight);
+            } else if (windowWidth > 0 && windowHeight > 0) {
+                renderPass.enableScissor(0, 0, 1, 1);
+            } else {
+                renderPass.disableScissor();
+            }
         }
     }
 

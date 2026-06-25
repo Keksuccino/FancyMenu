@@ -96,8 +96,8 @@ public abstract class MixinScreen implements CustomizableScreen {
         }
     }
 
-    @WrapOperation(method = "extractPanorama", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/Panorama;extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIZ)V"))
-    private void wrap_panorama_rendering_in_extractPanorama_FancyMenu(Panorama instance, GuiGraphicsExtractor graphics, int width, int height, boolean spin, Operation<Void> original) {
+    @WrapOperation(method = "extractPanorama", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/Panorama;extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;II)V"))
+    private void wrap_panorama_rendering_in_extractPanorama_FancyMenu(Panorama instance, GuiGraphicsExtractor graphics, int width, int height, Operation<Void> original) {
         if (PiPWindowHandler.INSTANCE.isScreenRenderActive()) {
             // This forces a normal background texture for PiP window screens
             RenderingUtils.setShaderColor(graphics, 0.5F, 0.5F, 0.5F, 1.0F);
@@ -106,7 +106,7 @@ public abstract class MixinScreen implements CustomizableScreen {
             GlStateManager._disableBlend(0);
             RenderingUtils.resetShaderColor(graphics);
         } else {
-            original.call(instance, graphics, width, height, spin);
+            original.call(instance, graphics, width, height);
         }
     }
 
