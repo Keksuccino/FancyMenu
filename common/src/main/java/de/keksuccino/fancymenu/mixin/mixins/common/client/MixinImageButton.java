@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.opengl.GlStateManager;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import net.minecraft.client.Minecraft;
@@ -43,7 +42,6 @@ public abstract class MixinImageButton {
 
 		cachedShaderColor_FancyMenu = RenderingUtils.getShaderColor();
 
-		GlStateManager._enableBlend(0);
 		//Fix missing alpha handling for ImageButtons (Vanilla bug)
 		int baseColor = cachedShaderColor_FancyMenu == -1 ? 0xFFFFFFFF : cachedShaderColor_FancyMenu;
 		RenderingUtils.setShaderColor(graphics, ARGB.color(((IMixinAbstractWidget)button).getAlphaFancyMenu(), baseColor));

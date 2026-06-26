@@ -90,9 +90,6 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
             this.hovered = this.isMouseOver(mouseX, mouseY);
 
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
-
-            com.mojang.blaze3d.opengl.GlStateManager._disableDepthTest();
             RenderingUtils.setDepthTestLocked(true);
 
             UIBase.resetShaderColor(graphics);
@@ -116,7 +113,6 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
                     e.height = PIXEL_SIZE;
                     e.hovered = e.isMouseOver(scaledMouseX, scaledMouseY);
                     if (e.isVisible()) {
-                        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
                         UIBase.resetShaderColor(graphics);
                         e.extractRenderState(graphics, scaledMouseX, scaledMouseY, partial);
                     }
@@ -129,7 +125,6 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
                     e.height = PIXEL_SIZE;
                     e.hovered = e.isMouseOver(scaledMouseX, scaledMouseY);
                     if (e.isVisible()) {
-                        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
                         UIBase.resetShaderColor(graphics);
                         e.extractRenderState(graphics, scaledMouseX, scaledMouseY, partial);
                     }
@@ -802,7 +797,6 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         }
 
         protected void renderLabelOrIcon(GuiGraphicsExtractor graphics) {
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
             Component label = this.getLabel();
             ITexture iconTexture = this.getIconTexture();
             if (iconTexture != null) {
@@ -1202,7 +1196,6 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
         @Override
         protected void renderEntry(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
             UIBase.resetShaderColor(graphics);
             graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + PIXEL_SIZE, this.getColor().getColorInt());
             UIBase.resetShaderColor(graphics);

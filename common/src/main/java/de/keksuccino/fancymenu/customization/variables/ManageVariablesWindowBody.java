@@ -212,8 +212,6 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
 
         this.performInitialWidgetFocusActionInRender();
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
-
         this.variableListScrollArea.setWidth(this.width - 40, true);
         this.variableListScrollArea.setHeight(this.height - 85 - 25, true);
         this.variableListScrollArea.setX(20, true);

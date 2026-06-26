@@ -142,8 +142,6 @@ public class SplashTextElement extends AbstractElement {
         }
         splashBaseScale = splashBaseScale * 100.0F / (float) (font.width(renderTextComponent) + 32);
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
-
         graphics.pose().pushMatrix();
         float resolvedScale = Math.max(0.0F, this.scale.getFloat());
         graphics.pose().scale(resolvedScale, resolvedScale);

@@ -229,8 +229,6 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
     @Override
     public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
-
         // Log disabled changes
         if (wasDisabled != isDisabled) {
             LOGGER.debug("Buddy disabled state changed: {} -> {}", wasDisabled, isDisabled);

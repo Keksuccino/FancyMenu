@@ -53,7 +53,6 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
         this.hovered = this.isMouseOver(mouseX, mouseY);
         this.updateHoverAnimation(wasHovered);
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         if (this.hovered) {
             UIBase.renderIconButtonHoverBackground(graphics, this.x, this.y, this.width, this.height);
         }
@@ -105,7 +104,6 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
         float drawX = baseX + offset.x();
         float drawY = baseY + offset.y();
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         de.keksuccino.fancymenu.util.rendering.RenderingUtils.defaultBlendFunc();
         UIBase.getUITheme().setUITextureShaderColor(graphics, this.iconAlpha);
         blitScaledIcon(graphics, iconData, drawX, drawY, areaWidth, areaHeight, offset.rotationDegrees());

@@ -122,7 +122,6 @@ public class SlideshowMenuBackground extends MenuBackground<SlideshowMenuBackgro
             this.slideshow.slideshowOpacity = 1.0F;
 
         } else {
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
             graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, MISSING, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
         }
 

@@ -64,7 +64,6 @@ public class TickerElement extends AbstractElement implements ExecutableElement 
             int y = this.getAbsoluteY();
             int w = this.getAbsoluteWidth();
             int h = this.getAbsoluteHeight();
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
             graphics.fill(x, y, x + w, y + h, this.inEditorColor.getDrawable().getColorInt());
             graphics.enableScissor(x, y, x + w, y + h);
             graphics.centeredText(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
@@ -102,7 +101,6 @@ public class TickerElement extends AbstractElement implements ExecutableElement 
 
     }
 
-    
     @Override
     public @NotNull GenericExecutableBlock getExecutableBlock() {
         return this.actionExecutor;

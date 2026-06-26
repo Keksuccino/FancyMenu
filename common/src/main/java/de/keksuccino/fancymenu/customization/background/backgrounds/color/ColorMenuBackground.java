@@ -32,9 +32,7 @@ public class ColorMenuBackground extends MenuBackground<ColorMenuBackground> {
     @Override
     public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         graphics.fill(0, 0, getScreenWidth(), getScreenHeight(), this.color.getDrawable().getColorIntWithAlpha(this.opacity));
-        
 
     }
 

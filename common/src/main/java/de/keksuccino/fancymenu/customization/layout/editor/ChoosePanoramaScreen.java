@@ -93,8 +93,6 @@ public class ChoosePanoramaScreen extends PiPWindowBody {
     @Override
     public void renderBody(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
-
         float listAreaX = 20.0F;
         float listLabelY = 50.0F;
         float labelHeight = UIBase.getUITextHeightNormal();

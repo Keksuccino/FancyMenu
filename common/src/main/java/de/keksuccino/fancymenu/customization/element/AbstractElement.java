@@ -244,7 +244,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public void renderInternal(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
 		if (this.allowDepthTestManipulation) {
-			com.mojang.blaze3d.opengl.GlStateManager._disableDepthTest();
 			RenderingUtils.setDepthTestLocked(true);
 		}
 
@@ -612,7 +611,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	@Deprecated
 	public void onCloseScreen() {
 	}
-
 
 	/**
 	 * Gets called after a {@link Screen} got opened via {@link Minecraft#setScreen(Screen)}.<br>

@@ -77,8 +77,6 @@ public class CreditsScreen extends Screen {
             }
         }
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
-
         //Background
         graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
         RenderingUtils.resetShaderColor(graphics);
@@ -120,7 +118,3 @@ public class CreditsScreen extends Screen {
     }
 
 }
-
-
-
-

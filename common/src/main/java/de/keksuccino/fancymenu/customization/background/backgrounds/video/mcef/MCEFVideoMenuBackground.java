@@ -161,8 +161,6 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
 
         this.lastRenderTickTime = System.currentTimeMillis();
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
-
         float[] parallaxOffset = calculateParallaxOffset(mouseX, mouseY, parallaxIntensityX, parallaxIntensityY);
         int x = 0;
         int y = 0;
@@ -182,7 +180,6 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
         graphics.fill(x, y, x + w, y + h, DrawableColor.BLACK.getColorIntWithAlpha(this.opacity));
 
         if (!this.ensureVideoManagerReady()) {
-            com.mojang.blaze3d.opengl.GlStateManager._disableBlend(0);
             return;
         }
 
@@ -261,15 +258,11 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
         }
         this.lastPausedState = pausedState;
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
-
         this.videoPlayer.setOpacity(this.opacity);
 
         if (finalVideoUrl != null) {
             this.videoPlayer.extractRenderState(graphics, mouseX, mouseY, partial);
         }
-
-        com.mojang.blaze3d.opengl.GlStateManager._disableBlend(0);
 
     }
 

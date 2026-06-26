@@ -271,7 +271,6 @@ public class BuddyStatusScreen implements Renderable {
 
         if (!isVisible) return;
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         BuddyTextures textures = buddy.getTextures();
 
         // Push pose stack and move to z=400 for rendering on top of everything
@@ -394,7 +393,6 @@ public class BuddyStatusScreen implements Renderable {
                 tooltip = Component.translatable("fancymenu.buddy.status_bar.experience_max", levelingManager.getExperience());
             }
         }
-
 
         // Removed attribute points, titles and buttons
 

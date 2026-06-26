@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.util.ScreenUtils;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.opengl.GlStateManager;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
 import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
@@ -101,9 +100,7 @@ public abstract class MixinScreen implements CustomizableScreen {
         if (PiPWindowHandler.INSTANCE.isScreenRenderActive()) {
             // This forces a normal background texture for PiP window screens
             RenderingUtils.setShaderColor(graphics, 0.5F, 0.5F, 0.5F, 1.0F);
-            GlStateManager._enableBlend(0);
             Screen.extractMenuBackgroundTexture(graphics, DIRT_TEXTURE_FANCYMENU, 0, 0, 0.0F, 0.0F, this.width, this.height);
-            GlStateManager._disableBlend(0);
             RenderingUtils.resetShaderColor(graphics);
         } else {
             original.call(instance, graphics, width, height);
@@ -124,10 +121,8 @@ public abstract class MixinScreen implements CustomizableScreen {
         int textureWidth = customBackground.getWidth();
         int textureHeight = customBackground.getHeight();
         if (textureWidth <= 0 || textureHeight <= 0) return;
-        GlStateManager._enableBlend(0);
         RenderingUtils.blitRepeat(graphics, customLocation, x, y, width, height, textureWidth, textureHeight);
         RenderingUtils.resetShaderColor(graphics);
-        GlStateManager._disableBlend(0);
         info.cancel();
     }
 
@@ -141,7 +136,6 @@ public abstract class MixinScreen implements CustomizableScreen {
         ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen(instance);
         if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(instance)) {
             if (!l.layoutBase.menuBackgrounds.isEmpty()) {
-                GlStateManager._enableBlend(0);
                 //Render a black background before the custom background gets rendered
                 graphics.fill(0, 0, instance.width, instance.height, 0);
                 RenderingUtils.resetShaderColor(graphics);

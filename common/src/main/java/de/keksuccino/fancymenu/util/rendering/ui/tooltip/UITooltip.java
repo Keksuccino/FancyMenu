@@ -77,10 +77,7 @@ public class UITooltip implements Renderable {
             int x = this.calculateX(screen, mouseX);
             int y = this.calculateY(screen, mouseY);
 
-            com.mojang.blaze3d.opengl.GlStateManager._disableDepthTest();
             RenderingUtils.setDepthTestLocked(true);
-
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
 
             graphics.pose().pushMatrix();
             graphics.pose().scale(scale, scale);

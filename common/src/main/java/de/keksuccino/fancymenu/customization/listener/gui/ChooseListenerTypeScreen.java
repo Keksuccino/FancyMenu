@@ -140,7 +140,6 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
 
     @Override
     public void renderBody(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         UIBase.renderText(graphics, titleComp, 20, 20, this.getGenericTextColor());
@@ -476,5 +475,4 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
     }
 
 }
-
 

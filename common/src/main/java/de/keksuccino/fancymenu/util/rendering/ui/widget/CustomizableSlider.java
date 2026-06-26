@@ -138,7 +138,6 @@ public interface CustomizableSlider {
         }
         if (location != null) {
             de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)this).getAlphaFancyMenu());
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
             if (this.isNineSliceCustomSliderBackground_FancyMenu()) {
                 RenderingUtils.blitNineSlicedTexture(graphics, location, widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight(), texture.getWidth(), texture.getHeight(),
                         this.getNineSliceSliderBackgroundBorderTop_FancyMenu(), this.getNineSliceSliderBackgroundBorderRight_FancyMenu(),

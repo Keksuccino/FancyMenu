@@ -116,8 +116,6 @@ public class ImageMenuBackground extends MenuBackground<ImageMenuBackground> {
         float parallaxIntensityX = this.parallaxIntensityXString.getFloat();
         float parallaxIntensityY = this.parallaxIntensityYString.getFloat();
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
-
         Identifier resourceLocation = null;
         ITexture tex = null;
         AspectRatio ratio = new AspectRatio(10, 10);

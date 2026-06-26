@@ -69,7 +69,6 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
 
         if (ScreenUtils.getScreen() == null) return;
 
-        com.mojang.blaze3d.opengl.GlStateManager._disableDepthTest();
         RenderingUtils.setDepthTestLocked(true);
 
         try {
@@ -93,7 +92,6 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
         int bottomLeftY = (int)((float)bottomYOffset / uiScale);
         int bottomRightY = (int)((float)bottomYOffset / uiScale);
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         graphics.pose().pushMatrix();
         graphics.pose().scale(uiScale, uiScale);
 
@@ -158,7 +156,6 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
         }
         //Render right-click context menu
         if (this.rightClickMenu != null) {
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
             graphics.pose().pushMatrix();
             try {
                 this.rightClickMenu.extractRenderState(graphics, mouseX, mouseY, partial);
@@ -196,7 +193,6 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
     }
 
     protected void renderLineBackground(@NotNull GuiGraphicsExtractor graphics, int x, int y, int width, int height) {
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         graphics.fill(x, y, x + width, y + height, this.lineBackgroundColor.getColorInt());
         RenderingUtils.resetShaderColor(graphics);
     }
@@ -224,7 +220,6 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
     }
 
     protected void renderGraphLine(@NotNull GuiGraphicsExtractor graphics, @NotNull DebugOverlayGraphLine graphLine, int x, int y, int width, int height) {
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
 
         int backgroundColor = graphLine.getBackgroundColor(this.lineBackgroundColor.getColorInt());
         graphics.fill(x, y, x + width, y + height, backgroundColor);

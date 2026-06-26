@@ -882,7 +882,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         if (iconData == null) {
             return;
         }
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         de.keksuccino.fancymenu.util.rendering.RenderingUtils.defaultBlendFunc();
         UIBase.getUITheme().setUITextureShaderColor(graphics, alpha);
         blitScaledIcon(graphics, iconData, x, y, width, height, rotationDegrees);
@@ -1270,7 +1269,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             }
             float iconX = this.x + (this.width - iconSize) * 0.5F;
             float iconY = this.y + (this.parent.getTitleBarHeight() - iconSize) * 0.5F;
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
             de.keksuccino.fancymenu.util.rendering.RenderingUtils.defaultBlendFunc();
             UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
             blitScaledIcon(graphics, iconData, iconX, iconY, iconSize, iconSize);
@@ -1351,7 +1349,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         @Override
         public void renderEntry(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
 
             if (this.element.isSelected() || this.element.isMultiSelected() || this.isHovered()) {
                 this.layerWidget.fillClippedToRoundedBottomSmooth(graphics, this.x, this.y, this.getWidth(), this.getHeight(), getElementHoverColor().getColorInt());
@@ -1841,7 +1838,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         @Override
         public void renderEntry(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
 
             this.updateMoveTopBottomButtonLayout();
             int renderMouseX = this.isIconButtonInteractionAllowed() ? mouseX : Integer.MIN_VALUE;
@@ -1910,7 +1906,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         @Override
         public void renderEntry(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
             LayerLayoutEditorWidget.this.fillClippedToRoundedBottom(graphics, this.x, this.y, this.getWidth(), this.getHeight(), getBorderColor().getColorInt());
         }
 

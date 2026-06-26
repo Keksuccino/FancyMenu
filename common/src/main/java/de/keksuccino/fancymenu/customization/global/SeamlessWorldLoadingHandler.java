@@ -156,11 +156,9 @@ public final class SeamlessWorldLoadingHandler {
         int renderX = x + (width - renderWidth) / 2;
         int renderY = y + (height - renderHeight) / 2;
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         RenderingUtils.resetShaderColor(graphics);
         graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, location, renderX, renderY, 0.0F, 0.0F, renderWidth, renderHeight, renderWidth, renderHeight);
         RenderingUtils.resetShaderColor(graphics);
-        com.mojang.blaze3d.opengl.GlStateManager._disableBlend(0);
         return true;
     }
 

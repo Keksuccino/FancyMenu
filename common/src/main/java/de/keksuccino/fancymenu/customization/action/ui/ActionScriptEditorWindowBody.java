@@ -1100,7 +1100,6 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             alpha = ILLEGAL_ACTION_MAX_ALPHA * (1.0F - Mth.clamp(fadeProgress, 0.0F, 1.0F));
         }
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         int targetHeight = Math.max(1, Math.round(this.height / 3.0F));
         int[] size = ILLEGAL_ACTION_ICON_RATIO.getAspectRatioSizeByMaximumSize(Math.max(1, this.width), targetHeight);
         int iconWidth = size[0];
@@ -1124,7 +1123,6 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             return;
         }
         UITheme theme = UIBase.getUITheme();
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         float radius = UIBase.getInterfaceCornerRoundingRadius();
         UIBase.renderRoundedRect(graphics, this.minimapX, this.minimapY, MINIMAP_WIDTH, this.minimapHeight, radius, radius, radius, radius, theme.actions_minimap_background_color.getColorInt());
         UIBase.renderRoundedBorder(graphics, this.minimapX, this.minimapY, this.minimapX + MINIMAP_WIDTH, this.minimapY + this.minimapHeight, 1, radius, radius, radius, radius, theme.actions_minimap_border_color.getColorInt());
@@ -1217,7 +1215,6 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         Matrix3x2fStack poseStack = graphics.pose();
         poseStack.pushMatrix();
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         UIBase.renderRoundedRect(graphics, tooltipX, tooltipY, tooltipWidth, tooltipHeight, radius, radius, radius, radius, backgroundColor.getRGB());
         UIBase.renderRoundedBorder(graphics, tooltipX, tooltipY, tooltipX + tooltipWidth, tooltipY + tooltipHeight, 1, radius, radius, radius, radius, theme.actions_minimap_tooltip_border_color.getColorInt());
 
@@ -1400,7 +1397,6 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
-
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
@@ -3355,7 +3351,6 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         }
 
         private void renderEntryDecorations(@NotNull GuiGraphicsExtractor graphics) {
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
             List<ExecutableEntry> chainAnchors = ActionScriptEditorWindowBody.this.getChainAnchorsFor(this);
             for (ExecutableEntry anchorEntry : chainAnchors) {
                 List<ExecutableEntry> chainEntries = ActionScriptEditorWindowBody.this.getStatementChainOf(anchorEntry);

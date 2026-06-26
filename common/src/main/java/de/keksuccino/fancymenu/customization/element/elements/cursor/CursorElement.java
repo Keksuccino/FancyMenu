@@ -59,7 +59,6 @@ public class CursorElement extends AbstractElement {
                     }
                 } else {
                     RenderingUtils.resetShaderColor(graphics);
-                    com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
                     graphics.fill(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY() + this.getAbsoluteHeight(), DrawableColor.WHITE.getColorInt());
                     graphics.fill(this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), DrawableColor.BLACK.getColorInt());
                     RenderingUtils.resetShaderColor(graphics);

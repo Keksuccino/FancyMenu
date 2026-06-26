@@ -254,7 +254,6 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
     @Override
     public void extractBackground(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         this.performInitialWidgetFocusActionInRender();
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
     }
 
     @Override

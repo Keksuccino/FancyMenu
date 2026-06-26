@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.realmsclient.gui.screens.RealmsNotificationsScreen;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
@@ -123,7 +122,6 @@ public abstract class MixinTitleScreen extends Screen {
             panorama.extractRenderState(graphics, 0, 0, partial);
         } else if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this)) {
             if (!l.layoutBase.menuBackgrounds.isEmpty()) {
-                GlStateManager._enableBlend(0);
                 //Render a black background before the custom background gets rendered
                 graphics.fill(0, 0, this.width, this.height, 0);
                 RenderingUtils.resetShaderColor(graphics);

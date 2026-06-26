@@ -87,8 +87,6 @@ public class ImageElement extends AbstractElement {
             int x = this.getAbsoluteX();
             int y = this.getAbsoluteY();
 
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
-
             ITexture t = this.getTextureResource();
             if ((t != null) && t.isReady()) {
                 Identifier loc = t.getResourceLocation();
@@ -124,8 +122,6 @@ public class ImageElement extends AbstractElement {
             } else if (isEditor()) {
                 RenderingUtils.renderMissing(graphics, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
             }
-
-            com.mojang.blaze3d.opengl.GlStateManager._disableBlend(0);
 
         }
 

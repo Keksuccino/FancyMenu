@@ -89,8 +89,6 @@ public class TextInputWindowBody extends PiPWindowBody implements InitialWidgetF
 
         this.performInitialWidgetFocusActionInRender();
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
-
     }
 
     @Override

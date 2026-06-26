@@ -699,7 +699,6 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
         Minecraft minecraft = Minecraft.getInstance();
         int screenWidth = minecraft.getWindow().getGuiScaledWidth();
         int screenHeight = minecraft.getWindow().getGuiScaledHeight();
-        com.mojang.blaze3d.opengl.GlStateManager._disableDepthTest();
         RenderingUtils.setDepthTestLocked(true);
         graphics.fill(0, 0, screenWidth, screenHeight, UIBase.getUITheme().pip_input_blocked_overlay_color.getColorInt());
         RenderingUtils.setDepthTestLocked(false);

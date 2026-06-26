@@ -166,7 +166,6 @@ public class TextElement extends AbstractElement {
 
                 this.markdownRenderer.setTextOpacity(this.opacity);
 
-                com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
                 this.scrollArea.setX(this.getAbsoluteX(), true);
                 this.scrollArea.setY(this.getAbsoluteY(), true);
                 this.scrollArea.setWidth(this.getAbsoluteWidth(), true);

@@ -1033,7 +1033,6 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
             int centerYLine3 = baseY + HEADER_FOOTER_HEIGHT + ((this.lineHeight / 2) * 5);
             float textHeight = UIBase.getUITextHeightNormal();
 
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
             int labelColor = UIBase.shouldBlur()
                     ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt()
                     : UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt();

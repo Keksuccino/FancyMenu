@@ -458,7 +458,6 @@ public class GlslShaderRuntime {
         boolean blendWasEnabled = GL11.glIsEnabled(GL11.GL_BLEND);
 
         try {
-            
 
             for (int i = 0; i < CHANNEL_COUNT; i++) {
                 GL13.glActiveTexture(GL13.GL_TEXTURE0 + i);
@@ -479,7 +478,6 @@ public class GlslShaderRuntime {
                 this.bindBufferPassTarget(target);
 
                 GL11.glViewport(0, 0, areaWidthPx, areaHeightPx);
-                com.mojang.blaze3d.opengl.GlStateManager._disableBlend(0);
 
                 GL20.glUseProgram(program.programId);
                 GL30.glBindVertexArray(this.vaoId);
@@ -508,10 +506,7 @@ public class GlslShaderRuntime {
             GL11.glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
 
             if (settings.enableBlend()) {
-                com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
                 de.keksuccino.fancymenu.util.rendering.RenderingUtils.defaultBlendFunc();
-            } else {
-                com.mojang.blaze3d.opengl.GlStateManager._disableBlend(0);
             }
 
             ProgramState imageProgram = this.passPrograms_FancyMenu[IMAGE_PASS_INDEX];
@@ -557,10 +552,7 @@ public class GlslShaderRuntime {
             GL11.glViewport(previousViewport[0], previousViewport[1], previousViewport[2], previousViewport[3]);
 
             if (blendWasEnabled) {
-                com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
                 de.keksuccino.fancymenu.util.rendering.RenderingUtils.defaultBlendFunc();
-            } else {
-                com.mojang.blaze3d.opengl.GlStateManager._disableBlend(0);
             }
 
             RenderingUtils.resetShaderColor(graphics);

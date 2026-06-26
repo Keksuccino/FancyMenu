@@ -306,7 +306,6 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
         int w = this.getAbsoluteWidth();
         int h = this.getAbsoluteHeight();
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         graphics.fill(x, y, x + w, y + h, DrawableColor.BLACK.getColorIntWithAlpha(this.opacity));
 
         ResourceSupplier<IVideo> supplier = this.videoSupplier.get();
@@ -321,13 +320,11 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
         if (showWatermediaWarning) {
             this.renderWatermediaMissingOverlay_FancyMenu(graphics, resolvedMouseX_FancyMenu, resolvedMouseY_FancyMenu, x, y, w, h);
             RenderingUtils.resetShaderColor(graphics);
-            com.mojang.blaze3d.opengl.GlStateManager._disableBlend(0);
             return;
         }
         this.resetWatermediaDownloadLinkBounds_FancyMenu();
 
         if (this.video == null) {
-            com.mojang.blaze3d.opengl.GlStateManager._disableBlend(0);
             return;
         }
 
@@ -370,7 +367,6 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
         }
 
         RenderingUtils.resetShaderColor(graphics);
-        com.mojang.blaze3d.opengl.GlStateManager._disableBlend(0);
     }
 
     @Override

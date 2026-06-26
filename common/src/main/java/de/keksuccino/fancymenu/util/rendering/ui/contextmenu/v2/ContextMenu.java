@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2;
 
 import de.keksuccino.fancymenu.util.ScreenUtils;
 
-import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.FancyMenu;
@@ -149,10 +148,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         float animationScale = animationsEnabled ? this.getOpenAnimationScale(partial) : 1.0F;
         float renderScale = uiScale * animationScale;
 
-        GlStateManager._disableDepthTest();
         RenderingUtils.setDepthTestLocked(true);
 
-        GlStateManager._enableBlend(0);
         graphics.pose().pushMatrix();
         graphics.pose().scale(renderScale, renderScale);
 
@@ -363,7 +360,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
                 // Only render if visible
                 if (isVisible) {
-                    GlStateManager._enableBlend(0);
                     e.extractRenderState(graphics, (int) scaledMouseX, (int) scaledMouseY, partial);
                 }
 
@@ -400,7 +396,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 );
 
                 // Render arrow centered
-                GlStateManager._enableBlend(0);
                 UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
                 IconRenderData iconData = resolveMaterialIconData(SCROLL_UP_ICON, SCROLL_INDICATOR_ICON_SIZE, SCROLL_INDICATOR_ICON_SIZE);
                 if (iconData != null) {
@@ -434,7 +429,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 );
 
                 // Render arrow centered (with fixed position)
-                GlStateManager._enableBlend(0);
                 UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
                 IconRenderData iconData = resolveMaterialIconData(SCROLL_DOWN_ICON, SCROLL_INDICATOR_ICON_SIZE, SCROLL_INDICATOR_ICON_SIZE);
                 if (iconData != null) {
@@ -2590,7 +2584,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             }
             float areaX = this.x + ICON_PADDING_LEFT + this.getIconWiggleOffsetX();
             float areaY = this.y + (this.getHeight() / 2.0F) - (ICON_WIDTH_HEIGHT / 2.0F);
-            GlStateManager._enableBlend(0);
             UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
             this.blitScaledIcon(graphics, iconData, areaX, areaY, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
             RenderingUtils.resetShaderColor(graphics);
@@ -2687,7 +2680,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 }
                 this.tooltipActive = (this.tooltipIconHoverStart != -1) && ((this.tooltipIconHoverStart + 200) < System.currentTimeMillis());
 
-                GlStateManager._enableBlend(0);
                 UIBase.getUITheme().ui_icon_texture_color.setAsShaderColor(graphics, this.tooltipIconHovered ? 1.0F : 0.2F);
                 IconRenderData iconData = this.resolveTooltipIconData();
                 if (iconData != null) {
@@ -3027,7 +3019,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         protected void renderSubMenuArrow(GuiGraphicsExtractor graphics) {
-            GlStateManager._enableBlend(0);
             UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
             IconRenderData iconData = this.resolveSubMenuArrowIconData();
             if (iconData != null) {
@@ -3529,7 +3520,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             }
             float areaX = this.x + ClickableContextMenuEntry.ICON_PADDING_LEFT;
             float areaY = this.y + (this.getHeight() / 2.0F) - (ClickableContextMenuEntry.ICON_WIDTH_HEIGHT / 2.0F);
-            GlStateManager._enableBlend(0);
             UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
             this.blitScaledIcon(graphics, iconData, areaX, areaY, ClickableContextMenuEntry.ICON_WIDTH_HEIGHT, ClickableContextMenuEntry.ICON_WIDTH_HEIGHT);
             RenderingUtils.resetShaderColor(graphics);

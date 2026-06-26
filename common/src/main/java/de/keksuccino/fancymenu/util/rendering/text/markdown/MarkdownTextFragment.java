@@ -83,14 +83,12 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
         if (this.imageSupplier != null) {
             this.imageSupplier.forRenderable((iTexture, location) -> {
-                com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
                 de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, this.parent.textOpacity);
                 RenderingUtils.blitF(graphics, location, this.x, this.y, 0.0F, 0.0F, this.getRenderWidth(), this.getRenderHeight(), this.getRenderWidth(), this.getRenderHeight());
                 RenderingUtils.resetShaderColor(graphics);
             });
         } else if (this.separationLine) {
 
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
             RenderingUtils.fillF(graphics, this.parent.x + this.parent.border, this.y, this.parent.x + this.parent.getRealWidth() - this.parent.border, this.y + this.getRenderHeight(), this.parent.separationLineColor.getColorIntWithAlpha(this.parent.textOpacity));
             RenderingUtils.resetShaderColor(graphics);
 
@@ -98,7 +96,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
             this.renderCodeBlock(graphics);
 
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
             graphics.pose().pushMatrix();
             graphics.pose().scale(this.getScale(), this.getScale());
             this.parent.renderText(graphics, this.buildRenderComponent(false), this.getTextRenderX(), this.getTextRenderY(), this.parent.textBaseColor.getColorIntWithAlpha(this.parent.textOpacity), this.parent.textShadow && (this.codeBlockContext == null));
@@ -128,9 +125,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         
         // Use the actual table width for rendering (not the full area width)
         float actualTableWidth = this.tableContext.totalWidth;
-        
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
-        
         // Render rows
         int dataRowIndex = 0; // Track data rows separately for alternating colors
         for (int rowIndex = 0; rowIndex < this.tableContext.rows.size(); rowIndex++) {
@@ -308,7 +302,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     }
 
     protected void renderCodeBlockBackground(GuiGraphicsExtractor graphics, float minX, float minY, float maxX, float maxY, int color) {
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         RenderingUtils.fillF(graphics, minX+1, minY, maxX-1, minY+1, color);
         RenderingUtils.fillF(graphics, minX, minY+1, maxX, maxY-1, color);
         RenderingUtils.fillF(graphics, minX+1, maxY-1, maxX-1, maxY, color);
@@ -317,7 +310,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     protected void renderHeadlineUnderline(GuiGraphicsExtractor graphics) {
         if (this.startOfRenderLine && ((this.headlineType == HeadlineType.BIGGER) || (this.headlineType == HeadlineType.BIGGEST))) {
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
             float scale = (this.parent.parentRenderScale != null) ? this.parent.parentRenderScale : (float)Minecraft.getInstance().getWindow().getGuiScale();
             float lineThickness = (scale > 1) ? 0.5f : 1f;
             float lineY = this.y + this.getTextRenderHeight() + 1;
@@ -330,7 +322,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if ((this.quoteContext != null) && (this.quoteContext.getQuoteEnd() != null) && (this.quoteContext.getQuoteEnd() == this)) {
             float yStart = Objects.requireNonNull(this.quoteContext.getQuoteStart()).y - 2;
             float yEnd = this.y + this.getRenderHeight() + 1;
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
             if (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) {
                 RenderingUtils.fillF(graphics, this.parent.x, yStart, this.parent.x + 2, yEnd, this.parent.quoteColor.getColorIntWithAlpha(this.parent.textOpacity));
             } else if (this.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT) {
@@ -342,7 +333,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     protected void renderBulletListDot(GuiGraphicsExtractor graphics) {
         if ((this.bulletListLevel > 0) && this.bulletListItemStart) {
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
             final float scale = this.getScale();
 
             // Calculate dimensions using scale
