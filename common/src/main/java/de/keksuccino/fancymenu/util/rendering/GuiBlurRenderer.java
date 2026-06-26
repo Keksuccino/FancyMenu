@@ -1,51 +1,95 @@
 package de.keksuccino.fancymenu.util.rendering;
 
+import com.mojang.blaze3d.GpuFormat;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.Std140Builder;
+import com.mojang.blaze3d.pipeline.BindGroupLayout;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.pipeline.TextureTarget;
+import com.mojang.blaze3d.shaders.UniformType;
+import com.mojang.blaze3d.systems.CommandEncoder;
+import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGameRenderer;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphicsExtractor;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPostChain;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPostPass;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
-import net.minecraft.client.renderer.LevelTargetBundle;
-import net.minecraft.client.renderer.PostChain;
-import net.minecraft.client.renderer.PostPass;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
 import net.minecraft.client.renderer.state.gui.GuiRenderState;
 import net.minecraft.resources.Identifier;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.lwjgl.system.MemoryStack;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.OptionalDouble;
 
 public final class GuiBlurRenderer {
 
-    private static final Logger LOGGER = LogManager.getLogger();
     private static final float SHAPE_TYPE_ROUNDED_RECT = 0.0F;
     private static final float SHAPE_TYPE_SUPERELLIPSE = 1.0F;
-    private static final Identifier GUI_BLUR_POST_CHAIN = Identifier.withDefaultNamespace("fancymenu_gui_blur");
     private static final String BLUR_CONFIG_UNIFORM_FANCYMENU = "BlurConfig";
     private static final String GUI_BLUR_CONFIG_UNIFORM_FANCYMENU = "GuiBlurConfig";
+    private static final String SAMPLER_INFO_UNIFORM_FANCYMENU = "SamplerInfo";
+    private static final String IN_SAMPLER_FANCYMENU = "InSampler";
+    private static final String ORIGINAL_SAMPLER_FANCYMENU = "OriginalSampler";
+    private static final String BLUR_SAMPLER_FANCYMENU = "BlurSampler";
     private static final int BLUR_CONFIG_UBO_SIZE_FANCYMENU = 12;
     private static final int GUI_BLUR_CONFIG_UBO_SIZE_FANCYMENU = 80;
+    private static final int SINGLE_INPUT_SAMPLER_INFO_UBO_SIZE_FANCYMENU = 16;
+    private static final int DOUBLE_INPUT_SAMPLER_INFO_UBO_SIZE_FANCYMENU = 24;
     private static final float[] BLUR_RADIUS_MULTIPLIERS_FANCYMENU = new float[]{1.0F, 1.0F, 0.5F, 0.5F, 0.25F, 0.25F};
-    private static final ThreadLocal<PostPassScissor> ACTIVE_POST_PASS_SCISSOR_FANCYMENU = new ThreadLocal<>();
+    private static final BindGroupLayout BOX_BLUR_BIND_GROUP_LAYOUT_FANCYMENU = BindGroupLayout.builder()
+            .withSampler(IN_SAMPLER_FANCYMENU)
+            .withUniform(SAMPLER_INFO_UNIFORM_FANCYMENU, UniformType.UNIFORM_BUFFER)
+            .withUniform(BLUR_CONFIG_UNIFORM_FANCYMENU, UniformType.UNIFORM_BUFFER)
+            .build();
+    private static final BindGroupLayout SCREEN_COPY_BIND_GROUP_LAYOUT_FANCYMENU = BindGroupLayout.builder()
+            .withSampler(IN_SAMPLER_FANCYMENU)
+            .withUniform(SAMPLER_INFO_UNIFORM_FANCYMENU, UniformType.UNIFORM_BUFFER)
+            .build();
+    private static final BindGroupLayout GUI_BLUR_BIND_GROUP_LAYOUT_FANCYMENU = BindGroupLayout.builder()
+            .withSampler(ORIGINAL_SAMPLER_FANCYMENU)
+            .withSampler(BLUR_SAMPLER_FANCYMENU)
+            .withUniform(SAMPLER_INFO_UNIFORM_FANCYMENU, UniformType.UNIFORM_BUFFER)
+            .withUniform(GUI_BLUR_CONFIG_UNIFORM_FANCYMENU, UniformType.UNIFORM_BUFFER)
+            .build();
+    private static final RenderPipeline BOX_BLUR_PIPELINE_FANCYMENU = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
+            .withLocation(Identifier.withDefaultNamespace("pipeline/fancymenu_box_blur"))
+            .withVertexShader("core/screenquad")
+            .withFragmentShader("post/fancymenu_box_blur")
+            .withBindGroupLayout(BOX_BLUR_BIND_GROUP_LAYOUT_FANCYMENU)
+            .build();
+    private static final RenderPipeline SCREEN_COPY_PIPELINE_FANCYMENU = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
+            .withLocation(Identifier.withDefaultNamespace("pipeline/fancymenu_copy_screen"))
+            .withVertexShader("core/screenquad")
+            .withFragmentShader("post/fancymenu_copy_screen")
+            .withBindGroupLayout(SCREEN_COPY_BIND_GROUP_LAYOUT_FANCYMENU)
+            .build();
+    private static final RenderPipeline GUI_BLUR_PIPELINE_FANCYMENU = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
+            .withLocation(Identifier.withDefaultNamespace("pipeline/fancymenu_gui_blur"))
+            .withVertexShader("core/screenquad")
+            .withFragmentShader("post/fancymenu_gui_blur")
+            .withBindGroupLayout(GUI_BLUR_BIND_GROUP_LAYOUT_FANCYMENU)
+            .build();
+    private static final GpuBuffer[] BLUR_CONFIG_BUFFERS_FANCYMENU = new GpuBuffer[BLUR_RADIUS_MULTIPLIERS_FANCYMENU.length];
 
-    private static boolean blurPostChainFailed;
+    private static TextureTarget blurOriginalTarget_FancyMenu;
+    private static TextureTarget blurSwapTarget_FancyMenu;
+    private static TextureTarget blurBlurredTarget_FancyMenu;
+    private static GpuBuffer boxBlurSamplerInfoBuffer_FancyMenu;
+    private static GpuBuffer guiBlurSamplerInfoBuffer_FancyMenu;
+    private static GpuBuffer guiBlurConfigBuffer_FancyMenu;
+    private static int blurTargetWidth_FancyMenu;
+    private static int blurTargetHeight_FancyMenu;
 
     private GuiBlurRenderer() {
     }
@@ -243,16 +287,12 @@ public final class GuiBlurRenderer {
     public static void executeQueuedBlurArea_FancyMenu(@Nonnull QueuedBlurArea queuedBlurArea) {
         Objects.requireNonNull(queuedBlurArea);
         Minecraft minecraft = Minecraft.getInstance();
-        PostChain postChain = getOrCreatePostChain(minecraft);
-        if (postChain == null) {
-            return;
-        }
-        int targetWidth = minecraft.getWindow().getWidth();
-        int targetHeight = minecraft.getWindow().getHeight();
+        RenderTarget mainTarget = minecraft.gameRenderer.mainRenderTarget();
+        int targetWidth = mainTarget.width;
+        int targetHeight = mainTarget.height;
         if (targetWidth <= 0 || targetHeight <= 0) {
             return;
         }
-        ensurePostChainSize(postChain, targetWidth, targetHeight);
 
         BlurArea area = queuedBlurArea.area_FancyMenu;
         float guiScale = (float) minecraft.getWindow().getGuiScale();
@@ -272,75 +312,91 @@ public final class GuiBlurRenderer {
         RenderRotationUtil.Rotation2D maskRotation = queuedBlurArea.maskRotation_FancyMenu;
         RenderRotationUtil.Rotation2D scissorRotation = maskRotation;
         float margin = guiScale > 0.0F ? (blurRadius / guiScale) * 4.0F : 0.0F;
-        PostPassScissor scissor = toPostPassScissor(resolveScissorBounds(area, margin, scissorRotation), guiScale, targetWidth, targetHeight);
+        BlurScissor scissor = toBlurScissor(resolveScissorBounds(area, margin, scissorRotation), guiScale, targetWidth, targetHeight);
         if (scissor.isEmpty()) {
             return;
         }
-        applyUniforms(postChain, scaledX, scaledY, scaledWidth, scaledHeight, blurRadius, scaledRadii, area.shapeType, area.roundness, maskRotation, tint);
 
-        // The final post pass writes a masked mix back into the main target, so no extra blit is needed here.
-        ACTIVE_POST_PASS_SCISSOR_FANCYMENU.set(scissor);
-        try {
-            postChain.process(minecraft.gameRenderer.mainRenderTarget(), getResourceAllocator(minecraft));
-        } finally {
-            ACTIVE_POST_PASS_SCISSOR_FANCYMENU.remove();
+        ensureBlurTargets_FancyMenu(targetWidth, targetHeight);
+        updateSamplerInfoUniforms_FancyMenu(targetWidth, targetHeight);
+        updateBlurConfigUniforms_FancyMenu(scaledX, scaledY, scaledWidth, scaledHeight, blurRadius, scaledRadii, area.shapeType, area.roundness, maskRotation, tint);
+        executeBlurPasses_FancyMenu(mainTarget, scissor);
+    }
+
+    public static void close_FancyMenu() {
+        closeBlurTargets_FancyMenu();
+        closeBuffer_FancyMenu(boxBlurSamplerInfoBuffer_FancyMenu);
+        closeBuffer_FancyMenu(guiBlurSamplerInfoBuffer_FancyMenu);
+        closeBuffer_FancyMenu(guiBlurConfigBuffer_FancyMenu);
+        boxBlurSamplerInfoBuffer_FancyMenu = null;
+        guiBlurSamplerInfoBuffer_FancyMenu = null;
+        guiBlurConfigBuffer_FancyMenu = null;
+        for (int i = 0; i < BLUR_CONFIG_BUFFERS_FANCYMENU.length; i++) {
+            closeBuffer_FancyMenu(BLUR_CONFIG_BUFFERS_FANCYMENU[i]);
+            BLUR_CONFIG_BUFFERS_FANCYMENU[i] = null;
         }
     }
 
-    private static GraphicsResourceAllocator getResourceAllocator(Minecraft minecraft) {
-        return ((IMixinGameRenderer) minecraft.gameRenderer).get_resourcePool_FancyMenu();
-    }
-
-    public static PostPassScissor getActivePostPassScissor_FancyMenu() {
-        return ACTIVE_POST_PASS_SCISSOR_FANCYMENU.get();
-    }
-
-    private static PostChain getOrCreatePostChain(Minecraft minecraft) {
-        PostChain postChain = minecraft.getShaderManager().getPostChain(GUI_BLUR_POST_CHAIN, LevelTargetBundle.MAIN_TARGETS);
-        if (postChain == null) {
-            if (!blurPostChainFailed) {
-                blurPostChainFailed = true;
-                LOGGER.error("[FANCYMENU] Failed to load GUI blur shader!");
-            }
-            return null;
+    private static void ensureBlurTargets_FancyMenu(int width, int height) {
+        if (blurOriginalTarget_FancyMenu != null && blurTargetWidth_FancyMenu == width && blurTargetHeight_FancyMenu == height) {
+            return;
         }
-        blurPostChainFailed = false;
-        return postChain;
+        closeBlurTargets_FancyMenu();
+        blurOriginalTarget_FancyMenu = new TextureTarget("FancyMenu GUI blur original", width, height, false, GpuFormat.RGBA8_UNORM);
+        blurSwapTarget_FancyMenu = new TextureTarget("FancyMenu GUI blur swap", width, height, false, GpuFormat.RGBA8_UNORM);
+        blurBlurredTarget_FancyMenu = new TextureTarget("FancyMenu GUI blur blurred", width, height, false, GpuFormat.RGBA8_UNORM);
+        blurTargetWidth_FancyMenu = width;
+        blurTargetHeight_FancyMenu = height;
     }
 
-    private static void ensurePostChainSize(PostChain postChain, int width, int height) {
-        // 1.21.11 frame graph post chains size their internal targets from the input target each process call.
-    }
-
-    private static void applyUniforms(PostChain postChain, float x, float y, float width, float height, float blurRadius, CornerRadii cornerRadii, float shapeType, float roundness, RenderRotationUtil.Rotation2D rotation, DrawableColor.FloatColor tint) {
-        List<PostPass> passes = ((IMixinPostChain) postChain).getPasses_FancyMenu();
-        int blurIndex = 0;
-        for (PostPass pass : passes) {
-            Map<String, GpuBuffer> customUniforms = ((IMixinPostPass) pass).get_customUniforms_FancyMenu();
-            if (customUniforms.containsKey(BLUR_CONFIG_UNIFORM_FANCYMENU) && blurIndex < BLUR_RADIUS_MULTIPLIERS_FANCYMENU.length) {
-                float directionX = (blurIndex & 1) == 0 ? 1.0F : 0.0F;
-                float directionY = (blurIndex & 1) == 0 ? 0.0F : 1.0F;
-                updateBlurConfigUniform(customUniforms, directionX, directionY, blurRadius * BLUR_RADIUS_MULTIPLIERS_FANCYMENU[blurIndex]);
-                blurIndex++;
-            }
-
-            if (customUniforms.containsKey(GUI_BLUR_CONFIG_UNIFORM_FANCYMENU)) {
-                updateGuiBlurConfigUniform(customUniforms, x, y, width, height, cornerRadii, shapeType, roundness, rotation, tint);
-            }
+    private static void closeBlurTargets_FancyMenu() {
+        if (blurOriginalTarget_FancyMenu != null) {
+            blurOriginalTarget_FancyMenu.destroyBuffers();
+            blurOriginalTarget_FancyMenu = null;
         }
+        if (blurSwapTarget_FancyMenu != null) {
+            blurSwapTarget_FancyMenu.destroyBuffers();
+            blurSwapTarget_FancyMenu = null;
+        }
+        if (blurBlurredTarget_FancyMenu != null) {
+            blurBlurredTarget_FancyMenu.destroyBuffers();
+            blurBlurredTarget_FancyMenu = null;
+        }
+        blurTargetWidth_FancyMenu = 0;
+        blurTargetHeight_FancyMenu = 0;
     }
 
-    private static void updateBlurConfigUniform(Map<String, GpuBuffer> customUniforms, float directionX, float directionY, float radius) {
+    private static void updateSamplerInfoUniforms_FancyMenu(int width, int height) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
-            ByteBuffer data = Std140Builder.onStack(stack, BLUR_CONFIG_UBO_SIZE_FANCYMENU)
-                    .putVec2(directionX, directionY)
-                    .putFloat(radius)
+            ByteBuffer data = Std140Builder.onStack(stack, SINGLE_INPUT_SAMPLER_INFO_UBO_SIZE_FANCYMENU)
+                    .putVec2(width, height)
+                    .putVec2(width, height)
                     .get();
-            updateUniformBuffer(customUniforms, BLUR_CONFIG_UNIFORM_FANCYMENU, data);
+            boxBlurSamplerInfoBuffer_FancyMenu = updateUniformBuffer_FancyMenu(boxBlurSamplerInfoBuffer_FancyMenu, "box blur sampler info", data);
+        }
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            ByteBuffer data = Std140Builder.onStack(stack, DOUBLE_INPUT_SAMPLER_INFO_UBO_SIZE_FANCYMENU)
+                    .putVec2(width, height)
+                    .putVec2(width, height)
+                    .putVec2(width, height)
+                    .get();
+            guiBlurSamplerInfoBuffer_FancyMenu = updateUniformBuffer_FancyMenu(guiBlurSamplerInfoBuffer_FancyMenu, "GUI blur sampler info", data);
         }
     }
 
-    private static void updateGuiBlurConfigUniform(Map<String, GpuBuffer> customUniforms, float x, float y, float width, float height, CornerRadii cornerRadii, float shapeType, float roundness, RenderRotationUtil.Rotation2D rotation, DrawableColor.FloatColor tint) {
+    private static void updateBlurConfigUniforms_FancyMenu(float x, float y, float width, float height, float blurRadius, CornerRadii cornerRadii, float shapeType, float roundness, RenderRotationUtil.Rotation2D rotation, DrawableColor.FloatColor tint) {
+        for (int i = 0; i < BLUR_RADIUS_MULTIPLIERS_FANCYMENU.length; i++) {
+            float directionX = (i & 1) == 0 ? 1.0F : 0.0F;
+            float directionY = (i & 1) == 0 ? 0.0F : 1.0F;
+            try (MemoryStack stack = MemoryStack.stackPush()) {
+                ByteBuffer data = Std140Builder.onStack(stack, BLUR_CONFIG_UBO_SIZE_FANCYMENU)
+                        .putVec2(directionX, directionY)
+                        .putFloat(blurRadius * BLUR_RADIUS_MULTIPLIERS_FANCYMENU[i])
+                        .get();
+                BLUR_CONFIG_BUFFERS_FANCYMENU[i] = updateUniformBuffer_FancyMenu(BLUR_CONFIG_BUFFERS_FANCYMENU[i], "box blur config " + i, data);
+            }
+        }
+
         try (MemoryStack stack = MemoryStack.stackPush()) {
             ByteBuffer data = Std140Builder.onStack(stack, GUI_BLUR_CONFIG_UBO_SIZE_FANCYMENU)
                     .putVec4(x, y, width, height)
@@ -349,27 +405,132 @@ public final class GuiBlurRenderer {
                     .putVec4(tint.red(), tint.green(), tint.blue(), tint.alpha())
                     .putVec4(shapeType, roundness, 0.0F, 0.0F)
                     .get();
-            updateUniformBuffer(customUniforms, GUI_BLUR_CONFIG_UNIFORM_FANCYMENU, data);
+            guiBlurConfigBuffer_FancyMenu = updateUniformBuffer_FancyMenu(guiBlurConfigBuffer_FancyMenu, "GUI blur config", data);
         }
     }
 
-    private static void updateUniformBuffer(Map<String, GpuBuffer> customUniforms, String uniformName, ByteBuffer data) {
-        GpuBuffer currentBuffer = customUniforms.get(uniformName);
-        if (currentBuffer == null) {
-            return;
-        }
-
-        if (currentBuffer.size() != data.remaining() || (currentBuffer.usage() & GpuBuffer.USAGE_COPY_DST) == 0) {
+    private static GpuBuffer updateUniformBuffer_FancyMenu(@Nullable GpuBuffer currentBuffer, String uniformName, ByteBuffer data) {
+        if (currentBuffer == null || currentBuffer.isClosed() || currentBuffer.size() != data.remaining() || (currentBuffer.usage() & GpuBuffer.USAGE_COPY_DST) == 0) {
             GpuBuffer newBuffer = RenderSystem.getDevice().createBuffer(() -> "FancyMenu GUI blur " + uniformName, GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, data);
-            customUniforms.put(uniformName, newBuffer);
-            currentBuffer.close();
-            return;
+            closeBuffer_FancyMenu(currentBuffer);
+            return newBuffer;
         }
 
         RenderSystem.getDevice().createCommandEncoder().writeToBuffer(currentBuffer.slice(), data);
+        return currentBuffer;
     }
 
-    private static PostPassScissor toPostPassScissor(ScissorBounds bounds, float guiScale, int targetWidth, int targetHeight) {
+    private static void executeBlurPasses_FancyMenu(RenderTarget mainTarget, BlurScissor scissor) {
+        if (mainTarget.getColorTexture() == null || blurOriginalTarget_FancyMenu == null || blurSwapTarget_FancyMenu == null || blurBlurredTarget_FancyMenu == null || blurOriginalTarget_FancyMenu.getColorTexture() == null) {
+            return;
+        }
+        if (boxBlurSamplerInfoBuffer_FancyMenu == null || guiBlurSamplerInfoBuffer_FancyMenu == null || guiBlurConfigBuffer_FancyMenu == null) {
+            return;
+        }
+        for (GpuBuffer blurConfigBuffer : BLUR_CONFIG_BUFFERS_FANCYMENU) {
+            if (blurConfigBuffer == null) {
+                return;
+            }
+        }
+
+        CommandEncoder commandEncoder = RenderSystem.getDevice().createCommandEncoder();
+        GpuSampler blurSampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR);
+        if (RenderingUtils.isVulkanActive()) {
+            executeTextureCopy_FancyMenu(commandEncoder, mainTarget, blurOriginalTarget_FancyMenu, scissor);
+        } else {
+            GpuSampler copySampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST);
+            executeScreenCopyPass_FancyMenu(commandEncoder, mainTarget, blurOriginalTarget_FancyMenu, scissor, copySampler);
+        }
+        executeBoxBlurPass_FancyMenu(commandEncoder, "FancyMenu GUI blur horizontal 0", blurOriginalTarget_FancyMenu, blurSwapTarget_FancyMenu, BLUR_CONFIG_BUFFERS_FANCYMENU[0], scissor, blurSampler);
+        executeBoxBlurPass_FancyMenu(commandEncoder, "FancyMenu GUI blur vertical 0", blurSwapTarget_FancyMenu, blurBlurredTarget_FancyMenu, BLUR_CONFIG_BUFFERS_FANCYMENU[1], scissor, blurSampler);
+        executeBoxBlurPass_FancyMenu(commandEncoder, "FancyMenu GUI blur horizontal 1", blurBlurredTarget_FancyMenu, blurSwapTarget_FancyMenu, BLUR_CONFIG_BUFFERS_FANCYMENU[2], scissor, blurSampler);
+        executeBoxBlurPass_FancyMenu(commandEncoder, "FancyMenu GUI blur vertical 1", blurSwapTarget_FancyMenu, blurBlurredTarget_FancyMenu, BLUR_CONFIG_BUFFERS_FANCYMENU[3], scissor, blurSampler);
+        executeBoxBlurPass_FancyMenu(commandEncoder, "FancyMenu GUI blur horizontal 2", blurBlurredTarget_FancyMenu, blurSwapTarget_FancyMenu, BLUR_CONFIG_BUFFERS_FANCYMENU[4], scissor, blurSampler);
+        executeBoxBlurPass_FancyMenu(commandEncoder, "FancyMenu GUI blur vertical 2", blurSwapTarget_FancyMenu, blurBlurredTarget_FancyMenu, BLUR_CONFIG_BUFFERS_FANCYMENU[5], scissor, blurSampler);
+        executeGuiBlurPass_FancyMenu(commandEncoder, mainTarget, scissor, blurSampler);
+    }
+
+    private static void executeTextureCopy_FancyMenu(CommandEncoder commandEncoder, RenderTarget inputTarget, RenderTarget outputTarget, BlurScissor scissor) {
+        if (inputTarget.getColorTexture() == null || outputTarget.getColorTexture() == null) {
+            return;
+        }
+
+        commandEncoder.copyTextureToTexture(
+                inputTarget.getColorTexture(),
+                outputTarget.getColorTexture(),
+                0,
+                scissor.x(),
+                scissor.y(),
+                scissor.x(),
+                scissor.y(),
+                scissor.width(),
+                scissor.height()
+        );
+    }
+
+    private static void executeScreenCopyPass_FancyMenu(CommandEncoder commandEncoder, RenderTarget inputTarget, RenderTarget outputTarget, BlurScissor scissor, GpuSampler sampler) {
+        if (inputTarget.getColorTextureView() == null || outputTarget.getColorTextureView() == null) {
+            return;
+        }
+
+        // OpenGL texture copies go through framebuffer blits, so use a render pass for predictable sub-region semantics.
+        try (RenderPass renderPass = commandEncoder.createRenderPass(() -> "FancyMenu GUI blur source copy", outputTarget.getColorTextureView(), Optional.empty())) {
+            renderPass.setPipeline(SCREEN_COPY_PIPELINE_FANCYMENU);
+            RenderSystem.bindDefaultUniforms(renderPass);
+            renderPass.setUniform(SAMPLER_INFO_UNIFORM_FANCYMENU, boxBlurSamplerInfoBuffer_FancyMenu);
+            renderPass.bindTexture(IN_SAMPLER_FANCYMENU, inputTarget.getColorTextureView(), sampler);
+            enableScissor_FancyMenu(renderPass, scissor);
+            renderPass.draw(3, 1, 0, 0);
+            renderPass.disableScissor();
+        }
+    }
+
+    private static void executeBoxBlurPass_FancyMenu(CommandEncoder commandEncoder, String label, RenderTarget inputTarget, RenderTarget outputTarget, GpuBuffer blurConfigBuffer, BlurScissor scissor, GpuSampler sampler) {
+        if (inputTarget.getColorTextureView() == null || outputTarget.getColorTextureView() == null) {
+            return;
+        }
+
+        try (RenderPass renderPass = commandEncoder.createRenderPass(() -> label, outputTarget.getColorTextureView(), Optional.empty())) {
+            renderPass.setPipeline(BOX_BLUR_PIPELINE_FANCYMENU);
+            RenderSystem.bindDefaultUniforms(renderPass);
+            renderPass.setUniform(SAMPLER_INFO_UNIFORM_FANCYMENU, boxBlurSamplerInfoBuffer_FancyMenu);
+            renderPass.setUniform(BLUR_CONFIG_UNIFORM_FANCYMENU, blurConfigBuffer);
+            renderPass.bindTexture(IN_SAMPLER_FANCYMENU, inputTarget.getColorTextureView(), sampler);
+            enableScissor_FancyMenu(renderPass, scissor);
+            renderPass.draw(3, 1, 0, 0);
+            renderPass.disableScissor();
+        }
+    }
+
+    private static void executeGuiBlurPass_FancyMenu(CommandEncoder commandEncoder, RenderTarget mainTarget, BlurScissor scissor, GpuSampler sampler) {
+        if (mainTarget.getColorTextureView() == null || blurOriginalTarget_FancyMenu.getColorTextureView() == null || blurBlurredTarget_FancyMenu.getColorTextureView() == null) {
+            return;
+        }
+
+        try (RenderPass renderPass = commandEncoder.createRenderPass(() -> "FancyMenu GUI blur composite", mainTarget.getColorTextureView(), Optional.empty(), mainTarget.useDepth ? mainTarget.getDepthTextureView() : null, OptionalDouble.empty())) {
+            renderPass.setPipeline(GUI_BLUR_PIPELINE_FANCYMENU);
+            RenderSystem.bindDefaultUniforms(renderPass);
+            renderPass.setUniform(SAMPLER_INFO_UNIFORM_FANCYMENU, guiBlurSamplerInfoBuffer_FancyMenu);
+            renderPass.setUniform(GUI_BLUR_CONFIG_UNIFORM_FANCYMENU, guiBlurConfigBuffer_FancyMenu);
+            renderPass.bindTexture(ORIGINAL_SAMPLER_FANCYMENU, blurOriginalTarget_FancyMenu.getColorTextureView(), sampler);
+            renderPass.bindTexture(BLUR_SAMPLER_FANCYMENU, blurBlurredTarget_FancyMenu.getColorTextureView(), sampler);
+            enableScissor_FancyMenu(renderPass, scissor);
+            renderPass.draw(3, 1, 0, 0);
+            renderPass.disableScissor();
+        }
+    }
+
+    private static void enableScissor_FancyMenu(RenderPass renderPass, BlurScissor scissor) {
+        renderPass.enableScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
+    }
+
+    private static void closeBuffer_FancyMenu(@Nullable GpuBuffer buffer) {
+        if (buffer != null && !buffer.isClosed()) {
+            buffer.close();
+        }
+    }
+
+    private static BlurScissor toBlurScissor(ScissorBounds bounds, float guiScale, int targetWidth, int targetHeight) {
         float minX = bounds.minX() * guiScale;
         float maxX = bounds.maxX() * guiScale;
         float minY = targetHeight - bounds.maxY() * guiScale;
@@ -379,7 +540,7 @@ public final class GuiBlurRenderer {
         int y0 = clampToInt(floorToInt(minY), 0, targetHeight);
         int x1 = clampToInt(ceilToInt(maxX), 0, targetWidth);
         int y1 = clampToInt(ceilToInt(maxY), 0, targetHeight);
-        return new PostPassScissor(x0, y0, Math.max(0, x1 - x0), Math.max(0, y1 - y0));
+        return new BlurScissor(x0, y0, Math.max(0, x1 - x0), Math.max(0, y1 - y0));
     }
 
     private static ScreenRectangle toScreenBounds(BlurArea area) {
@@ -429,7 +590,7 @@ public final class GuiBlurRenderer {
 
     }
 
-    public record PostPassScissor(int x, int y, int width, int height) {
+    private record BlurScissor(int x, int y, int width, int height) {
 
         private boolean isEmpty() {
             return width <= 0 || height <= 0;

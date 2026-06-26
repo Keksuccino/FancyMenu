@@ -11,18 +11,6 @@ final class SmoothTextShader {
     private SmoothTextShader() {
     }
 
-    static void applyDefaults() {
-    }
-
-    static void applySdfRange(float sdfRange) {
-    }
-
-    static void applyEdge(float edge) {
-    }
-
-    static void applySharpness(float sharpness) {
-    }
-
     static void setRuntimeSharpness(float sharpness) {
         runtimeSharpness = Math.max(0.05F, sharpness);
     }
@@ -45,9 +33,6 @@ final class SmoothTextShader {
 
     static float getResolvedEdge() {
         return runtimeEdge != null ? runtimeEdge : DEFAULT_SDF_EDGE;
-    }
-
-    static void clear() {
     }
 
 }

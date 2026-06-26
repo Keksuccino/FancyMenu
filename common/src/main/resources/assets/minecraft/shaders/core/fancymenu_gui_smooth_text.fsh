@@ -1,13 +1,10 @@
-#version 150
+#version 330
 
 uniform sampler2D Sampler0;
-uniform vec4 ColorModulator;
-uniform float SdfPixelRange;
-uniform float SdfEdge;
-uniform float SdfSharpness;
 
 in vec4 vertexColor;
 in vec2 texCoord0;
+in vec4 sdfInfo;
 
 out vec4 fragColor;
 
@@ -30,11 +27,14 @@ void main() {
     vec2 texSize = vec2(textureSize(Sampler0, 0));
     float pxPerScreenPx = length(fwidth(texCoord0) * texSize);
 
-    float softness = pxPerScreenPx / SdfPixelRange;
+    float sdfPixelRange = max(sdfInfo.x, 0.001);
+    float edge = sdfInfo.y;
+    float sdfSharpness = max(sdfInfo.z, 0.001);
 
-    softness /= max(0.001, SdfSharpness);
+    float softness = pxPerScreenPx / sdfPixelRange;
 
-    float edge = SdfEdge;
+    softness /= sdfSharpness;
+
     if (pxPerScreenPx > 1.0) {
         float thicken = clamp((pxPerScreenPx - 1.0) * 0.05, 0.0, 0.2);
         edge -= thicken;
@@ -59,5 +59,5 @@ void main() {
         discard;
     }
 
-    fragColor = vec4(vertexColor.rgb, vertexColor.a * alpha) * ColorModulator;
+    fragColor = vec4(vertexColor.rgb, vertexColor.a * alpha);
 }

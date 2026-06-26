@@ -323,9 +323,6 @@ public final class SmoothTextRenderer {
         return dimension;
     }
 
-    private static void applyShaderState() {
-    }
-
     private static void addGlyph(GuiGraphicsExtractor graphics, Matrix3x2f transform, SmoothFontGlyph glyph, float penX, float baseline, float scale, int color, boolean italic, @Nullable ScreenRectangle scissorArea) {
         float width = glyph.width() * scale;
         float height = glyph.height() * scale;
