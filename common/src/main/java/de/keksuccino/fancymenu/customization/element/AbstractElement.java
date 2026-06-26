@@ -340,7 +340,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		if (this.allowDepthTestManipulation) {
 			RenderingUtils.setDepthTestLocked(false);
-			com.mojang.blaze3d.opengl.GlStateManager._enableDepthTest();
 		}
 
 	}
