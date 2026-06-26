@@ -1,9 +1,6 @@
 package de.keksuccino.fancymenu.customization.background.backgrounds.browser;
 
 import de.keksuccino.fancymenu.util.ScreenUtils;
-
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -21,14 +18,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.awt.Color;
 import java.util.Objects;
 
