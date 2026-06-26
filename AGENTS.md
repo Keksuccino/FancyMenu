@@ -53,8 +53,12 @@
 - Always prefer the sources provided in the `/<mc_version>/libraries/` folder instead of trying to unpack source JARs yourself. Only do that when the provided sources don't contain what you need.
 - Minecraft 26.1.1 is the version before Minecraft 26.2.
 
-## Testing
-- Use "Computer Use" and terminal commands to test your changes.
-- For simple "does it compile" checks, build the `fabric` and `neoforge` submodules. Never the `common` submodule!
-- At the end, also do visual testing via Computer Use, so check if everything still works.
-- There is IntelliJ IDE open with the project active, so for visual testing you should run the project via the "Run" button in the top-right of IntelliJ, via Computer Use, instead of trying to manually run it via terminal. Never manually run the project via terminal, always use IntelliJ for launching!
+## Autonomous Testing
+- After making changes, always compile/build the project to identify and fix compile errors.
+- Only use the `fabric` and `forge`/`neoforge` modules for compile checks. Never use the `common` module.
+
+## Visual Testing
+- When the user tells you to also do visual testing, run the `fabric` and `neoforge` modules via IntelliJ IDE.
+- Only use "Computer Use" for running the modules! You will click the "Run" button in the top-right of IntelliJ to run the modules (and also select the correct run config before, obviously).
+- After the Minecraft client started, use "Computer Use" to navigate in the game and visually check your changes. Check if everything looks good and works as intended.
+- IntelliJ IDE is already open with the project active.
