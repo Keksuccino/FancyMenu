@@ -780,6 +780,9 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     }
 
     protected void saveCurrentFrameThumbnailOnRenderThread_FancyMenu(@NotNull String identifier, @NotNull Identifier resourceLocation, int width, int height) {
+        if (RenderingUtils.isVulkanActive()) {
+            return;
+        }
         NativeImage image = null;
         try {
             AbstractTexture texture = Minecraft.getInstance().getTextureManager().getTexture(resourceLocation);

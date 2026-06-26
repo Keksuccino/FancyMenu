@@ -3367,5 +3367,6 @@
   "fancymenu.widgetified_screens.title_screen.realmsnotification": "Realms Notification Icons",
   "fancymenu.widgetified_screens.title_screen.splash": "Vanilla Splash Text",
   "fancymenu.backgrounds.video.watermedia_vulkan_unsupported.info": "Watermedia does not support Vulkan yet. Switch to OpenGL to play videos.",
-  "fancymenu.ui.filechooser.preview.watermedia_vulkan_unsupported_apng_gif": "Watermedia does not support Vulkan yet. FancyMenu uses its fallback decoder for APNG and GIF while Vulkan is active."
+  "fancymenu.ui.filechooser.preview.watermedia_vulkan_unsupported_apng_gif": "Watermedia does not support Vulkan yet. FancyMenu uses its fallback decoder for APNG and GIF while Vulkan is active.",
+  "fancymenu.glsl.vulkan_unsupported.error": "Custom GLSL shaders are only supported when Minecraft uses OpenGL. Switch the renderer to OpenGL to use this shader."
 }

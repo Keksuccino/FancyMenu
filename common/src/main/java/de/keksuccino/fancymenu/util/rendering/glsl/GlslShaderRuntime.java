@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
@@ -47,6 +48,7 @@ public class GlslShaderRuntime {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final String DEFAULT_GLSL_VERSION = "#version 150";
+    private static final String VULKAN_UNSUPPORTED_ERROR_KEY_FANCYMENU = "fancymenu.glsl.vulkan_unsupported.error";
     private static final String VERTEX_SHADER_SOURCE = """
             #version 150
             in vec2 Position;
@@ -387,6 +389,11 @@ public class GlslShaderRuntime {
             return false;
         }
 
+        if (RenderingUtils.isVulkanActive()) {
+            this.disableForVulkan();
+            return false;
+        }
+
         Minecraft minecraft = Minecraft.getInstance();
         Window window = minecraft.getWindow();
 
@@ -575,6 +582,11 @@ public class GlslShaderRuntime {
     }
 
     public void close() {
+        if (RenderingUtils.isVulkanActive()) {
+            this.forgetBackendResources();
+            this.resetRuntimeState();
+            return;
+        }
         for (ProgramState program : this.passPrograms_FancyMenu) {
             this.deleteProgram(program);
             program.currentProgramKey = null;
@@ -583,6 +595,16 @@ public class GlslShaderRuntime {
         }
         this.deleteBufferTargets();
         this.deleteGeometry();
+        this.resetRuntimeState();
+    }
+
+    private void disableForVulkan() {
+        this.forgetBackendResources();
+        this.sourceMissing = false;
+        this.lastCompileError = Component.translatable(VULKAN_UNSUPPORTED_ERROR_KEY_FANCYMENU).getString();
+    }
+
+    private void resetRuntimeState() {
         this.activeUniformProgram_FancyMenu = null;
         this.lastCompileError = null;
         this.sourceMissing = false;
@@ -590,6 +612,28 @@ public class GlslShaderRuntime {
         this.lastShadertoyMouseY = 0.0F;
         this.hasShadertoyMousePosition = false;
         this.lastVariableUniformSuffixes_FancyMenu.clear();
+    }
+
+    private void forgetBackendResources() {
+        for (ProgramState program : this.passPrograms_FancyMenu) {
+            program.programId = 0;
+            program.vertexShaderId = 0;
+            program.fragmentShaderId = 0;
+            program.currentProgramKey = null;
+            program.lastFailedProgramKey = null;
+            program.lastCompileError = null;
+            program.uniformLocations.clear();
+        }
+        for (BufferTargetState target : this.bufferTargets_FancyMenu) {
+            target.readTextureId = 0;
+            target.writeTextureId = 0;
+            target.framebufferId = 0;
+            target.width = 0;
+            target.height = 0;
+        }
+        this.vaoId = 0;
+        this.vboId = 0;
+        this.activeUniformProgram_FancyMenu = null;
     }
 
     private void tickTime(@NotNull RenderSettings settings) {
