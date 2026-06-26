@@ -93,6 +93,7 @@ public class WatermediaReflectionBridge {
     @Nullable
     public static Object createPlayer(@Nullable Object mrl, @NotNull Thread renderThread, @NotNull Executor renderThreadExecutor, boolean video, boolean audio) {
         if (mrl == null) return null;
+        if (video && !WatermediaUtil.isWatermediaRenderingAvailable()) return null;
 
         WatermediaUtil.trySuppressDevelopmentFfmpegDebugLogs();
 

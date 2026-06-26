@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
-import com.mojang.blaze3d.opengl.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.HideableElement;
@@ -22,6 +21,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.MouseButtonInfo;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Style;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -162,18 +162,27 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
         this.tickAreaMouseOver(mouseX, mouseY);
 
         RenderingUtils.resetShaderColor(graphics);
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
-        //Invert color of overlay based on what's rendered behind it
-        if (this.invertOverlayColors()) {
-            GlStateManager._blendFuncSeparate(775, 769, 1, 0);
-        }
-
         this.renderAreas(graphics, mouseX, mouseY, partial);
         this.renderConnectionLines(graphics);
 
-        de.keksuccino.fancymenu.util.rendering.RenderingUtils.defaultBlendFunc();
         RenderingUtils.resetShaderColor(graphics);
 
+    }
+
+    @NotNull
+    private RenderPipeline getOverlayRenderPipeline() {
+        return this.invertOverlayColors() ? RenderPipelines.GUI_INVERT : RenderPipelines.GUI;
+    }
+
+    private void fillOverlay(@NotNull GuiGraphicsExtractor graphics, int x0, int y0, int x1, int y1, int color) {
+        graphics.fill(this.getOverlayRenderPipeline(), x0, y0, x1, y1, color);
+    }
+
+    private void renderOverlayBorder(@NotNull GuiGraphicsExtractor graphics, int xMin, int yMin, int xMax, int yMax, int borderThickness, int color) {
+        this.fillOverlay(graphics, xMin, yMin, xMax, yMin + borderThickness, color);
+        this.fillOverlay(graphics, xMin, yMin + borderThickness, xMin + borderThickness, yMax - borderThickness, color);
+        this.fillOverlay(graphics, xMax - borderThickness, yMin + borderThickness, xMax, yMax - borderThickness, color);
+        this.fillOverlay(graphics, xMin, yMax - borderThickness, xMax, yMax, color);
     }
 
     protected void renderAreas(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
@@ -269,12 +278,11 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
             horizontalX += lineThickness;
         }
 
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend(0);
         UIBase.resetShaderColor(graphics);
         //Horizontal Line
-        graphics.fill(horizontalX, horizontalY, horizontalX + horizontalWidth, horizontalY + lineThickness, color);
+        this.fillOverlay(graphics, horizontalX, horizontalY, horizontalX + horizontalWidth, horizontalY + lineThickness, color);
         //Vertical Line
-        graphics.fill(verticalX, verticalY, verticalX + lineThickness, verticalY + verticalHeight, color);
+        this.fillOverlay(graphics, verticalX, verticalY, verticalX + lineThickness, verticalY + verticalHeight, color);
         UIBase.resetShaderColor(graphics);
 
     }
@@ -575,8 +583,8 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
         public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
             int endX = this.getX() + this.getWidth();
             int endY = this.getY() + this.getHeight();
-            graphics.fill(this.getX(), this.getY(), endX, endY, RenderingUtils.replaceAlphaInColor(getOverlayColorBase().getColorInt(), getOverlayOpacity()));
-            UIBase.renderBorder(graphics, this.getX(), this.getY(), endX, endY, 1, RenderingUtils.replaceAlphaInColor(getOverlayColorBorder().getColorInt(), getOverlayOpacity()), true, true, true, true);
+            AnchorPointOverlay.this.fillOverlay(graphics, this.getX(), this.getY(), endX, endY, RenderingUtils.replaceAlphaInColor(getOverlayColorBase().getColorInt(), getOverlayOpacity()));
+            AnchorPointOverlay.this.renderOverlayBorder(graphics, this.getX(), this.getY(), endX, endY, 1, RenderingUtils.replaceAlphaInColor(getOverlayColorBorder().getColorInt(), getOverlayOpacity()));
             UIBase.resetShaderColor(graphics);
         }
 
@@ -597,7 +605,7 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
                 endX = this.getX() + this.getWidth();
                 startY = endY - progressHeight;
             }
-            graphics.fill(startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(getOverlayColorBorder().getColorInt(), getOverlayOpacity()));
+            AnchorPointOverlay.this.fillOverlay(graphics, startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(getOverlayColorBorder().getColorInt(), getOverlayOpacity()));
             UIBase.resetShaderColor(graphics);
         }
 

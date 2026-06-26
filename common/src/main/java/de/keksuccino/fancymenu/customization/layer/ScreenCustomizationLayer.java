@@ -4,10 +4,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.opengl.GlStateManager;
-import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
@@ -577,7 +574,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
                 }
             }
             if (show) {
-                GlStateManager._enableBlend(0);
                 graphics.fill(0, 0, screen.width, screen.height, DrawableColor.BLACK.getColorIntWithAlpha(this.backgroundOpacity));
             }
         }
@@ -586,21 +582,14 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 			if (background.showBackground.tryGetNonNull()) {
 
-                GlStateManager._enableBlend(0);
-
                 background.keepBackgroundAspectRatio = this.layoutBase.preserveBackgroundAspectRatio;
                 background.opacity = this.backgroundOpacity;
-                background._render(graphics, mouseX, mouseY, partial);
-                background.opacity = 1.0F;
-
-                //Restore render defaults
-                GlStateManager._colorMask(ColorTargetState.WRITE_ALL);
-                GlStateManager._depthMask(true);
-                GlStateManager._enableCull();
-                GlStateManager._enableDepthTest();
-                GlStateManager._enableBlend(0);
-                
-
+                try {
+                    background._render(graphics, mouseX, mouseY, partial);
+                } finally {
+                    background.opacity = 1.0F;
+                    RenderingUtils.restoreRawRenderStateDefaults();
+                }
             }
 
 		});
@@ -634,7 +623,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	public static void renderBackgroundOverlay(GuiGraphicsExtractor graphics, int x, int y, int width, int height) {
 		Identifier location = (Minecraft.getInstance().level == null) ? MENU_BACKGROUND : INWORLD_MENU_BACKGROUND;
-		GlStateManager._enableBlend(0);
 		graphics.blit(RenderPipelines.GUI_TEXTURED, location, x, y, 0.0F, 0.0F, width, height, 32, 32);
 	}
 

@@ -3365,5 +3365,7 @@
   "fancymenu.widgetified_screens.title_screen.forge.top.example.line2": "Used to display Beta build warnings and other things.",
   "fancymenu.widgetified_screens.title_screen.logo": "Minecraft Logo",
   "fancymenu.widgetified_screens.title_screen.realmsnotification": "Realms Notification Icons",
-  "fancymenu.widgetified_screens.title_screen.splash": "Vanilla Splash Text"
+  "fancymenu.widgetified_screens.title_screen.splash": "Vanilla Splash Text",
+  "fancymenu.backgrounds.video.watermedia_vulkan_unsupported.info": "Watermedia does not support Vulkan yet. Switch to OpenGL to play videos.",
+  "fancymenu.ui.filechooser.preview.watermedia_vulkan_unsupported_apng_gif": "Watermedia does not support Vulkan yet. FancyMenu uses its fallback decoder for APNG and GIF while Vulkan is active."
 }

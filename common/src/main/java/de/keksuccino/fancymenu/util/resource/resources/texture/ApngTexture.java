@@ -196,7 +196,7 @@ public class ApngTexture implements ITexture, PlayableResource {
         texture.watermediaFallbackData = null;
         if (!texture.closed.get()) {
             boolean decodedByWatermedia = false;
-            if (WatermediaUtil.isWatermediaLoaded()) {
+            if (WatermediaUtil.isWatermediaRenderingAvailable()) {
                 decodedByWatermedia = populateTextureWithWatermediaDirectSource(texture, apngTextureName);
             }
 

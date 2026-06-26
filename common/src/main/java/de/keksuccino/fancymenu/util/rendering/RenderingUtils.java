@@ -1,15 +1,17 @@
 package de.keksuccino.fancymenu.util.rendering;
 
-import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.pipeline.BlendFunction;
+import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.BlendFactor;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphicsExtractor;
+import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -22,6 +24,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
+import org.lwjgl.opengl.GL33C;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +48,22 @@ public class RenderingUtils {
     private static int tooltipRenderingBlockDepth = 0;
     private static int overrideBackgroundBlurRadius = -1000;
     private static int shaderColor = -1;
+
+    public static boolean isVulkanActive() {
+        return RenderUtils.isVulkanActive();
+    }
+
+    public static void restoreRawRenderStateDefaults() {
+        RenderSystem.assertOnRenderThread();
+        if (isVulkanActive()) {
+            return;
+        }
+        for (int i = 0; i < ColorTargetState.MAX_COLOR_TARGETS; i++) {
+            GL33C.glColorMaski(i, true, true, true, true);
+        }
+        GL33C.glDepthMask(true);
+        GL33C.glEnable(GL33C.GL_CULL_FACE);
+    }
 
     public static void extractVanillaLikeFullscreenBlur(@NotNull GuiGraphicsExtractor graphics, @NotNull Screen screen, float partial) {
         float blurRadius = convertVanillaBackgroundBlurrinessToGuiBlurRadius();
@@ -560,11 +579,28 @@ public class RenderingUtils {
 
     public static void blendFuncSeparate(SourceFactor sourceFactor, DestFactor destFactor, SourceFactor sourceFactor2, DestFactor destFactor2) {
         RenderSystem.assertOnRenderThread();
-        GlStateManager._blendFuncSeparate(sourceFactor.value, destFactor.value, sourceFactor2.value, destFactor2.value);
+        Objects.requireNonNull(sourceFactor);
+        Objects.requireNonNull(destFactor);
+        Objects.requireNonNull(sourceFactor2);
+        Objects.requireNonNull(destFactor2);
+        if (isVulkanActive()) {
+            return;
+        }
+        GL33C.glBlendFuncSeparate(sourceFactor.value, destFactor.value, sourceFactor2.value, destFactor2.value);
     }
 
     public static void defaultBlendFunc() {
         blendFuncSeparate(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA, SourceFactor.ONE, DestFactor.ZERO);
+    }
+
+    @NotNull
+    public static BlendFunction createBlendFunction(SourceFactor sourceFactor, DestFactor destFactor, SourceFactor sourceFactor2, DestFactor destFactor2) {
+        return new BlendFunction(
+                Objects.requireNonNull(sourceFactor).toBlendFactor(),
+                Objects.requireNonNull(destFactor).toBlendFactor(),
+                Objects.requireNonNull(sourceFactor2).toBlendFactor(),
+                Objects.requireNonNull(destFactor2).toBlendFactor()
+        );
     }
 
     public enum SourceFactor {
@@ -589,6 +625,11 @@ public class RenderingUtils {
         SourceFactor(final int value) {
             this.value = value;
         }
+
+        @NotNull
+        public BlendFactor toBlendFactor() {
+            return BlendFactor.valueOf(this.name());
+        }
     }
 
     public enum DestFactor {
@@ -611,6 +652,11 @@ public class RenderingUtils {
 
         DestFactor(final int value) {
             this.value = value;
+        }
+
+        @NotNull
+        public BlendFactor toBlendFactor() {
+            return BlendFactor.valueOf(this.name());
         }
     }
 

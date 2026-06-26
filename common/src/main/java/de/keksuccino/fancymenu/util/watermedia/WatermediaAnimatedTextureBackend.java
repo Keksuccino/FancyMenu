@@ -22,12 +22,12 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
     @NotNull
     protected final Identifier frameLocation;
     @NotNull
-    protected final WatermediaFrameTexture frameTexture = new WatermediaFrameTexture(-1);
-    @NotNull
     protected final String logTypeName;
     @NotNull
     protected final Object playerInitLock = new Object();
 
+    @Nullable
+    protected volatile WatermediaFrameTexture frameTexture;
     @Nullable
     protected volatile Object mrl;
     @Nullable
@@ -63,7 +63,7 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
 
     public boolean initializeFromBytes(@NotNull byte[] data, @NotNull String extension, @NotNull String sourceName) {
         if (this.closed) return false;
-        if (!WatermediaUtil.isWatermediaLoaded()) {
+        if (!WatermediaUtil.isWatermediaRenderingAvailable()) {
             this.onDependencyMissing(sourceName);
             return false;
         }
@@ -78,7 +78,7 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
 
     public boolean initializeFromSource(@NotNull String source, @NotNull String sourceName) {
         if (this.closed) return false;
-        if (!WatermediaUtil.isWatermediaLoaded()) {
+        if (!WatermediaUtil.isWatermediaRenderingAvailable()) {
             this.onDependencyMissing(sourceName);
             return false;
         }
@@ -143,6 +143,10 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
 
     protected void createPlayerIfPossible() {
         if (this.closed || this.loadingFailed || this.dependencyMissing) return;
+        if (!WatermediaUtil.isWatermediaRenderingAvailable()) {
+            this.onDependencyMissing(this.sourceName);
+            return;
+        }
         if (!Minecraft.getInstance().isSameThread()) {
             this.queuePlayerInitializationTask();
             return;
@@ -195,13 +199,36 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
             this.width = newWidth;
             this.height = newHeight;
             this.aspectRatio = new AspectRatio(newWidth, newHeight);
+            WatermediaFrameTexture cachedFrameTexture = this.frameTexture;
+            if (cachedFrameTexture != null) {
+                cachedFrameTexture.setWidth(newWidth);
+                cachedFrameTexture.setHeight(newHeight);
+            }
         }
     }
 
-    protected void ensureFrameTextureRegistered() {
+    protected boolean ensureFrameTextureRegistered(@NotNull WatermediaFrameTexture frameTexture) {
         var textureManager = Minecraft.getInstance().getTextureManager();
-        if (textureManager.getTexture(this.frameLocation) != this.frameTexture) {
-            textureManager.register(this.frameLocation, this.frameTexture);
+        if (textureManager.getTexture(this.frameLocation) != frameTexture) {
+            textureManager.register(this.frameLocation, frameTexture);
+        }
+        return true;
+    }
+
+    @Nullable
+    protected WatermediaFrameTexture getOrCreateFrameTexture() {
+        if (!WatermediaUtil.isWatermediaRenderingAvailable()) return null;
+        WatermediaFrameTexture cachedFrameTexture = this.frameTexture;
+        if (cachedFrameTexture != null) return cachedFrameTexture;
+        synchronized (this.playerInitLock) {
+            cachedFrameTexture = this.frameTexture;
+            if (cachedFrameTexture == null) {
+                cachedFrameTexture = new WatermediaFrameTexture(-1);
+                cachedFrameTexture.setWidth(this.width);
+                cachedFrameTexture.setHeight(this.height);
+                this.frameTexture = cachedFrameTexture;
+            }
+            return cachedFrameTexture;
         }
     }
 
@@ -225,8 +252,10 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
 
         int textureId = WatermediaReflectionBridge.playerTextureId(cachedPlayer);
         if (textureId <= 0) return RenderableResource.FULLY_TRANSPARENT_TEXTURE;
-        this.frameTexture.setId(textureId);
-        this.ensureFrameTextureRegistered();
+        WatermediaFrameTexture frameTexture = this.getOrCreateFrameTexture();
+        if (frameTexture == null) return RenderableResource.FULLY_TRANSPARENT_TEXTURE;
+        frameTexture.setId(textureId);
+        this.ensureFrameTextureRegistered(frameTexture);
         return this.frameLocation;
     }
 
@@ -367,10 +396,10 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
             WatermediaReflectionBridge.playerStop(cachedPlayer);
             WatermediaReflectionBridge.playerRelease(cachedPlayer);
         }
+        this.clearFrameTextureId();
         try {
             Minecraft.getInstance().getTextureManager().release(this.frameLocation);
         } catch (Exception ignored) {}
-        this.frameTexture.setId(-1);
         File temp = this.generatedTempFile;
         this.generatedTempFile = null;
         if ((temp != null) && temp.isFile()) {
@@ -382,7 +411,18 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
         this.dependencyMissing = true;
         this.loadingFailed = true;
         this.ready = true;
-        LOGGER.warn("[FANCYMENU] Watermedia is not loaded, {} source will use fallback decoder: {}", this.logTypeName, sourceName);
+        if (WatermediaUtil.isWatermediaVulkanUnsupported()) {
+            LOGGER.warn("[FANCYMENU] Watermedia does not support Vulkan yet, {} source will use fallback decoder: {}", this.logTypeName, sourceName);
+        } else {
+            LOGGER.warn("[FANCYMENU] Watermedia is not loaded, {} source will use fallback decoder: {}", this.logTypeName, sourceName);
+        }
+    }
+
+    protected void clearFrameTextureId() {
+        WatermediaFrameTexture cachedFrameTexture = this.frameTexture;
+        if (cachedFrameTexture != null) {
+            cachedFrameTexture.setId(-1);
+        }
     }
 
     protected boolean handlePlayerError(@Nullable Object player) {

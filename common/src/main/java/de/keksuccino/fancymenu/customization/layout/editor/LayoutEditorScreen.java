@@ -3,10 +3,7 @@ package de.keksuccino.fancymenu.customization.layout.editor;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.opengl.GlStateManager;
-import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
@@ -354,20 +351,14 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 			if (background.showBackground.tryGetNonNull()) {
 
-                GlStateManager._enableBlend(0);
-
                 background.keepBackgroundAspectRatio = this.layout.preserveBackgroundAspectRatio;
                 background.opacity = 1.0F;
-                background._render(graphics, mouseX, mouseY, partial);
-
-                //Restore render defaults
-                GlStateManager._colorMask(ColorTargetState.WRITE_ALL);
-                GlStateManager._depthMask(true);
-                GlStateManager._enableCull();
-                GlStateManager._enableDepthTest();
-                GlStateManager._enableBlend(0);
-                
-
+                try {
+                    background._render(graphics, mouseX, mouseY, partial);
+                } finally {
+                    background.opacity = 1.0F;
+                    RenderingUtils.restoreRawRenderStateDefaults();
+                }
             }
 
 		});
@@ -453,7 +444,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 			RenderingUtils.resetShaderColor(graphics);
 
-			GlStateManager._enableBlend(0);
 			graphics.blit(RenderPipelines.GUI_TEXTURED, Screen.HEADER_SEPARATOR, 0, y0 - 2, 0.0F, 0.0F, this.width, 2, 32, 2);
 			graphics.blit(RenderPipelines.GUI_TEXTURED, Screen.FOOTER_SEPARATOR, 0, y1, 0.0F, 0.0F, this.width, 2, 32, 2);
 

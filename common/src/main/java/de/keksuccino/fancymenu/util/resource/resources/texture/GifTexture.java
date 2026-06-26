@@ -194,7 +194,7 @@ public class GifTexture implements ITexture, PlayableResource {
         texture.watermediaFallbackData = null;
         if (!texture.closed.get()) {
             boolean decodedByWatermedia = false;
-            if (WatermediaUtil.isWatermediaLoaded()) {
+            if (WatermediaUtil.isWatermediaRenderingAvailable()) {
                 LOGGER.info("[FANCYMENU] Starting GIF loading via Watermedia (direct source preferred): {}", gifTextureName);
                 decodedByWatermedia = populateTextureWithWatermediaDirectSource(texture, gifTextureName);
             }
@@ -230,7 +230,7 @@ public class GifTexture implements ITexture, PlayableResource {
                 }
             }
 
-            if (!decodedByWatermedia && WatermediaUtil.isWatermediaLoaded()) {
+            if (!decodedByWatermedia && WatermediaUtil.isWatermediaRenderingAvailable()) {
                 decodedByWatermedia = populateTextureWithWatermedia(texture, gifData, gifTextureName);
                 if (decodedByWatermedia) {
                     WatermediaUtil.WATERMEDIA_initialized = true;
