@@ -30,7 +30,7 @@ dependencies {
     runtimeOnly "maven.modrinth:watermedia:${watermedia_version}"
     runtimeOnly "maven.modrinth:watermedia-binaries:${watermedia_binaries_version}"
     implementation "maven.modrinth:melody:1.0.17-26.2-fabric"
-    implementation "maven.modrinth:konkrete:1.11.0-26.2-fabric"
+    implementation "maven.modrinth:konkrete:1.11.1-26.2-fabric"
     implementation "maven.modrinth:modmenu:20.0.0-beta.4"
     // implementation "it.crystalnest:fancy-entity-renderer-fabric:$fer_mc_version-$fer_version"
     compileOnly "flatdir:fer:0.5.4"

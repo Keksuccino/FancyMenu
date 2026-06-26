@@ -67,7 +67,7 @@ dependencies {
     implementation(jarJar("net.objecthunter:exp4j:0.4.8")) {
         jarJar.ranged(it, "[0.4.8,)")
     }
-	implementation "maven.modrinth:konkrete:1.11.0-26.2-neoforge"
+	implementation "maven.modrinth:konkrete:1.11.1-26.2-neoforge"
 	implementation "maven.modrinth:melody:1.0.17-26.2-neoforge"
 	// implementation "it.crystalnest:fancy-entity-renderer-neoforge:$fer_mc_version-$fer_version"
 	compileOnly "flatdir:fer:0.5.4"

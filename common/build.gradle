@@ -29,7 +29,7 @@ dependencies {
     implementation "net.objecthunter:exp4j:0.4.8"
     compileOnly "maven.modrinth:watermedia:${watermedia_version}"
     compileOnly "maven.modrinth:melody:1.0.17-26.2-fabric"
-    compileOnly "maven.modrinth:konkrete:1.11.0-26.2-fabric"
+    compileOnly "maven.modrinth:konkrete:1.11.1-26.2-fabric"
     compileOnly "de.keksuccino:mcef-fabric:2.2.1-26.2"
     // compileOnly "it.crystalnest:fancy-entity-renderer-common:$fer_mc_version-$fer_version"
     compileOnly "flatdir:fer:0.5.4"
