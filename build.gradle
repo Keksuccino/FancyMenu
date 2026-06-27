@@ -37,6 +37,13 @@ subprojects {
     }
 
     repositories {
+        maven {
+            name = 'Mojang Libraries'
+            url = 'https://libraries.minecraft.net'
+            content {
+                includeGroup 'org.lwjgl'
+            }
+        }
         mavenCentral()
         maven {
             name = 'Sponge / Mixin'
