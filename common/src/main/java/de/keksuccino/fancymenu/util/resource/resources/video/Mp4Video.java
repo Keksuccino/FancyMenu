@@ -238,13 +238,13 @@ public class Mp4Video implements IVideo {
             while (!this.closed) {
                 Object cachedMrl = this.mrl;
                 if (cachedMrl == null) return;
-                if (WatermediaReflectionBridge.isMrlError(cachedMrl)) {
-                    this.fail("Watermedia MRL failed to resolve media source for MP4 video", null);
-                    return;
-                }
-                if (!WatermediaReflectionBridge.isMrlBusy(cachedMrl)) {
+                if (WatermediaReflectionBridge.isMrlLoaded(cachedMrl)) {
                     this.loadingCompleted = true;
                     if (this.playRequested) this.queuePlayerInitializationTask();
+                    return;
+                }
+                if (WatermediaReflectionBridge.isMrlFailed(cachedMrl)) {
+                    this.fail("Watermedia MRL failed to resolve media source for MP4 video", null);
                     return;
                 }
                 if ((waitStart + 30000L) < System.currentTimeMillis()) {
@@ -276,8 +276,8 @@ public class Mp4Video implements IVideo {
         if (this.mediaPlayer != null) return;
         Object cachedMrl = this.mrl;
         if (cachedMrl == null) return;
-        if (WatermediaReflectionBridge.isMrlBusy(cachedMrl)) return;
-        if (WatermediaReflectionBridge.isMrlError(cachedMrl)) {
+        if (WatermediaReflectionBridge.isMrlResolving(cachedMrl)) return;
+        if (!WatermediaReflectionBridge.isMrlLoaded(cachedMrl)) {
             this.fail("Cannot create MP4 video player because Watermedia MRL is in error state", null);
             return;
         }

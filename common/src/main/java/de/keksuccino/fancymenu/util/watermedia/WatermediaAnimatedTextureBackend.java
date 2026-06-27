@@ -113,13 +113,13 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
             while (!this.closed) {
                 Object cachedMrl = this.mrl;
                 if (cachedMrl == null) return;
-                if (WatermediaReflectionBridge.isMrlError(cachedMrl)) {
-                    this.fail("Watermedia MRL failed to resolve " + this.logTypeName + " texture source: " + sourceName, null);
-                    return;
-                }
-                if (!WatermediaReflectionBridge.isMrlBusy(cachedMrl)) {
+                if (WatermediaReflectionBridge.isMrlLoaded(cachedMrl)) {
                     this.loadingCompleted = true;
                     if (this.playRequested) this.queuePlayerInitializationTask();
+                    return;
+                }
+                if (WatermediaReflectionBridge.isMrlFailed(cachedMrl)) {
+                    this.fail("Watermedia MRL failed to resolve " + this.logTypeName + " texture source: " + sourceName, null);
                     return;
                 }
                 if ((waitStart + 30000L) < System.currentTimeMillis()) {
@@ -151,8 +151,8 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
         if (this.mediaPlayer != null) return;
         Object cachedMrl = this.mrl;
         if (cachedMrl == null) return;
-        if (WatermediaReflectionBridge.isMrlBusy(cachedMrl)) return;
-        if (WatermediaReflectionBridge.isMrlError(cachedMrl)) {
+        if (WatermediaReflectionBridge.isMrlResolving(cachedMrl)) return;
+        if (!WatermediaReflectionBridge.isMrlLoaded(cachedMrl)) {
             this.fail("Cannot create Watermedia player because MRL is in error state for " + this.logTypeName + " texture", null);
             return;
         }

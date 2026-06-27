@@ -62,6 +62,20 @@ ordering = "AFTER"
 side = "CLIENT"
 
 [[dependencies.${mod_id}]]
+modId="watermedia"
+type="optional"
+ordering="NONE"
+versionRange="[${watermedia_version},)"
+side="CLIENT"
+
+[[dependencies.${mod_id}]]
+modId="wm_binaries"
+type="optional"
+ordering="NONE"
+versionRange="[${watermedia_binaries_version},)"
+side="CLIENT"
+
+[[dependencies.${mod_id}]]
 modId="neoforge"
 type="required"
 versionRange="[${neoforge_version},)"
