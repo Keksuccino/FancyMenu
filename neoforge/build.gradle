@@ -67,8 +67,8 @@ dependencies {
     }
     implementation "it.crystalnest:fancy-entity-renderer-neoforge:$fer_mc_version-$fer_version"
     implementation "de.keksuccino:mcef-neoforge:2.2.0-1.21.1"
-    implementation "maven.modrinth:watermedia:${watermedia_version}"
-    implementation "maven.modrinth:watermedia-binaries:${watermedia_binaries_version}"
+    //implementation "maven.modrinth:watermedia-binaries:${watermedia_binaries_version}"
+    //implementation "maven.modrinth:watermedia:${watermedia_version}"
     compileOnly project(":common")
 }
 
