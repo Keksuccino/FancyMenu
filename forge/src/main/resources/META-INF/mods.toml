@@ -75,6 +75,13 @@ versionRange="[4.0.6.1,)"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
+modId="watermedia"
+mandatory=false
+ordering="NONE"
+versionRange="[${watermedia_version},)"
+side="CLIENT"
+
+[[dependencies.${mod_id}]]
 modId="forge"
 mandatory=true
 versionRange="[47.1.47,)"

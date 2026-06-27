@@ -5,11 +5,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.io.File;
 import java.lang.reflect.Method;
-import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Executor;
+import java.util.function.Supplier;
 
 public class WatermediaReflectionBridge {
 
@@ -20,47 +19,12 @@ public class WatermediaReflectionBridge {
     public static Object createMrl(@NotNull String source) {
         ClassLoader classLoader = FancyMenu.class.getClassLoader();
 
-        // Watermedia 3.x+ API
         try {
             Class<?> mediaApiClass = Class.forName("org.watermedia.api.media.MediaAPI", false, classLoader);
             Method getMrl = mediaApiClass.getMethod("getMRL", String.class);
             return getMrl.invoke(null, source);
-        } catch (ClassNotFoundException | NoSuchMethodException ignored) {
-            // Fall back to older APIs below
         } catch (Throwable ex) {
             LOGGER.error("[FANCYMENU] Failed to create Watermedia MRL via MediaAPI#getMRL for source: {}", source, ex);
-        }
-
-        // Legacy Watermedia API
-        try {
-            Class<?> mrlClass = Class.forName("org.watermedia.api.media.MRL", false, classLoader);
-            Method get = mrlClass.getMethod("get", String.class);
-            return get.invoke(null, source);
-        } catch (NoSuchMethodException ignored) {
-            // Some versions only expose get(URI)
-        } catch (Throwable ex) {
-            LOGGER.error("[FANCYMENU] Failed to create Watermedia MRL via MRL#get(String) for source: {}", source, ex);
-        }
-
-        // Legacy/alpha variants with URI signature.
-        try {
-            Class<?> mrlClass = Class.forName("org.watermedia.api.media.MRL", false, classLoader);
-            Method get = mrlClass.getDeclaredMethod("get", URI.class);
-            get.setAccessible(true);
-            File sourceFile = new File(source);
-            URI sourceUri;
-            if (sourceFile.exists()) {
-                sourceUri = sourceFile.getAbsoluteFile().toURI();
-            } else {
-                try {
-                    sourceUri = URI.create(source);
-                } catch (Throwable ignored) {
-                    sourceUri = sourceFile.getAbsoluteFile().toURI();
-                }
-            }
-            return get.invoke(null, sourceUri);
-        } catch (Throwable ex) {
-            LOGGER.error("[FANCYMENU] Failed to create Watermedia MRL for source: {}", source, ex);
         }
 
         return null;
@@ -104,12 +68,26 @@ public class WatermediaReflectionBridge {
         return null;
     }
 
-    public static boolean isMrlBusy(@Nullable Object mrl) {
-        return invokeBoolean(mrl, "busy", false);
+    public static boolean isMrlResolving(@Nullable Object mrl) {
+        return mrlStatusName(mrl).equals("FETCHING");
     }
 
-    public static boolean isMrlError(@Nullable Object mrl) {
-        return invokeBoolean(mrl, "error", true);
+    public static boolean isMrlLoaded(@Nullable Object mrl) {
+        return mrlStatusName(mrl).equals("LOADED");
+    }
+
+    public static boolean isMrlFailed(@Nullable Object mrl) {
+        String statusName = mrlStatusName(mrl);
+        return statusName.equals("ERROR")
+                || statusName.equals("BLOCKED")
+                || statusName.equals("EXPIRED")
+                || statusName.equals("FORGOTTEN");
+    }
+
+    @NotNull
+    public static String mrlStatusName(@Nullable Object mrl) {
+        Object status = invoke(mrl, "status", 0);
+        return (status != null) ? status.toString() : "UNKNOWN";
     }
 
     @Nullable
@@ -118,28 +96,13 @@ public class WatermediaReflectionBridge {
 
         WatermediaUtil.trySuppressDevelopmentFfmpegDebugLogs();
 
-        // Watermedia 3.0.0-beta.15+ API
         try {
             Object player = createModernPlayer(mrl, renderThread, renderThreadExecutor, video, audio);
             if (player != null) {
                 return player;
             }
-        } catch (ClassNotFoundException | NoSuchMethodException ignored) {
-            // Fall back to the legacy API below.
         } catch (Throwable ex) {
-            LOGGER.error("[FANCYMENU] Failed to create Watermedia player via beta15+ engine API", ex);
-        }
-
-        // Legacy Watermedia 3.x API
-        try {
-            Method createPlayer = findMethod(mrl.getClass(), "createPlayer", 7);
-            if (createPlayer == null) {
-                LOGGER.error("[FANCYMENU] Failed to create Watermedia player, unable to find MRL#createPlayer(..) method");
-                return null;
-            }
-            return createPlayer.invoke(mrl, 0, renderThread, renderThreadExecutor, null, null, video, audio);
-        } catch (Throwable ex) {
-            LOGGER.error("[FANCYMENU] Failed to create Watermedia player!", ex);
+            LOGGER.error("[FANCYMENU] Failed to create Watermedia player via media API", ex);
         }
         return null;
     }
@@ -236,21 +199,17 @@ public class WatermediaReflectionBridge {
     @Nullable
     private static Object createModernPlayer(@NotNull Object mrl, @NotNull Thread renderThread, @NotNull Executor renderThreadExecutor, boolean video, boolean audio) throws Throwable {
         ClassLoader classLoader = FancyMenu.class.getClassLoader();
-        Class<?> gfxEngineClass = Class.forName("org.watermedia.api.media.engines.GFXEngine", false, classLoader);
-        Class<?> sfxEngineClass = Class.forName("org.watermedia.api.media.engines.SFXEngine", false, classLoader);
+        Class<?> mediaApiClass = Class.forName("org.watermedia.api.media.MediaAPI", false, classLoader);
+        Class<?> mrlClass = Class.forName("org.watermedia.api.media.MRL", false, classLoader);
 
         Object gfxEngine = video ? buildModernGfxEngine(renderThread, renderThreadExecutor) : null;
         Object sfxEngine = audio ? buildModernSfxEngine() : null;
+        Supplier<Object> gfxSupplier = () -> gfxEngine;
+        Supplier<Object> sfxSupplier = () -> sfxEngine;
 
         try {
-            Object player;
-            try {
-                Method createPlayer = mrl.getClass().getMethod("createPlayer", int.class, gfxEngineClass, sfxEngineClass);
-                player = createPlayer.invoke(mrl, 0, gfxEngine, sfxEngine);
-            } catch (NoSuchMethodException ignored) {
-                Method createPlayer = mrl.getClass().getMethod("createPlayer", gfxEngineClass, sfxEngineClass);
-                player = createPlayer.invoke(mrl, gfxEngine, sfxEngine);
-            }
+            Method createPlayer = mediaApiClass.getMethod("createPlayer", mrlClass, int.class, Supplier.class, Supplier.class);
+            Object player = createPlayer.invoke(null, mrl, 0, gfxSupplier, sfxSupplier);
 
             if (player == null) {
                 releaseModernResource(gfxEngine);
