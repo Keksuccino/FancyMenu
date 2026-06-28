@@ -32,9 +32,7 @@ import org.lwjgl.system.MemoryStack;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL14;
-import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL21;
 import org.lwjgl.opengl.GL30;
 import java.awt.*;
 import java.nio.ByteBuffer;
@@ -555,18 +553,6 @@ public class RenderingUtils {
 
         private final int framebuffer;
         private final int activeTexture;
-        private final int arrayBufferBinding;
-        private final int elementArrayBufferBinding;
-        private final int pixelPackBufferBinding;
-        private final int pixelUnpackBufferBinding;
-        private final int packAlignment;
-        private final int packRowLength;
-        private final int packSkipRows;
-        private final int packSkipPixels;
-        private final int unpackAlignment;
-        private final int unpackRowLength;
-        private final int unpackSkipRows;
-        private final int unpackSkipPixels;
         private final int[] viewport = new int[4];
         private final int[] scissorBox = new int[4];
         private final int[] textureBindings = new int[SHADER_TEXTURE_COUNT_FANCYMENU];
@@ -596,18 +582,6 @@ public class RenderingUtils {
         private RenderStateSnapshot() {
             this.framebuffer = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
             this.activeTexture = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
-            this.arrayBufferBinding = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
-            this.elementArrayBufferBinding = GL11.glGetInteger(GL15.GL_ELEMENT_ARRAY_BUFFER_BINDING);
-            this.pixelPackBufferBinding = GL11.glGetInteger(GL21.GL_PIXEL_PACK_BUFFER_BINDING);
-            this.pixelUnpackBufferBinding = GL11.glGetInteger(GL21.GL_PIXEL_UNPACK_BUFFER_BINDING);
-            this.packAlignment = GL11.glGetInteger(GL11.GL_PACK_ALIGNMENT);
-            this.packRowLength = GL11.glGetInteger(GL11.GL_PACK_ROW_LENGTH);
-            this.packSkipRows = GL11.glGetInteger(GL11.GL_PACK_SKIP_ROWS);
-            this.packSkipPixels = GL11.glGetInteger(GL11.GL_PACK_SKIP_PIXELS);
-            this.unpackAlignment = GL11.glGetInteger(GL11.GL_UNPACK_ALIGNMENT);
-            this.unpackRowLength = GL11.glGetInteger(GL11.GL_UNPACK_ROW_LENGTH);
-            this.unpackSkipRows = GL11.glGetInteger(GL11.GL_UNPACK_SKIP_ROWS);
-            this.unpackSkipPixels = GL11.glGetInteger(GL11.GL_UNPACK_SKIP_PIXELS);
             GL11.glGetIntegerv(GL11.GL_VIEWPORT, this.viewport);
             GL11.glGetIntegerv(GL11.GL_SCISSOR_BOX, this.scissorBox);
             try (MemoryStack stack = MemoryStack.stackPush()) {
@@ -656,23 +630,10 @@ public class RenderingUtils {
         }
 
         public void restore() {
-            GlStateManager._glBindBuffer(GL15.GL_ARRAY_BUFFER, ExternalTextureUtils.sanitizeBufferId(this.arrayBufferBinding));
-            GlStateManager._glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, ExternalTextureUtils.sanitizeBufferId(this.elementArrayBufferBinding));
-            GlStateManager._glBindBuffer(GL21.GL_PIXEL_PACK_BUFFER, ExternalTextureUtils.sanitizeBufferId(this.pixelPackBufferBinding));
-            GlStateManager._glBindBuffer(GL21.GL_PIXEL_UNPACK_BUFFER, ExternalTextureUtils.sanitizeBufferId(this.pixelUnpackBufferBinding));
-            GlStateManager._pixelStore(GL11.GL_PACK_ALIGNMENT, this.packAlignment);
-            GlStateManager._pixelStore(GL11.GL_PACK_ROW_LENGTH, this.packRowLength);
-            GlStateManager._pixelStore(GL11.GL_PACK_SKIP_ROWS, this.packSkipRows);
-            GlStateManager._pixelStore(GL11.GL_PACK_SKIP_PIXELS, this.packSkipPixels);
-            GlStateManager._pixelStore(GL11.GL_UNPACK_ALIGNMENT, this.unpackAlignment);
-            GlStateManager._pixelStore(GL11.GL_UNPACK_ROW_LENGTH, this.unpackRowLength);
-            GlStateManager._pixelStore(GL11.GL_UNPACK_SKIP_ROWS, this.unpackSkipRows);
-            GlStateManager._pixelStore(GL11.GL_UNPACK_SKIP_PIXELS, this.unpackSkipPixels);
-
             for (int i = 0; i < SHADER_TEXTURE_COUNT_FANCYMENU; i++) {
-                RenderSystem.setShaderTexture(i, ExternalTextureUtils.sanitizeTextureId(this.shaderTextures[i]));
+                RenderSystem.setShaderTexture(i, this.shaderTextures[i]);
                 RenderSystem.activeTexture(GL13.GL_TEXTURE0 + i);
-                RenderSystem.bindTexture(ExternalTextureUtils.sanitizeTextureId(this.textureBindings[i]));
+                RenderSystem.bindTexture(this.textureBindings[i]);
             }
             RenderSystem.activeTexture(this.activeTexture);
 

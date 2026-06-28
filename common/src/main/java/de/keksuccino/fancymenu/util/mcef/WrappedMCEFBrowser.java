@@ -3,8 +3,6 @@ package de.keksuccino.fancymenu.util.mcef;
 import com.cinemamod.mcef.MCEF;
 import com.cinemamod.mcef.MCEFBrowser;
 import com.mojang.blaze3d.systems.RenderSystem;
-import de.keksuccino.fancymenu.util.rendering.ExternalTextureUtils;
-import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.ModernAbstractWidget;
@@ -105,7 +103,9 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
         this.setSize(200, 200);
         this.setPosition(0, 0);
 
-        this.updateFrameTextureId();
+        this.frameTexture.setId(this.browser.getRenderer().getTextureID());
+
+        Minecraft.getInstance().getTextureManager().register(this.frameLocation, this.frameTexture);
 
     }
     
@@ -149,20 +149,18 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
 
         try {
 
-            if (this.autoHandle) BrowserHandler.notifyHandler(this.genericIdentifier.toString(), this);
-            if (!this.updateFrameTextureId()) {
-                return;
-            }
+            this.frameTexture.setId(this.browser.getRenderer().getTextureID());
+            this.ensureFrameTextureRegistered();
 
-            RenderingUtils.RenderStateSnapshot renderState = RenderingUtils.captureRenderState();
+            if (this.autoHandle) BrowserHandler.notifyHandler(this.genericIdentifier.toString(), this);
+
             RenderSystem.enableBlend();
-            try {
-                graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
-                graphics.blit(this.frameLocation, this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
-            } finally {
-                RenderingUtils.resetShaderColor(graphics);
-                renderState.restore();
-            }
+
+            graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
+
+            graphics.blit(this.frameLocation, this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+
+            graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to render MCEFBrowser!", ex);
@@ -175,26 +173,6 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
         if (textureManager.getTexture(this.frameLocation, MissingTextureAtlasSprite.getTexture()) != this.frameTexture) {
             textureManager.register(this.frameLocation, this.frameTexture);
         }
-    }
-
-    private boolean updateFrameTextureId() {
-        if (this.closed) {
-            this.clearFrameTextureRegistration();
-            return false;
-        }
-        int textureId = this.browser.getRenderer().getTextureID();
-        if (textureId <= 0) {
-            this.clearFrameTextureRegistration();
-            return false;
-        }
-        this.frameTexture.setId(textureId);
-        this.ensureFrameTextureRegistered();
-        return true;
-    }
-
-    private void clearFrameTextureRegistration() {
-        this.frameTexture.setId(-1);
-        ExternalTextureUtils.unregisterWithoutDeletingIfCurrentId(this.minecraft.getTextureManager(), this.frameLocation, this.frameTexture, 0);
     }
 
     public void onVolumeUpdated(@NotNull SoundSource soundSource, float newVolume) {
@@ -542,9 +520,7 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
 
     @NotNull
     public ResourceLocation getFrameLocation() {
-        if (!this.updateFrameTextureId()) {
-            return RenderingUtils.FULLY_TRANSPARENT_TEXTURE;
-        }
+        this.frameTexture.setId(this.browser.getRenderer().getTextureID());
         if (this.autoHandle) BrowserHandler.notifyHandler(this.genericIdentifier.toString(), this);
         return this.frameLocation;
     }
@@ -570,12 +546,12 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
     @Override
     public void close() throws IOException {
         this.closed = true;
-        this.clearFrameTextureRegistration();
         // Unregister from the global handler manager
         if (this.browser != null) {
             BrowserLoadEventListenerManager.getInstance().unregisterAllListenersForBrowser(this.getIdentifier());
             this.browser.close(true);
         }
+        Minecraft.getInstance().getTextureManager().release(this.frameLocation);
     }
 
 }

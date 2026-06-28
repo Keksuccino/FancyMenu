@@ -1,7 +1,5 @@
 package de.keksuccino.fancymenu.util.watermedia;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
@@ -28,20 +26,12 @@ public class WatermediaFrameTexture extends AbstractTexture {
 
     @Override
     public void bind() {
-        int textureId = this.id;
-        if (textureId <= 0) {
-            return;
-        }
-        if (!RenderSystem.isOnRenderThreadOrInit()) {
-            RenderSystem.recordRenderCall(() -> GlStateManager._bindTexture(textureId));
-        } else {
-            GlStateManager._bindTexture(textureId);
-        }
+        // do nothing
     }
 
     @Override
     public int getId() {
-        return Math.max(this.id, 0);
+        return this.id;
     }
 
     public void setId(int id) {
@@ -51,11 +41,6 @@ public class WatermediaFrameTexture extends AbstractTexture {
     @Override
     public void releaseId() {
         // do nothing
-    }
-
-    @Override
-    public void close() {
-        // WaterMedia owns this GL texture ID.
     }
 
     @Override

@@ -346,17 +346,11 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         if (missingPausedFrame) {
             this.renderPausedThumbnailFallback_FancyMenu(graphics, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
         } else if (resourceLocation != null) {
-            RenderingUtils.RenderStateSnapshot renderState = RenderingUtils.captureRenderState();
             graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
-            try {
-                if (this.keepBackgroundAspectRatio) {
-                    this.renderKeepAspectRatio(graphics, resourceLocation, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
-                } else {
-                    this.renderFullScreen(graphics, resourceLocation, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
-                }
-            } finally {
-                RenderingUtils.resetShaderColor(graphics);
-                renderState.restore();
+            if (this.keepBackgroundAspectRatio) {
+                this.renderKeepAspectRatio(graphics, resourceLocation, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
+            } else {
+                this.renderFullScreen(graphics, resourceLocation, parallaxOffset, parallaxIntensityX, parallaxIntensityY);
             }
         }
 

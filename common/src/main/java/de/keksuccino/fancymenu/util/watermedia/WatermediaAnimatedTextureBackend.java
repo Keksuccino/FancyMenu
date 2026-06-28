@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.util.watermedia;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
-import de.keksuccino.fancymenu.util.rendering.ExternalTextureUtils;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
@@ -364,12 +363,15 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
         Object cachedPlayer = this.mediaPlayer;
         this.mediaPlayer = null;
         this.mrl = null;
-        this.clearFrameTextureRegistration();
         if (cachedPlayer != null) {
             WatermediaReflectionBridge.playerPause(cachedPlayer, true);
             WatermediaReflectionBridge.playerStop(cachedPlayer);
             WatermediaReflectionBridge.playerRelease(cachedPlayer);
         }
+        try {
+            Minecraft.getInstance().getTextureManager().release(this.frameLocation);
+        } catch (Exception ignored) {}
+        this.frameTexture.setId(-1);
         File temp = this.generatedTempFile;
         this.generatedTempFile = null;
         if ((temp != null) && temp.isFile()) {
@@ -389,13 +391,6 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
         if (!WatermediaReflectionBridge.playerStatusName(player).equals("ERROR")) return false;
         this.fail("Watermedia player entered error state for " + this.logTypeName + " texture: " + this.sourceName, null);
         return true;
-    }
-
-    protected void clearFrameTextureRegistration() {
-        this.frameTexture.setId(-1);
-        try {
-            ExternalTextureUtils.unregisterWithoutDeletingIfCurrentId(Minecraft.getInstance().getTextureManager(), this.frameLocation, this.frameTexture, 0);
-        } catch (Exception ignored) {}
     }
 
     protected void fail(@NotNull String message, @Nullable Throwable cause) {

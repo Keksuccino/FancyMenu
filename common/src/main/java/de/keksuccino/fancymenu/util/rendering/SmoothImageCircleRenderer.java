@@ -125,10 +125,7 @@ public final class SmoothImageCircleRenderer {
         float alpha = (float) FastColor.ARGB32.alpha(area.color) / 255.0F;
 
         RenderRotationUtil.Rotation2D rotation = RenderRotationUtil.getCurrentAdditionalRenderMaskRotation2D();
-        int textureId = ExternalTextureUtils.resolveRenderableTextureId(minecraft.getTextureManager(), area.texture);
-        if (textureId <= 0) {
-            return;
-        }
+        int textureId = minecraft.getTextureManager().getTexture(area.texture).getId();
         applyUniforms(postChain, area.textureRegion, scaledX, scaledY, scaledWidth, scaledHeight, scaledRoundness, rotation, red, green, blue, alpha, textureId);
 
         graphics.flush();
