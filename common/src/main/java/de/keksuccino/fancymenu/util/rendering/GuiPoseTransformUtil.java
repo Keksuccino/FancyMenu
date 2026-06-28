@@ -67,12 +67,23 @@ final class GuiPoseTransformUtil {
 
     record PoseTransform(float scale, float translationX, float translationY, RenderRotationUtil.Rotation2D rotation) {
 
-        float transformX(float x) {
-            return x * this.scale + this.translationX;
+        TransformedRect transformRect(float x, float y, float width, float height) {
+            float scaledWidth = width * this.scale;
+            float scaledHeight = height * this.scale;
+            float centerX = this.transformPositionX(x + width * 0.5F, y + height * 0.5F);
+            float centerY = this.transformPositionY(x + width * 0.5F, y + height * 0.5F);
+            return new TransformedRect(centerX - scaledWidth * 0.5F, centerY - scaledHeight * 0.5F, scaledWidth, scaledHeight);
         }
 
-        float transformY(float y) {
-            return y * this.scale + this.translationY;
+        private float transformPositionX(float x, float y) {
+            return (x * this.rotation.m00() + y * this.rotation.m01()) * this.scale + this.translationX;
         }
+
+        private float transformPositionY(float x, float y) {
+            return (x * this.rotation.m10() + y * this.rotation.m11()) * this.scale + this.translationY;
+        }
+    }
+
+    record TransformedRect(float x, float y, float width, float height) {
     }
 }

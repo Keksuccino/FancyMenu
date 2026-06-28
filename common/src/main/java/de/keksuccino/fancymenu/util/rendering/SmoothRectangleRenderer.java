@@ -67,7 +67,8 @@ public final class SmoothRectangleRenderer {
 
     public static void renderSmoothRectScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float cornerRadius, int color, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
-        renderSmoothRect(graphics, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), cornerRadius * transform.scale(), color, partial);
+        GuiPoseTransformUtil.TransformedRect rect = transform.transformRect(x, y, width, height);
+        renderSmoothRect(graphics, rect.x(), rect.y(), rect.width(), rect.height(), cornerRadius * transform.scale(), color, partial);
     }
 
     public static void renderSmoothRectRoundTopCorners(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float cornerRadius, int color, float partial) {
@@ -76,7 +77,8 @@ public final class SmoothRectangleRenderer {
 
     public static void renderSmoothRectRoundTopCornersScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float cornerRadius, int color, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
-        renderSmoothRectRoundTopCorners(graphics, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), cornerRadius * transform.scale(), color, partial);
+        GuiPoseTransformUtil.TransformedRect rect = transform.transformRect(x, y, width, height);
+        renderSmoothRectRoundTopCorners(graphics, rect.x(), rect.y(), rect.width(), rect.height(), cornerRadius * transform.scale(), color, partial);
     }
 
     public static void renderSmoothRectRoundBottomCorners(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float cornerRadius, int color, float partial) {
@@ -85,7 +87,8 @@ public final class SmoothRectangleRenderer {
 
     public static void renderSmoothRectRoundBottomCornersScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float cornerRadius, int color, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
-        renderSmoothRectRoundBottomCorners(graphics, transform.transformX(x), transform.transformY(y), width * transform.scale(), height * transform.scale(), cornerRadius * transform.scale(), color, partial);
+        GuiPoseTransformUtil.TransformedRect rect = transform.transformRect(x, y, width, height);
+        renderSmoothRectRoundBottomCorners(graphics, rect.x(), rect.y(), rect.width(), rect.height(), cornerRadius * transform.scale(), color, partial);
     }
 
     public static void renderSmoothRectRoundAllCorners(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, int color, float partial) {
@@ -94,12 +97,13 @@ public final class SmoothRectangleRenderer {
 
     public static void renderSmoothRectRoundAllCornersScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, int color, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
+        GuiPoseTransformUtil.TransformedRect rect = transform.transformRect(x, y, width, height);
         renderSmoothRectRoundAllCorners(
                 graphics,
-                transform.transformX(x),
-                transform.transformY(y),
-                width * transform.scale(),
-                height * transform.scale(),
+                rect.x(),
+                rect.y(),
+                rect.width(),
+                rect.height(),
                 topLeftRadius * transform.scale(),
                 topRightRadius * transform.scale(),
                 bottomRightRadius * transform.scale(),
@@ -115,12 +119,13 @@ public final class SmoothRectangleRenderer {
 
     public static void renderSmoothBorderScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, float cornerRadius, int color, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
+        GuiPoseTransformUtil.TransformedRect rect = transform.transformRect(x, y, width, height);
         renderSmoothBorder(
                 graphics,
-                transform.transformX(x),
-                transform.transformY(y),
-                width * transform.scale(),
-                height * transform.scale(),
+                rect.x(),
+                rect.y(),
+                rect.width(),
+                rect.height(),
                 borderThickness * transform.scale(),
                 cornerRadius * transform.scale(),
                 color,
@@ -134,12 +139,13 @@ public final class SmoothRectangleRenderer {
 
     public static void renderSmoothBorderRoundAllCornersScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, int color, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
+        GuiPoseTransformUtil.TransformedRect rect = transform.transformRect(x, y, width, height);
         renderSmoothBorderRoundAllCorners(
                 graphics,
-                transform.transformX(x),
-                transform.transformY(y),
-                width * transform.scale(),
-                height * transform.scale(),
+                rect.x(),
+                rect.y(),
+                rect.width(),
+                rect.height(),
                 borderThickness * transform.scale(),
                 topLeftRadius * transform.scale(),
                 topRightRadius * transform.scale(),
