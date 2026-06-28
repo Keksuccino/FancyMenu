@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Description and Structure
-- This project is "FancyMenu", which is a Minecraft Java 1.20.1 mod that uses the MultiLoader layout with shared logic under `common` and loader-specific wrappers under `fabric` and `neoforge`.
+- This project is "FancyMenu", which is a Minecraft Java 1.20.1 mod that uses the MultiLoader layout with shared logic under `common` and loader-specific wrappers under `fabric` and `forge`.
 - Place shared Java sources in `common/src/main/java`, and assets such as menu JSON, translations, or textures in `common/src/main/resources`, so they ship with every loader build.
 - Loader-only hooks belong inside each module's `/src/main/java` tree.
 
@@ -45,9 +45,9 @@
 - If you need to add packets for a feature, make sure to analyze the `de.keksuccino.fancymenu.networking` package in the `common` module first, to understand how packets get implemented and registered.
 
 ## Minecraft Sources
-- You have access to the full Minecraft 1.20.1 sources in `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.20.1/minecraft/fabric/` and `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.20.1/minecraft/neoforge/`.
+- You have access to the full Minecraft 1.20.1 sources in `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.20.1/minecraft/fabric/` and `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.20.1/minecraft/forge/`.
 - Sources for some libraries used by Minecraft 1.20.1 are in `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.20.1/libraries/`.
-- You have access to the full Minecraft 1.19.2 sources in `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.19.2/minecraft/fabric/` and `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.19.2/minecraft/neoforge/`.
+- You have access to the full Minecraft 1.19.2 sources in `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.19.2/minecraft/fabric/` and `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.19.2/minecraft/forge/`.
 - Sources for some libraries used by Minecraft 1.19.2 are in `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.19.2/libraries/`.
 - Use the Minecraft sources for research when working with Minecraft-related code.
 - Always prefer the sources provided in the `/<mc_version>/libraries/` folder instead of trying to unpack source JARs yourself. Only do that when the provided sources don't contain what you need.
@@ -55,11 +55,11 @@
 
 ## Autonomous Testing
 - After making changes, always compile/build the project to identify and fix compile errors.
-- Only use the `fabric` and `forge`/`neoforge` modules for compile checks. Never use the `common` module.
+- Only use the `fabric` and `forge`/`forge` modules for compile checks. Never use the `common` module.
 - Make sure to use Java 21 for compile/run stuff, like this for example: `JAVA_HOME=$(/usr/libexec/java_home -v 21) sh gradlew :fabric:compileJava :forge:compileJava --stacktrace`
 
 ## Visual Testing
-- When the user tells you to also do visual testing, run the `fabric` and `neoforge` modules via IntelliJ IDE.
+- When the user tells you to also do visual testing, run the `fabric` and `forge` modules via IntelliJ IDE.
 - Only use "Computer Use" for running the modules! You will click the "Run" button in the top-right of IntelliJ to run the modules (and also select the correct run config before, obviously).
 - After the Minecraft client started, use "Computer Use" to navigate in the game and visually check your changes. Check if everything looks good and works as intended.
 - IntelliJ IDE is already open with the project active.
