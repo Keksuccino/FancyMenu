@@ -53,7 +53,7 @@
 ## Autonomous Testing
 - After making changes, always compile/build the project to identify and fix compile errors.
 - Only use the `fabric` and `forge`/`neoforge` modules for compile checks. Never use the `common` module.
-- Make sure to use Java 21 for compile/run stuff, like this for example: `JAVA_HOME=$(/usr/libexec/java_home -v 21) sh gradlew :fabric:compileJava :forge:compileJava --stacktrace`
+- Make sure to use Java 17 for compile/run stuff, like this for example: `JAVA_HOME=$(/usr/libexec/java_home -v 17) sh gradlew :fabric:compileJava :forge:compileJava --stacktrace`
 
 ## Visual Testing
 - When the user tells you to also do visual testing, run the `fabric` and `neoforge` modules via IntelliJ IDE.

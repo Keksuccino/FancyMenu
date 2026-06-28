@@ -75,6 +75,20 @@ versionRange="[3.0.0,)"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
+modId="watermedia"
+mandatory=false
+ordering="NONE"
+versionRange="[${watermedia_version},)"
+side="CLIENT"
+
+[[dependencies.${mod_id}]]
+modId="wm_binaries"
+mandatory=false
+ordering="NONE"
+versionRange="[${watermedia_binaries_version},)"
+side="CLIENT"
+
+[[dependencies.${mod_id}]]
 modId="rrls"
 mandatory=false
 ordering="NONE"
