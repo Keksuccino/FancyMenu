@@ -56,9 +56,12 @@ public class Mp4Video implements IVideo {
     protected volatile AspectRatio aspectRatio = new AspectRatio(10, 10);
     protected volatile float volume = 1.0F;
     protected volatile boolean looping = false;
+    @NotNull
+    protected volatile String sourceName = "[Unknown Source]";
     protected final String uniqueId = ScreenCustomization.generateUniqueIdentifier();
     protected final Identifier frameLocation = Identifier.fromNamespaceAndPath("fancymenu", "watermedia_video_frame_" + this.uniqueId.toLowerCase().replace("-", ""));
-    protected final WatermediaFrameTexture frameTexture = new WatermediaFrameTexture(-1);
+    @Nullable
+    protected volatile WatermediaFrameTexture frameTexture;
     protected volatile boolean ready = false;
     protected volatile boolean loadingCompleted = false;
     protected volatile boolean loadingFailed = false;
@@ -178,6 +181,7 @@ public class Mp4Video implements IVideo {
 
     protected void initializeInternal(@NotNull String sourceName) {
         if (this.closed) return;
+        this.sourceName = sourceName;
         if (!WatermediaUtil.isWatermediaVideoPlaybackAvailable()) {
             this.onDependencyMissing(sourceName);
             return;
@@ -273,6 +277,10 @@ public class Mp4Video implements IVideo {
 
     protected void createPlayerIfPossible() {
         if (this.closed || this.dependencyMissing || this.loadingFailed) return;
+        if (!WatermediaUtil.isWatermediaVideoPlaybackAvailable()) {
+            this.onDependencyMissing(this.sourceName);
+            return;
+        }
         if (!Minecraft.getInstance().isSameThread()) {
             this.queuePlayerInitializationTask();
             return;
@@ -327,13 +335,36 @@ public class Mp4Video implements IVideo {
             this.width = newWidth;
             this.height = newHeight;
             this.aspectRatio = new AspectRatio(newWidth, newHeight);
+            WatermediaFrameTexture cachedFrameTexture = this.frameTexture;
+            if (cachedFrameTexture != null) {
+                cachedFrameTexture.setWidth(newWidth);
+                cachedFrameTexture.setHeight(newHeight);
+            }
         }
     }
 
-    protected void ensureFrameTextureRegistered() {
+    protected boolean ensureFrameTextureRegistered(@NotNull WatermediaFrameTexture frameTexture) {
         var textureManager = Minecraft.getInstance().getTextureManager();
-        if (textureManager.getTexture(this.frameLocation) != this.frameTexture) {
-            textureManager.register(this.frameLocation, this.frameTexture);
+        if (textureManager.getTexture(this.frameLocation) != frameTexture) {
+            textureManager.register(this.frameLocation, frameTexture);
+        }
+        return true;
+    }
+
+    @Nullable
+    protected WatermediaFrameTexture getOrCreateFrameTexture() {
+        if (!WatermediaUtil.isWatermediaVideoPlaybackAvailable()) return null;
+        WatermediaFrameTexture cachedFrameTexture = this.frameTexture;
+        if (cachedFrameTexture != null) return cachedFrameTexture;
+        synchronized (this.playerInitLock) {
+            cachedFrameTexture = this.frameTexture;
+            if (cachedFrameTexture == null) {
+                cachedFrameTexture = new WatermediaFrameTexture(-1);
+                cachedFrameTexture.setWidth(this.width);
+                cachedFrameTexture.setHeight(this.height);
+                this.frameTexture = cachedFrameTexture;
+            }
+            return cachedFrameTexture;
         }
     }
 
@@ -360,9 +391,11 @@ public class Mp4Video implements IVideo {
         this.updateSizeFromPlayer(cachedPlayer);
         int textureId = WatermediaReflectionBridge.playerTextureId(cachedPlayer);
         if (textureId <= 0) return FULLY_TRANSPARENT_TEXTURE;
-        this.frameTexture.setId(textureId);
+        WatermediaFrameTexture frameTexture = this.getOrCreateFrameTexture();
+        if (frameTexture == null) return FULLY_TRANSPARENT_TEXTURE;
+        frameTexture.setId(textureId);
         this.framePresented = true;
-        this.ensureFrameTextureRegistered();
+        this.ensureFrameTextureRegistered(frameTexture);
         return this.frameLocation;
     }
 
@@ -504,7 +537,7 @@ public class Mp4Video implements IVideo {
             this.maybeEmitVideoPlaybackStatusChanged(OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus.STOPPED);
         }
         this.resetVideoPlaybackListenerState();
-        this.frameTexture.setId(-1);
+        this.clearFrameTextureId();
         long stopVersion = ++this.stopRequestVersion;
         Object cachedPlayer = this.mediaPlayer;
         if (cachedPlayer != null) {
@@ -643,10 +676,10 @@ public class Mp4Video implements IVideo {
             // Run stop/release in a deferred sequence so queued uploads can drain first.
             this.queueDeferredHardStopAndReleaseForClose(cachedPlayer, closeReleaseVersion, HARD_STOP_DEFER_TICKS);
         }
+        this.clearFrameTextureId();
         try {
             Minecraft.getInstance().getTextureManager().release(this.frameLocation);
         } catch (Exception ignored) {}
-        this.frameTexture.setId(-1);
         File temp = this.generatedTempFile;
         if ((temp != null) && temp.isFile()) {
             temp.delete();
@@ -709,6 +742,13 @@ public class Mp4Video implements IVideo {
         LOGGER.warn("[FANCYMENU] Watermedia V3 and/or Watermedia Binaries are not loaded, MP4 source will render as missing texture: {}", sourceName);
     }
 
+    protected void clearFrameTextureId() {
+        WatermediaFrameTexture cachedFrameTexture = this.frameTexture;
+        if (cachedFrameTexture != null) {
+            cachedFrameTexture.setId(-1);
+        }
+    }
+
     protected void fail(@NotNull String message, @Nullable Throwable cause) {
         this.loadingFailed = true;
         this.ready = true;
@@ -746,7 +786,7 @@ public class Mp4Video implements IVideo {
 
     protected void resetFramePresentationStateForNewPlayer() {
         this.framePresented = false;
-        this.frameTexture.setId(-1);
+        this.clearFrameTextureId();
     }
 
     protected void queueDeferredInitialUnpause(@NotNull Object player, long startVersion, int ticksToWait, int statusWaitTicks) {
