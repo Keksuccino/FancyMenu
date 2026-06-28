@@ -2,6 +2,7 @@
 ## CHANGELOG | FANCYMENU v3.9.6
 
 - Fixed WaterMedia video support (use WaterMedia v3.0.0.19+ and WM Binaries v3.0.0-rc.3+)
+- Fixed broken element rotation for Circle Shape, Rectangle Shape, and Image elements in MC 1.21.11
 
 %changelog:end%
 
