@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.rendering.ExternalTextureUtils;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaFrameTexture;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaReflectionBridge;
@@ -341,26 +342,26 @@ public class Mp4Video implements IVideo {
     @Nullable
     @Override
     public ResourceLocation getResourceLocation() {
-        if (this.closed) return FULLY_TRANSPARENT_TEXTURE;
-        if (this.dependencyMissing || this.loadingFailed) return MISSING_TEXTURE_LOCATION;
-        if (!this.playRequested || !this.loadingCompleted) return FULLY_TRANSPARENT_TEXTURE;
+        if (this.closed) return this.clearFrameTextureAndReturn(FULLY_TRANSPARENT_TEXTURE);
+        if (this.dependencyMissing || this.loadingFailed) return this.clearFrameTextureAndReturn(MISSING_TEXTURE_LOCATION);
+        if (!this.playRequested || !this.loadingCompleted) return this.clearFrameTextureAndReturn(FULLY_TRANSPARENT_TEXTURE);
         if ((this.mediaPlayer == null) && this.playRequested) {
             if (Minecraft.getInstance().isSameThread()) this.createPlayerIfPossible();
             else this.queuePlayerInitializationTask();
         }
         Object cachedPlayer = this.mediaPlayer;
-        if (cachedPlayer == null) return FULLY_TRANSPARENT_TEXTURE;
+        if (cachedPlayer == null) return this.clearFrameTextureAndReturn(FULLY_TRANSPARENT_TEXTURE);
         String statusName = WatermediaReflectionBridge.playerStatusName(cachedPlayer);
         this.updateVideoPlaybackListenerStateFromPlayer(cachedPlayer, statusName);
         if (this.shouldRecoverPrematureEnd(cachedPlayer, statusName)) {
             this.recoverFromPrematureEnd(cachedPlayer);
-            return FULLY_TRANSPARENT_TEXTURE;
+            return this.clearFrameTextureAndReturn(FULLY_TRANSPARENT_TEXTURE);
         }
-        if (!this.shouldPresentFrame(statusName)) return FULLY_TRANSPARENT_TEXTURE;
+        if (!this.shouldPresentFrame(statusName)) return this.clearFrameTextureAndReturn(FULLY_TRANSPARENT_TEXTURE);
         this.tryApplyQueuedSeekToPlayer(cachedPlayer);
         this.updateSizeFromPlayer(cachedPlayer);
         int textureId = WatermediaReflectionBridge.playerTextureId(cachedPlayer);
-        if (textureId <= 0) return FULLY_TRANSPARENT_TEXTURE;
+        if (textureId <= 0) return this.clearFrameTextureAndReturn(FULLY_TRANSPARENT_TEXTURE);
         this.frameTexture.setId(textureId);
         this.framePresented = true;
         this.ensureFrameTextureRegistered();
@@ -505,7 +506,7 @@ public class Mp4Video implements IVideo {
             this.maybeEmitVideoPlaybackStatusChanged(OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus.STOPPED);
         }
         this.resetVideoPlaybackListenerState();
-        this.frameTexture.setId(-1);
+        this.clearFrameTextureRegistration();
         long stopVersion = ++this.stopRequestVersion;
         Object cachedPlayer = this.mediaPlayer;
         if (cachedPlayer != null) {
@@ -644,10 +645,7 @@ public class Mp4Video implements IVideo {
             // Run stop/release in a deferred sequence so queued uploads can drain first.
             this.queueDeferredHardStopAndReleaseForClose(cachedPlayer, closeReleaseVersion, HARD_STOP_DEFER_TICKS);
         }
-        try {
-            Minecraft.getInstance().getTextureManager().release(this.frameLocation);
-        } catch (Exception ignored) {}
-        this.frameTexture.setId(-1);
+        this.clearFrameTextureRegistration();
         File temp = this.generatedTempFile;
         if ((temp != null) && temp.isFile()) {
             temp.delete();
@@ -748,7 +746,20 @@ public class Mp4Video implements IVideo {
 
     protected void resetFramePresentationStateForNewPlayer() {
         this.framePresented = false;
+        this.clearFrameTextureRegistration();
+    }
+
+    @NotNull
+    protected ResourceLocation clearFrameTextureAndReturn(@NotNull ResourceLocation fallbackLocation) {
+        this.clearFrameTextureRegistration();
+        return fallbackLocation;
+    }
+
+    protected void clearFrameTextureRegistration() {
         this.frameTexture.setId(-1);
+        try {
+            ExternalTextureUtils.unregisterWithoutDeleting(Minecraft.getInstance().getTextureManager(), this.frameLocation, this.frameTexture);
+        } catch (Exception ignored) {}
     }
 
     protected void queueDeferredInitialUnpause(@NotNull Object player, long startVersion, int ticksToWait, int statusWaitTicks) {

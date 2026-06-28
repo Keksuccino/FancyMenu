@@ -3,6 +3,8 @@ package de.keksuccino.fancymenu.util.mcef;
 import com.cinemamod.mcef.MCEF;
 import com.cinemamod.mcef.MCEFBrowser;
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.util.rendering.ExternalTextureUtils;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.ModernAbstractWidget;
@@ -103,9 +105,7 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
         this.setSize(200, 200);
         this.setPosition(0, 0);
 
-        this.frameTexture.setId(this.browser.getRenderer().getTextureID());
-
-        Minecraft.getInstance().getTextureManager().register(this.frameLocation, this.frameTexture);
+        this.updateFrameTextureId();
 
     }
     
@@ -149,18 +149,20 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
 
         try {
 
-            this.frameTexture.setId(this.browser.getRenderer().getTextureID());
-            this.ensureFrameTextureRegistered();
-
             if (this.autoHandle) BrowserHandler.notifyHandler(this.genericIdentifier.toString(), this);
+            if (!this.updateFrameTextureId()) {
+                return;
+            }
 
+            RenderingUtils.RenderStateSnapshot renderState = RenderingUtils.captureRenderState();
             RenderSystem.enableBlend();
-
-            graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
-
-            graphics.blit(this.frameLocation, this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
-
-            graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+            try {
+                graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
+                graphics.blit(this.frameLocation, this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+            } finally {
+                RenderingUtils.resetShaderColor(graphics);
+                renderState.restore();
+            }
 
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to render MCEFBrowser!", ex);
@@ -173,6 +175,23 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
         if (textureManager.getTexture(this.frameLocation, MissingTextureAtlasSprite.getTexture()) != this.frameTexture) {
             textureManager.register(this.frameLocation, this.frameTexture);
         }
+    }
+
+    private boolean updateFrameTextureId() {
+        if (this.closed) {
+            this.frameTexture.setId(-1);
+            ExternalTextureUtils.unregisterWithoutDeleting(this.minecraft.getTextureManager(), this.frameLocation, this.frameTexture);
+            return false;
+        }
+        int textureId = this.browser.getRenderer().getTextureID();
+        if (textureId <= 0) {
+            this.frameTexture.setId(-1);
+            ExternalTextureUtils.unregisterWithoutDeleting(this.minecraft.getTextureManager(), this.frameLocation, this.frameTexture);
+            return false;
+        }
+        this.frameTexture.setId(textureId);
+        this.ensureFrameTextureRegistered();
+        return true;
     }
 
     public void onVolumeUpdated(@NotNull SoundSource soundSource, float newVolume) {
@@ -520,7 +539,9 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
 
     @NotNull
     public ResourceLocation getFrameLocation() {
-        this.frameTexture.setId(this.browser.getRenderer().getTextureID());
+        if (!this.updateFrameTextureId()) {
+            return RenderingUtils.FULLY_TRANSPARENT_TEXTURE;
+        }
         if (this.autoHandle) BrowserHandler.notifyHandler(this.genericIdentifier.toString(), this);
         return this.frameLocation;
     }
@@ -551,7 +572,8 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
             BrowserLoadEventListenerManager.getInstance().unregisterAllListenersForBrowser(this.getIdentifier());
             this.browser.close(true);
         }
-        Minecraft.getInstance().getTextureManager().release(this.frameLocation);
+        ExternalTextureUtils.unregisterWithoutDeleting(Minecraft.getInstance().getTextureManager(), this.frameLocation, this.frameTexture);
+        this.frameTexture.setId(-1);
     }
 
 }

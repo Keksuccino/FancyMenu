@@ -365,8 +365,14 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
 
         ResourceLocation resourceLocation = this.video.getResourceLocation();
         if ((resourceLocation != null) && !Objects.equals(resourceLocation, MISSING_TEXTURE_FANCYMENU)) {
+            RenderingUtils.RenderStateSnapshot renderState = RenderingUtils.captureRenderState();
             graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
-            this.renderFullArea(graphics, resourceLocation);
+            try {
+                this.renderFullArea(graphics, resourceLocation);
+            } finally {
+                RenderingUtils.resetShaderColor(graphics);
+                renderState.restore();
+            }
         }
 
         RenderingUtils.resetShaderColor(graphics);
