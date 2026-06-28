@@ -1,0 +1,32 @@
+{
+  "config_version": 1,
+  "projects": {
+    "fancymenu": {
+      "changelog_url": "https://github.com/Keksuccino/FancyMenu/blob/master/changelog.txt",
+      "curseforge_project_id": "367706",
+      "dependencies": {
+        "fabric": [
+          "fabric-api",
+          "konkrete",
+          "melody"
+        ],
+        "forge": [
+          "konkrete",
+          "melody"
+        ],
+        "neoforge": [
+          "konkrete",
+          "melody"
+        ]
+      },
+      "mandatory_environments": [
+        "client"
+      ],
+      "modrinth_project_id": "Wq5SjeWM",
+      "supported_environments": [
+        "client",
+        "server"
+      ]
+    }
+  }
+}
