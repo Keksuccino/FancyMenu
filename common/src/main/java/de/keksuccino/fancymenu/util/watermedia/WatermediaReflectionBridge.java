@@ -1,13 +1,23 @@
 package de.keksuccino.fancymenu.util.watermedia;
 
+import com.mojang.blaze3d.opengl.GlStateManager;
 import de.keksuccino.fancymenu.FancyMenu;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
+import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GL33C;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Executor;
+import java.util.function.IntConsumer;
+import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 public class WatermediaReflectionBridge {
@@ -231,8 +241,105 @@ public class WatermediaReflectionBridge {
         ClassLoader classLoader = FancyMenu.class.getClassLoader();
         Class<?> builderClass = Class.forName("org.watermedia.api.media.engines.GLEngine$Builder", false, classLoader);
         Object builder = builderClass.getConstructor(Thread.class, Executor.class).newInstance(renderThread, renderThreadExecutor);
+        configureModernGfxEngineBuilder(builder);
         Method build = builderClass.getMethod("build");
         return build.invoke(builder);
+    }
+
+    private static void configureModernGfxEngineBuilder(@NotNull Object builder) throws Throwable {
+        setBuilderCallbackIfPresent(builder, "setGenTexture", (IntSupplier) GlStateManager::_genTexture);
+        setBuilderBindConsumerIfPresent(builder, "setBindTexture", WatermediaReflectionBridge::bindTexture);
+        setBuilderTexParamConsumerIfPresent(builder, "setTexParameter", WatermediaReflectionBridge::texParameter);
+        setBuilderBindConsumerIfPresent(builder, "setPixelStore", GlStateManager::_pixelStore);
+        setBuilderCallbackIfPresent(builder, "setDelTexture", (IntConsumer) GlStateManager::_deleteTexture);
+        setBuilderCallbackIfPresent(builder, "setGetTexture", (IntConsumer) WatermediaReflectionBridge::bindTexture);
+        setBuilderCallbackIfPresent(builder, "setActiveTexture", (IntConsumer) WatermediaReflectionBridge::activeTexture);
+        setBuilderCallbackIfPresent(builder, "setBindVertexArray", (IntConsumer) GlStateManager::_glBindVertexArray);
+        setBuilderBindConsumerIfPresent(builder, "setBindFrameBuffer", WatermediaReflectionBridge::bindFrameBuffer);
+        setBuilderBindConsumerIfPresent(builder, "setBindBuffer", GlStateManager::_glBindBuffer);
+    }
+
+    private static void bindTexture(int target, int texture) {
+        if (target == GL11.GL_TEXTURE_2D) {
+            bindTexture(texture);
+            return;
+        }
+        GL11.glBindTexture(target, texture);
+    }
+
+    private static void bindTexture(int texture) {
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture);
+        GlStateManager._bindTexture(texture);
+    }
+
+    private static void activeTexture(int texture) {
+        unbindSampler(texture);
+        GL13.glActiveTexture(texture);
+        GlStateManager._activeTexture(texture);
+    }
+
+    private static void bindFrameBuffer(int target, int frameBuffer) {
+        GL30.glBindFramebuffer(target, frameBuffer);
+        GlStateManager._glBindFramebuffer(target, frameBuffer);
+    }
+
+    private static void texParameter(int target, int parameterName, int value) {
+        GlStateManager._texParameter(target, parameterName, value);
+        if (target == GL11.GL_TEXTURE_2D) {
+            // WaterMedia video textures are single-level textures; keep external samplers from requiring mipmaps.
+            GlStateManager._texParameter(target, GL12.GL_TEXTURE_BASE_LEVEL, 0);
+            GlStateManager._texParameter(target, GL12.GL_TEXTURE_MAX_LEVEL, 0);
+        }
+    }
+
+    private static void unbindSampler(int texture) {
+        int textureUnit = texture - GL13.GL_TEXTURE0;
+        if (textureUnit >= 0) {
+            // Minecraft's sampler objects override texture parameters. WaterMedia expects raw texture state here.
+            GL33C.glBindSampler(textureUnit, 0);
+        }
+    }
+
+    private static void setBuilderCallbackIfPresent(@NotNull Object builder, @NotNull String methodName, @NotNull Object callback) throws Throwable {
+        Method method = findMethod(builder.getClass(), methodName, 1);
+        if (method == null) return;
+        if (!method.getParameterTypes()[0].isInstance(callback)) return;
+        method.invoke(builder, callback);
+    }
+
+    private static void setBuilderBindConsumerIfPresent(@NotNull Object builder, @NotNull String methodName, @NotNull IntPairConsumer callback) throws Throwable {
+        setBuilderProxyCallbackIfPresent(builder, methodName, (proxy, method, args) -> {
+            if (method.getDeclaringClass() == Object.class) return handleProxyObjectMethod(proxy, method, args, methodName);
+            callback.accept(((Number) args[0]).intValue(), ((Number) args[1]).intValue());
+            return null;
+        });
+    }
+
+    private static void setBuilderTexParamConsumerIfPresent(@NotNull Object builder, @NotNull String methodName, @NotNull IntTripleConsumer callback) throws Throwable {
+        setBuilderProxyCallbackIfPresent(builder, methodName, (proxy, method, args) -> {
+            if (method.getDeclaringClass() == Object.class) return handleProxyObjectMethod(proxy, method, args, methodName);
+            callback.accept(((Number) args[0]).intValue(), ((Number) args[1]).intValue(), ((Number) args[2]).intValue());
+            return null;
+        });
+    }
+
+    private static void setBuilderProxyCallbackIfPresent(@NotNull Object builder, @NotNull String methodName, @NotNull InvocationHandler invocationHandler) throws Throwable {
+        Method method = findMethod(builder.getClass(), methodName, 1);
+        if (method == null) return;
+        Class<?> callbackType = method.getParameterTypes()[0];
+        if (!callbackType.isInterface()) return;
+        Object callback = Proxy.newProxyInstance(callbackType.getClassLoader(), new Class<?>[]{callbackType}, invocationHandler);
+        method.invoke(builder, callback);
+    }
+
+    @Nullable
+    private static Object handleProxyObjectMethod(@NotNull Object proxy, @NotNull Method method, @Nullable Object[] args, @NotNull String name) {
+        return switch (method.getName()) {
+            case "toString" -> "FancyMenu WaterMedia GL callback proxy: " + name;
+            case "hashCode" -> System.identityHashCode(proxy);
+            case "equals" -> proxy == ((args != null && args.length > 0) ? args[0] : null);
+            default -> null;
+        };
     }
 
     @NotNull
@@ -319,6 +426,16 @@ public class WatermediaReflectionBridge {
             }
         }
         return null;
+    }
+
+    @FunctionalInterface
+    private interface IntPairConsumer {
+        void accept(int first, int second);
+    }
+
+    @FunctionalInterface
+    private interface IntTripleConsumer {
+        void accept(int first, int second, int third);
     }
 
     private static final class ManagedModernPlayer {
