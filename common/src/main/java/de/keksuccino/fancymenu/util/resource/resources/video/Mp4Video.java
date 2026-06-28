@@ -32,7 +32,10 @@ public class Mp4Video implements IVideo {
     private static final File TEMP_VIDEO_DIR = FileUtils.createDirectory(new File(FancyMenu.TEMP_DATA_DIR, "/watermedia_videos"));
     private static final int HARD_STOP_DEFER_TICKS = 2;
     private static final int CLOSE_RELEASE_MAX_DEFER_TICKS = 16;
+    private static final int INITIAL_UNPAUSE_DEFER_TICKS = 1;
+    private static final int INITIAL_UNPAUSE_STATUS_WAIT_TICKS = 40;
     private static final long PLAY_REQUEST_GRACE_MS = 2200L;
+    private static final long PREMATURE_END_START_WINDOW_MS = 1000L;
     private static final double PLAYBACK_END_EPSILON_SECONDS = 0.12D;
     private static final double LOOP_RESTART_WINDOW_SECONDS = 0.40D;
 
@@ -72,6 +75,8 @@ public class Mp4Video implements IVideo {
     protected volatile long closeReleaseRequestVersion = 0L;
     protected volatile boolean restartFromBeginningOnNextPlay = false;
     protected volatile long lastPlayRequestTimestampMs = -1L;
+    protected volatile boolean framePresented = false;
+    protected volatile boolean prematureEndLogged = false;
     protected volatile boolean listenerPlaybackCycleActive = false;
     protected volatile boolean listenerFinishedEventEmittedForCycle = false;
     protected volatile double listenerLastKnownPlaybackTimeSeconds = 0.0D;
@@ -296,16 +301,11 @@ public class Mp4Video implements IVideo {
                 return;
             }
             this.mediaPlayer = createdPlayer;
+            this.resetFramePresentationStateForNewPlayer();
             this.applyVolumeToPlayer();
             this.applyLoopingToPlayer();
             if (this.playRequested) {
-                if (this.pausedRequested) {
-                    WatermediaReflectionBridge.playerStartPaused(createdPlayer);
-                    WatermediaReflectionBridge.playerPause(createdPlayer, true);
-                } else {
-                    WatermediaReflectionBridge.playerStart(createdPlayer);
-                    WatermediaReflectionBridge.playerPause(createdPlayer, false);
-                }
+                this.startPlayerForCurrentRequest(createdPlayer);
             } else {
                 WatermediaReflectionBridge.playerStop(createdPlayer);
             }
@@ -382,6 +382,10 @@ public class Mp4Video implements IVideo {
         if (cachedPlayer == null) return FULLY_TRANSPARENT_TEXTURE;
         String statusName = WatermediaReflectionBridge.playerStatusName(cachedPlayer);
         this.updateVideoPlaybackListenerStateFromPlayer(cachedPlayer, statusName);
+        if (this.shouldRecoverPrematureEnd(cachedPlayer, statusName)) {
+            this.recoverFromPrematureEnd(cachedPlayer);
+            return FULLY_TRANSPARENT_TEXTURE;
+        }
         if (!this.shouldPresentFrame(statusName)) return FULLY_TRANSPARENT_TEXTURE;
         this.tryApplyQueuedSeekToPlayer(cachedPlayer);
         this.updateSizeFromPlayer(cachedPlayer);
@@ -390,6 +394,7 @@ public class Mp4Video implements IVideo {
         WatermediaFrameTexture frameTexture = this.getOrCreateFrameTexture();
         if (frameTexture == null) return FULLY_TRANSPARENT_TEXTURE;
         frameTexture.setId(textureId);
+        this.framePresented = true;
         this.ensureFrameTextureRegistered(frameTexture);
         return this.frameLocation;
     }
@@ -542,6 +547,7 @@ public class Mp4Video implements IVideo {
             WatermediaReflectionBridge.playerPause(cachedPlayer, true);
             this.queueDeferredHardStop(cachedPlayer, stopVersion, HARD_STOP_DEFER_TICKS);
         }
+        this.framePresented = false;
     }
 
     @Override
@@ -592,7 +598,11 @@ public class Mp4Video implements IVideo {
         if (cachedPlayer == null) return false;
         String statusName = WatermediaReflectionBridge.playerStatusName(cachedPlayer);
         this.updateVideoPlaybackListenerStateFromPlayer(cachedPlayer, statusName);
-        boolean ended = statusName.equals("ENDED");
+        if (this.shouldRecoverPrematureEnd(cachedPlayer, statusName)) {
+            this.recoverFromPrematureEnd(cachedPlayer);
+            return false;
+        }
+        boolean ended = this.isNaturalEndStatus(cachedPlayer, statusName);
         if (ended && this.playRequested && !this.pausedRequested) {
             if (this.maybeEmitVideoFinishedEvent(this.looping)) {
                 this.maybeEmitVideoPlaybackStatusChanged(OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus.FINISHED);
@@ -729,6 +739,7 @@ public class Mp4Video implements IVideo {
         this.playRequested = false;
         this.lastPlayRequestTimestampMs = -1L;
         this.resetVideoPlaybackListenerState();
+        this.framePresented = false;
         if (WatermediaUtil.isWatermediaVulkanUnsupported()) {
             LOGGER.warn("[FANCYMENU] Watermedia does not support Vulkan yet, MP4 source will render as missing texture: {}", sourceName);
         } else {
@@ -749,6 +760,7 @@ public class Mp4Video implements IVideo {
         this.playRequested = false;
         this.lastPlayRequestTimestampMs = -1L;
         this.resetVideoPlaybackListenerState();
+        this.framePresented = false;
         if (cause != null) LOGGER.error("[FANCYMENU] {}", message, cause);
         else LOGGER.error("[FANCYMENU] {}", message);
     }
@@ -767,6 +779,90 @@ public class Mp4Video implements IVideo {
         return !this.isTerminalPlayerStatus(statusName);
     }
 
+    protected void startPlayerForCurrentRequest(@NotNull Object player) {
+        WatermediaReflectionBridge.playerStartPaused(player);
+        if (this.pausedRequested) {
+            WatermediaReflectionBridge.playerPause(player, true);
+            return;
+        }
+        long startVersion = this.stopRequestVersion;
+        this.queueDeferredInitialUnpause(player, startVersion, INITIAL_UNPAUSE_DEFER_TICKS, INITIAL_UNPAUSE_STATUS_WAIT_TICKS);
+    }
+
+    protected void resetFramePresentationStateForNewPlayer() {
+        this.framePresented = false;
+        WatermediaFrameTexture cachedFrameTexture = this.frameTexture;
+        if (cachedFrameTexture != null) {
+            cachedFrameTexture.setId(-1);
+        }
+    }
+
+    protected void queueDeferredInitialUnpause(@NotNull Object player, long startVersion, int ticksToWait, int statusWaitTicks) {
+        MainThreadTaskExecutor.executeInMainThread(() -> this.runDeferredInitialUnpause(player, startVersion, ticksToWait, statusWaitTicks), MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
+    }
+
+    protected void runDeferredInitialUnpause(@NotNull Object player, long startVersion, int ticksToWait, int statusWaitTicks) {
+        if (!this.shouldExecuteDeferredInitialUnpause(player, startVersion)) return;
+        if (ticksToWait > 0) {
+            this.queueDeferredInitialUnpause(player, startVersion, ticksToWait - 1, statusWaitTicks);
+            return;
+        }
+
+        String statusName = WatermediaReflectionBridge.playerStatusName(player);
+        if (statusName.equals("WAITING") || statusName.equals("LOADING")) {
+            if (statusWaitTicks > 0) {
+                this.queueDeferredInitialUnpause(player, startVersion, 0, statusWaitTicks - 1);
+            }
+            return;
+        }
+
+        if (this.shouldRecoverPrematureEnd(player, statusName)) {
+            this.recoverFromPrematureEnd(player);
+            return;
+        }
+        if (this.isTerminalPlayerStatus(statusName)) return;
+
+        this.tryApplyQueuedSeekToPlayer(player);
+        WatermediaReflectionBridge.playerPause(player, false);
+        this.tryApplyQueuedSeekToPlayer(player);
+    }
+
+    protected boolean shouldExecuteDeferredInitialUnpause(@NotNull Object player, long startVersion) {
+        if (this.closed || !this.playRequested || this.pausedRequested) return false;
+        if (this.stopRequestVersion != startVersion) return false;
+        return this.mediaPlayer == player;
+    }
+
+    protected boolean shouldRecoverPrematureEnd(@NotNull Object player, @NotNull String statusName) {
+        if (!statusName.equals("ENDED")) return false;
+        if (!this.playRequested || this.pausedRequested || this.framePresented) return false;
+
+        long durationMs = WatermediaReflectionBridge.playerDuration(player);
+        if (durationMs <= PREMATURE_END_START_WINDOW_MS) return false;
+
+        long timeMs = Math.max(0L, WatermediaReflectionBridge.playerTime(player));
+        return timeMs < Math.min(PREMATURE_END_START_WINDOW_MS, Math.max(0L, durationMs - Math.round(PLAYBACK_END_EPSILON_SECONDS * 1000.0D)));
+    }
+
+    protected boolean isNaturalEndStatus(@NotNull Object player, @NotNull String statusName) {
+        if (!statusName.equals("ENDED")) return false;
+
+        long durationMs = WatermediaReflectionBridge.playerDuration(player);
+        if (durationMs <= 0L) return this.framePresented;
+
+        long timeMs = Math.max(0L, WatermediaReflectionBridge.playerTime(player));
+        long endEpsilonMs = Math.max(1L, Math.round(PLAYBACK_END_EPSILON_SECONDS * 1000.0D));
+        return timeMs >= Math.max(0L, durationMs - endEpsilonMs);
+    }
+
+    protected void recoverFromPrematureEnd(@NotNull Object player) {
+        if (!this.prematureEndLogged) {
+            this.prematureEndLogged = true;
+            LOGGER.warn("[FANCYMENU] Watermedia reported MP4 playback as ended before FancyMenu received a video frame. Recreating the player to work around the early-end state. source: {}", this.resolveVideoSourceForListener());
+        }
+        this.recreatePlayerForAutoplay(player);
+    }
+
     protected void recreatePlayerForAutoplay(@NotNull Object player) {
         Runnable recreateTask = () -> {
             if (this.closed || !this.playRequested || this.pausedRequested) return;
@@ -775,7 +871,7 @@ public class Mp4Video implements IVideo {
                 this.mediaPlayer = null;
                 WatermediaReflectionBridge.playerRelease(player);
             }
-            this.clearFrameTextureId();
+            this.resetFramePresentationStateForNewPlayer();
             this.createPlayerIfPossible();
         };
         if (Minecraft.getInstance().isSameThread()) {
