@@ -179,19 +179,22 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
 
     private boolean updateFrameTextureId() {
         if (this.closed) {
-            this.frameTexture.setId(-1);
-            ExternalTextureUtils.unregisterWithoutDeleting(this.minecraft.getTextureManager(), this.frameLocation, this.frameTexture);
+            this.clearFrameTextureRegistration();
             return false;
         }
         int textureId = this.browser.getRenderer().getTextureID();
         if (textureId <= 0) {
-            this.frameTexture.setId(-1);
-            ExternalTextureUtils.unregisterWithoutDeleting(this.minecraft.getTextureManager(), this.frameLocation, this.frameTexture);
+            this.clearFrameTextureRegistration();
             return false;
         }
         this.frameTexture.setId(textureId);
         this.ensureFrameTextureRegistered();
         return true;
+    }
+
+    private void clearFrameTextureRegistration() {
+        this.frameTexture.setId(-1);
+        ExternalTextureUtils.unregisterWithoutDeletingIfCurrentId(this.minecraft.getTextureManager(), this.frameLocation, this.frameTexture, 0);
     }
 
     public void onVolumeUpdated(@NotNull SoundSource soundSource, float newVolume) {
@@ -567,13 +570,12 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
     @Override
     public void close() throws IOException {
         this.closed = true;
+        this.clearFrameTextureRegistration();
         // Unregister from the global handler manager
         if (this.browser != null) {
             BrowserLoadEventListenerManager.getInstance().unregisterAllListenersForBrowser(this.getIdentifier());
             this.browser.close(true);
         }
-        ExternalTextureUtils.unregisterWithoutDeleting(Minecraft.getInstance().getTextureManager(), this.frameLocation, this.frameTexture);
-        this.frameTexture.setId(-1);
     }
 
 }

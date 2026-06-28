@@ -639,13 +639,13 @@ public class Mp4Video implements IVideo {
         Object cachedPlayer = this.mediaPlayer;
         this.mediaPlayer = null;
         this.mrl = null;
+        this.clearFrameTextureRegistration();
         if (cachedPlayer != null) {
             WatermediaReflectionBridge.playerPause(cachedPlayer, true);
             // FFmpeg can still enqueue render-thread upload tasks right after stop.
             // Run stop/release in a deferred sequence so queued uploads can drain first.
             this.queueDeferredHardStopAndReleaseForClose(cachedPlayer, closeReleaseVersion, HARD_STOP_DEFER_TICKS);
         }
-        this.clearFrameTextureRegistration();
         File temp = this.generatedTempFile;
         if ((temp != null) && temp.isFile()) {
             temp.delete();
@@ -758,7 +758,7 @@ public class Mp4Video implements IVideo {
     protected void clearFrameTextureRegistration() {
         this.frameTexture.setId(-1);
         try {
-            ExternalTextureUtils.unregisterWithoutDeleting(Minecraft.getInstance().getTextureManager(), this.frameLocation, this.frameTexture);
+            ExternalTextureUtils.unregisterWithoutDeletingIfCurrentId(Minecraft.getInstance().getTextureManager(), this.frameLocation, this.frameTexture, 0);
         } catch (Exception ignored) {}
     }
 

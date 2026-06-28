@@ -209,9 +209,9 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
 
     @Nullable
     public ResourceLocation getResourceLocation() {
-        if (this.closed) return this.clearFrameTextureAndReturn(RenderableResource.FULLY_TRANSPARENT_TEXTURE);
-        if (this.dependencyMissing || this.loadingFailed) return this.clearFrameTextureAndReturn(RenderableResource.FULLY_TRANSPARENT_TEXTURE);
-        if (!this.loadingCompleted) return this.clearFrameTextureAndReturn(RenderableResource.FULLY_TRANSPARENT_TEXTURE);
+        if (this.closed) return RenderableResource.FULLY_TRANSPARENT_TEXTURE;
+        if (this.dependencyMissing || this.loadingFailed) return RenderableResource.FULLY_TRANSPARENT_TEXTURE;
+        if (!this.loadingCompleted) return RenderableResource.FULLY_TRANSPARENT_TEXTURE;
 
         if ((this.mediaPlayer == null) && this.playRequested) {
             if (Minecraft.getInstance().isSameThread()) this.createPlayerIfPossible();
@@ -219,14 +219,14 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
         }
 
         Object cachedPlayer = this.mediaPlayer;
-        if (cachedPlayer == null) return this.clearFrameTextureAndReturn(RenderableResource.FULLY_TRANSPARENT_TEXTURE);
-        if (this.handlePlayerError(cachedPlayer)) return this.clearFrameTextureAndReturn(RenderableResource.FULLY_TRANSPARENT_TEXTURE);
+        if (cachedPlayer == null) return RenderableResource.FULLY_TRANSPARENT_TEXTURE;
+        if (this.handlePlayerError(cachedPlayer)) return RenderableResource.FULLY_TRANSPARENT_TEXTURE;
 
         this.applyFiniteLoopStop(cachedPlayer);
         this.updateSizeFromPlayer(cachedPlayer);
 
         int textureId = WatermediaReflectionBridge.playerTextureId(cachedPlayer);
-        if (textureId <= 0) return this.clearFrameTextureAndReturn(RenderableResource.FULLY_TRANSPARENT_TEXTURE);
+        if (textureId <= 0) return RenderableResource.FULLY_TRANSPARENT_TEXTURE;
         this.frameTexture.setId(textureId);
         this.ensureFrameTextureRegistered();
         return this.frameLocation;
@@ -313,7 +313,6 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
         this.pausedRequested = false;
         this.completedLoops = 0;
         this.lastPlaybackTimeMs = 0L;
-        this.clearFrameTextureRegistration();
         Object cachedPlayer = this.mediaPlayer;
         if (cachedPlayer != null) {
             WatermediaReflectionBridge.playerStop(cachedPlayer);
@@ -365,12 +364,12 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
         Object cachedPlayer = this.mediaPlayer;
         this.mediaPlayer = null;
         this.mrl = null;
+        this.clearFrameTextureRegistration();
         if (cachedPlayer != null) {
             WatermediaReflectionBridge.playerPause(cachedPlayer, true);
             WatermediaReflectionBridge.playerStop(cachedPlayer);
             WatermediaReflectionBridge.playerRelease(cachedPlayer);
         }
-        this.clearFrameTextureRegistration();
         File temp = this.generatedTempFile;
         this.generatedTempFile = null;
         if ((temp != null) && temp.isFile()) {
@@ -392,16 +391,10 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
         return true;
     }
 
-    @NotNull
-    protected ResourceLocation clearFrameTextureAndReturn(@NotNull ResourceLocation fallbackLocation) {
-        this.clearFrameTextureRegistration();
-        return fallbackLocation;
-    }
-
     protected void clearFrameTextureRegistration() {
         this.frameTexture.setId(-1);
         try {
-            ExternalTextureUtils.unregisterWithoutDeleting(Minecraft.getInstance().getTextureManager(), this.frameLocation, this.frameTexture);
+            ExternalTextureUtils.unregisterWithoutDeletingIfCurrentId(Minecraft.getInstance().getTextureManager(), this.frameLocation, this.frameTexture, 0);
         } catch (Exception ignored) {}
     }
 

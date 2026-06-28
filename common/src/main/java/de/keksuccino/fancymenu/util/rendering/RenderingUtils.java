@@ -656,10 +656,10 @@ public class RenderingUtils {
         }
 
         public void restore() {
-            GlStateManager._glBindBuffer(GL15.GL_ARRAY_BUFFER, this.arrayBufferBinding);
-            GlStateManager._glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, this.elementArrayBufferBinding);
-            GlStateManager._glBindBuffer(GL21.GL_PIXEL_PACK_BUFFER, this.pixelPackBufferBinding);
-            GlStateManager._glBindBuffer(GL21.GL_PIXEL_UNPACK_BUFFER, this.pixelUnpackBufferBinding);
+            GlStateManager._glBindBuffer(GL15.GL_ARRAY_BUFFER, ExternalTextureUtils.sanitizeBufferId(this.arrayBufferBinding));
+            GlStateManager._glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, ExternalTextureUtils.sanitizeBufferId(this.elementArrayBufferBinding));
+            GlStateManager._glBindBuffer(GL21.GL_PIXEL_PACK_BUFFER, ExternalTextureUtils.sanitizeBufferId(this.pixelPackBufferBinding));
+            GlStateManager._glBindBuffer(GL21.GL_PIXEL_UNPACK_BUFFER, ExternalTextureUtils.sanitizeBufferId(this.pixelUnpackBufferBinding));
             GlStateManager._pixelStore(GL11.GL_PACK_ALIGNMENT, this.packAlignment);
             GlStateManager._pixelStore(GL11.GL_PACK_ROW_LENGTH, this.packRowLength);
             GlStateManager._pixelStore(GL11.GL_PACK_SKIP_ROWS, this.packSkipRows);
@@ -670,9 +670,9 @@ public class RenderingUtils {
             GlStateManager._pixelStore(GL11.GL_UNPACK_SKIP_PIXELS, this.unpackSkipPixels);
 
             for (int i = 0; i < SHADER_TEXTURE_COUNT_FANCYMENU; i++) {
-                RenderSystem.setShaderTexture(i, this.shaderTextures[i]);
+                RenderSystem.setShaderTexture(i, ExternalTextureUtils.sanitizeTextureId(this.shaderTextures[i]));
                 RenderSystem.activeTexture(GL13.GL_TEXTURE0 + i);
-                RenderSystem.bindTexture(this.textureBindings[i]);
+                RenderSystem.bindTexture(ExternalTextureUtils.sanitizeTextureId(this.textureBindings[i]));
             }
             RenderSystem.activeTexture(this.activeTexture);
 
