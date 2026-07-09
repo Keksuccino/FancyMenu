@@ -6,7 +6,7 @@
 - ⚠️ `0701c83fe755b40bbc8847c5a8cff0635aab1ddf`
   - Cannot be backported because it fixes Minecraft 26.2's extracted and batched GUI renderer. Minecraft 1.19.2 has no `GuiRenderer`, GUI render-state extraction, strata, command encoder, or closed render-pass framebuffer; its GLSL runtime already flushes pending GUI buffers and renders immediately into the bound framebuffer, so adding the 26.2 render-phase queue and synthetic main-target framebuffer would be incompatible architectural code rather than a backport.
 - [x] `bc94229bee360236a4c05a3e61a8fbb4d2dcdd57`
-- [ ] `e97aa4048aa39bb18080df693a3e7dc2721aedac`
+- [x] `e97aa4048aa39bb18080df693a3e7dc2721aedac`
 - [ ] `69f4e7679e2c225c1d3c795f502319e14540fb87`
 - [ ] `757bfa0729d7882edf0f83efbe46954c5724628b`
 - [ ] `2adc7ed7345218febbfd68bea8b7bfbe6c7ed371`

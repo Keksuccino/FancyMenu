@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
+import de.keksuccino.fancymenu.customization.element.elements.WidgetTooltipText;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -71,7 +72,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
         element.hoverLabel = serialized.getValue("hoverlabel");
 
-        element.tooltip = serialized.getValue("description");
+        element.tooltip = WidgetTooltipText.normalizeStoredValue(serialized.getValue("description"));
 
         element.clickSound = deserializeAudioResourceSupplier(serialized.getValue("clicksound"));
 
@@ -164,9 +165,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         if (element.clickSound != null) {
             serializeTo.putProperty("clicksound", element.clickSound.getSourceWithPrefix());
         }
-        if (element.tooltip != null) {
-            serializeTo.putProperty("description", element.tooltip);
-        }
+        serializeTo.putProperty("description", WidgetTooltipText.normalizeStoredValue(element.tooltip));
         if (element.label != null) {
             serializeTo.putProperty("label", element.label);
         }

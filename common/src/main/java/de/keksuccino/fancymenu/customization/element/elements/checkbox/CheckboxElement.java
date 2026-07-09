@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBloc
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
+import de.keksuccino.fancymenu.customization.element.elements.WidgetTooltipText;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
@@ -35,9 +36,9 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
     protected CheckboxButton checkbox;
 
     public final Property<String> tooltip = putProperty(Property.stringProperty("description", null, true, true, "fancymenu.elements.button.tooltip")
-            .setUserInputTextValidator(TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR)
-            .setValueGetProcessor(value -> value.replace("%n%", "\n"))
-            .setValueSetProcessor(value -> (value != null) ? value.replace("\n", "%n%") : null));
+            .setUserInputTextValidator(WidgetTooltipText::isEditorValueValid)
+            .setValueGetProcessor(WidgetTooltipText::toEditorValue)
+            .setValueSetProcessor(WidgetTooltipText::fromEditorValue));
     public final Property<ResourceSupplier<ITexture>> checkmarkTexture = putProperty(Property.resourceSupplierProperty(ITexture.class, "checkmark_texture", null, "fancymenu.elements.checkbox.checkmark_texture", true, true, true, null));
     public final Property<ResourceSupplier<ITexture>> backgroundTextureNormal = putProperty(Property.resourceSupplierProperty(ITexture.class, "background_texture_normal", null, "fancymenu.elements.checkbox.background_texture_normal", true, true, true, null));
     public final Property<ResourceSupplier<ITexture>> backgroundTextureHover = putProperty(Property.resourceSupplierProperty(ITexture.class, "background_texture_hover", null, "fancymenu.elements.checkbox.background_texture_hover", true, true, true, null));
