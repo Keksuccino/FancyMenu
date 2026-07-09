@@ -5,6 +5,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.nbt.NbtNumericValueFormatter;
 import de.keksuccino.fancymenu.util.rendering.text.ComponentParser;
 import net.minecraft.advancements.predicates.MinMaxBounds;
 import net.minecraft.client.Minecraft;
@@ -19,12 +20,6 @@ import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.NumericTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.StringTag;
-import net.minecraft.nbt.ByteTag;
-import net.minecraft.nbt.ShortTag;
-import net.minecraft.nbt.IntTag;
-import net.minecraft.nbt.LongTag;
-import net.minecraft.nbt.FloatTag;
-import net.minecraft.nbt.DoubleTag;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -106,15 +101,7 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
                 }
                 return json;
             } else {
-                double scale = 1.0D;
-                if ((scaleStr != null) && !scaleStr.isEmpty()) {
-                    try {
-                        scale = Double.parseDouble(scaleStr);
-                    } catch (NumberFormatException ignored) {
-                        // ignore invalid scale values
-                    }
-                }
-                return getTagValue(tag, scale);
+                return getTagValue(tag, NbtNumericValueFormatter.parseScale(scaleStr));
             }
         } catch (Exception e) {
             LOGGER.error("[FANCYMENU] Error in nbt_data_get placeholder", e);
@@ -190,41 +177,12 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
 
     private String getTagValue(Tag tag, double scale) {
         if (tag instanceof NumericTag numericTag) {
-            if (scale != 1.0D) {
-                return formatScaledNumeric(numericTag, scale);
-            }
-            return numericTag.asString().orElse("");
+            return NbtNumericValueFormatter.format(numericTag, scale);
         }
         if (tag instanceof StringTag) {
             return tag.asString().orElse("");
         }
         return tag.toString();
-    }
-
-    private String formatScaledNumeric(NumericTag tag, double scale) {
-        if (tag instanceof FloatTag) {
-            float value = (float)(tag.asDouble().orElse(1D) * scale);
-            return Float.toString(value) + "f";
-        }
-        if (tag instanceof DoubleTag) {
-            double value = tag.asDouble().orElse(1D) * scale;
-            return Double.toString(value) + "d";
-        }
-
-        long rounded = Math.round(tag.asDouble().orElse(1D) * scale);
-        if (tag instanceof ByteTag) {
-            return Byte.toString((byte)rounded) + "b";
-        }
-        if (tag instanceof ShortTag) {
-            return Short.toString((short)rounded) + "s";
-        }
-        if (tag instanceof IntTag) {
-            return Integer.toString((int)rounded);
-        }
-        if (tag instanceof LongTag) {
-            return Long.toString(rounded) + "L";
-        }
-        return Long.toString(rounded);
     }
 
     @Nullable
@@ -734,7 +692,6 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
     }
 
 }
-
 
 
 
