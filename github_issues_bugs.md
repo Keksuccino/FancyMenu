@@ -1,5 +1,5 @@
 - [x] [Vanilla pause menu buttons reappear in multiplayer after being removed](https://github.com/Keksuccino/FancyMenu/issues/1708)
-- [ ] [When using `watermedia` to loop a video, the screen flashes black at the start of each loop.](https://github.com/Keksuccino/FancyMenu/issues/1700)
+- [x] [When using `watermedia` to loop a video, the screen flashes black at the start of each loop.](https://github.com/Keksuccino/FancyMenu/issues/1700)
 - [ ] [[MC 26] Vanilla button icons](https://github.com/Keksuccino/FancyMenu/issues/1699)
 - [ ] [[MC 26.2] Smooth font height is too short (feels smaller than pre-26.2)](https://github.com/Keksuccino/FancyMenu/issues/1698)
 - [ ] [element animator grid problems](https://github.com/Keksuccino/FancyMenu/issues/1696)
