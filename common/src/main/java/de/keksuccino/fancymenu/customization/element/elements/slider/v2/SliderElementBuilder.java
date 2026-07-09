@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBloc
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
+import de.keksuccino.fancymenu.customization.element.elements.WidgetTooltipText;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -79,7 +80,7 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
             }
         }
 
-        element.tooltip = serialized.getValue("tooltip");
+        element.tooltip = WidgetTooltipText.normalizeStoredValue(serialized.getValue("tooltip"));
 
         element.handleTextureNormal = deserializeImageResourceSupplier(serialized.getValue("handle_texture_normal"));
         element.handleTextureHover = deserializeImageResourceSupplier(serialized.getValue("handle_texture_hovered"));
@@ -139,7 +140,7 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
         serializeTo.putProperty("slider_element_executable_block_identifier", element.executableBlock.getIdentifier());
         element.executableBlock.serializeToExistingPropertyContainer(serializeTo);
 
-        serializeTo.putProperty("tooltip", element.tooltip);
+        serializeTo.putProperty("tooltip", WidgetTooltipText.normalizeStoredValue(element.tooltip));
 
         if (element.handleTextureNormal != null) {
             serializeTo.putProperty("handle_texture_normal", element.handleTextureNormal.getSourceWithPrefix());
