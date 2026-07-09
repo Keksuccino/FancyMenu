@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.ImageButtonRenderPolicy;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.ImageButton;
@@ -32,7 +33,8 @@ public abstract class MixinImageButton extends GuiComponent {
 		CustomizableWidget customizable = (CustomizableWidget)this;
 
 		boolean renderVanilla = customizable.renderCustomBackgroundFancyMenu(button, graphics, button.x, button.y, button.getWidth(), button.getHeight());
-		if (!renderVanilla && (((customizable.getCustomLabelFancyMenu() != null) && !button.isHoveredOrFocused()) || ((customizable.getHoverLabelFancyMenu() != null) && button.isHoveredOrFocused()))) {
+		boolean renderCustomLabel = ImageButtonRenderPolicy.shouldRenderCustomLabel(customizable.getCustomLabelFancyMenu() != null, customizable.getHoverLabelFancyMenu() != null, button.isHoveredOrFocused(), button.visible, button.active);
+		if (renderCustomLabel) {
 			int labelColor = button.active ? 16777215 : 10526880;
 			graphics.drawCenteredString(Minecraft.getInstance().font, button.getMessage(), button.x + button.getWidth() / 2, button.y + (button.getHeight() - 8) / 2, labelColor | Mth.ceil(((IMixinAbstractWidget)button).getAlphaFancyMenu() * 255.0F) << 24);
 		}
@@ -42,7 +44,7 @@ public abstract class MixinImageButton extends GuiComponent {
 
 		RenderSystem.enableBlend();
 		graphics.setColor(this.cachedShaderColor_FancyMenu[0], this.cachedShaderColor_FancyMenu[1], this.cachedShaderColor_FancyMenu[2], ((IMixinAbstractWidget)button).getAlphaFancyMenu());
-		return renderVanilla;
+		return ImageButtonRenderPolicy.shouldRenderVanillaIcon(renderVanilla, renderCustomLabel);
 	}
 
 	@Inject(method = "renderButton", at = @At("RETURN"))
