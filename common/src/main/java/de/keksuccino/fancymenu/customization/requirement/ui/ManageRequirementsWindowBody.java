@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGro
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
@@ -423,24 +424,24 @@ public void renderBackground(@NotNull GuiGraphics $$0, int $$1, int $$2, float $
             }
         }
 
-        if (hasControlDown() && "z".equals(keyName)) {
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && "z".equals(keyName)) {
             if (this.undo()) {
                 return true;
             }
         }
 
-        if (hasControlDown() && "y".equals(keyName)) {
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && "y".equals(keyName)) {
             if (this.redo()) {
                 return true;
             }
         }
 
-        if (!contextMenuActive && !hasControlDown() && (keyCode == GLFW.GLFW_KEY_A)) {
+        if (!contextMenuActive && !InputUtils.isGuiShortcutModifierDown(modifiers) && (keyCode == GLFW.GLFW_KEY_A)) {
             this.onAddRequirement();
             return true;
         }
 
-        if (!contextMenuActive && !hasControlDown() && this.allowGroupManagement && (keyCode == GLFW.GLFW_KEY_G)) {
+        if (!contextMenuActive && !InputUtils.isGuiShortcutModifierDown(modifiers) && this.allowGroupManagement && (keyCode == GLFW.GLFW_KEY_G)) {
             this.onAddGroup();
             return true;
         }
@@ -463,7 +464,7 @@ public void renderBackground(@NotNull GuiGraphics $$0, int $$1, int $$2, float $
             }
         }
 
-        if (hasControlDown() && (keyCode == GLFW.GLFW_KEY_S)) {
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keyCode == GLFW.GLFW_KEY_S)) {
             this.triggerDoneAction();
             return true;
         }

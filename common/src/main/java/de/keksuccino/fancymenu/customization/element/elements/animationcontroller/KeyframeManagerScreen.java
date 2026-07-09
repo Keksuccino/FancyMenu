@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -102,7 +103,7 @@ public class KeyframeManagerScreen extends ModernScreen {
     protected long currentPlayOrRecordPosition = 0;
     protected final List<AnimationKeyframe> selectedKeyframes = new ArrayList<>();
     protected int draggingKeyframeIndex = -1;
-    protected AnimationKeyframe lastCtrlClickedFrameForDeselect = null;
+    protected AnimationKeyframe lastShortcutModifierClickedFrameForDeselect = null;
     protected boolean framesGotMoved = false;
     protected int timelineX;
     protected int timelineWidth;
@@ -953,7 +954,7 @@ public class KeyframeManagerScreen extends ModernScreen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
 
-        this.lastCtrlClickedFrameForDeselect = null;
+        this.lastShortcutModifierClickedFrameForDeselect = null;
         this.framesGotMoved = false;
 
         if (super.mouseClicked(mouseX, mouseY, button)) return true;
@@ -989,7 +990,7 @@ public class KeyframeManagerScreen extends ModernScreen {
         // Handle clicking keyframe lines
         int clickedIndex = getKeyframeIndexAtPosition((int)mouseX, (int)mouseY);
         // Handle clicking empty timeline area to deselect frames
-        if (!Screen.hasControlDown() && isInTimelineArea((int)mouseX, (int)mouseY) && (clickedIndex == -1)) {
+        if (!InputUtils.isGuiShortcutModifierDown() && isInTimelineArea((int)mouseX, (int)mouseY) && (clickedIndex == -1)) {
             this.selectKeyframeClearOldSelection(null);
             return true;
         }
@@ -1003,11 +1004,11 @@ public class KeyframeManagerScreen extends ModernScreen {
             hasMovedFromClickPosition = false;
             draggingKeyframeIndex = clickedIndex;
             AnimationKeyframe keyframe = this.workingKeyframes.get(draggingKeyframeIndex);
-            if (Screen.hasControlDown() && this.selectedKeyframes.contains(keyframe)) {
-                this.lastCtrlClickedFrameForDeselect = keyframe;
+            if (InputUtils.isGuiShortcutModifierDown() && this.selectedKeyframes.contains(keyframe)) {
+                this.lastShortcutModifierClickedFrameForDeselect = keyframe;
             } else {
-                // Handle CTRL-click for multi-select
-                this.selectKeyframe(workingKeyframes.get(clickedIndex), Screen.hasControlDown());
+                // Handle platform GUI shortcut modifier-click for multi-select
+                this.selectKeyframe(workingKeyframes.get(clickedIndex), InputUtils.isGuiShortcutModifierDown());
             }
             return true;
         }
@@ -1030,9 +1031,9 @@ public class KeyframeManagerScreen extends ModernScreen {
             this.applyElementValuesToKeyframe(this.previewElement, selectedKeyframe);
             this.applyKeyframeValuesToElement(selectedKeyframe, this.previewElement);
         }
-        if ((this.lastCtrlClickedFrameForDeselect != null) && !this.framesGotMoved) {
+        if ((this.lastShortcutModifierClickedFrameForDeselect != null) && !this.framesGotMoved) {
             if (this.selectedKeyframes.size() > 1) {
-                this.selectedKeyframes.remove(this.lastCtrlClickedFrameForDeselect);
+                this.selectedKeyframes.remove(this.lastShortcutModifierClickedFrameForDeselect);
                 if (this.selectedKeyframes.size() == 1) {
                     AnimationKeyframe lastSelected = this.selectedKeyframes.get(0);
                     this.selectKeyframeClearOldSelection(null); // first clear all
@@ -1042,7 +1043,7 @@ public class KeyframeManagerScreen extends ModernScreen {
                 this.selectKeyframeClearOldSelection(null);
             }
         }
-        this.lastCtrlClickedFrameForDeselect = null;
+        this.lastShortcutModifierClickedFrameForDeselect = null;
         this.framesGotMoved = false;
         return super.mouseReleased(mouseX, mouseY, button);
     }
@@ -1055,7 +1056,7 @@ public class KeyframeManagerScreen extends ModernScreen {
         key = key.toLowerCase();
 
         // Handle undo/redo keyboard shortcuts
-        if (Screen.hasControlDown()) {
+        if (InputUtils.isGuiShortcutModifierDown(modifiers)) {
             if (key.equals("z")) {
                 undo();
                 return true;
@@ -1095,7 +1096,7 @@ public class KeyframeManagerScreen extends ModernScreen {
 
         // Select all keyframes
         if (!this.isRecording || this.isRecordingPaused) {
-            if (Screen.hasControlDown() && (keyCode == InputConstants.KEY_A)) {
+            if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keyCode == InputConstants.KEY_A)) {
                 this.selectKeyframeClearOldSelection(null);
                 this.workingKeyframes.forEach(keyframe -> this.selectKeyframe(keyframe, true));
             }

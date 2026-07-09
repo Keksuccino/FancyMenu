@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
@@ -259,7 +260,7 @@ public class TextEditorLine extends AdvancedTextField {
     @Override
     public boolean keyPressed(int keycode, int i1, int i2) {
         //Handled by the editor
-        if (Screen.isCopy(keycode) || Screen.isPaste(keycode) || Screen.isSelectAll(keycode) || Screen.isCut(keycode)) {
+        if (((keycode == 67) || (keycode == 86) || (keycode == 65) || (keycode == 88)) && InputUtils.isGuiShortcutModifierDown(i2)) {
             return false;
         }
         //Text deletion is handled by the editor

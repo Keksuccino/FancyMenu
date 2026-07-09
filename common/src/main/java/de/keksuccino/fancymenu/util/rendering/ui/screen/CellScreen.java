@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -586,7 +587,7 @@ public final void renderBackground(GuiGraphics graphics, int mouseX, int mouseY,
 
     @Override
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
-        if (Screen.hasControlDown() && !Screen.hasShiftDown() && !Screen.hasAltDown() && this.isLetterKeyPressed(keycode, scancode, "s")) {
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && !Screen.hasShiftDown() && !Screen.hasAltDown() && this.isLetterKeyPressed(keycode, scancode, "s")) {
             if ((this.doneButton != null) && this.doneButton.visible && this.doneButton.active) {
                 this.doneButton.onPress();
                 return true;
@@ -796,7 +797,7 @@ public final void renderBackground(GuiGraphics graphics, int mouseX, int mouseY,
 
         GuiEventListener focusedTarget = this.getFocusedTarget(cell, focusTargets);
         if (focusedTarget == cell.editBox) {
-            if (!Screen.hasShiftDown() && !Screen.hasControlDown() && !Screen.hasAltDown()) {
+            if (!Screen.hasShiftDown() && !InputUtils.isGuiShortcutModifierDown(modifiers) && !Screen.hasAltDown()) {
                 boolean canJumpToEditorButton = cell.allowEditor
                         && (cell.openEditorButton != null)
                         && this.isNavigatableTarget(cell.openEditorButton);

@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.auth.ModValidator;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
@@ -22,6 +23,7 @@ import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -123,28 +125,30 @@ public class CustomizationOverlay {
 		if (!ScreenCustomization.isScreenBlacklisted(e.getScreen().getClass().getName())) {
 
 			String keyName = e.getKeyName();
+			boolean guiShortcutModifierDown = InputUtils.isGuiShortcutModifierDown(e.getModifiers());
+			boolean altDown = (e.getModifiers() & GLFW.GLFW_MOD_ALT) != 0;
 
 			if (!FancyMenu.getOptions().modpackMode.getValue()) {
 
 				//Toggle Menu Bar
-				if (keyName.equals("c") && Screen.hasControlDown() && Screen.hasAltDown()) {
+				if (keyName.equals("c") && guiShortcutModifierDown && altDown) {
 					FancyMenu.getOptions().showCustomizationOverlay.setValue(!FancyMenu.getOptions().showCustomizationOverlay.getValue());
 					ScreenCustomization.reInitCurrentScreen();
 				}
 
 				//Toggle Debug Overlay
-				if (keyName.equals("d") && Screen.hasControlDown() && Screen.hasAltDown()) {
+				if (keyName.equals("d") && guiShortcutModifierDown && altDown) {
 					FancyMenu.getOptions().showDebugOverlay.setValue(!FancyMenu.getOptions().showDebugOverlay.getValue());
 					ScreenCustomization.reInitCurrentScreen();
 				}
 
 				//Reload FancyMenu
-				if (keyName.equals("r") && Screen.hasControlDown() && Screen.hasAltDown()) {
+				if (keyName.equals("r") && guiShortcutModifierDown && altDown) {
 					ScreenCustomization.reloadFancyMenu();
 				}
 
 				//Open last edited layout
-				if (keyName.equals("l") && Screen.hasControlDown() && Screen.hasAltDown()) {
+				if (keyName.equals("l") && guiShortcutModifierDown && altDown) {
 					Layout lastEdited = LayoutHandler.getLastEditedLayout();
 					if (lastEdited != null) {
 						Screen layoutTargetScreen = null;

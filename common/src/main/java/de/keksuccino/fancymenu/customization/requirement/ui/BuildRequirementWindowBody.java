@@ -20,6 +20,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
@@ -451,7 +452,7 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
     }
 
     private boolean shouldRouteTypedCharacterToSearchBar(char codePoint) {
-        if (hasControlDown() || hasAltDown()) {
+        if (InputUtils.isGuiShortcutModifierDown() || hasAltDown()) {
             return false;
         }
         return !Character.isISOControl(codePoint);

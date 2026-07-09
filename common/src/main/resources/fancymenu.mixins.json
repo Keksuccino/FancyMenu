@@ -80,6 +80,7 @@
     "client.MixinStringDecomposer",
     "client.MixinTitleScreen",
     "client.MixinSelectWorldScreen",
+    "client.MixinWindow",
     "client.MixinWorldOpenFlows",
     "client.MixinWorldListEntry"
   ],

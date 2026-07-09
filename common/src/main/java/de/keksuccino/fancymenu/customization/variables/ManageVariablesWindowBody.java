@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -254,33 +255,33 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
             }
         }
 
-        if (Screen.hasControlDown() && !Screen.hasShiftDown() && !Screen.hasAltDown() && this.isLetterKeyPressed(keyCode, scanCode, "s")) {
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && !Screen.hasShiftDown() && !Screen.hasAltDown() && this.isLetterKeyPressed(keyCode, scanCode, "s")) {
             if ((this.doneButton != null) && this.doneButton.visible && this.doneButton.active) {
                 this.doneButton.onPress();
                 return true;
             }
         }
 
-        if (Screen.hasControlDown() && "z".equals(keyName)) {
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && "z".equals(keyName)) {
             if (this.undo()) {
                 return true;
             }
         }
 
-        if (Screen.hasControlDown() && "y".equals(keyName)) {
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && "y".equals(keyName)) {
             if (this.redo()) {
                 return true;
             }
         }
 
         boolean searchBarFocused = (this.searchBar != null) && this.searchBar.isFocused();
-        if (!contextMenuActive && !searchBarFocused && Screen.hasControlDown() && "c".equals(keyName)) {
+        if (!contextMenuActive && !searchBarFocused && InputUtils.isGuiShortcutModifierDown(modifiers) && "c".equals(keyName)) {
             if (this.copySelectedVariableToClipboard()) {
                 return true;
             }
         }
 
-        if (!contextMenuActive && !searchBarFocused && Screen.hasControlDown() && "v".equals(keyName)) {
+        if (!contextMenuActive && !searchBarFocused && InputUtils.isGuiShortcutModifierDown(modifiers) && "v".equals(keyName)) {
             if (this.pasteVariableFromClipboard()) {
                 return true;
             }
@@ -424,7 +425,7 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
     }
 
     private boolean shouldRouteTypedCharacterToSearchBar(char codePoint) {
-        if (hasControlDown() || hasAltDown()) {
+        if (InputUtils.isGuiShortcutModifierDown() || hasAltDown()) {
             return false;
         }
         return !Character.isISOControl(codePoint);
