@@ -7,7 +7,7 @@
 - [x] [get nbt data does not work for numbers if the scale is 1](https://github.com/Keksuccino/FancyMenu/issues/1694)
 - [x] [Can't save a tooltip to be empty when it has been saved to have something in it](https://github.com/Keksuccino/FancyMenu/issues/1693)
 - [x] [FM does not respect remapped modifier keys (Control/Command) in macOS (remapped via System Settings -> Keyboard)](https://github.com/Keksuccino/FancyMenu/issues/1692)
-- [ ] [having irradiated effect from alex's caves in third person causes the render to go black](https://github.com/Keksuccino/FancyMenu/issues/1689)
+- [x] [having irradiated effect from alex's caves in third person causes the render to go black](https://github.com/Keksuccino/FancyMenu/issues/1689)
 - [ ] [Fancymenu heavy lags my PC till... I unplug the HDMI cable](https://github.com/Keksuccino/FancyMenu/issues/1688)
 - [ ] [Unable to focus text input field](https://github.com/Keksuccino/FancyMenu/issues/1685)
 - [ ] [Text Elements break on blur](https://github.com/Keksuccino/FancyMenu/issues/1684)
