@@ -55,7 +55,8 @@ public class InputFieldElement extends AbstractElement {
 
         if (this.editBox == null) return;
 
-        if (this.shouldRender()) {
+        this.editBox.visible = this.shouldRender();
+        if (this.editBox.visible) {
 
             //Handle editor mode for text field
             if (isEditor()) {
