@@ -36,6 +36,7 @@ public class AnimationControllerEditorElement extends AbstractEditorElement<Anim
         this.rightClickMenu.addClickableEntry("manage_keyframes", Component.translatable("fancymenu.elements.animation_controller.manage_keyframes"),
                         (menu, entry) -> {
                             KeyframeManagerScreen managerScreen = new KeyframeManagerScreen(
+                                    this.editor,
                                     this.element,
                                     callback -> {
                                         if (callback != null) {
