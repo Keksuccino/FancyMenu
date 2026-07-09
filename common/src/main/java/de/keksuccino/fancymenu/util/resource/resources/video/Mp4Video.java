@@ -731,7 +731,10 @@ public class Mp4Video implements IVideo {
 
     protected boolean shouldPresentFrame(@NotNull String statusName) {
         if (!this.playRequested) return false;
-        if (this.isLoadingPlayerStatus(statusName)) return false;
+        if (this.isLoadingPlayerStatus(statusName)) {
+            // Watermedia keeps its last GL texture alive while repeat seeks and ordinary seeks temporarily enter BUFFERING. Preserve that frame once one was presented so renderers do not expose their fallback between decoded frames.
+            return this.framePresented;
+        }
         return !this.isTerminalPlayerStatus(statusName);
     }
 
