@@ -8,7 +8,8 @@
 - [x] [Can't save a tooltip to be empty when it has been saved to have something in it](https://github.com/Keksuccino/FancyMenu/issues/1693)
 - [x] [FM does not respect remapped modifier keys (Control/Command) in macOS (remapped via System Settings -> Keyboard)](https://github.com/Keksuccino/FancyMenu/issues/1692)
 - [x] [having irradiated effect from alex's caves in third person causes the render to go black](https://github.com/Keksuccino/FancyMenu/issues/1689)
-- [ ] [Fancymenu heavy lags my PC till... I unplug the HDMI cable](https://github.com/Keksuccino/FancyMenu/issues/1688)
+- ⚠️ [Fancymenu heavy lags my PC till... I unplug the HDMI cable](https://github.com/Keksuccino/FancyMenu/issues/1688)
+  - Blocked: The report provides no reproducible layout/assets or time-correlated performance/display capture, and its complete log contains no failure or active video player. Reproduce on current 26.2 with a stable A/B sequence, the exact layout/assets and mod configuration, the window/display setup (GPU routing, resolutions, refresh rates, VRR/HDR, fullscreen and VSync), a Spark or JFR CPU profile, a GPUView plus PresentMon trace, and VRAM/GPU utilization/clock/power telemetry covering the onset; those artifacts are required to identify a FancyMenu code path instead of guessing at an OS/driver presentation workaround.
 - [ ] [Unable to focus text input field](https://github.com/Keksuccino/FancyMenu/issues/1685)
 - [ ] [Text Elements break on blur](https://github.com/Keksuccino/FancyMenu/issues/1684)
 - [ ] [NeoForge 21.1.229 1.21.1 text elements has broken sizing if used decimals](https://github.com/Keksuccino/FancyMenu/issues/1681)
