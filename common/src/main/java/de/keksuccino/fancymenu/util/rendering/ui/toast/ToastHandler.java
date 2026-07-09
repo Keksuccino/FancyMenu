@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.toast;
 
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,7 +13,7 @@ public class ToastHandler {
     public static void showToast(@NotNull final SimpleToast toast, final long durationMs) {
         final long start = System.currentTimeMillis();
         Minecraft.getInstance().gui.toastManager().addToast(toast);
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             try {
                 while (true) {
                     long now = System.currentTimeMillis();
@@ -28,7 +29,7 @@ public class ToastHandler {
                 } catch (Exception ignore) {}
                 LOGGER.error("[FANCYMENU] Error in timer thread of SimpleToast in ToastHandler!", ex);
             }
-        }).start();
+        }, "Toast-DurationTimer");
     }
 
 }

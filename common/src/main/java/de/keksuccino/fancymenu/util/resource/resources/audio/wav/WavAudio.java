@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.AudioPlayTimeTracke
 import de.keksuccino.fancymenu.util.resource.resources.audio.AudioResourceReloadTracker;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.audio.OpenAlAudioClipFactory;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.melody.resources.audio.openal.ALAudioBuffer;
 import de.keksuccino.melody.resources.audio.openal.ALAudioClip;
 import de.keksuccino.melody.resources.audio.openal.ALErrorHandler;
@@ -172,7 +173,7 @@ public class WavAudio implements IAudio, ALAudio {
             return audio;
         }
 
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             try {
                 InputStream in = WebUtils.openResourceStream(wavAudioURL);
                 if (in == null) throw new NullPointerException("Web resource input stream was NULL!");
@@ -181,7 +182,7 @@ public class WavAudio implements IAudio, ALAudio {
                 audio.loadingFailed = true;
                 LOGGER.error("[FANCYMENU] Failed to read WAV audio from URL: " + wavAudioURL, ex);
             }
-        }).start();
+        }, "WavAudio-WebLoader");
 
         return audio;
 
@@ -212,7 +213,7 @@ public class WavAudio implements IAudio, ALAudio {
             return audio;
         }
 
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             AudioInputStream stream = null;
             ByteArrayInputStream byteIn = null;
             try {
@@ -269,7 +270,7 @@ public class WavAudio implements IAudio, ALAudio {
             CloseableUtils.closeQuietly(stream);
             CloseableUtils.closeQuietly(in);
             CloseableUtils.closeQuietly(byteIn);
-        }).start();
+        }, "WavAudio-Decoder");
 
         return audio;
     }

@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -174,7 +175,7 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
     protected void downloadPlayerNameSkinMetadata(@NotNull String getterPlayerName) {
         Objects.requireNonNull(getterPlayerName);
         this.startedDownloadingMetadata = true;
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             String skinUrl = null;
             boolean isSlim = false;
             MinecraftProfileTexture texture = MinecraftUsers.getProfileTexture(getterPlayerName, MinecraftProfileTexture.Type.SKIN);
@@ -189,7 +190,7 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
             }
             if (!this.startedDownloadingMetadata) return;
             this.playerNameSkinMeta = new SkinMetadata(getterPlayerName, skinUrl, isSlim);
-        }).start();
+        }, "LegacyPlayerSkin-MetadataLoader");
     }
 
     protected void clearCurrentlyLoadingPngSkinTexture() {

@@ -52,12 +52,13 @@ public class ActionBridge {
     private static final long PLACEHOLDER_MAIN_THREAD_TIMEOUT_MS = 3000L;
     private static CefMessageRouter messageRouter;
     private static boolean initialized = false;
+    private static boolean shuttingDown = false;
     
     /**
      * Initialize the global message router for all browsers
      */
-    public static void initialize() {
-        if (initialized) return;
+    public static synchronized void initialize() {
+        if (shuttingDown || initialized) return;
         
         // Check if MCEF is loaded
         if (!MCEFUtil.isMCEFLoaded()) {
@@ -97,15 +98,23 @@ public class ActionBridge {
      * Clean up the message router
      */
     public static void dispose() {
-        if (messageRouter != null && initialized) {
-            try {
-                MCEF.getClient().getHandle().removeMessageRouter(messageRouter);
-                messageRouter.dispose();
-                messageRouter = null;
-                initialized = false;
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to dispose ActionBridge message router", ex);
-            }
+        CefMessageRouter router;
+        synchronized (ActionBridge.class) {
+            shuttingDown = true;
+            router = messageRouter;
+            messageRouter = null;
+            initialized = false;
+        }
+        if (router == null) return;
+        try {
+            MCEF.getClient().getHandle().removeMessageRouter(router);
+        } catch (Throwable throwable) {
+            LOGGER.error("[FANCYMENU] Failed to remove the ActionBridge message router from MCEF", throwable);
+        }
+        try {
+            router.dispose();
+        } catch (Throwable throwable) {
+            LOGGER.error("[FANCYMENU] Failed to dispose the ActionBridge message router", throwable);
         }
     }
     

@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaAnimatedTextureBackend;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaUtil;
@@ -110,7 +111,7 @@ public class GifTexture implements ITexture, PlayableResource {
         }
 
         //Decode GIF image
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             try {
                 InputStream in = new FileInputStream(gifFile);
                 of(in, gifFile.getPath(), texture);
@@ -118,7 +119,7 @@ public class GifTexture implements ITexture, PlayableResource {
                 texture.loadingFailed.set(true);
                 LOGGER.error("[FANCYMENU] Failed to read GIF image from file: " + gifFile.getPath(), ex);
             }
-        }).start();
+        }, "GifTexture-LocalLoader");
 
         return texture;
 
@@ -144,7 +145,7 @@ public class GifTexture implements ITexture, PlayableResource {
         }
 
         //Download and decode GIF image
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             try {
                 populateTexture(texture, null, gifUrl);
                 if (texture.closed.get()) MainThreadTaskExecutor.executeInMainThread(texture::close, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
@@ -153,7 +154,7 @@ public class GifTexture implements ITexture, PlayableResource {
                 texture.decoded.set(true);
                 LOGGER.error("[FANCYMENU] Failed to read GIF image from URL: " + gifUrl, ex);
             }
-        }).start();
+        }, "GifTexture-WebLoader");
 
         return texture;
 
@@ -170,10 +171,10 @@ public class GifTexture implements ITexture, PlayableResource {
         GifTexture texture = (writeTo != null) ? writeTo : new GifTexture();
 
         //Decode GIF image
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             populateTexture(texture, in, (gifTextureName != null) ? gifTextureName : "[Generic InputStream Source]");
             if (texture.closed.get()) MainThreadTaskExecutor.executeInMainThread(texture::close, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
-        }).start();
+        }, "GifTexture-Decoder");
 
         return texture;
 
@@ -399,7 +400,7 @@ public class GifTexture implements ITexture, PlayableResource {
             this.tickerThreadRunning.set(true);
             this.lastResourceLocationCall = System.currentTimeMillis();
 
-            new Thread(() -> {
+            FancyMenuThreads.startDaemonThread(() -> {
 
                 //Automatically stop thread if APNG was inactive for >=10 seconds
                 while ((this.lastResourceLocationCall + 10000) > System.currentTimeMillis()) {
@@ -476,7 +477,7 @@ public class GifTexture implements ITexture, PlayableResource {
 
                 this.tickerThreadRunning.set(false);
 
-            }).start();
+            }, "GifTexture-FrameTicker");
 
         }
     }
@@ -704,7 +705,7 @@ public class GifTexture implements ITexture, PlayableResource {
         String gifTextureName = this.resolveTextureName();
         LOGGER.warn("[FANCYMENU] Watermedia GIF playback failed, falling back to primitive decoder: {}", gifTextureName);
         this.preparePrimitiveFallbackState();
-        new Thread(() -> this.loadPrimitiveFallback(gifTextureName)).start();
+        FancyMenuThreads.startDaemonThread(() -> this.loadPrimitiveFallback(gifTextureName), "GifTexture-PrimitiveFallback");
     }
 
     protected void preparePrimitiveFallbackState() {

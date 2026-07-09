@@ -30,6 +30,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import de.keksuccino.fancymenu.util.resource.resources.video.NativeVideoReferenceTracker;
+import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -57,7 +58,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.WeakHashMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -66,7 +66,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBackground> implements IVideoMenuBackground {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
+    private static final ScheduledExecutorService EXECUTOR = FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-NativeVideoMenuBackground");
     private static final Object BACKGROUND_INSTANCE_LOCK_FANCYMENU = new Object();
     private static final Set<NativeVideoMenuBackground> BACKGROUND_INSTANCES_FANCYMENU = Collections.newSetFromMap(new WeakHashMap<>());
     private static final String MEMORY_LAST_STOPPED_PLAY_TIME_SECONDS_FANCYMENU = "native_video_last_stopped_play_time_seconds";

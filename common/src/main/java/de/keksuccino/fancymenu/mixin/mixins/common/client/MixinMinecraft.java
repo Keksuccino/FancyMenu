@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
+import de.keksuccino.fancymenu.util.lifecycle.ClientShutdownHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import de.keksuccino.fancymenu.util.player.CameraRotationObserver;
@@ -89,6 +90,12 @@ public class MixinMinecraft {
 			this.quitListenerFired_FancyMenu = true;
 			Listeners.ON_QUIT_MINECRAFT.onQuitMinecraft();
 		}
+	}
+
+	/** @reason Release FancyMenu-owned resources while Minecraft's render and resource infrastructure is still available. */
+	@Inject(method = "close", at = @At("HEAD"))
+	private void before_close_FancyMenu(CallbackInfo info) {
+		ClientShutdownHandler.shutdown();
 	}
 
 	@Inject(method = "doWorldLoad(Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lnet/minecraft/server/packs/repository/PackRepository;Lnet/minecraft/server/WorldStem;Ljava/util/Optional;Z)V", at = @At("HEAD"))

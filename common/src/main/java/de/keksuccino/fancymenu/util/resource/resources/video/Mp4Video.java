@@ -7,8 +7,11 @@ import de.keksuccino.fancymenu.customization.listener.listeners.OnVideoPlaybackS
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.lifecycle.ClientShutdownHandler;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
+import de.keksuccino.fancymenu.util.watermedia.WatermediaDeferredPlayerReleaseTracker;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaFrameTexture;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaReflectionBridge;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaUtil;
@@ -152,7 +155,7 @@ public class Mp4Video implements IVideo {
         Mp4Video video = (writeTo != null) ? writeTo : new Mp4Video();
         String sourceName = (videoName != null) ? videoName : "[Generic InputStream Source]";
 
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             File temp = video.writeInputStreamToTempFile(in, sourceName);
             if (temp == null) {
                 video.fail("Failed to decode MP4 video from input stream: " + sourceName, null);
@@ -161,7 +164,7 @@ public class Mp4Video implements IVideo {
             video.generatedTempFile = temp;
             video.sourceFile = temp;
             video.initializeInternal(sourceName);
-        }).start();
+        }, "Mp4Video-InputStreamLoader");
 
         return video;
 
@@ -176,7 +179,7 @@ public class Mp4Video implements IVideo {
     }
 
     protected void initializeAsync(@NotNull String sourceName) {
-        new Thread(() -> this.initializeInternal(sourceName)).start();
+        FancyMenuThreads.startDaemonThread(() -> this.initializeInternal(sourceName), "Mp4Video-Initializer");
     }
 
     protected void initializeInternal(@NotNull String sourceName) {
@@ -241,7 +244,7 @@ public class Mp4Video implements IVideo {
     }
 
     protected void watchMrlStateAsync() {
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             long waitStart = System.currentTimeMillis();
             while (!this.closed) {
                 Object cachedMrl = this.mrl;
@@ -263,7 +266,7 @@ public class Mp4Video implements IVideo {
                     Thread.sleep(25);
                 } catch (Exception ignored) {}
             }
-        }).start();
+        }, "Mp4Video-MediaResolver");
     }
 
     protected void queuePlayerInitializationTask() {
@@ -345,9 +348,8 @@ public class Mp4Video implements IVideo {
 
     protected boolean ensureFrameTextureRegistered(@NotNull WatermediaFrameTexture frameTexture) {
         var textureManager = Minecraft.getInstance().getTextureManager();
-        if (textureManager.getTexture(this.frameLocation) != frameTexture) {
-            textureManager.register(this.frameLocation, frameTexture);
-        }
+        // TextureManager#getTexture treats an unknown dynamic ID as a file-backed texture and logs a false missing-resource warning. Re-registering the same instance is explicitly identity-safe.
+        textureManager.register(this.frameLocation, frameTexture);
         return true;
     }
 
@@ -672,9 +674,19 @@ public class Mp4Video implements IVideo {
         this.mrl = null;
         if (cachedPlayer != null) {
             WatermediaReflectionBridge.playerPause(cachedPlayer, true);
-            // FFmpeg can still enqueue render-thread upload tasks right after stop.
-            // Run stop/release in a deferred sequence so queued uploads can drain first.
-            this.queueDeferredHardStopAndReleaseForClose(cachedPlayer, closeReleaseVersion, HARD_STOP_DEFER_TICKS);
+            if (ClientShutdownHandler.isShuttingDown()) {
+                // No later client tick is guaranteed once shutdown starts, so the normal future-tick release sequence could never execute.
+                WatermediaReflectionBridge.playerStop(cachedPlayer);
+                WatermediaReflectionBridge.playerReleaseForShutdown(cachedPlayer);
+            } else if (WatermediaDeferredPlayerReleaseTracker.track(cachedPlayer)) {
+                // FFmpeg can still enqueue render-thread upload tasks right after stop.
+                // Run stop/release in a deferred sequence so queued uploads can drain first.
+                this.queueDeferredHardStopAndReleaseForClose(cachedPlayer, closeReleaseVersion, HARD_STOP_DEFER_TICKS);
+            } else {
+                // Shutdown can begin between the global-state check and tracker registration; ownership then stays on this close call.
+                WatermediaReflectionBridge.playerStop(cachedPlayer);
+                WatermediaReflectionBridge.playerReleaseForShutdown(cachedPlayer);
+            }
         }
         this.clearFrameTextureId();
         try {
@@ -925,7 +937,7 @@ public class Mp4Video implements IVideo {
             this.queueDeferredPlayerRelease(player, closeReleaseVersion, ticksToWait - 1);
             return;
         }
-        WatermediaReflectionBridge.playerRelease(player);
+        WatermediaDeferredPlayerReleaseTracker.release(player);
     }
 
     protected boolean shouldExecuteDeferredPlayerRelease(long closeReleaseVersion) {

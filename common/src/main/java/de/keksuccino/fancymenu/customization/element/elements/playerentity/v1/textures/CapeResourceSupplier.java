@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -114,7 +115,7 @@ public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
     protected void findPlayerNameCapeUrl(@NotNull String getterPlayerName) {
         Objects.requireNonNull(getterPlayerName);
         this.startedFindingPlayerNameCapeUrl = true;
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             String capeUrl = null;
             MinecraftProfileTexture texture = MinecraftUsers.getProfileTexture(getterPlayerName, MinecraftProfileTexture.Type.CAPE);
             if ((texture != null) && (texture != MinecraftUsers.MISSING_CAPE_TEXTURE)) {
@@ -125,7 +126,7 @@ public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
             }
             if (!this.startedFindingPlayerNameCapeUrl) return;
             this.playerNameCapeUrl = capeUrl;
-        }).start();
+        }, "LegacyPlayerCape-MetadataLoader");
     }
 
     @Override

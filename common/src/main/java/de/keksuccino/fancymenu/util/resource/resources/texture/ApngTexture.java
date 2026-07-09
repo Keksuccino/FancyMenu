@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaAnimatedTextureBackend;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaUtil;
@@ -112,7 +113,7 @@ public class ApngTexture implements ITexture, PlayableResource {
         }
 
         //Decode APNG image
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             try {
                 InputStream in = new FileInputStream(apngFile);
                 of(in, apngFile.getPath(), texture);
@@ -120,7 +121,7 @@ public class ApngTexture implements ITexture, PlayableResource {
                 texture.loadingFailed.set(true);
                 LOGGER.error("[FANCYMENU] Failed to read APNG image from file: " + apngFile.getPath(), ex);
             }
-        }).start();
+        }, "ApngTexture-LocalLoader");
 
         return texture;
 
@@ -146,7 +147,7 @@ public class ApngTexture implements ITexture, PlayableResource {
         }
 
         //Download and decode APNG image
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             try {
                 populateTexture(texture, null, apngUrl);
                 if (texture.closed.get()) MainThreadTaskExecutor.executeInMainThread(texture::close, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
@@ -155,7 +156,7 @@ public class ApngTexture implements ITexture, PlayableResource {
                 texture.decoded.set(true);
                 LOGGER.error("[FANCYMENU] Failed to read APNG image from URL: " + apngUrl, ex);
             }
-        }).start();
+        }, "ApngTexture-WebLoader");
 
         return texture;
 
@@ -172,10 +173,10 @@ public class ApngTexture implements ITexture, PlayableResource {
         ApngTexture texture = (writeTo != null) ? writeTo : new ApngTexture();
 
         //Decode APNG image
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             populateTexture(texture, in, (apngTextureName != null) ? apngTextureName : "[Generic InputStream Source]");
             if (texture.closed.get()) MainThreadTaskExecutor.executeInMainThread(texture::close, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
-        }).start();
+        }, "ApngTexture-Decoder");
 
         return texture;
 
@@ -364,7 +365,7 @@ public class ApngTexture implements ITexture, PlayableResource {
             this.tickerThreadRunning.set(true);
             this.lastResourceLocationCall = System.currentTimeMillis();
 
-            new Thread(() -> {
+            FancyMenuThreads.startDaemonThread(() -> {
 
                 //Automatically stop thread if APNG was inactive for >=10 seconds
                 while ((this.lastResourceLocationCall + 10000) > System.currentTimeMillis()) {
@@ -441,7 +442,7 @@ public class ApngTexture implements ITexture, PlayableResource {
 
                 this.tickerThreadRunning.set(false);
 
-            }).start();
+            }, "ApngTexture-FrameTicker");
 
         }
     }
@@ -670,7 +671,7 @@ public class ApngTexture implements ITexture, PlayableResource {
         String apngTextureName = this.resolveTextureName();
         LOGGER.warn("[FANCYMENU] Watermedia APNG playback failed, falling back to primitive decoder: {}", apngTextureName);
         this.preparePrimitiveFallbackState();
-        new Thread(() -> this.loadPrimitiveFallback(apngTextureName)).start();
+        FancyMenuThreads.startDaemonThread(() -> this.loadPrimitiveFallback(apngTextureName), "ApngTexture-PrimitiveFallback");
     }
 
     protected void preparePrimitiveFallbackState() {

@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.AudioPlayTimeTracke
 import de.keksuccino.fancymenu.util.resource.resources.audio.AudioResourceReloadTracker;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.audio.OpenAlAudioClipFactory;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.melody.resources.audio.openal.ALAudioBuffer;
 import de.keksuccino.melody.resources.audio.openal.ALAudioClip;
 import de.keksuccino.melody.resources.audio.openal.ALErrorHandler;
@@ -171,7 +172,7 @@ public class OggAudio implements IAudio, ALAudio {
             return audio;
         }
 
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             InputStream webIn = null;
             try {
                 webIn = WebUtils.openResourceStream(oggAudioURL);
@@ -183,7 +184,7 @@ public class OggAudio implements IAudio, ALAudio {
                 LOGGER.error("[FANCYMENU] Failed to read OGG audio from URL: " + oggAudioURL, ex);
             }
             CloseableUtils.closeQuietly(webIn);
-        }).start();
+        }, "OggAudio-WebLoader");
 
         return audio;
 
@@ -214,7 +215,7 @@ public class OggAudio implements IAudio, ALAudio {
             return audio;
         }
 
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             JOrbisAudioStream stream = null;
             try {
                 byte[] fullData = in.readAllBytes();
@@ -260,7 +261,7 @@ public class OggAudio implements IAudio, ALAudio {
             }
             CloseableUtils.closeQuietly(stream);
             CloseableUtils.closeQuietly(in);
-        }).start();
+        }, "OggAudio-Decoder");
 
         return audio;
     }

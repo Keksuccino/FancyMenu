@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util;
 
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import net.minecraft.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,7 +21,7 @@ public class WebUtils {
 
     public static void init() {
 
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             try {
                 isConnectionAvailable = _isInternetAvailable();
             } catch (Exception ex) {
@@ -31,7 +32,7 @@ public class WebUtils {
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to sleep after updating cached internet availability value!", ex);
             }
-        }, "FancyMenu-WebUtils-Thread").start();
+        }, "WebUtils-ConnectivityCheck");
 
     }
 

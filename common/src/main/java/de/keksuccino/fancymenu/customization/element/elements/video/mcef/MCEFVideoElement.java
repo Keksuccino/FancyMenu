@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoPlayer;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
+import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
@@ -24,7 +25,6 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.io.File;
 import java.util.Objects;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class MCEFVideoElement extends AbstractElement implements IVideoElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
+    private static final ScheduledExecutorService EXECUTOR = FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-MCEFVideoElement");
     private static final DrawableColor MISSING_MCEF_COLOR = DrawableColor.of(Color.RED);
 
     @Nullable

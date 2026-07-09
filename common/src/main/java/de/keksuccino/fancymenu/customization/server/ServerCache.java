@@ -1,107 +1,131 @@
 package de.keksuccino.fancymenu.customization.server;
 
-import de.keksuccino.fancymenu.util.ScreenUtils;
-
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.util.ScreenUtils;
+import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ServerStatusPinger;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.network.EventLoopGroupHolder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ServerCache {
 
-    protected static final Component CANT_CONNECT_TEXT = (Component.translatable("multiplayer.status.cannot_connect")).withStyle(ChatFormatting.DARK_RED);
-
-    protected static ServerStatusPinger pinger = new ServerStatusPinger();
-    protected static Map<String, ServerData> servers = new HashMap<>();
-    protected static Map<String, ServerData> serversUpdated = new HashMap<>();
+    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Component CANT_CONNECT_TEXT = Component.translatable("multiplayer.status.cannot_connect").withStyle(ChatFormatting.DARK_RED);
+    private static final ServerStatusPinger PINGER = new ServerStatusPinger();
+    private static final Map<String, ServerData> SERVERS = new ConcurrentHashMap<>();
+    private static final Map<String, ServerData> UPDATED_SERVERS = new ConcurrentHashMap<>();
+    private static final ScheduledExecutorService EXECUTOR = FancyMenuExecutors.newScheduledThreadPool(2, "FancyMenu-ServerCache");
+    private static final AtomicBoolean INITIALIZED = new AtomicBoolean();
+    private static final AtomicBoolean SHUTTING_DOWN = new AtomicBoolean();
 
     public static void init() {
-        new Thread(() -> {
-            while (true) {
-                try {
-                    if (ScreenCustomization.isCustomizationEnabledForScreen(ScreenUtils.getScreen())) {
-                        pingServers();
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                try {
-                    Thread.sleep(30000);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
+        if (!INITIALIZED.compareAndSet(false, true)) return;
+        EXECUTOR.scheduleWithFixedDelay(ServerCache::refreshServers, 0L, 30L, TimeUnit.SECONDS);
     }
 
-    public static void cacheServer(ServerData server, ServerData serverUpdated) {
-        if (server.ip != null) {
-            try {
-                server.ping = -1L;
-                serverUpdated.ping = -1L;
-                servers.put(server.ip, server);
-                serversUpdated.put(server.ip, serverUpdated);
-                pingServers();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+    public static void shutdown() {
+        if (!SHUTTING_DOWN.compareAndSet(false, true)) return;
+        EXECUTOR.shutdownNow();
+        try {
+            PINGER.removeAll();
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to cancel cached server pings during client shutdown!", ex);
+        }
+        clear();
+    }
+
+    public static void cacheServer(ServerData server, ServerData updatedServer) {
+        if (SHUTTING_DOWN.get() || server.ip == null) return;
+        try {
+            server.ping = -1L;
+            updatedServer.ping = -1L;
+            SERVERS.put(server.ip, server);
+            UPDATED_SERVERS.put(server.ip, updatedServer);
+            pingServers();
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to cache server data for '{}'!", server.ip, ex);
         }
     }
 
     public static ServerData getServer(String ip) {
-        if (!servers.containsKey(ip)) {
+        if (!SERVERS.containsKey(ip)) {
             cacheServer(new ServerData(ip, ip, ServerData.Type.OTHER), new ServerData(ip, ip, ServerData.Type.OTHER));
         }
-        //Copy server data from old to new array only when server is done pinging
-        if (servers.get(ip).motd != null) {
-            if (!servers.get(ip).motd.equals(Component.translatable("multiplayer.status.pinging"))) {
-                serversUpdated.get(ip).ping = servers.get(ip).ping;
-                serversUpdated.get(ip).protocol = servers.get(ip).protocol;
-                serversUpdated.get(ip).motd = servers.get(ip).motd;
-                serversUpdated.get(ip).version = servers.get(ip).version;
-                serversUpdated.get(ip).status = servers.get(ip).status;
-                serversUpdated.get(ip).playerList = servers.get(ip).playerList;
-            }
+        ServerData server = SERVERS.get(ip);
+        ServerData updatedServer = UPDATED_SERVERS.get(ip);
+        if (server == null || updatedServer == null) return new ServerData(ip, ip, ServerData.Type.OTHER);
+
+        // Only expose a new ping result after it is complete, keeping placeholders from flickering back to the pinging state.
+        if (server.motd != null && !server.motd.equals(Component.translatable("multiplayer.status.pinging"))) {
+            updatedServer.ping = server.ping;
+            updatedServer.protocol = server.protocol;
+            updatedServer.motd = server.motd;
+            updatedServer.version = server.version;
+            updatedServer.status = server.status;
+            updatedServer.playerList = server.playerList;
         }
-        return serversUpdated.get(ip);
+        return updatedServer;
     }
 
     public static void removeServer(String ip) {
-        servers.remove(ip);
-        serversUpdated.remove(ip);
+        SERVERS.remove(ip);
+        UPDATED_SERVERS.remove(ip);
     }
 
     public static void clear() {
-        servers.clear();
-        serversUpdated.clear();
+        SERVERS.clear();
+        UPDATED_SERVERS.clear();
     }
 
     public static void pingServers() {
-        List<ServerData> l = new ArrayList<>(servers.values());
-        for (ServerData d : l) {
+        if (SHUTTING_DOWN.get()) return;
+        List<ServerData> servers = new ArrayList<>(SERVERS.values());
+        for (ServerData server : servers) {
             try {
-                new Thread(() -> {
-                    try {
-                        pinger.pingServer(d, () -> {}, () -> {}, EventLoopGroupHolder.remote(Minecraft.getInstance().options.useNativeTransport()));
-                        if ((d == null) || d.status.getString().isEmpty()) {
-                            d.ping = -1L;
-                            d.motd = CANT_CONNECT_TEXT;
-                        }
-                    } catch (Exception ex) {
-                        d.ping = -1L;
-                        d.motd = CANT_CONNECT_TEXT;
-                    }
-                }).start();
-            } catch (Exception e) {
-                e.printStackTrace();
+                EXECUTOR.execute(() -> pingServer(server));
+            } catch (RejectedExecutionException ex) {
+                if (!SHUTTING_DOWN.get()) LOGGER.error("[FANCYMENU] Failed to queue cached server ping!", ex);
             }
+        }
+    }
+
+    private static void refreshServers() {
+        if (SHUTTING_DOWN.get()) return;
+        try {
+            if (ScreenCustomization.isCustomizationEnabledForScreen(ScreenUtils.getScreen())) pingServers();
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to refresh cached servers!", ex);
+        }
+    }
+
+    private static void pingServer(ServerData server) {
+        if (SHUTTING_DOWN.get()) return;
+        try {
+            PINGER.pingServer(server, () -> {}, () -> {}, EventLoopGroupHolder.remote(Minecraft.getInstance().options.useNativeTransport()));
+            if (server.status == null || server.status.getString().isEmpty()) {
+                server.ping = -1L;
+                server.motd = CANT_CONNECT_TEXT;
+            }
+        } catch (Exception ex) {
+            server.ping = -1L;
+            server.motd = CANT_CONNECT_TEXT;
+        } finally {
+            // DNS resolution happens inside pingServer and must never hold up the Render thread. A worker that loses the shutdown race cancels any connection it registered late.
+            if (SHUTTING_DOWN.get()) PINGER.removeAll();
         }
     }
 

@@ -10,10 +10,17 @@ public class MCEFUtil {
     public static boolean isMCEFLoaded() {
         if (MCEF_critical_failure) return false;
         if (FancyMenu.getOptions().devForceMcefMissing.getValue()) return false;
+        return isMCEFPresent();
+    }
+
+    /**
+     * Checks only whether MCEF classes are present. Shutdown cleanup must ignore runtime availability overrides because they can change after MCEF resources were created.
+     */
+    public static boolean isMCEFPresent() {
         try {
             Class.forName("com.cinemamod.mcef.MCEF", false, FancyMenu.class.getClassLoader());
             return true;
-        } catch (Exception ignored) {}
+        } catch (Exception | LinkageError ignored) {}
         return false;
     }
 

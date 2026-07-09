@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.watermedia;
 
 import com.mojang.blaze3d.opengl.GlStateManager;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -16,6 +17,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
@@ -23,6 +27,9 @@ import java.util.function.Supplier;
 public class WatermediaReflectionBridge {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final long SHUTDOWN_PLAYER_RELEASE_BUDGET_NANOS = TimeUnit.SECONDS.toNanos(2L);
+    private static final AtomicLong SHUTDOWN_PLAYER_RELEASE_DEADLINE_NANOS = new AtomicLong();
+    private static final AtomicBoolean SHUTDOWN_PLAYER_RELEASE_TIMEOUT_LOGGED = new AtomicBoolean();
     private static volatile boolean WATERMEDIA_unsupported_texture_handle_logged = false;
 
     @Nullable
@@ -140,6 +147,19 @@ public class WatermediaReflectionBridge {
             return;
         }
         invoke(player, "release", 0);
+    }
+
+    /**
+     * Releases a player without allowing Watermedia's unbounded native thread joins to consume Minecraft's shutdown-watchdog window.
+     * Modern players share one short wait budget so their GL engine can still be released on the render thread when native cleanup finishes promptly.
+     */
+    public static void playerReleaseForShutdown(@Nullable Object player) {
+        if (player == null) return;
+        if (player instanceof ManagedModernPlayer managedModernPlayer) {
+            managedModernPlayer.releaseForShutdown();
+            return;
+        }
+        FancyMenuThreads.startDaemonThread(() -> invoke(player, "release", 0), "Watermedia-PlayerRelease");
     }
 
     public static boolean playerIsPlaying(@Nullable Object player) {
@@ -418,6 +438,26 @@ public class WatermediaReflectionBridge {
         }
     }
 
+    private static boolean awaitShutdownPlayerRelease(@NotNull Thread releaseThread) {
+        long now = System.nanoTime();
+        long deadline = SHUTDOWN_PLAYER_RELEASE_DEADLINE_NANOS.updateAndGet(current -> current == 0L ? now + SHUTDOWN_PLAYER_RELEASE_BUDGET_NANOS : current);
+        long remainingNanos = Math.max(0L, deadline - now);
+        if (remainingNanos > 0L) {
+            long remainingMillis = remainingNanos / 1_000_000L;
+            int additionalNanos = (int) (remainingNanos % 1_000_000L);
+            try {
+                releaseThread.join(remainingMillis, additionalNanos);
+            } catch (InterruptedException ignored) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        boolean completed = !releaseThread.isAlive();
+        if (!completed && SHUTDOWN_PLAYER_RELEASE_TIMEOUT_LOGGED.compareAndSet(false, true)) {
+            LOGGER.warn("[FANCYMENU] Watermedia player release exceeded the shared client-shutdown time budget; remaining native cleanup will finish on a daemon thread.");
+        }
+        return completed;
+    }
+
     @Nullable
     private static Method findMethod(@NotNull Class<?> type, @NotNull String name, int parameterCount) {
         for (Method method : type.getMethods()) {
@@ -442,7 +482,7 @@ public class WatermediaReflectionBridge {
         private final Object player;
         @Nullable
         private final Object gfxEngine;
-        private volatile boolean released = false;
+        private final AtomicBoolean released = new AtomicBoolean();
 
         private ManagedModernPlayer(@NotNull Object player, @Nullable Object gfxEngine) {
             this.player = player;
@@ -450,9 +490,20 @@ public class WatermediaReflectionBridge {
         }
 
         private void release() {
-            if (this.released) return;
-            this.released = true;
+            if (!this.released.compareAndSet(false, true)) return;
 
+            this.releasePlayer();
+            releaseModernResource(this.gfxEngine);
+        }
+
+        private void releaseForShutdown() {
+            if (!this.released.compareAndSet(false, true)) return;
+
+            Thread releaseThread = FancyMenuThreads.startDaemonThread(this::releasePlayer, "Watermedia-NativePlayerRelease");
+            if (awaitShutdownPlayerRelease(releaseThread)) releaseModernResource(this.gfxEngine);
+        }
+
+        private void releasePlayer() {
             try {
                 Method release = findMethod(this.player.getClass(), "release", 0);
                 if (release != null) {
@@ -461,8 +512,6 @@ public class WatermediaReflectionBridge {
             } catch (Throwable ex) {
                 LOGGER.error("[FANCYMENU] Failed to release Watermedia player", ex);
             }
-
-            releaseModernResource(this.gfxEngine);
         }
     }
 

@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.mcef;
 
 import com.cinemamod.mcef.MCEF;
 import de.keksuccino.fancymenu.util.Pair;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.melody.resources.audio.MinecraftSoundSettingsObserver;
 import net.minecraft.sounds.SoundSource;
@@ -19,15 +20,16 @@ public class BrowserHandler {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final HashMap<String, Pair<WrappedMCEFBrowser, Long>> BROWSERS = new HashMap<>();
 
-    private static boolean is_initializing = false;
-    public static boolean initialized = false;
+    @Nullable private static volatile Long volumeListenerId = null;
+    private static volatile boolean shuttingDown = false;
+    private static volatile boolean is_initializing = false;
+    public static volatile boolean initialized = false;
 
     public static void init() {
-
-        if (initialized) return;
-
-        if (is_initializing) return;
-        is_initializing = true;
+        synchronized (BrowserHandler.class) {
+            if (shuttingDown || initialized || is_initializing) return;
+            is_initializing = true;
+        }
 
         LOGGER.info("[FANCYMENU] Starting initialization of BrowserHandler..");
 
@@ -35,24 +37,34 @@ public class BrowserHandler {
             LOGGER.warn("[FANCYMENU] MCEF not initialized yet! Will wait for MCEF to be ready before initializing BrowserHandler!");
         }
 
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             try {
-                while (!MCEFUtil.MCEF_initialized) {
-                    if (MCEF.isInitialized()) {
+                while (!shuttingDown) {
+                    if (MCEFUtil.MCEF_initialized || MCEF.isInitialized()) {
                         MCEFUtil.MCEF_initialized = true;
                         MainThreadTaskExecutor.executeInMainThread(() -> {
+                            if (shuttingDown) return;
                             try {
 
                                 // Initialize the ActionBridge for JavaScript-to-Java communication
                                 ActionBridge.initialize();
 
-                                MinecraftSoundSettingsObserver.registerVolumeListener(BrowserHandler::onVolumeUpdated);
-
-                                initialized = true;
+                                long registeredVolumeListenerId = MinecraftSoundSettingsObserver.registerVolumeListener(BrowserHandler::onVolumeUpdated);
+                                synchronized (BrowserHandler.class) {
+                                    if (shuttingDown) {
+                                        MinecraftSoundSettingsObserver.unregisterVolumeListener(registeredVolumeListenerId);
+                                        is_initializing = false;
+                                        return;
+                                    }
+                                    volumeListenerId = registeredVolumeListenerId;
+                                    initialized = true;
+                                    is_initializing = false;
+                                }
 
                                 LOGGER.info("[FANCYMENU] BrowserHandler successfully initialized!");
 
                             } catch (Exception ex) {
+                                is_initializing = false;
                                 LOGGER.error("[FANCYMENU] Failed to initialize BrowserHandler!", ex);
                             }
                         }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
@@ -60,75 +72,126 @@ public class BrowserHandler {
                     }
                     Thread.sleep(100);
                 }
+            } catch (InterruptedException ignored) {
+                is_initializing = false;
+                Thread.currentThread().interrupt();
             } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to initialize BrowserHandler!", ex);
+                is_initializing = false;
+                if (!shuttingDown) LOGGER.error("[FANCYMENU] Failed to initialize BrowserHandler!", ex);
             }
-        }).start();
+        }, "BrowserHandler-Initialization");
 
     }
 
     public static void notifyHandler(@NotNull String identifier, @NotNull WrappedMCEFBrowser browser) {
         long now = System.currentTimeMillis();
-        Pair<WrappedMCEFBrowser, Long> cached = BROWSERS.get(identifier);
-        if ((cached == null) || (cached.getFirst() != browser)) {
-            if ((cached != null) && (cached.getFirst() != null) && (cached.getFirst() != browser) && !cached.getFirst().isClosed()) {
-                try {
-                    cached.getFirst().close();
-                } catch (Exception ex) {
-                    LOGGER.error("[FANCYMENU] Failed to close stale MCEFBrowser!", ex);
+        WrappedMCEFBrowser staleBrowser = null;
+        synchronized (BROWSERS) {
+            if (shuttingDown) {
+                staleBrowser = browser;
+            } else {
+                Pair<WrappedMCEFBrowser, Long> cached = BROWSERS.get(identifier);
+                if ((cached == null) || (cached.getFirst() != browser)) {
+                    if ((cached != null) && (cached.getFirst() != null) && (cached.getFirst() != browser) && !cached.getFirst().isClosed()) {
+                        staleBrowser = cached.getFirst();
+                    }
+                    BROWSERS.put(identifier, Pair.of(browser, now));
+                } else {
+                    cached.setSecond(now);
                 }
             }
-            BROWSERS.put(identifier, Pair.of(browser, now));
-            return;
         }
-        cached.setSecond(now);
+        closeBrowserQuietly(staleBrowser, "stale");
     }
 
     @Nullable
     public static WrappedMCEFBrowser get(@NotNull String identifier) {
-        Pair<WrappedMCEFBrowser, Long> browser = BROWSERS.get(identifier);
-        if (browser != null) return browser.getFirst();
-        return null;
+        if (shuttingDown) return null;
+        synchronized (BROWSERS) {
+            Pair<WrappedMCEFBrowser, Long> browser = BROWSERS.get(identifier);
+            return (browser != null) ? browser.getFirst() : null;
+        }
     }
 
     public static void remove(@NotNull String identifier, boolean close) {
-        try {
-            if (close) {
-                Pair<WrappedMCEFBrowser, Long> browser = BROWSERS.get(identifier);
-                if (browser != null) browser.getFirst().close();
-            }
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to force-close MCEFBrowser!", ex);
+        Pair<WrappedMCEFBrowser, Long> browser;
+        synchronized (BROWSERS) {
+            browser = BROWSERS.remove(identifier);
         }
-        BROWSERS.remove(identifier);
+        if (close && (browser != null)) closeBrowserQuietly(browser.getFirst(), "removed");
     }
 
     public static void tick() {
+        if (shuttingDown) return;
         long now = System.currentTimeMillis();
-        List<String> garbageCollect = new ArrayList<>();
-        for (Map.Entry<String, Pair<WrappedMCEFBrowser, Long>> m : BROWSERS.entrySet()) {
-            //Close browser after 5 seconds of inactivity
-            if ((m.getValue().getSecond() + 5000) < now) {
-                garbageCollect.add(m.getKey());
+        List<WrappedMCEFBrowser> garbageCollect = new ArrayList<>();
+        synchronized (BROWSERS) {
+            List<String> staleIdentifiers = new ArrayList<>();
+            for (Map.Entry<String, Pair<WrappedMCEFBrowser, Long>> entry : BROWSERS.entrySet()) {
+                //Close browser after 5 seconds of inactivity
+                if ((entry.getValue().getSecond() + 5000) < now) {
+                    staleIdentifiers.add(entry.getKey());
+                    garbageCollect.add(entry.getValue().getFirst());
+                }
             }
+            staleIdentifiers.forEach(BROWSERS::remove);
         }
-        garbageCollect.forEach(s -> {
-            try {
-                Pair<WrappedMCEFBrowser, Long> browser = BROWSERS.get(s);
-                if (browser != null) browser.getFirst().close();
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to force-close MCEFBrowser!", ex);
-            }
-            BROWSERS.remove(s);
-        });
+        garbageCollect.forEach(browser -> closeBrowserQuietly(browser, "inactive"));
     }
 
     public static void mouseMoved(double mouseX, double mouseY) {
-        BROWSERS.forEach((id, browser) -> browser.getFirst().mouseMoved(mouseX, mouseY));
+        if (shuttingDown) return;
+        getBrowserSnapshot().forEach(browser -> browser.mouseMoved(mouseX, mouseY));
     }
 
     public static void onVolumeUpdated(SoundSource soundSource, float newVolume) {
-        BROWSERS.forEach((s, wrappedMCEFBrowserLongPair) -> wrappedMCEFBrowserLongPair.getFirst().onVolumeUpdated(soundSource, newVolume));
+        if (shuttingDown) return;
+        getBrowserSnapshot().forEach(browser -> browser.onVolumeUpdated(soundSource, newVolume));
+    }
+
+    public static void closeAll() {
+        Long registeredVolumeListenerId;
+        synchronized (BrowserHandler.class) {
+            shuttingDown = true;
+            initialized = false;
+            is_initializing = false;
+            registeredVolumeListenerId = volumeListenerId;
+            volumeListenerId = null;
+        }
+
+        List<WrappedMCEFBrowser> browsers;
+        synchronized (BROWSERS) {
+            browsers = new ArrayList<>(BROWSERS.size());
+            BROWSERS.values().forEach(browser -> browsers.add(browser.getFirst()));
+            BROWSERS.clear();
+        }
+        browsers.forEach(browser -> closeBrowserQuietly(browser, "client shutdown"));
+
+        if (registeredVolumeListenerId != null) {
+            try {
+                MinecraftSoundSettingsObserver.unregisterVolumeListener(registeredVolumeListenerId);
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to unregister the MCEF browser volume listener during client shutdown!", ex);
+            }
+        }
+    }
+
+    @NotNull
+    private static List<WrappedMCEFBrowser> getBrowserSnapshot() {
+        synchronized (BROWSERS) {
+            List<WrappedMCEFBrowser> browsers = new ArrayList<>(BROWSERS.size());
+            BROWSERS.values().forEach(browser -> browsers.add(browser.getFirst()));
+            return browsers;
+        }
+    }
+
+    private static void closeBrowserQuietly(@Nullable WrappedMCEFBrowser browser, @NotNull String reason) {
+        if ((browser == null) || browser.isClosed()) return;
+        try {
+            browser.close();
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to close {} MCEFBrowser!", reason, ex);
+        }
     }
 
 }

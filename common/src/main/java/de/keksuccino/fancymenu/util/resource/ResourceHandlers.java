@@ -18,11 +18,13 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @SuppressWarnings("unused")
 public class ResourceHandlers {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean();
 
     @NotNull
     protected static ResourceHandler<ITexture, ImageFileType> imageHandler = ImageResourceHandler.INSTANCE;
@@ -85,8 +87,21 @@ public class ResourceHandlers {
     }
 
     public static void reloadAll() {
+        if (SHUTDOWN_STARTED.get()) return;
         LOGGER.info("[FANCYMENU] Reloading resources..");
         getHandlers().forEach(ResourceHandler::releaseAll);
+    }
+
+    public static void shutdownAll() {
+        if (!SHUTDOWN_STARTED.compareAndSet(false, true)) return;
+        LOGGER.info("[FANCYMENU] Releasing all resources during client shutdown..");
+        for (ResourceHandler<?, ?> handler : getHandlers()) {
+            try {
+                handler.shutdown();
+            } catch (Throwable throwable) {
+                LOGGER.error("[FANCYMENU] Failed to release resources from handler {} during client shutdown!", handler.getClass().getName(), throwable);
+            }
+        }
     }
 
 }

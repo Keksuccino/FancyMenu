@@ -3,6 +3,8 @@ package de.keksuccino.fancymenu.util.rendering.video.mcef;
 import com.cinemamod.mcef.MCEFClient;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
+import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,12 +18,13 @@ import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
@@ -32,19 +35,22 @@ public class MCEFVideoManager {
 
     protected static final Logger LOGGER = LogManager.getLogger();
     protected static final MCEFVideoManager INSTANCE = new MCEFVideoManager();
-    public static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
+    public static final ScheduledExecutorService EXECUTOR = FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-MCEFVideoManager");
     
     // Map to track all active video players
-    protected final Map<String, MCEFVideoPlayer> players = new HashMap<>();
+    protected final Map<String, MCEFVideoPlayer> players = new ConcurrentHashMap<>();
+    private final Object playerLifecycleLock = new Object();
     // Flag to track if web resources have been registered
     protected boolean webResourcesRegistered = false;
     
     // For handling JS results
     private static volatile boolean jsResultHandlerRegistered = false;
     private static final Map<String, CompletableFuture<String>> pendingJsResults = new ConcurrentHashMap<>();
+    private static final Object JS_RESULT_LIFECYCLE_LOCK = new Object();
 
-    private static boolean is_initializing = false;
-    public static boolean initialized = false;
+    private static volatile boolean is_initializing = false;
+    public static volatile boolean initialized = false;
+    private static volatile boolean shuttingDown = false;
     
     /**
      * Gets the singleton instance of the VideoManager.
@@ -56,22 +62,14 @@ public class MCEFVideoManager {
     }
     
     /**
-     * Public getter for MCEFVideoPlayer to access the pending results map
-     */
-    public static Map<String, CompletableFuture<String>> getPendingJsResults() {
-        return pendingJsResults;
-    }
-    
-    /**
      * Initializes the VideoManager by extracting web resources to the temp directory.
      * This should be called during mod initialization.
      */
     public void initialize() {
-
-        if (initialized) return;
-
-        if (is_initializing) return;
-        is_initializing = true;
+        synchronized (MCEFVideoManager.class) {
+            if (shuttingDown || initialized || is_initializing) return;
+            is_initializing = true;
+        }
 
         LOGGER.info("[FANCYMENU] Starting initialization of MCEFVideoManager..");
 
@@ -79,11 +77,12 @@ public class MCEFVideoManager {
             LOGGER.warn("[FANCYMENU] MCEF not initialized yet! Will wait for MCEF to be ready before initializing MCEFVideoManager!");
         }
 
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             try {
-                while (true) {
+                while (!shuttingDown) {
                     if (MCEFUtil.MCEF_initialized) {
                         MainThreadTaskExecutor.executeInMainThread(() -> {
+                            if (shuttingDown) return;
                             try {
 
                                 if (isVideoPlaybackAvailable()) {
@@ -105,11 +104,16 @@ public class MCEFVideoManager {
                                     }
                                 }
 
-                                initialized = true;
+                                synchronized (MCEFVideoManager.class) {
+                                    if (shuttingDown) return;
+                                    initialized = true;
+                                    is_initializing = false;
+                                }
 
                                 LOGGER.info("[FANCYMENU] MCEFVideoManager successfully initialized!");
 
                             } catch (Exception ex) {
+                                is_initializing = false;
                                 LOGGER.error("[FANCYMENU] Failed to initialize MCEFVideoManager!", ex);
                             }
                         }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
@@ -118,9 +122,10 @@ public class MCEFVideoManager {
                     Thread.sleep(100);
                 }
             } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to initialize MCEFVideoManager!", ex);
+                is_initializing = false;
+                if (!shuttingDown) LOGGER.error("[FANCYMENU] Failed to initialize MCEFVideoManager!", ex);
             }
-        }).start();
+        }, "MCEFVideoManager-Initialization");
 
     }
     
@@ -128,9 +133,7 @@ public class MCEFVideoManager {
      * Registers the JavaScript result handler with MCEF
      */
     private static synchronized void registerJsResultHandlerInternal() {
-        if (jsResultHandlerRegistered) {
-            return;
-        }
+        if (shuttingDown || jsResultHandlerRegistered) return;
 
         try {
             MCEFClient client = MCEF.getClient(); // Get MCEF's CefClient instance
@@ -144,14 +147,14 @@ public class MCEFVideoManager {
                             if (parts.length == 3) {
                                 String requestId = parts[1];
                                 String jsonData = parts[2];
-                                CompletableFuture<String> future = pendingJsResults.remove(requestId);
+                                CompletableFuture<String> future = removePendingJsResult(requestId);
                                 if (future != null) {
                                     if ("undefined".equals(jsonData)) { // JSON.stringify(undefined) results in "undefined"
                                         future.complete(null); // Treat JS undefined as Java null
                                     } else {
                                         future.complete(jsonData);
                                     }
-                                } else {
+                                } else if (!shuttingDown) {
                                     LOGGER.warn("[FANCYMENU] Received JS result for unknown or timed-out request ID: {}", requestId);
                                 }
                             }
@@ -231,6 +234,23 @@ public class MCEFVideoManager {
     public boolean isVideoPlaybackAvailable() {
         return MCEFUtil.isMCEFLoaded();
     }
+
+    @Nullable
+    static CompletableFuture<String> registerPendingJsResult(@NotNull String requestId) {
+        synchronized (JS_RESULT_LIFECYCLE_LOCK) {
+            if (shuttingDown) return null;
+            CompletableFuture<String> result = new CompletableFuture<>();
+            pendingJsResults.put(requestId, result);
+            return result;
+        }
+    }
+
+    @Nullable
+    static CompletableFuture<String> removePendingJsResult(@NotNull String requestId) {
+        synchronized (JS_RESULT_LIFECYCLE_LOCK) {
+            return pendingJsResults.remove(requestId);
+        }
+    }
     
     /**
      * Creates a new video player with default settings.
@@ -255,6 +275,7 @@ public class MCEFVideoManager {
      */
     @Nullable
     public String createPlayer(int x, int y, int width, int height) {
+        if (shuttingDown) return null;
         if (!isVideoPlaybackAvailable()) {
             LOGGER.warn("[FANCYMENU] Cannot create video player: MCEF is not loaded");
             return null;
@@ -281,7 +302,13 @@ public class MCEFVideoManager {
         try {
             String playerId = UUID.randomUUID().toString();
             MCEFVideoPlayer player = new MCEFVideoPlayer(x, y, width, height);
-            players.put(playerId, player);
+            synchronized (this.playerLifecycleLock) {
+                if (shuttingDown) {
+                    player.dispose();
+                    return null;
+                }
+                players.put(playerId, player);
+            }
             return playerId;
         } catch (Exception e) {
             LOGGER.error("[FANCYMENU] Failed to create video player", e);
@@ -297,6 +324,7 @@ public class MCEFVideoManager {
      */
     @Nullable
     public MCEFVideoPlayer getPlayer(@NotNull String playerId) {
+        if (shuttingDown) return null;
         return players.get(playerId);
     }
     
@@ -306,7 +334,10 @@ public class MCEFVideoManager {
      * @param playerId The player's unique identifier
      */
     public void removePlayer(@NotNull String playerId) {
-        MCEFVideoPlayer player = players.remove(playerId);
+        MCEFVideoPlayer player;
+        synchronized (this.playerLifecycleLock) {
+            player = players.remove(playerId);
+        }
         if (player != null) {
             player.dispose();
         }
@@ -317,14 +348,35 @@ public class MCEFVideoManager {
      * Call this when shutting down or reloading the mod.
      */
     public void disposeAll() {
-        for (MCEFVideoPlayer player : players.values()) {
+        shuttingDown = true;
+        initialized = false;
+        is_initializing = false;
+        List<MCEFVideoPlayer> playersToDispose;
+        synchronized (this.playerLifecycleLock) {
+            playersToDispose = new ArrayList<>(this.players.values());
+            this.players.clear();
+        }
+        for (MCEFVideoPlayer player : playersToDispose) {
             try {
                 player.dispose();
-            } catch (Exception e) {
-                LOGGER.error("[FANCYMENU] Error disposing video player", e);
+            } catch (Throwable throwable) {
+                LOGGER.error("[FANCYMENU] Error disposing MCEF video player", throwable);
             }
         }
-        players.clear();
+
+        List<CompletableFuture<String>> jsResultsToCancel;
+        synchronized (JS_RESULT_LIFECYCLE_LOCK) {
+            jsResultsToCancel = new ArrayList<>(pendingJsResults.values());
+            pendingJsResults.clear();
+        }
+        CancellationException cancellation = new CancellationException("FancyMenu MCEF video manager was disposed");
+        for (CompletableFuture<String> pendingJsResult : jsResultsToCancel) {
+            try {
+                pendingJsResult.completeExceptionally(cancellation);
+            } catch (Throwable throwable) {
+                LOGGER.error("[FANCYMENU] Error cancelling a pending MCEF JavaScript result", throwable);
+            }
+        }
     }
 
 }

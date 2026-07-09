@@ -1,10 +1,10 @@
 package de.keksuccino.fancymenu.util;
 
+import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 public class TaskExecutor {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ScheduledExecutorService EXECUTOR = Executors.newScheduledThreadPool(20);
+    private static final ScheduledExecutorService EXECUTOR = FancyMenuExecutors.newScheduledThreadPool(20, "FancyMenu-TaskExecutor");
 
     public static void scheduleAtFixedRate(@NotNull Task task, long initialDelay, long period, @NotNull TimeUnit unit, boolean executeInMainThread) {
         ScheduledFuture<?>[] future = new ScheduledFuture[1];

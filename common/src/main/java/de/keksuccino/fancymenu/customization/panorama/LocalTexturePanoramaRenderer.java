@@ -24,6 +24,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
@@ -191,7 +192,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 		this.lastRenderCall = System.currentTimeMillis();
 		this.tickerThreadRunning = true;
 
-		new Thread(() -> {
+		FancyMenuThreads.startDaemonThread(() -> {
 			while ((this.lastRenderCall + 5000L) > System.currentTimeMillis()) {
 				try {
 					this.currentRotation += 0.03F;
@@ -208,7 +209,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 				}
 			}
 			this.tickerThreadRunning = false;
-		}, "FancyMenu Panorama Ticker Thread").start();
+		}, "Panorama-Ticker");
 
 	}
 

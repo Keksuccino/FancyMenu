@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.events.ModReloadEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.web.WebUtils;
@@ -99,7 +100,7 @@ public class WebTextPlaceholder extends Placeholder {
         try {
             if (!currentlyUpdatingPlaceholders.contains(placeholder)) {
                 currentlyUpdatingPlaceholders.add(placeholder);
-                new Thread(() -> {
+                FancyMenuThreads.startDaemonThread(() -> {
                     try {
                         if (WebUtils.isValidUrl(link)) {
                             cachedPlaceholders.put(placeholder, WebUtils.getPlainTextContentOfPage(new URL(link)));
@@ -114,7 +115,7 @@ public class WebTextPlaceholder extends Placeholder {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                }).start();
+                }, "WebTextPlaceholder-WebLoader");
             }
         } catch (Exception e) {
             e.printStackTrace();

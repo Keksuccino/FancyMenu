@@ -17,6 +17,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.Scro
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -336,7 +337,7 @@ public class TextElement extends AbstractElement {
             return;
         }
 
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
 
             List<String> linesRaw = new ArrayList<>();
 
@@ -379,7 +380,7 @@ public class TextElement extends AbstractElement {
             }
             this.text = text.toString();
 
-        }).start();
+        }, "TextElement-ContentLoader");
 
     }
 

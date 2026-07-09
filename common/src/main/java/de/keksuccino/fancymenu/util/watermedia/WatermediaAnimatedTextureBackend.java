@@ -2,8 +2,10 @@ package de.keksuccino.fancymenu.util.watermedia;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.file.FileUtils;
+import de.keksuccino.fancymenu.util.lifecycle.ClientShutdownHandler;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.Identifier;
@@ -107,7 +109,7 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
     }
 
     protected void watchMrlStateAsync(@NotNull String sourceName) {
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             long waitStart = System.currentTimeMillis();
             while (!this.closed) {
                 Object cachedMrl = this.mrl;
@@ -129,7 +131,7 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
                     Thread.sleep(25);
                 } catch (Exception ignored) {}
             }
-        }).start();
+        }, "WatermediaAnimatedTexture-MRLWatcher");
     }
 
     protected void queuePlayerInitializationTask() {
@@ -209,9 +211,8 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
 
     protected boolean ensureFrameTextureRegistered(@NotNull WatermediaFrameTexture frameTexture) {
         var textureManager = Minecraft.getInstance().getTextureManager();
-        if (textureManager.getTexture(this.frameLocation) != frameTexture) {
-            textureManager.register(this.frameLocation, frameTexture);
-        }
+        // TextureManager#getTexture treats an unknown dynamic ID as a file-backed texture and logs a false missing-resource warning. Re-registering the same instance is explicitly identity-safe.
+        textureManager.register(this.frameLocation, frameTexture);
         return true;
     }
 
@@ -394,7 +395,8 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
         if (cachedPlayer != null) {
             WatermediaReflectionBridge.playerPause(cachedPlayer, true);
             WatermediaReflectionBridge.playerStop(cachedPlayer);
-            WatermediaReflectionBridge.playerRelease(cachedPlayer);
+            if (ClientShutdownHandler.isShuttingDown()) WatermediaReflectionBridge.playerReleaseForShutdown(cachedPlayer);
+            else WatermediaReflectionBridge.playerRelease(cachedPlayer);
         }
         this.clearFrameTextureId();
         try {

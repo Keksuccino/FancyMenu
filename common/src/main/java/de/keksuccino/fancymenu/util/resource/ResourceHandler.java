@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Constructs usable instances of resources.
@@ -22,8 +23,10 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    protected Map<String, R> resources = new HashMap<>();
-    protected List<String> failedSources = new ArrayList<>();
+    protected final Map<String, R> resources = new ConcurrentHashMap<>();
+    protected final Set<String> failedSources = ConcurrentHashMap.newKeySet();
+    private final Object lifecycleLock = new Object();
+    private volatile boolean shuttingDown = false;
 
     /**
      * Get a {@link Resource} from a {@link ResourceSource}.<br>
@@ -54,12 +57,13 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
     @Nullable
     public R get(@NotNull ResourceSource resourceSource) {
         Objects.requireNonNull(resourceSource);
+        if (this.shuttingDown) return null;
         try {
             //Check if resource is registered and return registered resource if true
             R registered = this.getFromMapAndClearClosed(resourceSource.getSourceWithPrefix());
             if (registered != null) return registered;
             //Check if handler failed to register resource in the past
-            if (this.getFailedSourcesList().contains(resourceSource.getSourceWithPrefix())) return null;
+            if (this.getFailedSourcesSet().contains(resourceSource.getSourceWithPrefix())) return null;
             //Search file type of resource
             F fileType = null;
             for (F type : this.getAllowedFileTypes()) {
@@ -128,6 +132,7 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
      */
     @Nullable
     public R getIfRegistered(@NotNull String key) {
+        if (this.shuttingDown) return null;
         return this.getResourceMap().get(Objects.requireNonNull(key));
     }
 
@@ -136,29 +141,38 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
      * Registers the resource if no resource with the given key is registered yet.
      */
     public void registerIfKeyAbsent(@NotNull String key, @NotNull R resource) {
-        if (!this.hasResource(key)) {
-            LOGGER.debug("[FANCYMENU] Registering resource with key: " + key + " (RESOURCE HANDLER: " + this.getClass() + ")");
-            this.getResourceMap().put(key, Objects.requireNonNull(resource));
+        Objects.requireNonNull(key);
+        Objects.requireNonNull(resource);
+        boolean rejectResource;
+        synchronized (this.lifecycleLock) {
+            rejectResource = this.shuttingDown;
+            if (!rejectResource && (this.getResourceMap().putIfAbsent(key, resource) == null)) {
+                LOGGER.debug("[FANCYMENU] Registering resource with key: " + key + " (RESOURCE HANDLER: " + this.getClass() + ")");
+            }
         }
+        if (rejectResource) CloseableUtils.closeQuietly(resource);
     }
 
     public boolean hasResource(@NotNull String key) {
+        if (this.shuttingDown) return false;
         return this.getResourceMap().containsKey(Objects.requireNonNull(key));
     }
 
     @Nullable
     protected R getFromMapAndClearClosed(@Nullable String resourceSource) {
         if (resourceSource == null) return null;
-        if (this.getResourceMap().containsKey(resourceSource)) {
-            R resource = this.getResourceMap().get(resourceSource);
-            if (resource.isClosed()) {
-                //In case the resource isn't fully closed yet because of asynchronous shenanigans
-                CloseableUtils.closeQuietly(resource);
-                //Remove closed resource from map
-                this.getResourceMap().remove(resourceSource);
-            } else {
-                return resource;
+        R resource = this.getResourceMap().get(resourceSource);
+        if (resource == null) return null;
+        if (resource.isClosed()) {
+            //In case the resource isn't fully closed yet because of asynchronous shenanigans
+            boolean detached;
+            synchronized (this.lifecycleLock) {
+                //Only remove the resource we inspected, so a concurrent replacement remains registered.
+                detached = this.getResourceMap().remove(resourceSource, resource);
             }
+            if (detached) CloseableUtils.closeQuietly(resource);
+        } else if (!this.shuttingDown) {
+            return resource;
         }
         return null;
     }
@@ -167,20 +181,34 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
     protected R putAndReturn(@Nullable R resource, @NotNull ResourceSource resourceSource) {
         Objects.requireNonNull(resourceSource);
         if (resource != null) {
-            LOGGER.debug("[FANCYMENU] Registering resource with source: " + resourceSource + " (RESOURCE HANDLER: " + this.getClass() + ")");
-            this.getResourceMap().put(resourceSource.getSourceWithPrefix(), resource);
+            R registeredResource = resource;
+            boolean rejectResource;
+            synchronized (this.lifecycleLock) {
+                rejectResource = this.shuttingDown;
+                if (!rejectResource) {
+                    R existingResource = this.getResourceMap().putIfAbsent(resourceSource.getSourceWithPrefix(), resource);
+                    if (existingResource != null) registeredResource = existingResource;
+                    else LOGGER.debug("[FANCYMENU] Registering resource with source: " + resourceSource + " (RESOURCE HANDLER: " + this.getClass() + ")");
+                }
+            }
+            if (rejectResource) {
+                CloseableUtils.closeQuietly(resource);
+                return null;
+            }
+            if (registeredResource != resource) CloseableUtils.closeQuietly(resource);
+            return registeredResource;
         } else {
-            if (!this.getFailedSourcesList().contains(resourceSource.getSourceWithPrefix())) {
-                this.getFailedSourcesList().add(resourceSource.getSourceWithPrefix());
+            if (this.addToFailedSources(resourceSource)) {
                 LOGGER.error("[FANCYMENU] Failed to register resource! Resource was NULL: " + resourceSource + " (RESOURCE HANDLER: " + this.getClass() + ")");
             }
         }
-        return resource;
+        return null;
     }
 
-    protected void addToFailedSources(@NotNull ResourceSource resourceSource) {
-        if (!this.getFailedSourcesList().contains(resourceSource.getSourceWithPrefix())) {
-            this.getFailedSourcesList().add(resourceSource.getSourceWithPrefix());
+    protected boolean addToFailedSources(@NotNull ResourceSource resourceSource) {
+        synchronized (this.lifecycleLock) {
+            if (this.shuttingDown) return false;
+            return this.getFailedSourcesSet().add(resourceSource.getSourceWithPrefix());
         }
     }
 
@@ -190,7 +218,7 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
     }
 
     @NotNull
-    protected List<String> getFailedSourcesList() {
+    protected Set<String> getFailedSourcesSet() {
         return this.failedSources;
     }
 
@@ -215,18 +243,18 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
         Objects.requireNonNull(key);
         if (isKeyResourceSource) {
             String finalKey = key;
-            this.getFailedSourcesList().removeIf(s -> s.equals(finalKey));
+            this.getFailedSourcesSet().remove(finalKey);
             ResourceSourceType sourceType = ResourceSourceType.getSourceTypeOf(key);
             if (sourceType == ResourceSourceType.LOCAL) {
                 key = GameDirectoryUtils.getAbsoluteGameDirectoryPath(ResourceSourceType.getWithoutSourcePrefix(key));
                 key = sourceType.getSourcePrefix() + key;
             }
         }
-        R resource = this.getResourceMap().get(key);
-        if (resource != null) {
-            CloseableUtils.closeQuietly(resource);
+        R resource;
+        synchronized (this.lifecycleLock) {
+            resource = this.getResourceMap().remove(key);
         }
-        this.getResourceMap().remove(key);
+        if (resource != null) CloseableUtils.closeQuietly(resource);
     }
 
     /**
@@ -235,17 +263,18 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
      */
     public void release(@NotNull R resource) {
         Objects.requireNonNull(resource);
-        String key = null;
-        for (Map.Entry<String, R> m : this.getResourceMap().entrySet()) {
-            if (m.getValue() == resource) {
-                key = m.getKey();
-                break;
+        boolean closeResource = false;
+        synchronized (this.lifecycleLock) {
+            for (Map.Entry<String, R> entry : this.getResourceMap().entrySet()) {
+                if ((entry.getValue() == resource) && this.getResourceMap().remove(entry.getKey(), resource)) {
+                    closeResource = true;
+                    break;
+                }
             }
+            // Preserve the historic behavior for an unregistered resource during normal operation. Once shutdown owns the map snapshot, it owns closure too.
+            if (!closeResource && !this.shuttingDown) closeResource = true;
         }
-        CloseableUtils.closeQuietly(resource);
-        if (key != null) {
-            this.getResourceMap().remove(key);
-        }
+        if (closeResource) CloseableUtils.closeQuietly(resource);
     }
 
     /**
@@ -253,9 +282,29 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
      * This will unregister all resources, remove them from any possible caches and close them.
      */
     public void releaseAll() {
-        this.getResourceMap().values().forEach(CloseableUtils::closeQuietly);
-        this.getResourceMap().clear();
-        this.getFailedSourcesList().clear();
+        this.releaseRegisteredResources(false);
+    }
+
+    /**
+     * Permanently closes this handler for client shutdown. The lifecycle lock is intentionally held only while detaching
+     * registrations; individual resources can perform slow native cleanup without blocking a late registration from being rejected.
+     */
+    public void shutdown() {
+        this.releaseRegisteredResources(true);
+    }
+
+    private void releaseRegisteredResources(boolean shutdown) {
+        List<R> resourcesToRelease;
+        synchronized (this.lifecycleLock) {
+            if (shutdown) {
+                if (this.shuttingDown) return;
+                this.shuttingDown = true;
+            }
+            resourcesToRelease = new ArrayList<>(this.getResourceMap().values());
+            this.getResourceMap().clear();
+            this.getFailedSourcesSet().clear();
+        }
+        resourcesToRelease.forEach(CloseableUtils::closeQuietly);
     }
 
 }

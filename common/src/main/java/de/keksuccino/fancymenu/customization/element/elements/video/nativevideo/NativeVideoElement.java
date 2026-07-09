@@ -18,6 +18,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import de.keksuccino.fancymenu.util.resource.resources.video.NativeVideoReferenceTracker;
+import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaUtil;
 import net.minecraft.client.Minecraft;
@@ -41,7 +42,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.WeakHashMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -50,7 +50,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class NativeVideoElement extends AbstractElement implements IVideoElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
+    private static final ScheduledExecutorService EXECUTOR = FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-NativeVideoElement");
     private static final long DESTROY_RECOVERY_DELAY_MS_FANCYMENU = 1000L;
     private static final Object ELEMENT_INSTANCE_LOCK_FANCYMENU = new Object();
     private static final Object DESTROY_RECOVERY_LOCK_FANCYMENU = new Object();

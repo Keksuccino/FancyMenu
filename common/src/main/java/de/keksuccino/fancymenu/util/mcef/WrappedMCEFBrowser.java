@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -21,7 +22,6 @@ import org.jetbrains.annotations.Nullable;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.UUID;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -30,7 +30,7 @@ import java.util.function.Consumer;
 public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, NavigatableWidget, FancyMenuUiComponent {
 
     protected static final Logger LOGGER = LogManager.getLogger();
-    protected static final ScheduledExecutorService EXECUTOR = Executors. newSingleThreadScheduledExecutor();
+    protected static final ScheduledExecutorService EXECUTOR = FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-WrappedMCEFBrowser");
 
     protected final MCEFBrowser browser;
     protected final Minecraft minecraft = Minecraft.getInstance();

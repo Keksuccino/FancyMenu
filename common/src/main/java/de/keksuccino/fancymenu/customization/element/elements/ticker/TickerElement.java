@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.customization.element.ExecutableElement;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.jetbrains.annotations.NotNull;
@@ -78,7 +79,7 @@ public class TickerElement extends AbstractElement implements ExecutableElement 
             if (!isEditor()) {
                 this.asyncThreadController = new TickerElementThreadController();
                 TickerElementBuilder.cachedThreadControllers.add(this.asyncThreadController);
-                new Thread(() -> {
+                FancyMenuThreads.startDaemonThread(() -> {
                     while ((this.asyncThreadController != null) && this.asyncThreadController.running && this.isAsync) {
                         this.tickerElementTick();
                         try {
@@ -88,7 +89,7 @@ public class TickerElement extends AbstractElement implements ExecutableElement 
                             e.printStackTrace();
                         }
                     }
-                }).start();
+                }, "TickerElement-AsyncTicker");
             }
         }
 

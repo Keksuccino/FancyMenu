@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.events.ModReloadEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.json.JsonUtils;
 import net.minecraft.client.resources.language.I18n;
@@ -214,7 +215,7 @@ public class JsonPlaceholder extends Placeholder {
                 // Record the timestamp when starting the update
                 CURRENTLY_UPDATING_PLACEHOLDERS.put(placeholder, System.currentTimeMillis());
 
-                new Thread(() -> {
+                FancyMenuThreads.startDaemonThread(() -> {
                     try {
                         if (WebUtils.isValidUrl(source)) {
                             String jsonString = getJsonStringFromURL(source);
@@ -236,7 +237,7 @@ public class JsonPlaceholder extends Placeholder {
                             LOGGER.error("[FANCYMENU] Error while removing placeholder from updating list!", ex);
                         }
                     }
-                }).start();
+                }, "JsonPlaceholder-WebLoader");
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Error while caching a web JSON in the JsonPlaceholder!", ex);

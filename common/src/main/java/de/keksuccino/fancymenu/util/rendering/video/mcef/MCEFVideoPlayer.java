@@ -4,8 +4,10 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.customization.listener.listeners.OnVideoPlaybackStatusChangedListener;
 import de.keksuccino.fancymenu.util.ObjectHolder;
+import de.keksuccino.fancymenu.util.lifecycle.ClientShutdownHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
+import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
@@ -19,7 +21,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -34,7 +35,7 @@ public class MCEFVideoPlayer {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final long JS_RESULT_TIMEOUT_MS = 1000; // Timeout for waiting for JS result (e.g., 1 second)
-    private static final ScheduledExecutorService PLAYBACK_LISTENER_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
+    private static final ScheduledExecutorService PLAYBACK_LISTENER_EXECUTOR = FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-MCEFVideoPlayer-PlaybackListener");
     private static final long PLAYBACK_LISTENER_TICK_MS = 250L;
     private static final double PLAYBACK_END_EPSILON_SECONDS = 0.12D;
     private static final double LOOP_RESTART_WINDOW_SECONDS = 0.40D;
@@ -783,9 +784,8 @@ public class MCEFVideoPlayer {
         }
 
         String requestId = UUID.randomUUID().toString();
-        CompletableFuture<String> resultFuture = new CompletableFuture<>();
-        // Get the static map from MCEFVideoManager
-        MCEFVideoManager.getPendingJsResults().put(requestId, resultFuture);
+        CompletableFuture<String> resultFuture = MCEFVideoManager.registerPendingJsResult(requestId);
+        if (resultFuture == null) return null;
 
         // This JavaScript will execute the provided 'jsCodeToEvaluate',
         // then take its result and send it back via a 'console.log' message
@@ -813,21 +813,19 @@ public class MCEFVideoPlayer {
         } catch (TimeoutException e) {
             LOGGER.warn("[FANCYMENU] Player [{}]: Timeout ({}ms) waiting for JavaScript result for request {}. Original log: Could not get JavaScript result after multiple attempts", 
                          instanceId, JS_RESULT_TIMEOUT_MS, requestId);
-            MCEFVideoManager.getPendingJsResults().remove(requestId); // Clean up
             return null;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             LOGGER.warn("[FANCYMENU] Player [{}]: executeJavaScriptWithResult interrupted for request {}", instanceId, requestId, e);
-            MCEFVideoManager.getPendingJsResults().remove(requestId); // Clean up
             return null;
         } catch (ExecutionException e) {
             LOGGER.error("[FANCYMENU] Player [{}]: JavaScript execution future completed exceptionally for request {}", instanceId, requestId, e.getCause());
-            MCEFVideoManager.getPendingJsResults().remove(requestId); // Clean up
             return null;
         } catch (Exception e) { // Catch any other unexpected errors
             LOGGER.error("[FANCYMENU] Player [{}]: Unexpected error in executeJavaScriptWithResult for request {}", instanceId, requestId, e);
-            MCEFVideoManager.getPendingJsResults().remove(requestId); // Clean up
             return null;
+        } finally {
+            MCEFVideoManager.removePendingJsResult(requestId);
         }
     }
     
@@ -836,7 +834,8 @@ public class MCEFVideoPlayer {
      * Call this when the player is no longer needed.
      */
     public void dispose() {
-        this.stop();
+        // The managed scheduler is already stopped during client teardown, and closing the browser below terminates playback directly.
+        if (!ClientShutdownHandler.isShuttingDown()) this.stop();
         this.stopPlaybackListenerTicker();
         this.resetVideoPlaybackListenerState();
         if (browser != null) {

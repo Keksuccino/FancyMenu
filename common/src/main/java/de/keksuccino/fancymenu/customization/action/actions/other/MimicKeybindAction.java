@@ -18,6 +18,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWin
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.KeyMapping;
@@ -146,7 +147,7 @@ public class MimicKeybindAction extends Action {
     }
 
     private void startHoldThread(@NotNull KeyMapping keyMapping, @NotNull InputConstants.Key key, int keyCode, int scanCode, boolean keyboard, long durationMs) {
-        Thread holdThread = new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             Minecraft minecraft = Minecraft.getInstance();
             long start = System.currentTimeMillis();
             while (minecraft.isRunning() && !Thread.currentThread().isInterrupted() && (System.currentTimeMillis() - start) < durationMs) {
@@ -167,8 +168,7 @@ public class MimicKeybindAction extends Action {
                     KeyMapping.set(key, false);
                 }
             });
-        }, "FancyMenu-MimicKeybindHold-" + keyMapping.getName());
-        holdThread.start();
+        }, "MimicKeybind-Hold-" + keyMapping.getName());
     }
 
     @Nullable
