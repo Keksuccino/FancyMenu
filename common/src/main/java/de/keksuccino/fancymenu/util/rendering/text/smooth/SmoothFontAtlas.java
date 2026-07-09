@@ -89,10 +89,6 @@ final class SmoothFontAtlas implements AutoCloseable {
         return logicalHeight;
     }
 
-    float getEffectiveSdfRange() {
-        return sdfRange;
-    }
-
     Identifier getTextureLocation() {
         ensureInitialized();
         return textureLocation;
