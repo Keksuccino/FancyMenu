@@ -2,10 +2,8 @@ package de.keksuccino.fancymenu.util.rendering;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.Std140Builder;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGameRenderer;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphicsExtractor;
@@ -14,19 +12,15 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPostPass;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.renderer.LevelTargetBundle;
 import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.PostPass;
-import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
 import net.minecraft.client.renderer.state.gui.GuiRenderState;
 import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.system.MemoryStack;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
@@ -405,26 +399,11 @@ public final class GuiBlurRenderer {
 
     }
 
-    public record GuiBlurRenderState(QueuedBlurArea queuedBlurArea, ScreenRectangle bounds) implements GuiElementRenderState {
+    public record GuiBlurRenderState(QueuedBlurArea queuedBlurArea, ScreenRectangle bounds) implements GuiRenderPhaseAction {
 
         @Override
-        public void buildVertices(VertexConsumer vertexConsumer) {
-        }
-
-        @Override
-        public RenderPipeline pipeline() {
-            return RenderPipelines.GUI;
-        }
-
-        @Override
-        public TextureSetup textureSetup() {
-            return TextureSetup.noTexture();
-        }
-
-        @Override
-        @Nullable
-        public ScreenRectangle scissorArea() {
-            return null;
+        public void executeRender_FancyMenu() {
+            executeQueuedBlurArea_FancyMenu(this.queuedBlurArea);
         }
 
     }
