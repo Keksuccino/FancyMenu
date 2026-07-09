@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.MouseUtil;
 import de.keksuccino.fancymenu.util.VanillaEvents;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.input.ClicksPerSecondTracker;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.rendering.glsl.GlslRuntimeEventTracker;
@@ -47,6 +48,7 @@ public class MixinMouseHandler {
     private void head_onButton_FancyMenu(long window, MouseButtonInfo buttonInfo, int action, CallbackInfo info) {
         if (window != WindowHandler.getWindowHandle()) return;
 
+        InputUtils.updateActiveModifiers(buttonInfo.modifiers());
         boolean pressed = (action == GLFW.GLFW_PRESS);
         int mappedButton = buttonInfo.button();
         int modifiers = buttonInfo.modifiers();

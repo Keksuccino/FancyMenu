@@ -20,6 +20,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -462,7 +463,7 @@ public class BuildRequirementWindowBody extends PiPWindowBody implements Initial
     }
 
     private boolean shouldRouteTypedCharacterToSearchBar(char codePoint) {
-        if (net.minecraft.client.Minecraft.getInstance().hasControlDown() || net.minecraft.client.Minecraft.getInstance().hasAltDown()) {
+        if (InputUtils.isGuiShortcutModifierDown() || net.minecraft.client.Minecraft.getInstance().hasAltDown()) {
             return false;
         }
         return !Character.isISOControl(codePoint);

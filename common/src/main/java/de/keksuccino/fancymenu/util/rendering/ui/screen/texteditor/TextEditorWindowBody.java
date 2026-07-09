@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -1559,8 +1560,8 @@ public class TextEditorWindowBody extends PiPWindowBody {
             if (this.goToLineField.keyPressed(keycode, scancode, modifiers)) return true;
         }
 
-        //CTRL + G | GO TO LINE
-        if (net.minecraft.client.Minecraft.getInstance().hasControlDown() && (keycode == GLFW.GLFW_KEY_G)) {
+        //GUI shortcut modifier + G | GO TO LINE
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keycode == GLFW.GLFW_KEY_G)) {
             this.isGoToLineOpen = !this.isGoToLineOpen;
             if (this.isGoToLineOpen) {
                 this.goToLineField.setValue("");
@@ -1587,18 +1588,18 @@ public class TextEditorWindowBody extends PiPWindowBody {
         String key = GLFW.glfwGetKeyName(keycode, scancode);
         if (key == null) key = "";
 
-        //CTRL + Z | STEP BACK
-        if (net.minecraft.client.Minecraft.getInstance().hasControlDown() && (key.equals("z"))) {
+        //GUI shortcut modifier + Z | STEP BACK
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (key.equals("z"))) {
             this.history.stepBack();
             return true;
         }
-        //CTRL + Y | STEP FORWARD
-        if (net.minecraft.client.Minecraft.getInstance().hasControlDown() && (key.equals("y"))) {
+        //GUI shortcut modifier + Y | STEP FORWARD
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (key.equals("y"))) {
             this.history.stepForward();
             return true;
         }
-        //CTRL + S | DONE
-        if (net.minecraft.client.Minecraft.getInstance().hasControlDown() && (keycode == GLFW.GLFW_KEY_S)) {
+        //GUI shortcut modifier + S | DONE
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keycode == GLFW.GLFW_KEY_S)) {
             this.triggerDoneAction();
             return true;
         }
@@ -1703,19 +1704,19 @@ public class TextEditorWindowBody extends PiPWindowBody {
             }
             return true;
         }
-        //CTRL + C
-        if (((keycode) == 67 && net.minecraft.client.Minecraft.getInstance().hasControlDown())) {
+        //GUI shortcut modifier + C
+        if (((keycode) == 67 && InputUtils.isGuiShortcutModifierDown(modifiers))) {
             Minecraft.getInstance().keyboardHandler.setClipboard(this.getHighlightedText());
             return true;
         }
-        //CTRL + V
-        if (((keycode) == 86 && net.minecraft.client.Minecraft.getInstance().hasControlDown())) {
+        //GUI shortcut modifier + V
+        if (((keycode) == 86 && InputUtils.isGuiShortcutModifierDown(modifiers))) {
             this.history.saveSnapshot();
             this.pasteText(Minecraft.getInstance().keyboardHandler.getClipboard());
             return true;
         }
-        //CTRL + A
-        if (((keycode) == 65 && net.minecraft.client.Minecraft.getInstance().hasControlDown())) {
+        //GUI shortcut modifier + A
+        if (((keycode) == 65 && InputUtils.isGuiShortcutModifierDown(modifiers))) {
             for (TextEditorLine t : new ArrayList<>(this.textFieldLines)) {
                 t.setHighlightPos(0);
                 t.setCursorPosition(t.getValue().length());
@@ -1725,8 +1726,8 @@ public class TextEditorWindowBody extends PiPWindowBody {
             this.endHighlightLineIndex = this.getLineCount()-1;
             return true;
         }
-        //CTRL + U
-        if (((keycode) == 88 && net.minecraft.client.Minecraft.getInstance().hasControlDown())) {
+        //GUI shortcut modifier + X
+        if (((keycode) == 88 && InputUtils.isGuiShortcutModifierDown(modifiers))) {
             this.history.saveSnapshot();
             Minecraft.getInstance().keyboardHandler.setClipboard(this.cutHighlightedText());
             this.resetHighlighting();
@@ -1742,8 +1743,8 @@ public class TextEditorWindowBody extends PiPWindowBody {
             return true;
         }
 
-        //CTRL + D | DUPLICATE LINE
-        if (net.minecraft.client.Minecraft.getInstance().hasControlDown() && (keycode == GLFW.GLFW_KEY_D)) {
+        //GUI shortcut modifier + D | DUPLICATE LINE
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keycode == GLFW.GLFW_KEY_D)) {
             if (this.isLineFocused()) {
                 this.history.saveSnapshot();
                 int index = this.getFocusedLineIndex();
@@ -1763,8 +1764,8 @@ public class TextEditorWindowBody extends PiPWindowBody {
 
 
 
-        //CTRL + HOME | GO TO START
-        if (net.minecraft.client.Minecraft.getInstance().hasControlDown() && (keycode == GLFW.GLFW_KEY_HOME)) {
+        //GUI shortcut modifier + HOME | GO TO START
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keycode == GLFW.GLFW_KEY_HOME)) {
             this.resetHighlighting();
             if (this.getLineCount() > 0) {
                 this.setFocusedLine(0);
@@ -1775,8 +1776,8 @@ public class TextEditorWindowBody extends PiPWindowBody {
             return true;
         }
 
-        //CTRL + END | GO TO END
-        if (net.minecraft.client.Minecraft.getInstance().hasControlDown() && (keycode == GLFW.GLFW_KEY_END)) {
+        //GUI shortcut modifier + END | GO TO END
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keycode == GLFW.GLFW_KEY_END)) {
             this.resetHighlighting();
             if (this.getLineCount() > 0) {
                 int lastIndex = this.getLineCount() - 1;

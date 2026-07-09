@@ -6,6 +6,7 @@ import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
@@ -1811,7 +1812,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 return true;
             }
         }
-        if (targetMenu.isCtrlF(keyCode)) {
+        if (targetMenu.isSearchShortcut(keyCode, modifiers)) {
             if (!root.arrowNavigationActive && hoverMenu != null) {
                 root.cachedSearchMenu = hoverMenu;
             }
@@ -2039,8 +2040,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         return false;
     }
 
-    protected boolean isCtrlF(int keyCode) {
-        return keyCode == InputConstants.KEY_F && net.minecraft.client.Minecraft.getInstance().hasControlDown();
+    protected boolean isSearchShortcut(int keyCode, int modifiers) {
+        return keyCode == InputConstants.KEY_F && InputUtils.isGuiShortcutModifierDown(modifiers);
     }
 
     protected void clearCachedSearchMenuIfClosed() {
