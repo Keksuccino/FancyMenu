@@ -96,13 +96,21 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
         } else {
 
+            float scale = this.getScale();
+            if (scale <= 0.0F) return;
+
             this.renderCodeBlock(graphics);
 
             com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
             graphics.pose().pushMatrix();
-            graphics.pose().scale(this.getScale(), this.getScale());
-            this.parent.renderText(graphics, this.buildRenderComponent(false), this.getTextRenderX(), this.getTextRenderY(), this.parent.textBaseColor.getColorIntWithAlpha(this.parent.textOpacity), this.parent.textShadow && (this.codeBlockContext == null));
-            graphics.pose().popMatrix();
+            try {
+                // Vanilla text extraction only accepts integer draw coordinates. Translate to the exact text origin and draw at local zero so a fractional scale never requires dividing and truncating its absolute position, which would move glyphs into the parent's scissor area.
+                graphics.pose().translate(this.getTextX(), this.getTextY());
+                graphics.pose().scale(scale, scale);
+                this.parent.renderText(graphics, this.buildRenderComponent(false), 0.0F, 0.0F, this.parent.textBaseColor.getColorIntWithAlpha(this.parent.textOpacity), this.parent.textShadow && (this.codeBlockContext == null));
+            } finally {
+                graphics.pose().popMatrix();
+            }
             RenderingUtils.resetShaderColor(graphics);
 
             this.renderQuoteLine(graphics);
@@ -453,38 +461,50 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     }
 
     public float getTextRenderX() {
-        float baseX = this.x / this.getScale();
+        float scale = this.getScale();
+        if (scale <= 0.0F) return 0.0F;
+        return this.getTextX() / scale;
+    }
+
+    protected float getTextRenderOffsetX() {
+        float offsetX = 0.0F;
 
         if ((this.quoteContext != null) && this.startOfRenderLine && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT)) {
-            baseX += this.parent.quoteIndent;
+            offsetX += this.parent.quoteIndent;
         }
 
         if (this.bulletListLevel > 0 && this.startOfRenderLine) {
             // Now apply the full bullet indent for the first fragment.
             float bulletIndent = (this.parent.bulletListIndent * this.bulletListLevel) + BULLET_LIST_SPACE_AFTER_INDENT;
-            baseX += bulletIndent;
+            offsetX += bulletIndent;
         }
 
         if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.startOfRenderLine) {
-            baseX += 10;
+            offsetX += 10;
         }
 
         if ((this.codeBlockContext != null) && this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockStart() == this)) {
-            baseX += 1;
+            offsetX += 1;
         }
 
-        return (int)baseX;
+        return offsetX;
     }
 
     public float getTextRenderY() {
-        float f = this.y / this.getScale();
+        float scale = this.getScale();
+        if (scale <= 0.0F) return 0.0F;
+        return this.getTextY() / scale;
+    }
+
+    protected float getTextRenderOffsetY() {
+        float offsetY = 0.0F;
         if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockStart() != null) && (this.codeBlockContext.getBlockStart().y == this.y)) {
-            f += 10;
+            offsetY += 10;
         }
         if ((this.bulletListLevel > 0) && (this.parentLine != null) && this.parentLine.bulletListItemStartLine) {
-            f += this.parent.bulletListSpacing;
+            offsetY += this.parent.bulletListSpacing;
         }
-        return (int)f;
+        return offsetY;
     }
 
     public float getRenderWidth() {
@@ -580,17 +600,11 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     }
 
     public float getTextX() {
-        float f = this.getTextRenderX();
-        f -= (this.x / this.getScale());
-        f += this.x;
-        return f;
+        return this.x + (this.getTextRenderOffsetX() * this.getScale());
     }
 
     public float getTextY() {
-        float f = this.getTextRenderY();
-        f -= (this.y / this.getScale());
-        f += this.y;
-        return f;
+        return this.y + (this.getTextRenderOffsetY() * this.getScale());
     }
 
     public float getTextWidth() {
@@ -606,7 +620,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if (this.headlineType == HeadlineType.BIG) f = 1.2f;
         if (this.headlineType == HeadlineType.BIGGER) f = 1.6f;
         if (this.headlineType == HeadlineType.BIGGEST) f = 2.0f;
-        return f * this.parent.textBaseScale;
+        float scale = f * this.parent.textBaseScale;
+        return Float.isFinite(scale) && scale > 0.0F ? scale : 0.0F;
     }
 
     @Override
