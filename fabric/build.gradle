@@ -35,6 +35,14 @@ dependencies {
     // implementation "it.crystalnest:fancy-entity-renderer-fabric:$fer_mc_version-$fer_version"
     compileOnly "flatdir:fer:0.5.4"
     implementation "de.keksuccino:mcef-fabric:2.2.1-26.2"
+    
+    implementation "maven.modrinth:AANobbMI:3QgJXuSK" // Sodium
+    implementation "maven.modrinth:PtjYWJkn:9M5lqgDj" // Sodium Extra
+    implementation "maven.modrinth:gvQqBUqZ:vy3clWg7" // Lithium
+    implementation "maven.modrinth:YL57xq9U:3uIIps8q" // Iris
+    implementation "maven.modrinth:5ZwdcRci:4r0uMdy5" // ImmediatelyFast
+    implementation "maven.modrinth:uXXizFIs:d5ddUdiB" // FerriteCore
+    implementation "maven.modrinth:1eAoo2KR:LlSShNCR" // YACL
 
 }
 
