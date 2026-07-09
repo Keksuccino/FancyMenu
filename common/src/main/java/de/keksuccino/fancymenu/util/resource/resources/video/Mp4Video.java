@@ -723,17 +723,15 @@ public class Mp4Video implements IVideo {
     }
 
     protected boolean isLoadingPlayerStatus(@NotNull String statusName) {
-        return statusName.equals("WAITING") || statusName.equals("LOADING") || statusName.equals("BUFFERING");
+        return WatermediaFramePresentationPolicy.isLoadingStatus(statusName);
     }
 
     protected boolean isTerminalPlayerStatus(@NotNull String statusName) {
-        return statusName.equals("STOPPED") || statusName.equals("ENDED") || statusName.equals("ERROR");
+        return WatermediaFramePresentationPolicy.isTerminalStatus(statusName);
     }
 
     protected boolean shouldPresentFrame(@NotNull String statusName) {
-        if (!this.playRequested) return false;
-        if (this.isLoadingPlayerStatus(statusName)) return false;
-        return !this.isTerminalPlayerStatus(statusName);
+        return WatermediaFramePresentationPolicy.shouldPresentFrame(statusName, this.playRequested, this.framePresented);
     }
 
     protected void startPlayerForCurrentRequest(@NotNull Object player) {
