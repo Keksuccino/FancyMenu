@@ -1,15 +1,20 @@
 package de.keksuccino.fancymenu.util.rendering.glsl;
 
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.opengl.GlTexture;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.variables.Variable;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphicsExtractor;
+import de.keksuccino.fancymenu.util.rendering.GuiRenderPhaseAction;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -20,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
@@ -156,6 +162,7 @@ public class GlslShaderRuntime {
 
     private int vaoId;
     private int vboId;
+    private int imageFramebufferId;
 
     @Nullable
     private String lastCompileError;
@@ -367,6 +374,15 @@ public class GlslShaderRuntime {
     ) {
     }
 
+    private record GlslRenderState(@NotNull GlslShaderRuntime runtime, int areaX, int areaY, int areaWidth, int areaHeight, float partialTick, @Nullable String fragmentSource, @NotNull RenderSettings settings, @NotNull ScreenRectangle bounds) implements GuiRenderPhaseAction {
+
+        @Override
+        public void executeRender_FancyMenu() {
+            this.runtime.renderNow(this.areaX, this.areaY, this.areaWidth, this.areaHeight, this.partialTick, this.fragmentSource, this.settings);
+        }
+
+    }
+
     public GlslShaderRuntime() {
         for (int i = 0; i < TOTAL_PASS_COUNT; i++) {
             this.passPrograms_FancyMenu[i] = new ProgramState();
@@ -376,14 +392,7 @@ public class GlslShaderRuntime {
         }
     }
 
-    public boolean render(@NotNull GuiGraphicsExtractor graphics,
-                          int areaX,
-                          int areaY,
-                          int areaWidth,
-                          int areaHeight,
-                          float partialTick,
-                          @Nullable String fragmentSource,
-                          @NotNull RenderSettings settings) {
+    public boolean render(@NotNull GuiGraphicsExtractor graphics, int areaX, int areaY, int areaWidth, int areaHeight, float partialTick, @Nullable String fragmentSource, @NotNull RenderSettings settings) {
 
         if (areaWidth <= 0 || areaHeight <= 0) {
             return false;
@@ -394,12 +403,39 @@ public class GlslShaderRuntime {
             return false;
         }
 
+        this.sourceMissing = fragmentSource == null || fragmentSource.isBlank();
+        if (this.sourceMissing) {
+            this.lastCompileError = null;
+        }
+
+        ScreenRectangle bounds = new ScreenRectangle(areaX, areaY, areaWidth, areaHeight).transformAxisAligned(graphics.pose());
+        var renderState = ((IMixinGuiGraphicsExtractor) graphics).get_guiRenderState_FancyMenu();
+        renderState.nextStratum();
+        renderState.addGuiElement(new GlslRenderState(this, areaX, areaY, areaWidth, areaHeight, partialTick, fragmentSource, settings, bounds));
+        renderState.nextStratum();
+        RenderingUtils.resetShaderColor(graphics);
+        return !this.sourceMissing;
+    }
+
+    private boolean renderNow(int areaX, int areaY, int areaWidth, int areaHeight, float partialTick, @Nullable String fragmentSource, @NotNull RenderSettings settings) {
+
+        RenderSystem.assertOnRenderThread();
+        if (RenderingUtils.isVulkanActive()) {
+            this.disableForVulkan();
+            return false;
+        }
+
         Minecraft minecraft = Minecraft.getInstance();
         Window window = minecraft.getWindow();
+        RenderTarget mainRenderTarget = minecraft.gameRenderer.mainRenderTarget();
+        if (!(mainRenderTarget.getColorTexture() instanceof GlTexture mainColorTexture)) {
+            this.lastCompileError = "Render error: OpenGL main render target is unavailable.";
+            return false;
+        }
 
         double guiScale = window.getGuiScale();
-        int screenWidthPx = window.getScreenWidth();
-        int screenHeightPx = window.getScreenHeight();
+        int screenWidthPx = mainRenderTarget.width;
+        int screenHeightPx = mainRenderTarget.height;
 
         int areaXPx = Mth.floor(areaX * guiScale);
         int areaYPxTop = Mth.floor(areaY * guiScale);
@@ -443,32 +479,22 @@ public class GlslShaderRuntime {
             return false;
         }
 
-        this.ensureGeometry();
-        if (this.vaoId <= 0 || this.vboId <= 0) {
-            return false;
-        }
-
         this.tickTime(settings);
         VariableUniformSnapshot variableUniformSnapshot = this.buildVariableUniformSnapshot();
 
-        int[] previousViewport = new int[4];
-        GL11.glGetIntegerv(GL11.GL_VIEWPORT, previousViewport);
-
-        int previousProgram = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
-        int previousVao = GL11.glGetInteger(GL30.GL_VERTEX_ARRAY_BINDING);
-        int previousArrayBuffer = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
-        int previousFramebuffer = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
-
-        int previousActiveTexture = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
-        int[] previousTextureBindings = new int[CHANNEL_COUNT];
-
-        boolean blendWasEnabled = GL11.glIsEnabled(GL11.GL_BLEND);
+        GlslOpenGlStateSnapshot previousState = new GlslOpenGlStateSnapshot(CHANNEL_COUNT);
 
         try {
+            GlStateManager._disableScissorTest();
+            GlStateManager._disableDepthTest();
+            GlStateManager._depthMask(false);
+            GlStateManager._disableCull();
+            GlStateManager._disableBlend(0);
+            GlStateManager._colorMask(0, 15);
 
-            for (int i = 0; i < CHANNEL_COUNT; i++) {
-                GL13.glActiveTexture(GL13.GL_TEXTURE0 + i);
-                previousTextureBindings[i] = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+            this.ensureGeometry();
+            if (this.vaoId <= 0 || this.vboId <= 0) {
+                return false;
             }
 
             int missingTextureId = this.getGlTextureId(minecraft, MissingTextureAtlasSprite.getLocation(), 0);
@@ -484,11 +510,11 @@ public class GlslShaderRuntime {
                 BufferTargetState target = this.bufferTargets_FancyMenu[passIndex];
                 this.bindBufferPassTarget(target);
 
-                GL11.glViewport(0, 0, areaWidthPx, areaHeightPx);
+                GlStateManager._viewport(0, 0, areaWidthPx, areaHeightPx);
 
-                GL20.glUseProgram(program.programId);
-                GL30.glBindVertexArray(this.vaoId);
-                GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, this.vboId);
+                GlStateManager._glUseProgram(program.programId);
+                GlStateManager._glBindVertexArray(this.vaoId);
+                GlStateManager._glBindBuffer(GL15.GL_ARRAY_BUFFER, this.vboId);
 
                 ChannelTextureState[] routedChannels = this.resolveRoutedChannelStates(
                         settings.routingForPass(passIndex),
@@ -509,17 +535,21 @@ public class GlslShaderRuntime {
                 this.swapBufferTargetTextures(target);
             }
 
-            GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, previousFramebuffer);
-            GL11.glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+            this.bindImageTarget(mainColorTexture.glId());
+            GlStateManager._viewport(viewportX, viewportY, viewportWidth, viewportHeight);
 
             if (settings.enableBlend()) {
-                de.keksuccino.fancymenu.util.rendering.RenderingUtils.defaultBlendFunc();
+                GlStateManager._enableBlend(0);
+                GlStateManager._blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
+                GlStateManager._blendEquationSeparate(GL14.GL_FUNC_ADD, GL14.GL_FUNC_ADD);
+            } else {
+                GlStateManager._disableBlend(0);
             }
 
             ProgramState imageProgram = this.passPrograms_FancyMenu[IMAGE_PASS_INDEX];
-            GL20.glUseProgram(imageProgram.programId);
-            GL30.glBindVertexArray(this.vaoId);
-            GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, this.vboId);
+            GlStateManager._glUseProgram(imageProgram.programId);
+            GlStateManager._glBindVertexArray(this.vaoId);
+            GlStateManager._glBindBuffer(GL15.GL_ARRAY_BUFFER, this.vboId);
 
             ChannelTextureState[] imageChannels = this.resolveRoutedChannelStates(
                     settings.routingForPass(IMAGE_PASS_INDEX),
@@ -545,24 +575,7 @@ public class GlslShaderRuntime {
             return false;
         } finally {
             this.activeUniformProgram_FancyMenu = null;
-
-            for (int i = 0; i < CHANNEL_COUNT; i++) {
-                GL13.glActiveTexture(GL13.GL_TEXTURE0 + i);
-                GL11.glBindTexture(GL11.GL_TEXTURE_2D, previousTextureBindings[i]);
-            }
-            GL13.glActiveTexture(previousActiveTexture);
-
-            GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, previousArrayBuffer);
-            GL30.glBindVertexArray(previousVao);
-            GL20.glUseProgram(previousProgram);
-            GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, previousFramebuffer);
-            GL11.glViewport(previousViewport[0], previousViewport[1], previousViewport[2], previousViewport[3]);
-
-            if (blendWasEnabled) {
-                de.keksuccino.fancymenu.util.rendering.RenderingUtils.defaultBlendFunc();
-            }
-
-            RenderingUtils.resetShaderColor(graphics);
+            previousState.restore();
         }
 
         return true;
@@ -594,6 +607,7 @@ public class GlslShaderRuntime {
             program.lastCompileError = null;
         }
         this.deleteBufferTargets();
+        this.deleteImageTarget();
         this.deleteGeometry();
         this.resetRuntimeState();
     }
@@ -633,6 +647,7 @@ public class GlslShaderRuntime {
         }
         this.vaoId = 0;
         this.vboId = 0;
+        this.imageFramebufferId = 0;
         this.activeUniformProgram_FancyMenu = null;
     }
 
@@ -933,8 +948,8 @@ public class GlslShaderRuntime {
             return;
         }
 
-        this.vaoId = GL30.glGenVertexArrays();
-        this.vboId = GL15.glGenBuffers();
+        this.vaoId = GlStateManager._glGenVertexArrays();
+        this.vboId = GlStateManager._glGenBuffers();
         if (this.vaoId == 0 || this.vboId == 0) {
             LOGGER.error("[FANCYMENU] Failed creating GLSL geometry buffers (vao={}, vbo={}).", this.vaoId, this.vboId);
             return;
@@ -949,13 +964,13 @@ public class GlslShaderRuntime {
                 -1.0F, 1.0F
         };
 
-        GL30.glBindVertexArray(this.vaoId);
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, this.vboId);
+        GlStateManager._glBindVertexArray(this.vaoId);
+        GlStateManager._glBindBuffer(GL15.GL_ARRAY_BUFFER, this.vboId);
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, vertices, GL15.GL_STATIC_DRAW);
         GL20.glEnableVertexAttribArray(0);
         GL20.glVertexAttribPointer(0, 2, GL11.GL_FLOAT, false, 2 * Float.BYTES, 0L);
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
-        GL30.glBindVertexArray(0);
+        GlStateManager._glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+        GlStateManager._glBindVertexArray(0);
     }
 
     private void deleteProgram(@NotNull ProgramState state) {
@@ -984,13 +999,13 @@ public class GlslShaderRuntime {
     private void deleteBufferTargets() {
         for (BufferTargetState target : this.bufferTargets_FancyMenu) {
             if (target.readTextureId > 0) {
-                GL11.glDeleteTextures(target.readTextureId);
+                GlStateManager._deleteTexture(target.readTextureId);
             }
             if (target.writeTextureId > 0) {
-                GL11.glDeleteTextures(target.writeTextureId);
+                GlStateManager._deleteTexture(target.writeTextureId);
             }
             if (target.framebufferId > 0) {
-                GL30.glDeleteFramebuffers(target.framebufferId);
+                GlStateManager._glDeleteFramebuffers(target.framebufferId);
             }
             target.readTextureId = 0;
             target.writeTextureId = 0;
@@ -1000,13 +1015,37 @@ public class GlslShaderRuntime {
         }
     }
 
+    private void deleteImageTarget() {
+        if (this.imageFramebufferId > 0) {
+            GlStateManager._glDeleteFramebuffers(this.imageFramebufferId);
+            this.imageFramebufferId = 0;
+        }
+    }
+
+    /**
+     * Minecraft's OpenGL command encoder unbinds its render-pass framebuffer when a pass closes. Runtime GLSL
+     * therefore needs its own framebuffer view of the current main-target color texture before drawing.
+     */
+    private void bindImageTarget(int textureId) {
+        if (this.imageFramebufferId <= 0) {
+            this.imageFramebufferId = GlStateManager.glGenFramebuffers();
+        }
+        GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, this.imageFramebufferId);
+        GlStateManager._glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, textureId, 0);
+        GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
+        int status = GL30.glCheckFramebufferStatus(GL30.GL_FRAMEBUFFER);
+        if (status != GL30.GL_FRAMEBUFFER_COMPLETE) {
+            throw new IllegalStateException("Image framebuffer incomplete: " + status);
+        }
+    }
+
     private void ensureBufferTargets(int width, int height) {
         if (width <= 0 || height <= 0) {
             return;
         }
         for (BufferTargetState target : this.bufferTargets_FancyMenu) {
             if (target.framebufferId <= 0) {
-                target.framebufferId = GL30.glGenFramebuffers();
+                target.framebufferId = GlStateManager.glGenFramebuffers();
             }
             boolean needsRecreate = target.readTextureId <= 0
                     || target.writeTextureId <= 0
@@ -1020,10 +1059,10 @@ public class GlslShaderRuntime {
 
     private void recreateBufferTarget(@NotNull BufferTargetState target, int width, int height) {
         if (target.readTextureId > 0) {
-            GL11.glDeleteTextures(target.readTextureId);
+            GlStateManager._deleteTexture(target.readTextureId);
         }
         if (target.writeTextureId > 0) {
-            GL11.glDeleteTextures(target.writeTextureId);
+            GlStateManager._deleteTexture(target.writeTextureId);
         }
         target.readTextureId = this.createRenderTexture(width, height);
         target.writeTextureId = this.createRenderTexture(width, height);
@@ -1034,8 +1073,9 @@ public class GlslShaderRuntime {
     }
 
     private int createRenderTexture(int width, int height) {
-        int textureId = GL11.glGenTextures();
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
+        int previousTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+        int textureId = GlStateManager._genTexture();
+        GlStateManager._bindTexture(textureId);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
@@ -1043,32 +1083,35 @@ public class GlslShaderRuntime {
         // Use floating-point buffers so Shadertoy multipass data channels can store
         // reprojection/state values outside [0,1] without clamping.
         GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL30.GL_RGBA16F, width, height, 0, GL11.GL_RGBA, GL11.GL_FLOAT, (ByteBuffer) null);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+        GlStateManager._bindTexture(previousTexture);
         return textureId;
     }
 
     private void clearTexture(@NotNull BufferTargetState target, int textureId) {
-        int previousFramebuffer = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
+        int previousReadFramebuffer = GL11.glGetInteger(GL30.GL_READ_FRAMEBUFFER_BINDING);
+        int previousDrawFramebuffer = GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING);
         float[] previousClearColor = new float[4];
         GL11.glGetFloatv(GL11.GL_COLOR_CLEAR_VALUE, previousClearColor);
 
-        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, target.framebufferId);
-        GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, textureId, 0);
+        GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, target.framebufferId);
+        GlStateManager._glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, textureId, 0);
         int status = GL30.glCheckFramebufferStatus(GL30.GL_FRAMEBUFFER);
         if (status != GL30.GL_FRAMEBUFFER_COMPLETE) {
-            GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, previousFramebuffer);
+            GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, previousReadFramebuffer);
+            GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, previousDrawFramebuffer);
             throw new IllegalStateException("Buffer framebuffer incomplete: " + status);
         }
         GL11.glClearColor(0.0F, 0.0F, 0.0F, 0.0F);
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
 
         GL11.glClearColor(previousClearColor[0], previousClearColor[1], previousClearColor[2], previousClearColor[3]);
-        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, previousFramebuffer);
+        GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, previousReadFramebuffer);
+        GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, previousDrawFramebuffer);
     }
 
     private void bindBufferPassTarget(@NotNull BufferTargetState target) {
-        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, target.framebufferId);
-        GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, target.writeTextureId, 0);
+        GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, target.framebufferId);
+        GlStateManager._glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, target.writeTextureId, 0);
         int status = GL30.glCheckFramebufferStatus(GL30.GL_FRAMEBUFFER);
         if (status != GL30.GL_FRAMEBUFFER_COMPLETE) {
             throw new IllegalStateException("Buffer framebuffer incomplete: " + status);
@@ -1083,7 +1126,7 @@ public class GlslShaderRuntime {
 
     private void deleteGeometry() {
         if (this.vboId > 0) {
-            GL15.glDeleteBuffers(this.vboId);
+            GlStateManager._glDeleteBuffers(this.vboId);
             this.vboId = 0;
         }
         if (this.vaoId > 0) {
@@ -1149,8 +1192,8 @@ public class GlslShaderRuntime {
 
     private void bindChannelTextures(@NotNull ChannelTextureState[] channelTextureStates) {
         for (int i = 0; i < CHANNEL_COUNT; i++) {
-            GL13.glActiveTexture(GL13.GL_TEXTURE0 + i);
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, channelTextureStates[i].textureId());
+            GlStateManager._activeTexture(GL13.GL_TEXTURE0 + i);
+            GlStateManager._bindTexture(channelTextureStates[i].textureId());
         }
     }
 

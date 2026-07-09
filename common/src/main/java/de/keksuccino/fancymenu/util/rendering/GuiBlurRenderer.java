@@ -13,15 +13,12 @@ import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuSampler;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphicsExtractor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
 import net.minecraft.client.renderer.state.gui.GuiRenderState;
 import net.minecraft.resources.Identifier;
 import org.lwjgl.system.MemoryStack;
@@ -566,26 +563,11 @@ public final class GuiBlurRenderer {
 
     }
 
-    public record GuiBlurRenderState(QueuedBlurArea queuedBlurArea, ScreenRectangle bounds) implements GuiElementRenderState {
+    public record GuiBlurRenderState(QueuedBlurArea queuedBlurArea, ScreenRectangle bounds) implements GuiRenderPhaseAction {
 
         @Override
-        public void buildVertices(VertexConsumer vertexConsumer) {
-        }
-
-        @Override
-        public RenderPipeline pipeline() {
-            return RenderPipelines.GUI;
-        }
-
-        @Override
-        public TextureSetup textureSetup() {
-            return TextureSetup.noTexture();
-        }
-
-        @Override
-        @Nullable
-        public ScreenRectangle scissorArea() {
-            return null;
+        public void executeRender_FancyMenu() {
+            executeQueuedBlurArea_FancyMenu(this.queuedBlurArea);
         }
 
     }
