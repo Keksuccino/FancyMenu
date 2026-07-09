@@ -11,7 +11,7 @@
 - ⚠️ [Fancymenu heavy lags my PC till... I unplug the HDMI cable](https://github.com/Keksuccino/FancyMenu/issues/1688)
   - Blocked: The report provides no reproducible layout/assets or time-correlated performance/display capture, and its complete log contains no failure or active video player. Reproduce on current 26.2 with a stable A/B sequence, the exact layout/assets and mod configuration, the window/display setup (GPU routing, resolutions, refresh rates, VRR/HDR, fullscreen and VSync), a Spark or JFR CPU profile, a GPUView plus PresentMon trace, and VRAM/GPU utilization/clock/power telemetry covering the onset; those artifacts are required to identify a FancyMenu code path instead of guessing at an OS/driver presentation workaround.
 - [x] [Unable to focus text input field](https://github.com/Keksuccino/FancyMenu/issues/1685)
-- [ ] [Text Elements break on blur](https://github.com/Keksuccino/FancyMenu/issues/1684)
+- [x] [Text Elements break on blur](https://github.com/Keksuccino/FancyMenu/issues/1684)
 - [ ] [NeoForge 21.1.229 1.21.1 text elements has broken sizing if used decimals](https://github.com/Keksuccino/FancyMenu/issues/1681)
 - [ ] [Buttons do not auto size when auto sizing is enabled](https://github.com/Keksuccino/FancyMenu/issues/1680)
 - [ ] [gson MalformedJsonException log spam when some elements have invalid json in their text](https://github.com/Keksuccino/FancyMenu/issues/1675)
