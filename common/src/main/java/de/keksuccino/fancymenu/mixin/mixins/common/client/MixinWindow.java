@@ -1,7 +1,9 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.mojang.blaze3d.platform.Window;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.window.FancyWindow;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -12,12 +14,22 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Window.class)
 public abstract class MixinWindow implements FancyWindow {
 
-    @Unique double preciseScale_FancyMenu = -1;
+    @Shadow @Final private long handle;
+
+    @Unique private double preciseScale_FancyMenu = -1;
 
     @Inject(method = "setGuiScale", at = @At("HEAD"))
     private void void_before_setGuiScale_FancyMenu(int scale, CallbackInfo info) {
         // Reset precise scale when setting scale via Vanilla method
         this.preciseScale_FancyMenu = -1;
+    }
+
+    /**
+     * @reason Clear the semantic modifier cache when focus is lost because GLFW cannot synthesize releases for remapped physical modifier identities it did not track as pressed.
+     */
+    @Inject(method = "onFocus", at = @At("HEAD"))
+    private void before_onFocus_FancyMenu(long handle, boolean focused, CallbackInfo info) {
+        if ((handle == this.handle) && !focused) InputUtils.resetActiveModifiers();
     }
 
     @Shadow public abstract int getGuiScale();

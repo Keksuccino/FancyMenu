@@ -46,6 +46,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -1550,11 +1551,11 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
     }
     
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        boolean ctrlDown = net.minecraft.client.Minecraft.getInstance().hasControlDown();
+        boolean shortcutModifierDown = InputUtils.isGuiShortcutModifierDown(modifiers);
         String keyName = GLFW.glfwGetKeyName(keyCode, scanCode);
         keyName = (keyName != null) ? keyName.toLowerCase(Locale.ROOT) : "";
 
-        if (ctrlDown && "s".equals(keyName)) {
+        if (shortcutModifierDown && "s".equals(keyName)) {
             this.onDone();
             return true;
         }
@@ -1592,7 +1593,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
 
         if (!contextMenuActive && !inlineEditingActive) {
             ExecutableEntry selected = this.getSelectedEntry();
-            boolean shiftDown = Minecraft.getInstance().hasShiftDown();
+            boolean shiftDown = (modifiers & GLFW.GLFW_MOD_SHIFT) != 0;
 
             if (keyCode == InputConstants.KEY_DELETE) {
                 if (this.deleteSelectedEntryDirectly()) {
@@ -1600,25 +1601,25 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 }
             }
 
-            if ("z".equals(keyName) && ctrlDown && shiftDown) {
+            if ("z".equals(keyName) && shortcutModifierDown && shiftDown) {
                 if (this.redo()) {
                     return true;
                 }
             }
 
-            if ("z".equals(keyName) && ctrlDown && !shiftDown) {
+            if ("z".equals(keyName) && shortcutModifierDown && !shiftDown) {
                 if (this.undo()) {
                     return true;
                 }
             }
 
-            if ("y".equals(keyName) && ctrlDown) {
+            if ("y".equals(keyName) && shortcutModifierDown) {
                 if (this.redo()) {
                     return true;
                 }
             }
 
-            if ("c".equals(keyName) && ctrlDown) {
+            if ("c".equals(keyName) && shortcutModifierDown) {
                 if (this.copySelectedAction()) {
                     return true;
                 }
@@ -1628,7 +1629,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 }
             }
 
-            if ("v".equals(keyName) && ctrlDown) {
+            if ("v".equals(keyName) && shortcutModifierDown) {
                 if (this.pasteCopiedAction(selected)) {
                     return true;
                 }

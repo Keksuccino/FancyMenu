@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.fancymenu.util.rendering.glsl.GlslRuntimeEventTracker;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
@@ -40,6 +41,7 @@ public abstract class MixinKeyboardHandler {
     @Inject(method = "keyPress", at = @At("HEAD"), cancellable = true)
     private void head_keyPress_FancyMenu(long windowPointer, int action, KeyEvent event, CallbackInfo info) {
         if (windowPointer == WindowHandler.getWindowHandle()) {
+            InputUtils.updateActiveModifiers(event.modifiers());
             int key = event.key();
             int scanCode = event.scancode();
             int modifiers = event.modifiers();

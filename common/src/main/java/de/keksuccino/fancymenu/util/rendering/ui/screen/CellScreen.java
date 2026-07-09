@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -595,7 +596,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
     }
     
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
-        if (net.minecraft.client.Minecraft.getInstance().hasControlDown() && !net.minecraft.client.Minecraft.getInstance().hasShiftDown() && !net.minecraft.client.Minecraft.getInstance().hasAltDown() && this.isLetterKeyPressed(keycode, scancode, "s")) {
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && !net.minecraft.client.Minecraft.getInstance().hasShiftDown() && !net.minecraft.client.Minecraft.getInstance().hasAltDown() && this.isLetterKeyPressed(keycode, scancode, "s")) {
             if ((this.doneButton != null) && this.doneButton.visible && this.doneButton.active) {
                 this.doneButton.onPress(new KeyEvent(keycode, scancode, modifiers));
                 return true;
@@ -809,7 +810,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
         GuiEventListener focusedTarget = this.getFocusedTarget(cell, focusTargets);
         if (focusedTarget == cell.editBox) {
-            if (!net.minecraft.client.Minecraft.getInstance().hasShiftDown() && !net.minecraft.client.Minecraft.getInstance().hasControlDown() && !net.minecraft.client.Minecraft.getInstance().hasAltDown()) {
+            if (!net.minecraft.client.Minecraft.getInstance().hasShiftDown() && !InputUtils.isGuiShortcutModifierDown(modifiers) && !net.minecraft.client.Minecraft.getInstance().hasAltDown()) {
                 boolean canJumpToEditorButton = cell.allowEditor
                         && (cell.openEditorButton != null)
                         && this.isNavigatableTarget(cell.openEditorButton);

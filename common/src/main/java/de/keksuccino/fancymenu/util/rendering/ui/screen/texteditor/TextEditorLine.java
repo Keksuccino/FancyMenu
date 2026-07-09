@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
@@ -266,7 +267,7 @@ public class TextEditorLine extends ExtendedEditBox {
     
     public boolean keyPressed(int keycode, int i1, int i2) {
         //Handled by the editor
-        if (((keycode) == 67 && net.minecraft.client.Minecraft.getInstance().hasControlDown()) || ((keycode) == 86 && net.minecraft.client.Minecraft.getInstance().hasControlDown()) || ((keycode) == 65 && net.minecraft.client.Minecraft.getInstance().hasControlDown()) || ((keycode) == 88 && net.minecraft.client.Minecraft.getInstance().hasControlDown())) {
+        if (((keycode) == 67 || (keycode) == 86 || (keycode) == 65 || (keycode) == 88) && InputUtils.isGuiShortcutModifierDown(i2)) {
             return false;
         }
         //Text deletion is handled by the editor
