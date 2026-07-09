@@ -1093,9 +1093,25 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		return (s != null) ? s.width : 0;
 	}
 
+	/**
+	 * Returns the logical screen width used to resolve this element's anchor position. Preview-only elements can
+	 * override this when they are displayed in a coordinate space that differs from the active layout editor.
+	 */
+	public int getPositioningScreenWidth() {
+		return getScreenWidth();
+	}
+
 	public static int getScreenHeight() {
 		Screen s = getScreen();
 		return (s != null) ? s.height : 0;
+	}
+
+	/**
+	 * Returns the logical screen height used to resolve this element's anchor position. Preview-only elements can
+	 * override this when they are displayed in a coordinate space that differs from the active layout editor.
+	 */
+	public int getPositioningScreenHeight() {
+		return getScreenHeight();
 	}
 
 	@SuppressWarnings("all")
@@ -1289,4 +1305,3 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	}
 
 }
-
