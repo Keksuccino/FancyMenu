@@ -28,7 +28,7 @@
   - No production changes were required: Minecraft 1.19.2 has no split regional menu-background helper, and FancyMenu already replaces its single `renderDirtBackground` lifecycle at full-screen coordinates while preserving seamless-loading precedence and vanilla fallback.
 - [x] `508b55a0131bc08384a71c57b429f7ea7000c3a9`
 - [x] `aaa1851210fb11f02498e755596042282ab6d6af`
-- [ ] `4187f2a1305707186150409177455fc2172319b9`
+- [x] `4187f2a1305707186150409177455fc2172319b9`
 - [ ] `459bfc6ba1578a6326b71601aac0e40d1e114327`
 - [ ] `583374518a921235ff951c5718b0decc27ab7b98`
 - [ ] `4403ffdb9bec82b93dbb5745f03f3c43af2b2fa6`
