@@ -79,6 +79,16 @@ public interface IPlatformHelper {
     }
 
     /**
+     * Returns the effective display name from the packaged mod descriptor, before supported runtime display-name overrides.
+     * Loaders that permit runtime name changes must override this method; the default assumes their exposed metadata is immutable.
+     */
+    @Nullable
+    default String getDeclaredModDisplayName(@NotNull String id) {
+        UniversalModContainer mod = this.getLoadedMod(id);
+        return mod != null ? mod.name() : null;
+    }
+
+    /**
      * Gets the name of the environment type as a string.
      *
      * @return The name of the environment type.
