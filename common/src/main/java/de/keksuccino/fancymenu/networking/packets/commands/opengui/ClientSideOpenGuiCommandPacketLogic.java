@@ -1,8 +1,10 @@
 package de.keksuccino.fancymenu.networking.packets.commands.opengui;
 
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
+import de.keksuccino.fancymenu.customization.screen.ScreenConstructionContext;
 import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.util.ScreenUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
@@ -26,13 +28,13 @@ public class ClientSideOpenGuiCommandPacketLogic {
                 return true;
             }
             if (CustomGuiHandler.guiExists(packet.screen_identifier)) {
-                Screen custom = CustomGuiHandler.constructInstance(packet.screen_identifier, Minecraft.getInstance().screen, null);
-                if (custom != null) Minecraft.getInstance().setScreen(custom);
+                Screen custom = CustomGuiHandler.constructInstance(packet.screen_identifier, ScreenUtils.getScreen(), null);
+                if (custom != null) ScreenUtils.setScreenWithRollback(custom);
                 return true;
             } else {
-                Screen s = ScreenInstanceFactory.tryConstruct(ScreenIdentifierHandler.getBestIdentifier(packet.screen_identifier));
+                Screen s = ScreenInstanceFactory.tryConstruct(ScreenIdentifierHandler.getBestIdentifier(packet.screen_identifier), ScreenConstructionContext.live());
                 if (s != null) {
-                    Minecraft.getInstance().setScreen(s);
+                    ScreenUtils.setScreenWithRollback(s);
                     return true;
                 } else {
                     packet.sendChatFeedback(Component.translatable("fancymenu.commmands.openguiscreen.unable_to_open_gui", packet.screen_identifier), true);
