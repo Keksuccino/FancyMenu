@@ -36,6 +36,20 @@ class TitleScreenBrandingCaptureTest {
     }
 
     @Test
+    void preservesCapturedBrandingAcrossRendererReinitialization() {
+        TitleScreenBrandingCapture capture = new TitleScreenBrandingCapture();
+        capture.capture("Minecraft 1.20.1/Fabric (42 Mods)", null, null);
+
+        String replacementRendererText = capture.getCapturedText();
+        TitleScreenBrandingCapture.Update repeatedCapture = capture.capture(replacementRendererText, null, null);
+
+        assertEquals("Minecraft 1.20.1/Fabric (42 Mods)", replacementRendererText);
+        assertFalse(repeatedCapture.textChanged());
+        assertFalse(repeatedCapture.resizeWidth());
+        assertFalse(repeatedCapture.resizeHeight());
+    }
+
+    @Test
     void capturesChangedBrandingAndPreservesCustomizedBoundsIndependently() {
         TitleScreenBrandingCapture capture = new TitleScreenBrandingCapture();
         capture.capture("Minecraft 1.20.1/Fabric (42 Mods)", null, null);
