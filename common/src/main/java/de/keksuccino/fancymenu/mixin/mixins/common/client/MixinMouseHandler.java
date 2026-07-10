@@ -66,6 +66,8 @@ public class MixinMouseHandler {
             }
         }
         VanillaEvents.updateLatestVanillaMouseButtonInfo(new MouseButtonInfo(mappedButton, modifiers));
+        // This runs before NeoForge's cancellable mouse-button pre-hook, so even a canceled new press supersedes stale overlay ownership.
+        if (pressed) ScreenOverlayHandler.INSTANCE.prepareMousePress(mappedButton);
 
         double guiWidth = this.mc_FancyMenu.getWindow().getGuiScaledWidth();
         double guiHeight = this.mc_FancyMenu.getWindow().getGuiScaledHeight();

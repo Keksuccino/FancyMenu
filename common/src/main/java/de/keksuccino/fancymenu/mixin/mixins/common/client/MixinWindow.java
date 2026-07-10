@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.mojang.blaze3d.platform.Window;
 import de.keksuccino.fancymenu.util.input.InputUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import de.keksuccino.fancymenu.util.window.FancyWindow;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -24,12 +25,13 @@ public abstract class MixinWindow implements FancyWindow {
         this.preciseScale_FancyMenu = -1;
     }
 
-    /**
-     * @reason Clear the semantic modifier cache when focus is lost because GLFW cannot synthesize releases for remapped physical modifier identities it did not track as pressed.
-     */
+    /** @reason Clear cached modifier and captured overlay input when focus is lost because GLFW may not deliver matching release events while unfocused. */
     @Inject(method = "onFocus", at = @At("HEAD"))
     private void before_onFocus_FancyMenu(long handle, boolean focused, CallbackInfo info) {
-        if ((handle == this.handle) && !focused) InputUtils.resetActiveModifiers();
+        if ((handle == this.handle) && !focused) {
+            InputUtils.resetActiveModifiers();
+            ScreenOverlayHandler.INSTANCE.cancelMouseCaptures();
+        }
     }
 
     @Shadow public abstract int getGuiScale();

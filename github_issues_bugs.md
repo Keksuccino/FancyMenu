@@ -72,7 +72,7 @@
   - Already fixed: The GUI extraction/stratum migration introduced on the current line by `cdfad1e62` moved creative-container tooltip background, text, and image extraction into a fresh stratum after FancyMenu's foreground layout elements, with independent scissor state on both Fabric and NeoForge; the legacy FancyMenu 3.8.1/Minecraft 1.20.1 path rendered FancyMenu foreground content after the tooltip.
 - ♻️ [FancyMenu breaks custom item rendering in a custom Screen](https://github.com/Keksuccino/FancyMenu/issues/1530)
   - Already fixed: Minecraft 26.2 removed the immediate 3D `GuiGraphics`/`PoseStack` item path used by the report; GUI items are now isolated in immutable `GuiItemRenderState` atlas/PiP rendering and composited as 2D nodes, so FancyMenu's widget events and editor overlay cannot mutate their depth/cull state or globally erase the reported center-screen items.
-- [ ] [Unsaved changes prompt shows even after saving](https://github.com/Keksuccino/FancyMenu/issues/1527)
+- [x] [Unsaved changes prompt shows even after saving](https://github.com/Keksuccino/FancyMenu/issues/1527)
 - [ ] ["Failed to mimic" error when trying to mimic Vanilla's "Play Selected World" button while no world is selected](https://github.com/Keksuccino/FancyMenu/issues/1525)
 - [ ] [[1.21.11] Placeholder causes resource reload to fail](https://github.com/Keksuccino/FancyMenu/issues/1517)
 - [ ] [[MC 1.20.1] Level entities are invisible when joining a server while having a "Player Entity" element active in the Connect screen](https://github.com/Keksuccino/FancyMenu/issues/1514)

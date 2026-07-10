@@ -22,6 +22,7 @@ import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PipableScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -30,6 +31,7 @@ import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import org.jetbrains.annotations.Nullable;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -141,6 +143,13 @@ public abstract class MixinGui {
                 info.cancel();
             }
         }
+    }
+
+    /** @reason The replacement screen must not receive the remainder of a press that started on an overlay from the old screen. */
+    @Inject(method = "setScreen", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/Gui;screen:Lnet/minecraft/client/gui/screens/Screen;", opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER))
+    private void after_screenAssignment_in_setScreen_FancyMenu(Screen screen, CallbackInfo info) {
+        // NeoForge can cancel its opening event before this assignment, so resetting at setScreen HEAD would detach a press from a screen that remains active.
+        ScreenOverlayHandler.INSTANCE.detachMouseCaptures();
     }
 
     @Inject(method = "setScreen", at = @At("RETURN"))
