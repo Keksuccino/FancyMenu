@@ -60,7 +60,7 @@
   - Already fixed: #1659/`0a282cb13` fixed this same repeating-sampler edge wrap by using cached clamp-to-edge samplers for smooth image rectangles and circles while preserving filtering and mipmaps, preventing the bottom fringe from sampling the top texture row.
 - ♻️ [[MC 26.1.X] Screen's content gets rendered on negative X (gets moved too much to the left, leaving a black space at the right side)](https://github.com/Keksuccino/FancyMenu/issues/1577)
   - Already fixed: The common `Gui.setScreen` wrapper, carried into 26.2 by `b05681b720`, fires pre-init scale listeners and then re-reads the live GUI-scaled width and height for `Screen.init`, matching the reporter's workaround and preventing stale dimensions and the black right strip.
-- [ ] [Bugs related to buttons and navigation in interfaces](https://github.com/Keksuccino/FancyMenu/issues/1549)
+- [x] [Bugs related to buttons and navigation in interfaces](https://github.com/Keksuccino/FancyMenu/issues/1549)
 - [ ] [Opening "options_screen" with a custom Main Menu/Title Screen throws NullPointerException error.](https://github.com/Keksuccino/FancyMenu/issues/1545)
 - [ ] [Checkboxes do not fade in](https://github.com/Keksuccino/FancyMenu/issues/1536)
 - [ ] [False Positive With KubeJS Renaming Of Mods Feature](https://github.com/Keksuccino/FancyMenu/issues/1535)

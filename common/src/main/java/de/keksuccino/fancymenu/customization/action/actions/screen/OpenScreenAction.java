@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.action.actions.screen;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
+import de.keksuccino.fancymenu.customization.screen.ScreenConstructionContext;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
 import de.keksuccino.fancymenu.util.ScreenUtils;
@@ -48,13 +49,13 @@ public class OpenScreenAction extends Action {
                     Screen current = ScreenUtils.getScreen();
                     CreateWorldScreen.openFresh(Minecraft.getInstance(), () -> ScreenUtils.setScreen(current));
                 } else {
-                        if (CustomGuiHandler.guiExists(value)) {
-                            Screen custom = CustomGuiHandler.constructInstance(value, ScreenUtils.getScreen(), null);
-                        if (custom != null) ScreenUtils.setScreen(custom);
+                    if (CustomGuiHandler.guiExists(value)) {
+                        Screen custom = CustomGuiHandler.constructInstance(value, ScreenUtils.getScreen(), null);
+                        if (custom != null) ScreenUtils.setScreenWithRollback(custom);
                     } else {
-                        Screen s = ScreenInstanceFactory.tryConstruct(value);
+                        Screen s = ScreenInstanceFactory.tryConstruct(value, ScreenConstructionContext.live());
                         if (s != null) {
-                            ScreenUtils.setScreen(s);
+                            ScreenUtils.setScreenWithRollback(s);
                         } else {
                             LOGGER.error("[FANCYMENU] Unable to construct screen instance for '" + value + "'!", new Exception());
                             Dialogs.openMessage(Component.translatable("fancymenu.actions.open_screen.error"), MessageDialogStyle.ERROR);
