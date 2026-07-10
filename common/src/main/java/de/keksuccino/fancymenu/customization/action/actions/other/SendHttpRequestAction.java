@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.action.actions.other;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
-import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedGenericValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
@@ -64,12 +63,6 @@ public class SendHttpRequestAction extends Action {
         HttpRequestConfig config = HttpRequestConfig.parse(value);
         if (config == null) {
             LOGGER.error("[FANCYMENU] SendHttpRequestAction: Failed to parse configuration!");
-            return;
-        }
-
-        // Check internet availability first
-        if (!WebUtils.isInternetAvailable()) {
-            LOGGER.warn("[FANCYMENU] SendHttpRequestAction: No internet connection available!");
             return;
         }
 
