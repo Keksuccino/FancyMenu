@@ -85,11 +85,11 @@ public interface ElementStacker<E extends AbstractElement> {
         if (e.autoSizing) {
             stack.autoSizing = true;
         }
-        if (e.autoSizingBaseScreenWidth != 0) {
+        if ((e.autoSizingBaseScreenWidth != 0) || (e.autoSizingBaseScreenHeight != 0)) {
+            // These values describe one baseline and must override together, including a legacy zero GUI scale.
             stack.autoSizingBaseScreenWidth = e.autoSizingBaseScreenWidth;
-        }
-        if (e.autoSizingBaseScreenHeight != 0) {
             stack.autoSizingBaseScreenHeight = e.autoSizingBaseScreenHeight;
+            stack.autoSizingBaseGuiScale = e.autoSizingBaseGuiScale;
         }
         if (e.stickyAnchor) {
             stack.stickyAnchor = true;

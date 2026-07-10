@@ -137,6 +137,7 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             element.autoSizing = deserializeBoolean(element.autoSizing, serialized.getValue("auto_sizing"));
             element.autoSizingBaseScreenWidth = deserializeNumber(Integer.class, element.autoSizingBaseScreenWidth, serialized.getValue("auto_sizing_base_screen_width"));
             element.autoSizingBaseScreenHeight = deserializeNumber(Integer.class, element.autoSizingBaseScreenHeight, serialized.getValue("auto_sizing_base_screen_height"));
+            element.autoSizingBaseGuiScale = deserializeNumber(Integer.class, element.autoSizingBaseGuiScale, serialized.getValue("auto_sizing_base_gui_scale"));
 
             element.stickyAnchor = deserializeBoolean(element.stickyAnchor, serialized.getValue("sticky_anchor"));
 
@@ -310,6 +311,7 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             sec.putProperty("auto_sizing", "" + element.autoSizing);
             sec.putProperty("auto_sizing_base_screen_width", "" + element.autoSizingBaseScreenWidth);
             sec.putProperty("auto_sizing_base_screen_height", "" + element.autoSizingBaseScreenHeight);
+            sec.putProperty("auto_sizing_base_gui_scale", "" + element.autoSizingBaseGuiScale);
             sec.putProperty("sticky_anchor", "" + element.stickyAnchor);
 
             sec.putProperty("anchor_point", (element.anchorPoint != null) ? element.anchorPoint.getName() : ElementAnchorPoints.TOP_LEFT.getName());
