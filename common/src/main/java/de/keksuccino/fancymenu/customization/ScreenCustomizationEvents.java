@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization;
 import java.io.File;
 import java.io.IOException;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.events.screen.CloseScreenEvent;
@@ -11,6 +10,7 @@ import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.customization.widget.WidgetLocatorHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
@@ -92,10 +92,7 @@ public class ScreenCustomizationEvents {
 		}
 
 		if (this.lastScreen != null) {
-			ScreenCustomization.isNewMenu = !this.lastScreen.getClass().getName().equals(e.getScreen().getClass().getName());
-			if ((this.lastScreen instanceof CustomGuiBaseScreen cLast) && (e.getScreen() instanceof CustomGuiBaseScreen cNow)) {
-				ScreenCustomization.isNewMenu = !cLast.getIdentifier().equals(cNow.getIdentifier());
-			}
+			ScreenCustomization.isNewMenu = !ScreenIdentifierHandler.getIdentifierOfScreen(this.lastScreen).equals(ScreenIdentifierHandler.getIdentifierOfScreen(e.getScreen()));
 		} else {
 			ScreenCustomization.isNewMenu = true;
 		}
