@@ -55,7 +55,7 @@ public class CustomizationOverlay {
         ScreenOverlayHandler.INSTANCE.addOverlayWithId(ScreenOverlays.CUSTOMIZATION_MENU_BAR, overlayMenuBar);
         ScreenOverlayHandler.INSTANCE.setVisibilityControllerFor(ScreenOverlays.CUSTOMIZATION_MENU_BAR, screen -> {
             if (!isOverlayVisible(screen)) return false;
-            if (ScreenCustomization.isScreenBlacklisted(screen.getClass().getName())) return false;
+            if (ScreenCustomization.isScreenBlacklisted(screen)) return false;
             return true;
         });
 	}
@@ -67,7 +67,7 @@ public class CustomizationOverlay {
         ScreenOverlayHandler.INSTANCE.setVisibilityControllerFor(ScreenOverlays.CUSTOMIZATION_DEBUG_OVERLAY, screen -> {
             if (!isOverlayVisible(screen)) return false;
             if (!FancyMenu.getOptions().showDebugOverlay.getValue()) return false;
-            if (ScreenCustomization.isScreenBlacklisted(screen.getClass().getName())) return false;
+            if (ScreenCustomization.isScreenBlacklisted(screen)) return false;
             return true;
         });
 	}
@@ -123,7 +123,7 @@ public class CustomizationOverlay {
 	@EventListener
 	public void onScreenKeyPressed(ScreenKeyPressedEvent e) {
 
-		if (!ScreenCustomization.isScreenBlacklisted(e.getScreen().getClass().getName())) {
+		if (!ScreenCustomization.isScreenBlacklisted(e.getScreen())) {
 
 			String keyName = e.getKeyName();
 			boolean guiShortcutModifierDown = InputUtils.isGuiShortcutModifierDown(e.getModifiers());
