@@ -15,6 +15,7 @@ import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuSampler;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphicsExtractor;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
@@ -187,6 +188,13 @@ public final class GuiBlurRenderer {
     }
 
     /**
+     * Converts a blur radius in framebuffer pixels to the GUI coordinate space used by blur areas.
+     */
+    public static float convertFramebufferBlurRadiusToGui(float framebufferBlurRadius) {
+        return (float)(framebufferBlurRadius / getEffectiveGuiScale_FancyMenu());
+    }
+
+    /**
      * Renders a blur area using FancyMenu's blur intensity setting (a normalized multiplier, e.g., 0.25–3.0).
      * Callers provide the base radius they would normally use; this helper applies the current intensity
      * and renders the blur so UI code doesn’t need to recompute the radius everywhere.
@@ -292,23 +300,23 @@ public final class GuiBlurRenderer {
         }
 
         BlurArea area = queuedBlurArea.area_FancyMenu;
-        float guiScale = (float) minecraft.getWindow().getGuiScale();
-        float scaledWidth = area.width * guiScale;
-        float scaledHeight = area.height * guiScale;
-        if (scaledWidth <= 0.0F || scaledHeight <= 0.0F) {
+        double guiScale = getEffectiveGuiScale_FancyMenu();
+        float scaledWidth = (float)(area.width * guiScale);
+        float scaledHeight = (float)(area.height * guiScale);
+        float scaledX = (float)(area.x * guiScale);
+        float scaledY = (float)(targetHeight - area.y * guiScale - area.height * guiScale);
+        if (!Float.isFinite(scaledX) || !Float.isFinite(scaledY) || !Float.isFinite(scaledWidth) || !Float.isFinite(scaledHeight) || scaledWidth <= 0.0F || scaledHeight <= 0.0F) {
             return;
         }
 
-        float scaledX = area.x * guiScale;
-        float scaledY = targetHeight - (area.y * guiScale) - scaledHeight;
-        float rawBlurRadius = area.blurRadius * guiScale;
-        float blurRadius = Float.isFinite(rawBlurRadius) && rawBlurRadius > 0.0F ? rawBlurRadius : 0.0F;
+        double rawBlurRadius = area.blurRadius * guiScale;
+        float blurRadius = Double.isFinite(rawBlurRadius) && rawBlurRadius > 0.0D && rawBlurRadius <= Float.MAX_VALUE ? (float)rawBlurRadius : 0.0F;
         CornerRadii scaledRadii = area.cornerRadii.scaled(guiScale).clamped(Math.min(scaledWidth, scaledHeight) * 0.5F).flipVertical();
 
         DrawableColor.FloatColor tint = area.tint.getAsFloats();
         RenderRotationUtil.Rotation2D maskRotation = queuedBlurArea.maskRotation_FancyMenu;
         RenderRotationUtil.Rotation2D scissorRotation = maskRotation;
-        float margin = guiScale > 0.0F ? (blurRadius / guiScale) * 4.0F : 0.0F;
+        float margin = (float)(blurRadius / guiScale * 4.0D);
         BlurScissor scissor = toBlurScissor(resolveScissorBounds(area, margin, scissorRotation), guiScale, targetWidth, targetHeight);
         if (scissor.isEmpty()) {
             return;
@@ -527,11 +535,11 @@ public final class GuiBlurRenderer {
         }
     }
 
-    private static BlurScissor toBlurScissor(ScissorBounds bounds, float guiScale, int targetWidth, int targetHeight) {
-        float minX = bounds.minX() * guiScale;
-        float maxX = bounds.maxX() * guiScale;
-        float minY = targetHeight - bounds.maxY() * guiScale;
-        float maxY = targetHeight - bounds.minY() * guiScale;
+    private static BlurScissor toBlurScissor(ScissorBounds bounds, double guiScale, int targetWidth, int targetHeight) {
+        double minX = bounds.minX() * guiScale;
+        double maxX = bounds.maxX() * guiScale;
+        double minY = targetHeight - bounds.maxY() * guiScale;
+        double maxY = targetHeight - bounds.minY() * guiScale;
 
         int x0 = clampToInt(floorToInt(minX), 0, targetWidth);
         int y0 = clampToInt(floorToInt(minY), 0, targetHeight);
@@ -598,8 +606,8 @@ public final class GuiBlurRenderer {
             return new CornerRadii(topLeft, topRight, bottomRight, bottomLeft);
         }
 
-        private CornerRadii scaled(float factor) {
-            return new CornerRadii(topLeft * factor, topRight * factor, bottomRight * factor, bottomLeft * factor);
+        private CornerRadii scaled(double factor) {
+            return new CornerRadii((float)(topLeft * factor), (float)(topRight * factor), (float)(bottomRight * factor), (float)(bottomLeft * factor));
         }
 
         private CornerRadii clamped(float maxRadius) {
@@ -690,12 +698,21 @@ public final class GuiBlurRenderer {
         return Math.min(value, max);
     }
 
-    private static int floorToInt(float value) {
+    private static int floorToInt(double value) {
         return (int) Math.floor(value);
     }
 
-    private static int ceilToInt(float value) {
+    private static int ceilToInt(double value) {
         return (int) Math.ceil(value);
+    }
+
+    /**
+     * Blur areas are extracted in the same logical coordinate space as FancyMenu's precise GUI projection.
+     * Keep every framebuffer conversion on this scale; Window#getGuiScale() only exposes its floored integer part while a fractional scale is active.
+     */
+    private static double getEffectiveGuiScale_FancyMenu() {
+        double guiScale = WindowHandler.getGuiScale();
+        return Double.isFinite(guiScale) && guiScale > 0.0D ? guiScale : 1.0D;
     }
 
     private record ScissorBounds(float minX, float minY, float maxX, float maxY) {
