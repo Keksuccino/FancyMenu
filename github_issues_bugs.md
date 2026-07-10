@@ -13,7 +13,7 @@
 - [x] [Unable to focus text input field](https://github.com/Keksuccino/FancyMenu/issues/1685)
 - [x] [Text Elements break on blur](https://github.com/Keksuccino/FancyMenu/issues/1684)
 - [x] [NeoForge 21.1.229 1.21.1 text elements has broken sizing if used decimals](https://github.com/Keksuccino/FancyMenu/issues/1681)
-- [ ] [Buttons do not auto size when auto sizing is enabled](https://github.com/Keksuccino/FancyMenu/issues/1680)
+- [x] [Buttons do not auto size when auto sizing is enabled](https://github.com/Keksuccino/FancyMenu/issues/1680)
 - [ ] [gson MalformedJsonException log spam when some elements have invalid json in their text](https://github.com/Keksuccino/FancyMenu/issues/1675)
 - [ ] [Fancy Entity Renderer element is added but the entity/player does not render](https://github.com/Keksuccino/FancyMenu/issues/1673)
 - [ ] [Item elements have inconsistent layering between items and blocks](https://github.com/Keksuccino/FancyMenu/issues/1672)
