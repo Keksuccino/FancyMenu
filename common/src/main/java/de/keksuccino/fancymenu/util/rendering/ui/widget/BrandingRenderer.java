@@ -19,7 +19,7 @@ public class BrandingRenderer {
     private final Font font;
     private float opacity = 1.0F; // Default opacity
     private final int screenHeight;
-    private final List<Component> lines = Services.COMPAT.getTitleScreenBrandingLines();
+    private List<Component> lines = List.copyOf(Services.COMPAT.getTitleScreenBrandingLines());
 
     public BrandingRenderer(int screenHeight) {
         this.font = Minecraft.getInstance().font;
@@ -34,6 +34,13 @@ public class BrandingRenderer {
     public BrandingRenderer setOpacity(float opacity) {
         this.opacity = opacity;
         return this;
+    }
+
+    /**
+     * Replaces the rendered lines with branding captured after other mods have transformed it.
+     */
+    public void setLines(@NotNull List<Component> lines) {
+        this.lines = List.copyOf(lines);
     }
 
     /**
