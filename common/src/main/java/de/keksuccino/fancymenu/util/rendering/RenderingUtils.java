@@ -904,6 +904,10 @@ public class RenderingUtils {
         BufferUploader.drawWithShader(bufferBuilder.end());
     }
 
+    static void submitAlphaTextureBlit(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, float minX, float minY, float maxX, float maxY, float minU, float maxU, float minV, float maxV) {
+        innerBlitAlphaTexture(graphics, location, minX, maxX, minY, maxY, 0.0F, minU, maxU, minV, maxV, -1);
+    }
+
     private static void innerBlit(GuiGraphics graphics, ResourceLocation location, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9) {
         innerBlitAlphaTexture(graphics, location, $$1, $$2, $$3, $$4, $$5, $$6, $$7, $$8, $$9, -1);
     }

@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandl
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.mixin.MixinCacheCommon;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.rendering.GuiTextureCoverRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
@@ -25,7 +26,6 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
-import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
@@ -87,15 +87,12 @@ public abstract class MixinScreen implements CustomizableScreen, ContainerEventH
             original.call(vOffset);
             return;
         }
-        ResourceLocation customLocation = customBackground.getResourceLocation();
-        int textureWidth = customBackground.getWidth();
-        int textureHeight = customBackground.getHeight();
-        if (customLocation == null || textureWidth <= 0 || textureHeight <= 0) {
+        RenderSystem.enableBlend();
+        if (!GuiTextureCoverRenderer.render(graphics, customBackground, 0, 0, this.width, this.height)) {
+            RenderSystem.disableBlend();
             original.call(vOffset);
             return;
         }
-        RenderSystem.enableBlend();
-        RenderingUtils.blitRepeat(graphics, customLocation, 0, 0, this.width, this.height, textureWidth, textureHeight);
         RenderingUtils.resetShaderColor(graphics);
         RenderSystem.disableBlend();
     }
