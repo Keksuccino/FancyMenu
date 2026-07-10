@@ -24,7 +24,7 @@
 - [x] [Texture background menu issue on Fabric 1.19.2](https://github.com/Keksuccino/FancyMenu/issues/1658)
 - [x] [Entity Player object not working](https://github.com/Keksuccino/FancyMenu/issues/1657)
 - [x] [Crash related to using videos in the game intro and/or splash screen](https://github.com/Keksuccino/FancyMenu/issues/1656)
-- [ ] [Minecraft Font Corrupted After Show An MCEF (Minecraft Chromium Embedded Framework) Screen](https://github.com/Keksuccino/FancyMenu/issues/1651)
+- [x] [Minecraft Font Corrupted After Show An MCEF (Minecraft Chromium Embedded Framework) Screen](https://github.com/Keksuccino/FancyMenu/issues/1651)
 - [ ] [Global menu background doesn't scale correctly with GUI size](https://github.com/Keksuccino/FancyMenu/issues/1648)
 - [ ] [Menu Backgrounds: GLSL Shader overlays UI elements instead of rendering as background](https://github.com/Keksuccino/FancyMenu/issues/1647)
 - [ ] [Text element not replacing `&` formatting codes anymore (because removed from placeholder replacement logic)](https://github.com/Keksuccino/FancyMenu/issues/1645)
