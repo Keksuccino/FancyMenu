@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRenderer;
+import de.keksuccino.fancymenu.mixin.interfaces.TitleScreenBrandingController;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -23,6 +24,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -33,7 +35,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(TitleScreen.class)
-public abstract class MixinTitleScreen extends Screen {
+public abstract class MixinTitleScreen extends Screen implements TitleScreenBrandingController {
 
     @Shadow @Final private static Component COPYRIGHT_TEXT;
     @Shadow public boolean fading;
@@ -42,6 +44,9 @@ public abstract class MixinTitleScreen extends Screen {
     @Unique private int cached_mouseX_FancyMenu = -1;
     @Unique private int cached_mouseY_FancyMenu = -1;
     @Unique private float cached_partial_FancyMenu = -1f;
+    @Unique private final TitleScreenBrandingCaptureController brandingCaptureController_FancyMenu = new TitleScreenBrandingCaptureController();
+    @Unique @Nullable private BrandingRenderer brandingRenderer_FancyMenu;
+    @Unique @Nullable private RendererWidget brandingWidget_FancyMenu;
 
     //unused dummy constructor
     @SuppressWarnings("all")
@@ -90,14 +95,17 @@ public abstract class MixinTitleScreen extends Screen {
                     .setMessage(Component.translatable("fancymenu.widgetified_screens.title_screen.realmsnotification"));
         }
 
-        BrandingRenderer branding = new BrandingRenderer(this.height);
-        this.addRenderableWidget(new RendererWidget(branding.getDefaultPositionX(), branding.getDefaultPositionY() + 1, branding.getTotalWidth(), branding.getTotalHeight(),
+        this.brandingCaptureController_FancyMenu.setTarget(null);
+        this.brandingRenderer_FancyMenu = new BrandingRenderer(this.height);
+        BrandingRenderer branding = this.brandingRenderer_FancyMenu;
+        this.brandingWidget_FancyMenu = this.addRenderableWidget(new RendererWidget(branding.getDefaultPositionX(), branding.getDefaultPositionY() + 1, branding.getTotalWidth(), branding.getTotalHeight(),
                         (graphics, mouseX, mouseY, partial, x, y, width, height, renderer) -> {
                             branding.setOpacity(renderer.getAlpha());
                             branding.extractRenderState(graphics, x, y);
                         }))
-                .setWidgetIdentifierFancyMenu("minecraft_branding_widget")
-                .setMessage(Component.translatable("fancymenu.widgetified_screens.title_screen.branding"));
+                .setWidgetIdentifierFancyMenu("minecraft_branding_widget");
+        this.brandingWidget_FancyMenu.setMessage(Component.translatable("fancymenu.widgetified_screens.title_screen.branding"));
+        this.brandingCaptureController_FancyMenu.setTarget(new TitleScreenBrandingWidgetTarget(this.brandingRenderer_FancyMenu, this.brandingWidget_FancyMenu));
 
     }
 
@@ -159,6 +167,11 @@ public abstract class MixinTitleScreen extends Screen {
         if (!ScreenCustomization.isCustomizationEnabledForScreen(this)) {
             original.call(instance, alpha);
         }
+    }
+
+    @Override
+    public void fancymenu$setBrandingText(@NotNull String brandingText) {
+        this.brandingCaptureController_FancyMenu.capture(brandingText);
     }
 
 }
