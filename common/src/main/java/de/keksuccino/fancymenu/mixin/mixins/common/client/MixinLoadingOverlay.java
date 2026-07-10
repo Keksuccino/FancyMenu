@@ -29,56 +29,55 @@ import java.util.Objects;
 @Mixin(LoadingOverlay.class)
 public abstract class MixinLoadingOverlay {
 
-		@Inject(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;extractRenderStateWithTooltipAndSubtitles(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V"))
-		private void beforeRenderScreenFancyMenu(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
-		//Fire RenderPre event for current screen in loading overlay
-		if (ScreenUtils.getScreen() != null) {
-			RenderingUtils.executeAllPreRenderTasks(graphics, mouseX, mouseY, partial);
-			EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(ScreenUtils.getScreen(), graphics, mouseX, mouseY, partial));
-		}
-	}
+    @Inject(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;extractRenderStateWithTooltipAndSubtitles(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V"))
+    private void before_extractRenderState_FancyMenu(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
+        // Fire RenderPre event for current screen in loading overlay
+        if (ScreenUtils.getScreen() != null) {
+            RenderingUtils.executeAllPreRenderTasks(graphics, mouseX, mouseY, partial);
+            EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(ScreenUtils.getScreen(), graphics, mouseX, mouseY, partial));
+        }
+    }
 
-		@Inject(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;extractRenderStateWithTooltipAndSubtitles(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V", shift = At.Shift.AFTER))
-		private void afterRenderScreenFancyMenu(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
-		//Fire RenderPost event for current screen in loading overlay
-		if (ScreenUtils.getScreen() != null) {
-			EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(ScreenUtils.getScreen(), graphics, mouseX, mouseY, partial));
-			RenderingUtils.executeAllPostRenderTasks(graphics, mouseX, mouseY, partial);
-		}
-	}
+    @Inject(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;extractRenderStateWithTooltipAndSubtitles(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V", shift = At.Shift.AFTER))
+    private void after_extractRenderState_FancyMenu(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
+        // Fire RenderPost event for current screen in loading overlay
+        if (ScreenUtils.getScreen() != null) {
+            EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(ScreenUtils.getScreen(), graphics, mouseX, mouseY, partial));
+            RenderingUtils.executeAllPostRenderTasks(graphics, mouseX, mouseY, partial);
+        }
+    }
 
-		@WrapOperation(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init(II)V"))
-		private void wrapInitScreenFancyMenu(Screen instance, int width, int height, Operation<Void> original) {
-			Minecraft mc = Minecraft.getInstance();
+    @WrapOperation(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init(II)V"))
+    private void wrap_init_FancyMenu(Screen instance, int width, int height, Operation<Void> original) {
+        Minecraft mc = Minecraft.getInstance();
 
-			if (!GameIntroHandler.introPlayed && GameIntroHandler.shouldPlayIntro()) {
-			GameIntroHandler.introPlayed = true;
-			PlayableResource intro = GameIntroHandler.getIntro();
-			if (intro != null) {
-				Minecraft.getInstance().setOverlay(new GameIntroOverlay(instance, intro));
-				return;
-			}
-		}
+        if (!GameIntroHandler.introPlayed) {
+            PlayableResource intro = GameIntroHandler.getIntro();
+            if (intro != null) {
+                // A queued resource reload can replace this overlay on the next tick. The intro is only marked as played when it closes so an interrupted startup intro can retry after the final reload.
+                Minecraft.getInstance().setOverlay(new GameIntroOverlay(instance, intro));
+                return;
+            }
+        }
 
-		ScreenCustomization.setIsNewMenu(true);
+        ScreenCustomization.setIsNewMenu(true);
 
-		ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(instance);
-		if (layer != null) layer.resetLayer();
+        ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(instance);
+        if (layer != null) layer.resetLayer();
 
-		//Fire Pre Screen Init events, because they normally don't get fired in the loading overlay
-		RenderingUtils.resetGuiScale();
-		EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(Objects.requireNonNull(instance), InitOrResizeScreenEvent.InitializationPhase.INIT));
-		EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(Objects.requireNonNull(instance), InitOrResizeScreenEvent.InitializationPhase.INIT));
+        // Fire Pre Screen Init events, because they normally don't get fired in the loading overlay
+        RenderingUtils.resetGuiScale();
+        EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(Objects.requireNonNull(instance), InitOrResizeScreenEvent.InitializationPhase.INIT));
+        EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(Objects.requireNonNull(instance), InitOrResizeScreenEvent.InitializationPhase.INIT));
 
-		//Use window.getGuiScaledWidth/Height here to respect GUI scale modifications made in Init.Pre events
-		original.call(instance, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
+        // Use window.getGuiScaledWidth/Height here to respect GUI scale modifications made in Init.Pre events
+        original.call(instance, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
 
-		ScrollScreenNormalizer.normalizeScrollableScreen(instance);
+        ScrollScreenNormalizer.normalizeScrollableScreen(instance);
 
-		//Fire Post Screen Init events, because they normally don't get fired in the loading overlay
-		EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(Objects.requireNonNull(instance), InitOrResizeScreenEvent.InitializationPhase.INIT));
-		EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(Objects.requireNonNull(instance), InitOrResizeScreenEvent.InitializationPhase.INIT));
-
-	}
+        // Fire Post Screen Init events, because they normally don't get fired in the loading overlay
+        EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(Objects.requireNonNull(instance), InitOrResizeScreenEvent.InitializationPhase.INIT));
+        EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(Objects.requireNonNull(instance), InitOrResizeScreenEvent.InitializationPhase.INIT));
+    }
 
 }
