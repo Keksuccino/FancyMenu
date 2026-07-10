@@ -414,6 +414,13 @@ public class MixinMinecraft {
 
 	}
 
+    /** @reason The replacement screen must not receive the remainder of a press that started on an overlay from the old screen. */
+    @Inject(method = "setScreen", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;", opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER))
+    private void after_screenAssignment_in_setScreen_FancyMenu(Screen screen, CallbackInfo info) {
+        // NeoForge can cancel its opening event before this assignment, so resetting at setScreen HEAD would detach a press from a screen that remains active.
+        ScreenOverlayHandler.INSTANCE.detachMouseCaptures();
+    }
+
 	@Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;ZZ)V", at = @At("HEAD"))
 	private void beforeDisconnectFancyMenu(Screen screen, boolean keepDownloadedResourcePacks, boolean updateLevelInEngines, CallbackInfo info) {
 		this.fireServerLeft_FancyMenu();
