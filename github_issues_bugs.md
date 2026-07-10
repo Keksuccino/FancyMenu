@@ -61,7 +61,8 @@
 - ♻️ [[MC 26.1.X] Screen's content gets rendered on negative X (gets moved too much to the left, leaving a black space at the right side)](https://github.com/Keksuccino/FancyMenu/issues/1577)
   - Already fixed: The common `Gui.setScreen` wrapper, carried into 26.2 by `b05681b720`, fires pre-init scale listeners and then re-reads the live GUI-scaled width and height for `Screen.init`, matching the reporter's workaround and preventing stale dimensions and the black right strip.
 - [x] [Bugs related to buttons and navigation in interfaces](https://github.com/Keksuccino/FancyMenu/issues/1549)
-- [ ] [Opening "options_screen" with a custom Main Menu/Title Screen throws NullPointerException error.](https://github.com/Keksuccino/FancyMenu/issues/1545)
+- ♻️ [Opening "options_screen" with a custom Main Menu/Title Screen throws NullPointerException error.](https://github.com/Keksuccino/FancyMenu/issues/1545)
+  - Already fixed: The title-screen `opengui options_screen` path previously used FancyMenu’s generic reflective `boolean=true` default, causing Minecraft 26.1.2 to initialize the in-world Options variant while `minecraft.level` was null. Commit `4187f2a13` constructs Options with the active parent and actual world state (`false` on the main menu), while restoring the previous screen if another synchronous initialization failure occurs.
 - [ ] [Checkboxes do not fade in](https://github.com/Keksuccino/FancyMenu/issues/1536)
 - [ ] [False Positive With KubeJS Renaming Of Mods Feature](https://github.com/Keksuccino/FancyMenu/issues/1535)
 - [ ] [Create World Screen Layout Resetting](https://github.com/Keksuccino/FancyMenu/issues/1533)
