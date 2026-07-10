@@ -42,8 +42,7 @@ public class CheckboxButton extends ExtendedButton {
         super.renderWidget(graphics, mouseX, mouseY, partial);
 
         if (this.checkboxState && this.isActive()) {
-            RenderingUtils.setupAlphaBlend();
-            RenderingUtils.blitAlphaTexture(graphics, this.getCheckboxCheckmarkTexture(), this.getX(), this.getY(), this.getWidth(), this.getHeight());
+            this.renderCheckboxTexture(graphics, this.getCheckboxCheckmarkTexture());
         }
 
     }
@@ -51,14 +50,21 @@ public class CheckboxButton extends ExtendedButton {
     @Override
     protected void renderBackground(@NotNull GuiGraphics graphics, float partial) {
 
-        RenderingUtils.setupAlphaBlend();
-        RenderingUtils.blitAlphaTexture(graphics, this.getCheckboxBackground(), this.getX(), this.getY(), this.getWidth(), this.getHeight());
+        this.renderCheckboxTexture(graphics, this.getCheckboxBackground());
 
     }
 
     @Override
     protected void renderLabelText(@NotNull GuiGraphics graphics) {
         // do nothing
+    }
+
+    protected void renderCheckboxTexture(@NotNull GuiGraphics graphics, @NotNull ResourceLocation texture) {
+        RenderingUtils.blitAlphaTexture(graphics, texture, this.getX(), this.getY(), this.getWidth(), this.getHeight(), getTextureRenderColor(this.alpha));
+    }
+
+    static int getTextureRenderColor(float alpha) {
+        return RenderingUtils.replaceAlphaInColor(-1, alpha);
     }
 
     @NotNull
