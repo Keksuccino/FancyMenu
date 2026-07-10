@@ -58,7 +58,8 @@
   - Already fixed: This is the same first preloaded MCEF browser-context lifecycle fixed for #1622 by commit `045770796`: the router/load handler now register before `about:blank` preload contexts, and obsolete blank completions and delayed injections are guarded, so browser recreation is no longer needed.
 - ♻️ [[MC 26.1.X] Shadow line appears below custom title image element on Title Screen](https://github.com/Keksuccino/FancyMenu/issues/1585)
   - Already fixed: #1659/`0a282cb13` fixed this same repeating-sampler edge wrap by using cached clamp-to-edge samplers for smooth image rectangles and circles while preserving filtering and mipmaps, preventing the bottom fringe from sampling the top texture row.
-- [ ] [[MC 26.1.X] Screen's content gets rendered on negative X (gets moved too much to the left, leaving a black space at the right side)](https://github.com/Keksuccino/FancyMenu/issues/1577)
+- ♻️ [[MC 26.1.X] Screen's content gets rendered on negative X (gets moved too much to the left, leaving a black space at the right side)](https://github.com/Keksuccino/FancyMenu/issues/1577)
+  - Already fixed: The common `Gui.setScreen` wrapper, carried into 26.2 by `b05681b720`, fires pre-init scale listeners and then re-reads the live GUI-scaled width and height for `Screen.init`, matching the reporter's workaround and preventing stale dimensions and the black right strip.
 - [ ] [Bugs related to buttons and navigation in interfaces](https://github.com/Keksuccino/FancyMenu/issues/1549)
 - [ ] [Opening "options_screen" with a custom Main Menu/Title Screen throws NullPointerException error.](https://github.com/Keksuccino/FancyMenu/issues/1545)
 - [ ] [Checkboxes do not fade in](https://github.com/Keksuccino/FancyMenu/issues/1536)
