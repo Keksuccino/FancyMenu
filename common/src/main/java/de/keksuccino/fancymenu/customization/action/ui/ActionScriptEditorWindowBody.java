@@ -1545,6 +1545,18 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         return super.mouseReleased(new MouseButtonEvent(mouseX, mouseY, new MouseButtonInfo(button, 0)));
     }
 
+    /** The transient inline editors are not Screen children, so their captured drags must be forwarded explicitly. */
+    @Override
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        if ((this.inlineNameEditBox != null) && this.inlineNameEditBox.mouseDragged(event, dragX, dragY)) {
+            return true;
+        }
+        if ((this.inlineValueEditBox != null) && this.inlineValueEditBox.mouseDragged(event, dragX, dragY)) {
+            return true;
+        }
+        return super.mouseDragged(event, dragX, dragY);
+    }
+
     @Override
     public boolean keyPressed(KeyEvent event) {
         return this.keyPressed(event.key(), event.scancode(), event.modifiers());
