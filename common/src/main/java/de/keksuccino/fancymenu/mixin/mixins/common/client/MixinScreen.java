@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRender
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
+import de.keksuccino.fancymenu.util.rendering.GuiTextureCoverRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
@@ -116,12 +117,7 @@ public abstract class MixinScreen implements CustomizableScreen {
         }
         RenderableResource customBackground = GlobalCustomizationHandler.getCustomMenuBackgroundTexture();
         if (customBackground == null) return;
-        Identifier customLocation = customBackground.getResourceLocation();
-        if (customLocation == null) return;
-        int textureWidth = customBackground.getWidth();
-        int textureHeight = customBackground.getHeight();
-        if (textureWidth <= 0 || textureHeight <= 0) return;
-        RenderingUtils.blitRepeat(graphics, customLocation, x, y, width, height, textureWidth, textureHeight);
+        if (!GuiTextureCoverRenderer.render(graphics, customBackground, x, y, width, height)) return;
         RenderingUtils.resetShaderColor(graphics);
         info.cancel();
     }
