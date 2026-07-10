@@ -56,23 +56,27 @@ public class ActionBridge {
     /**
      * Initialize the global message router for all browsers
      */
-    public static void initialize() {
-        if (initialized) return;
+    public static synchronized void initialize() {
+        initializeIfNecessary();
+    }
+
+    static synchronized boolean initializeIfNecessary() {
+        if (initialized) return true;
         
         // Check if MCEF is loaded
         if (!MCEFUtil.isMCEFLoaded()) {
             LOGGER.warn("[FANCYMENU] Cannot initialize ActionBridge - MCEF is not loaded");
-            return;
+            return false;
+        }
+
+        // MCEF's getClient() asserts readiness instead of returning null on this version.
+        if (!MCEF.isInitialized()) {
+            LOGGER.warn("[FANCYMENU] MCEF client is not initialized yet, delaying ActionBridge initialization");
+            return false;
         }
         
         try {
             LOGGER.info("[FANCYMENU] Initializing ActionBridge message router");
-            
-            // Ensure MCEF client is initialized
-            if (MCEF.getClient() == null) {
-                LOGGER.warn("[FANCYMENU] MCEF client is not initialized yet, delaying ActionBridge initialization");
-                return;
-            }
             
             // Create message router configuration
             CefMessageRouterConfig config = new CefMessageRouterConfig();
@@ -88,8 +92,10 @@ public class ActionBridge {
             
             initialized = true;
             LOGGER.info("[FANCYMENU] ActionBridge message router initialized successfully");
+            return true;
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to initialize ActionBridge message router", ex);
+            return false;
         }
     }
     

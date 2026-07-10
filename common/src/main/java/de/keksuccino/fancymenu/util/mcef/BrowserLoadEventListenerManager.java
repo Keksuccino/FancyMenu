@@ -1,11 +1,13 @@
 package de.keksuccino.fancymenu.util.mcef;
 
+import com.cinemamod.mcef.MCEF;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.handler.CefLoadHandler;
 import org.cef.handler.CefLoadHandlerAdapter;
+import org.cef.network.CefRequest;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -26,9 +28,25 @@ public class BrowserLoadEventListenerManager {
     
     // Maps browser IDs to their initialization futures
     private final Map<String, List<BrowserLoadListener>> browserMap = new ConcurrentHashMap<>();
+    private boolean initialized = false;
     
     // The single load handler that will be registered with CefClient
     private final CefLoadHandlerAdapter globalHandler = new CefLoadHandlerAdapter() {
+
+        @Override
+        public void onLoadStart(CefBrowser cefBrowser, CefFrame frame, CefRequest.TransitionType transitionType) {
+            if (!frame.isMain()) return;
+
+            String browserId = getIdByCefBrowser(cefBrowser);
+            if (browserId == null) return;
+
+            List<BrowserLoadListener> loadListeners = browserMap.get(browserId);
+            if (loadListeners == null) return;
+            synchronized (loadListeners) {
+                if (loadListeners.isEmpty()) return;
+                loadListeners.get(0).getBrowser().onMainFrameLoadStartedForTracking(frame.getURL());
+            }
+        }
 
         @Override
         public void onLoadEnd(CefBrowser cefBrowser, CefFrame frame, int httpStatusCode) {
@@ -39,9 +57,11 @@ public class BrowserLoadEventListenerManager {
             
             List<BrowserLoadListener> loadListeners = browserMap.get(browserId);
             if (loadListeners != null) {
-                boolean success = (httpStatusCode >= 200 && httpStatusCode < 300) || (frame.getURL() != null && frame.getURL().startsWith("file:") && httpStatusCode == 0);
                 synchronized (loadListeners) {
-                    loadListeners.removeIf(loadListener -> processListener(loadListener, success));
+                    if (loadListeners.isEmpty()) return;
+                    if (BrowserLoadEventPolicy.isStalePreloadedPage(frame.getURL(), loadListeners.get(0).getBrowser().getExpectedMainFrameUrlForTracking())) return;
+                    boolean success = BrowserLoadEventPolicy.isSuccessfulLoad(frame.getURL(), httpStatusCode);
+                    processListeners(loadListeners, success);
                 }
             } else {
                 LOGGER.warn("[FANCYMENU] onLoadEnd: No load listeners found for browser ID: {}", browserId);
@@ -58,10 +78,10 @@ public class BrowserLoadEventListenerManager {
             List<BrowserLoadListener> loadListeners = browserMap.get(browserId);
             if (loadListeners != null) {
                 synchronized (loadListeners) {
-                    loadListeners.removeIf(loadListener -> {
-                        LOGGER.error("[FANCYMENU] Browser [ID:{}] load error: {}, {}, URL: {}", browserId, errorCode, errorText, failedUrl);
-                        return processListener(loadListener, false);
-                    });
+                    if (loadListeners.isEmpty()) return;
+                    if (BrowserLoadEventPolicy.isStalePreloadedPage(failedUrl, loadListeners.get(0).getBrowser().getExpectedMainFrameUrlForTracking())) return;
+                    LOGGER.error("[FANCYMENU] Browser [ID:{}] load error: {}, {}, URL: {}", browserId, errorCode, errorText, failedUrl);
+                    processListeners(loadListeners, false);
                 }
             } else {
                 LOGGER.warn("[FANCYMENU] onLoadError: No load listeners found for browser ID: {}", browserId);
@@ -86,6 +106,16 @@ public class BrowserLoadEventListenerManager {
     public CefLoadHandler getGlobalHandler() {
         return globalHandler;
     }
+
+    /**
+     * Registers the single global load handler before MCEF creates any browsers. MCEF fans this handler out itself,
+     * so adding the same instance once per FancyMenu browser would process every load event multiple times.
+     */
+    public synchronized void initialize() {
+        if (this.initialized) return;
+        MCEF.getClient().addLoadHandler(this.globalHandler);
+        this.initialized = true;
+    }
     
     /**
      * Registers a browser load listener for load event tracking.
@@ -107,15 +137,22 @@ public class BrowserLoadEventListenerManager {
      * @param browserId The ID of the browser to unregister
      */
     public void unregisterAllListenersForBrowser(String browserId) {
-        browserMap.remove(browserId);
+        List<BrowserLoadListener> loadListeners = browserMap.remove(browserId);
+        if (loadListeners == null) return;
+        synchronized (loadListeners) {
+            loadListeners.clear();
+        }
     }
 
     @Nullable
     public String getIdByCefBrowser(@NotNull CefBrowser cefBrowser) {
         for (Map.Entry<String, List<BrowserLoadListener>> m : this.browserMap.entrySet()) {
-            if (m.getValue().isEmpty()) continue;
-            BrowserLoadListener listener1 = m.getValue().get(0);
-            if (Objects.equals(listener1.getBrowser().getBrowser(), cefBrowser)) return m.getKey();
+            List<BrowserLoadListener> loadListeners = m.getValue();
+            synchronized (loadListeners) {
+                if (loadListeners.isEmpty()) continue;
+                BrowserLoadListener listener1 = loadListeners.get(0);
+                if (Objects.equals(listener1.getBrowser().getBrowser(), cefBrowser)) return m.getKey();
+            }
         }
         return null;
     }
@@ -156,10 +193,21 @@ public class BrowserLoadEventListenerManager {
     }
     
     private void registerListenerForBrowserInternal(@NotNull WrappedMCEFBrowser browser, @NotNull Consumer<Boolean> onLoadListener, boolean persistent) {
-        browserMap.computeIfAbsent(browser.getIdentifier(), id -> new ArrayList<>());
-        List<BrowserLoadListener> listeners = browserMap.get(browser.getIdentifier());
+        if (browser.isClosed()) return;
+        List<BrowserLoadListener> listeners = browserMap.computeIfAbsent(browser.getIdentifier(), id -> new ArrayList<>());
         synchronized (listeners) {
+            if (browser.isClosed()) {
+                browserMap.remove(browser.getIdentifier(), listeners);
+                return;
+            }
             listeners.add(new BrowserLoadListener(browser, onLoadListener, persistent));
+        }
+    }
+
+    private void processListeners(@NotNull List<BrowserLoadListener> loadListeners, boolean success) {
+        // Listener callbacks may close their own browser and clear this list reentrantly, so iterate over a snapshot.
+        for (BrowserLoadListener loadListener : new ArrayList<>(loadListeners)) {
+            if (loadListener.getBrowser().isClosed() || processListener(loadListener, success)) loadListeners.remove(loadListener);
         }
     }
     

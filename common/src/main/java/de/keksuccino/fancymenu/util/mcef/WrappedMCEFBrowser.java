@@ -34,6 +34,7 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
 
     protected final MCEFBrowser browser;
     protected final Minecraft minecraft = Minecraft.getInstance();
+    protected final BrowserNavigationTracker navigationTracker;
     protected boolean browserFocused = false;
     protected boolean interactable = true;
     protected float opacity = 1.0F;
@@ -71,12 +72,13 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
 
         super(0, 0, 0, 0, Component.empty());
 
+        this.navigationTracker = new BrowserNavigationTracker(url);
+
         // Initialize the global message router if not already done
         ActionBridge.initialize();
         
         // Register the custom load listener handler to later register multiple load listeners.
-        // Calling this method multiple times is fine, because there can only be one default listener active.
-        MCEF.getClient().addLoadHandler(BrowserLoadEventListenerManager.getInstance().getGlobalHandler());
+        BrowserLoadEventListenerManager.getInstance().initialize();
 
         this.browser = MCEF.createBrowser(url, transparent);
 
@@ -126,8 +128,10 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
     protected void injectJavaScriptAPI() {
         try {
             LOGGER.info("[FANCYMENU] Injecting FancyMenu JavaScript API into browser (ID: {})", this.getIdentifier());
+            long navigationGeneration = this.navigationTracker.captureGeneration();
             // Execute the JavaScript injection with a delay to ensure the page and message router are ready
             EXECUTOR.schedule(() -> {
+                if (this.closed || !this.navigationTracker.isCurrentGeneration(navigationGeneration)) return;
                 try {
                     this.browser.executeJavaScript(ActionBridge.JAVASCRIPT_API, this.browser.getURL(), 0);
                     LOGGER.info("[FANCYMENU] JavaScript API injection completed for browser (ID: {})", this.getIdentifier());
@@ -465,14 +469,20 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
     }
 
     public void goBack() {
-        if (this.browser.canGoBack()) this.browser.goBack();
+        if (this.browser.canGoBack()) {
+            this.navigationTracker.invalidateGeneration();
+            this.browser.goBack();
+        }
         if (initialized) {
             this.setVolume(this.volume);
         }
     }
 
     public void goForward() {
-        if (this.browser.canGoForward()) this.browser.goForward();
+        if (this.browser.canGoForward()) {
+            this.navigationTracker.invalidateGeneration();
+            this.browser.goForward();
+        }
         if (initialized) {
             this.setVolume(this.volume);
         }
@@ -483,10 +493,21 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
     }
 
     public void setUrl(@NotNull String url) {
+        this.navigationTracker.beginMainFrameNavigation(url);
         this.browser.loadURL(url);
     }
 
+    void onMainFrameLoadStartedForTracking(@Nullable String url) {
+        this.navigationTracker.beginMainFrameNavigation(url);
+    }
+
+    @Nullable
+    String getExpectedMainFrameUrlForTracking() {
+        return this.navigationTracker.getExpectedMainFrameUrl();
+    }
+
     public void reload() {
+        this.navigationTracker.beginMainFrameNavigation(this.browser.getURL());
         this.browser.reload();
         if (initialized) {
             this.setVolume(this.volume);
@@ -546,6 +567,7 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
     @Override
     public void close() throws IOException {
         this.closed = true;
+        this.navigationTracker.invalidateGeneration();
         // Unregister from the global handler manager
         if (this.browser != null) {
             BrowserLoadEventListenerManager.getInstance().unregisterAllListenersForBrowser(this.getIdentifier());
