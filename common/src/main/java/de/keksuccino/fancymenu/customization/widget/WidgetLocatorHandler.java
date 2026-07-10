@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.widget;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
+import de.keksuccino.fancymenu.customization.screen.ScreenConstructionContext;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.identifier.UniversalScreenIdentifierRegistry;
 import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
@@ -25,9 +26,8 @@ public class WidgetLocatorHandler {
     protected static final Map<String, ScreenWidgetCollection> CACHED_WIDGETS = new HashMap<>();
 
     protected static void tryCache(@NotNull String screenIdentifier, boolean overrideCache) {
-        Screen instance = ScreenInstanceFactory.tryConstruct(screenIdentifier);
+        Screen instance = ScreenInstanceFactory.tryConstruct(screenIdentifier, ScreenConstructionContext.preview(Minecraft.getInstance().screen));
         if (instance != null) {
-            instance.init(1000, 1000);
             tryCache(instance, overrideCache);
         } else {
             LOGGER.error("[FANCYMENU] WidgetLocatorHandler failed to construct instance of '" + screenIdentifier + "'! Unable to cache widgets!");

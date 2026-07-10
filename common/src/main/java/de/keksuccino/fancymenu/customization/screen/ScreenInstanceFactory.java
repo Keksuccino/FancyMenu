@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.screen;
 
 import java.lang.reflect.Constructor;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
@@ -11,6 +12,7 @@ import net.minecraft.client.Options;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.options.AccessibilityOptionsScreen;
+import net.minecraft.client.gui.screens.options.OptionsScreen;
 import net.minecraft.client.gui.screens.packs.PackSelectionScreen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.client.multiplayer.ClientAdvancements;
@@ -23,7 +25,8 @@ import org.jetbrains.annotations.Nullable;
 public class ScreenInstanceFactory {
 	
 	private static final Map<Class<?>, Object> DEFAULT_PARAMETERS = new HashMap<>();
-	private static final Map<String, Supplier<? extends Screen>> SCREEN_INSTANCE_PROVIDERS = new HashMap<>();
+	private static final Map<String, Function<ScreenConstructionContext, ? extends Screen>> SCREEN_INSTANCE_PROVIDERS = new HashMap<>();
+	private static final Map<String, Supplier<? extends Screen>> LEGACY_SCREEN_INSTANCE_PROVIDERS = new HashMap<>();
 
 	static {
 
@@ -56,24 +59,46 @@ public class ScreenInstanceFactory {
 		ScreenInstanceFactory.registerScreenProvider(CreateWorldScreen.class.getName(), () ->
 				new ExecuteOnRenderScreen(() -> CreateWorldScreen.openFresh(Minecraft.getInstance(), () -> Minecraft.getInstance().setScreen(new TitleScreen())), true));
 
-        ScreenInstanceFactory.registerScreenProvider(AccessibilityOptionsScreen.class.getName(), () -> {
-            return new AccessibilityOptionsScreen(Minecraft.getInstance().screen, Minecraft.getInstance().options);
-        });
+		ScreenInstanceFactory.registerContextAwareScreenProvider(AccessibilityOptionsScreen.class.getName(), context -> new AccessibilityOptionsScreen(context.parentScreen(), Minecraft.getInstance().options));
+		ScreenInstanceFactory.registerContextAwareScreenProvider(OptionsScreen.class.getName(), context -> new OptionsScreen(context.parentScreen(), Minecraft.getInstance().options, context.inWorld()));
 
 	}
 
 	public static void registerScreenProvider(@NotNull String screenClassPath, @NotNull Supplier<? extends Screen> provider) {
-		SCREEN_INSTANCE_PROVIDERS.put(screenClassPath, provider);
+		Objects.requireNonNull(screenClassPath);
+		Objects.requireNonNull(provider);
+		SCREEN_INSTANCE_PROVIDERS.put(screenClassPath, context -> provider.get());
+		LEGACY_SCREEN_INSTANCE_PROVIDERS.put(screenClassPath, provider);
+	}
+
+	public static void registerContextAwareScreenProvider(@NotNull String screenClassPath, @NotNull Function<ScreenConstructionContext, ? extends Screen> provider) {
+		Objects.requireNonNull(screenClassPath);
+		SCREEN_INSTANCE_PROVIDERS.put(screenClassPath, Objects.requireNonNull(provider));
+		LEGACY_SCREEN_INSTANCE_PROVIDERS.remove(screenClassPath);
 	}
 
 	@Nullable
 	public static Supplier<? extends Screen> getScreenProvider(@NotNull String screenClassPath) {
+		Supplier<? extends Screen> legacyProvider = LEGACY_SCREEN_INSTANCE_PROVIDERS.get(screenClassPath);
+		if (legacyProvider != null) return legacyProvider;
+		Function<ScreenConstructionContext, ? extends Screen> provider = getContextAwareScreenProvider(screenClassPath);
+		return provider != null ? () -> provider.apply(ScreenConstructionContext.live()) : null;
+	}
+
+	@Nullable
+	public static Function<ScreenConstructionContext, ? extends Screen> getContextAwareScreenProvider(@NotNull String screenClassPath) {
 		return SCREEN_INSTANCE_PROVIDERS.get(screenClassPath);
 	}
 
 	@Nullable
 	public static Screen tryConstruct(@NotNull String screenClassPathOrIdentifier) {
+		return tryConstruct(screenClassPathOrIdentifier, ScreenConstructionContext.live());
+	}
+
+	@Nullable
+	public static Screen tryConstruct(@NotNull String screenClassPathOrIdentifier, @NotNull ScreenConstructionContext context) {
 		try {
+			Objects.requireNonNull(context);
 			//Convert universal identifiers to actual class paths
 			if (UniversalScreenIdentifierRegistry.universalIdentifierExists(screenClassPathOrIdentifier)) {
 				String nonUniversal = UniversalScreenIdentifierRegistry.getScreenForUniversalIdentifier(screenClassPathOrIdentifier);
@@ -85,15 +110,15 @@ public class ScreenInstanceFactory {
 				return null;
 			}
 			//Update last screen
-			DEFAULT_PARAMETERS.put(Screen.class, Minecraft.getInstance().screen);
+			DEFAULT_PARAMETERS.put(Screen.class, context.parentScreen());
 			//Update player
 			DEFAULT_PARAMETERS.put(Player.class, Minecraft.getInstance().player);
 			if (Minecraft.getInstance().player != null) {
 				DEFAULT_PARAMETERS.put(ClientAdvancements.class, Minecraft.getInstance().player.connection.getAdvancements());
 			}
 			//Check if a provider is registered for the screen and return from provider if one was found
-			Supplier<? extends Screen> screenProvider = getScreenProvider(screenClassPathOrIdentifier);
-			if (screenProvider != null) return screenProvider.get();
+			Function<ScreenConstructionContext, ? extends Screen> screenProvider = getContextAwareScreenProvider(screenClassPathOrIdentifier);
+			if (screenProvider != null) return screenProvider.apply(context);
 			//Try to construct and instance of the screen
 			Class<?> screenClass = Class.forName(screenClassPathOrIdentifier, false, ScreenInstanceFactory.class.getClassLoader());
 			if (Screen.class.isAssignableFrom(screenClass)) {
@@ -157,7 +182,3 @@ public class ScreenInstanceFactory {
 	}
 
 }
-
-
-
-

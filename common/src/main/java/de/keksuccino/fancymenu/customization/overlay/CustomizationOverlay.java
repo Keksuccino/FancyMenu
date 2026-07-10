@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
+import de.keksuccino.fancymenu.customization.screen.ScreenConstructionContext;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
@@ -160,7 +161,7 @@ public class CustomizationOverlay {
 									layoutTargetScreen = CustomGuiHandler.constructInstance(lastEdited.screenIdentifier, currentScreen, null);
 								}
 								if (layoutTargetScreen == null) {
-									layoutTargetScreen = ScreenInstanceFactory.tryConstruct(lastEdited.screenIdentifier);
+									layoutTargetScreen = ScreenInstanceFactory.tryConstruct(lastEdited.screenIdentifier, ScreenConstructionContext.preview(currentScreen));
 								}
 							}
 						}
