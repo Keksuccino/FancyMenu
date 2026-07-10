@@ -48,7 +48,7 @@ void main() {
     float dist = sdRoundedBox(local, halfSize, CornerRadii);
 
     // 2. Anti-Aliasing
-    float aa = fwidth(dist);
+    float aa = max(fwidth(dist) * 0.5, 0.0001);
     float mask = 1.0 - smoothstep(-aa, aa, dist);
 
     if (mask <= 0.0) {

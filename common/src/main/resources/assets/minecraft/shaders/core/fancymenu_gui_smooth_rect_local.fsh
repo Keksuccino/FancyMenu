@@ -31,7 +31,7 @@ void main() {
     );
 
     float dist = sdRoundedBox(p, halfSize, CornerRadii);
-    float aa = fwidth(dist);
+    float aa = max(fwidth(dist) * 0.5, 0.0001);
     float alpha = 1.0 - smoothstep(-aa, aa, dist);
 
     if (BorderThickness > 0.0) {
@@ -39,7 +39,8 @@ void main() {
         vec2 innerHalfSize = halfSize - vec2(BorderThickness);
         if (innerHalfSize.x > 0.0 && innerHalfSize.y > 0.0) {
             float innerDist = sdRoundedBox(p, innerHalfSize, innerRadii);
-            float innerAlpha = 1.0 - smoothstep(-aa, aa, innerDist);
+            float innerAa = max(fwidth(innerDist) * 0.5, 0.0001);
+            float innerAlpha = 1.0 - smoothstep(-innerAa, innerAa, innerDist);
             alpha = clamp(alpha - innerAlpha, 0.0, 1.0);
         }
     }

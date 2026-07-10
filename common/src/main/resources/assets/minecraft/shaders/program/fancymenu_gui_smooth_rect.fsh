@@ -48,7 +48,7 @@ void main() {
     // 2. Anti-Aliasing
     // fwidth gives the change in distance over one pixel.
     // This allows for perfectly smooth edges regardless of scale.
-    float aa = fwidth(dist);
+    float aa = max(fwidth(dist) * 0.5, 0.0001);
 
     // Calculate alpha (1.0 inside, 0.0 outside, smooth gradient at edge)
     // Using 0.0 to 1.0 smoothstep ensures the AA is contained within the pixel boundary
@@ -64,7 +64,8 @@ void main() {
         // Only render hole if the border isn't thicker than the box itself
         if (innerHalfSize.x > 0.0 && innerHalfSize.y > 0.0) {
              float innerDist = sdRoundedBox(p, innerHalfSize, innerRadii);
-             float innerAlpha = 1.0 - smoothstep(-aa, aa, innerDist);
+             float innerAa = max(fwidth(innerDist) * 0.5, 0.0001);
+             float innerAlpha = 1.0 - smoothstep(-innerAa, innerAa, innerDist);
 
              // Subtract inner alpha from outer alpha
              alpha = clamp(alpha - innerAlpha, 0.0, 1.0);
