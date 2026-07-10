@@ -21,7 +21,7 @@
 - [x] [[NF 1.21.1] Invisible screens when menu blur is enabled](https://github.com/Keksuccino/FancyMenu/issues/1665)
 - [x] [Fancy menu issues intro Fabric (1.21.1)](https://github.com/Keksuccino/FancyMenu/issues/1660)
 - [x] [Fancy Menus 3.9.1 Fabric [1.21.1+1.2.11] Edges of image and rectangle shape elements rendering weirdly](https://github.com/Keksuccino/FancyMenu/issues/1659)
-- [ ] [Texture background menu issue on Fabric 1.19.2](https://github.com/Keksuccino/FancyMenu/issues/1658)
+- [x] [Texture background menu issue on Fabric 1.19.2](https://github.com/Keksuccino/FancyMenu/issues/1658)
 - [ ] [Entity Player object not working](https://github.com/Keksuccino/FancyMenu/issues/1657)
 - [ ] [Crash related to using videos in the game intro and/or splash screen](https://github.com/Keksuccino/FancyMenu/issues/1656)
 - [ ] [Minecraft Font Corrupted After Show An MCEF (Minecraft Chromium Embedded Framework) Screen](https://github.com/Keksuccino/FancyMenu/issues/1651)
