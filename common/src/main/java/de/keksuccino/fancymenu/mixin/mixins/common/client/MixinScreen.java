@@ -13,13 +13,13 @@ import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRender
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
+import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.GuiTextureCoverRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -43,11 +43,6 @@ import java.util.List;
 @Mixin(Screen.class)
 public abstract class MixinScreen implements CustomizableScreen {
 
-    @Unique private static final Identifier DIRT_TEXTURE_FANCYMENU = Identifier.withDefaultNamespace("textures/block/dirt.png");
-
-    @Unique private final List<GuiEventListener> removeOnInitChildrenFancyMenu = new ArrayList<>();
-    @Unique private boolean nextFocusPath_called_FancyMenu = false;
-
     @Shadow @Final private List<GuiEventListener> children;
 
     @Shadow
@@ -55,6 +50,12 @@ public abstract class MixinScreen implements CustomizableScreen {
 
     @Shadow
     public int height;
+
+    @Unique private static final Identifier DIRT_TEXTURE_FANCYMENU = Identifier.withDefaultNamespace("textures/block/dirt.png");
+    @Unique private static final ThreadLocal<Integer> MENU_BACKGROUND_REPLACEMENT_DEPTH_FANCYMENU = ThreadLocal.withInitial(() -> 0);
+    @Unique private final List<GuiEventListener> removeOnInitChildrenFancyMenu = new ArrayList<>();
+    @Unique private boolean nextFocusPath_called_FancyMenu = false;
+    @Unique private int menuBackgroundCallWrappedDepth_FancyMenu = 0;
 
     @WrapOperation(method = "extractRenderStateWithTooltipAndSubtitles", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V"))
     private void wrap_extractRenderState_in_extractRenderStateWithTooltipAndSubtitles_FancyMenu(Screen instance, GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {
@@ -95,6 +96,38 @@ public abstract class MixinScreen implements CustomizableScreen {
         }
     }
 
+    @WrapOperation(method = "extractBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;extractMenuBackground(Lnet/minecraft/client/gui/GuiGraphicsExtractor;)V"))
+    private void wrap_extractMenuBackground_in_extractBackground_FancyMenu(Screen instance, GuiGraphicsExtractor graphics, Operation<Void> original) {
+        if (this.renderMenuBackgroundReplacement_FancyMenu(graphics)) return;
+        this.menuBackgroundCallWrappedDepth_FancyMenu++;
+        int previousReplacementDepth = beginMenuBackgroundReplacement_FancyMenu();
+        try {
+            original.call(instance, graphics);
+        } finally {
+            // The virtual call can dispatch to a subclass override or re-enter through a PiP screen render.
+            // Always restore both depths so nested renders cannot suppress later background replacements.
+            endMenuBackgroundReplacement_FancyMenu(previousReplacementDepth);
+            this.menuBackgroundCallWrappedDepth_FancyMenu--;
+        }
+    }
+
+    @Inject(method = "extractMenuBackground(Lnet/minecraft/client/gui/GuiGraphicsExtractor;)V", at = @At("HEAD"), cancellable = true)
+    private void before_extractMenuBackground_FancyMenu(GuiGraphicsExtractor graphics, CallbackInfo info) {
+        if (this.menuBackgroundCallWrappedDepth_FancyMenu == 0 && this.renderMenuBackgroundReplacement_FancyMenu(graphics)) {
+            info.cancel();
+        }
+    }
+
+    @WrapOperation(method = "extractMenuBackground(Lnet/minecraft/client/gui/GuiGraphicsExtractor;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;extractMenuBackground(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIII)V"))
+    private void wrap_extractMenuBackgroundRegion_in_extractMenuBackground_FancyMenu(Screen instance, GuiGraphicsExtractor graphics, int x, int y, int width, int height, Operation<Void> original) {
+        int previousReplacementDepth = beginMenuBackgroundReplacement_FancyMenu();
+        try {
+            original.call(instance, graphics, x, y, width, height);
+        } finally {
+            endMenuBackgroundReplacement_FancyMenu(previousReplacementDepth);
+        }
+    }
+
     @WrapOperation(method = "extractPanorama", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/Panorama;extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIZ)V"))
     private void wrap_panorama_rendering_in_extractPanorama_FancyMenu(Panorama instance, GuiGraphicsExtractor graphics, int width, int height, boolean spin, Operation<Void> original) {
         if (PiPWindowHandler.INSTANCE.isScreenRenderActive()) {
@@ -111,20 +144,9 @@ public abstract class MixinScreen implements CustomizableScreen {
 
     @Inject(method = "extractMenuBackgroundTexture", at = @At("HEAD"), cancellable = true)
     private static void before_extractMenuBackgroundTexture_FancyMenu(GuiGraphicsExtractor graphics, Identifier location, int x, int y, float uOffset, float vOffset, int width, int height, CallbackInfo info) {
-        Screen currentScreen = Minecraft.getInstance().screen;
-        if (SeamlessWorldLoadingHandler.renderLoadingBackgroundIfActive(graphics, x, y, width, height, currentScreen)) {
+        Screen currentScreen = ScreenUtils.getScreen();
+        if (MENU_BACKGROUND_REPLACEMENT_DEPTH_FANCYMENU.get() == 0 && SeamlessWorldLoadingHandler.renderLoadingBackgroundIfActive(graphics, x, y, width, height, currentScreen)) {
             info.cancel();
-            return;
-        }
-        RenderableResource customBackground = GlobalCustomizationHandler.getCustomMenuBackgroundTexture();
-        if (customBackground == null) return;
-        GlStateManager._enableBlend();
-        try {
-            if (!GuiTextureCoverRenderer.render(graphics, customBackground, x, y, width, height)) return;
-            RenderingUtils.resetShaderColor(graphics);
-            info.cancel();
-        } finally {
-            GlStateManager._disableBlend();
         }
     }
 
@@ -205,6 +227,37 @@ public abstract class MixinScreen implements CustomizableScreen {
     @Override
     public @NotNull List<GuiEventListener> removeOnInitChildrenFancyMenu() {
         return this.removeOnInitChildrenFancyMenu;
+    }
+
+    @Unique
+    private boolean renderMenuBackgroundReplacement_FancyMenu(@NotNull GuiGraphicsExtractor graphics) {
+        if (SeamlessWorldLoadingHandler.renderLoadingBackgroundIfActive(graphics, 0, 0, this.width, this.height, ScreenUtils.getScreen())) return true;
+        RenderableResource customBackground = GlobalCustomizationHandler.getCustomMenuBackgroundTexture();
+        if (customBackground == null) return false;
+        GlStateManager._enableBlend();
+        try {
+            if (!GuiTextureCoverRenderer.render(graphics, customBackground, 0, 0, this.width, this.height)) return false;
+            RenderingUtils.resetShaderColor(graphics);
+            return true;
+        } finally {
+            GlStateManager._disableBlend();
+        }
+    }
+
+    @Unique
+    private static int beginMenuBackgroundReplacement_FancyMenu() {
+        int previousDepth = MENU_BACKGROUND_REPLACEMENT_DEPTH_FANCYMENU.get();
+        MENU_BACKGROUND_REPLACEMENT_DEPTH_FANCYMENU.set(previousDepth + 1);
+        return previousDepth;
+    }
+
+    @Unique
+    private static void endMenuBackgroundReplacement_FancyMenu(int previousDepth) {
+        if (previousDepth == 0) {
+            MENU_BACKGROUND_REPLACEMENT_DEPTH_FANCYMENU.remove();
+        } else {
+            MENU_BACKGROUND_REPLACEMENT_DEPTH_FANCYMENU.set(previousDepth);
+        }
     }
 
 }
