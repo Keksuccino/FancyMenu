@@ -9,6 +9,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -263,6 +264,11 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
 
     public double getActiveScreenRenderScaleFactor() {
         return activeScreenRenderWindow != null ? activeScreenRenderScaleFactor : 1.0;
+    }
+
+    @Nullable
+    public Screen getActiveScreenRenderScreen() {
+        return activeScreenRenderWindow != null ? activeScreenRenderWindow.getScreen() : null;
     }
 
     public boolean isScreenRenderActive() {

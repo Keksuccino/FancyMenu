@@ -10,6 +10,9 @@ import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.events.widget.RenderedGuiListHeaderFooterEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.MenuBackgroundReplacementController;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.MenuBackgroundReplacementPolicy;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSelectionList;
@@ -33,8 +36,11 @@ public abstract class MixinAbstractSelectionList {
 	 */
 	@Inject(method = "render", at = @At("HEAD"))
 	private void before_render_FancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partialTick, CallbackInfo info) {
-		Screen screen = Minecraft.getInstance().screen;
+		Screen screen = getRenderedScreen_FancyMenu();
 		ScreenCustomizationLayer layer = getCurrentLayer_FancyMenu(screen);
+		boolean inWorld = Minecraft.getInstance().level != null;
+		boolean hasScreenMenuBackgrounds = (layer != null) && !layer.layoutBase.menuBackgrounds.isEmpty();
+		if (MenuBackgroundReplacementPolicy.shouldRenderListBase(inWorld, hasScreenMenuBackgrounds) && (screen instanceof MenuBackgroundReplacementController controller)) controller.ensureMenuBackgroundReplacementFancyMenu(graphics);
 		if ((layer != null) && layer.shouldRenderBackgroundFromScrollList()) {
 			EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(screen, graphics, mouseX, mouseY, partialTick));
 		}
@@ -75,7 +81,7 @@ public abstract class MixinAbstractSelectionList {
 	 */
 	@WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;fillGradient(Lnet/minecraft/client/renderer/RenderType;IIIIIII)V", ordinal = 0))
 	private boolean wrap_headerShadow_in_render_FancyMenu(GuiGraphics graphics, RenderType renderType, int x1, int y1, int x2, int y2, int colorFrom, int colorTo, int z) {
-		ScreenCustomizationLayer layer = getCurrentLayer_FancyMenu(Minecraft.getInstance().screen);
+		ScreenCustomizationLayer layer = getCurrentLayer_FancyMenu(getRenderedScreen_FancyMenu());
 		return (layer == null) || layer.layoutBase.renderScrollListHeaderShadow;
 	}
 
@@ -84,7 +90,7 @@ public abstract class MixinAbstractSelectionList {
 	 */
 	@WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;fillGradient(Lnet/minecraft/client/renderer/RenderType;IIIIIII)V", ordinal = 1))
 	private boolean wrap_footerShadow_in_render_FancyMenu(GuiGraphics graphics, RenderType renderType, int x1, int y1, int x2, int y2, int colorFrom, int colorTo, int z) {
-		ScreenCustomizationLayer layer = getCurrentLayer_FancyMenu(Minecraft.getInstance().screen);
+		ScreenCustomizationLayer layer = getCurrentLayer_FancyMenu(getRenderedScreen_FancyMenu());
 		return (layer == null) || layer.layoutBase.renderScrollListFooterShadow;
 	}
 
@@ -96,8 +102,17 @@ public abstract class MixinAbstractSelectionList {
 
 	@Unique
 	private static boolean shouldUseFancyMenuListBackground_FancyMenu() {
-		ScreenCustomizationLayer layer = getCurrentLayer_FancyMenu(Minecraft.getInstance().screen);
+		Screen screen = getRenderedScreen_FancyMenu();
+		if ((screen instanceof MenuBackgroundReplacementController controller) && controller.isMenuBackgroundReplacementRenderedFancyMenu()) return true;
+		ScreenCustomizationLayer layer = getCurrentLayer_FancyMenu(screen);
 		return (layer != null) && layer.shouldReplaceVanillaScrollListBackground();
+	}
+
+	@Unique
+	@Nullable
+	private static Screen getRenderedScreen_FancyMenu() {
+		Screen activePiPScreen = PiPWindowHandler.INSTANCE.getActiveScreenRenderScreen();
+		return activePiPScreen != null ? activePiPScreen : Minecraft.getInstance().screen;
 	}
 
 	@Unique

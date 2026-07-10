@@ -55,6 +55,7 @@
     "client.MixinCycleButton",
     "client.MixinDeathScreen",
     "client.MixinDisconnectedScreen",
+    "client.MixinExperimentsScreen",
     "client.MixinGameNarrator",
     "client.MixinGameRenderer",
     "client.MixinGenericDirtMessageScreen",

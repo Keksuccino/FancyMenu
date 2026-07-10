@@ -12,12 +12,14 @@ import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.rendering.GuiTextureCoverRenderer;
+import de.keksuccino.fancymenu.util.rendering.MenuBackgroundReplacementState;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.MenuBackgroundReplacementController;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.MenuBackgroundReplacementPolicy;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -38,26 +40,33 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(Screen.class)
-public abstract class MixinScreen implements CustomizableScreen {
+public abstract class MixinScreen implements CustomizableScreen, MenuBackgroundReplacementController {
+
+	@Shadow @Final private List<GuiEventListener> children;
+    @Shadow public int width;
+    @Shadow public int height;
 
 	@Unique private final List<GuiEventListener> removeOnInitChildrenFancyMenu = new ArrayList<>();
 	@Unique private boolean nextFocusPath_called_FancyMenu = false;
     @Unique private int cachedMouseX_FancyMenu = -1;
     @Unique private int cachedMouseY_FancyMenu = -1;
     @Unique private float cachedPartial_FancyMenu = -1.0F;
-
-	@Shadow @Final private List<GuiEventListener> children;
-    @Shadow public int width;
-    @Shadow public int height;
+    @Unique private final MenuBackgroundReplacementState menuBackgroundReplacementState_FancyMenu = new MenuBackgroundReplacementState();
 
     @WrapOperation(method = "renderWithTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
     private void wrap_render_in_renderWithTooltip_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {
-        this.cachedMouseX_FancyMenu = mouseX;
-        this.cachedMouseY_FancyMenu = mouseY;
-        this.cachedPartial_FancyMenu = partial;
-        EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(instance, graphics, mouseX, mouseY, partial));
-        original.call(instance, graphics, mouseX, mouseY, partial);
-        EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(instance, graphics, mouseX, mouseY, partial));
+        int previousReplacementState = this.menuBackgroundReplacementState_FancyMenu.beginRenderPass();
+        try {
+            this.cachedMouseX_FancyMenu = mouseX;
+            this.cachedMouseY_FancyMenu = mouseY;
+            this.cachedPartial_FancyMenu = partial;
+            EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(instance, graphics, mouseX, mouseY, partial));
+            original.call(instance, graphics, mouseX, mouseY, partial);
+            EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(instance, graphics, mouseX, mouseY, partial));
+        } finally {
+            // A PiP render can nest another render pass. Restore the outer pass instead of leaking the nested state.
+            this.menuBackgroundReplacementState_FancyMenu.endRenderPass(previousReplacementState);
+        }
     }
 
     @WrapOperation(method = "renderWithTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;renderTooltip(Lnet/minecraft/client/gui/Font;Ljava/util/List;Lnet/minecraft/client/gui/screens/inventory/tooltip/ClientTooltipPositioner;II)V"))
@@ -79,21 +88,19 @@ public abstract class MixinScreen implements CustomizableScreen {
 
     @Inject(method = "renderDirtBackground", at = @At("HEAD"), cancellable = true)
     private void before_renderDirtBackground_FancyMenu(GuiGraphics graphics, CallbackInfo info) {
-        int x = 0;
-        int y = 0;
-        int width = this.width;
-        int height = this.height;
-        Screen currentScreen = Minecraft.getInstance().screen;
-        if (SeamlessWorldLoadingHandler.renderLoadingBackgroundIfActive(graphics, x, y, width, height, currentScreen)) {
-            info.cancel();
-            return;
+        if (!this.menuBackgroundReplacementState_FancyMenu.isDirtCallWrapped() && this.ensureMenuBackgroundReplacementFancyMenu(graphics)) info.cancel();
+    }
+
+    @WrapOperation(method = "renderBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderDirtBackground(Lnet/minecraft/client/gui/GuiGraphics;)V"))
+    private void wrap_renderDirtBackground_in_renderBackground_FancyMenu(Screen instance, GuiGraphics graphics, Operation<Void> original) {
+        if (this.ensureMenuBackgroundReplacementFancyMenu(graphics)) return;
+        int previousWrappedDepth = this.menuBackgroundReplacementState_FancyMenu.beginWrappedDirtCall();
+        try {
+            original.call(instance, graphics);
+        } finally {
+            // The virtual call can dispatch to CreateWorldScreen's override or re-enter through a nested screen render.
+            this.menuBackgroundReplacementState_FancyMenu.endWrappedDirtCall(previousWrappedDepth);
         }
-        RenderableResource customBackground = GlobalCustomizationHandler.getCustomMenuBackgroundTexture();
-        if (customBackground == null) return;
-        if (!GuiTextureCoverRenderer.render(graphics, customBackground, x, y, width, height)) return;
-        RenderingUtils.resetShaderColor(graphics);
-        RenderSystem.disableBlend();
-        info.cancel();
     }
 
     @Inject(method = "renderBackground", at = @At("HEAD"), cancellable = true)
@@ -156,5 +163,33 @@ public abstract class MixinScreen implements CustomizableScreen {
 	public @NotNull List<GuiEventListener> removeOnInitChildrenFancyMenu() {
 		return this.removeOnInitChildrenFancyMenu;
 	}
+
+    @Unique
+    @Override
+    public boolean ensureMenuBackgroundReplacementFancyMenu(@NotNull GuiGraphics graphics) {
+        if (this.menuBackgroundReplacementState_FancyMenu.isRendered()) return true;
+        Screen instance = (Screen)(Object)this;
+        ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(instance);
+        boolean hasScreenMenuBackgrounds = (layer != null) && ScreenCustomization.isCustomizationEnabledForScreen(instance) && !layer.layoutBase.menuBackgrounds.isEmpty();
+        if (!MenuBackgroundReplacementPolicy.shouldRenderGlobalBase(hasScreenMenuBackgrounds)) return false;
+        if (!this.menuBackgroundReplacementState_FancyMenu.beginAttempt()) return false;
+        if (SeamlessWorldLoadingHandler.renderLoadingBackgroundIfActive(graphics, 0, 0, this.width, this.height, instance)) {
+            this.menuBackgroundReplacementState_FancyMenu.markRendered();
+            return true;
+        }
+        RenderableResource customBackground = GlobalCustomizationHandler.getCustomMenuBackgroundTexture();
+        if (customBackground == null) return false;
+        if (!GuiTextureCoverRenderer.render(graphics, customBackground, 0, 0, this.width, this.height)) return false;
+        RenderingUtils.resetShaderColor(graphics);
+        RenderSystem.disableBlend();
+        this.menuBackgroundReplacementState_FancyMenu.markRendered();
+        return true;
+    }
+
+    @Unique
+    @Override
+    public boolean isMenuBackgroundReplacementRenderedFancyMenu() {
+        return this.menuBackgroundReplacementState_FancyMenu.isRendered();
+    }
 
 }

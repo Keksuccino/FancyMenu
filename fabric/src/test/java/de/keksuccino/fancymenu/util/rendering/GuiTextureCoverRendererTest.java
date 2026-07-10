@@ -59,6 +59,14 @@ class GuiTextureCoverRendererTest {
     }
 
     @Test
+    void fullScreenCoverDoesNotInheritLegacyHeaderOffset() {
+        GuiTextureCoverRenderer.CoverRegion fullScreen = requireRegion(0, 0, 1277, 694, 2560, 1440);
+        GuiTextureCoverRenderer.CoverRegion boundedBody = requireRegion(0, 24, 1277, 694, 2560, 1440);
+
+        assertAll(() -> assertEquals(0.0F, fullScreen.minY(), EPSILON), () -> assertEquals(694.0F, fullScreen.maxY(), EPSILON), () -> assertEquals(24.0F, boundedBody.minY(), EPSILON), () -> assertEquals(718.0F, boundedBody.maxY(), EPSILON), () -> assertUv(fullScreen, boundedBody.minU(), boundedBody.maxU(), boundedBody.minV(), boundedBody.maxV()));
+    }
+
+    @Test
     void uniformGuiScalingDoesNotChangeTheCrop() {
         GuiTextureCoverRenderer.CoverRegion base = requireRegion(0, 0, 320, 180, 100, 100);
         GuiTextureCoverRenderer.CoverRegion scaled = requireRegion(0, 0, 960, 540, 100, 100);
