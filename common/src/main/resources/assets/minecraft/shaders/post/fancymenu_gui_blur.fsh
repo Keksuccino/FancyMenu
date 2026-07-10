@@ -36,7 +36,7 @@ float getSuperellipseAlpha(vec2 pixel, vec2 pos, vec2 size, float n) {
     vec2 uv = p / (halfSize + vec2(1.0e-6));
     float raw = pow(uv.x, n) + pow(uv.y, n);
     float d = pow(raw, 1.0 / n);
-    float fw = max(fwidth(d), 0.0001);
+    float fw = max(fwidth(d) * 0.5, 0.0001);
     return 1.0 - smoothstep(1.0 - fw, 1.0 + fw, d);
 }
 
@@ -56,7 +56,7 @@ void main() {
     float mask;
     if (ShapeInfo.x < 0.5) {
         float dist = sdRoundedBox(local, halfSize, CornerRadii);
-        float aa = max(fwidth(dist), 0.0001);
+        float aa = max(fwidth(dist) * 0.5, 0.0001);
         mask = 1.0 - smoothstep(-aa, aa, dist);
     } else {
         float n = max(0.1, ShapeInfo.y);

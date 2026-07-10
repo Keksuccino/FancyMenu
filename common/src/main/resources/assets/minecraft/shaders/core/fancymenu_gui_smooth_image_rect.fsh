@@ -38,7 +38,7 @@ void main() {
     );
 
     float dist = sdRoundedBox(p, halfSize, cornerRadii);
-    float aa = max(fwidth(dist), 0.0001);
+    float aa = max(fwidth(dist) * 0.5, 0.0001);
     float mask = 1.0 - smoothstep(-aa, aa, dist);
 
     if (mask <= 0.0) {
