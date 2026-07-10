@@ -167,7 +167,7 @@ public class ScreenCustomization {
 		if (screen instanceof CustomGuiBaseScreen) return;
 		if (!isCustomizationEnabledForScreen(screen, true)) {
 			//Always use the screen class path here! NEVER universal identifiers!
-			String screenClassPath = screen.getClass().getName();
+			String screenClassPath = ScreenIdentifierHandler.getClassIdentifierOfScreen(screen);
 			PropertyContainer sec = new PropertyContainer(screenClassPath);
 			customizableScreens.putContainer(sec);
 			writeCustomizableScreensToFile();
@@ -181,7 +181,7 @@ public class ScreenCustomization {
 		if (screen instanceof CustomGuiBaseScreen) return;
 		if (screen != null) {
 			//Always use the screen class path here! NEVER universal identifiers!
-			String screenClassPath = screen.getClass().getName();
+			String screenClassPath = ScreenIdentifierHandler.getClassIdentifierOfScreen(screen);
 			List<PropertyContainer> l = new ArrayList<>();
 			for (PropertyContainer sec : customizableScreens.getContainers()) {
 				if (!sec.getType().equals(screenClassPath)) {
@@ -219,7 +219,7 @@ public class ScreenCustomization {
             if (!p.showsPauseMenu()) return false;
         }
 		// Always use the screen class path here! NEVER universal identifiers!
-		List<PropertyContainer> s = customizableScreens.getContainersOfType(screen.getClass().getName());
+		List<PropertyContainer> s = customizableScreens.getContainersOfType(ScreenIdentifierHandler.getClassIdentifierOfScreen(screen));
 		return !s.isEmpty();
 	}
 
@@ -373,7 +373,7 @@ public class ScreenCustomization {
 	}
 
 	public static boolean isScreenBlacklisted(@NotNull Screen screen) {
-		return isScreenBlacklisted(screen.getClass().getName());
+		return isScreenBlacklisted(ScreenIdentifierHandler.getClassIdentifierOfScreen(screen));
 	}
 
 	public static boolean isScreenBlacklisted(@NotNull String screenClassPath) {

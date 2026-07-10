@@ -1,4 +1,4 @@
-- [ ] [[Incompatibility] forcecloseworldloadingscreen prevents FancyMenu layout from loading](https://github.com/Keksuccino/FancyMenu/issues/1666)
+- [x] [[Incompatibility] forcecloseworldloadingscreen prevents FancyMenu layout from loading](https://github.com/Keksuccino/FancyMenu/issues/1666)
 - [ ] [Item Display Incompatible with TACZ Weapon and Ammo Models](https://github.com/Keksuccino/FancyMenu/issues/1661)
 - [ ] [Black screen flicker with Alex's Caves holographic projector in 3.9.x (3.8.1 is fine)](https://github.com/Keksuccino/FancyMenu/issues/1634)
 - [ ] [FancyMenu conflict with Mod Menu's mod counter on title screen](https://github.com/Keksuccino/FancyMenu/issues/1606)

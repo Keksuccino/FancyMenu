@@ -125,7 +125,7 @@ public class CustomGuiHandler {
 	}
 
 	public static void overrideScreenWithCustomGui(@NotNull String targetMenuIdentifier, @NotNull String customGuiIdentifier) {
-		OVERRIDDEN_SCREENS.put(targetMenuIdentifier, customGuiIdentifier);
+		OVERRIDDEN_SCREENS.put(ScreenIdentifierHandler.getBestIdentifier(targetMenuIdentifier), customGuiIdentifier);
 		saveChanges();
 	}
 

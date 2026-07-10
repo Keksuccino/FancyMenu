@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.layer;
 
 import de.keksuccino.fancymenu.util.ScreenUtils;
 
+import de.keksuccino.fancymenu.compat.ScreenCompatibility;
 import java.util.HashMap;
 import java.util.Map;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
@@ -119,13 +120,13 @@ public class ScreenCustomizationLayerHandler {
 		if (screen instanceof CustomGuiBaseScreen custom) {
 			return getLayer(custom.getIdentifier());
 		}
-		return getLayerOfScreen(screen.getClass());
+		return getLayer(ScreenIdentifierHandler.getIdentifierOfScreen(screen));
 	}
 
 	@Nullable
 	public static ScreenCustomizationLayer getLayerOfScreen(@NotNull Class<? extends Screen> screenClass) {
 		if (screenClass == CustomGuiBaseScreen.class) throw new IllegalArgumentException("Tried to get ScreenCustomizationLayer of CustomGuiBaseScreen class! This is not possible!");
-		return getLayer(screenClass.getName());
+		return getLayer(ScreenCompatibility.getCompatibleScreenClass(screenClass).getName());
 	}
 
 	@Nullable
@@ -156,7 +157,6 @@ public class ScreenCustomizationLayerHandler {
 	}
 
 }
-
 
 
 

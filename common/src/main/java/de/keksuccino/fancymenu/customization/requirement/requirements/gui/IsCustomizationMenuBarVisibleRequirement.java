@@ -32,7 +32,7 @@ public class IsCustomizationMenuBarVisibleRequirement extends Requirement {
         if (screen == null) {
             return false;
         }
-        if (ScreenCustomization.isScreenBlacklisted(screen.getClass().getName())) {
+        if (ScreenCustomization.isScreenBlacklisted(screen)) {
             return false;
         }
         return CustomizationOverlay.isOverlayVisible(screen);
