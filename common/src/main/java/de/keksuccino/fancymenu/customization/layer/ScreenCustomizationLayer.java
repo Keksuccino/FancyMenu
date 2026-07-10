@@ -200,6 +200,10 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		if (!this.shouldCustomize(e.getScreen())) return;
 
+		// The same layer instance is rebuilt in place. Clear template results before removing its old element graph so a
+		// layout that no longer contains any buttons cannot briefly reuse an old template until the normal cache expiry.
+		ButtonElement.resetTemplateCache(this);
+
 		this.allElements.forEach(element -> {
 			//Call onResizeScreen() for all OLD elements BEFORE resizing the screen
 			if (e.getInitializationPhase() == InitOrResizeScreenEvent.InitializationPhase.RESIZE) {
