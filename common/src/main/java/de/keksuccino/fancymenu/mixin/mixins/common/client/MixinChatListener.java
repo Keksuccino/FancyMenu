@@ -42,6 +42,7 @@ public class MixinChatListener {
         Instant timestamp
     ) {
         operation.call(instance, component, messageSignature, guiMessageTag);
+        if (!Listeners.ON_CHAT_MESSAGE_RECEIVED.hasInstancesListening()) return;
 
         UUID senderUuid = playerInfo != null ? playerInfo.getProfile().getId() : chatMessage.signer().profileId();
         Component senderNameComponent = (playerInfo != null && playerInfo.getProfile().getName() != null)
@@ -65,6 +66,6 @@ public class MixinChatListener {
         Operation<Void> operation
     ) {
         operation.call(instance, component);
-        Listeners.ON_SYSTEM_MESSAGE_RECEIVED_IN_CHAT.onSystemMessageReceivedInChat(component);
+        if (Listeners.ON_SYSTEM_MESSAGE_RECEIVED_IN_CHAT.hasInstancesListening()) Listeners.ON_SYSTEM_MESSAGE_RECEIVED_IN_CHAT.onSystemMessageReceivedInChat(component);
     }
 }

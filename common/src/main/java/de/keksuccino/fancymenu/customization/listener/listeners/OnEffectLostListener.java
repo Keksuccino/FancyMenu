@@ -20,6 +20,9 @@ public class OnEffectLostListener extends AbstractListener {
     }
 
     public void onEffectLost(@Nullable String effectKey, @Nullable String effectType) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cachedEffectKey = effectKey;
         this.cachedEffectType = effectType;
         this.notifyAllInstances();

@@ -29,6 +29,9 @@ public class OnEntityMountedListener extends AbstractListener {
     }
 
     public void onEntityMounted(@NotNull Entity entity) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cacheEntityData(entity);
         this.notifyAllInstances();
     }

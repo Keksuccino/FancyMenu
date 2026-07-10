@@ -24,6 +24,9 @@ public class OnSteppingOnBlockListener extends AbstractListener {
     }
 
     public void onSteppedOnBlock(@NotNull BlockPos blockPos, @NotNull BlockState blockState) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.lastBlockPos = blockPos.immutable();
         ResourceLocation blockKeyLocation = Registry.BLOCK.getKey(blockState.getBlock());
         this.cachedBlockKey = (blockKeyLocation != null) ? blockKeyLocation.toString() : null;

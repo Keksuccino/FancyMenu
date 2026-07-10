@@ -28,6 +28,9 @@ public class OnOtherPlayerDiedListener extends AbstractListener {
     }
 
     public void onOtherPlayerDied(@Nullable String playerName, @NotNull UUID playerUuid, @Nullable Vec3 deathPosition) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.lastPlayerName = playerName;
         this.lastPlayerUuid = playerUuid;
         this.lastDeathPosX = this.formatCoordinate(deathPosition != null ? deathPosition.x : null);

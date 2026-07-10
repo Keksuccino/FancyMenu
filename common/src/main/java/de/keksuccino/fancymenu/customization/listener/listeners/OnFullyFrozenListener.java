@@ -14,6 +14,9 @@ public class OnFullyFrozenListener extends AbstractListener {
     }
 
     public void onFullyFrozen() {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.notifyAllInstances();
     }
 

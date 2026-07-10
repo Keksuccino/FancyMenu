@@ -27,6 +27,9 @@ public class OnDeathListener extends AbstractListener {
     }
 
     public void onDeath(@Nullable Component deathReason, @Nullable Long daysSurvived, @Nullable Double posX, @Nullable Double posY, @Nullable Double posZ) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cachedDeathReasonString = (deathReason != null) ? deathReason.getString() : null;
         this.cachedDeathReasonComponent = (deathReason != null) ? this.serializeComponent(deathReason) : null;
         this.cachedDaysSurvived = (daysSurvived != null && daysSurvived >= 0L) ? Long.toString(daysSurvived) : null;
@@ -47,16 +50,6 @@ public class OnDeathListener extends AbstractListener {
             return null;
         }
         return Double.toString(coordinate);
-    }
-
-    @Nullable
-    public String getLastDeathReasonString() {
-        return this.cachedDeathReasonString;
-    }
-
-    @Nullable
-    public String getLastDeathReasonComponent() {
-        return this.cachedDeathReasonComponent;
     }
 
     @Override

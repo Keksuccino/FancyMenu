@@ -16,20 +16,29 @@ public class OnMouseScrolledListener extends AbstractListener {
     private Double lastScrollDeltaY;
 
     public OnMouseScrolledListener() {
-
         super("mouse_scrolled");
-
-        EventHandler.INSTANCE.registerListenersOf(this);
-
     }
 
     @EventListener
     public void onMouseScrolled(@NotNull ScreenMouseScrollEvent.Pre event) {
 
+        if (!this.hasInstancesListening()) return;
+
         this.lastScrollDeltaY = event.getScrollDeltaY();
 
         this.notifyAllInstances();
 
+    }
+
+    @Override
+    protected void onActivated() {
+        EventHandler.INSTANCE.registerListenersOf(this);
+    }
+
+    @Override
+    protected void onDeactivated() {
+        EventHandler.INSTANCE.unregisterListenersOf(this);
+        this.lastScrollDeltaY = null;
     }
 
     @Override

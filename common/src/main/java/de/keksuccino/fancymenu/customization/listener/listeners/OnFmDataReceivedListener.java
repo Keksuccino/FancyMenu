@@ -19,6 +19,9 @@ public class OnFmDataReceivedListener extends AbstractListener {
     }
 
     public void onDataReceived(@NotNull String dataIdentifier, @NotNull String data, @NotNull String sentBy) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.lastDataIdentifier = Objects.requireNonNullElse(dataIdentifier, "");
         this.lastData = Objects.requireNonNullElse(data, "");
         this.lastSentBy = Objects.requireNonNullElse(sentBy, "unknown_server");

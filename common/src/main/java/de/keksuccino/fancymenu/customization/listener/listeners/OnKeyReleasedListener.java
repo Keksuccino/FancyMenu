@@ -24,6 +24,9 @@ public class OnKeyReleasedListener extends AbstractListener {
     }
 
     public void handleKeyReleased(int keycode, int scancode, int modifiers) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.lastKeyName = InputConstants.getKey(keycode, scancode).getDisplayName().getString();
         this.lastKeycode = keycode;
         this.lastScancode = scancode;

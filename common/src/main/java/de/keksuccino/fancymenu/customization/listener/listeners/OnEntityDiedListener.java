@@ -42,6 +42,9 @@ public class OnEntityDiedListener extends AbstractListener {
     }
 
     public void onEntityDied(@Nullable String entityKey, @Nullable UUID entityUuid, double posX, double posY, double posZ, @Nullable String levelKey, @Nullable String killerName, @Nullable String killerKey, @Nullable String killerUuid, @Nullable String damageType) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cachedEntityKey = entityKey;
         this.cachedEntityUuid = (entityUuid != null) ? entityUuid.toString() : null;
         this.cachedDeathPosX = Double.toString(posX);

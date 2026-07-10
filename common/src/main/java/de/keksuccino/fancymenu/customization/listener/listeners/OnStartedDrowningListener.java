@@ -14,6 +14,9 @@ public class OnStartedDrowningListener extends AbstractListener {
     }
 
     public void onStartedDrowning() {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.notifyAllInstances();
     }
 

@@ -21,6 +21,8 @@ public class OnEntityStartsBeingInSightListener extends AbstractListener {
     private final OnEntityStopsBeingInSightListener stopListener;
     private final Map<UUID, EntitySightData> trackedEntities = new HashMap<>();
     private final Set<UUID> seenThisFrame = new HashSet<>();
+    private boolean trackingWasDormant;
+    private boolean suppressStartEventsThisFrame;
 
     @Nullable
     private EntitySightData cachedEntityData;
@@ -34,8 +36,14 @@ public class OnEntityStartsBeingInSightListener extends AbstractListener {
         return this.hasInstancesListening() || this.stopListener.hasInstancesListening();
     }
 
-    public void onRenderFrameStart() {
+    public boolean onRenderFrameStart() {
+        if (!this.shouldCheckVisibility()) {
+            this.resetTrackingForDormancy();
+            return false;
+        }
         this.seenThisFrame.clear();
+        this.suppressStartEventsThisFrame = this.trackingWasDormant;
+        return true;
     }
 
     public void onEntityVisible(@NotNull Entity entity, double distanceToPlayer) {
@@ -49,11 +57,13 @@ public class OnEntityStartsBeingInSightListener extends AbstractListener {
         }
 
         this.cachedEntityData = sightData;
-        this.notifyAllInstances();
+        if (!this.suppressStartEventsThisFrame) this.notifyAllInstances();
     }
 
     public void onRenderFrameEnd() {
         if (this.trackedEntities.isEmpty()) {
+            this.trackingWasDormant = false;
+            this.suppressStartEventsThisFrame = false;
             return;
         }
         Iterator<Map.Entry<UUID, EntitySightData>> iterator = this.trackedEntities.entrySet().iterator();
@@ -61,9 +71,19 @@ public class OnEntityStartsBeingInSightListener extends AbstractListener {
             Map.Entry<UUID, EntitySightData> entry = iterator.next();
             if (!this.seenThisFrame.contains(entry.getKey())) {
                 iterator.remove();
-                this.stopListener.onEntityStopped(entry.getValue());
+                if (this.stopListener.hasInstancesListening()) this.stopListener.onEntityStopped(entry.getValue());
             }
         }
+        this.trackingWasDormant = false;
+        this.suppressStartEventsThisFrame = false;
+    }
+
+    public void resetTrackingForDormancy() {
+        this.trackedEntities.clear();
+        this.seenThisFrame.clear();
+        this.cachedEntityData = null;
+        this.trackingWasDormant = true;
+        this.suppressStartEventsThisFrame = false;
     }
 
     @Override

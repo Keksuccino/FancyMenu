@@ -24,6 +24,7 @@ public class OnChatMessageReceivedListener extends AbstractListener {
     }
 
     public void onChatMessageReceived(@NotNull Component message, @Nullable UUID senderUuid, @Nullable Component senderName) {
+        if (!this.hasInstancesListening()) return;
         this.lastMessageString = message.getString();
         this.lastMessageJson = this.serializeComponent(message);
         this.lastSenderUuid = senderUuid;

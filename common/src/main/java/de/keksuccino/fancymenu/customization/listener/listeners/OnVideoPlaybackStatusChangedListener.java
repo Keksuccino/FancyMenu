@@ -23,6 +23,9 @@ public class OnVideoPlaybackStatusChangedListener extends AbstractListener {
     }
 
     public void onVideoPlaybackStatusChanged(@Nullable String videoSource, @Nullable String videoSourceType, boolean isLooping, @NotNull VideoPlaybackStatus newStatus) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cachedVideoSource = (videoSource != null && !videoSource.isBlank()) ? videoSource : null;
         this.cachedVideoSourceType = (videoSourceType != null && !videoSourceType.isBlank()) ? videoSourceType : null;
         this.cachedLooping = isLooping;

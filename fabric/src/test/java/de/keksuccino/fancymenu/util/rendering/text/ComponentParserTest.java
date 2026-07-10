@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.text;
 import com.google.gson.JsonParseException;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import net.minecraft.ResourceLocationException;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import org.junit.jupiter.api.Test;
 
@@ -100,5 +101,15 @@ class ComponentParserTest {
         Component component = AbstractElement.buildComponent("&bElement text");
 
         assertEquals("\u00a7bElement text", component.getString());
+    }
+
+    @Test
+    void legacySerializerAcceptsClientOnlyClickActions() {
+        Component component = Component.literal("Open file").withStyle(style -> style.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, "/tmp/fancymenu-test")));
+
+        String json = ComponentParser.toJson(component);
+
+        assertTrue(json.contains("\"action\":\"open_file\""));
+        assertTrue(json.contains("Open file"));
     }
 }

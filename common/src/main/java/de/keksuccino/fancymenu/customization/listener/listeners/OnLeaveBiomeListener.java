@@ -27,6 +27,9 @@ public class OnLeaveBiomeListener extends AbstractListener {
     }
 
     public void onBiomeLeft(@Nullable ResourceKey<Biome> biomeKey) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
 
         if (Objects.equals(this.lastBiomeKey, biomeKey)) {
             return;
@@ -39,6 +42,12 @@ public class OnLeaveBiomeListener extends AbstractListener {
             this.notifyAllInstances();
         }
 
+    }
+
+    @Override
+    protected void onDeactivated() {
+        this.lastBiomeKey = null;
+        this.cachedBiomeKey = null;
     }
 
     @Override

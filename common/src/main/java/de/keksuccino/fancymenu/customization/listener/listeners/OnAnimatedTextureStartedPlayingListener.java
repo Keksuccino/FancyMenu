@@ -21,6 +21,9 @@ public class OnAnimatedTextureStartedPlayingListener extends AbstractListener {
     }
 
     public void onAnimatedTextureStartedPlaying(@Nullable String textureSource, @Nullable String textureSourceType, boolean willRestart) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cachedTextureSource = (textureSource != null && !textureSource.isBlank()) ? textureSource : null;
         this.cachedTextureSourceType = (textureSourceType != null && !textureSourceType.isBlank()) ? textureSourceType : null;
         this.cachedWillRestart = willRestart;

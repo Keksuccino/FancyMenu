@@ -21,6 +21,9 @@ public class OnQuitMinecraftListener extends AbstractListener {
     }
 
     public void onQuitMinecraft() {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         long now = System.currentTimeMillis();
         this.cachedTimestampMillis = Long.toString(now);
         this.cachedTimestampIso = Instant.ofEpochMilli(now).toString();

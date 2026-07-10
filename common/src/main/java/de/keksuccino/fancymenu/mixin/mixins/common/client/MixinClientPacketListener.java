@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.authlib.GameProfile;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.player.LastDeathMessageTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -39,12 +40,13 @@ public class MixinClientPacketListener {
         if (!(packet instanceof ServerboundChatPacket chatPacket)) {
             return;
         }
-        Listeners.ON_CHAT_MESSAGE_SENT.onChatMessageSent(Component.literal(chatPacket.message()));
+        if (Listeners.ON_CHAT_MESSAGE_SENT.hasInstancesListening()) Listeners.ON_CHAT_MESSAGE_SENT.onChatMessageSent(Component.literal(chatPacket.message()));
     }
 
     /** @reason Fire FancyMenu listener when another player joins the connected server. */
     @Inject(method = "handlePlayerInfo", at = @At("HEAD"))
     private void before_handlePlayerInfoUpdate_FancyMenu(ClientboundPlayerInfoPacket packet, CallbackInfo ci) {
+        if (!Listeners.ON_OTHER_PLAYER_JOINED_WORLD.hasInstancesListening()) return;
         if (packet.getAction() != ClientboundPlayerInfoPacket.Action.ADD_PLAYER) {
             return;
         }
@@ -69,6 +71,7 @@ public class MixinClientPacketListener {
     /** @reason Fire FancyMenu listener when another player leaves the connected server. */
     @Inject(method = "handlePlayerInfo", at = @At("HEAD"))
     private void before_handlePlayerInfoRemove_FancyMenu(ClientboundPlayerInfoPacket packet, CallbackInfo ci) {
+        if (!Listeners.ON_OTHER_PLAYER_LEFT_WORLD.hasInstancesListening()) return;
         if (packet.getAction() != ClientboundPlayerInfoPacket.Action.REMOVE_PLAYER) {
             return;
         }
@@ -99,6 +102,7 @@ public class MixinClientPacketListener {
     /** @reason Fire FancyMenu listener when another player dies in the current world. */
     @Inject(method = "handlePlayerCombatKill", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/util/thread/BlockableEventLoop;)V", shift = At.Shift.AFTER))
     private void after_handlePlayerCombatKillEnsureThread_FancyMenu(ClientboundPlayerCombatKillPacket packet, CallbackInfo ci) {
+        if (!Listeners.ON_OTHER_PLAYER_DIED.hasInstancesListening()) return;
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.level == null) {
             return;
@@ -121,6 +125,8 @@ public class MixinClientPacketListener {
     /** @reason Fire FancyMenu listener after the death screen opened for the local player. */
     @Inject(method = "handlePlayerCombatKill", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V", shift = At.Shift.AFTER))
     private void after_handlePlayerCombatKillSetScreen_FancyMenu(ClientboundPlayerCombatKillPacket packet, CallbackInfo ci) {
+        LastDeathMessageTracker.record(packet.getMessage());
+        if (!Listeners.ON_DEATH.hasInstancesListening()) return;
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.player == null) {
             return;
@@ -142,6 +148,10 @@ public class MixinClientPacketListener {
     /** @reason Fire FancyMenu listener when the local player picks up an item entity. */
     @WrapOperation(method = "handleTakeItemEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;shrink(I)V"))
     private void wrap_shrinkItem_FancyMenu(ItemStack stack, int amount, Operation<Void> operation, ClientboundTakeItemEntityPacket packet) {
+        if (!Listeners.ON_ITEM_PICKED_UP.hasInstancesListening()) {
+            operation.call(stack, amount);
+            return;
+        }
         Minecraft minecraft = Minecraft.getInstance();
         LocalPlayer localPlayer = minecraft.player;
         if (localPlayer == null) {
