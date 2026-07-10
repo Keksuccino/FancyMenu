@@ -1,10 +1,11 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.ARGB;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -42,7 +43,7 @@ public class CheckboxButton extends ExtendedButton {
         super.extractContents(graphics, mouseX, mouseY, partial);
 
         if (this.checkboxState && this.isActive()) {
-            graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, this.getCheckboxCheckmarkTexture(), this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+            this.extractCheckboxTexture(graphics, this.getCheckboxCheckmarkTexture());
         }
 
     }
@@ -50,13 +51,21 @@ public class CheckboxButton extends ExtendedButton {
     @Override
     protected void extractBackground(@NotNull GuiGraphicsExtractor graphics, float partial) {
 
-        graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, this.getCheckboxBackground(), this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+        this.extractCheckboxTexture(graphics, this.getCheckboxBackground());
 
     }
 
     @Override
     protected void renderLabelText(@NotNull GuiGraphicsExtractor graphics) {
         // do nothing
+    }
+
+    protected void extractCheckboxTexture(@NotNull GuiGraphicsExtractor graphics, @NotNull Identifier texture) {
+        graphics.blit(RenderPipelines.GUI_TEXTURED, texture, this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight(), getTextureRenderColor(this.alpha));
+    }
+
+    static int getTextureRenderColor(float alpha) {
+        return ARGB.white(alpha);
     }
 
     @NotNull
