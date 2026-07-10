@@ -9,10 +9,13 @@ import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 @SuppressWarnings("all")
 public class RequirementInstance implements ValuePlaceholderHolder {
+
+    private static final ThreadLocal<Set<RequirementInstance>> ASSUMED_MET_INSTANCES = new ThreadLocal<>();
 
     public RequirementContainer parent;
     public Requirement requirement;
@@ -37,6 +40,8 @@ public class RequirementInstance implements ValuePlaceholderHolder {
     }
 
     public boolean requirementMet() {
+        Set<RequirementInstance> assumedMetInstances = ASSUMED_MET_INSTANCES.get();
+        if ((assumedMetInstances != null) && assumedMetInstances.contains(this)) return true;
         if (!this.requirement.checkAsync()) return false;
         String v = this.value;
         if (v != null) {
@@ -49,6 +54,26 @@ public class RequirementInstance implements ValuePlaceholderHolder {
             return !met;
         }
         return met;
+    }
+
+    /**
+     * Runs a narrowly scoped probe while treating this exact requirement instance as satisfied. This is used when
+     * a requirement needs to inspect the render eligibility of its own owner: evaluating the same instance again
+     * would recurse, while applying its mode again would produce incorrect results for inverted requirements.
+     */
+    public boolean testWithThisRequirementAssumedMet(@NotNull BooleanSupplier probe) {
+        Set<RequirementInstance> assumedMetInstances = ASSUMED_MET_INSTANCES.get();
+        if (assumedMetInstances == null) {
+            assumedMetInstances = Collections.newSetFromMap(new IdentityHashMap<>());
+            ASSUMED_MET_INSTANCES.set(assumedMetInstances);
+        }
+        boolean added = assumedMetInstances.add(this);
+        try {
+            return probe.getAsBoolean();
+        } finally {
+            if (added) assumedMetInstances.remove(this);
+            if (assumedMetInstances.isEmpty()) ASSUMED_MET_INSTANCES.remove();
+        }
     }
 
     /**

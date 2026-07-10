@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.element.elements.button.custombutto
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
@@ -39,6 +40,7 @@ public class IsAnyButtonHoveredRequirement extends Requirement {
 
     @Override
     public boolean isRequirementMet(@Nullable String value) {
+        RequirementInstance currentInstance = this.getCurrentInstance();
         Screen s = ScreenUtils.getScreen();
         if (s != null) {
             ScreenCustomizationLayer handler = ScreenCustomizationLayerHandler.getLayerOfScreen(s);
@@ -46,7 +48,7 @@ public class IsAnyButtonHoveredRequirement extends Requirement {
                 int mX = MouseInput.getMouseX();
                 int mY = MouseInput.getMouseY();
                 for (AbstractElement e : handler.allElements) {
-                    if ((e instanceof ButtonElement) && HoverRequirementUtils.isElementHovered(e, mX, mY)) {
+                    if ((e instanceof ButtonElement) && HoverRequirementUtils.isElementHovered(e, mX, mY, currentInstance)) {
                         return true;
                     }
                 }

@@ -45,7 +45,7 @@
 - [x] [Crash when JEI sends system chat message with OPEN_FILE action while FancyMenu chat listener is active](https://github.com/Keksuccino/FancyMenu/issues/1628)
 - ♻️ [Game crashing when i open "open screen action script" close screen action script too](https://github.com/Keksuccino/FancyMenu/issues/1625)
   - Already fixed: System Interactions Addon 1.0.1 was built against FancyMenu 3.1.7's old action ABI but falsely allowed 3.9.3, causing `AbstractMethodError` during action-menu enumeration; the addon has no 26.2 support and its actions are native now.
-- [ ] ["Is Element Hovered" requirement not working correctly](https://github.com/Keksuccino/FancyMenu/issues/1624)
+- [x] ["Is Element Hovered" requirement not working correctly](https://github.com/Keksuccino/FancyMenu/issues/1624)
 - [ ] [The text when creating the world is now bold in some languages](https://github.com/Keksuccino/FancyMenu/issues/1623)
 - [ ] [MCEF does not load on first boot](https://github.com/Keksuccino/FancyMenu/issues/1622)
 - [ ] [SendHttpRequestAction reports "No internet connection available!" even though internet works](https://github.com/Keksuccino/FancyMenu/issues/1614)
