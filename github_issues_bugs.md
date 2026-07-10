@@ -18,7 +18,7 @@
 - [x] [Fancy Entity Renderer element is added but the entity/player does not render](https://github.com/Keksuccino/FancyMenu/issues/1673)
 - [x] [Item elements have inconsistent layering between items and blocks](https://github.com/Keksuccino/FancyMenu/issues/1672)
 - [x] [Filled condition not updated when dropping hotbar items with hotkey](https://github.com/Keksuccino/FancyMenu/issues/1669)
-- [ ] [[NF 1.21.1] Invisible screens when menu blur is enabled](https://github.com/Keksuccino/FancyMenu/issues/1665)
+- [x] [[NF 1.21.1] Invisible screens when menu blur is enabled](https://github.com/Keksuccino/FancyMenu/issues/1665)
 - [ ] [Fancy menu issues intro Fabric (1.21.1)](https://github.com/Keksuccino/FancyMenu/issues/1660)
 - [ ] [Fancy Menus 3.9.1 Fabric [1.21.1+1.2.11] Edges of image and rectangle shape elements rendering weirdly](https://github.com/Keksuccino/FancyMenu/issues/1659)
 - [ ] [Texture background menu issue on Fabric 1.19.2](https://github.com/Keksuccino/FancyMenu/issues/1658)
