@@ -5,6 +5,7 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import net.minecraft.ResourceLocationException;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
@@ -44,10 +45,15 @@ public class ComponentParser {
         try {
             MutableComponent component = Component.Serializer.fromJson(jsonElement);
             return isValidComponent(component, Collections.newSetFromMap(new IdentityHashMap<>())) ? component : null;
-        } catch (JsonParseException ignored) {
-            // Syntactically valid JSON can still be invalid component input and uses the same plain-text fallback.
-            return null;
+        } catch (RuntimeException ex) {
+            if (isExpectedUserInputFailure(ex)) return null;
+            throw ex;
         }
+    }
+
+    static boolean isExpectedUserInputFailure(@NotNull RuntimeException exception) {
+        // 1.19.2 reports codec-invalid resource identifiers and values as runtime argument errors instead of structured decode failures.
+        return exception instanceof JsonParseException || exception instanceof ResourceLocationException || exception instanceof IllegalArgumentException;
     }
 
     /**

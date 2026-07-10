@@ -1,11 +1,13 @@
 package de.keksuccino.fancymenu.util.rendering.text;
 
+import com.google.gson.JsonParseException;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import net.minecraft.ResourceLocationException;
 import net.minecraft.network.chat.Component;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ComponentParserTest {
@@ -75,10 +77,22 @@ class ComponentParserTest {
     }
 
     @Test
-    void unexpectedRuntimeParserFailuresPropagate() {
+    void invalidResourceLocationFallsBackToExactLiteralText() {
         String invalidResourceLocation = "{\"nbt\":\"path\",\"storage\":\"invalid resource location\"}";
 
-        assertThrows(RuntimeException.class, () -> ComponentParser.fromJsonOrPlainText(invalidResourceLocation));
+        assertEquals(invalidResourceLocation, ComponentParser.fromJsonOrPlainText(invalidResourceLocation).getString());
+    }
+
+    @Test
+    void targetSpecificUserInputFailuresAreExpected() {
+        assertTrue(ComponentParser.isExpectedUserInputFailure(new JsonParseException("invalid component")));
+        assertTrue(ComponentParser.isExpectedUserInputFailure(new ResourceLocationException("invalid identifier")));
+        assertTrue(ComponentParser.isExpectedUserInputFailure(new IllegalArgumentException("invalid value")));
+    }
+
+    @Test
+    void unrelatedRuntimeFailuresRemainUnexpected() {
+        assertFalse(ComponentParser.isExpectedUserInputFailure(new IllegalStateException("unexpected parser failure")));
     }
 
     @Test
