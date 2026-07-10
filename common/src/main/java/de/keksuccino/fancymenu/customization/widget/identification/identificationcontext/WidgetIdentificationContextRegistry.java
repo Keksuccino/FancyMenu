@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.widget.identification.identificationcontext;
 
+import de.keksuccino.fancymenu.compat.ScreenCompatibility;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,7 +19,7 @@ public class WidgetIdentificationContextRegistry {
 
     @Nullable
     public static WidgetIdentificationContext getContextForScreen(@NotNull Class<? extends Screen> screenClass) {
-        return CONTEXTS.get(screenClass);
+        return CONTEXTS.get(ScreenCompatibility.getCompatibleScreenClass(screenClass));
     }
 
     @NotNull
@@ -27,7 +28,6 @@ public class WidgetIdentificationContextRegistry {
     }
 
 }
-
 
 
 
