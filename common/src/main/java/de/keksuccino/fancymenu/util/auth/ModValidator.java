@@ -16,43 +16,38 @@ import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 
 public class ModValidator {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final DrawableColor INVALID_COLOR = DrawableColor.of(Color.RED);
+    private static final String FANCYMENU_MOD_ID = "fancymenu";
+    private static final String FANCYMENU_DISPLAY_NAME = "FancyMenu";
+    private static final String FANCYMENU_DESCRIPTION = "Customize Minecraft's menus with ease!";
+    private static final String FANCYMENU_LICENSE = "DSMSLv3 (DON'T SNATCH MA STUFF LICENSE v3)";
 
     public static boolean isFancyMenuLoaded() {
-        return Services.PLATFORM.isModLoaded("fancymenu");
+        return Services.PLATFORM.isModLoaded(FANCYMENU_MOD_ID);
     }
 
     public static boolean isFancyMenuDisplayName() {
-        UniversalModContainer mod = Services.PLATFORM.getLoadedMod("fancymenu");
-        if (mod == null) return false;
-        return "FancyMenu".equals(mod.name());
+        return hasFancyMenuDisplayName(Services.PLATFORM.getLoadedMod(FANCYMENU_MOD_ID));
     }
 
     public static boolean isFancyMenuDescription() {
-        UniversalModContainer mod = Services.PLATFORM.getLoadedMod("fancymenu");
-        if (mod == null) return false;
-        if (mod.description() == null) return false;
-        return mod.description().contains("Customize Minecraft's menus with ease!");
+        return hasFancyMenuDescription(Services.PLATFORM.getLoadedMod(FANCYMENU_MOD_ID));
     }
 
     public static boolean isFancyMenuLicense() {
-        UniversalModContainer mod = Services.PLATFORM.getLoadedMod("fancymenu");
-        if (mod == null) return false;
-        if (mod.license() == null) return false;
-        return mod.license().contains("DSMSLv3");
+        return hasFancyMenuLicense(Services.PLATFORM.getLoadedMod(FANCYMENU_MOD_ID));
     }
 
     public static boolean isFancyMenuMetadataValid() {
         if (!isFancyMenuLoaded()) return false;
-        if (!isFancyMenuDisplayName()) return false;
-        if (!isFancyMenuDescription()) return false;
-        if (!isFancyMenuLicense()) return false;
-        return true;
+        UniversalModContainer mod = Services.PLATFORM.getLoadedMod(FANCYMENU_MOD_ID);
+        return isFancyMenuMetadataValid(mod);
     }
 
     public static void printInfo() {
@@ -61,10 +56,11 @@ public class ModValidator {
         LOGGER.warn("================ FANCYMENU ================");
         LOGGER.warn("");
 
+        UniversalModContainer mod = Services.PLATFORM.getLoadedMod(FANCYMENU_MOD_ID);
         LOGGER.warn("FM found in loaded mods: " + isFancyMenuLoaded());
-        LOGGER.warn("FM metadata has correct display name: " + isFancyMenuDisplayName());
-        LOGGER.warn("FM metadata has correct description: " + isFancyMenuDescription());
-        LOGGER.warn("FM metadata has correct license: " + isFancyMenuLicense());
+        LOGGER.warn("FM metadata has correct display name: " + hasFancyMenuDisplayName(mod));
+        LOGGER.warn("FM metadata has correct description: " + hasFancyMenuDescription(mod));
+        LOGGER.warn("FM metadata has correct license: " + hasFancyMenuLicense(mod));
 
         LOGGER.warn("");
         LOGGER.warn("===========================================");
@@ -104,6 +100,22 @@ public class ModValidator {
         if (screen instanceof CreativeModeInventoryScreen) return true;
         if (screen instanceof ChatScreen) return true;
         return false;
+    }
+
+    static boolean isFancyMenuMetadataValid(@Nullable UniversalModContainer mod) {
+        return hasFancyMenuDisplayName(mod) && hasFancyMenuDescription(mod) && hasFancyMenuLicense(mod);
+    }
+
+    private static boolean hasFancyMenuDisplayName(@Nullable UniversalModContainer mod) {
+        return mod != null && FANCYMENU_DISPLAY_NAME.equals(mod.name());
+    }
+
+    private static boolean hasFancyMenuDescription(@Nullable UniversalModContainer mod) {
+        return mod != null && FANCYMENU_DESCRIPTION.equals(mod.description());
+    }
+
+    private static boolean hasFancyMenuLicense(@Nullable UniversalModContainer mod) {
+        return mod != null && FANCYMENU_LICENSE.equals(mod.license());
     }
 
 }
