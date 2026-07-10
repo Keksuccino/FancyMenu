@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.WelcomeWindowBody;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
+import de.keksuccino.fancymenu.customization.gameintro.GameIntroOverlay;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
@@ -40,16 +41,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Gui.class)
 public abstract class MixinGui {
 
-    @Unique private boolean lateClientInitDoneFancyMenu = false;
-    @Unique @Nullable private Screen lastScreen_FancyMenu = null;
-
     @Shadow @Final private Minecraft minecraft;
     @Shadow @Nullable private Screen screen;
+    @Shadow @Nullable private Overlay overlay;
+
+    @Unique private boolean lateClientInitDone_FancyMenu = false;
+    @Unique @Nullable private Screen lastScreen_FancyMenu = null;
 
     @Inject(method = "setOverlay", at = @At("HEAD"))
-    private void before_setOverlay_FancyMenu(Overlay overlay, CallbackInfo info) {
-        if (!this.lateClientInitDoneFancyMenu) {
-            this.lateClientInitDoneFancyMenu = true;
+    private void before_setOverlay_FancyMenu(@Nullable Overlay overlay, CallbackInfo info) {
+        if ((this.overlay != overlay) && (this.overlay instanceof GameIntroOverlay gameIntroOverlay)) {
+            gameIntroOverlay.onReplaced();
+        }
+        if (!this.lateClientInitDone_FancyMenu) {
+            this.lateClientInitDone_FancyMenu = true;
             FancyMenu.lateClientInit();
         }
     }

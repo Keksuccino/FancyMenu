@@ -63,6 +63,7 @@ public class GameIntroOverlay extends Overlay {
     protected float watermediaBinariesDownloadWidth_FancyMenu = Float.NaN;
     protected float watermediaBinariesDownloadHeight_FancyMenu = Float.NaN;
     protected boolean watermediaLeftMouseWasDown_FancyMenu = false;
+    protected boolean closed = false;
 
     public GameIntroOverlay(@NotNull Screen fadeTo, @NotNull PlayableResource intro) {
         super();
@@ -242,9 +243,32 @@ public class GameIntroOverlay extends Overlay {
     }
 
     protected void close() {
-        this.intro.stop();
+        if (this.closed) return;
+        this.stopIntroSafely();
         if (!this.fadeToInitialized) this.initFadeToScreen();
+        GameIntroHandler.introPlayed = true;
+        this.closed = true;
         Minecraft.getInstance().gui.setOverlay(null);
+    }
+
+    /**
+     * Stops an intro that was displaced by another overlay without consuming it. Startup resource reloads can then retry the intro after their final loading overlay completes.
+     */
+    public void onReplaced() {
+        if (this.closed) return;
+        this.closed = true;
+        this.stopIntroSafely();
+    }
+
+    /**
+     * Playable resources can delegate to native or third-party code. A cleanup failure must never prevent the overlay transition from completing.
+     */
+    private void stopIntroSafely() {
+        try {
+            this.intro.stop();
+        } catch (Throwable throwable) {
+            LOGGER.error("[FANCYMENU] Failed to stop game intro resource!", throwable);
+        }
     }
 
     public void keyPressed(int keycode, int scancode, int modifiers) {
