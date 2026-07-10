@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.requirement.requirements.gui;
 
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
@@ -38,6 +39,8 @@ public class IsElementHoveredRequirement extends Requirement {
     @Override
     public boolean isRequirementMet(@Nullable String value) {
 
+        RequirementInstance currentInstance = this.getCurrentInstance();
+
         if (value != null) {
             Screen s = Minecraft.getInstance().screen;
             if (s != null) {
@@ -47,7 +50,7 @@ public class IsElementHoveredRequirement extends Requirement {
                     if (i != null) {
                         int mX = MouseInput.getMouseX();
                         int mY = MouseInput.getMouseY();
-                        if (HoverRequirementUtils.isElementHovered(i, mX, mY)) {
+                        if (HoverRequirementUtils.isElementHovered(i, mX, mY, currentInstance)) {
                             return true;
                         }
                     }
