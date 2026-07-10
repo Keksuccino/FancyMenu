@@ -64,6 +64,8 @@ public class MixinMouseHandler {
                 this.fakeRightMouse_FancyMenu--;
             }
         }
+        // This runs before Forge's cancellable mouse-button pre-hook, so even a canceled new press supersedes stale overlay ownership.
+        if (pressed) ScreenOverlayHandler.INSTANCE.prepareMousePress(mappedButton);
 
         double guiWidth = this.mc_FancyMenu.getWindow().getGuiScaledWidth();
         double guiHeight = this.mc_FancyMenu.getWindow().getGuiScaledHeight();
