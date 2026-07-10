@@ -24,9 +24,12 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PipableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
+import de.keksuccino.fancymenu.util.window.InitialLoadingOverlayIconRefreshController;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.screens.DeathScreen;
+import net.minecraft.client.gui.screens.LoadingOverlay;
 import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -49,6 +52,7 @@ public abstract class MixinGui {
 
     @Unique private boolean lateClientInitDone_FancyMenu = false;
     @Unique @Nullable private Screen lastScreen_FancyMenu = null;
+    @Unique private final InitialLoadingOverlayIconRefreshController initialLoadingOverlayIconRefreshController_FancyMenu = new InitialLoadingOverlayIconRefreshController();
 
     @Inject(method = "setOverlay", at = @At("HEAD"))
     private void before_setOverlay_FancyMenu(@Nullable Overlay overlay, CallbackInfo info) {
@@ -58,6 +62,14 @@ public abstract class MixinGui {
         if (!this.lateClientInitDone_FancyMenu) {
             this.lateClientInitDone_FancyMenu = true;
             FancyMenu.lateClientInit();
+        }
+    }
+
+    /** @reason The initial icon updates happen before resource loading; refreshing after the accepted loading-overlay exit makes the custom icon visible before the first unobscured screen frame. */
+    @Inject(method = "setOverlay", at = @At("TAIL"))
+    private void after_setOverlay_FancyMenu(@Nullable Overlay overlay, CallbackInfo info) {
+        if (this.initialLoadingOverlayIconRefreshController_FancyMenu.afterOverlayAssignment(this.overlay instanceof LoadingOverlay)) {
+            WindowHandler.updateCustomWindowIcon();
         }
     }
 
