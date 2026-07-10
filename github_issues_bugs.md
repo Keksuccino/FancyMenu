@@ -66,7 +66,8 @@
 - [x] [Checkboxes do not fade in](https://github.com/Keksuccino/FancyMenu/issues/1536)
 - ⚠️ [False Positive With KubeJS Renaming Of Mods Feature](https://github.com/Keksuccino/FancyMenu/issues/1535)
   - Intentional behavior: FancyMenu treats runtime changes to its display name or other authenticated metadata as a failed integrity check, so KubeJS renaming is deliberately unsupported rather than a false positive to fix.
-- [ ] [Create World Screen Layout Resetting](https://github.com/Keksuccino/FancyMenu/issues/1533)
+- ⚠️ [Create World Screen Layout Resetting](https://github.com/Keksuccino/FancyMenu/issues/1533)
+  - ⚠️ Blocked on a current reproduction: the supplied FancyMenu 3.8.1/Minecraft 1.21.1 log and video contain no layout file or widget/event trace, and the exact Modern World Creation 2.0.1 code performs its replacements synchronously before FancyMenu’s Init/Resize Post handling; that mod has no supported 26.2 release. Current 26.2 code exposes no identifiable late geometry-reset path. Please provide the exact layout/config export and a minimal current reproducer (loader and all mod versions), and authorize a visual client run instrumented to capture Init/Resize events plus each widget’s identifier, object identity, and geometry through the first incorrect frame.
 - [ ] [Creative Inventory Items Having No Tooltp Text Whe...](https://github.com/Keksuccino/FancyMenu/issues/1531)
 - [ ] [FancyMenu breaks custom item rendering in a custom Screen](https://github.com/Keksuccino/FancyMenu/issues/1530)
 - [ ] [Unsaved changes prompt shows even after saving](https://github.com/Keksuccino/FancyMenu/issues/1527)
