@@ -246,18 +246,21 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
 
     public void updateWidgetTexture() {
 
+        ButtonElement propertySource = this.getPropertySource();
         RenderableResource sliderBackNormal = null;
         RenderableResource sliderBackHighlighted = null;
-        boolean transparentBackground = this.isTransparentBackground();
+        ResourceSupplier<ITexture> sliderBackNormalSupplier = this.getTemplateProperty(propertySource, template -> template.sliderBackgroundTextureNormal, this.sliderBackgroundTextureNormal);
+        ResourceSupplier<ITexture> sliderBackHighlightedSupplier = this.getTemplateProperty(propertySource, template -> template.sliderBackgroundTextureHighlighted, this.sliderBackgroundTextureHighlighted);
+        boolean transparentBackground = this.getTemplateProperty(propertySource, template -> template.transparentBackground, this.transparentBackground);
         RenderableResource transparentResource = null;
 
         //Normal Slider Background
-        if (this.getSliderBackgroundTextureNormal() != null) {
-            sliderBackNormal = this.getSliderBackgroundTextureNormal().get();
+        if (sliderBackNormalSupplier != null) {
+            sliderBackNormal = sliderBackNormalSupplier.get();
         }
         //Highlighted Slider Background
-        if (this.getSliderBackgroundTextureHighlighted() != null) {
-            sliderBackHighlighted = this.getSliderBackgroundTextureHighlighted().get();
+        if (sliderBackHighlightedSupplier != null) {
+            sliderBackHighlighted = sliderBackHighlightedSupplier.get();
         }
         if (transparentBackground) {
             transparentResource = PngTexture.FULLY_TRANSPARENT_PNG_TEXTURE_SUPPLIER.get();
@@ -273,32 +276,35 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         RenderableResource handleTextureNormal = null;
         RenderableResource handleTextureHover = null;
         RenderableResource handleTextureInactive = null;
+        ResourceSupplier<ITexture> handleTextureNormalSupplier = this.getTemplateProperty(propertySource, template -> template.backgroundTextureNormal, this.handleTextureNormal);
+        ResourceSupplier<ITexture> handleTextureHoverSupplier = this.getTemplateProperty(propertySource, template -> template.backgroundTextureHover, this.handleTextureHover);
+        ResourceSupplier<ITexture> handleTextureInactiveSupplier = this.getTemplateProperty(propertySource, template -> template.backgroundTextureInactive, this.handleTextureInactive);
 
         //Normal
-        if (this.getHandleTextureNormal() != null) {
-            handleTextureNormal = this.getHandleTextureNormal().get();
+        if (handleTextureNormalSupplier != null) {
+            handleTextureNormal = handleTextureNormalSupplier.get();
         }
         //Hover
-        if (this.getHandleTextureHover() != null) {
-            handleTextureHover = this.getHandleTextureHover().get();
+        if (handleTextureHoverSupplier != null) {
+            handleTextureHover = handleTextureHoverSupplier.get();
         }
         //Inactive
-        if (this.getHandleTextureInactive() != null) {
-            handleTextureInactive = this.getHandleTextureInactive().get();
+        if (handleTextureInactiveSupplier != null) {
+            handleTextureInactive = handleTextureInactiveSupplier.get();
         }
         if (this.slider instanceof CustomizableWidget w) {
             if (this.slider instanceof CustomizableSlider s) {
-                s.setNineSliceCustomSliderBackground_FancyMenu(!transparentBackground && this.isNineSliceCustomBackground());
-                s.setNineSliceSliderBackgroundBorderX_FancyMenu(this.getNineSliceBorderX());
-                s.setNineSliceSliderBackgroundBorderY_FancyMenu(this.getNineSliceBorderY());
-                s.setNineSliceCustomSliderHandle_FancyMenu(this.isNineSliceSliderHandle());
-                s.setNineSliceSliderHandleBorderX_FancyMenu(this.getNineSliceSliderHandleBorderX());
-                s.setNineSliceSliderHandleBorderY_FancyMenu(this.getNineSliceSliderHandleBorderY());
+                s.setNineSliceCustomSliderBackground_FancyMenu(!transparentBackground && this.getTemplateProperty(propertySource, template -> template.nineSliceCustomBackground, this.nineSliceCustomBackground));
+                s.setNineSliceSliderBackgroundBorderX_FancyMenu(this.getTemplateProperty(propertySource, template -> template.nineSliceBorderX.getInteger(), this.nineSliceBorderX.getInteger()));
+                s.setNineSliceSliderBackgroundBorderY_FancyMenu(this.getTemplateProperty(propertySource, template -> template.nineSliceBorderY.getInteger(), this.nineSliceBorderY.getInteger()));
+                s.setNineSliceCustomSliderHandle_FancyMenu(this.getTemplateProperty(propertySource, template -> template.nineSliceSliderHandle, this.nineSliceSliderHandle));
+                s.setNineSliceSliderHandleBorderX_FancyMenu(this.getTemplateProperty(propertySource, template -> template.nineSliceSliderHandleBorderX.getInteger(), this.nineSliceSliderHandleBorderX.getInteger()));
+                s.setNineSliceSliderHandleBorderY_FancyMenu(this.getTemplateProperty(propertySource, template -> template.nineSliceSliderHandleBorderY.getInteger(), this.nineSliceSliderHandleBorderY.getInteger()));
             }
             w.setCustomBackgroundNormalFancyMenu(handleTextureNormal);
             w.setCustomBackgroundHoverFancyMenu(handleTextureHover);
             w.setCustomBackgroundInactiveFancyMenu(handleTextureInactive);
-            w.setCustomBackgroundResetBehaviorFancyMenu(this.isRestartBackgroundAnimationsOnHover() ? CustomizableWidget.CustomBackgroundResetBehavior.RESET_ON_HOVER : CustomizableWidget.CustomBackgroundResetBehavior.RESET_NEVER);
+            w.setCustomBackgroundResetBehaviorFancyMenu(this.getTemplateProperty(propertySource, template -> template.restartBackgroundAnimationsOnHover, this.restartBackgroundAnimationsOnHover) ? CustomizableWidget.CustomBackgroundResetBehavior.RESET_ON_HOVER : CustomizableWidget.CustomBackgroundResetBehavior.RESET_NEVER);
         }
 
     }
@@ -561,9 +567,11 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     }
 
     protected <T> T getTemplateProperty(@NotNull TemplatePropertyGetter<T> templatePropertyGetter, @Nullable T defaultProperty) {
-        if (this.getPropertySource() != null) {
-            return templatePropertyGetter.get(this.getPropertySource());
-        }
+        return this.getTemplateProperty(this.getPropertySource(), templatePropertyGetter, defaultProperty);
+    }
+
+    protected <T> T getTemplateProperty(@Nullable ButtonElement propertySource, @NotNull TemplatePropertyGetter<T> templatePropertyGetter, @Nullable T defaultProperty) {
+        if (propertySource != null) return templatePropertyGetter.get(propertySource);
         return defaultProperty;
     }
 

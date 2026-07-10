@@ -96,10 +96,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public final Property.IntegerProperty nineSliceSliderHandleBorderY = putProperty(Property.integerProperty("nine_slice_slider_handle_border_y", 5, "fancymenu.elements.slider.v2.handle.textures.nine_slice.border_y"));
     public final Property<ResourceSupplier<IAudio>> unhoverAudio = putProperty(Property.resourceSupplierProperty(IAudio.class, "unhover_audio", null, "fancymenu.elements.widgets.unhover_audio", true, true, true, null));
 
-    protected static long lastTemplateUpdateButton = -1L;
-    protected static ButtonElement lastTemplateButton = null;
-    protected static long lastTemplateUpdateSlider = -1L;
-    protected static ButtonElement lastTemplateSlider = null;
+    private static final LayerScopedTemplateCache<ScreenCustomizationLayer, ButtonElement> TEMPLATE_CACHE = new LayerScopedTemplateCache<>(100L);
 
     public ButtonElement(ElementBuilder<ButtonElement, ButtonEditorElement> builder) {
         super(builder);
@@ -109,7 +106,12 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     @Override
     public void afterConstruction() {
 
-        resetTemplateCache();
+        ScreenCustomizationLayer activeLayer = ScreenCustomizationLayerHandler.getActiveLayer();
+        if (activeLayer != null) {
+            resetTemplateCache(activeLayer);
+        } else {
+            resetTemplateCache();
+        }
 
         if (this.getWidget() == null) return;
         //This is mainly to make Vanilla buttons not flicker for the first frame when hidden
@@ -446,38 +448,39 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
     public void updateWidgetTexture() {
 
+        ButtonElement propertySource = this.getPropertySource();
         RenderableResource backNormal = null;
         RenderableResource backHover = null;
         RenderableResource backInactive = null;
         RenderableResource iconNormal = null;
         RenderableResource iconHover = null;
         RenderableResource iconInactive = null;
-        boolean transparentBackground = this.getPropertySource().transparentBackground;
+        boolean transparentBackground = propertySource.transparentBackground;
         RenderableResource transparentResource = null;
 
         //Normal
-        if (this.getPropertySource().backgroundTextureNormal != null) {
-            backNormal = this.getPropertySource().backgroundTextureNormal.get();
+        if (propertySource.backgroundTextureNormal != null) {
+            backNormal = propertySource.backgroundTextureNormal.get();
         }
         //Hover
-        if (this.getPropertySource().backgroundTextureHover != null) {
-            backHover = this.getPropertySource().backgroundTextureHover.get();
+        if (propertySource.backgroundTextureHover != null) {
+            backHover = propertySource.backgroundTextureHover.get();
         }
         //Inactive
-        if (this.getPropertySource().backgroundTextureInactive != null) {
-            backInactive = this.getPropertySource().backgroundTextureInactive.get();
+        if (propertySource.backgroundTextureInactive != null) {
+            backInactive = propertySource.backgroundTextureInactive.get();
         }
         //Icon Normal
-        if (this.getPropertySource().iconTextureNormal != null) {
-            iconNormal = this.getPropertySource().iconTextureNormal.get();
+        if (propertySource.iconTextureNormal != null) {
+            iconNormal = propertySource.iconTextureNormal.get();
         }
         //Icon Hover
-        if (this.getPropertySource().iconTextureHover != null) {
-            iconHover = this.getPropertySource().iconTextureHover.get();
+        if (propertySource.iconTextureHover != null) {
+            iconHover = propertySource.iconTextureHover.get();
         }
         //Icon Inactive
-        if (this.getPropertySource().iconTextureInactive != null) {
-            iconInactive = this.getPropertySource().iconTextureInactive.get();
+        if (propertySource.iconTextureInactive != null) {
+            iconInactive = propertySource.iconTextureInactive.get();
         }
         if (transparentBackground && !(this.getWidget() instanceof CustomizableSlider)) {
             transparentResource = PngTexture.FULLY_TRANSPARENT_PNG_TEXTURE_SUPPLIER.get();
@@ -488,18 +491,18 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
         if (this.getWidget() instanceof CustomizableWidget w) {
             if (this.getWidget() instanceof CustomizableSlider s) {
-                s.setNineSliceCustomSliderBackground_FancyMenu(!transparentBackground && this.getPropertySource().nineSliceCustomBackground);
-                s.setNineSliceSliderBackgroundBorderX_FancyMenu(this.getPropertySource().nineSliceBorderX.getInteger());
-                s.setNineSliceSliderBackgroundBorderY_FancyMenu(this.getPropertySource().nineSliceBorderY.getInteger());
+                s.setNineSliceCustomSliderBackground_FancyMenu(!transparentBackground && propertySource.nineSliceCustomBackground);
+                s.setNineSliceSliderBackgroundBorderX_FancyMenu(propertySource.nineSliceBorderX.getInteger());
+                s.setNineSliceSliderBackgroundBorderY_FancyMenu(propertySource.nineSliceBorderY.getInteger());
             } else {
-                w.setNineSliceCustomBackground_FancyMenu(!transparentBackground && this.getPropertySource().nineSliceCustomBackground);
-                w.setNineSliceBorderX_FancyMenu(this.getPropertySource().nineSliceBorderX.getInteger());
-                w.setNineSliceBorderY_FancyMenu(this.getPropertySource().nineSliceBorderY.getInteger());
+                w.setNineSliceCustomBackground_FancyMenu(!transparentBackground && propertySource.nineSliceCustomBackground);
+                w.setNineSliceBorderX_FancyMenu(propertySource.nineSliceBorderX.getInteger());
+                w.setNineSliceBorderY_FancyMenu(propertySource.nineSliceBorderY.getInteger());
             }
             w.setCustomBackgroundNormalFancyMenu(backNormal);
             w.setCustomBackgroundHoverFancyMenu(backHover);
             w.setCustomBackgroundInactiveFancyMenu(backInactive);
-            w.setCustomBackgroundResetBehaviorFancyMenu(this.getPropertySource().restartBackgroundAnimationsOnHover ? CustomizableWidget.CustomBackgroundResetBehavior.RESET_ON_HOVER : CustomizableWidget.CustomBackgroundResetBehavior.RESET_NEVER);
+            w.setCustomBackgroundResetBehaviorFancyMenu(propertySource.restartBackgroundAnimationsOnHover ? CustomizableWidget.CustomBackgroundResetBehavior.RESET_ON_HOVER : CustomizableWidget.CustomBackgroundResetBehavior.RESET_NEVER);
         }
         if (this.getWidget() instanceof ExtendedButton b) {
             b.setIconNormal(iconNormal);
@@ -513,12 +516,12 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         RenderableResource sliderBackHighlighted = null;
 
         //Normal
-        if (this.getPropertySource().sliderBackgroundTextureNormal != null) {
-            sliderBackNormal = this.getPropertySource().sliderBackgroundTextureNormal.get();
+        if (propertySource.sliderBackgroundTextureNormal != null) {
+            sliderBackNormal = propertySource.sliderBackgroundTextureNormal.get();
         }
         //Highlighted
-        if (this.getPropertySource().sliderBackgroundTextureHighlighted != null) {
-            sliderBackHighlighted = this.getPropertySource().sliderBackgroundTextureHighlighted.get();
+        if (propertySource.sliderBackgroundTextureHighlighted != null) {
+            sliderBackHighlighted = propertySource.sliderBackgroundTextureHighlighted.get();
         }
         if (transparentBackground && (this.getWidget() instanceof CustomizableSlider)) {
             if (transparentResource == null) {
@@ -529,9 +532,9 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         }
 
         if (this.getWidget() instanceof CustomizableSlider w) {
-            w.setNineSliceCustomSliderHandle_FancyMenu(this.getPropertySource().nineSliceSliderHandle);
-            w.setNineSliceSliderHandleBorderX_FancyMenu(this.getPropertySource().nineSliceSliderHandleBorderX.getInteger());
-            w.setNineSliceSliderHandleBorderY_FancyMenu(this.getPropertySource().nineSliceSliderHandleBorderY.getInteger());
+            w.setNineSliceCustomSliderHandle_FancyMenu(propertySource.nineSliceSliderHandle);
+            w.setNineSliceSliderHandleBorderX_FancyMenu(propertySource.nineSliceSliderHandleBorderX.getInteger());
+            w.setNineSliceSliderHandleBorderY_FancyMenu(propertySource.nineSliceSliderHandleBorderY.getInteger());
             w.setCustomSliderBackgroundNormalFancyMenu(sliderBackNormal);
             w.setCustomSliderBackgroundHighlightedFancyMenu(sliderBackHighlighted);
         }
@@ -661,43 +664,29 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
     @Nullable
     public static ButtonElement getTopActiveTemplateElement(boolean forSlider) {
-        long now = System.currentTimeMillis();
-        if (!forSlider && ((lastTemplateUpdateButton + 100L) > now)) {
-            return lastTemplateButton;
-        }
-        if (forSlider && ((lastTemplateUpdateSlider + 100L) > now)) {
-            return lastTemplateSlider;
-        }
-        ButtonElement template = null;
         ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getActiveLayer();
-        if (layer != null) {
+        if (layer == null) return null;
+        return TEMPLATE_CACHE.resolve(layer, forSlider, () -> {
             for (AbstractElement e : layer.allElements) {
                 if (e instanceof ButtonElement b) {
                     boolean validTemplate = true;
                     if (forSlider && (b.templateShareWith == TemplateSharing.BUTTONS)) validTemplate = false;
                     if (!forSlider && (b.templateShareWith == TemplateSharing.SLIDERS)) validTemplate = false;
                     if (b.isTemplate && b.shouldRender() && validTemplate) {
-                        template = b;
-                        break;
+                        return b;
                     }
                 }
             }
-        }
-        if (!forSlider) {
-            lastTemplateButton = template;
-            lastTemplateUpdateButton = now;
-        } else {
-            lastTemplateSlider = template;
-            lastTemplateUpdateSlider = now;
-        }
-        return template;
+            return null;
+        });
     }
 
     public static void resetTemplateCache() {
-        lastTemplateButton = null;
-        lastTemplateUpdateButton = -1L;
-        lastTemplateSlider = null;
-        lastTemplateUpdateSlider = -1L;
+        TEMPLATE_CACHE.clear();
+    }
+
+    public static void resetTemplateCache(@NotNull ScreenCustomizationLayer layer) {
+        TEMPLATE_CACHE.invalidate(layer);
     }
 
     public enum TemplateSharing implements LocalizedCycleEnum<TemplateSharing> {
