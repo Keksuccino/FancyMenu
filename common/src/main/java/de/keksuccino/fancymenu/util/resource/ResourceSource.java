@@ -54,6 +54,26 @@ public class ResourceSource {
         return of(resourceSource, null);
     }
 
+    /**
+     * Returns whether the serialized source can be dispatched to a resource handler. Prefix-only and whitespace-only
+     * sources are not dispatchable. Neither are location sources with an empty path, because Minecraft accepts them as
+     * namespace-root identifiers such as {@code minecraft:}. Invalid but non-empty identifiers remain dispatchable so
+     * the resource handler retains its existing validation and error behavior.
+     *
+     * <p>Unlike constructing a {@link ResourceSource}, this check does not expand local paths.</p>
+     */
+    public static boolean isDispatchable(@NotNull String resourceSource) {
+        Objects.requireNonNull(resourceSource);
+        String trimmedSource = resourceSource.trim();
+        String sourcePayload = ResourceSourceType.getWithoutSourcePrefix(trimmedSource);
+        if (sourcePayload.isBlank()) return false;
+        if (ResourceSourceType.getSourceTypeOf(trimmedSource) == ResourceSourceType.LOCATION) {
+            ResourceLocation location = ResourceLocation.tryParse(sourcePayload);
+            if ((location != null) && location.getPath().isEmpty()) return false;
+        }
+        return true;
+    }
+
     protected ResourceSource() {
     }
 

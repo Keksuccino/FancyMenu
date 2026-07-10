@@ -113,6 +113,10 @@ public class ResourceSupplier<R extends Resource> {
         }
         this.lastGetterSource = getterSource;
         if (this.current == null) {
+            // ResourceLocation accepts an empty path as minecraft:, which is also TextureManager's intentional-missing marker.
+            // Dispatching a temporarily empty placeholder result would register that marker as a reloadable file texture,
+            // so a later resource reload could try to decode a namespace directory as an image and fail the whole reload.
+            if (!ResourceSource.isDispatchable(getterSource)) return null;
             ResourceSource resourceSource = ResourceSource.of(getterSource);
             try {
                 ResourceHandler<?,?> handler = this.getResourceHandler();
