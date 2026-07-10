@@ -13,6 +13,7 @@ public class ClientSideFmDataToClientPacketLogic {
 
     protected static boolean handle(@NotNull FmDataToClientPacket packet) {
         try {
+            if (!Listeners.ON_FM_DATA_RECEIVED.hasInstancesListening()) return true;
             String identifier = Objects.requireNonNullElse(packet.data_identifier, "");
             String data = Objects.requireNonNullElse(packet.data, "");
             String sentBy = Objects.requireNonNullElse(packet.sent_by, "unknown_server");

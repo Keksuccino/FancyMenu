@@ -23,6 +23,9 @@ public class OnPositionChangedListener extends AbstractListener {
     }
 
     public void onPositionChanged(@NotNull BlockPos oldPosition, @NotNull BlockPos newPosition) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cachedPositionsValid = true;
         this.cachedOldX = oldPosition.getX();
         this.cachedOldY = oldPosition.getY();

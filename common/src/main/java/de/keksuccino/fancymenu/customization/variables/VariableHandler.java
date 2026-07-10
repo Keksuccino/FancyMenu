@@ -34,7 +34,9 @@ public class VariableHandler {
             v = new Variable(name);
             VARIABLES.put(name, v);
         }
-        Listeners.ON_VARIABLE_UPDATED.onVariableUpdated(v.name, v.value, Objects.requireNonNullElse(value, "0"));
+        if (Listeners.ON_VARIABLE_UPDATED.hasInstancesListening()) {
+            Listeners.ON_VARIABLE_UPDATED.onVariableUpdated(v.name, v.value, Objects.requireNonNullElse(value, "0"));
+        }
         v.setValue(value);
         writeToFile();
     }

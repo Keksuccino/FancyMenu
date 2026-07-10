@@ -80,9 +80,10 @@ public class ExtractZipFileAction extends Action {
             boolean finalSuccess = success;
             String finalFailureReason = failureReason;
 
-            MainThreadTaskExecutor.executeInMainThread(
-                    () -> Listeners.ON_ZIP_EXTRACTED.onZipExtracted(finalResolvedSource, finalResolvedTarget, finalSuccess, finalFailureReason),
-                    MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+            long listenerRevision = Listeners.ON_ZIP_EXTRACTED.getActiveInstanceRevision();
+            if (listenerRevision >= 0L) {
+                MainThreadTaskExecutor.executeInMainThread(() -> { if (Listeners.ON_ZIP_EXTRACTED.isActiveAtRevision(listenerRevision)) Listeners.ON_ZIP_EXTRACTED.onZipExtracted(finalResolvedSource, finalResolvedTarget, finalSuccess, finalFailureReason); }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+            }
         });
     }
 

@@ -14,6 +14,9 @@ public class OnStartedBurningListener extends AbstractListener {
     }
 
     public void onStartedBurning() {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.notifyAllInstances();
     }
 

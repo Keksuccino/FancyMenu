@@ -18,6 +18,9 @@ public class OnElementSpawnedListener extends AbstractListener {
     }
 
     public void onElementSpawned(@NotNull String elementType, @NotNull String elementIdentifier, @NotNull String targetScreen) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.elementType = elementType;
         this.elementIdentifier = elementIdentifier;
         this.targetScreen = targetScreen;

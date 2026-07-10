@@ -30,10 +30,10 @@ public abstract class MixinKeyboardHandler {
         int scanCode = event.scancode();
         int modifiers = event.modifiers();
         if (action == GLFW.GLFW_RELEASE) {
-            Listeners.ON_KEY_RELEASED.handleKeyReleased(key, scanCode, modifiers);
+            if (Listeners.ON_KEY_RELEASED.hasInstancesListening()) Listeners.ON_KEY_RELEASED.handleKeyReleased(key, scanCode, modifiers);
             GlslRuntimeEventTracker.onKeyReleased(key, scanCode, modifiers);
         } else if (action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT) {
-            Listeners.ON_KEY_PRESSED.handleKeyPressed(key, scanCode, modifiers);
+            if (Listeners.ON_KEY_PRESSED.hasInstancesListening()) Listeners.ON_KEY_PRESSED.handleKeyPressed(key, scanCode, modifiers);
             GlslRuntimeEventTracker.onKeyPressed(key, scanCode, modifiers, action == GLFW.GLFW_REPEAT);
         }
     }

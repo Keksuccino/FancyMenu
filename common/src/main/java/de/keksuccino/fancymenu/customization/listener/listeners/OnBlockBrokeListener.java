@@ -26,6 +26,9 @@ public class OnBlockBrokeListener extends AbstractListener {
     }
 
     public void onBlockBroke(@NotNull BlockPos blockPos, @NotNull BlockState blockState, @Nullable String brokeWithItemKey) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.lastBlockPos = blockPos.immutable();
         Identifier blockKeyLocation = BuiltInRegistries.BLOCK.getKey(blockState.getBlock());
         this.cachedBlockKey = (blockKeyLocation != null) ? blockKeyLocation.toString() : null;

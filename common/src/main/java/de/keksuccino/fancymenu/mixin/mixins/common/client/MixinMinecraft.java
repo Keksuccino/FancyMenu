@@ -100,12 +100,14 @@ public class MixinMinecraft {
 	@Unique private boolean pendingServerJoinEvent_FancyMenu;
 	@Unique @Nullable private String lastServerIp_FancyMenu;
 	@Unique private boolean quitListenerFired_FancyMenu;
+	@Unique private boolean blockLookTrackingWasDormant_FancyMenu;
+	@Unique private boolean entityLookTrackingWasDormant_FancyMenu;
 
 	@Inject(method = "stop", at = @At("HEAD"))
 	private void before_stop_FancyMenu(CallbackInfo info) {
 		if (!this.quitListenerFired_FancyMenu) {
 			this.quitListenerFired_FancyMenu = true;
-			Listeners.ON_QUIT_MINECRAFT.onQuitMinecraft();
+			if (Listeners.ON_QUIT_MINECRAFT.hasInstancesListening()) Listeners.ON_QUIT_MINECRAFT.onQuitMinecraft();
 		}
 	}
 
@@ -178,32 +180,42 @@ public class MixinMinecraft {
 
 	@Inject(method = "pick(F)V", at = @At("TAIL"))
 	private void tail_onPick_FancyMenu(float partialTicks, CallbackInfo info) {
-		Minecraft self = (Minecraft)(Object)this;
-		HitResult hitResult = this.hitResult;
 		OnStartLookingAtBlockListener startBlockListener = Listeners.ON_START_LOOKING_AT_BLOCK;
 		OnStopLookingAtBlockListener stopBlockListener = Listeners.ON_STOP_LOOKING_AT_BLOCK;
 		OnStartLookingAtEntityListener startLookingListener = Listeners.ON_START_LOOKING_AT_ENTITY;
 		OnStopLookingAtEntityListener stopLookingListener = Listeners.ON_STOP_LOOKING_AT_ENTITY;
+		boolean checkEntity = startLookingListener.shouldCheckLookingAt();
+		boolean checkBlock = startBlockListener.shouldCheckLookingAt();
+		boolean notifyNewEntityTarget = checkEntity && !this.entityLookTrackingWasDormant_FancyMenu;
+		boolean notifyNewBlockTarget = checkBlock && !this.blockLookTrackingWasDormant_FancyMenu;
+
+		if (checkEntity) {
+			this.entityLookTrackingWasDormant_FancyMenu = false;
+		} else {
+			this.entityLookTrackingWasDormant_FancyMenu = true;
+			startLookingListener.clearCurrentEntity();
+		}
+		if (checkBlock) {
+			this.blockLookTrackingWasDormant_FancyMenu = false;
+		} else {
+			this.blockLookTrackingWasDormant_FancyMenu = true;
+			startBlockListener.clearCurrentBlock();
+		}
+		if (!checkEntity && !checkBlock) return;
+
+		Minecraft self = (Minecraft)(Object)this;
+		HitResult hitResult = this.hitResult;
 
 		if (hitResult == null) {
-			stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
-			stopLooking_FancyMenu(startLookingListener, stopLookingListener);
+			if (checkBlock) stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
+			if (checkEntity) stopLooking_FancyMenu(startLookingListener, stopLookingListener);
 			return;
 		}
 
 		Entity cameraEntity = self.getCameraEntity();
 		if (cameraEntity == null) {
-			stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
-			stopLooking_FancyMenu(startLookingListener, stopLookingListener);
-			return;
-		}
-
-		boolean checkEntity = startLookingListener.shouldCheckLookingAt();
-		boolean checkBlock = startBlockListener.shouldCheckLookingAt();
-
-		if (!checkEntity && !checkBlock) {
-			stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
-			stopLooking_FancyMenu(startLookingListener, stopLookingListener);
+			if (checkBlock) stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
+			if (checkEntity) stopLooking_FancyMenu(startLookingListener, stopLookingListener);
 			return;
 		}
 
@@ -219,12 +231,10 @@ public class MixinMinecraft {
 			if (extendedEntityHit != null) {
 				Entity targetEntity = extendedEntityHit.getEntity();
 				double distance = extendedEntityHit.getLocation().distanceTo(eyePosition);
-				startLookingListener.onLookAtEntity(targetEntity, distance);
+				startLookingListener.onLookAtEntity(targetEntity, distance, notifyNewEntityTarget);
 				stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
 				return;
 			}
-			stopLooking_FancyMenu(startLookingListener, stopLookingListener);
-		} else {
 			stopLooking_FancyMenu(startLookingListener, stopLookingListener);
 		}
 
@@ -258,14 +268,12 @@ public class MixinMinecraft {
 				boolean sameBlock = previousBlock.blockPos().equals(blockPos)
 						&& previousBlock.blockState().equals(blockState)
 						&& previousBlock.levelKey().equals(clientLevel.dimension());
-				if (!sameBlock) {
+				if (!sameBlock && stopBlockListener.hasInstancesListening()) {
 					stopBlockListener.onStopLooking(previousBlock);
 				}
 			}
 
-			startBlockListener.onLookAtBlock(clientLevel, blockHitResult, Math.sqrt(distanceSqr));
-		} else {
-			stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
+			startBlockListener.onLookAtBlock(clientLevel, blockHitResult, Math.sqrt(distanceSqr), notifyNewBlockTarget);
 		}
 	}
 
@@ -376,7 +384,7 @@ public class MixinMinecraft {
 			return;
 		}
 
-		if ((screen != null) && (screen != this.screen)) {
+		if ((screen != null) && (screen != this.screen) && Listeners.ON_OPEN_SCREEN.hasInstancesListening()) {
 			Screen cachedCurrent = this.screen;
 			Listeners.ON_OPEN_SCREEN.onScreenOpened(screen);
 			if (cachedCurrent != this.screen) {
@@ -460,7 +468,7 @@ public class MixinMinecraft {
 	/** @reason Fire FancyMenu close screen listeners after the screen was removed. */
 	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;removed()V", shift = At.Shift.AFTER))
 	private void afterScreenRemovedFancyMenu(Screen screen, CallbackInfo info) {
-		if (this.lastScreen_FancyMenu != null) {
+		if (this.lastScreen_FancyMenu != null && Listeners.ON_CLOSE_SCREEN.hasInstancesListening()) {
 			Listeners.ON_CLOSE_SCREEN.onScreenClosed(this.lastScreen_FancyMenu);
 		}
 	}
@@ -529,7 +537,7 @@ public class MixinMinecraft {
 			SeamlessWorldLoadingHandler.saveAndClearServerCapture(serverIp);
 		}
 		SeamlessWorldLoadingHandler.finishServerLoad();
-		Listeners.ON_SERVER_LEFT.onServerLeft(serverIp);
+		if (Listeners.ON_SERVER_LEFT.hasInstancesListening()) Listeners.ON_SERVER_LEFT.onServerLeft(serverIp);
 		this.hasActiveServerConnection_FancyMenu = false;
 		this.pendingServerJoinEvent_FancyMenu = false;
 		this.lastServerIp_FancyMenu = null;
@@ -553,7 +561,7 @@ public class MixinMinecraft {
 			SeamlessWorldLoadingHandler.startServerCapture(serverIp);
 		}
 		SeamlessWorldLoadingHandler.finishServerLoad();
-		Listeners.ON_SERVER_JOINED.onServerJoined(serverIp);
+		if (Listeners.ON_SERVER_JOINED.hasInstancesListening()) Listeners.ON_SERVER_JOINED.onServerJoined(serverIp);
 	}
 
 	@Unique
@@ -593,7 +601,7 @@ public class MixinMinecraft {
 	private static void stopLooking_FancyMenu(OnStartLookingAtEntityListener startListener, OnStopLookingAtEntityListener stopListener) {
 		OnStartLookingAtEntityListener.LookedEntityData previousEntity = startListener.getCurrentEntityData();
 		if (previousEntity != null) {
-			stopListener.onStopLooking(previousEntity);
+			if (stopListener.hasInstancesListening()) stopListener.onStopLooking(previousEntity);
 			startListener.clearCurrentEntity();
 		}
 	}
@@ -601,7 +609,7 @@ public class MixinMinecraft {
 	@Unique
 	private static void stopLookingBlock_FancyMenu(OnStartLookingAtBlockListener startListener, OnStopLookingAtBlockListener stopListener) {
 		OnStartLookingAtBlockListener.LookedBlockData previousBlock = startListener.getCurrentBlockData();
-		if (previousBlock != null) {
+		if (previousBlock != null && stopListener.hasInstancesListening()) {
 			stopListener.onStopLooking(previousBlock);
 		}
 		startListener.clearCurrentBlock();

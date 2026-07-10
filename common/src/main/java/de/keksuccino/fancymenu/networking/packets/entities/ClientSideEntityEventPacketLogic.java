@@ -17,6 +17,11 @@ public class ClientSideEntityEventPacketLogic {
             if (packet.event_type == null) {
                 return false;
             }
+            boolean listenerActive = switch (packet.event_type) {
+                case SPAWN -> Listeners.ON_ENTITY_SPAWNED.hasInstancesListening();
+                case DEATH -> Listeners.ON_ENTITY_DIED.hasInstancesListening();
+            };
+            if (!listenerActive) return true;
 
             UUID entityUuid = parseUuid(packet.entity_uuid);
 

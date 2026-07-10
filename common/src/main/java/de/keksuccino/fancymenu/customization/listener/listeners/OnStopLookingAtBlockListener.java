@@ -19,6 +19,9 @@ public class OnStopLookingAtBlockListener extends AbstractListener {
     }
 
     public void onStopLooking(@Nullable LookedBlockData data) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.lastBlockData = data;
         if (data != null) {
             this.notifyAllInstances();

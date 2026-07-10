@@ -18,6 +18,9 @@ public class OnTextClickedListener extends AbstractListener {
     }
 
     public void onTextClicked(@NotNull String eventId) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.lastEventId = eventId;
         this.notifyAllInstances();
     }

@@ -18,6 +18,9 @@ public class OnRemoteServerConnectedListener extends AbstractListener {
     }
 
     public void onRemoteServerConnected(@NotNull String requestId, @NotNull String remoteServerUrl) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.lastRequestId = Objects.requireNonNullElse(requestId, "");
         this.lastRemoteServerUrl = Objects.requireNonNullElse(remoteServerUrl, "");
         this.notifyAllInstances();

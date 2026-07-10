@@ -42,19 +42,24 @@ public class EventHandler {
 	 * </pre>
 	 */
 	public void postEvent(EventBase event) {
-		if (eventsRegisteredForType(event.getClass())) {
-			List<ListenerContainer> l = new ArrayList<>(events.get(event.getClass()));
-			l.sort((o1, o2) -> {
-				if (o1.priority < o2.priority) {
-					return 1;
-				} else if (o1.priority > o2.priority) {
-					return -1;
-				}
-				return 0;
-			});
-			for (ListenerContainer c : l) {
-				c.notifyListener(event);
+		List<ListenerContainer> l;
+		synchronized (this.events) {
+			List<ListenerContainer> registeredListeners = this.events.get(event.getClass());
+			if (registeredListeners == null || registeredListeners.isEmpty()) {
+				return;
 			}
+			l = new ArrayList<>(registeredListeners);
+		}
+		l.sort((o1, o2) -> {
+			if (o1.priority < o2.priority) {
+				return 1;
+			} else if (o1.priority > o2.priority) {
+				return -1;
+			}
+			return 0;
+		});
+		for (ListenerContainer c : l) {
+			c.notifyListener(event);
 		}
 	}
 
@@ -92,6 +97,23 @@ public class EventHandler {
 		this.registerListenerMethods(this.getEventMethodsOf(object));
 	}
 
+	/**
+	 * Removes every annotated listener method registered for the exact object instance.
+	 * Dispatch uses a copied listener list, so removing a listener from inside its own callback is safe and affects the next event.
+	 */
+	public void unregisterListenersOf(Object object) {
+		synchronized (this.events) {
+			Iterator<Map.Entry<Class<? extends EventBase>, List<ListenerContainer>>> iterator = this.events.entrySet().iterator();
+			while (iterator.hasNext()) {
+				Map.Entry<Class<? extends EventBase>, List<ListenerContainer>> entry = iterator.next();
+				entry.getValue().removeIf(container -> container.listenerParentObject == object);
+				if (entry.getValue().isEmpty()) {
+					iterator.remove();
+				}
+			}
+		}
+	}
+
 	protected void registerListenerMethods(List<EventMethod> methods) {
 		for (EventMethod m : methods) {
 			Consumer<EventBase> listener = (event) -> {
@@ -104,6 +126,7 @@ public class EventHandler {
 			ListenerContainer container = new ListenerContainer(m.eventType, listener, m.priority);
 			container.listenerParentClassName = m.parentClass.getName();
 			container.listenerMethodName = m.method.getName();
+			container.listenerParentObject = m.parentObject;
 			this.registerListener(container);
 		}
 	}
@@ -148,10 +171,9 @@ public class EventHandler {
 
 	protected void registerListener(ListenerContainer listenerContainer) {
 		try {
-			if (!eventsRegisteredForType(listenerContainer.eventType)) {
-				events.put(listenerContainer.eventType, new ArrayList<>());
+			synchronized (this.events) {
+				this.events.computeIfAbsent(listenerContainer.eventType, eventType -> new ArrayList<>()).add(listenerContainer);
 			}
-			events.get(listenerContainer.eventType).add(listenerContainer);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -161,7 +183,9 @@ public class EventHandler {
 		if (eventType == null) {
 			return false;
 		}
-		return this.events.containsKey(eventType);
+		synchronized (this.events) {
+			return this.events.containsKey(eventType);
+		}
 	}
 
 	protected static class ListenerContainer {
@@ -171,6 +195,7 @@ public class EventHandler {
 		protected final int priority;
 		protected String listenerParentClassName = "[unknown]";
 		protected String listenerMethodName = "[unknown]";
+		protected Object listenerParentObject;
 
 		protected ListenerContainer(Class<? extends EventBase> eventType, Consumer<EventBase> listener, int priority) {
 			this.listener = listener;

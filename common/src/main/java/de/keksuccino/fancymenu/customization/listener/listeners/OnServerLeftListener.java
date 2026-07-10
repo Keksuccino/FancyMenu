@@ -18,6 +18,9 @@ public class OnServerLeftListener extends AbstractListener {
     }
 
     public void onServerLeft(@Nullable String serverIp) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.lastServerIp = serverIp;
         this.notifyAllInstances();
     }

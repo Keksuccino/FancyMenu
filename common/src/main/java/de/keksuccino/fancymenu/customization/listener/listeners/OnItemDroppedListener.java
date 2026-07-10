@@ -18,6 +18,9 @@ public class OnItemDroppedListener extends AbstractListener {
     }
 
     public void onItemDropped(@Nullable String itemKey) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cachedItemKey = (itemKey != null && !itemKey.isBlank()) ? itemKey : null;
         if (this.cachedItemKey != null) {
             this.notifyAllInstances();
