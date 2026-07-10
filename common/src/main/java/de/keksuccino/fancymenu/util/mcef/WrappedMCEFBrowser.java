@@ -24,6 +24,7 @@ import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
@@ -34,6 +35,8 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
     protected final MCEFBrowser browser;
     protected final Minecraft minecraft = Minecraft.getInstance();
+    protected final AtomicLong mainFrameNavigationGeneration = new AtomicLong();
+    @Nullable protected volatile String expectedMainFrameUrl;
     protected boolean browserFocused = false;
     protected boolean interactable = true;
     protected float opacity = 1.0F;
@@ -71,12 +74,14 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
         super(0, 0, 0, 0, Component.empty());
 
+        this.expectedMainFrameUrl = url;
+
         // Initialize the global message router if not already done
         ActionBridge.initialize();
         
         // Register the custom load listener handler to later register multiple load listeners.
         // Calling this method multiple times is fine, because there can only be one default listener active.
-        MCEF.getClient().addLoadHandler(BrowserLoadEventListenerManager.getInstance().getGlobalHandler());
+        BrowserLoadEventListenerManager.getInstance().initialize();
 
         this.browser = MCEF.createBrowser(url, transparent);
 
@@ -126,8 +131,10 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     protected void injectJavaScriptAPI() {
         try {
             LOGGER.info("[FANCYMENU] Injecting FancyMenu JavaScript API into browser (ID: {})", this.getIdentifier());
+            long navigationGeneration = this.mainFrameNavigationGeneration.get();
             // Execute the JavaScript injection with a delay to ensure the page and message router are ready
             EXECUTOR.schedule(() -> {
+                if (this.closed || this.mainFrameNavigationGeneration.get() != navigationGeneration) return;
                 try {
                     this.browser.executeJavaScript(ActionBridge.JAVASCRIPT_API, this.browser.getURL(), 0);
                     LOGGER.info("[FANCYMENU] JavaScript API injection completed for browser (ID: {})", this.getIdentifier());
@@ -481,14 +488,20 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     }
 
     public void goBack() {
-        if (this.browser.canGoBack()) this.browser.goBack();
+        if (this.browser.canGoBack()) {
+            this.mainFrameNavigationGeneration.incrementAndGet();
+            this.browser.goBack();
+        }
         if (initialized) {
             this.setVolume(this.volume);
         }
     }
 
     public void goForward() {
-        if (this.browser.canGoForward()) this.browser.goForward();
+        if (this.browser.canGoForward()) {
+            this.mainFrameNavigationGeneration.incrementAndGet();
+            this.browser.goForward();
+        }
         if (initialized) {
             this.setVolume(this.volume);
         }
@@ -499,10 +512,24 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     }
 
     public void setUrl(@NotNull String url) {
+        this.expectedMainFrameUrl = url;
+        this.mainFrameNavigationGeneration.incrementAndGet();
         this.browser.loadURL(url);
     }
 
+    void onMainFrameLoadStartedForTracking(@Nullable String url) {
+        this.expectedMainFrameUrl = url;
+        this.mainFrameNavigationGeneration.incrementAndGet();
+    }
+
+    @Nullable
+    String getExpectedMainFrameUrlForTracking() {
+        return this.expectedMainFrameUrl;
+    }
+
     public void reload() {
+        this.expectedMainFrameUrl = this.browser.getURL();
+        this.mainFrameNavigationGeneration.incrementAndGet();
         this.browser.reload();
         if (initialized) {
             this.setVolume(this.volume);
@@ -562,6 +589,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     @Override
     public void close() throws IOException {
         this.closed = true;
+        this.mainFrameNavigationGeneration.incrementAndGet();
         // Unregister from the global handler manager
         if (this.browser != null) {
             BrowserLoadEventListenerManager.getInstance().unregisterAllListenersForBrowser(this.getIdentifier());
