@@ -9,9 +9,9 @@ import java.util.Objects;
 /**
  * Owns the transformed branding captured for one title-screen instance.
  *
- * <p>The target is replaceable because vanilla can initialize the same screen more than once. Attaching a target does
- * not replay an earlier capture: the replacement renderer's initialization policy is intentionally kept separate from
- * capture, so callers remain in control of when existing state is restored.</p>
+ * <p>The target is replaceable because vanilla can initialize the same screen more than once. A replacement target is
+ * initialized with the existing capture before it becomes active, preventing reinitialization from temporarily
+ * restoring the renderer's default branding or bounds.</p>
  */
 public final class TitleScreenBrandingCaptureController {
 
@@ -19,9 +19,13 @@ public final class TitleScreenBrandingCaptureController {
     @Nullable private String capturedBrandingText;
 
     /**
-     * Replaces the widget receiving future changed branding values. Passing {@code null} detaches the previous widget.
+     * Replaces the widget receiving branding values. Passing {@code null} detaches the previous widget.
+     *
+     * <p>If branding was already captured, the replacement receives it immediately. The target is committed only after
+     * the complete update succeeds, so a failed replacement can be retried without losing the previous target.</p>
      */
     public void setTarget(@Nullable Target target) {
+        if ((target != null) && (this.capturedBrandingText != null)) this.applyToTarget(target, this.capturedBrandingText);
         this.target = target;
     }
 
@@ -38,11 +42,15 @@ public final class TitleScreenBrandingCaptureController {
         if (brandingText.equals(this.capturedBrandingText)) return false;
         Target target = this.target;
         if (target == null) return false;
+        this.applyToTarget(target, brandingText);
+        this.capturedBrandingText = brandingText;
+        return true;
+    }
+
+    private void applyToTarget(@NotNull Target target, @NotNull String brandingText) {
         target.setBrandingText(brandingText);
         if (!target.hasCustomWidth()) target.resizeWidthToContent();
         if (!target.hasCustomHeight()) target.resizeHeightToContent();
-        this.capturedBrandingText = brandingText;
-        return true;
     }
 
     @Nullable

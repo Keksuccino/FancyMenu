@@ -35,9 +35,15 @@ class TitleScreenBrandingCaptureControllerTest {
 
         first.capture("first");
         second.capture("second");
+        FakeTarget firstReplacement = new FakeTarget();
+        FakeTarget secondReplacement = new FakeTarget();
+        first.setTarget(firstReplacement);
+        second.setTarget(secondReplacement);
 
         assertEquals(List.of("first"), firstTarget.brandingValues);
         assertEquals(List.of("second"), secondTarget.brandingValues);
+        assertEquals(List.of("first"), firstReplacement.brandingValues);
+        assertEquals(List.of("second"), secondReplacement.brandingValues);
     }
 
     @Test
@@ -103,7 +109,19 @@ class TitleScreenBrandingCaptureControllerTest {
     }
 
     @Test
-    void replacementTargetReceivesOnlyFutureChangedCaptures() {
+    void targetInitializationWithoutCaptureDoesNotChangeRendererOrBounds() {
+        TitleScreenBrandingCaptureController controller = new TitleScreenBrandingCaptureController();
+        FakeTarget target = new FakeTarget();
+
+        controller.setTarget(target);
+
+        assertEquals(List.of(), target.brandingValues);
+        assertEquals(0, target.widthResizeCount);
+        assertEquals(0, target.heightResizeCount);
+    }
+
+    @Test
+    void replacementTargetImmediatelyReceivesExistingCaptureAndFutureChanges() {
         TitleScreenBrandingCaptureController controller = new TitleScreenBrandingCaptureController();
         FakeTarget first = new FakeTarget();
         FakeTarget replacement = new FakeTarget();
@@ -114,11 +132,13 @@ class TitleScreenBrandingCaptureControllerTest {
         controller.capture("changed after replacement");
 
         assertEquals(List.of("initial"), first.brandingValues);
-        assertEquals(List.of("changed after replacement"), replacement.brandingValues);
+        assertEquals(List.of("initial", "changed after replacement"), replacement.brandingValues);
+        assertEquals(2, replacement.widthResizeCount);
+        assertEquals(2, replacement.heightResizeCount);
     }
 
     @Test
-    void replacementTargetDoesNotReceiveUnchangedCapture() {
+    void unchangedCaptureAfterReinitializationDoesNotRepeatRestoration() {
         TitleScreenBrandingCaptureController controller = new TitleScreenBrandingCaptureController();
         FakeTarget first = new FakeTarget();
         FakeTarget replacement = new FakeTarget();
@@ -128,7 +148,71 @@ class TitleScreenBrandingCaptureControllerTest {
         controller.setTarget(replacement);
 
         assertFalse(controller.capture("initial"));
-        assertEquals(List.of(), replacement.brandingValues);
+        assertEquals(List.of("initial"), replacement.brandingValues);
+        assertEquals(1, replacement.widthResizeCount);
+        assertEquals(1, replacement.heightResizeCount);
+    }
+
+    @Test
+    void repeatedReinitializationRestoresEveryReplacementTarget() {
+        TitleScreenBrandingCaptureController controller = new TitleScreenBrandingCaptureController();
+        FakeTarget first = new FakeTarget();
+        FakeTarget second = new FakeTarget();
+        FakeTarget third = new FakeTarget();
+        controller.setTarget(first);
+        controller.capture("transformed");
+
+        controller.setTarget(second);
+        controller.setTarget(third);
+
+        assertEquals(List.of("transformed"), second.brandingValues);
+        assertEquals(List.of("transformed"), third.brandingValues);
+        assertEquals(1, second.widthResizeCount);
+        assertEquals(1, second.heightResizeCount);
+        assertEquals(1, third.widthResizeCount);
+        assertEquals(1, third.heightResizeCount);
+    }
+
+    @Test
+    void replacementTargetPreservesCustomizedBoundsIndependently() {
+        TitleScreenBrandingCaptureController controller = new TitleScreenBrandingCaptureController();
+        FakeTarget initial = new FakeTarget();
+        controller.setTarget(initial);
+        controller.capture("transformed");
+        FakeTarget customWidth = new FakeTarget();
+        customWidth.customWidth = true;
+        FakeTarget customHeight = new FakeTarget();
+        customHeight.customHeight = true;
+
+        controller.setTarget(customWidth);
+        controller.setTarget(customHeight);
+
+        assertEquals(List.of("transformed"), customWidth.brandingValues);
+        assertEquals(0, customWidth.widthResizeCount);
+        assertEquals(1, customWidth.heightResizeCount);
+        assertEquals(List.of("transformed"), customHeight.brandingValues);
+        assertEquals(1, customHeight.widthResizeCount);
+        assertEquals(0, customHeight.heightResizeCount);
+    }
+
+    @Test
+    void failedReplacementInitializationCanBeRetried() {
+        TitleScreenBrandingCaptureController controller = new TitleScreenBrandingCaptureController();
+        FakeTarget initial = new FakeTarget();
+        FakeTarget replacement = new FakeTarget();
+        controller.setTarget(initial);
+        controller.capture("transformed");
+        replacement.failWidthResize = true;
+
+        assertThrows(IllegalStateException.class, () -> controller.setTarget(replacement));
+        assertEquals("transformed", controller.getCapturedBrandingText());
+
+        replacement.failWidthResize = false;
+        controller.setTarget(replacement);
+
+        assertEquals(List.of("transformed", "transformed"), replacement.brandingValues);
+        assertEquals(1, replacement.widthResizeCount);
+        assertEquals(1, replacement.heightResizeCount);
     }
 
     @Test
