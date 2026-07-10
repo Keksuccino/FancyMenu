@@ -636,8 +636,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		if (radius < 1) {
 			return;
 		}
-		double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
-		float blurRadius = guiScale > 0.0D ? (float)radius / (float)guiScale : (float)radius;
+		float blurRadius = GuiBlurRenderer.convertFramebufferBlurRadiusToGui(radius);
 		GuiBlurRenderer.renderBlurArea(graphics, 0.0F, 0.0F, width, height, blurRadius, 0.0F, DrawableColor.FULLY_TRANSPARENT, partial);
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 	}

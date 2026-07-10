@@ -19,8 +19,6 @@ public final class GuiBlurRenderer {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String GUI_BOX_BLUR_SHADER_NAME_FANCYMENU = "fancymenu_gui_box_blur";
-    private static final float BLUR_SCISSOR_RADIUS_MULTIPLIER_FANCYMENU = 4.0F;
-    private static final float BLUR_SCISSOR_AA_PADDING_PIXELS_FANCYMENU = 2.0F;
     private static final float SHAPE_TYPE_ROUNDED_RECT = 0.0F;
     private static final float SHAPE_TYPE_SUPERELLIPSE = 1.0F;
     // Keep shader files in the default 'minecraft' namespace so the vanilla resource manager finds them for every loader.
@@ -132,6 +130,13 @@ public final class GuiBlurRenderer {
         float translationX = resolveAdditionalRenderTranslationX();
         float translationY = resolveAdditionalRenderTranslationY();
         renderBlurAreaCircle(graphics, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, blurRadius * additionalScale, roundness, tint, partial);
+    }
+
+    /**
+     * Converts a blur radius in framebuffer pixels to the GUI coordinate space used by blur areas.
+     */
+    public static float convertFramebufferBlurRadiusToGui(float framebufferBlurRadius) {
+        return GuiBlurScaleMath.convertFramebufferRadiusToGui(framebufferBlurRadius, getEffectiveGuiScale_FancyMenu());
     }
 
     /**
@@ -251,16 +256,17 @@ public final class GuiBlurRenderer {
         }
         ensurePostChainSize(postChain, targetWidth, targetHeight);
 
-        float guiScale = (float) minecraft.getWindow().getGuiScale();
-        float scaledWidth = area.width * guiScale;
-        float scaledHeight = area.height * guiScale;
-        if (scaledWidth <= 0.0F || scaledHeight <= 0.0F) {
+        double guiScale = getEffectiveGuiScale_FancyMenu();
+        GuiBlurScaleMath.FramebufferArea scaledArea = GuiBlurScaleMath.scaleArea(area.x, area.y, area.width, area.height, guiScale, targetHeight);
+        if (!scaledArea.isValid()) {
             return;
         }
 
-        float scaledX = area.x * guiScale;
-        float scaledY = targetHeight - (area.y * guiScale) - scaledHeight;
-        float blurRadius = Math.max(0.0F, area.blurRadius * guiScale);
+        float scaledX = scaledArea.x();
+        float scaledY = scaledArea.y();
+        float scaledWidth = scaledArea.width();
+        float scaledHeight = scaledArea.height();
+        float blurRadius = GuiBlurScaleMath.scalePositiveRadius(area.blurRadius, guiScale);
         CornerRadii scaledRadii = area.cornerRadii.scaled(guiScale).clamped(Math.min(scaledWidth, scaledHeight) * 0.5F).flipVertical();
 
         DrawableColor.FloatColor tint = area.tint.getAsFloats();
@@ -278,18 +284,8 @@ public final class GuiBlurRenderer {
             // darkening any translucent GUI content every time a blur area is drawn.
             RenderSystem.disableBlend();
 
-            ScissorBounds scissor = resolveScissorBounds(
-                    area,
-                    targetHeight,
-                    guiScale,
-                    scaledX,
-                    scaledY,
-                    scaledWidth,
-                    scaledHeight,
-                    blurRadius,
-                    maskRotation
-            );
-            graphics.enableScissor(scissor.minXInt(), scissor.minYInt(), scissor.maxXInt(), scissor.maxYInt());
+            GuiBlurScissorMath.LogicalBounds scissor = GuiBlurScissorMath.resolve(area.x, area.y, area.width, area.height, blurRadius, guiScale, targetHeight, maskRotation);
+            graphics.enableScissor(scissor.minX(), scissor.minY(), scissor.maxX(), scissor.maxY());
             scissorEnabled = true;
             processBlurPostChain(postChain, partial);
 
@@ -401,8 +397,8 @@ public final class GuiBlurRenderer {
             return new CornerRadii(topLeft, topRight, bottomRight, bottomLeft);
         }
 
-        private CornerRadii scaled(float factor) {
-            return new CornerRadii(topLeft * factor, topRight * factor, bottomRight * factor, bottomLeft * factor);
+        private CornerRadii scaled(double factor) {
+            return new CornerRadii((float)(topLeft * factor), (float)(topRight * factor), (float)(bottomRight * factor), (float)(bottomLeft * factor));
         }
 
         private CornerRadii clamped(float maxRadius) {
@@ -429,94 +425,11 @@ public final class GuiBlurRenderer {
         return Math.max(0.1F, roundness);
     }
 
-    private static ScissorBounds resolveScissorBounds(
-            BlurArea area,
-            int targetHeight,
-            float guiScale,
-            float scaledX,
-            float scaledY,
-            float scaledWidth,
-            float scaledHeight,
-            float blurRadius,
-            RenderRotationUtil.Rotation2D maskRotation
-    ) {
-        float padding = Math.max(0.0F, blurRadius) * BLUR_SCISSOR_RADIUS_MULTIPLIER_FANCYMENU + BLUR_SCISSOR_AA_PADDING_PIXELS_FANCYMENU;
-        float baseMinX = scaledX - padding;
-        float baseMaxX = scaledX + scaledWidth + padding;
-        float baseMinY = scaledY - padding;
-        float baseMaxY = scaledY + scaledHeight + padding;
-
-        float minXInPixels = baseMinX;
-        float maxXInPixels = baseMaxX;
-        float minYInPixels = baseMinY;
-        float maxYInPixels = baseMaxY;
-
-        RenderRotationUtil.Rotation2D forwardRotation = invertRotation(maskRotation);
-        float halfWidth = scaledWidth * 0.5F;
-        float halfHeight = scaledHeight * 0.5F;
-        float extentX = Math.abs(forwardRotation.m00()) * halfWidth + Math.abs(forwardRotation.m01()) * halfHeight;
-        float extentY = Math.abs(forwardRotation.m10()) * halfWidth + Math.abs(forwardRotation.m11()) * halfHeight;
-        if (Float.isFinite(extentX) && Float.isFinite(extentY)) {
-            float centerX = scaledX + halfWidth;
-            float centerY = scaledY + halfHeight;
-
-            minXInPixels = Math.min(minXInPixels, centerX - extentX - padding);
-            maxXInPixels = Math.max(maxXInPixels, centerX + extentX + padding);
-            minYInPixels = Math.min(minYInPixels, centerY - extentY - padding);
-            maxYInPixels = Math.max(maxYInPixels, centerY + extentY + padding);
-        }
-
-        if (!Float.isFinite(minXInPixels) || !Float.isFinite(maxXInPixels) || !Float.isFinite(minYInPixels) || !Float.isFinite(maxYInPixels)) {
-            return new ScissorBounds(area.x, area.y, area.x + area.width, area.y + area.height);
-        }
-
-        return new ScissorBounds(
-                minXInPixels / guiScale,
-                (targetHeight - maxYInPixels) / guiScale,
-                maxXInPixels / guiScale,
-                (targetHeight - minYInPixels) / guiScale
-        );
-    }
-
-    private static RenderRotationUtil.Rotation2D invertRotation(RenderRotationUtil.Rotation2D rotation) {
-        float det = rotation.m00() * rotation.m11() - rotation.m01() * rotation.m10();
-        if (!Float.isFinite(det) || Math.abs(det) < 1.0E-6F) {
-            return RenderRotationUtil.Rotation2D.identity();
-        }
-        float invDet = 1.0F / det;
-        return new RenderRotationUtil.Rotation2D(
-                rotation.m11() * invDet,
-                -rotation.m01() * invDet,
-                -rotation.m10() * invDet,
-                rotation.m00() * invDet
-        );
-    }
-
-    private record ScissorBounds(float minX, float minY, float maxX, float maxY) {
-
-        private int minXInt() {
-            return floorToInt(minX);
-        }
-
-        private int minYInt() {
-            return floorToInt(minY);
-        }
-
-        private int maxXInt() {
-            return ceilToInt(maxX);
-        }
-
-        private int maxYInt() {
-            return ceilToInt(maxY);
-        }
-
-        private static int floorToInt(float value) {
-            return (int) Math.floor(value);
-        }
-
-        private static int ceilToInt(float value) {
-            return (int) Math.ceil(value);
-        }
+    /**
+     * Minecraft 1.19.2 retains fractional scales in Window#getGuiScale(), so that precise value must be used for every blur-space conversion.
+     */
+    private static double getEffectiveGuiScale_FancyMenu() {
+        return GuiBlurScaleMath.normalizeGuiScale(Minecraft.getInstance().getWindow().getGuiScale());
     }
 
 }

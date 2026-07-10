@@ -146,8 +146,7 @@ public class CustomGuiBaseScreen extends ModernScreen {
 
     protected void renderGuiBlurBackground(@NotNull GuiGraphics graphics, float partial) {
         int radius = 7;
-        double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
-        float blurRadius = guiScale > 0.0D ? (float) radius / (float) guiScale : (float) radius;
+        float blurRadius = GuiBlurRenderer.convertFramebufferBlurRadiusToGui(radius);
         GuiBlurRenderer.renderBlurArea(graphics, 0.0F, 0.0F, this.width, this.height, blurRadius, 0.0F, DrawableColor.FULLY_TRANSPARENT, partial);
     }
 
