@@ -12,7 +12,7 @@ float getShapeAlpha(vec2 p, vec2 halfSize, float n) {
     vec2 uv = abs(p) / (halfSize + vec2(1.0E-6));
     float raw = pow(uv.x, n) + pow(uv.y, n);
     float d = pow(raw, 1.0 / n);
-    float fw = max(fwidth(d), 0.0001);
+    float fw = max(fwidth(d) * 0.5, 0.0001);
     return 1.0 - smoothstep(1.0 - fw, 1.0 + fw, d);
 }
 
@@ -61,7 +61,7 @@ void main() {
         float angle = wrapAngle(atan(p.y, p.x));
         float start = wrapAngle(circleInfo2.y);
         float end = wrapAngle(circleInfo2.z);
-        float angleAa = max(fwidth(angle), 0.0001);
+        float angleAa = max(fwidth(angle) * 0.5, 0.0001);
         alpha *= getArcMask(angle, start, end, angleAa);
     }
 
