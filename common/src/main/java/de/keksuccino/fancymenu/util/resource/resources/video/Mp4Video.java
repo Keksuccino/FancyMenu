@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaFrameTexture;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaReflectionBridge;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaUtil;
+import de.keksuccino.melody.resources.audio.openal.ALUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
@@ -170,6 +171,7 @@ public class Mp4Video implements IVideo {
     }
 
     protected Mp4Video() {
+        Mp4VideoSoundEngineReloadHandler.register(this);
     }
 
     protected void initializeAsync(@NotNull String sourceName) {
@@ -277,6 +279,11 @@ public class Mp4Video implements IVideo {
             this.queuePlayerInitializationTask();
             return;
         }
+        if (!this.playRequested || Mp4VideoSoundEngineReloadHandler.isSoundEngineReloading()) return;
+        boolean openAlReady = this.isOpenAlReadyForPlayerCreation();
+        // The first sound reload creates Minecraft's OpenAL capabilities. Calling Watermedia's ALEngine before that
+        // point permanently poisons LWJGL's write-once capability holder, so initial unavailability must stay retryable.
+        if (!openAlReady && !Mp4VideoSoundEngineReloadHandler.hasSoundEngineReloadCompleted()) return;
         if (this.mediaPlayer != null) return;
         Object cachedMrl = this.mrl;
         if (cachedMrl == null) return;
@@ -287,7 +294,7 @@ public class Mp4Video implements IVideo {
         }
         synchronized (this.playerInitLock) {
             if (this.mediaPlayer != null || this.closed) return;
-            Object createdPlayer = WatermediaReflectionBridge.createPlayer(cachedMrl, Thread.currentThread(), Minecraft.getInstance()::execute, true, true);
+            Object createdPlayer = WatermediaReflectionBridge.createPlayer(cachedMrl, Thread.currentThread(), Minecraft.getInstance()::execute, true, openAlReady);
             if (createdPlayer == null) {
                 this.fail("Failed to create Watermedia media player for MP4 video source", null);
                 return;
@@ -708,6 +715,43 @@ public class Mp4Video implements IVideo {
         this.resetVideoPlaybackListenerState();
         this.framePresented = false;
         LOGGER.warn("[FANCYMENU] Watermedia V3 and/or Watermedia Binaries are not loaded, MP4 source will render as missing texture: {}", sourceName);
+    }
+
+    protected boolean isOpenAlReadyForPlayerCreation() {
+        try {
+            return ALUtils.isOpenAlReady();
+        } catch (RuntimeException ignored) {
+            // A very early PRE_CLIENT_TICK can run before Minecraft has exposed its SoundManager through Melody's accessors.
+            return false;
+        }
+    }
+
+    /**
+     * Detaches this player while Minecraft's old OpenAL context is still current. Playback intent is deliberately kept
+     * so the same resource can recreate its player after the reload without element-specific replacement logic.
+     */
+    void releasePlayerBeforeSoundEngineReload() {
+        if (this.closed) return;
+        Object cachedPlayer;
+        synchronized (this.playerInitLock) {
+            cachedPlayer = this.mediaPlayer;
+            if (cachedPlayer == null) return;
+            if (this.playRequested && (this.seekRequestedMs < 0L)) {
+                // An explicit seek that is still waiting for metadata takes precedence over the last reported time.
+                long playTimeMs = WatermediaReflectionBridge.playerTime(cachedPlayer);
+                if (playTimeMs > 0L) this.seekRequestedMs = playTimeMs;
+            }
+            this.stopRequestVersion++;
+            this.mediaPlayer = null;
+            this.resetFramePresentationStateForNewPlayer();
+        }
+        WatermediaReflectionBridge.playerPause(cachedPlayer, true);
+        WatermediaReflectionBridge.playerRelease(cachedPlayer);
+    }
+
+    void retryPlayerAfterSoundEngineReload() {
+        if (this.closed || !this.playRequested || this.mediaPlayer != null) return;
+        this.queuePlayerInitializationTask();
     }
 
     protected void fail(@NotNull String message, @Nullable Throwable cause) {

@@ -51,7 +51,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -151,49 +150,6 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         synchronized (BACKGROUND_INSTANCE_LOCK_FANCYMENU) {
             BACKGROUND_INSTANCES_FANCYMENU.add(this);
         }
-    }
-
-    public static int forceReloadAllAfterSoundEngineReload_FancyMenu() {
-        List<NativeVideoMenuBackground> backgrounds;
-        synchronized (BACKGROUND_INSTANCE_LOCK_FANCYMENU) {
-            backgrounds = new ArrayList<>(BACKGROUND_INSTANCES_FANCYMENU);
-        }
-
-        if (backgrounds.isEmpty()) return 0;
-
-        Set<IVideo> videosToRelease = Collections.newSetFromMap(new IdentityHashMap<>());
-        int resetCount = 0;
-        int stoppedCount = 0;
-
-        for (NativeVideoMenuBackground background : backgrounds) {
-            if (background == null) continue;
-            IVideo oldVideo = background.video;
-            if (oldVideo != null) {
-                videosToRelease.add(oldVideo);
-            }
-            if (background.resetBackgroundAndReturnStopState()) {
-                stoppedCount++;
-            }
-            resetCount++;
-        }
-
-        int releasedCount = 0;
-        for (IVideo video : videosToRelease) {
-            if (NativeVideoReferenceTracker.hasReferences(video)) continue;
-            try {
-                ResourceHandlers.getVideoHandler().release(video);
-                releasedCount++;
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to release cached native video resource after sound engine reload!", ex);
-            }
-        }
-
-        LOGGER.info("[FANCYMENU] Forced native video background reload after sound engine reload. backgroundsReset: {}, stoppedPlayers: {}, videoResourcesReleased: {}",
-                resetCount,
-                stoppedCount,
-                releasedCount);
-
-        return resetCount;
     }
 
     public static void savePauseThumbnailForBackgroundIdentifier_FancyMenu(@Nullable String identifier) {

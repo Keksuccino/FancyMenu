@@ -1,10 +1,9 @@
 package de.keksuccino.fancymenu.util.resource.resources.audio;
 
 import de.keksuccino.fancymenu.customization.element.elements.audio.AudioElementBuilder;
-import de.keksuccino.fancymenu.customization.background.backgrounds.video.nativevideo.NativeVideoMenuBackground;
-import de.keksuccino.fancymenu.customization.element.elements.video.nativevideo.NativeVideoElement;
 import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
+import de.keksuccino.fancymenu.util.resource.resources.video.Mp4VideoSoundEngineReloadHandler;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.melody.resources.audio.MinecraftSoundSettingsObserver;
 import org.apache.logging.log4j.LogManager;
@@ -29,11 +28,17 @@ public final class AudioEngineReloadHandler {
                         GlobalCustomizationHandler.resetMenuMusicAfterSoundEngineReload();
                         AudioResourceReloadTracker.forceReloadAllAfterSoundEngineReload_FancyMenu();
                         ResourceHandlers.getAudioHandler().releaseAll();
-                        NativeVideoElement.forceReloadAllAfterSoundEngineReload_FancyMenu();
-                        NativeVideoMenuBackground.forceReloadAllAfterSoundEngineReload_FancyMenu();
                     },
                     MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK
             );
         });
+    }
+
+    public static void beforeSoundEngineReload() {
+        Mp4VideoSoundEngineReloadHandler.beforeSoundEngineReload();
+    }
+
+    public static void afterSoundEngineReload() {
+        Mp4VideoSoundEngineReloadHandler.afterSoundEngineReload();
     }
 }
