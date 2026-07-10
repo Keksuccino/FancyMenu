@@ -80,4 +80,5 @@
 - [x] [It is not possible to mimic the refresh server list button.](https://github.com/Keksuccino/FancyMenu/issues/1492)
 - [x] [custom icon only appears when clicking singleplayer or something else](https://github.com/Keksuccino/FancyMenu/issues/1481)
 - [x] [Button textures flicker when they get handled by a button template while in a world (probably related to Spiffy)](https://github.com/Keksuccino/FancyMenu/issues/1230)
-- [ ] [[26.1.X] Markdown hyperlinks no longer underline on hover](https://github.com/Keksuccino/FancyMenu/issues/1596)
+- ♻️ [[26.1.X] Markdown hyperlinks no longer underline on hover](https://github.com/Keksuccino/FancyMenu/issues/1596)
+  - Already fixed: The report was narrowed to FancyMenu 3.9.0 on Minecraft 26.1.x, while 1.21.1 worked. Current compiled 26.2 FancyMenu applies underline style when any hyperlink fragment is hovered; vanilla `Font.prepareText`/`GuiRenderer.prepareText` preserve underline effects into glyph render states, and the smooth renderer independently consumes `Style.isUnderlined`, so no 26.2 code fix is warranted.
