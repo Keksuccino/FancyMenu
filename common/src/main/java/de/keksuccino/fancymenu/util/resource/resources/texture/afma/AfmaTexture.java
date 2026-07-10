@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
+import de.keksuccino.fancymenu.util.resource.resources.texture.AnimatedTextureResetFrame;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
@@ -75,6 +76,8 @@ public class AfmaTexture implements ITexture, PlayableResource {
     protected volatile DynamicTexture streamingTexture = null;
     @Nullable
     protected volatile ResourceLocation streamingResourceLocation = null;
+    @NotNull
+    protected final AnimatedTextureResetFrame resetFrame = new AnimatedTextureResetFrame();
 
     protected final Object streamStateLock = new Object();
     @NotNull
@@ -94,6 +97,8 @@ public class AfmaTexture implements ITexture, PlayableResource {
     protected volatile int playbackIndex = -1;
     protected volatile long playbackFrameStartMs = 0L;
     protected volatile long playbackFrameDelayMs = MIN_FRAME_DELAY_MS;
+    protected volatile boolean playbackResetFrameRestorePending = false;
+    protected volatile boolean playbackResetFrameRestored = false;
 
     protected volatile boolean decodeIntro = false;
     protected volatile int decodeIndex = 0;
@@ -265,6 +270,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
     }
 
     protected void configureStreamingState(@NotNull DecodedAfmaImage decodedImage) {
+        this.resetFrame.clear();
         AfmaDecoder previousDecoder = this.decoder;
         if ((previousDecoder != null) && (previousDecoder != decodedImage.decoder())) {
             CloseableUtils.closeQuietly(previousDecoder);
@@ -596,7 +602,15 @@ public class AfmaTexture implements ITexture, PlayableResource {
             if (first == null) return;
 
             try {
-                this.applyPreparedFrame(first);
+                boolean useRestoredFrame = shouldUseRestoredFrame(this.playbackResetFrameRestored, first.index, first.intro, this.introFrameCount);
+                this.playbackResetFrameRestorePending = false;
+                this.playbackResetFrameRestored = false;
+                if (!useRestoredFrame) {
+                    this.resetFrame.cancelRestore();
+                    this.applyPreparedFrame(first);
+                    NativeImage canvas = Objects.requireNonNull(this.streamingTexture, "AFMA streaming texture was NULL after applying the first frame").getPixels();
+                    this.resetFrame.captureIfAbsent(Objects.requireNonNull(canvas, "AFMA streaming texture returned NULL pixels after applying the first frame"));
+                }
                 this.playbackInitialized = true;
                 this.playbackIntro = first.intro;
                 this.playbackIndex = first.index;
@@ -1029,6 +1043,10 @@ public class AfmaTexture implements ITexture, PlayableResource {
                 && (this.numPlays.get() <= 0);
     }
 
+    protected static boolean shouldUseRestoredFrame(boolean restored, int frameIndex, boolean intro, int introFrameCount) {
+        return restored && (frameIndex == 0) && (intro || (introFrameCount <= 0));
+    }
+
     protected void requestPlaybackReset() {
         int nextGeneration = this.streamGeneration.incrementAndGet();
 
@@ -1041,6 +1059,8 @@ public class AfmaTexture implements ITexture, PlayableResource {
         this.playbackIndex = -1;
         this.playbackFrameStartMs = 0L;
         this.playbackFrameDelayMs = MIN_FRAME_DELAY_MS;
+        this.playbackResetFrameRestorePending = false;
+        this.playbackResetFrameRestored = false;
         this.decodeIntro = this.introFrameCount > 0;
         this.decodeIndex = 0;
 
@@ -1071,6 +1091,10 @@ public class AfmaTexture implements ITexture, PlayableResource {
         if (!this.decoded.get()) return FULLY_TRANSPARENT_TEXTURE;
         this.startTickerIfNeeded();
         try {
+            if (this.playbackResetFrameRestorePending && this.resetFrame.restoreTo(this.streamingTexture)) {
+                this.playbackResetFrameRestorePending = false;
+                this.playbackResetFrameRestored = true;
+            }
             this.advancePlaybackIfNeeded();
         } catch (Exception ex) {
             this.failStreaming("AFMA playback failed on the client thread", ex);
@@ -1125,6 +1149,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
         this.playRequested = true;
         this.pausedRequested = false;
         this.requestPlaybackReset();
+        this.playbackResetFrameRestorePending = this.resetFrame.requestRestore();
         this.startTickerIfNeeded();
     }
 
@@ -1212,6 +1237,9 @@ public class AfmaTexture implements ITexture, PlayableResource {
         }
 
         this.releaseStreamingTextureNow();
+        this.playbackResetFrameRestorePending = false;
+        this.playbackResetFrameRestored = false;
+        this.resetFrame.close();
         this.requestDecoderRelease();
 
         this.sourceLocation = null;
@@ -1273,6 +1301,9 @@ public class AfmaTexture implements ITexture, PlayableResource {
             running.interrupt();
         }
         this.requestDecoderRelease();
+        this.playbackResetFrameRestorePending = false;
+        this.playbackResetFrameRestored = false;
+        this.resetFrame.clear();
         this.scheduleStreamingTextureRelease();
         if (throwable != null) {
             LOGGER.error("[FANCYMENU] {}", message, throwable);
