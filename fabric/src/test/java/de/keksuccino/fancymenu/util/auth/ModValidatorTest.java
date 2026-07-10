@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -15,43 +14,38 @@ class ModValidatorTest {
     private static final String LICENSE = "DSMSLv3 (DON'T SNATCH MA STUFF LICENSE v3)";
 
     @Test
-    void acceptsRuntimeDisplayNameOverrideWhenDeclaredMetadataIsValid() {
-        UniversalModContainer mod = mod("A Custom Name", DESCRIPTION, LICENSE);
-
-        assertTrue(ModValidator.isFancyMenuMetadataValid(mod, "FancyMenu"));
+    void acceptsUnmodifiedValidatedMetadata() {
+        assertTrue(ModValidator.isFancyMenuMetadataValid(mod("FancyMenu", DESCRIPTION, LICENSE)));
     }
 
     @Test
-    void rejectsModifiedDeclaredDisplayNameEvenWhenRuntimeNameLooksValid() {
-        UniversalModContainer mod = mod("FancyMenu", DESCRIPTION, LICENSE);
-
-        assertFalse(ModValidator.isFancyMenuMetadataValid(mod, "Modified Name"));
+    void rejectsRuntimeDisplayNameMutation() {
+        assertFalse(ModValidator.isFancyMenuMetadataValid(mod("A Custom Name", DESCRIPTION, LICENSE)));
     }
 
     @Test
-    void rejectsMissingDeclaredDisplayNameFallback() {
-        UniversalModContainer mod = mod("FancyMenu", DESCRIPTION, LICENSE);
-
-        assertFalse(ModValidator.isFancyMenuMetadataValid(mod, "fancymenu"));
+    void rejectsPrefixedDescriptionMutation() {
+        assertFalse(ModValidator.isFancyMenuMetadataValid(mod("FancyMenu", "Modified: " + DESCRIPTION, LICENSE)));
     }
 
     @Test
-    void rejectsModifiedDescription() {
-        UniversalModContainer mod = mod("FancyMenu", "Modified description", LICENSE);
-
-        assertFalse(ModValidator.isFancyMenuMetadataValid(mod, "FancyMenu"));
+    void rejectsAppendedDescriptionMutation() {
+        assertFalse(ModValidator.isFancyMenuMetadataValid(mod("FancyMenu", DESCRIPTION + " Modified", LICENSE)));
     }
 
     @Test
-    void rejectsModifiedLicense() {
-        UniversalModContainer mod = mod("FancyMenu", DESCRIPTION, "Modified license");
-
-        assertFalse(ModValidator.isFancyMenuMetadataValid(mod, "FancyMenu"));
+    void rejectsPrefixedLicenseMutation() {
+        assertFalse(ModValidator.isFancyMenuMetadataValid(mod("FancyMenu", DESCRIPTION, "Modified: " + LICENSE)));
     }
 
     @Test
-    void preservesUniversalModContainerRecordShape() {
-        assertArrayEquals(new String[]{"id", "name", "description", "license", "authors"}, List.of(UniversalModContainer.class.getRecordComponents()).stream().map(component -> component.getName()).toArray(String[]::new));
+    void rejectsAppendedLicenseMutation() {
+        assertFalse(ModValidator.isFancyMenuMetadataValid(mod("FancyMenu", DESCRIPTION, LICENSE + " Modified")));
+    }
+
+    @Test
+    void rejectsMissingModMetadata() {
+        assertFalse(ModValidator.isFancyMenuMetadataValid(null));
     }
 
     private static UniversalModContainer mod(String name, String description, String license) {

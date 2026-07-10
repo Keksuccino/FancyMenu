@@ -144,18 +144,6 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
     }
 
     @Override
-    public @Nullable String getDeclaredModDisplayName(@NotNull String id) {
-        Optional<? extends ModContainer> container = ModList.get().getModContainerById(id);
-        if (container.isEmpty()) return null;
-        IModInfo mod = container.get().getModInfo();
-        // KubeJS replaces ModInfo.displayName reflectively, but does not mutate the immutable descriptor config backing ModInfo.
-        Optional<?> configuredName = mod.getConfig().getConfigElement("displayName");
-        if (configuredName.isEmpty()) return mod.getModId();
-        Object declaredName = configuredName.get();
-        return declaredName instanceof String name ? name : null;
-    }
-
-    @Override
     public @NotNull Set<Identifier> getLoadedClientResourceLocations() {
         Set<Identifier> output = new HashSet<>();
         if (!this.isOnClient()) return output;

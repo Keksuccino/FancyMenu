@@ -28,14 +28,14 @@ public class ModValidator {
     private static final String FANCYMENU_MOD_ID = "fancymenu";
     private static final String FANCYMENU_DISPLAY_NAME = "FancyMenu";
     private static final String FANCYMENU_DESCRIPTION = "Customize Minecraft's menus with ease!";
-    private static final String FANCYMENU_LICENSE = "DSMSLv3";
+    private static final String FANCYMENU_LICENSE = "DSMSLv3 (DON'T SNATCH MA STUFF LICENSE v3)";
 
     public static boolean isFancyMenuLoaded() {
         return Services.PLATFORM.isModLoaded(FANCYMENU_MOD_ID);
     }
 
     public static boolean isFancyMenuDisplayName() {
-        return hasFancyMenuDisplayName(Services.PLATFORM.getDeclaredModDisplayName(FANCYMENU_MOD_ID));
+        return hasFancyMenuDisplayName(Services.PLATFORM.getLoadedMod(FANCYMENU_MOD_ID));
     }
 
     public static boolean isFancyMenuDescription() {
@@ -47,8 +47,9 @@ public class ModValidator {
     }
 
     public static boolean isFancyMenuMetadataValid() {
+        if (!isFancyMenuLoaded()) return false;
         UniversalModContainer mod = Services.PLATFORM.getLoadedMod(FANCYMENU_MOD_ID);
-        return isFancyMenuMetadataValid(mod, Services.PLATFORM.getDeclaredModDisplayName(FANCYMENU_MOD_ID));
+        return isFancyMenuMetadataValid(mod);
     }
 
     public static void printInfo() {
@@ -58,9 +59,8 @@ public class ModValidator {
         LOGGER.warn("");
 
         UniversalModContainer mod = Services.PLATFORM.getLoadedMod(FANCYMENU_MOD_ID);
-        String declaredDisplayName = Services.PLATFORM.getDeclaredModDisplayName(FANCYMENU_MOD_ID);
         LOGGER.warn("FM found in loaded mods: " + isFancyMenuLoaded());
-        LOGGER.warn("FM metadata has correct display name: " + hasFancyMenuDisplayName(declaredDisplayName));
+        LOGGER.warn("FM metadata has correct display name: " + hasFancyMenuDisplayName(mod));
         LOGGER.warn("FM metadata has correct description: " + hasFancyMenuDescription(mod));
         LOGGER.warn("FM metadata has correct license: " + hasFancyMenuLicense(mod));
 
@@ -104,20 +104,20 @@ public class ModValidator {
         return false;
     }
 
-    static boolean isFancyMenuMetadataValid(@Nullable UniversalModContainer mod, @Nullable String declaredDisplayName) {
-        return hasFancyMenuDisplayName(declaredDisplayName) && hasFancyMenuDescription(mod) && hasFancyMenuLicense(mod);
+    static boolean isFancyMenuMetadataValid(@Nullable UniversalModContainer mod) {
+        return hasFancyMenuDisplayName(mod) && hasFancyMenuDescription(mod) && hasFancyMenuLicense(mod);
     }
 
-    private static boolean hasFancyMenuDisplayName(@Nullable String declaredDisplayName) {
-        return FANCYMENU_DISPLAY_NAME.equals(declaredDisplayName);
+    private static boolean hasFancyMenuDisplayName(@Nullable UniversalModContainer mod) {
+        return mod != null && FANCYMENU_DISPLAY_NAME.equals(mod.name());
     }
 
     private static boolean hasFancyMenuDescription(@Nullable UniversalModContainer mod) {
-        return mod != null && mod.description() != null && mod.description().contains(FANCYMENU_DESCRIPTION);
+        return mod != null && FANCYMENU_DESCRIPTION.equals(mod.description());
     }
 
     private static boolean hasFancyMenuLicense(@Nullable UniversalModContainer mod) {
-        return mod != null && mod.license() != null && mod.license().contains(FANCYMENU_LICENSE);
+        return mod != null && FANCYMENU_LICENSE.equals(mod.license());
     }
 
 }

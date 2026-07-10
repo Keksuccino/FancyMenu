@@ -64,7 +64,8 @@
 - ♻️ [Opening "options_screen" with a custom Main Menu/Title Screen throws NullPointerException error.](https://github.com/Keksuccino/FancyMenu/issues/1545)
   - Already fixed: The title-screen `opengui options_screen` path previously used FancyMenu’s generic reflective `boolean=true` default, causing Minecraft 26.1.2 to initialize the in-world Options variant while `minecraft.level` was null. Commit `4187f2a13` constructs Options with the active parent and actual world state (`false` on the main menu), while restoring the previous screen if another synchronous initialization failure occurs.
 - [x] [Checkboxes do not fade in](https://github.com/Keksuccino/FancyMenu/issues/1536)
-- [x] [False Positive With KubeJS Renaming Of Mods Feature](https://github.com/Keksuccino/FancyMenu/issues/1535)
+- ⚠️ [False Positive With KubeJS Renaming Of Mods Feature](https://github.com/Keksuccino/FancyMenu/issues/1535)
+  - Intentional behavior: FancyMenu treats runtime changes to its display name or other authenticated metadata as a failed integrity check, so KubeJS renaming is deliberately unsupported rather than a false positive to fix.
 - [ ] [Create World Screen Layout Resetting](https://github.com/Keksuccino/FancyMenu/issues/1533)
 - [ ] [Creative Inventory Items Having No Tooltp Text Whe...](https://github.com/Keksuccino/FancyMenu/issues/1531)
 - [ ] [FancyMenu breaks custom item rendering in a custom Screen](https://github.com/Keksuccino/FancyMenu/issues/1530)
