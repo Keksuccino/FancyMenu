@@ -5,14 +5,19 @@ import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBloc
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
+import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.properties.Property;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.awt.*;
+
+import java.util.Objects;
 
 public class TickerElement extends AbstractElement implements ExecutableElement {
 
@@ -24,6 +29,12 @@ public class TickerElement extends AbstractElement implements ExecutableElement 
     protected volatile boolean ready = false;
     protected volatile boolean ticked = false;
     protected volatile long lastTick = -1;
+    /**
+     * A zero-delay NORMAL ticker that synchronously replaced its own screen must stay suspended for the lifetime of
+     * the replacement. Clearing this after one tick would only reduce the replacement loop to every second frame.
+     * Genuine later initialization creates a fresh ticker and intentionally restores the configured behavior.
+     */
+    protected volatile boolean suspendedAfterImmediateSameScreenReplacement = false;
     protected volatile TickerElementThreadController asyncThreadController = null;
 
     public TickerElement(@NotNull ElementBuilder<?, ?> builder) {
@@ -33,23 +44,76 @@ public class TickerElement extends AbstractElement implements ExecutableElement 
 
     protected void tickerElementTick() {
         if (this.ready && this.shouldRender()) {
+            if (this.suspendedAfterImmediateSameScreenReplacement) {
+                return;
+            }
             if (this.ticked && (this.tickMode == TickMode.ON_MENU_LOAD)) {
                 return;
             }
-            if ((this.tickMode == TickMode.ONCE_PER_SESSION) && TickerElementBuilder.cachedOncePerSessionItems.contains(this.getInstanceIdentifier())) {
-                return;
-            }
             if (this.tickMode == TickMode.ONCE_PER_SESSION) {
-                TickerElementBuilder.cachedOncePerSessionItems.add(this.getInstanceIdentifier());
+                if (!TickerElementBuilder.tryMarkOncePerSessionItem(this.getInstanceIdentifier())) {
+                    return;
+                }
             } else {
-                TickerElementBuilder.cachedOncePerSessionItems.remove(this.getInstanceIdentifier());
+                TickerElementBuilder.removeOncePerSessionItem(this.getInstanceIdentifier());
             }
             long now = System.currentTimeMillis();
             long delayMs = Math.max(0L, this.tickDelayMs.getLong());
             if ((delayMs <= 0) || ((this.lastTick + delayMs) <= now)) {
                 this.lastTick = now;
                 this.ticked = true;
-                this.actionExecutor.execute();
+                Screen sourceScreen = ScreenUtils.getScreen();
+                String sourceScreenIdentifier = (sourceScreen != null) ? ScreenIdentifierHandler.getIdentifierOfScreen(sourceScreen) : null;
+                ScreenCustomizationLayer sourceLayer = (sourceScreen != null) ? ScreenCustomizationLayerHandler.getLayerOfScreen(sourceScreen) : null;
+                try (TickerRuntimeStateTransfer.ExecutionScope ignored = TickerRuntimeStateTransfer.begin(sourceScreenIdentifier, sourceLayer, this)) {
+                    this.actionExecutor.execute();
+                }
+            }
+        }
+    }
+
+    @Nullable
+    TickerRuntimeStateTransfer.RuntimeKey createRuntimeStateKey() {
+        if (this.getParentLayout() == null) {
+            return null;
+        }
+        String rawTickDelay = Objects.requireNonNullElse(this.tickDelayMs.getRawInputOrFormattedValue(), "");
+        return new TickerRuntimeStateTransfer.RuntimeKey(this.getParentLayout().runtimeLayoutIdentifier, this.getInstanceIdentifier(), rawTickDelay, this.tickMode.name, this.isAsync, this.actionExecutor.identifier);
+    }
+
+    @NotNull
+    TickerRuntimeStateTransfer.RuntimeState createRuntimeState(boolean executionSource) {
+        boolean suspend = this.suspendedAfterImmediateSameScreenReplacement || (executionSource && this.isImmediateNormalExecutionSource());
+        return new TickerRuntimeStateTransfer.RuntimeState(this.ticked, this.lastTick, suspend);
+    }
+
+    boolean isImmediateNormalExecutionSource() {
+        return (this.tickMode == TickMode.NORMAL) && (Math.max(0L, this.tickDelayMs.getLong()) == 0L);
+    }
+
+    void suspendAfterImmediateSameScreenReplacement() {
+        this.suspendedAfterImmediateSameScreenReplacement = true;
+        if (this.asyncThreadController != null) {
+            this.asyncThreadController.running = false;
+        }
+    }
+
+    boolean shouldStartAsyncThread() {
+        return this.isAsync && !this.suspendedAfterImmediateSameScreenReplacement && ((this.asyncThreadController == null) || !this.asyncThreadController.running);
+    }
+
+    void restoreRuntimeState(@NotNull Object targetScreen) {
+        TickerRuntimeStateTransfer.RuntimeKey key = this.createRuntimeStateKey();
+        if (key == null) {
+            return;
+        }
+        TickerRuntimeStateTransfer.RuntimeState state = TickerRuntimeStateTransfer.take(targetScreen, key);
+        if (state != null) {
+            this.ticked = state.ticked();
+            this.lastTick = state.lastTick();
+            this.suspendedAfterImmediateSameScreenReplacement = state.suspended();
+            if (state.suspended() && (this.asyncThreadController != null)) {
+                this.asyncThreadController.running = false;
             }
         }
     }
@@ -75,12 +139,13 @@ public class TickerElement extends AbstractElement implements ExecutableElement 
         }
 
         //Start thread if not in editor and isAsync
-        if (this.isAsync && ((this.asyncThreadController == null) || !this.asyncThreadController.running)) {
+        if (this.shouldStartAsyncThread()) {
             if (!isEditor()) {
-                this.asyncThreadController = new TickerElementThreadController();
-                TickerElementBuilder.cachedThreadControllers.add(this.asyncThreadController);
+                TickerElementThreadController controller = new TickerElementThreadController();
+                this.asyncThreadController = controller;
+                TickerElementBuilder.cachedThreadControllers.add(controller);
                 new Thread(() -> {
-                    while ((this.asyncThreadController != null) && this.asyncThreadController.running && this.isAsync) {
+                    while (controller.running && this.isAsync) {
                         this.tickerElementTick();
                         try {
                             //Sleep 50ms to tick 20 times per second (like normal MC menus)
