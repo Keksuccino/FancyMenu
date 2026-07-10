@@ -26,10 +26,12 @@ import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.preload.ResourcePreLoader;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.window.InitialLoadingOverlayIconRefreshController;
 import java.net.SocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import net.minecraft.client.gui.screens.DeathScreen;
+import net.minecraft.client.gui.screens.LoadingOverlay;
 import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -76,6 +78,7 @@ public class MixinMinecraft {
 	@Unique private static boolean reloadListenerRegisteredFancyMenu = false;
 	@Unique private boolean lateClientInitDone_FancyMenu = false;
 	@Unique private Screen lastScreen_FancyMenu = null;
+	@Unique private final InitialLoadingOverlayIconRefreshController initialLoadingOverlayIconRefreshController_FancyMenu = new InitialLoadingOverlayIconRefreshController();
 	@Unique private boolean hasActiveServerConnection_FancyMenu;
 	@Unique private boolean pendingServerJoinEvent_FancyMenu;
 	@Unique @Nullable private String lastServerIp_FancyMenu;
@@ -115,6 +118,14 @@ public class MixinMinecraft {
 		if (!this.lateClientInitDone_FancyMenu) {
 			this.lateClientInitDone_FancyMenu = true;
 			FancyMenu.lateClientInit();
+		}
+	}
+
+	/** @reason The initial icon updates happen before resource loading; refreshing after the accepted loading-overlay exit makes the custom icon visible before the first unobscured screen frame. */
+	@Inject(method = "setOverlay", at = @At("TAIL"))
+	private void after_setOverlay_FancyMenu(@Nullable Overlay overlay, CallbackInfo info) {
+		if (this.initialLoadingOverlayIconRefreshController_FancyMenu.afterOverlayAssignment(this.overlay instanceof LoadingOverlay)) {
+			WindowHandler.updateCustomWindowIcon();
 		}
 	}
 
