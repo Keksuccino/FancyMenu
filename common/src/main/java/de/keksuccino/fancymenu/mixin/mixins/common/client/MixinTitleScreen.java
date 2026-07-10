@@ -12,10 +12,12 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
+import de.keksuccino.fancymenu.mixin.interfaces.TitleScreenBrandingController;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.BrandingRenderer;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.MinecraftLogoRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.MinecraftSplashRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.RendererWidget;
@@ -30,6 +32,7 @@ import net.minecraft.client.renderer.PanoramaRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,9 +41,10 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import java.util.List;
 
 @Mixin(TitleScreen.class)
-public abstract class MixinTitleScreen extends Screen {
+public abstract class MixinTitleScreen extends Screen implements TitleScreenBrandingController {
 
     @Shadow @Final public static Component COPYRIGHT_TEXT;
     @Shadow @Final private static ResourceLocation MINECRAFT_LOGO;
@@ -52,6 +56,9 @@ public abstract class MixinTitleScreen extends Screen {
     @Unique private int cached_mouseX_FancyMenu = -1;
     @Unique private int cached_mouseY_FancyMenu = -1;
     @Unique private float cached_partial_FancyMenu = -1f;
+    @Unique @Nullable private BrandingRenderer brandingRenderer_FancyMenu;
+    @Unique @Nullable private RendererWidget brandingWidget_FancyMenu;
+    @Unique @Nullable private String capturedBrandingText_FancyMenu;
 
     @SuppressWarnings("all")
     private MixinTitleScreen() {
@@ -81,14 +88,15 @@ public abstract class MixinTitleScreen extends Screen {
                 .setWidgetIdentifierFancyMenu("minecraft_splash_widget")
                 .setMessage(Component.translatable("fancymenu.widgetified_screens.title_screen.splash"));
 
-        BrandingRenderer branding = new BrandingRenderer(this.height);
-        this.addRenderableWidget(new RendererWidget(branding.getDefaultPositionX(), branding.getDefaultPositionY(), branding.getTotalWidth(), branding.getTotalHeight(),
+        this.brandingRenderer_FancyMenu = new BrandingRenderer(this.height);
+        BrandingRenderer branding = this.brandingRenderer_FancyMenu;
+        this.brandingWidget_FancyMenu = this.addRenderableWidget(new RendererWidget(branding.getDefaultPositionX(), branding.getDefaultPositionY(), branding.getTotalWidth(), branding.getTotalHeight(),
                         (graphics, mouseX, mouseY, partial, x, y, width, height, renderer) -> {
                             branding.setOpacity(renderer.getAlpha());
                             branding.render(graphics, x, y);
                         }))
-                .setWidgetIdentifierFancyMenu("minecraft_branding_widget")
-                .setMessage(Component.translatable("fancymenu.widgetified_screens.title_screen.branding"));
+                .setWidgetIdentifierFancyMenu("minecraft_branding_widget");
+        this.brandingWidget_FancyMenu.setMessage(Component.translatable("fancymenu.widgetified_screens.title_screen.branding"));
 
         this.realmsNotificationsScreen = null;
     }
@@ -169,6 +177,18 @@ public abstract class MixinTitleScreen extends Screen {
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractWidget;setAlpha(F)V"))
     private boolean cancel_setAlpha_FancyMenu(AbstractWidget instance, float alpha) {
         return !ScreenCustomization.isCustomizationEnabledForScreen(this);
+    }
+
+    @Override
+    public void fancymenu$setBrandingText(@NotNull String brandingText) {
+        if (brandingText.equals(this.capturedBrandingText_FancyMenu)) return;
+        BrandingRenderer branding = this.brandingRenderer_FancyMenu;
+        RendererWidget widget = this.brandingWidget_FancyMenu;
+        if ((branding == null) || (widget == null)) return;
+        this.capturedBrandingText_FancyMenu = brandingText;
+        branding.setLines(List.of(Component.literal(brandingText)));
+        if (((CustomizableWidget)widget).getCustomWidthFancyMenu() == null) widget.setWidth(branding.getTotalWidth());
+        if (((CustomizableWidget)widget).getCustomHeightFancyMenu() == null) widget.setHeight(branding.getTotalHeight());
     }
 
 }
