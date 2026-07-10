@@ -7,29 +7,40 @@
 - [x] [get nbt data does not work for numbers if the scale is 1](https://github.com/Keksuccino/FancyMenu/issues/1694)
 - [x] [Can't save a tooltip to be empty when it has been saved to have something in it](https://github.com/Keksuccino/FancyMenu/issues/1693)
 - [x] [FM does not respect remapped modifier keys (Control/Command) in macOS (remapped via System Settings -> Keyboard)](https://github.com/Keksuccino/FancyMenu/issues/1692)
-- [x] [having irradiated effect from alex's caves in third person causes the render to go black](https://github.com/Keksuccino/FancyMenu/issues/1689)
+- ♻️ [having irradiated effect from alex's caves in third person causes the render to go black](https://github.com/Keksuccino/FancyMenu/issues/1689)
+  - Already fixed: The report targets Forge 1.20.1; on 26.2 FancyMenu's ordinary world-render hooks do not run a post effect or rebind the framebuffer—the seamless-loading hook returns unless a capture is armed—so Alex's Caves retains ownership of its irradiated third-person post chain.
 - ⚠️ [Fancymenu heavy lags my PC till... I unplug the HDMI cable](https://github.com/Keksuccino/FancyMenu/issues/1688)
   - Blocked: The report provides no reproducible layout/assets or time-correlated performance/display capture, and its complete log contains no failure or active video player. Reproduce on current 26.2 with a stable A/B sequence, the exact layout/assets and mod configuration, the window/display setup (GPU routing, resolutions, refresh rates, VRR/HDR, fullscreen and VSync), a Spark or JFR CPU profile, a GPUView plus PresentMon trace, and VRAM/GPU utilization/clock/power telemetry covering the onset; those artifacts are required to identify a FancyMenu code path instead of guessing at an OS/driver presentation workaround.
 - [x] [Unable to focus text input field](https://github.com/Keksuccino/FancyMenu/issues/1685)
-- [x] [Text Elements break on blur](https://github.com/Keksuccino/FancyMenu/issues/1684)
+- ♻️ [Text Elements break on blur](https://github.com/Keksuccino/FancyMenu/issues/1684)
+  - Already fixed: 26.2 queues rectangle blur as a bounded `GuiBlurRenderState` between GUI strata and composites it through dedicated blur targets, so text is no longer corrupted by the legacy blur path.
 - [x] [NeoForge 21.1.229 1.21.1 text elements has broken sizing if used decimals](https://github.com/Keksuccino/FancyMenu/issues/1681)
 - [x] [Buttons do not auto size when auto sizing is enabled](https://github.com/Keksuccino/FancyMenu/issues/1680)
 - [x] [gson MalformedJsonException log spam when some elements have invalid json in their text](https://github.com/Keksuccino/FancyMenu/issues/1675)
-- [x] [Fancy Entity Renderer element is added but the entity/player does not render](https://github.com/Keksuccino/FancyMenu/issues/1673)
-- [x] [Item elements have inconsistent layering between items and blocks](https://github.com/Keksuccino/FancyMenu/issues/1672)
+- ♻️ [Fancy Entity Renderer element is added but the entity/player does not render](https://github.com/Keksuccino/FancyMenu/issues/1673)
+  - Already fixed: The 26.2 Player Entity element constructs the Fancy Entity Renderer widget, synchronizes its exact element bounds, and submits the widget's extracted render state, so compatible player/entity models are not left as an empty editor box.
+- ♻️ [Item elements have inconsistent layering between items and blocks](https://github.com/Keksuccino/FancyMenu/issues/1672)
+  - Already fixed: 26.2 records item models through `GuiGraphicsExtractor.item` in element order with scoped transforms, while legacy manual blend/depth toggles are gone, preventing 3D block-item depth from escaping its layer and covering later elements.
 - [x] [Filled condition not updated when dropping hotbar items with hotkey](https://github.com/Keksuccino/FancyMenu/issues/1669)
-- [x] [[NF 1.21.1] Invisible screens when menu blur is enabled](https://github.com/Keksuccino/FancyMenu/issues/1665)
+- ♻️ [[NF 1.21.1] Invisible screens when menu blur is enabled](https://github.com/Keksuccino/FancyMenu/issues/1665)
+  - Already fixed: 26.2 handles menu and shape blur through FancyMenu-owned blur targets and ordered GUI strata instead of the legacy shared post-chain path implicated by Iris and Tensura custom blur screens.
 - [x] [Fancy menu issues intro Fabric (1.21.1)](https://github.com/Keksuccino/FancyMenu/issues/1660)
 - [x] [Fancy Menus 3.9.1 Fabric [1.21.1+1.2.11] Edges of image and rectangle shape elements rendering weirdly](https://github.com/Keksuccino/FancyMenu/issues/1659)
-- [x] [Texture background menu issue on Fabric 1.19.2](https://github.com/Keksuccino/FancyMenu/issues/1658)
-- [x] [Entity Player object not working](https://github.com/Keksuccino/FancyMenu/issues/1657)
+- ♻️ [Texture background menu issue on Fabric 1.19.2](https://github.com/Keksuccino/FancyMenu/issues/1658)
+  - Already fixed: The 26.2 renderer resolves each background to its own texture `Identifier` and queues it through `RenderPipelines.GUI_TEXTURED`, with per-draw color reset and no legacy global texture-slot mutation that could sample unrelated atlas textures after menu changes.
+- ♻️ [Entity Player object not working](https://github.com/Keksuccino/FancyMenu/issues/1657)
+  - Already fixed: The 26.2 Player Entity integration creates a correctly sized Fancy Entity Renderer widget, retries construction after late renderer initialization, and synchronizes the widget bounds every extracted frame, removing the invisible and oversized legacy state.
 - [x] [Crash related to using videos in the game intro and/or splash screen](https://github.com/Keksuccino/FancyMenu/issues/1656)
-- [x] [Minecraft Font Corrupted After Show An MCEF (Minecraft Chromium Embedded Framework) Screen](https://github.com/Keksuccino/FancyMenu/issues/1651)
+- ♻️ [Minecraft Font Corrupted After Show An MCEF (Minecraft Chromium Embedded Framework) Screen](https://github.com/Keksuccino/FancyMenu/issues/1651)
+  - Already fixed: 26.2 renders MCEF's registered texture `Identifier` directly through the GUI pipeline and restores shader color in `finally`; the custom OpenGL texture-ID wrapper that could disturb Minecraft's font-atlas binding is gone.
 - [x] [Global menu background doesn't scale correctly with GUI size](https://github.com/Keksuccino/FancyMenu/issues/1648)
-- [x] [Menu Backgrounds: GLSL Shader overlays UI elements instead of rendering as background](https://github.com/Keksuccino/FancyMenu/issues/1647)
+- ♻️ [Menu Backgrounds: GLSL Shader overlays UI elements instead of rendering as background](https://github.com/Keksuccino/FancyMenu/issues/1647)
+  - Already fixed: 26.2 inserts GLSL draws as `GuiRenderPhaseAction`s at ordered GUI strata and writes the background to the live main-target color texture before later widget strata, so it is not deferred over buttons and text.
 - [x] [Text element not replacing `&` formatting codes anymore (because removed from placeholder replacement logic)](https://github.com/Keksuccino/FancyMenu/issues/1645)
-- [x] [Crash caused mixin of EuphoriaPatcherMixin](https://github.com/Keksuccino/FancyMenu/issues/1638)
-- [x] ["on ... looking at block" listeners limitation](https://github.com/Keksuccino/FancyMenu/issues/1637)
+- ♻️ [Crash caused mixin of EuphoriaPatcherMixin](https://github.com/Keksuccino/FancyMenu/issues/1638)
+  - Already fixed: The reporter and Euphoria Patcher author confirmed Forge load order was the root cause and fixed Euphoria Patcher; the minimal FancyMenu/Euphoria setup no longer reproduced, so no FancyMenu 26.2 patch is appropriate.
+- ♻️ ["on ... looking at block" listeners limitation](https://github.com/Keksuccino/FancyMenu/issues/1637)
+  - Already fixed: 26.2 polls an independent 20-block block ray after `Minecraft.pick`; MISS, non-block, air, out-of-range, and null paths fire the stop listener with the prior target and then clear start state, so aiming at sky or a distant block cannot retain the old range or crosshair state.
 - [x] [background blur doesn't cover the entire background](https://github.com/Keksuccino/FancyMenu/issues/1632)
 - [ ] [Crash when JEI sends system chat message with OPEN_FILE action while FancyMenu chat listener is active](https://github.com/Keksuccino/FancyMenu/issues/1628)
 - [ ] [Game crashing when i open "open screen action script" close screen action script too](https://github.com/Keksuccino/FancyMenu/issues/1625)
