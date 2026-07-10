@@ -53,7 +53,7 @@
 - [x] [[Fabric 1.21.11] Can't highlight text with your mouse in certain windows](https://github.com/Keksuccino/FancyMenu/issues/1613)
 - [x] [Global Menu Background Images](https://github.com/Keksuccino/FancyMenu/issues/1612)
 - [x] [Button's hover animation flickering strangely when hovered](https://github.com/Keksuccino/FancyMenu/issues/1610)
-- [ ] [Tooltips of Button element not replacing `&` formatting codes anymore (because removed from placeholder replacement logic)](https://github.com/Keksuccino/FancyMenu/issues/1609)
+- [x] [Tooltips of Button element not replacing `&` formatting codes anymore (because removed from placeholder replacement logic)](https://github.com/Keksuccino/FancyMenu/issues/1609)
 - [ ] [[NeoForge 1.21.1] JavaScript API Bridge Not Working on Title Screen at Launch](https://github.com/Keksuccino/FancyMenu/issues/1601)
 - [ ] [[MC 26.1.X] Shadow line appears below custom title image element on Title Screen](https://github.com/Keksuccino/FancyMenu/issues/1585)
 - [ ] [[MC 26.1.X] Screen's content gets rendered on negative X (gets moved too much to the left, leaving a black space at the right side)](https://github.com/Keksuccino/FancyMenu/issues/1577)
