@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroHandler;
+import de.keksuccino.fancymenu.customization.gameintro.GameIntroLifecycle;
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroOverlay;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
@@ -51,12 +52,12 @@ public abstract class MixinLoadingOverlay {
 	}
 
 	@WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init(Lnet/minecraft/client/Minecraft;II)V"))
-	private void wrapInitScreenFancyMenu(Screen instance, Minecraft mc, int width, int height, Operation<Void> original) {
+	private void wrap_init_FancyMenu(Screen instance, Minecraft mc, int width, int height, Operation<Void> original) {
 
-		if (!GameIntroHandler.introPlayed && GameIntroHandler.shouldPlayIntro()) {
-			GameIntroHandler.introPlayed = true;
+		if (GameIntroLifecycle.shouldLoadIntro(GameIntroHandler.introPlayed)) {
 			PlayableResource intro = GameIntroHandler.getIntro();
 			if (intro != null) {
+				// A queued resource reload can replace this overlay on the next tick. The intro is only marked as played when it closes so an interrupted startup intro can retry after the final reload.
 				Minecraft.getInstance().setOverlay(new GameIntroOverlay(instance, intro));
 				return;
 			}
