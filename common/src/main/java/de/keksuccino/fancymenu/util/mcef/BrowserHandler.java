@@ -2,8 +2,6 @@ package de.keksuccino.fancymenu.util.mcef;
 
 import com.cinemamod.mcef.MCEF;
 import de.keksuccino.fancymenu.util.Pair;
-import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
-import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.melody.resources.audio.MinecraftSoundSettingsObserver;
 import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
@@ -33,54 +31,50 @@ public class BrowserHandler {
 
         LOGGER.info("[FANCYMENU] Starting initialization of BrowserHandler..");
 
-        if (!MCEF.isInitialized()) {
-            LOGGER.warn("[FANCYMENU] MCEF not initialized yet! Will wait for MCEF to be ready before initializing BrowserHandler!");
+        if (MCEF.isInitialized()) {
+            completeInitialization(true);
+            return;
         }
 
-        FancyMenuThreads.startDaemonThread(() -> {
-            try {
-                while (!shuttingDown) {
-                    if (MCEFUtil.MCEF_initialized || MCEF.isInitialized()) {
-                        MCEFUtil.MCEF_initialized = true;
-                        MainThreadTaskExecutor.executeInMainThread(() -> {
-                            if (shuttingDown) return;
-                            try {
+        LOGGER.warn("[FANCYMENU] MCEF not initialized yet! Registering FancyMenu's browser integration for MCEF's initialization phase.");
 
-                                // Initialize the ActionBridge for JavaScript-to-Java communication
-                                ActionBridge.initialize();
+        // MCEF invokes these callbacks after creating its client but before creating its preloaded browsers. The
+        // message router must exist before those browser contexts or the first pooled browser never receives cefQuery.
+        MCEF.scheduleForInit(BrowserHandler::completeInitialization);
 
-                                long registeredVolumeListenerId = MinecraftSoundSettingsObserver.registerVolumeListener(BrowserHandler::onVolumeUpdated);
-                                synchronized (BrowserHandler.class) {
-                                    if (shuttingDown) {
-                                        MinecraftSoundSettingsObserver.unregisterVolumeListener(registeredVolumeListenerId);
-                                        is_initializing = false;
-                                        return;
-                                    }
-                                    volumeListenerId = registeredVolumeListenerId;
-                                    initialized = true;
-                                    is_initializing = false;
-                                }
+        // MCEF and both loader startup paths initialize on the client thread. Keep an idempotent recheck as a defensive
+        // fallback for integrations that report MCEF ready immediately after listener registration.
+        if (MCEF.isInitialized()) completeInitialization(true);
 
-                                LOGGER.info("[FANCYMENU] BrowserHandler successfully initialized!");
+    }
 
-                            } catch (Exception ex) {
-                                is_initializing = false;
-                                LOGGER.error("[FANCYMENU] Failed to initialize BrowserHandler!", ex);
-                            }
-                        }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-                        break;
-                    }
-                    Thread.sleep(100);
-                }
-            } catch (InterruptedException ignored) {
-                is_initializing = false;
-                Thread.currentThread().interrupt();
-            } catch (Exception ex) {
-                is_initializing = false;
-                if (!shuttingDown) LOGGER.error("[FANCYMENU] Failed to initialize BrowserHandler!", ex);
-            }
-        }, "BrowserHandler-Initialization");
+    private static synchronized void completeInitialization(boolean successful) {
+        if (shuttingDown || initialized || !is_initializing) return;
+        if (!successful) {
+            MCEFUtil.MCEF_critical_failure = true;
+            MCEFUtil.MCEF_initialized = false;
+            is_initializing = false;
+            LOGGER.error("[FANCYMENU] Cannot initialize BrowserHandler because MCEF initialization failed!");
+            return;
+        }
 
+        try {
+            // These native client integrations must be installed synchronously in MCEF's init callback. MCEF creates
+            // its browser preload pool immediately after the callback returns.
+            if (!ActionBridge.initializeIfNecessary()) throw new IllegalStateException("Failed to initialize the MCEF action bridge");
+            BrowserLoadEventListenerManager.getInstance().initialize();
+
+            long registeredVolumeListenerId = MinecraftSoundSettingsObserver.registerVolumeListener(BrowserHandler::onVolumeUpdated);
+            volumeListenerId = registeredVolumeListenerId;
+            MCEFUtil.MCEF_initialized = true;
+            initialized = true;
+            is_initializing = false;
+            LOGGER.info("[FANCYMENU] BrowserHandler successfully initialized!");
+        } catch (Exception ex) {
+            MCEFUtil.MCEF_initialized = false;
+            is_initializing = false;
+            LOGGER.error("[FANCYMENU] Failed to initialize BrowserHandler!", ex);
+        }
     }
 
     public static void notifyHandler(@NotNull String identifier, @NotNull WrappedMCEFBrowser browser) {
