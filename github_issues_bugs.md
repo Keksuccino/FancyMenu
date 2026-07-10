@@ -46,7 +46,8 @@
 - ♻️ [Game crashing when i open "open screen action script" close screen action script too](https://github.com/Keksuccino/FancyMenu/issues/1625)
   - Already fixed: System Interactions Addon 1.0.1 was built against FancyMenu 3.1.7's old action ABI but falsely allowed 3.9.3, causing `AbstractMethodError` during action-menu enumeration; the addon has no 26.2 support and its actions are native now.
 - [x] ["Is Element Hovered" requirement not working correctly](https://github.com/Keksuccino/FancyMenu/issues/1624)
-- [ ] [The text when creating the world is now bold in some languages](https://github.com/Keksuccino/FancyMenu/issues/1623)
+- ♻️ [The text when creating the world is now bold in some languages](https://github.com/Keksuccino/FancyMenu/issues/1623)
+  - Already fixed: FancyMenu 3.9.0's Minecraft 1.20.1 mixin rendered the vanilla and FancyMenu messages one pixel apart for odd-width translations; Minecraft 26.2 uses one vanilla `FocusableTextWidget` that FancyMenu only tags.
 - [ ] [MCEF does not load on first boot](https://github.com/Keksuccino/FancyMenu/issues/1622)
 - [ ] [SendHttpRequestAction reports "No internet connection available!" even though internet works](https://github.com/Keksuccino/FancyMenu/issues/1614)
 - [ ] [[Fabric 1.21.11] Can't highlight text with your mouse in certain windows](https://github.com/Keksuccino/FancyMenu/issues/1613)
