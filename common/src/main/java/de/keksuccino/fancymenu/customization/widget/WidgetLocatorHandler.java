@@ -105,6 +105,8 @@ public class WidgetLocatorHandler {
     public static boolean invokeWidgetOnClick(@NotNull WidgetMeta meta) {
         try {
             AbstractWidget w = meta.getWidget();
+            // Calling onClick directly bypasses Vanilla's mouseClicked active/visible gate. A resolved inactive widget is a successful no-op, not a broken locator.
+            if (!w.isActive()) return true;
             w.onClick(new MouseButtonEvent(w.getX() + 1, w.getY() + 1, new MouseButtonInfo(0, 0)), false);
             return true;
         } catch (Exception ex) {
