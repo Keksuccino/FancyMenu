@@ -28,7 +28,7 @@ public class OnStartLookingAtEntityListener extends AbstractListener {
     /**
      * @return {@code true} when a new entity was detected and the listener notified its instances.
      */
-    public boolean onLookAtEntity(@NotNull Entity entity, double distanceToPlayer) {
+    public boolean onLookAtEntity(@NotNull Entity entity, double distanceToPlayer, boolean notifyNewTarget) {
         LookedEntityData newData = LookedEntityData.from(entity, distanceToPlayer);
         LookedEntityData existingData = this.currentEntityData;
 
@@ -38,7 +38,7 @@ public class OnStartLookingAtEntityListener extends AbstractListener {
         }
 
         this.currentEntityData = newData;
-        this.notifyAllInstances();
+        if (notifyNewTarget) this.notifyAllInstances();
         return true;
     }
 

@@ -42,7 +42,7 @@
 - ♻️ ["on ... looking at block" listeners limitation](https://github.com/Keksuccino/FancyMenu/issues/1637)
   - Already fixed: 26.2 polls an independent 20-block block ray after `Minecraft.pick`; MISS, non-block, air, out-of-range, and null paths fire the stop listener with the prior target and then clear start state, so aiming at sky or a distant block cannot retain the old range or crosshair state.
 - [x] [background blur doesn't cover the entire background](https://github.com/Keksuccino/FancyMenu/issues/1632)
-- [ ] [Crash when JEI sends system chat message with OPEN_FILE action while FancyMenu chat listener is active](https://github.com/Keksuccino/FancyMenu/issues/1628)
+- [x] [Crash when JEI sends system chat message with OPEN_FILE action while FancyMenu chat listener is active](https://github.com/Keksuccino/FancyMenu/issues/1628)
 - [ ] [Game crashing when i open "open screen action script" close screen action script too](https://github.com/Keksuccino/FancyMenu/issues/1625)
 - [ ] ["Is Element Hovered" requirement not working correctly](https://github.com/Keksuccino/FancyMenu/issues/1624)
 - [ ] [The text when creating the world is now bold in some languages](https://github.com/Keksuccino/FancyMenu/issues/1623)

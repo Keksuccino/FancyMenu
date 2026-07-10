@@ -21,6 +21,9 @@ public class OnStartSwimmingListener extends AbstractListener {
     }
 
     public void onStartSwimming(@Nullable String fluidKey) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cachedFluidKey = fluidKey;
         this.notifyAllInstances();
     }

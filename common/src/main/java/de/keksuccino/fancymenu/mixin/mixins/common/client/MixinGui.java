@@ -134,7 +134,7 @@ public abstract class MixinGui {
             return;
         }
 
-        if ((screen != null) && (screen != this.screen)) {
+        if ((screen != null) && (screen != this.screen) && Listeners.ON_OPEN_SCREEN.hasInstancesListening()) {
             Screen cachedCurrent = this.screen;
             Listeners.ON_OPEN_SCREEN.onScreenOpened(screen);
             if (cachedCurrent != this.screen) {
@@ -189,7 +189,7 @@ public abstract class MixinGui {
     /** @reason Fire FancyMenu close screen listeners after the screen was removed. */
     @Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;removed()V", shift = At.Shift.AFTER))
     private void after_screenRemoved_FancyMenu(Screen screen, CallbackInfo info) {
-        if (this.lastScreen_FancyMenu != null) {
+        if (this.lastScreen_FancyMenu != null && Listeners.ON_CLOSE_SCREEN.hasInstancesListening()) {
             Listeners.ON_CLOSE_SCREEN.onScreenClosed(this.lastScreen_FancyMenu);
         }
     }

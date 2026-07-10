@@ -14,6 +14,13 @@ public class ClientSideStructureEventPacketLogic {
             if (packet.structure_identifier == null || packet.structure_identifier.isBlank() || packet.event_type == null) {
                 return false;
             }
+            boolean listenerActive = switch (packet.event_type) {
+                case ENTER -> Listeners.ON_ENTER_STRUCTURE.hasInstancesListening();
+                case LEAVE -> Listeners.ON_LEAVE_STRUCTURE.hasInstancesListening();
+                case ENTER_HIGH_PRECISION -> Listeners.ON_ENTER_STRUCTURE_HIGH_PRECISION.hasInstancesListening();
+                case LEAVE_HIGH_PRECISION -> Listeners.ON_LEAVE_STRUCTURE_HIGH_PRECISION.hasInstancesListening();
+            };
+            if (!listenerActive) return true;
 
             switch (packet.event_type) {
                 case ENTER -> Listeners.ON_ENTER_STRUCTURE.onStructureEntered(packet.structure_identifier);

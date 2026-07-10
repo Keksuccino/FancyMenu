@@ -19,6 +19,9 @@ public class OnEntityStopsBeingInSightListener extends AbstractListener {
     }
 
     public void onEntityStopped(@Nullable EntitySightData data) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.lastEntityData = data;
         if (data != null) {
             this.notifyAllInstances();

@@ -594,19 +594,15 @@ public class GifTexture implements ITexture, PlayableResource {
     }
 
     private void notifyAnimatedTextureStarted(boolean willRestart) {
-        Listeners.ON_ANIMATED_TEXTURE_STARTED_PLAYING.onAnimatedTextureStartedPlaying(
-            this.resolveTextureSource(),
-            this.resolveTextureSourceType(),
-            willRestart
-        );
+        if (Listeners.ON_ANIMATED_TEXTURE_STARTED_PLAYING.hasInstancesListening()) {
+            Listeners.ON_ANIMATED_TEXTURE_STARTED_PLAYING.onAnimatedTextureStartedPlaying(this.resolveTextureSource(), this.resolveTextureSourceType(), willRestart);
+        }
     }
 
     private void notifyAnimatedTextureFinished(boolean willRestart) {
-        Listeners.ON_ANIMATED_TEXTURE_FINISHED_PLAYING.onAnimatedTextureFinishedPlaying(
-            this.resolveTextureSource(),
-            this.resolveTextureSourceType(),
-            willRestart
-        );
+        if (Listeners.ON_ANIMATED_TEXTURE_FINISHED_PLAYING.hasInstancesListening()) {
+            Listeners.ON_ANIMATED_TEXTURE_FINISHED_PLAYING.onAnimatedTextureFinishedPlaying(this.resolveTextureSource(), this.resolveTextureSourceType(), willRestart);
+        }
     }
 
     private String resolveTextureSource() {

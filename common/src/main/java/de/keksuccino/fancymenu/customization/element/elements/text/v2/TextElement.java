@@ -139,7 +139,9 @@ public class TextElement extends AbstractElement {
                 if (eventId.isEmpty()) {
                     return;
                 }
-                Listeners.ON_TEXT_CLICKED.onTextClicked(eventId);
+                if (Listeners.ON_TEXT_CLICKED.hasInstancesListening()) {
+                    Listeners.ON_TEXT_CLICKED.onTextClicked(eventId);
+                }
             }
 
             @Override
@@ -150,7 +152,9 @@ public class TextElement extends AbstractElement {
                 if (eventId.isEmpty()) {
                     return;
                 }
-                Listeners.ON_TEXT_HOVERED.onTextHovered(eventId);
+                if (Listeners.ON_TEXT_HOVERED.hasInstancesListening()) {
+                    Listeners.ON_TEXT_HOVERED.onTextHovered(eventId);
+                }
             }
         });
 

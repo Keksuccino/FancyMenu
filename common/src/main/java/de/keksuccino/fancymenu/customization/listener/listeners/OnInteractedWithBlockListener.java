@@ -28,6 +28,9 @@ public class OnInteractedWithBlockListener extends AbstractListener {
     }
 
     public void onBlockInteracted(@NotNull BlockPos blockPos, @NotNull BlockState blockState) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         Identifier blockLocation = BuiltInRegistries.BLOCK.getKey(blockState.getBlock());
         this.cachedBlockKey = blockLocation != null ? blockLocation.toString() : null;
         this.cachedBlockPosX = Integer.toString(blockPos.getX());

@@ -14,6 +14,9 @@ public class OnStoppedBurningListener extends AbstractListener {
     }
 
     public void onStoppedBurning() {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.notifyAllInstances();
     }
 

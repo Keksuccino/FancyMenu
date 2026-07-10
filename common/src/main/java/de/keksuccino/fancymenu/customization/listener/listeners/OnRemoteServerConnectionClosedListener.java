@@ -21,6 +21,9 @@ public class OnRemoteServerConnectionClosedListener extends AbstractListener {
     }
 
     public void onRemoteServerConnectionClosed(@NotNull String requestId, @NotNull String remoteServerUrl, boolean intentionallyClosed, boolean crashed, boolean unknownCloseReason) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.lastRequestId = Objects.requireNonNullElse(requestId, "");
         this.lastRemoteServerUrl = Objects.requireNonNullElse(remoteServerUrl, "");
         this.lastIntentionallyClosed = intentionallyClosed;

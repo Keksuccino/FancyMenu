@@ -54,16 +54,18 @@ public class DownloadFileAction extends Action {
                 try {
                     resolvedDirectoryPath = resolveActionDirectoryPath(targetDirectoryPath);
                     String finalTargetPath = downloadFile(fileUrl, resolvedDirectoryPath);
-                    MainThreadTaskExecutor.executeInMainThread(() ->
-                            Listeners.ON_FILE_DOWNLOADED.onFileDownloaded(fileUrl, finalTargetPath, true),
-                            MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+                    long listenerRevision = Listeners.ON_FILE_DOWNLOADED.getActiveInstanceRevision();
+                    if (listenerRevision >= 0L) {
+                        MainThreadTaskExecutor.executeInMainThread(() -> { if (Listeners.ON_FILE_DOWNLOADED.isActiveAtRevision(listenerRevision)) Listeners.ON_FILE_DOWNLOADED.onFileDownloaded(fileUrl, finalTargetPath, true); }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+                    }
                 } catch (Exception ex) {
                     LOGGER.error("[FANCYMENU] Failed to download file via DownloadFileAction: " + value, ex);
                     String failurePath = (resolvedDirectoryPath != null) ? resolvedDirectoryPath : targetDirectoryPath;
                     String finalFailurePath = failurePath;
-                    MainThreadTaskExecutor.executeInMainThread(() ->
-                            Listeners.ON_FILE_DOWNLOADED.onFileDownloaded(fileUrl, finalFailurePath, false),
-                            MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+                    long listenerRevision = Listeners.ON_FILE_DOWNLOADED.getActiveInstanceRevision();
+                    if (listenerRevision >= 0L) {
+                        MainThreadTaskExecutor.executeInMainThread(() -> { if (Listeners.ON_FILE_DOWNLOADED.isActiveAtRevision(listenerRevision)) Listeners.ON_FILE_DOWNLOADED.onFileDownloaded(fileUrl, finalFailurePath, false); }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+                    }
                 }
             });
         }

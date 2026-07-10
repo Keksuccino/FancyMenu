@@ -34,6 +34,9 @@ public class OnEntitySpawnedListener extends AbstractListener {
     }
 
     public void onEntitySpawned(@Nullable String entityKey, @Nullable UUID entityUuid, double posX, double posY, double posZ, @Nullable String levelKey) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cachedEntityKey = entityKey;
         this.cachedEntityUuid = (entityUuid != null) ? entityUuid.toString() : null;
         this.cachedEntityPosX = Double.toString(posX);

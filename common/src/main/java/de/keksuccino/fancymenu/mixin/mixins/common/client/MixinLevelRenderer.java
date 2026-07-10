@@ -27,15 +27,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(LevelExtractor.class)
 public class MixinLevelRenderer {
 
+    @Unique private boolean trackEntityVisibility_FancyMenu;
+
     @Inject(method = "extract", at = @At("HEAD"))
     private void before_extract_FancyMenu(DeltaTracker deltaTracker, Camera camera, float deltaPartialTick, CallbackInfo info) {
-        Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.onRenderFrameStart();
+        this.trackEntityVisibility_FancyMenu = Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.onRenderFrameStart();
     }
 
     @WrapOperation(method = "extractVisibleEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/extract/LevelExtractor;extractEntity(Lnet/minecraft/world/entity/Entity;F)Lnet/minecraft/client/renderer/entity/state/EntityRenderState;"))
-	private EntityRenderState wrap_extractEntity_FancyMenu(LevelExtractor levelExtractor, Entity entity, float partialTicks, Operation<EntityRenderState> original, Camera camera, Frustum frustum, DeltaTracker deltaTracker, LevelRenderState levelRenderState) {
-		if (Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.shouldCheckVisibility()) {
-			double interpolatedX = Mth.lerp(partialTicks, entity.xo, entity.getX());
+    private EntityRenderState wrap_extractEntity_FancyMenu(LevelExtractor levelExtractor, Entity entity, float partialTicks, Operation<EntityRenderState> original, Camera camera, Frustum frustum, DeltaTracker deltaTracker, LevelRenderState levelRenderState) {
+        if (this.trackEntityVisibility_FancyMenu && !Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.shouldCheckVisibility()) {
+            Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.resetTrackingForDormancy();
+            this.trackEntityVisibility_FancyMenu = false;
+        }
+        if (this.trackEntityVisibility_FancyMenu) {
+            double interpolatedX = Mth.lerp(partialTicks, entity.xo, entity.getX());
             double interpolatedY = Mth.lerp(partialTicks, entity.yo, entity.getY());
             double interpolatedZ = Mth.lerp(partialTicks, entity.zo, entity.getZ());
             Vec3 entityPosition = new Vec3(interpolatedX, interpolatedY, interpolatedZ);
@@ -50,7 +56,14 @@ public class MixinLevelRenderer {
 
     @Inject(method = "extract", at = @At("RETURN"))
     private void after_extract_FancyMenu(DeltaTracker deltaTracker, Camera camera, float deltaPartialTick, CallbackInfo info) {
-        Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.onRenderFrameEnd();
+        if (this.trackEntityVisibility_FancyMenu && !Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.shouldCheckVisibility()) {
+            Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.resetTrackingForDormancy();
+            this.trackEntityVisibility_FancyMenu = false;
+        }
+        if (this.trackEntityVisibility_FancyMenu) {
+            Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.onRenderFrameEnd();
+            this.trackEntityVisibility_FancyMenu = false;
+        }
     }
 
     @Unique

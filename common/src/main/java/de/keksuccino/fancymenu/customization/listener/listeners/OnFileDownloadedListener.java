@@ -23,6 +23,9 @@ public class OnFileDownloadedListener extends AbstractListener {
     }
 
     public void onFileDownloaded(@NotNull String downloadUrl, @NotNull String targetFilePath, boolean successful) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
 
         // Update cache before notifying instances, so they can use the up-to-date char
         this.downloadUrl = downloadUrl;

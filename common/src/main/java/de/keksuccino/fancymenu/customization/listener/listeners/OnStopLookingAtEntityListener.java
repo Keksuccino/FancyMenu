@@ -19,6 +19,9 @@ public class OnStopLookingAtEntityListener extends AbstractListener {
     }
 
     public void onStopLooking(@Nullable LookedEntityData data) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.lastEntityData = data;
         if (data != null) {
             this.notifyAllInstances();

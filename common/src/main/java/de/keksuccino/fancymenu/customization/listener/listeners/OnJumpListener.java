@@ -14,6 +14,9 @@ public class OnJumpListener extends AbstractListener {
     }
 
     public void onJump() {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.notifyAllInstances();
     }
 

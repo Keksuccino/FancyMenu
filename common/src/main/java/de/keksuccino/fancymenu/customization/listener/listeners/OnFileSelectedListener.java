@@ -24,6 +24,9 @@ public class OnFileSelectedListener extends AbstractListener {
     }
 
     public void onFileSelectionResult(@Nullable String selectedFilePath, @Nullable String targetFilePath, boolean successful, boolean cancelled, @Nullable String failureReason) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.selectedFilePath = selectedFilePath;
         this.targetFilePath = targetFilePath;
         this.selectionSucceeded = successful;
