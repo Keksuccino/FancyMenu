@@ -1532,6 +1532,18 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
+    /** The transient inline editors are not Screen children, so their captured drags must be forwarded explicitly. */
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if ((this.inlineNameEditBox != null) && this.inlineNameEditBox.mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
+            return true;
+        }
+        if ((this.inlineValueEditBox != null) && this.inlineValueEditBox.mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         boolean shortcutModifierDown = InputUtils.isGuiShortcutModifierDown(modifiers);
