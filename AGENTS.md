@@ -48,11 +48,14 @@
 - Everything always needs to work with and without Sodium and Iris.
 - Always clean up after yourself! When finishing a task, remove leftover code from testing, code from earlier unsuccessful implementation attempts, and dead code.
 - When you work with Vanilla Minecraft code, or Iris/Sodium, always deeply analyze the source code for these, so you really understand what you are working with and how the related code works.
+- ALWAYS move most of the actual work to subagents. You just orchestrate your subagents as main agent. You keep and eye on them in case they do something stupid, so you can steer them, or correct their mistakes, if needed. Make sure to move as much work as possible to subagents.
 
 ## Mod Conflicts
 - When fixing mod conflicts, avoid injections into the other mod. Always try first to fix the issue purely on the project's side, without altering/patching the other mod's code.
 - When you discover that the issue actually comes from a bug or bad behavior in the other mod, do not try to patch that bug on the project's side, and instead tell the user that this is a bug/issue in the other mod, and that the other mod should better fix that on their side.
 - If possible, always analyze/inspect the actual code of the other mod, to understand the origin of the issue, instead of guessing.
+- When inspecting the source of other mods, always prefer the latest available build of the mod for this project's Minecraft version, to be able to understand how the other mod's code works, and to see if the conflict maybe already got fixed on the other mod's side.
+- When you need to add compat code for a mod, place these classes in dedicated and well-organized "compat" packages.
 
 ## Networking & Packets
 - FancyMenu uses its own custom packet system.
@@ -69,6 +72,7 @@
 - You have access to the full Minecraft 26.2 sources in `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/26.2/minecraft/fabric/` and `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/26.2/minecraft/neoforge/`.
 - Sources for some libraries used by Minecraft 26.2 are in `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/26.2/libraries/`.
 - Sources for Sodium, Sodium Extra, and Iris are in `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/26.2/libraries/`.
+- The following folder also contains sources for various other Minecraft versions, in case it is needed to compare Vanilla Minecraft code for something: `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES`.
 - Use the Minecraft sources for research when working with Minecraft-related code.
 - Always prefer the sources provided in the `/<mc_version>/libraries/` folder instead of trying to unpack source JARs yourself. Only do that when the provided sources don't contain what you need.
 
@@ -85,3 +89,7 @@
 - After the Minecraft client started, use "Computer Use" to navigate in the game and visually check your changes. Check if everything looks good and works as intended.
 - IntelliJ IDE is already open with the project active.
 - NEVER DO VISUAL TESTING WITHOUT THE USER TELLING YOU TO DO SO! Do not run the game without the user telling you to do so.
+
+## Subagents
+- Always spawn ALL your subagents with the gpt-5.6 model on xhigh.
+- Always spawn ALL your subagents with a CLEAN context (do not give them your context), so they have a clean context for doing their task in the best possible way.
