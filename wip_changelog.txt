@@ -1,35 +1,41 @@
 
-## CHANGELOG | FANCYMENU v3.9.1 [ W I P !! Not public yet !! ]
+CHANGELOG | FANCYMENU v3.9.7 [ W I P !! Not public yet !! ]
 
-### New Features and Improvements
-
-- 
-
-### Breaking Changes
-
-- 
-
-### Bug Fixes
-
-- Fixed custom button click sound set via Global Customizations not working the very first time a button gets clicked (#1586)
-- Fixed crash related to the smooth font renderer, triggered by, for example, moving the game window to a monitor with a different solution than the previous one (#1576)
-- Fixed Text in Text elements is getting cropped off, when a too small text border is set (#1567)
-- Fixed left-clicking while in a world opens the last edited menu (#1561)
-- Fixed legacy Realtime placeholders (and possibly some others) don't get parsed anymore (because of new timezone value) (#1593)
-- Fixed WHILE and ELSE-IF action blocks showing raw translatable requirement text instead of localized requirement names
-- Fixed listener and scheduler action previews showing raw translatable requirement text instead of localized requirement names
-- Fixed "Element Settings" context menu of hidden elements in the layout editor's "Layers" widget closes instantly when moving the mouse
-- Fixed advanced sizing and positioning of elements breaking when decimal numbers are used instead of whole numbers (#1575)
-- Fixed FMA/AFMA files set as button background textures loop even when loop count is set to 1 (#1595)
-- Fixed "Player Entity" element asking for FER in MC 1.19.2
-- Fixed FER-powered "Player Entity" element not working correctly in MC 1.20.1
-- Fixed menu background not working in custom GUIs in MC 1.19.2 and 1.20.1 (causes rendered stuff above it to get "burned" into the background) (#1588)
-- Fixed skins of "Player Entity" element not rendering in MC 1.21.11 (#1562)
-- Fixed some UI elements in windows not clickable in MC 1.21.11+ (like the placeholders in the placeholder picker) (#1598, #1569)
-- Fixed menu background blur not working in MC 1.21.11+ (#1580)
-- Fixed crash caused by an invalid Mixin in the SelectWorldScreen in MC 26.1.X (#1594)
-- Fixed Forced GUI Scale not working correctly in MC 1.21.11+ (#1565)
-- Fixed armor applied to "Player Entity" elements not visible in MC 26.1.X (#1590)
-- Fixed crash when using JSON-related features in Fabric 26.1.X (fixed in KONKRETE, so the Fabric version of FancyMenu now wants Konkrete v1.10.2+)
+- Fixed removed Vanilla pause-menu buttons reappearing in multiplayer (#1708)
+- Fixed WaterMedia videos flashing black when looping (#1700)
+- Fixed centered Vanilla icon buttons ignoring FancyMenu custom labels (#1699)
+- Fixed smooth fonts rendering visibly shorter than their layout metrics (#1698)
+- Fixed element animator previews being confined to the wrong part of the grid (#1696)
+- Fixed GLSL content rendering as a black screen or above later UI elements instead of at its configured GUI layer (#1695, #1647)
+- Fixed numeric NBT placeholders returning incorrect values when their scale is `1` (#1694)
+- Fixed saved widget tooltips not being removable (#1693)
+- Fixed FancyMenu shortcuts ignoring remapped Control/Command keys on macOS (#1692)
+- Fixed text input fields in container screens not receiving mouse focus (#1685)
+- Fixed text elements with fractional positions rendering with incorrect sizing or clipping (#1681)
+- Fixed auto-sized buttons breaking after GUI-scale changes (#1680)
+- Fixed malformed component JSON causing repeated Gson error log spam (#1675)
+- Fixed filled requirements not updating after dropping the final item from a hotbar slot (#1669)
+- Fixed game intros not retrying after a queued resource reload (#1660)
+- Fixed edge artifacts on smooth images and shapes, including the shadow line below custom title images (#1659, #1585)
+- Fixed crashes caused by video game intros initializing before the audio system was ready (#1656)
+- Fixed global menu backgrounds scaling incorrectly across different GUI sizes (#1648)
+- Fixed text elements no longer parsing legacy `&` formatting codes (#1645)
+- Fixed background blur not covering the complete target area at fractional GUI scales (#1632)
+- Fixed listener providers processing events without active listener instances, including the JEI `OPEN_FILE` system-message crash (#1628)
+- Fixed self-referential "Is Element Hovered" requirements evaluating incorrectly or recursively (#1624)
+- Fixed MCEF preload initialization on first launch, including the JavaScript API bridge being unavailable on the title screen (#1622, #1601)
+- Fixed HTTP request actions falsely reporting that no internet connection was available (#1614)
+- Fixed mouse-based text selection not working in certain FancyMenu windows (#1613)
+- Fixed global menu background images rendering incorrectly on split-layout screens (#1612)
+- Fixed animated button backgrounds flickering when their hover animation restarted (#1610)
+- Fixed button, slider, and checkbox tooltips no longer parsing legacy `&` formatting codes (#1609)
+- Fixed incorrect Vanilla widget identifiers and Options screen navigation, including a crash when opening `options_screen` from a custom title screen (#1549, #1545)
+- Fixed checkbox textures ignoring fade-animation alpha (#1536)
+- Fixed Save-menu pointer events falling through to the editor and causing an unsaved-changes prompt after saving (#1527)
+- Fixed mimicking disabled Vanilla buttons being reported as a failure (#1525)
+- Fixed empty placeholder results poisoning resource reloads (#1517)
+- Fixed the Vanilla "Refresh Server List" button not being mimicable (#1492)
+- Fixed custom window icons only appearing after opening another screen (#1481)
+- Fixed button-template textures flickering between Vanilla and custom states when SpiffyHUD processes an in-world screen (#1230)
 
 %changelog:end%
