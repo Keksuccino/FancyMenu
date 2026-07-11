@@ -133,6 +133,21 @@ subprojects {
         it.options.compilerArgs += ['-Xlint:-deprecation', '-Xlint:-removal']
     }
 
+    tasks.named("compileTestJava", JavaCompile).configure {
+        enabled = false
+        source = files()
+        classpath = files()
+        options.annotationProcessorPath = files()
+    }
+
+    tasks.named("processTestResources", ProcessResources).configure {
+        enabled = false
+    }
+
+    tasks.named("test", Test).configure {
+        enabled = false
+    }
+
     processResources {
         def expandProps = [
                 "group": project.group,

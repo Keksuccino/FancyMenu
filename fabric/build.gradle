@@ -40,6 +40,9 @@ dependencies {
     implementation "maven.modrinth:uXXizFIs:unerR5MN" // FerriteCore
     implementation "maven.modrinth:1eAoo2KR:dvS5DjUA" // YACL
 
+    testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.10.2"
+
 }
 
 loom {
@@ -65,11 +68,26 @@ loom {
     }
 }
 
-tasks.withType(JavaCompile).configureEach {
+tasks.named("compileJava", JavaCompile) {
     source(project(":common").sourceSets.main.allSource)
+}
+tasks.named("compileTestJava", JavaCompile) {
+    enabled = true
+    source(sourceSets.test.java)
+    classpath = sourceSets.test.compileClasspath
 }
 tasks.withType(Javadoc).configureEach {
     source(project(":common").sourceSets.main.allJava)
+}
+tasks.named("test", Test) {
+    enabled = true
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    workingDir(layout.buildDirectory.dir("test-working-directory"))
+    doFirst {
+        workingDir.mkdirs()
+    }
+    useJUnitPlatform()
 }
 tasks.named("sourcesJar", Jar) {
     from(project(":common").sourceSets.main.allSource)
