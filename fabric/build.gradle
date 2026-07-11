@@ -34,13 +34,9 @@ dependencies {
     //modImplementation "it.crystalnest:fancy-entity-renderer-fabric:$fer_mc_version-$fer_version"
     modImplementation "de.keksuccino:mcef-fabric:2.2.0-1.19.2"
 
-    implementation "maven.modrinth:AANobbMI:rAfhHfow" // Sodium
-    implementation "maven.modrinth:PtjYWJkn:MTxUvPFz" // Sodium Extra
-    implementation "maven.modrinth:gvQqBUqZ:m6sVgAi6" // Lithium
-    implementation "maven.modrinth:YL57xq9U:LgOJIpIS" // Iris
-    implementation "maven.modrinth:5ZwdcRci:gPV1o5PO" // ImmediatelyFast
-    implementation "maven.modrinth:uXXizFIs:kwjHqfz7" // FerriteCore
-    implementation "maven.modrinth:1eAoo2KR:bIVYcRpm" // YACL
+    modImplementation "maven.modrinth:AANobbMI:rAfhHfow" // Sodium
+    modImplementation "maven.modrinth:gvQqBUqZ:m6sVgAi6" // Lithium
+    modImplementation "maven.modrinth:YL57xq9U:LgOJIpIS" // Iris
 
     //This is only to fix the missing dependency error in-dev
     implementation group: 'ca.weblite', name: 'java-objc-bridge', version: '1.1'
