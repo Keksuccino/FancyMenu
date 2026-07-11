@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- This project is "FancyMenu", which is a Minecraft Java 1.20.1 mod (the version number is not a typo). It uses the MultiLoader layout with shared logic under `common` and loader-specific wrappers under `fabric` and `neoforge`.
+- This project is "FancyMenu", which is a Minecraft Java 1.20.1 mod (the version number is not a typo). It uses the MultiLoader layout with shared logic under `common` and loader-specific wrappers under `fabric` and `forge`.
 - Place shared Java sources in `common/src/main/java` and assets such as menu JSON, translations, or textures in `common/src/main/resources` so they ship with every loader build.
 - Loader-only hooks belong inside each module's `src/main/java` tree; keep local run directories like `run_client` and `run_server` for iterative testing but never depend on them for assets.
 
@@ -69,7 +69,7 @@
 - Always read and write en_us.json with an explicit UTF-8-without-BOM encoding.
 
 ## Minecraft Sources
-- You have access to the full Minecraft 1.20.1 sources in `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.20.1/minecraft/fabric/` and `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.20.1/minecraft/neoforge/`.
+- You have access to the full Minecraft 1.20.1 sources in `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.20.1/minecraft/fabric/` and `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.20.1/minecraft/forge/`.
 - Sources for some libraries used by Minecraft 1.20.1 are in `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.20.1/libraries/`.
 - Sources for Sodium, Sodium Extra, and Iris are in `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.20.1/libraries/`.
 - The following folder also contains sources for various other Minecraft versions, in case it is needed to compare Vanilla Minecraft code for something: `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES`.
@@ -78,22 +78,22 @@
 
 ## Autonomous Testing
 - After making changes, always compile/build the project to identify and fix compile errors.
-- Only use the `fabric` and `neoforge` modules for compile checks. Never use the `common` module.
-- Make sure to use Java 21 for compile/run stuff, like this for example: `JAVA_HOME=$(/usr/libexec/java_home -v 21) sh gradlew :fabric:compileJava :neoforge:compileJava --stacktrace`
+- Only use the `fabric` and `forge` modules for compile checks. Never use the `common` module.
+- Make sure to use Java 21 for compile/run stuff, like this for example: `JAVA_HOME=$(/usr/libexec/java_home -v 21) sh gradlew :fabric:compileJava :forge:compileJava --stacktrace`
 - Add focused JUnit 5 regression tests for every bug fix or behavior change that can be tested automatically. The tests should fail for the broken behavior and cover the main path plus relevant boundary, failure, and lifecycle cases.
 - Place shared and Fabric test classes under `fabric/src/test/java`, mirroring the production package and naming each class `<Subject>Test`. Treat each test class as a focused suite for one coherent subject; split unrelated behavior into separate classes.
-- Do not duplicate shared tests in the `neoforge` module. NeoForge's test task is disabled, so run tests through `fabric` and verify production compatibility by compiling both loaders.
+- Do not duplicate shared tests in the `forge` module. Forge's test task is disabled, so run tests through `fabric` and verify production compatibility by compiling both loaders.
 - Keep tests deterministic, isolated, and Minecraft-light. Prefer small reusable or package-private helpers/controllers for logic that cannot safely instantiate Minecraft runtime objects, without weakening or distorting the production design just for testing.
 - Inject clocks, executors, suppliers, and other changing inputs when needed. Use temporary directories, loopback servers, and fakes instead of real user files, external services, arbitrary sleeps, or test-order dependencies.
 - Run the focused suite first, for example: `JAVA_HOME=$(/usr/libexec/java_home -v 21) sh gradlew :fabric:test --tests 'fully.qualified.SubjectTest' --stacktrace`
-- Before finishing, run the complete Fabric suite with Java 21 using `JAVA_HOME=$(/usr/libexec/java_home -v 21) sh gradlew :fabric:test --stacktrace`, then compile Fabric and NeoForge. Use `--rerun-tasks` for the final test run when cached results could hide whether the current tree was executed.
+- Before finishing, run the complete Fabric suite with Java 21 using `JAVA_HOME=$(/usr/libexec/java_home -v 21) sh gradlew :fabric:test --stacktrace`, then compile Fabric and Forge. Use `--rerun-tasks` for the final test run when cached results could hide whether the current tree was executed.
 - Report the number of discovered suites/tests and the passed, failed, errored, and skipped totals.
 - A successful compile or an up-to-date Gradle task does not replace an executed regression test.
 - There are tools available on the system to validate GLSL shaders. Use these when working with shaders.
 - You always TRIPLE-CHECK EVERYTHING! When you are finishing a task, you triple-check everything for completeness, possible bad implementations, rushed implementations, performance, optimization, structurization, and so on.
 
 ## Visual Testing
-- When the user tells you to also do visual testing, run the `fabric` and `neoforge` modules via IntelliJ IDE.
+- When the user tells you to also do visual testing, run the `fabric` and `forge` modules via IntelliJ IDE.
 - Only use "Computer Use" for running the modules! You will click the "Run" button in the top-right of IntelliJ to run the modules (and also select the correct run config before, obviously).
 - After the Minecraft client started, use "Computer Use" to navigate in the game and visually check your changes. Check if everything looks good and works as intended.
 - IntelliJ IDE is already open with the project active.
