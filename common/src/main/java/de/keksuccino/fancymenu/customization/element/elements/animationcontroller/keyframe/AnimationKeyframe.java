@@ -1,10 +1,17 @@
-package de.keksuccino.fancymenu.customization.element.elements.animationcontroller;
+package de.keksuccino.fancymenu.customization.element.elements.animationcontroller.keyframe;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import org.jetbrains.annotations.NotNull;
 
-public class AnimationKeyframe implements Cloneable {
+/**
+ * Serializable state of an animated element at one point on the controller timeline.
+ *
+ * <p>The fields remain public because controller layouts store keyframes directly through Gson. Runtime and editor
+ * code should use {@link #copy()} whenever a keyframe crosses an ownership boundary so history snapshots and running
+ * animations cannot accidentally share mutable state.</p>
+ */
+public class AnimationKeyframe {
 
     public long timestamp;
     public int posOffsetX;
@@ -29,6 +36,13 @@ public class AnimationKeyframe implements Cloneable {
         this.stickyAnchor = stickyAnchor;
     }
 
+    @NotNull
+    public AnimationKeyframe copy() {
+        AnimationKeyframe copy = new AnimationKeyframe(this.timestamp, this.posOffsetX, this.posOffsetY, this.baseWidth, this.baseHeight, this.anchorPoint, this.stickyAnchor);
+        copy.uniqueIdentifier = ((this.uniqueIdentifier == null) || this.uniqueIdentifier.isBlank()) ? ScreenCustomization.generateUniqueIdentifier() : this.uniqueIdentifier;
+        return copy;
+    }
+
     @Override
     public String toString() {
         return "AnimationKeyframe{" +
@@ -37,19 +51,10 @@ public class AnimationKeyframe implements Cloneable {
                 ", posOffsetY=" + posOffsetY +
                 ", baseWidth=" + baseWidth +
                 ", baseHeight=" + baseHeight +
-                ", anchorPoint=" + anchorPoint.getName() +
+                ", anchorPoint=" + (anchorPoint != null ? anchorPoint.getName() : "null") +
                 ", stickyAnchor=" + stickyAnchor +
                 ", uniqueIdentifier='" + uniqueIdentifier + '\'' +
                 '}';
-    }
-
-    @SuppressWarnings("all")
-    @NotNull
-    @Override
-    protected AnimationKeyframe clone() {
-        AnimationKeyframe clone = new AnimationKeyframe(this.timestamp, this.posOffsetX, this.posOffsetY, this.baseWidth, this.baseHeight, this.anchorPoint, this.stickyAnchor);
-        clone.uniqueIdentifier = this.uniqueIdentifier;
-        return clone;
     }
 
 }

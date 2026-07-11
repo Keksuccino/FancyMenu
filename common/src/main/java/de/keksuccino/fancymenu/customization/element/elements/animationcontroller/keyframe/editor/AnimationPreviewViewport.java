@@ -1,16 +1,15 @@
-package de.keksuccino.fancymenu.customization.element.elements.animationcontroller;
+package de.keksuccino.fancymenu.customization.element.elements.animationcontroller.keyframe.editor;
 
 /**
- * Converts animation keyframe values from the parent layout editor's logical coordinate space to the keyframe
- * manager's display coordinate space. The manager can use a lower GUI scale to fit its controls, so these spaces
- * must not be treated as interchangeable.
+ * Converts serialized keyframe values from the parent editor coordinate space to the manager's display space.
+ * The manager may temporarily use a lower GUI scale to fit its controls, so these spaces are not interchangeable.
  */
 final class AnimationPreviewViewport {
 
-    private int sourceWidth;
-    private int sourceHeight;
-    private int displayWidth;
-    private int displayHeight;
+    private int sourceWidth = 1;
+    private int sourceHeight = 1;
+    private int displayWidth = 1;
+    private int displayHeight = 1;
 
     public void update(int sourceWidth, int sourceHeight, int displayWidth, int displayHeight) {
         this.sourceWidth = Math.max(1, sourceWidth);

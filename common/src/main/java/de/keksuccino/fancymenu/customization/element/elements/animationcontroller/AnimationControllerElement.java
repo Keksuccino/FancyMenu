@@ -3,12 +3,14 @@ package de.keksuccino.fancymenu.customization.element.elements.animationcontroll
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.keyframe.AnimationKeyframe;
+import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.keyframe.AnimationKeyframeSequence;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.util.properties.Property;
-import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiRenderTypes;
+import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
@@ -83,8 +85,9 @@ public class AnimationControllerElement extends AbstractElement {
 
     }
 
-    public List<AnimationKeyframe> getKeyframes() {
-        return new ArrayList<>(keyframes);
+    /** Returns a chronological deep snapshot that callers can own independently of the serialized controller. */
+    public @NotNull List<AnimationKeyframe> getKeyframes() {
+        return AnimationKeyframeSequence.copyAndSort(this.keyframes);
     }
 
     public static class TargetElement {

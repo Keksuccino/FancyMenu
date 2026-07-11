@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.element.elements.animationcontroller;
+package de.keksuccino.fancymenu.customization.element.elements.animationcontroller.keyframe.editor;
 
 import org.junit.jupiter.api.Test;
 

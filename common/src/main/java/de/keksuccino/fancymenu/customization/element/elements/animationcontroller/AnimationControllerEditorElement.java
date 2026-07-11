@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.elements.animationcontroller;
 
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.keyframe.editor.KeyframeManagerScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
@@ -28,7 +29,7 @@ public class AnimationControllerEditorElement extends AbstractEditorElement<Anim
         this.settings.setInEditorColorSupported(true);
     }
 
-    @Override 
+    @Override
     public void init() {
 
         super.init();
@@ -42,7 +43,7 @@ public class AnimationControllerEditorElement extends AbstractEditorElement<Anim
                                         if (callback != null) {
                                             this.editor.history.saveSnapshot();
                                             this.element.keyframes = callback.keyframes();
-                                            this.element.offsetMode = callback.isOffsetMode();
+                                            this.element.offsetMode = callback.offsetMode();
                                         }
                                         this.openContextMenuScreen(this.editor);
                                     }
