@@ -84,7 +84,7 @@ configurations {
 // NeoGradle compiles the game, but we don't want to add our common code to the game's code
 Spec<Task> notNeoTask = { Task it -> !it.name.startsWith("neo") } as Spec<Task>
 
-tasks.withType(JavaCompile).matching(notNeoTask).configureEach {
+tasks.named("compileJava", JavaCompile) {
     source(project(":common").sourceSets.main.allSource)
 }
 
