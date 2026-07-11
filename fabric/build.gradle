@@ -32,6 +32,14 @@ dependencies {
     modImplementation "de.keksuccino:mcef-fabric:2.2.0-1.20.1"
     modCompileOnly "maven.modrinth:fancy-entity-renderer:YIutsTi7"
 
+    implementation "maven.modrinth:AANobbMI:OihdIimA" // Sodium
+    implementation "maven.modrinth:PtjYWJkn:mDbF0LZT" // Sodium Extra
+    implementation "maven.modrinth:gvQqBUqZ:iEcXOkz4" // Lithium
+    implementation "maven.modrinth:YL57xq9U:s5eFLITc" // Iris
+    implementation "maven.modrinth:5ZwdcRci:iwYUrQJO" // ImmediatelyFast
+    implementation "maven.modrinth:uXXizFIs:unerR5MN" // FerriteCore
+    implementation "maven.modrinth:1eAoo2KR:dvS5DjUA" // YACL
+
 }
 
 loom {
