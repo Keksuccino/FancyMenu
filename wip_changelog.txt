@@ -1,6 +1,9 @@
 
 CHANGELOG | FANCYMENU v3.9.7 [ W I P !! Not public yet !! ]
 
+- Fixed title screen layouts not loading with ForceCloseWorldLoadingScreen (#1666)
+- Fixed Mod Menu's mod counter being replaced on the title screen (#1606)
+- Fixed Numismatic Overhaul purse tooltips disappearing in the Creative Inventory (#1257)
 - Fixed removed Vanilla pause-menu buttons reappearing in multiplayer (#1708)
 - Fixed WaterMedia videos flashing black when looping (#1700)
 - Fixed centered Vanilla icon buttons ignoring FancyMenu custom labels (#1699)
