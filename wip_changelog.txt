@@ -1,6 +1,7 @@
 
 CHANGELOG | FANCYMENU v3.9.7 [ W I P !! Not public yet !! ]
 
+- Fixed mouse wheel scrolling not working in some PiP windows
 - Fixed title screen layouts not loading with ForceCloseWorldLoadingScreen (#1666)
 - Fixed Mod Menu's mod counter being replaced on the title screen (#1606)
 - Fixed Numismatic Overhaul purse tooltips disappearing in the Creative Inventory (#1257)
