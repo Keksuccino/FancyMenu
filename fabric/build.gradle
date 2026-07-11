@@ -40,6 +40,10 @@ dependencies {
     implementation "maven.modrinth:uXXizFIs:Ii0gP3D8" // FerriteCore
     implementation "maven.modrinth:1eAoo2KR:pHWDw3Vc" // YACL
 
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.2")
+
 }
 
 loom {
@@ -66,13 +70,14 @@ loom {
     }
 }
 
-tasks.withType(JavaCompile).configureEach {
+tasks.named("compileJava", JavaCompile).configure {
     source(project(":common").sourceSets.main.allSource)
 }
 tasks.withType(Javadoc).configureEach {
     source(project(":common").sourceSets.main.allJava)
 }
 tasks.withType(Test).configureEach {
+    useJUnitPlatform()
     // Allow builds when there are test sources but no matching tests.
     failOnNoDiscoveredTests = false
 }

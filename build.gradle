@@ -146,19 +146,22 @@ subprojects {
         it.options.compilerArgs += ['-Xlint:-deprecation', '-Xlint:-removal']
     }
 
-    tasks.named("compileTestJava", JavaCompile).configure {
-        enabled = false
-        source = files()
-        classpath = files()
-        options.annotationProcessorPath = files()
-    }
+    // Shared tests run through Fabric; common and NeoForge do not own test suites.
+    if (project.path != ":fabric") {
+        tasks.named("compileTestJava", JavaCompile).configure {
+            enabled = false
+            source = files()
+            classpath = files()
+            options.annotationProcessorPath = files()
+        }
 
-    tasks.named("processTestResources", ProcessResources).configure {
-        enabled = false
-    }
+        tasks.named("processTestResources", ProcessResources).configure {
+            enabled = false
+        }
 
-    tasks.named("test", Test).configure {
-        enabled = false
+        tasks.named("test", Test).configure {
+            enabled = false
+        }
     }
 
     processResources {
