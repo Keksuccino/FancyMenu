@@ -111,8 +111,16 @@ public class ElementAnchorPoint {
         return AbstractElement.getScreenWidth();
     }
 
+    protected static int getScreenWidth(@NotNull AbstractElement element) {
+        return element.getPositioningScreenWidth();
+    }
+
     protected static int getScreenHeight() {
         return AbstractElement.getScreenHeight();
+    }
+
+    protected static int getScreenHeight(@NotNull AbstractElement element) {
+        return element.getPositioningScreenHeight();
     }
 
     protected static boolean isEditor() {
@@ -137,7 +145,7 @@ public class ElementAnchorPoint {
 
         @Override
         public int getOriginY(@NotNull AbstractElement element) {
-            return getScreenHeight() / 2;
+            return getScreenHeight(element) / 2;
         }
 
         @Override
@@ -158,7 +166,7 @@ public class ElementAnchorPoint {
 
         @Override
         public int getOriginY(@NotNull AbstractElement element) {
-            return getScreenHeight();
+            return getScreenHeight(element);
         }
 
         @Override
@@ -179,7 +187,7 @@ public class ElementAnchorPoint {
 
         @Override
         public int getOriginX(@NotNull AbstractElement element) {
-            return getScreenWidth() / 2;
+            return getScreenWidth(element) / 2;
         }
 
         @Override
@@ -200,12 +208,12 @@ public class ElementAnchorPoint {
 
         @Override
         public int getOriginX(@NotNull AbstractElement element) {
-            return getScreenWidth() / 2;
+            return getScreenWidth(element) / 2;
         }
 
         @Override
         public int getOriginY(@NotNull AbstractElement element) {
-            return getScreenHeight() / 2;
+            return getScreenHeight(element) / 2;
         }
 
         @Override
@@ -234,12 +242,12 @@ public class ElementAnchorPoint {
 
         @Override
         public int getOriginX(@NotNull AbstractElement element) {
-            return getScreenWidth() / 2;
+            return getScreenWidth(element) / 2;
         }
 
         @Override
         public int getOriginY(@NotNull AbstractElement element) {
-            return getScreenHeight();
+            return getScreenHeight(element);
         }
 
         @Override
@@ -268,7 +276,7 @@ public class ElementAnchorPoint {
 
         @Override
         public int getOriginX(@NotNull AbstractElement element) {
-            return getScreenWidth();
+            return getScreenWidth(element);
         }
 
         @Override
@@ -289,12 +297,12 @@ public class ElementAnchorPoint {
 
         @Override
         public int getOriginX(@NotNull AbstractElement element) {
-            return getScreenWidth();
+            return getScreenWidth(element);
         }
 
         @Override
         public int getOriginY(@NotNull AbstractElement element) {
-            return getScreenHeight() / 2;
+            return getScreenHeight(element) / 2;
         }
 
         @Override
@@ -323,12 +331,12 @@ public class ElementAnchorPoint {
 
         @Override
         public int getOriginX(@NotNull AbstractElement element) {
-            return getScreenWidth();
+            return getScreenWidth(element);
         }
 
         @Override
         public int getOriginY(@NotNull AbstractElement element) {
-            return getScreenHeight();
+            return getScreenHeight(element);
         }
 
         @Override

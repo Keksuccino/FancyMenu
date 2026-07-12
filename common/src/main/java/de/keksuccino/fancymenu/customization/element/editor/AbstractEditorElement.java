@@ -1407,7 +1407,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
                             // Check if X position would be clamped
                             int leftEdge = AbstractElement.STAY_ON_SCREEN_EDGE_ZONE_SIZE;
-                            int rightEdge = AbstractElement.getScreenWidth() - AbstractElement.STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.element.getAbsoluteWidth();
+                            int rightEdge = this.element.getPositioningScreenWidth() - AbstractElement.STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.element.getAbsoluteWidth();
 
                             if (absoluteX <= leftEdge && diffX < 0) {
                                 // Element is at left edge and trying to move further left
@@ -1419,7 +1419,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
                             // Check if Y position would be clamped
                             int topEdge = AbstractElement.STAY_ON_SCREEN_EDGE_ZONE_SIZE;
-                            int bottomEdge = AbstractElement.getScreenHeight() - AbstractElement.STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.element.getAbsoluteHeight();
+                            int bottomEdge = this.element.getPositioningScreenHeight() - AbstractElement.STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.element.getAbsoluteHeight();
 
                             if (absoluteY <= topEdge && diffY < 0) {
                                 // Element is at top edge and trying to move further up
@@ -1452,8 +1452,8 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                             double snapThreshold = Math.max(2 * guiScale, gridSize / 5.0) * FancyMenu.getOptions().layoutEditorGridSnappingStrength.getValue();
 
                             // Get screen centers at grid space
-                            double centerXInGridSpace = AbstractElement.getScreenWidth() * guiScale / 2.0;
-                            double centerYInGridSpace = AbstractElement.getScreenHeight() * guiScale / 2.0;
+                            double centerXInGridSpace = this.element.getPositioningScreenWidth() * guiScale / 2.0;
+                            double centerYInGridSpace = this.element.getPositioningScreenHeight() * guiScale / 2.0;
 
                             // Find nearest grid lines for all four edges
                             double[] edgesX = new double[] { leftEdge * guiScale, rightEdge * guiScale };
