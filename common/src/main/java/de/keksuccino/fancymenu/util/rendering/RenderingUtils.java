@@ -550,7 +550,7 @@ public class RenderingUtils {
         submitBlit(graphics, pipeline, absTex.getTextureView(), absTex.getSampler(), minX, minY, maxX, maxY, minU, maxU, minV, maxV, color);
     }
 
-    private static void submitBlit(@NotNull GuiGraphics graphics, RenderPipeline pipeline, GpuTextureView textureView, GpuSampler gpuSampler, float minX, float minY, float maxX, float maxY, float minU, float maxU, float minV, float maxV, int color) {
+    static void submitBlit(@NotNull GuiGraphics graphics, RenderPipeline pipeline, GpuTextureView textureView, GpuSampler gpuSampler, float minX, float minY, float maxX, float maxY, float minU, float maxU, float minV, float maxV, int color) {
         ((IMixinGuiGraphics)graphics).get_guiRenderState_FancyMenu().submitGuiElement(
                 new FloatBlitRenderState(
                         pipeline, TextureSetup.singleTexture(textureView, gpuSampler), new Matrix3x2f(graphics.pose()), minX, minY, maxX, maxY, minU, maxU, minV, maxV, color, GuiScissorUtil.getActiveScissor(graphics)
