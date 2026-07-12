@@ -6,14 +6,15 @@ import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGameRenderer;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphics;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPostChain;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPostPass;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.renderer.LevelTargetBundle;
 import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.PostPass;
-import net.minecraft.client.renderer.fog.FogRenderer;
 import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,13 +39,12 @@ public final class GuiBlurRenderer {
     private static final ThreadLocal<PostPassScissor> ACTIVE_POST_PASS_SCISSOR_FANCYMENU = new ThreadLocal<>();
 
     private static boolean blurPostChainFailed;
-    private static boolean flushingGuiRenderState;
 
     private GuiBlurRenderer() {
     }
 
     /**
-     * Renders a blur area immediately using the current framebuffer contents.
+     * Queues a blur area at the current GUI composition boundary using the framebuffer contents drawn before it.
      *
      * @param graphics The GuiGraphics for the current render pass.
      * @param x The X position in GUI pixels (top-left origin). Recommended range: 0 to screen width.
@@ -224,18 +224,29 @@ public final class GuiBlurRenderer {
     }
 
     private static void _renderBlurArea(GuiGraphics graphics, float partial, BlurArea area) {
+        RenderRotationUtil.Rotation2D maskRotation = GuiPoseTransformUtil.resolve(graphics).rotation();
+        QueuedBlurArea queuedBlurArea = new QueuedBlurArea(area, maskRotation);
+        graphics.nextStratum();
+        ((IMixinGuiGraphics) graphics).get_guiRenderState_FancyMenu().submitGuiElement(new GuiBlurRenderState(queuedBlurArea, toScreenBounds(area)));
+        graphics.nextStratum();
+        RenderingUtils.resetShaderColor(graphics);
+    }
+
+    public static void executeQueuedBlurArea_FancyMenu(@Nonnull QueuedBlurArea queuedBlurArea) {
+        Objects.requireNonNull(queuedBlurArea);
         Minecraft minecraft = Minecraft.getInstance();
         PostChain postChain = getOrCreatePostChain(minecraft);
         if (postChain == null) {
             return;
         }
-        int targetWidth = minecraft.getWindow().getWidth();
-        int targetHeight = minecraft.getWindow().getHeight();
+        int targetWidth = minecraft.getMainRenderTarget().width;
+        int targetHeight = minecraft.getMainRenderTarget().height;
         if (targetWidth <= 0 || targetHeight <= 0) {
             return;
         }
         ensurePostChainSize(postChain, targetWidth, targetHeight);
 
+        BlurArea area = queuedBlurArea.area_FancyMenu;
         float guiScale = (float) minecraft.getWindow().getGuiScale();
         float scaledWidth = area.width * guiScale;
         float scaledHeight = area.height * guiScale;
@@ -250,7 +261,7 @@ public final class GuiBlurRenderer {
         CornerRadii scaledRadii = area.cornerRadii.scaled(guiScale).clamped(Math.min(scaledWidth, scaledHeight) * 0.5F).flipVertical();
 
         DrawableColor.FloatColor tint = area.tint.getAsFloats();
-        RenderRotationUtil.Rotation2D maskRotation = GuiPoseTransformUtil.resolve(graphics).rotation();
+        RenderRotationUtil.Rotation2D maskRotation = queuedBlurArea.maskRotation_FancyMenu;
         RenderRotationUtil.Rotation2D scissorRotation = maskRotation;
         float margin = guiScale > 0.0F ? (blurRadius / guiScale) * 4.0F : 0.0F;
         PostPassScissor scissor = toPostPassScissor(resolveScissorBounds(area, margin, scissorRotation), guiScale, targetWidth, targetHeight);
@@ -260,26 +271,11 @@ public final class GuiBlurRenderer {
         applyUniforms(postChain, scaledX, scaledY, scaledWidth, scaledHeight, blurRadius, scaledRadii, area.shapeType, area.roundness, maskRotation, tint);
 
         // The final post pass writes a masked mix back into the main target, so no extra blit is needed here.
-        flushGuiRenderState(minecraft);
         ACTIVE_POST_PASS_SCISSOR_FANCYMENU.set(scissor);
         try {
             postChain.process(minecraft.getMainRenderTarget(), getResourceAllocator(minecraft));
         } finally {
             ACTIVE_POST_PASS_SCISSOR_FANCYMENU.remove();
-        }
-        RenderingUtils.resetShaderColor(graphics);
-    }
-
-    private static void flushGuiRenderState(Minecraft minecraft) {
-        if (flushingGuiRenderState) {
-            return;
-        }
-        flushingGuiRenderState = true;
-        try {
-            IMixinGameRenderer gameRenderer = (IMixinGameRenderer) minecraft.gameRenderer;
-            gameRenderer.get_guiRenderer_FancyMenu().render(gameRenderer.get_fogRenderer_FancyMenu().getBuffer(FogRenderer.FogMode.NONE));
-        } finally {
-            flushingGuiRenderState = false;
         }
     }
 
@@ -378,7 +374,36 @@ public final class GuiBlurRenderer {
         return new PostPassScissor(x0, y0, Math.max(0, x1 - x0), Math.max(0, y1 - y0));
     }
 
+    private static ScreenRectangle toScreenBounds(BlurArea area) {
+        int x0 = floorToInt(area.x);
+        int y0 = floorToInt(area.y);
+        int x1 = ceilToInt(area.x + area.width);
+        int y1 = ceilToInt(area.y + area.height);
+        return new ScreenRectangle(x0, y0, Math.max(1, x1 - x0), Math.max(1, y1 - y0));
+    }
+
     private record BlurArea(float x, float y, float width, float height, float blurRadius, CornerRadii cornerRadii, float shapeType, float roundness, DrawableColor tint) {
+    }
+
+    public static final class QueuedBlurArea {
+
+        private final BlurArea area_FancyMenu;
+        private final RenderRotationUtil.Rotation2D maskRotation_FancyMenu;
+
+        private QueuedBlurArea(BlurArea area, RenderRotationUtil.Rotation2D maskRotation) {
+            this.area_FancyMenu = area;
+            this.maskRotation_FancyMenu = maskRotation;
+        }
+
+    }
+
+    public record GuiBlurRenderState(QueuedBlurArea queuedBlurArea, ScreenRectangle bounds) implements GuiRenderPhaseAction {
+
+        @Override
+        public void executeRender_FancyMenu() {
+            executeQueuedBlurArea_FancyMenu(this.queuedBlurArea);
+        }
+
     }
 
     public record PostPassScissor(int x, int y, int width, int height) {
