@@ -1,4 +1,56 @@
 
+## CHANGELOG | FANCYMENU v3.9.7
+
+- Fixed mouse wheel scrolling not working in some PiP windows
+- Fixed title screen layouts not loading with ForceCloseWorldLoadingScreen (#1666)
+- Fixed Mod Menu's mod counter being replaced on the title screen (#1606)
+- Fixed Numismatic Overhaul purse tooltips disappearing in the Creative Inventory (#1257)
+- Fixed removed Vanilla pause-menu buttons reappearing in multiplayer (#1708)
+- Fixed WaterMedia videos flashing black when looping (#1700)
+- Fixed centered Vanilla icon buttons ignoring FancyMenu custom labels (#1699)
+- Fixed smooth fonts rendering visibly shorter than their layout metrics (#1698)
+- Fixed element animator previews being confined to the wrong part of the grid (#1696)
+- Fixed GLSL content rendering as a black screen or above later UI elements instead of at its configured GUI layer (#1695, #1647)
+- Fixed numeric NBT placeholders returning incorrect values when their scale is `1` (#1694)
+- Fixed saved widget tooltips not being removable (#1693)
+- Fixed FancyMenu shortcuts ignoring remapped Control/Command keys on macOS (#1692)
+- Fixed text input fields in container screens not receiving mouse focus (#1685)
+- Fixed text elements with fractional positions rendering with incorrect sizing or clipping (#1681)
+- Fixed auto-sized buttons breaking after GUI-scale changes (#1680)
+- Fixed malformed component JSON causing repeated Gson error log spam (#1675)
+- Fixed filled requirements not updating after dropping the final item from a hotbar slot (#1669)
+- Fixed game intros not retrying after a queued resource reload (#1660)
+- Fixed edge artifacts on smooth images and shapes, including the shadow line below custom title images (#1659, #1585)
+- Fixed crashes caused by video game intros initializing before the audio system was ready (#1656)
+- Fixed global menu backgrounds scaling incorrectly across different GUI sizes (#1648)
+- Fixed text elements no longer parsing legacy `&` formatting codes (#1645)
+- Fixed background blur not covering the complete target area at fractional GUI scales (#1632)
+- Fixed listener providers processing events without active listener instances, including the JEI `OPEN_FILE` system-message crash (#1628)
+- Fixed self-referential "Is Element Hovered" requirements evaluating incorrectly or recursively (#1624)
+- Fixed MCEF preload initialization on first launch, including the JavaScript API bridge being unavailable on the title screen (#1622, #1601)
+- Fixed HTTP request actions falsely reporting that no internet connection was available (#1614)
+- Fixed mouse-based text selection not working in certain FancyMenu windows (#1613)
+- Fixed global menu background images rendering incorrectly on split-layout screens (#1612)
+- Fixed animated button backgrounds flickering when their hover animation restarted (#1610)
+- Fixed button, slider, and checkbox tooltips no longer parsing legacy `&` formatting codes (#1609)
+- Fixed incorrect Vanilla widget identifiers and Options screen navigation, including a crash when opening `options_screen` from a custom title screen (#1549, #1545)
+- Fixed checkbox textures ignoring fade-animation alpha (#1536)
+- Fixed Save-menu pointer events falling through to the editor and causing an unsaved-changes prompt after saving (#1527)
+- Fixed mimicking disabled Vanilla buttons being reported as a failure (#1525)
+- Fixed empty placeholder results poisoning resource reloads (#1517)
+- Fixed the Vanilla "Refresh Server List" button not being mimicable (#1492)
+- Fixed custom window icons only appearing after opening another screen (#1481)
+- Fixed button-template textures flickering between Vanilla and custom states when SpiffyHUD processes an in-world screen (#1230)
+- Fixed Minecraft font rendering glitched/corrupted after showing an MCEF browser (#1651)
+- Fixed "Text" elements breaking on blur (#1684)
+- Fixed "Item" elements having inconsistent layering between items and blocks (#1672)
+
+%changelog:end%
+
+
+
+
+
 ## CHANGELOG | FANCYMENU v3.9.6
 
 - Fixed WaterMedia video support (use WaterMedia v3.0.0.19+ and WM Binaries v3.0.0-rc.3+)
