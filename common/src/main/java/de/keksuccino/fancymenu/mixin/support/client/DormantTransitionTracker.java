@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.mixin.mixins.common.client;
+package de.keksuccino.fancymenu.mixin.support.client;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -9,15 +9,18 @@ import java.util.Objects;
  * Tracks a polled value only while its listener source is active.
  * Reactivation establishes a silent baseline so state changes that happened while dormant cannot produce synthetic transition events.
  */
-final class DormantTransitionTracker<T> {
+public final class DormantTransitionTracker<T> {
 
     private boolean initialized;
     private boolean dormant;
     @Nullable private T previousValue;
     @Nullable private T value;
 
+    public DormantTransitionTracker() {
+    }
+
     @NotNull
-    Phase observe(boolean tracking, @Nullable T currentValue) {
+    public Phase observe(boolean tracking, @Nullable T currentValue) {
         if (!tracking) {
             this.resetForDormancy();
             return Phase.DISABLED;
@@ -36,30 +39,30 @@ final class DormantTransitionTracker<T> {
     }
 
     @Nullable
-    T previousValue() {
+    public T previousValue() {
         return this.previousValue;
     }
 
     @Nullable
-    T currentValue() {
+    public T currentValue() {
         return this.value;
     }
 
-    void resetForDormancy() {
+    public void resetForDormancy() {
         this.initialized = false;
         this.dormant = true;
         this.previousValue = null;
         this.value = null;
     }
 
-    void resetBaseline() {
+    public void resetBaseline() {
         this.initialized = false;
         this.dormant = false;
         this.previousValue = null;
         this.value = null;
     }
 
-    enum Phase {
+    public enum Phase {
         DISABLED,
         INITIAL,
         REACTIVATED,

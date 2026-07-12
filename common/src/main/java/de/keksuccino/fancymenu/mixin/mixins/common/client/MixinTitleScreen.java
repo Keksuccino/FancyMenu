@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.mixin.interfaces.TitleScreenBrandingController;
+import de.keksuccino.fancymenu.mixin.support.client.TitleScreenBrandingCapture;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;

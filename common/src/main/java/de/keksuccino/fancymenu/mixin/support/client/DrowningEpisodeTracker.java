@@ -1,35 +1,38 @@
-package de.keksuccino.fancymenu.mixin.mixins.common.client;
+package de.keksuccino.fancymenu.mixin.support.client;
 
 /**
  * Tracks client drowning episodes while the listener is active. Reactivation silently adopts an episode that began while dormant so the next damage packet cannot emit a synthetic start event.
  */
-final class DrowningEpisodeTracker {
+public final class DrowningEpisodeTracker {
 
     private boolean active;
     private boolean dormant;
 
-    void deactivate() {
+    public DrowningEpisodeTracker() {
+    }
+
+    public void deactivate() {
         this.active = false;
         this.dormant = true;
     }
 
-    void prepare(boolean alreadyDrowning) {
+    public void prepare(boolean alreadyDrowning) {
         if (!this.dormant) return;
         this.active = alreadyDrowning;
         this.dormant = false;
     }
 
-    boolean needsPreparation() {
+    public boolean needsPreparation() {
         return this.dormant;
     }
 
-    boolean beginEpisode() {
+    public boolean beginEpisode() {
         if (this.active) return false;
         this.active = true;
         return true;
     }
 
-    void recover() {
+    public void recover() {
         this.active = false;
     }
 

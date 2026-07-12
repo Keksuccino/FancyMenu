@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.mixin.interfaces.WorldSoundListenerController;
+import de.keksuccino.fancymenu.mixin.support.client.WorldSoundSubscriptionPolicy;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;

@@ -5,6 +5,8 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.customization.listener.listeners.helpers.FluidContactInfo;
 import de.keksuccino.fancymenu.mixin.interfaces.LocalPlayerDrowningTracker;
+import de.keksuccino.fancymenu.mixin.support.client.DormantTransitionTracker;
+import de.keksuccino.fancymenu.mixin.support.client.DrowningEpisodeTracker;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;

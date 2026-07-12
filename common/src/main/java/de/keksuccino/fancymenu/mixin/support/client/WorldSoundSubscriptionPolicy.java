@@ -1,12 +1,15 @@
-package de.keksuccino.fancymenu.mixin.mixins.common.client;
+package de.keksuccino.fancymenu.mixin.support.client;
 
-final class WorldSoundSubscriptionPolicy {
+public final class WorldSoundSubscriptionPolicy {
 
     private boolean registered;
     private int dispatchDepth;
     private boolean removalQueued;
 
-    Decision setActive(boolean active) {
+    public WorldSoundSubscriptionPolicy() {
+    }
+
+    public Decision setActive(boolean active) {
         if (active) {
             if (!this.registered) {
                 this.registered = true;
@@ -26,29 +29,29 @@ final class WorldSoundSubscriptionPolicy {
         return Decision.NONE;
     }
 
-    void beginDispatch() {
+    public void beginDispatch() {
         this.dispatchDepth++;
     }
 
-    void endDispatch() {
+    public void endDispatch() {
         if (this.dispatchDepth <= 0) throw new IllegalStateException("World sound dispatch depth underflow");
         this.dispatchDepth--;
     }
 
-    Decision reevaluateDeferredRemoval(boolean active) {
+    public Decision reevaluateDeferredRemoval(boolean active) {
         this.removalQueued = false;
         return this.setActive(active);
     }
 
-    boolean isRegistered() {
+    public boolean isRegistered() {
         return this.registered;
     }
 
-    boolean isRemovalQueued() {
+    public boolean isRemovalQueued() {
         return this.removalQueued;
     }
 
-    enum Decision {
+    public enum Decision {
         NONE,
         ADD,
         REMOVE,
