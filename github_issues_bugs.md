@@ -3,7 +3,7 @@
 - [x] [[MC 26] Vanilla button icons](https://github.com/Keksuccino/FancyMenu/issues/1699)
 - [x] [[MC 26.2] Smooth font height is too short (feels smaller than pre-26.2)](https://github.com/Keksuccino/FancyMenu/issues/1698)
 - [x] [element animator grid problems](https://github.com/Keksuccino/FancyMenu/issues/1696)
-- [ ] [[MC 26.X] GLSL Shaders not working (Blackscreen)](https://github.com/Keksuccino/FancyMenu/issues/1695)
+- [x] [[MC 26.X] GLSL Shaders not working (Blackscreen)](https://github.com/Keksuccino/FancyMenu/issues/1695)
 - [ ] [get nbt data does not work for numbers if the scale is 1](https://github.com/Keksuccino/FancyMenu/issues/1694)
 - [ ] [Can't save a tooltip to be empty when it has been saved to have something in it](https://github.com/Keksuccino/FancyMenu/issues/1693)
 - [ ] [FM does not respect remapped modifier keys (Control/Command) in macOS (remapped via System Settings -> Keyboard)](https://github.com/Keksuccino/FancyMenu/issues/1692)
