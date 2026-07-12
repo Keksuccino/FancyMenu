@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.util.rendering.text.smooth;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.client.Minecraft;
@@ -26,9 +25,6 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Objects;
 
-import net.minecraft.client.renderer.rendertype.RenderType;
-import net.minecraft.client.renderer.rendertype.RenderTypes;
-
 final class SmoothFontAtlas implements AutoCloseable {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -48,14 +44,11 @@ final class SmoothFontAtlas implements AutoCloseable {
     private NativeImage atlasImage;
     private DynamicTexture dynamicTexture;
     private Identifier textureLocation;
-    private int textureId;
     private volatile int logicalWidth;
     private volatile int logicalHeight;
     private int cursorX;
     private int cursorY;
     private int rowHeight;
-    private RenderType renderType;
-
     SmoothFontAtlas(@Nonnull SmoothFont parentFont, @Nonnull Font awtFont, @Nonnull FontRenderContext fontRenderContext, float sdfRange, int padding, @Nonnull String debugName, int initialSize, @Nonnull String sourceLabel, int sourceIndex, @Nonnull String sizeLabel, @Nonnull String styleLabel) {
         this.debugName = Objects.requireNonNull(debugName);
         this.sourceLabel = Objects.requireNonNull(sourceLabel);
@@ -72,15 +65,6 @@ final class SmoothFontAtlas implements AutoCloseable {
         this.logicalHeight = this.initialSize;
     }
 
-    RenderType getRenderType() {
-        if (renderType == null) {
-            ensureInitialized();
-            applyLinearFilter();
-            renderType = RenderTypes.text(textureLocation);
-        }
-        return renderType;
-    }
-
     int getWidth() {
         return logicalWidth;
     }
@@ -89,28 +73,9 @@ final class SmoothFontAtlas implements AutoCloseable {
         return logicalHeight;
     }
 
-    float getEffectiveSdfRange() {
-        return sdfRange;
-    }
-
-    Identifier getTextureLocation() {
-        ensureInitialized();
-        return textureLocation;
-    }
-
-    int getTextureId() {
-        ensureInitialized();
-        return textureId;
-    }
-
     GpuTextureView getTextureView() {
         ensureInitialized();
         return dynamicTexture.getTextureView();
-    }
-
-    GpuSampler getSampler() {
-        ensureInitialized();
-        return dynamicTexture.getSampler();
     }
 
     SmoothFontGlyph getGlyph(int codepoint) {
@@ -233,12 +198,6 @@ final class SmoothFontAtlas implements AutoCloseable {
         DynamicTexture newTexture = new DynamicTexture(() -> "fancymenu_smooth_font_" + debugName, atlasImage);
         Minecraft.getInstance().getTextureManager().register(textureLocation, newTexture);
         dynamicTexture = newTexture;
-        textureId = 0;
-        applyLinearFilter();
-    }
-
-    private void applyLinearFilter() {
-        // 1.21.11 moved filtering into the GPU sampler. Keep the hook as a no-op.
     }
 
     private void blitToAtlas(int atlasX, int atlasY, int width, int height, byte[] rgba) {
@@ -407,8 +366,6 @@ final class SmoothFontAtlas implements AutoCloseable {
             TextureManager textureManager = Minecraft.getInstance().getTextureManager();
             this.textureLocation = Identifier.fromNamespaceAndPath("fancymenu", "smooth_font/" + debugName.toLowerCase().replaceAll("[^a-z0-9_./-]", "_"));
             textureManager.register(this.textureLocation, dynamicTexture);
-            this.textureId = 0;
-            applyLinearFilter();
             LOGGER.info("[FANCYMENU] Smooth font atlas initialized: file='{}', source={}, size={}, style={}, sizePx={}x{}.", sourceLabel, sourceIndex, sizeLabel, styleLabel, logicalWidth, logicalHeight);
         }
     }

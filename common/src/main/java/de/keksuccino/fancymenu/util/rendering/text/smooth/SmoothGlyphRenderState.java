@@ -27,6 +27,7 @@ record SmoothGlyphRenderState(Matrix3x2f transform, SmoothFontAtlas atlas, float
 
     @Override
     public RenderPipeline pipeline() {
+        // The atlas stores filtered coverage alpha, not signed distances. Thresholding it as SDF changes the visible glyph size without changing its layout metrics.
         return RenderPipelines.GUI_TEXTURED;
     }
 
