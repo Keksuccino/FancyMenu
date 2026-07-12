@@ -52,7 +52,6 @@ public class RenderingUtils {
     public static final ResourceLocation FULLY_TRANSPARENT_TEXTURE = new ResourceLocation("fancymenu", "textures/fully_transparent.png");
 
     private static final String ALPHA_TEXTURE_SHADER_NAME_FANCYMENU = "fancymenu_gui_alpha_texture";
-    private static final BlendMode OPAQUE_BLEND_MODE_FANCYMENU = new BlendMode();
     private static final int GL_NEAREST_FANCYMENU = GL11.GL_NEAREST;
     private static final int GL_LINEAR_FANCYMENU = GL11.GL_LINEAR;
     private static final List<RenderingTask> PRE_RENDER_CONTEXTS = new ArrayList<>();
@@ -411,10 +410,6 @@ public class RenderingUtils {
         );
     }
 
-    public static void assumeOpaqueShaderBlendMode() {
-        IMixinBlendMode.set_lastApplied_FancyMenu(OPAQUE_BLEND_MODE_FANCYMENU);
-    }
-
     public static void processPostChainRestoringRenderState(@NotNull PostChain postChain, float partial) {
         RenderStateSnapshot renderState = captureRenderState();
         Map<RenderTarget, Integer> originalFilterModes = capturePostChainFilterModes(postChain);
@@ -493,7 +488,8 @@ public class RenderingUtils {
             return;
         }
         if (!RenderSystem.isOnRenderThread()) {
-            renderTarget.blitToScreen(screenWidth, screenHeight, false);
+            // Re-enter this helper on the render thread instead of using RenderTarget.blitToScreen(false). The vanilla blit shader owns its blend mode, so preserving alpha there would require globally falsifying BlendMode's cache and would corrupt unrelated post effects.
+            RenderSystem.recordRenderCall(() -> blitRenderTargetToScreenImmediate(renderTarget));
             return;
         }
 
@@ -566,6 +562,7 @@ public class RenderingUtils {
         private final int blendDstRgb;
         private final int blendSrcAlpha;
         private final int blendDstAlpha;
+        // BlendMode tracks its last applied state independently of OpenGL. Restore both together or a later shader can incorrectly skip a required blend-state update.
         private final BlendMode blendMode;
         private final boolean depthTestEnabled;
         private final int depthFunc;
