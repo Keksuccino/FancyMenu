@@ -132,6 +132,13 @@ public final class GuiBlurRenderer {
     }
 
     /**
+     * Converts a blur radius in framebuffer pixels to the GUI coordinate space used by blur areas.
+     */
+    public static float convertFramebufferBlurRadiusToGui(float framebufferBlurRadius) {
+        return convertFramebufferBlurRadiusToGui(framebufferBlurRadius, getEffectiveGuiScale_FancyMenu());
+    }
+
+    /**
      * Renders a blur area using FancyMenu's blur intensity setting (a normalized multiplier, e.g., 0.25–3.0).
      * Callers provide the base radius they would normally use; this helper applies the current intensity
      * and renders the blur so UI code doesn’t need to recompute the radius everywhere.
@@ -248,16 +255,17 @@ public final class GuiBlurRenderer {
         }
         ensurePostChainSize(postChain, targetWidth, targetHeight);
 
-        float guiScale = (float) minecraft.getWindow().getGuiScale();
-        float scaledWidth = area.width * guiScale;
-        float scaledHeight = area.height * guiScale;
-        if (scaledWidth <= 0.0F || scaledHeight <= 0.0F) {
+        FramebufferBlurArea framebufferArea = calculateFramebufferBlurArea_FancyMenu(area.x, area.y, area.width, area.height, area.blurRadius, minecraft.getWindow().getGuiScale(), targetHeight);
+        if (!framebufferArea.isValid_FancyMenu()) {
             return;
         }
 
-        float scaledX = area.x * guiScale;
-        float scaledY = targetHeight - (area.y * guiScale) - scaledHeight;
-        float blurRadius = Math.max(0.0F, area.blurRadius * guiScale);
+        double guiScale = framebufferArea.guiScale;
+        float scaledX = framebufferArea.x;
+        float scaledY = framebufferArea.y;
+        float scaledWidth = framebufferArea.width;
+        float scaledHeight = framebufferArea.height;
+        float blurRadius = framebufferArea.blurRadius;
         CornerRadii scaledRadii = area.cornerRadii.scaled(guiScale).clamped(Math.min(scaledWidth, scaledHeight) * 0.5F).flipVertical();
 
         DrawableColor.FloatColor tint = area.tint.getAsFloats();
@@ -270,7 +278,7 @@ public final class GuiBlurRenderer {
         // darkening any translucent GUI content every time a blur area is drawn.
         RenderSystem.disableBlend();
 
-        float margin = blurRadius * 4.0F;
+        float margin = calculateGuiScissorMargin_FancyMenu(blurRadius, guiScale);
         ScissorBounds scissor = resolveScissorBounds(area, margin, scissorRotation);
         graphics.enableScissor(scissor.minXInt(), scissor.minYInt(), scissor.maxXInt(), scissor.maxYInt());
         postChain.process(partial);
@@ -376,8 +384,8 @@ public final class GuiBlurRenderer {
             return new CornerRadii(topLeft, topRight, bottomRight, bottomLeft);
         }
 
-        private CornerRadii scaled(float factor) {
-            return new CornerRadii(topLeft * factor, topRight * factor, bottomRight * factor, bottomLeft * factor);
+        private CornerRadii scaled(double factor) {
+            return new CornerRadii((float)(topLeft * factor), (float)(topRight * factor), (float)(bottomRight * factor), (float)(bottomLeft * factor));
         }
 
         private CornerRadii clamped(float maxRadius) {
@@ -459,6 +467,44 @@ public final class GuiBlurRenderer {
 
     private static boolean isFinite(float value) {
         return Float.isFinite(value);
+    }
+
+    static float convertFramebufferBlurRadiusToGui(float framebufferBlurRadius, double guiScale) {
+        return (float)(framebufferBlurRadius / sanitizeGuiScale_FancyMenu(guiScale));
+    }
+
+    static float calculateGuiScissorMargin_FancyMenu(float framebufferBlurRadius, double guiScale) {
+        return (float)(framebufferBlurRadius / sanitizeGuiScale_FancyMenu(guiScale) * 4.0D);
+    }
+
+    static FramebufferBlurArea calculateFramebufferBlurArea_FancyMenu(float x, float y, float width, float height, float blurRadius, double guiScale, int targetHeight) {
+        double effectiveGuiScale = sanitizeGuiScale_FancyMenu(guiScale);
+        float scaledX = (float)(x * effectiveGuiScale);
+        float scaledY = (float)(targetHeight - y * effectiveGuiScale - height * effectiveGuiScale);
+        float scaledWidth = (float)(width * effectiveGuiScale);
+        float scaledHeight = (float)(height * effectiveGuiScale);
+        double rawBlurRadius = blurRadius * effectiveGuiScale;
+        float scaledBlurRadius = Double.isFinite(rawBlurRadius) && rawBlurRadius > 0.0D && rawBlurRadius <= Float.MAX_VALUE ? (float)rawBlurRadius : 0.0F;
+        return new FramebufferBlurArea(scaledX, scaledY, scaledWidth, scaledHeight, scaledBlurRadius, effectiveGuiScale);
+    }
+
+    /**
+     * Minecraft 1.21.1 retains fractional scales in Window#getGuiScale(). Keep all framebuffer conversion in double precision until the final shader values are produced so a fullscreen mask cannot round inward by one pixel.
+     */
+    private static double getEffectiveGuiScale_FancyMenu() {
+        return sanitizeGuiScale_FancyMenu(Minecraft.getInstance().getWindow().getGuiScale());
+    }
+
+    private static double sanitizeGuiScale_FancyMenu(double guiScale) {
+        return Double.isFinite(guiScale) && guiScale > 0.0D ? guiScale : 1.0D;
+    }
+
+    record FramebufferBlurArea(float x, float y, float width, float height, float blurRadius, double guiScale) {
+
+        boolean isValid_FancyMenu() {
+            return Float.isFinite(x) && Float.isFinite(y) && Float.isFinite(width) && Float.isFinite(height) && width > 0.0F && height > 0.0F;
+        }
+
     }
 
     private record ScissorBounds(float minX, float minY, float maxX, float maxY) {
