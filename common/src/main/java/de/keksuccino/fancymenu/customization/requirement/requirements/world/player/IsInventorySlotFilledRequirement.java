@@ -41,7 +41,7 @@ public class IsInventorySlotFilledRequirement extends Requirement {
             int slot = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, 0, value);
             if ((level != null) && (player != null)) {
                 ItemStack stack = player.getInventory().getItem(slot);
-                return ((stack != null) && (stack != ItemStack.EMPTY));
+                return InventorySlotFilledState.isFilled(stack);
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to handle '" + this.getIdentifier() + "' loading requirement!", ex);
