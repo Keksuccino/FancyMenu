@@ -41,12 +41,19 @@ public class IsInventorySlotFilledRequirement extends Requirement {
             int slot = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, 0, value);
             if ((level != null) && (player != null)) {
                 ItemStack stack = player.getInventory().getItem(slot);
-                return ((stack != null) && (stack != ItemStack.EMPTY));
+                return isStackFilled(stack);
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to handle '" + this.getIdentifier() + "' loading requirement!", ex);
         }
         return false;
+    }
+
+    /**
+     * Dropping the last item can leave the original stack object in its inventory slot with a count of zero, so identity checks against {@link ItemStack#EMPTY} do not describe whether the slot is actually filled.
+     */
+    static boolean isStackFilled(@NotNull ItemStack stack) {
+        return !stack.isEmpty();
     }
 
     @Override
