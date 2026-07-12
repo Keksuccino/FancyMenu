@@ -38,7 +38,7 @@ float getShapeAlpha(vec2 pixel, vec2 pos, vec2 size, float n) {
     float raw = pow(uv.x, n) + pow(uv.y, n);
     float d = pow(raw, 1.0 / n);
 
-    float fw = fwidth(d);
+    float fw = max(fwidth(d) * 0.5, 0.0001);
     return 1.0 - smoothstep(1.0 - fw, 1.0 + fw, d);
 }
 
@@ -56,7 +56,7 @@ void main() {
     float mask;
     if (ShapeType < 0.5) {
         float dist = sdRoundedBox(local, halfSize, CornerRadii);
-        float aa = fwidth(dist);
+        float aa = max(fwidth(dist) * 0.5, 0.0001);
         mask = 1.0 - smoothstep(-aa, aa, dist);
     } else {
         float n = max(0.1, Roundness);

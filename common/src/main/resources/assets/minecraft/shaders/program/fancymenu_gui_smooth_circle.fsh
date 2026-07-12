@@ -37,7 +37,7 @@ float getShapeAlpha(vec2 pixel, vec2 pos, vec2 size, float n) {
     float d = pow(raw, 1.0 / n);
 
     // Calculate change of 'd' per screen pixel
-    float fw = fwidth(d);
+    float fw = max(fwidth(d) * 0.5, 0.0001);
 
     // Smoothstep creates the AA gradient.
     // We target d=1.0 as the edge.
@@ -123,7 +123,7 @@ void main() {
         float angle = wrapAngle(atan(toCenter.y, toCenter.x));
         float start = wrapAngle(ArcStart);
         float end = wrapAngle(ArcEnd);
-        float angleAa = fwidth(angle);
+        float angleAa = max(fwidth(angle) * 0.5, 0.0001);
         float arcMask = getArcMask(angle, start, end, angleAa);
         alpha *= arcMask;
     }
