@@ -97,6 +97,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public boolean autoSizing = false;
 	public int autoSizingBaseScreenWidth = 0;
 	public int autoSizingBaseScreenHeight = 0;
+	/** Precise GUI scale used to capture the physical baseline. Zero identifies legacy serialized elements. */
+	public double autoSizingBaseGuiScale = 0.0D;
 	public double autoSizingLastTickScreenWidth = -1;
 	public double autoSizingLastTickScreenHeight = -1;
 	public int autoSizingWidth = 0;
@@ -828,26 +830,26 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	public void setAutoSizingBaseWidthAndHeight() {
 		Window window = Minecraft.getInstance().getWindow();
-		double guiWidth = getScreenWidth() * window.getGuiScale();
-		double guiHeight = getScreenHeight() * window.getGuiScale();
-		this.autoSizingBaseScreenWidth = (int)guiWidth;
-		this.autoSizingBaseScreenHeight = (int)guiHeight;
+		ElementAutoSizing.Baseline baseline = ElementAutoSizing.captureBaseline(getScreenWidth(), getScreenHeight(), window.getGuiScale());
+		this.autoSizingBaseScreenWidth = baseline.pixelWidth();
+		this.autoSizingBaseScreenHeight = baseline.pixelHeight();
+		this.autoSizingBaseGuiScale = baseline.guiScale();
 	}
 
 	public void updateAutoSizing(boolean ignoreLastTickScreenSize) {
-
-		Window window = Minecraft.getInstance().getWindow();
-		double guiWidth = getScreenWidth() * window.getGuiScale();
-		double guiHeight = getScreenHeight() * window.getGuiScale();
+		int guiWidth = getScreenWidth();
+		int guiHeight = getScreenHeight();
+		if (guiWidth <= 0 || guiHeight <= 0) return;
 
 		if (((this.autoSizingLastTickScreenWidth != guiWidth) || (this.autoSizingLastTickScreenHeight != guiHeight)) || ignoreLastTickScreenSize) {
 			if (this.autoSizing && (this.autoSizingBaseScreenWidth > 0) && (this.autoSizingBaseScreenHeight > 0)) {
-				double percentX = Math.max(1.0D, (guiWidth / (double) this.autoSizingBaseScreenWidth) * 100.0D);
-				double percentY = Math.max(1.0D, (guiHeight / (double) this.autoSizingBaseScreenHeight) * 100.0D);
-				double percent = Math.min(percentX, percentY);
-				this.autoSizingWidth = Math.max(1, (int) ((percent / 100.0D) * (double) this.baseWidth));
-				this.autoSizingHeight = Math.max(1, (int) ((percent / 100.0D) * (double) this.baseHeight));
-				if ((this.autoSizingBaseScreenWidth == guiWidth) && (this.autoSizingBaseScreenHeight == guiHeight)) {
+				double baseGuiScale = this.resolveAutoSizingBaseGuiScale();
+				int baseGuiWidth = ElementAutoSizing.calculateGuiDimension(this.autoSizingBaseScreenWidth, baseGuiScale);
+				int baseGuiHeight = ElementAutoSizing.calculateGuiDimension(this.autoSizingBaseScreenHeight, baseGuiScale);
+				double scaleFactor = ElementAutoSizing.calculateScaleFactor(guiWidth, guiHeight, baseGuiWidth, baseGuiHeight);
+				this.autoSizingWidth = ElementAutoSizing.calculateElementDimension(this.baseWidth, scaleFactor);
+				this.autoSizingHeight = ElementAutoSizing.calculateElementDimension(this.baseHeight, scaleFactor);
+				if ((baseGuiWidth == guiWidth) && (baseGuiHeight == guiHeight)) {
 					this.autoSizingWidth = 0;
 					this.autoSizingHeight = 0;
 				}
@@ -859,6 +861,14 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.autoSizingLastTickScreenWidth = guiWidth;
 		this.autoSizingLastTickScreenHeight = guiHeight;
 
+	}
+
+	private double resolveAutoSizingBaseGuiScale() {
+		Minecraft minecraft = Minecraft.getInstance();
+		double forcedGuiScale = (this.parentLayout != null) ? this.parentLayout.forcedScale : 0.0D;
+		ElementAutoSizing.Baseline baseline = new ElementAutoSizing.Baseline(this.autoSizingBaseScreenWidth, this.autoSizingBaseScreenHeight, this.autoSizingBaseGuiScale);
+		this.autoSizingBaseGuiScale = ElementAutoSizing.resolveBaselineGuiScale(baseline, getScreenWidth(), getScreenHeight(), minecraft.getWindow().getGuiScale(), forcedGuiScale, minecraft.options.guiScale().get(), minecraft.isEnforceUnicode());
+		return this.autoSizingBaseGuiScale;
 	}
 
 	@Nullable
