@@ -44,11 +44,6 @@ import java.util.List;
 @Mixin(Screen.class)
 public abstract class MixinScreen implements CustomizableScreen {
 
-    @Unique private static final ResourceLocation DIRT_TEXTURE_FANCYMENU = ResourceLocation.withDefaultNamespace("textures/block/dirt.png");
-
-	@Unique private final List<GuiEventListener> removeOnInitChildrenFancyMenu = new ArrayList<>();
-	@Unique private boolean nextFocusPath_called_FancyMenu = false;
-
 	@Shadow @Final private List<GuiEventListener> children;
 
     @Shadow
@@ -56,6 +51,12 @@ public abstract class MixinScreen implements CustomizableScreen {
 
     @Shadow
     public int height;
+
+    @Unique private static final ResourceLocation DIRT_TEXTURE_FANCYMENU = ResourceLocation.withDefaultNamespace("textures/block/dirt.png");
+    @Unique private static final ThreadLocal<Integer> MENU_BACKGROUND_REPLACEMENT_DEPTH_FANCYMENU = ThreadLocal.withInitial(() -> 0);
+    @Unique private final List<GuiEventListener> removeOnInitChildrenFancyMenu = new ArrayList<>();
+    @Unique private boolean nextFocusPath_called_FancyMenu = false;
+    @Unique private int menuBackgroundCallWrappedDepth_FancyMenu = 0;
 
     @WrapOperation(method = "renderWithTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
     private void wrap_render_in_renderWithTooltip_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {
@@ -112,23 +113,44 @@ public abstract class MixinScreen implements CustomizableScreen {
         }
     }
 
+    @WrapOperation(method = "renderBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderMenuBackground(Lnet/minecraft/client/gui/GuiGraphics;)V"))
+    private void wrap_renderMenuBackground_in_renderBackground_FancyMenu(Screen instance, GuiGraphics graphics, Operation<Void> original) {
+        if (this.renderMenuBackgroundReplacement_FancyMenu(graphics)) return;
+        this.menuBackgroundCallWrappedDepth_FancyMenu++;
+        int previousReplacementDepth = beginMenuBackgroundReplacement_FancyMenu();
+        try {
+            original.call(instance, graphics);
+        } finally {
+            // The virtual call can dispatch to a subclass override or re-enter through a PiP screen render.
+            // Always restore both depths so nested renders cannot suppress later background replacements.
+            endMenuBackgroundReplacement_FancyMenu(previousReplacementDepth);
+            this.menuBackgroundCallWrappedDepth_FancyMenu--;
+        }
+    }
+
+    @Inject(method = "renderMenuBackground(Lnet/minecraft/client/gui/GuiGraphics;)V", at = @At("HEAD"), cancellable = true)
+    private void before_renderMenuBackground_FancyMenu(GuiGraphics graphics, CallbackInfo info) {
+        if (this.menuBackgroundCallWrappedDepth_FancyMenu == 0 && this.renderMenuBackgroundReplacement_FancyMenu(graphics)) {
+            info.cancel();
+        }
+    }
+
+    @WrapOperation(method = "renderMenuBackground(Lnet/minecraft/client/gui/GuiGraphics;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderMenuBackground(Lnet/minecraft/client/gui/GuiGraphics;IIII)V"))
+    private void wrap_renderMenuBackgroundRegion_in_renderMenuBackground_FancyMenu(Screen instance, GuiGraphics graphics, int x, int y, int width, int height, Operation<Void> original) {
+        int previousReplacementDepth = beginMenuBackgroundReplacement_FancyMenu();
+        try {
+            original.call(instance, graphics, x, y, width, height);
+        } finally {
+            endMenuBackgroundReplacement_FancyMenu(previousReplacementDepth);
+        }
+    }
+
     @Inject(method = "renderMenuBackgroundTexture", at = @At("HEAD"), cancellable = true)
     private static void before_renderMenuBackgroundTexture_FancyMenu(GuiGraphics graphics, ResourceLocation location, int x, int y, float uOffset, float vOffset, int width, int height, CallbackInfo info) {
         Screen currentScreen = Minecraft.getInstance().screen;
-        if (SeamlessWorldLoadingHandler.renderLoadingBackgroundIfActive(graphics, x, y, width, height, currentScreen)) {
+        if (MENU_BACKGROUND_REPLACEMENT_DEPTH_FANCYMENU.get() == 0 && SeamlessWorldLoadingHandler.renderLoadingBackgroundIfActive(graphics, x, y, width, height, currentScreen)) {
             info.cancel();
-            return;
         }
-        RenderableResource customBackground = GlobalCustomizationHandler.getCustomMenuBackgroundTexture();
-        if (customBackground == null) return;
-        RenderSystem.enableBlend();
-        if (!GuiTextureCoverRenderer.render(graphics, customBackground, x, y, width, height)) {
-            RenderSystem.disableBlend();
-            return;
-        }
-        RenderingUtils.resetShaderColor(graphics);
-        RenderSystem.disableBlend();
-        info.cancel();
     }
 
 	@WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderBackground(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
@@ -198,5 +220,36 @@ public abstract class MixinScreen implements CustomizableScreen {
 	public @NotNull List<GuiEventListener> removeOnInitChildrenFancyMenu() {
 		return this.removeOnInitChildrenFancyMenu;
 	}
+
+    @Unique
+    private boolean renderMenuBackgroundReplacement_FancyMenu(@NotNull GuiGraphics graphics) {
+        if (SeamlessWorldLoadingHandler.renderLoadingBackgroundIfActive(graphics, 0, 0, this.width, this.height, Minecraft.getInstance().screen)) return true;
+        RenderableResource customBackground = GlobalCustomizationHandler.getCustomMenuBackgroundTexture();
+        if (customBackground == null) return false;
+        RenderSystem.enableBlend();
+        try {
+            if (!GuiTextureCoverRenderer.render(graphics, customBackground, 0, 0, this.width, this.height)) return false;
+            RenderingUtils.resetShaderColor(graphics);
+            return true;
+        } finally {
+            RenderSystem.disableBlend();
+        }
+    }
+
+    @Unique
+    private static int beginMenuBackgroundReplacement_FancyMenu() {
+        int previousDepth = MENU_BACKGROUND_REPLACEMENT_DEPTH_FANCYMENU.get();
+        MENU_BACKGROUND_REPLACEMENT_DEPTH_FANCYMENU.set(previousDepth + 1);
+        return previousDepth;
+    }
+
+    @Unique
+    private static void endMenuBackgroundReplacement_FancyMenu(int previousDepth) {
+        if (previousDepth == 0) {
+            MENU_BACKGROUND_REPLACEMENT_DEPTH_FANCYMENU.remove();
+        } else {
+            MENU_BACKGROUND_REPLACEMENT_DEPTH_FANCYMENU.set(previousDepth);
+        }
+    }
 
 }

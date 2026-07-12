@@ -28,6 +28,15 @@ class GuiTextureCoverRendererTest {
     }
 
     @Test
+    void fullScreenCoverDoesNotInheritCreateWorldHeaderOffset() {
+        GuiTextureCoverRenderer.CoverBounds fullScreenBounds = GuiTextureCoverRenderer.calculateBounds(0, 0, 1277, 694, 2560, 1440);
+        GuiTextureCoverRenderer.CoverBounds legacyBodyBounds = GuiTextureCoverRenderer.calculateBounds(0, 24, 1277, 694, 2560, 1440);
+
+        assertEquals(new GuiTextureCoverRenderer.CoverBounds(0, -12, 1277, 718), fullScreenBounds);
+        assertEquals(new GuiTextureCoverRenderer.CoverBounds(0, 12, 1277, 718), legacyBodyBounds);
+    }
+
+    @Test
     void integerRoundingStillCoversTheArea() {
         assertEquals(new GuiTextureCoverRenderer.CoverBounds(-1, 0, 7, 5), GuiTextureCoverRenderer.calculateBounds(0, 0, 5, 5, 3, 2));
     }
