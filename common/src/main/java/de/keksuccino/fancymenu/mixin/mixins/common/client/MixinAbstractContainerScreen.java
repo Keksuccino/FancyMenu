@@ -10,17 +10,13 @@ import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.Slot;
-import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -29,19 +25,16 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
 
 @Mixin(AbstractContainerScreen.class)
-public class MixinAbstractContainerScreen extends Screen {
+public class MixinAbstractContainerScreen extends Screen implements ContainerWidgetPointerRoutingBridge.Host {
 
-    @Unique private static final List<GuiEventListener> CLICKED_WIDGETS_FANCYMENU = new ArrayList<>();
+    @Shadow @Nullable protected Slot hoveredSlot;
 
+    @Unique private final Object pointerRouter_FancyMenu = ContainerWidgetPointerRoutingBridge.createRouter();
     @Unique private int cached_mouseX_FancyMenu;
     @Unique private int cached_mouseY_FancyMenu;
     @Unique private float cached_partial_FancyMenu;
-
-    @Shadow @Nullable protected Slot hoveredSlot;
 
     // Dummy constructor
     private MixinAbstractContainerScreen() {
@@ -49,57 +42,27 @@ public class MixinAbstractContainerScreen extends Screen {
     }
 
     /**
-     * @reason This is to make widgets work correctly in Inventory Container screens.
+     * @reason Container screens need explicit routing for FancyMenu widgets so their interactions take precedence over slot handling.
      */
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
-    private void head_mouseClicked_FancyMenu(MouseButtonEvent event, boolean isDoubleClick, CallbackInfoReturnable<Boolean> info) {
-
-        for (GuiEventListener l : this.children()) {
-            if ((l instanceof FancyMenuWidget) && this.canClickWidget_FancyMenu(l)) {
-                CLICKED_WIDGETS_FANCYMENU.add(l);
-                if (l.mouseClicked(event, isDoubleClick)) {
-                    info.setReturnValue(true);
-                    break;
-                }
-            }
-        }
-
+    private void before_mouseClicked_FancyMenu(MouseButtonEvent event, boolean isDoubleClick, CallbackInfoReturnable<Boolean> info) {
+        if (ContainerWidgetPointerRoutingBridge.mouseClicked(this.pointerRouter_FancyMenu, this, event, isDoubleClick)) info.setReturnValue(true);
     }
 
     /**
-     * @reason This is to make widgets work correctly in Inventory Container screens.
+     * @reason Container screens must not process slot releases belonging to a FancyMenu widget interaction.
      */
     @Inject(method = "mouseReleased", at = @At("HEAD"), cancellable = true)
-    private void head_mouseReleased_FancyMenu(MouseButtonEvent event, CallbackInfoReturnable<Boolean> info) {
-
-        for (GuiEventListener l : this.children()) {
-            if ((l instanceof FancyMenuWidget) && CLICKED_WIDGETS_FANCYMENU.contains(l)) {
-                if (l.mouseReleased(event)) {
-                    info.setReturnValue(true);
-                    break;
-                }
-            }
-        }
-
-        CLICKED_WIDGETS_FANCYMENU.clear();
-
+    private void before_mouseReleased_FancyMenu(MouseButtonEvent event, CallbackInfoReturnable<Boolean> info) {
+        if (ContainerWidgetPointerRoutingBridge.mouseReleased(this.pointerRouter_FancyMenu, this, event)) info.setReturnValue(true);
     }
 
     /**
-     * @reason This is to make widgets work correctly in Inventory Container screens.
+     * @reason Container screens must not start slot dragging while a FancyMenu widget owns the active pointer interaction.
      */
     @Inject(method = "mouseDragged", at = @At("HEAD"), cancellable = true)
-    private void head_mouseDragged_FancyMenu(MouseButtonEvent event, double dragX, double dragY, CallbackInfoReturnable<Boolean> info) {
-
-        for (GuiEventListener l : this.children()) {
-            if ((l instanceof FancyMenuWidget) && CLICKED_WIDGETS_FANCYMENU.contains(l)) {
-                if (l.mouseDragged(event, dragX, dragY)) {
-                    info.setReturnValue(true);
-                    break;
-                }
-            }
-        }
-
+    private void before_mouseDragged_FancyMenu(MouseButtonEvent event, double dragX, double dragY, CallbackInfoReturnable<Boolean> info) {
+        if (ContainerWidgetPointerRoutingBridge.mouseDragged(this.pointerRouter_FancyMenu, event, dragX, dragY)) info.setReturnValue(true);
     }
 
     @Inject(method = "render", at = @At("TAIL"))
@@ -138,14 +101,6 @@ public class MixinAbstractContainerScreen extends Screen {
             original.call(instance, graphics, mouseX, mouseY, partial);
         }
         EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(instance, graphics, this.cached_mouseX_FancyMenu, this.cached_mouseY_FancyMenu, this.cached_partial_FancyMenu));
-    }
-
-    @Unique
-    private boolean canClickWidget_FancyMenu(@NotNull GuiEventListener listener) {
-        if (listener instanceof AbstractWidget w) {
-            return (w.isHovered() && w.isActive() && w.visible);
-        }
-        return false;
     }
 
 }
