@@ -761,17 +761,16 @@ public class Mp4Video implements IVideo {
     }
 
     protected boolean isLoadingPlayerStatus(@NotNull String statusName) {
-        return statusName.equals("WAITING") || statusName.equals("LOADING") || statusName.equals("BUFFERING");
+        return WatermediaFramePresentationPolicy.isLoadingPlayerStatus(statusName);
     }
 
     protected boolean isTerminalPlayerStatus(@NotNull String statusName) {
-        return statusName.equals("STOPPED") || statusName.equals("ENDED") || statusName.equals("ERROR");
+        return WatermediaFramePresentationPolicy.isTerminalPlayerStatus(statusName);
     }
 
     protected boolean shouldPresentFrame(@NotNull String statusName) {
-        if (!this.playRequested) return false;
-        if (this.isLoadingPlayerStatus(statusName)) return false;
-        return !this.isTerminalPlayerStatus(statusName);
+        // Watermedia keeps the last GL texture alive while loop and ordinary seeks temporarily enter BUFFERING. Preserve that frame once one was presented so renderers do not expose their fallback between decoded frames.
+        return WatermediaFramePresentationPolicy.shouldPresentFrame(this.playRequested, this.framePresented, this.isLoadingPlayerStatus(statusName), this.isTerminalPlayerStatus(statusName));
     }
 
     protected void startPlayerForCurrentRequest(@NotNull Object player) {
