@@ -85,12 +85,10 @@ public interface ElementStacker<E extends AbstractElement> {
         if (e.autoSizing) {
             stack.autoSizing = true;
         }
-        if (e.autoSizingBaseScreenWidth != 0) {
-            stack.autoSizingBaseScreenWidth = e.autoSizingBaseScreenWidth;
-        }
-        if (e.autoSizingBaseScreenHeight != 0) {
-            stack.autoSizingBaseScreenHeight = e.autoSizingBaseScreenHeight;
-        }
+        ElementAutoSizing.Baseline baseline = ElementAutoSizing.selectStackedBaseline(new ElementAutoSizing.Baseline(stack.autoSizingBaseScreenWidth, stack.autoSizingBaseScreenHeight, stack.autoSizingBaseGuiScale), new ElementAutoSizing.Baseline(e.autoSizingBaseScreenWidth, e.autoSizingBaseScreenHeight, e.autoSizingBaseGuiScale));
+        stack.autoSizingBaseScreenWidth = baseline.screenWidth();
+        stack.autoSizingBaseScreenHeight = baseline.screenHeight();
+        stack.autoSizingBaseGuiScale = baseline.guiScale();
         if (e.stickyAnchor) {
             stack.stickyAnchor = true;
         }
