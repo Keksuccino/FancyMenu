@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.mixin.mixins.common.client;
+package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
 import net.minecraft.network.chat.Component;
 import org.junit.jupiter.api.Test;

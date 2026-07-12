@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.mixin.mixins.common.client;
+package de.keksuccino.fancymenu.util.rendering.ui.widget.interaction;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -7,9 +7,11 @@ import java.util.Map;
 /**
  * Tracks the widget that owns each mouse button until the matching release. Keeping this state per screen prevents one container screen from leaking an unfinished interaction into another.
  */
-final class ContainerWidgetPointerTracker<T> {
+public final class ContainerWidgetPointerTracker<T> {
 
     private final Map<Integer, T> ownersByButton = new HashMap<>();
+
+    public ContainerWidgetPointerTracker() {}
 
     void begin(int button) {
         this.ownersByButton.remove(button);
