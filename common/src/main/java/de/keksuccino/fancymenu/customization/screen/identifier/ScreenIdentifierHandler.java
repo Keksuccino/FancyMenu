@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.screen.identifier;
 
+import de.keksuccino.fancymenu.compat.ScreenCompatibility;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
@@ -34,9 +35,19 @@ public class ScreenIdentifierHandler {
     @NotNull
     public static String getIdentifierOfScreen(@NotNull Screen screen) {
         if (screen instanceof CustomGuiBaseScreen c) return c.getIdentifier();
-        String universal = UniversalScreenIdentifierRegistry.getUniversalIdentifierFor(screen);
+        String screenClassIdentifier = getClassIdentifierOfScreen(screen);
+        String universal = UniversalScreenIdentifierRegistry.getUniversalIdentifierFor(screenClassIdentifier);
         if (universal != null) return universal;
-        return screen.getClass().getName();
+        return screenClassIdentifier;
+    }
+
+    /**
+     * Returns the non-universal classpath identifier for a screen after applying compatibility aliases.
+     * Use this instead of the concrete runtime class when persisting customization state.
+     */
+    @NotNull
+    public static String getClassIdentifierOfScreen(@NotNull Screen screen) {
+        return ScreenCompatibility.getCompatibleScreenClass(screen.getClass()).getName();
     }
 
     public static boolean isValidIdentifier(@NotNull String screenIdentifier) {
@@ -76,6 +87,7 @@ public class ScreenIdentifierHandler {
      **/
     @NotNull
     public static String tryFixInvalidIdentifierWithNonUniversal(@NotNull String potentiallyInvalidScreenIdentifier) {
+        potentiallyInvalidScreenIdentifier = ScreenCompatibility.getCompatibleScreenClassName(potentiallyInvalidScreenIdentifier);
         if (isValidIdentifier(potentiallyInvalidScreenIdentifier)) return potentiallyInvalidScreenIdentifier;
         String fixed = SCREEN_CLASSPATH_DATABASE.getValidScreenClasspathFor(potentiallyInvalidScreenIdentifier);
         if (fixed != null) return fixed;

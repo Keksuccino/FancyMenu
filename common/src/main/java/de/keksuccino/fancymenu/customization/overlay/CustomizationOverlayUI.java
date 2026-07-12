@@ -232,7 +232,7 @@ public class CustomizationOverlayUI {
                                 StringListChooserScreen chooserScreen = new StringListChooserScreen(Component.translatable("fancymenu.custom_guis.override.choose_custom"), CustomGuiHandler.getGuiIdentifiers(), s -> {
                                     CustomGuiBaseScreen customInstance = null;
                                     if (s != null) {
-                                        CustomGuiHandler.overrideScreenWithCustomGui(current.getClass().getName(), s);
+                                        CustomGuiHandler.overrideScreenWithCustomGui(ScreenIdentifierHandler.getIdentifierOfScreen(current), s);
                                         //This is to avoid setting the Choose Custom GUI screen as parent of the custom GUI instance
                                         customInstance = CustomGuiHandler.constructInstance(s, null, current);
                                     }

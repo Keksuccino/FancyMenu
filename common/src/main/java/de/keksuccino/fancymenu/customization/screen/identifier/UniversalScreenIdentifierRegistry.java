@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.screen.identifier;
 
+import de.keksuccino.fancymenu.compat.ScreenCompatibility;
 import com.mojang.realmsclient.RealmsMainScreen;
 import com.mojang.realmsclient.gui.screens.*;
 import com.mojang.realmsclient.gui.screens.configuration.*;
@@ -196,7 +197,7 @@ public class UniversalScreenIdentifierRegistry {
 
     @Nullable
     public static String getUniversalIdentifierFor(@NotNull Screen screen) {
-        return getUniversalIdentifierFor(screen.getClass().getName());
+        return getUniversalIdentifierFor(ScreenCompatibility.getCompatibleScreenClass(screen.getClass()).getName());
     }
 
     @NotNull
