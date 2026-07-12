@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
+import de.keksuccino.fancymenu.util.resource.resources.texture.AnimatedTextureResetFrame;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
@@ -77,6 +78,8 @@ public class FmaTexture implements ITexture, PlayableResource {
     protected volatile DynamicTexture streamingTexture = null;
     @Nullable
     protected volatile ResourceLocation streamingResourceLocation = null;
+    @NotNull
+    protected final AnimatedTextureResetFrame resetFrame = new AnimatedTextureResetFrame();
 
     // Streaming state.
     protected final Object streamStateLock = new Object();
@@ -111,7 +114,7 @@ public class FmaTexture implements ITexture, PlayableResource {
         try {
             of(Minecraft.getInstance().getResourceManager().open(location), location.toString(), texture);
         } catch (Exception ex) {
-            texture.loadingFailed.set(true);
+            texture.markLoadingFailed();
             LOGGER.error("[FANCYMENU] Failed to read FMA image from ResourceLocation: " + location, ex);
         }
 
@@ -130,7 +133,7 @@ public class FmaTexture implements ITexture, PlayableResource {
         texture.sourceFile = fmaFile;
 
         if (!fmaFile.isFile()) {
-            texture.loadingFailed.set(true);
+            texture.markLoadingFailed();
             LOGGER.error("[FANCYMENU] Failed to read FMA image from file! File not found: " + fmaFile.getPath());
             return texture;
         }
@@ -140,7 +143,7 @@ public class FmaTexture implements ITexture, PlayableResource {
                 InputStream in = new FileInputStream(fmaFile);
                 of(in, fmaFile.getPath(), texture);
             } catch (Exception ex) {
-                texture.loadingFailed.set(true);
+                texture.markLoadingFailed();
                 LOGGER.error("[FANCYMENU] Failed to read FMA image from file: " + fmaFile.getPath(), ex);
             }
         }).start();
@@ -160,7 +163,7 @@ public class FmaTexture implements ITexture, PlayableResource {
         texture.sourceURL = fmaUrl;
 
         if (!TextValidators.BASIC_URL_TEXT_VALIDATOR.get(fmaUrl)) {
-            texture.loadingFailed.set(true);
+            texture.markLoadingFailed();
             LOGGER.error("[FANCYMENU] Failed to read FMA image from URL! Invalid URL: " + fmaUrl);
             return texture;
         }
@@ -173,7 +176,7 @@ public class FmaTexture implements ITexture, PlayableResource {
                 if (in == null) throw new NullPointerException("Web resource input stream was NULL!");
                 of(in, fmaUrl, texture);
             } catch (Exception ex) {
-                texture.loadingFailed.set(true);
+                texture.markLoadingFailed();
                 LOGGER.error("[FANCYMENU] Failed to read FMA image from URL: " + fmaUrl, ex);
                 CloseableUtils.closeQuietly(in);
             }
@@ -214,7 +217,7 @@ public class FmaTexture implements ITexture, PlayableResource {
             decodedImage = decodeFma(in, fmaTextureName);
             if (decodedImage == null) {
                 texture.decoded.set(true);
-                texture.loadingFailed.set(true);
+                texture.markLoadingFailed();
                 LOGGER.error("[FANCYMENU] Failed to read FMA image, because DecodedFmaImage was NULL: {}", fmaTextureName);
                 CloseableUtils.closeQuietly(in);
                 return;
@@ -223,7 +226,7 @@ public class FmaTexture implements ITexture, PlayableResource {
             try {
                 texture.configureStreamingState(decodedImage);
             } catch (Exception ex) {
-                texture.loadingFailed.set(true);
+                texture.markLoadingFailed();
                 LOGGER.error("[FANCYMENU] Failed to initialize streaming state for FMA image: " + fmaTextureName, ex);
             }
 
@@ -237,6 +240,7 @@ public class FmaTexture implements ITexture, PlayableResource {
     }
 
     protected void configureStreamingState(@NotNull DecodedFmaImage decodedImage) {
+        this.resetFrame.clear();
         FmaDecoder previousDecoder = this.decoder;
         if ((previousDecoder != null) && (previousDecoder != decodedImage.decoder())) {
             CloseableUtils.closeQuietly(previousDecoder);
@@ -350,17 +354,9 @@ public class FmaTexture implements ITexture, PlayableResource {
                     break;
                 }
 
-                boolean switchedIntroToNormal = this.playbackIntro && !next.intro;
-                if (switchedIntroToNormal) {
-                    this.introFinishedPlaying = true;
+                if (!this.publishDecodedFrame(next, generation, now)) {
+                    break;
                 }
-
-                this.playbackIntro = next.intro;
-                this.playbackIndex = next.index;
-                this.playbackFrameDelayMs = sanitizeDelay(next.delayMs);
-                this.playbackFrameStartMs = now;
-
-                this.publishDecodedFrame(next);
                 this.maybeEmitStartEvent(next.intro, next.index);
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] An error happened in the streaming thread of an FMA texture!", ex);
@@ -386,13 +382,7 @@ public class FmaTexture implements ITexture, PlayableResource {
         }
 
         long now = System.currentTimeMillis();
-        this.playbackInitialized = true;
-        this.playbackIntro = first.intro;
-        this.playbackIndex = first.index;
-        this.playbackFrameStartMs = now;
-        this.playbackFrameDelayMs = sanitizeDelay(first.delayMs);
-
-        this.publishDecodedFrame(first);
+        if (!this.publishDecodedFrame(first, generation, now)) return false;
         this.maybeEmitStartEvent(first.intro, first.index);
         this.loadingCompleted.set(true);
         return true;
@@ -423,7 +413,7 @@ public class FmaTexture implements ITexture, PlayableResource {
         NativeImage frameImage = this.decodeFrameImage(intro, index);
         if (frameImage == null) {
             if (this.loadingCompleted.get()) {
-                this.loadingFailed.set(true);
+                this.markLoadingFailed();
             }
             return null;
         }
@@ -503,11 +493,32 @@ public class FmaTexture implements ITexture, PlayableResource {
         }
     }
 
-    protected void publishDecodedFrame(@NotNull DecodedFrame nextFrame) {
-        DecodedFrame oldPending = this.pendingUploadFrame.getAndSet(nextFrame);
+    protected boolean publishDecodedFrame(@NotNull DecodedFrame nextFrame, int generation, long frameStartMs) {
+        DecodedFrame oldPending;
+        synchronized (this.streamStateLock) {
+            if (generation != this.streamGeneration.get()) {
+                nextFrame.close();
+                return false;
+            }
+            if (this.closed.get()) {
+                nextFrame.close();
+                return false;
+            }
+            boolean switchedIntroToNormal = this.playbackIntro && !nextFrame.intro;
+            if (switchedIntroToNormal) {
+                this.introFinishedPlaying = true;
+            }
+            this.playbackInitialized = true;
+            this.playbackIntro = nextFrame.intro;
+            this.playbackIndex = nextFrame.index;
+            this.playbackFrameStartMs = frameStartMs;
+            this.playbackFrameDelayMs = sanitizeDelay(nextFrame.delayMs);
+            oldPending = this.pendingUploadFrame.getAndSet(nextFrame);
+        }
         if (oldPending != null) {
             oldPending.close();
         }
+        return true;
     }
 
     protected void clearPendingUploadFrame() {
@@ -563,25 +574,22 @@ public class FmaTexture implements ITexture, PlayableResource {
     }
 
     protected void requestPlaybackReset() {
-        this.streamGeneration.incrementAndGet();
-
-        this.cycles.set(0);
-        this.maxLoopsReached = false;
-        this.pendingStartEvent = true;
-        this.introFinishedPlaying = this.introFrameCount <= 0;
-        this.playbackInitialized = false;
-        this.playbackIntro = this.introFrameCount > 0;
-        this.playbackIndex = -1;
-        this.playbackFrameStartMs = 0L;
-        this.playbackFrameDelayMs = MIN_FRAME_DELAY_MS;
-        this.decodeIntro = this.introFrameCount > 0;
-        this.decodeIndex = 0;
-
         synchronized (this.streamStateLock) {
+            this.streamGeneration.incrementAndGet();
+            this.cycles.set(0);
+            this.maxLoopsReached = false;
+            this.pendingStartEvent = true;
+            this.introFinishedPlaying = this.introFrameCount <= 0;
+            this.playbackInitialized = false;
+            this.playbackIntro = this.introFrameCount > 0;
+            this.playbackIndex = -1;
+            this.playbackFrameStartMs = 0L;
+            this.playbackFrameDelayMs = MIN_FRAME_DELAY_MS;
+            this.decodeIntro = this.introFrameCount > 0;
+            this.decodeIndex = 0;
             this.clearPrefetchedFramesLocked();
+            this.clearPendingUploadFrame();
         }
-
-        this.clearPendingUploadFrame();
 
         Thread running = this.streamThread;
         if (running != null) {
@@ -599,6 +607,9 @@ public class FmaTexture implements ITexture, PlayableResource {
         }
 
         try {
+            if ((frame.index == 0) && (frame.intro || (this.introFrameCount <= 0))) {
+                this.resetFrame.captureIfAbsent(frame.nativeImage);
+            }
             DynamicTexture currentTexture = this.streamingTexture;
 
             if (currentTexture == null) {
@@ -622,7 +633,7 @@ public class FmaTexture implements ITexture, PlayableResource {
             destinationPixels.copyFrom(frame.nativeImage);
             currentTexture.upload();
         } catch (Exception ex) {
-            this.loadingFailed.set(true);
+            this.markLoadingFailed();
             LOGGER.error("[FANCYMENU] Failed to upload streamed FMA frame into DynamicTexture", ex);
         } finally {
             frame.close();
@@ -635,6 +646,13 @@ public class FmaTexture implements ITexture, PlayableResource {
         if (this.closed.get()) return FULLY_TRANSPARENT_TEXTURE;
 
         this.lastResourceLocationCall = System.currentTimeMillis();
+        try {
+            this.restoreResetFrameIfRequested();
+        } catch (Exception ex) {
+            this.markLoadingFailed();
+            LOGGER.error("[FANCYMENU] Failed to restore the first FMA frame after a playback reset", ex);
+            return FULLY_TRANSPARENT_TEXTURE;
+        }
         this.startTickerIfNeeded();
         this.uploadPendingFrameToTexture();
 
@@ -686,6 +704,7 @@ public class FmaTexture implements ITexture, PlayableResource {
         this.playRequested = true;
         this.pausedRequested = false;
         this.requestPlaybackReset();
+        this.resetFrame.requestRestore();
         this.startTickerIfNeeded();
     }
 
@@ -774,6 +793,8 @@ public class FmaTexture implements ITexture, PlayableResource {
         }
         this.clearPendingUploadFrame();
 
+        this.resetFrame.close();
+
         if (this.streamingTexture != null) {
             try {
                 this.streamingTexture.close();
@@ -793,6 +814,51 @@ public class FmaTexture implements ITexture, PlayableResource {
         this.sourceLocation = null;
         this.sourceFile = null;
         this.sourceURL = null;
+    }
+
+    protected void restoreResetFrameIfRequested() {
+        if (this.resetFrame.restoreTo(this.streamingTexture)) return;
+        AnimatedTextureResetFrame.RequestedFrame requestedFrame = this.resetFrame.copyForRequestedRestore();
+        if (requestedFrame == null) return;
+        try (requestedFrame) {
+            // 1.21.1 transfers NativeImage ownership into DynamicTexture. Keep the local owner until construction succeeds.
+            NativeImage resetImage = requestedFrame.takeImage();
+            DynamicTexture replacement = null;
+            boolean registered = false;
+            try {
+                replacement = new DynamicTexture(resetImage);
+                resetImage = null;
+                DynamicTexture previousTexture = this.streamingTexture;
+                ResourceLocation replacementLocation = this.streamingResourceLocation;
+                boolean hadResourceLocation = replacementLocation != null;
+                if (replacementLocation == null) {
+                    replacementLocation = ResourceLocation.fromNamespaceAndPath("fancymenu", "dynamic/fma_stream_" + this.uniqueId);
+                } else {
+                    // Reuse the registered location so callers holding it immediately observe the restored replacement texture.
+                    Minecraft.getInstance().getTextureManager().release(replacementLocation);
+                }
+                if ((previousTexture != null) && !hadResourceLocation) {
+                    previousTexture.close();
+                }
+                Minecraft.getInstance().getTextureManager().register(replacementLocation, replacement);
+                registered = true;
+                this.streamingTexture = replacement;
+                this.streamingResourceLocation = replacementLocation;
+                this.resetFrame.markRestored(requestedFrame.restoreVersion());
+            } finally {
+                if (resetImage != null) {
+                    resetImage.close();
+                }
+                if (!registered && (replacement != null)) {
+                    replacement.close();
+                }
+            }
+        }
+    }
+
+    protected void markLoadingFailed() {
+        this.loadingFailed.set(true);
+        this.resetFrame.clear();
     }
 
     @Nullable
