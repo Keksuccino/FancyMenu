@@ -83,10 +83,17 @@ public class KeyframeManagerScreen extends Screen {
     protected static final Component PLAYING_STOPPED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.playing_stopped").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
 
     protected final AnimationControllerElement controller;
+    protected final LayoutEditorScreen parentEditor;
     protected final Consumer<AnimationControllerMetadata> resultCallback;
     protected final List<AnimationKeyframe> workingKeyframes;
     protected final PreviewElement previewElement;
     protected final PreviewEditorElement previewEditorElement;
+    protected final AnimationPreviewViewport previewViewport = new AnimationPreviewViewport();
+    protected final int initialParentViewportWidth;
+    protected final int initialParentViewportHeight;
+    protected final int initialFramebufferWidth;
+    protected final int initialFramebufferHeight;
+    protected final double initialParentGuiScale;
     protected boolean isDraggingProgress = false;
     protected boolean isPlaying = false;
     protected long playStartTime = -1;
@@ -134,10 +141,22 @@ public class KeyframeManagerScreen extends Screen {
     protected int lastGuiScaleCorrectionHeight = 0;
 
     public KeyframeManagerScreen(AnimationControllerElement controller, Consumer<AnimationControllerMetadata> resultCallback) {
+        this(Objects.requireNonNull(LayoutEditorScreen.getCurrentInstance(), "The keyframe manager requires an active layout editor"), controller, resultCallback);
+    }
+
+    public KeyframeManagerScreen(@NotNull LayoutEditorScreen parentEditor, @NotNull AnimationControllerElement controller, @NotNull Consumer<AnimationControllerMetadata> resultCallback) {
         super(Component.translatable("fancymenu.elements.animation_controller.keyframe_manager"));
         this.controller = controller;
+        this.parentEditor = parentEditor;
         this.isOffsetMode = this.controller.offsetMode;
         this.resultCallback = resultCallback;
+        Window window = Minecraft.getInstance().getWindow();
+        this.initialParentViewportWidth = Math.max(1, parentEditor.width);
+        this.initialParentViewportHeight = Math.max(1, parentEditor.height);
+        this.initialFramebufferWidth = Math.max(1, window.getWidth());
+        this.initialFramebufferHeight = Math.max(1, window.getHeight());
+        this.initialParentGuiScale = window.getGuiScale();
+        this.previewViewport.update(this.initialParentViewportWidth, this.initialParentViewportHeight, this.initialParentViewportWidth, this.initialParentViewportHeight);
         this.workingKeyframes = new ArrayList<>(controller.keyframes.stream()
                 .map(AnimationKeyframe::clone)
                 .toList());
@@ -159,9 +178,7 @@ public class KeyframeManagerScreen extends Screen {
         this.previewElement.stayOnScreen = false;
         this.previewElement.stickyAnchor = true;
         this.previewElement.anchorPoint = ElementAnchorPoints.MID_CENTERED;
-        if (!this.workingKeyframes.isEmpty()) {
-            this.applyKeyframeValuesToElement(this.workingKeyframes.getFirst(), this.previewElement);
-        }
+        if (!this.workingKeyframes.isEmpty()) this.applyKeyframeValuesToElement(this.workingKeyframes.getFirst(), this.previewElement);
 
         // Create editor element wrapper for resizing
         this.previewEditorElement = new PreviewEditorElement(this.previewElement, new LayoutEditorScreen(Layout.buildUniversal()));
@@ -172,6 +189,9 @@ public class KeyframeManagerScreen extends Screen {
 
     @Override
     protected void init() {
+
+        if (this.correctGuiScaleAboveParentScale()) return;
+        this.refreshPreviewViewport();
 
         timelineX = 50;
         timelineWidth = width - 100;
@@ -357,9 +377,9 @@ public class KeyframeManagerScreen extends Screen {
 
         AbstractWidget farRightWidget = previewMovingButton;
         Window window = Minecraft.getInstance().getWindow();
-        boolean resized = (window.getScreenWidth() != this.lastGuiScaleCorrectionWidth) || (window.getScreenHeight() != this.lastGuiScaleCorrectionHeight);
-        this.lastGuiScaleCorrectionWidth = window.getScreenWidth();
-        this.lastGuiScaleCorrectionHeight = window.getScreenHeight();
+        boolean resized = (window.getWidth() != this.lastGuiScaleCorrectionWidth) || (window.getHeight() != this.lastGuiScaleCorrectionHeight);
+        this.lastGuiScaleCorrectionWidth = window.getWidth();
+        this.lastGuiScaleCorrectionHeight = window.getHeight();
         boolean tooFarRight = (farRightWidget.getX() + farRightWidget.getWidth()) >= (this.width - 100);
 
         //Adjust GUI scale to make all buttons fit in the screen
@@ -370,10 +390,81 @@ public class KeyframeManagerScreen extends Screen {
             window.setGuiScale(newScale);
             this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
         } else if (!tooFarRight && resized) {
-            RenderingUtils.resetGuiScale();
-            this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
+            double parentScale = this.resolveParentGuiScale(window);
+            if (Double.compare(window.getGuiScale(), parentScale) != 0) {
+                window.setGuiScale(parentScale);
+                this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
+            }
         }
 
+    }
+
+    /**
+     * A larger GUI scale would make the preview display viewport smaller than its source viewport and cause multiple
+     * source coordinates to collapse onto the same display pixel. Keep the manager at or below the parent scale so
+     * resize reinitialization always has a lossless source-space round trip.
+     */
+    protected boolean correctGuiScaleAboveParentScale() {
+        Window window = Minecraft.getInstance().getWindow();
+        double parentScale = this.resolveParentGuiScale(window);
+        if (window.getGuiScale() <= parentScale) return false;
+        window.setGuiScale(parentScale);
+        this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
+        return true;
+    }
+
+    /**
+     * Preserves the preview in serialized keyframe space while the manager changes its GUI scale or the window is
+     * resized. Reapplying through the updated viewport keeps the full visible manager canvas mapped to the parent
+     * editor instead of leaving the parent canvas unscaled in the top-left portion of the screen.
+     */
+    protected void refreshPreviewViewport() {
+        AnimationKeyframe previewState = new AnimationKeyframe(0, 0, 0, 0, 0, this.previewElement.anchorPoint, this.previewElement.stickyAnchor);
+        this.applyElementValuesToKeyframe(this.previewElement, previewState);
+
+        Window window = Minecraft.getInstance().getWindow();
+        int sourceWidth = this.resolveParentViewportWidth(window);
+        int sourceHeight = this.resolveParentViewportHeight(window);
+        this.previewViewport.update(sourceWidth, sourceHeight, this.width, this.height);
+        this.applyKeyframeValuesToElement(previewState, this.previewElement);
+    }
+
+    protected int resolveParentViewportWidth(@NotNull Window window) {
+        if ((window.getWidth() == this.initialFramebufferWidth) && (window.getHeight() == this.initialFramebufferHeight)) return this.initialParentViewportWidth;
+        return Math.max(1, (int)Math.ceil((double)window.getWidth() / this.resolveParentGuiScale(window)));
+    }
+
+    protected int resolveParentViewportHeight(@NotNull Window window) {
+        if ((window.getWidth() == this.initialFramebufferWidth) && (window.getHeight() == this.initialFramebufferHeight)) return this.initialParentViewportHeight;
+        return Math.max(1, (int)Math.ceil((double)window.getHeight() / this.resolveParentGuiScale(window)));
+    }
+
+    protected double resolveParentGuiScale(@NotNull Window window) {
+        if ((window.getWidth() == this.initialFramebufferWidth) && (window.getHeight() == this.initialFramebufferHeight)) return this.initialParentGuiScale;
+        double currentScale = window.calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().options.forceUnicodeFont().get());
+
+        if (this.parentEditor.layout.forcedScale != 0) {
+            currentScale = this.parentEditor.layout.forcedScale;
+            if (currentScale <= 0.0D) currentScale = 1.0D;
+        }
+
+        if ((this.parentEditor.layout.autoScalingWidth != 0) && (this.parentEditor.layout.autoScalingHeight != 0)) {
+            int viewportWidth = (int)Math.ceil((double)window.getWidth() / currentScale);
+            int viewportHeight = (int)Math.ceil((double)window.getHeight() / currentScale);
+            double guiWidth = (double)viewportWidth * currentScale;
+            double guiHeight = (double)viewportHeight * currentScale;
+            double newScaleX = (guiWidth / (double)this.parentEditor.layout.autoScalingWidth) * currentScale;
+            double newScaleY = (guiHeight / (double)this.parentEditor.layout.autoScalingHeight) * currentScale;
+            currentScale = Math.min(newScaleX, newScaleY);
+            if (!Double.isFinite(currentScale) || (currentScale <= 0.0D)) currentScale = 1.0D;
+        }
+        return currentScale;
+    }
+
+    @Override
+    public void removed() {
+        RenderingUtils.resetGuiScale();
+        super.removed();
     }
 
     @SuppressWarnings("all")
@@ -510,19 +601,21 @@ public class KeyframeManagerScreen extends Screen {
             float progress = (float)(currentPlayOrRecordPosition - currentFrame.timestamp) / (float)(nextFrame.timestamp - currentFrame.timestamp);
 
             if (this.isOffsetMode) {
-                previewElement.animatedOffsetX = (int)lerp(currentFrame.posOffsetX, nextFrame.posOffsetX, progress);
-                previewElement.animatedOffsetY = (int)lerp(currentFrame.posOffsetY, nextFrame.posOffsetY, progress);
+                previewElement.animatedOffsetX = this.previewViewport.toDisplayX((int)lerp(currentFrame.posOffsetX, nextFrame.posOffsetX, progress));
+                previewElement.animatedOffsetY = this.previewViewport.toDisplayY((int)lerp(currentFrame.posOffsetY, nextFrame.posOffsetY, progress));
                 previewElement.posOffsetX = 0;
                 previewElement.posOffsetY = 0;
             } else {
-                previewElement.posOffsetX = (int)lerp(currentFrame.posOffsetX, nextFrame.posOffsetX, progress);
-                previewElement.posOffsetY = (int)lerp(currentFrame.posOffsetY, nextFrame.posOffsetY, progress);
+                previewElement.animatedOffsetX = 0;
+                previewElement.animatedOffsetY = 0;
+                previewElement.posOffsetX = this.previewViewport.toDisplayX((int)lerp(currentFrame.posOffsetX, nextFrame.posOffsetX, progress));
+                previewElement.posOffsetY = this.previewViewport.toDisplayY((int)lerp(currentFrame.posOffsetY, nextFrame.posOffsetY, progress));
             }
 
-            previewElement.baseWidth = (int)lerp(currentFrame.baseWidth, nextFrame.baseWidth, progress);
-            previewElement.baseHeight = (int)lerp(currentFrame.baseHeight, nextFrame.baseHeight, progress);
+            previewElement.baseWidth = this.previewViewport.toDisplayX((int)lerp(currentFrame.baseWidth, nextFrame.baseWidth, progress));
+            previewElement.baseHeight = this.previewViewport.toDisplayY((int)lerp(currentFrame.baseHeight, nextFrame.baseHeight, progress));
             previewElement.anchorPoint = this.isOffsetMode ? ElementAnchorPoints.MID_CENTERED : nextFrame.anchorPoint;
-            previewElement.stickyAnchor = nextFrame.stickyAnchor;
+            previewElement.stickyAnchor = this.isOffsetMode || nextFrame.stickyAnchor;
         }
     }
 
@@ -929,7 +1022,9 @@ public class KeyframeManagerScreen extends Screen {
         this.previewEditorElement.mouseReleased(mouseX, mouseY, button);
         if (this.previewEditorElement.isSelected() && (previewGotResized || previewGotMoved) && (this.selectedKeyframes.size() == 1) && (!this.isRecording || this.isRecordingPaused) && !this.isPlaying) {
             saveState();
-            this.applyElementValuesToKeyframe(this.previewElement, this.selectedKeyframes.getFirst());
+            AnimationKeyframe selectedKeyframe = this.selectedKeyframes.getFirst();
+            this.applyElementValuesToKeyframe(this.previewElement, selectedKeyframe);
+            this.applyKeyframeValuesToElement(selectedKeyframe, this.previewElement);
         }
         if ((this.lastCtrlClickedFrameForDeselect != null) && !this.framesGotMoved) {
             if (this.selectedKeyframes.size() > 1) {
@@ -1046,19 +1141,20 @@ public class KeyframeManagerScreen extends Screen {
                 this.saveState();
                 this.isShowingTimestampInput = false;
                 this.isShowingSmoothingInput = false;
+                AnimationKeyframe selectedKeyframe = this.selectedKeyframes.getFirst();
                 if (keyCode == InputConstants.KEY_LEFT) {
-                    this.previewElement.posOffsetX -= 1;
+                    selectedKeyframe.posOffsetX -= 1;
                 }
                 if (keyCode == InputConstants.KEY_RIGHT) {
-                    this.previewElement.posOffsetX += 1;
+                    selectedKeyframe.posOffsetX += 1;
                 }
                 if (keyCode == InputConstants.KEY_UP) {
-                    this.previewElement.posOffsetY -= 1;
+                    selectedKeyframe.posOffsetY -= 1;
                 }
                 if (keyCode == InputConstants.KEY_DOWN) {
-                    this.previewElement.posOffsetY += 1;
+                    selectedKeyframe.posOffsetY += 1;
                 }
-                this.applyElementValuesToKeyframe(this.previewElement, this.selectedKeyframes.get(0));
+                this.applyKeyframeValuesToElement(selectedKeyframe, this.previewElement);
                 return true;
             }
         }
@@ -1104,38 +1200,40 @@ public class KeyframeManagerScreen extends Screen {
     protected void applyElementValuesToKeyframe(@NotNull PreviewElement element, @NotNull AnimationKeyframe keyframe) {
         if (this.isOffsetMode) {
             // Calculate center points
-            int screenCenterX = this.width / 2;
-            int screenCenterY = this.height / 2;
+            int screenCenterX = this.previewViewport.getDisplayWidth() / 2;
+            int screenCenterY = this.previewViewport.getDisplayHeight() / 2;
             int elementCenterX = element.getAbsoluteX() + (element.getAbsoluteWidth() / 2);
             int elementCenterY = element.getAbsoluteY() + (element.getAbsoluteHeight() / 2);
 
             // Store offset from screen center
-            keyframe.posOffsetX = elementCenterX - screenCenterX;
-            keyframe.posOffsetY = elementCenterY - screenCenterY;
+            keyframe.posOffsetX = this.previewViewport.toSourceX(elementCenterX - screenCenterX);
+            keyframe.posOffsetY = this.previewViewport.toSourceY(elementCenterY - screenCenterY);
         } else {
-            keyframe.posOffsetX = element.posOffsetX;
-            keyframe.posOffsetY = element.posOffsetY;
+            keyframe.posOffsetX = this.previewViewport.toSourceX(element.posOffsetX);
+            keyframe.posOffsetY = this.previewViewport.toSourceY(element.posOffsetY);
         }
-        keyframe.baseWidth = element.baseWidth;
-        keyframe.baseHeight = element.baseHeight;
+        keyframe.baseWidth = this.previewViewport.toSourceX(element.baseWidth);
+        keyframe.baseHeight = this.previewViewport.toSourceY(element.baseHeight);
         keyframe.anchorPoint = this.isOffsetMode ? ElementAnchorPoints.MID_CENTERED : element.anchorPoint;
-        keyframe.stickyAnchor = this.isOffsetMode ? true : element.stickyAnchor;
+        keyframe.stickyAnchor = this.isOffsetMode || element.stickyAnchor;
     }
 
     protected void applyKeyframeValuesToElement(@NotNull AnimationKeyframe keyframe, @NotNull PreviewElement element) {
         if (this.isOffsetMode) {
-            element.animatedOffsetX = keyframe.posOffsetX;
-            element.animatedOffsetY = keyframe.posOffsetY;
+            element.animatedOffsetX = this.previewViewport.toDisplayX(keyframe.posOffsetX);
+            element.animatedOffsetY = this.previewViewport.toDisplayY(keyframe.posOffsetY);
             element.posOffsetX = 0;
             element.posOffsetY = 0;
         } else {
-            element.posOffsetX = keyframe.posOffsetX;
-            element.posOffsetY = keyframe.posOffsetY;
+            element.animatedOffsetX = 0;
+            element.animatedOffsetY = 0;
+            element.posOffsetX = this.previewViewport.toDisplayX(keyframe.posOffsetX);
+            element.posOffsetY = this.previewViewport.toDisplayY(keyframe.posOffsetY);
         }
-        element.baseWidth = keyframe.baseWidth;
-        element.baseHeight = keyframe.baseHeight;
+        element.baseWidth = this.previewViewport.toDisplayX(keyframe.baseWidth);
+        element.baseHeight = this.previewViewport.toDisplayY(keyframe.baseHeight);
         element.anchorPoint = this.isOffsetMode ? ElementAnchorPoints.MID_CENTERED : keyframe.anchorPoint;
-        element.stickyAnchor = this.isOffsetMode ? true : keyframe.stickyAnchor;
+        element.stickyAnchor = this.isOffsetMode || keyframe.stickyAnchor;
     }
 
     protected void togglePlayback() {
@@ -1235,37 +1333,8 @@ public class KeyframeManagerScreen extends Screen {
 
         saveState();
 
-        AnimationKeyframe newKeyframe;
-
-        if (this.isOffsetMode) {
-            // Calculate center points
-            int screenCenterX = this.width / 2;
-            int screenCenterY = this.height / 2;
-            int elementCenterX = previewElement.getAbsoluteX() + (previewElement.getAbsoluteWidth() / 2);
-            int elementCenterY = previewElement.getAbsoluteY() + (previewElement.getAbsoluteHeight() / 2);
-
-            // Create keyframe with offset from screen center
-            newKeyframe = new AnimationKeyframe(
-                    currentPlayOrRecordPosition,
-                    elementCenterX - screenCenterX,  // Store offset X from screen center
-                    elementCenterY - screenCenterY,  // Store offset Y from screen center
-                    previewElement.baseWidth,
-                    previewElement.baseHeight,
-                    ElementAnchorPoints.MID_CENTERED,
-                    true
-            );
-        } else {
-            // Create keyframe with absolute position
-            newKeyframe = new AnimationKeyframe(
-                    currentPlayOrRecordPosition,
-                    previewElement.posOffsetX,
-                    previewElement.posOffsetY,
-                    previewElement.baseWidth,
-                    previewElement.baseHeight,
-                    previewElement.anchorPoint,
-                    previewElement.stickyAnchor
-            );
-        }
+        AnimationKeyframe newKeyframe = new AnimationKeyframe(currentPlayOrRecordPosition, 0, 0, 0, 0, this.previewElement.anchorPoint, this.previewElement.stickyAnchor);
+        this.applyElementValuesToKeyframe(this.previewElement, newKeyframe);
 
         workingKeyframes.add(newKeyframe);
 
@@ -1510,9 +1579,8 @@ public class KeyframeManagerScreen extends Screen {
         if (this.selectedKeyframes.size() == 1) {
             saveState();
             AnimationKeyframe selectedKeyframe = this.selectedKeyframes.getFirst();
-            selectedKeyframe.anchorPoint = previewElement.anchorPoint;
-            selectedKeyframe.posOffsetX = previewElement.posOffsetX;
-            selectedKeyframe.posOffsetY = previewElement.posOffsetY;
+            this.applyElementValuesToKeyframe(this.previewElement, selectedKeyframe);
+            this.applyKeyframeValuesToElement(selectedKeyframe, this.previewElement);
         }
     }
 
@@ -1537,7 +1605,7 @@ public class KeyframeManagerScreen extends Screen {
         return false;
     }
 
-    protected static class PreviewElement extends AbstractElement {
+    protected class PreviewElement extends AbstractElement {
 
         public PreviewElement(ElementBuilder<?, ?> builder) {
             super(builder);
@@ -1545,6 +1613,16 @@ public class KeyframeManagerScreen extends Screen {
 
         @Override
         public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        }
+
+        @Override
+        public int getPositioningScreenWidth() {
+            return KeyframeManagerScreen.this.previewViewport.getDisplayWidth();
+        }
+
+        @Override
+        public int getPositioningScreenHeight() {
+            return KeyframeManagerScreen.this.previewViewport.getDisplayHeight();
         }
 
     }
