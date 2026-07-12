@@ -63,11 +63,13 @@ public class GameIntroOverlay extends Overlay {
     protected float watermediaBinariesDownloadWidth_FancyMenu = Float.NaN;
     protected float watermediaBinariesDownloadHeight_FancyMenu = Float.NaN;
     protected boolean watermediaLeftMouseWasDown_FancyMenu = false;
+    private final GameIntroLifecycle lifecycle;
 
     public GameIntroOverlay(@NotNull Screen fadeTo, @NotNull PlayableResource intro) {
         super();
         this.fadeTo = Objects.requireNonNull(fadeTo);
         this.intro = Objects.requireNonNull(intro);
+        this.lifecycle = new GameIntroLifecycle(this.intro::stop, throwable -> LOGGER.error("[FANCYMENU] Failed to stop game intro resource!", throwable));
         this.intro.waitForReady(5000);
     }
 
@@ -95,19 +97,25 @@ public class GameIntroOverlay extends Overlay {
             this.intro.play();
         }
 
-        if (this.endOfIntroReached() && !this.fadeToInitialized) {
+        boolean endOfIntroReached = this.endOfIntroReached();
+        if (endOfIntroReached && this.lifecycle.markFinished()) {
+            // Mark completion before destination-screen initialization because its callbacks can install a replacement loading overlay.
+            GameIntroHandler.introPlayed = true;
+        }
+
+        if (endOfIntroReached && !this.fadeToInitialized) {
             this.initFadeToScreen();
         }
 
-        this.tickFadeOut();
+        this.tickFadeOut(endOfIntroReached);
 
         //Close screen after finished playing
-        if (this.endOfIntroReached() && (!this.fadeOutIntro() || (this.opacity < 0.1F))) {
+        if (endOfIntroReached && (!this.fadeOutIntro() || (this.opacity < 0.1F))) {
             this.close();
             return;
         }
 
-        if (this.endOfIntroReached()) {
+        if (endOfIntroReached) {
             RenderingUtils.executeAllPreRenderTasks(graphics, mouseX, mouseY, partial);
             EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(this.fadeTo, graphics, mouseX, mouseY, partial));
             this.fadeTo.render(graphics, mouseX, mouseY, partial);
@@ -216,8 +224,8 @@ public class GameIntroOverlay extends Overlay {
         return ((this.start + 2000) < now) && !this.intro.isPlaying();
     }
 
-    protected void tickFadeOut() {
-        if (this.endOfIntroReached() && this.fadeOutIntro()) {
+    protected void tickFadeOut(boolean endOfIntroReached) {
+        if (endOfIntroReached && this.fadeOutIntro()) {
             this.opacity -= 0.02F;
         }
     }
@@ -244,9 +252,22 @@ public class GameIntroOverlay extends Overlay {
     }
 
     protected void close() {
-        this.intro.stop();
-        if (!this.fadeToInitialized) this.initFadeToScreen();
-        Minecraft.getInstance().setOverlay(null);
+        if (this.lifecycle.markFinished()) GameIntroHandler.introPlayed = true;
+        if (!this.lifecycle.closeFinished()) return;
+        Minecraft minecraft = Minecraft.getInstance();
+        try {
+            if (!this.fadeToInitialized) this.initFadeToScreen();
+        } finally {
+            // Screen initialization invokes extensible callbacks which can install another overlay. Never clear an overlay that displaced this intro during those callbacks.
+            if (minecraft.getOverlay() == this) minecraft.setOverlay(null);
+        }
+    }
+
+    /**
+     * Stops an intro displaced by another overlay. An open startup intro remains retryable, while an intro that already finished remains consumed.
+     */
+    public void onReplaced() {
+        this.lifecycle.replace();
     }
 
     public void keyPressed(int keycode, int scancode, int modifiers) {
