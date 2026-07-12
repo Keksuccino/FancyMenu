@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget;
 
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
+import de.keksuccino.fancymenu.customization.widget.identification.WidgetIdentifierHandler;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.HideableElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
@@ -17,6 +18,8 @@ import java.util.List;
 public class VanillaWidgetElement extends ButtonElement implements HideableElement {
 
     public WidgetMeta widgetMeta;
+    // Keep a loaded identifier primary when it still resolves to this widget; an already-stale coordinate cannot be inferred.
+    @Nullable protected String serializedWidgetIdentifier;
     public boolean vanillaButtonHidden = false;
     public final Property.IntegerProperty automatedButtonClicks = putProperty(Property.integerProperty("automated_button_clicks", 0, "fancymenu.elements.vanilla_button.automated_clicks"));
     protected boolean automatedButtonClicksDone = false;
@@ -118,6 +121,7 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
 
     @Override
     public @NotNull String getInstanceIdentifier() {
+        if (this.serializedWidgetIdentifier != null) return this.serializedWidgetIdentifier;
         if (this.widgetMeta != null) {
             return this.widgetMeta.getIdentifier().replace("vanillabtn:", "").replace("button_compatibility_id:", "");
         }
@@ -125,6 +129,9 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
     }
 
     public void setVanillaWidget(WidgetMeta data, boolean mirrorWidgetSizeAndPos) {
+        String existingIdentifier = super.getInstanceIdentifier().replace("vanillabtn:", "").replace("button_compatibility_id:", "");
+        this.serializedWidgetIdentifier = null;
+        if (WidgetIdentifierHandler.isIdentifierOfWidget(existingIdentifier, data)) this.serializedWidgetIdentifier = existingIdentifier;
         this.widgetMeta = data;
         this.setWidget(data.getWidget());
         if (this.baseWidth <= 0) this.baseWidth = data.width;

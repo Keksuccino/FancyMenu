@@ -1,6 +1,8 @@
 package de.keksuccino.fancymenu.customization.screen.dummyscreen;
 
 import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
+import de.keksuccino.fancymenu.customization.screen.ScreenConstructionContext;
+import de.keksuccino.fancymenu.util.ScreenUtils;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +31,7 @@ public class DummyScreenBuilder {
     @Nullable
     public Screen tryConstruct() {
         if (this.screenProvider != null) return this.screenProvider.get();
-        return ScreenInstanceFactory.tryConstruct(this.screenIdentifier);
+        return ScreenInstanceFactory.tryConstruct(this.screenIdentifier, ScreenConstructionContext.preview(ScreenUtils.getScreen()));
     }
 
     @NotNull

@@ -43,7 +43,7 @@
 - [ ] [[NeoForge 1.21.1] JavaScript API Bridge Not Working on Title Screen at Launch](https://github.com/Keksuccino/FancyMenu/issues/1601)
 - [ ] [[MC 26.1.X] Shadow line appears below custom title image element on Title Screen](https://github.com/Keksuccino/FancyMenu/issues/1585)
 - [ ] [[MC 26.1.X] Screen's content gets rendered on negative X (gets moved too much to the left, leaving a black space at the right side)](https://github.com/Keksuccino/FancyMenu/issues/1577)
-- [ ] [Bugs related to buttons and navigation in interfaces](https://github.com/Keksuccino/FancyMenu/issues/1549)
+- [x] [Bugs related to buttons and navigation in interfaces](https://github.com/Keksuccino/FancyMenu/issues/1549)
 - [ ] [Opening "options_screen" with a custom Main Menu/Title Screen throws NullPointerException error.](https://github.com/Keksuccino/FancyMenu/issues/1545)
 - [ ] [Checkboxes do not fade in](https://github.com/Keksuccino/FancyMenu/issues/1536)
 - [ ] [False Positive With KubeJS Renaming Of Mods Feature](https://github.com/Keksuccino/FancyMenu/issues/1535)

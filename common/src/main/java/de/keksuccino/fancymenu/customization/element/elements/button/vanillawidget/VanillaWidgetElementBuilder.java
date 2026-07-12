@@ -89,6 +89,8 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
 
         //VanillaButtonElement stuff
         if (e.widgetMeta != null) {
+            // Preserve the last stacked source's serialized lookup key before binding its current widget metadata.
+            stack.setInstanceIdentifier(e.getInstanceIdentifier());
             stack.setVanillaWidget(e.widgetMeta, false);
         }
         if (e.vanillaButtonHidden) {
