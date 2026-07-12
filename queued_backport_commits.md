@@ -4,7 +4,8 @@
   - Not applicable to Minecraft 1.20.1: this version has no `SpriteIconButton.CenteredIcon` class or `extractContents` icon-rendering path to patch.
 - [x] `7ae5520810d8a35faf1e968bb965953b421b9b07`
 - [x] `b6795f0cacb50d410ade90992be3913eb8dc7fd8`
-- [ ] `0701c83fe755b40bbc8847c5a8cff0635aab1ddf`
+- ⚠️ `0701c83fe755b40bbc8847c5a8cff0635aab1ddf`
+  - Not applicable to Minecraft 1.20.1: it has no deferred `GuiRenderer`/`GuiRenderState` batching path; GLSL and GUI blur rendering already flush and draw immediately in call order.
 - [ ] `bc94229bee360236a4c05a3e61a8fbb4d2dcdd57`
 - [ ] `e97aa4048aa39bb18080df693a3e7dc2721aedac`
 - [ ] `69f4e7679e2c225c1d3c795f502319e14540fb87`
