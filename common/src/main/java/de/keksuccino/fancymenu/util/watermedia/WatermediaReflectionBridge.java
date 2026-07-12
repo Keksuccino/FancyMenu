@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 public class WatermediaReflectionBridge {
@@ -202,24 +203,29 @@ public class WatermediaReflectionBridge {
         Class<?> mediaApiClass = Class.forName("org.watermedia.api.media.MediaAPI", false, classLoader);
         Class<?> mrlClass = Class.forName("org.watermedia.api.media.MRL", false, classLoader);
 
-        Object gfxEngine = video ? buildModernGfxEngine(renderThread, renderThreadExecutor) : null;
-        Object sfxEngine = audio ? buildModernSfxEngine() : null;
-        Supplier<Object> gfxSupplier = () -> gfxEngine;
-        Supplier<Object> sfxSupplier = () -> sfxEngine;
+        WatermediaRenderThreadExecutor gfxExecutor = video ? new WatermediaRenderThreadExecutor(renderThread, renderThreadExecutor) : null;
+        Object gfxEngine = null;
+        Object sfxEngine = null;
 
         try {
+            gfxEngine = video ? buildModernGfxEngine(renderThread, gfxExecutor) : null;
+            sfxEngine = audio ? buildModernSfxEngine() : null;
+            Object createdGfxEngine = gfxEngine;
+            Object createdSfxEngine = sfxEngine;
+            Supplier<Object> gfxSupplier = () -> createdGfxEngine;
+            Supplier<Object> sfxSupplier = () -> createdSfxEngine;
             Method createPlayer = mediaApiClass.getMethod("createPlayer", mrlClass, int.class, Supplier.class, Supplier.class);
             Object player = createPlayer.invoke(null, mrl, 0, gfxSupplier, sfxSupplier);
 
             if (player == null) {
-                releaseModernResource(gfxEngine);
+                releaseModernGfxResource(gfxEngine, gfxExecutor);
                 releaseModernResource(sfxEngine);
                 return null;
             }
 
-            return new ManagedModernPlayer(player, gfxEngine);
+            return new ManagedModernPlayer(player, gfxEngine, gfxExecutor);
         } catch (Throwable ex) {
-            releaseModernResource(gfxEngine);
+            releaseModernGfxResource(gfxEngine, gfxExecutor);
             releaseModernResource(sfxEngine);
             throw ex;
         }
@@ -310,6 +316,19 @@ public class WatermediaReflectionBridge {
         }
     }
 
+    private static void releaseModernGfxResource(@Nullable Object gfxEngine, @Nullable WatermediaRenderThreadExecutor gfxExecutor) {
+        Runnable releaseTask = gfxEngine != null ? () -> releaseModernResource(gfxEngine) : () -> {};
+        if (gfxExecutor != null) {
+            try {
+                gfxExecutor.close(releaseTask);
+            } catch (Throwable ex) {
+                LOGGER.error("[FANCYMENU] Failed to schedule Watermedia graphics-engine release on the render thread", ex);
+            }
+            return;
+        }
+        releaseTask.run();
+    }
+
     @Nullable
     private static Method findMethod(@NotNull Class<?> type, @NotNull String name, int parameterCount) {
         for (Method method : type.getMethods()) {
@@ -320,20 +339,22 @@ public class WatermediaReflectionBridge {
         return null;
     }
 
-    private static final class ManagedModernPlayer {
+    static final class ManagedModernPlayer {
         private final Object player;
         @Nullable
         private final Object gfxEngine;
-        private volatile boolean released = false;
+        @Nullable
+        private final WatermediaRenderThreadExecutor gfxExecutor;
+        private final AtomicBoolean released = new AtomicBoolean(false);
 
-        private ManagedModernPlayer(@NotNull Object player, @Nullable Object gfxEngine) {
+        ManagedModernPlayer(@NotNull Object player, @Nullable Object gfxEngine, @Nullable WatermediaRenderThreadExecutor gfxExecutor) {
             this.player = player;
             this.gfxEngine = gfxEngine;
+            this.gfxExecutor = gfxExecutor;
         }
 
-        private void release() {
-            if (this.released) return;
-            this.released = true;
+        void release() {
+            if (!this.released.compareAndSet(false, true)) return;
 
             try {
                 Method release = findMethod(this.player.getClass(), "release", 0);
@@ -342,9 +363,11 @@ public class WatermediaReflectionBridge {
                 }
             } catch (Throwable ex) {
                 LOGGER.error("[FANCYMENU] Failed to release Watermedia player", ex);
+            } finally {
+                // FFMediaPlayer.release() stops and joins its producer threads before releasing SFX. Only then can the
+                // executor reject new GL submissions and wait for its already-accepted render work to drain.
+                releaseModernGfxResource(this.gfxEngine, this.gfxExecutor);
             }
-
-            releaseModernResource(this.gfxEngine);
         }
     }
 

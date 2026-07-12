@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaFrameTexture;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaReflectionBridge;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaUtil;
+import de.keksuccino.melody.resources.audio.openal.ALUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
@@ -70,7 +71,6 @@ public class Mp4Video implements IVideo {
     protected volatile boolean closed = false;
     protected volatile boolean playerInitTaskQueued = false;
     protected volatile long stopRequestVersion = 0L;
-    protected volatile long closeReleaseRequestVersion = 0L;
     protected volatile boolean restartFromBeginningOnNextPlay = false;
     protected volatile long lastPlayRequestTimestampMs = -1L;
     protected volatile boolean framePresented = false;
@@ -79,6 +79,7 @@ public class Mp4Video implements IVideo {
     protected volatile boolean listenerFinishedEventEmittedForCycle = false;
     protected volatile double listenerLastKnownPlaybackTimeSeconds = 0.0D;
     protected final Object playerInitLock = new Object();
+    protected final Mp4VideoDeferredReleaseTracker deferredReleaseTracker = new Mp4VideoDeferredReleaseTracker();
 
     @NotNull
     public static Mp4Video location(@NotNull ResourceLocation location) {
@@ -171,6 +172,7 @@ public class Mp4Video implements IVideo {
     }
 
     protected Mp4Video() {
+        Mp4VideoSoundEngineReloadHandler.register(this);
     }
 
     protected void initializeAsync(@NotNull String sourceName) {
@@ -278,7 +280,6 @@ public class Mp4Video implements IVideo {
             this.queuePlayerInitializationTask();
             return;
         }
-        if (this.mediaPlayer != null) return;
         Object cachedMrl = this.mrl;
         if (cachedMrl == null) return;
         if (WatermediaReflectionBridge.isMrlResolving(cachedMrl)) return;
@@ -286,9 +287,17 @@ public class Mp4Video implements IVideo {
             this.fail("Cannot create MP4 video player because Watermedia MRL is in error state", null);
             return;
         }
+        if (!this.playRequested || this.mediaPlayer != null || Mp4VideoSoundEngineReloadHandler.isSoundEngineReloading()) return;
+        boolean openAlReady = this.isOpenAlReadyForPlayerCreation();
+        Mp4VideoSoundLifecyclePolicy.PlayerCreationMode creationMode = Mp4VideoSoundLifecyclePolicy.determinePlayerCreationMode(this.closed, this.playRequested, this.mediaPlayer != null, Mp4VideoSoundEngineReloadHandler.isSoundEngineReloading(), openAlReady, Mp4VideoSoundEngineReloadHandler.hasSoundEngineReloadCompleted());
+        // WaterMedia's first OpenAL access must not happen until Minecraft owns a live context. If sound startup fails,
+        // the completed reload permits video-only playback instead of waiting forever for an unavailable audio engine.
+        if (creationMode == Mp4VideoSoundLifecyclePolicy.PlayerCreationMode.NONE) return;
         synchronized (this.playerInitLock) {
-            if (this.mediaPlayer != null || this.closed) return;
-            Object createdPlayer = WatermediaReflectionBridge.createPlayer(cachedMrl, Thread.currentThread(), Minecraft.getInstance()::execute, true, true);
+            openAlReady = this.isOpenAlReadyForPlayerCreation();
+            creationMode = Mp4VideoSoundLifecyclePolicy.determinePlayerCreationMode(this.closed, this.playRequested, this.mediaPlayer != null, Mp4VideoSoundEngineReloadHandler.isSoundEngineReloading(), openAlReady, Mp4VideoSoundEngineReloadHandler.hasSoundEngineReloadCompleted());
+            if (creationMode == Mp4VideoSoundLifecyclePolicy.PlayerCreationMode.NONE) return;
+            Object createdPlayer = WatermediaReflectionBridge.createPlayer(cachedMrl, Thread.currentThread(), Minecraft.getInstance()::execute, true, creationMode.isAudioEnabled());
             if (createdPlayer == null) {
                 this.fail("Failed to create Watermedia media player for MP4 video source", null);
                 return;
@@ -624,25 +633,38 @@ public class Mp4Video implements IVideo {
 
     @Override
     public void close() {
-        if (this.closed) return;
-        this.stopRequestVersion++;
-        long closeReleaseVersion = ++this.closeReleaseRequestVersion;
-        this.closed = true;
-        this.playRequested = false;
-        this.pausedRequested = false;
-        this.seekRequestedMs = -1L;
-        this.restartFromBeginningOnNextPlay = false;
-        this.lastPlayRequestTimestampMs = -1L;
-        this.looping = false;
-        this.resetVideoPlaybackListenerState();
-        Object cachedPlayer = this.mediaPlayer;
-        this.mediaPlayer = null;
-        this.mrl = null;
+        Object cachedPlayer;
+        long closeReleaseVersion;
+        synchronized (this.playerInitLock) {
+            if (this.closed) return;
+            this.stopRequestVersion++;
+            this.closed = true;
+            this.playRequested = false;
+            this.pausedRequested = false;
+            this.seekRequestedMs = -1L;
+            this.restartFromBeginningOnNextPlay = false;
+            this.lastPlayRequestTimestampMs = -1L;
+            this.looping = false;
+            this.resetVideoPlaybackListenerState();
+            cachedPlayer = this.mediaPlayer;
+            this.mediaPlayer = null;
+            this.mrl = null;
+            closeReleaseVersion = this.deferredReleaseTracker.schedule(cachedPlayer);
+            if (cachedPlayer != null) {
+                try {
+                    WatermediaReflectionBridge.playerPause(cachedPlayer, true);
+                } catch (RuntimeException | Error throwable) {
+                    // The ownership tracker still guarantees a later release even if pausing a broken player fails.
+                    LOGGER.warn("[FANCYMENU] Failed to pause WaterMedia player while closing; deferred cleanup will still release it. source: {}", this.resolveVideoSourceForListener(), throwable);
+                }
+            }
+        }
         if (cachedPlayer != null) {
-            WatermediaReflectionBridge.playerPause(cachedPlayer, true);
             // FFmpeg can still enqueue render-thread upload tasks right after stop.
             // Run stop/release in a deferred sequence so queued uploads can drain first.
             this.queueDeferredHardStopAndReleaseForClose(cachedPlayer, closeReleaseVersion, HARD_STOP_DEFER_TICKS);
+        } else {
+            Mp4VideoSoundEngineReloadHandler.unregister(this);
         }
         try {
             Minecraft.getInstance().getTextureManager().release(this.frameLocation);
@@ -708,6 +730,92 @@ public class Mp4Video implements IVideo {
         this.lastPlayRequestTimestampMs = -1L;
         this.resetVideoPlaybackListenerState();
         LOGGER.warn("[FANCYMENU] Watermedia V3 and/or Watermedia Binaries are not loaded, MP4 source will render as missing texture: {}", sourceName);
+    }
+
+    protected boolean isOpenAlReadyForPlayerCreation() {
+        try {
+            return ALUtils.isOpenAlReady();
+        } catch (RuntimeException ignored) {
+            // Early PRE_CLIENT_TICK work can precede Melody's SoundManager accessor becoming available.
+            return false;
+        }
+    }
+
+    /**
+     * Claims every player still owned by this video and releases it while Minecraft's old OpenAL context is current.
+     * A close-detached player is claimed through its tracker first, which invalidates all queued deferred cleanup work.
+     */
+    void releasePlayerBeforeSoundEngineReload() {
+        // The tracker acquires playerInitLock before claiming the pending player, matching close()'s lock order.
+        Mp4VideoDeferredReleaseTracker.SoundReloadClaim claim = this.deferredReleaseTracker.claimForSoundEngineReload(this.playerInitLock, this::detachActivePlayerBeforeSoundEngineReload);
+        Object activePlayer = claim.activePlayer();
+        Object closeDetachedPlayer = claim.closeDetachedPlayer();
+
+        Throwable releaseFailure = null;
+        try {
+            releaseFailure = this.releasePlayerSynchronouslyForSoundEngineReload(activePlayer, releaseFailure);
+            if (closeDetachedPlayer != activePlayer) releaseFailure = this.releasePlayerSynchronouslyForSoundEngineReload(closeDetachedPlayer, releaseFailure);
+        } finally {
+            if (this.closed && !this.deferredReleaseTracker.hasPendingPlayer()) Mp4VideoSoundEngineReloadHandler.unregister(this);
+        }
+        rethrowPlayerReleaseFailure(releaseFailure);
+    }
+
+    @Nullable
+    private Object detachActivePlayerBeforeSoundEngineReload() {
+        Object activePlayer = this.mediaPlayer;
+        if (activePlayer == null) return null;
+        long currentPlayerTimeMs = -1L;
+        if (this.playRequested && this.seekRequestedMs < 0L) {
+            try {
+                currentPlayerTimeMs = WatermediaReflectionBridge.playerTime(activePlayer);
+            } catch (RuntimeException | Error throwable) {
+                LOGGER.warn("[FANCYMENU] Failed to read WaterMedia playback time before sound-engine reload; playback will restart from its last explicit seek. source: {}", this.resolveVideoSourceForListener(), throwable);
+            }
+        }
+        long preservedSeekMs = Mp4VideoSoundLifecyclePolicy.selectSeekForReload(this.playRequested, this.seekRequestedMs, currentPlayerTimeMs);
+        if (preservedSeekMs >= 0L) this.seekRequestedMs = preservedSeekMs;
+        this.stopRequestVersion++;
+        this.mediaPlayer = null;
+        this.resetFramePresentationStateForNewPlayer();
+        return activePlayer;
+    }
+
+    void retryPlayerAfterSoundEngineReload() {
+        // pause() deliberately keeps playRequested true, so paused playback recreates a player that starts paused.
+        if (!Mp4VideoSoundLifecyclePolicy.shouldRetryAfterReload(this.closed, this.playRequested, this.mediaPlayer != null)) return;
+        this.queuePlayerInitializationTask();
+    }
+
+    @Nullable
+    private Throwable releasePlayerSynchronouslyForSoundEngineReload(@Nullable Object player, @Nullable Throwable previousFailure) {
+        if (player == null) return previousFailure;
+        Throwable failure = previousFailure;
+        try {
+            WatermediaReflectionBridge.playerPause(player, true);
+        } catch (Throwable throwable) {
+            failure = appendPlayerReleaseFailure(failure, throwable);
+        }
+        try {
+            WatermediaReflectionBridge.playerRelease(player);
+        } catch (Throwable throwable) {
+            failure = appendPlayerReleaseFailure(failure, throwable);
+        }
+        return failure;
+    }
+
+    @NotNull
+    private static Throwable appendPlayerReleaseFailure(@Nullable Throwable previousFailure, @NotNull Throwable failure) {
+        if (previousFailure == null) return failure;
+        if (previousFailure != failure) previousFailure.addSuppressed(failure);
+        return previousFailure;
+    }
+
+    private static void rethrowPlayerReleaseFailure(@Nullable Throwable failure) {
+        if (failure == null) return;
+        if (failure instanceof Error error) throw error;
+        if (failure instanceof RuntimeException runtimeException) throw runtimeException;
+        throw new RuntimeException(failure);
     }
 
     protected void fail(@NotNull String message, @Nullable Throwable cause) {
@@ -861,26 +969,25 @@ public class Mp4Video implements IVideo {
     }
 
     protected void runDeferredHardStopAndReleaseForClose(@NotNull Object player, long closeReleaseVersion, int ticksToWait) {
-        if (!this.shouldExecuteDeferredPlayerRelease(closeReleaseVersion)) return;
+        if (!this.deferredReleaseTracker.isOwned(player, closeReleaseVersion)) return;
         if (ticksToWait > 0) {
             this.queueDeferredHardStopAndReleaseForClose(player, closeReleaseVersion, ticksToWait - 1);
             return;
         }
-        WatermediaReflectionBridge.playerStop(player);
+        if (!this.deferredReleaseTracker.runIfOwned(player, closeReleaseVersion, () -> WatermediaReflectionBridge.playerStop(player))) return;
         this.queueDeferredPlayerRelease(player, closeReleaseVersion, CLOSE_RELEASE_MAX_DEFER_TICKS);
     }
 
     protected void runDeferredPlayerRelease(@NotNull Object player, long closeReleaseVersion, int ticksToWait) {
-        if (!this.shouldExecuteDeferredPlayerRelease(closeReleaseVersion)) return;
-        if ((ticksToWait > 0) && !this.isReadyForDeferredPlayerRelease(player)) {
-            this.queueDeferredPlayerRelease(player, closeReleaseVersion, ticksToWait - 1);
-            return;
+        Mp4VideoDeferredReleaseTracker.ClaimResult claimResult;
+        try {
+            claimResult = this.deferredReleaseTracker.claimAndReleaseWhenReady(player, closeReleaseVersion, () -> ticksToWait <= 0 || this.isReadyForDeferredPlayerRelease(player), () -> WatermediaReflectionBridge.playerRelease(player));
+        } finally {
+            if (!this.deferredReleaseTracker.hasPendingPlayer()) Mp4VideoSoundEngineReloadHandler.unregister(this);
         }
-        WatermediaReflectionBridge.playerRelease(player);
-    }
-
-    protected boolean shouldExecuteDeferredPlayerRelease(long closeReleaseVersion) {
-        return this.closeReleaseRequestVersion == closeReleaseVersion;
+        if (claimResult == Mp4VideoDeferredReleaseTracker.ClaimResult.DEFER) {
+            this.queueDeferredPlayerRelease(player, closeReleaseVersion, ticksToWait - 1);
+        }
     }
 
     protected boolean isReadyForDeferredPlayerRelease(@NotNull Object player) {

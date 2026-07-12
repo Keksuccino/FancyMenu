@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
+import de.keksuccino.fancymenu.util.resource.resources.audio.AudioEngineReloadHandler;
 import net.minecraft.client.sounds.SoundEngine;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,8 +16,14 @@ public class MixinSoundEngine {
 
     @Unique private static final Logger LOGGER_FANCYMENU = LogManager.getLogger();
 
+    @Inject(method = "reload", at = @At("HEAD"))
+    private void before_reload_FancyMenu(CallbackInfo info) {
+        AudioEngineReloadHandler.beforeSoundEngineReload();
+    }
+
     @Inject(method = "reload", at = @At("RETURN"))
-    private void afterReloadSoundEngineFancyMenu(CallbackInfo info) {
+    private void after_reload_FancyMenu(CallbackInfo info) {
+        AudioEngineReloadHandler.afterSoundEngineReload();
         //Reload AudioResourceHandler
         LOGGER_FANCYMENU.info("[FANCYMENU] Reloading AudioResourceHandler after Minecraft SoundEngine reload..");
         ResourceHandlers.getAudioHandler().releaseAll();
