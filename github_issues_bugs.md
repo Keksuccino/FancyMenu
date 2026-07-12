@@ -15,7 +15,7 @@
 - [x] [Buttons do not auto size when auto sizing is enabled](https://github.com/Keksuccino/FancyMenu/issues/1680)
 - [x] [gson MalformedJsonException log spam when some elements have invalid json in their text](https://github.com/Keksuccino/FancyMenu/issues/1675)
 - [ ] [Fancy Entity Renderer element is added but the entity/player does not render](https://github.com/Keksuccino/FancyMenu/issues/1673)
-- [ ] [Item elements have inconsistent layering between items and blocks](https://github.com/Keksuccino/FancyMenu/issues/1672)
+- [x] [Item elements have inconsistent layering between items and blocks](https://github.com/Keksuccino/FancyMenu/issues/1672)
 - [x] [Filled condition not updated when dropping hotbar items with hotkey](https://github.com/Keksuccino/FancyMenu/issues/1669)
 - [ ] [[NF 1.21.1] Invisible screens when menu blur is enabled](https://github.com/Keksuccino/FancyMenu/issues/1665)
 - [x] [Fancy menu issues intro Fabric (1.21.1)](https://github.com/Keksuccino/FancyMenu/issues/1660)

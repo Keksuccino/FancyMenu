@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.properties.Property;
+import de.keksuccino.fancymenu.util.rendering.GuiDepthIsolation;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.konkrete.input.StringUtils;
@@ -123,11 +124,22 @@ public class ItemElement extends AbstractElement {
 
             RenderSystem.enableBlend();
 
-            if (this.cachedStack != null) {
-                this.renderItem(graphics, x, y, w, h, mouseX, mouseY, this.cachedStack);
+            boolean renderedItem = false;
+            try {
+                if (this.cachedStack != null) {
+                    renderedItem = true;
+                    this.renderItem(graphics, x, y, w, h, mouseX, mouseY, this.cachedStack);
+                }
+            } finally {
+                try {
+                    if (renderedItem) {
+                        // GUI block models need depth while they render, but vanilla leaves that depth in the shared target at a fixed GUI Z. Clear it only after the item and its count are flushed so later FancyMenu layers always follow layout order.
+                        GuiDepthIsolation.finishDepthWritingDraw(graphics);
+                    }
+                } finally {
+                    RenderSystem.disableBlend();
+                }
             }
-
-            RenderSystem.disableBlend();
 
         }
 
