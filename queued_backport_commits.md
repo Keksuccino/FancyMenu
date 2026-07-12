@@ -2,7 +2,7 @@
 - [x] `1cc3d77452e820772d8e3a68865c448abb2f4a81`
 - ⚠️ `5e2dc5aab2f76dadf1416c7d25583533aa7e1c45`
   - Not applicable to Minecraft 1.20.1: this version has no `SpriteIconButton.CenteredIcon` class or `extractContents` icon-rendering path to patch.
-- [ ] `7ae5520810d8a35faf1e968bb965953b421b9b07`
+- [x] `7ae5520810d8a35faf1e968bb965953b421b9b07`
 - [ ] `b6795f0cacb50d410ade90992be3913eb8dc7fd8`
 - [ ] `0701c83fe755b40bbc8847c5a8cff0635aab1ddf`
 - [ ] `bc94229bee360236a4c05a3e61a8fbb4d2dcdd57`
