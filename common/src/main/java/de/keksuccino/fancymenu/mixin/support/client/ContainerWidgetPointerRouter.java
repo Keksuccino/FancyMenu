@@ -1,17 +1,21 @@
-package de.keksuccino.fancymenu.mixin.mixins.common.client;
+package de.keksuccino.fancymenu.mixin.support.client;
 
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
+import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.input.MouseButtonEvent;
 
 import java.util.HashMap;
 import java.util.Map;
 
-final class ContainerWidgetPointerRouter {
+public final class ContainerWidgetPointerRouter {
 
     private final Map<Integer, GuiEventListener> ownersByButton = new HashMap<>();
 
-    boolean mouseClicked(ContainerWidgetPointerRoutingBridge.Host host, MouseButtonEvent event, boolean isDoubleClick) {
+    public ContainerWidgetPointerRouter() {
+    }
+
+    public boolean mouseClicked(ContainerEventHandler host, MouseButtonEvent event, boolean isDoubleClick) {
         GuiEventListener previousOwner = this.ownersByButton.remove(event.button());
         if (previousOwner != null && event.button() == 0 && host.isDragging()) host.setDragging(false);
 
@@ -28,14 +32,14 @@ final class ContainerWidgetPointerRouter {
         return false;
     }
 
-    boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
         GuiEventListener owner = this.ownersByButton.get(event.button());
         if (owner == null) return false;
         owner.mouseDragged(event, dragX, dragY);
         return true;
     }
 
-    boolean mouseReleased(ContainerWidgetPointerRoutingBridge.Host host, MouseButtonEvent event) {
+    public boolean mouseReleased(ContainerEventHandler host, MouseButtonEvent event) {
         GuiEventListener owner = this.ownersByButton.remove(event.button());
         if (owner == null) return false;
         if (event.button() == 0 && host.isDragging()) host.setDragging(false);

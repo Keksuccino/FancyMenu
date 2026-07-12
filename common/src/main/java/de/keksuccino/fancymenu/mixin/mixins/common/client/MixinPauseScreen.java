@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import de.keksuccino.fancymenu.mixin.support.client.PauseScreenWidgetIdentifierResolver;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;

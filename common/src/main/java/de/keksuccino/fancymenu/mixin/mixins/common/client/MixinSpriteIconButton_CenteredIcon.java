@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import de.keksuccino.fancymenu.mixin.support.client.CenteredIconButtonLabelResolver;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import net.minecraft.client.gui.GuiGraphics;

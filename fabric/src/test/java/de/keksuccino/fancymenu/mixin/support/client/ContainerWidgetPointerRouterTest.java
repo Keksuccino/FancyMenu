@@ -1,8 +1,9 @@
-package de.keksuccino.fancymenu.mixin.mixins.common.client;
+package de.keksuccino.fancymenu.mixin.support.client;
 
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -10,6 +11,7 @@ import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.network.chat.Component;
 import org.junit.jupiter.api.Test;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -177,7 +179,7 @@ class ContainerWidgetPointerRouterTest {
         return new MouseButtonEvent(x, y, new MouseButtonInfo(button, 0));
     }
 
-    private static final class TestHost implements ContainerWidgetPointerRoutingBridge.Host {
+    private static final class TestHost implements ContainerEventHandler {
 
         private List<? extends GuiEventListener> children;
         private GuiEventListener focused;
@@ -193,7 +195,13 @@ class ContainerWidgetPointerRouterTest {
         }
 
         @Override
-        public void setFocused(GuiEventListener listener) {
+        @Nullable
+        public GuiEventListener getFocused() {
+            return this.focused;
+        }
+
+        @Override
+        public void setFocused(@Nullable GuiEventListener listener) {
             this.focused = listener;
         }
 

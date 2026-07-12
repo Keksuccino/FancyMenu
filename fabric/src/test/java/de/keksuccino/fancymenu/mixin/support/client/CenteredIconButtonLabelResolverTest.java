@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.mixin.mixins.common.client;
+package de.keksuccino.fancymenu.mixin.support.client;
 
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;

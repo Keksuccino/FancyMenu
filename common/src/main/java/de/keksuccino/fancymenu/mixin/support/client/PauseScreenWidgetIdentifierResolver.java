@@ -1,8 +1,8 @@
-package de.keksuccino.fancymenu.mixin.mixins.common.client;
+package de.keksuccino.fancymenu.mixin.support.client;
 
 import javax.annotation.Nullable;
 
-final class PauseScreenWidgetIdentifierResolver {
+public final class PauseScreenWidgetIdentifierResolver {
 
     private PauseScreenWidgetIdentifierResolver() {
     }
@@ -12,7 +12,7 @@ final class PauseScreenWidgetIdentifierResolver {
      * The replacements must inherit the standalone identifiers unless both variants coexist, otherwise saved widget customizations stop matching.
      */
     @Nullable
-    static String resolve(String translationKey, boolean hasSendFeedbackButton, boolean hasReportBugsButton) {
+    public static String resolve(String translationKey, boolean hasSendFeedbackButton, boolean hasReportBugsButton) {
         return switch (translationKey) {
             case "menu.game" -> "pause_title_widget";
             case "menu.returnToGame" -> "pause_return_to_game_button";

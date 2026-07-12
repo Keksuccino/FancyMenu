@@ -8,11 +8,11 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
+import de.keksuccino.fancymenu.mixin.support.client.ContainerWidgetPointerRouter;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
@@ -27,11 +27,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import javax.annotation.Nullable;
 
 @Mixin(AbstractContainerScreen.class)
-public class MixinAbstractContainerScreen extends Screen implements ContainerWidgetPointerRoutingBridge.Host {
+public class MixinAbstractContainerScreen extends Screen {
 
     @Shadow @Nullable protected Slot hoveredSlot;
 
-    @Unique private final Object pointerRouter_FancyMenu = ContainerWidgetPointerRoutingBridge.createRouter();
+    @Unique private final ContainerWidgetPointerRouter pointerRouter_FancyMenu = new ContainerWidgetPointerRouter();
     @Unique private int cached_mouseX_FancyMenu;
     @Unique private int cached_mouseY_FancyMenu;
     @Unique private float cached_partial_FancyMenu;
@@ -47,7 +47,7 @@ public class MixinAbstractContainerScreen extends Screen implements ContainerWid
      */
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void before_mouseClicked_FancyMenu(MouseButtonEvent event, boolean isDoubleClick, CallbackInfoReturnable<Boolean> info) {
-        if (ContainerWidgetPointerRoutingBridge.mouseClicked(this.pointerRouter_FancyMenu, this, event, isDoubleClick)) info.setReturnValue(true);
+        if (this.pointerRouter_FancyMenu.mouseClicked(this, event, isDoubleClick)) info.setReturnValue(true);
     }
 
     /**
@@ -55,7 +55,7 @@ public class MixinAbstractContainerScreen extends Screen implements ContainerWid
      */
     @Inject(method = "mouseReleased", at = @At("HEAD"), cancellable = true)
     private void before_mouseReleased_FancyMenu(MouseButtonEvent event, CallbackInfoReturnable<Boolean> info) {
-        if (ContainerWidgetPointerRoutingBridge.mouseReleased(this.pointerRouter_FancyMenu, this, event)) info.setReturnValue(true);
+        if (this.pointerRouter_FancyMenu.mouseReleased(this, event)) info.setReturnValue(true);
     }
 
     /**
@@ -63,7 +63,7 @@ public class MixinAbstractContainerScreen extends Screen implements ContainerWid
      */
     @Inject(method = "mouseDragged", at = @At("HEAD"), cancellable = true)
     private void before_mouseDragged_FancyMenu(MouseButtonEvent event, double dragX, double dragY, CallbackInfoReturnable<Boolean> info) {
-        if (ContainerWidgetPointerRoutingBridge.mouseDragged(this.pointerRouter_FancyMenu, event, dragX, dragY)) info.setReturnValue(true);
+        if (this.pointerRouter_FancyMenu.mouseDragged(event, dragX, dragY)) info.setReturnValue(true);
     }
 
     @Inject(method = "render", at = @At("TAIL"))
