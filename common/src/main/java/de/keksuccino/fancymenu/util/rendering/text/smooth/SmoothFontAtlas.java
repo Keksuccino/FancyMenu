@@ -1,9 +1,14 @@
 package de.keksuccino.fancymenu.util.rendering.text.smooth;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
@@ -23,12 +28,6 @@ import java.awt.font.GlyphVector;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Objects;
-
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.RenderStateShard;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.blaze3d.platform.GlStateManager;
 
 final class SmoothFontAtlas implements AutoCloseable {
 
@@ -84,10 +83,8 @@ final class SmoothFontAtlas implements AutoCloseable {
                     false,
                     false,
                     () -> {
-                        SmoothTextShader.applySdfRange(getEffectiveSdfRange());
-                        SmoothTextShader.applyEdge(SmoothTextShader.getResolvedEdge());
-                        SmoothTextShader.applySharpness(SmoothTextShader.getResolvedSharpness());
-                        RenderSystem.setShader(SmoothTextShader::getShader);
+                        // The atlas stores filtered coverage alpha, not signed distances. Thresholding it as SDF changes the visible glyph size without changing its layout metrics.
+                        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
 
                         TextureManager textureManager = Minecraft.getInstance().getTextureManager();
                         textureManager.getTexture(textureLocation).setFilter(true, false);
@@ -116,10 +113,6 @@ final class SmoothFontAtlas implements AutoCloseable {
 
     int getHeight() {
         return logicalHeight;
-    }
-
-    float getEffectiveSdfRange() {
-        return sdfRange;
     }
 
     ResourceLocation getTextureLocation() {

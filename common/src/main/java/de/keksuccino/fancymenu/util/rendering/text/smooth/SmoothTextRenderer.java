@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.text.smooth;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -342,10 +341,6 @@ public final class SmoothTextRenderer {
         TextDimensions dimension = new TextDimensions(maxWidth, lineHeight * lines);
         LEGACY_MEASURE_CACHE.put(key, dimension);
         return dimension;
-    }
-
-    private static void applyShaderState() {
-        RenderSystem.setShader(SmoothTextShader::getShader);
     }
 
     private static void addGlyph(VertexConsumer buffer, Matrix4f matrix, SmoothFontGlyph glyph, float penX, float baseline, float scale, int color, boolean italic) {
