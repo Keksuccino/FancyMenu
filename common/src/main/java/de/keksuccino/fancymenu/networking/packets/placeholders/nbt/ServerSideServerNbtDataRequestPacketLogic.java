@@ -4,6 +4,7 @@ import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.networking.packets.placeholders.nbt.ServerNbtDataResponsePacket.ResultType;
+import de.keksuccino.fancymenu.util.nbt.NbtNumericValueFormatter;
 import de.keksuccino.fancymenu.util.rendering.text.ComponentParser;
 import net.minecraft.advancements.criterion.NbtPredicate;
 import net.minecraft.commands.CommandSourceStack;
@@ -165,44 +166,11 @@ public class ServerSideServerNbtDataRequestPacketLogic {
             }
             default -> {
                 if (tag instanceof NumericTag numericTag) {
-                    return formatScaledNumeric(numericTag, scale);
+                    return NbtNumericValueFormatter.format(numericTag, scale);
                 }
                 return tag.asString().orElse("");
             }
         }
-    }
-
-    @NotNull
-    private static String formatScaledNumeric(@NotNull NumericTag tag, double scale) {
-        if (scale != 1.0D) {
-            return formatScaled(tag, scale);
-        }
-        return tag.asString().orElse("");
-    }
-
-    @NotNull
-    private static String formatScaled(@NotNull NumericTag tag, double scale) {
-        double scaled = tag.asDouble().orElse(1D) * scale;
-        if (tag instanceof net.minecraft.nbt.FloatTag) {
-            return Float.toString((float) scaled) + "f";
-        }
-        if (tag instanceof net.minecraft.nbt.DoubleTag) {
-            return Double.toString(scaled) + "d";
-        }
-        long rounded = Math.round(scaled);
-        if (tag instanceof net.minecraft.nbt.ByteTag) {
-            return Byte.toString((byte) rounded) + "b";
-        }
-        if (tag instanceof net.minecraft.nbt.ShortTag) {
-            return Short.toString((short) rounded) + "s";
-        }
-        if (tag instanceof net.minecraft.nbt.IntTag) {
-            return Integer.toString((int) rounded);
-        }
-        if (tag instanceof net.minecraft.nbt.LongTag) {
-            return Long.toString(rounded) + "L";
-        }
-        return Long.toString(rounded);
     }
 
     private record CommandContextData(Tag baseTag, CommandSourceStack source) {

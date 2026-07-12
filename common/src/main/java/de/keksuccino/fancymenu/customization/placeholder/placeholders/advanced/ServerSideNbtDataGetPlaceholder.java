@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.networking.packets.placeholders.nbt.ServerNbtDataRequestPacket;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.nbt.NbtNumericValueFormatter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
 import org.jetbrains.annotations.NotNull;
@@ -80,23 +81,10 @@ public class ServerSideNbtDataGetPlaceholder extends Placeholder {
         packet.nbt_path = normalizeValue(dps.values.get("nbt_path"));
         packet.return_type = normalizeValue(dps.values.get("return_type"));
 
-        Double scale = parseScale(dps.values.get("scale"));
-        packet.scale = scale;
+        packet.scale = NbtNumericValueFormatter.parseOptionalScale(dps.values.get("scale"));
 
         PENDING_REQUESTS.put(placeholderKey, now);
         PacketHandler.sendToServer(packet);
-    }
-
-    @Nullable
-    private Double parseScale(@Nullable String scaleString) {
-        if ((scaleString == null) || scaleString.isEmpty()) {
-            return null;
-        }
-        try {
-            return Double.valueOf(scaleString);
-        } catch (NumberFormatException ignored) {
-            return null;
-        }
     }
 
     @Nullable
