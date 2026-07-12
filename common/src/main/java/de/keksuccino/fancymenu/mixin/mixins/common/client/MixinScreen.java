@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.rendering.GuiTextureCoverRenderer;
+import de.keksuccino.fancymenu.util.rendering.MenuBackgroundLifecycleController;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
@@ -42,11 +43,6 @@ import java.util.List;
 @Mixin(Screen.class)
 public abstract class MixinScreen implements CustomizableScreen {
 
-    @Unique private static final Identifier DIRT_TEXTURE_FANCYMENU = Identifier.withDefaultNamespace("textures/block/dirt.png");
-
-	@Unique private final List<GuiEventListener> removeOnInitChildrenFancyMenu = new ArrayList<>();
-	@Unique private boolean nextFocusPath_called_FancyMenu = false;
-
 	@Shadow @Final private List<GuiEventListener> children;
 
     @Shadow
@@ -54,6 +50,11 @@ public abstract class MixinScreen implements CustomizableScreen {
 
     @Shadow
     public int height;
+
+    @Unique private static final Identifier DIRT_TEXTURE_FANCYMENU = Identifier.withDefaultNamespace("textures/block/dirt.png");
+    @Unique private final List<GuiEventListener> removeOnInitChildrenFancyMenu = new ArrayList<>();
+    @Unique private final MenuBackgroundLifecycleController menuBackgroundLifecycleController_FancyMenu = new MenuBackgroundLifecycleController();
+    @Unique private boolean nextFocusPath_called_FancyMenu = false;
 
     @WrapOperation(method = "renderWithTooltipAndSubtitles", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
     private void wrap_render_in_renderWithTooltipAndSubtitles_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {
@@ -94,6 +95,23 @@ public abstract class MixinScreen implements CustomizableScreen {
         }
     }
 
+    @WrapOperation(method = "renderBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderMenuBackground(Lnet/minecraft/client/gui/GuiGraphics;)V"))
+    private void wrap_renderMenuBackground_in_renderBackground_FancyMenu(Screen instance, GuiGraphics graphics, Operation<Void> original) {
+        this.menuBackgroundLifecycleController_FancyMenu.renderLifecycle(this.width, this.height, (x, y, width, height) -> SeamlessWorldLoadingHandler.renderLoadingBackgroundIfActive(graphics, x, y, width, height, Minecraft.getInstance().screen), (x, y, width, height) -> renderGlobalMenuBackground_FancyMenu(graphics, x, y, width, height), () -> original.call(instance, graphics));
+    }
+
+    @Inject(method = "renderMenuBackground(Lnet/minecraft/client/gui/GuiGraphics;)V", at = @At("HEAD"), cancellable = true)
+    private void before_renderMenuBackground_FancyMenu(GuiGraphics graphics, CallbackInfo info) {
+        if (this.menuBackgroundLifecycleController_FancyMenu.renderDirectOneArgumentCall(this.width, this.height, (x, y, width, height) -> SeamlessWorldLoadingHandler.renderLoadingBackgroundIfActive(graphics, x, y, width, height, Minecraft.getInstance().screen), (x, y, width, height) -> renderGlobalMenuBackground_FancyMenu(graphics, x, y, width, height))) {
+            info.cancel();
+        }
+    }
+
+    @WrapOperation(method = "renderMenuBackground(Lnet/minecraft/client/gui/GuiGraphics;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderMenuBackground(Lnet/minecraft/client/gui/GuiGraphics;IIII)V"))
+    private void wrap_renderMenuBackgroundRegion_in_renderMenuBackground_FancyMenu(Screen instance, GuiGraphics graphics, int x, int y, int width, int height, Operation<Void> original) {
+        this.menuBackgroundLifecycleController_FancyMenu.renderNestedBoundedCall(() -> original.call(instance, graphics, x, y, width, height));
+    }
+
     @WrapOperation(method = "renderPanorama", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/PanoramaRenderer;render(Lnet/minecraft/client/gui/GuiGraphics;IIZ)V"))
     private void wrap_panorama_rendering_in_renderPanorama_FancyMenu(PanoramaRenderer instance, GuiGraphics graphics, int width, int height, boolean spin, Operation<Void> original) {
         if (PiPWindowHandler.INSTANCE.isScreenRenderActive()) {
@@ -111,15 +129,9 @@ public abstract class MixinScreen implements CustomizableScreen {
     @Inject(method = "renderMenuBackgroundTexture", at = @At("HEAD"), cancellable = true)
     private static void before_renderMenuBackgroundTexture_FancyMenu(GuiGraphics graphics, Identifier location, int x, int y, float uOffset, float vOffset, int width, int height, CallbackInfo info) {
         Screen currentScreen = Minecraft.getInstance().screen;
-        if (SeamlessWorldLoadingHandler.renderLoadingBackgroundIfActive(graphics, x, y, width, height, currentScreen)) {
+        if (MenuBackgroundLifecycleController.isStaticHelperReplacementAllowed() && SeamlessWorldLoadingHandler.renderLoadingBackgroundIfActive(graphics, x, y, width, height, currentScreen)) {
             info.cancel();
-            return;
         }
-        RenderableResource customBackground = GlobalCustomizationHandler.getCustomMenuBackgroundTexture();
-        if (customBackground == null) return;
-        if (!GuiTextureCoverRenderer.render(graphics, customBackground, x, y, width, height)) return;
-        RenderingUtils.resetShaderColor(graphics);
-        info.cancel();
     }
 
 		@WrapOperation(method = "renderWithTooltipAndSubtitles", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderBackground(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
@@ -189,5 +201,14 @@ public abstract class MixinScreen implements CustomizableScreen {
 	public @NotNull List<GuiEventListener> removeOnInitChildrenFancyMenu() {
 		return this.removeOnInitChildrenFancyMenu;
 	}
+
+    @Unique
+    private static boolean renderGlobalMenuBackground_FancyMenu(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
+        RenderableResource customBackground = GlobalCustomizationHandler.getCustomMenuBackgroundTexture();
+        if (customBackground == null) return false;
+        if (!GuiTextureCoverRenderer.render(graphics, customBackground, x, y, width, height)) return false;
+        RenderingUtils.resetShaderColor(graphics);
+        return true;
+    }
 
 }
