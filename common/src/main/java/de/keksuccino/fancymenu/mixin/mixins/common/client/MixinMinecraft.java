@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.WelcomeWindowBody;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
+import de.keksuccino.fancymenu.customization.gameintro.GameIntroOverlay;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
@@ -62,21 +63,22 @@ import net.minecraft.client.Minecraft;
 @Mixin(value = Minecraft.class)
 public class MixinMinecraft {
 
+	@Shadow @Nullable public Screen screen;
+	@Shadow @Nullable public ClientLevel level;
+	@Shadow @Nullable public LocalPlayer player;
+	@Shadow @Nullable private Overlay overlay;
+
 	@Unique private static final String DUMMY_RESOURCE_RELOAD_LISTENER_RETURN_VALUE_FANCYMENU = "PREPARE RETURN VALUE";
     @Unique private static final String UNKNOWN_SERVER_IP_FANCYMENU = "ERROR";
 	@Unique private static final Logger LOGGER_FANCYMENU = LogManager.getLogger();
 
 	@Unique private static boolean reloadListenerRegisteredFancyMenu = false;
-	@Unique private boolean lateClientInitDoneFancyMenu = false;
+	@Unique private boolean lateClientInitDone_FancyMenu = false;
 	@Unique private Screen lastScreen_FancyMenu = null;
 	@Unique private boolean hasActiveServerConnection_FancyMenu;
 	@Unique private boolean pendingServerJoinEvent_FancyMenu;
 	@Unique @Nullable private String lastServerIp_FancyMenu;
 	@Unique private boolean quitListenerFired_FancyMenu;
-
-	@Shadow @Nullable public Screen screen;
-	@Shadow @Nullable public ClientLevel level;
-	@Shadow @Nullable public LocalPlayer player;
 
 	@Inject(method = "stop", at = @At("HEAD"))
 	private void before_stop_FancyMenu(CallbackInfo info) {
@@ -103,10 +105,14 @@ public class MixinMinecraft {
 		}
 	}
 
+	/** @reason Stop a displaced game intro before Minecraft overwrites the only reference to its overlay and media resource. */
 	@Inject(method = "setOverlay", at = @At("HEAD"))
-	private void beforeSetOverlayFancyMenu(Overlay overlay, CallbackInfo info) {
-		if (!this.lateClientInitDoneFancyMenu) {
-			this.lateClientInitDoneFancyMenu = true;
+	private void before_setOverlay_FancyMenu(@Nullable Overlay overlay, CallbackInfo info) {
+		if ((this.overlay != overlay) && (this.overlay instanceof GameIntroOverlay gameIntroOverlay)) {
+			gameIntroOverlay.onReplaced(overlay);
+		}
+		if (!this.lateClientInitDone_FancyMenu) {
+			this.lateClientInitDone_FancyMenu = true;
 			FancyMenu.lateClientInit();
 		}
 	}

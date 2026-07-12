@@ -34,6 +34,7 @@ import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
 public class GameIntroOverlay extends Overlay {
@@ -47,6 +48,7 @@ public class GameIntroOverlay extends Overlay {
     @NotNull
     protected Screen fadeTo;
     protected PlayableResource intro;
+    private final GameIntroLifecycleController lifecycle;
     protected float opacity = 1.0F;
     protected long start = -1;
     protected boolean fadeToInitialized = false;
@@ -68,6 +70,7 @@ public class GameIntroOverlay extends Overlay {
         super();
         this.fadeTo = Objects.requireNonNull(fadeTo);
         this.intro = Objects.requireNonNull(intro);
+        this.lifecycle = new GameIntroLifecycleController(this.intro::stop, this::initFadeToScreenIfNeeded, () -> GameIntroHandler.introPlayed = true, () -> Minecraft.getInstance().setOverlay(null), throwable -> LOGGER.error("[FANCYMENU] Failed to stop game intro resource!", throwable));
         this.intro.waitForReady(5000);
     }
 
@@ -244,9 +247,18 @@ public class GameIntroOverlay extends Overlay {
     }
 
     protected void close() {
-        this.intro.stop();
+        this.lifecycle.complete();
+    }
+
+    /**
+     * Stops an intro displaced by another overlay without consuming it or initializing its target screen.
+     */
+    public void onReplaced(@Nullable Overlay replacementOverlay) {
+        this.lifecycle.replaceIfDisplaced(this, replacementOverlay);
+    }
+
+    private void initFadeToScreenIfNeeded() {
         if (!this.fadeToInitialized) this.initFadeToScreen();
-        Minecraft.getInstance().setOverlay(null);
     }
 
     public void keyPressed(int keycode, int scancode, int modifiers) {

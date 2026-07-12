@@ -4,7 +4,6 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroHandler;
-import de.keksuccino.fancymenu.customization.gameintro.GameIntroOverlay;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
@@ -15,7 +14,6 @@ import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
-import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -30,7 +28,7 @@ import java.util.Objects;
 public class MixinForgeLoadingOverlay {
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
-    private void beforeRenderScreenFancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
+    private void before_render_FancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
         //Fire RenderPre event for current screen in loading overlay
         if (ScreenUtils.getScreen() != null) {
             RenderingUtils.executeAllPreRenderTasks(graphics, mouseX, mouseY, partial);
@@ -39,7 +37,7 @@ public class MixinForgeLoadingOverlay {
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", shift = At.Shift.AFTER))
-    private void afterRenderScreenFancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
+    private void after_render_FancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
         //Fire RenderPost event for current screen in loading overlay
         if (ScreenUtils.getScreen() != null) {
             EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(ScreenUtils.getScreen(), graphics, mouseX, mouseY, partial));
@@ -47,17 +45,12 @@ public class MixinForgeLoadingOverlay {
         }
     }
 
+    /** @reason Forge overrides the startup loading render path, so its target-screen initialization must use the same retry-safe intro lifecycle as vanilla reload overlays. */
     @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init(Lnet/minecraft/client/Minecraft;II)V"))
-    private void wrapInitScreenFancyMenu(Screen instance, Minecraft mc, int width, int height, Operation<Void> original) {
+    private void wrap_init_FancyMenu(Screen instance, Minecraft mc, int width, int height, Operation<Void> original) {
 
-        if (!GameIntroHandler.introPlayed && GameIntroHandler.shouldPlayIntro()) {
-            GameIntroHandler.introPlayed = true;
-            PlayableResource intro = GameIntroHandler.getIntro();
-            if (intro != null) {
-                Minecraft.getInstance().setOverlay(new GameIntroOverlay(instance, intro));
-                return;
-            }
-        }
+        // Forge overrides LoadingOverlay.render during startup, so this path must share the same retry-safe intro start as later vanilla reload overlays.
+        if (GameIntroHandler.tryStartIntro(instance)) return;
 
         ScreenCustomization.setIsNewMenu(true);
 

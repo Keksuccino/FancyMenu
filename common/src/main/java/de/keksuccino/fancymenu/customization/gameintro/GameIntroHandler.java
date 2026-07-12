@@ -6,19 +6,41 @@ import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
 import de.keksuccino.fancymenu.util.file.type.types.VideoFileType;
-import de.keksuccino.fancymenu.util.resource.*;
+import de.keksuccino.fancymenu.util.resource.PlayableResource;
+import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
+import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.NotNull;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class GameIntroHandler {
 
-	private static final Logger LOGGER = LogManager.getLogger();
-
 	public static boolean introPlayed = false;
+
+    /**
+     * Starts an unconsumed intro for a loading overlay. The intro remains unconsumed until its overlay completes, allowing a queued resource reload to displace and retry it.
+     */
+    public static boolean tryStartIntro(@NotNull Screen fadeTo) {
+        Objects.requireNonNull(fadeTo);
+        return tryStartIntro(introPlayed, GameIntroHandler::getIntro, intro -> Minecraft.getInstance().setOverlay(new GameIntroOverlay(fadeTo, intro)));
+    }
+
+    static <T> boolean tryStartIntro(boolean alreadyPlayed, @NotNull Supplier<T> introSupplier, @NotNull Consumer<T> introStarter) {
+        Objects.requireNonNull(introSupplier);
+        Objects.requireNonNull(introStarter);
+        if (alreadyPlayed) return false;
+        T intro = introSupplier.get();
+        if (intro == null) return false;
+        introStarter.accept(intro);
+        return true;
+    }
 
 	public static boolean shouldPlayIntro() {
 		if (FancyMenu.getOptions().gameIntroAnimation.getValue().trim().isEmpty()) return false;
