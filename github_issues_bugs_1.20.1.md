@@ -1,4 +1,0 @@
-- [ ] [having irradiated effect from alex's caves in third person causes the render to go black](https://github.com/Keksuccino/FancyMenu/issues/1689)
-- [ ] [Fancy Entity Renderer element is added but the entity/player does not render](https://github.com/Keksuccino/FancyMenu/issues/1673)
-- [ ] [Entity Player object not working](https://github.com/Keksuccino/FancyMenu/issues/1657)
-- [ ] [Creative Inventory Items Having No Tooltp Text Whe...](https://github.com/Keksuccino/FancyMenu/issues/1531)

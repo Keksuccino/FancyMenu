@@ -1,1 +1,0 @@
-- [ ] [Texture background menu issue on Fabric 1.19.2](https://github.com/Keksuccino/FancyMenu/issues/1658)
