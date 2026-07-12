@@ -1,12 +1,9 @@
 package de.keksuccino.fancymenu.customization.element;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-import com.mojang.serialization.JsonOps;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
@@ -15,13 +12,13 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
-import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.properties.PropertyHolder;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.ComponentParser;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.Minecraft;
@@ -32,7 +29,6 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.chat.MutableComponent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -1159,36 +1155,23 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	}
 
 	/**
-	 * Replaces placeholders and deserializes serialized {@link MutableComponent}s.
+	 * Replaces formatting codes and placeholders, then deserializes serialized {@link Component}s.
 	 */
 	@NotNull
 	public static Component buildComponent(@NotNull String serializedComponentOrPlainText) {
         serializedComponentOrPlainText = TextFormattingUtils.replaceFormattingCodes(serializedComponentOrPlainText, "&", "§");
-		serializedComponentOrPlainText = PlaceholderParser.replacePlaceholders(serializedComponentOrPlainText);
-		if (!serializedComponentOrPlainText.startsWith("{") && !serializedComponentOrPlainText.startsWith("[")) return Component.literal(serializedComponentOrPlainText);
-		try {
-			Component c = deserializeComponentFromJson(serializedComponentOrPlainText);
-			if (c != null) return c;
-		} catch (Exception ignore) {}
-		return Component.literal(serializedComponentOrPlainText);
+		return ComponentParser.fromJsonOrPlainText(serializedComponentOrPlainText);
 	}
 
+	/**
+	 * Compatibility bridge for subclasses compiled against the former element-local component parser.
+	 *
+	 * @deprecated Use {@link ComponentParser#fromJson(String)}. Parsing is centralized there so all component entry points share the same fallback behavior.
+	 */
+	@Deprecated
 	@Nullable
 	protected static MutableComponent deserializeComponentFromJson(@NotNull String json) {
-		try {
-			JsonElement jsonElement = JsonParser.parseString(json);
-			return (jsonElement == null) ? null : deserializeComponent(jsonElement);
-		} catch (Exception ex) {
-			LOGGER.error("[FANCYMENU] Failed to deserialize Component!", ex);
-		}
-		return null;
-	}
-
-	private static MutableComponent deserializeComponent(JsonElement jsonElement) {
-		if (ComponentSerialization.CODEC.parse(JsonOps.INSTANCE, jsonElement).getOrThrow() instanceof MutableComponent m) {
-			return m;
-		}
-		throw new IllegalStateException("Deserialized component was not a MutableComponent!");
+		return ComponentParser.fromJson(json);
 	}
 
 	@Override
