@@ -44,10 +44,8 @@
 - Do not simply implement things without a second thought. Simulate in your reasoning STEP-BY-STEP what each step of the execution chain of the code you implemented does, where it does something, and what could be side effects of it. Chase the whole code execution chain step-by-step, to notice edge cases, incomplete implementations, bugs, etc.
 - Always implement everything in the best way possible. Implement everything in the most optimized, performance-friendly, and professional way, following best practices for everything.
 - Never rush tasks. It doesn't matter how long a task will take, you always take the best possible route instead of the fastest.
-- Everything always needs to be fully compatible with Sodium and Iris. Both mods are set as dependency for the `fabric` module, for testing.
-- Everything always needs to work with and without Sodium and Iris.
 - Always clean up after yourself! When finishing a task, remove leftover code from testing, code from earlier unsuccessful implementation attempts, and dead code.
-- When you work with Vanilla Minecraft code, or Iris/Sodium, always deeply analyze the source code for these, so you really understand what you are working with and how the related code works.
+- When you work with Vanilla Minecraft code, always deeply analyze the source code for these, so you really understand what you are working with and how the related code works.
 - ALWAYS move most of the actual work to subagents. You just orchestrate your subagents as main agent. You keep and eye on them in case they do something stupid, so you can steer them, or correct their mistakes, if needed. Make sure to move as much work as possible to subagents.
 
 ## Mod Conflicts
@@ -71,7 +69,6 @@
 ## Minecraft Sources
 - You have access to the full Minecraft 1.20.1 sources in `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.20.1/minecraft/fabric/` and `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.20.1/minecraft/forge/`.
 - Sources for some libraries used by Minecraft 1.20.1 are in `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.20.1/libraries/`.
-- Sources for Sodium, Sodium Extra, and Iris are in `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.20.1/libraries/`.
 - The following folder also contains sources for various other Minecraft versions, in case it is needed to compare Vanilla Minecraft code for something: `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES`.
 - Use the Minecraft sources for research when working with Minecraft-related code.
 - Always prefer the sources provided in the `/<mc_version>/libraries/` folder instead of trying to unpack source JARs yourself. Only do that when the provided sources don't contain what you need.
