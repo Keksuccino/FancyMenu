@@ -94,7 +94,8 @@
     "client.MixinTitleScreen",
     "client.MixinSelectWorldScreen",
     "client.MixinWorldOpenFlows",
-    "client.MixinWorldListEntry"
+    "client.MixinWorldListEntry",
+    "client.MixinWindow"
   ],
   "mixins": [
     "server.MixinLivingEntity",

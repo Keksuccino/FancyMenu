@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.events.screen.ScreenMouseScrollEvent;
 import de.keksuccino.fancymenu.util.MouseUtil;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.input.ClicksPerSecondTracker;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.rendering.glsl.GlslRuntimeEventTracker;
@@ -48,6 +49,7 @@ public class MixinMouseHandler {
     private void head_onPress_FancyMenu(long window, int button, int action, int modifiers, CallbackInfo info) {
         if (window != this.mc_FancyMenu.getWindow().getWindow()) return;
 
+        InputUtils.updateActiveModifiers(modifiers);
         boolean pressed = (action == GLFW.GLFW_PRESS);
         int mappedButton = button;
         // Mirror vanilla macOS fake right click behavior (Ctrl + Left Click).
@@ -117,13 +119,13 @@ public class MixinMouseHandler {
     private void before_getOverlay_in_onPress_FancyMenu(long window, int button, int action, int modifiers, CallbackInfo info) {
 
         boolean clicked = (action == GLFW.GLFW_PRESS);
+        int mappedButton = (this.mappedButtonOnPress_FancyMenu != -1) ? this.mappedButtonOnPress_FancyMenu : button;
         double mouseX = this.xpos * (double)Minecraft.getInstance().getWindow().getGuiScaledWidth() / (double)Minecraft.getInstance().getWindow().getScreenWidth();
         double mouseY = this.ypos * (double)Minecraft.getInstance().getWindow().getGuiScaledHeight() / (double)Minecraft.getInstance().getWindow().getScreenHeight();
 
         if (Minecraft.getInstance().getOverlay() instanceof GameIntroOverlay o) {
             // Consume all mouse button events while the intro overlay is active.
             if (clicked) {
-                int mappedButton = (this.mappedButtonOnPress_FancyMenu != -1) ? this.mappedButtonOnPress_FancyMenu : button;
                 o.mouseClicked(mappedButton);
             }
             info.cancel();
@@ -132,9 +134,9 @@ public class MixinMouseHandler {
 
         boolean cancel = false;
         if (clicked) {
-            if (ScreenOverlayHandler.INSTANCE.mouseClicked(mouseX, mouseY, button)) cancel = true;
+            if (ScreenOverlayHandler.INSTANCE.mouseClicked(mouseX, mouseY, mappedButton)) cancel = true;
         } else {
-            if (ScreenOverlayHandler.INSTANCE.mouseReleased(mouseX, mouseY, button)) cancel = true;
+            if (ScreenOverlayHandler.INSTANCE.mouseReleased(mouseX, mouseY, mappedButton)) cancel = true;
         }
         if (cancel) {
             info.cancel();

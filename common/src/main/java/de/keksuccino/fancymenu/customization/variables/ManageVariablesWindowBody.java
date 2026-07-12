@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -24,7 +25,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.Mth;
@@ -254,33 +254,33 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
             }
         }
 
-        if (Screen.hasControlDown() && !Screen.hasShiftDown() && !Screen.hasAltDown() && this.isLetterKeyPressed(keyCode, scanCode, "s")) {
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (modifiers & GLFW.GLFW_MOD_SHIFT) == 0 && (modifiers & GLFW.GLFW_MOD_ALT) == 0 && this.isLetterKeyPressed(keyCode, scanCode, "s")) {
             if ((this.doneButton != null) && this.doneButton.visible && this.doneButton.active) {
                 this.doneButton.onPress();
                 return true;
             }
         }
 
-        if (Screen.hasControlDown() && "z".equals(keyName)) {
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && "z".equals(keyName)) {
             if (this.undo()) {
                 return true;
             }
         }
 
-        if (Screen.hasControlDown() && "y".equals(keyName)) {
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && "y".equals(keyName)) {
             if (this.redo()) {
                 return true;
             }
         }
 
         boolean searchBarFocused = (this.searchBar != null) && this.searchBar.isFocused();
-        if (!contextMenuActive && !searchBarFocused && Screen.hasControlDown() && "c".equals(keyName)) {
+        if (!contextMenuActive && !searchBarFocused && InputUtils.isGuiShortcutModifierDown(modifiers) && "c".equals(keyName)) {
             if (this.copySelectedVariableToClipboard()) {
                 return true;
             }
         }
 
-        if (!contextMenuActive && !searchBarFocused && Screen.hasControlDown() && "v".equals(keyName)) {
+        if (!contextMenuActive && !searchBarFocused && InputUtils.isGuiShortcutModifierDown(modifiers) && "v".equals(keyName)) {
             if (this.pasteVariableFromClipboard()) {
                 return true;
             }
@@ -323,7 +323,7 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
         boolean contextMenuActive = (this.rightClickContextMenu != null) && this.rightClickContextMenu.isOpen();
-        if (!contextMenuActive && this.shouldRouteTypedCharacterToSearchBar(codePoint) && (this.searchBar != null) && !this.searchBar.isFocused()) {
+        if (!contextMenuActive && this.shouldRouteTypedCharacterToSearchBar(codePoint, modifiers) && (this.searchBar != null) && !this.searchBar.isFocused()) {
             this.focusSearchBar();
             if (this.searchBar.charTyped(codePoint, modifiers)) {
                 return true;
@@ -423,8 +423,8 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
         return true;
     }
 
-    private boolean shouldRouteTypedCharacterToSearchBar(char codePoint) {
-        if (hasControlDown() || hasAltDown()) {
+    private boolean shouldRouteTypedCharacterToSearchBar(char codePoint, int modifiers) {
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) || (modifiers & GLFW.GLFW_MOD_ALT) != 0) {
             return false;
         }
         return !Character.isISOControl(codePoint);

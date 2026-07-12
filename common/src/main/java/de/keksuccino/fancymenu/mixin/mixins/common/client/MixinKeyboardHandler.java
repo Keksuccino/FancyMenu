@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.glsl.GlslRuntimeEventTracker;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import net.minecraft.client.*;
@@ -34,6 +35,7 @@ public abstract class MixinKeyboardHandler {
     @Inject(method = "keyPress", at = @At("HEAD"), cancellable = true)
     private void head_keyPress_FancyMenu(long windowPointer, int key, int scanCode, int action, int modifiers, CallbackInfo info) {
         if (windowPointer == Minecraft.getInstance().getWindow().getWindow()) {
+            InputUtils.updateActiveModifiers(modifiers);
             if (action == 1 || action == 2) {
                 if (ScreenOverlayHandler.INSTANCE.keyPressed(key, scanCode, modifiers)) info.cancel();
             } else if (action == 0) {
@@ -45,6 +47,7 @@ public abstract class MixinKeyboardHandler {
     @Inject(method = "charTyped", at = @At("HEAD"), cancellable = true)
     private void head_charTyped_FancyMenu(long windowPointer, int codePoint, int modifiers, CallbackInfo info) {
         if (windowPointer == Minecraft.getInstance().getWindow().getWindow()) {
+            InputUtils.updateActiveModifiers(modifiers);
             GlslRuntimeEventTracker.onCharTyped(codePoint, modifiers);
             if (Character.charCount(codePoint) == 1) {
                 if (ScreenOverlayHandler.INSTANCE.charTyped((char)codePoint, modifiers)) info.cancel();

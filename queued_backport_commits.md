@@ -9,7 +9,7 @@
 - ⚠️ `bc94229bee360236a4c05a3e61a8fbb4d2dcdd57`
   - Not applicable to Minecraft 1.20.1: active client/server scale-1 paths already use `NumericTag#getAsString()`, whose `StringTagVisitor` output preserves exact typed SNBT, making the source `toString()` change output-identical.
 - [x] `e97aa4048aa39bb18080df693a3e7dc2721aedac`
-- [ ] `69f4e7679e2c225c1d3c795f502319e14540fb87`
+- [x] `69f4e7679e2c225c1d3c795f502319e14540fb87`
 - [ ] `757bfa0729d7882edf0f83efbe46954c5724628b`
 - [ ] `2adc7ed7345218febbfd68bea8b7bfbe6c7ed371`
 - [ ] `717cfd75f317c387889b1f00ca717bcd394d7a90`
