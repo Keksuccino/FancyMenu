@@ -58,9 +58,8 @@ public class RenderingUtils {
         if (backgroundBlurriness < 1) {
             return 0.0F;
         }
-        double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
         float convertedBackgroundBlurriness = (float)backgroundBlurriness * VANILLA_BACKGROUND_BLUR_TO_GUI_BLUR_MULTIPLIER;
-        return guiScale > 0.0D ? convertedBackgroundBlurriness / (float)guiScale : convertedBackgroundBlurriness;
+        return GuiBlurRenderer.convertFramebufferBlurRadiusToGui(convertedBackgroundBlurriness);
     }
 
     public static void setShaderColor(@NotNull GuiGraphics graphics, float red, float green, float blue, float alpha) {

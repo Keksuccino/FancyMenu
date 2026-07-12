@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGameRenderer;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphics;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPostChain;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPostPass;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
@@ -139,6 +140,17 @@ public final class GuiBlurRenderer {
     }
 
     /**
+     * Converts a blur radius in framebuffer pixels to the GUI coordinate space used by blur areas.
+     */
+    public static float convertFramebufferBlurRadiusToGui(float framebufferBlurRadius) {
+        return convertFramebufferBlurRadiusToGui(framebufferBlurRadius, getEffectiveGuiScale_FancyMenu());
+    }
+
+    static float convertFramebufferBlurRadiusToGui(float framebufferBlurRadius, double guiScale) {
+        return (float)(framebufferBlurRadius / getEffectiveGuiScale_FancyMenu(guiScale));
+    }
+
+    /**
      * Renders a blur area using FancyMenu's blur intensity setting (a normalized multiplier, e.g., 0.25–3.0).
      * Callers provide the base radius they would normally use; this helper applies the current intensity
      * and renders the blur so UI code doesn’t need to recompute the radius everywhere.
@@ -247,23 +259,22 @@ public final class GuiBlurRenderer {
         ensurePostChainSize(postChain, targetWidth, targetHeight);
 
         BlurArea area = queuedBlurArea.area_FancyMenu;
-        float guiScale = (float) minecraft.getWindow().getGuiScale();
-        float scaledWidth = area.width * guiScale;
-        float scaledHeight = area.height * guiScale;
-        if (scaledWidth <= 0.0F || scaledHeight <= 0.0F) {
+        double guiScale = getEffectiveGuiScale_FancyMenu();
+        float scaledWidth = (float)(area.width * guiScale);
+        float scaledHeight = (float)(area.height * guiScale);
+        float scaledX = (float)(area.x * guiScale);
+        float scaledY = (float)(targetHeight - area.y * guiScale - area.height * guiScale);
+        if (!isValidScaledGeometry(scaledX, scaledY, scaledWidth, scaledHeight)) {
             return;
         }
 
-        float scaledX = area.x * guiScale;
-        float scaledY = targetHeight - (area.y * guiScale) - scaledHeight;
-        float rawBlurRadius = area.blurRadius * guiScale;
-        float blurRadius = Float.isFinite(rawBlurRadius) && rawBlurRadius > 0.0F ? rawBlurRadius : 0.0F;
+        float blurRadius = scaleBlurRadiusToFramebuffer(area.blurRadius, guiScale);
         CornerRadii scaledRadii = area.cornerRadii.scaled(guiScale).clamped(Math.min(scaledWidth, scaledHeight) * 0.5F).flipVertical();
 
         DrawableColor.FloatColor tint = area.tint.getAsFloats();
         RenderRotationUtil.Rotation2D maskRotation = queuedBlurArea.maskRotation_FancyMenu;
         RenderRotationUtil.Rotation2D scissorRotation = maskRotation;
-        float margin = guiScale > 0.0F ? (blurRadius / guiScale) * 4.0F : 0.0F;
+        float margin = (float)(blurRadius / guiScale * 4.0D);
         PostPassScissor scissor = toPostPassScissor(resolveScissorBounds(area, margin, scissorRotation), guiScale, targetWidth, targetHeight);
         if (scissor.isEmpty()) {
             return;
@@ -361,11 +372,18 @@ public final class GuiBlurRenderer {
         RenderSystem.getDevice().createCommandEncoder().writeToBuffer(currentBuffer.slice(), data);
     }
 
-    private static PostPassScissor toPostPassScissor(ScissorBounds bounds, float guiScale, int targetWidth, int targetHeight) {
-        float minX = bounds.minX() * guiScale;
-        float maxX = bounds.maxX() * guiScale;
-        float minY = targetHeight - bounds.maxY() * guiScale;
-        float maxY = targetHeight - bounds.minY() * guiScale;
+    static PostPassScissor toPostPassScissor(ScissorBounds bounds, double guiScale, int targetWidth, int targetHeight) {
+        if (targetWidth <= 0 || targetHeight <= 0 || !bounds.isFinite() || bounds.maxX() <= bounds.minX() || bounds.maxY() <= bounds.minY()) {
+            return new PostPassScissor(0, 0, 0, 0);
+        }
+        guiScale = getEffectiveGuiScale_FancyMenu(guiScale);
+        double minX = bounds.minX() * guiScale;
+        double maxX = bounds.maxX() * guiScale;
+        double minY = targetHeight - bounds.maxY() * guiScale;
+        double maxY = targetHeight - bounds.minY() * guiScale;
+        if (!Double.isFinite(minX) || !Double.isFinite(maxX) || !Double.isFinite(minY) || !Double.isFinite(maxY)) {
+            return new PostPassScissor(0, 0, 0, 0);
+        }
 
         int x0 = clampToInt(floorToInt(minX), 0, targetWidth);
         int y0 = clampToInt(floorToInt(minY), 0, targetHeight);
@@ -408,13 +426,13 @@ public final class GuiBlurRenderer {
 
     public record PostPassScissor(int x, int y, int width, int height) {
 
-        private boolean isEmpty() {
+        boolean isEmpty() {
             return width <= 0 || height <= 0;
         }
 
     }
 
-    private record CornerRadii(float topLeft, float topRight, float bottomRight, float bottomLeft) {
+    record CornerRadii(float topLeft, float topRight, float bottomRight, float bottomLeft) {
 
         private static CornerRadii uniform(float radius) {
             return new CornerRadii(radius, radius, radius, radius);
@@ -432,8 +450,8 @@ public final class GuiBlurRenderer {
             return new CornerRadii(topLeft, topRight, bottomRight, bottomLeft);
         }
 
-        private CornerRadii scaled(float factor) {
-            return new CornerRadii(topLeft * factor, topRight * factor, bottomRight * factor, bottomLeft * factor);
+        CornerRadii scaled(double factor) {
+            return new CornerRadii((float)(topLeft * factor), (float)(topRight * factor), (float)(bottomRight * factor), (float)(bottomLeft * factor));
         }
 
         private CornerRadii clamped(float maxRadius) {
@@ -524,15 +542,41 @@ public final class GuiBlurRenderer {
         return Math.min(value, max);
     }
 
-    private static int floorToInt(float value) {
+    private static int floorToInt(double value) {
         return (int) Math.floor(value);
     }
 
-    private static int ceilToInt(float value) {
+    private static int ceilToInt(double value) {
         return (int) Math.ceil(value);
     }
 
-    private record ScissorBounds(float minX, float minY, float maxX, float maxY) {
+    static boolean isValidScaledGeometry(float x, float y, float width, float height) {
+        return Float.isFinite(x) && Float.isFinite(y) && Float.isFinite(width) && Float.isFinite(height) && width > 0.0F && height > 0.0F;
+    }
+
+    static float scaleBlurRadiusToFramebuffer(float guiBlurRadius, double guiScale) {
+        double rawBlurRadius = guiBlurRadius * guiScale;
+        return Double.isFinite(rawBlurRadius) && rawBlurRadius > 0.0D && rawBlurRadius <= Float.MAX_VALUE ? (float)rawBlurRadius : 0.0F;
+    }
+
+    /**
+     * Blur areas are extracted in the same logical coordinate space as FancyMenu's precise GUI projection.
+     * Keep every framebuffer conversion on this scale; Window#getGuiScale() only exposes its floored integer part while a fractional scale is active.
+     */
+    private static double getEffectiveGuiScale_FancyMenu() {
+        return getEffectiveGuiScale_FancyMenu(WindowHandler.getGuiScale());
+    }
+
+    static double getEffectiveGuiScale_FancyMenu(double guiScale) {
+        return Double.isFinite(guiScale) && guiScale > 0.0D ? guiScale : 1.0D;
+    }
+
+    record ScissorBounds(float minX, float minY, float maxX, float maxY) {
+
+        boolean isFinite() {
+            return Float.isFinite(minX) && Float.isFinite(minY) && Float.isFinite(maxX) && Float.isFinite(maxY);
+        }
+
     }
 
 }
