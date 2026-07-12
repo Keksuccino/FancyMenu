@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 
 public class AnimationControllerEditorElement extends AbstractEditorElement<AnimationControllerEditorElement, AnimationControllerElement> {
@@ -35,17 +36,7 @@ public class AnimationControllerEditorElement extends AbstractEditorElement<Anim
 
         this.rightClickMenu.addClickableEntry("manage_keyframes", Component.translatable("fancymenu.elements.animation_controller.manage_keyframes"),
                         (menu, entry) -> {
-                            KeyframeManagerScreen managerScreen = new KeyframeManagerScreen(
-                                    this.element,
-                                    callback -> {
-                                        if (callback != null) {
-                                            this.editor.history.saveSnapshot();
-                                            this.element.keyframes = callback.keyframes();
-                                            this.element.offsetMode = callback.isOffsetMode();
-                                        }
-                                        this.openContextMenuScreen(this.editor);
-                                    }
-                            );
+            KeyframeManagerScreen managerScreen = new KeyframeManagerScreen(this.editor, this.element, this::handleKeyframeManagerResult);
             this.openContextMenuScreen(managerScreen);
         })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.manage_keyframes.desc")))
@@ -114,6 +105,15 @@ public class AnimationControllerEditorElement extends AbstractEditorElement<Anim
                 .setStackable(false)
                 .setIcon(MaterialIcons.LINK);
 
+    }
+
+    private void handleKeyframeManagerResult(@Nullable KeyframeManagerScreen.AnimationControllerMetadata result) {
+        if (result != null) {
+            this.editor.history.saveSnapshot();
+            this.element.keyframes = result.keyframes();
+            this.element.offsetMode = result.isOffsetMode();
+        }
+        this.openContextMenuScreen(this.editor);
     }
 
 }
