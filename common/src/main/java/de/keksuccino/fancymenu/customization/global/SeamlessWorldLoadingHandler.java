@@ -6,7 +6,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
 import de.keksuccino.fancymenu.util.file.FileUtils;
-import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.rendering.GuiTextureCoverRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
@@ -144,23 +144,12 @@ public final class SeamlessWorldLoadingHandler {
             return false;
         }
 
-        AspectRatio aspectRatio = background.getAspectRatio();
-        int[] renderSize = aspectRatio.getAspectRatioSizeByMinimumSize(width, height);
-        int renderWidth = renderSize[0];
-        int renderHeight = renderSize[1];
-        if (renderWidth <= 0 || renderHeight <= 0) {
-            return false;
-        }
-
-        int renderX = x + (width - renderWidth) / 2;
-        int renderY = y + (height - renderHeight) / 2;
-
         RenderSystem.enableBlend();
         RenderingUtils.resetShaderColor(graphics);
-        graphics.blit(location, renderX, renderY, 0.0F, 0.0F, renderWidth, renderHeight, renderWidth, renderHeight);
+        boolean rendered = GuiTextureCoverRenderer.render(graphics, location, x, y, width, height, textureWidth, textureHeight);
         RenderingUtils.resetShaderColor(graphics);
         RenderSystem.disableBlend();
-        return true;
+        return rendered;
     }
 
     @Nullable
