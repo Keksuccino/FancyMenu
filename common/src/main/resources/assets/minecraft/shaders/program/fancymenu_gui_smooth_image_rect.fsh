@@ -32,6 +32,21 @@ float sdRoundedBox(vec2 p, vec2 b, vec4 r) {
     return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - rad;
 }
 
+// Clamp the selected region to valid texel centers so bilinear filtering cannot cross its edges.
+// Normalized bounds preserve reversed mapping, while center-limiting safely collapses sub-texel and out-of-range regions.
+vec2 clampUvToRegionTexelCenters(vec2 uv) {
+    vec2 regionMin = min(UvMin, UvMax);
+    vec2 regionMax = max(UvMin, UvMax);
+    vec2 textureSizePixels = max(vec2(textureSize(ImageSampler, 0)), vec2(1.0));
+    vec2 halfTexel = 0.5 / textureSizePixels;
+    vec2 textureMin = halfTexel;
+    vec2 textureMax = vec2(1.0) - halfTexel;
+    vec2 regionCenter = clamp((regionMin + regionMax) * 0.5, textureMin, textureMax);
+    vec2 sampleMin = min(max(regionMin + halfTexel, textureMin), regionCenter);
+    vec2 sampleMax = max(min(regionMax - halfTexel, textureMax), regionCenter);
+    return clamp(uv, sampleMin, sampleMax);
+}
+
 void main() {
     // Convert 0..1 UV to actual Screen Pixel coordinates
     vec2 pixel = texCoord * OutSize;
@@ -48,7 +63,7 @@ void main() {
     float dist = sdRoundedBox(local, halfSize, CornerRadii);
 
     // 2. Anti-Aliasing
-    float aa = fwidth(dist);
+    float aa = max(fwidth(dist) * 0.5, 0.0001);
     float mask = 1.0 - smoothstep(-aa, aa, dist);
 
     if (mask <= 0.0) {
@@ -59,10 +74,8 @@ void main() {
     vec2 uv = (localPixel - Rect.xy) / Rect.zw;
     uv.y = 1.0 - uv.y;
 
-    vec2 uvMin = min(UvMin, UvMax);
-    vec2 uvMax = max(UvMin, UvMax);
     uv = mix(UvMin, UvMax, uv);
-    uv = clamp(uv, uvMin, uvMax);
+    uv = clampUvToRegionTexelCenters(uv);
 
     vec4 texColor = texture(ImageSampler, uv);
     vec3 rgb = texColor.rgb * Color.rgb;
