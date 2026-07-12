@@ -99,6 +99,7 @@ public abstract class MixinTitleScreen extends Screen implements TitleScreenBran
 
         this.brandingRenderer_FancyMenu = new BrandingRenderer(this.height);
         BrandingRenderer branding = this.brandingRenderer_FancyMenu;
+        if (this.capturedBrandingText_FancyMenu != null) branding.setLines(List.of(Component.literal(this.capturedBrandingText_FancyMenu)));
         this.brandingWidget_FancyMenu = this.addRenderableWidget(new RendererWidget(branding.getDefaultPositionX(), branding.getDefaultPositionY() + 1, branding.getTotalWidth(), branding.getTotalHeight(),
                         (graphics, mouseX, mouseY, partial, x, y, width, height, renderer) -> {
                             branding.setOpacity(renderer.getAlpha());
