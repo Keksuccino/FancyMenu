@@ -6,7 +6,8 @@
 - [x] `b6795f0cacb50d410ade90992be3913eb8dc7fd8`
 - ⚠️ `0701c83fe755b40bbc8847c5a8cff0635aab1ddf`
   - Not applicable to Minecraft 1.20.1: it has no deferred `GuiRenderer`/`GuiRenderState` batching path; GLSL and GUI blur rendering already flush and draw immediately in call order.
-- [ ] `bc94229bee360236a4c05a3e61a8fbb4d2dcdd57`
+- ⚠️ `bc94229bee360236a4c05a3e61a8fbb4d2dcdd57`
+  - Not applicable to Minecraft 1.20.1: active client/server scale-1 paths already use `NumericTag#getAsString()`, whose `StringTagVisitor` output preserves exact typed SNBT, making the source `toString()` change output-identical.
 - [ ] `e97aa4048aa39bb18080df693a3e7dc2721aedac`
 - [ ] `69f4e7679e2c225c1d3c795f502319e14540fb87`
 - [ ] `757bfa0729d7882edf0f83efbe46954c5724628b`
