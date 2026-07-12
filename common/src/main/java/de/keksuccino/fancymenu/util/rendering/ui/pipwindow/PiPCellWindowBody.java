@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -149,6 +150,21 @@ public abstract class PiPCellWindowBody extends CellScreen implements PipableScr
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    /**
+     * Cell rows precede their scroll area in the screen's child list. Forwarding a wheel event to only the first
+     * hovered child can prevent the later scroll area from receiving it when the earlier child declines to handle
+     * scrolling. PiP cell windows therefore route wheel events through every child in order until one handles it.
+     */
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
+        for (GuiEventListener listener : this.children()) {
+            if (listener.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
