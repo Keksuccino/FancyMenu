@@ -1,1 +1,2 @@
 - [x] [[Incompatibility] forcecloseworldloadingscreen prevents FancyMenu layout from loading](https://github.com/Keksuccino/FancyMenu/issues/1666)
+- [x] [FancyMenu conflict with Mod Menu's mod counter on title screen](https://github.com/Keksuccino/FancyMenu/issues/1606)
