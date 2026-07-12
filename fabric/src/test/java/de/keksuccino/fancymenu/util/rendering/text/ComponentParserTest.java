@@ -1,8 +1,13 @@
 package de.keksuccino.fancymenu.util.rendering.text;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
@@ -14,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ComponentParserTest {
@@ -80,6 +86,27 @@ class ComponentParserTest {
         for (int i = 0; i < 25; i++) {
             assertEquals(text, ComponentParser.fromJsonOrPlainText(text).getString());
         }
+    }
+
+    @Test
+    void serializesOpenFileClickActionsInsideNestedHoverText() {
+        Component hoverText = Component.literal("Nested details").setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, "/tmp/nested.txt")));
+        Component component = Component.literal("Open file").setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, "/tmp/file.txt")).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, hoverText)));
+
+        String json = assertDoesNotThrow(() -> ComponentParser.toJson(component));
+        JsonObject serialized = JsonParser.parseString(json).getAsJsonObject();
+        JsonObject clickEvent = serialized.getAsJsonObject("clickEvent");
+        JsonObject hoverEvent = serialized.getAsJsonObject("hoverEvent");
+        JsonObject hoverContents = hoverEvent.getAsJsonObject("contents");
+        JsonObject nestedClickEvent = hoverContents.getAsJsonObject("clickEvent");
+
+        assertEquals("Open file", serialized.get("text").getAsString());
+        assertEquals("open_file", clickEvent.get("action").getAsString());
+        assertEquals("/tmp/file.txt", clickEvent.get("value").getAsString());
+        assertEquals("show_text", hoverEvent.get("action").getAsString());
+        assertEquals("Nested details", hoverContents.get("text").getAsString());
+        assertEquals("open_file", nestedClickEvent.get("action").getAsString());
+        assertEquals("/tmp/nested.txt", nestedClickEvent.get("value").getAsString());
     }
 
     @Test

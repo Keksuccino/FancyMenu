@@ -18,6 +18,9 @@ public class OnServerJoinedListener extends AbstractListener {
     }
 
     public void onServerJoined(@Nullable String serverIp) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.lastServerIp = serverIp;
         this.notifyAllInstances();
     }

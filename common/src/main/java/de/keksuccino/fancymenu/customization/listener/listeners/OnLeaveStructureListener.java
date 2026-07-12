@@ -18,6 +18,9 @@ public class OnLeaveStructureListener extends AbstractListener {
     }
 
     public void onStructureLeft(@Nullable String structureKey) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cachedStructureKey = structureKey;
         if ((structureKey != null) && !structureKey.isBlank()) {
             this.notifyAllInstances();

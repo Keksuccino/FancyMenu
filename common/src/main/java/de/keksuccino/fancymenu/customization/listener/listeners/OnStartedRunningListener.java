@@ -14,6 +14,9 @@ public class OnStartedRunningListener extends AbstractListener {
     }
 
     public void onStartedRunning() {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.notifyAllInstances();
     }
 

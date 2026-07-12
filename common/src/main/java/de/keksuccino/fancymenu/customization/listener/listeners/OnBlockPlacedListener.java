@@ -24,6 +24,9 @@ public class OnBlockPlacedListener extends AbstractListener {
     }
 
     public void onBlockPlaced(@NotNull BlockPos blockPos, @NotNull BlockState blockState) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.lastBlockPos = blockPos.immutable();
         ResourceLocation blockKeyLocation = BuiltInRegistries.BLOCK.getKey(blockState.getBlock());
         this.cachedBlockKey = (blockKeyLocation != null) ? blockKeyLocation.toString() : null;

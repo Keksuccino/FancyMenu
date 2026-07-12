@@ -14,7 +14,7 @@ public abstract class MixinPlayer {
     /** @reason Fire FancyMenu listener when the local player jumps. */
     @Inject(method = "jumpFromGround", at = @At("TAIL"))
     private void after_jumpFromGround_FancyMenu(CallbackInfo info) {
-        if ((Object)this instanceof LocalPlayer) {
+        if ((Object)this instanceof LocalPlayer && Listeners.ON_JUMP.hasInstancesListening()) {
             Listeners.ON_JUMP.onJump();
         }
     }

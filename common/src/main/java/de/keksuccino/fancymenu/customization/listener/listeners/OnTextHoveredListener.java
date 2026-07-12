@@ -18,6 +18,9 @@ public class OnTextHoveredListener extends AbstractListener {
     }
 
     public void onTextHovered(@NotNull String eventId) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.lastEventId = eventId;
         this.notifyAllInstances();
     }

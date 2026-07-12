@@ -26,15 +26,13 @@ public class OnMouseMovedListener extends AbstractListener {
     private Double lastDeltaY;
 
     public OnMouseMovedListener() {
-
         super("mouse_moved");
-
-        EventHandler.INSTANCE.registerListenersOf(this);
-
     }
 
     @EventListener
     public void onMouseMoved(@NotNull ScreenMouseMoveEvent event) {
+
+        if (!this.hasInstancesListening()) return;
 
         // Cache latest data before notifying listeners
         this.lastMouseX = event.getMouseX();
@@ -44,6 +42,20 @@ public class OnMouseMovedListener extends AbstractListener {
 
         this.notifyAllInstances();
 
+    }
+
+    @Override
+    protected void onActivated() {
+        EventHandler.INSTANCE.registerListenersOf(this);
+    }
+
+    @Override
+    protected void onDeactivated() {
+        EventHandler.INSTANCE.unregisterListenersOf(this);
+        this.lastMouseX = null;
+        this.lastMouseY = null;
+        this.lastDeltaX = null;
+        this.lastDeltaY = null;
     }
 
     @Override
@@ -72,4 +84,3 @@ public class OnMouseMovedListener extends AbstractListener {
     }
 
 }
-

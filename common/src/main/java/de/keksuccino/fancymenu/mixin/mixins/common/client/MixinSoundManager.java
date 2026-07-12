@@ -2,7 +2,10 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
+import de.keksuccino.fancymenu.mixin.interfaces.WorldSoundListenerController;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
@@ -21,23 +24,40 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(SoundManager.class)
-public abstract class MixinSoundManager {
+public abstract class MixinSoundManager implements WorldSoundListenerController {
 
-    @Shadow @Final
-    private SoundEngine soundEngine;
+    @Shadow @Final private SoundEngine soundEngine;
 
-    @Unique
-    private SoundEventListener worldSoundEventBridge_FancyMenu;
+    @Unique private SoundEventListener worldSoundEventBridge_FancyMenu;
+    @Unique private final WorldSoundSubscriptionPolicy worldSoundSubscriptionPolicy_FancyMenu = new WorldSoundSubscriptionPolicy();
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void afterInitFancyMenu(Options options, CallbackInfo info) {
+    private void after_init_FancyMenu(Options options, CallbackInfo info) {
         if (this.worldSoundEventBridge_FancyMenu == null) {
             this.worldSoundEventBridge_FancyMenu = (sound, accessor) -> {
-                float audibleRange = Math.max(sound.getVolume(), 1.0F) * sound.getSound().getAttenuationDistance();
-                Listeners.ON_WORLD_SOUND_TRIGGERED.onWorldSoundTriggered(sound, accessor.getSubtitle(), audibleRange);
+                if (Listeners.ON_WORLD_SOUND_TRIGGERED.hasInstancesListening()) {
+                    this.worldSoundSubscriptionPolicy_FancyMenu.beginDispatch();
+                    try {
+                        float audibleRange = Math.max(sound.getVolume(), 1.0F) * sound.getSound().getAttenuationDistance();
+                        Listeners.ON_WORLD_SOUND_TRIGGERED.onWorldSoundTriggered(sound, accessor.getSubtitle(), audibleRange);
+                    } finally {
+                        this.worldSoundSubscriptionPolicy_FancyMenu.endDispatch();
+                    }
+                }
             };
-            this.soundEngine.addEventListener(this.worldSoundEventBridge_FancyMenu);
+            this.setWorldSoundListenerActive_FancyMenu(Listeners.ON_WORLD_SOUND_TRIGGERED.hasInstancesListening());
         }
+    }
+
+    @Override
+    public void setWorldSoundListenerActive_FancyMenu(boolean active) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (!minecraft.isSameThread()) {
+            minecraft.execute(() -> this.setWorldSoundListenerActive_FancyMenu(Listeners.ON_WORLD_SOUND_TRIGGERED.hasInstancesListening()));
+            return;
+        }
+        if (this.worldSoundEventBridge_FancyMenu == null) return;
+        this.applyWorldSoundSubscriptionDecision_FancyMenu(this.worldSoundSubscriptionPolicy_FancyMenu.setActive(active));
     }
 
     @Inject(method = "play", at = @At("HEAD"), cancellable = true)
@@ -59,6 +79,25 @@ public abstract class MixinSoundManager {
                 }
             }
         }
+    }
+
+    /**
+     * SoundEngine iterates its listener ArrayList directly. Removing this bridge from inside its own callback would invalidate that iterator, so only the re-entrant removal path is deferred until after the client tick and then rechecks the provider's actual activity.
+     */
+    @Unique
+    private void applyWorldSoundSubscriptionDecision_FancyMenu(WorldSoundSubscriptionPolicy.Decision decision) {
+        switch (decision) {
+            case ADD -> this.soundEngine.addEventListener(this.worldSoundEventBridge_FancyMenu);
+            case REMOVE -> this.soundEngine.removeEventListener(this.worldSoundEventBridge_FancyMenu);
+            case DEFER_REMOVE -> MainThreadTaskExecutor.executeInMainThread(this::removeWorldSoundEventBridgeIfDormant_FancyMenu, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+            case NONE -> {
+            }
+        }
+    }
+
+    @Unique
+    private void removeWorldSoundEventBridgeIfDormant_FancyMenu() {
+        this.applyWorldSoundSubscriptionDecision_FancyMenu(this.worldSoundSubscriptionPolicy_FancyMenu.reevaluateDeferredRemoval(Listeners.ON_WORLD_SOUND_TRIGGERED.hasInstancesListening()));
     }
 
 }

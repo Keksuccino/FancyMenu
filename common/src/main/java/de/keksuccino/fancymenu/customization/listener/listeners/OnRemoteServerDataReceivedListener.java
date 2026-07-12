@@ -19,6 +19,9 @@ public class OnRemoteServerDataReceivedListener extends AbstractListener {
     }
 
     public void onRemoteServerDataReceived(@NotNull String requestId, @NotNull String remoteServerUrl, @NotNull String data) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.lastRequestId = Objects.requireNonNullElse(requestId, "");
         this.lastRemoteServerUrl = Objects.requireNonNullElse(remoteServerUrl, "");
         this.lastData = Objects.requireNonNullElse(data, "");

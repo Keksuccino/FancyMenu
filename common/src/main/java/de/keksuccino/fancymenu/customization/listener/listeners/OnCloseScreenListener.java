@@ -20,6 +20,7 @@ public class OnCloseScreenListener extends AbstractListener {
     }
 
     public void onScreenClosed(@NotNull Screen screen) {
+        if (!this.hasInstancesListening()) return;
         this.lastScreenIdentifier = ScreenIdentifierHandler.getIdentifierOfScreen(screen);
         this.notifyAllInstances();
     }

@@ -32,6 +32,9 @@ public class OnItemUsedListener extends AbstractListener {
     public void onItemUsed(@Nullable String itemKey, @NotNull String usedOnType,
                            @Nullable String entityKey, @Nullable String blockKey,
                            @NotNull String targetPosX, @NotNull String targetPosY, @NotNull String targetPosZ) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cachedItemKey = (itemKey != null && !itemKey.isBlank()) ? itemKey : null;
         this.cachedUsedOnType = this.normalizeUsedOnType_FancyMenu(usedOnType);
         this.cachedUsedOnEntityKey = (entityKey != null) ? entityKey : "";
@@ -71,4 +74,3 @@ public class OnItemUsedListener extends AbstractListener {
         return List.of(LocalizationUtils.splitLocalizedLines("fancymenu.listeners.on_item_used.desc"));
     }
 }
-

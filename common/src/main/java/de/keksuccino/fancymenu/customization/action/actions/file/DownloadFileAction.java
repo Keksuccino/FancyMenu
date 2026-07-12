@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.action.actions.file;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
+import de.keksuccino.fancymenu.customization.listener.RevisionSafeListenerDispatch;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
@@ -54,16 +55,12 @@ public class DownloadFileAction extends Action {
                 try {
                     resolvedDirectoryPath = resolveActionDirectoryPath(targetDirectoryPath);
                     String finalTargetPath = downloadFile(fileUrl, resolvedDirectoryPath);
-                    MainThreadTaskExecutor.executeInMainThread(() ->
-                            Listeners.ON_FILE_DOWNLOADED.onFileDownloaded(fileUrl, finalTargetPath, true),
-                            MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+                    RevisionSafeListenerDispatch.scheduleIfActive(Listeners.ON_FILE_DOWNLOADED, task -> MainThreadTaskExecutor.executeInMainThread(task, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK), () -> Listeners.ON_FILE_DOWNLOADED.onFileDownloaded(fileUrl, finalTargetPath, true));
                 } catch (Exception ex) {
                     LOGGER.error("[FANCYMENU] Failed to download file via DownloadFileAction: " + value, ex);
                     String failurePath = (resolvedDirectoryPath != null) ? resolvedDirectoryPath : targetDirectoryPath;
                     String finalFailurePath = failurePath;
-                    MainThreadTaskExecutor.executeInMainThread(() ->
-                            Listeners.ON_FILE_DOWNLOADED.onFileDownloaded(fileUrl, finalFailurePath, false),
-                            MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+                    RevisionSafeListenerDispatch.scheduleIfActive(Listeners.ON_FILE_DOWNLOADED, task -> MainThreadTaskExecutor.executeInMainThread(task, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK), () -> Listeners.ON_FILE_DOWNLOADED.onFileDownloaded(fileUrl, finalFailurePath, false));
                 }
             });
         }

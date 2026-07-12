@@ -25,6 +25,7 @@ public class MixinAbstractContainerScreen extends Screen {
     @Shadow @Nullable protected Slot hoveredSlot;
 
     @Unique private final ContainerWidgetPointerRouter<GuiEventListener> widgetPointerRouter_FancyMenu = new ContainerWidgetPointerRouter<>();
+    @Unique private boolean itemHoverTrackingWasDormant_FancyMenu;
 
     // Dummy constructor
     private MixinAbstractContainerScreen() {
@@ -60,12 +61,18 @@ public class MixinAbstractContainerScreen extends Screen {
 
     @Inject(method = "render", at = @At("TAIL"))
     private void after_render_FancyMenu(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick, CallbackInfo info) {
+        if (!Listeners.ON_ITEM_HOVERED_IN_INVENTORY.hasInstancesListening()) {
+            this.itemHoverTrackingWasDormant_FancyMenu = true;
+            return;
+        }
         Slot hoveredSlot = this.hoveredSlot;
         if (hoveredSlot == null || !hoveredSlot.hasItem()) {
             Listeners.ON_ITEM_HOVERED_IN_INVENTORY.clearCurrentItem();
+            this.itemHoverTrackingWasDormant_FancyMenu = false;
             return;
         }
-        Listeners.ON_ITEM_HOVERED_IN_INVENTORY.onItemHovered(hoveredSlot, hoveredSlot.getItem());
+        Listeners.ON_ITEM_HOVERED_IN_INVENTORY.onItemHovered(hoveredSlot, hoveredSlot.getItem(), !this.itemHoverTrackingWasDormant_FancyMenu);
+        this.itemHoverTrackingWasDormant_FancyMenu = false;
     }
 
     @Unique

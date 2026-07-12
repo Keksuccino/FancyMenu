@@ -84,7 +84,7 @@ public class MixinMinecraft {
 	private void before_stop_FancyMenu(CallbackInfo info) {
 		if (!this.quitListenerFired_FancyMenu) {
 			this.quitListenerFired_FancyMenu = true;
-			Listeners.ON_QUIT_MINECRAFT.onQuitMinecraft();
+			if (Listeners.ON_QUIT_MINECRAFT.hasInstancesListening()) Listeners.ON_QUIT_MINECRAFT.onQuitMinecraft();
 		}
 	}
 
@@ -263,7 +263,7 @@ public class MixinMinecraft {
 			return;
 		}
 
-		if ((screen != null) && (screen != this.screen)) {
+		if ((screen != null) && (screen != this.screen) && Listeners.ON_OPEN_SCREEN.hasInstancesListening()) {
 			Screen cachedCurrent = this.screen;
 			Listeners.ON_OPEN_SCREEN.onScreenOpened(screen);
 			if (cachedCurrent != this.screen) {
@@ -336,7 +336,7 @@ public class MixinMinecraft {
 	/** @reason Fire FancyMenu close screen listeners after the screen was removed. */
 	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;removed()V", shift = At.Shift.AFTER))
 	private void afterScreenRemovedFancyMenu(Screen screen, CallbackInfo info) {
-		if (this.lastScreen_FancyMenu != null) {
+		if (this.lastScreen_FancyMenu != null && Listeners.ON_CLOSE_SCREEN.hasInstancesListening()) {
 			Listeners.ON_CLOSE_SCREEN.onScreenClosed(this.lastScreen_FancyMenu);
 		}
 	}
@@ -405,7 +405,7 @@ public class MixinMinecraft {
 			SeamlessWorldLoadingHandler.saveAndClearServerCapture(serverIp);
 		}
 		SeamlessWorldLoadingHandler.finishServerLoad();
-		Listeners.ON_SERVER_LEFT.onServerLeft(serverIp);
+		if (Listeners.ON_SERVER_LEFT.hasInstancesListening()) Listeners.ON_SERVER_LEFT.onServerLeft(serverIp);
 		this.hasActiveServerConnection_FancyMenu = false;
 		this.pendingServerJoinEvent_FancyMenu = false;
 		this.lastServerIp_FancyMenu = null;
@@ -429,7 +429,7 @@ public class MixinMinecraft {
 			SeamlessWorldLoadingHandler.startServerCapture(serverIp);
 		}
 		SeamlessWorldLoadingHandler.finishServerLoad();
-		Listeners.ON_SERVER_JOINED.onServerJoined(serverIp);
+		if (Listeners.ON_SERVER_JOINED.hasInstancesListening()) Listeners.ON_SERVER_JOINED.onServerJoined(serverIp);
 	}
 
 	@Unique

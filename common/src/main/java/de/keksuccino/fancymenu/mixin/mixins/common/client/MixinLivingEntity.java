@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
+import de.keksuccino.fancymenu.mixin.interfaces.LocalPlayerDrowningTracker;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -12,6 +13,8 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
@@ -24,11 +27,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(LivingEntity.class)
 public abstract class MixinLivingEntity {
 
-    @Unique
-    private ItemStack lastBrokenStack_FancyMenu = ItemStack.EMPTY;
-
-    @Unique
-    private String lastBrokenItemType_FancyMenu;
+    @Unique private ItemStack lastBrokenStack_FancyMenu = ItemStack.EMPTY;
+    @Unique private String lastBrokenItemType_FancyMenu;
 
     /** @reason Fire FancyMenu listener when the local player gains a status effect. */
     @Inject(method = "onEffectAdded", at = @At("TAIL"))
@@ -37,17 +37,31 @@ public abstract class MixinLivingEntity {
         if (!(self instanceof LocalPlayer)) {
             return;
         }
+        if (!Listeners.ON_EFFECT_GAINED.hasInstancesListening()) return;
         MobEffect effect = effectInstance.getEffect();
         String effectKey = this.resolveEffectKey_FancyMenu(effect);
         String effectType = this.resolveEffectTypeName_FancyMenu(effect);
         Listeners.ON_EFFECT_GAINED.onEffectGained(effectKey, effectType, effectInstance.getDuration());
     }
 
+    /**
+     * @reason Client damage packets preserve their real source only in LivingEntity.handleDamageEvent; LocalPlayer.hurt is a no-op and receives a synthetic generic source from that method.
+     */
+    @Inject(method = "handleDamageEvent", at = @At("HEAD"))
+    private void before_handleDamageEvent_FancyMenu(DamageSource damageSource, CallbackInfo ci) {
+        if (!Listeners.ON_STARTED_DROWNING.hasInstancesListening() || !damageSource.is(DamageTypes.DROWN)) return;
+        LivingEntity self = (LivingEntity)(Object)this;
+        if (self instanceof LocalPlayerDrowningTracker tracker && tracker.beginDrowningEpisode_FancyMenu()) {
+            Listeners.ON_STARTED_DROWNING.onStartedDrowning();
+        }
+    }
+
     /** @reason Fire FancyMenu listener when the local player finishes consuming an item. */
     @WrapOperation(method = "completeUsingItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;finishUsingItem(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/LivingEntity;)Lnet/minecraft/world/item/ItemStack;"))
     private ItemStack wrap_finishUsingItem_FancyMenu(ItemStack stack, Level level, LivingEntity living, Operation<ItemStack> operation) {
         String itemKey = null;
-        if (!stack.isEmpty()) {
+        boolean notifyListener = living instanceof LocalPlayer && Listeners.ON_ITEM_CONSUMED.hasInstancesListening();
+        if (notifyListener && !stack.isEmpty()) {
             ResourceLocation itemLocation = BuiltInRegistries.ITEM.getKey(stack.getItem());
             if (itemLocation != null) {
                 itemKey = itemLocation.toString();
@@ -56,7 +70,7 @@ public abstract class MixinLivingEntity {
 
         ItemStack result = operation.call(stack, level, living);
 
-        if (itemKey != null && living instanceof LocalPlayer) {
+        if (itemKey != null && notifyListener) {
             Listeners.ON_ITEM_CONSUMED.onItemConsumed(itemKey);
         }
 
@@ -66,14 +80,18 @@ public abstract class MixinLivingEntity {
     /** @reason Capture the item that is about to break for the local player. */
     @Inject(method = "handleEntityEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;breakItem(Lnet/minecraft/world/item/ItemStack;)V"))
     private void before_breakItem_FancyMenu(byte eventId, CallbackInfo ci) {
-        this.captureBrokenItem_FancyMenu(eventId);
+        if (Listeners.ON_ITEM_BROKE.hasInstancesListening()) {
+            this.captureBrokenItem_FancyMenu(eventId);
+        } else {
+            this.clearBrokenItemCache_FancyMenu();
+        }
     }
 
     /** @reason Fire FancyMenu listener after the item break animation for the local player. */
     @Inject(method = "handleEntityEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;breakItem(Lnet/minecraft/world/item/ItemStack;)V", shift = At.Shift.AFTER))
     private void after_breakItem_FancyMenu(byte eventId, CallbackInfo ci) {
         LivingEntity self = (LivingEntity)(Object)this;
-        if (!(self instanceof LocalPlayer) || this.lastBrokenStack_FancyMenu.isEmpty()) {
+        if (!Listeners.ON_ITEM_BROKE.hasInstancesListening() || !(self instanceof LocalPlayer) || this.lastBrokenStack_FancyMenu.isEmpty()) {
             this.clearBrokenItemCache_FancyMenu();
             return;
         }
@@ -154,4 +172,3 @@ public abstract class MixinLivingEntity {
     }
 
 }
-

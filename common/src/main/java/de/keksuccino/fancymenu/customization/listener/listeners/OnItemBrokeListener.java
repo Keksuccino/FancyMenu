@@ -20,6 +20,9 @@ public class OnItemBrokeListener extends AbstractListener {
     }
 
     public void onItemBroke(@Nullable String itemKey, @Nullable String itemType) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cachedItemKey = itemKey;
         this.cachedItemType = itemType;
         this.notifyAllInstances();

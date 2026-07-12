@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.action.actions.file;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
+import de.keksuccino.fancymenu.customization.listener.RevisionSafeListenerDispatch;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
@@ -80,9 +81,7 @@ public class ExtractZipFileAction extends Action {
             boolean finalSuccess = success;
             String finalFailureReason = failureReason;
 
-            MainThreadTaskExecutor.executeInMainThread(
-                    () -> Listeners.ON_ZIP_EXTRACTED.onZipExtracted(finalResolvedSource, finalResolvedTarget, finalSuccess, finalFailureReason),
-                    MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+            RevisionSafeListenerDispatch.scheduleIfActive(Listeners.ON_ZIP_EXTRACTED, task -> MainThreadTaskExecutor.executeInMainThread(task, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK), () -> Listeners.ON_ZIP_EXTRACTED.onZipExtracted(finalResolvedSource, finalResolvedTarget, finalSuccess, finalFailureReason));
         });
     }
 

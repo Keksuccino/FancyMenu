@@ -18,6 +18,9 @@ public class OnEnterStructureHighPrecisionListener extends AbstractListener {
     }
 
     public void onStructureEntered(@Nullable String structureKey) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cachedStructureKey = structureKey;
         if ((structureKey != null) && !structureKey.isBlank()) {
             this.notifyAllInstances();

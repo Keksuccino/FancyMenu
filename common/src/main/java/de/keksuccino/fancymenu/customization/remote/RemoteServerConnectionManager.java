@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.remote;
 
+import de.keksuccino.fancymenu.customization.listener.RevisionSafeListenerDispatch;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import org.apache.logging.log4j.LogManager;
@@ -533,24 +534,15 @@ public final class RemoteServerConnectionManager {
     }
 
     private static void notifyConnected(@NotNull String requestId, @NotNull String remoteServerUrl) {
-        MainThreadTaskExecutor.executeInMainThread(
-                () -> Listeners.ON_REMOTE_SERVER_CONNECTED.onRemoteServerConnected(requestId, remoteServerUrl),
-                MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK
-        );
+        RevisionSafeListenerDispatch.scheduleIfActive(Listeners.ON_REMOTE_SERVER_CONNECTED, task -> MainThreadTaskExecutor.executeInMainThread(task, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK), () -> Listeners.ON_REMOTE_SERVER_CONNECTED.onRemoteServerConnected(requestId, remoteServerUrl));
     }
 
     private static void notifyDataReceived(@NotNull String requestId, @NotNull String remoteServerUrl, @NotNull String data) {
-        MainThreadTaskExecutor.executeInMainThread(
-                () -> Listeners.ON_REMOTE_SERVER_DATA_RECEIVED.onRemoteServerDataReceived(requestId, remoteServerUrl, data),
-                MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK
-        );
+        RevisionSafeListenerDispatch.scheduleIfActive(Listeners.ON_REMOTE_SERVER_DATA_RECEIVED, task -> MainThreadTaskExecutor.executeInMainThread(task, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK), () -> Listeners.ON_REMOTE_SERVER_DATA_RECEIVED.onRemoteServerDataReceived(requestId, remoteServerUrl, data));
     }
 
     private static void notifyConnectionClosed(@NotNull String requestId, @NotNull String remoteServerUrl, boolean intentionallyClosed, boolean crashed, boolean unknownCloseReason) {
-        MainThreadTaskExecutor.executeInMainThread(
-                () -> Listeners.ON_REMOTE_SERVER_CONNECTION_CLOSED.onRemoteServerConnectionClosed(requestId, remoteServerUrl, intentionallyClosed, crashed, unknownCloseReason),
-                MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK
-        );
+        RevisionSafeListenerDispatch.scheduleIfActive(Listeners.ON_REMOTE_SERVER_CONNECTION_CLOSED, task -> MainThreadTaskExecutor.executeInMainThread(task, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK), () -> Listeners.ON_REMOTE_SERVER_CONNECTION_CLOSED.onRemoteServerConnectionClosed(requestId, remoteServerUrl, intentionallyClosed, crashed, unknownCloseReason));
     }
 
     private static void deregisterState(@NotNull ConnectionState state) {

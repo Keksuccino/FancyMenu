@@ -20,6 +20,9 @@ public class OnDimensionEnteredListener extends AbstractListener {
     }
 
     public void onDimensionEntered(@NotNull ResourceKey<Level> dimensionKey) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cachedDimensionKey = dimensionKey.location().toString();
         this.notifyAllInstances();
     }

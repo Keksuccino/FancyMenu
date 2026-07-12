@@ -22,6 +22,9 @@ public class OnOtherPlayerLeftWorldListener extends AbstractListener {
     }
 
     public void onOtherPlayerLeft(@Nullable String playerName, @NotNull UUID playerUuid) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.lastPlayerName = playerName;
         this.lastPlayerUuid = playerUuid;
         this.notifyAllInstances();

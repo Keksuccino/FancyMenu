@@ -22,6 +22,9 @@ public class OnExperienceChangedListener extends AbstractListener {
     }
 
     public void onExperienceChanged(int oldExperience, int newExperience, boolean isLevelUp) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cachedOldExperience = Integer.toString(Math.max(oldExperience, 0));
         this.cachedNewExperience = Integer.toString(Math.max(newExperience, 0));
         this.cachedIsLevelUp = Boolean.toString(isLevelUp);

@@ -33,20 +33,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(MultiPlayerGameMode.class)
 public class MixinMultiPlayerGameMode {
 
-    @Unique
-    @Nullable
-    private String capturedItemUseKey_FancyMenu;
-
-    @Unique
-    @Nullable
-    private String capturedUseItemKey_FancyMenu;
+    @Unique @Nullable private String capturedItemUseKey_FancyMenu;
+    @Unique @Nullable private String capturedUseItemKey_FancyMenu;
 
     /** @reason Fire FancyMenu listener after the local player successfully breaks a block. */
     @WrapOperation(method = "destroyBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Block;destroy(Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V"))
     private void wrap_destroy_in_destroyBlock_FancyMenu(Block block, LevelAccessor level, BlockPos pos, BlockState state, Operation<Void> operation) {
-        String usedItemKey = this.getMainHandItemKey_FancyMenu();
+        boolean listenerActive = Listeners.ON_BLOCK_BROKE.hasInstancesListening();
+        String usedItemKey = listenerActive ? this.getMainHandItemKey_FancyMenu() : null;
         operation.call(block, level, pos, state);
-        if (level != null && level.isClientSide()) {
+        if (listenerActive && level != null && level.isClientSide()) {
             Listeners.ON_BLOCK_BROKE.onBlockBroke(pos, state, usedItemKey);
         }
     }
@@ -54,14 +50,16 @@ public class MixinMultiPlayerGameMode {
     /** @reason Capture the item key before the local player uses an item on a block. */
     @Inject(method = "performUseItemOn", at = @At("HEAD"))
     private void before_performUseItemOn_captureItem_FancyMenu(LocalPlayer player, InteractionHand hand, BlockHitResult hitResult, CallbackInfoReturnable<InteractionResult> cir) {
-        this.capturedItemUseKey_FancyMenu = this.resolveItemKeyFromHand_FancyMenu(player, hand);
+        this.capturedItemUseKey_FancyMenu = Listeners.ON_ITEM_USED.hasInstancesListening() ? this.resolveItemKeyFromHand_FancyMenu(player, hand) : null;
     }
 
     /** @reason Fire FancyMenu listeners when the local player interacts with a block. */
     @Inject(method = "performUseItemOn", at = @At("RETURN"))
     private void after_performUseItemOn_FancyMenu(LocalPlayer player, InteractionHand hand, BlockHitResult hitResult, CallbackInfoReturnable<InteractionResult> cir) {
+        boolean blockListenerActive = Listeners.ON_INTERACTED_WITH_BLOCK.hasInstancesListening();
+        boolean itemListenerActive = Listeners.ON_ITEM_USED.hasInstancesListening();
         InteractionResult result = cir.getReturnValue();
-        if ((result != null) && result.consumesAction()) {
+        if ((blockListenerActive || itemListenerActive) && (result != null) && result.consumesAction()) {
             Minecraft minecraft = Minecraft.getInstance();
             Level level = minecraft.level;
             BlockPos blockPos = hitResult.getBlockPos().immutable();
@@ -77,15 +75,14 @@ public class MixinMultiPlayerGameMode {
                 targetPosX = Integer.toString(blockPos.getX());
                 targetPosY = Integer.toString(blockPos.getY());
                 targetPosZ = Integer.toString(blockPos.getZ());
-                Listeners.ON_INTERACTED_WITH_BLOCK.onBlockInteracted(blockPos, state);
+                if (blockListenerActive) Listeners.ON_INTERACTED_WITH_BLOCK.onBlockInteracted(blockPos, state);
             }
 
-            String itemKey = this.capturedItemUseKey_FancyMenu;
-            if (itemKey == null) {
-                itemKey = this.resolveItemKeyFromHand_FancyMenu(player, hand);
+            if (itemListenerActive) {
+                String itemKey = this.capturedItemUseKey_FancyMenu;
+                if (itemKey == null) itemKey = this.resolveItemKeyFromHand_FancyMenu(player, hand);
+                Listeners.ON_ITEM_USED.onItemUsed(itemKey, "block", "", blockKey, targetPosX, targetPosY, targetPosZ);
             }
-
-            Listeners.ON_ITEM_USED.onItemUsed(itemKey, "block", "", blockKey, targetPosX, targetPosY, targetPosZ);
         }
 
         this.capturedItemUseKey_FancyMenu = null;
@@ -94,7 +91,8 @@ public class MixinMultiPlayerGameMode {
     /** @reason Fire FancyMenu listener when the local player places a block. */
     @WrapOperation(method = "performUseItemOn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;useOn(Lnet/minecraft/world/item/context/UseOnContext;)Lnet/minecraft/world/InteractionResult;"))
     private InteractionResult wrap_useOn_FancyMenu(ItemStack stack, UseOnContext context, Operation<InteractionResult> operation) {
-        BlockItem blockItem = (stack.getItem() instanceof BlockItem) ? (BlockItem)stack.getItem() : null;
+        boolean listenerActive = Listeners.ON_BLOCK_PLACED.hasInstancesListening();
+        BlockItem blockItem = listenerActive && stack.getItem() instanceof BlockItem item ? item : null;
         BlockPos placePos = null;
         if (blockItem != null) {
             placePos = new BlockPlaceContext(context).getClickedPos();
@@ -118,7 +116,7 @@ public class MixinMultiPlayerGameMode {
     /** @reason Cache the item key before the local player uses an item without targeting a block or entity. */
     @Inject(method = "useItem", at = @At("HEAD"))
     private void before_useItem_captureItem_FancyMenu(Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
-        if (player instanceof LocalPlayer) {
+        if (player instanceof LocalPlayer && Listeners.ON_ITEM_USED.hasInstancesListening()) {
             this.capturedUseItemKey_FancyMenu = this.resolveItemKeyFromHand_FancyMenu(player, hand);
         } else {
             this.capturedUseItemKey_FancyMenu = null;
@@ -129,7 +127,7 @@ public class MixinMultiPlayerGameMode {
     @Inject(method = "useItem", at = @At("RETURN"))
     private void after_useItem_FancyMenu(Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
         InteractionResult result = cir.getReturnValue();
-        if ((player instanceof LocalPlayer localPlayer) && (result != null) && result.consumesAction()) {
+        if (Listeners.ON_ITEM_USED.hasInstancesListening() && (player instanceof LocalPlayer localPlayer) && (result != null) && result.consumesAction()) {
             String itemKey = this.capturedUseItemKey_FancyMenu;
             if (itemKey == null) {
                 itemKey = this.resolveItemKeyFromHand_FancyMenu(player, hand);
@@ -154,9 +152,10 @@ public class MixinMultiPlayerGameMode {
     /** @reason Fire FancyMenu listener when the local player interacts with an entity. */
     @WrapOperation(method = "interact", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;interactOn(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;"))
     private InteractionResult wrap_interactWithEntity_FancyMenu(Player player, Entity target, InteractionHand hand, Operation<InteractionResult> original) {
-        String itemKey = this.resolveItemKeyFromHand_FancyMenu(player, hand);
+        boolean itemListenerActive = Listeners.ON_ITEM_USED.hasInstancesListening();
+        String itemKey = itemListenerActive ? this.resolveItemKeyFromHand_FancyMenu(player, hand) : null;
         InteractionResult result = original.call(player, target, hand);
-        if (itemKey == null) {
+        if (itemListenerActive && itemKey == null) {
             itemKey = this.resolveItemKeyFromHand_FancyMenu(player, hand);
         }
         this.handleEntityInteractionResult_FancyMenu(player, target, result, itemKey);
@@ -166,9 +165,10 @@ public class MixinMultiPlayerGameMode {
     /** @reason Fire FancyMenu listener when the local player interacts with an entity at a precise location. */
     @WrapOperation(method = "interactAt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;interactAt(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;"))
     private InteractionResult wrap_interactAtWithEntity_FancyMenu(Entity target, Player player, Vec3 hitVec, InteractionHand hand, Operation<InteractionResult> original) {
-        String itemKey = this.resolveItemKeyFromHand_FancyMenu(player, hand);
+        boolean itemListenerActive = Listeners.ON_ITEM_USED.hasInstancesListening();
+        String itemKey = itemListenerActive ? this.resolveItemKeyFromHand_FancyMenu(player, hand) : null;
         InteractionResult result = original.call(target, player, hitVec, hand);
-        if (itemKey == null) {
+        if (itemListenerActive && itemKey == null) {
             itemKey = this.resolveItemKeyFromHand_FancyMenu(player, hand);
         }
         this.handleEntityInteractionResult_FancyMenu(player, target, result, itemKey);
@@ -177,18 +177,20 @@ public class MixinMultiPlayerGameMode {
 
     @Unique
     private void handleEntityInteractionResult_FancyMenu(Player player, Entity target, InteractionResult result, @Nullable String itemKey) {
+        boolean itemListenerActive = Listeners.ON_ITEM_USED.hasInstancesListening();
+        boolean interactionListenerActive = Listeners.ON_INTERACTED_WITH_ENTITY.hasInstancesListening();
+        if (!itemListenerActive && !interactionListenerActive) return;
         if (!(player instanceof LocalPlayer) || target == null) {
             return;
         }
         if (result == null || !result.consumesAction()) {
             return;
         }
-        String entityKey = this.resolveEntityKey_FancyMenu(target);
-        Listeners.ON_ITEM_USED.onItemUsed(itemKey, "entity", entityKey, "",
-                Double.toString(target.getX()),
-                Double.toString(target.getY()),
-                Double.toString(target.getZ()));
-        Listeners.ON_INTERACTED_WITH_ENTITY.onEntityInteracted(target);
+        if (itemListenerActive) {
+            String entityKey = this.resolveEntityKey_FancyMenu(target);
+            Listeners.ON_ITEM_USED.onItemUsed(itemKey, "entity", entityKey, "", Double.toString(target.getX()), Double.toString(target.getY()), Double.toString(target.getZ()));
+        }
+        if (interactionListenerActive) Listeners.ON_INTERACTED_WITH_ENTITY.onEntityInteracted(target);
     }
 
     @Unique
@@ -238,4 +240,3 @@ public class MixinMultiPlayerGameMode {
         return entityLocation != null ? entityLocation.toString() : "";
     }
 }
-
