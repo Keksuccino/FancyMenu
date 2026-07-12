@@ -281,6 +281,10 @@ public final class GuiBlurRenderer {
         float margin = calculateGuiScissorMargin_FancyMenu(blurRadius, guiScale);
         ScissorBounds scissor = resolveScissorBounds(area, margin, scissorRotation);
         graphics.enableScissor(scissor.minXInt(), scissor.minYInt(), scissor.maxXInt(), scissor.maxYInt());
+        // PostPass clears and draws into reusable targets without normalizing write masks. GUI renderers are allowed to
+        // leave restricted masks behind, which would preserve stale target channels and make old glyph quads visible.
+        RenderSystem.colorMask(true, true, true, true);
+        RenderSystem.depthMask(true);
         postChain.process(partial);
 
         RenderTarget finalTarget = getFinalTarget(postChain);

@@ -10,7 +10,7 @@
 - [ ] [having irradiated effect from alex's caves in third person causes the render to go black](https://github.com/Keksuccino/FancyMenu/issues/1689)
 - [ ] [Fancymenu heavy lags my PC till... I unplug the HDMI cable](https://github.com/Keksuccino/FancyMenu/issues/1688)
 - [x] [Unable to focus text input field](https://github.com/Keksuccino/FancyMenu/issues/1685)
-- [ ] [Text Elements break on blur](https://github.com/Keksuccino/FancyMenu/issues/1684)
+- [x] [Text Elements break on blur](https://github.com/Keksuccino/FancyMenu/issues/1684)
 - [x] [NeoForge 21.1.229 1.21.1 text elements has broken sizing if used decimals](https://github.com/Keksuccino/FancyMenu/issues/1681)
 - [x] [Buttons do not auto size when auto sizing is enabled](https://github.com/Keksuccino/FancyMenu/issues/1680)
 - [x] [gson MalformedJsonException log spam when some elements have invalid json in their text](https://github.com/Keksuccino/FancyMenu/issues/1675)
