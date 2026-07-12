@@ -69,7 +69,7 @@
     <remote-repository>
       <option name="id" value="LoomLocalRemappedMods" />
       <option name="name" value="LoomLocalRemappedMods" />
-      <option name="url" value="file:$PROJECT_DIR$/../../Minecraft%20Mods/fancymenu-26.1.1/.gradle/loom-cache/remapped_mods/" />
+      <option name="url" value="file:$PROJECT_DIR$/../../Minecraft%20Mods/fancymenu-26.1.2/.gradle/loom-cache/remapped_mods/" />
     </remote-repository>
     <remote-repository>
       <option name="id" value="LoomGlobalMinecraft" />
@@ -79,7 +79,7 @@
     <remote-repository>
       <option name="id" value="LoomLocalMinecraft" />
       <option name="name" value="LoomLocalMinecraft" />
-      <option name="url" value="file:$PROJECT_DIR$/../../Minecraft%20Mods/fancymenu-26.1.1/.gradle/loom-cache/minecraftMaven/" />
+      <option name="url" value="file:$PROJECT_DIR$/../../Minecraft%20Mods/fancymenu-26.1.2/.gradle/loom-cache/minecraftMaven/" />
     </remote-repository>
     <remote-repository>
       <option name="id" value="Fabric" />

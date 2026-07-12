@@ -2,12 +2,12 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/common/fancymenu-26.1.1.common.main.iml" filepath="$PROJECT_DIR$/.idea/modules/common/fancymenu-26.1.1.common.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/common/fancymenu-26.1.1.common.test.iml" filepath="$PROJECT_DIR$/.idea/modules/common/fancymenu-26.1.1.common.test.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/fabric/fancymenu-26.1.1.fabric.main.iml" filepath="$PROJECT_DIR$/.idea/modules/fabric/fancymenu-26.1.1.fabric.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/fabric/fancymenu-26.1.1.fabric.test.iml" filepath="$PROJECT_DIR$/.idea/modules/fabric/fancymenu-26.1.1.fabric.test.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/neoforge/fancymenu-26.1.1.neoforge.main.iml" filepath="$PROJECT_DIR$/.idea/modules/neoforge/fancymenu-26.1.1.neoforge.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/neoforge/fancymenu-26.1.1.neoforge.test.iml" filepath="$PROJECT_DIR$/.idea/modules/neoforge/fancymenu-26.1.1.neoforge.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/common/fancymenu-26.1.2.common.main.iml" filepath="$PROJECT_DIR$/.idea/modules/common/fancymenu-26.1.2.common.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/common/fancymenu-26.1.2.common.test.iml" filepath="$PROJECT_DIR$/.idea/modules/common/fancymenu-26.1.2.common.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/fabric/fancymenu-26.1.2.fabric.main.iml" filepath="$PROJECT_DIR$/.idea/modules/fabric/fancymenu-26.1.2.fabric.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/fabric/fancymenu-26.1.2.fabric.test.iml" filepath="$PROJECT_DIR$/.idea/modules/fabric/fancymenu-26.1.2.fabric.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/neoforge/fancymenu-26.1.2.neoforge.main.iml" filepath="$PROJECT_DIR$/.idea/modules/neoforge/fancymenu-26.1.2.neoforge.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/neoforge/fancymenu-26.1.2.neoforge.test.iml" filepath="$PROJECT_DIR$/.idea/modules/neoforge/fancymenu-26.1.2.neoforge.test.iml" />
     </modules>
   </component>
 </project>
