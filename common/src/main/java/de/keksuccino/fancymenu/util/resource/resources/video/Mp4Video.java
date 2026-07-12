@@ -730,9 +730,7 @@ public class Mp4Video implements IVideo {
     }
 
     protected boolean shouldPresentFrame(@NotNull String statusName) {
-        if (!this.playRequested) return false;
-        if (this.isLoadingPlayerStatus(statusName)) return false;
-        return !this.isTerminalPlayerStatus(statusName);
+        return Mp4VideoFramePresentationPolicy.shouldPresentFrame(this.playRequested, this.framePresented, this.isLoadingPlayerStatus(statusName), this.isTerminalPlayerStatus(statusName));
     }
 
     protected void startPlayerForCurrentRequest(@NotNull Object player) {
