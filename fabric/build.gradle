@@ -32,16 +32,9 @@ dependencies {
     modImplementation "it.crystalnest:fancy-entity-renderer-fabric:$fer_mc_version-$fer_version"
     modImplementation "de.keksuccino:mcef-fabric:2.2.0-1.21.1"
 
-    implementation "maven.modrinth:AANobbMI:u1OEbNKx" // Sodium
-    implementation "maven.modrinth:PtjYWJkn:anDafurZ" // Sodium Extra
-    implementation "maven.modrinth:gvQqBUqZ:N08Z8wog" // Lithium
-    implementation "maven.modrinth:YL57xq9U:zsoi0dso" // Iris
-    implementation "maven.modrinth:5ZwdcRci:ATB4eNEP" // ImmediatelyFast
-    implementation "maven.modrinth:uXXizFIs:sOzRw3CG" // FerriteCore
-    implementation "maven.modrinth:1eAoo2KR:kVxtKPT4" // YACL
-
-    modImplementation "curse.maven:xaeros-world-map-317780:6538360"
-    modImplementation "curse.maven:xaeros-minimap-263420:6515046"
+    modImplementation "maven.modrinth:AANobbMI:u1OEbNKx" // Sodium
+    modImplementation "maven.modrinth:gvQqBUqZ:N08Z8wog" // Lithium
+    modImplementation "maven.modrinth:YL57xq9U:zsoi0dso" // Iris
 
     testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.10.2"
