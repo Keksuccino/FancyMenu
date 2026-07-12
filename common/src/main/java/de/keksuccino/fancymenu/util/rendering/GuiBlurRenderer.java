@@ -135,6 +135,13 @@ public final class GuiBlurRenderer {
     }
 
     /**
+     * Converts a blur radius in framebuffer pixels to the GUI coordinate space used by blur areas.
+     */
+    public static float convertFramebufferBlurRadiusToGui(float framebufferBlurRadius) {
+        return GuiBlurGeometry.convertFramebufferBlurRadiusToGui(framebufferBlurRadius, Minecraft.getInstance().getWindow().getGuiScale());
+    }
+
+    /**
      * Renders a blur area using FancyMenu's blur intensity setting (a normalized multiplier, e.g., 0.25–3.0).
      * Callers provide the base radius they would normally use; this helper applies the current intensity
      * and renders the blur so UI code doesn’t need to recompute the radius everywhere.
@@ -251,21 +258,23 @@ public final class GuiBlurRenderer {
         }
         ensurePostChainSize(postChain, targetWidth, targetHeight);
 
-        float guiScale = (float) minecraft.getWindow().getGuiScale();
-        float scaledWidth = area.width * guiScale;
-        float scaledHeight = area.height * guiScale;
-        if (scaledWidth <= 0.0F || scaledHeight <= 0.0F) {
-            return;
-        }
-
-        float scaledX = area.x * guiScale;
-        float scaledY = targetHeight - (area.y * guiScale) - scaledHeight;
-        float blurRadius = Math.max(0.0F, area.blurRadius * guiScale);
-        CornerRadii scaledRadii = area.cornerRadii.scaled(guiScale).clamped(Math.min(scaledWidth, scaledHeight) * 0.5F).flipVertical();
+        GuiBlurGeometry.ScaledArea scaledArea = GuiBlurGeometry.scaleArea(area.x, area.y, area.width, area.height, area.blurRadius, targetHeight, minecraft.getWindow().getGuiScale());
+        if (scaledArea == null) return;
+        double scaledX = scaledArea.x();
+        double scaledY = scaledArea.y();
+        double scaledWidth = scaledArea.width();
+        double scaledHeight = scaledArea.height();
+        float shaderScaledX = (float)scaledX;
+        float shaderScaledY = (float)scaledY;
+        float shaderScaledWidth = (float)scaledWidth;
+        float shaderScaledHeight = (float)scaledHeight;
+        float blurRadius = scaledArea.blurRadius();
+        double guiScale = scaledArea.guiScale();
+        CornerRadii scaledRadii = area.cornerRadii.scaled(guiScale).clamped(Math.min(shaderScaledWidth, shaderScaledHeight) * 0.5F).flipVertical();
 
         DrawableColor.FloatColor tint = area.tint.getAsFloats();
         RenderRotationUtil.Rotation2D maskRotation = RenderRotationUtil.getCurrentAdditionalRenderMaskRotation2D();
-        applyUniforms(postChain, scaledX, scaledY, scaledWidth, scaledHeight, blurRadius, scaledRadii, area.shapeType, area.roundness, maskRotation, tint);
+        applyUniforms(postChain, shaderScaledX, shaderScaledY, shaderScaledWidth, shaderScaledHeight, blurRadius, scaledRadii, area.shapeType, area.roundness, maskRotation, tint);
 
         graphics.flush();
         RenderTarget finalTarget = getFinalTarget(postChain);
@@ -278,18 +287,9 @@ public final class GuiBlurRenderer {
             // darkening any translucent GUI content every time a blur area is drawn.
             RenderSystem.disableBlend();
 
-            ScissorBounds scissor = resolveScissorBounds(
-                    area,
-                    targetHeight,
-                    guiScale,
-                    scaledX,
-                    scaledY,
-                    scaledWidth,
-                    scaledHeight,
-                    blurRadius,
-                    maskRotation
-            );
-            graphics.enableScissor(scissor.minXInt(), scissor.minYInt(), scissor.maxXInt(), scissor.maxYInt());
+            GuiBlurGeometry.ScissorBounds scissor = resolveScissorBounds(area, targetWidth, targetHeight, guiScale, scaledX, scaledY, scaledWidth, scaledHeight, blurRadius, maskRotation);
+            if (scissor.isEmpty()) return;
+            graphics.enableScissor(scissor.minX(), scissor.minY(), scissor.maxX(), scissor.maxY());
             scissorEnabled = true;
             processBlurPostChain(postChain, partial);
 
@@ -401,8 +401,8 @@ public final class GuiBlurRenderer {
             return new CornerRadii(topLeft, topRight, bottomRight, bottomLeft);
         }
 
-        private CornerRadii scaled(float factor) {
-            return new CornerRadii(topLeft * factor, topRight * factor, bottomRight * factor, bottomLeft * factor);
+        private CornerRadii scaled(double factor) {
+            return new CornerRadii(GuiBlurGeometry.scaleCornerRadius(topLeft, factor), GuiBlurGeometry.scaleCornerRadius(topRight, factor), GuiBlurGeometry.scaleCornerRadius(bottomRight, factor), GuiBlurGeometry.scaleCornerRadius(bottomLeft, factor));
         }
 
         private CornerRadii clamped(float maxRadius) {
@@ -429,36 +429,26 @@ public final class GuiBlurRenderer {
         return Math.max(0.1F, roundness);
     }
 
-    private static ScissorBounds resolveScissorBounds(
-            BlurArea area,
-            int targetHeight,
-            float guiScale,
-            float scaledX,
-            float scaledY,
-            float scaledWidth,
-            float scaledHeight,
-            float blurRadius,
-            RenderRotationUtil.Rotation2D maskRotation
-    ) {
-        float padding = Math.max(0.0F, blurRadius) * BLUR_SCISSOR_RADIUS_MULTIPLIER_FANCYMENU + BLUR_SCISSOR_AA_PADDING_PIXELS_FANCYMENU;
-        float baseMinX = scaledX - padding;
-        float baseMaxX = scaledX + scaledWidth + padding;
-        float baseMinY = scaledY - padding;
-        float baseMaxY = scaledY + scaledHeight + padding;
+    private static GuiBlurGeometry.ScissorBounds resolveScissorBounds(BlurArea area, int targetWidth, int targetHeight, double guiScale, double scaledX, double scaledY, double scaledWidth, double scaledHeight, float blurRadius, RenderRotationUtil.Rotation2D maskRotation) {
+        double padding = (double)Math.max(0.0F, blurRadius) * BLUR_SCISSOR_RADIUS_MULTIPLIER_FANCYMENU + BLUR_SCISSOR_AA_PADDING_PIXELS_FANCYMENU;
+        double baseMinX = scaledX - padding;
+        double baseMaxX = scaledX + scaledWidth + padding;
+        double baseMinY = scaledY - padding;
+        double baseMaxY = scaledY + scaledHeight + padding;
 
-        float minXInPixels = baseMinX;
-        float maxXInPixels = baseMaxX;
-        float minYInPixels = baseMinY;
-        float maxYInPixels = baseMaxY;
+        double minXInPixels = baseMinX;
+        double maxXInPixels = baseMaxX;
+        double minYInPixels = baseMinY;
+        double maxYInPixels = baseMaxY;
 
         RenderRotationUtil.Rotation2D forwardRotation = invertRotation(maskRotation);
-        float halfWidth = scaledWidth * 0.5F;
-        float halfHeight = scaledHeight * 0.5F;
-        float extentX = Math.abs(forwardRotation.m00()) * halfWidth + Math.abs(forwardRotation.m01()) * halfHeight;
-        float extentY = Math.abs(forwardRotation.m10()) * halfWidth + Math.abs(forwardRotation.m11()) * halfHeight;
-        if (Float.isFinite(extentX) && Float.isFinite(extentY)) {
-            float centerX = scaledX + halfWidth;
-            float centerY = scaledY + halfHeight;
+        double halfWidth = scaledWidth * 0.5D;
+        double halfHeight = scaledHeight * 0.5D;
+        double extentX = (double)Math.abs(forwardRotation.m00()) * halfWidth + (double)Math.abs(forwardRotation.m01()) * halfHeight;
+        double extentY = (double)Math.abs(forwardRotation.m10()) * halfWidth + (double)Math.abs(forwardRotation.m11()) * halfHeight;
+        if (Double.isFinite(extentX) && Double.isFinite(extentY)) {
+            double centerX = scaledX + halfWidth;
+            double centerY = scaledY + halfHeight;
 
             minXInPixels = Math.min(minXInPixels, centerX - extentX - padding);
             maxXInPixels = Math.max(maxXInPixels, centerX + extentX + padding);
@@ -466,16 +456,9 @@ public final class GuiBlurRenderer {
             maxYInPixels = Math.max(maxYInPixels, centerY + extentY + padding);
         }
 
-        if (!Float.isFinite(minXInPixels) || !Float.isFinite(maxXInPixels) || !Float.isFinite(minYInPixels) || !Float.isFinite(maxYInPixels)) {
-            return new ScissorBounds(area.x, area.y, area.x + area.width, area.y + area.height);
-        }
-
-        return new ScissorBounds(
-                minXInPixels / guiScale,
-                (targetHeight - maxYInPixels) / guiScale,
-                maxXInPixels / guiScale,
-                (targetHeight - minYInPixels) / guiScale
-        );
+        GuiBlurGeometry.ScissorBounds scissor = GuiBlurGeometry.convertPixelBoundsToGui(minXInPixels, minYInPixels, maxXInPixels, maxYInPixels, targetWidth, targetHeight, guiScale);
+        if (scissor != null) return scissor;
+        return new GuiBlurGeometry.ScissorBounds(0, 0, 0, 0);
     }
 
     private static RenderRotationUtil.Rotation2D invertRotation(RenderRotationUtil.Rotation2D rotation) {
@@ -490,33 +473,6 @@ public final class GuiBlurRenderer {
                 -rotation.m10() * invDet,
                 rotation.m00() * invDet
         );
-    }
-
-    private record ScissorBounds(float minX, float minY, float maxX, float maxY) {
-
-        private int minXInt() {
-            return floorToInt(minX);
-        }
-
-        private int minYInt() {
-            return floorToInt(minY);
-        }
-
-        private int maxXInt() {
-            return ceilToInt(maxX);
-        }
-
-        private int maxYInt() {
-            return ceilToInt(maxY);
-        }
-
-        private static int floorToInt(float value) {
-            return (int) Math.floor(value);
-        }
-
-        private static int ceilToInt(float value) {
-            return (int) Math.ceil(value);
-        }
     }
 
 }
