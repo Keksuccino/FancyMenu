@@ -95,13 +95,21 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
         } else {
 
+            float scale = this.getScale();
+            if (scale <= 0.0F) return;
+
             this.renderCodeBlock(graphics);
 
             RenderSystem.enableBlend();
             graphics.pose().pushPose();
-            graphics.pose().scale(this.getScale(), this.getScale(), this.getScale());
-            this.parent.renderText(graphics, this.buildRenderComponent(false), this.getTextRenderX(), this.getTextRenderY(), this.parent.textBaseColor.getColorIntWithAlpha(this.parent.textOpacity), this.parent.textShadow && (this.codeBlockContext == null));
-            graphics.pose().popPose();
+            try {
+                // GuiGraphics' vanilla text path only accepts integer draw coordinates. Translate to the exact float origin first so local scaling cannot truncate the fragment's absolute position.
+                graphics.pose().translate(this.getTextX(), this.getTextY(), 0.0F);
+                graphics.pose().scale(scale, scale, 1.0F);
+                this.parent.renderText(graphics, this.buildRenderComponent(false), 0.0F, 0.0F, this.parent.textBaseColor.getColorIntWithAlpha(this.parent.textOpacity), this.parent.textShadow && (this.codeBlockContext == null));
+            } finally {
+                graphics.pose().popPose();
+            }
             RenderingUtils.resetShaderColor(graphics);
 
             this.renderQuoteLine(graphics);
@@ -452,38 +460,29 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     }
 
     public float getTextRenderX() {
-        float baseX = this.x / this.getScale();
+        float scale = this.getScale();
+        if (scale <= 0.0F) return 0.0F;
+        return MarkdownTextGeometry.localCoordinate(this.getTextX(), scale);
+    }
 
-        if ((this.quoteContext != null) && this.startOfRenderLine && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT)) {
-            baseX += this.parent.quoteIndent;
-        }
-
-        if (this.bulletListLevel > 0 && this.startOfRenderLine) {
-            // Now apply the full bullet indent for the first fragment.
-            float bulletIndent = (this.parent.bulletListIndent * this.bulletListLevel) + BULLET_LIST_SPACE_AFTER_INDENT;
-            baseX += bulletIndent;
-        }
-
-        if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.startOfRenderLine) {
-            baseX += 10;
-        }
-
-        if ((this.codeBlockContext != null) && this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockStart() == this)) {
-            baseX += 1;
-        }
-
-        return (int)baseX;
+    protected float getTextRenderOffsetX() {
+        boolean quoteStart = (this.quoteContext != null) && this.startOfRenderLine && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT);
+        boolean bulletStart = this.bulletListLevel > 0 && this.startOfRenderLine;
+        boolean multilineCodeStart = (this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.startOfRenderLine;
+        boolean singleLineCodeStart = (this.codeBlockContext != null) && this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockStart() == this);
+        return MarkdownTextGeometry.horizontalOffset(quoteStart, this.parent.quoteIndent, bulletStart, this.bulletListLevel, this.parent.bulletListIndent, BULLET_LIST_SPACE_AFTER_INDENT, multilineCodeStart, singleLineCodeStart);
     }
 
     public float getTextRenderY() {
-        float f = this.y / this.getScale();
-        if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockStart() != null) && (this.codeBlockContext.getBlockStart().y == this.y)) {
-            f += 10;
-        }
-        if ((this.bulletListLevel > 0) && (this.parentLine != null) && this.parentLine.bulletListItemStartLine) {
-            f += this.parent.bulletListSpacing;
-        }
-        return (int)f;
+        float scale = this.getScale();
+        if (scale <= 0.0F) return 0.0F;
+        return MarkdownTextGeometry.localCoordinate(this.getTextY(), scale);
+    }
+
+    protected float getTextRenderOffsetY() {
+        boolean multilineCodeStart = (this.codeBlockContext != null) && !this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockStart() != null) && (this.codeBlockContext.getBlockStart().y == this.y);
+        boolean bulletItemStartLine = (this.bulletListLevel > 0) && (this.parentLine != null) && this.parentLine.bulletListItemStartLine;
+        return MarkdownTextGeometry.verticalOffset(multilineCodeStart, bulletItemStartLine, this.parent.bulletListSpacing);
     }
 
     public float getRenderWidth() {
@@ -579,17 +578,11 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     }
 
     public float getTextX() {
-        float f = this.getTextRenderX();
-        f -= (this.x / this.getScale());
-        f += this.x;
-        return f;
+        return MarkdownTextGeometry.screenOrigin(this.x, this.getTextRenderOffsetX(), this.getScale());
     }
 
     public float getTextY() {
-        float f = this.getTextRenderY();
-        f -= (this.y / this.getScale());
-        f += this.y;
-        return f;
+        return MarkdownTextGeometry.screenOrigin(this.y, this.getTextRenderOffsetY(), this.getScale());
     }
 
     public float getTextWidth() {
@@ -605,7 +598,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if (this.headlineType == HeadlineType.BIG) f = 1.2f;
         if (this.headlineType == HeadlineType.BIGGER) f = 1.6f;
         if (this.headlineType == HeadlineType.BIGGEST) f = 2.0f;
-        return f * this.parent.textBaseScale;
+        return MarkdownTextGeometry.sanitizeScale(f * this.parent.textBaseScale);
     }
 
     @Override
@@ -622,7 +615,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if ((this.imageSupplier != null) && (this.imageSupplier.get() != null)) {
             return RenderingUtils.isXYInArea(mouseX, mouseY, this.x, this.y, this.getRenderWidth(), this.getRenderHeight());
         }
-        return RenderingUtils.isXYInArea(mouseX, mouseY, this.getTextX(), this.getTextY(), this.getTextWidth(), this.getTextHeight());
+        return MarkdownTextGeometry.contains(mouseX, mouseY, this.getTextX(), this.getTextY(), this.getTextWidth(), this.getTextHeight());
     }
 
     @Override
