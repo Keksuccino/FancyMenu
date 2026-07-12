@@ -1,0 +1,1 @@
+- [x] [[Incompatibility] forcecloseworldloadingscreen prevents FancyMenu layout from loading](https://github.com/Keksuccino/FancyMenu/issues/1666)
