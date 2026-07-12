@@ -32,15 +32,10 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -52,9 +47,7 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
     private static final long DESTROY_RECOVERY_DELAY_MS_FANCYMENU = 1000L;
-    private static final Object ELEMENT_INSTANCE_LOCK_FANCYMENU = new Object();
     private static final Object DESTROY_RECOVERY_LOCK_FANCYMENU = new Object();
-    private static final Set<NativeVideoElement> ELEMENT_INSTANCES_FANCYMENU = Collections.newSetFromMap(new WeakHashMap<>());
     private static final Map<String, DelayedDestroyTask_FancyMenu> DELAYED_DESTROY_TASKS_BY_ELEMENT_ID_FANCYMENU = new HashMap<>();
     private static long delayedDestroyTaskTokenCounter_FancyMenu = 0L;
     private static final String MEMORY_LAST_STOPPED_PLAY_TIME_SECONDS_FANCYMENU = "native_video_element_last_stopped_play_time_seconds";
@@ -145,52 +138,6 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
     public NativeVideoElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
         this.allowDepthTestManipulation = true;
-        synchronized (ELEMENT_INSTANCE_LOCK_FANCYMENU) {
-            ELEMENT_INSTANCES_FANCYMENU.add(this);
-        }
-    }
-
-    public static int forceReloadAllAfterSoundEngineReload_FancyMenu() {
-        List<NativeVideoElement> elements;
-        synchronized (ELEMENT_INSTANCE_LOCK_FANCYMENU) {
-            elements = new ArrayList<>(ELEMENT_INSTANCES_FANCYMENU);
-        }
-
-        if (elements.isEmpty()) return 0;
-
-        Set<IVideo> videosToRelease = Collections.newSetFromMap(new IdentityHashMap<>());
-        int resetCount = 0;
-        int stoppedCount = 0;
-
-        for (NativeVideoElement element : elements) {
-            if ((element == null) || element.destroyed_FancyMenu) continue;
-            IVideo oldVideo = element.video;
-            if (oldVideo != null) {
-                videosToRelease.add(oldVideo);
-            }
-            if (element.resetElementAndReturnStopState()) {
-                stoppedCount++;
-            }
-            resetCount++;
-        }
-
-        int releasedCount = 0;
-        for (IVideo video : videosToRelease) {
-            if (NativeVideoReferenceTracker.hasReferences(video)) continue;
-            try {
-                ResourceHandlers.getVideoHandler().release(video);
-                releasedCount++;
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to release cached native video resource after sound engine reload!", ex);
-            }
-        }
-
-        LOGGER.info("[FANCYMENU] Forced native video element reload after sound engine reload. elementsReset: {}, stoppedPlayers: {}, videoResourcesReleased: {}",
-                resetCount,
-                stoppedCount,
-                releasedCount);
-
-        return resetCount;
     }
 
     protected static void cancelDelayedDestroyTask_FancyMenu(@Nullable DelayedDestroyTask_FancyMenu task) {
@@ -615,9 +562,6 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
             this.releaseVideoReference(oldVideo, oldVideoSource);
         }
         this.clearRuntimeState_FancyMenu();
-        synchronized (ELEMENT_INSTANCE_LOCK_FANCYMENU) {
-            ELEMENT_INSTANCES_FANCYMENU.remove(this);
-        }
     }
 
     /**
