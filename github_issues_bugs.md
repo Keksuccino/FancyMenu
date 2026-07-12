@@ -45,7 +45,7 @@
 - [ ] [[MC 26.1.X] Screen's content gets rendered on negative X (gets moved too much to the left, leaving a black space at the right side)](https://github.com/Keksuccino/FancyMenu/issues/1577)
 - [x] [Bugs related to buttons and navigation in interfaces](https://github.com/Keksuccino/FancyMenu/issues/1549)
 - [ ] [Opening "options_screen" with a custom Main Menu/Title Screen throws NullPointerException error.](https://github.com/Keksuccino/FancyMenu/issues/1545)
-- [ ] [Checkboxes do not fade in](https://github.com/Keksuccino/FancyMenu/issues/1536)
+- [x] [Checkboxes do not fade in](https://github.com/Keksuccino/FancyMenu/issues/1536)
 - [ ] [False Positive With KubeJS Renaming Of Mods Feature](https://github.com/Keksuccino/FancyMenu/issues/1535)
 - [ ] [Create World Screen Layout Resetting](https://github.com/Keksuccino/FancyMenu/issues/1533)
 - [ ] [Creative Inventory Items Having No Tooltp Text Whe...](https://github.com/Keksuccino/FancyMenu/issues/1531)
