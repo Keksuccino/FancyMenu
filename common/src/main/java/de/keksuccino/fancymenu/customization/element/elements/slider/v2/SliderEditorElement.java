@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.element.elements.slider.v2;
 
 import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorWindowBody;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.element.elements.WidgetTooltipText;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsWindowBody;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -182,19 +183,10 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_tooltip",
                         SliderEditorElement.class,
-                        consumes -> {
-                            String t = (consumes.element).tooltip;
-                            if (t != null) t = t.replace("%n%", "\n");
-                            return t;
-                        },
-                        (element1, s) -> {
-                            if (s != null) {
-                                s = s.replace("\n", "%n%");
-                            }
-                            (element1.element).tooltip = s;
-                        },
+                        consumes -> WidgetTooltipText.toEditorValue(consumes.element.tooltip),
+                        (element1, s) -> element1.element.tooltip = WidgetTooltipText.fromEditorValue(s),
                         null, true, true, Component.translatable("fancymenu.elements.button.tooltip"),
-                        true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
+                        true, null, WidgetTooltipText::isEditorValueValid, null)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.tooltip.desc")))
                 .setIcon(MaterialIcons.CHAT);
 
