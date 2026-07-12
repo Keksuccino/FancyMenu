@@ -1,7 +1,9 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import de.keksuccino.fancymenu.customization.widget.identification.PauseMenuWidgetIdentifierResolver;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -24,26 +26,23 @@ public class MixinPauseScreen extends Screen {
     @Inject(method = "createPauseMenu", at = @At("RETURN"))
     private void after_createPauseMenu_FancyMenu(CallbackInfo info) {
 
-        this.children().forEach(guiEventListener -> {
+        boolean hasSendFeedbackButton = false;
+        boolean hasReportBugsButton = false;
+        for (GuiEventListener guiEventListener : this.children()) {
+            if (guiEventListener instanceof AbstractWidget widget && widget.getMessage().getContents() instanceof TranslatableContents contents) {
+                if (contents.getKey().equals("menu.sendFeedback")) hasSendFeedbackButton = true;
+                if (contents.getKey().equals("menu.reportBugs")) hasReportBugsButton = true;
+            }
+        }
+
+        for (GuiEventListener guiEventListener : this.children()) {
             if (guiEventListener instanceof AbstractWidget w) {
                 if (w.getMessage().getContents() instanceof TranslatableContents c) {
-                    UniqueWidget u = ((UniqueWidget)w);
-                    if (c.getKey().equals("menu.game")) u.setWidgetIdentifierFancyMenu("pause_title_widget");
-                    if (c.getKey().equals("menu.returnToGame")) u.setWidgetIdentifierFancyMenu("pause_return_to_game_button");
-                    if (c.getKey().equals("gui.advancements")) u.setWidgetIdentifierFancyMenu("pause_advancements_button");
-                    if (c.getKey().equals("gui.stats")) u.setWidgetIdentifierFancyMenu("pause_stats_button");
-                    if (c.getKey().equals("menu.feedback")) u.setWidgetIdentifierFancyMenu("pause_feedback_button");
-                    if (c.getKey().equals("menu.server_links")) u.setWidgetIdentifierFancyMenu("pause_server_links_button");
-                    if (c.getKey().equals("menu.options")) u.setWidgetIdentifierFancyMenu("pause_options_button");
-                    if (c.getKey().equals("menu.shareToLan")) u.setWidgetIdentifierFancyMenu("pause_share_to_lan_button");
-                    if (c.getKey().equals("menu.playerReporting")) u.setWidgetIdentifierFancyMenu("pause_share_to_lan_button");
-                    if (c.getKey().equals("menu.returnToMenu")) u.setWidgetIdentifierFancyMenu("pause_disconnect_button");
-                    if (c.getKey().equals("menu.disconnect")) u.setWidgetIdentifierFancyMenu("pause_disconnect_button");
-                    if (c.getKey().equals("menu.sendFeedback")) u.setWidgetIdentifierFancyMenu("pause_send_feedback_button");
-                    if (c.getKey().equals("menu.reportBugs")) u.setWidgetIdentifierFancyMenu("pause_report_bugs_button");
+                    String identifier = PauseMenuWidgetIdentifierResolver.resolve(c.getKey(), hasSendFeedbackButton, hasReportBugsButton);
+                    if (identifier != null) ((UniqueWidget)w).setWidgetIdentifierFancyMenu(identifier);
                 }
             }
-        });
+        }
 
     }
 
