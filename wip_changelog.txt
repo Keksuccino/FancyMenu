@@ -42,5 +42,6 @@ CHANGELOG | FANCYMENU v3.9.7 [ W I P !! Not public yet !! ]
 - Fixed custom window icons only appearing after opening another screen (#1481)
 - Fixed button-template textures flickering between Vanilla and custom states when SpiffyHUD processes an in-world screen (#1230)
 - Fixed Minecraft font corrupted after showing an MCEF browser (#1651)
+- Fixed "Text" elements break on blur (#1684)
 
 %changelog:end%
