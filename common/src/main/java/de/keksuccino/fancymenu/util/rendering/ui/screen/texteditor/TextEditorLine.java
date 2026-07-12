@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
 import de.keksuccino.konkrete.input.CharacterFilter;
-import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -231,11 +230,6 @@ public class TextEditorLine extends AdvancedTextField {
     }
 
     public void tick() {
-
-        if (!MouseInput.isLeftMouseDown() && this.isInMouseHighlightingMode) {
-            this.isInMouseHighlightingMode = false;
-        }
-
         leftRightArrowWasDown = false;
 
     }
@@ -364,21 +358,18 @@ public class TextEditorLine extends AdvancedTextField {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
 
-        if (!this.parent.isMouseInsideEditorArea() || this.parent.rightClickContextMenu.isOpen()) {
+        if (!this.parent.isMouseInsideEditorArea(mouseX, mouseY) || this.parent.rightClickContextMenu.isOpen()) {
             return false;
         }
 
-        if ((mouseButton == 0) && this.isHovered() && !this.isInMouseHighlightingMode && this.isVisible()) {
-            if (!this.parent.isAtLeastOneLineInHighlightMode()) {
-                this.parent.startHighlightLine = this;
-            }
-            this.isInMouseHighlightingMode = true;
+        if ((mouseButton == 0) && this.isMouseOver(mouseX, mouseY) && !this.isInMouseHighlightingMode && this.isVisible()) {
+            this.parent.startMouseHighlighting(this);
             this.parent.setFocusedLine(Math.max(0, this.parent.getLineIndex(this)));
             super.mouseClicked(mouseX, mouseY, mouseButton);
             int cursorPos = this.parent.getCursorPosFromMouseX(this, mouseX);
             this.moveCursorTo(cursorPos, false);
             this.setHighlightPos(this.getCursorPosition());
-        } else if ((mouseButton == 0) && !this.isHovered()) {
+        } else if ((mouseButton == 0) && !this.isMouseOver(mouseX, mouseY)) {
             //Clear highlighting when left-clicked in another line, etc.
             this.setHighlightPos(this.getCursorPosition());
         }

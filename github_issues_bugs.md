@@ -36,7 +36,7 @@
 - [ ] [The text when creating the world is now bold in some languages](https://github.com/Keksuccino/FancyMenu/issues/1623)
 - [x] [MCEF does not load on first boot](https://github.com/Keksuccino/FancyMenu/issues/1622)
 - [x] [SendHttpRequestAction reports "No internet connection available!" even though internet works](https://github.com/Keksuccino/FancyMenu/issues/1614)
-- [ ] [[Fabric 1.21.11] Can't highlight text with your mouse in certain windows](https://github.com/Keksuccino/FancyMenu/issues/1613)
+- [x] [[Fabric 1.21.11] Can't highlight text with your mouse in certain windows](https://github.com/Keksuccino/FancyMenu/issues/1613)
 - [ ] [Global Menu Background Images](https://github.com/Keksuccino/FancyMenu/issues/1612)
 - [ ] [Button's hover animation flickering strangely when hovered](https://github.com/Keksuccino/FancyMenu/issues/1610)
 - [ ] [Tooltips of Button element not replacing `&` formatting codes anymore (because removed from placeholder replacement logic)](https://github.com/Keksuccino/FancyMenu/issues/1609)

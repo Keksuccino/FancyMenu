@@ -10,7 +10,9 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollbar.ScrollBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.formattingrules.TextEditorFormattingRules;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
@@ -22,7 +24,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.konkrete.input.CharacterFilter;
-import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
@@ -416,7 +417,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
 
         this.renderMultilineNotSupportedNotification(graphics, mouseX, mouseY, partial);
 
-        this.tickMouseHighlighting();
+        this.tickMouseHighlighting(this.getRenderMouseX(), this.getRenderMouseY(), true);
 
     }
 
@@ -710,43 +711,38 @@ public class TextEditorWindowBody extends PiPWindowBody {
         SmoothRectangleRenderer.renderSmoothBorderRoundAllCornersScaled(graphics, this.getEditorAreaX() - 1, this.getEditorAreaY() - 1, this.getEditorAreaWidth() + 2, this.getEditorAreaHeight() + 2, 1.0F, editorAreaRadius, editorAreaRadius, editorAreaRadius, editorAreaRadius, this.areaBorderColor.get().getColorInt(), partial);
     }
 
-    protected void tickMouseHighlighting() {
+    protected void tickMouseHighlighting(double mouseX, double mouseY, boolean allowAutoScroll) {
 
-        if (!MouseInput.isLeftMouseDown()) {
-            this.startHighlightLine = null;
-            for (TextEditorLine t : this.textFieldLines) {
-                t.isInMouseHighlightingMode = false;
-            }
+        if (!this.isInMouseHighlightingMode()) {
             return;
         }
 
         //Auto-scroll if mouse outside editor area and in mouse-highlighting mode
-        if (this.isInMouseHighlightingMode()) {
-            int mX = this.getRenderMouseX();
-            int mY = this.getRenderMouseY();
+        if (allowAutoScroll) {
             float speedMult = 0.008F;
-            if (mX < this.borderLeft) {
-                float f = Math.max(0.01F, (float)(this.borderLeft - mX) * speedMult);
+            if (mouseX < this.borderLeft) {
+                float f = Math.max(0.01F, (float)(this.borderLeft - mouseX) * speedMult);
                 this.horizontalScrollBar.setScroll(this.horizontalScrollBar.getScroll() - f);
-            } else if (mX > (this.getEditorAreaX() + this.getEditorAreaWidth())) {
-                float f = Math.max(0.01F, (float)(mX - (this.getEditorAreaX() + this.getEditorAreaWidth())) * speedMult);
+            } else if (mouseX > (this.getEditorAreaX() + this.getEditorAreaWidth())) {
+                float f = Math.max(0.01F, (float)(mouseX - (this.getEditorAreaX() + this.getEditorAreaWidth())) * speedMult);
                 this.horizontalScrollBar.setScroll(this.horizontalScrollBar.getScroll() + f);
             }
-            if (mY < this.headerHeight) {
-                float f = Math.max(0.01F, (float)(this.headerHeight - mY) * speedMult);
+            if (mouseY < this.headerHeight) {
+                float f = Math.max(0.01F, (float)(this.headerHeight - mouseY) * speedMult);
                 this.verticalScrollBar.setScroll(this.verticalScrollBar.getScroll() - f);
-            } else if (mY > (this.height - this.footerHeight)) {
-                float f = Math.max(0.01F, (float)(mY - (this.height - this.footerHeight)) * speedMult);
+            } else if (mouseY > (this.height - this.footerHeight)) {
+                float f = Math.max(0.01F, (float)(mouseY - (this.height - this.footerHeight)) * speedMult);
                 this.verticalScrollBar.setScroll(this.verticalScrollBar.getScroll() + f);
             }
         }
 
-        if (!this.isMouseInsideEditorArea()) {
-            return;
-        }
+        // Pointer capture must keep extending the selection while the pointer is outside the editor.
+        // Clamp only the selection endpoint; the original coordinates above still control auto-scroll speed.
+        double selectionMouseX = Mth.clamp(mouseX, this.borderLeft, this.getEditorAreaX() + this.getEditorAreaWidth());
+        double selectionMouseY = Mth.clamp(mouseY, this.headerHeight, this.height - this.footerHeight);
 
         TextEditorLine first = this.startHighlightLine;
-        TextEditorLine hovered = this.getHoveredLine();
+        TextEditorLine hovered = this.getClosestVisibleLineAtY(selectionMouseY);
         if ((hovered != null) && !hovered.isFocused() && (first != null)) {
 
             int firstIndex = this.getLineIndex(first);
@@ -812,7 +808,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
                 this.startHighlightLineIndex = this.getLineIndex(focused);
                 this.endHighlightLineIndex = this.startHighlightLineIndex;
             }
-            int cursorPos = this.getCursorPosFromMouseX(focused, this.getRenderMouseX());
+            int cursorPos = this.getCursorPosFromMouseX(focused, selectionMouseX);
             focused.moveCursorTo(cursorPos, true);
             if ((focused.getAsAccessor().getHighlightPosFancyMenu() == focused.getCursorPosition()) && (this.startHighlightLineIndex == this.endHighlightLineIndex)) {
                 this.resetHighlighting();
@@ -961,15 +957,6 @@ public class TextEditorWindowBody extends PiPWindowBody {
         return null;
     }
 
-    public boolean isAtLeastOneLineInHighlightMode() {
-        for (TextEditorLine t : this.textFieldLines) {
-            if (t.isInMouseHighlightingMode) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     /** Returns the lines between two indexes, EXCLUDING start AND end indexes! **/
     @Nullable
     public List<TextEditorLine> getLinesBetweenIndexes(int startIndex, int endIndex) {
@@ -984,12 +971,22 @@ public class TextEditorWindowBody extends PiPWindowBody {
 
     @Nullable
     public TextEditorLine getHoveredLine() {
+        return this.getHoveredLine(this.getRenderMouseX(), this.getRenderMouseY());
+    }
+
+    @Nullable
+    public TextEditorLine getHoveredLine(double mouseX, double mouseY) {
         for (TextEditorLine t : this.textFieldLines) {
-            if (t.isHovered()) {
+            if (t.isMouseOver(mouseX, mouseY)) {
                 return t;
             }
         }
         return null;
+    }
+
+    @Nullable
+    protected TextEditorLine getClosestVisibleLineAtY(double mouseY) {
+        return TextEditorSelectionLineResolver.findClosestVisibleLineAtY(this.textFieldLines, mouseY, this.getEditorAreaY(), this.getEditorAreaY() + this.getEditorAreaHeight(), TextEditorLine::getY, TextEditorLine::getHeight);
     }
 
     public int getLineIndex(TextEditorLine inputBox) {
@@ -1278,7 +1275,39 @@ public class TextEditorWindowBody extends PiPWindowBody {
     }
 
     public boolean isInMouseHighlightingMode() {
-        return MouseInput.isLeftMouseDown() && (this.startHighlightLine != null);
+        return this.startHighlightLine != null;
+    }
+
+    /**
+     * The editor lines are managed manually instead of being Screen children, so the editor must own
+     * their pointer capture instead of relying on vanilla's focused-child drag state.
+     */
+    protected void startMouseHighlighting(@NotNull TextEditorLine line) {
+        this.startHighlightLine = line;
+        line.isInMouseHighlightingMode = true;
+    }
+
+    protected void stopMouseHighlighting() {
+        this.startHighlightLine = null;
+        for (TextEditorLine line : this.textFieldLines) {
+            line.isInMouseHighlightingMode = false;
+        }
+    }
+
+    /**
+     * A captured PiP release can be intentionally dropped when the window becomes hidden, locked, or
+     * loses focus to a forced window. The raw GLFW state remains authoritative in all of those paths.
+     */
+    protected void validateMouseHighlightingCapture() {
+        if (!this.isInMouseHighlightingMode()) {
+            return;
+        }
+        PiPWindow window = this.getWindow();
+        boolean windowOwnsCapture = window == null || (window.isVisible() && !window.isInputLocked() && PiPWindowHandler.INSTANCE.isWindowFocused(window));
+        boolean leftMouseDown = GLFW.glfwGetMouseButton(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS;
+        if (!windowOwnsCapture || !leftMouseDown) {
+            this.stopMouseHighlighting();
+        }
     }
 
     public void pasteText(String text) {
@@ -1806,6 +1835,11 @@ public class TextEditorWindowBody extends PiPWindowBody {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
 
+        if (this.isInMouseHighlightingMode()) {
+            // Recover cleanly if the previous capture ended because its window disappeared before release.
+            this.stopMouseHighlighting();
+        }
+
         this.setFocused(null);
 
         if (super.mouseClicked(mouseX, mouseY, button)) return true;
@@ -1825,13 +1859,13 @@ public class TextEditorWindowBody extends PiPWindowBody {
                 l.mouseClicked(mouseX, mouseY, button);
             }
 
-            if (this.isMouseInsideEditorArea()) {
+            if (this.isMouseInsideEditorArea(mouseX, mouseY)) {
                 if (button == 1) {
                     this.rightClickContextMenu.closeMenu();
                 }
                 if ((button == 0) || (button == 1)) {
                     boolean isHighlightedHovered = this.isHighlightedTextHovered();
-                    TextEditorLine hoveredLine = this.getHoveredLine();
+                    TextEditorLine hoveredLine = this.getHoveredLine(mouseX, mouseY);
                     if (!this.rightClickContextMenu.isOpen()) {
                         if ((button == 0) || !isHighlightedHovered) {
                             this.resetHighlighting();
@@ -1882,7 +1916,29 @@ public class TextEditorWindowBody extends PiPWindowBody {
     }
 
     @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if ((button == 0) && this.isInMouseHighlightingMode()) {
+            this.tickMouseHighlighting(mouseX, mouseY, false);
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        boolean handled = super.mouseReleased(mouseX, mouseY, button);
+        if ((button == 0) && this.isInMouseHighlightingMode()) {
+            this.tickMouseHighlighting(mouseX, mouseY, false);
+            this.stopMouseHighlighting();
+            return true;
+        }
+        return handled;
+    }
+
+    @Override
     public void tick() {
+
+        this.validateMouseHighlightingCapture();
 
         for (TextEditorLine l : this.textFieldLines) {
             l.tick();
@@ -1894,7 +1950,14 @@ public class TextEditorWindowBody extends PiPWindowBody {
 
     @Override
     public void onWindowClosedExternally() {
+        this.stopMouseHighlighting();
         this.callback.accept(null);
+    }
+
+    @Override
+    public void onScreenClosed() {
+        super.onScreenClosed();
+        this.stopMouseHighlighting();
     }
 
     public boolean isMouseInteractingWithGrabbers() {
@@ -2147,13 +2210,15 @@ public class TextEditorWindowBody extends PiPWindowBody {
     }
 
     public boolean isMouseInsideEditorArea() {
+        return this.isMouseInsideEditorArea(this.getRenderMouseX(), this.getRenderMouseY());
+    }
+
+    public boolean isMouseInsideEditorArea(double mouseX, double mouseY) {
         int xStart = this.borderLeft;
         int yStart = this.headerHeight;
         int xEnd = this.getEditorAreaX() + this.getEditorAreaWidth();
         int yEnd = this.height - this.footerHeight;
-        int mX = this.getRenderMouseX();
-        int mY = this.getRenderMouseY();
-        return (mX >= xStart) && (mX <= xEnd) && (mY >= yStart) && (mY <= yEnd);
+        return (mouseX >= xStart) && (mouseX <= xEnd) && (mouseY >= yStart) && (mouseY <= yEnd);
     }
 
     public int getEditorAreaWidth() {
