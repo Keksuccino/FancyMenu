@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.entity;
 
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import it.crystalnest.fancy_entity_renderer.api.entity.player.FancyPlayerWidget;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -13,58 +14,57 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.util.UUID;
 
+/**
+ * Adapts FER's optional player widget to FancyMenu's widget contracts.
+ * {@link de.keksuccino.fancymenu.customization.element.elements.playerentity.PlayerEntityElement} only constructs this adapter after FER detection, so the typed references do not make FER mandatory.
+ * Delegation must stay typed because loader remappers cannot rewrite Minecraft method names hidden in reflection strings.
+ */
 public class WrappedFancyPlayerWidget extends AbstractWidget implements NavigatableWidget {
-
-    private static final String FER_PLAYER_WIDGET_CLASS = "it.crystalnest.fancy_entity_renderer.api.entity.player.FancyPlayerWidget";
 
     private boolean focusable = true;
     private boolean navigatable = true;
 
     @NotNull
-    public static WrappedFancyPlayerWidget build(int x, int y, int width, int height) throws ReflectiveOperationException {
+    public static WrappedFancyPlayerWidget build(int x, int y, int width, int height) {
         return new WrappedFancyPlayerWidget(x, y, width, height);
     }
 
     @NotNull
-    protected final Object wrapped;
+    protected final FancyPlayerWidget wrapped;
 
-    protected WrappedFancyPlayerWidget(int x, int y, int width, int height) throws ReflectiveOperationException {
+    protected WrappedFancyPlayerWidget(int x, int y, int width, int height) {
         super(x, y, width, height, Component.empty());
-        Class<?> widgetClass = Class.forName(FER_PLAYER_WIDGET_CLASS);
-        Constructor<?> constructor = widgetClass.getConstructor(int.class, int.class, int.class, int.class);
-        this.wrapped = constructor.newInstance(x, y, width, height);
+        this.wrapped = new FancyPlayerWidget(x, y, width, height);
     }
 
     @Override
     protected void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        this.invoke("render", graphics, mouseX, mouseY, partial);
+        this.wrapped.render(graphics, mouseX, mouseY, partial);
     }
 
     @Override
     protected void updateWidgetNarration(@NotNull NarrationElementOutput output) {
-        this.invoke("updateNarration", output);
+        this.wrapped.updateNarration(output);
     }
 
     @Override
     public void setX(int x) {
         super.setX(x);
-        this.invoke("setX", x);
+        this.wrapped.setX(x);
     }
 
     @Override
     public void setY(int y) {
         super.setY(y);
-        this.invoke("setY", y);
+        this.wrapped.setY(y);
     }
 
     @Override
     public void setWidth(int width) {
         super.setWidth(width);
-        this.invoke("setWidth", width);
+        this.wrapped.setWidth(width);
     }
 
     public void setHeight(int height) {
@@ -99,268 +99,234 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
     }
 
     public WrappedFancyPlayerWidget setBodyFollowsMouse(boolean followsMouse) {
-        this.invoke("setBodyFollowsMouse", followsMouse);
+        this.wrapped.setBodyFollowsMouse(followsMouse);
         return this;
     }
 
     public WrappedFancyPlayerWidget setHeadFollowsMouse(boolean followsMouse) {
-        this.invoke("setHeadFollowsMouse", followsMouse);
+        this.wrapped.setHeadFollowsMouse(followsMouse);
         return this;
     }
 
     public WrappedFancyPlayerWidget setHeadRotation(float x, float y, float z) {
-        this.invoke("setHeadRotation", x, y, z);
+        this.wrapped.setHeadRotation(x, y, z);
         return this;
     }
 
     public WrappedFancyPlayerWidget setBodyRotation(float x, float y, float z) {
-        this.invoke("setBodyRotation", x, y, z);
+        this.wrapped.setBodyRotation(x, y, z);
         return this;
     }
 
     public WrappedFancyPlayerWidget setLeftArmRotation(float x, float y, float z) {
-        this.invoke("setLeftArmRotation", x, y, z);
+        this.wrapped.setLeftArmRotation(x, y, z);
         return this;
     }
 
     public WrappedFancyPlayerWidget setRightArmRotation(float x, float y, float z) {
-        this.invoke("setRightArmRotation", x, y, z);
+        this.wrapped.setRightArmRotation(x, y, z);
         return this;
     }
 
     public WrappedFancyPlayerWidget setLeftLegRotation(float x, float y, float z) {
-        this.invoke("setLeftLegRotation", x, y, z);
+        this.wrapped.setLeftLegRotation(x, y, z);
         return this;
     }
 
     public WrappedFancyPlayerWidget setRightLegRotation(float x, float y, float z) {
-        this.invoke("setRightLegRotation", x, y, z);
+        this.wrapped.setRightLegRotation(x, y, z);
         return this;
     }
 
     public WrappedFancyPlayerWidget setSlim(boolean isSlim) {
-        this.invoke("setSlim", isSlim);
+        this.wrapped.setSlim(isSlim);
         return this;
     }
 
     public WrappedFancyPlayerWidget setSkin(@NotNull ResourceLocation skin, @Nullable ResourceLocation cape, boolean slim) {
-        this.invoke("setSkin", skin, slim);
+        this.wrapped.setSkin(skin, slim);
         this.setCape(cape);
         return this;
     }
 
     public WrappedFancyPlayerWidget copyLocalPlayer() {
-        this.invoke("copyLocalPlayer");
+        this.wrapped.copyLocalPlayer();
         return this;
     }
 
     public WrappedFancyPlayerWidget setName(String name) {
-        this.invoke("setName", name);
+        this.wrapped.setName(name);
         return this;
     }
 
     public WrappedFancyPlayerWidget setPinName(boolean pin) {
-        this.invoke("setPinName", pin);
+        this.wrapped.setPinName(pin);
         return this;
     }
 
     public WrappedFancyPlayerWidget setShowName(boolean showName) {
-        this.invoke("setShowName", showName);
+        this.wrapped.setShowName(showName);
         return this;
     }
 
     public WrappedFancyPlayerWidget setShowCape(boolean showCape) {
-        this.invoke("setShowCape", showCape);
+        this.wrapped.setShowCape(showCape);
         return this;
     }
 
     public WrappedFancyPlayerWidget setShowLeftArm(boolean showLeftArm) {
-        this.invoke("setShowLeftArm", showLeftArm);
+        this.wrapped.setShowLeftArm(showLeftArm);
         return this;
     }
 
     public WrappedFancyPlayerWidget setShowLeftSleeve(boolean showLeftSleeve) {
-        this.invoke("setShowLeftSleeve", showLeftSleeve);
+        this.wrapped.setShowLeftSleeve(showLeftSleeve);
         return this;
     }
 
     public WrappedFancyPlayerWidget setShowRightArm(boolean showRightArm) {
-        this.invoke("setShowRightArm", showRightArm);
+        this.wrapped.setShowRightArm(showRightArm);
         return this;
     }
 
     public WrappedFancyPlayerWidget setShowRightSleeve(boolean showRightSleeve) {
-        this.invoke("setShowRightSleeve", showRightSleeve);
+        this.wrapped.setShowRightSleeve(showRightSleeve);
         return this;
     }
 
     public WrappedFancyPlayerWidget setShowLeftLeg(boolean showLeftLeg) {
-        this.invoke("setShowLeftLeg", showLeftLeg);
+        this.wrapped.setShowLeftLeg(showLeftLeg);
         return this;
     }
 
     public WrappedFancyPlayerWidget setShowLeftPants(boolean showLeftPants) {
-        this.invoke("setShowLeftPants", showLeftPants);
+        this.wrapped.setShowLeftPants(showLeftPants);
         return this;
     }
 
     public WrappedFancyPlayerWidget setShowRightLeg(boolean showRightLeg) {
-        this.invoke("setShowRightLeg", showRightLeg);
+        this.wrapped.setShowRightLeg(showRightLeg);
         return this;
     }
 
     public WrappedFancyPlayerWidget setShowRightPants(boolean showRightPants) {
-        this.invoke("setShowRightPants", showRightPants);
+        this.wrapped.setShowRightPants(showRightPants);
         return this;
     }
 
     public WrappedFancyPlayerWidget setShowHead(boolean showHead) {
-        this.invoke("setShowHead", showHead);
+        this.wrapped.setShowHead(showHead);
         return this;
     }
 
     public WrappedFancyPlayerWidget setShowHat(boolean showHat) {
-        this.invoke("setShowHat", showHat);
+        this.wrapped.setShowHat(showHat);
         return this;
     }
 
     public WrappedFancyPlayerWidget setShowBody(boolean showBody) {
-        this.invoke("setShowBody", showBody);
+        this.wrapped.setShowBody(showBody);
         return this;
     }
 
     public WrappedFancyPlayerWidget setShowJacket(boolean showJacket) {
-        this.invoke("setShowJacket", showJacket);
+        this.wrapped.setShowJacket(showJacket);
         return this;
     }
 
     public WrappedFancyPlayerWidget setPose(@NotNull Pose pose) {
-        this.invoke("setPose", pose);
+        this.wrapped.setPose(pose);
         return this;
     }
 
     public WrappedFancyPlayerWidget setBaby(boolean isBaby) {
-        this.invoke("setBaby", isBaby);
+        this.wrapped.setBaby(isBaby);
         return this;
     }
 
     public WrappedFancyPlayerWidget setParrots(@Nullable Parrot.Variant leftParrot, @Nullable Parrot.Variant rightParrot) {
-        this.invoke("setParrots", leftParrot, rightParrot);
+        this.wrapped.setParrots(leftParrot, rightParrot);
         return this;
     }
 
     public WrappedFancyPlayerWidget setBodyMovement(boolean shouldMove) {
-        this.invoke("setMoving", shouldMove);
+        this.wrapped.setMoving(shouldMove);
         return this;
     }
 
     public WrappedFancyPlayerWidget setRightHandItem(@Nullable Item item) {
-        this.invoke("setRightHandItem", item);
+        this.wrapped.setRightHandItem(item);
         return this;
     }
 
     public WrappedFancyPlayerWidget setRightHandItem(@Nullable ItemStack item) {
-        this.invoke("setRightHandItem", item);
+        this.wrapped.setRightHandItem(item);
         return this;
     }
 
     public WrappedFancyPlayerWidget setLeftHandItem(@Nullable Item item) {
-        this.invoke("setLeftHandItem", item);
+        this.wrapped.setLeftHandItem(item);
         return this;
     }
 
     public WrappedFancyPlayerWidget setLeftHandItem(@Nullable ItemStack item) {
-        this.invoke("setLeftHandItem", item);
+        this.wrapped.setLeftHandItem(item);
         return this;
     }
 
     public WrappedFancyPlayerWidget setHeadWearable(@Nullable Item item) {
-        this.invoke("setHeadWearable", item);
+        this.wrapped.setHeadWearable(item);
         return this;
     }
 
     public WrappedFancyPlayerWidget setHeadWearable(@Nullable ItemStack item) {
-        this.invoke("setHeadWearable", item);
+        this.wrapped.setHeadWearable(item);
         return this;
     }
 
     public WrappedFancyPlayerWidget setChestWearable(@Nullable Item item) {
-        this.invoke("setChestWearable", item);
+        this.wrapped.setChestWearable(item);
         return this;
     }
 
     public WrappedFancyPlayerWidget setChestWearable(@Nullable ItemStack item) {
-        this.invoke("setChestWearable", item);
+        this.wrapped.setChestWearable(item);
         return this;
     }
 
     public WrappedFancyPlayerWidget setLegsWearable(@Nullable Item item) {
-        this.invoke("setLegsWearable", item);
+        this.wrapped.setLegsWearable(item);
         return this;
     }
 
     public WrappedFancyPlayerWidget setLegsWearable(@Nullable ItemStack item) {
-        this.invoke("setLegsWearable", item);
+        this.wrapped.setLegsWearable(item);
         return this;
     }
 
     public WrappedFancyPlayerWidget setFeetWearable(@Nullable Item item) {
-        this.invoke("setFeetWearable", item);
+        this.wrapped.setFeetWearable(item);
         return this;
     }
 
     public WrappedFancyPlayerWidget setFeetWearable(@Nullable ItemStack item) {
-        this.invoke("setFeetWearable", item);
+        this.wrapped.setFeetWearable(item);
         return this;
     }
 
     public WrappedFancyPlayerWidget copyPlayer(String profileName) {
-        this.invoke("copyPlayer", profileName);
+        this.wrapped.copyPlayer(profileName);
         return this;
     }
 
     public WrappedFancyPlayerWidget copyPlayer(UUID profileId) {
-        this.invoke("copyPlayer", profileId);
+        this.wrapped.copyPlayer(profileId);
         return this;
     }
 
     public WrappedFancyPlayerWidget uncopyPlayer() {
-        this.invoke("uncopyPlayer");
+        this.wrapped.uncopyPlayer();
         return this;
-    }
-
-    private boolean invoke(@NotNull String methodName, Object... args) {
-        try {
-            Method method = this.findMethod(methodName, args);
-            if (method != null) {
-                method.setAccessible(true);
-                method.invoke(this.wrapped, args);
-                return true;
-            }
-        } catch (Throwable ignored) {}
-        return false;
-    }
-
-    @Nullable
-    private Method findMethod(@NotNull String methodName, Object... args) {
-        for (Method method : this.wrapped.getClass().getMethods()) {
-            if (!method.getName().equals(methodName) || (method.getParameterCount() != args.length)) {
-                continue;
-            }
-            Class<?>[] parameterTypes = method.getParameterTypes();
-            boolean matches = true;
-            for (int i = 0; i < parameterTypes.length; i++) {
-                Object arg = args[i];
-                if ((arg != null) && !wrap(parameterTypes[i]).isAssignableFrom(arg.getClass())) {
-                    matches = false;
-                    break;
-                }
-            }
-            if (matches) {
-                return method;
-            }
-        }
-        return null;
     }
 
     private void setWrappedHeight(int height) {
@@ -371,20 +337,6 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
         try {
             ((FancyPlayerWidgetBridge) this.wrapped).setCape_FancyMenu(cape);
         } catch (Throwable ignored) {}
-    }
-
-    @NotNull
-    private static Class<?> wrap(@NotNull Class<?> type) {
-        if (!type.isPrimitive()) return type;
-        if (type == boolean.class) return Boolean.class;
-        if (type == byte.class) return Byte.class;
-        if (type == short.class) return Short.class;
-        if (type == int.class) return Integer.class;
-        if (type == long.class) return Long.class;
-        if (type == float.class) return Float.class;
-        if (type == double.class) return Double.class;
-        if (type == char.class) return Character.class;
-        return Void.class;
     }
 
 }
