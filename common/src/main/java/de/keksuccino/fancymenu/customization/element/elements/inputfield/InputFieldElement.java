@@ -55,7 +55,7 @@ public class InputFieldElement extends AbstractElement {
 
         if (this.editBox == null) return;
 
-        if (this.shouldRender()) {
+        if (this.editBox.visible) {
 
             RenderSystem.enableBlend();
 
@@ -86,6 +86,13 @@ public class InputFieldElement extends AbstractElement {
 
         }
 
+    }
+
+    @Override
+    public void renderTick_Inner_Stage_2() {
+        super.renderTick_Inner_Stage_2();
+        // This stage runs even when render() is skipped, so it is the only safe place to keep the registered widget's hit-testing state in sync.
+        this.updateWidgetVisibility();
     }
 
     public void updateValue() {
@@ -156,11 +163,17 @@ public class InputFieldElement extends AbstractElement {
         }
     }
 
+    private void updateWidgetVisibility() {
+        if (this.editBox == null) return;
+        InputFieldWidgetVisibilityController.synchronize(this.editBox, this.shouldRender(), getScreen());
+    }
+
     @Override
     public void afterConstruction() {
         this.updateWidgetBounds();
         this.updateWidgetMaxLength();
         this.updateWidgetStyle();
+        this.updateWidgetVisibility();
     }
 
     @Override

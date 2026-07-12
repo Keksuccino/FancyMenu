@@ -9,7 +9,7 @@
 - [x] [FM does not respect remapped modifier keys (Control/Command) in macOS (remapped via System Settings -> Keyboard)](https://github.com/Keksuccino/FancyMenu/issues/1692)
 - [ ] [having irradiated effect from alex's caves in third person causes the render to go black](https://github.com/Keksuccino/FancyMenu/issues/1689)
 - [ ] [Fancymenu heavy lags my PC till... I unplug the HDMI cable](https://github.com/Keksuccino/FancyMenu/issues/1688)
-- [ ] [Unable to focus text input field](https://github.com/Keksuccino/FancyMenu/issues/1685)
+- [x] [Unable to focus text input field](https://github.com/Keksuccino/FancyMenu/issues/1685)
 - [ ] [Text Elements break on blur](https://github.com/Keksuccino/FancyMenu/issues/1684)
 - [ ] [NeoForge 21.1.229 1.21.1 text elements has broken sizing if used decimals](https://github.com/Keksuccino/FancyMenu/issues/1681)
 - [ ] [Buttons do not auto size when auto sizing is enabled](https://github.com/Keksuccino/FancyMenu/issues/1680)
