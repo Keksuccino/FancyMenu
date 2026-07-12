@@ -1,0 +1,3 @@
+- [ ] [Minecraft Font Corrupted After Show An MCEF (Minecraft Chromium Embedded Framework) Screen](https://github.com/Keksuccino/FancyMenu/issues/1651)
+- [ ] [Opening "options_screen" with a custom Main Menu/Title Screen throws NullPointerException error.](https://github.com/Keksuccino/FancyMenu/issues/1545)
+- [ ] [[26.1.X] Markdown hyperlinks no longer underline on hover](https://github.com/Keksuccino/FancyMenu/issues/1596)

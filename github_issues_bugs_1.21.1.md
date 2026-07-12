@@ -1,0 +1,6 @@
+- [ ] [Text Elements break on blur](https://github.com/Keksuccino/FancyMenu/issues/1684)
+- [ ] [Item elements have inconsistent layering between items and blocks](https://github.com/Keksuccino/FancyMenu/issues/1672)
+- [ ] [[NF 1.21.1] Invisible screens when menu blur is enabled](https://github.com/Keksuccino/FancyMenu/issues/1665)
+- [ ] [[NeoForge 1.21.1] JavaScript API Bridge Not Working on Title Screen at Launch](https://github.com/Keksuccino/FancyMenu/issues/1601)
+- [ ] [Create World Screen Layout Resetting](https://github.com/Keksuccino/FancyMenu/issues/1533)
+- [ ] [FancyMenu breaks custom item rendering in a custom Screen](https://github.com/Keksuccino/FancyMenu/issues/1530)
