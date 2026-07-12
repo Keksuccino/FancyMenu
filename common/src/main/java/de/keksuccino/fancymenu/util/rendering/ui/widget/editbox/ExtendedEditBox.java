@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.VanillaEvents;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -31,6 +32,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 import java.awt.Color;
 import java.util.function.Supplier;
 
@@ -644,7 +646,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
         if (!this.canConsumeUserInput) return false;
-        if (!net.minecraft.client.Minecraft.getInstance().hasShiftDown()) {
+        if ((modifiers & GLFW.GLFW_MOD_SHIFT) == 0) {
             int cursorPos = this.getCursorPosition();
             int highlightPos = this.getHighlightPosition();
             if (cursorPos != highlightPos) {
@@ -659,7 +661,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             }
         }
         //If select all, only select parts that are not prefix or suffix
-        if (((keycode) == 65 && net.minecraft.client.Minecraft.getInstance().hasControlDown()) && ((this.inputPrefix != null) || (this.inputSuffix != null))) {
+        if (((keycode) == 65 && InputUtils.isGuiShortcutModifierDown(modifiers)) && ((this.inputPrefix != null) || (this.inputSuffix != null))) {
             if (this.inputSuffix != null) {
                 this.moveCursorTo(this.getValue().length() - this.inputSuffix.length(), false);
             } else {

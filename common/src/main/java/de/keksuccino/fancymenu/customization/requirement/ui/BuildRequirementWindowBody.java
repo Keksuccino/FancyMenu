@@ -20,6 +20,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.gui.GuiGraphics;
@@ -229,7 +230,7 @@ public class BuildRequirementWindowBody extends PiPWindowBody implements Initial
     }
     
     public boolean charTyped(char codePoint, int modifiers) {
-        if (this.shouldRouteTypedCharacterToSearchBar(codePoint) && (this.searchBar != null) && !this.searchBar.isFocused()) {
+        if (this.shouldRouteTypedCharacterToSearchBar(codePoint, modifiers) && (this.searchBar != null) && !this.searchBar.isFocused()) {
             this.focusSearchBar();
             if (this.searchBar.charTyped(codePoint, modifiers)) {
                 return true;
@@ -461,8 +462,8 @@ public class BuildRequirementWindowBody extends PiPWindowBody implements Initial
         }
     }
 
-    private boolean shouldRouteTypedCharacterToSearchBar(char codePoint) {
-        if (net.minecraft.client.Minecraft.getInstance().hasControlDown() || net.minecraft.client.Minecraft.getInstance().hasAltDown()) {
+    private boolean shouldRouteTypedCharacterToSearchBar(char codePoint, int modifiers) {
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) || (modifiers & GLFW.GLFW_MOD_ALT) != 0) {
             return false;
         }
         return !Character.isISOControl(codePoint);

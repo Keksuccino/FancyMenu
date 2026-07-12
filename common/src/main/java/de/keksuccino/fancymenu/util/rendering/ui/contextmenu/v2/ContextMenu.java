@@ -6,6 +6,7 @@ import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
@@ -43,6 +44,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -1806,12 +1808,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             if (root.isTabKey(keyCode)) {
                 ContextMenu activeMenu = (root.arrowNavigationActive && root.arrowNavigationMenu != null) ? root.arrowNavigationMenu : targetMenu;
                 root.activateArrowNavigation(activeMenu);
-                int direction = net.minecraft.client.Minecraft.getInstance().hasShiftDown() ? -1 : 1;
+                int direction = (modifiers & GLFW.GLFW_MOD_SHIFT) != 0 ? -1 : 1;
                 root.moveArrowSelection(activeMenu, direction);
                 return true;
             }
         }
-        if (targetMenu.isCtrlF(keyCode)) {
+        if (targetMenu.isSearchShortcut(keyCode, modifiers)) {
             if (!root.arrowNavigationActive && hoverMenu != null) {
                 root.cachedSearchMenu = hoverMenu;
             }
@@ -2039,8 +2041,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         return false;
     }
 
-    protected boolean isCtrlF(int keyCode) {
-        return keyCode == InputConstants.KEY_F && net.minecraft.client.Minecraft.getInstance().hasControlDown();
+    protected boolean isSearchShortcut(int keyCode, int modifiers) {
+        return keyCode == InputConstants.KEY_F && InputUtils.isGuiShortcutModifierDown(modifiers);
     }
 
     protected void clearCachedSearchMenuIfClosed() {

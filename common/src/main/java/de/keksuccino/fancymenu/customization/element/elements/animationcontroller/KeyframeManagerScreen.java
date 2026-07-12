@@ -103,7 +103,7 @@ public class KeyframeManagerScreen extends Screen {
     protected long currentPlayOrRecordPosition = 0;
     protected final List<AnimationKeyframe> selectedKeyframes = new ArrayList<>();
     protected int draggingKeyframeIndex = -1;
-    protected AnimationKeyframe lastCtrlClickedFrameForDeselect = null;
+    protected AnimationKeyframe lastShortcutModifierClickedFrameForDeselect = null;
     protected boolean framesGotMoved = false;
     protected int timelineX;
     protected int timelineWidth;
@@ -940,7 +940,7 @@ public class KeyframeManagerScreen extends Screen {
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
 
-        this.lastCtrlClickedFrameForDeselect = null;
+        this.lastShortcutModifierClickedFrameForDeselect = null;
         this.framesGotMoved = false;
 
         if (super.mouseClicked(event, isDoubleClick)) return true;
@@ -976,7 +976,7 @@ public class KeyframeManagerScreen extends Screen {
         // Handle clicking keyframe lines
         int clickedIndex = getKeyframeIndexAtPosition((int) event.x(), (int) event.y());
         // Handle clicking empty timeline area to deselect frames
-        if (!event.hasControlDown() && isInTimelineArea((int) event.x(), (int) event.y()) && (clickedIndex == -1)) {
+        if (!event.hasControlDownWithQuirk() && isInTimelineArea((int) event.x(), (int) event.y()) && (clickedIndex == -1)) {
             this.selectKeyframeClearOldSelection(null);
             return true;
         }
@@ -990,11 +990,11 @@ public class KeyframeManagerScreen extends Screen {
             hasMovedFromClickPosition = false;
             draggingKeyframeIndex = clickedIndex;
             AnimationKeyframe keyframe = this.workingKeyframes.get(draggingKeyframeIndex);
-            if (event.hasControlDown() && this.selectedKeyframes.contains(keyframe)) {
-                this.lastCtrlClickedFrameForDeselect = keyframe;
+            if (event.hasControlDownWithQuirk() && this.selectedKeyframes.contains(keyframe)) {
+                this.lastShortcutModifierClickedFrameForDeselect = keyframe;
             } else {
-                // Handle CTRL-click for multi-select
-                this.selectKeyframe(workingKeyframes.get(clickedIndex), event.hasControlDown());
+                // Handle platform GUI shortcut modifier-click for multi-select
+                this.selectKeyframe(workingKeyframes.get(clickedIndex), event.hasControlDownWithQuirk());
             }
             return true;
         }
@@ -1017,9 +1017,9 @@ public class KeyframeManagerScreen extends Screen {
             this.applyElementValuesToKeyframe(this.previewElement, selectedKeyframe);
             this.applyKeyframeValuesToElement(selectedKeyframe, this.previewElement);
         }
-        if ((this.lastCtrlClickedFrameForDeselect != null) && !this.framesGotMoved) {
+        if ((this.lastShortcutModifierClickedFrameForDeselect != null) && !this.framesGotMoved) {
             if (this.selectedKeyframes.size() > 1) {
-                this.selectedKeyframes.remove(this.lastCtrlClickedFrameForDeselect);
+                this.selectedKeyframes.remove(this.lastShortcutModifierClickedFrameForDeselect);
                 if (this.selectedKeyframes.size() == 1) {
                     AnimationKeyframe lastSelected = this.selectedKeyframes.getFirst();
                     this.selectKeyframeClearOldSelection(null); // first clear all
@@ -1029,7 +1029,7 @@ public class KeyframeManagerScreen extends Screen {
                 this.selectKeyframeClearOldSelection(null);
             }
         }
-        this.lastCtrlClickedFrameForDeselect = null;
+        this.lastShortcutModifierClickedFrameForDeselect = null;
         this.framesGotMoved = false;
         return super.mouseReleased(event);
     }
@@ -1044,7 +1044,7 @@ public class KeyframeManagerScreen extends Screen {
         key = key.toLowerCase();
 
         // Handle undo/redo keyboard shortcuts
-        if (event.hasControlDown()) {
+        if (event.hasControlDownWithQuirk()) {
             if (key.equals("z")) {
                 undo();
                 return true;
@@ -1084,7 +1084,7 @@ public class KeyframeManagerScreen extends Screen {
 
         // Select all keyframes
         if (!this.isRecording || this.isRecordingPaused) {
-            if (event.hasControlDown() && (keyCode == InputConstants.KEY_A)) {
+            if (event.hasControlDownWithQuirk() && (keyCode == InputConstants.KEY_A)) {
                 this.selectKeyframeClearOldSelection(null);
                 this.workingKeyframes.forEach(keyframe -> this.selectKeyframe(keyframe, true));
             }

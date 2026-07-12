@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
@@ -16,6 +17,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -268,9 +270,9 @@ public class TextEditorLine extends ExtendedEditBox {
         return this.keyPressed(event.key(), event.scancode(), event.modifiers());
     }
     
-    public boolean keyPressed(int keycode, int i1, int i2) {
+    public boolean keyPressed(int keycode, int scancode, int modifiers) {
         //Handled by the editor
-        if (((keycode) == 67 && net.minecraft.client.Minecraft.getInstance().hasControlDown()) || ((keycode) == 86 && net.minecraft.client.Minecraft.getInstance().hasControlDown()) || ((keycode) == 65 && net.minecraft.client.Minecraft.getInstance().hasControlDown()) || ((keycode) == 88 && net.minecraft.client.Minecraft.getInstance().hasControlDown())) {
+        if (((keycode) == 67 || (keycode) == 86 || (keycode) == 65 || (keycode) == 88) && InputUtils.isGuiShortcutModifierDown(modifiers)) {
             return false;
         }
         //Text deletion is handled by the editor
@@ -287,7 +289,7 @@ public class TextEditorLine extends ExtendedEditBox {
                 if (this.parent.isLineFocused() && (this.parent.getFocusedLine() == this) && (this.getCursorPosition() <= 0) && (this.parent.getLineIndex(this) > 0)) {
                     leftRightArrowWasDown = true;
                     this.parent.goUpLine();
-                    if (net.minecraft.client.Minecraft.getInstance().hasShiftDown()) {
+                    if ((modifiers & GLFW.GLFW_MOD_SHIFT) != 0) {
                         this.parent.getFocusedLine().setCursorPosition(this.parent.getFocusedLine().getValue().length());
                     } else {
                         this.parent.getFocusedLine().moveCursorTo(this.parent.getFocusedLine().getValue().length(), false);
@@ -305,7 +307,7 @@ public class TextEditorLine extends ExtendedEditBox {
                 if (this.parent.isLineFocused() && (this.parent.getFocusedLine() == this) && (this.getCursorPosition() >= this.getValue().length()) && (this.parent.getLineIndex(this) < this.parent.getLineCount() - 1)) {
                     leftRightArrowWasDown = true;
                     this.parent.goDownLine(false);
-                    if (net.minecraft.client.Minecraft.getInstance().hasShiftDown()) {
+                    if ((modifiers & GLFW.GLFW_MOD_SHIFT) != 0) {
                         this.parent.getFocusedLine().setCursorPosition(0);
                     } else {
                         this.parent.getFocusedLine().moveCursorTo(0, false);
@@ -317,7 +319,7 @@ public class TextEditorLine extends ExtendedEditBox {
                 return true;
             }
         }
-        return super.keyPressed(keycode, i1, i2);
+        return super.keyPressed(keycode, scancode, modifiers);
     }
 
     @Override
