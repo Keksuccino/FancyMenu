@@ -53,7 +53,7 @@
 - [ ] [FancyMenu breaks custom item rendering in a custom Screen](https://github.com/Keksuccino/FancyMenu/issues/1530)
 - [x] [Unsaved changes prompt shows even after saving](https://github.com/Keksuccino/FancyMenu/issues/1527)
 - [x] ["Failed to mimic" error when trying to mimic Vanilla's "Play Selected World" button while no world is selected](https://github.com/Keksuccino/FancyMenu/issues/1525)
-- [ ] [[1.21.11] Placeholder causes resource reload to fail](https://github.com/Keksuccino/FancyMenu/issues/1517)
+- [x] [[1.21.11] Placeholder causes resource reload to fail](https://github.com/Keksuccino/FancyMenu/issues/1517)
 - [ ] [[MC 1.20.1] Level entities are invisible when joining a server while having a "Player Entity" element active in the Connect screen](https://github.com/Keksuccino/FancyMenu/issues/1514)
 - [ ] [It is not possible to mimic the refresh server list button.](https://github.com/Keksuccino/FancyMenu/issues/1492)
 - [ ] [custom icon only appears when clicking singleplayer or something else](https://github.com/Keksuccino/FancyMenu/issues/1481)
