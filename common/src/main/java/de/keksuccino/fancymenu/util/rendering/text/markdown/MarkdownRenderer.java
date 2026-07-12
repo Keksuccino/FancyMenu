@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.text.markdown;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.FocuslessContainerEventHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
@@ -27,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 
 @SuppressWarnings("unused")
 public class MarkdownRenderer implements Renderable, FocuslessContainerEventHandler, NarratableEntry, NavigatableWidget {
@@ -303,11 +305,19 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     @NotNull
     protected String buildRenderText() {
-        String t = PlaceholderParser.replacePlaceholders(this.text);
+        return preprocessRenderText(this.text, this.removeHtmlBreaks, PlaceholderParser::replacePlaceholders);
+    }
+
+    @NotNull
+    static String preprocessRenderText(@NotNull String rawText, boolean removeHtmlBreaks, @NotNull UnaryOperator<String> placeholderExpander) {
+        String t = placeholderExpander.apply(rawText);
+        // Legacy formatting belongs to this text-rendering boundary instead of generic placeholder parsing. Keep
+        // this after placeholder replacement so dynamically produced formatting codes are handled too.
+        t = TextFormattingUtils.replaceFormattingCodes(t, "&", "§");
         t = StringUtils.replace(t, NEWLINE_PERCENT, NEWLINE);
         t = StringUtils.replace(t, NEWLINE_R, NEWLINE);
         t = StringUtils.replace(t, NEWLINE_ESCAPED, NEWLINE);
-        if (this.removeHtmlBreaks) t = StringUtils.replace(t, HTML_BREAK, EMPTY_STRING);
+        if (removeHtmlBreaks) t = StringUtils.replace(t, HTML_BREAK, EMPTY_STRING);
         return t;
     }
 
