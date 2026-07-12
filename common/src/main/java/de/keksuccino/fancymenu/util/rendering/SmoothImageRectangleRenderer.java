@@ -316,7 +316,7 @@ public final class SmoothImageRectangleRenderer {
 
         @Override
         public TextureSetup textureSetup() {
-            return TextureSetup.singleTexture(this.texture.getTextureView(), this.texture.getSampler());
+            return TextureSetup.singleTexture(this.texture.getTextureView(), GuiTextureSamplerUtil.clampToEdge(this.texture.getSampler()));
         }
 
         @Nullable
