@@ -41,6 +41,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 public class RenderingUtils {
 
@@ -878,10 +879,14 @@ public class RenderingUtils {
     }
 
     private static void innerBlitAlphaTexture(GuiGraphics graphics, ResourceLocation location, float minX, float maxX, float minY, float maxY, float z, float minU, float maxU, float minV, float maxV, int color) {
+        submitTexturedQuad(graphics, location, RenderingUtils::getAlphaTextureShader_FancyMenu, minX, maxX, minY, maxY, z, minU, maxU, minV, maxV, color);
+    }
+
+    static void submitTexturedQuad(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, @NotNull Supplier<ShaderInstance> shaderSupplier, float minX, float maxX, float minY, float maxY, float z, float minU, float maxU, float minV, float maxV, int color) {
         graphics.flush();
         setupAlphaBlend();
         RenderSystem.setShaderTexture(0, location);
-        RenderSystem.setShader(RenderingUtils::getAlphaTextureShader_FancyMenu);
+        RenderSystem.setShader(shaderSupplier);
         Matrix4f matrix4f = graphics.pose().last().pose();
         BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
         bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
