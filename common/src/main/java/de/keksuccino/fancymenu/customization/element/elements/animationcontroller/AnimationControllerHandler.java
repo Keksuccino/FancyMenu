@@ -1,268 +1,54 @@
 package de.keksuccino.fancymenu.customization.element.elements.animationcontroller;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
-import de.keksuccino.fancymenu.util.MathUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.runtime.AnimationControllerRuntime;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.*;
 
-public class AnimationControllerHandler {
+/** Public integration facade for the element animation runtime. */
+public final class AnimationControllerHandler {
 
-    private static final Logger LOGGER = LogManager.getLogger();
-    private static final Map<String, AnimationState> RUNNING_ANIMATIONS = new HashMap<>();
-    private static final List<String> ANIMATED_MEMORY = new ArrayList<>();
-    private static final List<String> FINISHED_ANIMATIONS = new ArrayList<>();
-
-    public static boolean applyAnimation(@NotNull AnimationControllerElement controller, @NotNull AnimationControllerElement.TargetElement targetConfig, @Nullable AbstractElement targetElement) {
-
-        if ((targetElement == null) || !controller.shouldRender()) {
-            return false;
-        }
-
-        String targetId = targetElement.getInstanceIdentifier();
-        List<AnimationKeyframe> keyframes = controller.getKeyframes();
-
-        if (keyframes.isEmpty()) {
-            return true;
-        }
-
-        if (!ANIMATED_MEMORY.contains(targetId)) ANIMATED_MEMORY.add(targetId);
-
-        // Start new animation state if not already running or update state if already running
-        AnimationState state;
-        if (!RUNNING_ANIMATIONS.containsKey(targetId)) {
-            int timingOffsetMs = resolveTimingOffsetMs(controller, targetConfig);
-            state = new AnimationState(keyframes, System.currentTimeMillis() + timingOffsetMs, targetElement, controller, timingOffsetMs);
-            RUNNING_ANIMATIONS.put(targetId, state);
-        } else {
-            state = RUNNING_ANIMATIONS.get(targetId);
-            state.targetElement = targetElement;
-        }
-        state.storeOriginalProperties();
-
-        return true;
-
+    private AnimationControllerHandler() {
     }
 
-    private static int resolveTimingOffsetMs(@NotNull AnimationControllerElement controller, @NotNull AnimationControllerElement.TargetElement targetConfig) {
-        int timingOffsetMs = targetConfig.timingOffsetMs;
-        if (controller.randomTimingOffsetMode) {
-            int min = controller.randomTimingOffsetMinMs.getInteger();
-            int max = controller.randomTimingOffsetMaxMs.getInteger();
-            if (min > max) {
-                int temp = min;
-                min = max;
-                max = temp;
-            }
-            timingOffsetMs += MathUtils.getRandomNumberInRange(min, max);
-        }
-        return timingOffsetMs;
+    public static boolean applyAnimation(@NotNull AnimationControllerElement controller, @NotNull AnimationControllerElement.TargetElement targetConfig, @Nullable AbstractElement targetElement) {
+        return AnimationControllerRuntime.applyAnimation(controller, targetConfig, targetElement);
     }
 
     public static void tick() {
-
-        Iterator<Map.Entry<String, AnimationState>> it = RUNNING_ANIMATIONS.entrySet().iterator();
-        long currentTime = System.currentTimeMillis();
-
-        while (it.hasNext()) {
-
-            Map.Entry<String, AnimationState> entry = it.next();
-            AnimationState state = entry.getValue();
-
-            state.controller.shouldRender();
-
-            // Calculate animation progress
-            long elapsedTime = currentTime - state.startTime;
-            AnimationKeyframe current = null;
-            AnimationKeyframe next = null;
-
-            // Special handling for the loop transition period
-            AnimationKeyframe lastKeyframe = state.keyframes.get(state.keyframes.size() - 1);
-            AnimationKeyframe firstKeyframe = state.keyframes.get(0);
-
-            if (state.controller.loop && elapsedTime > lastKeyframe.timestamp) {
-                // Calculate how far we are into the current loop
-                long loopDuration = lastKeyframe.timestamp;
-                long timeIntoLoop = elapsedTime % loopDuration;
-
-                // If we're between the last and first keyframe
-                if (timeIntoLoop < firstKeyframe.timestamp) {
-                    current = lastKeyframe;
-                    next = firstKeyframe;
-                    // Calculate progress for transition between last and first frame
-                    float progress = (float)timeIntoLoop / firstKeyframe.timestamp;
-
-                    // Apply interpolated values
-                    if (!state.controller.ignorePosition) {
-                        if (!state.controller.offsetMode) {
-                            state.targetElement.posOffsetX = (int)lerp(current.posOffsetX, next.posOffsetX, progress);
-                            state.targetElement.posOffsetY = (int)lerp(current.posOffsetY, next.posOffsetY, progress);
-                        } else {
-                            state.targetElement.animatedOffsetX = (int)lerp(current.posOffsetX, next.posOffsetX, progress);
-                            state.targetElement.animatedOffsetY = (int)lerp(current.posOffsetY, next.posOffsetY, progress);
-                        }
-                    }
-                    if (!state.controller.ignoreSize) {
-                        state.targetElement.baseWidth = (int)lerp(current.baseWidth, next.baseWidth, progress);
-                        state.targetElement.baseHeight = (int)lerp(current.baseHeight, next.baseHeight, progress);
-                    }
-                    if (!state.controller.offsetMode && !state.controller.ignorePosition) {
-                        state.targetElement.anchorPoint = next.anchorPoint;
-                        state.targetElement.stickyAnchor = next.stickyAnchor;
-                    }
-                    continue;
-                }
-
-                // Adjust elapsed time to be within the loop duration
-                elapsedTime = timeIntoLoop;
-            }
-
-            // Find current and next keyframes for normal playback
-            for (int i = 0; i < state.keyframes.size() - 1; i++) {
-                AnimationKeyframe k1 = state.keyframes.get(i);
-                AnimationKeyframe k2 = state.keyframes.get(i + 1);
-
-                if (elapsedTime >= k1.timestamp && elapsedTime < k2.timestamp) {
-                    current = k1;
-                    next = k2;
-                    break;
-                }
-            }
-
-            if (current != null && next != null) {
-                float progress = (float)(elapsedTime - current.timestamp) / (next.timestamp - current.timestamp);
-
-                // Interpolate and apply element properties
-                if (!state.controller.ignorePosition) {
-                    if (!state.controller.offsetMode) {
-                        state.targetElement.posOffsetX = (int) lerp(current.posOffsetX, next.posOffsetX, progress);
-                        state.targetElement.posOffsetY = (int) lerp(current.posOffsetY, next.posOffsetY, progress);
-                    } else {
-                        state.targetElement.animatedOffsetX = (int) lerp(current.posOffsetX, next.posOffsetX, progress);
-                        state.targetElement.animatedOffsetY = (int) lerp(current.posOffsetY, next.posOffsetY, progress);
-                    }
-                }
-                if (!state.controller.ignoreSize) {
-                    state.targetElement.baseWidth = (int)lerp(current.baseWidth, next.baseWidth, progress);
-                    state.targetElement.baseHeight = (int)lerp(current.baseHeight, next.baseHeight, progress);
-                }
-                if (!state.controller.offsetMode && !state.controller.ignorePosition) {
-                    state.targetElement.anchorPoint = next.anchorPoint;
-                    state.targetElement.stickyAnchor = next.stickyAnchor;
-                }
-            }
-
-            // Remove non-looping animations once they finish or animations in general when the controller is not active anymore
-            if ((!state.controller.loop && elapsedTime > lastKeyframe.timestamp) || !state.controller.shouldRender()) {
-                restoreElementToOriginal(state);
-                it.remove();
-                if (state.controller.shouldRender()) {
-                    FINISHED_ANIMATIONS.add(state.targetElement.getInstanceIdentifier());
-                }
-            }
-
-        }
-
-    }
-
-    private static float lerp(float a, float b, float t) {
-        return a + (b - a) * t;
-    }
-
-    private static void restoreElementToOriginal(@NotNull AnimationState state) {
-        if (!state.controller.offsetMode) {
-            state.targetElement.posOffsetX = state.originalPosOffsetX;
-            state.targetElement.posOffsetY = state.originalPosOffsetY;
-            state.targetElement.baseWidth = state.originalBaseWidth;
-            state.targetElement.baseHeight = state.originalBaseHeight;
-            state.targetElement.anchorPoint = state.originalAnchorPoint;
-            state.targetElement.stickyAnchor = state.originalStickyAnchor;
-        }
-        state.targetElement.animatedOffsetX = 0;
-        state.targetElement.animatedOffsetY = 0;
+        AnimationControllerRuntime.tick();
     }
 
     public static void resetAnimationState(@NotNull String targetElementId) {
-        AnimationState state = RUNNING_ANIMATIONS.remove(targetElementId);
-        if (state != null) {
-            restoreElementToOriginal(state);
-        }
-        ANIMATED_MEMORY.remove(targetElementId);
-        FINISHED_ANIMATIONS.remove(targetElementId);
+        AnimationControllerRuntime.resetAnimationState(targetElementId);
     }
 
     public static void resetController(@NotNull AnimationControllerElement controller) {
-        for (AnimationControllerElement.TargetElement target : controller.targetElements) {
-            if ((target.targetElementId != null) && !target.targetElementId.isEmpty()) {
-                resetAnimationState(target.targetElementId);
-            }
-            target.animationApplied = false;
-        }
+        AnimationControllerRuntime.resetController(controller);
     }
 
     public static void stopAnimation(@NotNull String targetElementId) {
-        RUNNING_ANIMATIONS.remove(targetElementId);
+        AnimationControllerRuntime.stopAnimation(targetElementId);
     }
 
     public static void stopAllAnimations() {
-        RUNNING_ANIMATIONS.clear();
+        AnimationControllerRuntime.stopAllAnimations();
     }
 
     public static void clearMemory() {
-        ANIMATED_MEMORY.clear();
-        FINISHED_ANIMATIONS.clear();
+        AnimationControllerRuntime.clearMemory();
     }
 
     public static boolean wasAnimatedInThePast(@NotNull String targetElementId) {
-        return ANIMATED_MEMORY.contains(targetElementId);
+        return AnimationControllerRuntime.wasAnimatedInThePast(targetElementId);
     }
 
     public static boolean isAnimating(@NotNull String targetElementId) {
-        return RUNNING_ANIMATIONS.containsKey(targetElementId);
+        return AnimationControllerRuntime.isAnimating(targetElementId);
     }
 
     public static boolean isFinished(@NotNull String targetElementId) {
-        return FINISHED_ANIMATIONS.contains(targetElementId);
-    }
-
-    protected static class AnimationState {
-
-        protected List<AnimationKeyframe> keyframes;
-        protected long startTime;
-        protected AbstractElement targetElement;
-        protected AnimationControllerElement controller;
-        protected int timingOffsetMs;
-
-        // Store original element properties
-        protected int originalPosOffsetX;
-        protected int originalPosOffsetY;
-        protected int originalBaseWidth;
-        protected int originalBaseHeight;
-        protected ElementAnchorPoint originalAnchorPoint;
-        protected boolean originalStickyAnchor;
-
-        protected AnimationState(List<AnimationKeyframe> keyframes, long startTime, AbstractElement targetElement, AnimationControllerElement controller, int timingOffsetMs) {
-
-            this.keyframes = keyframes;
-            this.startTime = startTime;
-            this.targetElement = targetElement;
-            this.controller = controller;
-            this.timingOffsetMs = timingOffsetMs;
-
-        }
-
-        protected void storeOriginalProperties() {
-            this.originalPosOffsetX = targetElement.posOffsetX;
-            this.originalPosOffsetY = targetElement.posOffsetY;
-            this.originalBaseWidth = targetElement.baseWidth;
-            this.originalBaseHeight = targetElement.baseHeight;
-            this.originalAnchorPoint = targetElement.anchorPoint;
-            this.originalStickyAnchor = targetElement.stickyAnchor;
-        }
-
+        return AnimationControllerRuntime.isFinished(targetElementId);
     }
 
 }
