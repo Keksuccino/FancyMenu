@@ -137,6 +137,12 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             element.autoSizing = deserializeBoolean(element.autoSizing, serialized.getValue("auto_sizing"));
             element.autoSizingBaseScreenWidth = deserializeNumber(Integer.class, element.autoSizingBaseScreenWidth, serialized.getValue("auto_sizing_base_screen_width"));
             element.autoSizingBaseScreenHeight = deserializeNumber(Integer.class, element.autoSizingBaseScreenHeight, serialized.getValue("auto_sizing_base_screen_height"));
+            double autoSizingBaseGuiScale = deserializeNumber(Double.class, element.autoSizingBaseGuiScale, serialized.getValue("auto_sizing_base_gui_scale"));
+            element.autoSizingBaseGuiScale = ElementAutoSizing.isValidGuiScale(autoSizingBaseGuiScale) ? autoSizingBaseGuiScale : 0.0D;
+            int autoSizingBaseGuiWidth = deserializeNumber(Integer.class, element.autoSizingBaseGuiWidth, serialized.getValue("auto_sizing_base_gui_width"));
+            int autoSizingBaseGuiHeight = deserializeNumber(Integer.class, element.autoSizingBaseGuiHeight, serialized.getValue("auto_sizing_base_gui_height"));
+            element.autoSizingBaseGuiWidth = ElementAutoSizing.isValidGuiDimensions(autoSizingBaseGuiWidth, autoSizingBaseGuiHeight) ? autoSizingBaseGuiWidth : 0;
+            element.autoSizingBaseGuiHeight = ElementAutoSizing.isValidGuiDimensions(autoSizingBaseGuiWidth, autoSizingBaseGuiHeight) ? autoSizingBaseGuiHeight : 0;
 
             element.stickyAnchor = deserializeBoolean(element.stickyAnchor, serialized.getValue("sticky_anchor"));
 
@@ -310,6 +316,9 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             sec.putProperty("auto_sizing", "" + element.autoSizing);
             sec.putProperty("auto_sizing_base_screen_width", "" + element.autoSizingBaseScreenWidth);
             sec.putProperty("auto_sizing_base_screen_height", "" + element.autoSizingBaseScreenHeight);
+            sec.putProperty("auto_sizing_base_gui_scale", ElementAutoSizing.serializeGuiScale(element.autoSizingBaseGuiScale));
+            sec.putProperty("auto_sizing_base_gui_width", "" + element.autoSizingBaseGuiWidth);
+            sec.putProperty("auto_sizing_base_gui_height", "" + element.autoSizingBaseGuiHeight);
             sec.putProperty("sticky_anchor", "" + element.stickyAnchor);
 
             sec.putProperty("anchor_point", (element.anchorPoint != null) ? element.anchorPoint.getName() : ElementAnchorPoints.TOP_LEFT.getName());

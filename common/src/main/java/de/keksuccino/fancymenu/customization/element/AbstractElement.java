@@ -99,6 +99,11 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public boolean autoSizing = false;
 	public int autoSizingBaseScreenWidth = 0;
 	public int autoSizingBaseScreenHeight = 0;
+	/** Exact GUI scale used to capture the pixel-space baseline. Zero identifies layouts saved before this value existed. */
+	public double autoSizingBaseGuiScale = 0.0D;
+	/** Exact logical baseline dimensions. Zero identifies layouts saved before these values existed. */
+	public int autoSizingBaseGuiWidth = 0;
+	public int autoSizingBaseGuiHeight = 0;
 	public double autoSizingLastTickScreenWidth = -1;
 	public double autoSizingLastTickScreenHeight = -1;
 	public int autoSizingWidth = 0;
@@ -830,26 +835,30 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	public void setAutoSizingBaseWidthAndHeight() {
 		Window window = Minecraft.getInstance().getWindow();
-		double guiWidth = getScreenWidth() * window.getGuiScale();
-		double guiHeight = getScreenHeight() * window.getGuiScale();
-		this.autoSizingBaseScreenWidth = (int)guiWidth;
-		this.autoSizingBaseScreenHeight = (int)guiHeight;
+		double guiScale = ElementAutoSizing.sanitizeGuiScale(window.getGuiScale());
+		int guiWidth = getScreenWidth();
+		int guiHeight = getScreenHeight();
+		this.autoSizingBaseScreenWidth = ElementAutoSizing.calculatePixelDimension(guiWidth, guiScale);
+		this.autoSizingBaseScreenHeight = ElementAutoSizing.calculatePixelDimension(guiHeight, guiScale);
+		this.autoSizingBaseGuiScale = guiScale;
+		this.autoSizingBaseGuiWidth = guiWidth;
+		this.autoSizingBaseGuiHeight = guiHeight;
 	}
 
 	public void updateAutoSizing(boolean ignoreLastTickScreenSize) {
-
-		Window window = Minecraft.getInstance().getWindow();
-		double guiWidth = getScreenWidth() * window.getGuiScale();
-		double guiHeight = getScreenHeight() * window.getGuiScale();
+		int guiWidth = getScreenWidth();
+		int guiHeight = getScreenHeight();
+		if (guiWidth <= 0 || guiHeight <= 0) return;
 
 		if (((this.autoSizingLastTickScreenWidth != guiWidth) || (this.autoSizingLastTickScreenHeight != guiHeight)) || ignoreLastTickScreenSize) {
-			if (this.autoSizing && (this.autoSizingBaseScreenWidth > 0) && (this.autoSizingBaseScreenHeight > 0)) {
-				double percentX = Math.max(1.0D, (guiWidth / (double) this.autoSizingBaseScreenWidth) * 100.0D);
-				double percentY = Math.max(1.0D, (guiHeight / (double) this.autoSizingBaseScreenHeight) * 100.0D);
-				double percent = Math.min(percentX, percentY);
-				this.autoSizingWidth = Math.max(1, (int) ((percent / 100.0D) * (double) this.baseWidth));
-				this.autoSizingHeight = Math.max(1, (int) ((percent / 100.0D) * (double) this.baseHeight));
-				if ((this.autoSizingBaseScreenWidth == guiWidth) && (this.autoSizingBaseScreenHeight == guiHeight)) {
+			if (this.autoSizing && (ElementAutoSizing.isValidGuiDimensions(this.autoSizingBaseGuiWidth, this.autoSizingBaseGuiHeight) || ((this.autoSizingBaseScreenWidth > 0) && (this.autoSizingBaseScreenHeight > 0)))) {
+				ElementAutoSizing.Baseline baseline = this.resolveAutoSizingBaseline();
+				int baseGuiWidth = baseline.guiWidth();
+				int baseGuiHeight = baseline.guiHeight();
+				double scaleFactor = ElementAutoSizing.calculateScaleFactor(guiWidth, guiHeight, baseGuiWidth, baseGuiHeight);
+				this.autoSizingWidth = ElementAutoSizing.calculateElementDimension(this.baseWidth, scaleFactor);
+				this.autoSizingHeight = ElementAutoSizing.calculateElementDimension(this.baseHeight, scaleFactor);
+				if ((baseGuiWidth == guiWidth) && (baseGuiHeight == guiHeight)) {
 					this.autoSizingWidth = 0;
 					this.autoSizingHeight = 0;
 				}
@@ -861,6 +870,33 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.autoSizingLastTickScreenWidth = guiWidth;
 		this.autoSizingLastTickScreenHeight = guiHeight;
 
+	}
+
+	private ElementAutoSizing.Baseline resolveAutoSizingBaseline() {
+		if (ElementAutoSizing.isValidGuiDimensions(this.autoSizingBaseGuiWidth, this.autoSizingBaseGuiHeight)) return new ElementAutoSizing.Baseline(this.autoSizingBaseGuiWidth, this.autoSizingBaseGuiHeight, ElementAutoSizing.sanitizeGuiScale(this.autoSizingBaseGuiScale), ElementAutoSizing.LegacyResolution.EXACT_METADATA);
+		Minecraft minecraft = Minecraft.getInstance();
+		Window window = minecraft.getWindow();
+		double currentGuiScale = ElementAutoSizing.sanitizeGuiScale(window.getGuiScale());
+		ElementAutoSizing.Baseline baseline = ElementAutoSizing.resolveCurrentLegacyBaseline(this.autoSizingBaseScreenWidth, this.autoSizingBaseScreenHeight, getScreenWidth(), getScreenHeight(), currentGuiScale);
+		if (baseline == null) {
+			if (ElementAutoSizing.isValidGuiScale(this.autoSizingBaseGuiScale)) {
+				baseline = new ElementAutoSizing.Baseline(ElementAutoSizing.calculateGuiDimension(this.autoSizingBaseScreenWidth, this.autoSizingBaseGuiScale), ElementAutoSizing.calculateGuiDimension(this.autoSizingBaseScreenHeight, this.autoSizingBaseGuiScale), this.autoSizingBaseGuiScale, ElementAutoSizing.LegacyResolution.FALLBACK);
+			} else if ((this.parentLayout != null) && ElementAutoSizing.isValidGuiScale(this.parentLayout.forcedScale)) {
+				if ((this.parentLayout.autoScalingWidth > 0) && (this.parentLayout.autoScalingHeight > 0)) {
+					baseline = ElementAutoSizing.reconstructLegacyLayoutBaseline(this.autoSizingBaseScreenWidth, this.autoSizingBaseScreenHeight, this.parentLayout.forcedScale, this.parentLayout.autoScalingWidth, this.parentLayout.autoScalingHeight);
+				} else {
+					double forcedScale = this.parentLayout.forcedScale;
+					baseline = new ElementAutoSizing.Baseline(ElementAutoSizing.calculateGuiDimension(this.autoSizingBaseScreenWidth, forcedScale), ElementAutoSizing.calculateGuiDimension(this.autoSizingBaseScreenHeight, forcedScale), forcedScale, ElementAutoSizing.LegacyResolution.FALLBACK);
+				}
+			} else {
+				double vanillaScale = ElementAutoSizing.inferVanillaGuiScale(this.autoSizingBaseScreenWidth, this.autoSizingBaseScreenHeight, minecraft.options.guiScale().get(), minecraft.isEnforceUnicode());
+				baseline = new ElementAutoSizing.Baseline(ElementAutoSizing.calculateGuiDimension(this.autoSizingBaseScreenWidth, vanillaScale), ElementAutoSizing.calculateGuiDimension(this.autoSizingBaseScreenHeight, vanillaScale), vanillaScale, ElementAutoSizing.LegacyResolution.FALLBACK);
+			}
+		}
+		this.autoSizingBaseGuiScale = baseline.guiScale();
+		this.autoSizingBaseGuiWidth = baseline.guiWidth();
+		this.autoSizingBaseGuiHeight = baseline.guiHeight();
+		return baseline;
 	}
 
 	@Nullable
