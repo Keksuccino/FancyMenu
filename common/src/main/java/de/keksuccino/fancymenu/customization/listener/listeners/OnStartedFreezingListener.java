@@ -18,6 +18,9 @@ public class OnStartedFreezingListener extends AbstractListener {
     }
 
     public void onStartedFreezing(float intensity) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cachedIntensity = Float.toString(Math.max(intensity, 0.0F));
         this.notifyAllInstances();
     }

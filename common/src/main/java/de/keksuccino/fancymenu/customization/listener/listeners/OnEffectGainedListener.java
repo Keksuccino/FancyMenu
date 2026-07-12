@@ -22,6 +22,9 @@ public class OnEffectGainedListener extends AbstractListener {
     }
 
     public void onEffectGained(@Nullable String effectKey, @Nullable String effectType, int effectDurationTicks) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cachedEffectKey = effectKey;
         this.cachedEffectType = effectType;
         this.cachedEffectDuration = Integer.toString(Math.max(effectDurationTicks, 0));

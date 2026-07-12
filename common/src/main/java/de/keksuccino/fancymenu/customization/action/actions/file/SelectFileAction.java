@@ -59,12 +59,12 @@ public class SelectFileAction extends Action {
         SelectFileConfig config = SelectFileConfig.parse(value);
         if (config == null) {
             LOGGER.error("[FANCYMENU] SelectFileAction: Failed to parse configuration!");
-            Listeners.ON_FILE_SELECTED.onFileSelectionResult(null, null, false, false, "invalid_configuration");
+            this.notifyFileSelectionResult(null, null, false, false, "invalid_configuration");
             return;
         }
         if (!config.hasValidTargetPath()) {
             LOGGER.error("[FANCYMENU] SelectFileAction: No target path configured!");
-            Listeners.ON_FILE_SELECTED.onFileSelectionResult(null, config.targetPath, false, false, "missing_target_path");
+            this.notifyFileSelectionResult(null, config.targetPath, false, false, "missing_target_path");
             return;
         }
 
@@ -73,7 +73,7 @@ public class SelectFileAction extends Action {
             targetPath = resolveTargetPath(config.targetPath);
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] SelectFileAction: Failed to resolve target path '{}'", config.targetPath, ex);
-            Listeners.ON_FILE_SELECTED.onFileSelectionResult(null, config.targetPath, false, false, ex.getMessage());
+            this.notifyFileSelectionResult(null, config.targetPath, false, false, ex.getMessage());
             return;
         }
 
@@ -100,7 +100,7 @@ public class SelectFileAction extends Action {
         }
 
         if (selectedFilePath == null) {
-            Listeners.ON_FILE_SELECTED.onFileSelectionResult(null, targetPath.toString(), false, true, null);
+            this.notifyFileSelectionResult(null, targetPath.toString(), false, true, null);
             return;
         }
 
@@ -109,13 +109,13 @@ public class SelectFileAction extends Action {
             sourcePath = Paths.get(selectedFilePath).toAbsolutePath().normalize();
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] SelectFileAction: Invalid source path returned from dialog: {}", selectedFilePath, ex);
-            Listeners.ON_FILE_SELECTED.onFileSelectionResult(selectedFilePath, targetPath.toString(), false, false, "invalid_source_path");
+            this.notifyFileSelectionResult(selectedFilePath, targetPath.toString(), false, false, "invalid_source_path");
             return;
         }
 
         if (!Files.exists(sourcePath) || Files.isDirectory(sourcePath)) {
             LOGGER.error("[FANCYMENU] SelectFileAction: Source path does not point to a readable file: {}", sourcePath);
-            Listeners.ON_FILE_SELECTED.onFileSelectionResult(sourcePath.toString(), targetPath.toString(), false, false, "source_not_file");
+            this.notifyFileSelectionResult(sourcePath.toString(), targetPath.toString(), false, false, "source_not_file");
             return;
         }
 
@@ -136,10 +136,16 @@ public class SelectFileAction extends Action {
             }
 
             LOGGER.info("[FANCYMENU] SelectFileAction: Copied '{}' to '{}'", sourcePath, targetPath);
-            Listeners.ON_FILE_SELECTED.onFileSelectionResult(sourcePath.toString(), targetPath.toString(), true, false, null);
+            this.notifyFileSelectionResult(sourcePath.toString(), targetPath.toString(), true, false, null);
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] SelectFileAction: Failed to copy '{}' to '{}'", sourcePath, targetPath, ex);
-            Listeners.ON_FILE_SELECTED.onFileSelectionResult(sourcePath.toString(), targetPath.toString(), false, false, ex.getMessage());
+            this.notifyFileSelectionResult(sourcePath.toString(), targetPath.toString(), false, false, ex.getMessage());
+        }
+    }
+
+    private void notifyFileSelectionResult(@Nullable String selectedFilePath, @Nullable String targetFilePath, boolean successful, boolean cancelled, @Nullable String failureReason) {
+        if (Listeners.ON_FILE_SELECTED.hasInstancesListening()) {
+            Listeners.ON_FILE_SELECTED.onFileSelectionResult(selectedFilePath, targetFilePath, successful, cancelled, failureReason);
         }
     }
 

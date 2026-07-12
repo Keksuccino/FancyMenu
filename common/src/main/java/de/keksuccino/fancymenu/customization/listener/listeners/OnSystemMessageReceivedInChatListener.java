@@ -23,6 +23,7 @@ public class OnSystemMessageReceivedInChatListener extends AbstractListener {
     }
 
     public void onSystemMessageReceivedInChat(@NotNull Component message) {
+        if (!this.hasInstancesListening()) return;
         this.lastFeedbackString = message.getString();
         this.lastFeedbackJson = this.serializeComponent(message);
         this.notifyAllInstances();

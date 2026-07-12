@@ -5,5 +5,6 @@ public interface LocalPlayerDrowningTracker {
     boolean fancymenu$isDrowningActive();
 
     void fancymenu$setDrowningActive(boolean active);
-}
 
+    void fancymenu$prepareDrowningTracking();
+}

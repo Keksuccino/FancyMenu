@@ -32,6 +32,9 @@ public class OnWorldEnteredListener extends AbstractListener {
                                @Nullable String cheatsAllowed,
                                @Nullable String worldIconPath,
                                boolean isFirstJoin) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cachedWorldName = sanitize(worldName);
         this.cachedWorldSavePath = sanitize(worldSavePath);
         this.cachedWorldDifficulty = sanitize(worldDifficultyKey);

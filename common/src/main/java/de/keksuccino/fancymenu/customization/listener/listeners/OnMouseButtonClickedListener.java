@@ -22,6 +22,7 @@ public class OnMouseButtonClickedListener extends AbstractListener {
     }
 
     public void onMouseButtonClicked(int button, double mouseX, double mouseY) {
+        if (!this.hasInstancesListening()) return;
         this.lastButton = button;
         this.lastMouseX = mouseX;
         this.lastMouseY = mouseY;

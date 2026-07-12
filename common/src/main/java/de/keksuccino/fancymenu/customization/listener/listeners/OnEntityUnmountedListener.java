@@ -29,6 +29,9 @@ public class OnEntityUnmountedListener extends AbstractListener {
     }
 
     public void onEntityUnmounted(@Nullable Entity entity) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         if (entity != null) {
             this.cacheEntityData(entity);
         } else {

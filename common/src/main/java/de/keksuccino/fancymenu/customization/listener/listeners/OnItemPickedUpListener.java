@@ -18,6 +18,9 @@ public class OnItemPickedUpListener extends AbstractListener {
     }
 
     public void onItemPickedUp(@Nullable String itemKey) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cachedItemKey = (itemKey != null && !itemKey.isBlank()) ? itemKey : null;
         if (this.cachedItemKey != null) {
             this.notifyAllInstances();

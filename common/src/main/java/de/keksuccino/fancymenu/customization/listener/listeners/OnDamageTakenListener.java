@@ -24,6 +24,9 @@ public class OnDamageTakenListener extends AbstractListener {
     }
 
     public void onDamageTaken(float damageAmount, @Nullable String damageType, boolean isFatal, @Nullable String damageSource) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cachedDamageAmount = Float.toString(Math.max(damageAmount, 0.0F));
         this.cachedDamageType = damageType;
         this.cachedIsFatal = Boolean.toString(isFatal);
@@ -49,4 +52,3 @@ public class OnDamageTakenListener extends AbstractListener {
         return List.of(LocalizationUtils.splitLocalizedLines("fancymenu.listeners.on_damage_taken.desc"));
     }
 }
-

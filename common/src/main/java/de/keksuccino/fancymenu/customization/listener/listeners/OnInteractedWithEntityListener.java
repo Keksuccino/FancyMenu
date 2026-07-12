@@ -29,6 +29,9 @@ public class OnInteractedWithEntityListener extends AbstractListener {
     }
 
     public void onEntityInteracted(@NotNull Entity entity) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         Identifier entityKey = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
         this.cachedEntityKey = (entityKey != null) ? entityKey.toString() : null;
         this.cachedEntityPosX = Double.toString(entity.getX());

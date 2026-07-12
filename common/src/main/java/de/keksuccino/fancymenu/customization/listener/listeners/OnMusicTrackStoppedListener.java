@@ -25,6 +25,9 @@ public class OnMusicTrackStoppedListener extends AbstractListener {
     }
 
     public void onMusicTrackStopped(@Nullable String trackIdentifier, @Nullable String trackEventLocation) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cachedTrackIdentifier = (trackIdentifier != null && !trackIdentifier.isBlank()) ? trackIdentifier : trackEventLocation;
         this.updateTrackInfoCache(trackIdentifier, trackEventLocation);
         if ((trackIdentifier != null && !trackIdentifier.isBlank()) || (trackEventLocation != null && !trackEventLocation.isBlank())) {

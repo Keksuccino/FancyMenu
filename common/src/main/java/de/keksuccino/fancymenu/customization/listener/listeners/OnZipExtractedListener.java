@@ -24,6 +24,9 @@ public class OnZipExtractedListener extends AbstractListener {
     }
 
     public void onZipExtracted(@NotNull String sourceZipPath, @NotNull String targetDirectoryPath, boolean successful, @Nullable String failureReason) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.sourceZipPath = sourceZipPath;
         this.targetDirectoryPath = targetDirectoryPath;
         this.successful = successful;

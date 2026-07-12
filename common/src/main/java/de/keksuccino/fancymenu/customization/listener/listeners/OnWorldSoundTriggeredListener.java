@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.listener.listeners;
 
 import de.keksuccino.fancymenu.customization.listener.AbstractListener;
+import de.keksuccino.fancymenu.mixin.interfaces.WorldSoundListenerController;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -15,8 +16,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 public class OnWorldSoundTriggeredListener extends AbstractListener {
+
+    private final Consumer<Boolean> soundSubscriptionController;
 
     @Nullable
     private String cachedSoundIdentifier;
@@ -34,10 +38,18 @@ public class OnWorldSoundTriggeredListener extends AbstractListener {
     private String cachedSoundOriginDirectionFromPlayer;
 
     public OnWorldSoundTriggeredListener() {
+        this(OnWorldSoundTriggeredListener::setSoundEngineSubscription);
+    }
+
+    OnWorldSoundTriggeredListener(@NotNull Consumer<Boolean> soundSubscriptionController) {
         super("world_sound_triggered");
+        this.soundSubscriptionController = soundSubscriptionController;
     }
 
     public void onWorldSoundTriggered(@NotNull SoundInstance sound, @Nullable Component subtitle, float audibleRange) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         Minecraft minecraft = Minecraft.getInstance();
         LocalPlayer player = minecraft.player;
         if ((minecraft.level == null) || (player == null)) {
@@ -63,6 +75,23 @@ public class OnWorldSoundTriggeredListener extends AbstractListener {
         this.cachedSoundOriginDirectionFromPlayer = Double.toString(this.calculateDirectionDegrees(player, soundPosition));
 
         this.notifyAllInstances();
+    }
+
+    @Override
+    protected void onActivated() {
+        this.soundSubscriptionController.accept(true);
+    }
+
+    @Override
+    protected void onDeactivated() {
+        this.soundSubscriptionController.accept(false);
+        this.cachedSoundIdentifier = null;
+        this.cachedSoundDisplayName = null;
+        this.cachedSoundOriginPosX = null;
+        this.cachedSoundOriginPosY = null;
+        this.cachedSoundOriginPosZ = null;
+        this.cachedSoundOriginDistanceToPlayer = null;
+        this.cachedSoundOriginDirectionFromPlayer = null;
     }
 
     @Override
@@ -132,6 +161,10 @@ public class OnWorldSoundTriggeredListener extends AbstractListener {
         }
         return normalized;
     }
+
+    private static void setSoundEngineSubscription(boolean active) {
+        if (Minecraft.getInstance().getSoundManager() instanceof WorldSoundListenerController controller) {
+            controller.fancymenu$setWorldSoundListenerActive(active);
+        }
+    }
 }
-
-

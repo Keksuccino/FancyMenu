@@ -29,15 +29,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(LevelRenderer.class)
 public class MixinLevelRenderer {
 
+    @Unique private boolean trackEntityVisibility_FancyMenu;
+
     @Inject(method = "renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;Z)V", at = @At("HEAD"))
     private void before_renderLevel_FancyMenu(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera, Matrix4f frustumMatrix, Matrix4f projectionMatrix, Matrix4f cullingProjectionMatrix, GpuBufferSlice shaderFog, Vector4f fogColor, boolean renderSky, CallbackInfo info) {
-        Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.onRenderFrameStart();
+        this.trackEntityVisibility_FancyMenu = Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.onRenderFrameStart();
     }
 
     @WrapOperation(method = "extractVisibleEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;extractEntity(Lnet/minecraft/world/entity/Entity;F)Lnet/minecraft/client/renderer/entity/state/EntityRenderState;"))
-	private EntityRenderState wrap_extractEntity_FancyMenu(LevelRenderer levelRenderer, Entity entity, float partialTicks, Operation<EntityRenderState> original) {
-		if (Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.shouldCheckVisibility()) {
-			double interpolatedX = Mth.lerp(partialTicks, entity.xo, entity.getX());
+    private EntityRenderState wrap_extractEntity_FancyMenu(LevelRenderer levelRenderer, Entity entity, float partialTicks, Operation<EntityRenderState> original) {
+        if (this.trackEntityVisibility_FancyMenu && !Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.shouldCheckVisibility()) {
+            Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.resetTrackingForDormancy();
+            this.trackEntityVisibility_FancyMenu = false;
+        }
+        if (this.trackEntityVisibility_FancyMenu) {
+            double interpolatedX = Mth.lerp(partialTicks, entity.xo, entity.getX());
             double interpolatedY = Mth.lerp(partialTicks, entity.yo, entity.getY());
             double interpolatedZ = Mth.lerp(partialTicks, entity.zo, entity.getZ());
             Vec3 entityPosition = new Vec3(interpolatedX, interpolatedY, interpolatedZ);
@@ -52,7 +58,14 @@ public class MixinLevelRenderer {
 
     @Inject(method = "renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;Z)V", at = @At("TAIL"))
     private void after_renderLevel_FancyMenu(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera, Matrix4f frustumMatrix, Matrix4f projectionMatrix, Matrix4f cullingProjectionMatrix, GpuBufferSlice shaderFog, Vector4f fogColor, boolean renderSky, CallbackInfo info) {
-        Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.onRenderFrameEnd();
+        if (this.trackEntityVisibility_FancyMenu && !Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.shouldCheckVisibility()) {
+            Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.resetTrackingForDormancy();
+            this.trackEntityVisibility_FancyMenu = false;
+        }
+        if (this.trackEntityVisibility_FancyMenu) {
+            Listeners.ON_ENTITY_STARTS_BEING_IN_SIGHT.onRenderFrameEnd();
+            this.trackEntityVisibility_FancyMenu = false;
+        }
     }
 
     @Unique

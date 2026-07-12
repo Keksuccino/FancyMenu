@@ -18,22 +18,30 @@ public class OnCharTypedListener extends AbstractListener {
     protected Character lastTypedChar = null;
 
     public OnCharTypedListener() {
-
         super("keyboard_char_typed");
-
-        // Register @EventListeners to the EventHandler
-        EventHandler.INSTANCE.registerListenersOf(this);
-
     }
 
     @EventListener
     public void onCharTyped(ScreenCharTypedEvent e) {
+
+        if (!this.hasInstancesListening()) return;
 
         // Update cached typed char before notifying instances, so they can use the up-to-date char
         this.lastTypedChar = e.getCharacter();
 
         this.notifyAllInstances();
 
+    }
+
+    @Override
+    protected void onActivated() {
+        EventHandler.INSTANCE.registerListenersOf(this);
+    }
+
+    @Override
+    protected void onDeactivated() {
+        EventHandler.INSTANCE.unregisterListenersOf(this);
+        this.lastTypedChar = null;
     }
 
     @Override
