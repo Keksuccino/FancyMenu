@@ -291,6 +291,10 @@ public class RequirementContainer implements ValuePlaceholderHolder {
             //Legacy support for when requirement containers had no meta and there was only one requirement container per PropertyContainer
             containers.add(combined);
         } else {
+            Map<String, RequirementGroup> groupsByIdentifier = new LinkedHashMap<>();
+            Map<String, RequirementInstance> instancesByIdentifier = new LinkedHashMap<>();
+            combined.groups.forEach(group -> groupsByIdentifier.putIfAbsent(group.identifier, group));
+            combined.instances.forEach(instance -> instancesByIdentifier.putIfAbsent(instance.instanceIdentifier, instance));
             for (List<String> meta : containerMetas) {
                 String key = meta.get(0);
                 String value = meta.get(1);
@@ -323,21 +327,13 @@ public class RequirementContainer implements ValuePlaceholderHolder {
                             container.identifier = identifier;
                             //Find groups of container
                             for (String groupId : groupIdentifiers) {
-                                for (RequirementGroup g : combined.groups) {
-                                    if (g.identifier.equals(groupId)) {
-                                        container.groups.add(g);
-                                        break;
-                                    }
-                                }
+                                RequirementGroup group = groupsByIdentifier.get(groupId);
+                                if (group != null) addDeserializedGroupCopy(container, group);
                             }
                             //Find instances of container
                             for (String instanceId : instanceIdentifiers) {
-                                for (RequirementInstance i : combined.instances) {
-                                    if (i.instanceIdentifier.equals(instanceId)) {
-                                        container.instances.add(i);
-                                        break;
-                                    }
-                                }
+                                RequirementInstance instance = instancesByIdentifier.get(instanceId);
+                                if (instance != null) addDeserializedInstanceCopy(container, instance);
                             }
                             containers.add(container);
                         }
@@ -346,6 +342,29 @@ public class RequirementContainer implements ValuePlaceholderHolder {
             }
         }
         return containers;
+    }
+
+    /**
+     * Copies a selected group out of the temporary combined deserialization container. Identified container metadata
+     * can be malformed and select the same source object more than once or for multiple containers, so the returned
+     * containers must never share mutable groups or instances with each other.
+     */
+    private static void addDeserializedGroupCopy(@NotNull RequirementContainer target, @NotNull RequirementGroup source) {
+        if (target.groupExists(source.identifier)) return;
+        RequirementGroup group = source.copy(false);
+        group.parent = target;
+        for (RequirementInstance instance : group.instances) {
+            instance.parent = target;
+            instance.group = group;
+        }
+        target.addGroup(group);
+    }
+
+    private static void addDeserializedInstanceCopy(@NotNull RequirementContainer target, @NotNull RequirementInstance source) {
+        RequirementInstance instance = source.copy(false);
+        instance.parent = target;
+        instance.group = null;
+        target.addInstance(instance);
     }
 
     @NotNull
