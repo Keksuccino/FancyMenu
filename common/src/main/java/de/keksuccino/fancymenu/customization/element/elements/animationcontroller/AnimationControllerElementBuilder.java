@@ -2,10 +2,13 @@ package de.keksuccino.fancymenu.customization.element.elements.animationcontroll
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
+import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.keyframe.AnimationKeyframe;
+import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.keyframe.AnimationKeyframeSequence;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.SerializationHelper;
@@ -18,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class AnimationControllerElementBuilder extends ElementBuilder<AnimationControllerElement, AnimationControllerEditorElement> {
@@ -48,7 +52,6 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
 
         boolean loadedTargets = false;
         try {
-            // Deserialize target elements (with offsets)
             String targetElementsJson = serialized.getValue("target_elements");
             if (targetElementsJson != null) {
                 ArrayList<AnimationControllerElement.TargetElement> targets = Objects.requireNonNullElse(GSON.fromJson(targetElementsJson, TARGETS_LIST_TYPE), new ArrayList<>());
@@ -74,18 +77,21 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
             }
         }
 
-        // Deserialize keyframes
         String keyframesJson = serialized.getValue("keyframes");
         if (keyframesJson != null) {
             try {
                 element.keyframes = Objects.requireNonNullElse(GSON.fromJson(keyframesJson, KEYFRAME_LIST_TYPE), new ArrayList<>());
+                element.keyframes.removeIf(Objects::isNull);
                 element.keyframes.forEach(animationKeyframe -> {
+                    animationKeyframe.timestamp = Math.max(0L, animationKeyframe.timestamp);
+                    if ((animationKeyframe.uniqueIdentifier == null) || animationKeyframe.uniqueIdentifier.isBlank()) animationKeyframe.uniqueIdentifier = ScreenCustomization.generateUniqueIdentifier();
                     if (animationKeyframe.anchorPoint != null) {
                         animationKeyframe.anchorPoint = Objects.requireNonNullElse(ElementAnchorPoints.getAnchorPointByName(animationKeyframe.anchorPoint.getName()), ElementAnchorPoints.TOP_LEFT);
                     } else {
                         animationKeyframe.anchorPoint = ElementAnchorPoints.TOP_LEFT;
                     }
                 });
+                AnimationKeyframeSequence.sort(element.keyframes);
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to deserialize animation keyframes of AnimationControllerElement!", ex);
             }
@@ -108,7 +114,6 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
     @Override
     protected SerializedElement serializeElement(@NotNull AnimationControllerElement element, @NotNull SerializedElement serializeTo) {
 
-        // Serialize target elements (with offsets)
         if (!element.targetElements.isEmpty()) {
             ArrayList<AnimationControllerElement.TargetElement> targets = new ArrayList<>(element.targetElements);
             serializeTo.putProperty("target_elements", GSON.toJson(targets, TARGETS_LIST_TYPE));
@@ -117,9 +122,9 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
             serializeTo.putProperty("target_element_ids", GSON.toJson(ids, IDS_LIST_TYPE));
         }
 
-        // Serialize keyframes 
-        if (!element.getKeyframes().isEmpty()) {
-            String keyframesJson = GSON.toJson(element.getKeyframes(), KEYFRAME_LIST_TYPE);
+        List<AnimationKeyframe> keyframes = element.getKeyframes();
+        if (!keyframes.isEmpty()) {
+            String keyframesJson = GSON.toJson(keyframes, KEYFRAME_LIST_TYPE);
             serializeTo.putProperty("keyframes", keyframesJson);
         }
 

@@ -1,9 +1,8 @@
-package de.keksuccino.fancymenu.customization.element.elements.animationcontroller;
+package de.keksuccino.fancymenu.customization.element.elements.animationcontroller.keyframe.editor;
 
 /**
- * Converts animation keyframe values from the parent layout editor's logical coordinate space to the keyframe
- * manager's display coordinate space. The manager can use a lower GUI scale to fit its controls, so these spaces
- * must not be treated as interchangeable.
+ * Converts serialized keyframe values from the parent editor coordinate space to the manager's display space.
+ * The manager may temporarily use a lower GUI scale to fit its controls, so these spaces are not interchangeable.
  */
 final class AnimationPreviewViewport {
 

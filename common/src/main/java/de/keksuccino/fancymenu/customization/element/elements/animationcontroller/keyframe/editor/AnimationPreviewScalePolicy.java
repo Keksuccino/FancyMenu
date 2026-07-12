@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.element.elements.animationcontroller;
+package de.keksuccino.fancymenu.customization.element.elements.animationcontroller.keyframe.editor;
 
 /** Calculates parent-editor GUI scale and viewport dimensions without depending on Minecraft runtime state. */
 final class AnimationPreviewScalePolicy {
