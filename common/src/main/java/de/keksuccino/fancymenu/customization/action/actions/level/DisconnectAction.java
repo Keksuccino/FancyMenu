@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.action.actions.level;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
+import de.keksuccino.fancymenu.customization.screen.ScreenConstructionContext;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
 import de.keksuccino.fancymenu.util.ScreenUtils;
@@ -40,7 +41,7 @@ public class DisconnectAction extends Action {
         if (value != null) {
             Minecraft mc = Minecraft.getInstance();
             try {
-                Screen current = Minecraft.getInstance().screen;
+                Screen current = ScreenUtils.getScreen();
                 if (current == null) current = new TitleScreen();
                 mc.getReportingContext().draftReportHandled(mc, current, () -> {
                     if ((mc.level != null) && (mc.player != null)) {
@@ -49,7 +50,7 @@ public class DisconnectAction extends Action {
                         if (CustomGuiHandler.guiExists(value)) {
                             openAfter = CustomGuiHandler.constructInstance(value, null, null);
                         } else {
-                            openAfter = ScreenInstanceFactory.tryConstruct(ScreenIdentifierHandler.tryFixInvalidIdentifierWithNonUniversal(value));
+                            openAfter = ScreenInstanceFactory.tryConstruct(ScreenIdentifierHandler.tryFixInvalidIdentifierWithNonUniversal(value), ScreenConstructionContext.postDisconnect(new TitleScreen()));
                         }
                         if (openAfter == null) {
                             openAfter = new TitleScreen();

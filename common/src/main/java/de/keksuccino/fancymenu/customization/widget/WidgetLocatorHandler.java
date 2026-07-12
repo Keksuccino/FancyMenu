@@ -5,8 +5,10 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.identifier.UniversalScreenIdentifierRegistry;
+import de.keksuccino.fancymenu.customization.screen.ScreenConstructionContext;
 import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
 import de.keksuccino.fancymenu.customization.widget.identification.WidgetIdentifierHandler;
+import de.keksuccino.fancymenu.util.ScreenUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
@@ -25,9 +27,8 @@ public class WidgetLocatorHandler {
     protected static final Map<String, ScreenWidgetCollection> CACHED_WIDGETS = new HashMap<>();
 
     protected static void tryCache(@NotNull String screenIdentifier, boolean overrideCache) {
-        Screen instance = ScreenInstanceFactory.tryConstruct(screenIdentifier);
+        Screen instance = ScreenInstanceFactory.tryConstruct(screenIdentifier, ScreenConstructionContext.preview(ScreenUtils.getScreen()));
         if (instance != null) {
-            instance.init(1000, 1000);
             tryCache(instance, overrideCache);
         } else {
             LOGGER.error("[FANCYMENU] WidgetLocatorHandler failed to construct instance of '" + screenIdentifier + "'! Unable to cache widgets!");
@@ -41,7 +42,7 @@ public class WidgetLocatorHandler {
             screenIdentifier = Objects.requireNonNull(UniversalScreenIdentifierRegistry.getScreenForUniversalIdentifier(screenIdentifier));
         }
         if (!CACHED_WIDGETS.containsKey(screenIdentifier) || overrideCache) {
-            Screen current = Minecraft.getInstance().screen;
+            Screen current = ScreenUtils.getScreen();
             if (current == screen) {
                 if (!ScreenCustomization.isCustomizationEnabledForScreen(current)) return;
                 ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(current);
@@ -69,7 +70,7 @@ public class WidgetLocatorHandler {
             }
             screenIdentifier = ScreenIdentifierHandler.tryFixInvalidIdentifierWithNonUniversal(screenIdentifier);
             String widgetIdentifier = widgetLocator.split(":", 2)[1];
-            Screen current = Minecraft.getInstance().screen;
+            Screen current = ScreenUtils.getScreen();
             //Check if the button locator is pointing to a button in the current screen
             if ((current != null) && ScreenIdentifierHandler.isIdentifierOfScreen(screenIdentifier, current)) {
                 if (ScreenCustomization.isCustomizationEnabledForScreen(current)) {
