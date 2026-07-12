@@ -19,7 +19,7 @@ dependencies {
     }
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
-    implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
+    implementation "com.google.code.findbugs:jsr305:3.0.1"
     implementation project(":common")
     include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:${mixin_extras_version}")))
     include(implementation 'com.github.Keksuccino:japng:0.5.3')
@@ -32,13 +32,10 @@ dependencies {
     modImplementation "it.crystalnest:fancy-entity-renderer-fabric:$fer_mc_version-$fer_version"
     modImplementation "de.keksuccino:mcef-fabric:2.2.0-1.21.11"
 
-    implementation "maven.modrinth:AANobbMI:NFkjnzWE" // Sodium
-    implementation "maven.modrinth:PtjYWJkn:zmsIDdn6" // Sodium Extra
-    implementation "maven.modrinth:gvQqBUqZ:Ow7wA0kG" // Lithium
-    implementation "maven.modrinth:YL57xq9U:fDpuVzVr" // Iris
-    implementation "maven.modrinth:5ZwdcRci:4EwhsTu7" // ImmediatelyFast
-    implementation "maven.modrinth:uXXizFIs:Ii0gP3D8" // FerriteCore
-    implementation "maven.modrinth:1eAoo2KR:pHWDw3Vc" // YACL
+    modImplementation "maven.modrinth:AANobbMI:NFkjnzWE" // Sodium
+    modImplementation "maven.modrinth:PtjYWJkn:zmsIDdn6" // Sodium Extra
+    modImplementation "maven.modrinth:gvQqBUqZ:Ow7wA0kG" // Lithium
+    modImplementation "maven.modrinth:YL57xq9U:fDpuVzVr" // Iris
 
     testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.10.2"
@@ -56,15 +53,15 @@ loom {
     runs {
         client {
             client()
-            setConfigName("Fabric Client")
-            ideConfigGenerated(true)
-            runDir("run_client")
+            displayName.set("Fabric Client")
+            generateRunConfig.set(true)
+            runDirectory.set(file("run_client"))
         }
         server {
             server()
-            setConfigName("Fabric Server")
-            ideConfigGenerated(true)
-            runDir("run_server")
+            displayName.set("Fabric Server")
+            generateRunConfig.set(true)
+            runDirectory.set(file("run_server"))
         }
     }
 }
@@ -105,13 +102,13 @@ processResources {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            artifactId base.archivesName.get()
+            artifactId = base.archivesName.get()
             from components.java
         }
     }
     repositories {
         maven {
-            url "file://" + System.getenv("local_maven")
+            url = "file://" + System.getenv("local_maven")
         }
     }
 }

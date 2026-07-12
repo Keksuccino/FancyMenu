@@ -54,19 +54,19 @@ subprojects {
             }
         }
         maven {
-            url "https://cursemaven.com"
+            url = "https://cursemaven.com"
             content {
                 includeGroup "curse.maven"
             }
         }
         maven {
-            url "https://api.modrinth.com/maven"
+            url = "https://api.modrinth.com/maven"
             content {
                 includeGroup "maven.modrinth"
             }
         }
         maven {
-            url 'https://jitpack.io'
+            url = 'https://jitpack.io'
             content {
                 includeGroupByRegex 'com\\.github\\..*'
             }
