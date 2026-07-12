@@ -533,24 +533,21 @@ public final class RemoteServerConnectionManager {
     }
 
     private static void notifyConnected(@NotNull String requestId, @NotNull String remoteServerUrl) {
-        MainThreadTaskExecutor.executeInMainThread(
-                () -> Listeners.ON_REMOTE_SERVER_CONNECTED.onRemoteServerConnected(requestId, remoteServerUrl),
-                MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK
-        );
+        long listenerRevision = Listeners.ON_REMOTE_SERVER_CONNECTED.getActiveInstanceRevision();
+        if (listenerRevision < 0L) return;
+        MainThreadTaskExecutor.executeInMainThread(() -> { if (Listeners.ON_REMOTE_SERVER_CONNECTED.isActiveAtRevision(listenerRevision)) Listeners.ON_REMOTE_SERVER_CONNECTED.onRemoteServerConnected(requestId, remoteServerUrl); }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
     }
 
     private static void notifyDataReceived(@NotNull String requestId, @NotNull String remoteServerUrl, @NotNull String data) {
-        MainThreadTaskExecutor.executeInMainThread(
-                () -> Listeners.ON_REMOTE_SERVER_DATA_RECEIVED.onRemoteServerDataReceived(requestId, remoteServerUrl, data),
-                MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK
-        );
+        long listenerRevision = Listeners.ON_REMOTE_SERVER_DATA_RECEIVED.getActiveInstanceRevision();
+        if (listenerRevision < 0L) return;
+        MainThreadTaskExecutor.executeInMainThread(() -> { if (Listeners.ON_REMOTE_SERVER_DATA_RECEIVED.isActiveAtRevision(listenerRevision)) Listeners.ON_REMOTE_SERVER_DATA_RECEIVED.onRemoteServerDataReceived(requestId, remoteServerUrl, data); }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
     }
 
     private static void notifyConnectionClosed(@NotNull String requestId, @NotNull String remoteServerUrl, boolean intentionallyClosed, boolean crashed, boolean unknownCloseReason) {
-        MainThreadTaskExecutor.executeInMainThread(
-                () -> Listeners.ON_REMOTE_SERVER_CONNECTION_CLOSED.onRemoteServerConnectionClosed(requestId, remoteServerUrl, intentionallyClosed, crashed, unknownCloseReason),
-                MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK
-        );
+        long listenerRevision = Listeners.ON_REMOTE_SERVER_CONNECTION_CLOSED.getActiveInstanceRevision();
+        if (listenerRevision < 0L) return;
+        MainThreadTaskExecutor.executeInMainThread(() -> { if (Listeners.ON_REMOTE_SERVER_CONNECTION_CLOSED.isActiveAtRevision(listenerRevision)) Listeners.ON_REMOTE_SERVER_CONNECTION_CLOSED.onRemoteServerConnectionClosed(requestId, remoteServerUrl, intentionallyClosed, crashed, unknownCloseReason); }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
     }
 
     private static void deregisterState(@NotNull ConnectionState state) {

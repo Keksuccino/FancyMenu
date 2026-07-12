@@ -26,7 +26,10 @@ public class OnItemHoveredInInventoryListener extends AbstractListener {
     /**
      * @return {@code true} when a new hovered item was detected and listeners were notified.
      */
-    public boolean onItemHovered(@Nonnull Slot slot, @Nonnull ItemStack stack) {
+    public boolean onItemHovered(@Nonnull Slot slot, @Nonnull ItemStack stack, boolean notifyNewTarget) {
+        if (!this.hasInstancesListening()) {
+            return false;
+        }
         HoveredItemData newData = HoveredItemData.from(slot, stack, this::serializeComponent);
         HoveredItemData existingData = this.currentItemData;
 
@@ -36,12 +39,17 @@ public class OnItemHoveredInInventoryListener extends AbstractListener {
         }
 
         this.currentItemData = newData;
-        this.notifyAllInstances();
+        if (notifyNewTarget) this.notifyAllInstances();
         return true;
     }
 
     public void clearCurrentItem() {
         this.currentItemData = null;
+    }
+
+    @Override
+    protected void onDeactivated() {
+        this.clearCurrentItem();
     }
 
     @Override

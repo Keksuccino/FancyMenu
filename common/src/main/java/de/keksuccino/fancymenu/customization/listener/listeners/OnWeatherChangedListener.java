@@ -22,6 +22,9 @@ public class OnWeatherChangedListener extends AbstractListener {
     }
 
     public void onWeatherChanged(@NotNull String weatherType, boolean canSnow, boolean canRain) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cachedWeatherType = weatherType;
         this.cachedWeatherCanSnow = Boolean.toString(canSnow);
         this.cachedWeatherCanRain = Boolean.toString(canRain);

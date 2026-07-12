@@ -301,16 +301,7 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
 
     @Override
     protected void onDone() {
-        // Clear existing instances
-        for (ListenerInstance instance : new ArrayList<>(ListenerHandler.getInstances())) {
-            ListenerHandler.removeInstance(instance.instanceIdentifier);
-        }
-        
-        // Add all temp instances to handler
-        for (ListenerInstance instance : this.tempInstances) {
-            ListenerHandler.addInstance(instance);
-        }
-        
+        ListenerHandler.replaceInstances(this.tempInstances);
         this.closeWithResult(true);
     }
 

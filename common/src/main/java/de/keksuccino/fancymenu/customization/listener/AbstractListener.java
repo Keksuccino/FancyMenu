@@ -5,6 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +17,9 @@ public abstract class AbstractListener {
 
     @NotNull
     protected final String identifier;
-    protected final Map<String, ListenerInstance> instances = new HashMap<>();
+    private final Object instanceLock = new Object();
+    private final Map<String, ListenerInstance> instances = new HashMap<>();
+    private volatile InstanceState instanceState = new InstanceState(List.of(), 0L);
 
     public AbstractListener(@NotNull String identifier) {
         this.identifier = identifier;
@@ -35,38 +38,92 @@ public abstract class AbstractListener {
     }
 
     public void registerInstance(@NotNull ListenerInstance instance) {
-        this.instances.put(instance.instanceIdentifier, instance);
+        if (instance.parent != this) {
+            throw new IllegalArgumentException("Tried to register listener instance with the wrong provider: " + instance.instanceIdentifier);
+        }
+        synchronized (this.instanceLock) {
+            boolean wasActive = !this.instances.isEmpty();
+            ListenerInstance previous = this.instances.put(instance.instanceIdentifier, instance);
+            if (previous != instance) {
+                this.updateActiveInstances_FancyMenu(wasActive);
+            }
+        }
     }
 
     public void unregisterInstance(@NotNull String identifier) {
-        this.instances.remove(identifier);
+        synchronized (this.instanceLock) {
+            boolean wasActive = !this.instances.isEmpty();
+            if (this.instances.remove(identifier) != null) {
+                this.updateActiveInstances_FancyMenu(wasActive);
+            }
+        }
     }
 
     public void unregisterInstance(@NotNull ListenerInstance instance) {
-        String identifier = null;
-        for (Map.Entry<String, ListenerInstance> m : this.instances.entrySet()) {
-            if (m.getValue() == instance) {
-                identifier = m.getKey();
-                break;
+        synchronized (this.instanceLock) {
+            boolean wasActive = !this.instances.isEmpty();
+            if (this.instances.entrySet().removeIf(entry -> entry.getValue() == instance)) {
+                this.updateActiveInstances_FancyMenu(wasActive);
             }
         }
-        if (identifier != null) {
-            this.instances.remove(identifier);
+    }
+
+    public final boolean hasInstancesListening() {
+        return !this.instanceState.instances.isEmpty();
+    }
+
+    public final long getActiveInstanceRevision() {
+        InstanceState state = this.instanceState;
+        return state.instances.isEmpty() ? -1L : state.revision;
+    }
+
+    public final boolean isActiveAtRevision(long revision) {
+        InstanceState state = this.instanceState;
+        return state.revision == revision && !state.instances.isEmpty();
+    }
+
+    public final void replaceInstances(@NotNull Collection<ListenerInstance> replacements) {
+        Map<String, ListenerInstance> validatedReplacements = new HashMap<>();
+        for (ListenerInstance instance : replacements) {
+            if (instance.parent != this) {
+                throw new IllegalArgumentException("Tried to register listener instance with the wrong provider: " + instance.instanceIdentifier);
+            }
+            validatedReplacements.put(instance.instanceIdentifier, instance);
+        }
+        synchronized (this.instanceLock) {
+            if (this.instances.equals(validatedReplacements)) {
+                return;
+            }
+            boolean wasActive = !this.instances.isEmpty();
+            this.instances.clear();
+            this.instances.putAll(validatedReplacements);
+            this.updateActiveInstances_FancyMenu(wasActive);
         }
     }
 
-    public boolean hasInstancesListening() {
-        return !this.instances.isEmpty();
-    }
-
-    protected void notifyAllInstances() {
-        this.instances.forEach((s, instance) -> {
+    protected final void notifyAllInstances() {
+        List<ListenerInstance> instancesAtDispatch = this.instanceState.instances;
+        for (ListenerInstance instance : instancesAtDispatch) {
             try {
                 instance.getActionScript().execute();
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Error while trying to execute action script of listener instance!", ex);
             }
-        });
+        }
+    }
+
+    /**
+     * Called exactly once when this provider transitions from zero registered instances to at least one.
+     * Implementations must remain local to this provider and must not query or mutate another provider while the lifecycle lock is held.
+     */
+    protected void onActivated() {
+    }
+
+    /**
+     * Called exactly once when this provider transitions from at least one registered instance to zero.
+     * Implementations must remain local to this provider and must not query or mutate another provider while the lifecycle lock is held.
+     */
+    protected void onDeactivated() {
     }
 
     protected abstract void buildCustomVariablesAndAddToList(List<CustomVariable> list);
@@ -84,13 +141,25 @@ public abstract class AbstractListener {
         }
     }
 
+    private void updateActiveInstances_FancyMenu(boolean wasActive) {
+        InstanceState previousState = this.instanceState;
+        this.instanceState = new InstanceState(List.copyOf(this.instances.values()), previousState.revision + 1L);
+        boolean isActive = !this.instanceState.instances.isEmpty();
+        if (!wasActive && isActive) {
+            this.onActivated();
+        } else if (wasActive && !isActive) {
+            this.onDeactivated();
+        }
+    }
+
     @NotNull
     public abstract Component getDisplayName();
 
     @NotNull
     public abstract List<Component> getDescription();
 
+    private record InstanceState(@NotNull List<ListenerInstance> instances, long revision) {}
+
     public record CustomVariable(@NotNull String name, @NotNull Supplier<String> valueSupplier) {}
 
 }
-

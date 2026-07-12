@@ -20,6 +20,7 @@ public class OnOpenScreenListener extends AbstractListener {
     }
 
     public void onScreenOpened(@NotNull Screen screen) {
+        if (!this.hasInstancesListening()) return;
         this.lastScreenIdentifier = ScreenIdentifierHandler.getIdentifierOfScreen(screen);
         this.notifyAllInstances();
     }

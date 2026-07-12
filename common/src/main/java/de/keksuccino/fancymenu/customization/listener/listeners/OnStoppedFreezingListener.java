@@ -14,6 +14,9 @@ public class OnStoppedFreezingListener extends AbstractListener {
     }
 
     public void onStoppedFreezing() {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.notifyAllInstances();
     }
 

@@ -41,13 +41,22 @@ public class MixinLocalPlayer {
     private ResourceKey<Biome> lastBiomeKey_FancyMenu;
 
     @Unique
+    private boolean biomeStateInitialized_FancyMenu;
+
+    @Unique private boolean biomeTrackingWasDormant_FancyMenu;
+
+    @Unique
     private boolean lastSwimmingState_FancyMenu;
+
+    @Unique private boolean swimmingTrackingWasDormant_FancyMenu;
 
     @Unique
     private boolean runningStateInitialized_FancyMenu;
 
     @Unique
     private boolean lastRunningState_FancyMenu;
+
+    @Unique private boolean runningTrackingWasDormant_FancyMenu;
 
     @Unique
     private boolean swimmingStateInitialized_FancyMenu;
@@ -57,6 +66,8 @@ public class MixinLocalPlayer {
 
     @Unique
     private boolean lastTouchingFluidState_FancyMenu;
+
+    @Unique private boolean touchingTrackingWasDormant_FancyMenu;
 
     @Unique
     private boolean touchingStateInitialized_FancyMenu;
@@ -76,11 +87,15 @@ public class MixinLocalPlayer {
     @Unique
     private boolean steppingStateInitialized_FancyMenu;
 
+    @Unique private boolean steppingTrackingWasDormant_FancyMenu;
+
     @Unique
     private boolean ridingStateInitialized_FancyMenu;
 
     @Unique
     private boolean lastRidingState_FancyMenu;
+
+    @Unique private boolean ridingTrackingWasDormant_FancyMenu;
 
     @Unique
     private Entity lastMountedEntity_FancyMenu;
@@ -91,14 +106,20 @@ public class MixinLocalPlayer {
     @Unique
     private boolean dimensionInitialized_FancyMenu;
 
+    @Unique private boolean dimensionTrackingWasDormant_FancyMenu;
+
     @Unique
     private boolean burningStateInitialized_FancyMenu;
 
     @Unique
     private boolean lastBurningState_FancyMenu;
 
+    @Unique private boolean burningTrackingWasDormant_FancyMenu;
+
     @Unique
     private boolean drowningActive_FancyMenu;
+
+    @Unique private boolean drowningTrackingWasDormant_FancyMenu;
 
     @Unique
     private boolean freezingStateInitialized_FancyMenu;
@@ -106,11 +127,15 @@ public class MixinLocalPlayer {
     @Unique
     private boolean lastFreezingState_FancyMenu;
 
+    @Unique private boolean freezingTrackingWasDormant_FancyMenu;
+
     @Unique
     private boolean fullyFrozenStateInitialized_FancyMenu;
 
     @Unique
     private boolean lastFullyFrozenState_FancyMenu;
+
+    @Unique private boolean fullyFrozenTrackingWasDormant_FancyMenu;
 
     @Unique
     private boolean experienceInitialized_FancyMenu;
@@ -145,6 +170,8 @@ public class MixinLocalPlayer {
     @Unique
     private boolean lastWeatherCanRain_FancyMenu;
 
+    @Unique private boolean weatherTrackingWasDormant_FancyMenu;
+
     @Inject(method = "tick", at = @At("TAIL"))
     private void after_tick_FancyMenu(CallbackInfo info) {
         LocalPlayer self = (LocalPlayer)(Object)this;
@@ -152,105 +179,186 @@ public class MixinLocalPlayer {
         this.updateFluidListeners_FancyMenu(self);
         this.updatePositionChangedListener_FancyMenu(self);
         this.updateSteppingListener_FancyMenu(self);
-        if (self.level() != null) {
-            ResourceKey<Level> currentDimensionKey = self.level().dimension();
-            if (!this.dimensionInitialized_FancyMenu || !Objects.equals(this.lastDimensionKey_FancyMenu, currentDimensionKey)) {
-                this.dimensionInitialized_FancyMenu = true;
-                this.lastDimensionKey_FancyMenu = currentDimensionKey;
-                if (currentDimensionKey != null) {
-                    Listeners.ON_DIMENSION_ENTERED.onDimensionEntered(currentDimensionKey);
-                }
-            }
-        }
+        this.updateDimensionListener_FancyMenu(self);
+        this.updateBurningListeners_FancyMenu(self);
+        this.updateDrowningListenerState_FancyMenu(self);
+        this.updateFreezingListeners_FancyMenu(self);
+        this.updateRunningListeners_FancyMenu(self);
+        this.updateRidingListeners_FancyMenu(self);
+        this.updateBiomeListeners_FancyMenu(self);
+        this.updateWeatherListener_FancyMenu(self, self.level() instanceof ClientLevel clientLevel ? clientLevel : null);
+        this.updateDamageListener_FancyMenu(self);
+    }
 
+    @Unique
+    private void updateDimensionListener_FancyMenu(LocalPlayer self) {
+        if (!Listeners.ON_DIMENSION_ENTERED.hasInstancesListening()) {
+            this.dimensionTrackingWasDormant_FancyMenu = true;
+            this.dimensionInitialized_FancyMenu = false;
+            this.lastDimensionKey_FancyMenu = null;
+            return;
+        }
+        if (self.level() == null) return;
+        ResourceKey<Level> currentDimensionKey = self.level().dimension();
+        if (!this.dimensionInitialized_FancyMenu) {
+            this.dimensionInitialized_FancyMenu = true;
+            this.lastDimensionKey_FancyMenu = currentDimensionKey;
+            if (!this.dimensionTrackingWasDormant_FancyMenu && currentDimensionKey != null) Listeners.ON_DIMENSION_ENTERED.onDimensionEntered(currentDimensionKey);
+            this.dimensionTrackingWasDormant_FancyMenu = false;
+        } else if (!Objects.equals(this.lastDimensionKey_FancyMenu, currentDimensionKey)) {
+            this.lastDimensionKey_FancyMenu = currentDimensionKey;
+            if (currentDimensionKey != null) Listeners.ON_DIMENSION_ENTERED.onDimensionEntered(currentDimensionKey);
+        }
+    }
+
+    @Unique
+    private void updateBurningListeners_FancyMenu(LocalPlayer self) {
+        boolean tracking = Listeners.ON_STARTED_BURNING.hasInstancesListening() || Listeners.ON_STOPPED_BURNING.hasInstancesListening();
+        if (!tracking) {
+            this.burningTrackingWasDormant_FancyMenu = true;
+            this.burningStateInitialized_FancyMenu = false;
+            return;
+        }
         boolean isBurning = self.isOnFire();
         if (!this.burningStateInitialized_FancyMenu) {
             this.burningStateInitialized_FancyMenu = true;
             this.lastBurningState_FancyMenu = isBurning;
-            if (isBurning) {
-                Listeners.ON_STARTED_BURNING.onStartedBurning();
-            }
-        } else {
-            if (!this.lastBurningState_FancyMenu && isBurning) {
-                Listeners.ON_STARTED_BURNING.onStartedBurning();
-            } else if (this.lastBurningState_FancyMenu && !isBurning) {
-                Listeners.ON_STOPPED_BURNING.onStoppedBurning();
-            }
-            this.lastBurningState_FancyMenu = isBurning;
+            if (!this.burningTrackingWasDormant_FancyMenu && isBurning) Listeners.ON_STARTED_BURNING.onStartedBurning();
+            this.burningTrackingWasDormant_FancyMenu = false;
+            return;
         }
+        if (!this.lastBurningState_FancyMenu && isBurning) {
+            Listeners.ON_STARTED_BURNING.onStartedBurning();
+        } else if (this.lastBurningState_FancyMenu && !isBurning) {
+            Listeners.ON_STOPPED_BURNING.onStoppedBurning();
+        }
+        this.lastBurningState_FancyMenu = isBurning;
+    }
 
+    @Unique
+    private void updateDrowningListenerState_FancyMenu(LocalPlayer self) {
+        if (!Listeners.ON_STARTED_DROWNING.hasInstancesListening()) {
+            this.drowningActive_FancyMenu = false;
+            this.drowningTrackingWasDormant_FancyMenu = true;
+            return;
+        }
+        this.prepareDrowningTracking_FancyMenu();
         if (self.getAirSupply() >= self.getMaxAirSupply()) {
             this.drowningActive_FancyMenu = false;
+        }
+    }
+
+    @Unique
+    private void updateFreezingListeners_FancyMenu(LocalPlayer self) {
+        boolean trackFreezing = Listeners.ON_STARTED_FREEZING.hasInstancesListening() || Listeners.ON_STOPPED_FREEZING.hasInstancesListening();
+        boolean trackFullyFrozen = Listeners.ON_FULLY_FROZEN.hasInstancesListening();
+        if (!trackFreezing && !trackFullyFrozen) {
+            this.freezingTrackingWasDormant_FancyMenu = true;
+            this.fullyFrozenTrackingWasDormant_FancyMenu = true;
+            this.freezingStateInitialized_FancyMenu = false;
+            this.fullyFrozenStateInitialized_FancyMenu = false;
+            return;
         }
 
         int ticksFrozen = self.getTicksFrozen();
         int ticksRequiredToFreeze = self.getTicksRequiredToFreeze();
-        boolean isFreezing = ticksFrozen > 0;
-        float freezingIntensity = 0.0F;
-        if (ticksRequiredToFreeze > 0) {
-            freezingIntensity = Mth.clamp((float)ticksFrozen / (float)ticksRequiredToFreeze, 0.0F, 1.0F);
-        }
-
-        if (!this.freezingStateInitialized_FancyMenu) {
-            this.freezingStateInitialized_FancyMenu = true;
-            this.lastFreezingState_FancyMenu = isFreezing;
-            if (isFreezing) {
-                Listeners.ON_STARTED_FREEZING.onStartedFreezing(freezingIntensity);
+        if (trackFreezing) {
+            boolean isFreezing = ticksFrozen > 0;
+            float freezingIntensity = ticksRequiredToFreeze > 0 ? Mth.clamp((float)ticksFrozen / (float)ticksRequiredToFreeze, 0.0F, 1.0F) : 0.0F;
+            if (!this.freezingStateInitialized_FancyMenu) {
+                this.freezingStateInitialized_FancyMenu = true;
+                this.lastFreezingState_FancyMenu = isFreezing;
+                if (!this.freezingTrackingWasDormant_FancyMenu && isFreezing) Listeners.ON_STARTED_FREEZING.onStartedFreezing(freezingIntensity);
+                this.freezingTrackingWasDormant_FancyMenu = false;
+            } else {
+                if (!this.lastFreezingState_FancyMenu && isFreezing) {
+                    Listeners.ON_STARTED_FREEZING.onStartedFreezing(freezingIntensity);
+                } else if (this.lastFreezingState_FancyMenu && !isFreezing) {
+                    Listeners.ON_STOPPED_FREEZING.onStoppedFreezing();
+                }
+                this.lastFreezingState_FancyMenu = isFreezing;
             }
         } else {
-            if (!this.lastFreezingState_FancyMenu && isFreezing) {
-                Listeners.ON_STARTED_FREEZING.onStartedFreezing(freezingIntensity);
-            } else if (this.lastFreezingState_FancyMenu && !isFreezing) {
-                Listeners.ON_STOPPED_FREEZING.onStoppedFreezing();
-            }
+            this.freezingTrackingWasDormant_FancyMenu = true;
+            this.freezingStateInitialized_FancyMenu = false;
         }
 
-        this.lastFreezingState_FancyMenu = isFreezing;
-
-        boolean isFullyFrozen = ticksRequiredToFreeze > 0 && ticksFrozen >= ticksRequiredToFreeze;
-        if (!this.fullyFrozenStateInitialized_FancyMenu) {
-            this.fullyFrozenStateInitialized_FancyMenu = true;
-            this.lastFullyFrozenState_FancyMenu = isFullyFrozen;
-            if (isFullyFrozen) {
-                Listeners.ON_FULLY_FROZEN.onFullyFrozen();
+        if (trackFullyFrozen) {
+            boolean isFullyFrozen = ticksRequiredToFreeze > 0 && ticksFrozen >= ticksRequiredToFreeze;
+            if (!this.fullyFrozenStateInitialized_FancyMenu) {
+                this.fullyFrozenStateInitialized_FancyMenu = true;
+                this.lastFullyFrozenState_FancyMenu = isFullyFrozen;
+                if (!this.fullyFrozenTrackingWasDormant_FancyMenu && isFullyFrozen) Listeners.ON_FULLY_FROZEN.onFullyFrozen();
+                this.fullyFrozenTrackingWasDormant_FancyMenu = false;
+            } else {
+                if (!this.lastFullyFrozenState_FancyMenu && isFullyFrozen) Listeners.ON_FULLY_FROZEN.onFullyFrozen();
+                this.lastFullyFrozenState_FancyMenu = isFullyFrozen;
             }
         } else {
-            if (!this.lastFullyFrozenState_FancyMenu && isFullyFrozen) {
-                Listeners.ON_FULLY_FROZEN.onFullyFrozen();
-            }
+            this.fullyFrozenTrackingWasDormant_FancyMenu = true;
+            this.fullyFrozenStateInitialized_FancyMenu = false;
         }
-        this.lastFullyFrozenState_FancyMenu = isFullyFrozen;
+    }
 
+    @Unique
+    private void updateRunningListeners_FancyMenu(LocalPlayer self) {
+        boolean tracking = Listeners.ON_STARTED_RUNNING.hasInstancesListening() || Listeners.ON_STOPPED_RUNNING.hasInstancesListening();
+        if (!tracking) {
+            this.runningTrackingWasDormant_FancyMenu = true;
+            this.runningStateInitialized_FancyMenu = false;
+            return;
+        }
         boolean isRunning = self.isSprinting();
         if (!this.runningStateInitialized_FancyMenu) {
             this.runningStateInitialized_FancyMenu = true;
             this.lastRunningState_FancyMenu = isRunning;
-            if (isRunning) {
-                Listeners.ON_STARTED_RUNNING.onStartedRunning();
-            }
-        } else {
-            if (!this.lastRunningState_FancyMenu && isRunning) {
-                Listeners.ON_STARTED_RUNNING.onStartedRunning();
-            } else if (this.lastRunningState_FancyMenu && !isRunning) {
-                Listeners.ON_STOPPED_RUNNING.onStoppedRunning();
-            }
+            if (!this.runningTrackingWasDormant_FancyMenu && isRunning) Listeners.ON_STARTED_RUNNING.onStartedRunning();
+            this.runningTrackingWasDormant_FancyMenu = false;
+            return;
+        }
+        if (!this.lastRunningState_FancyMenu && isRunning) {
+            Listeners.ON_STARTED_RUNNING.onStartedRunning();
+        } else if (this.lastRunningState_FancyMenu && !isRunning) {
+            Listeners.ON_STOPPED_RUNNING.onStoppedRunning();
         }
         this.lastRunningState_FancyMenu = isRunning;
+    }
 
-        this.updateRidingListeners_FancyMenu(self);
-
-        ResourceKey<Biome> currentBiomeKey = null;
-        ClientLevel cachedClientLevel = null;
-        if (self.level() instanceof ClientLevel clientLevel) {
-            cachedClientLevel = clientLevel;
-            if (clientLevel.hasChunkAt(self.getBlockX(), self.getBlockZ())) {
-                Holder<Biome> biomeHolder = clientLevel.getBiome(self.blockPosition());
-                currentBiomeKey = biomeHolder.unwrapKey().orElse(null);
-            }
+    @Unique
+    private void updateBiomeListeners_FancyMenu(LocalPlayer self) {
+        boolean trackEntering = Listeners.ON_ENTER_BIOME.hasInstancesListening();
+        boolean trackLeaving = Listeners.ON_LEAVE_BIOME.hasInstancesListening();
+        if (!trackEntering && !trackLeaving) {
+            this.biomeTrackingWasDormant_FancyMenu = true;
+            this.biomeStateInitialized_FancyMenu = false;
+            this.lastBiomeKey_FancyMenu = null;
+            return;
         }
 
-        this.updateWeatherListener_FancyMenu(self, cachedClientLevel);
+        ResourceKey<Biome> currentBiomeKey = null;
+        if (self.level() instanceof ClientLevel clientLevel && clientLevel.hasChunkAt(self.getBlockX(), self.getBlockZ())) {
+            Holder<Biome> biomeHolder = clientLevel.getBiome(self.blockPosition());
+            currentBiomeKey = biomeHolder.unwrapKey().orElse(null);
+        }
+        if (!this.biomeStateInitialized_FancyMenu) {
+            this.biomeStateInitialized_FancyMenu = true;
+            this.lastBiomeKey_FancyMenu = currentBiomeKey;
+            if (!this.biomeTrackingWasDormant_FancyMenu && trackEntering) Listeners.ON_ENTER_BIOME.onBiomeChanged(currentBiomeKey);
+            this.biomeTrackingWasDormant_FancyMenu = false;
+            return;
+        }
+        if (Objects.equals(this.lastBiomeKey_FancyMenu, currentBiomeKey)) return;
+        if (trackLeaving && this.lastBiomeKey_FancyMenu != null) Listeners.ON_LEAVE_BIOME.onBiomeLeft(this.lastBiomeKey_FancyMenu);
+        this.lastBiomeKey_FancyMenu = currentBiomeKey;
+        if (trackEntering) Listeners.ON_ENTER_BIOME.onBiomeChanged(currentBiomeKey);
+    }
 
+    @Unique
+    private void updateDamageListener_FancyMenu(LocalPlayer self) {
+        if (!Listeners.ON_DAMAGE_TAKEN.hasInstancesListening()) {
+            this.healthInitialized_FancyMenu = false;
+            return;
+        }
         float currentHealth = self.getHealth();
         if (!this.healthInitialized_FancyMenu) {
             this.healthInitialized_FancyMenu = true;
@@ -263,80 +371,80 @@ public class MixinLocalPlayer {
             Listeners.ON_DAMAGE_TAKEN.onDamageTaken(damageTaken, damageTypeKey, fatalDamage, damageSourceKey);
         }
         this.lastKnownHealth_FancyMenu = currentHealth;
-
-        if (Objects.equals(this.lastBiomeKey_FancyMenu, currentBiomeKey)) {
-            if (currentBiomeKey == null) {
-                Listeners.ON_ENTER_BIOME.onBiomeChanged(null);
-            }
-            return;
-        }
-
-        if (this.lastBiomeKey_FancyMenu != null) {
-            Listeners.ON_LEAVE_BIOME.onBiomeLeft(this.lastBiomeKey_FancyMenu);
-        }
-
-        this.lastBiomeKey_FancyMenu = currentBiomeKey;
-        Listeners.ON_ENTER_BIOME.onBiomeChanged(currentBiomeKey);
-
-
     }
 
     @Unique
     private void updateFluidListeners_FancyMenu(LocalPlayer self) {
+        boolean trackTouching = Listeners.ON_START_TOUCHING_FLUID.hasInstancesListening() || Listeners.ON_STOP_TOUCHING_FLUID.hasInstancesListening();
+        boolean trackSwimming = Listeners.ON_START_SWIMMING.hasInstancesListening() || Listeners.ON_STOP_SWIMMING.hasInstancesListening();
+        if (!trackTouching && !trackSwimming) {
+            this.touchingTrackingWasDormant_FancyMenu = true;
+            this.swimmingTrackingWasDormant_FancyMenu = true;
+            this.touchingStateInitialized_FancyMenu = false;
+            this.swimmingStateInitialized_FancyMenu = false;
+            this.lastTouchingFluidKey_FancyMenu = null;
+            this.lastSwimmingFluidKey_FancyMenu = null;
+            return;
+        }
+
         FluidContactInfo contactInfo = this.detectFluidContact_FancyMenu(self);
         boolean isTouchingFluid = contactInfo.touching();
         String currentFluidKey = contactInfo.fluidKey();
 
-        if (!this.touchingStateInitialized_FancyMenu) {
-            this.touchingStateInitialized_FancyMenu = true;
-            this.lastTouchingFluidKey_FancyMenu = isTouchingFluid ? currentFluidKey : null;
-            if (isTouchingFluid) {
-                Listeners.ON_START_TOUCHING_FLUID.onStartTouchingFluid(currentFluidKey);
-            }
-        } else {
-            if (!this.lastTouchingFluidState_FancyMenu && isTouchingFluid) {
+        if (trackTouching) {
+            if (!this.touchingStateInitialized_FancyMenu) {
+                this.touchingStateInitialized_FancyMenu = true;
+                this.lastTouchingFluidKey_FancyMenu = isTouchingFluid ? currentFluidKey : null;
+                if (!this.touchingTrackingWasDormant_FancyMenu && isTouchingFluid) Listeners.ON_START_TOUCHING_FLUID.onStartTouchingFluid(currentFluidKey);
+                this.touchingTrackingWasDormant_FancyMenu = false;
+            } else if (!this.lastTouchingFluidState_FancyMenu && isTouchingFluid) {
                 this.lastTouchingFluidKey_FancyMenu = currentFluidKey;
                 Listeners.ON_START_TOUCHING_FLUID.onStartTouchingFluid(currentFluidKey);
             } else if (this.lastTouchingFluidState_FancyMenu && !isTouchingFluid) {
                 Listeners.ON_STOP_TOUCHING_FLUID.onStopTouchingFluid(this.lastTouchingFluidKey_FancyMenu);
                 this.lastTouchingFluidKey_FancyMenu = null;
-            } else if (isTouchingFluid) {
-                this.lastTouchingFluidKey_FancyMenu = currentFluidKey;
             } else {
-                this.lastTouchingFluidKey_FancyMenu = null;
+                this.lastTouchingFluidKey_FancyMenu = isTouchingFluid ? currentFluidKey : null;
             }
-        }
-        this.lastTouchingFluidState_FancyMenu = isTouchingFluid;
-
-        boolean isSwimming = self.isSwimming();
-        String swimmingFluidKey = isSwimming ? currentFluidKey : null;
-
-        if (!this.swimmingStateInitialized_FancyMenu) {
-            this.swimmingStateInitialized_FancyMenu = true;
-            this.lastSwimmingFluidKey_FancyMenu = swimmingFluidKey;
-            if (isSwimming) {
-                Listeners.ON_START_SWIMMING.onStartSwimming(swimmingFluidKey);
-            }
+            this.lastTouchingFluidState_FancyMenu = isTouchingFluid;
         } else {
-            if (!this.lastSwimmingState_FancyMenu && isSwimming) {
+            this.touchingTrackingWasDormant_FancyMenu = true;
+            this.touchingStateInitialized_FancyMenu = false;
+            this.lastTouchingFluidKey_FancyMenu = null;
+        }
+
+        if (trackSwimming) {
+            boolean isSwimming = self.isSwimming();
+            String swimmingFluidKey = isSwimming ? currentFluidKey : null;
+            if (!this.swimmingStateInitialized_FancyMenu) {
+                this.swimmingStateInitialized_FancyMenu = true;
+                this.lastSwimmingFluidKey_FancyMenu = swimmingFluidKey;
+                if (!this.swimmingTrackingWasDormant_FancyMenu && isSwimming) Listeners.ON_START_SWIMMING.onStartSwimming(swimmingFluidKey);
+                this.swimmingTrackingWasDormant_FancyMenu = false;
+            } else if (!this.lastSwimmingState_FancyMenu && isSwimming) {
                 this.lastSwimmingFluidKey_FancyMenu = swimmingFluidKey;
                 Listeners.ON_START_SWIMMING.onStartSwimming(swimmingFluidKey);
             } else if (this.lastSwimmingState_FancyMenu && !isSwimming) {
                 Listeners.ON_STOP_SWIMMING.onStopSwimming(this.lastSwimmingFluidKey_FancyMenu);
                 this.lastSwimmingFluidKey_FancyMenu = null;
-            } else if (isSwimming) {
-                this.lastSwimmingFluidKey_FancyMenu = swimmingFluidKey;
             } else {
-                this.lastSwimmingFluidKey_FancyMenu = null;
+                this.lastSwimmingFluidKey_FancyMenu = swimmingFluidKey;
             }
+            this.lastSwimmingState_FancyMenu = isSwimming;
+        } else {
+            this.swimmingTrackingWasDormant_FancyMenu = true;
+            this.swimmingStateInitialized_FancyMenu = false;
+            this.lastSwimmingFluidKey_FancyMenu = null;
         }
-
-        this.lastSwimmingState_FancyMenu = isSwimming;
-
     }
 
     @Unique
     private void updatePositionChangedListener_FancyMenu(LocalPlayer self) {
+        if (!Listeners.ON_POSITION_CHANGED.hasInstancesListening()) {
+            this.positionChangeInitialized_FancyMenu = false;
+            this.lastKnownBlockPosition_FancyMenu = null;
+            return;
+        }
         if (!(self.level() instanceof ClientLevel clientLevel)) {
             return;
         }
@@ -363,6 +471,11 @@ public class MixinLocalPlayer {
 
     @Unique
     private void updateSteppingListener_FancyMenu(LocalPlayer self) {
+        if (!Listeners.ON_STEPPING_ON_BLOCK.hasInstancesListening()) {
+            this.steppingTrackingWasDormant_FancyMenu = true;
+            this.resetSteppingState_FancyMenu();
+            return;
+        }
         if (!(self.level() instanceof ClientLevel clientLevel)) {
             this.resetSteppingState_FancyMenu();
             return;
@@ -385,8 +498,14 @@ public class MixinLocalPlayer {
 
         BlockPos immutablePos = onPos.immutable();
 
-        if (!this.steppingStateInitialized_FancyMenu || !immutablePos.equals(this.lastSteppedBlockPos_FancyMenu)) {
+        if (!this.steppingStateInitialized_FancyMenu) {
             this.steppingStateInitialized_FancyMenu = true;
+            this.lastSteppedBlockPos_FancyMenu = immutablePos;
+            if (!this.steppingTrackingWasDormant_FancyMenu) Listeners.ON_STEPPING_ON_BLOCK.onSteppedOnBlock(immutablePos, blockState);
+            this.steppingTrackingWasDormant_FancyMenu = false;
+            return;
+        }
+        if (!immutablePos.equals(this.lastSteppedBlockPos_FancyMenu)) {
             this.lastSteppedBlockPos_FancyMenu = immutablePos;
             Listeners.ON_STEPPING_ON_BLOCK.onSteppedOnBlock(immutablePos, blockState);
         }
@@ -395,6 +514,14 @@ public class MixinLocalPlayer {
 
     @Unique
     private void updateRidingListeners_FancyMenu(LocalPlayer self) {
+        boolean tracking = Listeners.ON_ENTITY_MOUNTED.hasInstancesListening() || Listeners.ON_ENTITY_UNMOUNTED.hasInstancesListening();
+        if (!tracking) {
+            this.ridingTrackingWasDormant_FancyMenu = true;
+            this.ridingStateInitialized_FancyMenu = false;
+            this.lastRidingState_FancyMenu = false;
+            this.clearMountedEntityCache_FancyMenu();
+            return;
+        }
         Entity vehicle = self.getVehicle();
         boolean isRiding = vehicle != null;
 
@@ -402,8 +529,9 @@ public class MixinLocalPlayer {
             this.ridingStateInitialized_FancyMenu = true;
             if (isRiding) {
                 this.updateMountedEntityCache_FancyMenu(vehicle);
-                Listeners.ON_ENTITY_MOUNTED.onEntityMounted(vehicle);
+                if (!this.ridingTrackingWasDormant_FancyMenu) Listeners.ON_ENTITY_MOUNTED.onEntityMounted(vehicle);
             }
+            this.ridingTrackingWasDormant_FancyMenu = false;
         } else {
             if (!this.lastRidingState_FancyMenu && isRiding) {
                 this.updateMountedEntityCache_FancyMenu(vehicle);
@@ -495,6 +623,11 @@ public class MixinLocalPlayer {
 
     @Inject(method = "setExperienceValues", at = @At("HEAD"))
     private void before_setExperienceValues_FancyMenu(float currentXP, int totalExperience, int level, CallbackInfo ci) {
+        if (!Listeners.ON_EXPERIENCE_CHANGED.hasInstancesListening()) {
+            this.experienceInitialized_FancyMenu = false;
+            this.shouldEmitExperienceChange_FancyMenu = false;
+            return;
+        }
         LocalPlayer self = (LocalPlayer)(Object)this;
         this.shouldEmitExperienceChange_FancyMenu = this.experienceInitialized_FancyMenu;
         this.previousTotalExperience_FancyMenu = self.totalExperience;
@@ -504,6 +637,7 @@ public class MixinLocalPlayer {
 
     @Inject(method = "removeEffectNoUpdate", at = @At("TAIL"))
     private void after_removeEffectNoUpdate_FancyMenu(Holder<MobEffect> effectHolder, CallbackInfoReturnable<MobEffectInstance> cir) {
+        if (!Listeners.ON_EFFECT_LOST.hasInstancesListening()) return;
         MobEffectInstance removedInstance = cir.getReturnValue();
         if (removedInstance == null) {
             return;
@@ -515,6 +649,7 @@ public class MixinLocalPlayer {
 
     @Inject(method = "setExperienceValues", at = @At("TAIL"))
     private void after_setExperienceValues_FancyMenu(float currentXP, int totalExperience, int level, CallbackInfo ci) {
+        if (!Listeners.ON_EXPERIENCE_CHANGED.hasInstancesListening()) return;
         LocalPlayer self = (LocalPlayer)(Object)this;
         if (!this.shouldEmitExperienceChange_FancyMenu) {
             this.experienceInitialized_FancyMenu = true;
@@ -579,8 +714,21 @@ public class MixinLocalPlayer {
     }
 
     @Unique
+    private void prepareDrowningTracking_FancyMenu() {
+        if (!this.drowningTrackingWasDormant_FancyMenu) {
+            return;
+        }
+        LocalPlayer self = (LocalPlayer)(Object)this;
+        DamageSource lastDamageSource = self.getLastDamageSource();
+        // Do not retain listener state while dormant. A recent vanilla drowning hit seeds an already-running episode silently when tracking resumes.
+        this.drowningActive_FancyMenu = self.getAirSupply() < self.getMaxAirSupply() && lastDamageSource != null && lastDamageSource.is(DamageTypes.DROWN);
+        this.drowningTrackingWasDormant_FancyMenu = false;
+    }
+
+    @Unique
     private void updateWeatherListener_FancyMenu(LocalPlayer self, @Nullable ClientLevel clientLevel) {
-        if (clientLevel == null) {
+        if (!Listeners.ON_WEATHER_CHANGED.hasInstancesListening() || clientLevel == null) {
+            if (!Listeners.ON_WEATHER_CHANGED.hasInstancesListening()) this.weatherTrackingWasDormant_FancyMenu = true;
             this.weatherStateInitialized_FancyMenu = false;
             this.lastWeatherType_FancyMenu = null;
             return;
@@ -612,11 +760,13 @@ public class MixinLocalPlayer {
                 || !Objects.equals(this.lastWeatherType_FancyMenu, weatherType)
                 || this.lastWeatherCanSnow_FancyMenu != canSnow
                 || this.lastWeatherCanRain_FancyMenu != canRain) {
+            boolean wasInitialized = this.weatherStateInitialized_FancyMenu;
             this.weatherStateInitialized_FancyMenu = true;
             this.lastWeatherType_FancyMenu = weatherType;
             this.lastWeatherCanSnow_FancyMenu = canSnow;
             this.lastWeatherCanRain_FancyMenu = canRain;
-            Listeners.ON_WEATHER_CHANGED.onWeatherChanged(weatherType, canSnow, canRain);
+            if (wasInitialized || !this.weatherTrackingWasDormant_FancyMenu) Listeners.ON_WEATHER_CHANGED.onWeatherChanged(weatherType, canSnow, canRain);
+            this.weatherTrackingWasDormant_FancyMenu = false;
         }
 
     }
@@ -624,18 +774,21 @@ public class MixinLocalPlayer {
     /** @reason Fire FancyMenu listener when the local player takes drowning damage. */
     @Inject(method = "hurt", at = @At("HEAD"))
     private void before_hurt_FancyMenu(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        if (!Listeners.ON_STARTED_DROWNING.hasInstancesListening()) {
+            return;
+        }
+        this.prepareDrowningTracking_FancyMenu();
         if (source.is(DamageTypes.DROWN) && !this.drowningActive_FancyMenu) {
             this.drowningActive_FancyMenu = true;
             Listeners.ON_STARTED_DROWNING.onStartedDrowning();
         }
-
     }
 
     /** @reason Fire FancyMenu listener when the local player drops an item. */
     @WrapOperation(method = "drop", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Inventory;removeFromSelected(Z)Lnet/minecraft/world/item/ItemStack;"))
     private ItemStack wrap_removeFromSelected_FancyMenu(Inventory inventory, boolean fullStack, Operation<ItemStack> operation) {
         ItemStack removed = operation.call(inventory, fullStack);
-        if (!removed.isEmpty()) {
+        if (!removed.isEmpty() && Listeners.ON_ITEM_DROPPED.hasInstancesListening()) {
             ResourceLocation itemLocation = BuiltInRegistries.ITEM.getKey(removed.getItem());
             String itemKey = itemLocation != null ? itemLocation.toString() : null;
             Listeners.ON_ITEM_DROPPED.onItemDropped(itemKey);
@@ -644,10 +797,3 @@ public class MixinLocalPlayer {
     }
 
 }
-
-
-
-
-
-
-

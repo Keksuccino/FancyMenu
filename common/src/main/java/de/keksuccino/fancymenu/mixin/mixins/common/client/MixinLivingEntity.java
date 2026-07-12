@@ -38,6 +38,7 @@ public abstract class MixinLivingEntity {
         if (!(self instanceof LocalPlayer)) {
             return;
         }
+        if (!Listeners.ON_EFFECT_GAINED.hasInstancesListening()) return;
         Holder<MobEffect> effectHolder = effectInstance.getEffect();
         String effectKey = this.resolveEffectKey_FancyMenu(effectHolder);
         String effectType = this.resolveEffectTypeName_FancyMenu(effectHolder.value());
@@ -48,7 +49,8 @@ public abstract class MixinLivingEntity {
     @WrapOperation(method = "completeUsingItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;finishUsingItem(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/LivingEntity;)Lnet/minecraft/world/item/ItemStack;"))
     private ItemStack wrap_finishUsingItem_FancyMenu(ItemStack stack, Level level, LivingEntity living, Operation<ItemStack> operation) {
         String itemKey = null;
-        if (!stack.isEmpty()) {
+        boolean notifyListener = living instanceof LocalPlayer && Listeners.ON_ITEM_CONSUMED.hasInstancesListening();
+        if (notifyListener && !stack.isEmpty()) {
             ResourceLocation itemLocation = BuiltInRegistries.ITEM.getKey(stack.getItem());
             if (itemLocation != null) {
                 itemKey = itemLocation.toString();
@@ -57,7 +59,7 @@ public abstract class MixinLivingEntity {
 
         ItemStack result = operation.call(stack, level, living);
 
-        if (itemKey != null && living instanceof LocalPlayer) {
+        if (itemKey != null && notifyListener) {
             Listeners.ON_ITEM_CONSUMED.onItemConsumed(itemKey);
         }
 
@@ -67,14 +69,18 @@ public abstract class MixinLivingEntity {
     /** @reason Capture the item that is about to break for the local player. */
     @Inject(method = "handleEntityEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;breakItem(Lnet/minecraft/world/item/ItemStack;)V"))
     private void before_breakItem_FancyMenu(byte eventId, CallbackInfo ci) {
-        this.captureBrokenItem_FancyMenu(eventId);
+        if (Listeners.ON_ITEM_BROKE.hasInstancesListening()) {
+            this.captureBrokenItem_FancyMenu(eventId);
+        } else {
+            this.clearBrokenItemCache_FancyMenu();
+        }
     }
 
     /** @reason Fire FancyMenu listener after the item break animation for the local player. */
     @Inject(method = "handleEntityEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;breakItem(Lnet/minecraft/world/item/ItemStack;)V", shift = At.Shift.AFTER))
     private void after_breakItem_FancyMenu(byte eventId, CallbackInfo ci) {
         LivingEntity self = (LivingEntity)(Object)this;
-        if (!(self instanceof LocalPlayer) || this.lastBrokenStack_FancyMenu.isEmpty()) {
+        if (!Listeners.ON_ITEM_BROKE.hasInstancesListening() || !(self instanceof LocalPlayer) || this.lastBrokenStack_FancyMenu.isEmpty()) {
             this.clearBrokenItemCache_FancyMenu();
             return;
         }
@@ -160,4 +166,3 @@ public abstract class MixinLivingEntity {
     }
 
 }
-

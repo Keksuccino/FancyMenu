@@ -14,6 +14,9 @@ public class OnStoppedRunningListener extends AbstractListener {
     }
 
     public void onStoppedRunning() {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.notifyAllInstances();
     }
 

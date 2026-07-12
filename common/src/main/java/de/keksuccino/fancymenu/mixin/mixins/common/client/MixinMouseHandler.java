@@ -155,11 +155,11 @@ public class MixinMouseHandler {
         this.mappedButtonOnPress_FancyMenu = -1;
         if (action == GLFW.GLFW_PRESS) {
             ClicksPerSecondTracker.recordClick(mappedButton);
-            Listeners.ON_MOUSE_BUTTON_CLICKED.onMouseButtonClicked(mappedButton, mouseX, mouseY);
+            if (Listeners.ON_MOUSE_BUTTON_CLICKED.hasInstancesListening()) Listeners.ON_MOUSE_BUTTON_CLICKED.onMouseButtonClicked(mappedButton, mouseX, mouseY);
             MouseUtil.onMouseButtonPressed(mappedButton, mouseX, mouseY);
             GlslRuntimeEventTracker.onMouseButtonPressed(mappedButton, mouseX, mouseY);
         } else if (action == GLFW.GLFW_RELEASE) {
-            Listeners.ON_MOUSE_BUTTON_RELEASED.onMouseButtonReleased(mappedButton, mouseX, mouseY);
+            if (Listeners.ON_MOUSE_BUTTON_RELEASED.hasInstancesListening()) Listeners.ON_MOUSE_BUTTON_RELEASED.onMouseButtonReleased(mappedButton, mouseX, mouseY);
             MouseUtil.onMouseButtonReleased(mappedButton, mouseX, mouseY);
             GlslRuntimeEventTracker.onMouseButtonReleased(mappedButton, mouseX, mouseY);
         }

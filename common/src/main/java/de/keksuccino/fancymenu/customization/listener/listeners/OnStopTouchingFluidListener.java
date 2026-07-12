@@ -21,6 +21,9 @@ public class OnStopTouchingFluidListener extends AbstractListener {
     }
 
     public void onStopTouchingFluid(@Nullable String fluidKey) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
         this.cachedFluidKey = fluidKey;
         this.notifyAllInstances();
     }

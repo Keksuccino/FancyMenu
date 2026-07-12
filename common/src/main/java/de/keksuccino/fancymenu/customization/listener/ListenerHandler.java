@@ -27,14 +27,17 @@ public class ListenerHandler {
         canRegisterListeners = false;
     }
 
-    public static void addInstance(@NotNull ListenerInstance instance) {
+    public static synchronized void addInstance(@NotNull ListenerInstance instance) {
         assertInitialized();
-        INSTANCES.put(instance.instanceIdentifier, instance);
+        ListenerInstance previousInstance = INSTANCES.put(instance.instanceIdentifier, instance);
+        if (previousInstance != null && previousInstance.parent != instance.parent) {
+            previousInstance.parent.unregisterInstance(previousInstance);
+        }
         instance.registerSelfToParent();
         writeToFile();
     }
 
-    public static void removeInstance(@NotNull String identifier) {
+    public static synchronized void removeInstance(@NotNull String identifier) {
         assertInitialized();
         ListenerInstance instance = INSTANCES.get(identifier);
         if (instance != null) instance.parent.unregisterInstance(instance);
@@ -42,18 +45,24 @@ public class ListenerHandler {
         writeToFile();
     }
 
-    public static void syncChanges() {
+    public static synchronized void replaceInstances(@NotNull Collection<ListenerInstance> replacements) {
+        assertInitialized();
+        replaceInstancesInternal(replacements);
+        writeToFile();
+    }
+
+    public static synchronized void syncChanges() {
         writeToFile();
     }
 
     @Nullable
-    public static ListenerInstance getInstance(@NotNull String identifier) {
+    public static synchronized ListenerInstance getInstance(@NotNull String identifier) {
         assertInitialized();
         return INSTANCES.get(identifier);
     }
 
     @NotNull
-    public static List<ListenerInstance> getInstances() {
+    public static synchronized List<ListenerInstance> getInstances() {
         assertInitialized();
         return new ArrayList<>(INSTANCES.values());
     }
@@ -73,24 +82,43 @@ public class ListenerHandler {
     }
 
     private static void readFromFile() {
-        INSTANCES.clear();
+        List<ListenerInstance> loadedInstances = new ArrayList<>();
         try {
 
-            if (!LISTENERS_FILE.isFile()) return;
+            if (!LISTENERS_FILE.isFile()) {
+                replaceInstancesInternal(loadedInstances);
+                return;
+            }
 
             PropertyContainerSet instances = Objects.requireNonNull(PropertiesParser.deserializeSetFromFile(LISTENERS_FILE.getAbsolutePath()), "Parser returned NULL as PropertyContainerSet!");
 
             instances.getContainers().forEach(propertyContainer -> {
                 ListenerInstance instance = ListenerInstance.deserialize(propertyContainer);
                 if (instance != null) {
-                    INSTANCES.put(instance.instanceIdentifier, instance);
-                    instance.registerSelfToParent();
+                    loadedInstances.add(instance);
                 }
             });
 
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to deserialize listener instances from file!", ex);
         }
+        replaceInstancesInternal(loadedInstances);
+    }
+
+    private static void replaceInstancesInternal(@NotNull Collection<ListenerInstance> replacements) {
+        Map<String, ListenerInstance> replacementMap = new HashMap<>();
+        for (ListenerInstance instance : replacements) {
+            replacementMap.put(instance.instanceIdentifier, instance);
+        }
+        Map<AbstractListener, List<ListenerInstance>> replacementsByProvider = new HashMap<>();
+        for (ListenerInstance instance : replacementMap.values()) {
+            replacementsByProvider.computeIfAbsent(instance.parent, listener -> new ArrayList<>()).add(instance);
+        }
+        for (AbstractListener listener : ListenerRegistry.getListeners()) {
+            listener.replaceInstances(replacementsByProvider.getOrDefault(listener, List.of()));
+        }
+        INSTANCES.clear();
+        INSTANCES.putAll(replacementMap);
     }
 
     public static void assertInitialized() {

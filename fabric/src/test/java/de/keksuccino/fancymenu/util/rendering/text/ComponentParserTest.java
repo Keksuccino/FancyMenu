@@ -2,10 +2,19 @@ package de.keksuccino.fancymenu.util.rendering.text;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import net.minecraft.server.Bootstrap;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LogEvent;
@@ -21,15 +30,18 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ComponentParserTest {
@@ -150,6 +162,129 @@ class ComponentParserTest {
         assertEquals("Bridge", ((MutableComponent)bridge.invoke(null, "{\"text\":\"Bridge\"}")).getString());
         assertNull(bridge.invoke(null, "[invalid"));
         assertNull(bridge.invoke(null, "{}"));
+    }
+
+    @Test
+    void unsafeClickActionsAreRemovedFromDirectAndInheritedStylesWithoutLosingFormatting() {
+        Style unsafeParentStyle = Style.EMPTY.withColor(ChatFormatting.RED).withBold(true).withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, "/tmp/example"));
+        Component input = Component.literal("Parent").setStyle(unsafeParentStyle).append(Component.literal("Child").setStyle(Style.EMPTY.withItalic(true)));
+
+        MutableComponent decoded = ComponentParser.fromJson(ComponentParser.toJson(input));
+
+        assertNotNull(decoded);
+        assertEquals("ParentChild", decoded.getString());
+        List<Component> segments = decoded.toFlatList();
+        assertEquals(2, segments.size());
+        assertTrue(segments.stream().allMatch(segment -> segment.getStyle().getClickEvent() == null));
+        assertEquals(ChatFormatting.RED.getColor(), segments.get(0).getStyle().getColor().getValue());
+        assertTrue(segments.get(0).getStyle().isBold());
+        assertEquals(ChatFormatting.RED.getColor(), segments.get(1).getStyle().getColor().getValue());
+        assertTrue(segments.get(1).getStyle().isBold());
+        assertTrue(segments.get(1).getStyle().isItalic());
+    }
+
+    @Test
+    void unsafeClickOnSiblingIsRemovedWhileSafeClickAndTextRemain() {
+        ClickEvent safeClick = new ClickEvent(ClickEvent.Action.OPEN_URL, "https://example.com");
+        Component input = Component.literal("Safe").setStyle(Style.EMPTY.withClickEvent(safeClick)).append(Component.literal("Unsafe").setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, "/tmp/example"))));
+
+        MutableComponent decoded = ComponentParser.fromJson(ComponentParser.toJson(input));
+
+        assertNotNull(decoded);
+        assertEquals("SafeUnsafe", decoded.getString());
+        List<Component> segments = decoded.toFlatList();
+        assertEquals(safeClick, segments.get(0).getStyle().getClickEvent());
+        assertNull(segments.get(1).getStyle().getClickEvent());
+    }
+
+    @Test
+    void unsafeClicksAreSanitizedRecursivelyInsideShowTextHoverEvents() {
+        Component hoverText = Component.literal("Hover").append(Component.literal(" file").setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, "/tmp/example"))));
+        Component input = Component.literal("Visible").setStyle(Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, hoverText)));
+
+        MutableComponent decoded = ComponentParser.fromJson(ComponentParser.toJson(input));
+
+        assertNotNull(decoded);
+        HoverEvent hoverEvent = decoded.toFlatList().getFirst().getStyle().getHoverEvent();
+        assertNotNull(hoverEvent);
+        Component decodedHoverText = hoverEvent.getValue(HoverEvent.Action.SHOW_TEXT);
+        assertNotNull(decodedHoverText);
+        assertEquals("Hover file", decodedHoverText.getString());
+        assertTrue(decodedHoverText.toFlatList().stream().allMatch(segment -> segment.getStyle().getClickEvent() == null));
+    }
+
+    @Test
+    void unsafeClicksAreSanitizedRecursivelyInsideShowEntityNames() {
+        UUID entityId = UUID.fromString("01234567-89ab-cdef-0123-456789abcdef");
+        Component entityName = Component.literal("Entity").setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, "/tmp/example")));
+        HoverEvent.EntityTooltipInfo entityInfo = new HoverEvent.EntityTooltipInfo(EntityType.PIG, entityId, entityName);
+        Component input = Component.literal("Visible").setStyle(Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ENTITY, entityInfo)));
+
+        MutableComponent decoded = ComponentParser.fromJson(ComponentParser.toJson(input));
+
+        assertNotNull(decoded);
+        HoverEvent hoverEvent = decoded.toFlatList().getFirst().getStyle().getHoverEvent();
+        assertNotNull(hoverEvent);
+        HoverEvent.EntityTooltipInfo decodedInfo = hoverEvent.getValue(HoverEvent.Action.SHOW_ENTITY);
+        assertNotNull(decodedInfo);
+        assertSame(EntityType.PIG, decodedInfo.type);
+        assertEquals(entityId, decodedInfo.id);
+        assertTrue(decodedInfo.name.isPresent());
+        assertEquals("Entity", decodedInfo.name.get().getString());
+        assertTrue(decodedInfo.name.get().toFlatList().stream().allMatch(segment -> segment.getStyle().getClickEvent() == null));
+    }
+
+    @Test
+    void registryAwareSerializationUsesTheSameSanitizer() {
+        Component input = Component.literal("Registry").setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, "/tmp/example")));
+
+        MutableComponent decoded = ComponentParser.fromJson(ComponentParser.toJson(input, RegistryAccess.EMPTY));
+
+        assertNotNull(decoded);
+        assertEquals("Registry", decoded.getString());
+        assertNull(decoded.toFlatList().getFirst().getStyle().getClickEvent());
+    }
+
+    @Test
+    void safeShowItemHoverSurvivesFlatteningTriggeredByAnotherSegment() {
+        HoverEvent itemHover = new HoverEvent(HoverEvent.Action.SHOW_ITEM, new HoverEvent.ItemStackInfo(new ItemStack(Items.DIAMOND)));
+        Component input = Component.literal("Unsafe").setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, "/tmp/example"))).append(Component.literal("Item").setStyle(Style.EMPTY.withHoverEvent(itemHover)));
+
+        MutableComponent decoded = ComponentParser.fromJson(ComponentParser.toJson(input));
+
+        assertNotNull(decoded);
+        List<Component> segments = decoded.toFlatList();
+        assertEquals(2, segments.size());
+        assertNull(segments.get(0).getStyle().getClickEvent());
+        HoverEvent decodedHover = segments.get(1).getStyle().getHoverEvent();
+        assertNotNull(decodedHover);
+        HoverEvent.ItemStackInfo decodedItem = decodedHover.getValue(HoverEvent.Action.SHOW_ITEM);
+        assertNotNull(decodedItem);
+        assertTrue(decodedItem.getItemStack().is(Items.DIAMOND));
+    }
+
+    @Test
+    void serializationDoesNotMutateTheOriginalComponentStyleGraph() {
+        ClickEvent unsafeClick = new ClickEvent(ClickEvent.Action.OPEN_FILE, "/tmp/example");
+        Style unsafeStyle = Style.EMPTY.withColor(ChatFormatting.GOLD).withClickEvent(unsafeClick);
+        MutableComponent input = Component.literal("Original").setStyle(unsafeStyle);
+
+        ComponentParser.toJson(input);
+
+        assertSame(unsafeStyle, input.getStyle());
+        assertSame(unsafeClick, input.getStyle().getClickEvent());
+        assertEquals(ChatFormatting.GOLD.getColor(), input.getStyle().getColor().getValue());
+    }
+
+    @Test
+    void serializationFailureFallsBackToJsonQuotedVisibleText() {
+        HolderLookup.Provider failingRegistries = (HolderLookup.Provider)Proxy.newProxyInstance(HolderLookup.Provider.class.getClassLoader(), new Class<?>[]{HolderLookup.Provider.class}, (proxy, method, args) -> {
+            throw new IllegalStateException("intentional test failure");
+        });
+
+        String serialized = ComponentParser.toJson(Component.literal("Fallback \"text\""), failingRegistries);
+
+        assertEquals("\"Fallback \\\"text\\\"\"", serialized);
     }
 
     private static void assertProducesNoErrorLogs(Runnable invocation) {

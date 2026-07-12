@@ -22,6 +22,7 @@ public class OnChatMessageSentListener extends AbstractListener {
     }
 
     public void onChatMessageSent(@NotNull Component message) {
+        if (!this.hasInstancesListening()) return;
         this.lastMessageString = message.getString();
         this.lastMessageJson = this.serializeComponent(message);
         this.notifyAllInstances();

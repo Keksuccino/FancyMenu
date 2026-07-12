@@ -40,6 +40,9 @@ public class MixinGameRenderer {
 
     @Shadow @Final Minecraft minecraft;
 
+    @Unique private boolean blockLookTrackingWasDormant_FancyMenu;
+    @Unique private boolean entityLookTrackingWasDormant_FancyMenu;
+
     @Inject(method = "processBlurEffect", at = @At("HEAD"), cancellable = true)
     private void head_processBlurEffect_FancyMenu(float radius, CallbackInfo info) {
         if (RenderingUtils.isVanillaMenuBlurringBlocked()) info.cancel();
@@ -78,31 +81,41 @@ public class MixinGameRenderer {
             return;
         }
 
-        HitResult hitResult = this.minecraft.hitResult;
         OnStartLookingAtBlockListener startBlockListener = Listeners.ON_START_LOOKING_AT_BLOCK;
         OnStopLookingAtBlockListener stopBlockListener = Listeners.ON_STOP_LOOKING_AT_BLOCK;
         OnStartLookingAtEntityListener startLookingListener = Listeners.ON_START_LOOKING_AT_ENTITY;
         OnStopLookingAtEntityListener stopLookingListener = Listeners.ON_STOP_LOOKING_AT_ENTITY;
+        boolean checkEntity = startLookingListener.shouldCheckLookingAt();
+        boolean checkBlock = startBlockListener.shouldCheckLookingAt();
+        boolean notifyNewEntityTarget = checkEntity && !this.entityLookTrackingWasDormant_FancyMenu;
+        boolean notifyNewBlockTarget = checkBlock && !this.blockLookTrackingWasDormant_FancyMenu;
+
+        if (checkEntity) {
+            this.entityLookTrackingWasDormant_FancyMenu = false;
+        } else {
+            this.entityLookTrackingWasDormant_FancyMenu = true;
+            startLookingListener.clearCurrentEntity();
+        }
+        if (checkBlock) {
+            this.blockLookTrackingWasDormant_FancyMenu = false;
+        } else {
+            this.blockLookTrackingWasDormant_FancyMenu = true;
+            startBlockListener.clearCurrentBlock();
+        }
+        if (!checkEntity && !checkBlock) return;
+
+        HitResult hitResult = this.minecraft.hitResult;
 
         if (hitResult == null) {
-            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
-            stopLooking_FancyMenu(startLookingListener, stopLookingListener);
+            if (checkBlock) stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
+            if (checkEntity) stopLooking_FancyMenu(startLookingListener, stopLookingListener);
             return;
         }
 
         Entity cameraEntity = this.minecraft.getCameraEntity();
         if (cameraEntity == null) {
-            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
-            stopLooking_FancyMenu(startLookingListener, stopLookingListener);
-            return;
-        }
-
-        boolean checkEntity = startLookingListener.shouldCheckLookingAt();
-        boolean checkBlock = startBlockListener.shouldCheckLookingAt();
-
-        if (!checkEntity && !checkBlock) {
-            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
-            stopLooking_FancyMenu(startLookingListener, stopLookingListener);
+            if (checkBlock) stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
+            if (checkEntity) stopLooking_FancyMenu(startLookingListener, stopLookingListener);
             return;
         }
 
@@ -118,12 +131,10 @@ public class MixinGameRenderer {
             if (extendedEntityHit != null) {
                 Entity targetEntity = extendedEntityHit.getEntity();
                 double distance = extendedEntityHit.getLocation().distanceTo(eyePosition);
-                startLookingListener.onLookAtEntity(targetEntity, distance);
+                startLookingListener.onLookAtEntity(targetEntity, distance, notifyNewEntityTarget);
                 stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
                 return;
             }
-            stopLooking_FancyMenu(startLookingListener, stopLookingListener);
-        } else {
             stopLooking_FancyMenu(startLookingListener, stopLookingListener);
         }
 
@@ -157,14 +168,12 @@ public class MixinGameRenderer {
                 boolean sameBlock = previousBlock.blockPos().equals(blockPos)
                         && previousBlock.blockState().equals(blockState)
                         && previousBlock.levelKey().equals(clientLevel.dimension());
-                if (!sameBlock) {
+                if (!sameBlock && stopBlockListener.hasInstancesListening()) {
                     stopBlockListener.onStopLooking(previousBlock);
                 }
             }
 
-            startBlockListener.onLookAtBlock(clientLevel, blockHitResult, Math.sqrt(distanceSqr));
-        } else {
-            stopLookingBlock_FancyMenu(startBlockListener, stopBlockListener);
+            startBlockListener.onLookAtBlock(clientLevel, blockHitResult, Math.sqrt(distanceSqr), notifyNewBlockTarget);
         }
 
     }
@@ -173,7 +182,7 @@ public class MixinGameRenderer {
     private static void stopLooking_FancyMenu(OnStartLookingAtEntityListener startListener, OnStopLookingAtEntityListener stopListener) {
         OnStartLookingAtEntityListener.LookedEntityData previousEntity = startListener.getCurrentEntityData();
         if (previousEntity != null) {
-            stopListener.onStopLooking(previousEntity);
+            if (stopListener.hasInstancesListening()) stopListener.onStopLooking(previousEntity);
             startListener.clearCurrentEntity();
         }
     }
@@ -181,7 +190,7 @@ public class MixinGameRenderer {
     @Unique
     private static void stopLookingBlock_FancyMenu(OnStartLookingAtBlockListener startListener, OnStopLookingAtBlockListener stopListener) {
         OnStartLookingAtBlockListener.LookedBlockData previousBlock = startListener.getCurrentBlockData();
-        if (previousBlock != null) {
+        if (previousBlock != null && stopListener.hasInstancesListening()) {
             stopListener.onStopLooking(previousBlock);
         }
         startListener.clearCurrentBlock();

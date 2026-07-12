@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.listener.listeners;
 
 import de.keksuccino.fancymenu.customization.listener.AbstractListener;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.text.ComponentParser;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.chat.Component;
@@ -27,6 +28,7 @@ public class OnChatMessageReceivedListener extends AbstractListener {
     }
 
     public void onChatMessageReceived(@NotNull Component message, @Nullable UUID senderUuid, @Nullable Component senderName) {
+        if (!this.hasInstancesListening()) return;
         this.lastMessageString = message.getString();
         this.lastMessageJson = this.serializeComponent(message);
         this.lastSenderUuid = senderUuid;
@@ -51,7 +53,7 @@ public class OnChatMessageReceivedListener extends AbstractListener {
         } else if ((minecraft.getConnection() != null) && (minecraft.getConnection().registryAccess() != null)) {
             registryAccess = minecraft.getConnection().registryAccess();
         }
-        return Component.Serializer.toJson(component, registryAccess);
+        return ComponentParser.toJson(component, registryAccess);
     }
 
     @Override

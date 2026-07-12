@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders.player;
 
-import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -22,7 +21,7 @@ public class LastDeathMessagePlaceholder extends Placeholder {
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         boolean asJsonComponent = SerializationHelper.INSTANCE.deserializeBoolean(false, dps.values.get("as_json_component"));
-        String cached = asJsonComponent ? Listeners.ON_DEATH.getLastDeathReasonComponent() : Listeners.ON_DEATH.getLastDeathReasonString();
+        String cached = asJsonComponent ? LastDeathMessageTracker.getJson() : LastDeathMessageTracker.getPlainText();
         return cached != null ? cached : "";
     }
 

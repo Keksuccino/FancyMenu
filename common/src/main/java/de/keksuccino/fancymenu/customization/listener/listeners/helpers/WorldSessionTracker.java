@@ -52,14 +52,7 @@ public final class WorldSessionTracker {
         pendingSession = null;
         SeamlessWorldLoadingHandler.startWorldCapture(session.worldSavePath);
         SeamlessWorldLoadingHandler.finishWorldLoad();
-        Listeners.ON_WORLD_ENTERED.onWorldEntered(
-                session.worldName,
-                session.worldSavePath,
-                session.lastDifficultyKey,
-                session.lastCheatsAllowed,
-                session.iconPath,
-                session.isFirstJoin
-        );
+        if (Listeners.ON_WORLD_ENTERED.hasInstancesListening()) Listeners.ON_WORLD_ENTERED.onWorldEntered(session.worldName, session.worldSavePath, session.lastDifficultyKey, session.lastCheatsAllowed, session.iconPath, session.isFirstJoin);
     }
 
     public static void handleWorldLeft(@NotNull Minecraft minecraft) {
@@ -71,13 +64,7 @@ public final class WorldSessionTracker {
         SessionData session = activeSession.copy();
         activeSession = null;
         SeamlessWorldLoadingHandler.saveAndClearWorldCapture(session.worldSavePath);
-        Listeners.ON_WORLD_LEFT.onWorldLeft(
-                session.worldName,
-                session.worldSavePath,
-                session.lastDifficultyKey,
-                session.lastCheatsAllowed,
-                session.iconPath
-        );
+        if (Listeners.ON_WORLD_LEFT.hasInstancesListening()) Listeners.ON_WORLD_LEFT.onWorldLeft(session.worldName, session.worldSavePath, session.lastDifficultyKey, session.lastCheatsAllowed, session.iconPath);
     }
 
     private static void captureSnapshotFor(@NotNull Minecraft minecraft, @Nullable SessionData session) {

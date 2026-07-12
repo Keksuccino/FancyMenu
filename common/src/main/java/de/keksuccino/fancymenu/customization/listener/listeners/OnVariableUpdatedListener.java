@@ -23,6 +23,9 @@ public class OnVariableUpdatedListener extends AbstractListener {
     }
 
     public void onVariableUpdated(@NotNull String varName, @NotNull String oldValue, @NotNull String newValue) {
+        if (!this.hasInstancesListening()) {
+            return;
+        }
 
         // Update cache before notifying instances, so they can use the up-to-date char
         this.varName = varName;

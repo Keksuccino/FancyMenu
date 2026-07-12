@@ -35,7 +35,7 @@ public class OnStartLookingAtBlockListener extends AbstractListener {
     /**
      * @return {@code true} if a new block target was detected and listeners were notified.
      */
-    public boolean onLookAtBlock(@NotNull ClientLevel level, @NotNull BlockHitResult hitResult, double distance) {
+    public boolean onLookAtBlock(@NotNull ClientLevel level, @NotNull BlockHitResult hitResult, double distance, boolean notifyNewTarget) {
         LookedBlockData newData = LookedBlockData.from(level, hitResult, distance);
         LookedBlockData existingData = this.currentBlockData;
 
@@ -45,7 +45,7 @@ public class OnStartLookingAtBlockListener extends AbstractListener {
         }
 
         this.currentBlockData = newData;
-        this.notifyAllInstances();
+        if (notifyNewTarget) this.notifyAllInstances();
         return true;
     }
 
