@@ -285,7 +285,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 			return;
 		}
 		AbstractWidget w = this.getWidgetFancyMenu();
-		Component text = w.getMessage();
+		Component text = component;
 		int xMin = w.getX() + margin;
 		int xMax = w.getX() + w.getWidth() - margin;
 		int yMin = w.getY();
