@@ -57,4 +57,4 @@
 - [ ] [[MC 1.20.1] Level entities are invisible when joining a server while having a "Player Entity" element active in the Connect screen](https://github.com/Keksuccino/FancyMenu/issues/1514)
 - [x] [It is not possible to mimic the refresh server list button.](https://github.com/Keksuccino/FancyMenu/issues/1492)
 - [x] [custom icon only appears when clicking singleplayer or something else](https://github.com/Keksuccino/FancyMenu/issues/1481)
-- [ ] [Button textures flicker when they get handled by a button template while in a world (probably related to Spiffy)](https://github.com/Keksuccino/FancyMenu/issues/1230)
+- [x] [Button textures flicker when they get handled by a button template while in a world (probably related to Spiffy)](https://github.com/Keksuccino/FancyMenu/issues/1230)
