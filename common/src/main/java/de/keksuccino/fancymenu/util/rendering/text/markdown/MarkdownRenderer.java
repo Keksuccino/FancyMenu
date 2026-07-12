@@ -303,7 +303,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     @NotNull
     protected String buildRenderText() {
-        String t = PlaceholderParser.replacePlaceholders(this.text);
+        String t = MarkdownRenderTextFormatter.expandPlaceholdersAndReplaceFormattingCodes(this.text, PlaceholderParser::replacePlaceholders);
         t = StringUtils.replace(t, NEWLINE_PERCENT, NEWLINE);
         t = StringUtils.replace(t, NEWLINE_R, NEWLINE);
         t = StringUtils.replace(t, NEWLINE_ESCAPED, NEWLINE);
