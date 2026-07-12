@@ -56,6 +56,8 @@ public class MixinMouseHandler {
                 this.fakeRightMouse_FancyMenu--;
             }
         }
+        // This runs before NeoForge's cancellable mouse-button pre-hook, so even a canceled new press supersedes stale overlay ownership.
+        if (pressed) ScreenOverlayHandler.INSTANCE.prepareMousePress(mappedButton);
 
         double guiWidth = this.mc_FancyMenu.getWindow().getGuiScaledWidth();
         double guiHeight = this.mc_FancyMenu.getWindow().getGuiScaledHeight();
@@ -109,6 +111,7 @@ public class MixinMouseHandler {
 
     @Inject(method = "onPress", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;getOverlay()Lnet/minecraft/client/gui/screens/Overlay;"), cancellable = true)
     private void before_getOverlay_in_onPress_FancyMenu(long window, int button, int action, int modifiers, CallbackInfo info) {
+        int mappedButton = (this.mappedButtonOnPress_FancyMenu != -1) ? this.mappedButtonOnPress_FancyMenu : button;
 
         boolean clicked = (action == GLFW.GLFW_PRESS);
         double mouseX = this.xpos * (double)Minecraft.getInstance().getWindow().getGuiScaledWidth() / (double)Minecraft.getInstance().getWindow().getScreenWidth();
@@ -117,7 +120,6 @@ public class MixinMouseHandler {
         if (Minecraft.getInstance().getOverlay() instanceof GameIntroOverlay o) {
             // Consume all mouse button events while the intro overlay is active.
             if (clicked) {
-                int mappedButton = (this.mappedButtonOnPress_FancyMenu != -1) ? this.mappedButtonOnPress_FancyMenu : button;
                 o.mouseClicked(mappedButton);
             }
             info.cancel();
@@ -126,9 +128,9 @@ public class MixinMouseHandler {
 
         boolean cancel = false;
         if (clicked) {
-            if (ScreenOverlayHandler.INSTANCE.mouseClicked(mouseX, mouseY, button)) cancel = true;
+            if (ScreenOverlayHandler.INSTANCE.mouseClicked(mouseX, mouseY, mappedButton)) cancel = true;
         } else {
-            if (ScreenOverlayHandler.INSTANCE.mouseReleased(mouseX, mouseY, button)) cancel = true;
+            if (ScreenOverlayHandler.INSTANCE.mouseReleased(mouseX, mouseY, mappedButton)) cancel = true;
         }
         if (cancel) {
             info.cancel();
