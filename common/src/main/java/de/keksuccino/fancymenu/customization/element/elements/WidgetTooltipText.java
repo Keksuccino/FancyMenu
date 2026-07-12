@@ -1,7 +1,10 @@
 package de.keksuccino.fancymenu.customization.element.elements;
 
+import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public final class WidgetTooltipText {
@@ -24,6 +27,17 @@ public final class WidgetTooltipText {
     public static @Nullable String fromEditorValue(@Nullable String value) {
         value = normalizeStoredValue(value);
         return value != null ? value.replace("\n", "%n%") : null;
+    }
+
+    /**
+     * Prepares literal widget tooltip text at its rendering boundary. Formatting conversion intentionally happens
+     * after placeholder replacement so formatting codes returned by dynamic placeholders are handled as well.
+     * Newline decoding stays with each widget because the supported stored codes differ between tooltip renderers.
+     */
+    public static @Nonnull String replacePlaceholdersAndFormattingCodes(@Nonnull String value) {
+        String prepared = PlaceholderParser.replacePlaceholders(value);
+        if (prepared.indexOf('&') < 0) return prepared;
+        return TextFormattingUtils.replaceFormattingCodes(prepared, "&", "§");
     }
 
     public static @Nullable String normalizeStoredValue(@Nullable String value) {

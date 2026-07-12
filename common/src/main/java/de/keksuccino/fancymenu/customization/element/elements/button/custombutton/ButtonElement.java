@@ -4,11 +4,11 @@ import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBloc
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
+import de.keksuccino.fancymenu.customization.element.elements.WidgetTooltipText;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
-import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.properties.Property;
@@ -333,7 +333,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
     public void updateWidgetTooltip() {
         if ((this.tooltip != null) && (this.getWidget() != null) && this.shouldRender() && !isEditor()) {
-            String t = PlaceholderParser.replacePlaceholders(this.tooltip).replace("%n%", "\n").replace("\\n", "\n");
+            String t = WidgetTooltipText.replacePlaceholdersAndFormattingCodes(this.tooltip).replace("%n%", "\n").replace("\\n", "\n");
             this.getWidget().setTooltip(Tooltip.create(Component.literal(t)));
         }
     }
