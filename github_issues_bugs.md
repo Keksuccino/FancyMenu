@@ -46,7 +46,8 @@
 - [x] [Bugs related to buttons and navigation in interfaces](https://github.com/Keksuccino/FancyMenu/issues/1549)
 - [ ] [Opening "options_screen" with a custom Main Menu/Title Screen throws NullPointerException error.](https://github.com/Keksuccino/FancyMenu/issues/1545)
 - [x] [Checkboxes do not fade in](https://github.com/Keksuccino/FancyMenu/issues/1536)
-- [ ] [False Positive With KubeJS Renaming Of Mods Feature](https://github.com/Keksuccino/FancyMenu/issues/1535)
+- ⚠️ [False Positive With KubeJS Renaming Of Mods Feature](https://github.com/Keksuccino/FancyMenu/issues/1535)
+  - Intentional behavior: FancyMenu treats runtime changes to its display name or other authenticated metadata as a failed integrity check, so KubeJS renaming is deliberately unsupported rather than a false positive to fix.
 - [ ] [Create World Screen Layout Resetting](https://github.com/Keksuccino/FancyMenu/issues/1533)
 - [ ] [Creative Inventory Items Having No Tooltp Text Whe...](https://github.com/Keksuccino/FancyMenu/issues/1531)
 - [ ] [FancyMenu breaks custom item rendering in a custom Screen](https://github.com/Keksuccino/FancyMenu/issues/1530)
