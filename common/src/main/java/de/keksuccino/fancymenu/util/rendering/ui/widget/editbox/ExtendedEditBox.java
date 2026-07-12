@@ -3,6 +3,8 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget.editbox;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
+import de.keksuccino.fancymenu.util.input.EditBoxInputController;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -14,10 +16,10 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.Util;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -27,6 +29,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 import java.awt.Color;
 import java.util.function.Supplier;
 
@@ -560,12 +563,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
 
     @Override
     public void onClick(double mouseX, double mouseY) {
-        if (!this.renderLabelWithUiBase) {
-            super.onClick(mouseX, mouseY);
-            return;
-        }
-
-        this.moveCursorTo(this.getCursorPosFromMouseX(mouseX), Screen.hasShiftDown());
+        this.moveCursorTo(this.getCursorPosFromMouseX(mouseX), (InputUtils.getActiveModifiers() & GLFW.GLFW_MOD_SHIFT) != 0);
     }
 
     @Override
@@ -614,41 +612,100 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
 
     @Override
     public void deleteText(int i) {
-        if (this.deleteAllAllowed) {
-            super.deleteText(i);
-        } else {
-            this.deleteChars(i);
-        }
+        this.deleteText(i, InputUtils.isGuiShortcutModifierDown());
     }
 
+    public void deleteText(int direction, boolean deleteWord) {
+        if (this.deleteAllAllowed && deleteWord) this.deleteWords(direction);
+        else this.deleteChars(direction);
+    }
+
+    /**
+     * Handles every modifier-sensitive Vanilla edit action locally. Minecraft 1.21.1 polls physical modifier key identities in {@link EditBox}, which cannot honor macOS modifier remaps, so these actions must not be delegated to the superclass.
+     */
     @Override
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
         if (!this.canConsumeUserInput) return false;
-        if (!Screen.hasShiftDown()) {
-            int cursorPos = this.getCursorPosition();
-            int highlightPos = this.getHighlightPosition();
-            if (cursorPos != highlightPos) {
-                if (keycode == 263) {
-                    this.moveCursorTo(Math.min(cursorPos, highlightPos), false);
-                    return true;
-                }
-                if (keycode == 262) {
-                    this.moveCursorTo(Math.max(cursorPos, highlightPos), false);
-                    return true;
-                }
+        if (!this.isActive() || !this.isFocused()) return false;
+
+        EditBoxInputController.Action action = EditBoxInputController.resolve(keycode, modifiers);
+        boolean shiftDown = (modifiers & GLFW.GLFW_MOD_SHIFT) != 0;
+        int cursorPos = this.getCursorPosition();
+        int highlightPos = this.getHighlightPosition();
+        if (!shiftDown && (cursorPos != highlightPos)) {
+            if ((action == EditBoxInputController.Action.MOVE_CHARACTER_LEFT) || (action == EditBoxInputController.Action.MOVE_WORD_LEFT)) {
+                this.moveCursorTo(Math.min(cursorPos, highlightPos), false);
+                return true;
+            }
+            if ((action == EditBoxInputController.Action.MOVE_CHARACTER_RIGHT) || (action == EditBoxInputController.Action.MOVE_WORD_RIGHT)) {
+                this.moveCursorTo(Math.max(cursorPos, highlightPos), false);
+                return true;
             }
         }
-        //If select all, only select parts that are not prefix or suffix
-        if (Screen.isSelectAll(keycode) && ((this.inputPrefix != null) || (this.inputSuffix != null))) {
-            if (this.inputSuffix != null) {
-                this.moveCursorTo(this.getValue().length() - this.inputSuffix.length(), false);
-            } else {
-                this.moveCursorToEnd(false);
+
+        IMixinEditBox accessor = (IMixinEditBox)this;
+        return switch (action) {
+            case DELETE_CHARACTER_BACKWARD -> {
+                if (accessor.getIsEditableFancyMenu()) this.deleteText(-1, false);
+                yield true;
             }
-            this.setHighlightPos((this.inputPrefix != null) ? this.inputPrefix.length() : 0);
-            return true;
-        }
-        return super.keyPressed(keycode, scancode, modifiers);
+            case DELETE_WORD_BACKWARD -> {
+                if (accessor.getIsEditableFancyMenu()) this.deleteText(-1, true);
+                yield true;
+            }
+            case DELETE_CHARACTER_FORWARD -> {
+                if (accessor.getIsEditableFancyMenu()) this.deleteText(1, false);
+                yield true;
+            }
+            case DELETE_WORD_FORWARD -> {
+                if (accessor.getIsEditableFancyMenu()) this.deleteText(1, true);
+                yield true;
+            }
+            case MOVE_CHARACTER_LEFT -> {
+                this.moveCursor(-1, shiftDown);
+                yield true;
+            }
+            case MOVE_WORD_LEFT -> {
+                this.moveCursorTo(this.getWordPosition(-1), shiftDown);
+                yield true;
+            }
+            case MOVE_CHARACTER_RIGHT -> {
+                this.moveCursor(1, shiftDown);
+                yield true;
+            }
+            case MOVE_WORD_RIGHT -> {
+                this.moveCursorTo(this.getWordPosition(1), shiftDown);
+                yield true;
+            }
+            case MOVE_START -> {
+                this.moveCursorToStart(shiftDown);
+                yield true;
+            }
+            case MOVE_END -> {
+                this.moveCursorToEnd(shiftDown);
+                yield true;
+            }
+            case SELECT_ALL -> {
+                if (this.inputSuffix != null) this.moveCursorTo(this.getValue().length() - this.inputSuffix.length(), false);
+                else this.moveCursorToEnd(false);
+                this.setHighlightPos((this.inputPrefix != null) ? this.inputPrefix.length() : 0);
+                yield true;
+            }
+            case COPY -> {
+                Minecraft.getInstance().keyboardHandler.setClipboard(this.getHighlighted());
+                yield true;
+            }
+            case PASTE -> {
+                if (accessor.getIsEditableFancyMenu()) this.insertText(Minecraft.getInstance().keyboardHandler.getClipboard());
+                yield true;
+            }
+            case CUT -> {
+                Minecraft.getInstance().keyboardHandler.setClipboard(this.getHighlighted());
+                if (accessor.getIsEditableFancyMenu()) this.insertText("");
+                yield true;
+            }
+            case NONE -> false;
+        };
     }
 
     @Override

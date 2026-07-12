@@ -94,6 +94,7 @@
     "client.MixinTabNavigationBar",
     "client.MixinTitleScreen",
     "client.MixinSelectWorldScreen",
+    "client.MixinWindow",
     "client.MixinWorldOpenFlows",
     "client.MixinWorldListEntry"
   ],
@@ -109,7 +110,6 @@
   "plugin": "de.keksuccino.fancymenu.mixin.FMMixinPlugin",
   "minVersion": "0.8"
 }
-
 
 
 

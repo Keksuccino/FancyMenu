@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.events.screen.ScreenMouseScrollEvent;
 import de.keksuccino.fancymenu.util.MouseUtil;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.input.ClicksPerSecondTracker;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.rendering.glsl.GlslRuntimeEventTracker;
@@ -40,6 +41,7 @@ public class MixinMouseHandler {
     private void head_onPress_FancyMenu(long window, int button, int action, int modifiers, CallbackInfo info) {
         if (window != this.mc_FancyMenu.getWindow().getWindow()) return;
 
+        InputUtils.updateActiveModifiers(modifiers);
         boolean pressed = (action == GLFW.GLFW_PRESS);
         int mappedButton = button;
         // Mirror vanilla macOS fake right click behavior (Ctrl + Left Click).

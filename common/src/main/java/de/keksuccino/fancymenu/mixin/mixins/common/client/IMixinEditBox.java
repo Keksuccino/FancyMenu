@@ -26,8 +26,6 @@ public interface IMixinEditBox {
 
     @Accessor("highlightPos") int getHighlightPosFancyMenu();
 
-    @Invoker("deleteText") void invokeDeleteTextFancyMenu(int i);
-
     @Accessor("textColor") int getTextColorFancyMenu();
 
     @Accessor("textColorUneditable") int getTextColorUneditableFancyMenu();

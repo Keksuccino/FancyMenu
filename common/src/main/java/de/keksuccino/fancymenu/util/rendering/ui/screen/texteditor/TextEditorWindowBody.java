@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -27,7 +28,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -1520,6 +1520,8 @@ public class TextEditorWindowBody extends PiPWindowBody {
     @Override
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
 
+        boolean shiftDown = (modifiers & GLFW.GLFW_MOD_SHIFT) != 0;
+
         if (this.indentGuideRenderer != null) {
             this.indentGuideRenderer.markDirty();
         }
@@ -1549,8 +1551,8 @@ public class TextEditorWindowBody extends PiPWindowBody {
             if (this.goToLineField.keyPressed(keycode, scancode, modifiers)) return true;
         }
 
-        //CTRL + G | GO TO LINE
-        if (Screen.hasControlDown() && (keycode == GLFW.GLFW_KEY_G)) {
+        // GUI shortcut modifier + G | GO TO LINE
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keycode == GLFW.GLFW_KEY_G)) {
             this.isGoToLineOpen = !this.isGoToLineOpen;
             if (this.isGoToLineOpen) {
                 this.goToLineField.setValue("");
@@ -1566,7 +1568,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
 
         boolean isHorizontalArrow = (keycode == InputConstants.KEY_RIGHT) || (keycode == InputConstants.KEY_LEFT);
         boolean isVerticalArrow = (keycode == InputConstants.KEY_UP) || (keycode == InputConstants.KEY_DOWN);
-        if ((Screen.hasShiftDown() && (isHorizontalArrow || isVerticalArrow)) && !this.isInMouseHighlightingMode()) {
+        if (shiftDown && (isHorizontalArrow || isVerticalArrow) && !this.isInMouseHighlightingMode()) {
             this.captureKeyboardHighlightAnchor();
         }
 
@@ -1577,18 +1579,18 @@ public class TextEditorWindowBody extends PiPWindowBody {
         String key = GLFW.glfwGetKeyName(keycode, scancode);
         if (key == null) key = "";
 
-        //CTRL + Z | STEP BACK
-        if (Screen.hasControlDown() && (key.equals("z"))) {
+        // GUI shortcut modifier + Z | STEP BACK
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (key.equals("z"))) {
             this.history.stepBack();
             return true;
         }
-        //CTRL + Y | STEP FORWARD
-        if (Screen.hasControlDown() && (key.equals("y"))) {
+        // GUI shortcut modifier + Y | STEP FORWARD
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (key.equals("y"))) {
             this.history.stepForward();
             return true;
         }
-        //CTRL + S | DONE
-        if (Screen.hasControlDown() && (keycode == GLFW.GLFW_KEY_S)) {
+        // GUI shortcut modifier + S | DONE
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keycode == GLFW.GLFW_KEY_S)) {
             this.triggerDoneAction();
             return true;
         }
@@ -1653,7 +1655,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
         if (keycode == InputConstants.KEY_UP) {
             if (!this.isInMouseHighlightingMode()) {
                 this.goUpLine();
-                if (Screen.hasShiftDown()) {
+                if (shiftDown) {
                     this.syncKeyboardHighlightFromAnchor();
                 } else {
                     this.resetHighlighting();
@@ -1666,7 +1668,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
         if (keycode == InputConstants.KEY_DOWN) {
             if (!this.isInMouseHighlightingMode()) {
                 this.goDownLine(false);
-                if (Screen.hasShiftDown()) {
+                if (shiftDown) {
                     this.syncKeyboardHighlightFromAnchor();
                 } else {
                     this.resetHighlighting();
@@ -1686,26 +1688,26 @@ public class TextEditorWindowBody extends PiPWindowBody {
                     if (this.isLineFocused()) {
                         if (!this.getText().isEmpty()) this.history.saveSnapshot();
                         TextEditorLine focused = Objects.requireNonNull(this.getFocusedLine());
-                        focused.getAsAccessor().invokeDeleteTextFancyMenu(-1);
+                        focused.deleteText(-1, InputUtils.isGuiShortcutModifierDown(modifiers));
                     }
                 }
                 this.resetHighlighting();
             }
             return true;
         }
-        //CTRL + C
-        if (Screen.isCopy(keycode)) {
+        // GUI shortcut modifier + C
+        if (InputUtils.isCopy(keycode, modifiers)) {
             Minecraft.getInstance().keyboardHandler.setClipboard(this.getHighlightedText());
             return true;
         }
-        //CTRL + V
-        if (Screen.isPaste(keycode)) {
+        // GUI shortcut modifier + V
+        if (InputUtils.isPaste(keycode, modifiers)) {
             this.history.saveSnapshot();
             this.pasteText(Minecraft.getInstance().keyboardHandler.getClipboard());
             return true;
         }
-        //CTRL + A
-        if (Screen.isSelectAll(keycode)) {
+        // GUI shortcut modifier + A
+        if (InputUtils.isSelectAll(keycode, modifiers)) {
             for (TextEditorLine t : new ArrayList<>(this.textFieldLines)) {
                 t.setHighlightPos(0);
                 t.setCursorPosition(t.getValue().length());
@@ -1715,8 +1717,8 @@ public class TextEditorWindowBody extends PiPWindowBody {
             this.endHighlightLineIndex = this.getLineCount()-1;
             return true;
         }
-        //CTRL + U
-        if (Screen.isCut(keycode)) {
+        // GUI shortcut modifier + X
+        if (InputUtils.isCut(keycode, modifiers)) {
             this.history.saveSnapshot();
             Minecraft.getInstance().keyboardHandler.setClipboard(this.cutHighlightedText());
             this.resetHighlighting();
@@ -1724,7 +1726,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
         }
         //Reset highlighting when pressing left/right arrow keys
         if ((keycode == InputConstants.KEY_RIGHT) || (keycode == InputConstants.KEY_LEFT)) {
-            if (Screen.hasShiftDown() && !this.isInMouseHighlightingMode()) {
+            if (shiftDown && !this.isInMouseHighlightingMode()) {
                 this.syncKeyboardHighlightFromAnchor();
             } else {
                 this.resetHighlighting();
@@ -1732,8 +1734,8 @@ public class TextEditorWindowBody extends PiPWindowBody {
             return true;
         }
 
-        //CTRL + D | DUPLICATE LINE
-        if (Screen.hasControlDown() && (keycode == GLFW.GLFW_KEY_D)) {
+        // GUI shortcut modifier + D | DUPLICATE LINE
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keycode == GLFW.GLFW_KEY_D)) {
             if (this.isLineFocused()) {
                 this.history.saveSnapshot();
                 int index = this.getFocusedLineIndex();
@@ -1753,8 +1755,8 @@ public class TextEditorWindowBody extends PiPWindowBody {
 
 
 
-        //CTRL + HOME | GO TO START
-        if (Screen.hasControlDown() && (keycode == GLFW.GLFW_KEY_HOME)) {
+        // GUI shortcut modifier + HOME | GO TO START
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keycode == GLFW.GLFW_KEY_HOME)) {
             this.resetHighlighting();
             if (this.getLineCount() > 0) {
                 this.setFocusedLine(0);
@@ -1765,8 +1767,8 @@ public class TextEditorWindowBody extends PiPWindowBody {
             return true;
         }
 
-        //CTRL + END | GO TO END
-        if (Screen.hasControlDown() && (keycode == GLFW.GLFW_KEY_END)) {
+        // GUI shortcut modifier + END | GO TO END
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keycode == GLFW.GLFW_KEY_END)) {
             this.resetHighlighting();
             if (this.getLineCount() > 0) {
                 int lastIndex = this.getLineCount() - 1;

@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayout
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidgetBuilder;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -25,7 +26,6 @@ import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -1509,19 +1509,19 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                 } else {
                     if (FancyMenu.getOptions().playUiClickSounds.getValue()) Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
 
-                    // Proper multi-selection with CTRL handling
-                    boolean ctrlDown = Screen.hasControlDown();
+                    // Proper multi-selection with the platform GUI shortcut modifier
+                    boolean shortcutModifierDown = InputUtils.isGuiShortcutModifierDown();
 
-                    if (!ctrlDown) {
-                        // Without CTRL, deselect all others first
+                    if (!shortcutModifierDown) {
+                        // Without the shortcut modifier, deselect all others first
                         this.layerWidget.editor.deselectAllElements();
                     } else if (this.element.isSelected()) {
-                        // With CTRL and already selected, toggle this element (deselect it)
+                        // With the shortcut modifier and already selected, toggle this element (deselect it)
                         this.element.setSelected(false);
                         return;
                     }
 
-                    // Select this element (unless CTRL was down and we just deselected it)
+                    // Select this element unless the shortcut modifier was down and we just deselected it
                     if (!this.element.isSelected()) {
                         this.element.setSelected(true);
                     }
@@ -1783,9 +1783,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                     List<AbstractEditorElement<?, ?>> elements = this.layerWidget.editor.getElementsInGroup(this.group);
                     if (!elements.isEmpty()) {
                         if (FancyMenu.getOptions().playUiClickSounds.getValue()) Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
-                        boolean ctrlDown = Screen.hasControlDown();
+                        boolean shortcutModifierDown = InputUtils.isGuiShortcutModifierDown();
                         boolean allSelected = this.isGroupFullySelected();
-                        if (!ctrlDown) {
+                        if (!shortcutModifierDown) {
                             this.layerWidget.editor.deselectAllElements();
                         } else if (allSelected) {
                             for (AbstractEditorElement<?, ?> element : elements) {

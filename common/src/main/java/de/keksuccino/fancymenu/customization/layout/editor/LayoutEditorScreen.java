@@ -33,6 +33,7 @@ import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -1275,7 +1276,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			this.mouseSelectionStartY = (int) mouseY;
 		}
 		//Deselect all elements
-		if (!this.rightClickMenu.isUserNavigatingInMenu() && ((this.activeElementContextMenu == null) || !this.activeElementContextMenu.isUserNavigatingInMenu()) && !hasControlDown()) {
+		if (!this.rightClickMenu.isUserNavigatingInMenu() && ((this.activeElementContextMenu == null) || !this.activeElementContextMenu.isUserNavigatingInMenu()) && !InputUtils.isGuiShortcutModifierDown()) {
 			if ((button == 0) || ((button == 1) && ((topHoverElement == null) || topHoverGotSelected))) {
 				for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 					if (!e.isGettingResized() && ((topHoverElement == null) || (e != topHoverElement))) e.setSelected(false);
@@ -1334,8 +1335,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		List<AbstractEditorElement<?, ?>> hoveredElements = this.getHoveredElements();
 		AbstractEditorElement<?, ?> topHoverElement = !hoveredElements.isEmpty() ? hoveredElements.get(hoveredElements.size()-1) : null;
 
-		//Deselect hovered element on left-click if CTRL pressed
-		if (!mouseWasInDraggingMode && !cachedMouseSelection && (button == 0) && (topHoverElement != null) && topHoverElement.isSelected() && !topHoverElement.recentlyMovedByDragging && !topHoverElement.recentlyLeftClickSelected && hasControlDown()) {
+		// Deselect hovered element on left-click if the GUI shortcut modifier is pressed
+		if (!mouseWasInDraggingMode && !cachedMouseSelection && (button == 0) && (topHoverElement != null) && topHoverElement.isSelected() && !topHoverElement.recentlyMovedByDragging && !topHoverElement.recentlyLeftClickSelected && InputUtils.isGuiShortcutModifierDown()) {
 			topHoverElement.setSelected(false);
 		}
 
@@ -1364,7 +1365,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 				if (e.element.layerHiddenInEditor) continue;
 				boolean b = this.isElementOverlappingArea(e, Math.min(this.mouseSelectionStartX, (int)mouseX), Math.min(this.mouseSelectionStartY, (int)mouseY), Math.max(this.mouseSelectionStartX, (int)mouseX), Math.max(this.mouseSelectionStartY, (int)mouseY));
-				if (!b && hasControlDown()) continue; //skip deselect if CTRL pressed
+				if (!b && InputUtils.isGuiShortcutModifierDown()) continue; // Skip deselect if the GUI shortcut modifier is pressed
 				e.setSelected(b);
 			}
 		}
@@ -1452,45 +1453,45 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			return true;
 		}
 
-		//CTRL + A
-		if (key.equals("a") && hasControlDown()) {
+		// GUI shortcut modifier + A
+		if (key.equals("a") && InputUtils.isGuiShortcutModifierDown(modifiers)) {
 			this.selectAllElements();
 		}
 
-		//CTRL + C
-		if (key.equals("c") && hasControlDown()) {
+		// GUI shortcut modifier + C
+		if (key.equals("c") && InputUtils.isGuiShortcutModifierDown(modifiers)) {
 			this.copyElementsToClipboard(this.getSelectedElements().toArray(new AbstractEditorElement<?, ?>[0]));
 			return true;
 		}
 
-		//CTRL + V
-		if (key.equals("v") && hasControlDown()) {
+		// GUI shortcut modifier + V
+		if (key.equals("v") && InputUtils.isGuiShortcutModifierDown(modifiers)) {
 			this.pasteElementsFromClipboard();
 			return true;
 		}
 
-		//CTRL + S
-		if (key.equals("s") && hasControlDown()) {
+		// GUI shortcut modifier + S
+		if (key.equals("s") && InputUtils.isGuiShortcutModifierDown(modifiers)) {
 			this.saveLayout();
 			return true;
 		}
 
-		//CTRL + Z
-		if (key.equals("z") && hasControlDown()) {
+		// GUI shortcut modifier + Z
+		if (key.equals("z") && InputUtils.isGuiShortcutModifierDown(modifiers)) {
 			this.history.stepBack();
             this.resize(Minecraft.getInstance(), this.width, this.height);
 			return true;
 		}
 
-		//CTRL + Y
-		if (key.equals("y") && hasControlDown()) {
+		// GUI shortcut modifier + Y
+		if (key.equals("y") && InputUtils.isGuiShortcutModifierDown(modifiers)) {
 			this.history.stepForward();
             this.resize(Minecraft.getInstance(), this.width, this.height);
 			return true;
 		}
 
-		//CTRL + G
-		if (key.equals("g") && hasControlDown()) {
+		// GUI shortcut modifier + G
+		if (key.equals("g") && InputUtils.isGuiShortcutModifierDown(modifiers)) {
 			try {
 				FancyMenu.getOptions().showLayoutEditorGrid.setValue(!FancyMenu.getOptions().showLayoutEditorGrid.getValue());
 			} catch (Exception ex) {

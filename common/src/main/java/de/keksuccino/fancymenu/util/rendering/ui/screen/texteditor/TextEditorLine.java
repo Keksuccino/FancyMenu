@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
+import de.keksuccino.fancymenu.util.input.EditBoxInputController;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
@@ -10,12 +11,12 @@ import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -241,12 +242,16 @@ public class TextEditorLine extends AdvancedTextField {
 
     @Override
     public boolean keyPressed(int keycode, int i1, int i2) {
+        boolean shiftDown = (i2 & GLFW.GLFW_MOD_SHIFT) != 0;
         //Handled by the editor
-        if (Screen.isCopy(keycode) || Screen.isPaste(keycode) || Screen.isSelectAll(keycode) || Screen.isCut(keycode)) {
+        if ((keycode == GLFW.GLFW_KEY_C) || (keycode == GLFW.GLFW_KEY_V) || (keycode == GLFW.GLFW_KEY_A) || (keycode == GLFW.GLFW_KEY_X)) {
             return false;
         }
         //Text deletion is handled by the editor
         if (keycode == InputConstants.KEY_BACKSPACE) {
+            return false;
+        }
+        if (!this.isActive() || !this.isFocused()) {
             return false;
         }
         //Don't move cursor when in mouse-highlighting mode
@@ -259,7 +264,7 @@ public class TextEditorLine extends AdvancedTextField {
                 if (this.parent.isLineFocused() && (this.parent.getFocusedLine() == this) && (this.getCursorPosition() <= 0) && (this.parent.getLineIndex(this) > 0)) {
                     leftRightArrowWasDown = true;
                     this.parent.goUpLine();
-                    if (Screen.hasShiftDown()) {
+                    if (shiftDown) {
                         this.parent.getFocusedLine().setCursorPosition(this.parent.getFocusedLine().getValue().length());
                     } else {
                         this.parent.getFocusedLine().moveCursorTo(this.parent.getFocusedLine().getValue().length(), false);
@@ -277,7 +282,7 @@ public class TextEditorLine extends AdvancedTextField {
                 if (this.parent.isLineFocused() && (this.parent.getFocusedLine() == this) && (this.getCursorPosition() >= this.getValue().length()) && (this.parent.getLineIndex(this) < this.parent.getLineCount() - 1)) {
                     leftRightArrowWasDown = true;
                     this.parent.goDownLine(false);
-                    if (Screen.hasShiftDown()) {
+                    if (shiftDown) {
                         this.parent.getFocusedLine().setCursorPosition(0);
                     } else {
                         this.parent.getFocusedLine().moveCursorTo(0, false);
@@ -289,7 +294,47 @@ public class TextEditorLine extends AdvancedTextField {
                 return true;
             }
         }
-        return super.keyPressed(keycode, i1, i2);
+        return switch (EditBoxInputController.resolve(keycode, i2)) {
+            case DELETE_CHARACTER_FORWARD -> {
+                if (this.isEditable()) this.deleteText(1, false);
+                yield true;
+            }
+            case DELETE_WORD_FORWARD -> {
+                if (this.isEditable()) this.deleteText(1, true);
+                yield true;
+            }
+            case MOVE_CHARACTER_LEFT -> {
+                this.moveCursor(-1, shiftDown);
+                yield true;
+            }
+            case MOVE_WORD_LEFT -> {
+                this.moveCursorTo(this.getWordPosition(-1), shiftDown);
+                yield true;
+            }
+            case MOVE_CHARACTER_RIGHT -> {
+                this.moveCursor(1, shiftDown);
+                yield true;
+            }
+            case MOVE_WORD_RIGHT -> {
+                this.moveCursorTo(this.getWordPosition(1), shiftDown);
+                yield true;
+            }
+            case MOVE_START -> {
+                this.moveCursorToStart(shiftDown);
+                yield true;
+            }
+            case MOVE_END -> {
+                this.moveCursorToEnd(shiftDown);
+                yield true;
+            }
+            default -> super.keyPressed(keycode, i1, i2);
+        };
+    }
+
+    public void deleteText(int direction, boolean deleteWord) {
+        if (deleteWord) this.deleteWords(direction);
+        else this.deleteChars(direction);
+        this.textWidth = Math.round(this.parent.getTextWidthAtUIScale(this.getValue()));
     }
 
     @Override
