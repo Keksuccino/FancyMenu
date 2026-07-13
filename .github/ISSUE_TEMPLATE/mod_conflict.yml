@@ -1,6 +1,6 @@
 name: Mod Conflict
 description: Report a conflict with another mod.
-labels: ["mod conflict"]
+labels: ["⚔️ mod conflict"]
 
 body:
   - type: markdown
