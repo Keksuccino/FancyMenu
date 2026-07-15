@@ -4,7 +4,6 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.FocuslessContainerEventHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
@@ -93,7 +92,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     @Nullable
     protected Float parentRenderScale = null;
     @NotNull
-    protected Font font = Minecraft.getInstance().font;
+    protected final Font font;
     @NotNull
     protected DrawableColor tableLineColor = DrawableColor.of(new Color(120, 120, 120));
     @NotNull
@@ -114,6 +113,14 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected final List<MarkdownTextLine> lines = new ArrayList<>();
     protected final List<MarkdownTextFragment> fragments = new ArrayList<>();
     protected final List<ConsumingSupplier<MarkdownTextLine, Boolean>> lineRenderValidators = new ArrayList<>();
+
+    public MarkdownRenderer() {
+        this(Minecraft.getInstance().font);
+    }
+
+    MarkdownRenderer(@NotNull Font font) {
+        this.font = Objects.requireNonNull(font);
+    }
 
     @Override
     public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
@@ -304,10 +311,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     @NotNull
     protected String buildRenderText() {
-        String t = PlaceholderParser.replacePlaceholders(this.text);
-        // Legacy formatting belongs to this text-rendering boundary instead of generic placeholder parsing. Keep
-        // this after placeholder replacement so dynamically produced formatting codes are handled too.
-        t = TextFormattingUtils.replaceFormattingCodes(t, "&", "§");
+        String t = PlaceholderParser.replacePlaceholdersPreservingFormattingCodes(this.text);
         t = StringUtils.replace(t, NEWLINE_PERCENT, NEWLINE);
         t = StringUtils.replace(t, NEWLINE_R, NEWLINE);
         t = StringUtils.replace(t, NEWLINE_ESCAPED, NEWLINE);
@@ -911,4 +915,3 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
 }
-
