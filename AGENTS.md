@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- This project is "FancyMenu", which is a Minecraft Java 1.19.2 mod (the version number is not a typo). It uses the MultiLoader layout with shared logic under `common` and loader-specific wrappers under `fabric` and `forge`.
+- This project is "FancyMenu", which is a Minecraft Java 1.19.2 mod (the version number is not a typo). It uses the MultiLoader layout with shared logic under `common` and loader-specific wrappers under `fabric` and `neoforge`.
 - Place shared Java sources in `common/src/main/java` and assets such as menu JSON, translations, or textures in `common/src/main/resources` so they ship with every loader build.
 - Loader-only hooks belong inside each module's `src/main/java` tree; keep local run directories like `run_client` and `run_server` for iterative testing but never depend on them for assets.
 
@@ -44,8 +44,10 @@
 - Do not simply implement things without a second thought. Simulate in your reasoning STEP-BY-STEP what each step of the execution chain of the code you implemented does, where it does something, and what could be side effects of it. Chase the whole code execution chain step-by-step, to notice edge cases, incomplete implementations, bugs, etc.
 - Always implement everything in the best way possible. Implement everything in the most optimized, performance-friendly, and professional way, following best practices for everything.
 - Never rush tasks. It doesn't matter how long a task will take, you always take the best possible route instead of the fastest.
+- Everything always needs to be fully compatible with Sodium and Iris. Both mods are set as dependency for the `fabric` module, for testing.
+- Everything always needs to work with and without Sodium and Iris.
 - Always clean up after yourself! When finishing a task, remove leftover code from testing, code from earlier unsuccessful implementation attempts, and dead code.
-- When you work with Vanilla Minecraft code, always deeply analyze the source code for these, so you really understand what you are working with and how the related code works.
+- When you work with Vanilla Minecraft code, or Iris/Sodium, always deeply analyze the source code for these, so you really understand what you are working with and how the related code works.
 - ALWAYS move most of the actual work to subagents. You just orchestrate your subagents as main agent. You keep and eye on them in case they do something stupid, so you can steer them, or correct their mistakes, if needed. Make sure to move as much work as possible to subagents.
 
 ## Mod Conflicts
@@ -67,35 +69,34 @@
 - Always read and write en_us.json with an explicit UTF-8-without-BOM encoding.
 
 ## Minecraft Sources
-- You have access to the full Minecraft 1.19.2 sources in `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.19.2/minecraft/fabric/` and `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.19.2/minecraft/forge/`.
+- You have access to the full Minecraft 1.19.2 sources in `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.19.2/minecraft/fabric/` and `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.19.2/minecraft/neoforge/`.
 - Sources for some libraries used by Minecraft 1.19.2 are in `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.19.2/libraries/`.
+- Sources for Sodium, Sodium Extra, and Iris are in `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/1.19.2/libraries/`.
 - The following folder also contains sources for various other Minecraft versions, in case it is needed to compare Vanilla Minecraft code for something: `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES`.
 - Use the Minecraft sources for research when working with Minecraft-related code.
 - Always prefer the sources provided in the `/<mc_version>/libraries/` folder instead of trying to unpack source JARs yourself. Only do that when the provided sources don't contain what you need.
 
 ## Autonomous Testing
 - After making changes, always compile/build the project to identify and fix compile errors.
-- Only use the `fabric` and `forge` modules for compile checks. Never use the `common` module.
-- Make sure to use Java 17 for compile/run stuff, like this for example: `JAVA_HOME=$(/usr/libexec/java_home -v 17) sh gradlew :fabric:compileJava :forge:compileJava --stacktrace`
+- Only use the `fabric` and `neoforge` modules for compile checks. Never use the `common` module.
+- Make sure to use Java 17 for compile/run stuff, like this for example: `JAVA_HOME=$(/usr/libexec/java_home -v 17) sh gradlew :fabric:compileJava :neoforge:compileJava --stacktrace`
 - Add focused JUnit 5 regression tests for every bug fix or behavior change that can be tested automatically. The tests should fail for the broken behavior and cover the main path plus relevant boundary, failure, and lifecycle cases.
 - Place shared and Fabric test classes under `fabric/src/test/java`, mirroring the production package and naming each class `<Subject>Test`. Treat each test class as a focused suite for one coherent subject; split unrelated behavior into separate classes.
-- Do not duplicate shared tests in the `forge` module. Forge's test task is disabled, so run tests through `fabric` and verify production compatibility by compiling both loaders.
+- Do not duplicate shared tests in the `neoforge` module. NeoForge's test task is disabled, so run tests through `fabric` and verify production compatibility by compiling both loaders.
 - Keep tests deterministic, isolated, and Minecraft-light. Prefer small reusable or package-private helpers/controllers for logic that cannot safely instantiate Minecraft runtime objects, without weakening or distorting the production design just for testing.
 - Inject clocks, executors, suppliers, and other changing inputs when needed. Use temporary directories, loopback servers, and fakes instead of real user files, external services, arbitrary sleeps, or test-order dependencies.
 - Run the focused suite first, for example: `JAVA_HOME=$(/usr/libexec/java_home -v 17) sh gradlew :fabric:test --tests 'fully.qualified.SubjectTest' --stacktrace`
-- Before finishing, run the complete Fabric suite with Java 17 using `JAVA_HOME=$(/usr/libexec/java_home -v 17) sh gradlew :fabric:test --stacktrace`, then compile Fabric and Forge. Use `--rerun-tasks` for the final test run when cached results could hide whether the current tree was executed.
+- Before finishing, run the complete Fabric suite with Java 17 using `JAVA_HOME=$(/usr/libexec/java_home -v 17) sh gradlew :fabric:test --stacktrace`, then compile Fabric and NeoForge. Use `--rerun-tasks` for the final test run when cached results could hide whether the current tree was executed.
 - Report the number of discovered suites/tests and the passed, failed, errored, and skipped totals.
 - A successful compile or an up-to-date Gradle task does not replace an executed regression test.
+- After compiling and normal tests succeeded, run the client of both `fabric` and `neoforge` modules via their client launch tasks, and check the log output, to see if stuff like Mixin injects succeeded, but make sure to CLOSE THE CLIENT WINDOWS after. Only run clients when it makes sense to run them, which means when compiling is not enough to catch all possible issues.
+- Never try to control the client, for example with "Computer Use".
+- You can add temporary testing code to the mod that executes on client launch or when it hits the Title screen or something, for getting feedback from the game process directly, for things like shader testing and other stuff you need the actual Minecraft process for. Make sure to remove that testing code after.
 - There are tools available on the system to validate GLSL shaders. Use these when working with shaders.
 - You always TRIPLE-CHECK EVERYTHING! When you are finishing a task, you triple-check everything for completeness, possible bad implementations, rushed implementations, performance, optimization, structurization, and so on.
-
-## Visual Testing
-- When the user tells you to also do visual testing, run the `fabric` and `forge` modules via IntelliJ IDE.
-- Only use "Computer Use" for running the modules! You will click the "Run" button in the top-right of IntelliJ to run the modules (and also select the correct run config before, obviously).
-- After the Minecraft client started, use "Computer Use" to navigate in the game and visually check your changes. Check if everything looks good and works as intended.
-- IntelliJ IDE is already open with the project active.
-- NEVER DO VISUAL TESTING WITHOUT THE USER TELLING YOU TO DO SO! Do not run the game without the user telling you to do so.
 
 ## Subagents
 - Always spawn ALL your subagents with the gpt-5.6 model on xhigh.
 - Always spawn ALL your subagents with a CLEAN context (do not give them your context), so they have a clean context for doing their task in the best possible way.
+
+
