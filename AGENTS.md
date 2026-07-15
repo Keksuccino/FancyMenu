@@ -44,8 +44,10 @@
 - Do not simply implement things without a second thought. Simulate in your reasoning STEP-BY-STEP what each step of the execution chain of the code you implemented does, where it does something, and what could be side effects of it. Chase the whole code execution chain step-by-step, to notice edge cases, incomplete implementations, bugs, etc.
 - Always implement everything in the best way possible. Implement everything in the most optimized, performance-friendly, and professional way, following best practices for everything.
 - Never rush tasks. It doesn't matter how long a task will take, you always take the best possible route instead of the fastest.
+- Everything always needs to be fully compatible with Sodium and Iris. Both mods are set as dependency for the `fabric` module, for testing.
+- Everything always needs to work with and without Sodium and Iris.
 - Always clean up after yourself! When finishing a task, remove leftover code from testing, code from earlier unsuccessful implementation attempts, and dead code.
-- When you work with Vanilla Minecraft code, always deeply analyze the source code for these, so you really understand what you are working with and how the related code works.
+- When you work with Vanilla Minecraft code, or Iris/Sodium, always deeply analyze the source code for these, so you really understand what you are working with and how the related code works.
 - ALWAYS move most of the actual work to subagents. You just orchestrate your subagents as main agent. You keep and eye on them in case they do something stupid, so you can steer them, or correct their mistakes, if needed. Make sure to move as much work as possible to subagents.
 
 ## Mod Conflicts
@@ -69,6 +71,7 @@
 ## Minecraft Sources
 - You have access to the full Minecraft 26.1.2 sources in `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/26.1.2/minecraft/fabric/` and `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/26.1.2/minecraft/neoforge/`.
 - Sources for some libraries used by Minecraft 26.1.2 are in `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/26.1.2/libraries/`.
+- Sources for Sodium, Sodium Extra, and Iris are in `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES/26.1.2/libraries/`.
 - The following folder also contains sources for various other Minecraft versions, in case it is needed to compare Vanilla Minecraft code for something: `/Volumes/STUFF/CODING/WORKSPACES/Java/Minecraft Mods/.MINECRAFT_SOURCES`.
 - Use the Minecraft sources for research when working with Minecraft-related code.
 - Always prefer the sources provided in the `/<mc_version>/libraries/` folder instead of trying to unpack source JARs yourself. Only do that when the provided sources don't contain what you need.
@@ -86,16 +89,14 @@
 - Before finishing, run the complete Fabric suite with Java 25 using `JAVA_HOME=$(/usr/libexec/java_home -v 25) sh gradlew :fabric:test --stacktrace`, then compile Fabric and NeoForge. Use `--rerun-tasks` for the final test run when cached results could hide whether the current tree was executed.
 - Report the number of discovered suites/tests and the passed, failed, errored, and skipped totals.
 - A successful compile or an up-to-date Gradle task does not replace an executed regression test.
+- After compiling and normal tests succeeded, run the client of both `fabric` and `neoforge` modules via their client launch tasks, and check the log output, to see if stuff like Mixin injects succeeded, but make sure to CLOSE THE CLIENT WINDOWS after. Only run clients when it makes sense to run them, which means when compiling is not enough to catch all possible issues.
+- Never try to control the client, for example with "Computer Use".
+- You can add temporary testing code to the mod that executes on client launch or when it hits the Title screen or something, for getting feedback from the game process directly, for things like shader testing and other stuff you need the actual Minecraft process for. Make sure to remove that testing code after.
 - There are tools available on the system to validate GLSL shaders. Use these when working with shaders.
 - You always TRIPLE-CHECK EVERYTHING! When you are finishing a task, you triple-check everything for completeness, possible bad implementations, rushed implementations, performance, optimization, structurization, and so on.
-
-## Visual Testing
-- When the user tells you to also do visual testing, run the `fabric` and `neoforge` modules via IntelliJ IDE.
-- Only use "Computer Use" for running the modules! You will click the "Run" button in the top-right of IntelliJ to run the modules (and also select the correct run config before, obviously).
-- After the Minecraft client started, use "Computer Use" to navigate in the game and visually check your changes. Check if everything looks good and works as intended.
-- IntelliJ IDE is already open with the project active.
-- NEVER DO VISUAL TESTING WITHOUT THE USER TELLING YOU TO DO SO! Do not run the game without the user telling you to do so.
 
 ## Subagents
 - Always spawn ALL your subagents with the gpt-5.6 model on xhigh.
 - Always spawn ALL your subagents with a CLEAN context (do not give them your context), so they have a clean context for doing their task in the best possible way.
+
+
