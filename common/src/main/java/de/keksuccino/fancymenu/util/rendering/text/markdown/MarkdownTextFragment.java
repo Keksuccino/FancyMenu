@@ -44,6 +44,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     public boolean bold;
     public boolean italic;
     public boolean strikethrough;
+    @NotNull
+    MinecraftFormattingState minecraftFormatting = MinecraftFormattingState.EMPTY;
     public boolean bulletListItemStart = false;
     public int bulletListLevel = 0;
     @NotNull
@@ -392,6 +394,23 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if (this.textColor != null) {
             style = style.withColor(this.textColor.getColorInt());
         }
+        boolean addSpaceComponentAtEnd = false;
+        String t = this.text;
+        if (this.isLinkLike() && (this.naturalLineBreakAfter || this.autoLineBreakAfter) && t.endsWith(" ")) {
+            //Remove spaces at line end that would look ugly when underlined
+            t = t.substring(0, t.length()-1);
+        } else if (this.isLinkLike() && this.isLastLinkLikeFragment() && t.endsWith(" ")) {
+            //Make space at the end not underlined without removing it completely
+            t = t.substring(0, t.length()-1);
+            addSpaceComponentAtEnd = true;
+        }
+        if (this.codeBlockContext != null) {
+            style = Style.EMPTY;
+        }
+        if (this.plainText) {
+            style = Style.EMPTY;
+        }
+        style = this.minecraftFormatting.applyTo(style);
         if (this.hyperlink != null) {
             style = style.withColor(this.parent.hyperlinkColor.getColorInt());
             if (this.hyperlink.isHovered()) {
@@ -409,22 +428,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             if (this.hoverEvent.isHovered()) {
                 style = style.withUnderlined(true);
             }
-        }
-        boolean addSpaceComponentAtEnd = false;
-        String t = this.text;
-        if (this.isLinkLike() && (this.naturalLineBreakAfter || this.autoLineBreakAfter) && t.endsWith(" ")) {
-            //Remove spaces at line end that would look ugly when underlined
-            t = t.substring(0, t.length()-1);
-        } else if (this.isLinkLike() && this.isLastLinkLikeFragment() && t.endsWith(" ")) {
-            //Make space at the end not underlined without removing it completely
-            t = t.substring(0, t.length()-1);
-            addSpaceComponentAtEnd = true;
-        }
-        if (this.codeBlockContext != null) {
-            style = Style.EMPTY;
-        }
-        if (this.plainText) {
-            style = Style.EMPTY;
         }
         if (this.parent.textCase == MarkdownRenderer.TextCase.ALL_UPPER) {
             t = t.toUpperCase();
