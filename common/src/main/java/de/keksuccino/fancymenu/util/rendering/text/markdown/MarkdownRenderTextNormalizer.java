@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
-import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,8 +17,7 @@ final class MarkdownRenderTextNormalizer {
 
     @NotNull
     static String normalize(@NotNull String placeholderExpandedText, boolean removeHtmlBreaks) {
-        // Formatting must be normalized after placeholder expansion so dynamically produced codes are handled too.
-        String normalized = TextFormattingUtils.replaceFormattingCodes(placeholderExpandedText, "&", "§");
+        String normalized = placeholderExpandedText;
         normalized = StringUtils.replace(normalized, NEWLINE_PERCENT, NEWLINE);
         normalized = StringUtils.replace(normalized, NEWLINE_R, NEWLINE);
         normalized = StringUtils.replace(normalized, NEWLINE_ESCAPED, NEWLINE);

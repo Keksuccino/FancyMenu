@@ -7,15 +7,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class MarkdownRenderTextNormalizerTest {
 
     @Test
-    void convertsEveryRecognizedLowercaseLegacyFormattingCode() {
+    void preservesEveryRecognizedLowercaseLegacyFormattingCodeForContextualParsing() {
         String source = "&0&1&2&3&4&5&6&7&8&9&a&b&c&d&e&f&k&l&m&n&o&r";
 
-        assertEquals("§0§1§2§3§4§5§6§7§8§9§a§b§c§d§e§f§k§l§m§n§o§r", MarkdownRenderTextNormalizer.normalize(source, true));
+        assertEquals(source, MarkdownRenderTextNormalizer.normalize(source, true));
     }
 
     @Test
-    void convertsFormattingInTextWithoutPlaceholders() {
-        assertEquals("Plain §aformatted", MarkdownRenderTextNormalizer.normalize("Plain &aformatted", true));
+    void preservesFormattingInTextWithoutPlaceholders() {
+        assertEquals("Plain &aformatted", MarkdownRenderTextNormalizer.normalize("Plain &aformatted", true));
     }
 
     @Test
@@ -29,13 +29,13 @@ class MarkdownRenderTextNormalizerTest {
     }
 
     @Test
-    void convertsRecognizedCodeAfterAnExtraAmpersand() {
-        assertEquals("&§a", MarkdownRenderTextNormalizer.normalize("&&a", true));
+    void preservesRecognizedCodeAfterAnExtraAmpersand() {
+        assertEquals("&&a", MarkdownRenderTextNormalizer.normalize("&&a", true));
     }
 
     @Test
-    void convertsPlaceholderProducedFormattingBeforeNormalizingNewlines() {
-        assertEquals("§aFirst\nSecond\nThird\nFourth", MarkdownRenderTextNormalizer.normalize("&aFirst%n%Second\rThird\\nFourth", true));
+    void preservesPlaceholderProducedFormattingWhileNormalizingNewlines() {
+        assertEquals("&aFirst\nSecond\nThird\nFourth", MarkdownRenderTextNormalizer.normalize("&aFirst%n%Second\rThird\\nFourth", true));
     }
 
     @Test
@@ -50,13 +50,13 @@ class MarkdownRenderTextNormalizerTest {
         String normalized = MarkdownRenderTextNormalizer.normalize(source, true);
 
         assertEquals("&aFirst%n%Second<br>", source);
-        assertEquals("§aFirst\nSecond", normalized);
+        assertEquals("&aFirst\nSecond", normalized);
         assertEquals(normalized, MarkdownRenderTextNormalizer.normalize(normalized, true));
     }
 
     @Test
-    void preservesUpstreamFormattingConversionInsideMarkdownDestinations() {
-        assertEquals("[link](https://example.test/§a)", MarkdownRenderTextNormalizer.normalize("[link](https://example.test/&a)", true));
+    void preservesAmpersandsInsideMarkdownDestinations() {
+        assertEquals("[link](https://example.test/&a)", MarkdownRenderTextNormalizer.normalize("[link](https://example.test/&a)", true));
     }
 
 }

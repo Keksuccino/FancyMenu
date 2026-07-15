@@ -1,5 +1,7 @@
 #version 330
 
+#moj_import <fancymenu:fancymenu_rounded_box.glsl>
+
 uniform sampler2D OriginalSampler;
 uniform sampler2D BlurSampler;
 
@@ -20,14 +22,6 @@ layout(std140) uniform GuiBlurConfig {
 in vec2 texCoord;
 
 out vec4 fragColor;
-
-float sdRoundedBox(vec2 p, vec2 b, vec4 r) {
-    vec2 section = step(0.0, p);
-    vec2 botTop = mix(r.xw, r.yz, section.x);
-    float rad = mix(botTop.x, botTop.y, section.y);
-    vec2 q = abs(p) - b + rad;
-    return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - rad;
-}
 
 float getSuperellipseAlpha(vec2 pixel, vec2 pos, vec2 size, float n) {
     vec2 halfSize = size * 0.5;
@@ -55,9 +49,7 @@ void main() {
 
     float mask;
     if (ShapeInfo.x < 0.5) {
-        float dist = sdRoundedBox(local, halfSize, CornerRadii);
-        float aa = max(fwidth(dist) * 0.5, 0.0001);
-        mask = 1.0 - smoothstep(-aa, aa, dist);
+        mask = fancymenuRoundedBoxAlpha(local, halfSize, CornerRadii);
     } else {
         float n = max(0.1, ShapeInfo.y);
         mask = getSuperellipseAlpha(local + center, Rect.xy, Rect.zw, n);

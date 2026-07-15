@@ -13,6 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SmoothRenderingShaderResourceTest {
 
+    private static final String SHARED_ROUNDED_BOX_IMPORT = "#moj_import <fancymenu:fancymenu_rounded_box.glsl>";
+
     @Test
     void smoothCircleUsesHalfDerivativeForShapeAndArcEdges() throws IOException {
         String shader = readResource("assets/minecraft/shaders/core/fancymenu_gui_smooth_circle.fsh");
@@ -32,31 +34,36 @@ class SmoothRenderingShaderResourceTest {
     }
 
     @Test
-    void smoothImageRectangleUsesHalfDerivativeForShapeEdge() throws IOException {
+    void smoothImageRectangleUsesSharedRoundedBoxCoverage() throws IOException {
         String shader = readResource("assets/minecraft/shaders/core/fancymenu_gui_smooth_image_rect.fsh");
 
-        assertTrue(shader.contains("max(fwidth(dist) * 0.5, 0.0001)"));
-        assertFalse(shader.contains("max(fwidth(dist), 0.0001)"));
+        assertTrue(shader.contains(SHARED_ROUNDED_BOX_IMPORT));
+        assertEquals(1, occurrences(shader, "fancymenuRoundedBoxAlpha("));
+        assertFalse(shader.contains("float sdRoundedBox("));
+        assertFalse(shader.contains("fwidth(dist)"));
     }
 
     @Test
-    void smoothRectangleUsesIndependentHalfDerivativesForOuterAndInnerEdges() throws IOException {
+    void smoothRectangleUsesSharedCoverageForOuterAndInnerEdges() throws IOException {
         String shader = readResource("assets/minecraft/shaders/core/fancymenu_gui_smooth_rect.fsh");
 
-        assertEquals(1, occurrences(shader, "max(fwidth(dist) * 0.5, 0.0001)"));
-        assertEquals(1, occurrences(shader, "max(fwidth(innerDist) * 0.5, 0.0001)"));
-        assertTrue(shader.contains("smoothstep(-innerAa, innerAa, innerDist)"));
-        assertFalse(shader.contains("smoothstep(-aa, aa, innerDist)"));
+        assertTrue(shader.contains(SHARED_ROUNDED_BOX_IMPORT));
+        assertEquals(2, occurrences(shader, "fancymenuRoundedBoxAlpha("));
+        assertFalse(shader.contains("float sdRoundedBox("));
+        assertFalse(shader.contains("fwidth(dist)"));
+        assertFalse(shader.contains("fwidth(innerDist)"));
     }
 
     @Test
-    void blurMaskUsesHalfDerivativeForRectangleAndSuperellipseEdges() throws IOException {
+    void blurMaskUsesSharedRectangleCoverageAndHalfDerivativeForSuperellipseEdge() throws IOException {
         String shader = readResource("assets/minecraft/shaders/post/fancymenu_gui_blur.fsh");
 
         assertTrue(shader.contains("max(fwidth(d) * 0.5, 0.0001)"));
-        assertTrue(shader.contains("max(fwidth(dist) * 0.5, 0.0001)"));
+        assertTrue(shader.contains(SHARED_ROUNDED_BOX_IMPORT));
+        assertEquals(1, occurrences(shader, "fancymenuRoundedBoxAlpha("));
+        assertFalse(shader.contains("float sdRoundedBox("));
         assertFalse(shader.contains("max(fwidth(d), 0.0001)"));
-        assertFalse(shader.contains("max(fwidth(dist), 0.0001)"));
+        assertFalse(shader.contains("fwidth(dist)"));
     }
 
     private String readResource(String path) throws IOException {
