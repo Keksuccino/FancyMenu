@@ -1,4 +1,18 @@
 
+## CHANGELOG | FANCYMENU v3.9.8
+
+- Reintroduced and improved support for Vanilla Minecraft's text formatting codes in the "Text" element (#1715)
+  - Minecraft's normal text formatting codes now work properly in "Text" elements, without having to get reapplied after each word
+  - This is still experimental, and some formatting bugs could happen, so if you find bugs, please OPEN A GITHUB ISSUE, thank you very much!
+- Fixed message/information labels in some screens rendering twice, overlapping each other (#1623)
+- Fixed images having weird lines drawn around them in some specific cases (#1713)
+
+%changelog:end%
+
+
+
+
+
 ## CHANGELOG | FANCYMENU v3.9.7
 
 - Fixed mouse wheel scrolling not working in some PiP windows
