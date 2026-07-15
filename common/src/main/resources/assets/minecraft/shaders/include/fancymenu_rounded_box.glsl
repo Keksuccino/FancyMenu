@@ -1,19 +1,3 @@
-#version 150
-
-uniform sampler2D ImageSampler;
-uniform vec2 OutSize;
-uniform vec4 Rect;
-uniform vec4 Rotation; // m00, m01, m10, m11
-uniform vec4 CornerRadii; // BL, BR, TR, TL (matches Java flipVertical)
-uniform vec2 UvMin;
-uniform vec2 UvMax;
-uniform vec4 Color;
-
-in vec2 texCoord;
-
-out vec4 fragColor;
-
-// Minecraft 1.19.2's EffectProgram rejects shader imports, so keep this block identical to the shared include.
 float fancymenuResolveCornerRadius(vec2 position, vec4 cornerRadii) {
     vec2 section = step(0.0, position);
     vec2 bottomTop = mix(cornerRadii.xw, cornerRadii.yz, section.x);
@@ -46,42 +30,4 @@ float fancymenuRoundedBoxAlpha(vec2 position, vec2 halfSize, vec4 cornerRadii) {
     float cornerTransitionWidth = max(max(coordinateDerivativeWidth.x, coordinateDerivativeWidth.y), 0.0001);
     float roundedWeight = smoothstep(0.0, cornerTransitionWidth, max(cornerRadius, 0.0));
     return mix(sharpAlpha, roundedAlpha, roundedWeight);
-}
-
-void main() {
-    // Convert 0..1 UV to actual Screen Pixel coordinates
-    vec2 pixel = texCoord * OutSize;
-
-    // Calculate Center and Half-Size of the rectangle
-    vec2 halfSize = Rect.zw * 0.5;
-    vec2 center = Rect.xy + halfSize;
-
-    // Position relative to center
-    vec2 p = pixel - center;
-    vec2 local = vec2(Rotation.x * p.x + Rotation.y * p.y, Rotation.z * p.x + Rotation.w * p.y);
-
-    float mask = fancymenuRoundedBoxAlpha(local, halfSize, CornerRadii);
-
-    if (mask <= 0.0) {
-        discard;
-    }
-
-    vec2 localPixel = local + center;
-    vec2 uv = (localPixel - Rect.xy) / Rect.zw;
-    uv.y = 1.0 - uv.y;
-
-    vec2 uvMin = min(UvMin, UvMax);
-    vec2 uvMax = max(UvMin, UvMax);
-    uv = mix(UvMin, UvMax, uv);
-    uv = clamp(uv, uvMin, uvMax);
-
-    vec4 texColor = texture(ImageSampler, uv);
-    vec3 rgb = texColor.rgb * Color.rgb;
-    float alpha = texColor.a * Color.a * mask;
-
-    if (alpha <= 0.0) {
-        discard;
-    }
-
-    fragColor = vec4(rgb, alpha);
 }
