@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
 import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
+import de.keksuccino.fancymenu.mixin.support.client.WidgetifiedTextReplacementController;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.WidgetifiedScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.TextWidget;
 import net.minecraft.client.Minecraft;
@@ -28,6 +29,7 @@ public abstract class MixinConnectScreen extends Screen {
     @Shadow private Component status;
 
     @Unique private TextWidget statusTextFancyMenu;
+    @Unique private final WidgetifiedTextReplacementController<TextWidget> textReplacementController_FancyMenu = new WidgetifiedTextReplacementController<>();
 
     protected MixinConnectScreen(Component $$0) {
         super($$0);
@@ -35,12 +37,7 @@ public abstract class MixinConnectScreen extends Screen {
 
     @Inject(method = "init", at = @At("RETURN"))
     private void afterInitFancyMenu(CallbackInfo info) {
-
-        this.statusTextFancyMenu = this.addRenderableWidget(TextWidget.of(this.status, 0, (this.height / 2) - 50, 200))
-                .centerWidget(this)
-                .setTextAlignment(TextWidget.TextAlignment.CENTER)
-                .setWidgetIdentifierFancyMenu("status");
-
+        this.statusTextFancyMenu = this.textReplacementController_FancyMenu.initialize(ScreenCustomization.isCustomizationEnabledForScreen(this), this::createStatusTextWidget_FancyMenu);
     }
 
     @Inject(at = @At("HEAD"), method = "startConnecting")
@@ -71,7 +68,16 @@ public abstract class MixinConnectScreen extends Screen {
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/ConnectScreen;drawCenteredString(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
     private boolean wrapDrawCenteredStringInRenderFancyMenu(PoseStack poseStack, Font $$0, Component $$1, int $$2, int $$3, int $$4) {
-        return !ScreenCustomization.isCustomizationEnabledForScreen(this);
+        return this.textReplacementController_FancyMenu.shouldRenderVanillaText();
+    }
+
+    @Unique
+    private TextWidget createStatusTextWidget_FancyMenu() {
+        TextWidget widget = TextWidget.of(this.status, 0, (this.height / 2) - 50, 200);
+        widget.centerWidget(this);
+        widget.setTextAlignment(TextWidget.TextAlignment.CENTER);
+        widget.setWidgetIdentifierFancyMenu("status");
+        return this.addRenderableWidget(widget);
     }
 
 }
