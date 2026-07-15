@@ -34,16 +34,14 @@ class SmoothEdgeShaderResourcesTest {
         assertEquals(1, occurrences(loadShader(SMOOTH_CIRCLE), "max(fwidth(d) * 0.5, 0.0001)"));
         assertEquals(1, occurrences(loadShader(SMOOTH_CIRCLE), "max(fwidth(angle) * 0.5, 0.0001)"));
         assertEquals(1, occurrences(loadShader(SMOOTH_IMAGE_CIRCLE), "max(fwidth(d) * 0.5, 0.0001)"));
-        assertEquals(1, occurrences(loadShader(SMOOTH_IMAGE_RECT), "max(fwidth(dist) * 0.5, 0.0001)"));
         assertEquals(1, occurrences(loadShader(GUI_BLUR), "max(fwidth(d) * 0.5, 0.0001)"));
-        assertEquals(1, occurrences(loadShader(GUI_BLUR), "max(fwidth(dist) * 0.5, 0.0001)"));
     }
 
     @Test
-    void rectangleBordersUseDistinctInnerDerivativeWidth() throws IOException {
+    void rectangleBordersUseSharedCoverageForOuterAndInnerMasks() throws IOException {
         for (String path : List.of(SMOOTH_RECT, SMOOTH_RECT_LOCAL)) {
             String shader = loadShader(path);
-            assertAll(path, () -> assertEquals(1, occurrences(shader, "max(fwidth(dist) * 0.5, 0.0001)")), () -> assertEquals(1, occurrences(shader, "max(fwidth(innerDist) * 0.5, 0.0001)")), () -> assertTrue(shader.contains("smoothstep(-innerAa, innerAa, innerDist)")));
+            assertAll(path, () -> assertTrue(shader.contains("float alpha = fancymenuRoundedBoxAlpha(p, halfSize, CornerRadii);")), () -> assertTrue(shader.contains("float innerAlpha = fancymenuRoundedBoxAlpha(p, innerHalfSize, innerRadii);")));
         }
     }
 
