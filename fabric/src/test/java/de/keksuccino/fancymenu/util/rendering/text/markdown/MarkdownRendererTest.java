@@ -9,12 +9,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class MarkdownRendererTest {
 
     @Test
-    void restoresLegacyFormattingInDirectText() {
-        assertEquals("§aGreen §lBold§r", MarkdownRenderer.preprocessRenderText("&aGreen &lBold&r", true, text -> text));
+    void preservesLegacyFormattingInDirectTextForContextAwareParsing() {
+        assertEquals("&aGreen &lBold&r", MarkdownRenderer.preprocessRenderText("&aGreen &lBold&r", true, text -> text));
     }
 
     @Test
-    void expandsPlaceholdersBeforeRestoringFormatting() {
+    void expandsPlaceholdersWithoutGloballyNormalizingFormatting() {
         AtomicReference<String> expanderInput = new AtomicReference<>();
 
         String processed = MarkdownRenderer.preprocessRenderText("raw placeholder", true, text -> {
@@ -23,7 +23,7 @@ class MarkdownRendererTest {
         });
 
         assertEquals("raw placeholder", expanderInput.get());
-        assertEquals("Status: §cOffline", processed);
+        assertEquals("Status: &cOffline", processed);
     }
 
     @Test

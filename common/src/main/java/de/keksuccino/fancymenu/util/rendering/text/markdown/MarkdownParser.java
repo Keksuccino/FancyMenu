@@ -4,12 +4,14 @@ import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.ObjectUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.text.color.TextColorFormatter;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.CodeBlockContext;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.HeadlineType;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.Hyperlink;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.QuoteContext;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import net.minecraft.ChatFormatting;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -106,6 +108,7 @@ public class MarkdownParser {
         boolean queueNewLine = true;
         boolean italicUnderscore = false;
         int charsToSkip = 0;
+        boolean preserveStartOfLineWhileSkipping = false;
         boolean skipLine = false;
         MarkdownTextFragment lastBuiltFragment = null;
         boolean lastLineWasHeadline = false;
@@ -168,6 +171,10 @@ public class MarkdownParser {
             //Skip Chars
             if (charsToSkip > 0) {
                 charsToSkip--;
+                if (preserveStartOfLineWhileSkipping) {
+                    queueNewLine = true;
+                    if (charsToSkip == 0) preserveStartOfLineWhileSkipping = false;
+                }
                 continue;
             }
 
@@ -180,6 +187,26 @@ public class MarkdownParser {
                 builder.separationLine = false;
                 skipLine = false;
                 queueNewLine = true;
+                continue;
+            }
+
+            // Parse formatting before Markdown so its state survives the word-sized fragments built below. Ampersand
+            // codes are handled here, after Markdown destinations are skipped, so URL query parameters stay intact.
+            ChatFormatting vanillaFormatting = c == ChatFormatting.PREFIX_CODE ? MinecraftFormattingState.getSectionFormattingAt(markdownText, index) : c == '&' ? MinecraftFormattingState.getAmpersandFormattingAt(markdownText, index) : null;
+            TextColorFormatter customFormatting = c == ChatFormatting.PREFIX_CODE && vanillaFormatting == null ? MinecraftFormattingState.getCustomFormattingAt(markdownText, index) : null;
+            if ((vanillaFormatting != null) || (customFormatting != null)) {
+                if (!builder.text.isEmpty()) {
+                    lastBuiltFragment = addFragment(fragments, builder.build(false, false));
+                }
+                builder.minecraftFormatting = vanillaFormatting != null ? builder.minecraftFormatting.apply(vanillaFormatting) : builder.minecraftFormatting.apply(Objects.requireNonNull(customFormatting));
+                // A following isolated space must be built with the new formatting state instead of being folded
+                // into the fragment before this formatting boundary by the whitespace optimization below.
+                lastBuiltFragment = null;
+                charsToSkip = 1;
+                if (isStartOfLine) {
+                    queueNewLine = true;
+                    preserveStartOfLineWhileSkipping = true;
+                }
                 continue;
             }
 
@@ -936,20 +963,23 @@ public class MarkdownParser {
     }
 
     protected static boolean isTableSeparatorLine(@NotNull String line) {
-        if (!containsUnescapedPipe(line)) {
+        String structuralLine = splitLeadingFormattingTokens(line.trim()).content.trim();
+        if (!containsUnescapedPipe(structuralLine)) {
             return false;
         }
-        return TABLE_SEPARATOR_PATTERN.matcher(line).matches();
+        return TABLE_SEPARATOR_PATTERN.matcher(structuralLine).matches();
     }
     
     protected static boolean isTableRow(@NotNull String line) {
-        return containsUnescapedPipe(line) && !isTableSeparatorLine(line);
+        String structuralLine = splitLeadingFormattingTokens(line.trim()).content.trim();
+        return containsUnescapedPipe(structuralLine) && !isTableSeparatorLine(line);
     }
     
     @NotNull
     protected static List<String> parseTableRow(@NotNull String line) {
         List<String> cells = new ArrayList<>();
-        String trimmed = line.trim();
+        LeadingFormattingTokens leadingFormatting = splitLeadingFormattingTokens(line.trim());
+        String trimmed = leadingFormatting.content.trim();
         if (trimmed.startsWith(VERTICAL_BAR)) {
             trimmed = trimmed.substring(1);
         }
@@ -958,13 +988,14 @@ public class MarkdownParser {
         }
         List<String> parts = splitByUnescapedPipes(trimmed);
         parts.forEach(part -> cells.add(part.trim()));
+        if (!leadingFormatting.tokens.isEmpty() && !cells.isEmpty()) cells.set(0, leadingFormatting.tokens + cells.get(0));
         return cells;
     }
     
     @NotNull
     protected static List<MarkdownTextFragment.TableCell.TableCellAlignment> parseTableAlignments(@NotNull String separatorLine) {
         List<MarkdownTextFragment.TableCell.TableCellAlignment> alignments = new ArrayList<>();
-        String trimmed = separatorLine.trim();
+        String trimmed = splitLeadingFormattingTokens(separatorLine.trim()).content.trim();
         if (trimmed.startsWith(VERTICAL_BAR)) {
             trimmed = trimmed.substring(1);
         }
@@ -983,6 +1014,22 @@ public class MarkdownParser {
             }
         }
         return alignments;
+    }
+
+    @NotNull
+    private static LeadingFormattingTokens splitLeadingFormattingTokens(@NotNull String line) {
+        int index = 0;
+        while ((index + 1) < line.length()) {
+            char prefix = line.charAt(index);
+            ChatFormatting vanillaFormatting = prefix == ChatFormatting.PREFIX_CODE ? MinecraftFormattingState.getSectionFormattingAt(line, index) : prefix == '&' ? MinecraftFormattingState.getAmpersandFormattingAt(line, index) : null;
+            TextColorFormatter customFormatting = prefix == ChatFormatting.PREFIX_CODE && vanillaFormatting == null ? MinecraftFormattingState.getCustomFormattingAt(line, index) : null;
+            if ((vanillaFormatting == null) && (customFormatting == null)) break;
+            index += 2;
+        }
+        return new LeadingFormattingTokens(line.substring(0, index), line.substring(index));
+    }
+
+    private record LeadingFormattingTokens(@NotNull String tokens, @NotNull String content) {
     }
     
     @NotNull
@@ -1102,6 +1149,8 @@ public class MarkdownParser {
         protected boolean bold = false;
         protected boolean italic = false;
         protected boolean strikethrough = false;
+        @NotNull
+        protected MinecraftFormattingState minecraftFormatting = MinecraftFormattingState.EMPTY;
         protected boolean bulletListItemStart = false;
         protected int bulletListLevel = 0;
         @NotNull
@@ -1140,6 +1189,7 @@ public class MarkdownParser {
             frag.bold = bold;
             frag.italic = italic;
             frag.strikethrough = strikethrough;
+            frag.minecraftFormatting = minecraftFormatting;
             frag.bulletListLevel = bulletListLevel;
             frag.bulletListItemStart = bulletListItemStart;
             bulletListItemStart = false;
