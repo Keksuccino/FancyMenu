@@ -11,6 +11,7 @@ import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
 import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.Connection;
 import net.minecraft.server.packs.PackType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,8 +29,12 @@ public class FancyMenuFabricClientEvents {
         registerScreenEvents();
 
         ClientPlayConnectionEvents.JOIN.register((clientPacketListener, packetSender, minecraft) -> {
-            Minecraft.getInstance().execute(PacketHandler::sendHandshakeToServer);
+            Connection connection = clientPacketListener.getConnection();
+            PacketHandler.onClientConnected(connection);
+            minecraft.execute(() -> PacketHandler.sendHandshakeToServer(connection));
         });
+
+        ClientPlayConnectionEvents.DISCONNECT.register((clientPacketListener, minecraft) -> PacketHandler.onClientDisconnected(clientPacketListener.getConnection()));
 
     }
 

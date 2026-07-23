@@ -1,9 +1,11 @@
 package de.keksuccino.fancymenu.networking;
 
-import net.minecraft.client.Minecraft;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
+
 import java.util.Objects;
 
 public class PacketHandlerNeoForge {
@@ -12,9 +14,8 @@ public class PacketHandlerNeoForge {
         toPlayer.connection.send(Objects.requireNonNull(packet));
     }
 
-    public static void  sendToServer(@NotNull CustomPacketPayload packet) {
-        if (Minecraft.getInstance().getConnection() == null) return;
-        Minecraft.getInstance().getConnection().send(Objects.requireNonNull(packet));
+    public static void sendToServer(@NotNull CustomPacketPayload packet, @NotNull Connection connection) {
+        Objects.requireNonNull(connection).send(new ServerboundCustomPayloadPacket(Objects.requireNonNull(packet)));
     }
 
 }
