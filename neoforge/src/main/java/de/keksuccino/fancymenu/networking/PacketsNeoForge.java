@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.networking;
 
-import de.keksuccino.fancymenu.networking.bridge.BridgePacketPayloadNeoForge;
+import de.keksuccino.fancymenu.networking.bridge.BridgePacketPayload;
 import de.keksuccino.fancymenu.networking.packets.Packets;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.IEventBus;
@@ -21,12 +21,12 @@ public class PacketsNeoForge {
         eventBus.addListener(PacketsNeoForge::registerBridgePacketNeoForge);
 
         PacketHandler.setSendToClientLogic((player, s) -> {
-            BridgePacketPayloadNeoForge payload = new BridgePacketPayloadNeoForge("client", s);
+            BridgePacketPayload payload = new BridgePacketPayload(BridgePacketPayload.TO_CLIENT_WIRE_DIRECTION, s);
             PacketHandlerNeoForge.sendToClient(payload, player);
         });
 
         PacketHandler.setSendToServerLogic(s -> {
-            BridgePacketPayloadNeoForge payload = new BridgePacketPayloadNeoForge("server", s);
+            BridgePacketPayload payload = new BridgePacketPayload(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, s);
             PacketHandlerNeoForge.sendToServer(payload);
         });
 
@@ -38,15 +38,15 @@ public class PacketsNeoForge {
         PayloadRegistrar registrar = e.registrar("fancymenu").optional();
 
         registrar.playBidirectional(
-                BridgePacketPayloadNeoForge.TYPE,
-                BridgePacketPayloadNeoForge.CODEC,
+                BridgePacketPayload.TYPE,
+                BridgePacketPayload.CODEC,
                 PacketsNeoForge::handleServerboundBridgePacket,
                 PacketsNeoForge::handleClientboundBridgePacket
         );
 
     }
 
-    private static void handleServerboundBridgePacket(BridgePacketPayloadNeoForge payload, IPayloadContext context) {
+    private static void handleServerboundBridgePacket(BridgePacketPayload payload, IPayloadContext context) {
         try {
             if (context.player() instanceof ServerPlayer sender) {
                 payload.handle(sender, PacketHandler.PacketDirection.TO_SERVER);
@@ -56,7 +56,7 @@ public class PacketsNeoForge {
         }
     }
 
-    private static void handleClientboundBridgePacket(BridgePacketPayloadNeoForge payload, IPayloadContext context) {
+    private static void handleClientboundBridgePacket(BridgePacketPayload payload, IPayloadContext context) {
         try {
             payload.handle(null, PacketHandler.PacketDirection.TO_CLIENT);
         } catch (Exception ex) {
