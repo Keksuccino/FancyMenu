@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.networking.bridge;
 
 import de.keksuccino.fancymenu.networking.PacketHandler;
+import net.minecraft.network.Connection;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -46,6 +47,10 @@ public final class BridgePacketPayload implements CustomPacketPayload {
 
     public void handle(@Nullable ServerPlayer sender, @NotNull PacketHandler.PacketDirection direction) {
         if (this.dataWithIdentifier != null) PacketHandler.onPacketReceived(sender, direction, this.dataWithIdentifier);
+    }
+
+    public void handle(@Nullable ServerPlayer sender, @NotNull PacketHandler.PacketDirection direction, @Nullable Connection clientConnection) {
+        if (this.dataWithIdentifier != null) PacketHandler.onPacketReceived(sender, direction, this.dataWithIdentifier, clientConnection);
     }
 
     public String direction() {

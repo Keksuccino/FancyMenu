@@ -78,6 +78,10 @@ final class ServerHandshakeNegotiationTracker {
         return Decision.ALLOW;
     }
 
+    synchronized void remove(@NotNull Object connection) {
+        this.statesByConnection.remove(Objects.requireNonNull(connection));
+    }
+
     @NotNull
     private Decision reject(@NotNull ConnectionState state, long now) {
         long elapsed = now - state.lastWarningAt;

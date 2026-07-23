@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.reload.FancyMenuResourceReload;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.Connection;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
@@ -51,6 +52,13 @@ public class FancyMenuNeoForgeClientEvents {
 
     @SubscribeEvent
     public void onClientLoggedIn(ClientPlayerNetworkEvent.LoggingIn e) {
-        Minecraft.getInstance().execute(PacketHandler::sendHandshakeToServer);
+        Connection connection = e.getConnection();
+        PacketHandler.onClientConnected(connection);
+        Minecraft.getInstance().execute(() -> PacketHandler.sendHandshakeToServer(connection));
+    }
+
+    @SubscribeEvent
+    public void onClientLoggedOut(ClientPlayerNetworkEvent.LoggingOut e) {
+        PacketHandler.onClientDisconnected(e.getConnection());
     }
 }

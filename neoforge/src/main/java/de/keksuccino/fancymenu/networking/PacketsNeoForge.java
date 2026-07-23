@@ -6,6 +6,7 @@ import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,9 +26,9 @@ public class PacketsNeoForge {
             PacketHandlerNeoForge.sendToClient(payload, player);
         });
 
-        PacketHandler.setSendToServerLogic(s -> {
+        PacketHandler.setSendToServerLogic((connection, s) -> {
             BridgePacketPayload payload = new BridgePacketPayload(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, s);
-            PacketHandlerNeoForge.sendToServer(payload);
+            PacketHandlerNeoForge.sendToServer(payload, connection);
         });
 
     }
@@ -37,17 +38,19 @@ public class PacketsNeoForge {
         //using the optional() registrar is important to be able to connect to servers without FM installed
         PayloadRegistrar registrar = e.registrar("fancymenu").optional();
 
-		registrar.playBidirectional(BridgePacketPayload.TYPE, BridgePacketPayload.CODEC, (payload, context) -> {
-		   try {
-               if (context.flow() == PacketFlow.CLIENTBOUND) {
-                   payload.handle(null, PacketHandler.PacketDirection.TO_CLIENT);
-               } else {
-                   payload.handle((ServerPlayer) context.player(), PacketHandler.PacketDirection.TO_SERVER);
-               }
-           } catch (Exception ex) {
-               LOGGER.error("[FANCYMENU] Failed to handle NeoForge bridge packet!", ex);
-           }
-		});
+        registrar.playBidirectional(BridgePacketPayload.TYPE, BridgePacketPayload.CODEC, PacketsNeoForge::handleBridgePacket);
 
-	}
+    }
+
+    private static void handleBridgePacket(BridgePacketPayload payload, IPayloadContext context) {
+        try {
+            if (context.flow() == PacketFlow.CLIENTBOUND) {
+                payload.handle(null, PacketHandler.PacketDirection.TO_CLIENT, context.connection());
+            } else if (context.player() instanceof ServerPlayer sender) {
+                payload.handle(sender, PacketHandler.PacketDirection.TO_SERVER);
+            }
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to handle NeoForge bridge packet!", ex);
+        }
+    }
 }
