@@ -2881,7 +2881,7 @@
   "fancymenu.requirements.gamemode.is_survival": "Is Survival",
   "fancymenu.requirements.gamemode.is_survival.desc": "Check if the player is\ncurrently in survival mode.",
   "fancymenu.requirements.guiscale": "Is GUI Scale",
-  "fancymenu.requirements.guiscale.desc": "Check if the current GUI scale is X.\n\nYou can check for bigger than ('>'),\nsmaller than ('<') and equals X.\n\nFor example, if you want to check\nif the scale is smaller than 3.20,\ntype '<3.20' (without the '').\nTo check if the scale is equal to 1.0,\njust type '1.0' (without the '').\nWhen checking if the scale is bigger than 2.20,\ntype '>2.20' (without the '').",
+  "fancymenu.requirements.guiscale.desc": "Check if the current GUI scale is X.\n\nYou can check for bigger than ('>'),\nsmaller than ('<') and equals X.\n\nFor example, if you want to check\nif the scale is smaller than 3.20,\ntype '<3.20' (without the '').\nTo check if the scale is equal to 1.0,\njust type '1.0' (without the '').\nWhen checking if the scale is bigger than 2.20,\ntype '>2.20' (without the '').\n\nSeparate multiple conditions with commas.\nEquality values are alternatives, while all\n'>' and '<' conditions must be met.",
   "fancymenu.requirements.guiscale.value_name": "GUI Scale Condition",
   "fancymenu.requirements.is_active_cursor_type": "Is Active Cursor Type",
   "fancymenu.requirements.is_active_cursor_type.desc": "Checks if the currently active system cursor matches the given cursor type.",
