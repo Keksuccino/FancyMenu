@@ -6,9 +6,9 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.TaskExecutor;
 import de.keksuccino.fancymenu.util.WebUtils;
-import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
-import de.keksuccino.fancymenu.util.resource.ResourceSource;
+import de.keksuccino.fancymenu.util.file.LocalSourcePathResolver;
+import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import net.minecraft.client.resources.language.I18n;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,7 +19,6 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -49,9 +48,6 @@ public class FileTextPlaceholder extends Placeholder {
             return "";
         }
 
-        //Convert short .minecraft path to actual .minecraft path
-        pathOrUrl = DotMinecraftUtils.resolveMinecraftPath(pathOrUrl);
-        
         if (separator == null) {
             separator = "\\n"; // Default to newline
         }
@@ -166,7 +162,7 @@ public class FileTextPlaceholder extends Placeholder {
         }, false); // Execute in background thread, not main thread
     }
     
-    private boolean isUrl(String path) {
+    static boolean isUrl(String path) {
         return path != null && (path.startsWith("http://") || path.startsWith("https://"));
     }
     
@@ -185,24 +181,36 @@ public class FileTextPlaceholder extends Placeholder {
         return FileUtils.readTextLinesFrom(stream);
     }
     
-    private List<String> loadFromFile(String filePath) throws IOException {
-        // Converts the path to a valid game directory path
-        filePath = ResourceSource.of(filePath).getSourceWithoutPrefix();
-        Path path = Paths.get(filePath);
-        if (!Files.exists(path) || !Files.isRegularFile(path)) {
-            LOGGER.warn("[FANCYMENU] File not found or is not a regular file: " + filePath);
+    private List<String> loadFromFile(String filePath) {
+        try {
+            return loadFromFile(filePath, LocalSourcePathResolver.createForGameAndMinecraftDirectories());
+        } catch (IOException | RuntimeException ignored) {
             return new ArrayList<>();
         }
-        
-        List<String> lines = new ArrayList<>();
-        try (BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                lines.add(line);
+    }
+
+    @NotNull
+    static List<String> loadFromFile(@NotNull String filePath, @NotNull LocalSourcePathResolver resolver) {
+        try {
+            if (ResourceSourceType.hasSourcePrefix(filePath) && (ResourceSourceType.getSourceTypeOf(filePath) != ResourceSourceType.LOCAL)) return new ArrayList<>();
+            filePath = ResourceSourceType.getWithoutSourcePrefix(filePath);
+            LocalSourcePathResolver.ResolvedPath resolvedPath = resolver.resolve(filePath);
+            Path path = resolvedPath.revalidate();
+            if (!Files.isRegularFile(path)) return new ArrayList<>();
+
+            List<String> lines = new ArrayList<>();
+            // Revalidate after the metadata probe and immediately before opening the file. The captured boundary also
+            // catches a formerly nonexistent safe ancestor that was replaced with an escaping symbolic link.
+            try (BufferedReader reader = Files.newBufferedReader(resolvedPath.revalidate(), StandardCharsets.UTF_8)) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    lines.add(line);
+                }
             }
+            return lines;
+        } catch (IOException | RuntimeException ignored) {
+            return new ArrayList<>();
         }
-        
-        return lines;
     }
 
     @Override
