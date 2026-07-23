@@ -85,7 +85,6 @@
     "client.MixinProgressScreen",
     "client.MixinQuickPlay",
     "client.MixinRealmsNotificationsScreen",
-    "client.MixinReloadableResourceManager",
     "client.MixinResourceLoadStateTracker",
     "client.MixinScreen",
     "client.MixinSelectWorldScreen",

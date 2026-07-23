@@ -12,12 +12,14 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class FancyMenuResourceReload {
 
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String DUMMY_RETURN = "FANCYMENU RESOURCE RELOAD LISTENER";
     private static final Map<Long, Runnable> LISTENERS = new HashMap<>();
+    private static final ClientReloadListenerRegistration<SimplePreparableReloadListener<String>> CLIENT_LISTENER_REGISTRATION = new ClientReloadListenerRegistration<>(FancyMenuResourceReload::createMinecraftPreparableReloadListener);
     private static long id = 0;
 
     public static final Identifier FANCYMENU_RELOAD_LISTENER_ID = Identifier.fromNamespaceAndPath("fancymenu", "fancymenu_reload_listener");
@@ -41,6 +43,11 @@ public class FancyMenuResourceReload {
     }
 
     @ApiStatus.Internal
+    public static boolean registerClientReloadListener(@NotNull ClientLoader loader, @NotNull Consumer<? super SimplePreparableReloadListener<String>> registrar) {
+        return CLIENT_LISTENER_REGISTRATION.register(loader, registrar);
+    }
+
+    @ApiStatus.Internal
     @NotNull
     public static SimplePreparableReloadListener<String> createMinecraftPreparableReloadListener() {
         return new SimplePreparableReloadListener<>() {
@@ -53,6 +60,11 @@ public class FancyMenuResourceReload {
                 LISTENERS.forEach((aLong, runnable) -> runnable.run());
             }
         };
+    }
+
+    public enum ClientLoader {
+        FABRIC,
+        NEOFORGE
     }
 
 }
