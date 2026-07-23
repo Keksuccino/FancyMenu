@@ -113,10 +113,18 @@ public class MinecraftUsers {
 
     @Nullable
     public static MinecraftProfileTexture getProfileTexture(@NotNull String playerName, @NotNull MinecraftProfileTexture.Type type) {
-        MinecraftProfileTextures textures = getProfileTextures(playerName);
-        if (type == MinecraftProfileTexture.Type.CAPE) return textures.cape();
-        if (type == MinecraftProfileTexture.Type.ELYTRA) return textures.cape();
-        return textures.skin();
+        return selectProfileTexture(getProfileTextures(playerName), type);
+    }
+
+    @Nullable
+    static MinecraftProfileTexture selectProfileTexture(@NotNull MinecraftProfileTextures textures, @NotNull MinecraftProfileTexture.Type type) {
+        Objects.requireNonNull(textures);
+        Objects.requireNonNull(type);
+        return switch (type) {
+            case SKIN -> textures.skin();
+            case CAPE -> textures.cape();
+            case ELYTRA -> textures.elytra();
+        };
     }
 
 }
