@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierH
 import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.customization.listener.listeners.helpers.WorldSessionTracker;
+import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.util.MouseUtil;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
@@ -85,6 +86,7 @@ public class MixinMinecraft {
 
 	@Inject(method = "stop", at = @At("HEAD"))
 	private void before_stop_FancyMenu(CallbackInfo info) {
+		PanoramaHandler.shutdown();
 		if (!this.quitListenerFired_FancyMenu) {
 			this.quitListenerFired_FancyMenu = true;
 			if (Listeners.ON_QUIT_MINECRAFT.hasInstancesListening()) Listeners.ON_QUIT_MINECRAFT.onQuitMinecraft();
