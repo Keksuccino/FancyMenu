@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu;
 
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.util.reload.FancyMenuResourceReload;
+import de.keksuccino.fancymenu.util.resource.ClientResourceIndex;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
@@ -38,7 +39,7 @@ public class FancyMenuFabricClientEvents {
 
     }
 
-    private static void registerReloadListener(SimplePreparableReloadListener<String> listener) {
+    private static void registerReloadListener(SimplePreparableReloadListener<ClientResourceIndex.PreparedIndex> listener) {
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new IdentifiableResourceReloadListener() {
             @Override
             public ResourceLocation getFabricId() {
