@@ -94,7 +94,7 @@ public class FancyMenu {
 
 		CursorHandler.init();
 
-		CustomLocalsHandler.loadLocalizations();
+		CustomLocalsHandler.init();
 
 		ServerCache.init();
 
