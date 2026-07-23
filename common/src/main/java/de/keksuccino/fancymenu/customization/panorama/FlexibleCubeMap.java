@@ -38,7 +38,13 @@ public class FlexibleCubeMap implements AutoCloseable {
 	public FlexibleCubeMap(@NotNull Identifier location, @NotNull String label) {
 		this.location = location;
 		this.projectionMatrixBuffer = new ProjectionMatrixBuffer(label);
-		this.vertexBuffer = initializeVertices();
+		try {
+			this.vertexBuffer = initializeVertices();
+		} catch (RuntimeException | Error throwable) {
+			// A failed renderer build never receives this instance, so release the buffer allocated earlier in the constructor here.
+			this.projectionMatrixBuffer.close();
+			throw throwable;
+		}
 	}
 
 	public void render(float rotXInDegrees, float rotYInDegrees, float fov, int width, int height) {

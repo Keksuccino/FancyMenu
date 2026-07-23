@@ -84,17 +84,22 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 	protected volatile boolean tickerThreadRunning = false;
 	protected volatile float currentRotation = 0.0F; //0 - 360
 	protected volatile long lastRenderCall = -1L;
+	private volatile boolean closed = false;
+	@Nullable
+	private volatile Thread tickerThread = null;
 	@Nullable
 	private PanoramaCubeMapTexture panoramaCubeMapTexture = null;
 	@Nullable
 	private FlexibleCubeMap cubeMap = null;
 	@Nullable
 	private Identifier cubeMapLocation = null;
+	private boolean panoramaCubeMapTextureRegistered = false;
 	private final String uniqueId = UUID.randomUUID().toString();
 
 	@Nullable
 	public static LocalTexturePanoramaRenderer build(@NotNull File propertiesFile, @NotNull File panoramaImageDir, @Nullable File overlayImageFile) {
 		LocalTexturePanoramaRenderer renderer = new LocalTexturePanoramaRenderer(propertiesFile, panoramaImageDir, overlayImageFile);
+		boolean built = false;
 		try {
 			if (renderer.propertiesFile.isFile() && renderer.panoramaImageDir.isDirectory()) {
 				PropertyContainerSet panoProperties = PropertiesParser.deserializeSetFromFile(renderer.propertiesFile.getAbsolutePath());
@@ -127,6 +132,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 						}
 						renderer.prepare();
 						renderer.initialize();
+						built = true;
 						return renderer;
 					} else {
 						LOGGER.error("[FANCYMENU] Unable to load panorama! Missing 'panorama-meta' section in properties instance: " + renderer.propertiesFile.getAbsolutePath(), new NullPointerException());
@@ -137,6 +143,14 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 			}
 		} catch (Exception ex) {
 			LOGGER.error("[FANCYMENU] An error happened while trying to build a cubic panorama!", ex);
+		} finally {
+			if (!built) {
+				try {
+					renderer.close();
+				} catch (Throwable throwable) {
+					LOGGER.error("[FANCYMENU] Failed to close a partially initialized cubic panorama renderer!", throwable);
+				}
+			}
 		}
 		return null;
 	}
@@ -176,35 +190,49 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 		this.cubeMapLocation = Identifier.fromNamespaceAndPath("fancymenu", "panorama_" + this.uniqueId);
 		TextureManager textureManager = Minecraft.getInstance().getTextureManager();
 		textureManager.register(this.cubeMapLocation, this.panoramaCubeMapTexture);
+		this.panoramaCubeMapTextureRegistered = true;
 		this.cubeMap = new FlexibleCubeMap(this.cubeMapLocation, "fancymenu_panorama_" + this.uniqueId);
 	}
 
 	@SuppressWarnings("all")
 	protected void startTickerThreadIfNeeded() {
 
-		if (this.tickerThreadRunning) return;
+		if (this.closed || this.tickerThreadRunning) return;
 
 		this.lastRenderCall = System.currentTimeMillis();
 		this.tickerThreadRunning = true;
 
-		new Thread(() -> {
-			while ((this.lastRenderCall + 5000L) > System.currentTimeMillis()) {
-				try {
-					this.currentRotation += 0.03F;
-					if (this.currentRotation >= 360) {
-						this.currentRotation = 0;
+		Thread startedThread = new Thread(() -> {
+			try {
+				while (!this.closed && (this.lastRenderCall + 5000L) > System.currentTimeMillis()) {
+					try {
+						this.currentRotation += 0.03F;
+						if (this.currentRotation >= 360) {
+							this.currentRotation = 0;
+						}
+					} catch (Exception ex) {
+						LOGGER.error("[FANCYMENU] Error while ticking panorama!", ex);
 					}
-				} catch (Exception ex) {
-					LOGGER.error("[FANCYMENU] Error while ticking panorama!", ex);
+					try {
+						Thread.sleep(Math.max(2, (int)(20 / this.speed)));
+					} catch (InterruptedException ex) {
+						Thread.currentThread().interrupt();
+						break;
+					} catch (Exception ex) {
+						LOGGER.error("[FANCYMENU] Error while ticking panorama!", ex);
+					}
 				}
-				try {
-					Thread.sleep(Math.max(2, (int)(20 / this.speed)));
-				} catch (Exception ex) {
-					LOGGER.error("[FANCYMENU] Error while ticking panorama!", ex);
-				}
+			} finally {
+				// Clear the published thread before allowing another ticker to start, so an old worker cannot erase its successor.
+				this.tickerThread = null;
+				this.tickerThreadRunning = false;
 			}
-			this.tickerThreadRunning = false;
-		}, "FancyMenu Panorama Ticker Thread").start();
+		}, "FancyMenu Panorama Ticker Thread");
+		// This target predates FancyMenu's shared thread factory, so publish and daemonize the worker before starting it.
+		startedThread.setDaemon(true);
+		this.tickerThread = startedThread;
+		startedThread.start();
+		if (this.closed) startedThread.interrupt();
 
 	}
 
@@ -214,6 +242,10 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 	}
 
 	public void render(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
+		if (this.closed) {
+			this.renderMissingTexture(graphics, 0, 0, ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight());
+			return;
+		}
 
 		this.lastRenderCall = System.currentTimeMillis();
 		this.startTickerThreadIfNeeded();
@@ -252,6 +284,10 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 
 	public void renderInArea(@NotNull GuiGraphicsExtractor graphics, int x, int y, int width, int height, float partial) {
 		if ((width <= 0) || (height <= 0)) {
+			return;
+		}
+		if (this.closed) {
+			this.renderMissingTexture(graphics, x, y, width, height);
 			return;
 		}
 
@@ -388,17 +424,47 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 
 	@Override
 	public void close() {
-		if (this.cubeMap != null) {
-			this.cubeMap.close();
-			this.cubeMap = null;
+		this.closed = true;
+		this.lastRenderCall = -1L;
+		Thread activeTickerThread = this.tickerThread;
+		this.tickerThread = null;
+		if (activeTickerThread != null) {
+			activeTickerThread.interrupt();
 		}
-		if (this.panoramaCubeMapTexture != null) {
-			this.panoramaCubeMapTexture.close();
-			this.panoramaCubeMapTexture = null;
+
+		FlexibleCubeMap ownedCubeMap = this.cubeMap;
+		this.cubeMap = null;
+		PanoramaCubeMapTexture ownedTexture = this.panoramaCubeMapTexture;
+		this.panoramaCubeMapTexture = null;
+		Identifier registeredLocation = this.cubeMapLocation;
+		this.cubeMapLocation = null;
+		boolean registeredTexture = this.panoramaCubeMapTextureRegistered;
+		this.panoramaCubeMapTextureRegistered = false;
+
+		RuntimeException closeFailure = null;
+		if (ownedCubeMap != null) {
+			try {
+				ownedCubeMap.close();
+			} catch (RuntimeException ex) {
+				closeFailure = ex;
+			}
 		}
-		if (this.cubeMapLocation != null) {
-			Minecraft.getInstance().getTextureManager().release(this.cubeMapLocation);
-			this.cubeMapLocation = null;
+		try {
+			if (registeredTexture && registeredLocation != null) {
+				// TextureManager owns the registered texture and closes it while removing the unique registry entry.
+				Minecraft.getInstance().getTextureManager().release(registeredLocation);
+			} else if (ownedTexture != null) {
+				ownedTexture.close();
+			}
+		} catch (RuntimeException ex) {
+			if (closeFailure == null) {
+				closeFailure = ex;
+			} else {
+				closeFailure.addSuppressed(ex);
+			}
+		}
+		if (closeFailure != null) {
+			throw closeFailure;
 		}
 	}
 

@@ -25,7 +25,6 @@ public class PanoramaMenuBackground extends MenuBackground<PanoramaMenuBackgroun
 
     public final Property.StringProperty panoramaName = putProperty(Property.stringProperty("panorama_name", null, false, false, "fancymenu.backgrounds.panorama.name"));
 
-    protected String lastPanoramaName;
     protected LocalTexturePanoramaRenderer panorama;
 
     public PanoramaMenuBackground(MenuBackgroundBuilder<PanoramaMenuBackground> builder) {
@@ -75,10 +74,8 @@ public class PanoramaMenuBackground extends MenuBackground<PanoramaMenuBackgroun
         if (panoName == null) {
             this.panorama = null;
         } else {
-            if ((this.lastPanoramaName == null) || !this.lastPanoramaName.equals(panoName)) {
-                this.panorama = PanoramaHandler.getPanorama(panoName);
-            }
-            this.lastPanoramaName = panoName;
+            // A FancyMenu reload replaces the owned renderer even when the configured panorama name stays unchanged.
+            this.panorama = PanoramaHandler.getPanorama(panoName);
         }
 
         if (this.panorama != null) {
