@@ -5,10 +5,13 @@ import de.keksuccino.fancymenu.events.screen.ScreenKeyPressedEvent;
 import de.keksuccino.fancymenu.events.screen.ScreenKeyReleasedEvent;
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.reload.FancyMenuResourceReload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
+import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
 import net.minecraft.client.Minecraft;
+import net.minecraft.server.packs.PackType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,6 +20,10 @@ public class FancyMenuFabricClientEvents {
     private static final Logger LOGGER = LogManager.getLogger();
 
     public static void registerAll() {
+
+        if (FancyMenuResourceReload.registerClientReloadListener(FancyMenuResourceReload.ClientLoader.FABRIC, listener -> ResourceLoader.get(PackType.CLIENT_RESOURCES).registerReloader(FancyMenuResourceReload.FANCYMENU_RELOAD_LISTENER_ID, listener))) {
+            LOGGER.info("[FANCYMENU] Registered FancyMenu's resource reload listener via Fabric API.");
+        }
 
         registerScreenEvents();
 
