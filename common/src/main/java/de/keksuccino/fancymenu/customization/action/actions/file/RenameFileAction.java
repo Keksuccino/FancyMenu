@@ -2,8 +2,7 @@ package de.keksuccino.fancymenu.customization.action.actions.file;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
-import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
-import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
+import de.keksuccino.fancymenu.util.file.GameDirectoryActionPathResolver;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.DualTextInputWindowBody;
 import net.minecraft.network.chat.Component;
@@ -11,10 +10,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 
 public class RenameFileAction extends Action {
@@ -33,36 +33,35 @@ public class RenameFileAction extends Action {
     @Override
     public void execute(@Nullable String value) {
         try {
-            if ((value != null) && value.contains("||")) {
-                String[] valueArray = value.split("\\|\\|", 2);
-                String filePath = valueArray[0];
-                String newFileName = valueArray[1];
-                if (newFileName.isEmpty()) {
-                    throw new IllegalArgumentException("New name cannot be empty!");
-                }
-                String resolvedPath = DotMinecraftUtils.resolveMinecraftPath(filePath);
-                if (!DotMinecraftUtils.isInsideMinecraftDirectory(resolvedPath)) {
-                    resolvedPath = GameDirectoryUtils.getAbsoluteGameDirectoryPath(resolvedPath);
-                }
-                File oldFile = new File(resolvedPath);
-                if (!oldFile.exists()) {
-                    throw new FileNotFoundException("Source not found! Can't rename: " + resolvedPath);
-                }
-                File parentDir = oldFile.getParentFile();
-                if (parentDir == null) {
-                    throw new IllegalStateException("Unable to resolve parent directory for: " + resolvedPath);
-                }
-                File newFile = new File(parentDir, newFileName);
-                if (newFile.exists()) {
-                    throw new FileAlreadyExistsException("Target already exists! Can't rename to: " + newFile.getAbsolutePath());
-                }
-                Path sourcePath = oldFile.toPath();
-                Path targetPath = newFile.toPath();
-                Files.move(sourcePath, targetPath);
-            }
+            this.executeWithResolver(value, GameDirectoryActionPathResolver.create());
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to rename file in game directory via RenameFileAction: " + value, ex);
         }
+    }
+
+    void executeWithResolver(@Nullable String value, @NotNull GameDirectoryActionPathResolver resolver) throws IOException {
+        if ((value == null) || !value.contains("||")) {
+            return;
+        }
+        String[] valueArray = value.split("\\|\\|", 2);
+        String filePath = valueArray[0];
+        String newFileName = valueArray[1];
+        if (newFileName.isEmpty()) {
+            throw new IllegalArgumentException("New name cannot be empty!");
+        }
+        GameDirectoryActionPathResolver.ResolvedPath source = resolver.resolve(filePath).requireDescendant();
+        GameDirectoryActionPathResolver.ResolvedPath target = source.resolveSingleComponentSibling(newFileName).requireDescendant();
+        Path sourcePath = source.path();
+        Path targetPath = target.path();
+        if (!Files.exists(sourcePath, LinkOption.NOFOLLOW_LINKS)) {
+            throw new FileNotFoundException("Source not found! Can't rename: " + sourcePath);
+        }
+        if (Files.exists(targetPath, LinkOption.NOFOLLOW_LINKS)) {
+            throw new FileAlreadyExistsException("Target already exists! Can't rename to: " + targetPath);
+        }
+        source.revalidate();
+        target.revalidate();
+        Files.move(sourcePath, targetPath);
     }
 
     @Override
