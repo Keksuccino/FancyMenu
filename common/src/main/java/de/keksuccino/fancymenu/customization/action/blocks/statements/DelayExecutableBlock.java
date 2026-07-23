@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.konkrete.math.MathUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.util.function.LongSupplier;
 
 public class DelayExecutableBlock extends AbstractExecutableBlock {
 
@@ -17,14 +18,24 @@ public class DelayExecutableBlock extends AbstractExecutableBlock {
     private String delayMs = DEFAULT_DELAY_MS;
     private boolean collapsed = false;
 
-    private long delayEndTime = -1L;
-    private boolean delayFinished = false;
+    /** Retained so copy() can preserve an injected clock while deliberately creating fresh, closed gate state. */
+    @NotNull
+    private final LongSupplier currentTimeMillisSupplier;
+    @NotNull
+    private final OneTimeDelayGate delayGate;
 
     public DelayExecutableBlock() {
+        this(System::currentTimeMillis);
     }
 
     public DelayExecutableBlock(@NotNull String delayMs) {
+        this();
         this.setDelayMs(delayMs);
+    }
+
+    DelayExecutableBlock(@NotNull LongSupplier currentTimeMillisSupplier) {
+        this.currentTimeMillisSupplier = currentTimeMillisSupplier;
+        this.delayGate = new OneTimeDelayGate(currentTimeMillisSupplier);
     }
 
     @Override
@@ -35,25 +46,9 @@ public class DelayExecutableBlock extends AbstractExecutableBlock {
     @Override
     public void execute() {
         long delay = this.resolveDelayMs();
-        if (delay <= 0L) {
-            this.delayFinished = true;
+        if (this.delayGate.shouldExecute(delay)) {
             super.execute();
-            return;
         }
-        if (this.delayFinished) {
-            super.execute();
-            return;
-        }
-        long now = System.currentTimeMillis();
-        if (this.delayEndTime <= 0L) {
-            this.delayEndTime = now + delay;
-            return;
-        }
-        if (now < this.delayEndTime) {
-            return;
-        }
-        this.delayFinished = true;
-        super.execute();
     }
 
     public boolean isCollapsed() {
@@ -104,7 +99,7 @@ public class DelayExecutableBlock extends AbstractExecutableBlock {
 
     @Override
     public @NotNull DelayExecutableBlock copy(boolean unique) {
-        DelayExecutableBlock b = new DelayExecutableBlock();
+        DelayExecutableBlock b = new DelayExecutableBlock(this.currentTimeMillisSupplier);
         if (!unique) b.identifier = this.identifier;
         if (this.getAppendedBlock() != null) b.setAppendedBlock((AbstractExecutableBlock)this.getAppendedBlock().copy(unique));
         for (Executable e : this.executables) {
