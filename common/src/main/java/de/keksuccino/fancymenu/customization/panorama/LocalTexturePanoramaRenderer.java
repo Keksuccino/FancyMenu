@@ -77,16 +77,14 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 	public final List<ResourceSupplier<ITexture>> panoramaImageSuppliers = new ArrayList<>();
 	@Nullable
 	public ResourceSupplier<ITexture> overlayTextureSupplier;
-	protected float speed = 1.0F;
+	protected volatile float speed = 1.0F;
 	protected double fov = 85.0D;
 	protected float angle = 25.0F;
 	public float opacity = 1.0F;
-	protected volatile boolean tickerThreadRunning = false;
 	protected volatile float currentRotation = 0.0F; //0 - 360
-	protected volatile long lastRenderCall = -1L;
 	private volatile boolean closed = false;
-	@Nullable
-	private volatile Thread tickerThread = null;
+	private final Object speedLock = new Object();
+	private final PanoramaRotationTicker rotationTicker;
 	@Nullable
 	private PanoramaCubeMapTexture panoramaCubeMapTexture = null;
 	@Nullable
@@ -113,7 +111,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 						}
 						String sp = panoMeta.getValue("speed");
 						if ((sp != null) && MathUtils.isFloat(sp)) {
-							renderer.speed = Float.parseFloat(sp);
+							renderer.setSpeed(Float.parseFloat(sp));
 						}
 						String fo = panoMeta.getValue("fov");
 						if ((fo != null) && MathUtils.isDouble(fo)) {
@@ -159,6 +157,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 		this.propertiesFile = Objects.requireNonNull(propertiesFile);
 		this.panoramaImageDir = Objects.requireNonNull(panoramaImageDir);
 		this.overlayImageFile = overlayImageFile;
+		this.rotationTicker = new PanoramaRotationTicker(System::nanoTime, PanoramaRotationTicker.sharedScheduler(), this::tickRotation);
 	}
 
 	protected void prepare() {
@@ -194,48 +193,6 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 		this.cubeMap = new FlexibleCubeMap(this.cubeMapLocation, "fancymenu_panorama_" + this.uniqueId);
 	}
 
-	@SuppressWarnings("all")
-	protected void startTickerThreadIfNeeded() {
-
-		if (this.closed || this.tickerThreadRunning) return;
-
-		this.lastRenderCall = System.currentTimeMillis();
-		this.tickerThreadRunning = true;
-
-		Thread startedThread = new Thread(() -> {
-			try {
-				while (!this.closed && (this.lastRenderCall + 5000L) > System.currentTimeMillis()) {
-					try {
-						this.currentRotation += 0.03F;
-						if (this.currentRotation >= 360) {
-							this.currentRotation = 0;
-						}
-					} catch (Exception ex) {
-						LOGGER.error("[FANCYMENU] Error while ticking panorama!", ex);
-					}
-					try {
-						Thread.sleep(Math.max(2, (int)(20 / this.speed)));
-					} catch (InterruptedException ex) {
-						Thread.currentThread().interrupt();
-						break;
-					} catch (Exception ex) {
-						LOGGER.error("[FANCYMENU] Error while ticking panorama!", ex);
-					}
-				}
-			} finally {
-				// Clear the published thread before allowing another ticker to start, so an old worker cannot erase its successor.
-				this.tickerThread = null;
-				this.tickerThreadRunning = false;
-			}
-		}, "FancyMenu Panorama Ticker Thread");
-		// This target predates FancyMenu's shared thread factory, so publish and daemonize the worker before starting it.
-		startedThread.setDaemon(true);
-		this.tickerThread = startedThread;
-		startedThread.start();
-		if (this.closed) startedThread.interrupt();
-
-	}
-
 	@Override
 	public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 		this.render(graphics, mouseX, mouseY, partial);
@@ -247,8 +204,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 			return;
 		}
 
-		this.lastRenderCall = System.currentTimeMillis();
-		this.startTickerThreadIfNeeded();
+		this.markRendered();
 
 		// Check if cube map texture is loaded
 		if (!this.isPanoramaTextureReady()) {
@@ -291,8 +247,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 			return;
 		}
 
-		this.lastRenderCall = System.currentTimeMillis();
-		this.startTickerThreadIfNeeded();
+		this.markRendered();
 
 		if (!this.isPanoramaTextureReady()) {
 			if ((this.panoramaCubeMapTexture == null) || this.panoramaCubeMapTexture.isLoadFailed()) {
@@ -399,10 +354,9 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 	}
 
 	public void setSpeed(float speed) {
-		if (speed < 0.0F) {
-			speed = 0.0F;
+		synchronized (this.speedLock) {
+			this.speed = this.rotationTicker.setSpeed(speed);
 		}
-		this.speed = speed;
 	}
 
 	public void setFov(double fov) {
@@ -425,12 +379,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 	@Override
 	public void close() {
 		this.closed = true;
-		this.lastRenderCall = -1L;
-		Thread activeTickerThread = this.tickerThread;
-		this.tickerThread = null;
-		if (activeTickerThread != null) {
-			activeTickerThread.interrupt();
-		}
+		this.rotationTicker.close();
 
 		FlexibleCubeMap ownedCubeMap = this.cubeMap;
 		this.cubeMap = null;
@@ -465,6 +414,19 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 		}
 		if (closeFailure != null) {
 			throw closeFailure;
+		}
+	}
+
+	private void tickRotation() {
+		this.currentRotation += 0.03F;
+		if (this.currentRotation >= 360.0F) this.currentRotation = 0.0F;
+	}
+
+	private void markRendered() {
+		synchronized (this.speedLock) {
+			// Keep the historically protected field compatible: subclasses may write it directly instead of calling setSpeed().
+			this.speed = this.rotationTicker.setSpeed(this.speed);
+			this.rotationTicker.onRender();
 		}
 	}
 

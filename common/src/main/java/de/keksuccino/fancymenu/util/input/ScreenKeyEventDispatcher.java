@@ -51,7 +51,7 @@ public final class ScreenKeyEventDispatcher {
     private static void postKeyPressed(@NotNull Screen screen, @NotNull KeyEvent event) {
         EventHandler.INSTANCE.postEvent(new ScreenKeyPressedEvent(screen, event));
 
-        if (Minecraft.getInstance().gui.overlay() instanceof GameIntroOverlay overlay) {
+        if (Minecraft.getInstance().getOverlay() instanceof GameIntroOverlay overlay) {
             overlay.keyPressed(event.key(), event.scancode(), event.modifiers());
         }
     }
