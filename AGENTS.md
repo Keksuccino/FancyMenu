@@ -96,7 +96,7 @@
 - You always TRIPLE-CHECK EVERYTHING! When you are finishing a task, you triple-check everything for completeness, possible bad implementations, rushed implementations, performance, optimization, structurization, and so on.
 
 ## Subagents
-- Always spawn ALL your subagents with the gpt-5.6 model on xhigh.
+- Always spawn ALL your subagents with the gpt-5.6 model on "max" reasoning effort.
 - Always spawn ALL your subagents with a CLEAN context (do not give them your context), so they have a clean context for doing their task in the best possible way.
 
 
