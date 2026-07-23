@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.lifecycle;
 
+import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.server.ServerCache;
 import de.keksuccino.fancymenu.util.mcef.ActionBridge;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
@@ -42,6 +43,7 @@ public final class ClientShutdownHandler {
                 runCleanup("MCEF video players", () -> MCEFVideoManager.getInstance().disposeAll());
                 runCleanup("MCEF browsers", BrowserHandler::closeAll);
             }
+            runCleanup("panorama renderers", PanoramaHandler::shutdown);
             runCleanup("resources", ResourceHandlers::shutdownAll);
             if (mcefPresent) {
                 runCleanup("MCEF action bridge", ActionBridge::dispose);
