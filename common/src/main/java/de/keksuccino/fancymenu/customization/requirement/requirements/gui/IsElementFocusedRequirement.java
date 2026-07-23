@@ -70,7 +70,7 @@ public class IsElementFocusedRequirement extends Requirement {
 
     @Override
     public Component getDescription() {
-        return Component.translatable("fancymenu.requirements.is_element_fucsed.desc");
+        return Component.translatable("fancymenu.requirements.is_element_focused.desc");
     }
 
     @Override
