@@ -13,11 +13,12 @@ public class ServerSideHandshakePacketLogic {
     private static final Logger LOGGER = LogManager.getLogger();
 
     protected static boolean handle(@NotNull ServerPlayer sender, @NotNull HandshakePacket packet) {
-        PacketHandler.addFancyMenuClient(sender.getUUID().toString());
+        if (!PacketHandler.addFancyMenuClient(sender)) return true;
         LOGGER.info("[FANCYMENU] A client with FancyMenu installed joined the server: " + sender.getScoreboardName());
         MinecraftServer server = sender.level().getServer();
         if (server != null) {
-            // Queue on server executor so welcome-data dispatch happens after handshake processing/logging.
+            // PacketHandler normally reaches this on the server thread, where execute runs inline. Keeping the executor
+            // boundary also makes direct off-thread invocations dispatch welcome data on the correct thread.
             server.execute(() -> FmDataWelcomeDataHandler.onFancyMenuClientJoined(sender));
         }
         return true;
