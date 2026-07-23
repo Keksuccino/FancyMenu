@@ -19,7 +19,7 @@ public class PacketsForge {
             PacketHandlerForge.send(PacketDistributor.PLAYER.with(() -> player), payload);
         });
 
-        PacketHandler.setSendToServerLogic(s -> {
+        PacketHandler.setSendToServerLogic((connection, s) -> {
             BridgePacketPayload payload = new BridgePacketPayload(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, s);
             PacketHandlerForge.sendToServer(payload);
         });
@@ -36,15 +36,15 @@ public class PacketsForge {
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
                     //Handle both sides on client, because integrated server needs handling too
                     if (payload.direction().equals(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION)) {
-                        payload.handle(context.get().getSender(), PacketHandler.PacketDirection.TO_SERVER);
+                        payload.handle(context.get().getSender(), PacketHandler.PacketDirection.TO_SERVER, null);
                     } else if (payload.direction().equals(BridgePacketPayload.TO_CLIENT_WIRE_DIRECTION)) {
-                        payload.handle(null, PacketHandler.PacketDirection.TO_CLIENT);
+                        payload.handle(null, PacketHandler.PacketDirection.TO_CLIENT, context.get().getNetworkManager());
                     }
                 });
                 //Handle on server
                 DistExecutor.unsafeRunWhenOn(Dist.DEDICATED_SERVER, () -> () -> {
                     if (payload.direction().equals(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION)) {
-                        payload.handle(context.get().getSender(), PacketHandler.PacketDirection.TO_SERVER);
+                        payload.handle(context.get().getSender(), PacketHandler.PacketDirection.TO_SERVER, null);
                     }
                 });
             });

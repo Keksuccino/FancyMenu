@@ -12,6 +12,7 @@ import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.Connection;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -31,8 +32,12 @@ public class FancyMenuFabricClientEvents {
         registerScreenEvents();
 
         ClientPlayConnectionEvents.JOIN.register((clientPacketListener, packetSender, minecraft) -> {
-            Minecraft.getInstance().execute(PacketHandler::sendHandshakeToServer);
+            Connection connection = clientPacketListener.getConnection();
+            PacketHandler.onClientConnected(connection);
+            minecraft.execute(() -> PacketHandler.sendHandshakeToServer(connection));
         });
+
+        ClientPlayConnectionEvents.DISCONNECT.register((clientPacketListener, minecraft) -> PacketHandler.onClientDisconnected(clientPacketListener.getConnection()));
 
     }
 

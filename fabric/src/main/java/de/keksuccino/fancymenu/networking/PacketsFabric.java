@@ -18,9 +18,9 @@ public class PacketsFabric {
             ServerPlayNetworking.send(player, BridgePacketPayload.ID, payload.writeToNewBuffer());
         });
 
-        PacketHandler.setSendToServerLogic(s -> {
+        PacketHandler.setSendToServerLogic((connection, s) -> {
             BridgePacketPayload payload = new BridgePacketPayload(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, s);
-            ClientPlayNetworking.send(BridgePacketPayload.ID, payload.writeToNewBuffer());
+            connection.send(ClientPlayNetworking.createC2SPacket(BridgePacketPayload.ID, payload.writeToNewBuffer()));
         });
 
         registerFabricBridgePacket();
@@ -32,14 +32,14 @@ public class PacketsFabric {
         //ON SERVER
         ServerPlayNetworking.registerGlobalReceiver(BridgePacketPayload.ID, (server, player, handler, buf, responseSender) -> {
             BridgePacketPayload payload = BridgePacketPayload.read(buf);
-            payload.handle(player, PacketHandler.PacketDirection.TO_SERVER);
+            payload.handle(player, PacketHandler.PacketDirection.TO_SERVER, null);
         });
 
         //ON CLIENT
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
             ClientPlayNetworking.registerGlobalReceiver(BridgePacketPayload.ID, (client, handler, buf, responseSender) -> {
                 BridgePacketPayload payload = BridgePacketPayload.read(buf);
-                payload.handle(null, PacketHandler.PacketDirection.TO_CLIENT);
+                payload.handle(null, PacketHandler.PacketDirection.TO_CLIENT, handler.getConnection());
             });
         }
 

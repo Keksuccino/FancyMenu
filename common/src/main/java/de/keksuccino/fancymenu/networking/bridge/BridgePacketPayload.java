@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.networking.bridge;
 
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import io.netty.buffer.Unpooled;
+import net.minecraft.network.Connection;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -39,8 +40,8 @@ public final class BridgePacketPayload {
         return byteBuf;
     }
 
-    public void handle(@Nullable ServerPlayer sender, @NotNull PacketHandler.PacketDirection direction) {
-        PacketHandler.onPacketReceived(sender, direction, this.dataWithIdentifier);
+    public void handle(@Nullable ServerPlayer sender, @NotNull PacketHandler.PacketDirection direction, @Nullable Connection clientConnection) {
+        PacketHandler.onPacketReceived(sender, direction, this.dataWithIdentifier, clientConnection);
     }
 
     public @NotNull String direction() {
