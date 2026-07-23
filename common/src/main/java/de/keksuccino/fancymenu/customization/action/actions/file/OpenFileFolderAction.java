@@ -1,8 +1,7 @@
 package de.keksuccino.fancymenu.customization.action.actions.file;
 
 import de.keksuccino.fancymenu.customization.action.Action;
-import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
-import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
+import de.keksuccino.fancymenu.util.file.GameDirectoryActionPathResolver;
 import net.minecraft.Util;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -10,9 +9,11 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class OpenFileFolderAction extends Action {
 
@@ -35,21 +36,19 @@ public class OpenFileFolderAction extends Action {
             return;
         }
 
-        Path normalizedPath;
+        GameDirectoryActionPathResolver.ResolvedPath target;
         try {
-            normalizedPath = resolveTargetPath(value.trim());
+            GameDirectoryActionPathResolver resolver = GameDirectoryActionPathResolver.create();
+            target = this.resolveWithResolver(value.trim(), resolver);
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] OpenFileFolderAction: Failed to resolve path: {}", value, ex);
             return;
         }
 
-        if (!Files.exists(normalizedPath)) {
-            LOGGER.error("[FANCYMENU] OpenFileFolderAction: Path does not exist: {}", normalizedPath);
-            return;
-        }
-
+        Path normalizedPath = target.path();
         try {
-            Util.getPlatform().openFile(normalizedPath.toFile());
+            Path realPath = this.resolveRealPath(target);
+            Util.getPlatform().openFile(realPath.toFile());
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] OpenFileFolderAction: Failed to open path: {}", normalizedPath, ex);
         }
@@ -76,21 +75,22 @@ public class OpenFileFolderAction extends Action {
         return "/config/fancymenu";
     }
 
-    private @NotNull Path resolveTargetPath(@NotNull String targetPath) {
-        String resolved = DotMinecraftUtils.resolveMinecraftPath(targetPath);
-        if (!DotMinecraftUtils.isInsideMinecraftDirectory(resolved)) {
-            resolved = GameDirectoryUtils.getAbsoluteGameDirectoryPath(resolved);
+    GameDirectoryActionPathResolver.ResolvedPath resolveWithResolver(@NotNull String value, @NotNull GameDirectoryActionPathResolver resolver) throws IOException {
+        GameDirectoryActionPathResolver.ResolvedPath target = resolver.resolve(value);
+        target.revalidate();
+        if (!Files.exists(target.path(), LinkOption.NOFOLLOW_LINKS)) {
+            throw new FileNotFoundException("Path does not exist: " + target.path());
         }
+        target.revalidate();
+        return target;
+    }
 
-        Path normalized = Paths.get(resolved).toAbsolutePath().normalize();
-        Path minecraftDir = DotMinecraftUtils.getMinecraftDirectory().toAbsolutePath().normalize();
-        Path gameDir = GameDirectoryUtils.getGameDirectory().toPath().toAbsolutePath().normalize();
-
-        if (!normalized.startsWith(gameDir) && !normalized.startsWith(minecraftDir)) {
-            throw new SecurityException("Path must stay inside the game directory or default .minecraft directory!");
-        }
-
-        return normalized;
+    Path resolveRealPath(@NotNull GameDirectoryActionPathResolver.ResolvedPath target) throws IOException {
+        target.revalidate();
+        // Give the OS the captured real target so swapping a safe final symlink cannot redirect the open operation.
+        Path realPath = target.path().toRealPath();
+        target.revalidate();
+        return realPath;
     }
 
 }

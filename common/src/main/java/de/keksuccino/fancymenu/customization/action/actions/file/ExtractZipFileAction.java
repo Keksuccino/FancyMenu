@@ -3,8 +3,7 @@ package de.keksuccino.fancymenu.customization.action.actions.file;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
-import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
-import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
+import de.keksuccino.fancymenu.util.file.GameDirectoryActionPathResolver;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.DualTextInputWindowBody;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
@@ -16,11 +15,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -45,41 +47,44 @@ public class ExtractZipFileAction extends Action {
             return;
         }
 
+        try {
+            this.executeWithResolver(value, GameDirectoryActionPathResolver.create());
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to initialize ExtractZipFileAction: {}", value, ex);
+        }
+    }
+
+    CompletableFuture<Void> executeWithResolver(@Nullable String value, @NotNull GameDirectoryActionPathResolver resolver) {
+        if ((value == null) || !value.contains("||")) {
+            return CompletableFuture.completedFuture(null);
+        }
         String[] valueArray = value.split("\\|\\|", 2);
         String rawSourceZipPath = valueArray[0];
         String rawTargetDirectoryPath = valueArray[1];
-
-        CompletableFuture.runAsync(() -> {
-            String resolvedSourceZipPath = null;
-            String resolvedTargetDirectoryPath = null;
+        return CompletableFuture.runAsync(() -> {
+            GameDirectoryActionPathResolver.ResolvedPath sourceZip = null;
+            GameDirectoryActionPathResolver.ResolvedPath targetDirectory = null;
             boolean success = false;
             String failureReason = null;
-
             try {
-                Path sourceZipPath = resolveAllowedPath(rawSourceZipPath);
-                resolvedSourceZipPath = sourceZipPath.toString();
-
-                if (!Files.exists(sourceZipPath) || Files.isDirectory(sourceZipPath)) {
+                sourceZip = resolver.resolve(rawSourceZipPath);
+                targetDirectory = resolver.resolve(rawTargetDirectoryPath);
+                sourceZip.revalidate();
+                targetDirectory.revalidate();
+                if (!Files.exists(sourceZip.path(), LinkOption.NOFOLLOW_LINKS) || Files.isDirectory(sourceZip.path())) {
                     throw new IOException("Source ZIP file not found or is a directory: " + rawSourceZipPath);
                 }
-
-                Path targetDirectoryPath = resolveAllowedPath(rawTargetDirectoryPath);
-                resolvedTargetDirectoryPath = targetDirectoryPath.toString();
-
-                Files.createDirectories(targetDirectoryPath);
-
-                extractZip(sourceZipPath, targetDirectoryPath);
+                this.extractZip(sourceZip, targetDirectory);
                 success = true;
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to extract ZIP via ExtractZipFileAction: {}", value, ex);
                 failureReason = ex.getMessage();
             }
 
-            String finalResolvedSource = (resolvedSourceZipPath != null) ? resolvedSourceZipPath : rawSourceZipPath;
-            String finalResolvedTarget = (resolvedTargetDirectoryPath != null) ? resolvedTargetDirectoryPath : rawTargetDirectoryPath;
+            String finalResolvedSource = (sourceZip != null) ? sourceZip.path().toString() : rawSourceZipPath;
+            String finalResolvedTarget = (targetDirectory != null) ? targetDirectory.path().toString() : rawTargetDirectoryPath;
             boolean finalSuccess = success;
             String finalFailureReason = failureReason;
-
             long listenerRevision = Listeners.ON_ZIP_EXTRACTED.getActiveInstanceRevision();
             if (listenerRevision >= 0L) {
                 MainThreadTaskExecutor.executeInMainThread(() -> { if (Listeners.ON_ZIP_EXTRACTED.isActiveAtRevision(listenerRevision)) Listeners.ON_ZIP_EXTRACTED.onZipExtracted(finalResolvedSource, finalResolvedTarget, finalSuccess, finalFailureReason); }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
@@ -147,10 +152,14 @@ public class ExtractZipFileAction extends Action {
 
     }
 
-    private void extractZip(@NotNull Path sourceZipPath, @NotNull Path targetDirectoryPath) throws IOException {
-        Path normalizedTargetDir = targetDirectoryPath.toAbsolutePath().normalize();
-
-        try (ZipFile zipFile = new ZipFile(sourceZipPath.toFile())) {
+    void extractZip(@NotNull GameDirectoryActionPathResolver.ResolvedPath sourceZip, @NotNull GameDirectoryActionPathResolver.ResolvedPath targetDirectory) throws IOException {
+        sourceZip.revalidate();
+        targetDirectory.revalidate();
+        Path realSourceZipPath = sourceZip.path().toRealPath();
+        sourceZip.revalidate();
+        try (ZipFile zipFile = new ZipFile(realSourceZipPath.toFile())) {
+            // Resolve every ZIP entry before creating the target so ZIP slip or an existing escaping link cannot leave partial output.
+            List<ExtractionEntry> extractionPlan = new ArrayList<>();
             Enumeration<? extends ZipEntry> entries = zipFile.entries();
             while (entries.hasMoreElements()) {
                 ZipEntry entry = entries.nextElement();
@@ -159,23 +168,38 @@ public class ExtractZipFileAction extends Action {
                     continue;
                 }
 
-                Path destinationPath = normalizedTargetDir.resolve(entryName).normalize();
-                if (!destinationPath.startsWith(normalizedTargetDir)) {
-                    throw new SecurityException("Blocked ZIP entry outside target directory: " + entry.getName());
-                }
+                GameDirectoryActionPathResolver.ResolvedPath destination = targetDirectory.resolveRelativeChild(entryName);
+                destination.revalidate();
+                extractionPlan.add(new ExtractionEntry(entry, destination, entry.isDirectory() || entryName.endsWith("/")));
+            }
+            sourceZip.revalidate();
+            targetDirectory.revalidate();
+            for (ExtractionEntry extractionEntry : extractionPlan) {
+                extractionEntry.destination().revalidate();
+            }
+            Files.createDirectories(targetDirectory.path());
+            targetDirectory.revalidate();
 
-                if (entry.isDirectory() || entryName.endsWith("/")) {
-                    Files.createDirectories(destinationPath);
+            for (ExtractionEntry extractionEntry : extractionPlan) {
+                GameDirectoryActionPathResolver.ResolvedPath destination = extractionEntry.destination();
+                destination.revalidate();
+                if (extractionEntry.directory()) {
+                    Files.createDirectories(destination.path());
+                    destination.revalidate();
                     continue;
                 }
 
-                Path parent = destinationPath.getParent();
+                Path parent = destination.path().getParent();
                 if (parent != null) {
                     Files.createDirectories(parent);
                 }
-
-                try (InputStream input = zipFile.getInputStream(entry)) {
-                    Files.copy(input, destinationPath, StandardCopyOption.REPLACE_EXISTING);
+                sourceZip.revalidate();
+                destination.revalidate();
+                try (InputStream input = zipFile.getInputStream(extractionEntry.entry())) {
+                    destination.revalidate();
+                    try (OutputStream output = Files.newOutputStream(destination.path(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, LinkOption.NOFOLLOW_LINKS)) {
+                        input.transferTo(output);
+                    }
                 }
             }
         }
@@ -201,21 +225,7 @@ public class ExtractZipFileAction extends Action {
         return normalized;
     }
 
-    private @NotNull Path resolveAllowedPath(@NotNull String path) {
-        String resolved = DotMinecraftUtils.resolveMinecraftPath(path);
-        if (!DotMinecraftUtils.isInsideMinecraftDirectory(resolved)) {
-            resolved = GameDirectoryUtils.getAbsoluteGameDirectoryPath(resolved);
-        }
-
-        Path normalized = Paths.get(resolved).toAbsolutePath().normalize();
-        Path minecraftDir = DotMinecraftUtils.getMinecraftDirectory().toAbsolutePath().normalize();
-        Path gameDir = GameDirectoryUtils.getGameDirectory().toPath().toAbsolutePath().normalize();
-
-        if (!normalized.startsWith(gameDir) && !normalized.startsWith(minecraftDir)) {
-            throw new SecurityException("Path must stay inside the game directory or default .minecraft directory!");
-        }
-
-        return normalized;
+    private record ExtractionEntry(ZipEntry entry, GameDirectoryActionPathResolver.ResolvedPath destination, boolean directory) {
     }
 
 }

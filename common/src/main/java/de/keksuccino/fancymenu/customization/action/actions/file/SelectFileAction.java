@@ -4,8 +4,7 @@ import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
-import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
-import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
+import de.keksuccino.fancymenu.util.file.GameDirectoryActionPathResolver;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPCellWindowBody;
@@ -21,12 +20,16 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.util.tinyfd.TinyFileDialogs;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -68,14 +71,16 @@ public class SelectFileAction extends Action {
             return;
         }
 
-        Path targetPath;
+        GameDirectoryActionPathResolver.ResolvedPath target;
         try {
-            targetPath = resolveTargetPath(config.targetPath);
+            GameDirectoryActionPathResolver resolver = GameDirectoryActionPathResolver.create();
+            target = resolver.resolve(config.targetPath).requireDescendant();
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] SelectFileAction: Failed to resolve target path '{}'", config.targetPath, ex);
             this.notifyFileSelectionResult(null, config.targetPath, false, false, ex.getMessage());
             return;
         }
+        Path targetPath = target.path();
 
         String dialogTitle = Component.translatable("fancymenu.actions.select_file.dialog_title").getString();
         if (dialogTitle.isBlank()) {
@@ -120,26 +125,53 @@ public class SelectFileAction extends Action {
         }
 
         try {
-            Path parent = targetPath.getParent();
-            if (parent != null) {
-                Files.createDirectories(parent);
-            }
-
-            if (!config.overwriteExisting && Files.exists(targetPath)) {
-                throw new FileAlreadyExistsException("Destination exists already: " + targetPath);
-            }
-
-            if (config.overwriteExisting) {
-                Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
-            } else {
-                Files.copy(sourcePath, targetPath);
-            }
-
+            this.copySelectedFile(sourcePath, target, config.overwriteExisting);
             LOGGER.info("[FANCYMENU] SelectFileAction: Copied '{}' to '{}'", sourcePath, targetPath);
             this.notifyFileSelectionResult(sourcePath.toString(), targetPath.toString(), true, false, null);
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] SelectFileAction: Failed to copy '{}' to '{}'", sourcePath, targetPath, ex);
             this.notifyFileSelectionResult(sourcePath.toString(), targetPath.toString(), false, false, ex.getMessage());
+        }
+    }
+
+    void copySelectedFileWithResolver(@NotNull Path sourcePath, @NotNull String rawTargetPath, boolean overwriteExisting, @NotNull GameDirectoryActionPathResolver resolver) throws IOException {
+        GameDirectoryActionPathResolver.ResolvedPath target = resolver.resolve(rawTargetPath).requireDescendant();
+        this.copySelectedFile(sourcePath, target, overwriteExisting);
+    }
+
+    void copySelectedFile(@NotNull Path sourcePath, @NotNull GameDirectoryActionPathResolver.ResolvedPath target, boolean overwriteExisting) throws IOException {
+        if (!Files.exists(sourcePath) || Files.isDirectory(sourcePath)) {
+            throw new FileNotFoundException("Source path does not point to a readable file: " + sourcePath);
+        }
+        Path targetPath = target.path();
+        Path parent = targetPath.getParent();
+        if (parent != null) {
+            target.revalidate();
+            Files.createDirectories(parent);
+        }
+        target.revalidate();
+        if (Files.exists(targetPath, LinkOption.NOFOLLOW_LINKS)) {
+            if (Files.isSameFile(sourcePath, targetPath)) {
+                if (!overwriteExisting) {
+                    throw new FileAlreadyExistsException("Destination exists already: " + targetPath);
+                }
+                return;
+            }
+            if (!overwriteExisting) {
+                throw new FileAlreadyExistsException("Destination exists already: " + targetPath);
+            }
+        }
+        try (InputStream input = Files.newInputStream(sourcePath, StandardOpenOption.READ)) {
+            target.revalidate();
+            if (overwriteExisting) {
+                try (OutputStream output = Files.newOutputStream(targetPath, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, LinkOption.NOFOLLOW_LINKS)) {
+                    input.transferTo(output);
+                }
+            } else {
+                try (OutputStream output = Files.newOutputStream(targetPath, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE, LinkOption.NOFOLLOW_LINKS)) {
+                    input.transferTo(output);
+                }
+            }
         }
     }
 
@@ -209,23 +241,6 @@ public class SelectFileAction extends Action {
             handled[0] = true;
             onEditingCanceled.accept(instance);
         });
-    }
-
-    private @NotNull Path resolveTargetPath(@NotNull String targetPath) throws IOException {
-        String resolved = DotMinecraftUtils.resolveMinecraftPath(targetPath);
-        if (!DotMinecraftUtils.isInsideMinecraftDirectory(resolved)) {
-            resolved = GameDirectoryUtils.getAbsoluteGameDirectoryPath(resolved);
-        }
-
-        Path normalized = Paths.get(resolved).toAbsolutePath().normalize();
-        Path minecraftDir = DotMinecraftUtils.getMinecraftDirectory().toAbsolutePath().normalize();
-        Path gameDir = GameDirectoryUtils.getGameDirectory().toPath().toAbsolutePath().normalize();
-
-        if (!normalized.startsWith(gameDir) && !normalized.startsWith(minecraftDir)) {
-            throw new SecurityException("Target path must stay inside the game directory or default .minecraft directory!");
-        }
-
-        return normalized;
     }
 
     public static class SelectFileConfig {
