@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.lifecycle;
 
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.server.ServerCache;
+import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.mcef.ActionBridge;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
@@ -33,6 +34,7 @@ public final class ClientShutdownHandler {
         if (!SHUTDOWN_STARTED.compareAndSet(false, true)) return;
 
         try {
+            runCleanup("internet availability monitor", WebUtils::shutdown);
             runCleanup("server cache", ServerCache::shutdown);
             // Stop recurring work before any resource it can touch is disposed. All managed workers are daemons as a final fallback.
             runCleanup("FancyMenu executors", FancyMenuExecutors::shutdownAll);
