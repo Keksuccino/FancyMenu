@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.properties;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,23 +20,15 @@ public class PropertiesParser {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    /**
+     * Reads and deserializes a property set from a file owned by this method.
+     *
+     * @throws IOException if the file cannot be completely read; malformed complete content still returns {@code null}
+     */
     @Nullable
-    public static PropertyContainerSet deserializeSetFromFile(@NotNull String filePath) {
-        try {
-            File f = new File(Objects.requireNonNull(filePath));
-            if (f.exists() && f.isFile()) {
-                String content = "";
-                for (String s : FileUtils.getFileLines(f)) {
-                    content += s + "\n";
-                }
-                return deserializeSetFromFancyString(content);
-            } else {
-                LOGGER.error("[FANCYMENU] Failed to deserialize PropertyContainerSet! File not found!");
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return null;
+    public static PropertyContainerSet deserializeSetFromFile(@NotNull String filePath) throws IOException {
+        File f = new File(Objects.requireNonNull(filePath));
+        return deserializeSetFromFancyString(buildFancyStringFromList(FileUtils.readTextLinesFrom(f)));
     }
 
     /**
@@ -94,21 +87,21 @@ public class PropertiesParser {
                 LOGGER.error("[FANCYMENU] Failed to deserialize PropertyContainerSet! Missing type: " + serializedFancyString.replace("\n", "").replace("\r", ""));
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to deserialize PropertyContainerSet from complete text content!", ex);
         }
         return null;
     }
 
+    /**
+     * Reads and deserializes a property set without closing the caller-owned stream.
+     *
+     * @throws IOException if the complete stream cannot be read; incomplete content is never passed to the parser
+     */
     @Nullable
-    public static PropertyContainerSet deserializeSetFromStream(@NotNull InputStream in) {
-        try {
-            List<String> dbTextLines = FileUtils.readTextLinesFrom(in);
-            String fancyString = PropertiesParser.buildFancyStringFromList(dbTextLines);
-            return PropertiesParser.deserializeSetFromFancyString(fancyString);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return null;
+    public static PropertyContainerSet deserializeSetFromStream(@NotNull InputStream in) throws IOException {
+        List<String> dbTextLines = FileUtils.readTextLinesFrom(in);
+        String fancyString = PropertiesParser.buildFancyStringFromList(dbTextLines);
+        return PropertiesParser.deserializeSetFromFancyString(fancyString);
     }
 
     public static void serializeSetToFile(@NotNull PropertyContainerSet set, @NotNull String filePath) {

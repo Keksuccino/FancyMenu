@@ -9,6 +9,8 @@ import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.math.MathUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,6 +20,8 @@ import java.util.Map;
 import java.util.Objects;
 
 public abstract class AbstractLayoutEditorWidgetBuilder<T extends AbstractLayoutEditorWidget> {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public static final File WIDGET_SETTINGS_DIR = FileUtils.createDirectory(new File(FancyMenu.MOD_DIR, "/layout_editor/widgets"));
     private static final LayoutEditorScreen DUMMY_LAYOUT_EDITOR = new LayoutEditorScreen(Layout.buildUniversal());
@@ -97,7 +101,7 @@ public abstract class AbstractLayoutEditorWidgetBuilder<T extends AbstractLayout
             return widget;
 
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to build layout editor widget with saved settings: " + this.identifier, ex);
         }
 
         return null;
@@ -130,7 +134,7 @@ public abstract class AbstractLayoutEditorWidgetBuilder<T extends AbstractLayout
             PropertiesParser.serializeSetToFile(set, this.getSettingsFile().getAbsolutePath());
 
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to write layout editor widget settings: " + this.identifier, ex);
         }
     }
 
@@ -149,7 +153,7 @@ public abstract class AbstractLayoutEditorWidgetBuilder<T extends AbstractLayout
                 }
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to read layout editor widget settings: " + this.identifier, ex);
         }
         return null;
     }

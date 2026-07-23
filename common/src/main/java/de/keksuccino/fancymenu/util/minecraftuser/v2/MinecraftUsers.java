@@ -6,7 +6,6 @@ import com.mojang.authlib.SignatureState;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTextures;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
-import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.LogManager;
@@ -42,7 +41,6 @@ public class MinecraftUsers {
         if (cachedProfile != null) return cachedProfile;
 
         HttpURLConnection connection = null;
-        InputStream in = null;
         UserProfile profile = UNKNOWN_USER_PROFILE;
 
         try {
@@ -54,12 +52,13 @@ public class MinecraftUsers {
 
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                in = connection.getInputStream();
-                String json = String.join("", FileUtils.readTextLinesFrom(in));
-                if (!json.isBlank()) {
-                    UserProfile parsedProfile = GSON.fromJson(json, UserProfile.class);
-                    if ((parsedProfile != null) && (parsedProfile.getUUID() != null)) {
-                        profile = parsedProfile;
+                try (InputStream in = connection.getInputStream()) {
+                    String json = String.join("", FileUtils.readTextLinesFrom(in));
+                    if (!json.isBlank()) {
+                        UserProfile parsedProfile = GSON.fromJson(json, UserProfile.class);
+                        if ((parsedProfile != null) && (parsedProfile.getUUID() != null)) {
+                            profile = parsedProfile;
+                        }
                     }
                 }
             } else if ((responseCode != HttpURLConnection.HTTP_NO_CONTENT) && (responseCode != HttpURLConnection.HTTP_NOT_FOUND)) {
@@ -69,7 +68,6 @@ public class MinecraftUsers {
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to get player profile via Mojang API: " + playerName, ex);
         } finally {
-            CloseableUtils.closeQuietly(in);
             if (connection != null) {
                 connection.disconnect();
             }

@@ -6,12 +6,16 @@ import de.keksuccino.fancymenu.util.Legacy;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.*;
 
 public class VariableHandler {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     protected static final File VARIABLES_FILE = new File(FancyMenu.MOD_DIR.getPath() + "/user_variables.db");
     protected static final Map<String, Variable> VARIABLES = new HashMap<>();
@@ -81,7 +85,7 @@ public class VariableHandler {
             }
             PropertiesParser.serializeSetToFile(set, VARIABLES_FILE.getPath());
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to write variables to file!", e);
         }
     }
 
@@ -106,7 +110,7 @@ public class VariableHandler {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to read variables from file!", e);
         }
     }
 
@@ -130,7 +134,7 @@ public class VariableHandler {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to read legacy variables from file!", e);
         }
     }
 

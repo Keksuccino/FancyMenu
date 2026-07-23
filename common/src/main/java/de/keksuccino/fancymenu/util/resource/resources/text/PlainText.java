@@ -1,9 +1,9 @@
 package de.keksuccino.fancymenu.util.resource.resources.text;
 
-import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.Identifier;
@@ -160,8 +160,8 @@ public class PlainText implements IText {
         if (textSourceName == null) textSourceName = "[Generic InputStream source]";
 
         String name = textSourceName;
-        new Thread(() -> {
-            try {
+        FancyMenuThreads.startDaemonThread(() -> {
+            try (in) {
                 text.lines = FileUtils.readTextLinesFrom(in);
                 text.decoded = true;
                 text.loadingCompleted = true;
@@ -170,8 +170,7 @@ public class PlainText implements IText {
                 text.loadingFailed = true;
                 LOGGER.error("[FANCYMENU] Failed to read text context via InputStream: " + name, ex);
             }
-            CloseableUtils.closeQuietly(in);
-        }).start();
+        }, "PlainText-Decoder");
 
         return text;
 
