@@ -1,6 +1,8 @@
 package de.keksuccino.fancymenu.util.reload;
 
 import com.mojang.logging.LogUtils;
+import de.keksuccino.fancymenu.util.MinecraftResourceReloadObserver;
+import de.keksuccino.fancymenu.util.resource.ClientResourceIndex;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.preload.ResourcePreLoader;
 import net.minecraft.resources.ResourceLocation;
@@ -17,14 +19,15 @@ import java.util.function.Consumer;
 public class FancyMenuResourceReload {
 
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final String DUMMY_RETURN = "FANCYMENU RESOURCE RELOAD LISTENER";
     private static final Map<Long, Runnable> LISTENERS = new HashMap<>();
-    private static final ClientReloadListenerRegistration<SimplePreparableReloadListener<String>> CLIENT_LISTENER_REGISTRATION = new ClientReloadListenerRegistration<>(FancyMenuResourceReload::createMinecraftPreparableReloadListener);
+    private static final ClientReloadListenerRegistration<SimplePreparableReloadListener<ClientResourceIndex.PreparedIndex>> CLIENT_LISTENER_REGISTRATION = new ClientReloadListenerRegistration<>(FancyMenuResourceReload::createMinecraftPreparableReloadListener);
     private static long id = 0;
 
     public static final ResourceLocation FANCYMENU_RELOAD_LISTENER_ID = new ResourceLocation("fancymenu", "fancymenu_reload_listener");
 
     static {
+
+        MinecraftResourceReloadObserver.addReloadListener(ClientResourceIndex::onMinecraftResourceReload);
 
         registerReloadListener(ResourceHandlers::reloadAll);
 
@@ -43,20 +46,22 @@ public class FancyMenuResourceReload {
     }
 
     @ApiStatus.Internal
-    public static boolean registerClientReloadListener(@NotNull ClientLoader loader, @NotNull Consumer<? super SimplePreparableReloadListener<String>> registrar) {
+    public static boolean registerClientReloadListener(@NotNull ClientLoader loader, @NotNull Consumer<? super SimplePreparableReloadListener<ClientResourceIndex.PreparedIndex>> registrar) {
         return CLIENT_LISTENER_REGISTRATION.register(loader, registrar);
     }
 
     @ApiStatus.Internal
     @NotNull
-    public static SimplePreparableReloadListener<String> createMinecraftPreparableReloadListener() {
+    public static SimplePreparableReloadListener<ClientResourceIndex.PreparedIndex> createMinecraftPreparableReloadListener() {
         return new SimplePreparableReloadListener<>() {
             @Override
-            protected @NotNull String prepare(@NotNull ResourceManager var1, @NotNull ProfilerFiller var2) {
-                return DUMMY_RETURN;
+            protected @NotNull ClientResourceIndex.PreparedIndex prepare(@NotNull ResourceManager resourceManager, @NotNull ProfilerFiller profiler) {
+                return ClientResourceIndex.prepare(resourceManager);
             }
             @Override
-            protected void apply(@NotNull String prepareReturnValue, @NotNull ResourceManager var2, @NotNull ProfilerFiller var3) {
+            protected void apply(@NotNull ClientResourceIndex.PreparedIndex preparedIndex, @NotNull ResourceManager resourceManager, @NotNull ProfilerFiller profiler) {
+                // Stage here, but publish only after ResourceLoadStateTracker confirms the entire reload succeeded. A later listener can still fail after this apply step.
+                ClientResourceIndex.stage(preparedIndex);
                 LISTENERS.forEach((aLong, runnable) -> runnable.run());
             }
         };

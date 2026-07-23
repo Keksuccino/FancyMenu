@@ -42,7 +42,7 @@ public class FancyMenuFabricClientEvents {
         ClientPlayConnectionEvents.DISCONNECT.register((clientPacketListener, minecraft) -> PacketHandler.onClientDisconnected(clientPacketListener.getConnection()));
     }
 
-    private static void registerReloadListener(SimplePreparableReloadListener<String> listener) {
+    private static <T> void registerReloadListener(SimplePreparableReloadListener<T> listener) {
         // Fabric API 0.92 only accepts identifiable listeners, so retain its ID contract while delegating the actual reload lifecycle unchanged.
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new IdentifiableResourceReloadListener() {
             @Override
