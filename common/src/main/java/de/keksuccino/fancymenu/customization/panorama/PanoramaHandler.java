@@ -68,6 +68,7 @@ public class PanoramaHandler {
 	/** Releases all renderer-owned GPU resources before vanilla tears down its texture manager and render device. */
 	public static void shutdown() {
 		PANORAMAS.close();
+		PanoramaRotationTicker.shutdownSharedScheduler();
 	}
 
 	private static String buildErrorMessage(@NotNull File panoramaDir, boolean addDetails, boolean propertiesFileFound, boolean imageDirFound) {
