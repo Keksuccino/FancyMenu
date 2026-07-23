@@ -1,14 +1,16 @@
 package de.keksuccino.fancymenu.customization.action.actions.file;
 
 import de.keksuccino.fancymenu.customization.action.Action;
-import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
-import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
+import de.keksuccino.fancymenu.util.file.GameDirectoryActionPathResolver;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
 
 public class CreateFileAction extends Action {
 
@@ -26,27 +28,29 @@ public class CreateFileAction extends Action {
     @Override
     public void execute(@Nullable String value) {
         try {
-            if (value != null) {
-                // We only allow the default .minecraft directory and the instance's actual game directory for safety reasons
-                value = DotMinecraftUtils.resolveMinecraftPath(value);
-                if (!DotMinecraftUtils.isInsideMinecraftDirectory(value)) {
-                    value = GameDirectoryUtils.getAbsoluteGameDirectoryPath(value);
-                }
-                File f = new File(value);
-                if (!f.exists()) {
-                    // Create parent directories if they don't exist
-                    File parentDir = f.getParentFile();
-                    if (parentDir != null && !parentDir.exists()) {
-                        parentDir.mkdirs();
-                    }
-                    // Create the file
-                    f.createNewFile();
-                }
-                // If file already exists, do nothing and don't log
-            }
+            this.executeWithResolver(value, GameDirectoryActionPathResolver.create());
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to create file in game directory via CreateFileAction: " + value, ex);
         }
+    }
+
+    void executeWithResolver(@Nullable String value, @NotNull GameDirectoryActionPathResolver resolver) throws IOException {
+        if (value == null) {
+            return;
+        }
+        GameDirectoryActionPathResolver.ResolvedPath target = resolver.resolve(value).requireDescendant();
+        Path targetPath = target.path();
+        target.revalidate();
+        if (!Files.exists(targetPath, LinkOption.NOFOLLOW_LINKS)) {
+            Path parent = targetPath.getParent();
+            if (parent != null) {
+                target.revalidate();
+                Files.createDirectories(parent);
+            }
+            target.revalidate();
+            Files.createFile(targetPath);
+        }
+        // If file already exists, do nothing and don't log
     }
 
     @Override

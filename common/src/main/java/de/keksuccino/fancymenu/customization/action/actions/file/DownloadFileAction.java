@@ -4,8 +4,7 @@ import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.listener.RevisionSafeListenerDispatch;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
-import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
-import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
+import de.keksuccino.fancymenu.util.file.GameDirectoryActionPathResolver;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.DualTextInputWindowBody;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
@@ -14,18 +13,20 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 
@@ -45,28 +46,35 @@ public class DownloadFileAction extends Action {
 
     @Override
     public void execute(@Nullable String value) {
-        if ((value != null) && value.contains("||")) {
-            String[] valueArray = value.split("\\|\\|", 2);
-            String fileUrl = valueArray[0];
-            String targetDirectoryPath = valueArray[1];
-
-            CompletableFuture.runAsync(() -> {
-                String resolvedDirectoryPath = null;
-                try {
-                    resolvedDirectoryPath = resolveActionDirectoryPath(targetDirectoryPath);
-                    String finalTargetPath = downloadFile(fileUrl, resolvedDirectoryPath);
-                    RevisionSafeListenerDispatch.scheduleIfActive(Listeners.ON_FILE_DOWNLOADED, task -> MainThreadTaskExecutor.executeInMainThread(task, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK), () -> Listeners.ON_FILE_DOWNLOADED.onFileDownloaded(fileUrl, finalTargetPath, true));
-                } catch (Exception ex) {
-                    LOGGER.error("[FANCYMENU] Failed to download file via DownloadFileAction: " + value, ex);
-                    String failurePath = (resolvedDirectoryPath != null) ? resolvedDirectoryPath : targetDirectoryPath;
-                    String finalFailurePath = failurePath;
-                    RevisionSafeListenerDispatch.scheduleIfActive(Listeners.ON_FILE_DOWNLOADED, task -> MainThreadTaskExecutor.executeInMainThread(task, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK), () -> Listeners.ON_FILE_DOWNLOADED.onFileDownloaded(fileUrl, finalFailurePath, false));
-                }
-            });
+        try {
+            this.executeWithResolver(value, GameDirectoryActionPathResolver.create());
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to initialize DownloadFileAction: " + value, ex);
         }
     }
 
-    private @NotNull String downloadFile(@NotNull String fileUrl, @NotNull String resolvedTargetDirectory) throws Exception {
+    CompletableFuture<Void> executeWithResolver(@Nullable String value, @NotNull GameDirectoryActionPathResolver resolver) {
+        if ((value == null) || !value.contains("||")) {
+            return CompletableFuture.completedFuture(null);
+        }
+        String[] valueArray = value.split("\\|\\|", 2);
+        String fileUrl = valueArray[0];
+        String targetDirectoryPath = valueArray[1];
+        return CompletableFuture.runAsync(() -> {
+            GameDirectoryActionPathResolver.ResolvedPath targetDirectory = null;
+            try {
+                targetDirectory = this.resolveActionDirectoryPath(targetDirectoryPath, resolver);
+                String finalTargetPath = this.downloadFile(fileUrl, targetDirectory);
+                RevisionSafeListenerDispatch.scheduleIfActive(Listeners.ON_FILE_DOWNLOADED, task -> MainThreadTaskExecutor.executeInMainThread(task, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK), () -> Listeners.ON_FILE_DOWNLOADED.onFileDownloaded(fileUrl, finalTargetPath, true));
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to download file via DownloadFileAction: " + value, ex);
+                String failurePath = (targetDirectory != null) ? targetDirectory.path().toString() : targetDirectoryPath;
+                RevisionSafeListenerDispatch.scheduleIfActive(Listeners.ON_FILE_DOWNLOADED, task -> MainThreadTaskExecutor.executeInMainThread(task, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK), () -> Listeners.ON_FILE_DOWNLOADED.onFileDownloaded(fileUrl, failurePath, false));
+            }
+        });
+    }
+
+    @NotNull String downloadFile(@NotNull String fileUrl, @NotNull GameDirectoryActionPathResolver.ResolvedPath targetDirectory) throws Exception {
         HttpURLConnection connection = null;
         try {
             URL actualURL = new URL(fileUrl);
@@ -78,26 +86,40 @@ public class DownloadFileAction extends Action {
             }
 
             String fileName = resolveFileName(connection, actualURL);
-            File targetFile = buildTargetFile(resolvedTargetDirectory, fileName);
-            if (targetFile.exists()) {
-                LOGGER.warn("[FANCYMENU] Target file already exists, overwriting via DownloadFileAction: " + targetFile.getAbsolutePath());
+            targetDirectory.revalidate();
+            GameDirectoryActionPathResolver.ResolvedPath targetFile = targetDirectory.resolveSingleComponentChild(fileName);
+            Path targetPath = targetFile.path();
+            if (Files.exists(targetPath, LinkOption.NOFOLLOW_LINKS)) {
+                LOGGER.warn("[FANCYMENU] Target file already exists, overwriting via DownloadFileAction: " + targetPath);
             }
 
-            try (InputStream inputStream = connection.getInputStream();
-                 FileOutputStream outputStream = new FileOutputStream(targetFile)) {
-                byte[] buffer = new byte[BUFFER_SIZE];
-                int bytesRead;
+            Path temporaryPath = null;
+            GameDirectoryActionPathResolver.ResolvedPath temporaryFile = null;
+            try (InputStream inputStream = connection.getInputStream()) {
+                targetDirectory.revalidate();
+                targetFile.revalidate();
+                temporaryPath = Files.createTempFile(targetDirectory.path(), ".fancymenu-download-", ".tmp");
+                temporaryFile = targetDirectory.resolveSingleComponentChild(temporaryPath.getFileName().toString());
                 long totalBytesRead = 0;
-
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, bytesRead);
-                    totalBytesRead += bytesRead;
+                try (OutputStream outputStream = Files.newOutputStream(temporaryPath, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, LinkOption.NOFOLLOW_LINKS)) {
+                    byte[] buffer = new byte[BUFFER_SIZE];
+                    int bytesRead;
+                    while ((bytesRead = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, bytesRead);
+                        totalBytesRead += bytesRead;
+                    }
                 }
-
-                LOGGER.info("[FANCYMENU] Successfully downloaded file via the DownloadFileAction: {} ({} bytes)",
-                        targetFile.getAbsolutePath(), totalBytesRead);
-
-                return targetFile.getAbsolutePath();
+                targetDirectory.revalidate();
+                temporaryFile.revalidate();
+                targetFile.revalidate();
+                Files.move(temporaryPath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+                temporaryPath = null;
+                LOGGER.info("[FANCYMENU] Successfully downloaded file via the DownloadFileAction: {} ({} bytes)", targetPath, totalBytesRead);
+                return targetPath.toString();
+            } finally {
+                if ((temporaryPath != null) && (temporaryFile != null)) {
+                    this.cleanupTemporaryFile(temporaryFile);
+                }
             }
         } finally {
             if (connection != null) {
@@ -106,35 +128,30 @@ public class DownloadFileAction extends Action {
         }
     }
 
-    private @NotNull String resolveActionDirectoryPath(@NotNull String path) throws IOException {
-        String resolvedPath = DotMinecraftUtils.resolveMinecraftPath(path);
-        if (!DotMinecraftUtils.isInsideMinecraftDirectory(resolvedPath)) {
-            resolvedPath = GameDirectoryUtils.getAbsoluteGameDirectoryPath(resolvedPath);
+    boolean cleanupTemporaryFile(@NotNull GameDirectoryActionPathResolver.ResolvedPath temporaryFile) {
+        try {
+            temporaryFile.revalidate();
+            return Files.deleteIfExists(temporaryFile.path());
+        } catch (Exception cleanupException) {
+            // A leaked temporary file is safer than deleting the same lexical name after an ancestor or root was redirected.
+            LOGGER.warn("[FANCYMENU] Skipped unsafe temporary download cleanup: " + temporaryFile.path(), cleanupException);
+            return false;
         }
-
-        File directory = new File(resolvedPath);
-        if (directory.exists()) {
-            if (!directory.isDirectory()) {
-                throw new IllegalArgumentException("Target path must be a directory: " + resolvedPath);
-            }
-        } else {
-            Files.createDirectories(directory.toPath());
-        }
-
-        return directory.getAbsolutePath();
     }
 
-    private @NotNull File buildTargetFile(@NotNull String directoryPath, @NotNull String fileName) throws IOException {
-        File directory = new File(directoryPath);
-        File targetFile = new File(directory, fileName);
-
-        Path canonicalDirectory = directory.getCanonicalFile().toPath();
-        Path canonicalFile = targetFile.getCanonicalFile().toPath();
-        if (!canonicalFile.startsWith(canonicalDirectory)) {
-            throw new SecurityException("Resolved file path escapes target directory: " + canonicalFile);
+    private @NotNull GameDirectoryActionPathResolver.ResolvedPath resolveActionDirectoryPath(@NotNull String path, @NotNull GameDirectoryActionPathResolver resolver) throws IOException {
+        GameDirectoryActionPathResolver.ResolvedPath directory = resolver.resolve(path);
+        Path directoryPath = directory.path();
+        directory.revalidate();
+        if (Files.exists(directoryPath, LinkOption.NOFOLLOW_LINKS)) {
+            if (!Files.isDirectory(directoryPath)) {
+                throw new IllegalArgumentException("Target path must be a directory: " + directoryPath);
+            }
+        } else {
+            Files.createDirectories(directoryPath);
         }
-
-        return targetFile;
+        directory.revalidate();
+        return directory;
     }
 
     private @NotNull String resolveFileName(@NotNull HttpURLConnection connection, @NotNull URL url) {

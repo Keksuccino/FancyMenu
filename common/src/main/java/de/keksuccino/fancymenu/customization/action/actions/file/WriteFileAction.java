@@ -3,8 +3,7 @@ package de.keksuccino.fancymenu.customization.action.actions.file;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
-import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
-import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
+import de.keksuccino.fancymenu.util.file.GameDirectoryActionPathResolver;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPCellWindowBody;
@@ -17,10 +16,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -54,46 +54,41 @@ public class WriteFileAction extends Action {
         }
 
         try {
-
-            //Just in case a placeholder or something added multi-line content to the value
-            value = value.replace("\n", "\\n").replace("\r", "\\n");
-
-            // We only allow the default .minecraft directory and the instance's actual game directory for safety reasons
-            String filePath = DotMinecraftUtils.resolveMinecraftPath(config.targetPath);
-            if (!DotMinecraftUtils.isInsideMinecraftDirectory(filePath)) {
-                filePath = GameDirectoryUtils.getAbsoluteGameDirectoryPath(filePath);
-            }
-
-            File targetFile = new File(filePath);
-            
-            // Create parent directories if they don't exist
-            if (!targetFile.getParentFile().exists()) {
-                targetFile.getParentFile().mkdirs();
-            }
-
-            // Convert string representation of line breaks to actual line breaks
-            String contentToWrite = config.content.replace("\\n", "\n");
-
-            if (config.appendMode) {
-                // Append to file
-                if (!targetFile.exists()) {
-                    targetFile.createNewFile();
-                }
-                Files.write(targetFile.toPath(), contentToWrite.getBytes(), StandardOpenOption.APPEND);
-            } else {
-                // Override file (create new or replace existing)
-                try (FileWriter writer = new FileWriter(targetFile, false)) {
-                    writer.write(contentToWrite);
-                }
-            }
-
-            LOGGER.info("[FANCYMENU] Successfully wrote to file: " + filePath);
-
+            this.executeWithResolver(value, GameDirectoryActionPathResolver.create());
         } catch (IOException ex) {
             LOGGER.error("[FANCYMENU] Failed to write file via WriteFileAction: " + config.targetPath, ex);
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Unexpected error in WriteFileAction: " + value, ex);
         }
+    }
+
+    void executeWithResolver(@NotNull String value, @NotNull GameDirectoryActionPathResolver resolver) throws IOException {
+        WriteFileConfig config = WriteFileConfig.parse(value);
+        if (config == null) {
+            throw new IllegalArgumentException("Failed to parse write file configuration");
+        }
+        GameDirectoryActionPathResolver.ResolvedPath target = resolver.resolve(config.targetPath).requireDescendant();
+        Path targetPath = target.path();
+        Path parent = targetPath.getParent();
+        if (parent != null) {
+            target.revalidate();
+            Files.createDirectories(parent);
+        }
+        target.revalidate();
+
+        String contentToWrite = config.content.replace("\\n", "\n");
+        if (config.appendMode) {
+            target.revalidate();
+            try (var writer = Files.newBufferedWriter(targetPath, Charset.defaultCharset(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND, LinkOption.NOFOLLOW_LINKS)) {
+                writer.write(contentToWrite);
+            }
+        } else {
+            target.revalidate();
+            try (var writer = Files.newBufferedWriter(targetPath, Charset.defaultCharset(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, LinkOption.NOFOLLOW_LINKS)) {
+                writer.write(contentToWrite);
+            }
+        }
+        LOGGER.info("[FANCYMENU] Successfully wrote to file: " + targetPath);
     }
 
     @Override
