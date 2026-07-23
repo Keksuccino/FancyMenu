@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.slideshow;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -56,7 +57,13 @@ public class ExternalTextureSlideshowRenderer {
 
 		if (props.exists()) {
 
-			PropertyContainerSet s = PropertiesParser.deserializeSetFromFile(props.getPath());
+			PropertyContainerSet s;
+			try {
+				s = PropertiesParser.deserializeSetFromFile(props.getPath());
+			} catch (IOException ex) {
+				LOGGER.error("[FANCYMENU] Failed to read slideshow properties: " + props.getAbsolutePath(), ex);
+				return;
+			}
 
 			if (s != null) {
 				List<PropertyContainer> l = s.getContainersOfType("slideshow-meta");

@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.resource.resources.text;
 
-import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
@@ -160,8 +159,8 @@ public class PlainText implements IText {
         if (textSourceName == null) textSourceName = "[Generic InputStream source]";
 
         String name = textSourceName;
-        new Thread(() -> {
-            try {
+        Thread decoderThread = new Thread(() -> {
+            try (in) {
                 text.lines = FileUtils.readTextLinesFrom(in);
                 text.decoded = true;
                 text.loadingCompleted = true;
@@ -170,8 +169,9 @@ public class PlainText implements IText {
                 text.loadingFailed = true;
                 LOGGER.error("[FANCYMENU] Failed to read text context via InputStream: " + name, ex);
             }
-            CloseableUtils.closeQuietly(in);
-        }).start();
+        }, "PlainText-Decoder");
+        decoderThread.setDaemon(true);
+        decoderThread.start();
 
         return text;
 

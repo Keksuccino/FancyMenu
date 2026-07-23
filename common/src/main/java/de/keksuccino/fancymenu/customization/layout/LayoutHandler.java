@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.layout;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import com.google.common.io.Files;
 import de.keksuccino.fancymenu.FancyMenu;
@@ -80,12 +81,16 @@ public class LayoutHandler {
 				continue;
 			}
 			if (f.getPath().toLowerCase().endsWith(".txt")) {
-				PropertyContainerSet s = PropertiesParser.deserializeSetFromFile(f.getAbsolutePath().replace("\\", "/"));
-				if (s != null) {
-					Layout layout = deserializeLayout(s, f);
-					if (layout != null) {
-						layouts.add(layout);
+				try {
+					PropertyContainerSet s = PropertiesParser.deserializeSetFromFile(f.getAbsolutePath().replace("\\", "/"));
+					if (s != null) {
+						Layout layout = deserializeLayout(s, f);
+						if (layout != null) {
+							layouts.add(layout);
+						}
 					}
+				} catch (IOException ex) {
+					LOGGER.error("[FANCYMENU] Failed to read layout file: " + f.getAbsolutePath(), ex);
 				}
 			}
 		}
