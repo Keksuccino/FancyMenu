@@ -95,6 +95,11 @@ public class ChoosePanoramaScreen extends PiPWindowBody {
 
         RenderSystem.enableBlend();
 
+        // The chooser can outlive a FancyMenu reload, so never keep rendering a detached registry instance.
+        if (this.selectedPanoramaName != null) {
+            this.selectedPanorama = PanoramaHandler.getPanorama(this.selectedPanoramaName);
+        }
+
         float listAreaX = 20.0F;
         float listLabelY = 50.0F;
         float labelHeight = UIBase.getUITextHeightNormal();

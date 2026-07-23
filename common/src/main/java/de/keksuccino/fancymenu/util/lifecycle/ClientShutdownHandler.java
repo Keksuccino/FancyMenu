@@ -1,0 +1,30 @@
+package de.keksuccino.fancymenu.util.lifecycle;
+
+import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+
+/** Releases FancyMenu resources before vanilla tears down the client rendering infrastructure. */
+public final class ClientShutdownHandler {
+
+    private static final Logger LOGGER = LogManager.getLogger();
+    private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean();
+
+    private ClientShutdownHandler() {
+    }
+
+    public static boolean isShuttingDown() {
+        return SHUTDOWN_STARTED.get();
+    }
+
+    public static void shutdown() {
+        if (!SHUTDOWN_STARTED.compareAndSet(false, true)) return;
+        try {
+            PanoramaHandler.shutdown();
+        } catch (Throwable throwable) {
+            LOGGER.error("[FANCYMENU] Failed to clean up panorama renderers during client shutdown!", throwable);
+        }
+    }
+}

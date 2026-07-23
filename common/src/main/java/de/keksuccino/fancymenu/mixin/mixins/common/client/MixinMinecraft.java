@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
+import de.keksuccino.fancymenu.util.lifecycle.ClientShutdownHandler;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PipableScreen;
@@ -90,6 +91,12 @@ public class MixinMinecraft {
 			this.quitListenerFired_FancyMenu = true;
 			if (Listeners.ON_QUIT_MINECRAFT.hasInstancesListening()) Listeners.ON_QUIT_MINECRAFT.onQuitMinecraft();
 		}
+	}
+
+	/** @reason Release FancyMenu-owned resources while Minecraft's rendering infrastructure is still available. */
+	@Inject(method = "close", at = @At("HEAD"))
+	private void before_close_FancyMenu(CallbackInfo info) {
+		ClientShutdownHandler.shutdown();
 	}
 
 	@Inject(method = "doWorldLoad(Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lnet/minecraft/server/packs/repository/PackRepository;Lnet/minecraft/server/WorldStem;Z)V", at = @At("HEAD"))
