@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.networking;
 
-import de.keksuccino.fancymenu.networking.bridge.BridgePacketPayloadNeoForge;
+import de.keksuccino.fancymenu.networking.bridge.BridgePacketPayload;
 import de.keksuccino.fancymenu.networking.packets.Packets;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.level.ServerPlayer;
@@ -21,12 +21,12 @@ public class PacketsNeoForge {
         eventBus.addListener(PacketsNeoForge::registerBridgePacketNeoForge);
 
         PacketHandler.setSendToClientLogic((player, s) -> {
-            BridgePacketPayloadNeoForge payload = new BridgePacketPayloadNeoForge("client", s);
+            BridgePacketPayload payload = new BridgePacketPayload(BridgePacketPayload.TO_CLIENT_WIRE_DIRECTION, s);
             PacketHandlerNeoForge.sendToClient(payload, player);
         });
 
         PacketHandler.setSendToServerLogic(s -> {
-            BridgePacketPayloadNeoForge payload = new BridgePacketPayloadNeoForge("server", s);
+            BridgePacketPayload payload = new BridgePacketPayload(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, s);
             PacketHandlerNeoForge.sendToServer(payload);
         });
 
@@ -37,8 +37,8 @@ public class PacketsNeoForge {
         //using the optional() registrar is important to be able to connect to servers without FM installed
         PayloadRegistrar registrar = e.registrar("fancymenu").optional();
 
-        registrar.playBidirectional(BridgePacketPayloadNeoForge.TYPE, BridgePacketPayloadNeoForge.CODEC, (payload, context) -> {
-           try {
+		registrar.playBidirectional(BridgePacketPayload.TYPE, BridgePacketPayload.CODEC, (payload, context) -> {
+		   try {
                if (context.flow() == PacketFlow.CLIENTBOUND) {
                    payload.handle(null, PacketHandler.PacketDirection.TO_CLIENT);
                } else {
@@ -47,8 +47,7 @@ public class PacketsNeoForge {
            } catch (Exception ex) {
                LOGGER.error("[FANCYMENU] Failed to handle NeoForge bridge packet!", ex);
            }
-        });
+		});
 
-    }
-
+	}
 }
