@@ -294,7 +294,7 @@
   "fancymenu.actions.show_toast.edit.title_text": "Title",
   "fancymenu.actions.show_toast.edit.title_text.desc": "Supports plain text (with § formatting codes) or a serialized JSON text component.",
   "fancymenu.actions.show_toast.edit.width": "Toast Width",
-  "fancymenu.actions.show_toast.edit.width.desc": "The toast width in pixels. Values outside the default range may stretch the background.",
+  "fancymenu.actions.show_toast.edit.width.desc": "The toast width in pixels. The accepted range is 120–320 pixels, inclusive; values outside this range are clamped to the nearest limit. The default width is 160 pixels.",
   "fancymenu.actions.spawn_element_instance": "Spawn Element Instance",
   "fancymenu.actions.spawn_element_instance.desc": "Spawns a new element instance by deserializing an element body and injecting it into the active customization layer.\nSpawned elements are not saved and disappear when the screen or layout reloads.",
   "fancymenu.actions.spawn_element_instance.edit.element_body": "Element Body",
