@@ -261,7 +261,7 @@ public class ScreenCustomization {
 			}
 			customizableScreens = s2;
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOGGER.error("[FANCYMENU] Failed to read customizable menus from file!", e);
 		}
 	}
 

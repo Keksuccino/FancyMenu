@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.util.rendering.ui.theme;
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import net.minecraft.client.Minecraft;
@@ -58,29 +57,30 @@ public class UIColorThemeSerializer {
 
     @Nullable
     public static UITheme deserializeThemeFromResource(@NotNull Identifier resource) {
-        InputStream in = null;
-        try {
+        try (InputStream in = Objects.requireNonNull(Minecraft.getInstance().getResourceManager().open(resource))) {
             StringBuilder json = new StringBuilder();
-            in = Objects.requireNonNull(Minecraft.getInstance().getResourceManager().open(resource));
             for (String s : FileUtils.readTextLinesFrom(in)) {
                 json.append(s);
             }
-            CloseableUtils.closeQuietly(in);
             return deserializeTheme(json.toString());
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to deserialize FancyMenu theme from Identifier: " + resource, ex);
         }
-        CloseableUtils.closeQuietly(in);
         return null;
     }
 
     @Nullable
     public static UITheme deserializeThemeFromFile(@NotNull File file) {
-        StringBuilder json = new StringBuilder();
-        for (String s : FileUtils.getFileLines(file)) {
-            json.append(s);
+        try {
+            StringBuilder json = new StringBuilder();
+            for (String s : FileUtils.readTextLinesFrom(file)) {
+                json.append(s);
+            }
+            return deserializeTheme(json.toString());
+        } catch (IOException ex) {
+            LOGGER.error("[FANCYMENU] Failed to deserialize FancyMenu theme from file: " + file.getAbsolutePath(), ex);
+            return null;
         }
-        return deserializeTheme(json.toString());
     }
 
     @Nullable

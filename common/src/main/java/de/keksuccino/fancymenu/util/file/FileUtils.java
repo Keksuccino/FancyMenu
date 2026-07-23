@@ -1,45 +1,63 @@
 package de.keksuccino.fancymenu.util.file;
 
 import net.minecraft.util.Util;
-import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import java.io.*;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 public class FileUtils extends de.keksuccino.konkrete.file.FileUtils {
 
-    /** Reads all plain text lines from the given {@link InputStream}, closes it at the end and returns the text lines. **/
+    private static final Logger LOGGER = LogManager.getLogger();
+
+    /**
+     * Reads every UTF-8 text line from the given stream. The caller retains ownership of the stream and must close it.
+     *
+     * @throws IOException if the complete stream cannot be read; partially read lines are never returned
+     */
     @NotNull
-    public static List<String> readTextLinesFrom(@NotNull InputStream in) {
+    public static List<String> readTextLinesFrom(@NotNull InputStream in) throws IOException {
+        Objects.requireNonNull(in);
         List<String> lines = new ArrayList<>();
-        BufferedReader reader = null;
-        try {
-            reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
-            for(String line = reader.readLine(); line != null; line = reader.readLine()) {
-                lines.add(line);
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
+        for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+            lines.add(line);
         }
-        IOUtils.closeQuietly(reader);
-        IOUtils.closeQuietly(in);
         return lines;
     }
 
-    /** Reads all plain text lines from the given {@link File} and returns the text lines. **/
+    /**
+     * Opens the given file, reads every UTF-8 text line and closes the internally owned stream.
+     *
+     * @throws IOException if the file cannot be opened, completely read or closed; partially read lines are never returned
+     */
     @NotNull
-    public static List<String> readTextLinesFrom(@NotNull File file) {
-        try {
-            return readTextLinesFrom(new FileInputStream(file));
-        } catch (Exception ex) {
-            ex.printStackTrace();
+    public static List<String> readTextLinesFrom(@NotNull File file) throws IOException {
+        return readTextLinesFrom(file, source -> Files.newInputStream(source.toPath()));
+    }
+
+    /**
+     * Keeps the complete owned-stream lifecycle deterministic and testable without depending on platform file-lock behavior.
+     */
+    @NotNull
+    static List<String> readTextLinesFrom(@NotNull File file, @NotNull OwnedInputStreamOpener inputStreamOpener) throws IOException {
+        Objects.requireNonNull(file);
+        Objects.requireNonNull(inputStreamOpener);
+        try (InputStream in = inputStreamOpener.open(file)) {
+            return readTextLinesFrom(in);
         }
-        return new ArrayList<>();
     }
 
     @NotNull
@@ -65,7 +83,7 @@ public class FileUtils extends de.keksuccino.konkrete.file.FileUtils {
                 directory.mkdirs();
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to create directory: " + directory.getAbsolutePath(), ex);
         }
         if (directory.getName().startsWith(".")) {
             try {
@@ -93,8 +111,16 @@ public class FileUtils extends de.keksuccino.konkrete.file.FileUtils {
                 Runtime.getRuntime().exec(new String[]{"open", url});
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to open file: " + file.getAbsolutePath(), e);
         }
+    }
+
+    @FunctionalInterface
+    interface OwnedInputStreamOpener {
+
+        @NotNull
+        InputStream open(@NotNull File file) throws IOException;
+
     }
 
 }

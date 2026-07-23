@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.customgui;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import javax.annotation.Nullable;
 import de.keksuccino.fancymenu.FancyMenu;
@@ -204,10 +205,17 @@ public class CustomGuiHandler {
 			LOGGER.info("[FANCYMENU] Trying to port old FMv2 custom GUIs to the new FMv3 system..");
 			for (String s : FileUtils.getFiles(LEGACY_CUSTOM_GUIS_DIR.getPath())) {
 				File f = new File(s);
+				List<String> fileLines;
+				try {
+					fileLines = FileUtils.readTextLinesFrom(f);
+				} catch (IOException ex) {
+					LOGGER.error("[FANCYMENU] Failed to read legacy custom GUI file: " + f.getAbsolutePath(), ex);
+					continue;
+				}
 				String identifier = null;
 				String title = null;
 				boolean allowEsc = false;
-				for (String s2 : FileUtils.getFileLines(f)) {
+				for (String s2 : fileLines) {
 					if (s2.contains("=")) {
 						String variable = s2.replace(" ", "").split("=", 2)[0].toLowerCase();
 						String value = "";
