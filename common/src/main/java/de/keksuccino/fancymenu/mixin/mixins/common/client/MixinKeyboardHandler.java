@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.input.ScreenKeyEventDispatcher;
+import de.keksuccino.fancymenu.util.input.Utf16CodeUnitDispatcher;
 import de.keksuccino.fancymenu.util.rendering.glsl.GlslRuntimeEventTracker;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import net.minecraft.client.KeyboardHandler;
@@ -80,15 +81,7 @@ public abstract class MixinKeyboardHandler {
         if (windowPointer == Minecraft.getInstance().getWindow().getWindow()) {
             InputUtils.updateActiveModifiers(modifiers);
             GlslRuntimeEventTracker.onCharTyped(codePoint, modifiers);
-            if (Character.charCount(codePoint) == 1) {
-                if (ScreenOverlayHandler.INSTANCE.charTyped((char)codePoint, modifiers)) info.cancel();
-            } else {
-                boolean cancel = false;
-                for (char c : Character.toChars(codePoint)) {
-                    if (ScreenOverlayHandler.INSTANCE.charTyped(c, modifiers)) cancel = true;
-                }
-                if (cancel) info.cancel();
-            }
+            if (Utf16CodeUnitDispatcher.dispatch(codePoint, modifiers, ScreenOverlayHandler.INSTANCE::charTyped)) info.cancel();
         }
     }
 
