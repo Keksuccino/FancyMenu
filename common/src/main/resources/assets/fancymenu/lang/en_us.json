@@ -2939,7 +2939,7 @@
   "fancymenu.requirements.is_layout_enabled.desc": "Check if a layout is enabled.",
   "fancymenu.requirements.is_layout_enabled.value.desc": "Layout Name",
   "fancymenu.requirements.is_mcef_loaded": "Is MCEF Loaded",
-  "fancymenu.requirements.is_mcef_loaded.desc": "Checks if the MCEF mod is loaded.\n\nThis mod is needed for the Browser element and for all\nvideo-related features like the Video element and menu background.",
+  "fancymenu.requirements.is_mcef_loaded.desc": "Checks if the MCEF mod is loaded.\n\nMCEF is needed for Browser features and the deprecated\nMCEF-based Video element and menu background. Native Video\nfeatures use Watermedia instead.",
   "fancymenu.requirements.is_menu_title": "Is Screen Title",
   "fancymenu.requirements.is_menu_title.desc": "Checks for a specific screen title.\nScreen titles are the names of GUIs you can see in some GUIs like\nthe Options or Pause screen.",
   "fancymenu.requirements.is_menu_title.value": "Plain Text Title or Localization Key",
