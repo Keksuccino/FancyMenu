@@ -25,9 +25,9 @@ public class PacketsNeoForge {
             PacketHandlerNeoForge.sendToClient(payload, player);
         });
 
-        PacketHandler.setSendToServerLogic(s -> {
+        PacketHandler.setSendToServerLogic((connection, s) -> {
             BridgePacketPayload payload = new BridgePacketPayload(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, s);
-            PacketHandlerNeoForge.sendToServer(payload);
+            PacketHandlerNeoForge.sendToServer(payload, connection);
         });
 
     }
@@ -58,7 +58,7 @@ public class PacketsNeoForge {
 
     private static void handleClientboundBridgePacket(BridgePacketPayload payload, IPayloadContext context) {
         try {
-            payload.handle(null, PacketHandler.PacketDirection.TO_CLIENT);
+            payload.handle(null, PacketHandler.PacketDirection.TO_CLIENT, context.connection());
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to handle NeoForge bridge packet!", ex);
         }
