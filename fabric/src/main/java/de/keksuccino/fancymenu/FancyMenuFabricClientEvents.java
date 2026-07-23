@@ -32,7 +32,7 @@ public class FancyMenuFabricClientEvents {
 
     }
 
-    private static void registerReloadListener(Runnable reloadAction) {
+    private static void registerReloadListener(java.util.function.Consumer<ResourceManager> reloadAction) {
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
             @Override
             public ResourceLocation getFabricId() {
@@ -41,7 +41,7 @@ public class FancyMenuFabricClientEvents {
 
             @Override
             public void onResourceManagerReload(ResourceManager resourceManager) {
-                reloadAction.run();
+                reloadAction.accept(resourceManager);
             }
         });
     }

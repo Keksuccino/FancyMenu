@@ -29,7 +29,7 @@ public class FancyMenuForgeClientEvents {
         }
     }
 
-    private static SimplePreparableReloadListener<String> createReloadListener(Runnable reloadAction) {
+    private static SimplePreparableReloadListener<String> createReloadListener(java.util.function.Consumer<ResourceManager> reloadAction) {
         return new SimplePreparableReloadListener<>() {
             @Override
             protected String prepare(ResourceManager resourceManager, ProfilerFiller profiler) {
@@ -38,7 +38,7 @@ public class FancyMenuForgeClientEvents {
 
             @Override
             protected void apply(String prepared, ResourceManager resourceManager, ProfilerFiller profiler) {
-                reloadAction.run();
+                reloadAction.accept(resourceManager);
             }
         };
     }
