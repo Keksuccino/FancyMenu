@@ -13,7 +13,7 @@ public class ServerSideHandshakePacketLogic {
     private static final Logger LOGGER = LogManager.getLogger();
 
     protected static boolean handle(@NotNull ServerPlayer sender, @NotNull HandshakePacket packet) {
-        if (!PacketHandler.addFancyMenuClient(sender)) return true;
+        if (!PacketHandler.addFancyMenuClient(sender, packet.bridgeProtocolVersion())) return true;
         LOGGER.info("[FANCYMENU] A client with FancyMenu installed joined the server: " + sender.getScoreboardName());
         MinecraftServer server = sender.level().getServer();
         if (server != null) {
