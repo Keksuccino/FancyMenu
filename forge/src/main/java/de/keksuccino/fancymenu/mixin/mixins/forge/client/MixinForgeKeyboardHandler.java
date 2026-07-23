@@ -1,13 +1,17 @@
 package de.keksuccino.fancymenu.mixin.mixins.forge.client;
 
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.events.screen.ScreenCharTypedEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.input.ScreenKeyEventDispatcher;
 import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -32,6 +36,20 @@ public class MixinForgeKeyboardHandler {
         this.cached_scanCode_FancyMenu = scanCode;
         this.cached_action_FancyMenu = action;
         this.cached_modifiers_FancyMenu = modifiers;
+    }
+
+    /** @reason Forge only posts its key event when the screen does not consume the input, so dispatch after the exact screen call instead. */
+    @Dynamic("Forge inserts a handled-state capture into this synthetic method and changes its descriptor after Mixin's annotation processor runs.")
+    @WrapOperation(method = "lambda$keyPress$5", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;keyPressed(III)Z"))
+    private static boolean wrap_keyPressed_in_keyPress_FancyMenu(Screen screen, int key, int scanCode, int modifiers, Operation<Boolean> operation) {
+        return ScreenKeyEventDispatcher.dispatchPressedAfterScreenCall(screen, key, scanCode, modifiers, () -> operation.call(screen, key, scanCode, modifiers));
+    }
+
+    /** @reason See {@code wrap_keyPressed_in_keyPress_FancyMenu}; releases need the same handled-input behavior. */
+    @Dynamic("Forge inserts a handled-state capture into this synthetic method and changes its descriptor after Mixin's annotation processor runs.")
+    @WrapOperation(method = "lambda$keyPress$5", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;keyReleased(III)Z"))
+    private static boolean wrap_keyReleased_in_keyPress_FancyMenu(Screen screen, int key, int scanCode, int modifiers, Operation<Boolean> operation) {
+        return ScreenKeyEventDispatcher.dispatchReleasedAfterScreenCall(screen, key, scanCode, modifiers, () -> operation.call(screen, key, scanCode, modifiers));
     }
 
     /**

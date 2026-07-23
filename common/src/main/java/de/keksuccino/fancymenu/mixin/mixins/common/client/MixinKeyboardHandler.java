@@ -4,7 +4,8 @@ import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.glsl.GlslRuntimeEventTracker;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
-import net.minecraft.client.*;
+import net.minecraft.client.KeyboardHandler;
+import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -60,5 +61,4 @@ public abstract class MixinKeyboardHandler {
             }
         }
     }
-
 }
