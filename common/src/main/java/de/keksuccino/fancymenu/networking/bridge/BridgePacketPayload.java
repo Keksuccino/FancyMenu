@@ -9,29 +9,67 @@ import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/** Shared bridge message and wire format used by the legacy Fabric and Forge networking adapters. */
+import java.util.Objects;
+
+/**
+ * Shared bridge wire format for the legacy Fabric and Forge networking adapters.
+ */
 public final class BridgePacketPayload {
 
     public static final ResourceLocation ID = new ResourceLocation("fancymenu", "fancymenu_bridge_packet");
     public static final String TO_SERVER_WIRE_DIRECTION = "server";
     public static final String TO_CLIENT_WIRE_DIRECTION = "client";
 
-    /** Retained for wire compatibility only; receivers must trust their loader callback direction instead. */
-    private final String direction;
-    private final String dataWithIdentifier;
+    /**
+     * This field is retained for wire compatibility only. Receivers must use the direction supplied by their
+     * loader callback, because a remote peer controls the serialized value.
+     */
+    @Nullable private final String direction;
+    @Nullable private final String dataWithIdentifier;
+    private final boolean valid;
 
     public BridgePacketPayload(@NotNull String direction, @NotNull String dataWithIdentifier) {
+        validate(Objects.requireNonNull(direction), Objects.requireNonNull(dataWithIdentifier));
         this.direction = direction;
         this.dataWithIdentifier = dataWithIdentifier;
+        this.valid = true;
     }
 
-    public static @NotNull BridgePacketPayload read(@NotNull FriendlyByteBuf byteBuf) {
-        return new BridgePacketPayload(byteBuf.readUtf(), byteBuf.readUtf());
+    private BridgePacketPayload() {
+        this.direction = null;
+        this.dataWithIdentifier = null;
+        this.valid = false;
     }
 
     public void write(@NotNull FriendlyByteBuf byteBuf) {
-        byteBuf.writeUtf(this.direction);
-        byteBuf.writeUtf(this.dataWithIdentifier);
+        if (!this.valid || this.direction == null || this.dataWithIdentifier == null) throw new IllegalStateException("Cannot encode an invalid legacy bridge payload");
+        Lengths lengths = validate(this.direction, this.dataWithIdentifier);
+        BridgeWireCodec.writeUtf8(byteBuf, this.direction, lengths.directionBytes);
+        BridgeWireCodec.writeUtf8(byteBuf, this.dataWithIdentifier, lengths.messageBytes);
+    }
+
+    public static @NotNull BridgePacketPayload read(@NotNull FriendlyByteBuf byteBuf) {
+        int bodyEnd = byteBuf.writerIndex();
+        try {
+            if (byteBuf.readableBytes() > BridgeProtocol.MAX_PAYLOAD_BODY_BYTES) return new BridgePacketPayload();
+            String direction = BridgeWireCodec.readUtf8(byteBuf, BridgeProtocol.MAX_LEGACY_DIRECTION_BYTES);
+            String dataWithIdentifier = BridgeWireCodec.readUtf8(byteBuf, BridgeProtocol.MAX_LEGACY_MESSAGE_BYTES);
+            if (byteBuf.isReadable()) return new BridgePacketPayload();
+            return new BridgePacketPayload(direction, dataWithIdentifier);
+        } catch (RuntimeException ignored) {
+            return new BridgePacketPayload();
+        } finally {
+            // A malformed registered payload must not leave unread attacker-controlled bytes for another decoder.
+            byteBuf.readerIndex(bodyEnd);
+        }
+    }
+
+    private static @NotNull Lengths validate(@NotNull String direction, @NotNull String dataWithIdentifier) {
+        int directionBytes = BridgeProtocol.encodedLength(direction, BridgeProtocol.MAX_LEGACY_DIRECTION_BYTES);
+        int messageBytes = BridgeProtocol.encodedLength(dataWithIdentifier, BridgeProtocol.MAX_LEGACY_MESSAGE_BYTES);
+        int bodyBytes = BridgeProtocol.varIntSize(directionBytes) + directionBytes + BridgeProtocol.varIntSize(messageBytes) + messageBytes;
+        if (bodyBytes > BridgeProtocol.MAX_PAYLOAD_BODY_BYTES) throw new IllegalArgumentException("Legacy bridge payload body exceeds the protocol limit");
+        return new Lengths(directionBytes, messageBytes);
     }
 
     public @NotNull FriendlyByteBuf writeToNewBuffer() {
@@ -41,14 +79,21 @@ public final class BridgePacketPayload {
     }
 
     public void handle(@Nullable ServerPlayer sender, @NotNull PacketHandler.PacketDirection direction, @Nullable Connection clientConnection) {
-        PacketHandler.onPacketReceived(sender, direction, this.dataWithIdentifier, clientConnection);
+        if (this.dataWithIdentifier != null) PacketHandler.onPacketReceived(sender, direction, this.dataWithIdentifier, clientConnection);
     }
 
-    public @NotNull String direction() {
+    public @Nullable String direction() {
         return this.direction;
     }
 
-    public @NotNull String dataWithIdentifier() {
+    public @Nullable String dataWithIdentifier() {
         return this.dataWithIdentifier;
+    }
+
+    public boolean isValid() {
+        return this.valid;
+    }
+
+    private record Lengths(int directionBytes, int messageBytes) {
     }
 }

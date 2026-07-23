@@ -4,12 +4,16 @@ import io.netty.buffer.Unpooled;
 import net.minecraft.network.FriendlyByteBuf;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BridgePacketPayloadTest {
 
@@ -23,15 +27,7 @@ class BridgePacketPayloadTest {
         assertNotEquals("minecraft", BridgePacketPayload.ID.getNamespace());
     }
 
-    @Test
-    void fabricServerboundWireBodyDecodesWithTheSharedCodec() {
-        BridgePacketPayload decoded = decodeSharedPayload(encodeReferenceWireBody(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, SERVERBOUND_DATA));
-        assertEquals(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, decoded.direction());
-        assertEquals(SERVERBOUND_DATA, decoded.dataWithIdentifier());
-    }
-
-    @Test
-    void sharedClientboundEncodingMatchesTheForgeWireLayout() {
+    void legacyEncodingPreservesTheExactHistoricalTwoUtfLayout() {
         BridgePacketPayload payload = new BridgePacketPayload(BridgePacketPayload.TO_CLIENT_WIRE_DIRECTION, CLIENTBOUND_DATA);
         assertArrayEquals(encodeReferenceWireBody(BridgePacketPayload.TO_CLIENT_WIRE_DIRECTION, CLIENTBOUND_DATA), encodeSharedPayload(payload));
     }
@@ -43,31 +39,112 @@ class BridgePacketPayloadTest {
     }
 
     @Test
-    void serializedDirectionRemainsOpaqueUntrustedMetadata() {
+    void serializedDirectionRemainsOpaqueUntrustedMetadataWithinItsByteLimit() {
         String forgedDirection = "server\u0000client";
         BridgePacketPayload decoded = decodeSharedPayload(encodeReferenceWireBody(forgedDirection, SERVERBOUND_DATA));
+
+        assertTrue(decoded.isValid());
         assertEquals(forgedDirection, decoded.direction());
     }
 
     @Test
-    void truncatedWireBodyIsRejectedBeforeProducingAPayload() {
-        byte[] completeWireBody = encodeSharedPayload(new BridgePacketPayload(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, SERVERBOUND_DATA));
-        assertThrows(IndexOutOfBoundsException.class, () -> decodeSharedPayload(Arrays.copyOf(completeWireBody, completeWireBody.length - 1)));
+    void exactAsciiByteCeilingIsAcceptedAndOneMoreByteIsRejected() {
+        String exact = "a".repeat(BridgeProtocol.MAX_LEGACY_MESSAGE_BYTES);
+
+        assertRoundTrip(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, exact);
+        assertTrue(encodeSharedPayload(new BridgePacketPayload(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, exact)).length < 32767);
+        assertThrows(BridgeProtocol.EncodedLengthExceededException.class, () -> new BridgePacketPayload(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, exact + "a"));
+    }
+
+    @Test
+    void multibyteCeilingUsesEncodedBytesInsteadOfJavaCharacterCount() {
+        String exact = "€".repeat(BridgeProtocol.MAX_LEGACY_MESSAGE_BYTES / 3);
+
+        assertEquals(BridgeProtocol.MAX_LEGACY_MESSAGE_BYTES / 3, exact.length());
+        assertRoundTrip(BridgePacketPayload.TO_CLIENT_WIRE_DIRECTION, exact);
+        assertThrows(BridgeProtocol.EncodedLengthExceededException.class, () -> new BridgePacketPayload(BridgePacketPayload.TO_CLIENT_WIRE_DIRECTION, exact + "€"));
+    }
+
+    @Test
+    void supplementaryCodePointsAreCountedAsFourBytesWithoutSplittingSurrogates() {
+        String exact = "😀".repeat(BridgeProtocol.MAX_LEGACY_MESSAGE_BYTES / 4);
+
+        assertEquals(BridgeProtocol.MAX_LEGACY_MESSAGE_BYTES / 2, exact.length());
+        assertRoundTrip(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, exact);
+        assertThrows(BridgeProtocol.EncodedLengthExceededException.class, () -> new BridgePacketPayload(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, exact + "😀"));
+        assertThrows(BridgeProtocol.MalformedTextException.class, () -> new BridgePacketPayload(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, "broken\uD83D"));
+        assertThrows(BridgeProtocol.MalformedTextException.class, () -> new BridgePacketPayload(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, "broken\uDE00"));
+    }
+
+    @Test
+    void encodeRevalidatesEveryFieldBeforeWritingAnything() throws Exception {
+        BridgePacketPayload payload = new BridgePacketPayload(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, "valid");
+        Field messageField = BridgePacketPayload.class.getDeclaredField("dataWithIdentifier");
+        messageField.setAccessible(true);
+        messageField.set(payload, "x".repeat(BridgeProtocol.MAX_LEGACY_MESSAGE_BYTES + 1));
+        FriendlyByteBuf byteBuf = new FriendlyByteBuf(Unpooled.buffer());
+        try {
+            assertThrows(BridgeProtocol.EncodedLengthExceededException.class, () -> payload.write(byteBuf));
+            assertEquals(0, byteBuf.writerIndex());
+        } finally {
+            byteBuf.release();
+        }
+    }
+
+    @Test
+    void truncatedWireBodyBecomesAQuietFullyConsumedDrop() {
+        byte[] complete = encodeSharedPayload(new BridgePacketPayload(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, SERVERBOUND_DATA));
+        assertInvalidAndFullyConsumed(Arrays.copyOf(complete, complete.length - 1));
+    }
+
+    @Test
+    void malformedUtf8BecomesAQuietFullyConsumedDrop() {
+        FriendlyByteBuf byteBuf = new FriendlyByteBuf(Unpooled.buffer());
+        try {
+            byteBuf.writeVarInt(6);
+            byteBuf.writeBytes(new byte[]{'s', 'e', 'r', 'v', 'e', 'r'});
+            byteBuf.writeVarInt(2);
+            byteBuf.writeBytes(new byte[]{(byte) 0xC3, 0x28});
+            assertInvalidAndFullyConsumed(copyReadableBytes(byteBuf));
+        } finally {
+            byteBuf.release();
+        }
+    }
+
+    @Test
+    void oversizedOrTrailingBodiesAreConsumedWithoutProducingData() {
+        assertInvalidAndFullyConsumed(new byte[BridgeProtocol.MAX_PAYLOAD_BODY_BYTES + 1]);
+        byte[] valid = encodeSharedPayload(new BridgePacketPayload(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, "payload"));
+        byte[] withTrailingByte = Arrays.copyOf(valid, valid.length + 1);
+        assertInvalidAndFullyConsumed(withTrailingByte);
     }
 
     private static void assertRoundTrip(String direction, String dataWithIdentifier) {
         BridgePacketPayload decoded = decodeSharedPayload(encodeSharedPayload(new BridgePacketPayload(direction, dataWithIdentifier)));
+
+        assertTrue(decoded.isValid());
         assertEquals(direction, decoded.direction());
         assertEquals(dataWithIdentifier, decoded.dataWithIdentifier());
+    }
+
+    private static void assertInvalidAndFullyConsumed(byte[] bytes) {
+        FriendlyByteBuf byteBuf = new FriendlyByteBuf(Unpooled.wrappedBuffer(bytes));
+        try {
+            BridgePacketPayload payload = BridgePacketPayload.read(byteBuf);
+            assertFalse(payload.isValid());
+            assertNull(payload.direction());
+            assertNull(payload.dataWithIdentifier());
+            assertEquals(0, byteBuf.readableBytes());
+        } finally {
+            byteBuf.release();
+        }
     }
 
     private static byte[] encodeSharedPayload(BridgePacketPayload payload) {
         FriendlyByteBuf byteBuf = new FriendlyByteBuf(Unpooled.buffer());
         try {
             payload.write(byteBuf);
-            byte[] bytes = new byte[byteBuf.readableBytes()];
-            byteBuf.readBytes(bytes);
-            return bytes;
+            return copyReadableBytes(byteBuf);
         } finally {
             byteBuf.release();
         }
@@ -89,11 +166,14 @@ class BridgePacketPayloadTest {
         try {
             byteBuf.writeUtf(direction);
             byteBuf.writeUtf(dataWithIdentifier);
-            byte[] bytes = new byte[byteBuf.readableBytes()];
-            byteBuf.readBytes(bytes);
-            return bytes;
+            return copyReadableBytes(byteBuf);
         } finally {
             byteBuf.release();
         }
+    }
+    private static byte[] copyReadableBytes(FriendlyByteBuf byteBuf) {
+        byte[] bytes = new byte[byteBuf.readableBytes()];
+        byteBuf.getBytes(byteBuf.readerIndex(), bytes);
+        return bytes;
     }
 }
