@@ -18,9 +18,9 @@ public class PacketsFabric {
             ServerPlayNetworking.send(player, payload);
         });
 
-        PacketHandler.setSendToServerLogic(s -> {
+        PacketHandler.setSendToServerLogic((connection, s) -> {
             BridgePacketPayload payload = new BridgePacketPayload(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, s);
-            ClientPlayNetworking.send(payload);
+            connection.send(ClientPlayNetworking.createServerboundPacket(payload));
         });
 
         registerFabricBridgePacket();
@@ -40,7 +40,7 @@ public class PacketsFabric {
         //ON CLIENT
         if (Services.PLATFORM.isOnClient()) {
             ClientPlayNetworking.registerGlobalReceiver(BridgePacketPayload.TYPE, (payload, context) -> {
-                payload.handle(null, PacketHandler.PacketDirection.TO_CLIENT);
+                payload.handle(null, PacketHandler.PacketDirection.TO_CLIENT, context.player().connection.getConnection());
             });
         }
 
