@@ -70,7 +70,8 @@ public class ListUtils {
     }
 
     /**
-     * Checks if the elements of both lists are equal, but ignores their order.
+     * Checks if the elements of both lists are equal, but ignores their order.<br>
+     * Each occurrence is matched exactly once, so duplicate counts must be equal. List elements may be {@code null}.
      */
     public static <T> boolean contentEqualIgnoreOrder(@NotNull List<T> list1, @NotNull List<T> list2) {
         Objects.requireNonNull(list1);
@@ -81,13 +82,19 @@ public class ListUtils {
         if (list1 == list2) {
             return true;
         }
+        // Keep this equals-based instead of using a frequency map. Existing callers contain value-equal objects
+        // without corresponding hash codes, so a hash-based comparison would reject valid copied requirements.
+        boolean[] matchedElements = new boolean[list2.size()];
         for (T obj1 : list1) {
             boolean foundMatch = false;
+            int candidateIndex = 0;
             for (T obj2 : list2) {
-                if (obj1.equals(obj2)) {
+                if (!matchedElements[candidateIndex] && Objects.equals(obj1, obj2)) {
+                    matchedElements[candidateIndex] = true;
                     foundMatch = true;
                     break;
                 }
+                candidateIndex++;
             }
             if (!foundMatch) {
                 return false;
