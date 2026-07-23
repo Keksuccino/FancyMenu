@@ -3,6 +3,7 @@
   "package": "de.keksuccino.fancymenu.mixin.mixins.common",
   "compatibilityLevel": "JAVA_17",
   "client": [
+    "client.AccessorMixinBlockModel",
     "client.IMixinAbstractContainerScreen",
     "client.IMixinAbstractSliderButton",
     "client.IMixinAbstractWidget",
@@ -110,7 +111,6 @@
   "plugin": "de.keksuccino.fancymenu.mixin.FMMixinPlugin",
   "minVersion": "0.8"
 }
-
 
 
 
