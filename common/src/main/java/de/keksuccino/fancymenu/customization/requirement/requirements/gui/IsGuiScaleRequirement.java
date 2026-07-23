@@ -2,16 +2,16 @@ package de.keksuccino.fancymenu.customization.requirement.requirements.gui;
 
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
-import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import net.minecraft.network.chat.Component;
 
 public class IsGuiScaleRequirement extends Requirement {
 
@@ -26,21 +26,35 @@ public class IsGuiScaleRequirement extends Requirement {
 
     @Override
     public boolean isRequirementMet(@Nullable String value) {
+        if (value == null) return false;
+        List<String> conditions = this.parseValues(value);
+        if (conditions.isEmpty()) return false;
+        return matchesGuiScaleConditions(conditions, Minecraft.getInstance().getWindow().getGuiScale());
+    }
 
-        if (value != null) {
-            List<String> l = this.parseValues(value);
-            if (!l.isEmpty()) {
-                for (String s : l) {
-                    if (!checkForGuiScale(s)) {
-                        return false;
-                    }
-                }
-                return true;
+    /**
+     * Equality tokens are alternatives, while relational tokens stay cumulative so legacy ranges such as
+     * {@code >1.20,<3.0} keep their established behavior.
+     */
+    boolean matchesGuiScaleConditions(@Nullable String value, double windowScale) {
+        if (value == null) return false;
+        List<String> conditions = this.parseValues(value);
+        if (conditions.isEmpty()) return false;
+        return matchesGuiScaleConditions(conditions, windowScale);
+    }
+
+    private static boolean matchesGuiScaleConditions(@NotNull List<String> conditions, double windowScale) {
+        boolean hasEqualityCondition = false;
+        boolean equalityConditionMatched = false;
+        for (String condition : conditions) {
+            if (condition.startsWith("double:")) {
+                hasEqualityCondition = true;
+                if (checkForGuiScale(condition, windowScale)) equalityConditionMatched = true;
+            } else if (!checkForGuiScale(condition, windowScale)) {
+                return false;
             }
         }
-
-        return false;
-
+        return !hasEqualityCondition || equalityConditionMatched;
     }
 
     protected List<String> parseValues(String value) {
@@ -74,7 +88,10 @@ public class IsGuiScaleRequirement extends Requirement {
     }
 
     protected static boolean checkForGuiScale(String condition) {
-        double windowScale = Minecraft.getInstance().getWindow().getGuiScale();
+        return checkForGuiScale(condition, Minecraft.getInstance().getWindow().getGuiScale());
+    }
+
+    private static boolean checkForGuiScale(String condition, double windowScale) {
         if (condition.startsWith("double:")) {
             String value = condition.replace("double:", "");
             double valueScale = Double.parseDouble(value);
