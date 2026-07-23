@@ -3,7 +3,9 @@ package de.keksuccino.fancymenu.networking;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,7 +31,7 @@ final class NetworkCapabilityLifecycle {
         while (true) {
             ClientSession current = this.clientSession.get();
             if (current != null && current.connection == connection) return false;
-            if (this.clientSession.compareAndSet(current, new ClientSession(connection, false))) return true;
+            if (this.clientSession.compareAndSet(current, new ClientSession(connection, false, 0))) return true;
         }
     }
 
@@ -38,11 +40,15 @@ final class NetworkCapabilityLifecycle {
      * capability to a replacement connection.
      */
     boolean markClientServerCapable(@NotNull Object connection) {
+        return this.markClientServerCapable(connection, 0);
+    }
+
+    boolean markClientServerCapable(@NotNull Object connection, int bridgeProtocolVersion) {
         Objects.requireNonNull(connection);
         while (true) {
             ClientSession current = this.clientSession.get();
             if (current == null || current.connection != connection || current.serverCapable) return false;
-            if (this.clientSession.compareAndSet(current, new ClientSession(connection, true))) return true;
+            if (this.clientSession.compareAndSet(current, new ClientSession(connection, true, normalizeProtocolVersion(bridgeProtocolVersion)))) return true;
         }
     }
 
@@ -56,6 +62,13 @@ final class NetworkCapabilityLifecycle {
         Objects.requireNonNull(connection);
         ClientSession current = this.clientSession.get();
         return current != null && current.connection == connection && current.serverCapable;
+    }
+
+    boolean supportsClientBridgeProtocol(@NotNull Object connection, int minimumVersion) {
+        Objects.requireNonNull(connection);
+        if (minimumVersion < 1) throw new IllegalArgumentException("Minimum bridge protocol version must be positive");
+        ClientSession current = this.clientSession.get();
+        return current != null && current.connection == connection && current.serverCapable && current.bridgeProtocolVersion >= minimumVersion;
     }
 
     boolean endClientSession(@Nullable Object connection) {
@@ -80,10 +93,14 @@ final class NetworkCapabilityLifecycle {
     }
 
     boolean markServerClientCapable(@NotNull Object server, @NotNull Object connection) {
+        return this.markServerClientCapable(server, connection, 0);
+    }
+
+    boolean markServerClientCapable(@NotNull Object server, @NotNull Object connection, int bridgeProtocolVersion) {
         Objects.requireNonNull(server);
         Objects.requireNonNull(connection);
         ServerSession session = this.serverSessions.get(new IdentityKey(server));
-        return session != null && session.markClientCapable(connection);
+        return session != null && session.markClientCapable(connection, normalizeProtocolVersion(bridgeProtocolVersion));
     }
 
     boolean isServerClientCapable(@NotNull Object server, @NotNull Object connection) {
@@ -91,6 +108,14 @@ final class NetworkCapabilityLifecycle {
         Objects.requireNonNull(connection);
         ServerSession session = this.serverSessions.get(new IdentityKey(server));
         return session != null && session.isClientCapable(connection);
+    }
+
+    boolean supportsServerBridgeProtocol(@NotNull Object server, @NotNull Object connection, int minimumVersion) {
+        Objects.requireNonNull(server);
+        Objects.requireNonNull(connection);
+        if (minimumVersion < 1) throw new IllegalArgumentException("Minimum bridge protocol version must be positive");
+        ServerSession session = this.serverSessions.get(new IdentityKey(server));
+        return session != null && session.supportsBridgeProtocol(connection, minimumVersion);
     }
 
     boolean endServerConnection(@NotNull Object server, @NotNull Object connection) {
@@ -122,7 +147,11 @@ final class NetworkCapabilityLifecycle {
         return session == null ? 0 : session.capableConnectionCount();
     }
 
-    private record ClientSession(Object connection, boolean serverCapable) {
+    private static int normalizeProtocolVersion(int bridgeProtocolVersion) {
+        return Math.max(bridgeProtocolVersion, 0);
+    }
+
+    private record ClientSession(Object connection, boolean serverCapable, int bridgeProtocolVersion) {
     }
 
     /**
@@ -133,7 +162,7 @@ final class NetworkCapabilityLifecycle {
     private static final class ServerSession {
 
         private final Set<IdentityKey> liveConnections = new HashSet<>();
-        private final Set<IdentityKey> capableConnections = new HashSet<>();
+        private final Map<IdentityKey, Integer> capableConnections = new HashMap<>();
         private boolean active = true;
 
         private synchronized boolean beginConnection(@NotNull Object connection) {
@@ -141,21 +170,27 @@ final class NetworkCapabilityLifecycle {
             return this.liveConnections.add(new IdentityKey(connection));
         }
 
-        private synchronized boolean markClientCapable(@NotNull Object connection) {
+        private synchronized boolean markClientCapable(@NotNull Object connection, int bridgeProtocolVersion) {
             if (!this.active) return false;
             IdentityKey connectionKey = new IdentityKey(connection);
             if (!this.liveConnections.contains(connectionKey)) return false;
-            return this.capableConnections.add(connectionKey);
+            return this.capableConnections.putIfAbsent(connectionKey, bridgeProtocolVersion) == null;
         }
 
         private synchronized boolean isClientCapable(@NotNull Object connection) {
-            return this.active && this.capableConnections.contains(new IdentityKey(connection));
+            return this.active && this.capableConnections.containsKey(new IdentityKey(connection));
+        }
+
+        private synchronized boolean supportsBridgeProtocol(@NotNull Object connection, int minimumVersion) {
+            if (!this.active) return false;
+            Integer version = this.capableConnections.get(new IdentityKey(connection));
+            return version != null && version >= minimumVersion;
         }
 
         private synchronized boolean endConnection(@NotNull Object connection) {
             IdentityKey connectionKey = new IdentityKey(connection);
             boolean removed = this.liveConnections.remove(connectionKey);
-            return this.capableConnections.remove(connectionKey) || removed;
+            return this.capableConnections.remove(connectionKey) != null || removed;
         }
 
         private synchronized void close() {
