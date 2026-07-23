@@ -212,7 +212,8 @@ public abstract class FileCodec<T> {
                 return (loc != null) ? this.readLocation(loc) : null;
             }
             if (resourceSource.getSourceType() == ResourceSourceType.LOCAL) {
-                return this.readLocal(new File(resourceSource.getSourceWithoutPrefix()));
+                File localFile = resourceSource.getValidatedLocalFile();
+                return (localFile != null) ? this.readLocal(localFile) : null;
             }
             if (resourceSource.getSourceType() == ResourceSourceType.WEB) {
                 return this.readWeb(resourceSource.getSourceWithoutPrefix());
