@@ -94,7 +94,13 @@ public class FileTextPlaceholder extends Placeholder {
         }
         
         // Join lines with separator
-        return String.join(separator, resultLines);
+        return joinLines(resultLines, separator);
+    }
+
+    @NotNull
+    static String joinLines(@NotNull List<String> lines, @NotNull String separator) {
+        // Only the documented textual newline is decoded. Actual line breaks and all unrelated escapes stay untouched.
+        return String.join(separator.replace("\\n", "\n"), lines);
     }
 
     private List<String> getCachedOrLoadAsync(String path) {
