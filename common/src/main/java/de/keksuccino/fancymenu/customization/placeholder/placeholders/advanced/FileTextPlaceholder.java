@@ -166,7 +166,7 @@ public class FileTextPlaceholder extends Placeholder {
         return path != null && (path.startsWith("http://") || path.startsWith("https://"));
     }
     
-    private List<String> loadFromUrl(String url) {
+    private List<String> loadFromUrl(String url) throws IOException {
         if (!WebUtils.isInternetAvailable()) {
             return new ArrayList<>();
         }
@@ -176,9 +176,10 @@ public class FileTextPlaceholder extends Placeholder {
             LOGGER.warn("[FANCYMENU] Failed to open URL stream: " + url);
             return new ArrayList<>();
         }
-        
-        // Use FileUtils to read lines from the stream
-        return FileUtils.readTextLinesFrom(stream);
+
+        try (stream) {
+            return FileUtils.readTextLinesFrom(stream);
+        }
     }
     
     private List<String> loadFromFile(String filePath) {
