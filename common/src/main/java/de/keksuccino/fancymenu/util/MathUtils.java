@@ -13,4 +13,14 @@ public class MathUtils extends de.keksuccino.konkrete.math.MathUtils {
         return bd.doubleValue();
     }
 
+    /**
+     * Formats finite whole-number doubles as plain integer text without narrowing them to the range of a {@code long}.
+     * Non-finite and fractional values retain Java's canonical double representation so callers do not silently change their semantics.
+     */
+    public static String formatWholeNumber(double value) {
+        if (!Double.isFinite(value) || value != Math.rint(value)) return Double.toString(value);
+        // The exact double constructor is intentional; valueOf would round large integers through Double.toString before formatting them.
+        return new BigDecimal(value).toBigIntegerExact().toString();
+    }
+
 }
