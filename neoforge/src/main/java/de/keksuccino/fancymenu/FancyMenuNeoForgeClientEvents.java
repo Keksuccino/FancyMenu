@@ -31,8 +31,9 @@ public class FancyMenuNeoForgeClientEvents {
     }
 
     public static void onAddClientReloadListeners(AddClientReloadListenersEvent e) {
-        LOGGER.info("[FANCYMENU] Registering FancyMenu's resource reload listener via NeoForge API..");
-        e.addListener(FancyMenuResourceReload.FANCYMENU_RELOAD_LISTENER_ID, FancyMenuResourceReload.createMinecraftPreparableReloadListener());
+        if (FancyMenuResourceReload.registerClientReloadListener(FancyMenuResourceReload.ClientLoader.NEOFORGE, listener -> e.addListener(FancyMenuResourceReload.FANCYMENU_RELOAD_LISTENER_ID, listener))) {
+            LOGGER.info("[FANCYMENU] Registered FancyMenu's resource reload listener via NeoForge API.");
+        }
     }
 
     @SubscribeEvent
