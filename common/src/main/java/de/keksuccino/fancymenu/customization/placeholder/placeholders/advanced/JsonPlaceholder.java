@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.advanced;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.events.ModReloadEvent;
+import de.keksuccino.fancymenu.util.file.LocalSourcePathResolver;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -10,17 +11,18 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.json.JsonUtils;
 import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.web.WebUtils;
-import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -107,16 +109,10 @@ public class JsonPlaceholder extends Placeholder {
                 return formatJsonToString(json);
             }
             
-            // If not direct JSON, check for file
-            File f = new File(source);
-            if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
-                String linkTemp = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + source;
-                f = new File(linkTemp);
-            }
-            if (f.isFile()) {
-                List<String> json = JsonUtils.getJsonValueByPath(f, jsonPath);
-                return formatJsonToString(json);
-            } else {
+            LocalJsonLookup localLookup = isHttpSource(source) ? LocalJsonLookup.missing() : readLocalJsonWithProductionResolver(source, jsonPath);
+            if (localLookup.status() == LocalJsonStatus.FOUND) {
+                return formatJsonToString(Objects.requireNonNull(localLookup.json()));
+            } else if (localLookup.status() == LocalJsonStatus.MISSING) {
                 // Finally, check for URL
                 if (!isInvalidWebPlaceholderLink(source)) {
                     List<String> json = getCachedWebPlaceholder(dps.placeholderString);
@@ -134,6 +130,56 @@ public class JsonPlaceholder extends Placeholder {
         return null;
     }
 
+    private static LocalJsonLookup readLocalJsonWithProductionResolver(String source, String jsonPath) {
+        try {
+            return readLocalJson(source, jsonPath, LocalSourcePathResolver.createForGameDirectory());
+        } catch (IOException | RuntimeException ignored) {
+            return LocalJsonLookup.rejected();
+        }
+    }
+
+    static boolean isHttpSource(String source) {
+        return source.regionMatches(true, 0, "http://", 0, "http://".length()) || source.regionMatches(true, 0, "https://", 0, "https://".length());
+    }
+
+    @NotNull
+    static LocalJsonLookup readLocalJson(@NotNull String source, @NotNull String jsonPath, @NotNull LocalSourcePathResolver resolver) {
+        LocalSourcePathResolver.ResolvedPath resolvedPath;
+        Path path;
+        try {
+            resolvedPath = resolver.resolve(source);
+            path = resolvedPath.revalidate();
+            if (!Files.isRegularFile(path)) return LocalJsonLookup.missing();
+            // Revalidate after the metadata probe and immediately before JsonUtils opens the file.
+            path = resolvedPath.revalidate();
+        } catch (IOException | RuntimeException ignored) {
+            return LocalJsonLookup.rejected();
+        }
+        // Keep parser failures visible to the placeholder framework as before; only path-validation failures fail closed.
+        return LocalJsonLookup.found(JsonUtils.getJsonValueByPath(path.toFile(), jsonPath));
+    }
+
+    enum LocalJsonStatus {
+        FOUND,
+        MISSING,
+        REJECTED
+    }
+
+    record LocalJsonLookup(@NotNull LocalJsonStatus status, @Nullable List<String> json) {
+
+        private static LocalJsonLookup found(List<String> json) {
+            return new LocalJsonLookup(LocalJsonStatus.FOUND, json);
+        }
+
+        private static LocalJsonLookup missing() {
+            return new LocalJsonLookup(LocalJsonStatus.MISSING, null);
+        }
+
+        private static LocalJsonLookup rejected() {
+            return new LocalJsonLookup(LocalJsonStatus.REJECTED, null);
+        }
+    }
+
     /**
      * Checks if the given string is direct JSON content (not a file path or URL).
      * This is a quick check that looks for JSON object or array indicators.
@@ -141,7 +187,7 @@ public class JsonPlaceholder extends Placeholder {
      * @param str The string to check
      * @return true if the string appears to be direct JSON content
      */
-    private static boolean isDirectJsonContent(String str) {
+    static boolean isDirectJsonContent(String str) {
         if (str == null || str.trim().isEmpty()) {
             return false;
         }
