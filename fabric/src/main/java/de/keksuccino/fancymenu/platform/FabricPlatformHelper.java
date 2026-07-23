@@ -38,7 +38,7 @@ public class FabricPlatformHelper implements IPlatformHelper {
 
     @Override
     public String getLoaderVersion() {
-        return this.getModVersion("fabric");
+        return this.getModVersion("fabricloader");
     }
 
     @Override
