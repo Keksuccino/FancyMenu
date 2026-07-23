@@ -16,7 +16,7 @@ public class FancyMenuNeoForge {
         PacketsNeoForge.init(eventBus);
 
         if (Services.PLATFORM.isOnClient()) {
-            FancyMenuNeoForgeClientEvents.registerAll();
+            FancyMenuNeoForgeClientEvents.registerAll(eventBus);
         }
 
         FancyMenuNeoForgeServerEvents.registerAll();
