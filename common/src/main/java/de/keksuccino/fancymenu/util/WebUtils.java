@@ -1,71 +1,55 @@
 package de.keksuccino.fancymenu.util;
 
 import net.minecraft.util.Util;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
+import java.time.Duration;
 import java.util.Locale;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 public class WebUtils {
 
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final URI INTERNET_AVAILABILITY_ENDPOINT = URI.create("https://docs.fancymenu.net");
+    private static final int INTERNET_AVAILABILITY_TIMEOUT_MILLIS = 3000;
+    private static final Duration INTERNET_AVAILABILITY_REFRESH_DELAY = Duration.ofSeconds(20L);
 
-    private static volatile boolean isConnectionAvailable = true;
+    private static volatile boolean isConnectionAvailable = false;
+    private static final InternetAvailabilityMonitor INTERNET_AVAILABILITY_MONITOR = new InternetAvailabilityMonitor(new HttpInternetAvailabilityProbe(INTERNET_AVAILABILITY_ENDPOINT, INTERNET_AVAILABILITY_TIMEOUT_MILLIS, INTERNET_AVAILABILITY_TIMEOUT_MILLIS, endpoint -> (HttpURLConnection) endpoint.toURL().openConnection()), () -> new ExecutorFixedDelayScheduler(createConnectivityExecutor()), INTERNET_AVAILABILITY_REFRESH_DELAY, available -> isConnectionAvailable = available);
+
+    private static ScheduledExecutorService createConnectivityExecutor() {
+        return Executors.newSingleThreadScheduledExecutor(runnable -> {
+            // 26.1.2 predates the shared managed-executor registry; ownership stays with the monitor and its worker must never delay process exit.
+            Thread thread = new Thread(runnable, "FancyMenu-WebUtils-ConnectivityCheck");
+            thread.setDaemon(true);
+            return thread;
+        });
+    }
 
     public static void init() {
+        INTERNET_AVAILABILITY_MONITOR.init();
+    }
 
-        new Thread(() -> {
-            try {
-                isConnectionAvailable = _isInternetAvailable();
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to update the cached internet availability value!", ex);
-            }
-            try {
-                Thread.sleep(20000); // 20 seconds
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to sleep after updating cached internet availability value!", ex);
-            }
-        }, "FancyMenu-WebUtils-Thread").start();
-
+    public static void shutdown() {
+        INTERNET_AVAILABILITY_MONITOR.shutdown();
     }
 
     /**
      * Checks if an internet connection is available.
      * The method can be called in the main thread, since the value it returns is updated asynchronously every 20 seconds.
      *
-     * @return true if an internet connection is available, false otherwise
+     * Before the first asynchronous probe completes, this deliberately reports false instead of assuming an
+     * unverified connection is available.
+     *
+     * @return true if the latest internet availability probe succeeded, false otherwise
      */
     public static boolean isInternetAvailable() {
         return isConnectionAvailable;
-    }
-
-    /**
-     * Checks if an internet connection is available.
-     * Uses a 3-second timeout for both connection and read operations.
-     *
-     * @return true if an internet connection is available, false otherwise
-     */
-    private static boolean _isInternetAvailable() {
-        try {
-            var url = new URL("https://docs.fancymenu.net");
-            var connection = (HttpURLConnection) url.openConnection();
-
-            // Using 3 seconds (3000ms) as a reasonable timeout
-            connection.setConnectTimeout(3000);
-            connection.setReadTimeout(3000);
-            connection.setRequestMethod("HEAD");
-
-            int responseCode = connection.getResponseCode();
-            return (responseCode >= 200 && responseCode < 300);
-        } catch (IOException e) {
-            return false;
-        }
     }
 
     @Nullable
