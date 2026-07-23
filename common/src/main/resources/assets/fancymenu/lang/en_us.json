@@ -3002,7 +3002,7 @@
   "fancymenu.requirements.multiplayer.desc": "Check if the user is in multiplayer.",
   "fancymenu.requirements.multiselect.warning.override": "§x§lOverride Requirements?\n\nThe selected entries have different requirements!\nAll of their requirements will get §xoverridden§r!\n\nContinue?",
   "fancymenu.requirements.once_per_session": "Only Once Per Session",
-  "fancymenu.requirements.once_per_session.desc": "Returns true only once per game session.\nAfter returning true once, it will return false\nuntil the game is restarted.",
+  "fancymenu.requirements.once_per_session.desc": "Each instance of this requirement returns true once per game session.\nAfter an instance returns true, it will return false\nuntil the game is restarted.",
   "fancymenu.requirements.oslinux": "Is OS Linux",
   "fancymenu.requirements.oslinux.desc": "Check if the operating system is Linux.",
   "fancymenu.requirements.osmac": "Is OS macOS",
