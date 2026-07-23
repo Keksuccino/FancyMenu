@@ -26,12 +26,16 @@ public class IsLayoutEnabledRequirement extends Requirement {
     @Override
     public boolean isRequirementMet(@Nullable String value) {
 
+        return hasLayoutNamed(value, LayoutHandler.getEnabledLayouts());
+
+    }
+
+    static boolean hasLayoutNamed(@Nullable String value, @NotNull Iterable<Layout> enabledLayouts) {
+
         if (value != null) {
-            for (Layout s : LayoutHandler.getEnabledLayouts()) {
-                File f = s.layoutFile;
-                if (f != null) {
-                    return Files.getNameWithoutExtension(f.getName()).equals(value);
-                }
+            for (Layout layout : enabledLayouts) {
+                File layoutFile = layout.layoutFile;
+                if ((layoutFile != null) && Files.getNameWithoutExtension(layoutFile.getName()).equals(value)) return true;
             }
         }
 
