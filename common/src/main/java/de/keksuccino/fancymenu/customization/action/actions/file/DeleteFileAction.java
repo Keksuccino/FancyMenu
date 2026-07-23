@@ -1,21 +1,23 @@
 package de.keksuccino.fancymenu.customization.action.actions.file;
 
 import de.keksuccino.fancymenu.customization.action.Action;
-import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
-import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
+import de.keksuccino.fancymenu.util.file.GameDirectoryActionPathResolver;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
 
 public class DeleteFileAction extends Action {
 
@@ -33,28 +35,38 @@ public class DeleteFileAction extends Action {
     @Override
     public void execute(@Nullable String value) {
         try {
-            if ((value != null) && !value.isEmpty()) {
-                boolean wildcardTarget = isWildcardPath(value);
-                String resolvedPath = resolveActionPath(value, wildcardTarget);
-                File targetFile = new File(resolvedPath);
-                if (!targetFile.exists()) {
-                    throw new FileNotFoundException("Target not found! Can't delete: " + (wildcardTarget ? value : resolvedPath));
-                }
-                if (wildcardTarget) {
-                    if (!targetFile.isDirectory()) {
-                        throw new FileNotFoundException("Target directory not found! Can't delete: " + value);
-                    }
-                    deleteWildcardFiles(targetFile);
-                    return;
-                }
-                if (targetFile.isDirectory()) {
-                    deleteDirectoryRecursively(targetFile);
-                } else if (targetFile.isFile()) {
-                    Files.delete(targetFile.toPath());
-                }
-            }
+            this.executeWithResolver(value, GameDirectoryActionPathResolver.create());
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to delete file in game directory via DeleteFileAction: " + value, ex);
+        }
+    }
+
+    void executeWithResolver(@Nullable String value, @NotNull GameDirectoryActionPathResolver resolver) throws IOException {
+        if (value == null) {
+            return;
+        }
+        boolean wildcardTarget = isWildcardPath(value);
+        String processedPath = wildcardTarget ? stripTrailingWildcard(value) : value;
+        GameDirectoryActionPathResolver.ResolvedPath target = resolver.resolve(processedPath).requireDescendant();
+        Path targetPath = target.path();
+        target.revalidate();
+        if (!Files.exists(targetPath, LinkOption.NOFOLLOW_LINKS)) {
+            throw new FileNotFoundException("Target not found! Can't delete: " + (wildcardTarget ? value : targetPath));
+        }
+        if (wildcardTarget) {
+            target.revalidate();
+            if (!Files.isDirectory(targetPath)) {
+                throw new FileNotFoundException("Target directory not found! Can't delete: " + value);
+            }
+            this.deleteWildcardFiles(target);
+            return;
+        }
+        target.revalidate();
+        if (Files.isDirectory(targetPath)) {
+            this.deleteDirectoryRecursively(target);
+        } else if (Files.isRegularFile(targetPath)) {
+            target.revalidate();
+            Files.delete(targetPath);
         }
     }
 
@@ -78,43 +90,62 @@ public class DeleteFileAction extends Action {
         return "/config/some_mod_folder/some_file.txt";
     }
 
-    private void deleteDirectoryRecursively(@NotNull File directory) throws IOException {
-        Path directoryPath = directory.toPath();
-        Files.walkFileTree(directoryPath, new SimpleFileVisitor<>() {
+    private void deleteDirectoryRecursively(@NotNull GameDirectoryActionPathResolver.ResolvedPath directory) throws IOException {
+        // The no-follow walk only inventories entries; deletion starts after the whole tree passes real-path validation.
+        List<GameDirectoryActionPathResolver.ResolvedPath> deletePlan = new ArrayList<>();
+        directory.revalidate();
+        Files.walkFileTree(directory.path(), new SimpleFileVisitor<>() {
             @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                Files.delete(file);
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                deletePlan.add(resolveEntry(directory, dir));
                 return FileVisitResult.CONTINUE;
             }
 
             @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                if (exc != null) {
-                    throw exc;
-                }
-                Files.delete(dir);
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                deletePlan.add(resolveEntry(directory, file));
                 return FileVisitResult.CONTINUE;
             }
         });
-    }
-
-    private void deleteWildcardFiles(@NotNull File directory) throws IOException {
-        File[] filesToDelete = directory.listFiles(File::isFile);
-        if (filesToDelete == null) {
-            throw new IOException("Failed to list files in target directory: " + directory.getAbsolutePath());
+        for (GameDirectoryActionPathResolver.ResolvedPath entry : deletePlan) {
+            entry.revalidate();
         }
-        for (File file : filesToDelete) {
-            Files.delete(file.toPath());
+        for (int i = deletePlan.size() - 1; i >= 0; i--) {
+            GameDirectoryActionPathResolver.ResolvedPath entry = deletePlan.get(i);
+            entry.revalidate();
+            Files.delete(entry.path());
         }
     }
 
-    private @NotNull String resolveActionPath(@NotNull String path, boolean wildcard) {
-        String processedPath = wildcard ? stripTrailingWildcard(path) : path;
-        String resolvedPath = DotMinecraftUtils.resolveMinecraftPath(processedPath);
-        if (!DotMinecraftUtils.isInsideMinecraftDirectory(resolvedPath)) {
-            resolvedPath = GameDirectoryUtils.getAbsoluteGameDirectoryPath(resolvedPath);
+    private void deleteWildcardFiles(@NotNull GameDirectoryActionPathResolver.ResolvedPath directory) throws IOException {
+        // Preflight the complete direct-child batch before deleting any entry.
+        List<GameDirectoryActionPathResolver.ResolvedPath> deletePlan = new ArrayList<>();
+        directory.revalidate();
+        try (Stream<Path> children = Files.list(directory.path())) {
+            for (Path child : children.toList()) {
+                String fileName = child.getFileName().toString();
+                GameDirectoryActionPathResolver.ResolvedPath entry = directory.resolveSingleComponentChild(fileName);
+                entry.revalidate();
+                if (Files.isRegularFile(child)) {
+                    deletePlan.add(entry);
+                }
+            }
         }
-        return resolvedPath;
+        for (GameDirectoryActionPathResolver.ResolvedPath entry : deletePlan) {
+            entry.revalidate();
+        }
+        for (GameDirectoryActionPathResolver.ResolvedPath entry : deletePlan) {
+            entry.revalidate();
+            Files.delete(entry.path());
+        }
+    }
+
+    private @NotNull GameDirectoryActionPathResolver.ResolvedPath resolveEntry(@NotNull GameDirectoryActionPathResolver.ResolvedPath directory, @NotNull Path entryPath) throws IOException {
+        Path relativePath = directory.path().relativize(entryPath);
+        if (relativePath.toString().isEmpty()) {
+            return directory;
+        }
+        return directory.resolveRelativeChild(relativePath.toString());
     }
 
     private @NotNull String stripTrailingWildcard(@NotNull String path) {
