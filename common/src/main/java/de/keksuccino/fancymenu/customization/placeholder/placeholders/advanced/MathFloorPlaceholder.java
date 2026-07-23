@@ -29,7 +29,7 @@ public class MathFloorPlaceholder extends Placeholder {
             try {
                 if (MathUtils.isDouble(num)) {
                     double numD = Double.parseDouble(num);
-                    return "" + Math.floor(numD);
+                    return MathUtils.formatWholeNumber(Math.floor(numD));
                 }
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to parse 'Floor (Math)' placeholder: " + dps.placeholderString, ex);
