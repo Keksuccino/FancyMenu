@@ -20,6 +20,7 @@ public class PacketHandler {
     private static final Logger LOGGER = LogManager.getLogger();
     static final List<String> FANCYMENU_SERVERS = new ArrayList<>();
     private static final List<String> FANCYMENU_CLIENTS = new ArrayList<>();
+    private static final ServerHandshakeNegotiationTracker SERVER_HANDSHAKE_NEGOTIATIONS = new ServerHandshakeNegotiationTracker();
 
     private static Consumer<String> sendToServerDataConsumer = null;
     private static BiConsumer<ServerPlayer, String> sendToClientPlayerAndDataConsumer = null;
@@ -30,10 +31,22 @@ public class PacketHandler {
         FANCYMENU_SERVERS.add(serverIp);
     }
 
+    /**
+     * @return true only for the first accepted handshake on this live play connection
+     */
+    public static boolean addFancyMenuClient(@NotNull ServerPlayer player) {
+        Objects.requireNonNull(player);
+        ServerHandshakeNegotiationTracker.Decision decision = SERVER_HANDSHAKE_NEGOTIATIONS.accept(Objects.requireNonNull(player.connection));
+        warnAboutRejectedHandshake(player, decision);
+        if (!decision.isAllowed()) return false;
+
+        addFancyMenuClient(player.getUUID().toString());
+        return true;
+    }
+
     public static void addFancyMenuClient(@NotNull String playerUUID) {
         Objects.requireNonNull(playerUUID);
-        if (FANCYMENU_CLIENTS.contains(playerUUID)) return;
-        FANCYMENU_CLIENTS.add(playerUUID);
+        if (!FANCYMENU_CLIENTS.contains(playerUUID)) FANCYMENU_CLIENTS.add(playerUUID);
     }
 
     public static boolean isFancyMenuClient(@NotNull ServerPlayer player) {
@@ -103,15 +116,16 @@ public class PacketHandler {
      * @param dataWithIdentifier The packet data, starting with the packet identifier.
      */
     public static void onPacketReceived(@Nullable ServerPlayer sender, @NotNull PacketDirection direction, @NotNull String dataWithIdentifier) {
-        if (!dataWithIdentifier.contains(":")) return;
-        String[] dataSplit = dataWithIdentifier.split(":", 2);
-        PacketCodec<?> codec = PacketRegistry.getCodec(dataSplit[0]);
+        int separatorIndex = dataWithIdentifier.indexOf(':');
+        if (separatorIndex < 0) return;
+        String packetIdentifier = dataWithIdentifier.substring(0, separatorIndex);
+        PacketCodec<?> codec = PacketRegistry.getCodec(packetIdentifier);
         if (codec == null) {
-            LOGGER.error("[FANCYMENU] No codec for packet data found with identifier: " + dataSplit[0], new NullPointerException("Codec returned for identifier was NULL!"));
+            LOGGER.error("[FANCYMENU] No codec for packet data found with identifier: " + packetIdentifier, new NullPointerException("Codec returned for identifier was NULL!"));
             return;
         }
         if (direction == PacketDirection.TO_CLIENT) {
-            Packet packet = deserializePacket(() -> Objects.requireNonNull(codec.deserialize(dataSplit[1])));
+            Packet packet = deserializePacket(() -> Objects.requireNonNull(codec.deserialize(dataWithIdentifier.substring(separatorIndex + 1))));
             if (packet != null) {
                 MainThreadTaskExecutor.executeInMainThread(() -> {
                     try {
@@ -125,7 +139,8 @@ public class PacketHandler {
             if (sender != null) {
                 MinecraftServer server = sender.level().getServer();
                 if (server != null) {
-                    Packet packet = deserializePacket(() -> Objects.requireNonNull(codec.deserialize(dataSplit[1])));
+                    if (codec.getType() == HandshakePacket.class && !admitServerHandshake(sender)) return;
+                    Packet packet = deserializePacket(() -> Objects.requireNonNull(codec.deserialize(dataWithIdentifier.substring(separatorIndex + 1))));
                     if (packet != null) {
                         server.execute(() -> {
                             try {
@@ -141,6 +156,18 @@ public class PacketHandler {
             } else {
                 LOGGER.error("[FANCYMENU] Failed to process packet on server!", new NullPointerException("Sender was NULL!"));
             }
+        }
+    }
+
+    private static boolean admitServerHandshake(@NotNull ServerPlayer sender) {
+        ServerHandshakeNegotiationTracker.Decision decision = SERVER_HANDSHAKE_NEGOTIATIONS.admitAttempt(Objects.requireNonNull(sender.connection));
+        warnAboutRejectedHandshake(sender, decision);
+        return decision.isAllowed();
+    }
+
+    private static void warnAboutRejectedHandshake(@NotNull ServerPlayer sender, @NotNull ServerHandshakeNegotiationTracker.Decision decision) {
+        if (decision.isWarningRequired()) {
+            LOGGER.warn("[FANCYMENU] Ignoring excessive or replayed handshake traffic from client: " + sender.getScoreboardName());
         }
     }
 
