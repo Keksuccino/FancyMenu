@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.networking;
 
+import de.keksuccino.fancymenu.networking.bridge.BridgeProtocol;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -13,9 +14,68 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NetworkCapabilityLifecycleTest {
+
+    @Test
+    void legacyCapabilityDoesNotImplyChunkProtocolSupport() {
+        NetworkCapabilityLifecycle lifecycle = new NetworkCapabilityLifecycle();
+        Object connection = new Object();
+
+        lifecycle.beginClientSession(connection);
+        assertTrue(lifecycle.markClientServerCapable(connection, 0));
+
+        assertTrue(lifecycle.isClientServerCapable(connection));
+        assertFalse(lifecycle.supportsClientBridgeProtocol(connection, BridgeProtocol.VERSION));
+    }
+
+    @Test
+    void advertisedProtocolIsBoundToTheExactClientSession() {
+        NetworkCapabilityLifecycle lifecycle = new NetworkCapabilityLifecycle();
+        EqualIdentity advertisedConnection = new EqualIdentity();
+        EqualIdentity replacementConnection = new EqualIdentity();
+
+        lifecycle.beginClientSession(advertisedConnection);
+        lifecycle.markClientServerCapable(advertisedConnection, BridgeProtocol.VERSION);
+        assertTrue(lifecycle.supportsClientBridgeProtocol(advertisedConnection, BridgeProtocol.VERSION));
+
+        lifecycle.beginClientSession(replacementConnection);
+        assertFalse(lifecycle.supportsClientBridgeProtocol(advertisedConnection, BridgeProtocol.VERSION));
+        assertFalse(lifecycle.supportsClientBridgeProtocol(replacementConnection, BridgeProtocol.VERSION));
+    }
+
+    @Test
+    void serverConnectionsKeepIndependentAdvertisedVersions() {
+        NetworkCapabilityLifecycle lifecycle = new NetworkCapabilityLifecycle();
+        Object server = new Object();
+        Object legacyConnection = new Object();
+        Object v1Connection = new Object();
+        lifecycle.beginServerSession(server);
+        lifecycle.beginServerConnection(server, legacyConnection);
+        lifecycle.beginServerConnection(server, v1Connection);
+
+        lifecycle.markServerClientCapable(server, legacyConnection, 0);
+        lifecycle.markServerClientCapable(server, v1Connection, BridgeProtocol.VERSION);
+
+        assertTrue(lifecycle.isServerClientCapable(server, legacyConnection));
+        assertFalse(lifecycle.supportsServerBridgeProtocol(server, legacyConnection, BridgeProtocol.VERSION));
+        assertTrue(lifecycle.supportsServerBridgeProtocol(server, v1Connection, BridgeProtocol.VERSION));
+    }
+
+    @Test
+    void futureAdvertisedVersionSupportsV1ButNotAnUnknownHigherMinimum() {
+        NetworkCapabilityLifecycle lifecycle = new NetworkCapabilityLifecycle();
+        Object connection = new Object();
+        lifecycle.beginClientSession(connection);
+        lifecycle.markClientServerCapable(connection, BridgeProtocol.VERSION + 1);
+
+        assertTrue(lifecycle.supportsClientBridgeProtocol(connection, BridgeProtocol.VERSION));
+        assertTrue(lifecycle.supportsClientBridgeProtocol(connection, BridgeProtocol.VERSION + 1));
+        assertFalse(lifecycle.supportsClientBridgeProtocol(connection, BridgeProtocol.VERSION + 2));
+        assertThrows(IllegalArgumentException.class, () -> lifecycle.supportsClientBridgeProtocol(connection, 0));
+    }
 
     @Test
     void clientSessionReplacementRejectsLateHandshakeAndDisconnect() {

@@ -3,10 +3,10 @@ package de.keksuccino.fancymenu.networking;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.Connection;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.NetworkRegistry;
-import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -24,12 +24,25 @@ public class PacketHandlerForge {
         INSTANCE.registerMessage(messageIndex, messageType, encoder, decoder, messageConsumer);
     }
 
-    public static void sendToServer(Object message, Connection connection) {
-        INSTANCE.sendTo(message, connection, NetworkDirection.PLAY_TO_SERVER);
+    public static boolean canSendToServer(Connection connection) {
+        return INSTANCE.isRemotePresent(connection);
     }
 
-    public static void send(PacketDistributor.PacketTarget target, Object message) {
-        INSTANCE.send(target, message);
+    public static boolean canSendToClient(ServerPlayer player) {
+        return INSTANCE.isRemotePresent(player.connection.connection);
+    }
+
+    public static boolean sendToServerIfNegotiated(Connection connection, Object message) {
+        if (!canSendToServer(connection)) return false;
+        INSTANCE.sendTo(message, connection, NetworkDirection.PLAY_TO_SERVER);
+        return true;
+    }
+
+    public static boolean sendToClientIfNegotiated(ServerPlayer player, Object message) {
+        Connection connection = player.connection.connection;
+        if (!INSTANCE.isRemotePresent(connection)) return false;
+        INSTANCE.sendTo(message, connection, NetworkDirection.PLAY_TO_CLIENT);
+        return true;
     }
 
 }
