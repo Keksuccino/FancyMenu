@@ -202,9 +202,11 @@
             }
         }
 
-        // Initialize variables
-        let videoSource = '';
-        let videoBlob = null;
+        // Every asynchronous operation belongs to exactly one load context. Incrementing the generation even for
+        // same-source reloads is important because the requested source alone cannot distinguish their callbacks.
+        let loadGeneration = 0;
+        let activeLoad = null;
+        let disposed = false;
         
         // Parse URL parameters
         const urlParams = new URLSearchParams(window.location.search);
@@ -244,29 +246,35 @@
             },
 
             loadVideo: function(path) {
-                log(`API called: loadVideo(${path})`);
-                this.currentSettings.currentVideoSrc = path;
-                this.currentSettings.videoLoadedAndReady = false;
-                // If a new video is loaded, and the original intent was to autoplay,
-                // or if a play was requested before this load, keep playRequestPending.
-                // Let's assume a new loadVideo implies a new context for autoplay.
-                // The caller (Java) can call play() after loadVideo if desired.
-                // For now, loadVideo itself won't automatically set playRequestPending unless wantsAutoplay was true from URL.
-                // This means if Java calls loadVideo then play, play() will set playRequestPending.
-
-                videoPlayer.pause();
-                if (videoPlayer.src) { // Revoke old blob URL if one was used
-                    URL.revokeObjectURL(videoPlayer.src);
+                if (disposed) {
+                    log('Ignoring loadVideo() because the player has been disposed.');
+                    return false;
                 }
-                videoPlayer.removeAttribute('src');
-                videoPlayer.load(); // Important to reset the video element's state
-                
-                // Use the existing loadVideo (renamed to internalLoadVideo)
-                internalLoadVideo(path); 
+
+                const source = normalizeVideoSource(path);
+                log(`API called: loadVideo(${source})`);
+                const load = beginVideoLoad(source);
+                if (!source) {
+                    this.currentSettings.playRequestPending = false;
+                    return true;
+                }
+
+                if (isCurrentLoad(load)) {
+                    internalLoadVideo(load);
+                }
+                return true;
+            },
+
+            dispose: function() {
+                disposeVideoPlayer();
                 return true;
             },
 
             play: function() {
+                if (disposed) {
+                    log('Ignoring play() because the player has been disposed.');
+                    return false;
+                }
                 log('API called: play()');
                 this.currentSettings.playRequestPending = true;
                 if (this.currentSettings.videoLoadedAndReady) {
@@ -339,6 +347,7 @@
 
             setMuted: function(muted) {
                 log(`API called: setMuted(${muted})`);
+                relinquishTemporaryMute(activeLoad);
                 this.currentSettings.muted = muted;
                 videoPlayer.muted = muted;
                 return true;
@@ -396,216 +405,602 @@
             }
         };
 
-        function tryPlayVideo() {
-            log('Attempting to play video (tryPlayVideo)...');
-            if (!videoPlayer.currentSrc) {
-                log('tryPlayVideo: No src. Aborting play attempt.');
-                // Keep playRequestPending true if it was set
+        function normalizeVideoSource(path) {
+            return (path === null || path === undefined) ? '' : String(path);
+        }
+
+        function beginVideoLoad(source) {
+            const previousLoad = activeLoad;
+            loadGeneration += 1;
+            const load = {
+                generation: loadGeneration,
+                requestedSource: source,
+                expectedMediaSource: '',
+                xhr: null,
+                xhrExpectedMediaSource: null,
+                xhrIsDirectFallback: false,
+                fallbackTimer: null,
+                unmuteTimer: null,
+                temporaryMuteRestoreValue: null,
+                ownedObjectUrl: null,
+                retired: false
+            };
+
+            // Publish the new owner before aborting the old XHR because XMLHttpRequest.abort() fires callbacks synchronously.
+            activeLoad = load;
+            window.videoPlayerAPI.currentSettings.currentVideoSrc = source;
+            window.videoPlayerAPI.currentSettings.videoLoadedAndReady = false;
+            const ownedObjectUrl = retireLoad(previousLoad);
+            try {
+                resetVideoElement();
+            } finally {
+                revokeOwnedObjectUrl(ownedObjectUrl);
+            }
+            return load;
+        }
+
+        function retireLoad(load) {
+            if (!load || load.retired) {
+                return null;
+            }
+
+            // Null every owned handle before invoking browser APIs; abort and timer callbacks can be reentrant.
+            load.retired = true;
+            const fallbackTimer = load.fallbackTimer;
+            const unmuteTimer = load.unmuteTimer;
+            const xhr = load.xhr;
+            const temporaryMuteRestoreValue = load.temporaryMuteRestoreValue;
+            const ownedObjectUrl = load.ownedObjectUrl;
+            load.fallbackTimer = null;
+            load.unmuteTimer = null;
+            load.xhr = null;
+            load.xhrExpectedMediaSource = null;
+            load.xhrIsDirectFallback = false;
+            load.temporaryMuteRestoreValue = null;
+            load.ownedObjectUrl = null;
+            load.expectedMediaSource = null;
+            load.requestedSource = null;
+
+            // Restore the user's mute intent before any clear/abort call can reentrantly apply a newer explicit choice.
+            if (temporaryMuteRestoreValue !== null && window.videoPlayerAPI.currentSettings.muted === temporaryMuteRestoreValue) {
+                videoPlayer.muted = temporaryMuteRestoreValue;
+            }
+            if (fallbackTimer !== null) {
+                clearTimeout(fallbackTimer);
+            }
+            if (unmuteTimer !== null) {
+                clearTimeout(unmuteTimer);
+            }
+            if (xhr !== null) {
+                detachXhrCallbacks(xhr);
+                try {
+                    xhr.abort();
+                } catch (e) {
+                    logError(`Failed to abort retired video XHR: ${e.message}`);
+                }
+            }
+            return ownedObjectUrl;
+        }
+
+        function resetVideoElement() {
+            videoPlayer.pause();
+            videoPlayer.removeAttribute('src');
+            videoPlayer.load();
+        }
+
+        function revokeOwnedObjectUrl(objectUrl) {
+            if (!objectUrl) {
+                return;
+            }
+            try {
+                URL.revokeObjectURL(objectUrl);
+            } catch (e) {
+                logError(`Failed to revoke owned video object URL: ${e.message}`);
+            }
+        }
+
+        function detachXhrCallbacks(xhr) {
+            xhr.onprogress = null;
+            xhr.onload = null;
+            xhr.onerror = null;
+            xhr.onabort = null;
+        }
+
+        function disposeVideoPlayer() {
+            if (disposed) {
                 return;
             }
 
-            const playPromise = videoPlayer.play();
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    log('Video playback started successfully (tryPlayVideo)');
-                    window.videoPlayerAPI.currentSettings.playRequestPending = false;
-                }).catch(e => {
-                    log(`Standard play failed (tryPlayVideo): ${e.message}. Muted: ${videoPlayer.muted}, ReadyState: ${videoPlayer.readyState}`);
-                    // Autoplay policies often require muted. Try with muted.
-                    if (!videoPlayer.muted) {
-                        log('Trying muted playback (tryPlayVideo)...');
-                        const originallyMutedByUser = window.videoPlayerAPI.currentSettings.muted;
-                        videoPlayer.muted = true; // Force mute for this attempt
-                        window.videoPlayerAPI.currentSettings.muted = true; // Reflect this forced mute
-
-                        videoPlayer.play().then(() => {
-                            log('Muted playback started successfully (tryPlayVideo)');
-                            window.videoPlayerAPI.currentSettings.playRequestPending = false;
-                            // If the user didn't intend to mute, try unmuting after a bit.
-                            // This is a common pattern to satisfy autoplay-with-sound policies after user interaction.
-                            if (!originallyMutedByUser) {
-                                setTimeout(() => {
-                                    log('Attempting to unmute after successful muted autoplay.');
-                                    videoPlayer.muted = false;
-                                    window.videoPlayerAPI.currentSettings.muted = false;
-                                }, 500);
-                            }
-                        }).catch(e2 => {
-                            logError(`Muted play also failed (tryPlayVideo): ${e2.message}`);
-                            // Restore intended muted state if muted play failed
-                            videoPlayer.muted = originallyMutedByUser;
-                            window.videoPlayerAPI.currentSettings.muted = originallyMutedByUser;
-                            // Keep playRequestPending true so that further 'canplay' events might trigger it
-                        });
-                    } else {
-                         // Already muted and failed, keep playRequestPending.
-                         log('Play failed while already muted (tryPlayVideo). Keeping request pending.');
-                    }
-                });
-            } else {
-                log("video.play() did not return a promise. This browser might be older. Relying on events.");
-                // For older browsers/contexts, the 'playing' event will be the confirmation.
-                // If it plays, playRequestPending will be cleared by the 'playing' event handler.
+            disposed = true;
+            loadGeneration += 1;
+            const previousLoad = activeLoad;
+            activeLoad = null;
+            window.videoPlayerAPI.currentSettings.currentVideoSrc = '';
+            window.videoPlayerAPI.currentSettings.videoLoadedAndReady = false;
+            window.videoPlayerAPI.currentSettings.playRequestPending = false;
+            const ownedObjectUrl = retireLoad(previousLoad);
+            try {
+                resetVideoElement();
+            } finally {
+                revokeOwnedObjectUrl(ownedObjectUrl);
             }
         }
-        
-        // Functions to load files in different ways
-        
-        // Method 1: Direct src attribute (works for some videos)
-        function loadVideoDirectly(path) {
-            log(`Loading video directly: ${path}`);
-            videoPlayer.src = path;
-            
-            // Ensure controls are disabled
+
+        function isCurrentLoad(load) {
+            return !disposed
+                && load !== null
+                && !load.retired
+                && activeLoad === load
+                && load.generation === loadGeneration
+                && load.requestedSource === window.videoPlayerAPI.currentSettings.currentVideoSrc;
+        }
+
+        function mediaElementMatchesExpectedSource(expectedMediaSource) {
+            const assignedSource = videoPlayer.src || '';
+            const selectedSource = videoPlayer.currentSrc || '';
+            if (!expectedMediaSource) {
+                // Chromium can retain the previous read-only currentSrc after removeAttribute('src') + load(). The
+                // generation and empty assigned src identify this pre-blob state; media events still require a nonempty
+                // exact expected source and therefore cannot claim this context.
+                return !assignedSource;
+            }
+            return assignedSource === expectedMediaSource && (!selectedSource || selectedSource === expectedMediaSource);
+        }
+
+        function isExpectedMediaLoad(load, expectedMediaSource) {
+            return isCurrentLoad(load)
+                && !!expectedMediaSource
+                && load.expectedMediaSource === expectedMediaSource
+                && mediaElementMatchesExpectedSource(expectedMediaSource);
+        }
+
+        function isExpectedXhr(load, xhr, expectedMediaSource) {
+            return isCurrentLoad(load)
+                && load.xhr === xhr
+                && load.xhrExpectedMediaSource === expectedMediaSource
+                && load.expectedMediaSource === expectedMediaSource
+                && mediaElementMatchesExpectedSource(expectedMediaSource);
+        }
+
+        function getExpectedMediaLoad() {
+            const load = activeLoad;
+            const expectedMediaSource = load ? load.expectedMediaSource : '';
+            if (!isExpectedMediaLoad(load, expectedMediaSource)) {
+                return null;
+            }
+            return {load, expectedMediaSource};
+        }
+
+        function configureVideoElement() {
             videoPlayer.removeAttribute('controls');
             videoPlayer.setAttribute('nocontrols', '');
             videoPlayer.setAttribute('controlslist', 'nodownload nofullscreen noremoteplayback');
             videoPlayer.controls = false;
-            
-            videoPlayer.load();
         }
-        
-        // Method 2: XHR + Blob approach (works for local files)
-        function loadVideoAsBlob(path) {
-            log(`Loading video as blob: ${path}`);
-            
+
+        function assignVideoSource(load, source) {
+            if (!isCurrentLoad(load)) {
+                return false;
+            }
+
+            load.expectedMediaSource = '';
+            videoPlayer.src = source;
+            const expectedMediaSource = videoPlayer.src || '';
+            load.expectedMediaSource = expectedMediaSource;
+            configureVideoElement();
+            videoPlayer.load();
+            return isExpectedMediaLoad(load, expectedMediaSource);
+        }
+
+        function clearDirectLoadFallback(load, expectedMediaSource) {
+            if (!isExpectedMediaLoad(load, expectedMediaSource)) {
+                return;
+            }
+
+            const fallbackTimer = load.fallbackTimer;
+            load.fallbackTimer = null;
+            if (fallbackTimer !== null) {
+                clearTimeout(fallbackTimer);
+            }
+
+            if (load.xhr !== null && load.xhrIsDirectFallback && load.xhrExpectedMediaSource === expectedMediaSource) {
+                const xhr = load.xhr;
+                load.xhr = null;
+                load.xhrExpectedMediaSource = null;
+                load.xhrIsDirectFallback = false;
+                detachXhrCallbacks(xhr);
+                try {
+                    xhr.abort();
+                } catch (e) {
+                    logError(`Failed to abort direct-load fallback XHR: ${e.message}`);
+                }
+            }
+        }
+
+        function releaseXhrOwnership(load, xhr) {
+            if (load.xhr !== xhr) {
+                return false;
+            }
+            load.xhr = null;
+            load.xhrExpectedMediaSource = null;
+            load.xhrIsDirectFallback = false;
+            detachXhrCallbacks(xhr);
+            return true;
+        }
+
+        function directMediaSourceRecovered(load, expectedMediaSource) {
+            return isExpectedMediaLoad(load, expectedMediaSource) && videoPlayer.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA;
+        }
+
+        function releaseFailedObjectUrlAssignment(load, objectUrl) {
+            if (load.ownedObjectUrl !== objectUrl) {
+                return;
+            }
+
+            // Drop ownership before touching the media element because pause/load can dispatch events synchronously.
+            load.ownedObjectUrl = null;
+            if (isCurrentLoad(load)) {
+                const assignedSource = videoPlayer.src || '';
+                const selectedSource = videoPlayer.currentSrc || '';
+                if (load.expectedMediaSource === objectUrl || assignedSource === objectUrl || selectedSource === objectUrl) {
+                    load.expectedMediaSource = '';
+                    try {
+                        videoPlayer.pause();
+                    } catch (e) {
+                        logError(`Failed to pause after video object URL assignment failed: ${e.message}`);
+                    }
+                    try {
+                        videoPlayer.removeAttribute('src');
+                    } catch (e) {
+                        logError(`Failed to detach video object URL after assignment failed: ${e.message}`);
+                    }
+                    try {
+                        videoPlayer.load();
+                    } catch (e) {
+                        logError(`Failed to reset video after object URL assignment failed: ${e.message}`);
+                    }
+                }
+            }
+            revokeOwnedObjectUrl(objectUrl);
+        }
+
+        function relinquishTemporaryMute(load) {
+            if (!load) {
+                return;
+            }
+            const unmuteTimer = load.unmuteTimer;
+            load.unmuteTimer = null;
+            load.temporaryMuteRestoreValue = null;
+            if (unmuteTimer !== null) {
+                clearTimeout(unmuteTimer);
+            }
+        }
+
+        function scheduleUnmute(load, expectedMediaSource, restoreValue) {
+            const previousTimer = load.unmuteTimer;
+            load.unmuteTimer = null;
+            if (previousTimer !== null) {
+                clearTimeout(previousTimer);
+            }
+
+            let timer = null;
+            timer = setTimeout(function() {
+                if (load.unmuteTimer !== timer) {
+                    return;
+                }
+                load.unmuteTimer = null;
+                if (!isExpectedMediaLoad(load, expectedMediaSource) || load.temporaryMuteRestoreValue !== restoreValue) {
+                    return;
+                }
+                log('Attempting to unmute after successful muted autoplay.');
+                load.temporaryMuteRestoreValue = null;
+                videoPlayer.muted = restoreValue;
+            }, 500);
+            load.unmuteTimer = timer;
+        }
+
+        function tryPlayVideo(load, expectedMediaSource) {
+            load = load || activeLoad;
+            expectedMediaSource = expectedMediaSource || (load ? load.expectedMediaSource : '');
+            log('Attempting to play video (tryPlayVideo)...');
+            if (!isExpectedMediaLoad(load, expectedMediaSource)) {
+                log('tryPlayVideo: No current expected source. Aborting play attempt.');
+                return;
+            }
+
+            const playPromise = videoPlayer.play();
+            if (playPromise !== undefined && playPromise !== null && typeof playPromise.then === 'function') {
+                playPromise.then(() => {
+                    if (!isExpectedMediaLoad(load, expectedMediaSource)) {
+                        return;
+                    }
+                    log('Video playback started successfully (tryPlayVideo)');
+                    window.videoPlayerAPI.currentSettings.playRequestPending = false;
+                }).catch(e => {
+                    if (!isExpectedMediaLoad(load, expectedMediaSource) || !window.videoPlayerAPI.currentSettings.playRequestPending) {
+                        return;
+                    }
+                    log(`Standard play failed (tryPlayVideo): ${e.message}. Muted: ${videoPlayer.muted}, ReadyState: ${videoPlayer.readyState}`);
+                    if (!videoPlayer.muted) {
+                        log('Trying muted playback (tryPlayVideo)...');
+                        const originallyMutedByUser = window.videoPlayerAPI.currentSettings.muted;
+                        load.temporaryMuteRestoreValue = originallyMutedByUser;
+                        videoPlayer.muted = true;
+
+                        const mutedPlayPromise = videoPlayer.play();
+                        if (mutedPlayPromise !== undefined && mutedPlayPromise !== null && typeof mutedPlayPromise.then === 'function') {
+                            mutedPlayPromise.then(() => {
+                                if (!isExpectedMediaLoad(load, expectedMediaSource) || load.temporaryMuteRestoreValue !== originallyMutedByUser) {
+                                    return;
+                                }
+                                log('Muted playback started successfully (tryPlayVideo)');
+                                window.videoPlayerAPI.currentSettings.playRequestPending = false;
+                                if (!originallyMutedByUser) {
+                                    scheduleUnmute(load, expectedMediaSource, originallyMutedByUser);
+                                } else {
+                                    relinquishTemporaryMute(load);
+                                }
+                            }).catch(e2 => {
+                                if (!isExpectedMediaLoad(load, expectedMediaSource) || load.temporaryMuteRestoreValue !== originallyMutedByUser) {
+                                    return;
+                                }
+                                logError(`Muted play also failed (tryPlayVideo): ${e2.message}`);
+                                relinquishTemporaryMute(load);
+                                videoPlayer.muted = originallyMutedByUser;
+                            });
+                        }
+                    } else {
+                        log('Play failed while already muted (tryPlayVideo). Keeping request pending.');
+                    }
+                });
+            } else {
+                log("video.play() did not return a promise. This browser might be older. Relying on events.");
+            }
+        }
+
+        // Method 1: Direct src attribute (works for some videos)
+        function loadVideoDirectly(load) {
+            if (!isCurrentLoad(load)) {
+                return;
+            }
+            log(`Loading video directly: ${load.requestedSource}`);
+            assignVideoSource(load, load.requestedSource);
+        }
+
+        // Method 2: XHR + Blob approach (works for local files and as the direct-load fallback)
+        function loadVideoAsBlob(load, isDirectFallback) {
+            if (!isCurrentLoad(load) || load.xhr !== null) {
+                return;
+            }
+
+            const expectedMediaSource = load.expectedMediaSource;
+            if (!mediaElementMatchesExpectedSource(expectedMediaSource)) {
+                return;
+            }
+            log(`Loading video as blob: ${load.requestedSource}`);
+
             const xhr = new XMLHttpRequest();
-            xhr.open('GET', path, true);
-            xhr.responseType = 'blob';
-            
+            try {
+                xhr.open('GET', load.requestedSource, true);
+                xhr.responseType = 'blob';
+            } catch (e) {
+                if (isCurrentLoad(load)) {
+                    logError(`Failed to initialize video XHR: ${e.message}`);
+                    loadVideoDirectly(load);
+                }
+                return;
+            }
+
+            load.xhr = xhr;
+            load.xhrExpectedMediaSource = expectedMediaSource;
+            load.xhrIsDirectFallback = isDirectFallback;
+
             xhr.onprogress = function(event) {
+                if (!isExpectedXhr(load, xhr, expectedMediaSource)) {
+                    return;
+                }
                 if (event.lengthComputable) {
                     const percentComplete = Math.round((event.loaded / event.total) * 100);
                     log(`Loading progress: ${percentComplete}%`);
                 }
             };
-            
+
             xhr.onload = function() {
-                if (this.status === 200) {
-                    // Release previous blob
-                    if (videoBlob) {
-                        URL.revokeObjectURL(videoPlayer.src);
+                if (!isExpectedXhr(load, xhr, expectedMediaSource)) {
+                    return;
+                }
+                releaseXhrOwnership(load, xhr);
+
+                if (xhr.status !== 200) {
+                    logError(`XHR failed with status: ${xhr.status}`);
+                    return;
+                }
+
+                if (isDirectFallback && directMediaSourceRecovered(load, expectedMediaSource)) {
+                    log('Direct loading recovered before the blob fallback completed. Keeping the direct source.');
+                    return;
+                }
+
+                let objectUrl = null;
+                try {
+                    objectUrl = URL.createObjectURL(xhr.response);
+                } catch (e) {
+                    logError(`Failed to create video object URL: ${e.message}`);
+                    return;
+                }
+
+                // URL creation can be reentrant in an embedded browser. Re-check both ownership and direct readiness
+                // before transferring the new object URL to the media element.
+                if (!isCurrentLoad(load) || load.expectedMediaSource !== expectedMediaSource || !mediaElementMatchesExpectedSource(expectedMediaSource)) {
+                    revokeOwnedObjectUrl(objectUrl);
+                    return;
+                }
+                if (isDirectFallback && directMediaSourceRecovered(load, expectedMediaSource)) {
+                    revokeOwnedObjectUrl(objectUrl);
+                    log('Direct loading recovered while creating the blob fallback. Keeping the direct source.');
+                    return;
+                }
+
+                load.ownedObjectUrl = objectUrl;
+                log(`Created blob URL: ${objectUrl}`);
+                try {
+                    if (!assignVideoSource(load, objectUrl)) {
+                        releaseFailedObjectUrlAssignment(load, objectUrl);
                     }
-                    
-                    // Create blob URL
-                    videoBlob = this.response;
-                    const blobUrl = URL.createObjectURL(videoBlob);
-                    log(`Created blob URL: ${blobUrl}`);
-                    
-                    // Set video source
-                    videoPlayer.src = blobUrl;
-                    
-                    // Ensure controls are disabled
-                    videoPlayer.removeAttribute('controls');
-                    videoPlayer.setAttribute('nocontrols', '');
-                    videoPlayer.setAttribute('controlslist', 'nodownload nofullscreen noremoteplayback');
-                    videoPlayer.controls = false;
-                    
-                    videoPlayer.load();
-                    // No direct play here, will let events handle it
-                } else {
-                    logError(`XHR failed with status: ${this.status}`);
+                } catch (e) {
+                    logError(`Failed to assign video object URL: ${e.message}`);
+                    releaseFailedObjectUrlAssignment(load, objectUrl);
                 }
             };
-            
+
             xhr.onerror = function() {
+                if (!isExpectedXhr(load, xhr, expectedMediaSource)) {
+                    return;
+                }
+                releaseXhrOwnership(load, xhr);
                 logError('XHR network error when loading video');
-                
-                // Try direct loading as fallback
                 log('Trying direct loading as fallback');
-                loadVideoDirectly(path);
+                loadVideoDirectly(load);
             };
-            
-            xhr.send();
+
+            xhr.onabort = function() {
+                if (!isExpectedXhr(load, xhr, expectedMediaSource)) {
+                    return;
+                }
+                releaseXhrOwnership(load, xhr);
+                log('Video XHR was aborted.');
+            };
+
+            try {
+                xhr.send();
+            } catch (e) {
+                if (isExpectedXhr(load, xhr, expectedMediaSource)) {
+                    releaseXhrOwnership(load, xhr);
+                    logError(`Failed to send video XHR: ${e.message}`);
+                    loadVideoDirectly(load);
+                }
+            }
         }
-        
+
+        function scheduleDirectLoadFallback(load, expectedMediaSource) {
+            let timer = null;
+            timer = setTimeout(function() {
+                if (load.fallbackTimer !== timer) {
+                    return;
+                }
+                load.fallbackTimer = null;
+                if (!isExpectedMediaLoad(load, expectedMediaSource)) {
+                    return;
+                }
+                if (!videoPlayer.duration && videoPlayer.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+                    log('Direct loading not working, trying blob approach');
+                    loadVideoAsBlob(load, true);
+                }
+            }, 2000);
+            load.fallbackTimer = timer;
+        }
+
         // Main load function that decides which method to use
-        function internalLoadVideo(path) {
-            if (!path) {
-                logError('No video path provided');
+        function internalLoadVideo(load) {
+            if (!isCurrentLoad(load) || !load.requestedSource) {
                 return;
             }
-            
-            // Store the current source
-            videoSource = path;
-            log(`Loading video from path: ${path}`);
-            
-            // For local file paths, use the blob approach
-            if (path.startsWith('file://')) {
-                loadVideoAsBlob(path);
+            log(`Loading video from path: ${load.requestedSource}`);
+
+            if (load.requestedSource.startsWith('file://')) {
+                loadVideoAsBlob(load, false);
             } else {
-                // For other URLs, try direct loading
-                loadVideoDirectly(path);
-                
-                // If direct loading doesn't work after a short time, try blob approach
-                setTimeout(function() {
-                    if (!videoPlayer.duration && videoPlayer.readyState < 2) {
-                        log('Direct loading not working, trying blob approach');
-                        loadVideoAsBlob(path);
-                    }
-                }, 2000);
+                loadVideoDirectly(load);
+                if (isCurrentLoad(load)) {
+                    scheduleDirectLoadFallback(load, load.expectedMediaSource);
+                }
             }
         }
 
         videoPlayer.addEventListener('loadedmetadata', function() {
+            const expectedLoad = getExpectedMediaLoad();
+            if (!expectedLoad) {
+                return;
+            }
+            clearDirectLoadFallback(expectedLoad.load, expectedLoad.expectedMediaSource);
             log(`Video metadata loaded: ${videoPlayer.videoWidth}x${videoPlayer.videoHeight}, duration: ${videoPlayer.duration}, readyState: ${videoPlayer.readyState}`);
-            applyStoredSettings(); // Apply volume, loop etc. as they don't depend on play readiness
+            applyStoredSettings();
         });
 
         videoPlayer.addEventListener('canplay', function() {
+            const expectedLoad = getExpectedMediaLoad();
+            if (!expectedLoad) {
+                return;
+            }
+            clearDirectLoadFallback(expectedLoad.load, expectedLoad.expectedMediaSource);
             log(`Video can play. ReadyState=${videoPlayer.readyState}`);
-            // Consider ready if we have at least HAVE_FUTURE_DATA, but HAVE_ENOUGH_DATA is safer.
-            if (videoPlayer.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) { // HAVE_FUTURE_DATA = 3, HAVE_ENOUGH_DATA = 4
+            if (videoPlayer.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
                 window.videoPlayerAPI.currentSettings.videoLoadedAndReady = true;
                 log('Set videoLoadedAndReady = true (on canplay)');
             }
-            applyStoredSettings(); 
+            applyStoredSettings();
 
             if (window.videoPlayerAPI.currentSettings.playRequestPending && window.videoPlayerAPI.currentSettings.videoLoadedAndReady) {
                 log('Attempting play due to pending request (on canplay).');
-                tryPlayVideo();
+                tryPlayVideo(expectedLoad.load, expectedLoad.expectedMediaSource);
             }
         });
-        
+
         videoPlayer.addEventListener('canplaythrough', function() {
+            const expectedLoad = getExpectedMediaLoad();
+            if (!expectedLoad) {
+                return;
+            }
+            clearDirectLoadFallback(expectedLoad.load, expectedLoad.expectedMediaSource);
             log(`Video can play through. ReadyState=${videoPlayer.readyState}`);
-            window.videoPlayerAPI.currentSettings.videoLoadedAndReady = true; // Definitely ready
+            window.videoPlayerAPI.currentSettings.videoLoadedAndReady = true;
             log('Set videoLoadedAndReady = true (on canplaythrough)');
-            
+
             if (window.videoPlayerAPI.currentSettings.playRequestPending) {
                 log('Attempting play due to pending request (on canplaythrough).');
-                tryPlayVideo();
+                tryPlayVideo(expectedLoad.load, expectedLoad.expectedMediaSource);
             }
         });
 
         videoPlayer.addEventListener('playing', function() {
+            if (!getExpectedMediaLoad()) {
+                return;
+            }
             log('Video event: playing. ReadyState=' + videoPlayer.readyState);
-            window.videoPlayerAPI.currentSettings.playRequestPending = false; // Clear flag as it's now playing
+            window.videoPlayerAPI.currentSettings.playRequestPending = false;
         });
 
         videoPlayer.addEventListener('pause', function() {
+            if (!getExpectedMediaLoad()) {
+                return;
+            }
             log('Video event: pause');
-            // Don't automatically clear playRequestPending here, as a pause could be transient (buffering)
-            // or user-initiated. The API's pause() already clears it.
         });
-        
+
         videoPlayer.addEventListener('waiting', function() {
+            if (!getExpectedMediaLoad()) {
+                return;
+            }
             log('Video buffering...');
-            // No need to show loading indicator
         });
-        
+
         videoPlayer.addEventListener('ended', function() {
+            if (!getExpectedMediaLoad()) {
+                return;
+            }
             log('Video ended');
-            // Update the playing state in the API unless looping
-            if (window.videoPlayerAPI && !videoPlayer.loop) {
+            if (!videoPlayer.loop) {
                 window.videoPlayerAPI.currentSettings.playRequestPending = false;
             }
         });
-        
-        videoPlayer.addEventListener('error', function(e) {
-            // Always log the error details
+
+        videoPlayer.addEventListener('error', function() {
+            const expectedLoad = getExpectedMediaLoad();
+            if (!expectedLoad) {
+                return;
+            }
             let errorMessage = "Unknown error";
-            
+
             if (videoPlayer.error) {
                 switch(videoPlayer.error.code) {
                     case 1: errorMessage = "Video loading aborted"; break;
@@ -613,14 +1008,11 @@
                     case 3: errorMessage = "Video decoding failed"; break;
                     case 4: errorMessage = "Video format not supported"; break;
                 }
-                
                 errorMessage += ` (${videoPlayer.error.code})`;
             }
-            
+
             logError(`Video error: ${errorMessage}`);
-            
-            // Try to provide more detailed error info
-            const videoSrc = videoPlayer.currentSrc || videoSource || "(unknown)";
+            const videoSrc = videoPlayer.currentSrc || expectedLoad.load.requestedSource || "(unknown)";
             logError(`Source: ${videoSrc}`);
         });
 
@@ -628,9 +1020,11 @@
             log(`Applying settings: Vol=${window.videoPlayerAPI.currentSettings.volume}, Loop=${window.videoPlayerAPI.currentSettings.loop}, Muted=${window.videoPlayerAPI.currentSettings.muted}`);
             videoPlayer.volume = window.videoPlayerAPI.currentSettings.volume;
             videoPlayer.loop = window.videoPlayerAPI.currentSettings.loop;
-            videoPlayer.muted = window.videoPlayerAPI.currentSettings.muted; // Apply JS-side muted state
+            videoPlayer.muted = isCurrentLoad(activeLoad) && activeLoad.temporaryMuteRestoreValue !== null ? true : window.videoPlayerAPI.currentSettings.muted;
             applyFitClasses(window.videoPlayerAPI.currentSettings.preserveAspectRatio, window.videoPlayerAPI.currentSettings.fillScreen);
         }
+
+        window.addEventListener('pagehide', disposeVideoPlayer);
         
         // Initial load if path provided in URL
         if (initialVideoPath) {
