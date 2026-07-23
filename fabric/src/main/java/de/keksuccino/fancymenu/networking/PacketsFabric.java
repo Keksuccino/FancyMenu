@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.networking;
 
-import de.keksuccino.fancymenu.networking.bridge.BridgePacketPayloadFabric;
+import de.keksuccino.fancymenu.networking.bridge.BridgePacketPayload;
 import de.keksuccino.fancymenu.networking.packets.Packets;
 import de.keksuccino.fancymenu.platform.Services;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -14,12 +14,12 @@ public class PacketsFabric {
         Packets.registerAll();
 
         PacketHandler.setSendToClientLogic((player, s) -> {
-            BridgePacketPayloadFabric payload = new BridgePacketPayloadFabric("client", s);
+            BridgePacketPayload payload = new BridgePacketPayload(BridgePacketPayload.TO_CLIENT_WIRE_DIRECTION, s);
             ServerPlayNetworking.send(player, payload);
         });
 
         PacketHandler.setSendToServerLogic(s -> {
-            BridgePacketPayloadFabric payload = new BridgePacketPayloadFabric("server", s);
+            BridgePacketPayload payload = new BridgePacketPayload(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, s);
             ClientPlayNetworking.send(payload);
         });
 
@@ -29,17 +29,17 @@ public class PacketsFabric {
 
     private static void registerFabricBridgePacket() {
 
-        PayloadTypeRegistry.playC2S().register(BridgePacketPayloadFabric.TYPE, BridgePacketPayloadFabric.CODEC);
-        PayloadTypeRegistry.playS2C().register(BridgePacketPayloadFabric.TYPE, BridgePacketPayloadFabric.CODEC);
+		PayloadTypeRegistry.playC2S().register(BridgePacketPayload.TYPE, BridgePacketPayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(BridgePacketPayload.TYPE, BridgePacketPayload.CODEC);
 
         //ON SERVER
-        ServerPlayNetworking.registerGlobalReceiver(BridgePacketPayloadFabric.TYPE, (payload, context) -> {
+        ServerPlayNetworking.registerGlobalReceiver(BridgePacketPayload.TYPE, (payload, context) -> {
             payload.handle(context.player(), PacketHandler.PacketDirection.TO_SERVER);
         });
 
         //ON CLIENT
         if (Services.PLATFORM.isOnClient()) {
-            ClientPlayNetworking.registerGlobalReceiver(BridgePacketPayloadFabric.TYPE, (payload, context) -> {
+            ClientPlayNetworking.registerGlobalReceiver(BridgePacketPayload.TYPE, (payload, context) -> {
                 payload.handle(null, PacketHandler.PacketDirection.TO_CLIENT);
             });
         }
