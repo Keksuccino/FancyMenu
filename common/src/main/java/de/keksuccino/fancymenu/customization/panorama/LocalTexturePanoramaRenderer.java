@@ -31,7 +31,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
-public class LocalTexturePanoramaRenderer implements Renderable {
+public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -52,10 +52,14 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 	protected volatile boolean tickerThreadRunning = false;
 	protected volatile float currentRotation = 0.0F; //0 - 360
 	protected volatile long lastRenderCall = -1L;
+	private volatile boolean closed = false;
+	@Nullable
+	private volatile Thread tickerThread = null;
 
 	@Nullable
 	public static LocalTexturePanoramaRenderer build(@NotNull File propertiesFile, @NotNull File panoramaImageDir, @Nullable File overlayImageFile) {
 		LocalTexturePanoramaRenderer renderer = new LocalTexturePanoramaRenderer(propertiesFile, panoramaImageDir, overlayImageFile);
+		boolean built = false;
 		try {
 			if (renderer.propertiesFile.isFile() && renderer.panoramaImageDir.isDirectory()) {
 				PropertyContainerSet panoProperties = PropertiesParser.deserializeSetFromFile(renderer.propertiesFile.getAbsolutePath());
@@ -87,6 +91,7 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 							}
 						}
 						renderer.prepare();
+						built = true;
 						return renderer;
 					} else {
 						LOGGER.error("[FANCYMENU] Unable to load panorama! Missing 'panorama-meta' section in properties instance: " + renderer.propertiesFile.getAbsolutePath(), new NullPointerException());
@@ -97,6 +102,14 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 			}
 		} catch (Exception ex) {
 			LOGGER.error("[FANCYMENU] An error happened while trying to build a cubic panorama!", ex);
+		} finally {
+			if (!built) {
+				try {
+					renderer.close();
+				} catch (Throwable throwable) {
+					LOGGER.error("[FANCYMENU] Failed to close a partially initialized cubic panorama renderer!", throwable);
+				}
+			}
 		}
 		return null;
 	}
@@ -131,41 +144,61 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 	@SuppressWarnings("all")
 	protected void startTickerThreadIfNeeded() {
 
-		if (this.tickerThreadRunning) return;
+		if (this.closed || this.tickerThreadRunning) return;
 
 		this.lastRenderCall = System.currentTimeMillis();
 		this.tickerThreadRunning = true;
 
-		new Thread(() -> {
-			while ((this.lastRenderCall + 5000L) > System.currentTimeMillis()) {
-				try {
-					this.currentRotation += 0.03F;
-					if (this.currentRotation >= 360) {
-						this.currentRotation = 0;
+		Thread startedThread = new Thread(() -> {
+			try {
+				while (!this.closed && (this.lastRenderCall + 5000L) > System.currentTimeMillis()) {
+					try {
+						this.currentRotation += 0.03F;
+						if (this.currentRotation >= 360) {
+							this.currentRotation = 0;
+						}
+					} catch (Exception ex) {
+						LOGGER.error("[FANCYMENU] Error while ticking panorama!", ex);
 					}
-				} catch (Exception ex) {
-					LOGGER.error("[FANCYMENU] Error while ticking panorama!", ex);
+					try {
+						Thread.sleep(Math.max(2, (int)(20 / this.speed)));
+					} catch (InterruptedException ex) {
+						Thread.currentThread().interrupt();
+						break;
+					} catch (Exception ex) {
+						LOGGER.error("[FANCYMENU] Error while ticking panorama!", ex);
+					}
 				}
-				try {
-					Thread.sleep(Math.max(2, (int)(20 / this.speed)));
-				} catch (Exception ex) {
-					LOGGER.error("[FANCYMENU] Error while ticking panorama!", ex);
-				}
+			} finally {
+				// Clear the published thread before allowing another ticker to start, so an old worker cannot erase its successor.
+				this.tickerThread = null;
+				this.tickerThreadRunning = false;
 			}
+		}, "FancyMenu Panorama Ticker Thread");
+		startedThread.setDaemon(true);
+		startedThread.start();
+		this.tickerThread = startedThread;
+		if (this.closed) {
+			startedThread.interrupt();
+			this.tickerThread = null;
+		} else if (!startedThread.isAlive()) {
+			// The daemon starts inside the helper and may finish before its reference can be published here.
+			this.tickerThread = null;
 			this.tickerThreadRunning = false;
-		}, "FancyMenu Panorama Ticker Thread").start();
+		}
 
 	}
 
 	@Override
 	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+		if (this.closed) {
+			this.renderMissingTexture(graphics, 0, 0, ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight());
+			return;
+		}
 		this.lastRenderCall = System.currentTimeMillis();
 		this.startTickerThreadIfNeeded();
 		if (this.panoramaImageSuppliers.size() < 6) {
-			RenderingUtils.setupAlphaBlend();
-			RenderingUtils.resetShaderColor(graphics);
-			graphics.blit(ITexture.MISSING_TEXTURE_LOCATION, 0, 0, 0.0F, 0.0F, ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight(), ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight());
-			RenderingUtils.resetShaderColor(graphics);
+			this.renderMissingTexture(graphics, 0, 0, ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight());
 		} else {
 			this._render(graphics, Minecraft.getInstance(), this.opacity);
 		}
@@ -175,14 +208,15 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 		if (width <= 0 || height <= 0) {
 			return;
 		}
+		if (this.closed) {
+			this.renderMissingTexture(graphics, x, y, width, height);
+			return;
+		}
 		this.lastRenderCall = System.currentTimeMillis();
 		this.startTickerThreadIfNeeded();
 
 		if (this.panoramaImageSuppliers.size() < 6) {
-			RenderingUtils.setupAlphaBlend();
-			RenderingUtils.resetShaderColor(graphics);
-			graphics.blit(ITexture.MISSING_TEXTURE_LOCATION, x, y, 0.0F, 0.0F, width, height, width, height);
-			RenderingUtils.resetShaderColor(graphics);
+			this.renderMissingTexture(graphics, x, y, width, height);
 			return;
 		}
 
@@ -484,4 +518,21 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 		this.angle = angle;
 	}
 
+	private void renderMissingTexture(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
+		RenderingUtils.setupAlphaBlend();
+		RenderingUtils.resetShaderColor(graphics);
+		graphics.blit(ITexture.MISSING_TEXTURE_LOCATION, x, y, 0.0F, 0.0F, width, height, width, height);
+		RenderingUtils.resetShaderColor(graphics);
+	}
+
+	@Override
+	public void close() {
+		this.closed = true;
+		this.lastRenderCall = -1L;
+		Thread activeTickerThread = this.tickerThread;
+		this.tickerThread = null;
+		if (activeTickerThread != null) {
+			activeTickerThread.interrupt();
+		}
+	}
 }
