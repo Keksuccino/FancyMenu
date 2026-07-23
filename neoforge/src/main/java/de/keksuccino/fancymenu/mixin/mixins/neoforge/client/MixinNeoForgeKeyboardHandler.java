@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.util.ScreenUtils;
 
 import de.keksuccino.fancymenu.events.screen.ScreenCharTypedEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.input.Utf16CodeUnitDispatcher;
 import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
@@ -88,15 +89,7 @@ public class MixinNeoForgeKeyboardHandler {
         if (screen != null) {
             for (GuiEventListener listener : screen.children()) {
                 if (listener instanceof WrappedMCEFBrowser) {
-                    boolean b = false;
-                    if (Character.charCount(event.codepoint()) == 1) {
-                        b = listener.charTyped(event);
-                    } else {
-                        for (char c : Character.toChars(event.codepoint())) {
-                            b = !b ? listener.charTyped(event) : true;
-                        }
-                    }
-                    if (b) {
+                    if (Utf16CodeUnitDispatcher.dispatch(event, listener::charTyped)) {
                         info.cancel();
                         return;
                     }
