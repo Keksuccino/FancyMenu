@@ -50,6 +50,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -572,8 +573,10 @@ public class ResourceChooserWindowBody<R extends Resource, F extends FileType<R>
 
     protected void validateFmaSource_FancyMenu(@NotNull ResourceSource source) throws Exception {
         if (source.getSourceType() == ResourceSourceType.LOCAL) {
+            File localFile = source.getValidatedLocalFile();
+            if (localFile == null) throw new IOException("The selected local FMA source is outside its allowed roots.");
             try (FmaDecoder decoder = new FmaDecoder()) {
-                decoder.read(new File(source.getSourceWithoutPrefix()));
+                decoder.read(localFile);
             }
             return;
         }
@@ -592,8 +595,10 @@ public class ResourceChooserWindowBody<R extends Resource, F extends FileType<R>
 
     protected void validateAfmaSource_FancyMenu(@NotNull ResourceSource source) throws Exception {
         if (source.getSourceType() == ResourceSourceType.LOCAL) {
+            File localFile = source.getValidatedLocalFile();
+            if (localFile == null) throw new IOException("The selected local AFMA source is outside its allowed roots.");
             try (AfmaDecoder decoder = new AfmaDecoder()) {
-                decoder.read(new File(source.getSourceWithoutPrefix()));
+                decoder.read(localFile);
             }
             return;
         }

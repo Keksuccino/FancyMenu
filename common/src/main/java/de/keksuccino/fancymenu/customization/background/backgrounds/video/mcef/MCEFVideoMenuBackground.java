@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroups;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
+import de.keksuccino.fancymenu.util.mcef.MCEFVideoSourceResolver;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
@@ -34,7 +35,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
-import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -223,7 +223,8 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
         String finalVideoUrl = null;
         ResourceSource rawSource = this.rawVideoUrlSource.get();
         if (rawSource != null) {
-            finalVideoUrl = PlaceholderParser.replacePlaceholders(rawSource.getSourceWithoutPrefix());
+            String placeholderExpandedSource = PlaceholderParser.replacePlaceholders(rawSource.getSourceWithoutPrefix());
+            finalVideoUrl = MCEFVideoSourceResolver.resolve(rawSource, placeholderExpandedSource);
         }
         // Check if the video URL has changed since last time
         boolean videoUrlChanged = !Objects.equals(finalVideoUrl, this.lastFinalUrl);
@@ -231,18 +232,9 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
         if (videoUrlChanged && (finalVideoUrl != null)) {
             // Stop any existing video before loading new one
             this.videoPlayer.stop();
-            // Convert to URI format if it's a file
             try {
-                File videoFile = new File(finalVideoUrl);
-                if (videoFile.exists()) {
-                    String videoUri = videoFile.toURI().toString();
-                    this.videoPlayer.loadVideo(videoUri);
-                    if (!pausedState) this.videoPlayer.play();
-                } else {
-                    // Try loading the URL as-is
-                    this.videoPlayer.loadVideo(finalVideoUrl);
-                    if (!pausedState) this.videoPlayer.play();
-                }
+                this.videoPlayer.loadVideo(finalVideoUrl);
+                if (!pausedState) this.videoPlayer.play();
             } catch (Exception e) {
                 LOGGER.error("[FANCYMENU] Error processing video URL", e);
             }

@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.util.file.type;
 
 import com.google.common.io.Files;
 import de.keksuccino.fancymenu.util.WebUtils;
-import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
@@ -95,7 +94,8 @@ public class FileType<T> {
                 if (loc != null) return this.isFileTypeLocation(loc);
             }
             if (resourceSource.getSourceType() == ResourceSourceType.LOCAL) {
-                return this.isFileTypeLocal(new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(resourceSource.getSourceWithoutPrefix())));
+                File localFile = resourceSource.getValidatedLocalFile();
+                return (localFile != null) && this.isFileTypeLocal(localFile);
             }
             if (resourceSource.getSourceType() == ResourceSourceType.WEB) {
                 if (this.isFileTypeWeb(resourceSource.getSourceWithoutPrefix())) return true;
