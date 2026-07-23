@@ -1,11 +1,15 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.input.InputUtils;
+import de.keksuccino.fancymenu.util.input.ScreenKeyEventDispatcher;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.fancymenu.util.rendering.glsl.GlslRuntimeEventTracker;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import net.minecraft.client.KeyboardHandler;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import org.lwjgl.glfw.GLFW;
@@ -14,8 +18,34 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(KeyboardHandler.class)
+/**
+ * The reduced priority keeps FancyMenu's screen-call wrappers inside Fabric API's default-priority wrappers. This is
+ * important because a Fabric allow-event cancellation must skip FancyMenu's post-screen event along with the actual
+ * {@link Screen} call.
+ */
+@Mixin(value = KeyboardHandler.class, priority = 900)
 public abstract class MixinKeyboardHandler {
+
+    /**
+     * @reason Fire FancyMenu's screen-key event after the exact screen call even when the screen consumes the key.
+     *
+     * MCEF forwarding can cancel {@code KeyboardHandler.keyPress} before Vanilla calls the screen. In that case this
+     * post-call hook must not run, preserving the established behavior on both loaders.
+     */
+    @WrapOperation(method = "keyPress", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;keyPressed(Lnet/minecraft/client/input/KeyEvent;)Z"))
+    private boolean wrap_keyPressed_in_keyPress_FancyMenu(Screen screen, KeyEvent event, Operation<Boolean> operation, long windowPointer, int action) {
+        return ScreenKeyEventDispatcher.dispatchAfterScreenCall(windowPointer, action, screen, event, () -> operation.call(screen, event));
+    }
+
+    /**
+     * @reason Fire FancyMenu's screen-key event after the exact screen call even when the screen consumes the key.
+     *
+     * See {@code wrap_keyPressed_in_keyPress_FancyMenu} for the intentional MCEF cancellation ordering.
+     */
+    @WrapOperation(method = "keyPress", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;keyReleased(Lnet/minecraft/client/input/KeyEvent;)Z"))
+    private boolean wrap_keyReleased_in_keyPress_FancyMenu(Screen screen, KeyEvent event, Operation<Boolean> operation, long windowPointer, int action) {
+        return ScreenKeyEventDispatcher.dispatchAfterScreenCall(windowPointer, action, screen, event, () -> operation.call(screen, event));
+    }
 
     /**
      * @reason Fire FancyMenu's key listeners after vanilla processing so they run both in menus and during gameplay.
