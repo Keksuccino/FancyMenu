@@ -4,11 +4,15 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.util.List;
 
 public class LastWorldHandler {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public static final File LAST_WORLD_SAVE_FILE = new File(FancyMenu.INSTANCE_DATA_DIR.getPath() + "/last_world.fmdata");
 
@@ -61,7 +65,7 @@ public class LastWorldHandler {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to read last-world data from file!", e);
         }
     }
 
@@ -77,7 +81,7 @@ public class LastWorldHandler {
             set.putContainer(sec);
             PropertiesParser.serializeSetToFile(set, LAST_WORLD_SAVE_FILE.getPath());
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to write last-world data to file!", e);
         }
     }
 

@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.listener.listeners.helpers;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.Sound;
@@ -13,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -48,7 +48,10 @@ public final class MusicTrackInfoHelper {
                 }
                 parsed.forEach(MusicTrackInfo::initialize);
                 cachedMusicTrackInfo = Collections.unmodifiableList(parsed);
-            } catch (Exception ex) {
+            } catch (IOException ex) {
+                LOGGER.error("[FANCYMENU] Failed to read Minecraft music track metadata from file!", ex);
+                cachedMusicTrackInfo = Collections.emptyList();
+            } catch (RuntimeException ex) {
                 LOGGER.error("[FANCYMENU] Failed to parse Minecraft music track metadata!", ex);
                 cachedMusicTrackInfo = Collections.emptyList();
             }
@@ -93,21 +96,15 @@ public final class MusicTrackInfoHelper {
     }
 
     @NotNull
-    private static String getMusicTrackMetadataString() {
+    private static String getMusicTrackMetadataString() throws IOException {
         if (cachedMusicTrackMetadataJsonString != null) {
             return cachedMusicTrackMetadataJsonString;
         }
-        InputStream in = null;
-        try {
-            in = Minecraft.getInstance().getResourceManager().getResourceOrThrow(MUSIC_TRACK_METADATA_LOCATION).open();
+        try (InputStream in = Minecraft.getInstance().getResourceManager().getResourceOrThrow(MUSIC_TRACK_METADATA_LOCATION).open()) {
             StringBuilder builder = new StringBuilder();
             FileUtils.readTextLinesFrom(in).forEach(line -> builder.append(line).append('\n'));
             cachedMusicTrackMetadataJsonString = builder.toString();
-        } catch (Exception ex) {
-            cachedMusicTrackMetadataJsonString = "";
-            LOGGER.error("[FANCYMENU] Failed to read Minecraft music track metadata from file!", ex);
         }
-        CloseableUtils.closeQuietly(in);
         return cachedMusicTrackMetadataJsonString;
     }
 
