@@ -27,7 +27,7 @@ public class MathCeilPlaceholder extends Placeholder {
             try {
                 if (MathUtils.isDouble(num)) {
                     double numD = Double.parseDouble(num);
-                    return "" + Math.ceil(numD);
+                    return MathUtils.formatWholeNumber(Math.ceil(numD));
                 }
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to parse 'Ceiling (Math)' placeholder: " + dps.placeholderString, ex);
