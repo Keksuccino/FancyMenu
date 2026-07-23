@@ -14,13 +14,24 @@ public class FancyMenuFabricServerEvents {
 
         registerServerCommands();
 
-        // An integrated server can stop while its physical client keeps running, so only a dedicated-server process
-        // owns the server lifecycle of the shared internet availability monitor.
-        if (!Services.PLATFORM.isOnClient()) ServerLifecycleEvents.SERVER_STOPPING.register(server -> WebUtils.shutdown());
+        ServerLifecycleEvents.SERVER_STARTING.register(PacketHandler::onServerStarting);
+
+        // STOPPING clears networking state before player teardown; the repeated STOPPED cleanup is an intentional,
+        // idempotent fallback for partial shutdown paths. An integrated server can stop while its physical client
+        // keeps running, so only a dedicated-server process owns the shared internet availability monitor lifecycle.
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            PacketHandler.onServerStopped(server);
+            if (!Services.PLATFORM.isOnClient()) WebUtils.shutdown();
+        });
+
+        ServerLifecycleEvents.SERVER_STOPPED.register(PacketHandler::onServerStopped);
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            PacketHandler.onServerPlayerConnected(handler.getPlayer());
             PacketHandler.sendHandshakeToClient(handler.getPlayer());
         });
+
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> PacketHandler.onServerPlayerDisconnected(handler.getPlayer()));
 
     }
 

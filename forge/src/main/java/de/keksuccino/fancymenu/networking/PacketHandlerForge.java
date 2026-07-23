@@ -1,7 +1,9 @@
 package de.keksuccino.fancymenu.networking;
 
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.Connection;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
@@ -22,8 +24,8 @@ public class PacketHandlerForge {
         INSTANCE.registerMessage(messageIndex, messageType, encoder, decoder, messageConsumer);
     }
 
-    public static void sendToServer(Object message) {
-        INSTANCE.sendToServer(message);
+    public static void sendToServer(Object message, Connection connection) {
+        INSTANCE.sendTo(message, connection, NetworkDirection.PLAY_TO_SERVER);
     }
 
     public static void send(PacketDistributor.PacketTarget target, Object message) {

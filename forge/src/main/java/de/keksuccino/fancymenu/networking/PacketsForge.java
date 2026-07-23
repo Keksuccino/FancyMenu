@@ -18,9 +18,9 @@ public class PacketsForge {
             PacketHandlerForge.send(PacketDistributor.PLAYER.with(() -> player), payload);
         });
 
-        PacketHandler.setSendToServerLogic(s -> {
+        PacketHandler.setSendToServerLogic((connection, s) -> {
             BridgePacketPayload payload = new BridgePacketPayload(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, s);
-            PacketHandlerForge.sendToServer(payload);
+            PacketHandlerForge.sendToServer(payload, connection);
         });
 
     }
@@ -30,7 +30,7 @@ public class PacketsForge {
         PacketHandlerForge.registerMessage(BridgePacketPayload.class, BridgePacketPayload::write, BridgePacketPayload::new, (payload, context) -> {
             context.get().enqueueWork(() -> {
                 PacketHandler.PacketDirection direction = context.get().getDirection() == NetworkDirection.PLAY_TO_SERVER ? PacketHandler.PacketDirection.TO_SERVER : PacketHandler.PacketDirection.TO_CLIENT;
-                payload.handle(context.get().getSender(), direction);
+                payload.handle(context.get().getSender(), direction, direction == PacketHandler.PacketDirection.TO_CLIENT ? context.get().getNetworkManager() : null);
             });
             context.get().setPacketHandled(true);
         });

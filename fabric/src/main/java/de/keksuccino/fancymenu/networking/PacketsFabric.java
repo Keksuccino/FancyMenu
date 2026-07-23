@@ -8,6 +8,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.game.ServerboundCustomPayloadPacket;
 
 public class PacketsFabric {
 
@@ -20,9 +21,9 @@ public class PacketsFabric {
             ServerPlayNetworking.send(player, BridgePacketPayload.ID, writeToByteBuf(payload));
         });
 
-        PacketHandler.setSendToServerLogic(s -> {
+        PacketHandler.setSendToServerLogic((connection, s) -> {
             BridgePacketPayload payload = new BridgePacketPayload(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, s);
-            ClientPlayNetworking.send(BridgePacketPayload.ID, writeToByteBuf(payload));
+            connection.send(new ServerboundCustomPayloadPacket(BridgePacketPayload.ID, writeToByteBuf(payload)));
         });
 
         registerFabricBridgePacket();
@@ -41,7 +42,7 @@ public class PacketsFabric {
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
             ClientPlayNetworking.registerGlobalReceiver(BridgePacketPayload.ID, (client, handler, buf, responseSender) -> {
                 BridgePacketPayload payload = new BridgePacketPayload(buf);
-                payload.handle(null, PacketHandler.PacketDirection.TO_CLIENT);
+                payload.handle(null, PacketHandler.PacketDirection.TO_CLIENT, handler.getConnection());
             });
         }
 
