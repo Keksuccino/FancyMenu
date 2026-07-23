@@ -1,13 +1,25 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders.advanced;
 
+import de.keksuccino.fancymenu.util.file.LocalSourcePathResolver;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class FileTextPlaceholderTest {
+
+    @TempDir
+    Path temporaryDirectory;
 
     @Test
     void convertsDocumentedTextualNewlineSeparator() {
@@ -45,6 +57,87 @@ class FileTextPlaceholderTest {
         assertEquals("first\nsecond", FileTextPlaceholder.joinLines(cachedLines, "\\n"));
         assertEquals("first, second", FileTextPlaceholder.joinLines(cachedLines, ", "));
         assertEquals(List.of("first", "second"), cachedLines);
+    }
+
+    @Test
+    void readsRootAndNestedFilesFromBothDocumentedRoots() throws Exception {
+        Path gameRoot = Files.createDirectory(this.temporaryDirectory.resolve("game"));
+        Path minecraftRoot = Files.createDirectory(this.temporaryDirectory.resolve("minecraft"));
+        Files.writeString(gameRoot.resolve("root.txt"), "game-root");
+        Files.writeString(Files.createDirectories(gameRoot.resolve("config/nested")).resolve("value.txt"), "game-first\ngame-second");
+        Files.writeString(Files.createDirectories(minecraftRoot.resolve("config/nested")).resolve("value.txt"), "minecraft-value");
+        LocalSourcePathResolver resolver = LocalSourcePathResolver.createForGameAndMinecraftDirectories(gameRoot, minecraftRoot);
+
+        assertAll(
+                () -> assertEquals(List.of("game-root"), FileTextPlaceholder.loadFromFile("root.txt", resolver)),
+                () -> assertEquals(List.of("game-first", "game-second"), FileTextPlaceholder.loadFromFile("[source:local]/config/nested/value.txt", resolver)),
+                () -> assertEquals(List.of("minecraft-value"), FileTextPlaceholder.loadFromFile(".minecraft/config/nested/value.txt", resolver)),
+                () -> assertTrue(FileTextPlaceholder.isUrl("https://example.com/data.txt")),
+                () -> assertTrue(FileTextPlaceholder.isUrl("http://example.com/data.txt")));
+    }
+
+    @Test
+    void returnsNoContentForMissingMalformedAndNonLocalSources() throws Exception {
+        Path gameRoot = Files.createDirectory(this.temporaryDirectory.resolve("game"));
+        Path minecraftRoot = Files.createDirectory(this.temporaryDirectory.resolve("minecraft"));
+        LocalSourcePathResolver resolver = LocalSourcePathResolver.createForGameAndMinecraftDirectories(gameRoot, minecraftRoot);
+
+        assertAll(
+                () -> assertEquals(List.of(), FileTextPlaceholder.loadFromFile("missing.txt", resolver)),
+                () -> assertEquals(List.of(), FileTextPlaceholder.loadFromFile("bad\0path", resolver)),
+                () -> assertEquals(List.of(), FileTextPlaceholder.loadFromFile("[source:location]fancymenu:texts/example.txt", resolver)),
+                () -> assertEquals(List.of(), FileTextPlaceholder.loadFromFile("[source:web]https://example.com/data.txt", resolver)),
+                () -> assertFalse(FileTextPlaceholder.isUrl("config/data.txt")));
+    }
+
+    @Test
+    void rejectsTraversalSiblingDriveAndUncSourcesWithoutPublishingOutsideText() throws Exception {
+        Path gameRoot = Files.createDirectory(this.temporaryDirectory.resolve("game"));
+        Path minecraftRoot = Files.createDirectory(this.temporaryDirectory.resolve("minecraft"));
+        Path sibling = Files.createDirectory(this.temporaryDirectory.resolve("game-backup"));
+        Path outsideFile = Files.writeString(sibling.resolve("secret.txt"), "outside-secret");
+        LocalSourcePathResolver resolver = LocalSourcePathResolver.createForGameAndMinecraftDirectories(gameRoot, minecraftRoot);
+
+        List<List<String>> rejectedResults = List.of(
+                FileTextPlaceholder.loadFromFile("../game-backup/secret.txt", resolver),
+                FileTextPlaceholder.loadFromFile("nested\\..\\..\\game-backup\\secret.txt", resolver),
+                FileTextPlaceholder.loadFromFile(outsideFile.toString(), resolver),
+                FileTextPlaceholder.loadFromFile("C:\\outside\\secret.txt", resolver),
+                FileTextPlaceholder.loadFromFile("//server/share/secret.txt", resolver));
+
+        assertTrue(rejectedResults.stream().allMatch(List::isEmpty));
+        assertTrue(rejectedResults.stream().flatMap(List::stream).noneMatch("outside-secret"::equals));
+    }
+
+    @Test
+    void rejectsEscapingAndDanglingLinksWhileReadingInternalLinks() throws Exception {
+        Path gameRoot = Files.createDirectory(this.temporaryDirectory.resolve("game"));
+        Path minecraftRoot = Files.createDirectory(this.temporaryDirectory.resolve("minecraft"));
+        Path outside = Files.createDirectory(this.temporaryDirectory.resolve("outside"));
+        Path outsideFile = Files.writeString(outside.resolve("secret.txt"), "outside-secret");
+        Path internal = Files.createDirectory(gameRoot.resolve("internal"));
+        Path internalFile = Files.writeString(internal.resolve("value.txt"), "inside-value");
+        createSymbolicLinkOrSkip(gameRoot.resolve("escaping-file.txt"), outsideFile);
+        createSymbolicLinkOrSkip(gameRoot.resolve("escaping-directory"), outside);
+        createSymbolicLinkOrSkip(gameRoot.resolve("dangling.txt"), outside.resolve("missing.txt"));
+        createSymbolicLinkOrSkip(gameRoot.resolve("internal-directory"), internal);
+        createSymbolicLinkOrSkip(gameRoot.resolve("internal-file.txt"), internalFile);
+        LocalSourcePathResolver resolver = LocalSourcePathResolver.createForGameAndMinecraftDirectories(gameRoot, minecraftRoot);
+
+        assertAll(
+                () -> assertEquals(List.of(), FileTextPlaceholder.loadFromFile("escaping-file.txt", resolver)),
+                () -> assertEquals(List.of(), FileTextPlaceholder.loadFromFile("escaping-directory/secret.txt", resolver)),
+                () -> assertEquals(List.of(), FileTextPlaceholder.loadFromFile("dangling.txt", resolver)),
+                () -> assertEquals(List.of("inside-value"), FileTextPlaceholder.loadFromFile("internal-directory/value.txt", resolver)),
+                () -> assertEquals(List.of("inside-value"), FileTextPlaceholder.loadFromFile("internal-file.txt", resolver)));
+    }
+
+    private static void createSymbolicLinkOrSkip(Path link, Path target) {
+        try {
+            Files.createSymbolicLink(link, target);
+        } catch (IOException | UnsupportedOperationException | SecurityException ex) {
+            assumeTrue(false, "Symbolic links are unavailable in this test environment: " + ex.getMessage());
+        }
     }
 
 }

@@ -111,7 +111,14 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
                     this.addToFailedSources(resourceSource);
                     return null;
                 }
-                return this.putAndReturn(fileType.getCodec().readLocal(new File(resourceSource.getSourceWithoutPrefix())), resourceSource);
+                File localFile = resourceSource.getValidatedLocalFile();
+                if (localFile == null) {
+                    this.addToFailedSources(resourceSource);
+                    return null;
+                }
+                // This is the last shared handoff before a codec opens the file. Some native decoders retain the File
+                // for asynchronous use; portable Java cannot make validation and that later third-party open atomic.
+                return this.putAndReturn(fileType.getCodec().readLocal(localFile), resourceSource);
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to register resource: " + resourceSource + " (RESOURCE HANDLER: " + this.getClass() + ")", ex);

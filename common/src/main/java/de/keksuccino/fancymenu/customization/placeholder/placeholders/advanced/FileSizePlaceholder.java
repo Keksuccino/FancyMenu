@@ -3,8 +3,8 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.advanced;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.file.DotMinecraftUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
+import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import net.minecraft.client.resources.language.I18n;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,7 +14,6 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 public class FileSizePlaceholder extends Placeholder {
@@ -41,14 +40,10 @@ public class FileSizePlaceholder extends Placeholder {
         }
 
         try {
-            // Convert short .minecraft path to actual .minecraft path
-            filePath = DotMinecraftUtils.resolveMinecraftPath(filePath);
-            if (!DotMinecraftUtils.isInsideMinecraftDirectory(filePath)) {
-                // Convert the path to a valid game directory path
-                filePath = ResourceSource.of(filePath).getSourceWithoutPrefix();
-            }
-            
-            Path path = Paths.get(filePath);
+            ResourceSource source = ResourceSource.of(filePath, ResourceSourceType.LOCAL);
+            File validatedFile = source.getValidatedLocalFile();
+            if (validatedFile == null) return "0";
+            Path path = validatedFile.toPath();
             
             if (!Files.exists(path)) {
                 LOGGER.warn("[FANCYMENU] File Size placeholder: File not found: " + filePath);
@@ -61,7 +56,9 @@ public class FileSizePlaceholder extends Placeholder {
             }
             
             // Get file size in bytes
-            long sizeInBytes = Files.size(path);
+            validatedFile = source.getValidatedLocalFile();
+            if (validatedFile == null) return "0";
+            long sizeInBytes = Files.size(validatedFile.toPath());
             return String.valueOf(sizeInBytes);
             
         } catch (Exception e) {

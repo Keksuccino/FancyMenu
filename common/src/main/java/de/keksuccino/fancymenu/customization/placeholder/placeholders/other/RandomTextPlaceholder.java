@@ -182,7 +182,9 @@ public class RandomTextPlaceholder extends Placeholder {
     
     private List<String> loadFromFile(String pathString) {
         try {
-            File path = new File(ResourceSource.of(pathString, ResourceSourceType.LOCAL).getSourceWithoutPrefix());
+            ResourceSource source = ResourceSource.of(pathString, ResourceSourceType.LOCAL);
+            File path = source.getValidatedLocalFile();
+            if (path == null) return new ArrayList<>();
             
             if (!path.isFile() || !path.getPath().toLowerCase().endsWith(".txt")) {
                 LOGGER.warn("[FANCYMENU] File not found or not a .txt file: " + pathString);
@@ -190,6 +192,8 @@ public class RandomTextPlaceholder extends Placeholder {
             }
             
             List<String> lines = new ArrayList<>();
+            path = source.getValidatedLocalFile();
+            if (path == null) return lines;
             lines.addAll(Files.readAllLines(path.toPath(), StandardCharsets.UTF_8));
             return lines;
             
