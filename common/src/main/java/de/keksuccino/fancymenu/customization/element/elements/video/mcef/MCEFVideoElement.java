@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.customization.element.elements.video.VideoElement
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
+import de.keksuccino.fancymenu.util.mcef.MCEFVideoSourceResolver;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoPlayer;
@@ -22,7 +23,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
-import java.io.File;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -159,7 +159,8 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
 
             String finalVideoUrl = null;
             if (this.rawVideoUrlSource != null) {
-                finalVideoUrl = PlaceholderParser.replacePlaceholders(this.rawVideoUrlSource.getSourceWithoutPrefix());
+                String placeholderExpandedSource = PlaceholderParser.replacePlaceholders(this.rawVideoUrlSource.getSourceWithoutPrefix());
+                finalVideoUrl = MCEFVideoSourceResolver.resolve(this.rawVideoUrlSource, placeholderExpandedSource);
             }
             // Check if the video URL has changed since last time
             boolean videoUrlChanged = !Objects.equals(finalVideoUrl, this.lastFinalUrl);
@@ -167,18 +168,9 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
             if (videoUrlChanged && (finalVideoUrl != null)) {
                 // Stop any existing video before loading new one
                 this.videoPlayer.stop();
-                // Convert to URI format if it's a file
                 try {
-                    File videoFile = new File(finalVideoUrl);
-                    if (videoFile.exists()) {
-                        String videoUri = videoFile.toURI().toString();
-                        this.videoPlayer.loadVideo(videoUri);
-                        if (!pausedState) this.videoPlayer.play();
-                    } else {
-                        // Try loading the URL as-is
-                        this.videoPlayer.loadVideo(finalVideoUrl);
-                        if (!pausedState) this.videoPlayer.play();
-                    }
+                    this.videoPlayer.loadVideo(finalVideoUrl);
+                    if (!pausedState) this.videoPlayer.play();
                 } catch (Exception e) {
                 }
             }
