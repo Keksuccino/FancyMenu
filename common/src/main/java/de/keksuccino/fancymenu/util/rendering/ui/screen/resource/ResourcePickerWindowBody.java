@@ -48,8 +48,6 @@ public class ResourcePickerWindowBody extends AbstractBrowserWindowBody {
     protected String currentPath = "";
     @Nullable
     protected Identifier preselectedLocation;
-    @Nullable
-    protected Set<Identifier> cachedResourceLocations;
     protected boolean blockResourceUnfriendlyNames = true;
     protected boolean showBlockedResourceUnfriendlyNames = true;
     @Nullable
@@ -413,10 +411,7 @@ public class ResourcePickerWindowBody extends AbstractBrowserWindowBody {
 
     @NotNull
     protected Set<Identifier> getAllResourceLocations() {
-        if (this.cachedResourceLocations == null) {
-            this.cachedResourceLocations = new HashSet<>(Services.PLATFORM.getLoadedClientResourceLocations());
-        }
-        return this.cachedResourceLocations;
+        return Services.PLATFORM.getLoadedClientResourceLocations();
     }
 
     protected boolean currentIsRootDirectory() {
@@ -426,13 +421,9 @@ public class ResourcePickerWindowBody extends AbstractBrowserWindowBody {
     public void setDirectory(@Nullable String namespace, @NotNull String path, boolean playSound) {
         if (playSound) Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
         this.updatePreviewForKey(null);
-        boolean namespaceChanged = !Objects.equals(this.currentNamespace, namespace);
         this.currentNamespace = namespace;
         this.currentPath = path;
         this.preselectedLocation = null;
-        if (namespaceChanged) {
-            this.cachedResourceLocations = null;
-        }
         this.updateResourceList();
         this.updateCurrentDirectoryComponent();
     }
