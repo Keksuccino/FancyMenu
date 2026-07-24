@@ -84,6 +84,24 @@ class BoundedConnectionRegistryTest {
     }
 
     @Test
+    void clearRemovesActiveIndexesAndCachedRequestIds() {
+        BoundedConnectionRegistry<TestState> registry = new BoundedConnectionRegistry<>(2, 3);
+        AtomicInteger nextId = new AtomicInteger();
+        TestState active = admit(registry, "ws://active", nextId).state();
+        TestState inactive = admit(registry, "ws://inactive", nextId).state();
+        assertTrue(registry.remove(inactive.url(), inactive.requestId(), inactive));
+
+        registry.clear();
+
+        assertEquals(0, registry.activeStateCount());
+        assertEquals(0, registry.cachedRequestIdCount());
+        assertNull(registry.getByUrl(active.url()));
+        assertNull(registry.getByRequestId(active.requestId()));
+        assertNull(registry.cachedRequestId(active.url()));
+        assertNull(registry.cachedRequestId(inactive.url()));
+    }
+
+    @Test
     void reportsExhaustionWhenSupplierCannotProduceAUniqueActiveId() {
         BoundedConnectionRegistry<TestState> registry = new BoundedConnectionRegistry<>(2, 2);
         BoundedConnectionRegistry.Admission<TestState> first = registry.getOrCreate("ws://one", () -> "duplicate", TestState::new);

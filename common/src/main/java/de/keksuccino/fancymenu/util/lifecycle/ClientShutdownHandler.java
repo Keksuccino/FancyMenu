@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.lifecycle;
 
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
+import de.keksuccino.fancymenu.customization.remote.RemoteServerConnectionManager;
 import de.keksuccino.fancymenu.customization.server.ServerCache;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.WebUtils;
@@ -37,6 +38,8 @@ public final class ClientShutdownHandler {
         if (!SHUTDOWN_STARTED.compareAndSet(false, true)) return;
 
         try {
+            // Remote callbacks can enqueue main-thread listener work, so quiesce both of their owned worker pools first.
+            runCleanup("remote server connections", RemoteServerConnectionManager::shutdown);
             runCleanup("internet availability monitor", WebUtils::shutdown);
             runCleanup("server cache", ServerCache::shutdown);
             // Stop recurring work before any resource it can touch is disposed. All managed workers are daemons as a final fallback.

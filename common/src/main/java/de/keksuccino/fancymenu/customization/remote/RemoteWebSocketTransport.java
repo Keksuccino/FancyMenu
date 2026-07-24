@@ -9,6 +9,11 @@ interface RemoteWebSocketTransport {
 
     @NotNull Connection connect(@NotNull URI uri, @NotNull Listener listener);
 
+    /** Permanently rejects new connections and waits a bounded time for owned I/O workers to terminate. */
+    void shutdown();
+
+    boolean isTerminated();
+
     interface Connection {
 
         boolean isOpen();

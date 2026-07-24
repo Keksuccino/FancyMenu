@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -17,6 +18,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 public final class RemoteServerConnectionManager {
@@ -46,25 +48,22 @@ public final class RemoteServerConnectionManager {
     private static final long REJECTION_LOG_INTERVAL_MILLIS = 5_000L;
     private static final byte[] HEARTBEAT_PING_DATA = "fm_remote_ping".getBytes(StandardCharsets.UTF_8);
 
-    private static final RemoteWebSocketTransport TRANSPORT = new NettyRemoteWebSocketTransport(MAX_INBOUND_MESSAGE_UTF8_BYTES, MAX_INBOUND_MESSAGE_FRAGMENTS);
+    private static final Object LIFECYCLE_LOCK = new Object();
     private static final BoundedConnectionRegistry<ConnectionState> CONNECTIONS = new BoundedConnectionRegistry<>(MAX_ACTIVE_CONNECTION_STATES, MAX_CACHED_REQUEST_IDS);
     private static final CoalescingTaskGate INBOUND_DELIVERY_DRAIN_GATE = new CoalescingTaskGate();
+    private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean();
     private static final AtomicLong LAST_REJECTION_LOG_MILLIS = new AtomicLong(Long.MIN_VALUE);
 
-    private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor(runnable -> {
-        Thread thread = new Thread(runnable, "FancyMenu-RemoteServerConnectionManager");
-        thread.setDaemon(true);
-        return thread;
-    });
-
-    static {
-        EXECUTOR.scheduleAtFixedRate(RemoteServerConnectionManager::runHeartbeatAndReconnectTick, HEARTBEAT_TICK_INTERVAL_MILLIS, HEARTBEAT_TICK_INTERVAL_MILLIS, TimeUnit.MILLISECONDS);
-    }
+    // The shutdown handler must not initialize networking merely to stop a feature that was never used.
+    private static volatile @Nullable RuntimeResources runtimeResources;
 
     private RemoteServerConnectionManager() {
     }
 
     public static void sendData(@NotNull String remoteServerUrl, @Nullable String data) {
+        if (SHUTDOWN_STARTED.get()) {
+            return;
+        }
         String payload = Objects.requireNonNullElse(data, "");
         PendingPayloadBuffer.PayloadValidation validation = PendingPayloadBuffer.validatePayload(payload, MAX_OUTBOUND_MESSAGE_UTF8_BYTES, OUTGOING_MESSAGE_ENVELOPE_UTF8_BYTES);
         if (validation.result() != PendingPayloadBuffer.AdmissionResult.ACCEPTED) {
@@ -92,6 +91,9 @@ public final class RemoteServerConnectionManager {
     }
 
     public static void connect(@NotNull String remoteServerUrl) {
+        if (SHUTDOWN_STARTED.get()) {
+            return;
+        }
         ConnectionState state = getOrCreateConnectionState(remoteServerUrl);
         if (state != null) {
             connectIfNeededAndFlush(state);
@@ -115,8 +117,109 @@ public final class RemoteServerConnectionManager {
         }
     }
 
+    /** Permanently disables remote networking and synchronously quiesces all manager-owned resources. */
+    public static void shutdown() {
+        if (SHUTDOWN_STARTED.get()) {
+            return;
+        }
+
+        RuntimeResources resources;
+        List<RemoteWebSocketTransport.Connection> connectionsToAbort = new ArrayList<>();
+        synchronized (LIFECYCLE_LOCK) {
+            if (!SHUTDOWN_STARTED.compareAndSet(false, true)) {
+                return;
+            }
+            resources = runtimeResources;
+            if (resources != null) {
+                try {
+                    resources.executor.shutdownNow();
+                } catch (Throwable throwable) {
+                    LOGGER.error("[FANCYMENU] Failed to stop the remote server connection manager executor", throwable);
+                }
+            }
+
+            // Invalidate every generation while admission is blocked. Late connect, send, and Netty callbacks can
+            // then only observe an unregistered state and cannot recreate work during client resource teardown.
+            for (ConnectionState state : CONNECTIONS.snapshot()) {
+                synchronized (state.lock) {
+                    RemoteWebSocketTransport.Connection connection = state.connection;
+                    if (connection != null) {
+                        connectionsToAbort.add(connection);
+                    }
+                    state.registered = false;
+                    state.reconnectRequested = false;
+                    state.connecting = false;
+                    state.sendPumpScheduled = false;
+                    state.intentionallyClosing = false;
+                    state.removeAfterClose = false;
+                    state.awaitingCrashRecoveryLog = false;
+                    state.connection = null;
+                    state.connectionGeneration++;
+                    state.nextReconnectAttemptAtMillis = 0L;
+                    state.lastHeartbeatPingMillis = 0L;
+                    state.lastHeartbeatPongMillis = 0L;
+                    state.pendingPayloads.clear();
+                    state.inboundDeliveries.clear();
+                }
+            }
+            CONNECTIONS.clear();
+        }
+
+        for (RemoteWebSocketTransport.Connection connection : connectionsToAbort) {
+            try {
+                connection.abort();
+            } catch (Throwable throwable) {
+                LOGGER.error("[FANCYMENU] Failed to abort a remote server connection during client shutdown", throwable);
+            }
+        }
+
+        if (resources == null) {
+            return;
+        }
+        try {
+            resources.transport.shutdown();
+        } catch (Throwable throwable) {
+            LOGGER.error("[FANCYMENU] Failed to shut down the remote WebSocket transport", throwable);
+        } finally {
+            if (!RemoteShutdownSupport.awaitTerminationPreservingInterrupt(resources.executor)) {
+                LOGGER.warn("[FANCYMENU] Timed out while waiting for the remote server connection manager executor to terminate");
+            }
+        }
+    }
+
     static int activeConnectionStateCount() {
         return CONNECTIONS.activeStateCount();
+    }
+
+    static int cachedRequestIdCount() {
+        return CONNECTIONS.cachedRequestIdCount();
+    }
+
+    static boolean isShutdownStarted() {
+        return SHUTDOWN_STARTED.get();
+    }
+
+    static boolean areWorkersTerminated() {
+        RuntimeResources resources = runtimeResources;
+        return SHUTDOWN_STARTED.get() && (resources == null || (resources.executor.isTerminated() && resources.transport.isTerminated()));
+    }
+
+    static @Nullable ConnectionState activeConnectionState(@NotNull String remoteServerUrl) {
+        String normalizedUrl = normalizeRemoteServerUrl(remoteServerUrl);
+        return normalizedUrl == null ? null : CONNECTIONS.getByUrl(normalizedUrl);
+    }
+
+    @Nullable
+    private static RuntimeResources getOrCreateRuntimeResources() {
+        synchronized (LIFECYCLE_LOCK) {
+            if (SHUTDOWN_STARTED.get()) {
+                return null;
+            }
+            if (runtimeResources == null) {
+                runtimeResources = new RuntimeResources();
+            }
+            return runtimeResources;
+        }
     }
 
     @Nullable
@@ -164,32 +267,38 @@ public final class RemoteServerConnectionManager {
             return null;
         }
 
-        while (true) {
-            BoundedConnectionRegistry.Admission<ConnectionState> admission = CONNECTIONS.getOrCreate(normalizedUrl, RemoteServerConnectionManager::createRequestId, ConnectionState::new);
-            if (admission.type() == BoundedConnectionRegistry.AdmissionType.CAPACITY_EXCEEDED) {
-                logRejectedRequest("Ignoring remote server request because the active connection-state limit of " + MAX_ACTIVE_CONNECTION_STATES + " has been reached");
-                return null;
-            }
-            if (admission.type() == BoundedConnectionRegistry.AdmissionType.REQUEST_ID_EXHAUSTED) {
-                logRejectedRequest("Ignoring remote server request because a unique request ID could not be allocated");
+        synchronized (LIFECYCLE_LOCK) {
+            if (SHUTDOWN_STARTED.get()) {
                 return null;
             }
 
-            ConnectionState state = Objects.requireNonNull(admission.state());
-            synchronized (state.lock) {
-                if (!state.registered) {
-                    continue;
+            while (true) {
+                BoundedConnectionRegistry.Admission<ConnectionState> admission = CONNECTIONS.getOrCreate(normalizedUrl, RemoteServerConnectionManager::createRequestId, ConnectionState::new);
+                if (admission.type() == BoundedConnectionRegistry.AdmissionType.CAPACITY_EXCEEDED) {
+                    logRejectedRequest("Ignoring remote server request because the active connection-state limit of " + MAX_ACTIVE_CONNECTION_STATES + " has been reached");
+                    return null;
                 }
-                state.reconnectRequested = true;
-                if (state.intentionallyClosing) {
-                    // A new action may legitimately reuse an endpoint while its previous close frame is still flushing.
-                    // Keep the state registered and reconnect only after the old channel reaches its terminal callback.
-                    state.removeAfterClose = false;
+                if (admission.type() == BoundedConnectionRegistry.AdmissionType.REQUEST_ID_EXHAUSTED) {
+                    logRejectedRequest("Ignoring remote server request because a unique request ID could not be allocated");
+                    return null;
                 }
-                if (state.nextReconnectAttemptAtMillis <= 0L) {
-                    state.nextReconnectAttemptAtMillis = System.currentTimeMillis();
+
+                ConnectionState state = Objects.requireNonNull(admission.state());
+                synchronized (state.lock) {
+                    if (!state.registered) {
+                        continue;
+                    }
+                    state.reconnectRequested = true;
+                    if (state.intentionallyClosing) {
+                        // A new action may legitimately reuse an endpoint while its previous close frame is still flushing.
+                        // Keep the state registered and reconnect only after the old channel reaches its terminal callback.
+                        state.removeAfterClose = false;
+                    }
+                    if (state.nextReconnectAttemptAtMillis <= 0L) {
+                        state.nextReconnectAttemptAtMillis = System.currentTimeMillis();
+                    }
+                    return state;
                 }
-                return state;
             }
         }
     }
@@ -236,6 +345,11 @@ public final class RemoteServerConnectionManager {
             return;
         }
 
+        if (SHUTDOWN_STARTED.get()) {
+            Objects.requireNonNull(connectionToClose).abort();
+            return;
+        }
+
         Objects.requireNonNull(connectionToClose).close(NORMAL_CLOSURE_STATUS, "fancymenu_close_action").exceptionally(throwable -> {
             LOGGER.warn("[FANCYMENU] Failed to gracefully close remote server connection. Aborting socket: {}", state.remoteServerUrl, throwable);
             connectionToClose.abort();
@@ -269,6 +383,11 @@ public final class RemoteServerConnectionManager {
             return;
         }
 
+        RuntimeResources resources = getOrCreateRuntimeResources();
+        if (resources == null) {
+            return;
+        }
+
         URI uri;
         try {
             uri = URI.create(state.remoteServerUrl);
@@ -277,7 +396,7 @@ public final class RemoteServerConnectionManager {
             return;
         }
 
-        RemoteWebSocketTransport.Connection connection = TRANSPORT.connect(uri, new TransportListener(state, generation));
+        RemoteWebSocketTransport.Connection connection = resources.transport.connect(uri, new TransportListener(state, generation));
         boolean abortConnection = false;
         synchronized (state.lock) {
             if (!state.registered || generation != state.connectionGeneration || (!state.connecting && state.connection != connection)) {
@@ -357,6 +476,10 @@ public final class RemoteServerConnectionManager {
     }
 
     private static void scheduleSendPump(@NotNull ConnectionState state, @NotNull RemoteWebSocketTransport.Connection connection, long generation) {
+        RuntimeResources resources = getOrCreateRuntimeResources();
+        if (resources == null) {
+            return;
+        }
         synchronized (state.lock) {
             if (state.sendPumpScheduled || !state.registered || state.connectionGeneration != generation || state.connection != connection) {
                 return;
@@ -364,7 +487,7 @@ public final class RemoteServerConnectionManager {
             state.sendPumpScheduled = true;
         }
         try {
-            EXECUTOR.execute(() -> {
+            resources.executor.execute(() -> {
                 synchronized (state.lock) {
                     state.sendPumpScheduled = false;
                     if (!state.registered || state.connectionGeneration != generation || state.connection != connection) {
@@ -401,9 +524,15 @@ public final class RemoteServerConnectionManager {
     }
 
     private static void runHeartbeatAndReconnectTick() {
+        if (SHUTDOWN_STARTED.get()) {
+            return;
+        }
         long now = System.currentTimeMillis();
 
         for (ConnectionState state : CONNECTIONS.snapshot()) {
+            if (SHUTDOWN_STARTED.get()) {
+                return;
+            }
             state.pendingPayloads.pruneExpiredQueued(now);
 
             RemoteWebSocketTransport.Connection connection;
@@ -430,6 +559,10 @@ public final class RemoteServerConnectionManager {
                 } else if (state.reconnectRequested && !state.connecting && !state.intentionallyClosing && now >= state.nextReconnectAttemptAtMillis) {
                     shouldReconnect = true;
                 }
+            }
+
+            if (SHUTDOWN_STARTED.get()) {
+                return;
             }
 
             if (shouldCrashForTimeout && connection != null) {
@@ -586,14 +719,16 @@ public final class RemoteServerConnectionManager {
     }
 
     private static void scheduleInboundDeliveryDrain() {
-        if (!INBOUND_DELIVERY_DRAIN_GATE.tryAcquire()) {
-            return;
-        }
-        try {
-            MainThreadTaskExecutor.executeInMainThread(RemoteServerConnectionManager::drainInboundDeliveries, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-        } catch (RuntimeException | Error throwable) {
-            INBOUND_DELIVERY_DRAIN_GATE.release();
-            throw throwable;
+        synchronized (LIFECYCLE_LOCK) {
+            if (SHUTDOWN_STARTED.get() || !INBOUND_DELIVERY_DRAIN_GATE.tryAcquire()) {
+                return;
+            }
+            try {
+                MainThreadTaskExecutor.executeInMainThread(RemoteServerConnectionManager::drainInboundDeliveries, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+            } catch (RuntimeException | Error throwable) {
+                INBOUND_DELIVERY_DRAIN_GATE.release();
+                throw throwable;
+            }
         }
     }
 
@@ -611,7 +746,7 @@ public final class RemoteServerConnectionManager {
                     }
                     madeProgress = true;
                     delivered++;
-                    if (Listeners.ON_REMOTE_SERVER_DATA_RECEIVED.isActiveAtRevision(delivery.listenerRevision())) {
+                    if (!SHUTDOWN_STARTED.get() && Listeners.ON_REMOTE_SERVER_DATA_RECEIVED.isActiveAtRevision(delivery.listenerRevision())) {
                         IncomingMessage incoming = delivery.message();
                         Listeners.ON_REMOTE_SERVER_DATA_RECEIVED.onRemoteServerDataReceived(incoming.requestId(), state.remoteServerUrl, incoming.data());
                     }
@@ -640,15 +775,21 @@ public final class RemoteServerConnectionManager {
     }
 
     private static void notifyConnected(@NotNull String requestId, @NotNull String remoteServerUrl) {
-        long listenerRevision = Listeners.ON_REMOTE_SERVER_CONNECTED.getActiveInstanceRevision();
-        if (listenerRevision < 0L) return;
-        MainThreadTaskExecutor.executeInMainThread(() -> { if (Listeners.ON_REMOTE_SERVER_CONNECTED.isActiveAtRevision(listenerRevision)) Listeners.ON_REMOTE_SERVER_CONNECTED.onRemoteServerConnected(requestId, remoteServerUrl); }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+        synchronized (LIFECYCLE_LOCK) {
+            if (SHUTDOWN_STARTED.get()) return;
+            long listenerRevision = Listeners.ON_REMOTE_SERVER_CONNECTED.getActiveInstanceRevision();
+            if (listenerRevision < 0L) return;
+            MainThreadTaskExecutor.executeInMainThread(() -> { if (!SHUTDOWN_STARTED.get() && Listeners.ON_REMOTE_SERVER_CONNECTED.isActiveAtRevision(listenerRevision)) Listeners.ON_REMOTE_SERVER_CONNECTED.onRemoteServerConnected(requestId, remoteServerUrl); }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+        }
     }
 
     private static void notifyConnectionClosed(@NotNull String requestId, @NotNull String remoteServerUrl, boolean intentionallyClosed, boolean crashed, boolean unknownCloseReason) {
-        long listenerRevision = Listeners.ON_REMOTE_SERVER_CONNECTION_CLOSED.getActiveInstanceRevision();
-        if (listenerRevision < 0L) return;
-        MainThreadTaskExecutor.executeInMainThread(() -> { if (Listeners.ON_REMOTE_SERVER_CONNECTION_CLOSED.isActiveAtRevision(listenerRevision)) Listeners.ON_REMOTE_SERVER_CONNECTION_CLOSED.onRemoteServerConnectionClosed(requestId, remoteServerUrl, intentionallyClosed, crashed, unknownCloseReason); }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+        synchronized (LIFECYCLE_LOCK) {
+            if (SHUTDOWN_STARTED.get()) return;
+            long listenerRevision = Listeners.ON_REMOTE_SERVER_CONNECTION_CLOSED.getActiveInstanceRevision();
+            if (listenerRevision < 0L) return;
+            MainThreadTaskExecutor.executeInMainThread(() -> { if (!SHUTDOWN_STARTED.get() && Listeners.ON_REMOTE_SERVER_CONNECTION_CLOSED.isActiveAtRevision(listenerRevision)) Listeners.ON_REMOTE_SERVER_CONNECTION_CLOSED.onRemoteServerConnectionClosed(requestId, remoteServerUrl, intentionallyClosed, crashed, unknownCloseReason); }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+        }
     }
 
     private static void deregisterStateLocked(@NotNull ConnectionState state) {
@@ -691,6 +832,41 @@ public final class RemoteServerConnectionManager {
         }
     }
 
+    private static final class RuntimeResources {
+
+        private final RemoteWebSocketTransport transport;
+        private final ScheduledExecutorService executor;
+
+        private RuntimeResources() {
+            RemoteWebSocketTransport createdTransport = new NettyRemoteWebSocketTransport(MAX_INBOUND_MESSAGE_UTF8_BYTES, MAX_INBOUND_MESSAGE_FRAGMENTS);
+            ScheduledExecutorService createdExecutor = null;
+            try {
+                createdExecutor = Executors.newSingleThreadScheduledExecutor(runnable -> {
+                    Thread thread = new Thread(runnable, "FancyMenu-RemoteServerConnectionManager");
+                    thread.setDaemon(true);
+                    return thread;
+                });
+                createdExecutor.scheduleAtFixedRate(RemoteServerConnectionManager::runHeartbeatAndReconnectTick, HEARTBEAT_TICK_INTERVAL_MILLIS, HEARTBEAT_TICK_INTERVAL_MILLIS, TimeUnit.MILLISECONDS);
+            } catch (RuntimeException | Error throwable) {
+                if (createdExecutor != null) {
+                    try {
+                        createdExecutor.shutdownNow();
+                    } catch (Throwable cleanupFailure) {
+                        throwable.addSuppressed(cleanupFailure);
+                    }
+                }
+                try {
+                    createdTransport.shutdown();
+                } catch (Throwable cleanupFailure) {
+                    throwable.addSuppressed(cleanupFailure);
+                }
+                throw throwable;
+            }
+            this.transport = createdTransport;
+            this.executor = createdExecutor;
+        }
+    }
+
     static final class ConnectionState {
 
         private final Object lock = new Object();
@@ -728,6 +904,26 @@ public final class RemoteServerConnectionManager {
             synchronized (this.lock) {
                 return this.connection;
             }
+        }
+
+        boolean isRegistered() {
+            synchronized (this.lock) {
+                return this.registered;
+            }
+        }
+
+        boolean isReconnectRequested() {
+            synchronized (this.lock) {
+                return this.reconnectRequested;
+            }
+        }
+
+        int pendingOutboundPayloadCount() {
+            return this.pendingPayloads.pendingCount();
+        }
+
+        int pendingInboundDeliveryCount() {
+            return this.inboundDeliveries.size();
         }
     }
 

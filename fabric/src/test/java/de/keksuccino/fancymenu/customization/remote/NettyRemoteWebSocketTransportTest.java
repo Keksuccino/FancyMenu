@@ -34,12 +34,15 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NettyRemoteWebSocketTransportTest {
 
@@ -271,6 +274,28 @@ class NettyRemoteWebSocketTransportTest {
         }
     }
 
+    @Test
+    void shutdownIsIdempotentTerminatesTheEventLoopAndRejectsLateConnections() throws Exception {
+        EventLoopGroup eventLoopGroup = new MultiThreadIoEventLoopGroup(1, NioIoHandler.newFactory());
+        NettyRemoteWebSocketTransport transport = new NettyRemoteWebSocketTransport(eventLoopGroup, MESSAGE_LIMIT, 4);
+        try {
+            CountingListener listener = new CountingListener();
+
+            transport.shutdown();
+            transport.shutdown();
+            RemoteWebSocketTransport.Connection rejected = transport.connect(URI.create("ws://127.0.0.1:1/socket"), listener);
+
+            assertTrue(transport.isTerminated());
+            assertFalse(rejected.isOpen());
+            assertInstanceOf(RejectedExecutionException.class, listener.failed.get(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+            assertEquals(0, listener.openCallbacks.get());
+            assertEquals(0, listener.closeCallbacks.get());
+            assertEquals(1, listener.errorCallbacks.get());
+        } finally {
+            transport.shutdown();
+        }
+    }
+
     private static final class ClientHarness implements AutoCloseable {
 
         private final EventLoopGroup eventLoopGroup = new MultiThreadIoEventLoopGroup(1, NioIoHandler.newFactory());
@@ -283,7 +308,7 @@ class NettyRemoteWebSocketTransportTest {
 
         private void drainEventLoop() {
             if (!this.drained) {
-                this.eventLoopGroup.shutdownGracefully(0, 0, TimeUnit.MILLISECONDS).syncUninterruptibly();
+                this.transport.shutdown();
                 this.drained = true;
             }
         }
