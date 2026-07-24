@@ -130,7 +130,7 @@ public class RandomTextPlaceholder extends Placeholder {
         }
         
         List<String> lines = new ArrayList<>();
-        try (InputStream stream = WebUtils.openResourceStream(url)) {
+        try (InputStream stream = WebUtils.openResourceStream(url, WebUtils.WebResourceType.TEXT)) {
             if (stream == null) {
                 LOGGER.warn("[FANCYMENU] Failed to open URL stream: " + url);
                 return lines;
