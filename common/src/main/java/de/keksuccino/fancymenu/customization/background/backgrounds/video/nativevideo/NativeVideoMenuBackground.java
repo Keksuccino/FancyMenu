@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.backgrounds.video.IVideoMenuBackground;
+import de.keksuccino.fancymenu.customization.background.backgrounds.video.VideoBackgroundTaskController;
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
@@ -55,8 +56,6 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBackground> implements IVideoMenuBackground {
@@ -117,33 +116,11 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     protected float watermediaBinariesDownloadWidth_FancyMenu = Float.NaN;
     protected float watermediaBinariesDownloadHeight_FancyMenu = Float.NaN;
     protected boolean watermediaLeftMouseWasDown_FancyMenu = false;
-    // The field is currently unused, but the scheduler is used, so don't delete this
-    protected final ScheduledFuture<?> garbageChecker = EXECUTOR.scheduleAtFixedRate(() -> {
-        if (this.initialized && !this.shouldSkipWatchdogAutoClear() && (this.lastRenderTickTime != -1L) && ((this.lastRenderTickTime + 11000L) < System.currentTimeMillis())) {
-            String sourceForLog = this.getConfiguredVideoSourceForLog();
-            String videoTypeForLog = this.getVideoTypeForLog();
-            boolean didStopPlayer = this.resetBackgroundAndReturnStopState();
-            LOGGER.info("[FANCYMENU] Auto-clearing native video background after watchdog timeout. source: {}, videoType: {}, didStopPlayer: {}, backgroundInstance: {}",
-                    sourceForLog,
-                    videoTypeForLog,
-                    didStopPlayer,
-                    this.getInstanceIdentifier());
-        }
-    }, 0L, 100L, TimeUnit.MILLISECONDS);
-    // The field is currently unused, but the scheduler is used, so don't delete this
-    protected final ScheduledFuture<?> asyncTicker = EXECUTOR.scheduleAtFixedRate(() -> {
-        if (this.initialized) {
-            this.cachedDuration.set(this._getDuration());
-            this.cachedPlayTime.set(this._getPlayTime());
-            IVideo cachedVideo = this.video;
-            if (cachedVideo != null) {
-                this.updateEndedStateMemory(cachedVideo, this.activeVideoSource);
-            }
-        }
-    }, 0L, 900L, TimeUnit.MILLISECONDS);
+    protected final VideoBackgroundTaskController taskController;
 
     public NativeVideoMenuBackground(MenuBackgroundBuilder<NativeVideoMenuBackground> builder) {
         super(builder);
+        this.taskController = new VideoBackgroundTaskController(EXECUTOR, this::runGarbageCheck, 100L, this::updateCachedPlaybackState, 900L);
         synchronized (BACKGROUND_INSTANCE_LOCK_FANCYMENU) {
             BACKGROUND_INSTANCES_FANCYMENU.add(this);
         }
@@ -217,6 +194,8 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
+        if (this.taskController.isClosed()) return;
+
         float parallaxIntensityX = this.parallaxIntensityXString.getFloat();
         float parallaxIntensityY = this.parallaxIntensityYString.getFloat();
 
@@ -246,6 +225,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         this.currentResolvedVideoSource = this.getResolvedVideoSource(supplier);
         IVideo currentVideo = (supplier != null) ? supplier.get() : null;
         this.updateVideoReference(currentVideo);
+        if ((this.video != null) && !this.taskController.start()) return;
         double resolvedMouseX_FancyMenu = MouseUtil.getGuiScaledMouseX();
         double resolvedMouseY_FancyMenu = MouseUtil.getGuiScaledMouseY();
         boolean showWatermediaWarning = this.shouldRenderWatermediaMissingOverlay_FancyMenu(supplier);
@@ -534,6 +514,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         this.resetWatermediaDownloadLinkBounds_FancyMenu();
 
         if (newVideo == null) {
+            this.taskController.stop();
             this.cachedDuration.set(0F);
             this.cachedPlayTime.set(0F);
         }
@@ -659,14 +640,16 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     }
 
     protected boolean resetBackgroundAndReturnStopState() {
+        this.taskController.stop();
+        this.initialized = false;
         boolean didStopPlayer = false;
         IVideo oldVideo = this.video;
         String oldVideoSource = this.activeVideoSource;
         if (oldVideo != null) {
             didStopPlayer = this.releaseVideoReference(oldVideo, oldVideoSource);
         }
-        this.initialized = false;
         this.video = null;
+        this.currentResolvedVideoSource = null;
         this.activeVideoSource = null;
         this.cachedActualVolume = -10000F;
         this.lastCachedActualVolume = -11000F;
@@ -680,6 +663,16 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         this.cachedDuration.set(0F);
         this.cachedPlayTime.set(0F);
         return didStopPlayer;
+    }
+
+    @Override
+    public void onDestroyBackground() {
+        super.onDestroyBackground();
+        this.taskController.close();
+        this.resetBackgroundAndReturnStopState();
+        synchronized (BACKGROUND_INSTANCE_LOCK_FANCYMENU) {
+            BACKGROUND_INSTANCES_FANCYMENU.remove(this);
+        }
     }
 
     protected float _getDuration() {
@@ -804,7 +797,24 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     }
 
     protected boolean shouldSkipWatchdogAutoClear() {
-        return isEditor() && this.playInEditor.tryGetNonNull();
+        LayoutEditorScreen editor = LayoutEditorScreen.getCurrentInstance();
+        return (editor != null) && editor.layout.menuBackgrounds.contains(this) && this.showBackground.tryGetNonNull() && this.playInEditor.tryGetNonNull();
+    }
+
+    protected void runGarbageCheck() {
+        if (!this.initialized || this.shouldSkipWatchdogAutoClear() || (this.lastRenderTickTime == -1L) || ((this.lastRenderTickTime + 11000L) >= System.currentTimeMillis())) return;
+        String sourceForLog = this.getConfiguredVideoSourceForLog();
+        String videoTypeForLog = this.getVideoTypeForLog();
+        boolean didStopPlayer = this.resetBackgroundAndReturnStopState();
+        LOGGER.info("[FANCYMENU] Auto-clearing native video background after watchdog timeout. source: {}, videoType: {}, didStopPlayer: {}, backgroundInstance: {}", sourceForLog, videoTypeForLog, didStopPlayer, this.getInstanceIdentifier());
+    }
+
+    protected void updateCachedPlaybackState() {
+        if (!this.initialized) return;
+        this.cachedDuration.set(this._getDuration());
+        this.cachedPlayTime.set(this._getPlayTime());
+        IVideo cachedVideo = this.video;
+        if (cachedVideo != null) this.updateEndedStateMemory(cachedVideo, this.activeVideoSource);
     }
 
     protected void acquireVideoReference(@NotNull IVideo video) {

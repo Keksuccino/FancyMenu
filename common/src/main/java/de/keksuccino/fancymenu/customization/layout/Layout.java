@@ -62,6 +62,7 @@ public class Layout extends LayoutBase {
     public File layoutFile;
     public long lastEditedTime = -1;
     protected boolean enabled = true;
+    private boolean destroyed = false;
     public int layoutIndex = 0;
     public boolean renderElementsBehindVanilla = false;
     public boolean randomMode = false;
@@ -636,6 +637,23 @@ public class Layout extends LayoutBase {
 
     public void delete(boolean reInitCurrentScreen) {
         LayoutHandler.deleteLayout(this, reInitCurrentScreen);
+    }
+
+    /** Permanently releases runtime state owned by this exact deserialized layout instance. */
+    public void destroy() {
+        List<MenuBackground<?>> backgrounds;
+        synchronized (this) {
+            if (this.destroyed) return;
+            this.destroyed = true;
+            backgrounds = new ArrayList<>(this.menuBackgrounds);
+        }
+        for (MenuBackground<?> background : backgrounds) {
+            try {
+                background.onDestroyBackground();
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to destroy menu background '{}' from layout '{}'.", background.getInstanceIdentifier(), this.getLayoutName(), ex);
+            }
+        }
     }
 
     public boolean layoutWideLoadingRequirementsMet() {

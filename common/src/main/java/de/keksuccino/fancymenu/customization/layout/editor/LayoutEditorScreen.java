@@ -6,6 +6,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
+import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.HideableElement;
@@ -96,6 +97,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	protected int rightClickMenuOpenPosX = -1000;
 	protected int rightClickMenuOpenPosY = -1000;
 	protected LayoutEditorHistory.Snapshot preDragElementSnapshot;
+	private boolean editorStateDestroyed = false;
 	public final List<WidgetMeta> cachedVanillaWidgetMetas = new ArrayList<>();
 	public boolean unsavedChanges = false;
 	public boolean justOpened = true;
@@ -160,6 +162,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 		}
 
 		this.isMouseSelection = false;
+		this.history.discardSnapshot(this.preDragElementSnapshot);
 		this.preDragElementSnapshot = null;
 
 		this.closeActiveElementMenu(true);
@@ -1351,6 +1354,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 		if (cachedMovingStarted && (this.preDragElementSnapshot != null)) {
 			this.history.saveSnapshot(this.preDragElementSnapshot);
 		}
+		this.history.discardSnapshot(this.preDragElementSnapshot);
 		this.preDragElementSnapshot = null;
 
 		return false;
@@ -1544,16 +1548,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
         ScreenOverlayHandler.INSTANCE.removeOverlay(ScreenOverlays.LAYOUT_EDITOR_MENU_BAR, true, false);
         this.closeActiveElementMenu(true);
         this.closeRightClickMenu(true);
-		this.saveWidgetSettings();
-		this.getAllElements().forEach(element -> {
-			element.element.onDestroyElement();
-			element.element.onCloseScreen(null, null);
-			element.element.onCloseScreen();
-		});
-		this.layout.menuBackgrounds.forEach(menuBackground -> menuBackground.onCloseScreen(null, null));
-		this.layout.menuBackgrounds.forEach(MenuBackground::onCloseScreen);
-		this.layout.decorationOverlays.forEach(pair -> pair.getSecond().onCloseScreen(null, null));
-		currentInstance = null;
+		this.destroyEditorState();
 		if (this.layoutTargetScreen != null) {
 			if (!((CustomizableScreen)this.layoutTargetScreen).get_initialized_FancyMenu()) {
 				Minecraft.getInstance().setScreen(this.layoutTargetScreen);
@@ -1564,6 +1559,51 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 			}
 		} else {
 			Minecraft.getInstance().setScreen(null);
+		}
+	}
+
+	/** Permanently releases the layout copy and history owned by this editor without changing the current screen. */
+	public void destroyEditorState() {
+		if (this.editorStateDestroyed) return;
+		this.editorStateDestroyed = true;
+		this.runEditorStateCleanup("widget settings", this::saveWidgetSettings);
+		this.getAllElements().forEach(this::destroyEditorElementState);
+		this.layout.menuBackgrounds.forEach(this::closeEditorBackground);
+		for (var pair : this.layout.decorationOverlays) this.closeEditorOverlay(pair.getSecond());
+		this.runEditorStateCleanup("history", this.history::destroy);
+		this.runEditorStateCleanup("layout", this.layout::destroy);
+		if (currentInstance == this) currentInstance = null;
+	}
+
+	private void destroyEditorElementState(@NotNull AbstractEditorElement<?, ?> element) {
+		this.runEditorStateCleanup("pending snapshots for element '" + element.element.getInstanceIdentifier() + "'", element::discardPendingHistorySnapshots);
+		this.runEditorStateCleanup("element '" + element.element.getInstanceIdentifier() + "'", () -> this.closeEditorElement(element));
+	}
+
+	private void closeEditorElement(@NotNull AbstractEditorElement<?, ?> element) {
+		element.element.onDestroyElement();
+		element.element.onCloseScreen(null, null);
+		element.element.onCloseScreen();
+	}
+
+	private void closeEditorBackground(@NotNull MenuBackground<?> background) {
+		this.runEditorStateCleanup("menu background '" + background.getInstanceIdentifier() + "'", () -> this.closeEditorBackgroundLifecycle(background));
+	}
+
+	private void closeEditorBackgroundLifecycle(@NotNull MenuBackground<?> background) {
+		background.onCloseScreen(null, null);
+		background.onCloseScreen();
+	}
+
+	private void closeEditorOverlay(@NotNull AbstractDecorationOverlay<?> overlay) {
+		this.runEditorStateCleanup("decoration overlay '" + overlay.getInstanceIdentifier() + "'", () -> overlay.onCloseScreen(null, null));
+	}
+
+	private void runEditorStateCleanup(@NotNull String description, @NotNull Runnable cleanup) {
+		try {
+			cleanup.run();
+		} catch (Exception ex) {
+			LOGGER.error("[FANCYMENU] Failed to clean up {} while destroying a layout editor.", description, ex);
 		}
 	}
 

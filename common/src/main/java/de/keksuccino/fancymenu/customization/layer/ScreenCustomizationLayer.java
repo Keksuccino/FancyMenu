@@ -144,6 +144,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		this.layoutBase.menuBackgrounds.forEach(menuBackground -> menuBackground.onCloseScreen(e.getClosedScreen(), e.getNewScreen()));
 		this.layoutBase.menuBackgrounds.forEach(MenuBackground::onCloseScreen);
 		this.layoutBase.decorationOverlays.forEach(pair -> pair.getSecond().onCloseScreen(e.getClosedScreen(), e.getNewScreen()));
+		LayoutHandler.releaseRetiredLayoutsNotIn(List.of());
 
 		IMixinScreen closedScreenMixin = (IMixinScreen)e.getClosedScreen();
 		this.layoutBase.menuBackgrounds.forEach(menuBackground -> {
@@ -301,6 +302,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		});
 
 		this.layoutBase.menuBackgrounds.forEach(MenuBackground::onAfterEnable);
+		LayoutHandler.releaseRetiredLayoutsNotIn(this.activeLayouts);
 
 	}
 
