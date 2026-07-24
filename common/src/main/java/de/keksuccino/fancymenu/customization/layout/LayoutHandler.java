@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.*;
 import com.google.common.io.Files;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -12,6 +14,7 @@ import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.file.FilenameComparator;
 import de.keksuccino.fancymenu.util.Legacy;
 import de.keksuccino.fancymenu.util.ListUtils;
+import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
@@ -32,6 +35,7 @@ public class LayoutHandler {
 
 	private static final List<Layout> LAYOUTS = new ArrayList<>();
 	private static final Map<String, UniversalLayoutInclusionRule> UNIVERSAL_LAYOUT_INCLUSION_RULES = new HashMap<>();
+	private static final LayoutRetirementTracker LAYOUT_RETIREMENT_TRACKER = new LayoutRetirementTracker();
 
 	public static void init() {
 
@@ -55,9 +59,11 @@ public class LayoutHandler {
 		ScreenCustomization.readCustomizableScreensFromFile();
 
 		List<Layout> layouts = deserializeLayoutFilesInDirectory(LAYOUT_DIR);
+		List<Layout> replacedLayouts = new ArrayList<>(LAYOUTS);
 
 		LAYOUTS.clear();
 		LAYOUTS.addAll(layouts);
+		retireLayouts(replacedLayouts);
 
 	}
 
@@ -266,7 +272,26 @@ public class LayoutHandler {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		retireLayouts(List.of(layout));
 		if (reInitCurrentScreen) ScreenCustomization.reInitCurrentScreen();
+	}
+
+	/** Releases replaced layouts once no currently rendered layer still refers to their exact instances. */
+	public static void releaseRetiredLayoutsNotIn(@NotNull Collection<Layout> retainedLayouts) {
+		LAYOUT_RETIREMENT_TRACKER.releaseNotIn(retainedLayouts);
+	}
+
+	/** Stops layout-owned runtime work before the managed executors and media systems shut down. */
+	public static void shutdown() {
+		List<Layout> loadedLayouts = new ArrayList<>(LAYOUTS);
+		LAYOUTS.clear();
+		LAYOUT_RETIREMENT_TRACKER.destroyAll(loadedLayouts);
+	}
+
+	private static void retireLayouts(@NotNull Collection<Layout> layouts) {
+		if (layouts.isEmpty()) return;
+		ScreenCustomizationLayer activeLayer = ScreenCustomizationLayerHandler.getActiveLayer();
+		LAYOUT_RETIREMENT_TRACKER.retire(layouts, activeLayer == null ? List.of() : activeLayer.activeLayouts);
 	}
 
 	public static void addLayout(@NotNull Layout layout, boolean saveToFile) {
@@ -277,12 +302,26 @@ public class LayoutHandler {
 	}
 
 	public static void openLayoutEditor(@NotNull Layout layout, @Nullable Screen layoutTargetScreen) {
-		try {
+        try {
             ContextMenuHandler.INSTANCE.removeCurrent();
-			Minecraft.getInstance().setScreen(new LayoutEditorScreen(layoutTargetScreen, layout).setAsCurrentInstance());
+			LayoutEditorScreen replacementEditor = new LayoutEditorScreen(layoutTargetScreen, layout);
+			replaceCurrentEditor(replacementEditor);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	private static void replaceCurrentEditor(@NotNull LayoutEditorScreen replacementEditor) {
+		LayoutEditorScreen previousEditor = LayoutEditorScreen.getCurrentInstance();
+		replacementEditor.setAsCurrentInstance();
+		try {
+			ScreenUtils.setScreenWithRollback(replacementEditor);
+		} catch (RuntimeException | Error ex) {
+			replacementEditor.destroyEditorState();
+			if (previousEditor != null) previousEditor.setAsCurrentInstance();
+			throw ex;
+		}
+		if (previousEditor != null) previousEditor.destroyEditorState();
 	}
 
 	/**
