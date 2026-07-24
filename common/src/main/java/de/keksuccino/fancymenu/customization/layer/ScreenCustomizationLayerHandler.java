@@ -1,8 +1,11 @@
 package de.keksuccino.fancymenu.customization.layer;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+import de.keksuccino.fancymenu.compat.ScreenCompatibility;
+import de.keksuccino.fancymenu.customization.layout.Layout;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import de.keksuccino.fancymenu.compat.ScreenCompatibility;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
@@ -92,12 +95,23 @@ public class ScreenCustomizationLayerHandler {
 
 	public static void registerLayer(@NotNull String screenIdentifier, @NotNull ScreenCustomizationLayer layer) {
 		screenIdentifier = ScreenIdentifierHandler.getBestIdentifier(screenIdentifier);
-		if (!LAYERS.containsKey(screenIdentifier)) {
+		ScreenCustomizationLayer previous = LAYERS.get(screenIdentifier);
+		if (previous == null) {
 			LOGGER.info("[FANCYMENU] ScreenCustomizationLayer registered: " + screenIdentifier);
 		} else {
 			LOGGER.warn("[FANCYMENU] ScreenCustomizationLayer replaced: " + screenIdentifier);
 		}
 		LAYERS.put(screenIdentifier, layer);
+		if (previous != null && previous != layer) previous.shutdownAudioPlayback();
+	}
+
+	public static void cancelPendingAudioPlaybackOwnedBy(@NotNull Collection<Layout> layouts) {
+		if (layouts.isEmpty()) return;
+		LAYERS.values().forEach(layer -> layer.cancelPendingAudioPlaybackOwnedBy(layouts));
+	}
+
+	public static void shutdown() {
+		LAYERS.values().forEach(ScreenCustomizationLayer::shutdownAudioPlayback);
 	}
 	
 	public static boolean isLayerRegistered(@NotNull String screenIdentifier) {
@@ -155,6 +169,4 @@ public class ScreenCustomizationLayerHandler {
 	}
 
 }
-
-
 
