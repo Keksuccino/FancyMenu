@@ -1,9 +1,11 @@
 package de.keksuccino.fancymenu.util.lifecycle;
 
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.remote.RemoteServerConnectionManager;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
+import de.keksuccino.fancymenu.util.TaskExecutor;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.resource.resources.texture.TextureManagerReleaseDispatcher;
@@ -32,7 +34,9 @@ public final class ClientShutdownHandler {
         // Remote callbacks can enqueue main-thread listener work, so quiesce both of their owned worker pools first.
         runCleanup("remote server connections", RemoteServerConnectionManager::shutdown);
         runCleanup("internet availability monitor", WebUtils::shutdown);
+        runCleanup("screen audio playback", ScreenCustomizationLayerHandler::shutdown);
         runCleanup("layouts", LayoutHandler::shutdown);
+        runCleanup("task executor", TaskExecutor::shutdown);
         runCleanup("user variables", VariableHandler::shutdown);
         runCleanup("panorama renderers", PanoramaHandler::shutdown);
         // GLFW cursor destruction must finish on the render thread while the window and GLFW are still alive.
