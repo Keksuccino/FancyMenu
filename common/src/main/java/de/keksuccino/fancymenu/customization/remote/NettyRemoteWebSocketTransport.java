@@ -42,6 +42,8 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -66,6 +68,8 @@ final class NettyRemoteWebSocketTransport implements RemoteWebSocketTransport {
     private final EventLoopGroup eventLoopGroup;
     private final int maxInboundMessageBytes;
     private final int maxInboundFragments;
+    private final Object shutdownLock = new Object();
+    private final AtomicBoolean shutdownStarted = new AtomicBoolean();
 
     NettyRemoteWebSocketTransport(int maxInboundMessageBytes, int maxInboundFragments) {
         this(new MultiThreadIoEventLoopGroup(1, runnable -> {
@@ -87,6 +91,10 @@ final class NettyRemoteWebSocketTransport implements RemoteWebSocketTransport {
     @Override
     public @NotNull Connection connect(@NotNull URI uri, @NotNull Listener listener) {
         NettyConnection connection = new NettyConnection(listener, this.maxInboundMessageBytes, this.maxInboundFragments);
+        if (this.shutdownStarted.get()) {
+            connection.notifyError(new RejectedExecutionException("Remote WebSocket transport is shut down"));
+            return connection;
+        }
         int port = resolvePort(uri);
         try {
             Bootstrap bootstrap = new Bootstrap();
@@ -118,6 +126,25 @@ final class NettyRemoteWebSocketTransport implements RemoteWebSocketTransport {
             connection.notifyError(throwable);
         }
         return connection;
+    }
+
+    @Override
+    public void shutdown() {
+        synchronized (this.shutdownLock) {
+            if (!this.shutdownStarted.get()) {
+                this.shutdownStarted.set(true);
+                // A quiet period would deliberately keep accepting tasks while the client is already tearing down.
+                this.eventLoopGroup.shutdownGracefully(0L, RemoteShutdownSupport.TERMINATION_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+            }
+        }
+        if (!RemoteShutdownSupport.awaitTerminationPreservingInterrupt(this.eventLoopGroup)) {
+            LOGGER.warn("[FANCYMENU] Timed out while waiting for the remote WebSocket I/O event loop to terminate");
+        }
+    }
+
+    @Override
+    public boolean isTerminated() {
+        return this.eventLoopGroup.isTerminated();
     }
 
     private static int resolvePort(@NotNull URI uri) {
