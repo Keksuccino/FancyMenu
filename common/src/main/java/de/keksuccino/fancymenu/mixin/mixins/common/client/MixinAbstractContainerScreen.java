@@ -8,10 +8,12 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
-import de.keksuccino.fancymenu.mixin.support.client.ContainerWidgetPointerRouter;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuInputRouter;
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuPointerTracker;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -31,7 +33,7 @@ public class MixinAbstractContainerScreen extends Screen {
 
     @Shadow @Nullable protected Slot hoveredSlot;
 
-    @Unique private final ContainerWidgetPointerRouter pointerRouter_FancyMenu = new ContainerWidgetPointerRouter();
+    @Unique private final FancyMenuPointerTracker pointerTracker_FancyMenu = new FancyMenuPointerTracker();
     @Unique private int cached_mouseX_FancyMenu;
     @Unique private int cached_mouseY_FancyMenu;
     @Unique private float cached_partial_FancyMenu;
@@ -47,7 +49,17 @@ public class MixinAbstractContainerScreen extends Screen {
      */
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void before_mouseClicked_FancyMenu(MouseButtonEvent event, boolean isDoubleClick, CallbackInfoReturnable<Boolean> info) {
-        if (this.pointerRouter_FancyMenu.mouseClicked(this, event, isDoubleClick)) info.setReturnValue(true);
+        GuiEventListener listener = this.pointerTracker_FancyMenu.routeMouseClicked(this.children(), event, isDoubleClick);
+        if (listener != null) {
+            // Track the actual consumer instead of inferring release ownership from focus; some FancyMenu controls intentionally never take focus.
+            if (listener.shouldTakeFocusAfterInteraction()) {
+                this.setFocused(listener);
+                if (event.button() == 0) {
+                    this.setDragging(true);
+                }
+            }
+            info.setReturnValue(true);
+        }
     }
 
     /**
@@ -55,7 +67,18 @@ public class MixinAbstractContainerScreen extends Screen {
      */
     @Inject(method = "mouseReleased", at = @At("HEAD"), cancellable = true)
     private void before_mouseReleased_FancyMenu(MouseButtonEvent event, CallbackInfoReturnable<Boolean> info) {
-        if (this.pointerRouter_FancyMenu.mouseReleased(this, event)) info.setReturnValue(true);
+        if (!this.pointerTracker_FancyMenu.dispatchMouseReleased(event)) {
+            if (FancyMenuInputRouter.routeMouseReleased(this.children(), null, event, FancyMenuInputRouter.MouseReleaseRouting.CAPTURED_COMPONENTS_ONLY)) {
+                // Container release logic runs before its super call, so route orphaned pointer captures before slot handling.
+                if ((event.button() == 0) && this.isDragging()) this.setDragging(false);
+                info.setReturnValue(true);
+            }
+            return;
+        }
+        if ((event.button() == 0) && this.isDragging()) {
+            this.setDragging(false);
+        }
+        info.setReturnValue(true);
     }
 
     /**
@@ -63,7 +86,7 @@ public class MixinAbstractContainerScreen extends Screen {
      */
     @Inject(method = "mouseDragged", at = @At("HEAD"), cancellable = true)
     private void before_mouseDragged_FancyMenu(MouseButtonEvent event, double dragX, double dragY, CallbackInfoReturnable<Boolean> info) {
-        if (this.pointerRouter_FancyMenu.mouseDragged(event, dragX, dragY)) info.setReturnValue(true);
+        if (this.pointerTracker_FancyMenu.dispatchMouseDragged(event, dragX, dragY)) info.setReturnValue(true);
     }
 
     @Inject(method = "render", at = @At("TAIL"))
@@ -109,5 +132,4 @@ public class MixinAbstractContainerScreen extends Screen {
         }
         EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(instance, graphics, this.cached_mouseX_FancyMenu, this.cached_mouseY_FancyMenu, this.cached_partial_FancyMenu));
     }
-
 }

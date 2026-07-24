@@ -3,8 +3,8 @@ package de.keksuccino.fancymenu.mixin;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.keksuccino.fancymenu.mixin.support.client.CenteredIconButtonLabelResolver;
-import de.keksuccino.fancymenu.mixin.support.client.ContainerWidgetPointerRouter;
 import de.keksuccino.fancymenu.mixin.support.client.PauseScreenWidgetIdentifierResolver;
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuPointerTracker;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -26,7 +26,7 @@ class MixinPackageIsolationTest {
             mixinPackagePrefix = mixinConfig.get("package").getAsString() + ".";
         }
 
-        assertAll(() -> assertFalse(ContainerWidgetPointerRouter.class.getName().startsWith(mixinPackagePrefix)), () -> assertFalse(CenteredIconButtonLabelResolver.class.getName().startsWith(mixinPackagePrefix)), () -> assertFalse(PauseScreenWidgetIdentifierResolver.class.getName().startsWith(mixinPackagePrefix)));
+        assertAll(() -> assertFalse(FancyMenuPointerTracker.class.getName().startsWith(mixinPackagePrefix)), () -> assertFalse(CenteredIconButtonLabelResolver.class.getName().startsWith(mixinPackagePrefix)), () -> assertFalse(PauseScreenWidgetIdentifierResolver.class.getName().startsWith(mixinPackagePrefix)));
     }
 
 }
