@@ -3,7 +3,10 @@ package de.keksuccino.fancymenu.util.lifecycle;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.WebUtils;
+import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
+import de.keksuccino.fancymenu.util.resource.resources.texture.TextureManagerReleaseDispatcher;
 import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,6 +27,9 @@ public final class ClientShutdownHandler {
             runCleanup("internet availability monitor", WebUtils::shutdown);
             runCleanup("user variables", VariableHandler::shutdown);
             runCleanup("panorama renderers", PanoramaHandler::shutdown);
+            runCleanup("resources", ResourceHandlers::shutdownAll);
+            runCleanup("pending texture-manager releases", TextureManagerReleaseDispatcher::flushPendingReleases);
+            runCleanup("main-thread task queue", MainThreadTaskExecutor::shutdown);
         } finally {
             runCleanup("FancyMenu executors", FancyMenuExecutors::shutdownAll);
         }
