@@ -11,7 +11,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.Objects;
 
 public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, InputFieldEditorElement> {
 
@@ -50,8 +49,8 @@ public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, 
         element.editBox.setCharacterFilter(element.type.filter);
         element.editBox.setMaxLength(Math.max(1, element.maxTextLength.getInteger()));
         if (element.linkedVariable != null) {
-            if (VariableHandler.variableExists(element.linkedVariable)) {
-                String var = Objects.requireNonNull(VariableHandler.getVariable(element.linkedVariable)).getValue();
+            String var = VariableHandler.getVariableValue(element.linkedVariable);
+            if (var != null) {
                 element.editBox.setValue(var);
             }
         }

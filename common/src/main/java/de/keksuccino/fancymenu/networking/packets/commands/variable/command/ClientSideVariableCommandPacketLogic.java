@@ -22,7 +22,7 @@ public class ClientSideVariableCommandPacketLogic {
 
     protected static boolean getVariable(@NotNull VariableCommandPacket packet) {
         try {
-            String s = VariableHandler.variableExists(Objects.requireNonNull(packet.variable_name)) ? Objects.requireNonNull(VariableHandler.getVariable(packet.variable_name)).getValue() : null;
+            String s = VariableHandler.getVariableValue(Objects.requireNonNull(packet.variable_name));
             if (s != null) {
                 packet.sendChatFeedback(Component.translatable("fancymenu.commands.variable.get.success", s), false);
                 return true;

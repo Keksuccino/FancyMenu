@@ -25,7 +25,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
-import java.util.Objects;
 
 public class CheckboxElement extends AbstractElement implements ExecutableElement {
 
@@ -119,11 +118,11 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
         if (this.variableMode.tryGetNonNull()) {
             String variable = this.linkedVariable.get();
             if (variable != null) {
-                if (VariableHandler.variableExists(variable)) {
-                    String value = Objects.requireNonNull(VariableHandler.getVariable(variable)).getValue();
+                String value = VariableHandler.getVariableValue(variable);
+                if (value != null) {
                     state = this.parseBooleanVariableValue(value);
                 } else if (!isEditor()) {
-                    VariableHandler.setVariable(variable, Boolean.toString(state));
+                    VariableHandler.setVariableIfAbsent(variable, Boolean.toString(state));
                 }
             }
         }
@@ -135,8 +134,8 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
         if (!this.variableMode.tryGetNonNull()) return;
         String variable = this.linkedVariable.get();
         if (variable == null) return;
-        if (!VariableHandler.variableExists(variable)) return;
-        String value = Objects.requireNonNull(VariableHandler.getVariable(variable)).getValue();
+        String value = VariableHandler.getVariableValue(variable);
+        if (value == null) return;
         boolean state = this.parseBooleanVariableValue(value);
         if (this.checkbox.getCheckboxState() != state) {
             this.checkbox.setCheckboxState(state, false);
@@ -146,8 +145,9 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
     protected boolean getCheckboxStateForPlaceholders() {
         if (this.variableMode.tryGetNonNull()) {
             String variable = this.linkedVariable.get();
-            if ((variable != null) && VariableHandler.variableExists(variable)) {
-                String value = Objects.requireNonNull(VariableHandler.getVariable(variable)).getValue();
+            if (variable != null) {
+                String value = VariableHandler.getVariableValue(variable);
+                if (value == null) return CheckboxStatesHandler.getForCheckboxElement(this);
                 return this.parseBooleanVariableValue(value);
             }
         }
