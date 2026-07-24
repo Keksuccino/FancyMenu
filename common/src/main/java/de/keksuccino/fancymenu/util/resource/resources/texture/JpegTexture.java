@@ -25,15 +25,11 @@ public class JpegTexture implements ITexture {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    @Nullable
-    protected ResourceLocation resourceLocation;
+    protected final TextureManagerEntry<NativeImage, DynamicTexture> textureEntry = TextureManagerEntry.dynamicTexture();
     protected volatile int width = 10;
     protected volatile int height = 10;
     protected volatile AspectRatio aspectRatio = new AspectRatio(10, 10);
     protected volatile boolean decoded = false;
-    protected volatile boolean loadedIntoMinecraft = false;
-    protected volatile NativeImage nativeImage;
-    protected DynamicTexture dynamicTexture;
     protected ResourceLocation sourceLocation;
     protected File sourceFile;
     protected String sourceURL;
@@ -185,7 +181,7 @@ public class JpegTexture implements ITexture {
 
         JpegTexture texture = new JpegTexture();
 
-        texture.nativeImage = nativeImage;
+        texture.textureEntry.adopt(nativeImage);
         texture.width = nativeImage.getWidth();
         texture.height = nativeImage.getHeight();
         texture.aspectRatio = new AspectRatio(nativeImage.getWidth(), nativeImage.getHeight());
@@ -204,11 +200,10 @@ public class JpegTexture implements ITexture {
             try {
                 SizedNativeImage image = convertJpegToPng(in);
                 if (image != null) {
-                    texture.nativeImage = image.image;
                     texture.width = image.width;
                     texture.height = image.height;
                     texture.aspectRatio = new AspectRatio(texture.width, texture.height);
-                    texture.loadingCompleted = true;
+                    if (texture.textureEntry.adopt(image.image)) texture.loadingCompleted = true;
                 } else {
                     texture.loadingFailed = true;
                     LOGGER.error("[FANCYMENU] Failed to read texture, NativeImage was NULL: " + textureName);
@@ -250,16 +245,14 @@ public class JpegTexture implements ITexture {
     @Nullable
     public ResourceLocation getResourceLocation() {
         if (this.closed) return FULLY_TRANSPARENT_TEXTURE;
-        if ((this.resourceLocation == null) && !this.loadedIntoMinecraft && (this.nativeImage != null)) {
+        if (this.textureEntry.canRegister()) {
             try {
-                this.dynamicTexture = new DynamicTexture(this.nativeImage);
-                this.resourceLocation = Minecraft.getInstance().getTextureManager().register("fancymenu_simple_texture", this.dynamicTexture);
+                this.textureEntry.register(new ResourceLocation("fancymenu", "dynamic/simple_jpeg_texture_" + System.nanoTime()));
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to get ResourceLocation of JpegTexture!", ex);
             }
-            this.loadedIntoMinecraft = true;
         }
-        return this.resourceLocation;
+        return this.textureEntry.getIdentifier();
     }
 
     public int getWidth() {
@@ -277,7 +270,8 @@ public class JpegTexture implements ITexture {
 
     @Override
     public @Nullable InputStream open() throws IOException {
-        if (this.nativeImage != null) return new ByteArrayInputStream(this.nativeImage.asByteArray());
+        NativeImage image = this.textureEntry.getImage();
+        if (image != null) return new ByteArrayInputStream(image.asByteArray());
         return null;
     }
 
@@ -307,31 +301,17 @@ public class JpegTexture implements ITexture {
     }
 
     /**
-     * Only really closes textures that are NOT loaded via ResourceLocation.<br>
-     * Does basically nothing for ResourceLocation textures, because these are handled by Minecraft.
+     * Releases the owned dynamic entry through Minecraft's texture manager, which disposes both the DynamicTexture and
+     * its NativeImage. JPEG resources loaded from a ResourceLocation are decoded into owned dynamic entries too.
      */
     @Override
     public void close() {
         this.closed = true;
-        try {
-            if (this.dynamicTexture != null) this.dynamicTexture.close();
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] An error happened while trying to close the DynamicTexture!", ex);
-        }
-        try {
-            if (this.nativeImage != null) this.nativeImage.close();
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] An error happened while trying to close the NativeImage!", ex);
-        }
-        this.dynamicTexture = null;
-        this.nativeImage = null;
-        this.resourceLocation = null;
+        this.textureEntry.close();
         this.decoded = false;
-        this.loadedIntoMinecraft = true;
     }
 
     protected record SizedNativeImage(@NotNull NativeImage image, int width, int height) {
     }
 
 }
-
