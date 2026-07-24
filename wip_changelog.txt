@@ -1,48 +1,57 @@
 
-CHANGELOG | FANCYMENU v3.9.7 [ W I P !! Not public yet !! ]
+CHANGELOG | FANCYMENU v3.9.9 [ W I P !! Not public yet !! ]
 
-- Fixed mouse wheel scrolling not working in some PiP windows
-- Fixed title screen layouts not loading with ForceCloseWorldLoadingScreen (#1666)
-- Fixed Mod Menu's mod counter being replaced on the title screen (#1606)
-- Fixed Numismatic Overhaul purse tooltips disappearing in the Creative Inventory (#1257)
-- Fixed removed Vanilla pause-menu buttons reappearing in multiplayer (#1708)
-- Fixed WaterMedia videos flashing black when looping (#1700)
-- Fixed centered Vanilla icon buttons ignoring FancyMenu custom labels (#1699)
-- Fixed smooth fonts rendering visibly shorter than their layout metrics (#1698)
-- Fixed element animator previews being confined to the wrong part of the grid (#1696)
-- Fixed GLSL content rendering as a black screen or above later UI elements instead of at its configured GUI layer (#1695, #1647)
-- Fixed numeric NBT placeholders returning incorrect values when their scale is `1` (#1694)
-- Fixed saved widget tooltips not being removable (#1693)
-- Fixed FancyMenu shortcuts ignoring remapped Control/Command keys on macOS (#1692)
-- Fixed text input fields in container screens not receiving mouse focus (#1685)
-- Fixed text elements with fractional positions rendering with incorrect sizing or clipping (#1681)
-- Fixed auto-sized buttons breaking after GUI-scale changes (#1680)
-- Fixed malformed component JSON causing repeated Gson error log spam (#1675)
-- Fixed filled requirements not updating after dropping the final item from a hotbar slot (#1669)
-- Fixed game intros not retrying after a queued resource reload (#1660)
-- Fixed edge artifacts on smooth images and shapes, including the shadow line below custom title images (#1659, #1585)
-- Fixed crashes caused by video game intros initializing before the audio system was ready (#1656)
-- Fixed global menu backgrounds scaling incorrectly across different GUI sizes (#1648)
-- Fixed text elements no longer parsing legacy `&` formatting codes (#1645)
-- Fixed background blur not covering the complete target area at fractional GUI scales (#1632)
-- Fixed listener providers processing events without active listener instances, including the JEI `OPEN_FILE` system-message crash (#1628)
-- Fixed self-referential "Is Element Hovered" requirements evaluating incorrectly or recursively (#1624)
-- Fixed MCEF preload initialization on first launch, including the JavaScript API bridge being unavailable on the title screen (#1622, #1601)
-- Fixed HTTP request actions falsely reporting that no internet connection was available (#1614)
-- Fixed mouse-based text selection not working in certain FancyMenu windows (#1613)
-- Fixed global menu background images rendering incorrectly on split-layout screens (#1612)
-- Fixed animated button backgrounds flickering when their hover animation restarted (#1610)
-- Fixed button, slider, and checkbox tooltips no longer parsing legacy `&` formatting codes (#1609)
-- Fixed incorrect Vanilla widget identifiers and Options screen navigation, including a crash when opening `options_screen` from a custom title screen (#1549, #1545)
-- Fixed checkbox textures ignoring fade-animation alpha (#1536)
-- Fixed Save-menu pointer events falling through to the editor and causing an unsaved-changes prompt after saving (#1527)
-- Fixed mimicking disabled Vanilla buttons being reported as a failure (#1525)
-- Fixed empty placeholder results poisoning resource reloads (#1517)
-- Fixed the Vanilla "Refresh Server List" button not being mimicable (#1492)
-- Fixed custom window icons only appearing after opening another screen (#1481)
-- Fixed button-template textures flickering between Vanilla and custom states when SpiffyHUD processes an in-world screen (#1230)
-- Fixed Minecraft font rendering glitched/corrupted after showing an MCEF browser (#1651)
-- Fixed "Text" elements breaking on blur (#1684)
-- Fixed "Item" elements having inconsistent layering between items and blocks (#1672)
+- Fixed the "Is Layout Enabled" requirement stopping after the first enabled layout instead of checking for later matches
+- Fixed comma-separated GUI-scale equality values being treated as simultaneous conditions instead of alternatives
+- Fixed Ceiling and Floor placeholders adding a `.0` suffix to whole-number results
+- Fixed the "Is Element Focused" requirement using a misspelled description localization key
+- Fixed the File Text placeholder treating `\n` separators as literal text
+- Fixed custom localization files in root directories being ignored and language files being merged unpredictably
+- Fixed panorama reloads discarding active renderers without releasing their texture resources
+- Fixed the "Mouse Clicked" requirement name and description incorrectly implying one-shot behavior instead of a held-button state
+- Fixed the "Only Once Per Session" description omitting that each requirement instance is tracked independently
+- Fixed the Position Changed listener documenting its variables with incorrect single-dollar-sign names
+- Fixed Show Toast width help contradicting the actual 120–320 pixel clamping behavior
+- Fixed MCEF help incorrectly claiming that all video features require MCEF
+- Fixed the Quit Game and Reload Resource Packs descriptions using joke wording instead of explaining their behavior
+- Fixed the Delay block name and description misrepresenting its one-time delay-gate behavior
+- Fixed game-directory file actions allowing path traversal and symlink escapes outside their permitted roots
+- Fixed local-resource placeholders allowing files outside their documented roots to be read
+- Fixed unbounded remote WebSocket message buffers, pending-send queues, and connection state growth
+- Fixed replayed handshakes repeatedly constructing and sending welcome data
+- Fixed Fabric and NeoForge using incompatible bridge payload identifiers
+- Fixed cyclic JSON-model parent chains hanging the render thread
+- Fixed NeoForge registering and executing the FancyMenu resource reload sequence twice
+- Fixed internet availability being checked only once and initially reported as available before verification
+- Fixed stale asynchronous video-loading callbacks overwriting newer video sources
+- Fixed order-insensitive list equality ignoring duplicate item counts
+- Fixed Elytra profile texture requests returning cape textures
+- Fixed networking capability state surviving disconnects and conflating unrelated local sessions
+- Fixed NeoForge sending optional FancyMenu payloads without checking whether the peer supports them
+- Fixed large bridge payloads failing at the 32,767-character UTF limit by adding a bounded chunk protocol
+- Fixed NeoForge missing keyboard events consumed by the active screen
+- Fixed the resource picker missing resources from generic, virtual, overlay, and multi-root pack implementations
+- Fixed a panorama speed of zero stalling its ticker for roughly 24 days
+- Fixed Fabric reporting the loader version as `0.0.0`
+- Fixed NeoForge duplicating supplementary Unicode input sent to MCEF
+- Fixed NeoForge branding lines appearing in reverse order
+- Fixed action-move tooltips referencing a missing localization key
+- Fixed Write File actions using the host system’s default character encoding instead of UTF-8
+- Fixed file-reading failures being silently converted into ambiguous empty or partial results
+- Fixed concurrent variable mutations and database writes risking lost updates, iteration errors, and corrupted files
+- Fixed placeholder parser caches, cooldowns, and processor registration being unsafe during concurrent access
+- Fixed legacy Web Text placeholder state being mutated concurrently and stale loaders repopulating state after reloads
+- Fixed concurrent placeholder requests scheduling duplicate file or network loads and stale loads overwriting newer data
+- Fixed PNG, JPEG, GIF, and APNG reloads leaving obsolete entries in Minecraft’s texture manager
+- Fixed custom GLFW cursor handles leaking when cursors were replaced, unregistered, or shut down
+- Fixed failed JSON-model builds leaking native images and retrying every rendered frame
+- Fixed remote sockets, reconnect tasks, and networking executors continuing during client shutdown
+- Fixed shared URL helpers allowing resource loaders to stall indefinitely without time or size limits
+- Fixed discarded video menu backgrounds retaining scheduler tasks and player resources
+- Fixed failed open and close audio loads creating permanent polling tasks
+- Fixed PNG resource-pack input streams not being explicitly closed
+- Fixed excessive shape-blur values causing extreme GPU shader loops
+- Fixed entity visibility listeners performing repeated block raycasts for every candidate entity on every rendered frame
+- Fixed normal variable assignments synchronously serializing and writing the complete database twice instead of coalescing rapid changes
 
 %changelog:end%
