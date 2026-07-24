@@ -2,15 +2,13 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
-import de.keksuccino.fancymenu.mixin.support.client.ContainerWidgetPointerTracker;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
-import net.minecraft.client.gui.components.AbstractWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuInputRouter;
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuPointerTracker;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.Slot;
-import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -25,7 +23,7 @@ public class MixinAbstractContainerScreen extends Screen {
 
     @Shadow @Nullable protected Slot hoveredSlot;
 
-    @Unique private final ContainerWidgetPointerTracker<GuiEventListener> widgetPointerOwnership_FancyMenu = new ContainerWidgetPointerTracker<>();
+    @Unique private final FancyMenuPointerTracker pointerTracker_FancyMenu = new FancyMenuPointerTracker();
     @Unique private boolean itemHoverTrackingWasDormant_FancyMenu;
 
     // Dummy constructor
@@ -34,59 +32,49 @@ public class MixinAbstractContainerScreen extends Screen {
     }
 
     /**
-     * @reason Container screens need explicit routing for FancyMenu widgets so their interactions take precedence over slot handling.
+     * @reason Container screens need explicit routing for FancyMenu widgets and browsers so their interactions take precedence over slot handling.
      */
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void before_mouseClicked_FancyMenu(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> info) {
 
-        this.widgetPointerOwnership_FancyMenu.clear(button);
-        for (GuiEventListener listener : this.children()) {
-            if ((listener instanceof FancyMenuWidget) && this.canClickWidget_FancyMenu(listener, mouseX, mouseY)) {
-                if (listener.mouseClicked(mouseX, mouseY, button)) {
-                    // The manual routing must mirror 1.19.2's ContainerEventHandler focus contract. Edit boxes rely on their parent to focus them.
-                    this.widgetPointerOwnership_FancyMenu.capture(button, listener);
-                    this.setFocused(listener);
-                    if (button == 0) {
-                        this.setDragging(true);
-                    }
-                    info.setReturnValue(true);
-                    return;
-                }
-            }
+        GuiEventListener listener = this.pointerTracker_FancyMenu.routeMouseClicked(this.children(), mouseX, mouseY, button);
+        if (listener != null) {
+            // The manual routing must mirror 1.19.2's ContainerEventHandler focus contract. Edit boxes rely on their parent to focus them.
+            this.setFocused(listener);
+            if (button == 0) this.setDragging(true);
+            info.setReturnValue(true);
         }
 
     }
 
     /**
-     * @reason Container screens must not process slot releases belonging to a FancyMenu widget interaction.
+     * @reason Container screens must not process slot releases belonging to a FancyMenu component interaction.
      */
     @Inject(method = "mouseReleased", at = @At("HEAD"), cancellable = true)
     private void before_mouseReleased_FancyMenu(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> info) {
 
-        GuiEventListener clickedWidget = this.widgetPointerOwnership_FancyMenu.release(button);
-        if (clickedWidget == null) {
+        if (this.pointerTracker_FancyMenu.dispatchMouseReleased(mouseX, mouseY, button)) {
+            if ((button == 0) && this.isDragging()) this.setDragging(false);
+            info.setReturnValue(true);
             return;
         }
-        if ((button == 0) && this.isDragging()) {
-            this.setDragging(false);
+        if (FancyMenuInputRouter.routeMouseReleased(this.children(), null, mouseX, mouseY, button, FancyMenuInputRouter.MouseReleaseRouting.CAPTURED_COMPONENTS_ONLY)) {
+            // Container release logic runs before its super call, so route orphaned pointer captures before slot handling.
+            if ((button == 0) && this.isDragging()) this.setDragging(false);
+            info.setReturnValue(true);
         }
-        clickedWidget.mouseReleased(mouseX, mouseY, button);
-        info.setReturnValue(true);
 
     }
 
     /**
-     * @reason Container screens must not start slot dragging while a FancyMenu widget owns the active pointer interaction.
+     * @reason Container screens must not start slot dragging while a FancyMenu component owns the active pointer interaction.
      */
     @Inject(method = "mouseDragged", at = @At("HEAD"), cancellable = true)
     private void before_mouseDragged_FancyMenu(double mouseX, double mouseY, int button, double dragX, double dragY, CallbackInfoReturnable<Boolean> info) {
 
-        GuiEventListener clickedWidget = this.widgetPointerOwnership_FancyMenu.get(button);
-        if (clickedWidget == null) {
-            return;
+        if (this.pointerTracker_FancyMenu.dispatchMouseDragged(mouseX, mouseY, button, dragX, dragY)) {
+            info.setReturnValue(true);
         }
-        clickedWidget.mouseDragged(mouseX, mouseY, button, dragX, dragY);
-        info.setReturnValue(true);
 
     }
 
@@ -104,14 +92,6 @@ public class MixinAbstractContainerScreen extends Screen {
         }
         Listeners.ON_ITEM_HOVERED_IN_INVENTORY.onItemHovered(hoveredSlot, hoveredSlot.getItem(), !this.itemHoverTrackingWasDormant_FancyMenu);
         this.itemHoverTrackingWasDormant_FancyMenu = false;
-    }
-
-    @Unique
-    private boolean canClickWidget_FancyMenu(@NotNull GuiEventListener listener, double mouseX, double mouseY) {
-        if (listener instanceof AbstractWidget w) {
-            return w.isActive() && w.isMouseOver(mouseX, mouseY);
-        }
-        return false;
     }
 
 }

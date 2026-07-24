@@ -55,8 +55,16 @@ public class BrowserElement extends AbstractElement {
         if (MCEFUtil.isMCEFLoaded() && MCEFUtil.MCEF_initialized) {
             this.browser = BrowserHandler.get(this.getInstanceIdentifier());
             if (this.browser == null) this.browser = WrappedMCEFBrowser.build(PlaceholderParser.replacePlaceholders(this.url), true, false, null);
+            // Widgets are registered before their first render pass, so keep the browser inert until render visibility has been resolved.
+            this.browser.setInteractable(false);
             BrowserHandler.notifyHandler(this.getInstanceIdentifier(), this.browser);
         }
+    }
+
+    @Override
+    public void renderTick_Inner_Stage_2() {
+        super.renderTick_Inner_Stage_2();
+        if (this.browser != null) this.browser.setInteractable(isBrowserInputEnabled(this.shouldRender(), this.interactable, isEditor()));
     }
 
     @Override
@@ -123,8 +131,6 @@ public class BrowserElement extends AbstractElement {
                     this.setLastTickUrl(finalUrl);
                 }
 
-                this.browser.setInteractable(this.interactable && !isEditor());
-
                 RenderSystem.enableBlend();
 
                 this.browser.render(graphics, mouseX, mouseY, partial);
@@ -161,6 +167,10 @@ public class BrowserElement extends AbstractElement {
 
     public void setLastTickUrl(@Nullable String url) {
         this.getMemory().putProperty("last_tick_url", url);
+    }
+
+    static boolean isBrowserInputEnabled(boolean rendered, boolean interactable, boolean editor) {
+        return rendered && interactable && !editor;
     }
 
 }

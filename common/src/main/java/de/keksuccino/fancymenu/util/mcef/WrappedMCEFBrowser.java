@@ -4,6 +4,7 @@ import com.cinemamod.mcef.MCEF;
 import com.cinemamod.mcef.MCEFBrowser;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
+import de.keksuccino.fancymenu.util.rendering.ui.MouseButtonCaptureOwner;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.ModernAbstractWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
@@ -27,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
-public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeable, NavigatableWidget, FancyMenuUiComponent {
+public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeable, NavigatableWidget, FancyMenuUiComponent, MouseButtonCaptureOwner {
 
     protected static final Logger LOGGER = LogManager.getLogger();
     protected static final ScheduledExecutorService EXECUTOR = Executors. newSingleThreadScheduledExecutor();
@@ -35,7 +36,7 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
     protected final MCEFBrowser browser;
     protected final Minecraft minecraft = Minecraft.getInstance();
     protected final BrowserNavigationTracker navigationTracker;
-    protected boolean browserFocused = false;
+    protected final BrowserInputState inputState = new BrowserInputState();
     protected boolean interactable = true;
     protected float opacity = 1.0F;
     protected boolean autoHandle = true;
@@ -185,23 +186,17 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.isMouseOver(mouseX, mouseY) && this.interactable) {
-            this.browserFocused = true;
-            this.browser.sendMousePress(this.convertMouseX(mouseX), this.convertMouseY(mouseY), button);
-            this.browser.setFocus(true);
-        } else {
-            this.browserFocused = false;
-        }
-        return false;
+        boolean handled = this.inputState.forwardMousePress(this.interactable, this.isMouseOver(mouseX, mouseY), button, () -> this.browser.sendMousePress(this.convertMouseX(mouseX), this.convertMouseY(mouseY), button));
+        this.setFocused(handled);
+        return handled;
     }
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (this.interactable) {
+        return this.inputState.forwardMouseRelease(button, () -> {
             this.browser.sendMouseRelease(this.convertMouseX(mouseX), this.convertMouseY(mouseY), button);
-            this.browser.setFocus(true);
-        }
-        return false;
+            this.browser.setFocus(this.inputState.isFocused());
+        });
     }
 
     @Override
@@ -212,40 +207,32 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollY) {
-        if (this.isMouseOver(mouseX, mouseY) && this.interactable) {
-            this.browser.sendMouseWheel(this.convertMouseX(mouseX), this.convertMouseY(mouseY), scrollY, 0);
-            this.browser.setFocus(true);
-        }
-        return false;
+        return this.inputState.forwardMouseScroll(this.interactable, this.isMouseOver(mouseX, mouseY), () -> this.browser.sendMouseWheel(this.convertMouseX(mouseX), this.convertMouseY(mouseY), scrollY, 0));
     }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (this.interactable && this.browserFocused) {
+        return this.inputState.forwardKeyboardInput(this.interactable, () -> {
             this.browser.sendKeyPress(keyCode, scanCode, modifiers);
             this.browser.setFocus(true);
-        }
-        return false;
+        });
     }
 
     @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        if (this.interactable && this.browserFocused) {
+        return this.inputState.forwardKeyboardInput(this.interactable, () -> {
             this.browser.sendKeyRelease(keyCode, scanCode, modifiers);
             this.browser.setFocus(true);
-        }
-        return false;
+        });
     }
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
-        if (this.interactable && this.browserFocused) {
-            if (codePoint == (char) 0) return true;
+        return this.inputState.forwardCharacterInput(this.interactable, codePoint, () -> {
             this.browser.sendKeyTyped(codePoint, modifiers);
             this.browser.setFocus(true);
-        }
-        return false;
-	}
+        });
+    }
 
 	@Override
 	public boolean isMouseOver(double mouseX, double mouseY) {
@@ -317,10 +304,11 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
     }
 
     public void setInteractable(boolean interactable) {
+        if (this.interactable == interactable) return;
         this.interactable = interactable;
         if (!this.interactable) {
-            this.browser.setFocus(false);
-            this.browserFocused = false;
+            // Keep captured buttons until their matching releases, otherwise Chromium can retain a stuck pressed button.
+            this.setFocused(false);
         }
     }
 
@@ -329,12 +317,19 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
     }
 
     public void setBrowserFocused(boolean browserFocused) {
-        this.browserFocused = browserFocused;
-        this.browser.setFocus(browserFocused);
+        this.setFocused(browserFocused);
     }
 
     public boolean isBrowserFocused() {
-        return this.browserFocused;
+        return this.inputState.isFocused();
+    }
+
+    @Override
+    public void setFocused(boolean focused) {
+        boolean acceptedFocus = focused && this.interactable;
+        super.setFocused(acceptedFocus);
+        this.inputState.setFocused(acceptedFocus);
+        if (!this.closed && (this.browser != null)) this.browser.setFocus(acceptedFocus);
     }
 
     public void setAutoHandle(boolean autoHandle) {
@@ -548,7 +543,8 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
 
     @Override
     public boolean isFocusable() {
-        return false;
+        // Pointer focus is required for Screen to route browser input, but isNavigatable() remains false to keep it out of tab/arrow navigation.
+        return true;
     }
 
     @Override
@@ -566,14 +562,22 @@ public class WrappedMCEFBrowser extends ModernAbstractWidget implements Closeabl
 
     @Override
     public void close() throws IOException {
+        if (this.closed) return;
+        this.setFocused(false);
         this.closed = true;
         this.navigationTracker.invalidateGeneration();
+        this.inputState.reset();
         // Unregister from the global handler manager
         if (this.browser != null) {
             BrowserLoadEventListenerManager.getInstance().unregisterAllListenersForBrowser(this.getIdentifier());
             this.browser.close(true);
         }
         Minecraft.getInstance().getTextureManager().release(this.frameLocation);
+    }
+
+    @Override
+    public boolean hasMouseButtonCapture(int button) {
+        return this.inputState.hasMouseButtonCapture(button);
     }
 
 }
