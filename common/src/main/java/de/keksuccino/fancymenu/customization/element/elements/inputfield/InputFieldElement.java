@@ -21,7 +21,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.Color;
 import java.util.List;
-import java.util.Objects;
 
 public class InputFieldElement extends AbstractElement {
 
@@ -63,8 +62,8 @@ public class InputFieldElement extends AbstractElement {
                 this.editBox.active = false;
                 this.editBox.setEditable(false);
                 if (this.linkedVariable != null) {
-                    if (VariableHandler.variableExists(this.linkedVariable)) {
-                        String var = Objects.requireNonNull(VariableHandler.getVariable(this.linkedVariable)).getValue();
+                    String var = VariableHandler.getVariableValue(this.linkedVariable);
+                    if (var != null) {
                         this.editBox.setValue(var);
                     }
                 }
@@ -94,8 +93,8 @@ public class InputFieldElement extends AbstractElement {
                 if (!this.lastValue.equals(this.editBox.getValue())) {
                     VariableHandler.setVariable(linkedVariable, this.editBox.getValue());
                 }
-                if (VariableHandler.variableExists(this.linkedVariable)) {
-                    String val = Objects.requireNonNull(VariableHandler.getVariable(this.linkedVariable)).getValue();
+                String val = VariableHandler.getVariableValue(this.linkedVariable);
+                if (val != null) {
                     if (!this.editBox.getValue().equals(val)) {
                         this.editBox.setValue(val);
                     }

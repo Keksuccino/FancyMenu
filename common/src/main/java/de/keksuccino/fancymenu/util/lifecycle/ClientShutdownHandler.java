@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.lifecycle;
 
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.server.ServerCache;
+import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.mcef.ActionBridge;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
@@ -40,6 +41,7 @@ public final class ClientShutdownHandler {
             runCleanup("FancyMenu executors", FancyMenuExecutors::shutdownAll);
             runCleanup("deferred Watermedia players", WatermediaDeferredPlayerReleaseTracker::shutdown);
             runCleanup("main-thread task queue", MainThreadTaskExecutor::shutdown);
+            runCleanup("user variables", VariableHandler::shutdown);
             boolean mcefPresent = isMCEFPresentSafely();
             if (mcefPresent) {
                 runCleanup("MCEF video players", () -> MCEFVideoManager.getInstance().disposeAll());
