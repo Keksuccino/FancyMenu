@@ -12,7 +12,6 @@ CHANGELOG | FANCYMENU v3.9.9 [ W I P !! Not public yet !! ]
 - Fixed the "Only Once Per Session" description omitting that each requirement instance is tracked independently
 - Fixed the Position Changed listener documenting its variables with incorrect single-dollar-sign names
 - Fixed Show Toast width help contradicting the actual 120–320 pixel clamping behavior
-- Fixed MCEF help incorrectly claiming that all video features require MCEF
 - Fixed the Quit Game and Reload Resource Packs descriptions using joke wording instead of explaining their behavior
 - Fixed the Delay block name and description misrepresenting its one-time delay-gate behavior
 - Fixed game-directory file actions allowing path traversal and symlink escapes outside their permitted roots
