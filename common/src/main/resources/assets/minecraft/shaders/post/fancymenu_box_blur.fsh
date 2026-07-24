@@ -19,7 +19,8 @@ out vec4 fragColor;
 void main() {
     vec2 oneTexel = 1.0 / InSize;
     vec2 sampleStep = oneTexel * BlurDir;
-    float actualRadius = max(round(Radius), 0.0);
+    // Defined from GuiBlurRadius.MAX_RADIUS so malformed uniforms cannot create unbounded GPU work.
+    float actualRadius = clamp(round(Radius), 0.0, FANCYMENU_MAX_BLUR_RADIUS);
 
     vec4 blurred = vec4(0.0);
     for (float a = -actualRadius + 0.5; a <= actualRadius; a += 2.0) {

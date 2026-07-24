@@ -64,6 +64,7 @@ public final class GuiBlurRenderer {
             .withLocation(Identifier.withDefaultNamespace("pipeline/fancymenu_box_blur"))
             .withVertexShader("core/screenquad")
             .withFragmentShader("post/fancymenu_box_blur")
+            .withShaderDefine("FANCYMENU_MAX_BLUR_RADIUS", GuiBlurRadius.MAX_RADIUS)
             .withBindGroupLayout(BOX_BLUR_BIND_GROUP_LAYOUT_FANCYMENU)
             .build();
     private static final RenderPipeline SCREEN_COPY_PIPELINE_FANCYMENU = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
@@ -100,7 +101,7 @@ public final class GuiBlurRenderer {
      * @param y The Y position in GUI pixels (top-left origin). Recommended range: 0 to screen height.
      * @param width The width in GUI pixels. Recommended range: 1 to screen width.
      * @param height The height in GUI pixels. Recommended range: 1 to screen height.
-     * @param blurRadius The blur intensity in GUI pixels. Recommended range: 0 to 16 (4 is a good default).
+     * @param blurRadius The blur intensity in GUI pixels. Values are hard-clamped to 0 through {@link GuiBlurRadius#MAX_RADIUS} (4 is a good default).
      * @param cornerRadius The rounded corner radius in GUI pixels. Recommended range: 0 to min(width, height) / 2 (6 is a good default).
      * @param tint The tint color that is mixed into the blurred area. Use alpha to control strength (0.15 is a good default).
      * @param partial Partial tick for the frame; pass the current render partial.
@@ -276,7 +277,7 @@ public final class GuiBlurRenderer {
         if (width <= 0.0F || height <= 0.0F) {
             return;
         }
-        _renderBlurArea(graphics, partial, new BlurArea(x, y, width, height, blurRadius, cornerRadii, shapeType, clampRoundness(roundness), tint));
+        _renderBlurArea(graphics, partial, new BlurArea(x, y, width, height, GuiBlurRadius.sanitize(blurRadius), cornerRadii, shapeType, clampRoundness(roundness), tint));
     }
 
     private static void _renderBlurArea(GuiGraphicsExtractor graphics, float partial, BlurArea area) {
@@ -309,8 +310,7 @@ public final class GuiBlurRenderer {
             return;
         }
 
-        double rawBlurRadius = area.blurRadius * guiScale;
-        float blurRadius = Double.isFinite(rawBlurRadius) && rawBlurRadius > 0.0D && rawBlurRadius <= Float.MAX_VALUE ? (float)rawBlurRadius : 0.0F;
+        float blurRadius = GuiBlurRadius.resolveShaderRadius(area.blurRadius, guiScale);
         CornerRadii scaledRadii = area.cornerRadii.scaled(guiScale).clamped(Math.min(scaledWidth, scaledHeight) * 0.5F).flipVertical();
 
         DrawableColor.FloatColor tint = area.tint.getAsFloats();

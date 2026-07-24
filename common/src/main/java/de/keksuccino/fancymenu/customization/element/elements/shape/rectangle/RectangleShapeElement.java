@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.element.elements.shape.rectangle;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.shape.ShapeBlurRadius;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
@@ -15,7 +16,7 @@ public class RectangleShapeElement extends AbstractElement {
 
     public final Property.ColorProperty color = putProperty(Property.hexColorProperty("color", "#FFFFFF", true, "fancymenu.elements.shape.color"));
     public final Property<Boolean> blurEnabled = putProperty(Property.booleanProperty("blur_enabled", false, "fancymenu.elements.shape.blur"));
-    public final Property.FloatProperty blurRadius = putProperty(Property.floatProperty("blur_radius", 3.0F, "fancymenu.elements.shape.blur.radius"));
+    public final Property.FloatProperty blurRadius = putProperty(ShapeBlurRadius.createProperty());
     public final Property.FloatProperty cornerRadiusTopLeft = putProperty(Property.floatProperty("corner_radius_top_left", 0.0F, "fancymenu.elements.shape.corner_radius.top_left"));
     public final Property.FloatProperty cornerRadiusTopRight = putProperty(Property.floatProperty("corner_radius_top_right", 0.0F, "fancymenu.elements.shape.corner_radius.top_right"));
     public final Property.FloatProperty cornerRadiusBottomRight = putProperty(Property.floatProperty("corner_radius_bottom_right", 0.0F, "fancymenu.elements.shape.corner_radius.bottom_right"));
@@ -31,7 +32,7 @@ public class RectangleShapeElement extends AbstractElement {
 
         if (!this.shouldRender()) return;
 
-        float resolvedBlurRadius = Math.max(0.0F, this.blurRadius.getFloat());
+        float resolvedBlurRadius = ShapeBlurRadius.resolve(this.blurRadius);
         float resolvedCornerRadiusTopLeft = Math.max(0.0F, this.cornerRadiusTopLeft.getFloat());
         float resolvedCornerRadiusTopRight = Math.max(0.0F, this.cornerRadiusTopRight.getFloat());
         float resolvedCornerRadiusBottomRight = Math.max(0.0F, this.cornerRadiusBottomRight.getFloat());
