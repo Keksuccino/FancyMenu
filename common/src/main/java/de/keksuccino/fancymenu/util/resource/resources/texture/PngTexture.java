@@ -65,11 +65,13 @@ public class PngTexture implements ITexture {
         try {
             Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(location);
             if (resource.isPresent()) {
-                NativeImage image = NativeImage.read(resource.get().open());
-                texture.width = image.getWidth();
-                texture.height = image.getHeight();
-                texture.aspectRatio = new AspectRatio(texture.width, texture.height);
-                CloseableUtils.closeQuietly(image);
+                PngTextureMetadataReader.Dimensions dimensions = PngTextureMetadataReader.read(resource.get());
+                int width = dimensions.width();
+                int height = dimensions.height();
+                AspectRatio aspectRatio = new AspectRatio(width, height);
+                texture.width = width;
+                texture.height = height;
+                texture.aspectRatio = aspectRatio;
             } else {
                 texture.loadingFailed = true;
                 LOGGER.error("[FANCYMENU] Failed to read texture from ResourceLocation! Resource not present: " + location, new IOException());
