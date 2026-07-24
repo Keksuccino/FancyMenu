@@ -1,16 +1,15 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuInputRouter;
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuPointerTracker;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.Slot;
-import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -19,15 +18,13 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.Map;
 
 @Mixin(AbstractContainerScreen.class)
 public class MixinAbstractContainerScreen extends Screen {
 
     @Shadow @Nullable protected Slot hoveredSlot;
 
-    @Unique private final Map<Integer, GuiEventListener> clickedWidgetsByButton_FancyMenu = new HashMap<>();
+    @Unique private final FancyMenuPointerTracker pointerTracker_FancyMenu = new FancyMenuPointerTracker();
     @Unique private boolean itemHoverTrackingWasDormant_FancyMenu;
 
     // Dummy constructor
@@ -41,22 +38,16 @@ public class MixinAbstractContainerScreen extends Screen {
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void before_mouseClicked_FancyMenu(MouseButtonEvent event, boolean isDoubleClick, CallbackInfoReturnable<Boolean> info) {
 
-        this.clickedWidgetsByButton_FancyMenu.remove(event.button());
-        for (GuiEventListener listener : this.children()) {
-            if ((listener instanceof FancyMenuWidget) && this.canClickWidget_FancyMenu(listener, event)) {
-                if (listener.mouseClicked(event, isDoubleClick)) {
-                    // The manual routing must mirror ContainerEventHandler's focus contract. Edit boxes rely on their parent to focus them.
-                    this.clickedWidgetsByButton_FancyMenu.put(event.button(), listener);
-                    if (listener.shouldTakeFocusAfterInteraction()) {
-                        this.setFocused(listener);
-                        if (event.button() == 0) {
-                            this.setDragging(true);
-                        }
-                    }
-                    info.setReturnValue(true);
-                    return;
+        GuiEventListener listener = this.pointerTracker_FancyMenu.routeMouseClicked(this.children(), event, isDoubleClick);
+        if (listener != null) {
+            // Track the actual consumer instead of inferring release ownership from focus; some FancyMenu controls intentionally never take focus.
+            if (listener.shouldTakeFocusAfterInteraction()) {
+                this.setFocused(listener);
+                if (event.button() == 0) {
+                    this.setDragging(true);
                 }
             }
+            info.setReturnValue(true);
         }
 
     }
@@ -67,14 +58,17 @@ public class MixinAbstractContainerScreen extends Screen {
     @Inject(method = "mouseReleased", at = @At("HEAD"), cancellable = true)
     private void before_mouseReleased_FancyMenu(MouseButtonEvent event, CallbackInfoReturnable<Boolean> info) {
 
-        GuiEventListener clickedWidget = this.clickedWidgetsByButton_FancyMenu.remove(event.button());
-        if (clickedWidget == null) {
+        if (!this.pointerTracker_FancyMenu.dispatchMouseReleased(event)) {
+            if (FancyMenuInputRouter.routeMouseReleased(this.children(), null, event, FancyMenuInputRouter.MouseReleaseRouting.CAPTURED_COMPONENTS_ONLY)) {
+                // Container release logic runs before its super call, so route orphaned pointer captures before slot handling.
+                if ((event.button() == 0) && this.isDragging()) this.setDragging(false);
+                info.setReturnValue(true);
+            }
             return;
         }
         if ((event.button() == 0) && this.isDragging()) {
             this.setDragging(false);
         }
-        clickedWidget.mouseReleased(event);
         info.setReturnValue(true);
 
     }
@@ -85,12 +79,7 @@ public class MixinAbstractContainerScreen extends Screen {
     @Inject(method = "mouseDragged", at = @At("HEAD"), cancellable = true)
     private void before_mouseDragged_FancyMenu(MouseButtonEvent event, double dragX, double dragY, CallbackInfoReturnable<Boolean> info) {
 
-        GuiEventListener clickedWidget = this.clickedWidgetsByButton_FancyMenu.get(event.button());
-        if (clickedWidget == null) {
-            return;
-        }
-        clickedWidget.mouseDragged(event, dragX, dragY);
-        info.setReturnValue(true);
+        if (this.pointerTracker_FancyMenu.dispatchMouseDragged(event, dragX, dragY)) info.setReturnValue(true);
 
     }
 
@@ -108,14 +97,6 @@ public class MixinAbstractContainerScreen extends Screen {
         }
         Listeners.ON_ITEM_HOVERED_IN_INVENTORY.onItemHovered(hoveredSlot, hoveredSlot.getItem(), !this.itemHoverTrackingWasDormant_FancyMenu);
         this.itemHoverTrackingWasDormant_FancyMenu = false;
-    }
-
-    @Unique
-    private boolean canClickWidget_FancyMenu(@NotNull GuiEventListener listener, @NotNull MouseButtonEvent event) {
-        if (listener instanceof AbstractWidget w) {
-            return w.isMouseOver(event.x(), event.y());
-        }
-        return false;
     }
 
 }

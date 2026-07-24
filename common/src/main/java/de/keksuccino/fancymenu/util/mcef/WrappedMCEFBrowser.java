@@ -4,8 +4,10 @@ import com.cinemamod.mcef.MCEF;
 import com.cinemamod.mcef.MCEFBrowser;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
+import de.keksuccino.fancymenu.util.rendering.ui.MouseButtonCaptureOwner;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -21,23 +23,22 @@ import org.jetbrains.annotations.Nullable;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.UUID;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
-public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, NavigatableWidget, FancyMenuUiComponent {
+public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, NavigatableWidget, FancyMenuUiComponent, MouseButtonCaptureOwner {
 
     protected static final Logger LOGGER = LogManager.getLogger();
-    protected static final ScheduledExecutorService EXECUTOR = Executors. newSingleThreadScheduledExecutor();
+    protected static final ScheduledExecutorService EXECUTOR = FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-WrappedMCEFBrowser");
 
     protected final MCEFBrowser browser;
     protected final Minecraft minecraft = Minecraft.getInstance();
     protected final AtomicLong mainFrameNavigationGeneration = new AtomicLong();
+    protected final BrowserInputState inputState = new BrowserInputState();
     @Nullable protected volatile String expectedMainFrameUrl;
-    protected boolean browserFocused = false;
     protected boolean interactable = true;
     protected float opacity = 1.0F;
     protected boolean autoHandle = true;
@@ -177,14 +178,9 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     }
     
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.isMouseOver(mouseX, mouseY) && this.interactable) {
-            this.browserFocused = true;
-            this.browser.sendMousePress(this.convertMouseX(mouseX), this.convertMouseY(mouseY), button);
-            this.browser.setFocus(true);
-        } else {
-            this.browserFocused = false;
-        }
-        return false;
+        boolean handled = this.inputState.forwardMousePress(this.interactable, this.isMouseOver(mouseX, mouseY), button, () -> this.browser.sendMousePress(this.convertMouseX(mouseX), this.convertMouseY(mouseY), button));
+        this.setFocused(handled);
+        return handled;
     }
 
     @Override
@@ -193,11 +189,10 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     }
     
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (this.interactable) {
+        return this.inputState.forwardMouseRelease(button, () -> {
             this.browser.sendMouseRelease(this.convertMouseX(mouseX), this.convertMouseY(mouseY), button);
-            this.browser.setFocus(true);
-        }
-        return false;
+            this.browser.setFocus(this.inputState.isFocused());
+        });
     }
 
     @Override
@@ -208,11 +203,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if (this.isMouseOver(mouseX, mouseY) && this.interactable) {
-            this.browser.sendMouseWheel(this.convertMouseX(mouseX), this.convertMouseY(mouseY), scrollY, 0);
-            this.browser.setFocus(true);
-        }
-        return false;
+        return this.inputState.forwardMouseScroll(this.interactable, this.isMouseOver(mouseX, mouseY), () -> this.browser.sendMouseWheel(this.convertMouseX(mouseX), this.convertMouseY(mouseY), scrollY, 0));
     }
 
     @Override
@@ -221,11 +212,10 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     }
     
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (this.interactable && this.browserFocused) {
+        return this.inputState.forwardKeyboardInput(this.interactable, () -> {
             this.browser.sendKeyPress(keyCode, scanCode, modifiers);
             this.browser.setFocus(true);
-        }
-        return false;
+        });
     }
 
     @Override
@@ -234,11 +224,10 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     }
     
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        if (this.interactable && this.browserFocused) {
+        return this.inputState.forwardKeyboardInput(this.interactable, () -> {
             this.browser.sendKeyRelease(keyCode, scanCode, modifiers);
             this.browser.setFocus(true);
-        }
-        return false;
+        });
     }
 
     @Override
@@ -247,13 +236,11 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     }
     
     public boolean charTyped(char codePoint, int modifiers) {
-        if (this.interactable && this.browserFocused) {
-            if (codePoint == (char) 0) return true;
+        return this.inputState.forwardCharacterInput(this.interactable, codePoint, () -> {
             this.browser.sendKeyTyped(codePoint, modifiers);
             this.browser.setFocus(true);
-        }
-        return false;
-	}
+        });
+    }
 
 	@Override
 	public boolean isMouseOver(double mouseX, double mouseY) {
@@ -321,10 +308,11 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     }
 
     public void setInteractable(boolean interactable) {
+        if (this.interactable == interactable) return;
         this.interactable = interactable;
         if (!this.interactable) {
-            this.browser.setFocus(false);
-            this.browserFocused = false;
+            // Keep captured buttons until their matching releases, otherwise Chromium can retain a stuck pressed button.
+            this.setFocused(false);
         }
     }
 
@@ -333,12 +321,19 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     }
 
     public void setBrowserFocused(boolean browserFocused) {
-        this.browserFocused = browserFocused;
-        this.browser.setFocus(browserFocused);
+        this.setFocused(browserFocused);
     }
 
     public boolean isBrowserFocused() {
-        return this.browserFocused;
+        return this.inputState.isFocused();
+    }
+
+    @Override
+    public void setFocused(boolean focused) {
+        boolean acceptedFocus = focused && this.interactable;
+        super.setFocused(acceptedFocus);
+        this.inputState.setFocused(acceptedFocus);
+        if (!this.closed && (this.browser != null)) this.browser.setFocus(acceptedFocus);
     }
 
     public void setAutoHandle(boolean autoHandle) {
@@ -554,7 +549,8 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
     @Override
     public boolean isFocusable() {
-        return false;
+        // Pointer focus is required for Screen to route browser input, but isNavigatable() remains false to keep it out of tab/arrow navigation.
+        return true;
     }
 
     @Override
@@ -573,13 +569,20 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     @Override
     public void close() throws IOException {
         if (this.closed) return;
+        this.setFocused(false);
         this.closed = true;
+        this.inputState.reset();
         this.mainFrameNavigationGeneration.incrementAndGet();
         // Unregister from the global handler manager
         if (this.browser != null) {
             BrowserLoadEventListenerManager.getInstance().unregisterAllListenersForBrowser(this.getIdentifier());
             this.browser.close();
         }
+    }
+
+    @Override
+    public boolean hasMouseButtonCapture(int button) {
+        return this.inputState.hasMouseButtonCapture(button);
     }
 
 }
