@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.backgrounds.video.IVideoMenuBackground;
+import de.keksuccino.fancymenu.customization.background.backgrounds.video.VideoBackgroundTaskController;
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
@@ -39,8 +40,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackground> implements IVideoMenuBackground {
@@ -82,22 +81,11 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
     protected boolean pausedBySystem = false;
     protected final AtomicReference<Float> cachedDuration = new AtomicReference<>(0F);
     protected final AtomicReference<Float> cachedPlayTime = new AtomicReference<>(0F);
-    // The field is currently unused, but the scheduler is used, so don't delete this
-    protected final ScheduledFuture<?> garbageChecker = EXECUTOR.scheduleAtFixedRate(() -> {
-        if (this.initialized && (this.lastRenderTickTime != -1) && ((this.lastRenderTickTime + 11000) < System.currentTimeMillis())) {
-            this.resetBackground();
-        }
-    }, 0, 100, TimeUnit.MILLISECONDS);
-    // The field is currently unused, but the scheduler is used, so don't delete this
-    protected final ScheduledFuture<?> asyncTicker = EXECUTOR.scheduleAtFixedRate(() -> {
-        if (this.initialized) {
-            this.cachedDuration.set(this._getDuration());
-            this.cachedPlayTime.set(this._getPlayTime());
-        }
-    }, 0, 900, TimeUnit.MILLISECONDS);
+    protected final VideoBackgroundTaskController taskController;
 
     public MCEFVideoMenuBackground(MenuBackgroundBuilder<MCEFVideoMenuBackground> builder) {
         super(builder);
+        this.taskController = new VideoBackgroundTaskController(EXECUTOR, this::runGarbageCheck, 100L, this::updateCachedPlaybackState, 900L);
         if (MCEFUtil.isMCEFLoaded() && MCEFUtil.MCEF_initialized) this.videoManager = MCEFVideoManager.getInstance();
     }
 
@@ -150,6 +138,8 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
+        if (this.taskController.isClosed()) return;
+
         float parallaxIntensityX = this.parallaxIntensityXString.getFloat();
         float parallaxIntensityY = this.parallaxIntensityYString.getFloat();
 
@@ -185,6 +175,7 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
             com.mojang.blaze3d.opengl.GlStateManager._disableBlend();
             return;
         }
+        if (!this.taskController.start()) return;
 
         if (!this.initialized) {
             this.initialized = true;
@@ -384,15 +375,28 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
     }
 
     public void disposePlayer() {
-        if ((this.videoManager != null) && (this.playerId != null) && (this.videoPlayer != null)) {
-            this.videoPlayer.stop();
+        if ((this.videoManager != null) && (this.playerId != null)) {
             this.videoManager.removePlayer(this.playerId);
+        } else if (this.videoPlayer != null) {
+            this.videoPlayer.dispose();
         }
     }
 
     public void resetBackground() {
-        this.disposePlayer();
+        this.taskController.stop();
+        this.resetPlayerState();
+    }
+
+    @Override
+    public void onDestroyBackground() {
+        super.onDestroyBackground();
+        this.taskController.close();
+        this.resetPlayerState();
+    }
+
+    protected void resetPlayerState() {
         this.initialized = false;
+        this.disposePlayer();
         this.videoPlayer = null;
         this.playerId = null;
         this.lastFinalUrl = null;
@@ -406,6 +410,8 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
         this.lastPausedState = null;
         this.lastRenderTickTime = -1L;
         this.pausedBySystem = false;
+        this.cachedDuration.set(0F);
+        this.cachedPlayTime.set(0F);
     }
 
     protected float _getDuration() {
@@ -421,6 +427,16 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
     protected boolean _isPaused() {
         if (isEditor()) return false;
         return (this.getControllerPausedState() || this.pausedBySystem);
+    }
+
+    protected void runGarbageCheck() {
+        if (this.initialized && (this.lastRenderTickTime != -1L) && ((this.lastRenderTickTime + 11000L) < System.currentTimeMillis())) this.resetBackground();
+    }
+
+    protected void updateCachedPlaybackState() {
+        if (!this.initialized) return;
+        this.cachedDuration.set(this._getDuration());
+        this.cachedPlayTime.set(this._getPlayTime());
     }
 
     @Override
