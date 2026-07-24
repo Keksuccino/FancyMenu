@@ -2,9 +2,16 @@ package de.keksuccino.fancymenu.customization.remote;
 
 import org.junit.jupiter.api.Test;
 
+import java.net.URI;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.atomic.AtomicReference;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class JdkRemoteWebSocketTransportTest {
 
@@ -58,5 +65,26 @@ class JdkRemoteWebSocketTransportTest {
         JdkRemoteWebSocketTransport.JdkInboundTextBuffer buffer = new JdkRemoteWebSocketTransport.JdkInboundTextBuffer(8, 2);
         assertEquals(JdkRemoteWebSocketTransport.JdkInboundTextBuffer.ResultType.INVALID_UTF16, buffer.accept("\uDE00", true).type());
         assertEquals(JdkRemoteWebSocketTransport.JdkInboundTextBuffer.ResultType.INVALID_UTF16, buffer.accept("\uD83D", true).type());
+    }
+
+    @Test
+    void shutdownIsIdempotentTerminatesExecutorAndRejectsLateConnections() {
+        JdkRemoteWebSocketTransport transport = new JdkRemoteWebSocketTransport(1024, 4);
+        AtomicReference<Throwable> failure = new AtomicReference<>();
+        RemoteWebSocketTransport.Listener listener = new RemoteWebSocketTransport.Listener() {
+            @Override public void onOpen(RemoteWebSocketTransport.Connection connection) {}
+            @Override public void onText(RemoteWebSocketTransport.Connection connection, String data, int utf8Bytes) {}
+            @Override public void onPong(RemoteWebSocketTransport.Connection connection) {}
+            @Override public void onClose(RemoteWebSocketTransport.Connection connection, int statusCode, String reason) {}
+            @Override public void onError(RemoteWebSocketTransport.Connection connection, Throwable error) { failure.set(error); }
+        };
+
+        transport.shutdown();
+        transport.shutdown();
+        RemoteWebSocketTransport.Connection rejected = transport.connect(URI.create("ws://127.0.0.1:1/socket"), listener);
+
+        assertTrue(transport.isTerminated());
+        assertFalse(rejected.isOpen());
+        assertInstanceOf(RejectedExecutionException.class, failure.get());
     }
 }

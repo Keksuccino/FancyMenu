@@ -13,6 +13,9 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -24,27 +27,53 @@ final class JdkRemoteWebSocketTransport implements RemoteWebSocketTransport {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final int MESSAGE_TOO_BIG_STATUS = 1009;
-    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(15L)).build();
-
     private final int maxInboundMessageBytes;
     private final int maxInboundFragments;
+    private final ExecutorService executor;
+    private final HttpClient httpClient;
+    private final AtomicBoolean shutdownStarted = new AtomicBoolean();
 
     JdkRemoteWebSocketTransport(int maxInboundMessageBytes, int maxInboundFragments) {
         if (maxInboundMessageBytes <= 0 || maxInboundFragments <= 0) throw new IllegalArgumentException("Inbound WebSocket limits must be positive");
         this.maxInboundMessageBytes = maxInboundMessageBytes;
         this.maxInboundFragments = maxInboundFragments;
+        this.executor = Executors.newCachedThreadPool(runnable -> {
+            Thread thread = new Thread(runnable, "FancyMenu-RemoteWebSocket");
+            thread.setDaemon(true);
+            return thread;
+        });
+        this.httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(15L)).executor(this.executor).build();
     }
 
     @Override
     public @NotNull Connection connect(@NotNull URI uri, @NotNull Listener listener) {
         JdkConnection connection = new JdkConnection(listener, this.maxInboundMessageBytes, this.maxInboundFragments);
-        CompletableFuture<WebSocket> connectFuture = HTTP_CLIENT.newWebSocketBuilder().connectTimeout(Duration.ofSeconds(15L)).buildAsync(uri, connection);
-        connection.attachConnectFuture(connectFuture);
-        connectFuture.exceptionally(throwable -> {
-            connection.notifyError(unwrapCompletionFailure(throwable));
-            return null;
-        });
+        if (this.shutdownStarted.get()) {
+            connection.notifyError(new RejectedExecutionException("Remote WebSocket transport is shut down"));
+            return connection;
+        }
+        try {
+            CompletableFuture<WebSocket> connectFuture = this.httpClient.newWebSocketBuilder().connectTimeout(Duration.ofSeconds(15L)).buildAsync(uri, connection);
+            connection.attachConnectFuture(connectFuture);
+            connectFuture.exceptionally(throwable -> {
+                connection.notifyError(unwrapCompletionFailure(throwable));
+                return null;
+            });
+        } catch (RuntimeException ex) {
+            connection.notifyError(ex);
+        }
         return connection;
+    }
+
+    @Override
+    public void shutdown() {
+        if (this.shutdownStarted.compareAndSet(false, true)) this.executor.shutdownNow();
+        if (!RemoteShutdownSupport.awaitTerminationPreservingInterrupt(this.executor)) LOGGER.warn("[FANCYMENU] Timed out while waiting for the remote WebSocket executor to terminate");
+    }
+
+    @Override
+    public boolean isTerminated() {
+        return this.executor.isTerminated();
     }
 
     private static @NotNull Throwable unwrapCompletionFailure(@NotNull Throwable throwable) {
