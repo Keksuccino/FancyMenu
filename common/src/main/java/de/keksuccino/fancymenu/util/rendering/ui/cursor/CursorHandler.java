@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.cursor;
 
 import com.mojang.blaze3d.platform.TextureUtil;
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
@@ -20,28 +21,26 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 @SuppressWarnings("unused")
 public class CursorHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final CursorHandleLifecycle CURSOR_HANDLE_LIFECYCLE = new CursorHandleLifecycle(new MinecraftGlfwThreadExecutor(), new GlfwNativeOperations(), throwable -> LOGGER.error("[FANCYMENU] Failed to release a GLFW cursor!", throwable));
+    private static final CursorRegistry<CustomCursor> CUSTOM_CURSORS = new CursorRegistry<>(new CustomCursorRetirement());
+    private static final CursorTickSelection<CustomCursor> CLIENT_TICK_CURSOR = new CursorTickSelection<>();
 
-    public static final long CURSOR_RESIZE_HORIZONTAL = GLFW.glfwCreateStandardCursor(GLFW.GLFW_RESIZE_EW_CURSOR);
-    public static final long CURSOR_RESIZE_VERTICAL = GLFW.glfwCreateStandardCursor(GLFW.GLFW_RESIZE_NS_CURSOR);
-    public static final long CURSOR_RESIZE_NWSE = GLFW.glfwCreateStandardCursor(GLFW.GLFW_RESIZE_NWSE_CURSOR);
-    public static final long CURSOR_RESIZE_NESW = GLFW.glfwCreateStandardCursor(GLFW.GLFW_RESIZE_NESW_CURSOR);
-    public static final long CURSOR_RESIZE_ALL = GLFW.glfwCreateStandardCursor(GLFW.GLFW_RESIZE_ALL_CURSOR);
-    public static final long CURSOR_WRITING = GLFW.glfwCreateStandardCursor(GLFW.GLFW_IBEAM_CURSOR);
-    public static final long CURSOR_POINTING_HAND = GLFW.glfwCreateStandardCursor(GLFW.GLFW_POINTING_HAND_CURSOR);
-    public static final long CURSOR_NORMAL = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR);
+    public static final long CURSOR_RESIZE_HORIZONTAL = createStandardCursor(GLFW.GLFW_RESIZE_EW_CURSOR);
+    public static final long CURSOR_RESIZE_VERTICAL = createStandardCursor(GLFW.GLFW_RESIZE_NS_CURSOR);
+    public static final long CURSOR_RESIZE_NWSE = createStandardCursor(GLFW.GLFW_RESIZE_NWSE_CURSOR);
+    public static final long CURSOR_RESIZE_NESW = createStandardCursor(GLFW.GLFW_RESIZE_NESW_CURSOR);
+    public static final long CURSOR_RESIZE_ALL = createStandardCursor(GLFW.GLFW_RESIZE_ALL_CURSOR);
+    public static final long CURSOR_WRITING = createStandardCursor(GLFW.GLFW_IBEAM_CURSOR);
+    public static final long CURSOR_POINTING_HAND = createStandardCursor(GLFW.GLFW_POINTING_HAND_CURSOR);
+    public static final long CURSOR_NORMAL = createStandardCursor(GLFW.GLFW_ARROW_CURSOR);
 
-    private static final Map<String, CustomCursor> CUSTOM_CURSORS = new HashMap<>();
-
-    private static long clientTickCursor = -2;
-    private static boolean initialized = false;
+    private static volatile boolean initialized = false;
 
     /**
      * Returns the currently active GLFW cursor handle on the Minecraft window, or {@code -1} if unknown/not yet tracked.
@@ -81,20 +80,24 @@ public class CursorHandler {
     public static void registerCustomCursor(@NotNull String uniqueCursorName, @NotNull CustomCursor cursor) {
         if (!initialized) throw new RuntimeException("[FANCYMENU] CursorHandler accessed too early!");
         LOGGER.info("[FANCYMENU] Registering GLFW custom cursor: NAME: " + uniqueCursorName + " | TEXTURE CONTEXT: " + cursor.textureName);
-        CUSTOM_CURSORS.put(Objects.requireNonNull(uniqueCursorName), Objects.requireNonNull(cursor));
+        CUSTOM_CURSORS.register(Objects.requireNonNull(uniqueCursorName), Objects.requireNonNull(cursor), CustomCursor::isUsable);
     }
 
     public static void unregisterCustomCursor(@NotNull String cursorName) {
         if (!initialized) throw new RuntimeException("[FANCYMENU] CursorHandler accessed too early!");
-        CustomCursor c = CUSTOM_CURSORS.get(cursorName);
-        if (c != null) c.destroy();
-        CUSTOM_CURSORS.remove(cursorName);
+        CUSTOM_CURSORS.unregister(Objects.requireNonNull(cursorName));
+    }
+
+    public static void unregisterCustomCursor(@NotNull String cursorName, @NotNull CustomCursor expectedCursor) {
+        if (!initialized) throw new RuntimeException("[FANCYMENU] CursorHandler accessed too early!");
+        CUSTOM_CURSORS.unregister(Objects.requireNonNull(cursorName), Objects.requireNonNull(expectedCursor));
     }
 
     @Nullable
     public static CustomCursor getCustomCursor(@NotNull String cursorName) {
         if (!initialized) throw new RuntimeException("[FANCYMENU] CursorHandler accessed too early!");
-        return CUSTOM_CURSORS.get(cursorName);
+        CustomCursor cursor = CUSTOM_CURSORS.get(Objects.requireNonNull(cursorName));
+        return cursor != null && cursor.isUsable() ? cursor : null;
     }
 
     /**
@@ -102,7 +105,7 @@ public class CursorHandler {
      */
     public static void setClientTickCursor(long cursor) {
         if (!initialized) throw new RuntimeException("[FANCYMENU] CursorHandler accessed too early!");
-        clientTickCursor = cursor;
+        CLIENT_TICK_CURSOR.setRawCursor(cursor);
     }
 
     /**
@@ -111,7 +114,7 @@ public class CursorHandler {
     public static void setClientTickCursor(@NotNull String customCursorName) {
         if (!initialized) throw new RuntimeException("[FANCYMENU] CursorHandler accessed too early!");
         CustomCursor c = getCustomCursor(customCursorName);
-        if (c != null) setClientTickCursor(c.id_long);
+        if (c != null) CLIENT_TICK_CURSOR.setCustomCursor(c, CustomCursor::isUsable);
     }
 
     private static void setCursor(long cursor) {
@@ -121,17 +124,36 @@ public class CursorHandler {
 
     @EventListener
     public void onClientTickPre(ClientTickEvent.Pre e) {
+        long cursorToSet = CLIENT_TICK_CURSOR.takeCursorForTick(CURSOR_NORMAL, CustomCursor::isUsable, cursor -> cursor.id_long);
+        if (cursorToSet != CursorTickSelection.NO_CURSOR_CHANGE) setCursor(cursorToSet);
+    }
 
-        if ((clientTickCursor != -1) && (clientTickCursor != -2)) {
-            //Set the non-default cursor set by the mod
-            setCursor(clientTickCursor);
-            clientTickCursor = -1;
-        } else if (clientTickCursor == -1) {
-            //Reset the cursor to default, if no custom cursor was set last tick
-            setCursor(CURSOR_NORMAL);
-            clientTickCursor = -2;
+    /** Releases all FancyMenu-owned cursors while Minecraft's GLFW window is still alive. */
+    public static void shutdown() {
+        LOGGER.info("[FANCYMENU] Releasing FancyMenu-owned GLFW cursors during client shutdown..");
+        CUSTOM_CURSORS.close();
+        CLIENT_TICK_CURSOR.clear();
+        CURSOR_HANDLE_LIFECYCLE.shutdown();
+    }
+
+    private static long createStandardCursor(int shape) {
+        long cursor = GLFW.glfwCreateStandardCursor(shape);
+        CURSOR_HANDLE_LIFECYCLE.trackStandard(cursor);
+        return cursor;
+    }
+
+    private static void destroyNativeCursor(long cursor) {
+        boolean failedToSwitchWindow = false;
+        for (long window : GlfwCursorTracker.getWindowsUsingCursor(cursor)) {
+            try {
+                GLFW.glfwSetCursor(window, 0L);
+            } catch (Throwable throwable) {
+                failedToSwitchWindow = true;
+                LOGGER.error("[FANCYMENU] Failed to switch a window away from a GLFW cursor before destroying it!", throwable);
+            }
         }
-
+        if (failedToSwitchWindow) throw new IllegalStateException("Could not safely detach GLFW cursor " + cursor + " from every tracked window");
+        GLFW.glfwDestroyCursor(cursor);
     }
 
     public static class CustomCursor {
@@ -139,6 +161,7 @@ public class CursorHandler {
         public final long id_long;
         public final int hotspotX;
         public final int hotspotY;
+        private final CursorHandleLifecycle.Handle nativeHandle;
         @NotNull
         public final PngTexture texture;
         @NotNull
@@ -169,9 +192,11 @@ public class CursorHandler {
                         if (stbBuffer != null) {
                             GLFWImage image = GLFWImage.create();
                             image = image.set(texture.getWidth(), texture.getHeight(), stbBuffer);
+                            RenderSystem.assertOnRenderThread();
                             long lid = GLFW.glfwCreateCursor(image, hotspotX, hotspotY);
                             if (lid != 0L) {
                                 customCursor = new CustomCursor(lid, hotspotX, hotspotY, texture, textureName);
+                                if (!customCursor.isUsable()) customCursor = null;
                             } else {
                                 throw new IllegalArgumentException("Failed to create custom cursor! Cursor handle was NULL!");
                             }
@@ -210,16 +235,69 @@ public class CursorHandler {
             this.hotspotY = hotspotY;
             this.texture = texture;
             this.textureName = textureName;
+            this.nativeHandle = CURSOR_HANDLE_LIFECYCLE.trackCustom(id_long);
         }
 
-        /** Does nothing. **/
+        /** Idempotently unregisters and releases this cursor on Minecraft's GLFW thread. */
         public void destroy() {
-            //TODO unstable! fix this later!
-//            try {
-//                GLFW.glfwDestroyCursor(this.id_long);
-//            } catch (Exception ex) {
-//                ex.printStackTrace();
-//            }
+            CUSTOM_CURSORS.retire(this);
+        }
+
+        private boolean isUsable() {
+            return this.nativeHandle.isLive();
+        }
+
+    }
+
+    private static final class MinecraftGlfwThreadExecutor implements CursorHandleLifecycle.ThreadExecutor {
+
+        @Override
+        public boolean isOnThread() {
+            return RenderSystem.isOnRenderThread();
+        }
+
+        @Override
+        public void execute(@NotNull Runnable task) {
+            if (this.isOnThread()) {
+                task.run();
+                return;
+            }
+            Minecraft minecraft = Minecraft.getInstance();
+            if (minecraft != null) {
+                minecraft.execute(task);
+            } else {
+                LOGGER.error("[FANCYMENU] Could not schedule GLFW cursor cleanup because the Minecraft client is unavailable!");
+            }
+        }
+
+    }
+
+    private static final class CustomCursorRetirement implements CursorRegistry.Retirement<CustomCursor> {
+
+        @Override
+        public boolean markRetired(@NotNull CustomCursor cursor) {
+            CLIENT_TICK_CURSOR.retireCustomCursor(cursor);
+            return CURSOR_HANDLE_LIFECYCLE.requestDestruction(cursor.nativeHandle);
+        }
+
+        @Override
+        public void executeRetirement(@NotNull CustomCursor cursor) {
+            CURSOR_HANDLE_LIFECYCLE.executeDestruction(cursor.nativeHandle);
+        }
+
+    }
+
+    private static final class GlfwNativeOperations implements CursorHandleLifecycle.NativeOperations {
+
+        @Override
+        public void prepareForShutdown() {
+            Minecraft minecraft = Minecraft.getInstance();
+            if (minecraft != null && minecraft.getWindow() != null) GLFW.glfwSetCursor(minecraft.getWindow().getWindow(), 0L);
+        }
+
+        @Override
+        public void destroyCursor(long nativeHandle) {
+            destroyNativeCursor(nativeHandle);
         }
 
     }
