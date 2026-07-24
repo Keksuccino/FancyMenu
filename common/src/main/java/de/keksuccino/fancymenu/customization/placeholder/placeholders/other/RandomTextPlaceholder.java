@@ -2,13 +2,13 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.other;
 
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
-import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.TaskExecutor;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
+import de.keksuccino.fancymenu.util.threading.AsyncRefreshingValueCache;
 import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.math.MathUtils;
 import org.apache.logging.log4j.LogManager;
@@ -22,21 +22,29 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.LongSupplier;
 
 public class RandomTextPlaceholder extends Placeholder {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final long CONTENT_RELOAD_COOLDOWN_MS = 30000L; // 30 seconds
-    // Cache structure: path/url -> Pair<lastLoadTime, List<lines>>
-    private static final Map<String, Pair<Long, List<String>>> CONTENT_CACHE = new ConcurrentHashMap<>();
-    // Track sources currently being loaded to prevent multiple simultaneous reads
-    private static final Set<String> LOADING_SOURCES = Collections.synchronizedSet(new HashSet<>());
+    private static final AsyncRefreshingValueCache<String, List<String>> CONTENT_CACHE = createContentCache(task -> TaskExecutor.execute(task, false), RandomTextPlaceholder::loadSource, System::currentTimeMillis);
 
     public static Map<String, RandomTextPackage> randomTextIntervals = new HashMap<>();
 
+    private final AsyncRefreshingValueCache<String, List<String>> contentCache;
+
     public RandomTextPlaceholder() {
+        this(CONTENT_CACHE);
+    }
+
+    RandomTextPlaceholder(@NotNull AsyncRefreshingValueCache.TaskLauncher taskLauncher, @NotNull AsyncRefreshingValueCache.ValueLoader<String, List<String>> sourceLoader, @NotNull LongSupplier timeSource) {
+        this(createContentCache(taskLauncher, sourceLoader, timeSource));
+    }
+
+    private RandomTextPlaceholder(@NotNull AsyncRefreshingValueCache<String, List<String>> contentCache) {
         super("randomtext");
+        this.contentCache = contentCache;
     }
 
     @Override
@@ -83,79 +91,40 @@ public class RandomTextPlaceholder extends Placeholder {
         return p.currentText != null ? p.currentText : "";
     }
     
-    private List<String> getCachedOrLoadContent(String pathOrUrl) {
-        Pair<Long, List<String>> cached = CONTENT_CACHE.get(pathOrUrl);
-        long currentTime = System.currentTimeMillis();
-        
-        // Check if we have cached content
-        if (cached != null) {
-            // For plain text, never expire the cache since it doesn't change
-            if (isPlainText(pathOrUrl)) {
-                return cached.getSecond();
-            }
-            
-            // If cache is still valid, return it
-            if ((currentTime - cached.getFirst()) < CONTENT_RELOAD_COOLDOWN_MS) {
-                return cached.getSecond();
-            }
-            
-            // Cache expired, trigger async reload if not already loading
-            if (!LOADING_SOURCES.contains(pathOrUrl)) {
-                triggerAsyncLoad(pathOrUrl);
-            }
-            
-            // Return existing cached content while reloading
-            return cached.getSecond();
-        }
-        
-        // No cache exists, trigger async load if not already loading
-        if (!LOADING_SOURCES.contains(pathOrUrl)) {
-            triggerAsyncLoad(pathOrUrl);
-        }
-        
-        // Return empty for first load
-        return null;
+    @Nullable
+    List<String> getCachedOrLoadContent(@NotNull String pathOrUrl) {
+        long refreshIntervalMillis = isPlainText(pathOrUrl) ? AsyncRefreshingValueCache.NO_REFRESH : CONTENT_RELOAD_COOLDOWN_MS;
+        return this.contentCache.getOrLoad(pathOrUrl, refreshIntervalMillis);
+    }
+
+    boolean isSourceLoading(@NotNull String pathOrUrl) {
+        return this.contentCache.isLoading(pathOrUrl);
+    }
+
+    void clearContentCache() {
+        this.contentCache.clear();
+    }
+
+    @NotNull
+    private static AsyncRefreshingValueCache<String, List<String>> createContentCache(@NotNull AsyncRefreshingValueCache.TaskLauncher taskLauncher, @NotNull AsyncRefreshingValueCache.ValueLoader<String, List<String>> sourceLoader, @NotNull LongSupplier timeSource) {
+        return new AsyncRefreshingValueCache<>(taskLauncher, source -> List.copyOf(sourceLoader.load(source)), (source, exception) -> {
+            LOGGER.error("[FANCYMENU] Failed to read source for RandomTextPlaceholder: " + source, exception);
+            return List.of();
+        }, (source, exception) -> LOGGER.error("[FANCYMENU] Failed to start the asynchronous Random Text source read: " + source, exception), timeSource);
+    }
+
+    @NotNull
+    private static List<String> loadSource(@NotNull String source) {
+        if (isUrl(source)) return loadFromUrl(source);
+        if (isPlainText(source)) return parsePlainText(source);
+        return loadFromFile(source);
     }
     
-    private void triggerAsyncLoad(String pathOrUrl) {
-        // Mark source as loading
-        LOADING_SOURCES.add(pathOrUrl);
-        
-        // Execute loading asynchronously
-        TaskExecutor.execute(() -> {
-            try {
-                List<String> lines;
-                
-                if (isUrl(pathOrUrl)) {
-                    // Load from URL
-                    lines = loadFromUrl(pathOrUrl);
-                } else if (isPlainText(pathOrUrl)) {
-                    // Parse plain text
-                    lines = parsePlainText(pathOrUrl);
-                } else {
-                    // Load from local file
-                    lines = loadFromFile(pathOrUrl);
-                }
-                
-                // Update cache with new content
-                CONTENT_CACHE.put(pathOrUrl, Pair.of(System.currentTimeMillis(), lines));
-                
-            } catch (Exception e) {
-                LOGGER.error("[FANCYMENU] Failed to read source for RandomTextPlaceholder: " + pathOrUrl, e);
-                // Cache empty result on error to avoid repeated attempts
-                CONTENT_CACHE.put(pathOrUrl, Pair.of(System.currentTimeMillis(), new ArrayList<>()));
-            } finally {
-                // Always remove from loading set
-                LOADING_SOURCES.remove(pathOrUrl);
-            }
-        }, false); // Execute in background thread
-    }
-    
-    private boolean isUrl(String path) {
+    static boolean isUrl(String path) {
         return path != null && (path.startsWith("http://") || path.startsWith("https://"));
     }
     
-    private List<String> loadFromUrl(String url) {
+    private static List<String> loadFromUrl(String url) {
         if (!WebUtils.isInternetAvailable()) {
             return new ArrayList<>();
         }
@@ -180,7 +149,7 @@ public class RandomTextPlaceholder extends Placeholder {
         return lines;
     }
     
-    private List<String> loadFromFile(String pathString) {
+    private static List<String> loadFromFile(String pathString) {
         try {
             ResourceSource source = ResourceSource.of(pathString, ResourceSourceType.LOCAL);
             File path = source.getValidatedLocalFile();
@@ -203,7 +172,7 @@ public class RandomTextPlaceholder extends Placeholder {
         }
     }
     
-    private boolean isPlainText(String path) {
+    static boolean isPlainText(String path) {
         // If it's a URL, it's not plain text
         if (isUrl(path)) return false;
         
@@ -216,7 +185,8 @@ public class RandomTextPlaceholder extends Placeholder {
         return !looksLikeFilePath;
     }
     
-    private List<String> parsePlainText(String plainText) {
+    @NotNull
+    static List<String> parsePlainText(@NotNull String plainText) {
         // Split by escaped \n
         String[] lines = plainText.split("\\\\n");
         List<String> result = new ArrayList<>();

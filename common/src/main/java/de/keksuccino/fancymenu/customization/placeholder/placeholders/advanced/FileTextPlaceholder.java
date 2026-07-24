@@ -3,12 +3,12 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.advanced;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.TaskExecutor;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.file.LocalSourcePathResolver;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
+import de.keksuccino.fancymenu.util.threading.AsyncRefreshingValueCache;
 import net.minecraft.client.resources.language.I18n;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,20 +20,28 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.LongSupplier;
 
 public class FileTextPlaceholder extends Placeholder {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final long FILE_READ_COOLDOWN_MS = 1000L;
     private static final long URL_READ_COOLDOWN_MS = 10000L;
-    // Cache structure: path/url -> Pair<lastReadTime, fileContent>
-    private static final Map<String, Pair<Long, List<String>>> FILE_CACHE = new ConcurrentHashMap<>();
-    // Track files/urls currently being loaded to prevent multiple simultaneous reads
-    private static final Set<String> LOADING_SOURCES = Collections.synchronizedSet(new HashSet<>());
+    private static final AsyncRefreshingValueCache<String, List<String>> FILE_CACHE = createContentCache(task -> TaskExecutor.execute(task, false), FileTextPlaceholder::loadSource, System::currentTimeMillis);
+
+    private final AsyncRefreshingValueCache<String, List<String>> contentCache;
 
     public FileTextPlaceholder() {
+        this(FILE_CACHE);
+    }
+
+    FileTextPlaceholder(@NotNull AsyncRefreshingValueCache.TaskLauncher taskLauncher, @NotNull AsyncRefreshingValueCache.ValueLoader<String, List<String>> sourceLoader, @NotNull LongSupplier timeSource) {
+        this(createContentCache(taskLauncher, sourceLoader, timeSource));
+    }
+
+    private FileTextPlaceholder(@NotNull AsyncRefreshingValueCache<String, List<String>> contentCache) {
         super("file_text");
+        this.contentCache = contentCache;
     }
 
     @Override
@@ -99,74 +107,38 @@ public class FileTextPlaceholder extends Placeholder {
         return String.join(separator.replace("\\n", "\n"), lines);
     }
 
-    private List<String> getCachedOrLoadAsync(String path) {
-        Pair<Long, List<String>> cached = FILE_CACHE.get(path);
-        long currentTime = System.currentTimeMillis();
-        
-        // Determine the appropriate cooldown based on source type
+    @Nullable
+    List<String> getCachedOrLoadAsync(@NotNull String path) {
         long cooldownMs = isUrl(path) ? URL_READ_COOLDOWN_MS : FILE_READ_COOLDOWN_MS;
-        
-        // Check if we have cached content
-        if (cached != null) {
-            // If cache is still valid, return it
-            if ((currentTime - cached.getFirst()) < cooldownMs) {
-                return cached.getSecond();
-            }
-            
-            // Cache expired, trigger async reload if not already loading
-            if (!LOADING_SOURCES.contains(path)) {
-                triggerAsyncLoad(path);
-            }
-            
-            // Return existing cached content while reloading
-            return cached.getSecond();
-        }
-        
-        // No cache exists, trigger async load if not already loading
-        if (!LOADING_SOURCES.contains(path)) {
-            triggerAsyncLoad(path);
-        }
-        
-        // Return empty for first load
-        return null;
+        return this.contentCache.getOrLoad(path, cooldownMs);
     }
-    
-    private void triggerAsyncLoad(String path) {
-        // Mark source as loading
-        LOADING_SOURCES.add(path);
-        
-        // Execute loading asynchronously
-        TaskExecutor.execute(() -> {
-            try {
-                List<String> lines;
-                
-                if (isUrl(path)) {
-                    // Load from URL
-                    lines = loadFromUrl(path);
-                } else {
-                    // Load from local file
-                    lines = loadFromFile(path);
-                }
-                
-                // Update cache with new content
-                FILE_CACHE.put(path, Pair.of(System.currentTimeMillis(), lines));
-                
-            } catch (Exception e) {
-                LOGGER.error("[FANCYMENU] Failed to read source asynchronously: " + path, e);
-                // Cache empty result on error to avoid repeated attempts
-                FILE_CACHE.put(path, Pair.of(System.currentTimeMillis(), new ArrayList<>()));
-            } finally {
-                // Always remove from loading set
-                LOADING_SOURCES.remove(path);
-            }
-        }, false); // Execute in background thread, not main thread
+
+    boolean isSourceLoading(@NotNull String path) {
+        return this.contentCache.isLoading(path);
+    }
+
+    void clearContentCache() {
+        this.contentCache.clear();
+    }
+
+    @NotNull
+    private static AsyncRefreshingValueCache<String, List<String>> createContentCache(@NotNull AsyncRefreshingValueCache.TaskLauncher taskLauncher, @NotNull AsyncRefreshingValueCache.ValueLoader<String, List<String>> sourceLoader, @NotNull LongSupplier timeSource) {
+        return new AsyncRefreshingValueCache<>(taskLauncher, source -> List.copyOf(sourceLoader.load(source)), (source, exception) -> {
+            LOGGER.error("[FANCYMENU] Failed to read source asynchronously: " + source, exception);
+            return List.of();
+        }, (source, exception) -> LOGGER.error("[FANCYMENU] Failed to start the asynchronous source read: " + source, exception), timeSource);
+    }
+
+    @NotNull
+    private static List<String> loadSource(@NotNull String source) throws IOException {
+        return isUrl(source) ? loadFromUrl(source) : loadFromFile(source);
     }
     
     static boolean isUrl(String path) {
         return path != null && (path.startsWith("http://") || path.startsWith("https://"));
     }
     
-    private List<String> loadFromUrl(String url) throws IOException {
+    private static List<String> loadFromUrl(String url) throws IOException {
         if (!WebUtils.isInternetAvailable()) {
             return new ArrayList<>();
         }
@@ -182,7 +154,7 @@ public class FileTextPlaceholder extends Placeholder {
         }
     }
     
-    private List<String> loadFromFile(String filePath) {
+    private static List<String> loadFromFile(String filePath) {
         try {
             return loadFromFile(filePath, LocalSourcePathResolver.createForGameAndMinecraftDirectories());
         } catch (IOException | RuntimeException ignored) {
