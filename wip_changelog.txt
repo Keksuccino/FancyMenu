@@ -2,7 +2,6 @@
 CHANGELOG | FANCYMENU v3.9.9 [ W I P !! Not public yet !! ]
 
 - Fixed the "Is Layout Enabled" requirement stopping after the first enabled layout instead of checking for later matches
-- Fixed comma-separated GUI-scale equality values being treated as simultaneous conditions instead of alternatives
 - Fixed Ceiling and Floor placeholders adding a `.0` suffix to whole-number results
 - Fixed the "Is Element Focused" requirement using a misspelled description localization key
 - Fixed the File Text placeholder treating `\n` separators as literal text
