@@ -143,7 +143,7 @@ public class FileTextPlaceholder extends Placeholder {
             return new ArrayList<>();
         }
         
-        InputStream stream = WebUtils.openResourceStream(url);
+        InputStream stream = WebUtils.openResourceStream(url, WebUtils.WebResourceType.TEXT);
         if (stream == null) {
             LOGGER.warn("[FANCYMENU] Failed to open URL stream: " + url);
             return new ArrayList<>();
