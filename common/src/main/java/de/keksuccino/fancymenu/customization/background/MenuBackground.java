@@ -199,6 +199,13 @@ public abstract class MenuBackground<B extends MenuBackground<?>> implements Ren
     }
 
     /**
+     * Gets called when this exact background instance is permanently discarded and will never be rendered again.<br>
+     * Screen close and layout disable paths must not call this because layouts intentionally keep background instances warm for reuse.
+     */
+    public void onDestroyBackground() {
+    }
+
+    /**
      * The memory of a {@link MenuBackground} remembers variables across instance rebuilding.<br>
      * It can be used if a background needs to access data of its ancestors.<br><br>
      *
