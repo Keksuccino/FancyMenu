@@ -11,8 +11,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(value = GLFW.class, remap = false)
 public class MixinGLFW {
 
-    @Inject(method = "glfwSetCursor", at = @At("HEAD"))
-    private static void on_glfwSetCursor_FancyMenu(long window, long cursor, CallbackInfo ci) {
+    @Inject(method = "glfwSetCursor", at = @At("RETURN"))
+    private static void after_glfwSetCursor_FancyMenu(long window, long cursor, CallbackInfo ci) {
         GlfwCursorTracker.onGlfwSetCursor(window, cursor);
     }
 
@@ -21,10 +21,14 @@ public class MixinGLFW {
         GlfwCursorTracker.onGlfwCreateStandardCursor(shape, cir.getReturnValue());
     }
 
-    @Inject(method = "glfwDestroyCursor", at = @At("HEAD"))
-    private static void on_glfwDestroyCursor_FancyMenu(long cursor, CallbackInfo ci) {
+    @Inject(method = "glfwDestroyWindow", at = @At("RETURN"))
+    private static void after_glfwDestroyWindow_FancyMenu(long window, CallbackInfo ci) {
+        GlfwCursorTracker.onGlfwDestroyWindow(window);
+    }
+
+    @Inject(method = "glfwDestroyCursor", at = @At("RETURN"))
+    private static void after_glfwDestroyCursor_FancyMenu(long cursor, CallbackInfo ci) {
         GlfwCursorTracker.onGlfwDestroyCursor(cursor);
     }
 
 }
-
