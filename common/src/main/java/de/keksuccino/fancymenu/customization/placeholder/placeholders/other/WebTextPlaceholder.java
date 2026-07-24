@@ -20,30 +20,28 @@ import java.util.*;
 public class WebTextPlaceholder extends Placeholder {
 
     private static final Logger LOGGER = LogManager.getLogger();
-
-    protected static volatile Map<String, List<String>> cachedPlaceholders = new HashMap<>();
-    protected static volatile List<String> currentlyUpdatingPlaceholders = new ArrayList<>();
-    protected static volatile List<String> invalidWebPlaceholderLinks = new ArrayList<>();
-
-    protected static boolean eventsRegistered = false;
+    private static final Object EVENT_REGISTRATION_LOCK = new Object();
+    private static final WebTextPlaceholderCache CACHE = new WebTextPlaceholderCache(WebTextPlaceholder::startWebTextLoaderTask, link -> WebUtils.isValidUrl(link) ? WebTextPlaceholderCache.LoadResult.valid(WebUtils.getPlainTextContentOfPage(new URL(link))) : WebTextPlaceholderCache.LoadResult.invalid());
+    private static boolean eventsRegistered;
 
     public WebTextPlaceholder() {
         super("webtext");
-        if (!eventsRegistered) {
-            EventHandler.INSTANCE.registerListenersOf(WebTextPlaceholder.class);
-            eventsRegistered = true;
+        registerEventsIfNeeded();
+    }
+
+    private static void registerEventsIfNeeded() {
+        synchronized (EVENT_REGISTRATION_LOCK) {
+            if (!eventsRegistered) {
+                EventHandler.INSTANCE.registerListenersOf(WebTextPlaceholder.class);
+                eventsRegistered = true;
+            }
         }
     }
 
     @EventListener
     public static void onReload(ModReloadEvent e) {
-        try {
-            cachedPlaceholders.clear();
-            invalidWebPlaceholderLinks.clear();
-            LOGGER.info("[FANCYMENU] V2 WebTextPlaceholder cache successfully cleared!");
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        CACHE.reload();
+        LOGGER.info("[FANCYMENU] V2 WebTextPlaceholder cache successfully cleared!");
     }
 
     @Override
@@ -51,74 +49,34 @@ public class WebTextPlaceholder extends Placeholder {
         String link = dps.values.get("link");
         if (link != null) {
             link = StringUtils.convertFormatCodes(link, "§", "&");
-            if (!isInvalidWebPlaceholderLink(link)) {
-                List<String> lines = getCachedWebPlaceholder(dps.placeholderString);
-                if (lines != null) {
-                    if (!lines.isEmpty()) {
-                        return lines.get(0);
-                    }
-                } else {
-                    if (!isWebPlaceholderUpdating(dps.placeholderString)) {
-                        cacheWebPlaceholder(dps.placeholderString, link);
-                    }
-                    return "";
-                }
-            }
+            WebTextPlaceholderCache.Lookup lookup = CACHE.getOrLoad(dps.placeholderString, link);
+            if (lookup.status() == WebTextPlaceholderCache.Status.INVALID) return null;
+            if (lookup.status() == WebTextPlaceholderCache.Status.LOADING) return "";
+            if (!lookup.lines().isEmpty()) return lookup.lines().get(0);
         }
         return null;
     }
 
     protected static boolean isInvalidWebPlaceholderLink(String link) {
-        try {
-            return invalidWebPlaceholderLinks.contains(link);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return true;
+        return CACHE.isInvalidLink(link);
     }
 
     protected static List<String> getCachedWebPlaceholder(String placeholder) {
-        try {
-            return cachedPlaceholders.get(placeholder);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
+        return CACHE.getCached(placeholder);
     }
 
     protected static boolean isWebPlaceholderUpdating(String placeholder) {
-        try {
-            return currentlyUpdatingPlaceholders.contains(placeholder);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return true;
+        return CACHE.isLoading(placeholder);
     }
 
     protected static void cacheWebPlaceholder(String placeholder, String link) {
-        try {
-            if (!currentlyUpdatingPlaceholders.contains(placeholder)) {
-                currentlyUpdatingPlaceholders.add(placeholder);
-                new Thread(() -> {
-                    try {
-                        if (WebUtils.isValidUrl(link)) {
-                            cachedPlaceholders.put(placeholder, WebUtils.getPlainTextContentOfPage(new URL(link)));
-                        } else {
-                            invalidWebPlaceholderLinks.add(link);
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    try {
-                        currentlyUpdatingPlaceholders.remove(placeholder);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }).start();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        CACHE.loadIfAbsent(placeholder, link);
+    }
+
+    private static void startWebTextLoaderTask(Runnable task) {
+        Thread loaderThread = new Thread(task, "WebTextPlaceholder-WebLoader");
+        loaderThread.setDaemon(true);
+        loaderThread.start();
     }
 
     @Override
