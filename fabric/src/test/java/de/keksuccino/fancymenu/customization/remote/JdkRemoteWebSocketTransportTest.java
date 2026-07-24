@@ -7,12 +7,14 @@ import java.net.URI;
 import java.net.http.WebSocket;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class JdkRemoteWebSocketTransportTest {
@@ -97,6 +99,21 @@ class JdkRemoteWebSocketTransportTest {
         assertEquals("done", harness.webSocket.closeReason);
     }
 
+    @Test
+    void shutdownIsIdempotentAndRejectsLateConnections() {
+        Harness harness = new Harness(8, 2);
+        CountingListener listener = new CountingListener();
+
+        harness.transport.shutdown();
+        harness.transport.shutdown();
+        RemoteWebSocketTransport.Connection rejected = harness.connect(listener);
+
+        assertTrue(harness.transport.isTerminated());
+        assertFalse(rejected.isOpen());
+        assertInstanceOf(RejectedExecutionException.class, listener.error.get());
+        assertEquals(1, listener.errorCallbacks.get());
+    }
+
     private static final class Harness {
 
         private final AtomicReference<WebSocket.Listener> listener = new AtomicReference<>();
@@ -126,6 +143,8 @@ class JdkRemoteWebSocketTransportTest {
         private final AtomicInteger textCallbacks = new AtomicInteger();
         private final AtomicInteger closeCallbacks = new AtomicInteger();
         private final AtomicInteger closeStatus = new AtomicInteger(-1);
+        private final AtomicInteger errorCallbacks = new AtomicInteger();
+        private final AtomicReference<Throwable> error = new AtomicReference<>();
 
         @Override
         public void onOpen(@NotNull RemoteWebSocketTransport.Connection connection) {
@@ -150,6 +169,8 @@ class JdkRemoteWebSocketTransportTest {
 
         @Override
         public void onError(@NotNull RemoteWebSocketTransport.Connection connection, @NotNull Throwable error) {
+            this.error.set(error);
+            this.errorCallbacks.incrementAndGet();
         }
     }
 

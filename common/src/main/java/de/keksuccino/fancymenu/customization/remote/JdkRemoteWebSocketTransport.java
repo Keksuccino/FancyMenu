@@ -12,6 +12,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Java 17 WebSocket transport with bounded retained message aggregation for legacy Minecraft targets. */
@@ -23,22 +24,39 @@ final class JdkRemoteWebSocketTransport implements RemoteWebSocketTransport {
     private final int maxInboundMessageUtf8Bytes;
     private final int maxInboundMessageFragments;
     private final WebSocketConnector connector;
+    private final Runnable shutdownAction;
+    private final java.util.function.BooleanSupplier terminationChecker;
+    private final AtomicBoolean shutdownStarted = new AtomicBoolean();
 
     JdkRemoteWebSocketTransport(int maxInboundMessageUtf8Bytes, int maxInboundMessageFragments) {
-        this(maxInboundMessageUtf8Bytes, maxInboundMessageFragments, createConnector());
+        this(maxInboundMessageUtf8Bytes, maxInboundMessageFragments, new OwnedConnector());
+    }
+
+    private JdkRemoteWebSocketTransport(int maxInboundMessageUtf8Bytes, int maxInboundMessageFragments, @NotNull OwnedConnector connector) {
+        this(maxInboundMessageUtf8Bytes, maxInboundMessageFragments, connector, connector::shutdown, connector::isTerminated);
     }
 
     JdkRemoteWebSocketTransport(int maxInboundMessageUtf8Bytes, int maxInboundMessageFragments, @NotNull WebSocketConnector connector) {
+        this(maxInboundMessageUtf8Bytes, maxInboundMessageFragments, connector, () -> {}, () -> true);
+    }
+
+    private JdkRemoteWebSocketTransport(int maxInboundMessageUtf8Bytes, int maxInboundMessageFragments, @NotNull WebSocketConnector connector, @NotNull Runnable shutdownAction, @NotNull java.util.function.BooleanSupplier terminationChecker) {
         if (maxInboundMessageUtf8Bytes <= 0) throw new IllegalArgumentException("maxInboundMessageUtf8Bytes must be positive");
         if (maxInboundMessageFragments <= 0) throw new IllegalArgumentException("maxInboundMessageFragments must be positive");
         this.maxInboundMessageUtf8Bytes = maxInboundMessageUtf8Bytes;
         this.maxInboundMessageFragments = maxInboundMessageFragments;
         this.connector = Objects.requireNonNull(connector);
+        this.shutdownAction = Objects.requireNonNull(shutdownAction);
+        this.terminationChecker = Objects.requireNonNull(terminationChecker);
     }
 
     @Override
     public @NotNull Connection connect(@NotNull URI uri, @NotNull Listener listener) {
         JdkConnection connection = new JdkConnection(listener);
+        if (this.shutdownStarted.get()) {
+            connection.notifyError(new RejectedExecutionException("Remote WebSocket transport is shut down"));
+            return connection;
+        }
         JdkListener adapter = new JdkListener(connection, listener, this.maxInboundMessageUtf8Bytes, this.maxInboundMessageFragments);
         try {
             this.connector.connect(Objects.requireNonNull(uri), adapter).whenComplete((webSocket, throwable) -> {
@@ -50,20 +68,44 @@ final class JdkRemoteWebSocketTransport implements RemoteWebSocketTransport {
         return connection;
     }
 
-    private static WebSocketConnector createConnector() {
-        ExecutorService executor = Executors.newCachedThreadPool(runnable -> {
-            Thread thread = new Thread(runnable, "FancyMenu-RemoteServerConnection-IO");
-            thread.setDaemon(true);
-            return thread;
-        });
-        HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(15)).executor(executor).build();
-        return (uri, listener) -> client.newWebSocketBuilder().connectTimeout(Duration.ofSeconds(15)).buildAsync(uri, listener);
+    @Override
+    public void shutdown() {
+        if (this.shutdownStarted.compareAndSet(false, true)) this.shutdownAction.run();
+    }
+
+    @Override
+    public boolean isTerminated() {
+        return this.shutdownStarted.get() && this.terminationChecker.getAsBoolean();
     }
 
     @FunctionalInterface
     interface WebSocketConnector {
 
         @NotNull CompletableFuture<WebSocket> connect(@NotNull URI uri, @NotNull WebSocket.Listener listener);
+    }
+
+    private static final class OwnedConnector implements WebSocketConnector {
+
+        private final ExecutorService executor = Executors.newCachedThreadPool(runnable -> {
+            Thread thread = new Thread(runnable, "FancyMenu-RemoteServerConnection-IO");
+            thread.setDaemon(true);
+            return thread;
+        });
+        private final HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(15)).executor(this.executor).build();
+
+        @Override
+        public @NotNull CompletableFuture<WebSocket> connect(@NotNull URI uri, @NotNull WebSocket.Listener listener) {
+            return this.client.newWebSocketBuilder().connectTimeout(Duration.ofSeconds(15)).buildAsync(uri, listener);
+        }
+
+        private void shutdown() {
+            this.executor.shutdownNow();
+            RemoteShutdownSupport.awaitTerminationPreservingInterrupt(this.executor);
+        }
+
+        private boolean isTerminated() {
+            return this.executor.isTerminated();
+        }
     }
 
     private static final class JdkConnection implements Connection {
