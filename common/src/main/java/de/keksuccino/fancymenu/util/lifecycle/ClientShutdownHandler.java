@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
+import de.keksuccino.fancymenu.util.resource.resources.texture.TextureManagerReleaseDispatcher;
 import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaDeferredPlayerReleaseTracker;
@@ -40,7 +41,6 @@ public final class ClientShutdownHandler {
             // Stop recurring work before any resource it can touch is disposed. All managed workers are daemons as a final fallback.
             runCleanup("FancyMenu executors", FancyMenuExecutors::shutdownAll);
             runCleanup("deferred Watermedia players", WatermediaDeferredPlayerReleaseTracker::shutdown);
-            runCleanup("main-thread task queue", MainThreadTaskExecutor::shutdown);
             runCleanup("user variables", VariableHandler::shutdown);
             boolean mcefPresent = isMCEFPresentSafely();
             if (mcefPresent) {
@@ -49,6 +49,8 @@ public final class ClientShutdownHandler {
             }
             runCleanup("panorama renderers", PanoramaHandler::shutdown);
             runCleanup("resources", ResourceHandlers::shutdownAll);
+            runCleanup("pending texture-manager releases", TextureManagerReleaseDispatcher::flushPendingReleases);
+            runCleanup("main-thread task queue", MainThreadTaskExecutor::shutdown);
             if (mcefPresent) {
                 runCleanup("MCEF action bridge", ActionBridge::dispose);
             }

@@ -25,7 +25,6 @@ import org.jetbrains.annotations.Nullable;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -36,10 +35,7 @@ public class ApngTexture implements ITexture, PlayableResource {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    @NotNull
-    protected volatile List<ApngFrame> frames = new ArrayList<>();
-    @Nullable
-    protected volatile ApngTexture.ApngFrame current = null;
+    protected final AnimatedTextureFrameStore<ApngFrame> frameStore = new AnimatedTextureFrameStore<>();
     @NotNull
     protected volatile AspectRatio aspectRatio = new AspectRatio(10, 10);
     protected volatile int width = 10;
@@ -47,14 +43,12 @@ public class ApngTexture implements ITexture, PlayableResource {
     protected volatile long lastResourceLocationCall = -1;
     protected final AtomicBoolean tickerThreadRunning = new AtomicBoolean(false);
     protected final AtomicBoolean decoded = new AtomicBoolean(false);
-    protected volatile boolean allFramesDecoded = false;
     protected final AtomicInteger cycles = new AtomicInteger(0);
     /** How many times the APNG should loop. Value <= 0 means infinite loops. **/
     protected final AtomicInteger numPlays = new AtomicInteger(0);
     protected Identifier sourceLocation;
     protected File sourceFile;
     protected String sourceURL;
-    protected final AtomicBoolean loadingCompleted = new AtomicBoolean(false);
     protected final AtomicBoolean loadingFailed = new AtomicBoolean(false);
     protected final String uniqueId = ScreenCustomization.generateUniqueIdentifier();
     protected int frameRegistrationCounter = 0;
@@ -243,7 +237,6 @@ public class ApngTexture implements ITexture, PlayableResource {
                 populateTextureWithPrimitiveDecoder(texture, apngData, apngTextureName);
             }
         }
-        texture.decoded.set(true);
         CloseableUtils.closeQuietly(readInput);
     }
 
@@ -274,39 +267,33 @@ public class ApngTexture implements ITexture, PlayableResource {
     }
 
     protected static void populateTextureWithPrimitiveDecoder(@NotNull ApngTexture texture, @NotNull byte[] apngData, @NotNull String apngTextureName) {
-        texture.watermediaFallbackData = null;
+        long frameGeneration = texture.frameStore.generation();
+        if (!texture.frameStore.runIfGenerationActive(frameGeneration, () -> texture.watermediaFallbackData = null)) return;
         DecodedApngImage decodedImage = decodeApng(new ByteArrayInputStream(apngData), apngTextureName);
         if (decodedImage == null) {
             LOGGER.error("[FANCYMENU] Failed to read APNG image, because DecodedApngImage was NULL: " + apngTextureName);
-            texture.loadingFailed.set(true);
+            texture.frameStore.runIfGenerationActive(frameGeneration, texture::publishPrimitiveFailure);
             return;
         }
-        texture.width = decodedImage.imageWidth;
-        texture.height = decodedImage.imageHeight;
-        texture.aspectRatio = new AspectRatio(decodedImage.imageWidth, decodedImage.imageHeight);
-        texture.numPlays.set(decodedImage.numPlays);
-        texture.decoded.set(true);
+        if (!texture.frameStore.runIfGenerationActive(frameGeneration, () -> texture.publishPrimitiveMetadata(decodedImage))) return;
         try {
             deliverApngFrames(decodedImage.sequence(), apngTextureName, true, frame -> {
                 if (frame != null) {
                     try {
-                        if ((frame.nativeImage == null) && (frame.frameInputStream != null)) {
-                            frame.nativeImage = NativeImage.read(frame.frameInputStream);
-                        }
+                        NativeImage image = NativeImage.read(frame.frameInputStream);
+                        if (image != null) frame.textureEntry.adopt(image);
                     } catch (Exception ex) {
                         LOGGER.error("[FANCYMENU] Failed to read frame of APNG image into NativeImage: " + apngTextureName, ex);
                     }
-                    CloseableUtils.closeQuietly(frame.closeAfterLoading);
-                    CloseableUtils.closeQuietly(frame.frameInputStream);
-                    texture.frames.add(frame);
+                    frame.closeDecoderInputs();
+                    texture.frameStore.add(frameGeneration, frame);
                 }
             });
-            texture.loadingCompleted.set(true);
+            texture.frameStore.markComplete(frameGeneration);
         } catch (Exception ex) {
-            texture.loadingFailed.set(true);
+            texture.frameStore.runIfGenerationActive(frameGeneration, () -> texture.loadingFailed.set(true));
             LOGGER.error("[FANCYMENU] Failed to read frames of APNG image: " + apngTextureName, ex);
         }
-        texture.allFramesDecoded = true;
     }
 
     protected static boolean populateTextureWithWatermedia(@NotNull ApngTexture texture, @NotNull byte[] apngData, @NotNull String apngTextureName) {
@@ -358,9 +345,22 @@ public class ApngTexture implements ITexture, PlayableResource {
     protected ApngTexture() {
     }
 
+    protected void publishPrimitiveMetadata(@NotNull DecodedApngImage decodedImage) {
+        this.width = decodedImage.imageWidth;
+        this.height = decodedImage.imageHeight;
+        this.aspectRatio = new AspectRatio(decodedImage.imageWidth, decodedImage.imageHeight);
+        this.numPlays.set(decodedImage.numPlays);
+        this.decoded.set(true);
+    }
+
+    protected void publishPrimitiveFailure() {
+        this.loadingFailed.set(true);
+        this.decoded.set(true);
+    }
+
     @SuppressWarnings("all")
     protected void startTickerIfNeeded() {
-        if (!this.tickerThreadRunning.get() && !this.frames.isEmpty() && !this.maxLoopsReached && !this.closed.get()) {
+        if (!this.tickerThreadRunning.get() && !this.frameStore.isEmpty() && !this.maxLoopsReached && !this.closed.get()) {
 
             this.tickerThreadRunning.set(true);
             this.lastResourceLocationCall = System.currentTimeMillis();
@@ -369,25 +369,31 @@ public class ApngTexture implements ITexture, PlayableResource {
 
                 //Automatically stop thread if APNG was inactive for >=10 seconds
                 while ((this.lastResourceLocationCall + 10000) > System.currentTimeMillis()) {
-                    if (this.frames.isEmpty() || this.closed.get()) break;
+                    if (this.frameStore.isEmpty() || this.closed.get()) break;
                     //Don't tick frame if max loops reached
                     if (this.maxLoopsReached) break;
                     boolean sleep = false;
                     try {
-                        boolean cachedAllDecoded = this.allFramesDecoded;
-                        //Cache frames to avoid possible concurrent modification exceptions
-                        List<ApngFrame> cachedFrames = new ArrayList<>(this.frames);
+                        AnimatedTextureFrameStore.Snapshot<ApngFrame> frameSnapshot = this.frameStore.snapshot();
+                        List<ApngFrame> cachedFrames = frameSnapshot.frames();
+                        if (!this.frameStore.isGenerationActive(frameSnapshot.generation())) continue;
+                        boolean cachedAllDecoded = frameSnapshot.complete();
                         if (!cachedFrames.isEmpty()) {
                             //Set initial (first) frame if current is NULL
-                            if (this.current == null) {
-                                this.current = cachedFrames.get(0);
-                                this.maybeEmitStartEvent(cachedFrames, this.current);
-                                Thread.sleep(Math.max(20, cachedFrames.get(0).delayMs));
+                            ApngFrame currentFrame = frameSnapshot.current();
+                            if (currentFrame == null) {
+                                currentFrame = cachedFrames.get(0);
+                                if (this.frameStore.setCurrent(frameSnapshot.generation(), currentFrame)) {
+                                    this.maybeEmitStartEvent(cachedFrames, currentFrame);
+                                    Thread.sleep(Math.max(20, currentFrame.delayMs));
+                                } else {
+                                    continue;
+                                }
                             } else {
-                                this.maybeEmitStartEvent(cachedFrames, this.current);
+                                this.maybeEmitStartEvent(cachedFrames, currentFrame);
                             }
                             //Cache current frame to make sure it stays the same instance while working with it
-                            ApngFrame cachedCurrent = this.current;
+                            ApngFrame cachedCurrent = currentFrame;
                             if (cachedCurrent != null) {
                                 ApngFrame newCurrent = null;
                                 int currentIndexIncrement = cachedCurrent.index + 1;
@@ -416,8 +422,11 @@ public class ApngTexture implements ITexture, PlayableResource {
                                     }
                                 }
                                 if (newCurrent != null) {
-                                    this.current = newCurrent;
-                                    this.maybeEmitStartEvent(cachedFrames, this.current);
+                                    if (this.frameStore.setCurrent(frameSnapshot.generation(), newCurrent)) {
+                                        this.maybeEmitStartEvent(cachedFrames, newCurrent);
+                                    } else {
+                                        continue;
+                                    }
                                 }
                                 //Sleep for the new current frame's delay or sleep for 100ms if there's no new frame
                                 Thread.sleep(Math.max(20, (newCurrent != null) ? newCurrent.delayMs : 100));
@@ -461,20 +470,18 @@ public class ApngTexture implements ITexture, PlayableResource {
         if (this.closed.get()) return FULLY_TRANSPARENT_TEXTURE;
         this.lastResourceLocationCall = System.currentTimeMillis();
         this.startTickerIfNeeded();
-        ApngFrame frame = this.current;
+        ApngFrame frame = this.frameStore.current();
         if (frame != null) {
-            if ((frame.resourceLocation == null) && !frame.loaded && (frame.nativeImage != null)) {
+            if (frame.textureEntry.canRegister()) {
                 try {
                     this.frameRegistrationCounter++;
-                    frame.resourceLocation = Identifier.fromNamespaceAndPath("fancymenu", "dynamic/apng_frame_" + this.uniqueId + "_" + this.frameRegistrationCounter);
-                    frame.dynamicTexture = new DynamicTexture(frame.resourceLocation::toString, frame.nativeImage);
-                    Minecraft.getInstance().getTextureManager().register(frame.resourceLocation, frame.dynamicTexture);
+                    frame.textureEntry.register(Identifier.fromNamespaceAndPath("fancymenu", "dynamic/apng_frame_" + this.uniqueId + "_" + this.frameRegistrationCounter));
                 } catch (Exception ex) {
                     LOGGER.error("[FANCYMENU] Failed to register APNG frame to Minecraft's TextureManager!", ex);
                 }
-                frame.loaded = true;
             }
-            return (frame.resourceLocation != null) ? frame.resourceLocation : FULLY_TRANSPARENT_TEXTURE;
+            Identifier resourceLocation = frame.textureEntry.getIdentifier();
+            return (resourceLocation != null) ? resourceLocation : FULLY_TRANSPARENT_TEXTURE;
         }
         return null;
     }
@@ -520,7 +527,7 @@ public class ApngTexture implements ITexture, PlayableResource {
     public boolean isLoadingCompleted() {
         WatermediaAnimatedTextureBackend backend = this.resolveWatermediaBackend();
         if (backend != null) return backend.isLoadingCompleted();
-        return !this.closed.get() && !this.loadingFailed.get() && this.loadingCompleted.get();
+        return !this.closed.get() && !this.loadingFailed.get() && this.frameStore.isComplete();
     }
 
     @Override
@@ -537,12 +544,8 @@ public class ApngTexture implements ITexture, PlayableResource {
             return;
         }
         this.maxLoopsReached = false;
-        this.current = null;
         this.pendingStartEvent = true;
-        List<ApngFrame> frameList = new ArrayList<>(this.frames);
-        if (!frameList.isEmpty()) {
-            this.current = frameList.get(0);
-        }
+        this.frameStore.resetToFirst();
         this.cycles.set(0);
     }
 
@@ -671,14 +674,12 @@ public class ApngTexture implements ITexture, PlayableResource {
     }
 
     protected void preparePrimitiveFallbackState() {
-        this.loadingCompleted.set(false);
+        this.releasePrimitiveFrames();
         this.loadingFailed.set(false);
         this.decoded.set(false);
-        this.allFramesDecoded = false;
         this.maxLoopsReached = false;
         this.pendingStartEvent = true;
         this.cycles.set(0);
-        this.releasePrimitiveFrames();
     }
 
     protected void loadPrimitiveFallback(@NotNull String apngTextureName) {
@@ -711,22 +712,8 @@ public class ApngTexture implements ITexture, PlayableResource {
     }
 
     protected void releasePrimitiveFrames() {
-        for (ApngFrame frame : new ArrayList<>(this.frames)) {
-            try {
-                if (frame.dynamicTexture != null) frame.dynamicTexture.close();
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to close DynamicTexture of APNG frame!", ex);
-            }
-            try {
-                if (frame.nativeImage != null) frame.nativeImage.close();
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to close NativeImage of APNG frame!", ex);
-            }
-            frame.dynamicTexture = null;
-            frame.nativeImage = null;
-        }
-        this.frames = new ArrayList<>();
-        this.current = null;
+        if (this.closed.get()) this.frameStore.close();
+        else this.frameStore.clear();
     }
 
     @Nullable
@@ -803,22 +790,30 @@ public class ApngTexture implements ITexture, PlayableResource {
         return frameImage;
     }
 
-    public static class ApngFrame {
+    public static class ApngFrame implements AutoCloseable {
 
         protected final int index;
         protected final ByteArrayInputStream frameInputStream;
         protected final int delayMs;
         protected final ByteArrayOutputStream closeAfterLoading;
-        protected DynamicTexture dynamicTexture;
-        protected volatile NativeImage nativeImage;
-        protected Identifier resourceLocation;
-        protected boolean loaded = false;
+        protected final TextureManagerEntry<NativeImage, DynamicTexture> textureEntry = TextureManagerEntry.dynamicTexture();
 
         protected ApngFrame(int index, ByteArrayInputStream frameInputStream, int delayMs, ByteArrayOutputStream closeAfterLoading) {
             this.index = index;
             this.frameInputStream = frameInputStream;
             this.delayMs = delayMs;
             this.closeAfterLoading = closeAfterLoading;
+        }
+
+        protected void closeDecoderInputs() {
+            CloseableUtils.closeQuietly(this.closeAfterLoading);
+            CloseableUtils.closeQuietly(this.frameInputStream);
+        }
+
+        @Override
+        public void close() {
+            this.closeDecoderInputs();
+            this.textureEntry.close();
         }
 
     }
