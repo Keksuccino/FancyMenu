@@ -1,5 +1,8 @@
 #version 150
 
+// Keep this synchronized with GuiBlurRadius.MAX_RADIUS.
+#define FANCYMENU_MAX_BLUR_RADIUS 16.0
+
 uniform sampler2D DiffuseSampler;
 
 in vec2 texCoord;
@@ -15,7 +18,8 @@ out vec4 fragColor;
 // In the end we sample the last pixel with a half weight, since the amount of pixels to sample is always odd (actualRadius * 2 + 1).
 void main() {
     vec4 blurred = vec4(0.0);
-    float actualRadius = round(Radius * RadiusMultiplier);
+    // The matching Java-side bound prevents malformed uniforms from creating unbounded GPU work.
+    float actualRadius = clamp(round(Radius * RadiusMultiplier), 0.0, FANCYMENU_MAX_BLUR_RADIUS);
     for (float a = -actualRadius + 0.5; a <= actualRadius; a += 2.0) {
         blurred += texture(DiffuseSampler, texCoord + sampleStep * a);
     }
