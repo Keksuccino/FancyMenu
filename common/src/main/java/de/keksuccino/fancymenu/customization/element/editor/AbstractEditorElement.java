@@ -1291,8 +1291,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                     this.editor.history.saveSnapshot(this.preTiltSnapshot);
                 }
             }
-            this.preRotationSnapshot = null;
-            this.preTiltSnapshot = null;
+            this.discardPendingHistorySnapshots();
             this.rotationGrabberActive = false;
             this.verticalTiltGrabberActive = false;
             this.horizontalTiltGrabberActive = false;
@@ -1302,6 +1301,14 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
             this.movingCrumpleZonePassed = false;
         }
         return false;
+    }
+
+    /** Releases transient rotation and tilt snapshots after input completes or the owning editor is destroyed. */
+    public void discardPendingHistorySnapshots() {
+        this.editor.history.discardSnapshot(this.preRotationSnapshot);
+        this.editor.history.discardSnapshot(this.preTiltSnapshot);
+        this.preRotationSnapshot = null;
+        this.preTiltSnapshot = null;
     }
 
     /**

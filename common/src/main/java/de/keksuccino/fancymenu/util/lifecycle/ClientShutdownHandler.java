@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.lifecycle;
 
+import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.remote.RemoteServerConnectionManager;
 import de.keksuccino.fancymenu.customization.server.ServerCache;
@@ -42,6 +43,7 @@ public final class ClientShutdownHandler {
             runCleanup("remote server connections", RemoteServerConnectionManager::shutdown);
             runCleanup("internet availability monitor", WebUtils::shutdown);
             runCleanup("server cache", ServerCache::shutdown);
+            runCleanup("layouts", LayoutHandler::shutdown);
             // Stop recurring work before any resource it can touch is disposed. All managed workers are daemons as a final fallback.
             runCleanup("FancyMenu executors", FancyMenuExecutors::shutdownAll);
             runCleanup("deferred Watermedia players", WatermediaDeferredPlayerReleaseTracker::shutdown);
