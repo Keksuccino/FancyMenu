@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.layer;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
@@ -17,7 +16,6 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutBase;
 import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
 import de.keksuccino.fancymenu.util.ScreenUtils;
-import de.keksuccino.fancymenu.util.TaskExecutor;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
@@ -56,6 +54,7 @@ import org.jetbrains.annotations.Nullable;
 public class ScreenCustomizationLayer implements ElementFactory {
 
 	private static final Logger LOGGER = LogManager.getLogger();
+	private final ScreenAudioPlaybackController audioPlaybackController = new ScreenAudioPlaybackController();
 
 	private static final int BACKGROUND_OVERLAY_COLOR_FANCYMENU = 0x40000000;
 	private static final int VANILLA_BACKGROUND_BLUR_RADIUS_FANCYMENU = 5;
@@ -93,6 +92,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	}
 
 	public void resetLayer() {
+		this.audioPlaybackController.cancel();
 		this.delayAppearanceFirstTime.clear();
 		for (RandomLayoutContainer c : this.randomLayoutGroups.values()) {
 			c.reset(true);
@@ -108,6 +108,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	@EventListener
 	public void onOpenScreen(OpenScreenEvent e) {
 
+		if (!this.isLayerForScreen(e.getScreen())) return;
+		this.audioPlaybackController.cancel();
 		if (!this.shouldCustomize(e.getScreen())) return;
 
 		//Cache original menu title
@@ -133,7 +135,9 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	@EventListener
 	public void onCloseScreen(CloseScreenEvent e) {
 
-		if (!this.shouldCustomize(e.getScreen())) return;
+		if (!this.isLayerForScreen(e.getClosedScreen())) return;
+		this.audioPlaybackController.cancel();
+		if (!this.shouldCustomize(e.getClosedScreen())) return;
 
 		this.allElements.forEach(element -> {
 			element.onCloseScreen(e.getClosedScreen(), e.getNewScreen());
@@ -159,24 +163,10 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		});
 
 		if (this.layoutBase.closeAudio != null) {
-			final ResourceSupplier<IAudio> closeAudioSupplier = this.layoutBase.closeAudio;
-			IAudio audio = closeAudioSupplier.get();
-			if ((audio != null) && audio.isReady()) {
-				audio.stop();
-				audio.play();
-			} else {
-				final AtomicBoolean played = new AtomicBoolean(false);
-				TaskExecutor.scheduleAtFixedRate((future) -> {
-					if (played.get()) return;
-					IAudio audio2 = closeAudioSupplier.get();
-					if ((audio2 != null) && audio2.isReady()) {
-						audio2.stop();
-						audio2.play();
-						played.set(true);
-						future.cancel(true);
-					}
-				}, 100, 100, TimeUnit.MILLISECONDS, true);
-			}
+			ResourceSupplier<IAudio> closeAudioSupplier = this.layoutBase.closeAudio;
+			// A close cue must survive the screen removal that triggers it. Its bounded controller still cancels it when the
+			// exact layout retires, a newer cue supersedes it, loading terminates, or the client shuts down.
+			this.audioPlaybackController.playWhenReady(ScreenAudioPlaybackController.Cue.CLOSE, closeAudioSupplier, this.findAudioOwner(closeAudioSupplier, false));
 		}
 
 		this.layoutBase.closeScreenExecutableBlocks.forEach(AbstractExecutableBlock::execute);
@@ -191,7 +181,10 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		}
 		this.delayThreads.clear();
 
-		if (!this.shouldCustomize(e.getScreen())) return;
+		if (!this.shouldCustomize(e.getScreen())) {
+			if (this.isLayerForScreen(e.getScreen())) this.audioPlaybackController.cancel();
+			return;
+		}
 
 		// The same layer instance is rebuilt in place. Clear template results before removing its old element graph so a
 		// layout that no longer contains any buttons cannot briefly reuse an old template until the normal cache expiry.
@@ -269,6 +262,9 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		//Stack active layouts
 		this.layoutBase = LayoutBase.stackLayoutBases(this.activeLayouts.toArray(new LayoutBase[]{}));
+		ResourceSupplier<IAudio> openAudioSupplier = this.layoutBase.openAudio;
+		ResourceSupplier<IAudio> closeAudioSupplier = this.layoutBase.closeAudio;
+		this.audioPlaybackController.retainConfigured(openAudioSupplier, this.findAudioOwner(openAudioSupplier, true), closeAudioSupplier, this.findAudioOwner(closeAudioSupplier, false));
 
 		Window window = Minecraft.getInstance().getWindow();
 
@@ -311,24 +307,11 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		if (!this.shouldCustomize(e.getScreen())) return;
 
-		if (ScreenCustomization.isNewMenu() && (this.layoutBase.openAudio != null)) {
-			final ResourceSupplier<IAudio> openAudioSupplier = this.layoutBase.openAudio;
-			IAudio audio = openAudioSupplier.get();
-			if ((audio != null) && audio.isReady()) {
-				audio.stop();
-				audio.play();
-			} else {
-				final AtomicBoolean played = new AtomicBoolean(false);
-				TaskExecutor.scheduleAtFixedRate((future) -> {
-					if (played.get()) return;
-					IAudio audio2 = openAudioSupplier.get();
-					if ((audio2 != null) && audio2.isReady()) {
-						audio2.stop();
-						audio2.play();
-						played.set(true);
-						future.cancel(true);
-					}
-				}, 100, 100, TimeUnit.MILLISECONDS, true);
+		if (ScreenCustomization.isNewMenu()) {
+			this.audioPlaybackController.cancel();
+			if (this.layoutBase.openAudio != null) {
+				ResourceSupplier<IAudio> openAudioSupplier = this.layoutBase.openAudio;
+				this.audioPlaybackController.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, openAudioSupplier, this.findAudioOwner(openAudioSupplier, true));
 			}
 		}
 
@@ -664,6 +647,29 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			if (b.getInstanceIdentifier().equals(identifier)) return b;
 		}
 		return null;
+	}
+
+	void cancelPendingAudioPlaybackOwnedBy(@NotNull Collection<Layout> layouts) {
+		this.audioPlaybackController.cancelIfOwnedBy(layouts);
+	}
+
+	void shutdownAudioPlayback() {
+		this.audioPlaybackController.close();
+	}
+
+	@Nullable
+	private Layout findAudioOwner(@Nullable ResourceSupplier<IAudio> supplier, boolean openAudio) {
+		if (supplier == null) return null;
+		for (int i = this.activeLayouts.size() - 1; i >= 0; i--) {
+			Layout layout = this.activeLayouts.get(i);
+			ResourceSupplier<IAudio> layoutSupplier = openAudio ? layout.openAudio : layout.closeAudio;
+			if (layoutSupplier == supplier) return layout;
+		}
+		return null;
+	}
+
+	private boolean isLayerForScreen(@Nullable Screen screen) {
+		return screen != null && ScreenIdentifierHandler.isIdentifierOfScreen(this.getScreenIdentifier(), screen);
 	}
 
 	@SuppressWarnings("all")

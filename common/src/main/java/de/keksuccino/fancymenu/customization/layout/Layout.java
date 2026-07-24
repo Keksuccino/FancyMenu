@@ -629,7 +629,9 @@ public class Layout extends LayoutBase {
     }
 
     public Layout setEnabled(boolean enabled, boolean reInitCurrentScreen) {
+        boolean deactivated = this.enabled && !enabled;
         this.enabled = enabled;
+        if (deactivated) LayoutHandler.cancelPendingAudioPlaybackOwnedBy(this);
         this.saveToFileIfPossible();
         if (reInitCurrentScreen) ScreenCustomization.reInitCurrentScreen();
         return this;
@@ -647,6 +649,7 @@ public class Layout extends LayoutBase {
             this.destroyed = true;
             backgrounds = new ArrayList<>(this.menuBackgrounds);
         }
+        LayoutHandler.cancelPendingAudioPlaybackOwnedBy(this);
         for (MenuBackground<?> background : backgrounds) {
             try {
                 background.onDestroyBackground();
@@ -654,6 +657,10 @@ public class Layout extends LayoutBase {
                 LOGGER.error("[FANCYMENU] Failed to destroy menu background '{}' from layout '{}'.", background.getInstanceIdentifier(), this.getLayoutName(), ex);
             }
         }
+    }
+
+    public synchronized boolean isDestroyed() {
+        return this.destroyed;
     }
 
     public boolean layoutWideLoadingRequirementsMet() {

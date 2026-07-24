@@ -289,8 +289,17 @@ public class LayoutHandler {
 
 	private static void retireLayouts(@NotNull Collection<Layout> layouts) {
 		if (layouts.isEmpty()) return;
+		cancelPendingAudioPlaybackOwnedBy(layouts);
 		ScreenCustomizationLayer activeLayer = ScreenCustomizationLayerHandler.getActiveLayer();
 		LAYOUT_RETIREMENT_TRACKER.retire(layouts, activeLayer == null ? List.of() : activeLayer.activeLayouts);
+	}
+
+	static void cancelPendingAudioPlaybackOwnedBy(@NotNull Layout layout) {
+		cancelPendingAudioPlaybackOwnedBy(List.of(layout));
+	}
+
+	private static void cancelPendingAudioPlaybackOwnedBy(@NotNull Collection<Layout> layouts) {
+		ScreenCustomizationLayerHandler.cancelPendingAudioPlaybackOwnedBy(layouts);
 	}
 
 	public static void addLayout(@NotNull Layout layout, boolean saveToFile) {
