@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.file.LocalSourcePathResolver;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.json.JsonUtils;
 import net.minecraft.client.resources.language.I18n;
@@ -25,16 +26,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class JsonPlaceholder extends Placeholder {
 
     private static final Logger LOGGER = LogManager.getLogger();
-
-    protected static final Map<String, List<String>> CACHED_PLACEHOLDERS = Collections.synchronizedMap(new HashMap<>());
-    protected static final Map<String, Long> CURRENTLY_UPDATING_PLACEHOLDERS = new ConcurrentHashMap<>();
-    protected static final List<String> INVALID_WEB_PLACEHOLDER_URLS = Collections.synchronizedList(new ArrayList<>());
     protected static final long UPDATE_TIMEOUT = 120000; // 2 minutes
+    private static final JsonPlaceholderWebCache WEB_CACHE = new JsonPlaceholderWebCache(task -> FancyMenuThreads.startDaemonThread(task, "JsonPlaceholder-WebLoader"), JsonPlaceholder::loadWebJson, System::currentTimeMillis, UPDATE_TIMEOUT);
 
     private static Timer cleanupTimer;
     protected static boolean initialized = false;
@@ -67,26 +64,13 @@ public class JsonPlaceholder extends Placeholder {
      * Cleans up placeholder update tasks that have been running too long
      */
     protected static void cleanupStaleUpdates() {
-        long currentTime = System.currentTimeMillis();
-
-        // Use iterator to safely remove while iterating
-        Iterator<Map.Entry<String, Long>> iterator = CURRENTLY_UPDATING_PLACEHOLDERS.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<String, Long> entry = iterator.next();
-            if (currentTime - entry.getValue() > UPDATE_TIMEOUT) {
-                String placeholder = entry.getKey();
-                iterator.remove();
-                LOGGER.warn("[FANCYMENU] Placeholder update timed out for: {}", placeholder);
-            }
-        }
+        WEB_CACHE.cleanupTimedOut();
     }
 
     @EventListener
     public static void onReload(ModReloadEvent e) {
         try {
-            CACHED_PLACEHOLDERS.clear();
-            INVALID_WEB_PLACEHOLDER_URLS.clear();
-            CURRENTLY_UPDATING_PLACEHOLDERS.clear();
+            WEB_CACHE.reload();
             LOGGER.info("[FANCYMENU] JsonPlaceholder cache successfully cleared!");
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to reload JsonPlaceholder!", ex);
@@ -113,18 +97,9 @@ public class JsonPlaceholder extends Placeholder {
             if (localLookup.status() == LocalJsonStatus.FOUND) {
                 return formatJsonToString(Objects.requireNonNull(localLookup.json()));
             } else if (localLookup.status() == LocalJsonStatus.MISSING) {
-                // Finally, check for URL
-                if (!isInvalidWebPlaceholderLink(source)) {
-                    List<String> json = getCachedWebPlaceholder(dps.placeholderString);
-                    if (json != null) {
-                        return formatJsonToString(json);
-                    } else {
-                        if (!isWebPlaceholderUpdating(dps.placeholderString)) {
-                            cacheWebPlaceholder(dps.placeholderString, source, jsonPath);
-                        }
-                        return "";
-                    }
-                }
+                JsonPlaceholderWebCache.Lookup lookup = WEB_CACHE.getOrLoad(dps.placeholderString, source, jsonPath);
+                if (lookup.status() == JsonPlaceholderWebCache.Status.LOADED) return formatJsonToString(lookup.values());
+                if (lookup.status() == JsonPlaceholderWebCache.Status.LOADING) return "";
             }
         }
         return null;
@@ -229,7 +204,7 @@ public class JsonPlaceholder extends Placeholder {
 
     protected static boolean isInvalidWebPlaceholderLink(String link) {
         try {
-            return INVALID_WEB_PLACEHOLDER_URLS.contains(link);
+            return WEB_CACHE.isInvalidSource(link);
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Error in JsonPlaceholder!", ex);
         }
@@ -238,7 +213,7 @@ public class JsonPlaceholder extends Placeholder {
 
     protected static List<String> getCachedWebPlaceholder(String placeholder) {
         try {
-            return CACHED_PLACEHOLDERS.get(placeholder);
+            return WEB_CACHE.getCached(placeholder);
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Error in JsonPlaceholder!", ex);
         }
@@ -247,7 +222,7 @@ public class JsonPlaceholder extends Placeholder {
 
     protected static boolean isWebPlaceholderUpdating(String placeholder) {
         try {
-            return CURRENTLY_UPDATING_PLACEHOLDERS.containsKey(placeholder);
+            return WEB_CACHE.isLoading(placeholder);
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Error in JsonPlaceholder!", ex);
         }
@@ -256,39 +231,18 @@ public class JsonPlaceholder extends Placeholder {
 
     protected static void cacheWebPlaceholder(@NotNull String placeholder, @NotNull String source, @NotNull String jsonPath) {
         try {
-            if (!CURRENTLY_UPDATING_PLACEHOLDERS.containsKey(placeholder)) {
-                // Record the timestamp when starting the update
-                CURRENTLY_UPDATING_PLACEHOLDERS.put(placeholder, System.currentTimeMillis());
-
-                new Thread(() -> {
-                    try {
-                        if (WebUtils.isValidUrl(source)) {
-                            String jsonString = getJsonStringFromURL(source);
-                            if (jsonString != null) {
-                                CACHED_PLACEHOLDERS.put(placeholder, JsonUtils.getJsonValueByPath(jsonString, jsonPath));
-                            } else {
-                                INVALID_WEB_PLACEHOLDER_URLS.add(source);
-                            }
-                        } else {
-                            INVALID_WEB_PLACEHOLDER_URLS.add(source);
-                        }
-                    } catch (Exception ex) {
-                        LOGGER.error("[FANCYMENU] Error while caching a web JSON in the JsonPlaceholder!", ex);
-                    } finally {
-                        try {
-                            // Always remove from updating list, even if an exception occurred
-                            CURRENTLY_UPDATING_PLACEHOLDERS.remove(placeholder);
-                        } catch (Exception ex) {
-                            LOGGER.error("[FANCYMENU] Error while removing placeholder from updating list!", ex);
-                        }
-                    }
-                }).start();
-            }
+            WEB_CACHE.loadIfAbsent(placeholder, source, jsonPath);
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Error while caching a web JSON in the JsonPlaceholder!", ex);
-            // Make sure to remove from updating list if an exception occurs during setup
-            CURRENTLY_UPDATING_PLACEHOLDERS.remove(placeholder);
         }
+    }
+
+    @NotNull
+    private static JsonPlaceholderWebCache.LoadResult loadWebJson(@NotNull String source, @NotNull String jsonPath) {
+        if (!WebUtils.isValidUrl(source)) return JsonPlaceholderWebCache.LoadResult.invalid();
+        String jsonString = getJsonStringFromURL(source);
+        if (jsonString == null) return JsonPlaceholderWebCache.LoadResult.invalid();
+        return JsonPlaceholderWebCache.LoadResult.loaded(JsonUtils.getJsonValueByPath(jsonString, jsonPath));
     }
 
     /**
@@ -316,6 +270,9 @@ public class JsonPlaceholder extends Placeholder {
                     ? response.body()
                     : null;
 
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            return null;
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Error while getting the content of a web JSON in the JsonPlaceholder!", ex);
             return null;
