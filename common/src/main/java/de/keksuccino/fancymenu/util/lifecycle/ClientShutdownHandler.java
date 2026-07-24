@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.lifecycle;
 
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
+import de.keksuccino.fancymenu.customization.remote.RemoteServerConnectionManager;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
@@ -25,6 +26,8 @@ public final class ClientShutdownHandler {
         if (!SHUTDOWN_STARTED.compareAndSet(false, true)) return;
 
         try {
+            // Remote callbacks can enqueue main-thread listener work, so quiesce both of their owned worker pools first.
+            runCleanup("remote server connections", RemoteServerConnectionManager::shutdown);
             runCleanup("internet availability monitor", WebUtils::shutdown);
             runCleanup("user variables", VariableHandler::shutdown);
             runCleanup("panorama renderers", PanoramaHandler::shutdown);

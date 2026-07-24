@@ -63,6 +63,10 @@ final class BoundedConnectionRegistry<T> {
         return this.statesByRequestId.get(requestId);
     }
 
+    synchronized @Nullable T getByUrl(@NotNull String normalizedUrl) {
+        return this.statesByUrl.get(normalizedUrl);
+    }
+
     synchronized boolean remove(@NotNull String normalizedUrl, @NotNull String requestId, @NotNull T expectedState) {
         if (this.statesByUrl.get(normalizedUrl) != expectedState || this.statesByRequestId.get(requestId) != expectedState) {
             return false;
@@ -82,6 +86,12 @@ final class BoundedConnectionRegistry<T> {
 
     synchronized int cachedRequestIdCount() {
         return this.cachedRequestIdsByUrl.size();
+    }
+
+    synchronized void clear() {
+        this.statesByUrl.clear();
+        this.statesByRequestId.clear();
+        this.cachedRequestIdsByUrl.clear();
     }
 
     synchronized @Nullable String cachedRequestId(@NotNull String normalizedUrl) {
