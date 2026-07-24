@@ -1,9 +1,10 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
-import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuInputRouter;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.VanillaMouseClickHandlingScreen;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.MouseButtonEvent;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -21,22 +22,18 @@ public interface MixinContainerEventHandler {
      */
     @Inject(method = "mouseClicked", at = @At(value = "HEAD"), cancellable = true)
     private void head_mouseClicked_FancyMenu(MouseButtonEvent event, boolean isDoubleClick, CallbackInfoReturnable<Boolean> info) {
-        if (this instanceof VanillaMouseClickHandlingScreen) {
+        if ((this instanceof VanillaMouseClickHandlingScreen) || (this instanceof AbstractContainerScreen<?>)) {
             return;
         }
-        for (GuiEventListener listener : this.children()) {
-            if (listener instanceof FancyMenuUiComponent) {
-                if (listener.mouseClicked(event, isDoubleClick)) {
-                    if (listener.shouldTakeFocusAfterInteraction()) {
-                        this.setFocused(listener);
-                        if (event.button() == 0) {
-                            this.setDragging(true);
-                        }
-                    }
-                    info.cancel();
-                    return;
+        GuiEventListener listener = FancyMenuInputRouter.routeMouseClicked(this.children(), event, isDoubleClick);
+        if (listener != null) {
+            if (listener.shouldTakeFocusAfterInteraction()) {
+                this.setFocused(listener);
+                if (event.button() == 0) {
+                    this.setDragging(true);
                 }
             }
+            info.setReturnValue(true);
         }
     }
 
@@ -48,31 +45,11 @@ public interface MixinContainerEventHandler {
         if (this instanceof VanillaMouseClickHandlingScreen) {
             return;
         }
-        for (GuiEventListener listener : this.children()) {
-            if (listener instanceof FancyMenuUiComponent) {
-                listener.mouseReleased(event); // Call mouseReleased for ALL FM listeners
-            }
-        }
-        if (this.getFocused() instanceof FancyMenuUiComponent) {
+        if (FancyMenuInputRouter.routeMouseReleased(this.children(), this.getFocused(), event, FancyMenuInputRouter.MouseReleaseRouting.BROADCAST_FANCYMENU_COMPONENTS)) {
             if ((event.button() == 0) && this.isDragging()) {
                 this.setDragging(false);
             }
-            info.cancel();
-        }
-    }
-
-    /**
-     * @reason This restores Minecraft's old UI component scroll routing for FancyMenu components that manage their own hit-testing.
-     */
-    @Inject(method = "mouseScrolled", at = @At("HEAD"), cancellable = true)
-    private void head_mouseScrolled_FancyMenu(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY, CallbackInfoReturnable<Boolean> info) {
-        for (GuiEventListener listener : this.children()) {
-            if (listener instanceof FancyMenuUiComponent) {
-                if (listener.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY)) {
-                    info.setReturnValue(true);
-                    return;
-                }
-            }
+            info.setReturnValue(true);
         }
     }
 
