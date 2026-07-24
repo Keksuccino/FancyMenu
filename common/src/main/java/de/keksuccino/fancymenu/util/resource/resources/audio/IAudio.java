@@ -6,6 +6,14 @@ import org.jetbrains.annotations.NotNull;
 public interface IAudio extends PlayableResourceWithAudio {
 
     /**
+     * Returns whether the current loading failure is a temporary state that the supplying resource can recover from.
+     * Callers must fetch the resource from its supplier again while retrying because recovery may replace the instance.
+     */
+    default boolean isLoadingFailureRetryable() {
+        return false;
+    }
+
+    /**
      * If the audio is not playing, this will START the audio.<br>
      * If the audio is paused, this will RESUME the audio.<br>
      * If the audio is playing, this will RESTART the audio.

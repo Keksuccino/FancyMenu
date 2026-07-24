@@ -456,6 +456,11 @@ public class OggAudio implements IAudio, ALAudio {
         return this.loadingFailed;
     }
 
+    @Override
+    public boolean isLoadingFailureRetryable() {
+        return this.retryWhenOpenAlReady;
+    }
+
     public boolean isValidOpenAlSource() {
         ALAudioClip cached = this.clip;
         return (cached != null) && cached.isValidOpenAlSource();
