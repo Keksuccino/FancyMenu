@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
+import de.keksuccino.fancymenu.mixin.support.client.ContainerWidgetPointerTracker;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;

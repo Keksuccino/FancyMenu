@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import de.keksuccino.fancymenu.mixin.support.client.ContainerWidgetPointerTracker;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
