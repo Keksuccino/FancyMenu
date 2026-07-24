@@ -46,6 +46,6 @@ CHANGELOG | FANCYMENU v3.9.9 [ W I P !! Not public yet !! ]
 - Fixed entity visibility listeners performing repeated block raycasts for every candidate entity on every rendered frame
 - Fixed normal variable assignments synchronously serializing and writing the complete database twice instead of coalescing rapid changes
 - Fixed game crashing when opening the Inventory screen in MC 1.19.2 (#1728)
-- Fixed browser element mouse, keyboard, and scroll input passing through to the underlying menu (#1726)
+- Fixed "Browser" element mouse, keyboard, and scroll input passing through to the underlying menu in some cases (#1726)
 
 %changelog:end%
