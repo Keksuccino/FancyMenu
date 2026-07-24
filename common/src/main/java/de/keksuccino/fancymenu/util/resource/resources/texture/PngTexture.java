@@ -29,15 +29,14 @@ public class PngTexture implements ITexture {
 
     public static final ResourceSupplier<ITexture> FULLY_TRANSPARENT_PNG_TEXTURE_SUPPLIER = ResourceSupplier.image(ResourceSource.of(FULLY_TRANSPARENT_TEXTURE.toString(), ResourceSourceType.LOCATION).getSourceWithPrefix());
 
+    /** Borrowed resource-pack location; dynamic registrations are owned exclusively by {@link #textureEntry}. */
     @Nullable
     protected Identifier resourceLocation;
+    protected final TextureManagerEntry<NativeImage, DynamicTexture> textureEntry = TextureManagerEntry.dynamicTexture();
     protected volatile int width = 10;
     protected volatile int height = 10;
     protected volatile AspectRatio aspectRatio = new AspectRatio(10, 10);
     protected volatile boolean decoded = false;
-    protected volatile boolean loadedIntoMinecraft = false;
-    protected volatile NativeImage nativeImage;
-    protected DynamicTexture dynamicTexture;
     protected Identifier sourceLocation;
     protected File sourceFile;
     protected String sourceURL;
@@ -80,7 +79,6 @@ public class PngTexture implements ITexture {
             texture.loadingFailed = true;
             LOGGER.error("[FANCYMENU] Failed to read texture from Identifier: " + location, ex);
         }
-        texture.loadedIntoMinecraft = true;
         texture.loadingCompleted = true;
         texture.decoded = true;
         texture.resourceLocation = location;
@@ -201,7 +199,7 @@ public class PngTexture implements ITexture {
 
         PngTexture texture = new PngTexture();
 
-        texture.nativeImage = nativeImage;
+        texture.textureEntry.adopt(nativeImage);
         texture.width = nativeImage.getWidth();
         texture.height = nativeImage.getHeight();
         texture.aspectRatio = new AspectRatio(nativeImage.getWidth(), nativeImage.getHeight());
@@ -218,12 +216,12 @@ public class PngTexture implements ITexture {
     protected static void populateTexture(@NotNull PngTexture texture, @NotNull InputStream in, @NotNull String textureName) {
         if (!texture.closed) {
             try {
-                texture.nativeImage = NativeImage.read(in);
-                if (texture.nativeImage != null) {
-                    texture.width = texture.nativeImage.getWidth();
-                    texture.height = texture.nativeImage.getHeight();
+                NativeImage image = NativeImage.read(in);
+                if (image != null) {
+                    texture.width = image.getWidth();
+                    texture.height = image.getHeight();
                     texture.aspectRatio = new AspectRatio(texture.width, texture.height);
-                    texture.loadingCompleted = true;
+                    if (texture.textureEntry.adopt(image)) texture.loadingCompleted = true;
                 } else {
                     texture.loadingFailed = true;
                     LOGGER.error("[FANCYMENU] Failed to read texture, NativeImage was NULL: " + textureName);
@@ -240,17 +238,15 @@ public class PngTexture implements ITexture {
     @Nullable
     public Identifier getResourceLocation() {
         if (this.closed) return FULLY_TRANSPARENT_TEXTURE;
-        if ((this.resourceLocation == null) && !this.loadedIntoMinecraft && (this.nativeImage != null)) {
+        if (this.resourceLocation != null) return this.resourceLocation;
+        if (this.textureEntry.canRegister()) {
             try {
-                this.resourceLocation = Identifier.fromNamespaceAndPath("fancymenu", "dynamic/simple_texture_" + System.nanoTime());
-                this.dynamicTexture = new DynamicTexture(this.resourceLocation::toString, this.nativeImage);
-                Minecraft.getInstance().getTextureManager().register(this.resourceLocation, this.dynamicTexture);
+                this.textureEntry.register(Identifier.fromNamespaceAndPath("fancymenu", "dynamic/simple_texture_" + System.nanoTime()));
             } catch (Exception ex) {
-                ex.printStackTrace();
+                LOGGER.error("[FANCYMENU] Failed to register PNG texture to Minecraft's TextureManager!", ex);
             }
-            this.loadedIntoMinecraft = true;
         }
-        return this.resourceLocation;
+        return this.textureEntry.getIdentifier();
     }
 
     public int getWidth() {
@@ -263,7 +259,7 @@ public class PngTexture implements ITexture {
 
     @Nullable
     public NativeImage getNativeImage() {
-        return this.nativeImage;
+        return this.textureEntry.getImage();
     }
 
     @NotNull
@@ -273,7 +269,8 @@ public class PngTexture implements ITexture {
 
     @Override
     public @Nullable InputStream open() throws IOException {
-        if (this.nativeImage != null) return new ByteArrayInputStream(NativeImageUtil.asByteArray(this.nativeImage));
+        NativeImage image = this.textureEntry.getImage();
+        if (image != null) return new ByteArrayInputStream(NativeImageUtil.asByteArray(image));
         return null;
     }
 
@@ -303,27 +300,15 @@ public class PngTexture implements ITexture {
     }
 
     /**
-     * Only really closes textures that are NOT loaded via Identifier.<br>
-     * Does basically nothing for Identifier textures, because these are handled by Minecraft.
+     * Releases owned dynamic entries through Minecraft's texture manager, which disposes both the DynamicTexture and its
+     * NativeImage. Resource-pack locations are borrowed, so closing one never releases that shared manager entry.
      */
     @Override
     public void close() {
         this.closed = true;
-        try {
-            if (this.dynamicTexture != null) this.dynamicTexture.close();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        try {
-            if (this.nativeImage != null) this.nativeImage.close();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        this.dynamicTexture = null;
-        this.nativeImage = null;
+        this.textureEntry.close();
         this.resourceLocation = null;
         this.decoded = false;
-        this.loadedIntoMinecraft = true;
     }
 
 }
