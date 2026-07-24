@@ -175,7 +175,7 @@ public class OggAudio implements IAudio, ALAudio {
         FancyMenuThreads.startDaemonThread(() -> {
             InputStream webIn = null;
             try {
-                webIn = WebUtils.openResourceStream(oggAudioURL);
+                webIn = WebUtils.openResourceStream(oggAudioURL, WebUtils.WebResourceType.AUDIO);
                 if (webIn == null) throw new NullPointerException("Web resource input stream was NULL!");
                 ByteArrayInputStream byteIn = new ByteArrayInputStream(webIn.readAllBytes());
                 of(byteIn, oggAudioURL, audio, clip);
@@ -429,7 +429,7 @@ public class OggAudio implements IAudio, ALAudio {
 
     @Override
     public @Nullable InputStream open() throws IOException {
-        if (this.sourceURL != null) return WebUtils.openResourceStream(this.sourceURL);
+        if (this.sourceURL != null) return WebUtils.openResourceStream(this.sourceURL, WebUtils.WebResourceType.AUDIO);
         if (this.sourceFile != null) return new FileInputStream(this.sourceFile);
         if (this.sourceLocation != null) return Minecraft.getInstance().getResourceManager().open(this.sourceLocation);
         return null;
