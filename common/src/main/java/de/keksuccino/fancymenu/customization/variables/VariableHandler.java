@@ -75,8 +75,13 @@ public final class VariableHandler {
         return STORE.variableExists(name);
     }
 
+    /** Blocks until the latest admitted variable revision has completed one durable write attempt. */
+    public static boolean flush() {
+        return STORE.flush();
+    }
+
     protected static void writeToFile() {
-        STORE.writeToFile();
+        flush();
     }
 
     protected static void readFromFile() {
