@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.remote;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,6 +15,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Java 21 WebSocket transport used on Minecraft versions whose bundled Netty does not include the HTTP/WebSocket
@@ -21,33 +25,68 @@ import java.util.concurrent.Executors;
  */
 final class JdkRemoteWebSocketTransport implements RemoteWebSocketTransport {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final int MESSAGE_TOO_BIG_STATUS = 1009;
     private static final int INVALID_PAYLOAD_STATUS = 1007;
-    // This daemon executor intentionally lives for the client process. HttpClient has no close operation on Java 21,
-    // while per-connection clients and executors would leak a new thread pool after every reconnect.
-    private static final ExecutorService HTTP_EXECUTOR = Executors.newCachedThreadPool(runnable -> {
-        Thread thread = new Thread(runnable, "FancyMenu-RemoteServerConnection-IO");
-        thread.setDaemon(true);
-        return thread;
-    });
-    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(15)).executor(HTTP_EXECUTOR).build();
-
     private final int maxInboundMessageBytes;
     private final int maxInboundFragments;
+    private final ExecutorService httpExecutor;
+    private final HttpClient httpClient;
+    private final Object shutdownLock = new Object();
+    private final AtomicBoolean shutdownStarted = new AtomicBoolean();
 
     JdkRemoteWebSocketTransport(int maxInboundMessageBytes, int maxInboundFragments) {
         if (maxInboundMessageBytes <= 0 || maxInboundFragments <= 0) throw new IllegalArgumentException("Inbound WebSocket limits must be positive");
         this.maxInboundMessageBytes = maxInboundMessageBytes;
         this.maxInboundFragments = maxInboundFragments;
+        this.httpExecutor = Executors.newCachedThreadPool(runnable -> {
+            Thread thread = new Thread(runnable, "FancyMenu-RemoteServerConnection-IO");
+            thread.setDaemon(true);
+            return thread;
+        });
+        try {
+            // Java 21 has no HttpClient close operation. The explicitly supplied executor is the worker resource this
+            // transport owns and can synchronously quiesce after the manager aborts every outstanding WebSocket.
+            this.httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(15)).executor(this.httpExecutor).build();
+        } catch (RuntimeException | Error throwable) {
+            this.httpExecutor.shutdownNow();
+            throw throwable;
+        }
     }
 
     @Override
     public @NotNull Connection connect(@NotNull URI uri, @NotNull Listener listener) {
         JdkConnection connection = new JdkConnection(listener, this.maxInboundMessageBytes, this.maxInboundFragments);
-        HTTP_CLIENT.newWebSocketBuilder().connectTimeout(Duration.ofSeconds(15)).buildAsync(uri, connection).whenComplete((socket, throwable) -> {
-            if (throwable != null) connection.receiveError(throwable);
-        });
+        if (this.shutdownStarted.get()) {
+            connection.receiveError(new RejectedExecutionException("Remote WebSocket transport is shut down"));
+            return connection;
+        }
+        try {
+            CompletableFuture<WebSocket> handshake = this.httpClient.newWebSocketBuilder().connectTimeout(Duration.ofSeconds(15)).buildAsync(uri, connection);
+            connection.attachHandshake(handshake);
+            handshake.whenComplete((socket, throwable) -> {
+                connection.clearHandshake(handshake);
+                if (throwable != null) connection.receiveError(throwable);
+            });
+        } catch (RuntimeException ex) {
+            connection.receiveError(ex);
+        }
         return connection;
+    }
+
+    @Override
+    public void shutdown() {
+        synchronized (this.shutdownLock) {
+            if (this.shutdownStarted.compareAndSet(false, true)) this.httpExecutor.shutdownNow();
+        }
+        if (!RemoteShutdownSupport.awaitTerminationPreservingInterrupt(this.httpExecutor)) {
+            LOGGER.warn("[FANCYMENU] Timed out while waiting for the remote WebSocket I/O executor to terminate");
+        }
+    }
+
+    @Override
+    public boolean isTerminated() {
+        return this.httpExecutor.isTerminated();
     }
 
     static final class JdkConnection implements Connection, WebSocket.Listener {
@@ -59,6 +98,8 @@ final class JdkRemoteWebSocketTransport implements RemoteWebSocketTransport {
 
         @Nullable
         private volatile WebSocket socket;
+        @Nullable
+        private CompletableFuture<WebSocket> pendingHandshake;
         private boolean closing;
         private boolean closed;
         private int textFragments;
@@ -79,6 +120,7 @@ final class JdkRemoteWebSocketTransport implements RemoteWebSocketTransport {
                     return;
                 }
                 this.socket = webSocket;
+                this.pendingHandshake = null;
             }
             this.listener.onOpen(this);
             webSocket.request(1L);
@@ -235,10 +277,25 @@ final class JdkRemoteWebSocketTransport implements RemoteWebSocketTransport {
             if (this.markClosed()) this.listener.onError(this, error);
         }
 
+        private synchronized void attachHandshake(@NotNull CompletableFuture<WebSocket> handshake) {
+            if (this.closed || this.closing) {
+                handshake.cancel(true);
+            } else if (this.socket == null && !handshake.isDone()) {
+                this.pendingHandshake = handshake;
+            }
+        }
+
+        private synchronized void clearHandshake(@NotNull CompletableFuture<WebSocket> handshake) {
+            if (this.pendingHandshake == handshake) this.pendingHandshake = null;
+        }
+
         private synchronized boolean markClosed() {
             if (this.closed) return false;
             this.closed = true;
             this.closing = true;
+            CompletableFuture<WebSocket> handshake = this.pendingHandshake;
+            this.pendingHandshake = null;
+            if (handshake != null) handshake.cancel(true);
             this.resetTextMessage();
             this.binaryFragments = 0;
             this.binaryBytes = 0;

@@ -8,13 +8,31 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.RejectedExecutionException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class JdkRemoteWebSocketTransportTest {
+
+    @Test
+    void shutdownIsIdempotentTerminatesTheExecutorAndRejectsLateConnections() {
+        JdkRemoteWebSocketTransport transport = new JdkRemoteWebSocketTransport(8, 2);
+        CountingListener listener = new CountingListener();
+
+        transport.shutdown();
+        transport.shutdown();
+        RemoteWebSocketTransport.Connection rejected = transport.connect(java.net.URI.create("ws://127.0.0.1:1/socket"), listener);
+
+        assertTrue(transport.isTerminated());
+        assertFalse(rejected.isOpen());
+        assertInstanceOf(RejectedExecutionException.class, listener.lastError);
+        assertEquals(0, listener.openCallbacks);
+        assertEquals(1, listener.errorCallbacks);
+    }
 
     @Test
     void fragmentedTextIsDeliveredAfterTheFinalFragmentWithOneAtATimeDemand() {
@@ -212,6 +230,7 @@ class JdkRemoteWebSocketTransportTest {
         private final List<CloseEvent> closeEvents = new ArrayList<>();
         private int openCallbacks;
         private int errorCallbacks;
+        private Throwable lastError;
 
         @Override
         public void onOpen(@NotNull RemoteWebSocketTransport.Connection connection) {
@@ -235,6 +254,7 @@ class JdkRemoteWebSocketTransportTest {
         @Override
         public void onError(@NotNull RemoteWebSocketTransport.Connection connection, @NotNull Throwable error) {
             this.errorCallbacks++;
+            this.lastError = error;
         }
     }
 
