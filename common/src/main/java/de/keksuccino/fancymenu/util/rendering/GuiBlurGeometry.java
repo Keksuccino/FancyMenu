@@ -25,7 +25,7 @@ final class GuiBlurGeometry {
         double scaledWidth = (double)width * safeScale;
         double scaledHeight = (double)height * safeScale;
         if (!isFiniteFloat(scaledX) || !isFiniteFloat(scaledY) || !isFinitePositiveFloat(scaledWidth) || !isFinitePositiveFloat(scaledHeight)) return null;
-        return new ScaledArea(scaledX, scaledY, scaledWidth, scaledHeight, positiveFiniteFloat((double)blurRadius * safeScale), safeScale);
+        return new ScaledArea(scaledX, scaledY, scaledWidth, scaledHeight, GuiBlurRadius.resolveShaderRadius(blurRadius, safeScale), safeScale);
     }
 
     static float scaleCornerRadius(float radius, double guiScale) {

@@ -10,12 +10,16 @@ uniform float RadiusMultiplier;
 
 out vec4 fragColor;
 
+// Keep this value synchronized with GuiBlurRadius.MAX_RADIUS; Minecraft 1.20.1 post chains cannot inject shader defines.
+const float FANCYMENU_MAX_BLUR_RADIUS = 16.0;
+
 // This shader relies on GL_LINEAR sampling to reduce the amount of texture samples in half.
 // Instead of sampling each pixel position with a step of 1 we sample between pixels with a step of 2.
 // In the end we sample the last pixel with a half weight, since the amount of pixels to sample is always odd (actualRadius * 2 + 1).
 void main() {
     vec4 blurred = vec4(0.0);
-    float actualRadius = round(Radius * RadiusMultiplier);
+    // Clamp after applying the pass multiplier so malformed uniforms cannot create unbounded GPU work.
+    float actualRadius = clamp(round(Radius * RadiusMultiplier), 0.0, FANCYMENU_MAX_BLUR_RADIUS);
     for (float a = -actualRadius + 0.5; a <= actualRadius; a += 2.0) {
         blurred += texture(DiffuseSampler, texCoord + sampleStep * a);
     }
