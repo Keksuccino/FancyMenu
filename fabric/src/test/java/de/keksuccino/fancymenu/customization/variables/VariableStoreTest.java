@@ -13,7 +13,9 @@ import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -40,6 +42,153 @@ class VariableStoreTest {
 
     @TempDir
     Path temporaryDirectory;
+
+    @Test
+    void normalAssignmentIsImmediatelyVisibleAndBurstWritesAreCoalesced() throws Exception {
+        Path target = this.temporaryDirectory.resolve("user_variables.db");
+        RecordingStoreFileOperations operations = new RecordingStoreFileOperations();
+        ManualScheduler scheduler = new ManualScheduler();
+        VariableStore store = new VariableStore(new AtomicVariableDatabase(target, operations), (name, oldValue, newValue) -> {}, scheduler);
+
+        store.setVariable("rapid", "one");
+        store.setVariable("rapid", "two");
+        store.setVariable("rapid", "latest");
+
+        assertAll(() -> assertEquals("latest", store.getVariableValue("rapid")), () -> assertEquals(0, operations.writeCalls.get()), () -> assertEquals(1, scheduler.pendingTaskCount()));
+
+        assertTrue(scheduler.runNext());
+
+        assertAll(() -> assertEquals(1, operations.writeCalls.get()), () -> assertEquals("latest", readSnapshots(target).get("rapid").value()), () -> assertEquals(0, scheduler.pendingTaskCount()));
+    }
+
+    @Test
+    void oneAssignmentProducesAtMostOneDatabaseReplacement() throws Exception {
+        Path target = this.temporaryDirectory.resolve("user_variables.db");
+        RecordingStoreFileOperations operations = new RecordingStoreFileOperations();
+        ManualScheduler scheduler = new ManualScheduler();
+        VariableStore store = new VariableStore(new AtomicVariableDatabase(target, operations), (name, oldValue, newValue) -> {}, scheduler);
+
+        store.setVariable("single", "value");
+        assertTrue(scheduler.runNext());
+
+        assertAll(() -> assertEquals(1, operations.writeCalls.get()), () -> assertFalse(scheduler.runNext()), () -> assertEquals("value", readSnapshots(target).get("single").value()));
+    }
+
+    @Test
+    void identicalAssignmentStillNotifiesButDoesNotScheduleAnotherWrite() {
+        Path target = this.temporaryDirectory.resolve("user_variables.db");
+        RecordingStoreFileOperations operations = new RecordingStoreFileOperations();
+        ManualScheduler scheduler = new ManualScheduler();
+        AtomicInteger notifications = new AtomicInteger();
+        VariableStore store = new VariableStore(new AtomicVariableDatabase(target, operations), (name, oldValue, newValue) -> notifications.incrementAndGet(), scheduler);
+        store.setVariable("constant", "same");
+        assertTrue(store.flush());
+
+        store.setVariable("constant", "same");
+
+        assertAll(() -> assertEquals(2, notifications.get()), () -> assertEquals(1, operations.writeCalls.get()), () -> assertEquals(0, scheduler.pendingTaskCount()));
+    }
+
+    @Test
+    void explicitFlushPersistsLatestRevisionAndCancelsDelayedWrite() throws Exception {
+        Path target = this.temporaryDirectory.resolve("user_variables.db");
+        RecordingStoreFileOperations operations = new RecordingStoreFileOperations();
+        ManualScheduler scheduler = new ManualScheduler();
+        VariableStore store = new VariableStore(new AtomicVariableDatabase(target, operations), (name, oldValue, newValue) -> {}, scheduler);
+        store.setVariable("flush", "now");
+
+        assertTrue(store.flush());
+
+        assertAll(() -> assertEquals(1, operations.writeCalls.get()), () -> assertEquals("now", readSnapshots(target).get("flush").value()), () -> assertEquals(0, scheduler.pendingTaskCount()));
+    }
+
+    @Test
+    void failedWriteRemainsDirtyAndRetriesLatestSnapshot() throws Exception {
+        Path target = this.temporaryDirectory.resolve("user_variables.db");
+        RecordingStoreFileOperations operations = new RecordingStoreFileOperations();
+        operations.writeFailuresRemaining.set(1);
+        ManualScheduler scheduler = new ManualScheduler();
+        VariableStore store = new VariableStore(new AtomicVariableDatabase(target, operations), (name, oldValue, newValue) -> {}, scheduler);
+        store.setVariable("retry", "kept");
+
+        assertTrue(scheduler.runNext());
+        assertAll(() -> assertFalse(Files.exists(target)), () -> assertEquals(1, scheduler.pendingTaskCount()));
+
+        assertTrue(scheduler.runNext());
+
+        assertAll(() -> assertEquals(2, operations.writeCalls.get()), () -> assertEquals("kept", readSnapshots(target).get("retry").value()), () -> assertEquals(0, scheduler.pendingTaskCount()));
+    }
+
+    @Test
+    void removeAndClearOrderingPublishesOnlyFinalState() throws Exception {
+        Path target = this.temporaryDirectory.resolve("user_variables.db");
+        RecordingStoreFileOperations operations = new RecordingStoreFileOperations();
+        ManualScheduler scheduler = new ManualScheduler();
+        VariableStore store = new VariableStore(new AtomicVariableDatabase(target, operations), (name, oldValue, newValue) -> {}, scheduler);
+
+        store.setVariable("first", "one");
+        store.setVariable("second", "two");
+        store.removeVariable("first");
+        store.clearVariables();
+        assertTrue(scheduler.runNext());
+
+        assertAll(() -> assertTrue(store.getVariableSnapshots().isEmpty()), () -> assertTrue(readSnapshots(target).isEmpty()), () -> assertEquals(1, operations.writeCalls.get()));
+    }
+
+    @Test
+    void cleanupOnlyFailureAcknowledgesDurabilityWithoutRetry() throws Exception {
+        Path target = this.temporaryDirectory.resolve("user_variables.db");
+        RecordingStoreFileOperations operations = new RecordingStoreFileOperations();
+        operations.deleteFailure = new IOException("simulated cleanup failure");
+        ManualScheduler scheduler = new ManualScheduler();
+        VariableStore store = new VariableStore(new AtomicVariableDatabase(target, operations), (name, oldValue, newValue) -> {}, scheduler);
+        store.setVariable("durable", "despite cleanup");
+
+        assertTrue(scheduler.runNext());
+        assertTrue(store.flush());
+
+        assertAll(() -> assertEquals("despite cleanup", readSnapshots(target).get("durable").value()), () -> assertEquals(1, operations.writeCalls.get()), () -> assertEquals(0, scheduler.pendingTaskCount()));
+    }
+
+    @Test
+    void reloadFlushesPreCallStateAndPostCallMutationWaitsForReplacement() throws Exception {
+        Path target = this.temporaryDirectory.resolve("user_variables.db");
+        BlockingReadFileOperations operations = new BlockingReadFileOperations();
+        ManualScheduler scheduler = new ManualScheduler();
+        VariableStore store = new VariableStore(new AtomicVariableDatabase(target, operations), (name, oldValue, newValue) -> {}, scheduler);
+        store.setVariable("before", "pending");
+        AtomicReference<Throwable> reloadFailure = new AtomicReference<>();
+        AtomicReference<Throwable> mutationFailure = new AtomicReference<>();
+        Thread reloadThread = new Thread(() -> runCapturingFailure(store::readFromFile, reloadFailure), "VariableStoreTest-Reload");
+        Thread mutationThread = new Thread(() -> runCapturingFailure(() -> store.setVariable("after", "post-reload"), mutationFailure), "VariableStoreTest-Mutation");
+
+        try {
+            reloadThread.start();
+            assertTrue(operations.blockedReadStarted.await(5L, TimeUnit.SECONDS));
+            mutationThread.start();
+            assertTrue(awaitThreadWaiting(mutationThread));
+        } finally {
+            operations.releaseBlockedRead.countDown();
+            reloadThread.join(5_000L);
+            mutationThread.join(5_000L);
+        }
+
+        assertAll(() -> assertFalse(reloadThread.isAlive()), () -> assertFalse(mutationThread.isAlive()), () -> assertNull(reloadFailure.get()), () -> assertNull(mutationFailure.get()), () -> assertEquals("pending", store.getVariableValue("before")), () -> assertEquals("post-reload", store.getVariableValue("after")), () -> assertEquals(1, operations.writeCalls.get()));
+        assertTrue(store.flush());
+        assertAll(() -> assertEquals("pending", readSnapshots(target).get("before").value()), () -> assertEquals("post-reload", readSnapshots(target).get("after").value()), () -> assertEquals(2, operations.writeCalls.get()));
+    }
+
+    @Test
+    void firstInitializationDoesNotDiscardMutationAdmittedBeforeInit() throws Exception {
+        Path target = this.temporaryDirectory.resolve("user_variables.db");
+        RecordingStoreFileOperations operations = new RecordingStoreFileOperations();
+        VariableStore store = new VariableStore(new AtomicVariableDatabase(target, operations), (name, oldValue, newValue) -> {}, new ManualScheduler());
+        store.setVariable("early", "survives");
+
+        store.init();
+
+        assertAll(() -> assertEquals("survives", store.getVariableValue("early")), () -> assertEquals("survives", readSnapshots(target).get("early").value()), () -> assertEquals(2, operations.writeCalls.get()));
+    }
 
     @Test
     void concurrentMutationsAndObserversPublishEveryUpdateAsOneValidDatabase() throws Exception {
@@ -86,6 +235,7 @@ class VariableStoreTest {
             executor.shutdownNow();
         }
 
+        assertTrue(store.flush());
         Map<String, UserVariableSnapshot> memory = snapshotsByName(store.getVariableSnapshots());
         Map<String, UserVariableSnapshot> disk = readSnapshots(target);
         assertAll(() -> assertEquals(writerCount * variablesPerWriter, memory.size()), () -> assertEquals(memory, disk), () -> assertEquals(List.of(target.getFileName().toString()), listFileNames(target.getParent())));
@@ -130,6 +280,7 @@ class VariableStoreTest {
             executor.shutdownNow();
         }
 
+        assertTrue(store.flush());
         Map<String, UserVariableSnapshot> disk = readSnapshots(target);
         assertAll(() -> assertEquals("60", disk.get("generation_a").value()), () -> assertEquals(disk.get("generation_a").value(), disk.get("generation_b").value()));
     }
@@ -143,7 +294,7 @@ class VariableStoreTest {
         VariableStore store = new VariableStore(new AtomicVariableDatabase(target), (name, oldValue, newValue) -> {
             events.add(name + ":" + oldValue + "->" + newValue);
             if ("outer".equals(name) && nestedMutationStarted.compareAndSet(false, true)) storeReference.get().setVariable("nested", "inside");
-        });
+        }, new ManualScheduler());
         storeReference.set(store);
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -153,6 +304,7 @@ class VariableStoreTest {
             executor.shutdownNow();
         }
 
+        assertTrue(store.flush());
         Map<String, UserVariableSnapshot> expected = Map.of("outer", new UserVariableSnapshot("outer", "outside", false), "nested", new UserVariableSnapshot("nested", "inside", false));
         assertAll(() -> assertEquals(List.of("outer:->outside", "nested:->inside"), events), () -> assertEquals(expected, snapshotsByName(store.getVariableSnapshots())), () -> assertEquals(expected, readSnapshots(target)));
     }
@@ -183,6 +335,7 @@ class VariableStoreTest {
                 List<Attempt> results = new ArrayList<>();
                 for (Future<Attempt> attempt : attempts) results.add(attempt.get(10L, TimeUnit.SECONDS));
                 List<Attempt> winners = results.stream().filter(Attempt::created).toList();
+                assertTrue(store.flush());
                 assertAll(() -> assertEquals(1, winners.size()), () -> assertEquals(winners.get(0).value(), store.getVariableValue("shared")), () -> assertEquals(winners.get(0).value(), readSnapshots(target).get("shared").value()));
             } finally {
                 start.countDown();
@@ -209,6 +362,7 @@ class VariableStoreTest {
         Path target = this.temporaryDirectory.resolve("user_variables.db");
         VariableStore store = createStore(target);
         store.setVariable("stable", "memory");
+        assertTrue(store.flush());
         String malformed = "this is not a variable database\n";
         Files.writeString(target, malformed, StandardCharsets.UTF_8);
 
@@ -221,8 +375,9 @@ class VariableStoreTest {
     void readFailureKeepsLiveStateAndExistingBytesUntouched() throws Exception {
         Path target = this.temporaryDirectory.resolve("user_variables.db");
         RecordingStoreFileOperations operations = new RecordingStoreFileOperations();
-        VariableStore store = new VariableStore(new AtomicVariableDatabase(target, operations), (name, oldValue, newValue) -> {});
+        VariableStore store = new VariableStore(new AtomicVariableDatabase(target, operations), (name, oldValue, newValue) -> {}, new ManualScheduler());
         store.setVariable("stable", "memory");
+        assertTrue(store.flush());
         String persisted = Files.readString(target, StandardCharsets.UTF_8);
         operations.readFailure = new IOException("simulated read failure");
 
@@ -236,11 +391,11 @@ class VariableStoreTest {
         Path target = Files.writeString(this.temporaryDirectory.resolve("user_variables.db"), "existing bytes must stay untouched", StandardCharsets.UTF_8);
         RecordingStoreFileOperations operations = new RecordingStoreFileOperations();
         operations.readFailure = new AccessDeniedException(target.toString());
-        VariableStore store = new VariableStore(new AtomicVariableDatabase(target, operations), (name, oldValue, newValue) -> {});
+        VariableStore store = new VariableStore(new AtomicVariableDatabase(target, operations), (name, oldValue, newValue) -> {}, new ManualScheduler());
 
         store.init();
 
-        assertAll(() -> assertTrue(store.getVariableSnapshots().isEmpty()), () -> assertEquals("existing bytes must stay untouched", Files.readString(target, StandardCharsets.UTF_8)), () -> assertEquals(0, operations.writeCalls));
+        assertAll(() -> assertTrue(store.getVariableSnapshots().isEmpty()), () -> assertEquals("existing bytes must stay untouched", Files.readString(target, StandardCharsets.UTF_8)), () -> assertEquals(0, operations.writeCalls.get()));
     }
 
     @Test
@@ -248,6 +403,7 @@ class VariableStoreTest {
         Path target = this.temporaryDirectory.resolve("user_variables.db");
         VariableStore store = createStore(target);
         store.setVariable("stable", "memory");
+        assertTrue(store.flush());
         Map<String, UserVariableSnapshot> expectedState = Map.of("stable", new UserVariableSnapshot("stable", "memory", false));
 
         String truncated = "type = user_variables\n\nvariable {\n  name = lost\n  value = incomplete\n";
@@ -291,12 +447,14 @@ class VariableStoreTest {
         VariableStore store = new VariableStore(new AtomicVariableDatabase(target), (name, oldValue, newValue) -> {}, snapshots -> {
             if (failSerialization.get()) throw new IllegalStateException("simulated serialization failure");
             return serializeStoredSnapshots(snapshots);
-        });
+        }, new ManualScheduler());
         store.setVariable("old", "complete");
+        assertTrue(store.flush());
         String previousDatabase = Files.readString(target, StandardCharsets.UTF_8);
         failSerialization.set(true);
 
         store.replaceVariables(List.of(new UserVariableSnapshot("new_a", "one", false), new UserVariableSnapshot("new_b", "two", true)));
+        assertFalse(store.flush());
 
         Map<String, UserVariableSnapshot> expectedMemory = Map.of("new_a", new UserVariableSnapshot("new_a", "one", false), "new_b", new UserVariableSnapshot("new_b", "two", true));
         assertAll(() -> assertEquals(expectedMemory, snapshotsByName(store.getVariableSnapshots())), () -> assertEquals(previousDatabase, Files.readString(target, StandardCharsets.UTF_8)), () -> assertEquals(Map.of("old", new UserVariableSnapshot("old", "complete", false)), readSnapshots(target)), () -> assertEquals(List.of(target.getFileName().toString()), listFileNames(target.getParent())));
@@ -306,11 +464,12 @@ class VariableStoreTest {
     void shutdownFlushesOnceAndMakesEveryLateMutationANoOp() throws Exception {
         Path target = this.temporaryDirectory.resolve("user_variables.db");
         RecordingStoreFileOperations operations = new RecordingStoreFileOperations();
-        VariableStore store = new VariableStore(new AtomicVariableDatabase(target, operations), (name, oldValue, newValue) -> {});
+        ManualScheduler scheduler = new ManualScheduler();
+        VariableStore store = new VariableStore(new AtomicVariableDatabase(target, operations), (name, oldValue, newValue) -> {}, scheduler);
         store.setVariable("kept", "value");
         Variable handle = store.getVariable("kept");
         assertNotNull(handle);
-        int writesBeforeShutdown = operations.writeCalls;
+        int writesBeforeShutdown = operations.writeCalls.get();
 
         store.shutdown();
         store.shutdown();
@@ -321,34 +480,28 @@ class VariableStoreTest {
         handle.toggleResetOnLaunch();
         store.replaceVariables(List.of(new UserVariableSnapshot("replacement", "ignored", false)));
 
-        assertAll(() -> assertEquals(writesBeforeShutdown + 1, operations.writeCalls), () -> assertEquals(Map.of("kept", new UserVariableSnapshot("kept", "value", false)), snapshotsByName(store.getVariableSnapshots())), () -> assertEquals(Map.of("kept", new UserVariableSnapshot("kept", "value", false)), readSnapshots(target)), () -> assertFalse(store.setVariableIfAbsent("late", "ignored")), () -> assertNull(store.createVariableWithUniqueCopyName("kept", "ignored", false)));
+        assertAll(() -> assertEquals(writesBeforeShutdown + 1, operations.writeCalls.get()), () -> assertTrue(scheduler.shutdown), () -> assertEquals(Map.of("kept", new UserVariableSnapshot("kept", "value", false)), snapshotsByName(store.getVariableSnapshots())), () -> assertEquals(Map.of("kept", new UserVariableSnapshot("kept", "value", false)), readSnapshots(target)), () -> assertFalse(store.setVariableIfAbsent("late", "ignored")), () -> assertNull(store.createVariableWithUniqueCopyName("kept", "ignored", false)));
     }
 
     @Test
-    void shutdownWaitsForAdmittedMutationThenFlushesItBeforeClosingAdmission() throws Exception {
+    void updateDuringInFlightWriteDoesNotBlockAndSchedulesLatestRevision() throws Exception {
         Path target = this.temporaryDirectory.resolve("user_variables.db");
         BlockingWriteFileOperations operations = new BlockingWriteFileOperations();
-        VariableStore store = new VariableStore(new AtomicVariableDatabase(target, operations), (name, oldValue, newValue) -> {});
-        CountDownLatch shutdownTaskStarted = new CountDownLatch(1);
+        ManualScheduler scheduler = new ManualScheduler();
+        VariableStore store = new VariableStore(new AtomicVariableDatabase(target, operations), (name, oldValue, newValue) -> {}, scheduler);
+        store.setVariable("admitted", "old");
 
         ExecutorService executor = Executors.newFixedThreadPool(2);
         try {
             try {
-                Future<?> mutation = executor.submit(() -> store.setVariable("admitted", "complete"));
+                Future<?> firstWrite = executor.submit(scheduler::runNext);
                 boolean mutationReachedWrite = operations.blockedWriteStarted.await(5L, TimeUnit.SECONDS);
                 if (!mutationReachedWrite) operations.releaseBlockedWrite.countDown();
                 assertTrue(mutationReachedWrite);
-                Future<?> shutdown = executor.submit(() -> {
-                    shutdownTaskStarted.countDown();
-                    store.shutdown();
-                });
-                boolean shutdownAttempted = shutdownTaskStarted.await(5L, TimeUnit.SECONDS);
-                boolean mutationWaited = !mutation.isDone();
-                boolean shutdownWaited = !shutdown.isDone();
+                Future<?> latestMutation = executor.submit(() -> store.setVariable("admitted", "latest"));
+                latestMutation.get(5L, TimeUnit.SECONDS);
                 operations.releaseBlockedWrite.countDown();
-                assertAll(() -> assertTrue(shutdownAttempted), () -> assertTrue(mutationWaited), () -> assertTrue(shutdownWaited));
-                mutation.get(10L, TimeUnit.SECONDS);
-                shutdown.get(10L, TimeUnit.SECONDS);
+                firstWrite.get(10L, TimeUnit.SECONDS);
             } finally {
                 operations.releaseBlockedWrite.countDown();
             }
@@ -356,9 +509,9 @@ class VariableStoreTest {
             executor.shutdownNow();
         }
 
-        store.setVariable("late", "ignored");
-        Map<String, UserVariableSnapshot> expected = Map.of("admitted", new UserVariableSnapshot("admitted", "complete", false));
-        assertAll(() -> assertEquals(expected, snapshotsByName(store.getVariableSnapshots())), () -> assertEquals(expected, readSnapshots(target)), () -> assertEquals(3, operations.writeCalls.get()));
+        assertAll(() -> assertEquals("latest", store.getVariableValue("admitted")), () -> assertEquals("old", readSnapshots(target).get("admitted").value()), () -> assertEquals(1, scheduler.pendingTaskCount()));
+        assertTrue(scheduler.runNext());
+        assertAll(() -> assertEquals("latest", readSnapshots(target).get("admitted").value()), () -> assertEquals(2, operations.writeCalls.get()));
     }
 
     @Test
@@ -372,13 +525,14 @@ class VariableStoreTest {
 
         staleHandle.setValue("stale");
         staleHandle.setResetOnLaunch(true);
+        assertTrue(store.flush());
 
         assertAll(() -> assertTrue(store.getVariableSnapshots().isEmpty()), () -> assertTrue(readSnapshots(target).isEmpty()), () -> assertEquals("stale", staleHandle.getValue()), () -> assertTrue(staleHandle.isResetOnLaunch()));
     }
 
     @NotNull
     private static VariableStore createStore(@NotNull Path target) {
-        return new VariableStore(new AtomicVariableDatabase(target), (name, oldValue, newValue) -> {});
+        return new VariableStore(new AtomicVariableDatabase(target), (name, oldValue, newValue) -> {}, new ManualScheduler());
     }
 
     @NotNull
@@ -426,13 +580,34 @@ class VariableStoreTest {
         }
     }
 
+    private static void runCapturingFailure(@NotNull Runnable runnable, @NotNull AtomicReference<Throwable> failure) {
+        try {
+            runnable.run();
+        } catch (Throwable throwable) {
+            failure.set(throwable);
+        }
+    }
+
+    private static boolean awaitThreadWaiting(@NotNull Thread thread) {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5L);
+        while (System.nanoTime() < deadline) {
+            Thread.State state = thread.getState();
+            if (state == Thread.State.WAITING || state == Thread.State.TIMED_WAITING) return true;
+            if (!thread.isAlive()) return false;
+            Thread.onSpinWait();
+        }
+        return false;
+    }
+
     private record Attempt(boolean created, @NotNull String value) {
     }
 
     private static final class RecordingStoreFileOperations implements AtomicVariableDatabase.FileOperations {
 
         private IOException readFailure;
-        private int writeCalls;
+        private final AtomicInteger writeCalls = new AtomicInteger();
+        private final AtomicInteger writeFailuresRemaining = new AtomicInteger();
+        private IOException deleteFailure;
 
         @Override
         public void createDirectories(@NotNull Path directory) throws IOException {
@@ -452,7 +627,60 @@ class VariableStoreTest {
 
         @Override
         public void writeUtf8AndForce(@NotNull Path path, @NotNull String value) throws IOException {
-            this.writeCalls++;
+            this.writeCalls.incrementAndGet();
+            if (this.writeFailuresRemaining.getAndUpdate(remaining -> Math.max(0, remaining - 1)) > 0) throw new IOException("simulated write failure");
+            Files.writeString(path, value, StandardCharsets.UTF_8);
+        }
+
+        @Override
+        public void atomicReplace(@NotNull Path source, @NotNull Path target) throws IOException {
+            Files.move(source, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        @Override
+        public void replace(@NotNull Path source, @NotNull Path target) throws IOException {
+            Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        @Override
+        public void deleteIfExists(@NotNull Path path) throws IOException {
+            if (this.deleteFailure != null) throw this.deleteFailure;
+            Files.deleteIfExists(path);
+        }
+
+    }
+
+    private static final class BlockingReadFileOperations implements AtomicVariableDatabase.FileOperations {
+
+        private final CountDownLatch blockedReadStarted = new CountDownLatch(1);
+        private final CountDownLatch releaseBlockedRead = new CountDownLatch(1);
+        private final AtomicInteger writeCalls = new AtomicInteger();
+
+        @Override
+        public void createDirectories(@NotNull Path directory) throws IOException {
+            Files.createDirectories(directory);
+        }
+
+        @Override
+        public @NotNull Path createTempFile(@NotNull Path directory, @NotNull String prefix, @NotNull String suffix) throws IOException {
+            return Files.createTempFile(directory, prefix, suffix);
+        }
+
+        @Override
+        public @NotNull String readUtf8(@NotNull Path path) throws IOException {
+            this.blockedReadStarted.countDown();
+            try {
+                this.releaseBlockedRead.await();
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                throw new IOException("Interrupted while simulating a blocked variable read", ex);
+            }
+            return Files.readString(path, StandardCharsets.UTF_8);
+        }
+
+        @Override
+        public void writeUtf8AndForce(@NotNull Path path, @NotNull String value) throws IOException {
+            this.writeCalls.incrementAndGet();
             Files.writeString(path, value, StandardCharsets.UTF_8);
         }
 
@@ -469,6 +697,59 @@ class VariableStoreTest {
         @Override
         public void deleteIfExists(@NotNull Path path) throws IOException {
             Files.deleteIfExists(path);
+        }
+
+    }
+
+    private static final class ManualScheduler implements VariablePersistenceCoordinator.Scheduler {
+
+        private final Deque<ManualTask> tasks = new ArrayDeque<>();
+        private boolean shutdown;
+
+        @Override
+        public synchronized @NotNull VariablePersistenceCoordinator.ScheduledTask schedule(@NotNull Runnable task, long delayMillis) {
+            if (this.shutdown) throw new IllegalStateException("scheduler is shut down");
+            ManualTask scheduledTask = new ManualTask(task);
+            this.tasks.addLast(scheduledTask);
+            return scheduledTask;
+        }
+
+        @Override
+        public synchronized void shutdown() {
+            this.shutdown = true;
+            this.tasks.clear();
+        }
+
+        boolean runNext() {
+            ManualTask task;
+            synchronized (this) {
+                do {
+                    task = this.tasks.pollFirst();
+                } while (task != null && task.cancelled);
+            }
+            if (task == null) return false;
+            task.runnable.run();
+            return true;
+        }
+
+        synchronized int pendingTaskCount() {
+            return (int) this.tasks.stream().filter(task -> !task.cancelled).count();
+        }
+
+    }
+
+    private static final class ManualTask implements VariablePersistenceCoordinator.ScheduledTask {
+
+        private final Runnable runnable;
+        private volatile boolean cancelled;
+
+        private ManualTask(@NotNull Runnable runnable) {
+            this.runnable = runnable;
+        }
+
+        @Override
+        public void cancel() {
+            this.cancelled = true;
         }
 
     }
