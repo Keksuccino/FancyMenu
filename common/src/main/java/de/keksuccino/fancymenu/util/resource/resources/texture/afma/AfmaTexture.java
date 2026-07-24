@@ -178,7 +178,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
         Thread loaderThread = new Thread(() -> {
             InputStream in = null;
             try {
-                in = WebUtils.openResourceStream(afmaUrl);
+                in = WebUtils.openResourceStream(afmaUrl, WebUtils.WebResourceType.STREAMED_ANIMATED_ARCHIVE);
                 if (in == null) throw new NullPointerException("Web resource input stream was NULL!");
                 of(in, afmaUrl, texture);
             } catch (Exception ex) {
@@ -1119,7 +1119,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
     @Override
     public @Nullable InputStream open() throws IOException {
-        if (this.sourceURL != null) return WebUtils.openResourceStream(this.sourceURL);
+        if (this.sourceURL != null) return WebUtils.openResourceStream(this.sourceURL, WebUtils.WebResourceType.STREAMED_ANIMATED_ARCHIVE);
         if (this.sourceFile != null) return new FileInputStream(this.sourceFile);
         if (this.sourceLocation != null) return Minecraft.getInstance().getResourceManager().open(this.sourceLocation);
         return null;

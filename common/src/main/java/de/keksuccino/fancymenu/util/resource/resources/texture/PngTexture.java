@@ -151,7 +151,7 @@ public class PngTexture implements ITexture {
 
         new Thread(() -> {
             try {
-                InputStream in = WebUtils.openResourceStream(textureURL);
+                InputStream in = WebUtils.openResourceStream(textureURL, WebUtils.WebResourceType.IMAGE);
                 if (in == null) throw new NullPointerException("Web resource input stream was NULL!");
                 of(in, textureURL, texture);
             } catch (Exception ex) {
