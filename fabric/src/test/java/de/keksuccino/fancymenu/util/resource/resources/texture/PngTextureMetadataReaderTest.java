@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PngTextureMetadataReaderTest {
 
@@ -23,7 +22,7 @@ class PngTextureMetadataReaderTest {
             assertEquals(3, dimensions.width());
             assertEquals(2, dimensions.height());
             assertEquals(1, input.closeCalls);
-            assertTrue(image.isClosed());
+            assertThrows(IllegalStateException.class, () -> image.getPixel(0, 0));
         } finally {
             image.close();
         }
@@ -69,7 +68,7 @@ class PngTextureMetadataReaderTest {
 
             assertSame(closeFailure, thrown);
             assertEquals(1, input.closeCalls);
-            assertTrue(image.isClosed());
+            assertThrows(IllegalStateException.class, () -> image.getPixel(0, 0));
         } finally {
             image.close();
         }
