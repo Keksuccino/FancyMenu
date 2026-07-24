@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.cursor;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.util.properties.Property;
@@ -28,10 +27,9 @@ public class CursorElement extends AbstractElement {
     @Nullable
     public ResourceSupplier<ITexture> textureSupplier;
     protected boolean cursorReady = false;
+    private final CursorRebuildTracker cursorRebuildTracker = new CursorRebuildTracker();
     @Nullable
-    protected Identifier lastLocation;
-    protected int lastHotspotX;
-    protected int lastHotspotY;
+    private CursorHandler.CustomCursor registeredCursor;
 
     public CursorElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -74,52 +72,79 @@ public class CursorElement extends AbstractElement {
     }
 
     public void updateCursor() {
-
-        if (this.textureSupplier != null) {
-            ITexture t = this.textureSupplier.get();
-            if (t instanceof PngTexture s) {
-                Identifier loc = t.getResourceLocation();
-                int resolvedHotspotX = this.hotspotX.getInteger();
-                int resolvedHotspotY = this.hotspotY.getInteger();
-                if ((loc != this.lastLocation) || (this.lastHotspotX != resolvedHotspotX) || (this.lastHotspotY != resolvedHotspotY)) {
-                    if (loc != null) {
-                        this.cursorReady = false;
-                        if (!isEditor() || this.editorPreviewMode) {
-                            CursorHandler.CustomCursor cursor = CursorHandler.getCustomCursor(this.getCursorName());
-                            if ((cursor == null) || (cursor.texture != s) || (cursor.hotspotX != resolvedHotspotX) || (cursor.hotspotY != resolvedHotspotY)) {
-                                cursor = CursorHandler.CustomCursor.create(s, resolvedHotspotX, resolvedHotspotY, this.textureSupplier.getSourceWithPrefix());
-                                if (cursor != null) {
-                                    CursorHandler.registerCustomCursor(this.getCursorName(), cursor);
-                                    this.cursorReady = true;
-                                }
-                            } else {
-                                this.cursorReady = true;
-                            }
-                        }
-                    }
-                }
-                this.lastLocation = loc;
-                this.lastHotspotX = resolvedHotspotX;
-                this.lastHotspotY = resolvedHotspotY;
-            }
-        } else {
-            this.lastLocation = null;
-            this.lastHotspotX = 0;
-            this.lastHotspotY = 0;
-            this.cursorReady = false;
+        if (this.textureSupplier == null) {
+            this.resetCursorState();
+            return;
         }
+        ITexture texture = this.textureSupplier.get();
+        if (!(texture instanceof PngTexture pngTexture)) {
+            this.resetCursorState();
+            return;
+        }
+        Identifier location = texture.getResourceLocation();
+        int resolvedHotspotX = this.hotspotX.getInteger();
+        int resolvedHotspotY = this.hotspotY.getInteger();
+        boolean canUseCustomCursor = location != null && (!isEditor() || this.editorPreviewMode);
+        CursorHandler.CustomCursor registered = this.registeredCursor;
+        boolean registrationStillCurrent = registered != null && CursorHandler.getCustomCursor(this.getCursorName()) == registered && CursorConfigurationMatcher.matches(registered.texture, registered.hotspotX, registered.hotspotY, pngTexture, resolvedHotspotX, resolvedHotspotY);
+        boolean shouldRebuild = this.cursorRebuildTracker.shouldAttempt(pngTexture, location, resolvedHotspotX, resolvedHotspotY, canUseCustomCursor, registrationStillCurrent);
 
+        if (!canUseCustomCursor) {
+            this.releaseRegisteredCursor();
+            this.cursorReady = false;
+        } else if (shouldRebuild) {
+            this.cursorRebuildTracker.recordResult(this.rebuildCursor(pngTexture, resolvedHotspotX, resolvedHotspotY));
+        }
     }
 
     public void forceRebuildCursor() {
+        this.releaseRegisteredCursor();
         this.cursorReady = false;
-        this.lastLocation = null;
+        this.cursorRebuildTracker.reset();
         this.updateCursor();
+    }
+
+    @Override
+    public void onDestroyElement() {
+        super.onDestroyElement();
+        this.resetCursorState();
     }
 
     @NotNull
     public String getCursorName() {
         return "fm_cursor_element_" + this.getInstanceIdentifier();
+    }
+
+    private boolean rebuildCursor(@NotNull PngTexture texture, int resolvedHotspotX, int resolvedHotspotY) {
+        this.cursorReady = false;
+        CursorHandler.CustomCursor cursor = CursorHandler.getCustomCursor(this.getCursorName());
+        if (cursor == null || !CursorConfigurationMatcher.matches(cursor.texture, cursor.hotspotX, cursor.hotspotY, texture, resolvedHotspotX, resolvedHotspotY)) {
+            CursorHandler.CustomCursor obsoleteCursor = cursor;
+            cursor = CursorHandler.CustomCursor.create(texture, resolvedHotspotX, resolvedHotspotY, this.textureSupplier.getSourceWithPrefix());
+            if (cursor != null) CursorHandler.registerCustomCursor(this.getCursorName(), cursor);
+            if (cursor == null && obsoleteCursor != null) CursorHandler.unregisterCustomCursor(this.getCursorName(), obsoleteCursor);
+        }
+        if (cursor != null && CursorHandler.getCustomCursor(this.getCursorName()) == cursor) {
+            if (this.registeredCursor != null && this.registeredCursor != cursor) this.registeredCursor.destroy();
+            this.registeredCursor = cursor;
+            this.cursorReady = true;
+            return true;
+        } else {
+            this.releaseRegisteredCursor();
+            return false;
+        }
+    }
+
+    private void resetCursorState() {
+        this.releaseRegisteredCursor();
+        this.cursorReady = false;
+        this.cursorRebuildTracker.reset();
+    }
+
+    private void releaseRegisteredCursor() {
+        CursorHandler.CustomCursor cursor = this.registeredCursor;
+        this.registeredCursor = null;
+        if (cursor != null) CursorHandler.unregisterCustomCursor(this.getCursorName(), cursor);
     }
 
 }

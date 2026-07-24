@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.mcef.ActionBridge;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
+import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.resources.texture.TextureManagerReleaseDispatcher;
@@ -48,6 +49,8 @@ public final class ClientShutdownHandler {
                 runCleanup("MCEF browsers", BrowserHandler::closeAll);
             }
             runCleanup("panorama renderers", PanoramaHandler::shutdown);
+            // GLFW cursor destruction must finish on the render thread while the window and GLFW are still alive.
+            runCleanup("GLFW cursors", CursorHandler::shutdown);
             runCleanup("resources", ResourceHandlers::shutdownAll);
             runCleanup("pending texture-manager releases", TextureManagerReleaseDispatcher::flushPendingReleases);
             runCleanup("main-thread task queue", MainThreadTaskExecutor::shutdown);
