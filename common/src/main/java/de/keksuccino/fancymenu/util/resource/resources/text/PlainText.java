@@ -122,7 +122,7 @@ public class PlainText implements IText {
         String url = textFileUrl;
         new Thread(() -> {
             try {
-                InputStream in = WebUtils.openResourceStream(url);
+                InputStream in = WebUtils.openResourceStream(url, WebUtils.WebResourceType.TEXT);
                 if (in != null) {
                     of(in, url, text);
                 } else {
@@ -187,7 +187,7 @@ public class PlainText implements IText {
 
     @Override
     public @Nullable InputStream open() throws IOException {
-        if (this.sourceURL != null) return WebUtils.openResourceStream(this.sourceURL);
+        if (this.sourceURL != null) return WebUtils.openResourceStream(this.sourceURL, WebUtils.WebResourceType.TEXT);
         if (this.sourceFile != null) return new FileInputStream(this.sourceFile);
         if (this.sourceLocation != null) return Minecraft.getInstance().getResourceManager().open(this.sourceLocation);
         return null;
