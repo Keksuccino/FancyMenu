@@ -134,7 +134,7 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
                         return;
                     }
                     VariablesSnapshot beforeSnapshot = this.captureCurrentState();
-                    selectedVariable.setResetOnLaunch(!selectedVariable.isResetOnLaunch());
+                    selectedVariable.toggleResetOnLaunch();
                     this.createUndoPointIfChanged(beforeSnapshot);
                 }).setLabelSupplier((menu, entry) -> this.getContextMenuToggleResetOnLaunchLabel())
                 .addIsActiveSupplier((menu, entry) -> this.hasContextMenuTargetVariable())
@@ -591,9 +591,8 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
     protected void requestAddVariable() {
         TextInputWindowBody s = new TextInputWindowBody(CharacterFilter.buildOnlyLowercaseFileNameFilter(), (call) -> {
             if (call != null) {
-                if (!VariableHandler.variableExists(call)) {
-                    VariablesSnapshot beforeSnapshot = this.captureCurrentState();
-                    VariableHandler.setVariable(call, "");
+                VariablesSnapshot beforeSnapshot = this.captureCurrentState();
+                if (VariableHandler.setVariableIfAbsent(call, "")) {
                     this.contextMenuTargetVariableName = call;
                     this.refreshVariablesList();
                     this.restoreSelection(call);
@@ -634,7 +633,8 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
     }
 
     protected void copyVariableToClipboard(@NotNull Variable variable) {
-        this.variableClipboard = new VariableSnapshot(variable.getName(), variable.getValue(), variable.isResetOnLaunch());
+        UserVariableSnapshot snapshot = variable.snapshot();
+        this.variableClipboard = new VariableSnapshot(snapshot.name(), snapshot.value(), snapshot.resetOnLaunch());
     }
 
     protected boolean canPasteVariableFromClipboard() {
@@ -646,29 +646,13 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
             return false;
         }
         VariablesSnapshot beforeSnapshot = this.captureCurrentState();
-        String pastedVariableName = this.generatePastedVariableName(this.variableClipboard.name());
-        VariableHandler.setVariable(pastedVariableName, this.variableClipboard.value());
-        Variable pastedVariable = VariableHandler.getVariable(pastedVariableName);
-        if (pastedVariable != null) {
-            pastedVariable.setResetOnLaunch(this.variableClipboard.resetOnLaunch());
-        }
+        String pastedVariableName = VariableHandler.createVariableWithUniqueCopyName(this.variableClipboard.name(), this.variableClipboard.value(), this.variableClipboard.resetOnLaunch());
+        if (pastedVariableName == null) return false;
         this.contextMenuTargetVariableName = pastedVariableName;
         this.refreshVariablesList();
         this.restoreSelection(pastedVariableName);
         this.createUndoPointIfChanged(beforeSnapshot);
         return true;
-    }
-
-    @NotNull
-    protected String generatePastedVariableName(@NotNull String sourceVariableName) {
-        String baseName = sourceVariableName + "_Copy";
-        String candidate = baseName;
-        int suffix = 2;
-        while (VariableHandler.variableExists(candidate)) {
-            candidate = baseName + suffix;
-            suffix++;
-        }
-        return candidate;
     }
 
     @Nullable
@@ -809,13 +793,13 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
     }
 
     private @NotNull List<VariableSnapshot> captureVariableSnapshots() {
-        List<Variable> variables = VariableHandler.getVariables();
+        List<UserVariableSnapshot> variables = new ArrayList<>(VariableHandler.getVariableSnapshots());
         variables.sort(Comparator
-                .comparing(Variable::getName, String.CASE_INSENSITIVE_ORDER)
-                .thenComparing(Variable::getName));
+                .comparing(UserVariableSnapshot::name, String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(UserVariableSnapshot::name));
         List<VariableSnapshot> snapshots = new ArrayList<>();
-        for (Variable variable : variables) {
-            snapshots.add(new VariableSnapshot(variable.getName(), variable.getValue(), variable.isResetOnLaunch()));
+        for (UserVariableSnapshot variable : variables) {
+            snapshots.add(new VariableSnapshot(variable.name(), variable.value(), variable.resetOnLaunch()));
         }
         return snapshots;
     }
@@ -834,14 +818,11 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
     }
 
     private void applyVariableSnapshots(@NotNull List<VariableSnapshot> snapshots) {
-        VariableHandler.clearVariables();
+        List<UserVariableSnapshot> replacement = new ArrayList<>(snapshots.size());
         for (VariableSnapshot snapshot : snapshots) {
-            VariableHandler.setVariable(snapshot.name(), snapshot.value());
-            Variable variable = VariableHandler.getVariable(snapshot.name());
-            if (variable != null) {
-                variable.setResetOnLaunch(snapshot.resetOnLaunch());
-            }
+            replacement.add(new UserVariableSnapshot(snapshot.name(), snapshot.value(), snapshot.resetOnLaunch()));
         }
+        VariableHandler.replaceVariables(replacement);
     }
 
     private void restoreSelection(@Nullable String selectedVariableName) {
@@ -867,7 +848,7 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
         public Variable variable;
 
         public VariableScrollEntry(ScrollArea parent, @NotNull Variable variable, @NotNull Consumer<TextScrollAreaEntry> onClick) {
-            super(parent, Component.literal(variable.name).setStyle(Style.EMPTY.withColor(resolveLabelColor())).append(Component.literal(" (" + variable.getValue() + ")").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))), onClick);
+            super(parent, Component.literal(variable.getName()).setStyle(Style.EMPTY.withColor(resolveLabelColor())).append(Component.literal(" (" + variable.getValue() + ")").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))), onClick);
             this.variable = variable;
         }
 

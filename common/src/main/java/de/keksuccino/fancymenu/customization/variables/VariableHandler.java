@@ -3,138 +3,106 @@ package de.keksuccino.fancymenu.customization.variables;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.Legacy;
-import de.keksuccino.fancymenu.util.properties.PropertyContainer;
-import de.keksuccino.fancymenu.util.properties.PropertiesParser;
-import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import java.io.File;
-import java.util.*;
+import java.util.List;
 
-public class VariableHandler {
-
-    private static final Logger LOGGER = LogManager.getLogger();
+public final class VariableHandler {
 
     protected static final File VARIABLES_FILE = new File(FancyMenu.MOD_DIR.getPath() + "/user_variables.db");
-    protected static final Map<String, Variable> VARIABLES = new HashMap<>();
+    private static final VariableStore STORE = new VariableStore(new AtomicVariableDatabase(VARIABLES_FILE.toPath()), VariableHandler::notifyVariableUpdated);
+
+    private VariableHandler() {
+    }
 
     public static void init() {
-
-        readFromFile();
-
-        //Reset variables that have "Reset on Launch" enabled
-        for (Variable v : getVariables()) {
-            if (v.resetOnLaunch) v.value = "";
-        }
-        writeToFile();
-
+        STORE.init();
     }
 
     public static void setVariable(@NotNull String name, @Nullable String value) {
-        Variable v = getVariable(name);
-        if (v == null) {
-            v = new Variable(name);
-            VARIABLES.put(name, v);
-        }
-        if (Listeners.ON_VARIABLE_UPDATED.hasInstancesListening()) {
-            Listeners.ON_VARIABLE_UPDATED.onVariableUpdated(v.name, v.value, Objects.requireNonNullElse(value, "0"));
-        }
-        v.setValue(value);
-        writeToFile();
+        STORE.setVariable(name, value);
     }
 
-    public static void removeVariable(String name) {
-        VARIABLES.remove(name);
-        writeToFile();
+    public static boolean setVariableIfAbsent(@NotNull String name, @Nullable String value) {
+        return STORE.setVariableIfAbsent(name, value);
     }
 
     @Nullable
-    public static Variable getVariable(String name) {
-        return VARIABLES.get(name);
+    public static String createVariableWithUniqueCopyName(@NotNull String sourceName, @NotNull String value, boolean resetOnLaunch) {
+        return STORE.createVariableWithUniqueCopyName(sourceName, value, resetOnLaunch);
+    }
+
+    public static void replaceVariables(@NotNull List<UserVariableSnapshot> snapshots) {
+        STORE.replaceVariables(snapshots);
+    }
+
+    public static void removeVariable(@NotNull String name) {
+        STORE.removeVariable(name);
+    }
+
+    @Nullable
+    public static Variable getVariable(@NotNull String name) {
+        return STORE.getVariable(name);
+    }
+
+    @Nullable
+    public static String getVariableValue(@NotNull String name) {
+        return STORE.getVariableValue(name);
     }
 
     @NotNull
     public static List<Variable> getVariables() {
-        return new ArrayList<>(VARIABLES.values());
+        return STORE.getVariables();
+    }
+
+    @NotNull
+    public static List<UserVariableSnapshot> getVariableSnapshots() {
+        return STORE.getVariableSnapshots();
     }
 
     @NotNull
     public static List<String> getVariableNames() {
-        return new ArrayList<>(VARIABLES.keySet());
+        return STORE.getVariableNames();
     }
 
     public static void clearVariables() {
-        VARIABLES.clear();
-        writeToFile();
+        STORE.clearVariables();
     }
 
     public static boolean variableExists(@NotNull String name) {
-        return getVariable(name) != null;
+        return STORE.variableExists(name);
     }
 
     protected static void writeToFile() {
-        try {
-            if (!VARIABLES_FILE.exists()) {
-                VARIABLES_FILE.createNewFile();
-            }
-            PropertyContainerSet set = new PropertyContainerSet("user_variables");
-            for (Variable v : VARIABLES.values()) {
-                set.putContainer(v.serialize());
-            }
-            PropertiesParser.serializeSetToFile(set, VARIABLES_FILE.getPath());
-        } catch (Exception e) {
-            LOGGER.error("[FANCYMENU] Failed to write variables to file!", e);
-        }
+        STORE.writeToFile();
     }
 
     protected static void readFromFile() {
-        try {
-            if (!VARIABLES_FILE.exists()) {
-                writeToFile();
-            }
-            VARIABLES.clear();
-            PropertyContainerSet set = PropertiesParser.deserializeSetFromFile(VARIABLES_FILE.getPath());
-            if (set != null) {
-                if (set.getType().equals("cached_variables")) {
-                    readFromLegacyFile();
-                } else {
-                    List<PropertyContainer> secs = set.getContainersOfType("variable");
-                    for (PropertyContainer c : secs) {
-                        Variable v = Variable.deserialize(c);
-                        if (v != null) {
-                            VARIABLES.put(v.name, v);
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            LOGGER.error("[FANCYMENU] Failed to read variables from file!", e);
-        }
+        STORE.readFromFile();
     }
 
     @Legacy("This reads variables from v2 variable files. Remove this in the future.")
     protected static void readFromLegacyFile() {
-        try {
-            if (!VARIABLES_FILE.exists()) {
-                writeToFile();
-            }
-            VARIABLES.clear();
-            PropertyContainerSet set = PropertiesParser.deserializeSetFromFile(VARIABLES_FILE.getPath());
-            if (set != null) {
-                List<PropertyContainer> secs = set.getContainersOfType("variables");
-                if (!secs.isEmpty()) {
-                    PropertyContainer sec = secs.get(0);
-                    for (Map.Entry<String, String> m : sec.getProperties().entrySet()) {
-                        Variable v = new Variable(m.getKey());
-                        v.value = m.getValue();
-                        VARIABLES.put(m.getKey(), v);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            LOGGER.error("[FANCYMENU] Failed to read legacy variables from file!", e);
+        STORE.readFromLegacyFile();
+    }
+
+    /**
+     * Flushes a final complete snapshot and then rejects late daemon-thread mutations for the remainder of shutdown.
+     * Repeated calls are safe and do not perform duplicate writes.
+     */
+    public static void shutdown() {
+        STORE.shutdown();
+    }
+
+    static VariableStore getStore() {
+        return STORE;
+    }
+
+    private static void notifyVariableUpdated(@NotNull String name, @NotNull String oldValue, @NotNull String newValue) {
+        if (Listeners.ON_VARIABLE_UPDATED.hasInstancesListening()) {
+            Listeners.ON_VARIABLE_UPDATED.onVariableUpdated(name, oldValue, newValue);
         }
     }
 

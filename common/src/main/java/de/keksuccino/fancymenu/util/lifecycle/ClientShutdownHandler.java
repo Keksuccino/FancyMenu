@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.lifecycle;
 
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
+import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
 import org.apache.logging.log4j.LogManager;
@@ -19,9 +20,13 @@ public final class ClientShutdownHandler {
     public static void shutdown() {
         if (!SHUTDOWN_STARTED.compareAndSet(false, true)) return;
 
-        runCleanup("internet availability monitor", WebUtils::shutdown);
-        runCleanup("panorama renderers", PanoramaHandler::shutdown);
-        runCleanup("FancyMenu executors", FancyMenuExecutors::shutdownAll);
+        try {
+            runCleanup("internet availability monitor", WebUtils::shutdown);
+            runCleanup("user variables", VariableHandler::shutdown);
+            runCleanup("panorama renderers", PanoramaHandler::shutdown);
+        } finally {
+            runCleanup("FancyMenu executors", FancyMenuExecutors::shutdownAll);
+        }
     }
 
     private static void runCleanup(String name, Runnable cleanup) {

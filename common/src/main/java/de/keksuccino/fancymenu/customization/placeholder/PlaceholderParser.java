@@ -6,7 +6,7 @@ package de.keksuccino.fancymenu.customization.placeholder;
 
 import com.google.common.collect.Lists;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.customization.variables.Variable;
+import de.keksuccino.fancymenu.customization.variables.UserVariableSnapshot;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
@@ -86,13 +86,14 @@ public class PlaceholderParser {
         addParsingProcessor(ParsingProcessorTiming.AFTER_REPLACING_PLACEHOLDERS, in -> {
             String replaced = in;
             int index = 0;
+            List<UserVariableSnapshot> variables = VariableHandler.getVariableSnapshots();
             for (char c : in.toCharArray()) {
                 if (c == DOLLAR_CHAR) {
                     String sub = StringUtils.substring(in, index);
                     if (StringUtils.startsWith(sub, SHORT_VARIABLE_PLACEHOLDER_PREFIX)) {
-                        for (Variable variable : VariableHandler.getVariables()) {
-                            if (StringUtils.startsWith(sub, SHORT_VARIABLE_PLACEHOLDER_PREFIX + variable.getName())) {
-                                replaced = StringUtils.replace(replaced, SHORT_VARIABLE_PLACEHOLDER_PREFIX + variable.getName(), variable.getValue());
+                        for (UserVariableSnapshot variable : variables) {
+                            if (StringUtils.startsWith(sub, SHORT_VARIABLE_PLACEHOLDER_PREFIX + variable.name())) {
+                                replaced = StringUtils.replace(replaced, SHORT_VARIABLE_PLACEHOLDER_PREFIX + variable.name(), variable.value());
                                 break;
                             }
                         }

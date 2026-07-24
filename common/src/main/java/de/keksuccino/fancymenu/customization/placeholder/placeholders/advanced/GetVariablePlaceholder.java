@@ -23,7 +23,7 @@ public class GetVariablePlaceholder extends Placeholder {
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         String name = dps.values.get("name");
         if (name != null) {
-            String val = VariableHandler.variableExists(name) ? Objects.requireNonNull(VariableHandler.getVariable(name)).getValue() : "0";
+            String val = Objects.requireNonNullElse(VariableHandler.getVariableValue(name), "0");
             if (val.isEmpty()) {
                 val = "0";
             }
