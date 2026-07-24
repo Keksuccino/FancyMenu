@@ -18,40 +18,72 @@ final class ModelBuildAttemptTracker {
     private long revision;
     @Nullable
     private List<String> lines;
+    private boolean contentAvailable;
     private boolean attempted;
 
     @NotNull
-    Observation observe(long revision, @Nullable List<String> currentLines) {
-        boolean contentChanged = !this.initialized || !Objects.equals(this.lines, currentLines);
-        boolean changed = !this.initialized || this.revision != revision || contentChanged;
-        if (changed) {
-            List<String> snapshot = contentChanged ? (currentLines != null ? Collections.unmodifiableList(new ArrayList<>(currentLines)) : null) : this.lines;
+    synchronized Observation observe(long revision, @Nullable List<String> currentLines) {
+        boolean revisionChanged = !this.initialized || this.revision != revision;
+        if (revisionChanged) {
+            List<String> snapshot = snapshot(currentLines);
+            boolean contentChanged = !this.initialized || !Objects.equals(this.lines, snapshot);
             this.initialized = true;
             this.revision = revision;
             this.lines = snapshot;
             this.attempted = false;
+            this.contentAvailable = snapshot != null && !snapshot.isEmpty();
+            return new Observation(true, contentChanged, this.contentAvailable);
         }
-        return new Observation(changed, contentChanged, this.lines != null && !this.lines.isEmpty());
-    }
 
-    boolean beginAttempt() {
-        if (this.attempted || this.lines == null || this.lines.isEmpty()) return false;
-        this.attempted = true;
-        return true;
-    }
+        // Null means the asynchronous resource is not currently readable. Keep the last exact content revision and its
+        // failed-attempt marker so a readiness blip cannot turn the same malformed model into another frame-time build.
+        if (currentLines == null) {
+            this.contentAvailable = false;
+            return new Observation(false, false, false);
+        }
 
-    @NotNull
-    String modelJson() {
-        if (!this.attempted || this.lines == null || this.lines.isEmpty()) throw new IllegalStateException("No model build attempt is active");
-        return String.join("\n", this.lines);
+        if (Objects.equals(this.lines, currentLines)) {
+            this.contentAvailable = !currentLines.isEmpty();
+            return new Observation(false, false, this.contentAvailable);
+        }
+
+        List<String> snapshot = snapshot(currentLines);
+        boolean contentChanged = !Objects.equals(this.lines, snapshot);
+        if (contentChanged) {
+            this.lines = snapshot;
+            this.attempted = false;
+        }
+        this.contentAvailable = !snapshot.isEmpty();
+        return new Observation(contentChanged, contentChanged, this.contentAvailable);
     }
 
     @Nullable
-    List<String> linesSnapshot() {
+    synchronized Attempt beginAttempt() {
+        if (this.attempted || !this.contentAvailable || this.lines == null || this.lines.isEmpty()) return null;
+        this.attempted = true;
+        return new Attempt(this.revision, this.lines);
+    }
+
+    @Nullable
+    synchronized List<String> linesSnapshot() {
         return this.lines;
     }
 
+    @Nullable
+    private static List<String> snapshot(@Nullable List<String> lines) {
+        return lines != null ? Collections.unmodifiableList(new ArrayList<>(lines)) : null;
+    }
+
     record Observation(boolean changed, boolean contentChanged, boolean hasContent) {
+    }
+
+    record Attempt(long revision, @NotNull List<String> lines) {
+
+        @NotNull
+        String modelJson() {
+            return String.join("\n", this.lines);
+        }
+
     }
 
 }
