@@ -14,14 +14,15 @@ public class WatermediaFrameTexture extends AbstractTexture {
 
     protected WatermediaGlTexture watermediaTexture;
 
-    public WatermediaFrameTexture(int id) {
-        this.watermediaTexture = new WatermediaGlTexture(TEXTURE_USAGE_FANCYMENU, LABEL_FANCYMENU, TextureFormat.RGBA8, 100, 100, 1, 1, id);
+    public WatermediaFrameTexture(long handle) {
+        this.watermediaTexture = new WatermediaGlTexture(TEXTURE_USAGE_FANCYMENU, LABEL_FANCYMENU, TextureFormat.RGBA8, 100, 100, 1, 1, WatermediaReflectionBridge.openGlTextureId(handle));
         this.texture = this.watermediaTexture;
         this.textureView = RenderSystem.getDevice().createTextureView(this.texture);
         this.sampler = RenderSystem.getSamplerCache().getRepeat(FilterMode.NEAREST, false);
     }
 
-    public void setId(int id) {
+    public void setHandle(long handle) {
+        int id = WatermediaReflectionBridge.openGlTextureId(handle);
         if (this.watermediaTexture.glId() == id) return;
         int width = Math.max(1, this.watermediaTexture.getWidth(0));
         int height = Math.max(1, this.watermediaTexture.getHeight(0));
