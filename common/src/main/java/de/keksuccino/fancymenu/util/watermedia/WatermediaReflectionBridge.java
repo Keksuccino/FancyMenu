@@ -14,7 +14,7 @@ import java.util.function.Supplier;
 public class WatermediaReflectionBridge {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static volatile boolean WATERMEDIA_unsupported_texture_handle_logged = false;
+    private static volatile boolean WATERMEDIA_unsupported_gl_texture_handle_logged = false;
 
     @Nullable
     public static Object createMrl(@NotNull String source) {
@@ -146,21 +146,9 @@ public class WatermediaReflectionBridge {
         return (status != null) ? status.toString() : "UNKNOWN";
     }
 
-    public static int playerTextureId(@Nullable Object player) {
+    public static long playerTextureHandle(@Nullable Object player) {
         Number textureHandle = invokeNumber(player, "texture", 0);
-        if (textureHandle == null) return 0;
-
-        long textureId = textureHandle.longValue();
-        if (textureId <= 0L) return 0;
-        if (textureId > Integer.MAX_VALUE) {
-            if (!WATERMEDIA_unsupported_texture_handle_logged) {
-                WATERMEDIA_unsupported_texture_handle_logged = true;
-                LOGGER.warn("[FANCYMENU] Watermedia returned an unsupported texture handle for Minecraft rendering: {}", textureId);
-            }
-            return 0;
-        }
-
-        return (int) textureId;
+        return textureHandle != null ? textureHandle.longValue() : 0L;
     }
 
     public static int playerWidth(@Nullable Object player) {
@@ -245,6 +233,15 @@ public class WatermediaReflectionBridge {
         // WaterMedia 3.0.0.22 removed the callback-based builder; its factory engine now preserves the host's exact GL state itself, including state cached by Minecraft, Sodium, and Iris.
         Method createGlEngine = mediaApiClass.getMethod("glEngine", Thread.class, Executor.class);
         return createGlEngine.invoke(null, renderThread, renderThreadExecutor);
+    }
+
+    public static int openGlTextureId(long textureHandle) {
+        if (textureHandle > 0L && textureHandle <= Integer.MAX_VALUE) return (int) textureHandle;
+        if (textureHandle != 0L && !WATERMEDIA_unsupported_gl_texture_handle_logged) {
+            WATERMEDIA_unsupported_gl_texture_handle_logged = true;
+            LOGGER.warn("[FANCYMENU] Watermedia returned an unsupported OpenGL texture handle: {}", textureHandle);
+        }
+        return 0;
     }
 
     @NotNull

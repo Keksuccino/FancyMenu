@@ -35,4 +35,30 @@ class WatermediaReflectionBridgeTest {
         assertTrue(frames[0].hasRemaining());
     }
 
+    @Test
+    void preservesTheLongApiBoundaryAndAcceptsOnlyPositiveIntSizedOpenGlTextureNames() {
+        assertEquals(0, WatermediaReflectionBridge.openGlTextureId(0L));
+        assertEquals(0, WatermediaReflectionBridge.openGlTextureId(-1L));
+        assertEquals(1, WatermediaReflectionBridge.openGlTextureId(1L));
+        assertEquals(Integer.MAX_VALUE, WatermediaReflectionBridge.openGlTextureId(Integer.MAX_VALUE));
+        assertEquals(0, WatermediaReflectionBridge.openGlTextureId((long)Integer.MAX_VALUE + 1L));
+        long oversizedHandle = (long)Integer.MAX_VALUE + 42L;
+        assertEquals(oversizedHandle, WatermediaReflectionBridge.playerTextureHandle(new TexturePlayer(oversizedHandle)));
+        assertEquals(0, WatermediaReflectionBridge.openGlTextureId(WatermediaReflectionBridge.playerTextureHandle(new TexturePlayer(oversizedHandle))));
+    }
+
+    public static final class TexturePlayer {
+
+        private final long texture;
+
+        public TexturePlayer(long texture) {
+            this.texture = texture;
+        }
+
+        public long texture() {
+            return this.texture;
+        }
+
+    }
+
 }

@@ -23,7 +23,7 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
     @NotNull
     protected final ResourceLocation frameLocation;
     @NotNull
-    protected final WatermediaFrameTexture frameTexture = new WatermediaFrameTexture(-1);
+    protected final WatermediaFrameTexture frameTexture = new WatermediaFrameTexture(0L);
     @NotNull
     protected final String logTypeName;
     @NotNull
@@ -224,9 +224,9 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
         this.applyFiniteLoopStop(cachedPlayer);
         this.updateSizeFromPlayer(cachedPlayer);
 
-        int textureId = WatermediaReflectionBridge.playerTextureId(cachedPlayer);
-        if (textureId <= 0) return RenderableResource.FULLY_TRANSPARENT_TEXTURE;
-        this.frameTexture.setId(textureId);
+        long textureHandle = WatermediaReflectionBridge.playerTextureHandle(cachedPlayer);
+        if (WatermediaReflectionBridge.openGlTextureId(textureHandle) == 0) return RenderableResource.FULLY_TRANSPARENT_TEXTURE;
+        this.frameTexture.setHandle(textureHandle);
         this.ensureFrameTextureRegistered();
         return this.frameLocation;
     }
@@ -371,7 +371,7 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
         try {
             Minecraft.getInstance().getTextureManager().release(this.frameLocation);
         } catch (Exception ignored) {}
-        this.frameTexture.setId(-1);
+        this.frameTexture.setHandle(0L);
         File temp = this.generatedTempFile;
         this.generatedTempFile = null;
         if ((temp != null) && temp.isFile()) {

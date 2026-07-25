@@ -12,8 +12,8 @@ import java.util.concurrent.Executor;
 
 public class WatermediaFrameTexture extends AbstractTexture {
 
-    public WatermediaFrameTexture(int id) {
-        this.id = id;
+    public WatermediaFrameTexture(long handle) {
+        this.id = WatermediaReflectionBridge.openGlTextureId(handle);
     }
 
     @Override
@@ -43,8 +43,8 @@ public class WatermediaFrameTexture extends AbstractTexture {
         return this.id;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setHandle(long handle) {
+        this.id = WatermediaReflectionBridge.openGlTextureId(handle);
     }
 
     @Override
