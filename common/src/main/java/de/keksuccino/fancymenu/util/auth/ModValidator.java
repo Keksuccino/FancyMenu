@@ -28,7 +28,7 @@ public class ModValidator {
     private static final String FANCYMENU_MOD_ID = "fancymenu";
     private static final String FANCYMENU_DISPLAY_NAME = "FancyMenu";
     private static final String FANCYMENU_DESCRIPTION = "Customize Minecraft's menus with ease!";
-    private static final String FANCYMENU_LICENSE = "DSMSLv3 (DON'T SNATCH MA STUFF LICENSE v3)";
+    private static final String FANCYMENU_LICENSE = "DSMSLv3.1 (DON'T SNATCH MA STUFF LICENSE v3.1)";
 
     public static boolean isFancyMenuLoaded() {
         return Services.PLATFORM.isModLoaded(FANCYMENU_MOD_ID);
