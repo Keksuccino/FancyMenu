@@ -335,6 +335,14 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public void renderTick_Tail() {
 	}
 
+	/**
+	 * Called when an outer owner intentionally skips {@link #renderInternal(GuiGraphics, int, int, float)} for
+	 * this extraction cycle. Resource-owning elements can use this to observe the skipped cycle without duplicating the
+	 * normal visibility, delay, or fading lifecycle.
+	 */
+	public void onRenderInternalSkipped() {
+	}
+
 	public void tickBaseOpacity() {
 
 		//Don't update opacity while fade-in/out is active
