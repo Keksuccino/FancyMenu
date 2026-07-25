@@ -772,6 +772,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
             if (this.rightClickMenu.isOpen() && !this.rightClickMenu.isSubMenu()) {
                 this.rightClickMenu.closeMenu();
             }
+            this.element.onRenderInternalSkipped();
             return;
         }
 
