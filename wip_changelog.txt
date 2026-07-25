@@ -1,6 +1,8 @@
 
 CHANGELOG | FANCYMENU v3.9.9 [ W I P !! Not public yet !! ]
 
+- Added support for latest WaterMedia version (#1732)
+  - FancyMenu now wants at least WaterMedia v3.0.0.22 (older versions do not work anymore)
 - Fixed the "Is Layout Enabled" requirement stopping after the first enabled layout instead of checking for later matches
 - Fixed Ceiling and Floor placeholders adding a `.0` suffix to whole-number results
 - Fixed the "Is Element Focused" requirement using a misspelled description localization key
