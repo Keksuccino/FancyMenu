@@ -10,8 +10,8 @@ import java.util.concurrent.Executor;
 
 public class WatermediaFrameTexture extends AbstractTexture {
 
-    public WatermediaFrameTexture(int id) {
-        this.id = id;
+    public WatermediaFrameTexture(long textureHandle) {
+        this.setHandle(textureHandle);
     }
 
     @Override
@@ -34,8 +34,10 @@ public class WatermediaFrameTexture extends AbstractTexture {
         return this.id;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setHandle(long textureHandle) {
+        // WaterMedia uses a backend-neutral long handle. Minecraft 1.19.2 only supports OpenGL texture names, so the
+        // narrowing conversion stays at this renderer-specific boundary and rejects opaque/non-GL handles safely.
+        this.id = WatermediaReflectionBridge.openGlTextureId(textureHandle);
     }
 
     @Override

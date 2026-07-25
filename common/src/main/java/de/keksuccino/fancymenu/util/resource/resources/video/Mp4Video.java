@@ -60,7 +60,7 @@ public class Mp4Video implements IVideo {
     protected volatile boolean looping = false;
     protected final String uniqueId = ScreenCustomization.generateUniqueIdentifier();
     protected final ResourceLocation frameLocation = new ResourceLocation("fancymenu", "watermedia_video_frame_" + this.uniqueId.toLowerCase().replace("-", ""));
-    protected final WatermediaFrameTexture frameTexture = new WatermediaFrameTexture(-1);
+    protected final WatermediaFrameTexture frameTexture = new WatermediaFrameTexture(0L);
     protected volatile boolean ready = false;
     protected volatile boolean loadingCompleted = false;
     protected volatile boolean loadingFailed = false;
@@ -367,9 +367,10 @@ public class Mp4Video implements IVideo {
         if (!this.shouldPresentFrame(statusName)) return FULLY_TRANSPARENT_TEXTURE;
         this.tryApplyQueuedSeekToPlayer(cachedPlayer);
         this.updateSizeFromPlayer(cachedPlayer);
-        int textureId = WatermediaReflectionBridge.playerTextureId(cachedPlayer);
-        if (textureId <= 0) return FULLY_TRANSPARENT_TEXTURE;
-        this.frameTexture.setId(textureId);
+        long textureHandle = WatermediaReflectionBridge.playerTextureHandle(cachedPlayer);
+        if (textureHandle == 0L) return FULLY_TRANSPARENT_TEXTURE;
+        this.frameTexture.setHandle(textureHandle);
+        if (this.frameTexture.getId() <= 0) return FULLY_TRANSPARENT_TEXTURE;
         this.framePresented = true;
         this.ensureFrameTextureRegistered();
         return this.frameLocation;
@@ -513,7 +514,7 @@ public class Mp4Video implements IVideo {
             this.maybeEmitVideoPlaybackStatusChanged(OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus.STOPPED);
         }
         this.resetVideoPlaybackListenerState();
-        this.frameTexture.setId(-1);
+        this.frameTexture.setHandle(0L);
         long stopVersion = ++this.stopRequestVersion;
         Object cachedPlayer = this.mediaPlayer;
         if (cachedPlayer != null) {
@@ -663,7 +664,7 @@ public class Mp4Video implements IVideo {
         try {
             Minecraft.getInstance().getTextureManager().release(this.frameLocation);
         } catch (Exception ignored) {}
-        this.frameTexture.setId(-1);
+        this.frameTexture.setHandle(0L);
         File temp = this.generatedTempFile;
         if ((temp != null) && temp.isFile()) {
             temp.delete();
@@ -809,7 +810,7 @@ public class Mp4Video implements IVideo {
 
     protected void resetFramePresentationStateForNewPlayer() {
         this.framePresented = false;
-        this.frameTexture.setId(-1);
+        this.frameTexture.setHandle(0L);
     }
 
     protected void queueDeferredInitialUnpause(@NotNull Object player, long startVersion, int ticksToWait, int statusWaitTicks) {

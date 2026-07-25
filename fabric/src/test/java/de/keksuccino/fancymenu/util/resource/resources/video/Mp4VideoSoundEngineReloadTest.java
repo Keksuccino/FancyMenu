@@ -18,7 +18,7 @@ public class Mp4VideoSoundEngineReloadTest {
         video.seekRequestedMs = -1L;
         video.stopRequestVersion = 7L;
         video.framePresented = true;
-        video.frameTexture.setId(42);
+        video.frameTexture.setHandle(42L);
 
         video.releasePlayerBeforeSoundEngineReload();
 
@@ -26,7 +26,7 @@ public class Mp4VideoSoundEngineReloadTest {
         assertEquals(1432L, video.seekRequestedMs);
         assertEquals(8L, video.stopRequestVersion);
         assertFalse(video.framePresented);
-        assertEquals(-1, video.frameTexture.getId());
+        assertEquals(0, video.frameTexture.getId());
         assertTrue(player.paused);
         assertEquals(1, player.releaseCount);
     }
