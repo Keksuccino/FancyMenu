@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.properties.Property;
+import de.keksuccino.fancymenu.util.rendering.glsl.GlslOwnedResourceLifecycle;
 import de.keksuccino.fancymenu.util.rendering.glsl.GlslShaderRuntime;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -60,6 +61,8 @@ public class GlslElement extends AbstractElement {
     public final Property<ResourceSupplier<ITexture>> iChannel3Source = putProperty(Property.resourceSupplierProperty(ITexture.class, "ichannel_3_source", null, "fancymenu.elements.glsl.ichannel3_source", true, true, true, FileFilter.IMAGE_FILE_FILTER));
 
     protected final GlslShaderRuntime shaderRuntime = new GlslShaderRuntime();
+    private final GlslOwnedResourceLifecycle ownedResourceLifecycle = new GlslOwnedResourceLifecycle();
+    private boolean extractedThisTick;
 
     public GlslElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -74,6 +77,7 @@ public class GlslElement extends AbstractElement {
         if (!this.shouldRender()) {
             return;
         }
+        this.extractedThisTick = true;
 
         int x = this.getAbsoluteX();
         int y = this.getAbsoluteY();
@@ -132,21 +136,51 @@ public class GlslElement extends AbstractElement {
     }
 
     @Override
+    public void renderTick_Tail() {
+        super.renderTick_Tail();
+        // Track actual extraction instead of re-querying the time-sensitive visibility rules. Disappearance delays and
+        // fade-out frames keep extracting, so cleanup happens on the first tick after the final visible/fade frame.
+        // A delay can expire between AbstractElement's time-sensitive visibility queries; keep ownership for that one
+        // unsettled cycle so a fade that begins on the next cycle retains its pass history and feedback textures.
+        this.completeExtractionCycle(this.becameInvisible || this.lastTickRawShouldRender);
+    }
+
+    @Override
+    public void onRenderInternalSkipped() {
+        super.onRenderInternalSkipped();
+        this.completeExtractionCycle(true);
+    }
+
+    @Override
     public void onBeforeResizeScreen() {
         super.onBeforeResizeScreen();
-        this.shaderRuntime.close();
+        this.closeShaderRuntime();
     }
 
     @Override
     public void onDestroyElement() {
         super.onDestroyElement();
-        this.shaderRuntime.close();
+        this.closeShaderRuntime();
     }
 
     @Override
     public void onCloseScreen(@Nullable net.minecraft.client.gui.screens.Screen closedScreen, @Nullable net.minecraft.client.gui.screens.Screen newScreen) {
         super.onCloseScreen(closedScreen, newScreen);
+        this.closeShaderRuntime();
+    }
+
+    private void completeExtractionCycle(boolean releaseAllowed) {
+        boolean extracted = this.extractedThisTick;
+        this.extractedThisTick = false;
+        if (this.ownedResourceLifecycle.completeExtractionCycle(extracted, releaseAllowed)) {
+            this.closeShaderRuntime();
+        }
+    }
+
+    private void closeShaderRuntime() {
         this.shaderRuntime.close();
+        this.ownedResourceLifecycle.markResourcesReleased();
+        this.extractedThisTick = false;
     }
 
     @Nullable
