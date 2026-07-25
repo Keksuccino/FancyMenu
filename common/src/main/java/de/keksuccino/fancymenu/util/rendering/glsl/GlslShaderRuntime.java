@@ -1,12 +1,16 @@
 package de.keksuccino.fancymenu.util.rendering.glsl;
 
-import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.opengl.GlStateManager;
-import com.mojang.blaze3d.opengl.GlTexture;
+import com.mojang.blaze3d.GpuFormat;
+import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.pipeline.TextureTarget;
+import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.systems.CommandEncoder;
+import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import de.keksuccino.fancymenu.customization.variables.VariableHandler;
-import de.keksuccino.fancymenu.customization.variables.UserVariableSnapshot;
+import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.blaze3d.textures.GpuSampler;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphicsExtractor;
 import de.keksuccino.fancymenu.util.rendering.GuiRenderPhaseAction;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -15,176 +19,48 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL13;
-import org.lwjgl.opengl.GL14;
-import org.lwjgl.opengl.GL15;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL30;
-import org.lwjgl.opengl.GL12;
+import org.joml.Vector4f;
+import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
-import java.time.Instant;
-import java.time.ZonedDateTime;
-import java.time.temporal.WeekFields;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.regex.Pattern;
+import java.util.Optional;
 
-/**
- * Runtime OpenGL shader pipeline for FancyMenu GLSL backgrounds/elements.
- */
+/** Backend-neutral runtime for FancyMenu's Image and Buffer A-D GLSL passes. */
 public class GlslShaderRuntime {
 
     private static final Logger LOGGER = LogManager.getLogger();
-
-    private static final String DEFAULT_GLSL_VERSION = "#version 150";
-    private static final String VULKAN_UNSUPPORTED_ERROR_KEY_FANCYMENU = "fancymenu.glsl.vulkan_unsupported.error";
-    private static final String VERTEX_SHADER_SOURCE = """
-            #version 150
-            in vec2 Position;
-            out vec2 fmUv_FancyMenu;
-            void main() {
-                fmUv_FancyMenu = (Position + 1.0) * 0.5;
-                gl_Position = vec4(Position, 0.0, 1.0);
-            }
-            """;
-
     private static final int CHANNEL_COUNT = 4;
     private static final int BUFFER_PASS_COUNT = 4;
     private static final int TOTAL_PASS_COUNT = BUFFER_PASS_COUNT + 1;
     private static final int IMAGE_PASS_INDEX = BUFFER_PASS_COUNT;
 
-    // FancyMenu variable API uniforms (replace <name> with the variable name):
-    // fmVarFloat_<name>, fmVarInt_<name>, fmVarBool_<name>, fmVarVec2_<name>, fmVarVec3_<name>,
-    // fmVarVec4_<name>, fmVarExists_<name>, and the global fmVariableCount.
-    private static final String VARIABLE_UNIFORM_FLOAT_PREFIX = "fmVarFloat_";
-    private static final String VARIABLE_UNIFORM_INT_PREFIX = "fmVarInt_";
-    private static final String VARIABLE_UNIFORM_BOOL_PREFIX = "fmVarBool_";
-    private static final String VARIABLE_UNIFORM_VEC2_PREFIX = "fmVarVec2_";
-    private static final String VARIABLE_UNIFORM_VEC3_PREFIX = "fmVarVec3_";
-    private static final String VARIABLE_UNIFORM_VEC4_PREFIX = "fmVarVec4_";
-    private static final String VARIABLE_UNIFORM_EXISTS_PREFIX = "fmVarExists_";
-    private static final Pattern VARIABLE_COMPONENT_SPLIT_PATTERN = Pattern.compile("[\\s,;|]+");
-    private static final VariableUniformValue ZERO_VARIABLE_UNIFORM_VALUE_FANCYMENU = new VariableUniformValue(
-            0.0F,
-            0,
-            0,
-            0.0F,
-            0.0F,
-            0.0F,
-            0.0F,
-            0.0F,
-            0.0F,
-            0.0F,
-            0.0F,
-            0.0F
-    );
-
-    private static final UniformDefinition[] UNIFORMS = new UniformDefinition[]{
-            new UniformDefinition("iResolution", "uniform vec3 iResolution;"),
-            new UniformDefinition("iTime", "uniform float iTime;"),
-            new UniformDefinition("iTimeDelta", "uniform float iTimeDelta;"),
-            new UniformDefinition("iFrameRate", "uniform float iFrameRate;"),
-            new UniformDefinition("iFrame", "uniform int iFrame;"),
-            new UniformDefinition("iMouse", "uniform vec4 iMouse;"),
-            new UniformDefinition("iDate", "uniform vec4 iDate;"),
-            new UniformDefinition("iSampleRate", "uniform float iSampleRate;"),
-            new UniformDefinition("iChannelTime", "uniform float iChannelTime[4];"),
-            new UniformDefinition("iChannelResolution", "uniform vec3 iChannelResolution[4];"),
-            new UniformDefinition("iChannel0", "uniform sampler2D iChannel0;"),
-            new UniformDefinition("iChannel1", "uniform sampler2D iChannel1;"),
-            new UniformDefinition("iChannel2", "uniform sampler2D iChannel2;"),
-            new UniformDefinition("iChannel3", "uniform sampler2D iChannel3;"),
-            new UniformDefinition("fmAreaOffset", "uniform vec2 fmAreaOffset;"),
-            new UniformDefinition("fmAreaSize", "uniform vec2 fmAreaSize;"),
-            new UniformDefinition("fmAreaPosition", "uniform vec2 fmAreaPosition;"),
-            new UniformDefinition("fmAreaTopLeft", "uniform vec2 fmAreaTopLeft;"),
-            new UniformDefinition("fmScreenSize", "uniform vec2 fmScreenSize;"),
-            new UniformDefinition("fmGuiScale", "uniform float fmGuiScale;"),
-            new UniformDefinition("fmMouse", "uniform vec4 fmMouse;"),
-            new UniformDefinition("fmMouseDelta", "uniform vec2 fmMouseDelta;"),
-            new UniformDefinition("fmMouseButtons", "uniform ivec4 fmMouseButtons;"),
-            new UniformDefinition("fmMouseClickCount", "uniform ivec4 fmMouseClickCount;"),
-            new UniformDefinition("fmMouseReleaseCount", "uniform ivec4 fmMouseReleaseCount;"),
-            new UniformDefinition("fmMouseScroll", "uniform vec2 fmMouseScroll;"),
-            new UniformDefinition("fmMouseScrollTotal", "uniform vec2 fmMouseScrollTotal;"),
-            new UniformDefinition("fmKeyEvent", "uniform ivec4 fmKeyEvent;"),
-            new UniformDefinition("fmKeyEventCount", "uniform int fmKeyEventCount;"),
-            new UniformDefinition("fmCharEvent", "uniform ivec4 fmCharEvent;"),
-            new UniformDefinition("fmCharEventCount", "uniform int fmCharEventCount;"),
-            new UniformDefinition("fmDateParts", "uniform ivec4 fmDateParts;"),
-            new UniformDefinition("fmTimeParts", "uniform ivec4 fmTimeParts;"),
-            new UniformDefinition("fmDayOfYear", "uniform int fmDayOfYear;"),
-            new UniformDefinition("fmWeekOfYear", "uniform int fmWeekOfYear;"),
-            new UniformDefinition("fmUnixTimeSeconds", "uniform int fmUnixTimeSeconds;"),
-            new UniformDefinition("fmUnixTimeMilliseconds", "uniform int fmUnixTimeMilliseconds;"),
-            new UniformDefinition("fmPartialTick", "uniform float fmPartialTick;"),
-            new UniformDefinition("fmGameDeltaTicks", "uniform float fmGameDeltaTicks;"),
-            new UniformDefinition("fmRealtimeDeltaTicks", "uniform float fmRealtimeDeltaTicks;"),
-            new UniformDefinition("fmInWorld", "uniform int fmInWorld;"),
-            new UniformDefinition("fmIsPaused", "uniform int fmIsPaused;"),
-            new UniformDefinition("fmOpacity", "uniform float fmOpacity;"),
-            new UniformDefinition("fmVariableCount", "uniform int fmVariableCount;")
-    };
-
-    private static final String[] CACHED_UNIFORM_LOOKUPS = new String[]{
-            "iResolution", "iTime", "iTimeDelta", "iFrameRate", "iFrame", "iMouse", "iDate", "iSampleRate",
-            "iChannelTime[0]", "iChannelResolution[0]",
-            "iChannel0", "iChannel1", "iChannel2", "iChannel3",
-            "fmAreaOffset", "fmAreaSize", "fmAreaPosition", "fmAreaTopLeft", "fmScreenSize", "fmGuiScale",
-            "fmMouse", "fmMouseDelta", "fmMouseButtons", "fmMouseClickCount", "fmMouseReleaseCount",
-            "fmMouseScroll", "fmMouseScrollTotal",
-            "fmKeyEvent", "fmKeyEventCount", "fmCharEvent", "fmCharEventCount",
-            "fmDateParts", "fmTimeParts", "fmDayOfYear", "fmWeekOfYear",
-            "fmUnixTimeSeconds", "fmUnixTimeMilliseconds",
-            "fmPartialTick", "fmGameDeltaTicks", "fmRealtimeDeltaTicks", "fmInWorld", "fmIsPaused", "fmOpacity",
-            "fmVariableCount"
-    };
-
-    private static final Pattern VERSION_DIRECTIVE_PATTERN = Pattern.compile("(?m)^\\s*#version\\s+.+$");
-    private static final Pattern PRECISION_DIRECTIVE_PATTERN = Pattern.compile("(?m)^\\s*precision\\s+\\w+\\s+\\w+\\s*;\\s*$");
-
-    private int vaoId;
-    private int vboId;
-    private int imageFramebufferId;
-
     @Nullable
     private String lastCompileError;
     private boolean sourceMissing;
-
     private final ProgramState[] passPrograms_FancyMenu = new ProgramState[TOTAL_PASS_COUNT];
-    private final BufferTargetState[] bufferTargets_FancyMenu = new BufferTargetState[BUFFER_PASS_COUNT];
+    private final GlslPingPongTarget[] bufferTargets_FancyMenu = new GlslPingPongTarget[BUFFER_PASS_COUNT];
+    private final GlslFrameUniformState frameUniformState_FancyMenu = new GlslFrameUniformState();
     @Nullable
-    private ProgramState activeUniformProgram_FancyMenu;
+    private TextureTarget fallbackTextureTarget_FancyMenu;
 
-    private long frameCounter;
-    private long startNanoTime = -1L;
-    private long lastFrameNanoTime = -1L;
-    private double accumulatedTimeSeconds;
-    private float lastFrameDeltaSeconds;
-    private float lastFrameRate;
-    private double lastMouseScrollTotalX;
-    private double lastMouseScrollTotalY;
-    private float lastShadertoyMouseX;
-    private float lastShadertoyMouseY;
-    private boolean hasShadertoyMousePosition;
-    private final Set<String> lastVariableUniformSuffixes_FancyMenu = new HashSet<>();
+    public GlslShaderRuntime() {
+        for (int i = 0; i < TOTAL_PASS_COUNT; i++) {
+            this.passPrograms_FancyMenu[i] = new ProgramState();
+        }
+        for (int i = 0; i < BUFFER_PASS_COUNT; i++) {
+            this.bufferTargets_FancyMenu[i] = new GlslPingPongTarget("FancyMenu GLSL Buffer " + (char) ('A' + i));
+        }
+    }
 
     public enum CompileMode {
         AUTO,
@@ -235,12 +111,8 @@ public class GlslShaderRuntime {
         }
     }
 
-    public record ChannelRouting(
-            @NotNull ChannelInput channel0,
-            @NotNull ChannelInput channel1,
-            @NotNull ChannelInput channel2,
-            @NotNull ChannelInput channel3
-    ) {
+    public record ChannelRouting(@NotNull ChannelInput channel0, @NotNull ChannelInput channel1, @NotNull ChannelInput channel2, @NotNull ChannelInput channel3) {
+
         @NotNull
         public ChannelInput channelForIndex(int index) {
             return switch (index) {
@@ -263,29 +135,8 @@ public class GlslShaderRuntime {
         }
     }
 
-    public record RenderSettings(
-            @NotNull CompileMode compileMode,
-            boolean forceShadertoyCompatibility,
-            float timeScale,
-            boolean freezeTime,
-            boolean enableBlend,
-            boolean useInput,
-            boolean mousePositionRequiresHold,
-            float opacity,
-            @Nullable ResourceSupplier<ITexture> channel0,
-            @Nullable ResourceSupplier<ITexture> channel1,
-            @Nullable ResourceSupplier<ITexture> channel2,
-            @Nullable ResourceSupplier<ITexture> channel3,
-            @Nullable String bufferASource,
-            @Nullable String bufferBSource,
-            @Nullable String bufferCSource,
-            @Nullable String bufferDSource,
-            @NotNull ChannelRouting imageRouting,
-            @NotNull ChannelRouting bufferARouting,
-            @NotNull ChannelRouting bufferBRouting,
-            @NotNull ChannelRouting bufferCRouting,
-            @NotNull ChannelRouting bufferDRouting
-    ) {
+    public record RenderSettings(@NotNull CompileMode compileMode, boolean forceShadertoyCompatibility, float timeScale, boolean freezeTime, boolean enableBlend, boolean useInput, boolean mousePositionRequiresHold, float opacity, @Nullable ResourceSupplier<ITexture> channel0, @Nullable ResourceSupplier<ITexture> channel1, @Nullable ResourceSupplier<ITexture> channel2, @Nullable ResourceSupplier<ITexture> channel3, @Nullable String bufferASource, @Nullable String bufferBSource, @Nullable String bufferCSource, @Nullable String bufferDSource, @NotNull ChannelRouting imageRouting, @NotNull ChannelRouting bufferARouting, @NotNull ChannelRouting bufferBRouting, @NotNull ChannelRouting bufferCRouting, @NotNull ChannelRouting bufferDRouting) {
+
         @Nullable
         public ResourceSupplier<ITexture> channelSupplier(int index) {
             return switch (index) {
@@ -321,85 +172,16 @@ public class GlslShaderRuntime {
         }
     }
 
-    private static final class ProgramState {
-        private int programId;
-        private int vertexShaderId;
-        private int fragmentShaderId;
-        @Nullable
-        private String currentProgramKey;
-        @Nullable
-        private String lastFailedProgramKey;
-        @Nullable
-        private String lastCompileError;
-        private final Map<String, Integer> uniformLocations = new HashMap<>();
-    }
-
-    private static final class BufferTargetState {
-        private int framebufferId;
-        private int readTextureId;
-        private int writeTextureId;
-        private int width;
-        private int height;
-    }
-
-    private record UniformDefinition(@NotNull String name, @NotNull String declaration) {
-    }
-
-    private record FragmentVariant(@NotNull String label, @NotNull String source) {
-    }
-
-    private record ChannelTextureState(int textureId, float resolutionX, float resolutionY) {
-    }
-
-    private record VariableUniformValue(
-            float floatValue,
-            int intValue,
-            int boolValue,
-            float vec2X,
-            float vec2Y,
-            float vec3X,
-            float vec3Y,
-            float vec3Z,
-            float vec4X,
-            float vec4Y,
-            float vec4Z,
-            float vec4W
-    ) {
-    }
-
-    private record VariableUniformSnapshot(
-            @NotNull Map<String, VariableUniformValue> valuesBySuffix,
-            @NotNull Set<String> removedSuffixes,
-            int variableCount
-    ) {
-    }
-
-    private record GlslRenderState(@NotNull GlslShaderRuntime runtime, int areaX, int areaY, int areaWidth, int areaHeight, float partialTick, @Nullable String fragmentSource, @NotNull RenderSettings settings, @NotNull ScreenRectangle bounds) implements GuiRenderPhaseAction {
-
-        @Override
-        public void executeRender_FancyMenu() {
-            this.runtime.renderNow(this.areaX, this.areaY, this.areaWidth, this.areaHeight, this.partialTick, this.fragmentSource, this.settings);
-        }
-
-    }
-
-    public GlslShaderRuntime() {
-        for (int i = 0; i < TOTAL_PASS_COUNT; i++) {
-            this.passPrograms_FancyMenu[i] = new ProgramState();
-        }
-        for (int i = 0; i < BUFFER_PASS_COUNT; i++) {
-            this.bufferTargets_FancyMenu[i] = new BufferTargetState();
-        }
-    }
-
     public boolean render(@NotNull GuiGraphicsExtractor graphics, int areaX, int areaY, int areaWidth, int areaHeight, float partialTick, @Nullable String fragmentSource, @NotNull RenderSettings settings) {
-
-        if (areaWidth <= 0 || areaHeight <= 0) {
-            return false;
-        }
-
-        if (RenderingUtils.isVulkanActive()) {
-            this.disableForVulkan();
+        if (!GlslOwnedResourceLifecycle.hasRenderableArea(areaWidth, areaHeight)) {
+            // Destruction must remain ordered with extracted GUI actions. Closing here could invalidate resources owned
+            // by an earlier action for this runtime before the render phase has had a chance to execute that action.
+            // The one-pixel bound makes the vertexless action a valid GuiRenderState entry; it emits no visible geometry.
+            ScreenRectangle releaseBounds = new ScreenRectangle(areaX, areaY, 1, 1).transformMaxBounds(graphics.pose());
+            var renderState = ((IMixinGuiGraphicsExtractor) graphics).get_guiRenderState_FancyMenu();
+            renderState.nextStratum();
+            renderState.addGuiElement(new GlslResourceReleaseRenderState(this, releaseBounds));
+            renderState.nextStratum();
             return false;
         }
 
@@ -418,167 +200,372 @@ public class GlslShaderRuntime {
     }
 
     private boolean renderNow(int areaX, int areaY, int areaWidth, int areaHeight, float partialTick, @Nullable String fragmentSource, @NotNull RenderSettings settings) {
-
         RenderSystem.assertOnRenderThread();
-        if (RenderingUtils.isVulkanActive()) {
-            this.disableForVulkan();
+        boolean imageSourceActive = hasShaderSource(fragmentSource);
+        boolean[] activeBufferPasses = resolveActiveBufferPasses(settings);
+        // Reconcile source-owned resources before draw-related early returns. An off-screen pass must not keep large
+        // feedback targets alive after its source was disabled, and active passes must retain their frame history.
+        GlslPassResourceLifecycle.releaseUnusedBufferPasses(imageSourceActive, activeBufferPasses, this::releaseBufferPassResources);
+        if (!imageSourceActive) {
+            this.deactivateProgram(this.passPrograms_FancyMenu[IMAGE_PASS_INDEX]);
+            this.passPrograms_FancyMenu[IMAGE_PASS_INDEX].passFrames.deactivate();
+            this.sourceMissing = true;
+            this.lastCompileError = getPassName(IMAGE_PASS_INDEX) + ": Shader source is missing.";
             return false;
         }
 
         Minecraft minecraft = Minecraft.getInstance();
         Window window = minecraft.getWindow();
-        RenderTarget mainRenderTarget = minecraft.gameRenderer.mainRenderTarget();
-        if (!(mainRenderTarget.getColorTexture() instanceof GlTexture mainColorTexture)) {
-            this.lastCompileError = "Render error: OpenGL main render target is unavailable.";
+        RenderTarget mainTarget = minecraft.gameRenderer.mainRenderTarget();
+        GpuTextureView mainColorView = mainTarget.getColorTextureView();
+        if (mainColorView == null || mainColorView.isClosed()) {
+            this.lastCompileError = "Render error: the main GPU color target is unavailable.";
             return false;
         }
 
         double guiScale = window.getGuiScale();
-        int screenWidthPx = mainRenderTarget.width;
-        int screenHeightPx = mainRenderTarget.height;
-
+        int screenWidthPx = mainTarget.width;
+        int screenHeightPx = mainTarget.height;
         int areaXPx = Mth.floor(areaX * guiScale);
         int areaYPxTop = Mth.floor(areaY * guiScale);
         int areaWidthPx = Math.max(1, Mth.floor(areaWidth * guiScale));
         int areaHeightPx = Math.max(1, Mth.floor(areaHeight * guiScale));
         int areaYPxBottom = screenHeightPx - areaYPxTop - areaHeightPx;
-
         int viewportX = Math.max(0, areaXPx);
-        int viewportY = Math.max(0, areaYPxBottom);
+        int viewportYBottom = Math.max(0, areaYPxBottom);
         int viewportRight = Math.min(screenWidthPx, areaXPx + areaWidthPx);
         int viewportTop = Math.min(screenHeightPx, areaYPxBottom + areaHeightPx);
         int viewportWidth = Math.max(0, viewportRight - viewportX);
-        int viewportHeight = Math.max(0, viewportTop - viewportY);
+        int viewportHeight = Math.max(0, viewportTop - viewportYBottom);
         if (viewportWidth <= 0 || viewportHeight <= 0) {
             return false;
         }
 
-        boolean[] activeBufferPasses = new boolean[BUFFER_PASS_COUNT];
-        for (int i = 0; i < BUFFER_PASS_COUNT; i++) {
-            String source = settings.bufferSource(i);
-            activeBufferPasses[i] = source != null && !source.isBlank();
-        }
-
+        GlslShaderSourceTransformer.BackendCoordinates backendCoordinates = RenderingUtils.isVulkanActive() ? GlslShaderSourceTransformer.BackendCoordinates.VULKAN : GlslShaderSourceTransformer.BackendCoordinates.OPENGL;
         this.sourceMissing = false;
         this.lastCompileError = null;
 
-        for (int i = 0; i < BUFFER_PASS_COUNT; i++) {
-            if (!activeBufferPasses[i]) {
-                this.deleteProgram(this.passPrograms_FancyMenu[i]);
-                this.passPrograms_FancyMenu[i].currentProgramKey = null;
-                this.passPrograms_FancyMenu[i].lastFailedProgramKey = null;
-                this.passPrograms_FancyMenu[i].lastCompileError = null;
+        for (int passIndex = 0; passIndex < BUFFER_PASS_COUNT; passIndex++) {
+            if (!activeBufferPasses[passIndex]) {
                 continue;
             }
-            if (!this.ensureProgramForPass(i, settings.bufferSource(i), settings, false)) {
+            if (!this.ensureProgramForPass(passIndex, settings.bufferSource(passIndex), settings, false, GpuFormat.RGBA16_FLOAT, backendCoordinates)) {
                 return false;
             }
         }
-
-        if (!this.ensureProgramForPass(IMAGE_PASS_INDEX, fragmentSource, settings, true)) {
+        if (!this.ensureProgramForPass(IMAGE_PASS_INDEX, fragmentSource, settings, true, mainColorView.texture().getFormat(), backendCoordinates)) {
             return false;
         }
-
-        this.tickTime(settings);
-        VariableUniformSnapshot variableUniformSnapshot = this.buildVariableUniformSnapshot();
-
-        GlslOpenGlStateSnapshot previousState = new GlslOpenGlStateSnapshot(CHANNEL_COUNT);
 
         try {
-            GlStateManager._disableScissorTest();
-            GlStateManager._disableDepthTest();
-            GlStateManager._depthMask(false);
-            GlStateManager._disableCull();
-            GlStateManager._disableBlend(0);
-            GlStateManager._colorMask(0, 15);
-
-            this.ensureGeometry();
-            if (this.vaoId <= 0 || this.vboId <= 0) {
-                return false;
-            }
-
-            int missingTextureId = this.getGlTextureId(minecraft, MissingTextureAtlasSprite.getLocation(), 0);
-            ChannelTextureState[] externalChannelTextureStates = this.resolveExternalChannelTextureStates(minecraft, settings, missingTextureId);
-            this.ensureBufferTargets(areaWidthPx, areaHeightPx);
-
             for (int passIndex = 0; passIndex < BUFFER_PASS_COUNT; passIndex++) {
-                if (!activeBufferPasses[passIndex]) {
-                    continue;
+                if (activeBufferPasses[passIndex]) {
+                    ProgramState program = this.passPrograms_FancyMenu[passIndex];
+                    GlslPingPongTarget target = this.bufferTargets_FancyMenu[passIndex];
+                    String historyIdentity = buildPassHistoryIdentity(program, settings.routingForPass(passIndex));
+                    if (program.passFrames.historyIdentityChanged(historyIdentity)) {
+                        target.close();
+                    }
+                    boolean storageRecreated = target.ensureSize(areaWidthPx, areaHeightPx);
+                    program.passFrames.activate(historyIdentity, storageRecreated);
                 }
-
-                ProgramState program = this.passPrograms_FancyMenu[passIndex];
-                BufferTargetState target = this.bufferTargets_FancyMenu[passIndex];
-                this.bindBufferPassTarget(target);
-
-                GlStateManager._viewport(0, 0, areaWidthPx, areaHeightPx);
-
-                GlStateManager._glUseProgram(program.programId);
-                GlStateManager._glBindVertexArray(this.vaoId);
-                GlStateManager._glBindBuffer(GL15.GL_ARRAY_BUFFER, this.vboId);
-
-                ChannelTextureState[] routedChannels = this.resolveRoutedChannelStates(
-                        settings.routingForPass(passIndex),
-                        externalChannelTextureStates,
-                        activeBufferPasses,
-                        missingTextureId
-                );
-                this.bindChannelTextures(routedChannels);
-
-                this.activeUniformProgram_FancyMenu = program;
-                this.uploadUniforms(minecraft, window, settings, partialTick,
-                        areaX, areaY, areaWidth, areaHeight,
-                        0, 0, areaWidthPx, areaHeightPx, 0,
-                        screenWidthPx, screenHeightPx, routedChannels, variableUniformSnapshot);
-                GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, 6);
-                this.activeUniformProgram_FancyMenu = null;
-
-                this.swapBufferTargetTextures(target);
             }
-
-            this.bindImageTarget(mainColorTexture.glId());
-            GlStateManager._viewport(viewportX, viewportY, viewportWidth, viewportHeight);
-
-            if (settings.enableBlend()) {
-                GlStateManager._enableBlend(0);
-                GlStateManager._blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
-                GlStateManager._blendEquationSeparate(GL14.GL_FUNC_ADD, GL14.GL_FUNC_ADD);
-            } else {
-                GlStateManager._disableBlend(0);
-            }
-
             ProgramState imageProgram = this.passPrograms_FancyMenu[IMAGE_PASS_INDEX];
-            GlStateManager._glUseProgram(imageProgram.programId);
-            GlStateManager._glBindVertexArray(this.vaoId);
-            GlStateManager._glBindBuffer(GL15.GL_ARRAY_BUFFER, this.vboId);
-
-            ChannelTextureState[] imageChannels = this.resolveRoutedChannelStates(
-                    settings.routingForPass(IMAGE_PASS_INDEX),
-                    externalChannelTextureStates,
-                    activeBufferPasses,
-                    missingTextureId
-            );
-            this.bindChannelTextures(imageChannels);
-
-            this.activeUniformProgram_FancyMenu = imageProgram;
-            this.uploadUniforms(minecraft, window, settings, partialTick,
-                    areaX, areaY, areaWidth, areaHeight,
-                    areaXPx, areaYPxTop, areaWidthPx, areaHeightPx, areaYPxBottom,
-                    screenWidthPx, screenHeightPx, imageChannels, variableUniformSnapshot);
-            GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, 6);
-            this.activeUniformProgram_FancyMenu = null;
-
+            imageProgram.passFrames.activate(buildPassHistoryIdentity(imageProgram, settings.routingForPass(IMAGE_PASS_INDEX)), false);
+            ChannelTextureState fallback = this.resolveFallbackTextureState();
+            ChannelTextureState[] externalChannels = this.resolveExternalChannelTextureStates(minecraft, settings, fallback);
+            GlslFrameUniformState.FrameSnapshot frameSnapshot = this.frameUniformState_FancyMenu.capture(minecraft, window, settings, partialTick, areaX, areaY, areaWidth, areaHeight, areaWidthPx, areaHeightPx, screenWidthPx, screenHeightPx);
+            List<PreparedPass> preparedPasses = this.preparePasses(settings, activeBufferPasses, externalChannels, fallback, frameSnapshot, mainColorView, areaXPx, areaYPxTop, areaYPxBottom, areaWidthPx, areaHeightPx, viewportX, viewportYBottom, viewportWidth, viewportHeight, screenWidthPx, screenHeightPx);
+            this.executePasses(preparedPasses, activeBufferPasses);
             this.lastCompileError = null;
-
+            return true;
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed rendering GLSL shader.", ex);
-            this.lastCompileError = "Render error: " + ex.getMessage();
+            LOGGER.error("[FANCYMENU] Failed rendering backend-neutral GLSL shader.", ex);
+            this.lastCompileError = "Render error: " + safeMessage(ex);
             return false;
-        } finally {
-            this.activeUniformProgram_FancyMenu = null;
-            previousState.restore();
+        }
+    }
+
+    @NotNull
+    private List<PreparedPass> preparePasses(@NotNull RenderSettings settings, @NotNull boolean[] activeBufferPasses, @NotNull ChannelTextureState[] externalChannels, @NotNull ChannelTextureState fallback, @NotNull GlslFrameUniformState.FrameSnapshot frameSnapshot, @NotNull GpuTextureView mainColorView, int areaXPx, int areaYPxTop, int areaYPxBottom, int areaWidthPx, int areaHeightPx, int viewportX, int viewportYBottom, int viewportWidth, int viewportHeight, int screenWidthPx, int screenHeightPx) {
+        List<PreparedPass> prepared = new ArrayList<>();
+        for (int passIndex = 0; passIndex < BUFFER_PASS_COUNT; passIndex++) {
+            if (!activeBufferPasses[passIndex]) {
+                continue;
+            }
+            ProgramState program = this.passPrograms_FancyMenu[passIndex];
+            GlslPingPongTarget target = this.bufferTargets_FancyMenu[passIndex];
+            GpuTextureView outputView = target.writeView();
+            if (outputView == null || !target.isReady()) {
+                throw new IllegalStateException(getPassName(passIndex) + " feedback target is unavailable.");
+            }
+            ChannelTextureState[] channels = this.resolveRoutedChannelStates(settings.routingForPass(passIndex), externalChannels, activeBufferPasses, fallback, passIndex, false);
+            GlslFrameUniformState.PassContext passContext = new GlslFrameUniformState.PassContext(0, 0, 0, 0, 0, areaWidthPx, areaHeightPx, areaWidthPx, areaHeightPx, program.passFrames.currentFrame());
+            this.updateUniformBuffer(program, frameSnapshot, passContext, channels);
+            prepared.add(new PreparedPass(passIndex, program, outputView, channels));
         }
 
-        return true;
+        ProgramState imageProgram = this.passPrograms_FancyMenu[IMAGE_PASS_INDEX];
+        ChannelTextureState[] imageChannels = this.resolveRoutedChannelStates(settings.routingForPass(IMAGE_PASS_INDEX), externalChannels, activeBufferPasses, fallback, IMAGE_PASS_INDEX, true);
+        GlslFrameUniformState.PassContext imageContext = new GlslFrameUniformState.PassContext(areaXPx, areaYPxTop, areaYPxBottom, viewportX, viewportYBottom, viewportWidth, viewportHeight, screenWidthPx, screenHeightPx, imageProgram.passFrames.currentFrame());
+        this.updateUniformBuffer(imageProgram, frameSnapshot, imageContext, imageChannels);
+        prepared.add(new PreparedPass(IMAGE_PASS_INDEX, imageProgram, mainColorView, imageChannels));
+        return List.copyOf(prepared);
+    }
+
+    private void executePasses(@NotNull List<PreparedPass> preparedPasses, @NotNull boolean[] activeBufferPasses) {
+        CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
+        for (PreparedPass prepared : preparedPasses) {
+            ProgramState program = prepared.program();
+            if (program.pipeline == null || program.uniformBuffer == null) {
+                throw new IllegalStateException(getPassName(prepared.passIndex()) + " was not fully prepared.");
+            }
+            try (RenderPass renderPass = encoder.createRenderPass(() -> "FancyMenu GLSL " + getPassName(prepared.passIndex()), prepared.outputView(), Optional.empty())) {
+                renderPass.setPipeline(program.pipeline.pipeline());
+                renderPass.setUniform(GlslShaderSourceTransformer.UNIFORM_BLOCK_NAME, program.uniformBuffer);
+                this.bindActiveSamplers(renderPass, program.pipeline.variant().activeSamplerNames(), prepared.channels());
+                renderPass.draw(6, 1, 0, 0);
+            }
+        }
+        // Channel preparation points later passes at earlier passes' write views, which is equivalent to immediate
+        // A-to-D swaps while allowing every logical swap to commit atomically only after every draw was encoded.
+        for (int passIndex = 0; passIndex < BUFFER_PASS_COUNT; passIndex++) {
+            if (activeBufferPasses[passIndex]) {
+                this.bufferTargets_FancyMenu[passIndex].swap();
+                this.passPrograms_FancyMenu[passIndex].passFrames.commitFrame();
+            }
+        }
+        this.passPrograms_FancyMenu[IMAGE_PASS_INDEX].passFrames.commitFrame();
+    }
+
+    private void bindActiveSamplers(@NotNull RenderPass renderPass, @NotNull List<String> samplerNames, @NotNull ChannelTextureState[] channels) {
+        for (String samplerName : samplerNames) {
+            // Unknown sampler2D uniforms historically defaulted to OpenGL texture unit zero. Explicitly map them to
+            // routed channel zero so that compatibility remains deterministic and Vulkan never sees an unbound descriptor.
+            ChannelTextureState channel = channels[resolveSamplerChannelIndex(samplerName)];
+            renderPass.bindTexture(samplerName, channel.view(), channel.sampler());
+        }
+    }
+
+    private void updateUniformBuffer(@NotNull ProgramState program, @NotNull GlslFrameUniformState.FrameSnapshot frameSnapshot, @NotNull GlslFrameUniformState.PassContext passContext, @NotNull ChannelTextureState[] channels) {
+        if (program.pipeline == null) {
+            throw new IllegalStateException("Cannot update uniforms without a pipeline.");
+        }
+        GlslStd140Layout layout = program.pipeline.variant().uniformLayout();
+        ByteBuffer data = prepareStagingBuffer(program, layout.size());
+        GlslFrameUniformState.ChannelResolution[] resolutions = new GlslFrameUniformState.ChannelResolution[CHANNEL_COUNT];
+        for (int i = 0; i < CHANNEL_COUNT; i++) {
+            resolutions[i] = new GlslFrameUniformState.ChannelResolution(channels[i].resolutionX(), channels[i].resolutionY());
+        }
+        frameSnapshot.write(layout, data, passContext, resolutions);
+        data.position(0);
+        data.limit(layout.size());
+        if (program.uniformBuffer == null || program.uniformBuffer.isClosed() || program.uniformBuffer.size() != layout.size()) {
+            GpuBuffer replacement = RenderSystem.getDevice().createBuffer(() -> "FancyMenu GLSL " + program.pipeline.pipelineIdentity() + " uniforms", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, data);
+            closeBuffer(program.uniformBuffer);
+            program.uniformBuffer = replacement;
+        } else {
+            // Minecraft's command encoders copy/stage this data during the call (the same lifetime contract used by
+            // Std140Builder's stack buffers), so the native staging block can safely be reused by the next frame.
+            RenderSystem.getDevice().createCommandEncoder().writeToBuffer(program.uniformBuffer.slice(), data);
+        }
+    }
+
+    @NotNull
+    private static ByteBuffer prepareStagingBuffer(@NotNull ProgramState program, int size) {
+        if (program.stagingBuffer == null || program.stagingBuffer.capacity() != size) {
+            freeStagingBuffer(program);
+            program.stagingBuffer = MemoryUtil.memAlloc(size);
+        }
+        program.stagingBuffer.position(0);
+        program.stagingBuffer.limit(size);
+        MemoryUtil.memSet(MemoryUtil.memAddress(program.stagingBuffer), 0, size);
+        return program.stagingBuffer;
+    }
+
+    private boolean ensureProgramForPass(int passIndex, @Nullable String source, @NotNull RenderSettings settings, boolean requiredSource, @NotNull GpuFormat targetFormat, @NotNull GlslShaderSourceTransformer.BackendCoordinates backendCoordinates) {
+        ProgramState state = this.passPrograms_FancyMenu[passIndex];
+        String passName = getPassName(passIndex);
+        if (source == null || source.isBlank()) {
+            if (requiredSource) {
+                this.sourceMissing = true;
+                this.lastCompileError = passName + ": Shader source is missing.";
+                return false;
+            }
+            this.deactivateProgram(state);
+            return true;
+        }
+
+        if (passIndex == IMAGE_PASS_INDEX) {
+            this.sourceMissing = false;
+        }
+        boolean blend = passIndex == IMAGE_PASS_INDEX && settings.enableBlend();
+        GlslShaderSourceTransformer.PassKind passKind = passIndex == IMAGE_PASS_INDEX ? GlslShaderSourceTransformer.PassKind.IMAGE : GlslShaderSourceTransformer.PassKind.BUFFER;
+        String programKey = GlslShaderSourceTransformer.contentIdentity(source, settings.compileMode().name(), Boolean.toString(settings.forceShadertoyCompatibility()), backendCoordinates.name(), passKind.name(), targetFormat.name(), Boolean.toString(blend));
+        long cacheGeneration = GlslGpuPipelineCache.generation();
+        if (state.cacheGeneration != cacheGeneration) {
+            state.pipeline = null;
+            state.currentProgramKey = null;
+            state.lastFailedProgramKey = null;
+            state.lastCompileError = null;
+            state.cacheGeneration = cacheGeneration;
+        }
+
+        if (programKey.equals(state.currentProgramKey) && state.pipeline != null) {
+            GlslGpuPipelineCache.CompilationResult compilation = state.pipeline.precompile();
+            if (compilation.valid()) {
+                return true;
+            }
+            return this.failProgram(passName, programKey, state, compilation.diagnostics());
+        }
+        if (programKey.equals(state.lastFailedProgramKey)) {
+            this.lastCompileError = passName + ":\n" + state.lastCompileError;
+            return false;
+        }
+
+        List<GlslShaderSourceTransformer.FragmentVariant> variants;
+        try {
+            variants = GlslShaderSourceTransformer.buildFragmentVariants(source, settings.compileMode(), settings.forceShadertoyCompatibility(), backendCoordinates, passKind);
+        } catch (GlslShaderSourceTransformer.ShaderTransformException ex) {
+            return this.failProgram(passName, programKey, state, ex.diagnostics());
+        } catch (Exception ex) {
+            return this.failProgram(passName, programKey, state, List.of("Shader transformation failed: " + safeMessage(ex)));
+        }
+        if (variants.isEmpty()) {
+            return this.failProgram(passName, programKey, state, List.of("Shader source does not contain the entry point required by " + settings.compileMode().name() + " mode."));
+        }
+
+        List<String> diagnostics = new ArrayList<>();
+        for (GlslShaderSourceTransformer.FragmentVariant variant : variants) {
+            GlslGpuPipelineCache.PipelineBundle pipeline = GlslGpuPipelineCache.getOrCreate(variant, targetFormat, blend);
+            GlslGpuPipelineCache.CompilationResult compilation = pipeline.precompile();
+            if (compilation.valid()) {
+                state.pipeline = pipeline;
+                state.currentProgramKey = programKey;
+                state.lastFailedProgramKey = null;
+                state.lastCompileError = null;
+                return true;
+            }
+            diagnostics.add("[" + variant.label() + "] " + String.join("\n", compilation.diagnostics()));
+            LOGGER.warn("[FANCYMENU] GLSL {} variant '{}' failed for content ID {}: {}", passName, variant.label(), variant.identity(), String.join(" | ", compilation.diagnostics()));
+        }
+        return this.failProgram(passName, programKey, state, diagnostics);
+    }
+
+    private boolean failProgram(@NotNull String passName, @NotNull String programKey, @NotNull ProgramState state, @NotNull List<String> diagnostics) {
+        state.pipeline = null;
+        state.currentProgramKey = null;
+        state.lastFailedProgramKey = programKey;
+        state.lastCompileError = diagnostics.isEmpty() ? "Unknown pipeline compilation failure." : String.join("\n", diagnostics);
+        this.lastCompileError = passName + ":\n" + state.lastCompileError;
+        return false;
+    }
+
+    private void deactivateProgram(@NotNull ProgramState state) {
+        state.pipeline = null;
+        state.currentProgramKey = null;
+        state.lastFailedProgramKey = null;
+        state.lastCompileError = null;
+        closeBuffer(state.uniformBuffer);
+        state.uniformBuffer = null;
+        freeStagingBuffer(state);
+    }
+
+    private void releaseBufferPassResources(int passIndex) {
+        this.deactivateProgram(this.passPrograms_FancyMenu[passIndex]);
+        this.passPrograms_FancyMenu[passIndex].passFrames.deactivate();
+        this.bufferTargets_FancyMenu[passIndex].close();
+    }
+
+    @NotNull
+    private static String buildPassHistoryIdentity(@NotNull ProgramState program, @NotNull ChannelRouting routing) {
+        if (program.currentProgramKey == null) {
+            throw new IllegalStateException("Cannot identify a GLSL pass lifecycle without a compiled program.");
+        }
+        return GlslShaderSourceTransformer.contentIdentity(program.currentProgramKey, routing.channel0().serializedName(), routing.channel1().serializedName(), routing.channel2().serializedName(), routing.channel3().serializedName());
+    }
+
+    @NotNull
+    private ChannelTextureState[] resolveExternalChannelTextureStates(@NotNull Minecraft minecraft, @NotNull RenderSettings settings, @NotNull ChannelTextureState fallback) {
+        ChannelTextureState[] states = new ChannelTextureState[CHANNEL_COUNT];
+        for (int i = 0; i < CHANNEL_COUNT; i++) {
+            states[i] = this.resolveChannelTextureState(minecraft, settings.channelSupplier(i), fallback);
+        }
+        return states;
+    }
+
+    @NotNull
+    private ChannelTextureState resolveChannelTextureState(@NotNull Minecraft minecraft, @Nullable ResourceSupplier<ITexture> supplier, @NotNull ChannelTextureState fallback) {
+        if (supplier == null) {
+            return fallback.withResolution(0.0F, 0.0F);
+        }
+        ITexture texture = supplier.get();
+        if (texture == null || !texture.isReady() || texture.getResourceLocation() == null) {
+            return fallback.withResolution(0.0F, 0.0F);
+        }
+        try {
+            AbstractTexture minecraftTexture = minecraft.getTextureManager().getTexture(texture.getResourceLocation());
+            GpuTextureView view = minecraftTexture.getTextureView();
+            if (view.isClosed()) {
+                return fallback.withResolution(0.0F, 0.0F);
+            }
+            return new ChannelTextureState(view, minecraftTexture.getSampler(), Math.max(0.0F, texture.getWidth()), Math.max(0.0F, texture.getHeight()));
+        } catch (Exception ignored) {
+            return fallback.withResolution(0.0F, 0.0F);
+        }
+    }
+
+    @NotNull
+    private ChannelTextureState[] resolveRoutedChannelStates(@NotNull ChannelRouting routing, @NotNull ChannelTextureState[] externalChannels, @NotNull boolean[] activeBufferPasses, @NotNull ChannelTextureState fallback, int renderingPassIndex, boolean imagePass) {
+        ChannelTextureState[] states = new ChannelTextureState[CHANNEL_COUNT];
+        for (int channelIndex = 0; channelIndex < CHANNEL_COUNT; channelIndex++) {
+            ChannelInput input = routing.channelForIndex(channelIndex);
+            states[channelIndex] = switch (input) {
+                case RESOURCE0 -> externalChannels[0];
+                case RESOURCE1 -> externalChannels[1];
+                case RESOURCE2 -> externalChannels[2];
+                case RESOURCE3 -> externalChannels[3];
+                case BUFFER_A, BUFFER_B, BUFFER_C, BUFFER_D -> this.resolveBufferChannelState(input.bufferPassIndex(), activeBufferPasses, fallback, renderingPassIndex, imagePass);
+                case NONE -> fallback.withResolution(0.0F, 0.0F);
+            };
+        }
+        return states;
+    }
+
+    @NotNull
+    private ChannelTextureState resolveBufferChannelState(int referencedBufferIndex, @NotNull boolean[] activeBufferPasses, @NotNull ChannelTextureState fallback, int renderingPassIndex, boolean imagePass) {
+        GlslPassGraph.BufferVersion version = GlslPassGraph.resolveBufferVersion(renderingPassIndex, referencedBufferIndex, imagePass, activeBufferPasses);
+        if (version == GlslPassGraph.BufferVersion.FALLBACK) {
+            return fallback.withResolution(0.0F, 0.0F);
+        }
+        GlslPingPongTarget target = this.bufferTargets_FancyMenu[referencedBufferIndex];
+        GpuTextureView view = version == GlslPassGraph.BufferVersion.CURRENT_FRAME ? target.writeView() : target.readView();
+        if (view == null || view.isClosed()) {
+            return fallback.withResolution(0.0F, 0.0F);
+        }
+        GpuSampler sampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR);
+        return new ChannelTextureState(view, sampler, target.width(), target.height());
+    }
+
+    @NotNull
+    private ChannelTextureState resolveFallbackTextureState() {
+        Minecraft minecraft = Minecraft.getInstance();
+        Identifier missingLocation = MissingTextureAtlasSprite.getLocation();
+        try {
+            AbstractTexture missingTexture = minecraft.getTextureManager().getTexture(missingLocation);
+            GpuTextureView view = missingTexture.getTextureView();
+            if (!view.isClosed()) {
+                return new ChannelTextureState(view, missingTexture.getSampler(), 0.0F, 0.0F);
+            }
+        } catch (Exception ignored) {
+        }
+
+        if (this.fallbackTextureTarget_FancyMenu == null || this.fallbackTextureTarget_FancyMenu.getColorTextureView() == null || this.fallbackTextureTarget_FancyMenu.getColorTextureView().isClosed()) {
+            this.closeFallbackTarget();
+            this.fallbackTextureTarget_FancyMenu = new TextureTarget("FancyMenu GLSL fallback", 1, 1, false, GpuFormat.RGBA8_UNORM);
+            RenderSystem.getDevice().createCommandEncoder().clearColorTexture(this.fallbackTextureTarget_FancyMenu.getColorTexture(), new Vector4f(1.0F, 0.0F, 1.0F, 1.0F));
+        }
+        return new ChannelTextureState(this.fallbackTextureTarget_FancyMenu.getColorTextureView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST), 0.0F, 0.0F);
     }
 
     public boolean isSourceMissing() {
@@ -591,156 +578,53 @@ public class GlslShaderRuntime {
     }
 
     public long getFrameCounter() {
-        return this.frameCounter;
+        return this.passPrograms_FancyMenu[IMAGE_PASS_INDEX].passFrames.committedFrameCount();
     }
 
     public void close() {
-        if (RenderingUtils.isVulkanActive()) {
-            this.forgetBackendResources();
-            this.resetRuntimeState();
-            return;
-        }
+        RenderSystem.assertOnRenderThread();
         for (ProgramState program : this.passPrograms_FancyMenu) {
-            this.deleteProgram(program);
-            program.currentProgramKey = null;
-            program.lastFailedProgramKey = null;
-            program.lastCompileError = null;
+            this.deactivateProgram(program);
+            program.passFrames.deactivate();
+            program.cacheGeneration = GlslGpuPipelineCache.generation();
         }
-        this.deleteBufferTargets();
-        this.deleteImageTarget();
-        this.deleteGeometry();
-        this.resetRuntimeState();
-    }
-
-    private void disableForVulkan() {
-        this.forgetBackendResources();
-        this.sourceMissing = false;
-        this.lastCompileError = Component.translatable(VULKAN_UNSUPPORTED_ERROR_KEY_FANCYMENU).getString();
-    }
-
-    private void resetRuntimeState() {
-        this.activeUniformProgram_FancyMenu = null;
+        for (GlslPingPongTarget target : this.bufferTargets_FancyMenu) {
+            target.close();
+        }
+        this.closeFallbackTarget();
+        this.frameUniformState_FancyMenu.onRuntimeResourcesClosed();
         this.lastCompileError = null;
         this.sourceMissing = false;
-        this.lastShadertoyMouseX = 0.0F;
-        this.lastShadertoyMouseY = 0.0F;
-        this.hasShadertoyMousePosition = false;
-        this.lastVariableUniformSuffixes_FancyMenu.clear();
     }
 
-    private void forgetBackendResources() {
-        for (ProgramState program : this.passPrograms_FancyMenu) {
-            program.programId = 0;
-            program.vertexShaderId = 0;
-            program.fragmentShaderId = 0;
-            program.currentProgramKey = null;
-            program.lastFailedProgramKey = null;
-            program.lastCompileError = null;
-            program.uniformLocations.clear();
+    private void closeFallbackTarget() {
+        if (this.fallbackTextureTarget_FancyMenu != null) {
+            this.fallbackTextureTarget_FancyMenu.destroyBuffers();
+            this.fallbackTextureTarget_FancyMenu = null;
         }
-        for (BufferTargetState target : this.bufferTargets_FancyMenu) {
-            target.readTextureId = 0;
-            target.writeTextureId = 0;
-            target.framebufferId = 0;
-            target.width = 0;
-            target.height = 0;
-        }
-        this.vaoId = 0;
-        this.vboId = 0;
-        this.imageFramebufferId = 0;
-        this.activeUniformProgram_FancyMenu = null;
     }
 
-    private void tickTime(@NotNull RenderSettings settings) {
-        long now = System.nanoTime();
-        if (this.startNanoTime < 0L) {
-            this.startNanoTime = now;
+    @NotNull
+    private static boolean[] resolveActiveBufferPasses(@NotNull RenderSettings settings) {
+        boolean[] active = new boolean[BUFFER_PASS_COUNT];
+        for (int i = 0; i < BUFFER_PASS_COUNT; i++) {
+            active[i] = hasShaderSource(settings.bufferSource(i));
         }
-        if (this.lastFrameNanoTime < 0L) {
-            this.lastFrameNanoTime = now;
-        }
-
-        double rawDelta = Math.max(0.0D, (now - this.lastFrameNanoTime) / 1_000_000_000.0D);
-        if (rawDelta > 1.5D) {
-            rawDelta = 0.0D;
-        }
-        this.lastFrameNanoTime = now;
-
-        this.lastFrameDeltaSeconds = (float) rawDelta;
-        this.lastFrameRate = (this.lastFrameDeltaSeconds > 0.0F) ? (1.0F / this.lastFrameDeltaSeconds) : 0.0F;
-
-        if (!settings.freezeTime()) {
-            this.accumulatedTimeSeconds += rawDelta * Math.max(0.0F, settings.timeScale());
-        }
-
-        this.frameCounter++;
+        return active;
     }
 
-    private boolean ensureProgramForPass(int passIndex,
-                                         @Nullable String source,
-                                         @NotNull RenderSettings settings,
-                                         boolean requiredSource) {
+    private static boolean hasShaderSource(@Nullable String source) {
+        return source != null && !source.isBlank();
+    }
 
-        ProgramState state = this.passPrograms_FancyMenu[passIndex];
-        String passName = getPassName(passIndex);
-
-        if (source == null || source.isBlank()) {
-            if (requiredSource) {
-                this.sourceMissing = true;
-                state.lastFailedProgramKey = null;
-                state.lastCompileError = null;
-                this.lastCompileError = passName + ": Shader source is missing.";
-                return false;
-            }
-            this.deleteProgram(state);
-            state.currentProgramKey = null;
-            state.lastFailedProgramKey = null;
-            state.lastCompileError = null;
-            return true;
-        }
-
-        if (passIndex == IMAGE_PASS_INDEX) {
-            this.sourceMissing = false;
-        }
-
-        String normalizedSource = normalizeSource(source);
-        String programKey = settings.compileMode().name() + "::" + settings.forceShadertoyCompatibility() + "::" + normalizedSource;
-        if (Objects.equals(state.currentProgramKey, programKey) && state.programId > 0) {
-            return true;
-        }
-        if (Objects.equals(state.lastFailedProgramKey, programKey) && state.programId <= 0) {
-            if (state.lastCompileError != null && !state.lastCompileError.isBlank()) {
-                this.lastCompileError = passName + ":\n" + state.lastCompileError;
-            }
-            return false;
-        }
-
-        List<FragmentVariant> variants = buildFragmentVariants(normalizedSource, settings.compileMode(), settings.forceShadertoyCompatibility());
-        if (variants.isEmpty()) {
-            this.deleteProgram(state);
-            state.currentProgramKey = null;
-            state.lastFailedProgramKey = programKey;
-            state.lastCompileError = "Shader source does not contain a valid entry point.";
-            this.lastCompileError = passName + ":\n" + state.lastCompileError;
-            return false;
-        }
-
-        List<String> errors = new ArrayList<>();
-        for (FragmentVariant variant : variants) {
-            if (this.tryCompileVariantForPass(passIndex, state, variant, errors)) {
-                state.currentProgramKey = programKey;
-                state.lastFailedProgramKey = null;
-                state.lastCompileError = null;
-                return true;
+    static int resolveSamplerChannelIndex(@NotNull String samplerName) {
+        if (samplerName.length() == "iChannel0".length() && samplerName.startsWith("iChannel")) {
+            char digit = samplerName.charAt(samplerName.length() - 1);
+            if (digit >= '0' && digit <= '3') {
+                return digit - '0';
             }
         }
-
-        this.deleteProgram(state);
-        state.currentProgramKey = null;
-        state.lastFailedProgramKey = programKey;
-        state.lastCompileError = String.join("\n", errors);
-        this.lastCompileError = passName + ":\n" + state.lastCompileError;
-        return false;
+        return 0;
     }
 
     @NotNull
@@ -755,963 +639,66 @@ public class GlslShaderRuntime {
         };
     }
 
-    @NotNull
-    private static String normalizeSource(@NotNull String source) {
-        String normalized = source.replace('\uFEFF', ' ');
-        normalized = normalized.replace("\r\n", "\n").replace('\r', '\n');
-        normalized = VERSION_DIRECTIVE_PATTERN.matcher(normalized).replaceAll("");
-        normalized = PRECISION_DIRECTIVE_PATTERN.matcher(normalized).replaceAll("");
-        return normalized.strip();
-    }
-
-    @NotNull
-    private List<FragmentVariant> buildFragmentVariants(@NotNull String normalizedSource,
-                                                        @NotNull CompileMode compileMode,
-                                                        boolean forceShadertoyCompatibility) {
-
-        boolean hasMainImage = containsMainImage(normalizedSource);
-        boolean hasMain = containsMain(normalizedSource);
-        boolean referencesGlFragColor = normalizedSource.contains("gl_FragColor");
-        boolean definesOutColor = Pattern.compile("(?m)^\\s*(layout\\s*\\(.+\\)\\s*)?out\\s+vec4\\s+\\w+").matcher(normalizedSource).find();
-
-        List<FragmentVariant> variants = new ArrayList<>();
-
-        if (compileMode == CompileMode.SHADERTOY) {
-            if (hasMainImage) {
-                variants.add(new FragmentVariant("shadertoy", buildShadertoyFragment(normalizedSource)));
-            }
-            return variants;
-        }
-
-        if ((compileMode == CompileMode.AUTO) && (forceShadertoyCompatibility || hasMainImage) && hasMainImage) {
-            variants.add(new FragmentVariant("shadertoy", buildShadertoyFragment(normalizedSource)));
-        }
-
-        if (compileMode == CompileMode.DIRECT || compileMode == CompileMode.AUTO) {
-            boolean preferDirectWithoutCompat = definesOutColor && !referencesGlFragColor;
-            if (preferDirectWithoutCompat) {
-                variants.add(new FragmentVariant("direct_no_compat", buildDirectFragment(normalizedSource, false)));
-                variants.add(new FragmentVariant("direct_glfragcolor_compat", buildDirectFragment(normalizedSource, true)));
-            } else {
-                variants.add(new FragmentVariant("direct_glfragcolor_compat", buildDirectFragment(normalizedSource, true)));
-                variants.add(new FragmentVariant("direct_no_compat", buildDirectFragment(normalizedSource, false)));
-            }
-        }
-
-        if (!hasMainImage && !hasMain) {
-            return new ArrayList<>();
-        }
-
-        return variants;
-    }
-
-    private static boolean containsMainImage(@NotNull String source) {
-        return Pattern.compile("(?m)^\\s*void\\s+mainImage\\s*\\(").matcher(source).find();
-    }
-
-    private static boolean containsMain(@NotNull String source) {
-        return Pattern.compile("(?m)^\\s*void\\s+main\\s*\\(").matcher(source).find();
-    }
-
-    @NotNull
-    private String buildShadertoyFragment(@NotNull String source) {
-        StringBuilder uniforms = buildUniformDeclarations(source);
-        StringBuilder fragment = new StringBuilder();
-        fragment.append(DEFAULT_GLSL_VERSION).append('\n');
-        fragment.append("in vec2 fmUv_FancyMenu;\n");
-        fragment.append("out vec4 fmOutputColor_FancyMenu;\n");
-        fragment.append("#define iGlobalTime iTime\n");
-        fragment.append("#define texture2D texture\n");
-        fragment.append("#define textureCube texture\n");
-        fragment.append(uniforms);
-        fragment.append('\n');
-        fragment.append(source).append('\n');
-        fragment.append("\nvoid main() {\n");
-        fragment.append("    vec4 fmColor_FancyMenu = vec4(0.0);\n");
-        fragment.append("    mainImage(fmColor_FancyMenu, gl_FragCoord.xy - fmAreaOffset);\n");
-        fragment.append("    fmOutputColor_FancyMenu = vec4(fmColor_FancyMenu.rgb, fmColor_FancyMenu.a * fmOpacity);\n");
-        fragment.append("}\n");
-        return fragment.toString();
-    }
-
-    @NotNull
-    private String buildDirectFragment(@NotNull String source, boolean withGlFragColorCompat) {
-        StringBuilder uniforms = buildUniformDeclarations(source);
-        StringBuilder fragment = new StringBuilder();
-        fragment.append(DEFAULT_GLSL_VERSION).append('\n');
-        fragment.append("in vec2 fmUv_FancyMenu;\n");
-        if (withGlFragColorCompat) {
-            fragment.append("out vec4 fmOutputColor_FancyMenu;\n");
-            fragment.append("#define gl_FragColor fmOutputColor_FancyMenu\n");
-        }
-        fragment.append("#define iGlobalTime iTime\n");
-        fragment.append("#define texture2D texture\n");
-        fragment.append("#define textureCube texture\n");
-        fragment.append(uniforms);
-        fragment.append('\n');
-        fragment.append(source).append('\n');
-        return fragment.toString();
-    }
-
-    @NotNull
-    private StringBuilder buildUniformDeclarations(@NotNull String source) {
-        StringBuilder builder = new StringBuilder();
-        for (UniformDefinition uniform : UNIFORMS) {
-            if (!sourceDeclaresUniform(source, uniform.name())) {
-                builder.append(uniform.declaration()).append('\n');
-            }
-        }
-        return builder;
-    }
-
-    private boolean sourceDeclaresUniform(@NotNull String source, @NotNull String uniformName) {
-        Pattern pattern = Pattern.compile("(?m)^\\s*uniform\\s+[^;]*\\b" + Pattern.quote(uniformName) + "\\b");
-        return pattern.matcher(source).find();
-    }
-
-    private boolean tryCompileVariantForPass(int passIndex,
-                                             @NotNull ProgramState state,
-                                             @NotNull FragmentVariant variant,
-                                             @NotNull List<String> errors) {
-        int vertex = 0;
-        int fragment = 0;
-        int program = 0;
-        try {
-            vertex = compileShader(GL20.GL_VERTEX_SHADER, VERTEX_SHADER_SOURCE);
-            fragment = compileShader(GL20.GL_FRAGMENT_SHADER, variant.source());
-            program = GL20.glCreateProgram();
-            if (program == 0) {
-                throw new IllegalStateException("glCreateProgram returned 0.");
-            }
-
-            GL20.glAttachShader(program, vertex);
-            GL20.glAttachShader(program, fragment);
-            GL20.glBindAttribLocation(program, 0, "Position");
-            GL20.glLinkProgram(program);
-
-            if (GL20.glGetProgrami(program, GL20.GL_LINK_STATUS) == GL11.GL_FALSE) {
-                String log = GL20.glGetProgramInfoLog(program);
-                throw new IllegalStateException("Program link failed:\n" + log);
-            }
-
-            this.deleteProgram(state);
-            state.programId = program;
-            state.vertexShaderId = vertex;
-            state.fragmentShaderId = fragment;
-            this.cacheUniformLocations(state);
-            return true;
-
-        } catch (Exception ex) {
-            String message = "[" + variant.label() + "] " + ex.getMessage();
-            errors.add(message);
-            LOGGER.warn("[FANCYMENU] GLSL {} variant '{}' failed to compile/link: {}", getPassName(passIndex), variant.label(), ex.getMessage());
-            if (program > 0) {
-                GL20.glDeleteProgram(program);
-            }
-            if (vertex > 0) {
-                GL20.glDeleteShader(vertex);
-            }
-            if (fragment > 0) {
-                GL20.glDeleteShader(fragment);
-            }
-            return false;
+    private static void closeBuffer(@Nullable GpuBuffer buffer) {
+        if (buffer != null && !buffer.isClosed()) {
+            buffer.close();
         }
     }
 
-    private int compileShader(int type, @NotNull String source) {
-        int shader = GL20.glCreateShader(type);
-        if (shader == 0) {
-            throw new IllegalStateException("glCreateShader returned 0.");
-        }
-
-        GL20.glShaderSource(shader, source);
-        GL20.glCompileShader(shader);
-
-        if (GL20.glGetShaderi(shader, GL20.GL_COMPILE_STATUS) == GL11.GL_FALSE) {
-            String log = GL20.glGetShaderInfoLog(shader);
-            GL20.glDeleteShader(shader);
-            throw new IllegalStateException("Shader compile failed:\n" + log);
-        }
-
-        return shader;
-    }
-
-    private void cacheUniformLocations(@NotNull ProgramState state) {
-        state.uniformLocations.clear();
-        for (String lookup : CACHED_UNIFORM_LOOKUPS) {
-            state.uniformLocations.put(lookup, GL20.glGetUniformLocation(state.programId, lookup));
-        }
-    }
-
-    private void ensureGeometry() {
-        if (this.vaoId > 0 && this.vboId > 0) {
-            return;
-        }
-
-        this.vaoId = GlStateManager._glGenVertexArrays();
-        this.vboId = GlStateManager._glGenBuffers();
-        if (this.vaoId == 0 || this.vboId == 0) {
-            LOGGER.error("[FANCYMENU] Failed creating GLSL geometry buffers (vao={}, vbo={}).", this.vaoId, this.vboId);
-            return;
-        }
-
-        float[] vertices = new float[]{
-                -1.0F, -1.0F,
-                1.0F, -1.0F,
-                1.0F, 1.0F,
-                -1.0F, -1.0F,
-                1.0F, 1.0F,
-                -1.0F, 1.0F
-        };
-
-        GlStateManager._glBindVertexArray(this.vaoId);
-        GlStateManager._glBindBuffer(GL15.GL_ARRAY_BUFFER, this.vboId);
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, vertices, GL15.GL_STATIC_DRAW);
-        GL20.glEnableVertexAttribArray(0);
-        GL20.glVertexAttribPointer(0, 2, GL11.GL_FLOAT, false, 2 * Float.BYTES, 0L);
-        GlStateManager._glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
-        GlStateManager._glBindVertexArray(0);
-    }
-
-    private void deleteProgram(@NotNull ProgramState state) {
-        if (state.programId > 0) {
-            if (state.vertexShaderId > 0) {
-                GL20.glDetachShader(state.programId, state.vertexShaderId);
-            }
-            if (state.fragmentShaderId > 0) {
-                GL20.glDetachShader(state.programId, state.fragmentShaderId);
-            }
-            GL20.glDeleteProgram(state.programId);
-        }
-        if (state.vertexShaderId > 0) {
-            GL20.glDeleteShader(state.vertexShaderId);
-        }
-        if (state.fragmentShaderId > 0) {
-            GL20.glDeleteShader(state.fragmentShaderId);
-        }
-
-        state.programId = 0;
-        state.vertexShaderId = 0;
-        state.fragmentShaderId = 0;
-        state.uniformLocations.clear();
-    }
-
-    private void deleteBufferTargets() {
-        for (BufferTargetState target : this.bufferTargets_FancyMenu) {
-            if (target.readTextureId > 0) {
-                GlStateManager._deleteTexture(target.readTextureId);
-            }
-            if (target.writeTextureId > 0) {
-                GlStateManager._deleteTexture(target.writeTextureId);
-            }
-            if (target.framebufferId > 0) {
-                GlStateManager._glDeleteFramebuffers(target.framebufferId);
-            }
-            target.readTextureId = 0;
-            target.writeTextureId = 0;
-            target.framebufferId = 0;
-            target.width = 0;
-            target.height = 0;
-        }
-    }
-
-    private void deleteImageTarget() {
-        if (this.imageFramebufferId > 0) {
-            GlStateManager._glDeleteFramebuffers(this.imageFramebufferId);
-            this.imageFramebufferId = 0;
-        }
-    }
-
-    /**
-     * Minecraft's OpenGL command encoder unbinds its render-pass framebuffer when a pass closes. Runtime GLSL
-     * therefore needs its own framebuffer view of the current main-target color texture before drawing.
-     */
-    private void bindImageTarget(int textureId) {
-        if (this.imageFramebufferId <= 0) {
-            this.imageFramebufferId = GlStateManager.glGenFramebuffers();
-        }
-        GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, this.imageFramebufferId);
-        GlStateManager._glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, textureId, 0);
-        GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
-        int status = GL30.glCheckFramebufferStatus(GL30.GL_FRAMEBUFFER);
-        if (status != GL30.GL_FRAMEBUFFER_COMPLETE) {
-            throw new IllegalStateException("Image framebuffer incomplete: " + status);
-        }
-    }
-
-    private void ensureBufferTargets(int width, int height) {
-        if (width <= 0 || height <= 0) {
-            return;
-        }
-        for (BufferTargetState target : this.bufferTargets_FancyMenu) {
-            if (target.framebufferId <= 0) {
-                target.framebufferId = GlStateManager.glGenFramebuffers();
-            }
-            boolean needsRecreate = target.readTextureId <= 0
-                    || target.writeTextureId <= 0
-                    || target.width != width
-                    || target.height != height;
-            if (needsRecreate) {
-                this.recreateBufferTarget(target, width, height);
-            }
-        }
-    }
-
-    private void recreateBufferTarget(@NotNull BufferTargetState target, int width, int height) {
-        if (target.readTextureId > 0) {
-            GlStateManager._deleteTexture(target.readTextureId);
-        }
-        if (target.writeTextureId > 0) {
-            GlStateManager._deleteTexture(target.writeTextureId);
-        }
-        target.readTextureId = this.createRenderTexture(width, height);
-        target.writeTextureId = this.createRenderTexture(width, height);
-        target.width = width;
-        target.height = height;
-        this.clearTexture(target, target.readTextureId);
-        this.clearTexture(target, target.writeTextureId);
-    }
-
-    private int createRenderTexture(int width, int height) {
-        int previousTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-        int textureId = GlStateManager._genTexture();
-        GlStateManager._bindTexture(textureId);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
-        // Use floating-point buffers so Shadertoy multipass data channels can store
-        // reprojection/state values outside [0,1] without clamping.
-        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL30.GL_RGBA16F, width, height, 0, GL11.GL_RGBA, GL11.GL_FLOAT, (ByteBuffer) null);
-        GlStateManager._bindTexture(previousTexture);
-        return textureId;
-    }
-
-    private void clearTexture(@NotNull BufferTargetState target, int textureId) {
-        int previousReadFramebuffer = GL11.glGetInteger(GL30.GL_READ_FRAMEBUFFER_BINDING);
-        int previousDrawFramebuffer = GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING);
-        float[] previousClearColor = new float[4];
-        GL11.glGetFloatv(GL11.GL_COLOR_CLEAR_VALUE, previousClearColor);
-
-        GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, target.framebufferId);
-        GlStateManager._glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, textureId, 0);
-        int status = GL30.glCheckFramebufferStatus(GL30.GL_FRAMEBUFFER);
-        if (status != GL30.GL_FRAMEBUFFER_COMPLETE) {
-            GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, previousReadFramebuffer);
-            GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, previousDrawFramebuffer);
-            throw new IllegalStateException("Buffer framebuffer incomplete: " + status);
-        }
-        GL11.glClearColor(0.0F, 0.0F, 0.0F, 0.0F);
-        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
-
-        GL11.glClearColor(previousClearColor[0], previousClearColor[1], previousClearColor[2], previousClearColor[3]);
-        GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, previousReadFramebuffer);
-        GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, previousDrawFramebuffer);
-    }
-
-    private void bindBufferPassTarget(@NotNull BufferTargetState target) {
-        GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, target.framebufferId);
-        GlStateManager._glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, target.writeTextureId, 0);
-        int status = GL30.glCheckFramebufferStatus(GL30.GL_FRAMEBUFFER);
-        if (status != GL30.GL_FRAMEBUFFER_COMPLETE) {
-            throw new IllegalStateException("Buffer framebuffer incomplete: " + status);
-        }
-    }
-
-    private void swapBufferTargetTextures(@NotNull BufferTargetState target) {
-        int temp = target.readTextureId;
-        target.readTextureId = target.writeTextureId;
-        target.writeTextureId = temp;
-    }
-
-    private void deleteGeometry() {
-        if (this.vboId > 0) {
-            GlStateManager._glDeleteBuffers(this.vboId);
-            this.vboId = 0;
-        }
-        if (this.vaoId > 0) {
-            GL30.glDeleteVertexArrays(this.vaoId);
-            this.vaoId = 0;
+    private static void freeStagingBuffer(@NotNull ProgramState state) {
+        if (state.stagingBuffer != null) {
+            MemoryUtil.memFree(state.stagingBuffer);
+            state.stagingBuffer = null;
         }
     }
 
     @NotNull
-    private ChannelTextureState[] resolveExternalChannelTextureStates(@NotNull Minecraft minecraft,
-                                                                      @NotNull RenderSettings settings,
-                                                                      int fallbackTextureId) {
-        ChannelTextureState[] states = new ChannelTextureState[CHANNEL_COUNT];
-        for (int i = 0; i < CHANNEL_COUNT; i++) {
-            states[i] = this.resolveChannelTextureState(minecraft, settings.channelSupplier(i), fallbackTextureId);
-        }
-        return states;
+    private static String safeMessage(@NotNull Exception exception) {
+        String message = exception.getMessage();
+        return message == null || message.isBlank() ? exception.getClass().getSimpleName() : message;
     }
 
-    @NotNull
-    private ChannelTextureState[] resolveRoutedChannelStates(@NotNull ChannelRouting routing,
-                                                             @NotNull ChannelTextureState[] externalChannelStates,
-                                                             @NotNull boolean[] activeBufferPasses,
-                                                             int fallbackTextureId) {
-        ChannelTextureState[] states = new ChannelTextureState[CHANNEL_COUNT];
-        for (int i = 0; i < CHANNEL_COUNT; i++) {
-            states[i] = this.resolveChannelInputState(routing.channelForIndex(i), externalChannelStates, activeBufferPasses, fallbackTextureId);
-        }
-        return states;
+    private static final class ProgramState {
+        @Nullable
+        private GlslGpuPipelineCache.PipelineBundle pipeline;
+        @Nullable
+        private GpuBuffer uniformBuffer;
+        @Nullable
+        private ByteBuffer stagingBuffer;
+        @Nullable
+        private String currentProgramKey;
+        @Nullable
+        private String lastFailedProgramKey;
+        @Nullable
+        private String lastCompileError;
+        private long cacheGeneration = -1L;
+        private final GlslPassFrameState passFrames = new GlslPassFrameState();
     }
 
-    @NotNull
-    private ChannelTextureState resolveChannelInputState(@NotNull ChannelInput input,
-                                                         @NotNull ChannelTextureState[] externalChannelStates,
-                                                         @NotNull boolean[] activeBufferPasses,
-                                                         int fallbackTextureId) {
-        return switch (input) {
-            case RESOURCE0 -> externalChannelStates[0];
-            case RESOURCE1 -> externalChannelStates[1];
-            case RESOURCE2 -> externalChannelStates[2];
-            case RESOURCE3 -> externalChannelStates[3];
-            case BUFFER_A, BUFFER_B, BUFFER_C, BUFFER_D -> this.resolveBufferChannelState(input.bufferPassIndex(), activeBufferPasses, fallbackTextureId);
-            case NONE -> new ChannelTextureState(fallbackTextureId, 0.0F, 0.0F);
-        };
-    }
+    private record ChannelTextureState(@NotNull GpuTextureView view, @NotNull GpuSampler sampler, float resolutionX, float resolutionY) {
 
-    @NotNull
-    private ChannelTextureState resolveBufferChannelState(int bufferPassIndex,
-                                                          @NotNull boolean[] activeBufferPasses,
-                                                          int fallbackTextureId) {
-        if (bufferPassIndex < 0 || bufferPassIndex >= BUFFER_PASS_COUNT) {
-            return new ChannelTextureState(fallbackTextureId, 0.0F, 0.0F);
-        }
-        if (bufferPassIndex >= activeBufferPasses.length || !activeBufferPasses[bufferPassIndex]) {
-            return new ChannelTextureState(fallbackTextureId, 0.0F, 0.0F);
-        }
-        BufferTargetState target = this.bufferTargets_FancyMenu[bufferPassIndex];
-        if (target.readTextureId <= 0 || target.width <= 0 || target.height <= 0) {
-            return new ChannelTextureState(fallbackTextureId, 0.0F, 0.0F);
-        }
-        return new ChannelTextureState(target.readTextureId, target.width, target.height);
-    }
-
-    private void bindChannelTextures(@NotNull ChannelTextureState[] channelTextureStates) {
-        for (int i = 0; i < CHANNEL_COUNT; i++) {
-            GlStateManager._activeTexture(GL13.GL_TEXTURE0 + i);
-            GlStateManager._bindTexture(channelTextureStates[i].textureId());
+        @NotNull
+        private ChannelTextureState withResolution(float width, float height) {
+            return new ChannelTextureState(this.view, this.sampler, width, height);
         }
     }
 
-    @NotNull
-    private ChannelTextureState resolveChannelTextureState(@NotNull Minecraft minecraft,
-                                                           @Nullable ResourceSupplier<ITexture> supplier,
-                                                           int fallbackTextureId) {
-        if (supplier == null) {
-            return new ChannelTextureState(fallbackTextureId, 0.0F, 0.0F);
-        }
-
-        ITexture texture = supplier.get();
-        if (texture == null || !texture.isReady()) {
-            return new ChannelTextureState(fallbackTextureId, 0.0F, 0.0F);
-        }
-
-        Identifier location = texture.getResourceLocation();
-        if (location == null) {
-            return new ChannelTextureState(fallbackTextureId, 0.0F, 0.0F);
-        }
-
-        int textureId;
-        try {
-            textureId = this.getGlTextureId(minecraft, location, fallbackTextureId);
-        } catch (Exception ex) {
-            return new ChannelTextureState(fallbackTextureId, 0.0F, 0.0F);
-        }
-
-        float width = Math.max(0.0F, texture.getWidth());
-        float height = Math.max(0.0F, texture.getHeight());
-        return new ChannelTextureState(textureId, width, height);
+    private record PreparedPass(int passIndex, @NotNull ProgramState program, @NotNull GpuTextureView outputView, @NotNull ChannelTextureState[] channels) {
     }
 
-    private int getGlTextureId(@NotNull Minecraft minecraft, @NotNull Identifier location, int fallbackTextureId) {
-        try {
-            if (minecraft.getTextureManager().getTexture(location).getTexture() instanceof GlTexture glTexture) {
-                return glTexture.glId();
-            }
-        } catch (Exception ignored) {
-        }
-        return fallbackTextureId;
-    }
+    private record GlslRenderState(@NotNull GlslShaderRuntime runtime, int areaX, int areaY, int areaWidth, int areaHeight, float partialTick, @Nullable String fragmentSource, @NotNull RenderSettings settings, @NotNull ScreenRectangle bounds) implements GuiRenderPhaseAction {
 
-    private void uploadUniforms(@NotNull Minecraft minecraft,
-                                @NotNull Window window,
-                                @NotNull RenderSettings settings,
-                                float partialTick,
-                                int areaX,
-                                int areaY,
-                                int areaWidth,
-                                int areaHeight,
-                                int areaXPx,
-                                int areaYPxTop,
-                                int areaWidthPx,
-                                int areaHeightPx,
-                                int areaYPxBottom,
-                                int screenWidthPx,
-                                int screenHeightPx,
-                                @NotNull ChannelTextureState[] channelTextureStates,
-                                @NotNull VariableUniformSnapshot variableUniformSnapshot) {
-
-        if (settings.useInput()) {
-            GlslRuntimeEventTracker.syncMouseButtonsFromWindow(window.handle());
-        }
-        GlslRuntimeEventTracker.InputSnapshot input = GlslRuntimeEventTracker.snapshot();
-        if (!settings.useInput()) {
-            this.lastShadertoyMouseX = 0.0F;
-            this.lastShadertoyMouseY = 0.0F;
-            this.hasShadertoyMousePosition = false;
-            input = new GlslRuntimeEventTracker.InputSnapshot(
-                    areaX,
-                    areaY + areaHeight,
-                    0.0D,
-                    0.0D,
-                    0.0D,
-                    0.0D,
-                    new boolean[GlslRuntimeEventTracker.TRACKED_MOUSE_BUTTONS],
-                    new int[GlslRuntimeEventTracker.TRACKED_MOUSE_BUTTONS],
-                    new int[GlslRuntimeEventTracker.TRACKED_MOUSE_BUTTONS],
-                    new double[GlslRuntimeEventTracker.TRACKED_MOUSE_BUTTONS],
-                    new double[GlslRuntimeEventTracker.TRACKED_MOUSE_BUTTONS],
-                    new long[GlslRuntimeEventTracker.TRACKED_MOUSE_BUTTONS],
-                    0,
-                    -1,
-                    -1,
-                    0,
-                    GlslRuntimeEventTracker.KEY_ACTION_RELEASE,
-                    0,
-                    -1,
-                    0
-            );
-        }
-
-        float timeDelta = this.lastFrameDeltaSeconds;
-        if (settings.freezeTime()) {
-            timeDelta = 0.0F;
-        } else {
-            timeDelta *= Math.max(0.0F, settings.timeScale());
-        }
-
-        float frameRate = minecraft.getFps();
-        if (frameRate <= 0.0F && this.lastFrameRate > 0.0F) {
-            frameRate = this.lastFrameRate;
-        }
-
-        double mouseGuiX = input.mouseX();
-        double mouseGuiY = input.mouseY();
-        double localMouseGuiX = mouseGuiX - areaX;
-        double localMouseGuiYTop = mouseGuiY - areaY;
-        double localMousePxX = localMouseGuiX * window.getGuiScale();
-        double localMousePxYBottom = (areaHeight - localMouseGuiYTop) * window.getGuiScale();
-
-        double localMouseNormX = areaWidthPx > 0 ? (localMousePxX / areaWidthPx) : 0.0D;
-        double localMouseNormY = areaHeightPx > 0 ? (localMousePxYBottom / areaHeightPx) : 0.0D;
-
-        boolean leftMouseDown = input.mouseButtonStates().length > 0 && input.mouseButtonStates()[0];
-        double clickX = 0.0D;
-        double clickY = 0.0D;
-        boolean hasClickData = input.lastMouseClickNanos().length > 0 && input.lastMouseClickNanos()[0] > 0L;
-        if (hasClickData && input.lastMouseClickX().length > 0 && input.lastMouseClickY().length > 0) {
-            clickX = (input.lastMouseClickX()[0] - areaX) * window.getGuiScale();
-            clickY = (areaHeight - (input.lastMouseClickY()[0] - areaY)) * window.getGuiScale();
-        }
-
-        float iMouseX;
-        float iMouseY;
-        if (settings.mousePositionRequiresHold()) {
-            if (leftMouseDown) {
-                iMouseX = (float) localMousePxX;
-                iMouseY = (float) localMousePxYBottom;
-                this.lastShadertoyMouseX = iMouseX;
-                this.lastShadertoyMouseY = iMouseY;
-                this.hasShadertoyMousePosition = true;
-            } else if (this.hasShadertoyMousePosition) {
-                iMouseX = this.lastShadertoyMouseX;
-                iMouseY = this.lastShadertoyMouseY;
-            } else if (hasClickData) {
-                iMouseX = (float) clickX;
-                iMouseY = (float) clickY;
-            } else {
-                iMouseX = 0.0F;
-                iMouseY = 0.0F;
-            }
-        } else {
-            iMouseX = (float) localMousePxX;
-            iMouseY = (float) localMousePxYBottom;
-        }
-
-        double mouseScrollDeltaX = input.mouseScrollTotalX() - this.lastMouseScrollTotalX;
-        double mouseScrollDeltaY = input.mouseScrollTotalY() - this.lastMouseScrollTotalY;
-        if (settings.useInput()) {
-            this.lastMouseScrollTotalX = input.mouseScrollTotalX();
-            this.lastMouseScrollTotalY = input.mouseScrollTotalY();
-        } else {
-            mouseScrollDeltaX = 0.0D;
-            mouseScrollDeltaY = 0.0D;
-        }
-
-        ZonedDateTime now = ZonedDateTime.now();
-        Instant instant = now.toInstant();
-        int unixSeconds = (int) instant.getEpochSecond();
-        int unixMillis = now.getNano() / 1_000_000;
-        int secondOfDay = (now.getHour() * 3600) + (now.getMinute() * 60) + now.getSecond();
-        float dateSeconds = secondOfDay + (now.getNano() / 1_000_000_000.0F);
-
-        int dayOfWeek = now.getDayOfWeek().getValue();
-        int dayOfYear = now.getDayOfYear();
-        int weekOfYear = now.get(WeekFields.ISO.weekOfWeekBasedYear());
-
-        setUniform3f("iResolution", areaWidthPx, areaHeightPx, 1.0F);
-        setUniform1f("iTime", (float) this.accumulatedTimeSeconds);
-        setUniform1f("iTimeDelta", timeDelta);
-        setUniform1f("iFrameRate", frameRate);
-        setUniform1i("iFrame", (int) Math.min(Integer.MAX_VALUE, this.frameCounter));
-        setUniform4f("iMouse",
-                iMouseX,
-                iMouseY,
-                (float) (leftMouseDown ? clickX : -Math.abs(clickX)),
-                (float) (leftMouseDown ? clickY : -Math.abs(clickY)));
-        setUniform4f("iDate", now.getYear(), now.getMonthValue(), now.getDayOfMonth(), dateSeconds);
-        setUniform1f("iSampleRate", 44100.0F);
-
-        float[] iChannelTime = new float[]{
-                (float) this.accumulatedTimeSeconds,
-                (float) this.accumulatedTimeSeconds,
-                (float) this.accumulatedTimeSeconds,
-                (float) this.accumulatedTimeSeconds
-        };
-        float[] iChannelResolution = new float[CHANNEL_COUNT * 3];
-        for (int i = 0; i < CHANNEL_COUNT; i++) {
-            int baseIndex = i * 3;
-            ChannelTextureState state = channelTextureStates[i];
-            iChannelResolution[baseIndex] = state.resolutionX();
-            iChannelResolution[baseIndex + 1] = state.resolutionY();
-            iChannelResolution[baseIndex + 2] = (state.resolutionX() > 0.0F && state.resolutionY() > 0.0F) ? 1.0F : 0.0F;
-        }
-        setUniform1fv("iChannelTime[0]", iChannelTime);
-        setUniform3fv("iChannelResolution[0]", iChannelResolution);
-
-        setUniform1i("iChannel0", 0);
-        setUniform1i("iChannel1", 1);
-        setUniform1i("iChannel2", 2);
-        setUniform1i("iChannel3", 3);
-
-        setUniform2f("fmAreaOffset", areaXPx, areaYPxBottom);
-        setUniform2f("fmAreaSize", areaWidthPx, areaHeightPx);
-        setUniform2f("fmAreaPosition", areaXPx, areaYPxBottom);
-        setUniform2f("fmAreaTopLeft", areaXPx, areaYPxTop);
-        setUniform2f("fmScreenSize", screenWidthPx, screenHeightPx);
-        setUniform1f("fmGuiScale", (float) window.getGuiScale());
-
-        setUniform4f("fmMouse", (float) localMousePxX, (float) localMousePxYBottom, (float) localMouseNormX, (float) localMouseNormY);
-        setUniform2f("fmMouseDelta", (float) (input.mouseDeltaX() * window.getGuiScale()), (float) (-input.mouseDeltaY() * window.getGuiScale()));
-
-        int[] clickCounts = input.mouseClickCounts();
-        int[] releaseCounts = input.mouseReleaseCounts();
-        boolean[] buttonStates = input.mouseButtonStates();
-        setUniform4i("fmMouseButtons",
-                resolveButtonState(buttonStates, 0),
-                resolveButtonState(buttonStates, 1),
-                resolveButtonState(buttonStates, 2),
-                resolveButtonState(buttonStates, 3));
-        setUniform4i("fmMouseClickCount",
-                resolveArrayValue(clickCounts, 0),
-                resolveArrayValue(clickCounts, 1),
-                resolveArrayValue(clickCounts, 2),
-                resolveArrayValue(clickCounts, 3));
-        setUniform4i("fmMouseReleaseCount",
-                resolveArrayValue(releaseCounts, 0),
-                resolveArrayValue(releaseCounts, 1),
-                resolveArrayValue(releaseCounts, 2),
-                resolveArrayValue(releaseCounts, 3));
-        setUniform2f("fmMouseScroll", (float) mouseScrollDeltaX, (float) mouseScrollDeltaY);
-        setUniform2f("fmMouseScrollTotal", settings.useInput() ? (float) input.mouseScrollTotalX() : 0.0F, settings.useInput() ? (float) input.mouseScrollTotalY() : 0.0F);
-
-        setUniform4i("fmKeyEvent", input.lastKeyCode(), input.lastScanCode(), input.lastKeyModifiers(), input.lastKeyAction());
-        setUniform1i("fmKeyEventCount", input.keyEventCounter());
-        setUniform4i("fmCharEvent", input.lastCharCodePoint(), input.lastCharModifiers(), 0, 0);
-        setUniform1i("fmCharEventCount", input.charEventCounter());
-
-        setUniform4i("fmDateParts", now.getYear(), now.getMonthValue(), now.getDayOfMonth(), dayOfWeek);
-        setUniform4i("fmTimeParts", now.getHour(), now.getMinute(), now.getSecond(), unixMillis);
-        setUniform1i("fmDayOfYear", dayOfYear);
-        setUniform1i("fmWeekOfYear", weekOfYear);
-        setUniform1i("fmUnixTimeSeconds", unixSeconds);
-        setUniform1i("fmUnixTimeMilliseconds", unixMillis);
-
-        setUniform1f("fmPartialTick", partialTick);
-        setUniform1f("fmGameDeltaTicks", minecraft.getDeltaTracker().getGameTimeDeltaTicks());
-        setUniform1f("fmRealtimeDeltaTicks", minecraft.getDeltaTracker().getRealtimeDeltaTicks());
-        setUniform1i("fmInWorld", minecraft.level != null ? 1 : 0);
-        setUniform1i("fmIsPaused", minecraft.isPaused() ? 1 : 0);
-        setUniform1f("fmOpacity", Mth.clamp(settings.opacity(), 0.0F, 1.0F));
-        setUniform1i("fmVariableCount", variableUniformSnapshot.variableCount());
-        this.uploadVariableUniforms(variableUniformSnapshot);
-    }
-
-    private static int resolveButtonState(@NotNull boolean[] array, int index) {
-        if (index < 0 || index >= array.length) {
-            return 0;
-        }
-        return array[index] ? 1 : 0;
-    }
-
-    private static int resolveArrayValue(@NotNull int[] array, int index) {
-        if (index < 0 || index >= array.length) {
-            return 0;
-        }
-        return array[index];
-    }
-
-    @NotNull
-    private VariableUniformSnapshot buildVariableUniformSnapshot() {
-        List<UserVariableSnapshot> variables = new ArrayList<>(VariableHandler.getVariableSnapshots());
-        variables.sort(Comparator.comparing(UserVariableSnapshot::name));
-
-        Map<String, VariableUniformValue> valuesBySuffix = new HashMap<>();
-        for (UserVariableSnapshot variable : variables) {
-            String uniformSuffix = toVariableUniformSuffix(variable.name());
-            if (uniformSuffix.isEmpty()) {
-                continue;
-            }
-            valuesBySuffix.put(uniformSuffix, parseVariableUniformValue(variable.value()));
-        }
-
-        Set<String> removedSuffixes = new HashSet<>(this.lastVariableUniformSuffixes_FancyMenu);
-        removedSuffixes.removeAll(valuesBySuffix.keySet());
-        this.lastVariableUniformSuffixes_FancyMenu.clear();
-        this.lastVariableUniformSuffixes_FancyMenu.addAll(valuesBySuffix.keySet());
-
-        return new VariableUniformSnapshot(valuesBySuffix, removedSuffixes, variables.size());
-    }
-
-    private void uploadVariableUniforms(@NotNull VariableUniformSnapshot snapshot) {
-        for (Map.Entry<String, VariableUniformValue> entry : snapshot.valuesBySuffix().entrySet()) {
-            this.uploadVariableUniformValue(entry.getKey(), entry.getValue(), 1);
-        }
-        for (String removedSuffix : snapshot.removedSuffixes()) {
-            this.uploadVariableUniformValue(removedSuffix, ZERO_VARIABLE_UNIFORM_VALUE_FANCYMENU, 0);
+        @Override
+        public void executeRender_FancyMenu() {
+            this.runtime.renderNow(this.areaX, this.areaY, this.areaWidth, this.areaHeight, this.partialTick, this.fragmentSource, this.settings);
         }
     }
 
-    private void uploadVariableUniformValue(@NotNull String suffix, @NotNull VariableUniformValue value, int existsFlag) {
-        setUniform1f(VARIABLE_UNIFORM_FLOAT_PREFIX + suffix, value.floatValue());
-        setUniform1i(VARIABLE_UNIFORM_INT_PREFIX + suffix, value.intValue());
-        setUniform1i(VARIABLE_UNIFORM_BOOL_PREFIX + suffix, value.boolValue());
-        setUniform2f(VARIABLE_UNIFORM_VEC2_PREFIX + suffix, value.vec2X(), value.vec2Y());
-        setUniform3f(VARIABLE_UNIFORM_VEC3_PREFIX + suffix, value.vec3X(), value.vec3Y(), value.vec3Z());
-        setUniform4f(VARIABLE_UNIFORM_VEC4_PREFIX + suffix, value.vec4X(), value.vec4Y(), value.vec4Z(), value.vec4W());
-        setUniform1i(VARIABLE_UNIFORM_EXISTS_PREFIX + suffix, existsFlag);
-    }
+    private record GlslResourceReleaseRenderState(@NotNull GlslShaderRuntime runtime, @NotNull ScreenRectangle bounds) implements GuiRenderPhaseAction {
 
-    @NotNull
-    private static String toVariableUniformSuffix(@Nullable String variableName) {
-        if (variableName == null || variableName.isEmpty()) {
-            return "";
-        }
-        // Keep mapping deterministic and GLSL-safe so variable updates never require shader recompilation.
-        StringBuilder builder = new StringBuilder(variableName.length() + 2);
-        for (int i = 0; i < variableName.length(); i++) {
-            char c = variableName.charAt(i);
-            if ((c >= 'a' && c <= 'z')
-                    || (c >= 'A' && c <= 'Z')
-                    || (c >= '0' && c <= '9')
-                    || c == '_') {
-                builder.append(c);
-            } else {
-                builder.append('_');
-            }
-        }
-        if (builder.isEmpty()) {
-            return "";
-        }
-        if (builder.charAt(0) >= '0' && builder.charAt(0) <= '9') {
-            builder.insert(0, '_');
-        }
-        return builder.toString();
-    }
-
-    @NotNull
-    private static VariableUniformValue parseVariableUniformValue(@Nullable String rawValue) {
-        String normalized = rawValue == null ? "" : rawValue.trim();
-        float floatValue = parseFloatValue(normalized);
-        int intValue = parseIntValue(normalized, floatValue);
-        int boolValue = parseBoolValue(normalized, floatValue);
-        float[] vec4 = parseVec4Value(normalized, floatValue);
-        return new VariableUniformValue(
-                floatValue,
-                intValue,
-                boolValue,
-                vec4[0],
-                vec4[1],
-                vec4[0],
-                vec4[1],
-                vec4[2],
-                vec4[0],
-                vec4[1],
-                vec4[2],
-                vec4[3]
-        );
-    }
-
-    private static float parseFloatValue(@NotNull String normalizedValue) {
-        if (normalizedValue.isEmpty()) {
-            return 0.0F;
-        }
-        try {
-            return Float.parseFloat(normalizedValue);
-        } catch (Exception ignored) {
-        }
-        float[] components = parseFloatComponents(normalizedValue);
-        if (components.length > 0) {
-            return components[0];
-        }
-        return parseBoolValue(normalizedValue, 0.0F);
-    }
-
-    private static int parseIntValue(@NotNull String normalizedValue, float fallbackFloat) {
-        if (normalizedValue.isEmpty()) {
-            return 0;
-        }
-        try {
-            return Integer.parseInt(normalizedValue);
-        } catch (Exception ignored) {
-        }
-        try {
-            return (int) Float.parseFloat(normalizedValue);
-        } catch (Exception ignored) {
-        }
-        float[] components = parseFloatComponents(normalizedValue);
-        if (components.length > 0) {
-            return (int) components[0];
-        }
-        return (int) fallbackFloat;
-    }
-
-    private static int parseBoolValue(@NotNull String normalizedValue, float fallbackFloat) {
-        if (normalizedValue.isEmpty()) {
-            return 0;
-        }
-        String lower = normalizedValue.toLowerCase(Locale.ROOT);
-        if (lower.equals("true") || lower.equals("yes") || lower.equals("on") || lower.equals("enabled")) {
-            return 1;
-        }
-        if (lower.equals("false") || lower.equals("no") || lower.equals("off") || lower.equals("disabled")) {
-            return 0;
-        }
-        try {
-            return Float.parseFloat(normalizedValue) != 0.0F ? 1 : 0;
-        } catch (Exception ignored) {
-        }
-        return fallbackFloat != 0.0F ? 1 : 0;
-    }
-
-    @NotNull
-    private static float[] parseVec4Value(@NotNull String normalizedValue, float fallbackScalar) {
-        float[] components = parseFloatComponents(normalizedValue);
-        if (components.length == 0) {
-            return new float[]{fallbackScalar, fallbackScalar, fallbackScalar, fallbackScalar};
-        }
-
-        float[] vec4 = new float[4];
-        for (int i = 0; i < 4; i++) {
-            if (i < components.length) {
-                vec4[i] = components[i];
-            } else {
-                vec4[i] = components[components.length - 1];
-            }
-        }
-        return vec4;
-    }
-
-    @NotNull
-    private static float[] parseFloatComponents(@NotNull String value) {
-        if (value.isEmpty()) {
-            return new float[0];
-        }
-        String[] split = VARIABLE_COMPONENT_SPLIT_PATTERN.split(value);
-        List<Float> components = new ArrayList<>(split.length);
-        for (String token : split) {
-            if (token == null || token.isEmpty()) {
-                continue;
-            }
-            try {
-                components.add(Float.parseFloat(token));
-            } catch (Exception ignored) {
-            }
-        }
-        float[] array = new float[components.size()];
-        for (int i = 0; i < components.size(); i++) {
-            array[i] = components.get(i);
-        }
-        return array;
-    }
-
-    private void setUniform1f(@NotNull String name, float value) {
-        Integer location = this.getActiveUniformLocation(name);
-        if (location != null && location >= 0) {
-            GL20.glUniform1f(location, value);
+        @Override
+        public void executeRender_FancyMenu() {
+            this.runtime.close();
         }
     }
-
-    private void setUniform2f(@NotNull String name, float v1, float v2) {
-        Integer location = this.getActiveUniformLocation(name);
-        if (location != null && location >= 0) {
-            GL20.glUniform2f(location, v1, v2);
-        }
-    }
-
-    private void setUniform3f(@NotNull String name, float v1, float v2, float v3) {
-        Integer location = this.getActiveUniformLocation(name);
-        if (location != null && location >= 0) {
-            GL20.glUniform3f(location, v1, v2, v3);
-        }
-    }
-
-    private void setUniform4f(@NotNull String name, float v1, float v2, float v3, float v4) {
-        Integer location = this.getActiveUniformLocation(name);
-        if (location != null && location >= 0) {
-            GL20.glUniform4f(location, v1, v2, v3, v4);
-        }
-    }
-
-    private void setUniform1i(@NotNull String name, int value) {
-        Integer location = this.getActiveUniformLocation(name);
-        if (location != null && location >= 0) {
-            GL20.glUniform1i(location, value);
-        }
-    }
-
-    private void setUniform4i(@NotNull String name, int v1, int v2, int v3, int v4) {
-        Integer location = this.getActiveUniformLocation(name);
-        if (location != null && location >= 0) {
-            GL20.glUniform4i(location, v1, v2, v3, v4);
-        }
-    }
-
-    private void setUniform1fv(@NotNull String name, @NotNull float[] values) {
-        Integer location = this.getActiveUniformLocation(name);
-        if (location != null && location >= 0) {
-            GL20.glUniform1fv(location, values);
-        }
-    }
-
-    private void setUniform3fv(@NotNull String name, @NotNull float[] values) {
-        Integer location = this.getActiveUniformLocation(name);
-        if (location != null && location >= 0) {
-            GL20.glUniform3fv(location, values);
-        }
-    }
-
-    @Nullable
-    private Integer getActiveUniformLocation(@NotNull String name) {
-        ProgramState state = this.activeUniformProgram_FancyMenu;
-        if (state == null) {
-            return null;
-        }
-        return state.uniformLocations.computeIfAbsent(name, lookup -> GL20.glGetUniformLocation(state.programId, lookup));
-    }
-
 }

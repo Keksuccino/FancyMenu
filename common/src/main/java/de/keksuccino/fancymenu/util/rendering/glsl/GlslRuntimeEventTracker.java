@@ -33,6 +33,7 @@ public final class GlslRuntimeEventTracker {
     private static double mouseDeltaY;
     private static double mouseScrollTotalX;
     private static double mouseScrollTotalY;
+    private static int mouseMoveEventCounter;
 
     private static int keyEventCounter;
     private static int lastKeyCode = -1;
@@ -52,6 +53,7 @@ public final class GlslRuntimeEventTracker {
         mouseY = y;
         mouseDeltaX = deltaX;
         mouseDeltaY = deltaY;
+        mouseMoveEventCounter++;
     }
 
     public static synchronized void onMouseButtonPressed(int button, double mouseX, double mouseY) {
@@ -149,6 +151,7 @@ public final class GlslRuntimeEventTracker {
                 Arrays.copyOf(LAST_MOUSE_CLICK_X, LAST_MOUSE_CLICK_X.length),
                 Arrays.copyOf(LAST_MOUSE_CLICK_Y, LAST_MOUSE_CLICK_Y.length),
                 Arrays.copyOf(LAST_MOUSE_CLICK_NANOS, LAST_MOUSE_CLICK_NANOS.length),
+                mouseMoveEventCounter,
                 keyEventCounter,
                 lastKeyCode,
                 lastScanCode,
@@ -177,6 +180,7 @@ public final class GlslRuntimeEventTracker {
             @NotNull double[] lastMouseClickX,
             @NotNull double[] lastMouseClickY,
             @NotNull long[] lastMouseClickNanos,
+            int mouseMoveEventCounter,
             int keyEventCounter,
             int lastKeyCode,
             int lastScanCode,
@@ -186,6 +190,11 @@ public final class GlslRuntimeEventTracker {
             int lastCharCodePoint,
             int lastCharModifiers
     ) {
+
+        /** Retains source compatibility for callers that do not need mouse-delta lifecycle tracking. */
+        public InputSnapshot(double mouseX, double mouseY, double mouseDeltaX, double mouseDeltaY, double mouseScrollTotalX, double mouseScrollTotalY, @NotNull boolean[] mouseButtonStates, @NotNull int[] mouseClickCounts, @NotNull int[] mouseReleaseCounts, @NotNull double[] lastMouseClickX, @NotNull double[] lastMouseClickY, @NotNull long[] lastMouseClickNanos, int keyEventCounter, int lastKeyCode, int lastScanCode, int lastKeyModifiers, int lastKeyAction, int charEventCounter, int lastCharCodePoint, int lastCharModifiers) {
+            this(mouseX, mouseY, mouseDeltaX, mouseDeltaY, mouseScrollTotalX, mouseScrollTotalY, mouseButtonStates, mouseClickCounts, mouseReleaseCounts, lastMouseClickX, lastMouseClickY, lastMouseClickNanos, 0, keyEventCounter, lastKeyCode, lastScanCode, lastKeyModifiers, lastKeyAction, charEventCounter, lastCharCodePoint, lastCharModifiers);
+        }
     }
 
 }

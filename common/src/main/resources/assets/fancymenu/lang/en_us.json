@@ -523,7 +523,7 @@
   "fancymenu.backgrounds.glsl.mouse_position_requires_hold": "Update iMouse Position Only While Holding LMB: %s",
   "fancymenu.backgrounds.glsl.mouse_position_requires_hold.desc": "Controls how iMouse.xy is updated when input is enabled.\nEnabled: iMouse.xy updates only while the left mouse button is held, then keeps the last held position.\nDisabled: iMouse.xy continuously follows cursor movement even when no mouse button is held.",
   "fancymenu.backgrounds.glsl.opacity_multiplier": "Opacity Multiplier",
-  "fancymenu.backgrounds.glsl.opacity_multiplier.desc": "Additional opacity multiplier for this shader background.\nFinal alpha = background opacity x this multiplier (clamped to 0.0-1.0).",
+  "fancymenu.backgrounds.glsl.opacity_multiplier.desc": "Additional opacity multiplier for this shader background.\nResolved opacity = background opacity x this multiplier (clamped to 0.0-1.0).\nShadertoy Image output alpha is multiplied automatically. Direct shaders receive the resolved value as fmOpacity and should apply it to their output alpha.",
   "fancymenu.backgrounds.glsl.prefer_inline_shader_source": "Prefer Source: %s",
   "fancymenu.backgrounds.glsl.prefer_inline_shader_source.desc": "If enabled, FancyMenu tries the shader source first.\nIf is empty, it falls back to the shader source file.\nIf disabled, file source is preferred and is only fallback.",
   "fancymenu.backgrounds.glsl.shader_source": "Shader Source File",
@@ -954,7 +954,7 @@
   "fancymenu.decoration_overlays.glsl.mouse_position_requires_hold": "Update iMouse Position Only While Holding LMB: %s",
   "fancymenu.decoration_overlays.glsl.mouse_position_requires_hold.desc": "Controls how iMouse.xy is updated when input is enabled.\nEnabled: iMouse.xy updates only while the left mouse button is held, then keeps the last held position.\nDisabled: iMouse.xy continuously follows cursor movement even when no mouse button is held.",
   "fancymenu.decoration_overlays.glsl.opacity_multiplier": "Opacity Multiplier",
-  "fancymenu.decoration_overlays.glsl.opacity_multiplier.desc": "Opacity multiplier for this shader overlay.\nFinal alpha = this multiplier (clamped to 0.0-1.0).",
+  "fancymenu.decoration_overlays.glsl.opacity_multiplier.desc": "Opacity multiplier for this shader overlay (clamped to 0.0-1.0).\nShadertoy Image output alpha is multiplied automatically. Direct shaders receive the resolved value as fmOpacity and should apply it to their output alpha.",
   "fancymenu.decoration_overlays.glsl.show_compile_errors": "Show Compile Errors: %s",
   "fancymenu.decoration_overlays.glsl.show_compile_errors.desc": "Shows shader compile/link errors as an overlay on the menu.\nDisable if you want to hide diagnostics in production layouts.",
   "fancymenu.decoration_overlays.glsl.time_scale": "Time Scale",
@@ -1506,7 +1506,7 @@
   "fancymenu.elements.glsl.mouse_position_requires_hold": "Update iMouse Position Only While Holding LMB: %s",
   "fancymenu.elements.glsl.mouse_position_requires_hold.desc": "Controls how iMouse.xy is updated when input is enabled.\nEnabled: iMouse.xy updates only while the left mouse button is held, then keeps the last held position.\nDisabled: iMouse.xy continuously follows cursor movement even when no mouse button is held.",
   "fancymenu.elements.glsl.opacity_multiplier": "Opacity Multiplier",
-  "fancymenu.elements.glsl.opacity_multiplier.desc": "Additional opacity multiplier for this shader element.\nFinal alpha = element opacity x this multiplier (clamped to 0.0-1.0).",
+  "fancymenu.elements.glsl.opacity_multiplier.desc": "Additional opacity multiplier for this shader element.\nResolved opacity = element opacity x this multiplier (clamped to 0.0-1.0).\nShadertoy Image output alpha is multiplied automatically. Direct shaders receive the resolved value as fmOpacity and should apply it to their output alpha.",
   "fancymenu.elements.glsl.prefer_inline_shader_source.desc": "If enabled, FancyMenu tries the shader source first.\nIf is empty, it falls back to the shader source file.\nIf disabled, file source is preferred and is only fallback.",
   "fancymenu.elements.glsl.shader_source.desc": "Select a shader source file from local storage, a web URL, or a resource location.\nThe file must contain plain text GLSL fragment shader code (not binary).\nAccepted entry points:\n- Shadertoy style: void mainImage(out vec4 fragColor, in vec2 fragCoord)\n- Direct fragment style: void main()\nIn direct mode, output should be written to an out vec4 variable (recommended) or gl_FragColor compatibility.\nSupported local file extension: .txt only.\nImportant: extension is only used for filtering; the content must still be fragment shader code.",
   "fancymenu.elements.glsl.show_compile_errors": "Show Compile Errors: %s",
@@ -3366,6 +3366,5 @@
   "fancymenu.widgetified_screens.title_screen.logo": "Minecraft Logo",
   "fancymenu.widgetified_screens.title_screen.realmsnotification": "Realms Notification Icons",
   "fancymenu.widgetified_screens.title_screen.splash": "Vanilla Splash Text",
-  "fancymenu.glsl.vulkan_unsupported.error": "Custom GLSL shaders are only supported when Minecraft uses OpenGL. Switch the renderer to OpenGL to use this shader.",
   "fancymenu.actions.screens.finish.no_action_selected": "§xYou need to select an action first!"
 }
