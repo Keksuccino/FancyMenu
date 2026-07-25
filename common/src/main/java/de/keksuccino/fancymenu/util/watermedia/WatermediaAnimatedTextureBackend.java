@@ -413,11 +413,7 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
         this.dependencyMissing = true;
         this.loadingFailed = true;
         this.ready = true;
-        if (WatermediaUtil.isWatermediaVulkanUnsupported()) {
-            LOGGER.warn("[FANCYMENU] Watermedia does not support Vulkan yet, {} source will use fallback decoder: {}", this.logTypeName, sourceName);
-        } else {
-            LOGGER.warn("[FANCYMENU] Watermedia is not loaded, {} source will use fallback decoder: {}", this.logTypeName, sourceName);
-        }
+        LOGGER.warn("[FANCYMENU] Watermedia is not loaded, {} source will use fallback decoder: {}", this.logTypeName, sourceName);
     }
 
     protected void clearFrameTextureId() {

@@ -312,7 +312,6 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     }
 
     protected boolean handleWatermediaMissingOverlayClick_FancyMenu(double mouseX, double mouseY) {
-        if (!WatermediaUtil.shouldOfferWatermediaDownloads()) return false;
         if (this.isMouseOverWatermediaDownloadLink_FancyMenu(mouseX, mouseY)) {
             WebUtils.openWebLink(WATERMEDIA_V3_DOWNLOAD_URL_FANCYMENU);
             return true;
@@ -341,10 +340,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         int height = getScreenHeight();
         graphics.fill(0, 0, width, height, WATERMEDIA_MISSING_BACKGROUND_COLOR_FANCYMENU.getColorIntWithAlpha(this.opacity));
 
-        boolean showDownloadLinks = WatermediaUtil.shouldOfferWatermediaDownloads();
-        Component infoText = Component.translatable(showDownloadLinks
-                ? "fancymenu.backgrounds.video.watermedia_missing.info"
-                : "fancymenu.backgrounds.video.watermedia_vulkan_unsupported.info");
+        Component infoText = Component.translatable("fancymenu.backgrounds.video.watermedia_missing.info");
         Component downloadText = Component.translatable("fancymenu.backgrounds.video.watermedia_missing.download");
         Component downloadBinariesText = Component.translatable("fancymenu.backgrounds.video.watermedia_missing.download_binaries");
 
@@ -352,12 +348,12 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         float largeTextSize = UIBase.getUITextSizeLarge();
         float infoTextWidth = UIBase.getUITextWidth(infoText, normalTextSize);
         float infoTextHeight = UIBase.getUITextHeight(normalTextSize);
-        float downloadTextWidth = showDownloadLinks ? UIBase.getUITextWidth(downloadText, largeTextSize) : 0.0F;
-        float downloadTextHeight = showDownloadLinks ? UIBase.getUITextHeight(largeTextSize) : 0.0F;
-        float downloadBinariesTextWidth = showDownloadLinks ? UIBase.getUITextWidth(downloadBinariesText, largeTextSize) : 0.0F;
-        float downloadBinariesTextHeight = showDownloadLinks ? UIBase.getUITextHeight(largeTextSize) : 0.0F;
+        float downloadTextWidth = UIBase.getUITextWidth(downloadText, largeTextSize);
+        float downloadTextHeight = UIBase.getUITextHeight(largeTextSize);
+        float downloadBinariesTextWidth = UIBase.getUITextWidth(downloadBinariesText, largeTextSize);
+        float downloadBinariesTextHeight = UIBase.getUITextHeight(largeTextSize);
         float spacing = Math.max(4.0F, UIBase.getUITextHeightSmall());
-        float totalHeight = infoTextHeight + (showDownloadLinks ? spacing + downloadTextHeight + spacing + downloadBinariesTextHeight : 0.0F);
+        float totalHeight = infoTextHeight + spacing + downloadTextHeight + spacing + downloadBinariesTextHeight;
 
         float infoX = (width / 2.0F) - (infoTextWidth / 2.0F);
         float infoY = (height / 2.0F) - (totalHeight / 2.0F);
@@ -368,28 +364,24 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
 
         int textColor = DrawableColor.WHITE.getColorIntWithAlpha(this.opacity);
         UIBase.renderText(graphics, infoText, infoX, infoY, textColor, normalTextSize);
-        if (showDownloadLinks) {
-            this.watermediaDownloadX_FancyMenu = downloadX;
-            this.watermediaDownloadY_FancyMenu = downloadY;
-            this.watermediaDownloadWidth_FancyMenu = downloadTextWidth;
-            this.watermediaDownloadHeight_FancyMenu = downloadTextHeight;
-            this.watermediaBinariesDownloadX_FancyMenu = downloadBinariesX;
-            this.watermediaBinariesDownloadY_FancyMenu = downloadBinariesY;
-            this.watermediaBinariesDownloadWidth_FancyMenu = downloadBinariesTextWidth;
-            this.watermediaBinariesDownloadHeight_FancyMenu = downloadBinariesTextHeight;
+        this.watermediaDownloadX_FancyMenu = downloadX;
+        this.watermediaDownloadY_FancyMenu = downloadY;
+        this.watermediaDownloadWidth_FancyMenu = downloadTextWidth;
+        this.watermediaDownloadHeight_FancyMenu = downloadTextHeight;
+        this.watermediaBinariesDownloadX_FancyMenu = downloadBinariesX;
+        this.watermediaBinariesDownloadY_FancyMenu = downloadBinariesY;
+        this.watermediaBinariesDownloadWidth_FancyMenu = downloadBinariesTextWidth;
+        this.watermediaBinariesDownloadHeight_FancyMenu = downloadBinariesTextHeight;
 
-            boolean hoveredMain = this.isMouseOverWatermediaDownloadLink_FancyMenu(mouseX, mouseY);
-            boolean hoveredBinaries = this.isMouseOverWatermediaBinariesDownloadLink_FancyMenu(mouseX, mouseY);
-            if (hoveredMain || hoveredBinaries) {
-                CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
-            }
-            Component renderedDownloadText = downloadText.copy().setStyle(Style.EMPTY.withBold(true).withUnderlined(hoveredMain));
-            Component renderedDownloadBinariesText = downloadBinariesText.copy().setStyle(Style.EMPTY.withBold(true).withUnderlined(hoveredBinaries));
-            UIBase.renderText(graphics, renderedDownloadText, downloadX, downloadY, textColor, largeTextSize);
-            UIBase.renderText(graphics, renderedDownloadBinariesText, downloadBinariesX, downloadBinariesY, textColor, largeTextSize);
-        } else {
-            this.resetWatermediaDownloadLinkBounds_FancyMenu();
+        boolean hoveredMain = this.isMouseOverWatermediaDownloadLink_FancyMenu(mouseX, mouseY);
+        boolean hoveredBinaries = this.isMouseOverWatermediaBinariesDownloadLink_FancyMenu(mouseX, mouseY);
+        if (hoveredMain || hoveredBinaries) {
+            CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
         }
+        Component renderedDownloadText = downloadText.copy().setStyle(Style.EMPTY.withBold(true).withUnderlined(hoveredMain));
+        Component renderedDownloadBinariesText = downloadBinariesText.copy().setStyle(Style.EMPTY.withBold(true).withUnderlined(hoveredBinaries));
+        UIBase.renderText(graphics, renderedDownloadText, downloadX, downloadY, textColor, largeTextSize);
+        UIBase.renderText(graphics, renderedDownloadBinariesText, downloadBinariesX, downloadBinariesY, textColor, largeTextSize);
     }
 
     protected boolean isMouseOverWatermediaDownloadLink_FancyMenu(double mouseX, double mouseY) {

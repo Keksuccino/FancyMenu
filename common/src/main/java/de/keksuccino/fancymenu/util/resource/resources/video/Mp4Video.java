@@ -759,11 +759,7 @@ public class Mp4Video implements IVideo {
         this.lastPlayRequestTimestampMs = -1L;
         this.resetVideoPlaybackListenerState();
         this.framePresented = false;
-        if (WatermediaUtil.isWatermediaVulkanUnsupported()) {
-            LOGGER.warn("[FANCYMENU] Watermedia does not support Vulkan yet, MP4 source will render as missing texture: {}", sourceName);
-        } else {
-            LOGGER.warn("[FANCYMENU] Watermedia V3 and/or Watermedia Binaries are not loaded, MP4 source will render as missing texture: {}", sourceName);
-        }
+        LOGGER.warn("[FANCYMENU] Watermedia V3 and/or Watermedia Binaries are not loaded, MP4 source will render as missing texture: {}", sourceName);
     }
 
     protected void clearFrameTextureId() {

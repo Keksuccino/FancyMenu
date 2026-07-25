@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.util.watermedia;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.platform.Services;
-import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -38,22 +37,20 @@ public class WatermediaUtil {
     }
 
     public static boolean isWatermediaVideoPlaybackAvailable() {
-        return isWatermediaRenderingAvailable() && isWatermediaBinariesLoaded();
+        boolean watermediaLoaded = isWatermediaLoaded();
+        return isWatermediaVideoPlaybackAvailable(watermediaLoaded, watermediaLoaded && isWatermediaBinariesLoaded());
     }
 
     public static boolean isWatermediaRenderingAvailable() {
-        return isWatermediaLoaded() && !isWatermediaVulkanUnsupported();
+        return isWatermediaRenderingAvailable(isWatermediaLoaded());
     }
 
-    public static boolean isWatermediaVulkanUnsupported() {
-        try {
-            return RenderingUtils.isVulkanActive();
-        } catch (Throwable ignored) {}
-        return false;
+    static boolean isWatermediaVideoPlaybackAvailable(boolean watermediaLoaded, boolean watermediaBinariesLoaded) {
+        return isWatermediaRenderingAvailable(watermediaLoaded) && watermediaBinariesLoaded;
     }
 
-    public static boolean shouldOfferWatermediaDownloads() {
-        return !isWatermediaVulkanUnsupported();
+    static boolean isWatermediaRenderingAvailable(boolean watermediaLoaded) {
+        return watermediaLoaded;
     }
 
     /**
