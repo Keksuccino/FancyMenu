@@ -93,6 +93,12 @@
     "client.MixinTabNavigationBar",
     "client.MixinTitleScreen",
     "client.MixinVanillaPackResources",
+    "client.MixinVulkanCommandEncoder",
+    "client.MixinVulkanDevice",
+    "client.MixinVulkanGpuSurface",
+    "client.MixinVulkanQueue",
+    "client.MixinVulkanQueueSubmission",
+    "client.MixinVulkanRenderPass",
     "client.MixinWindow",
     "client.MixinWorldListEntry",
     "client.MixinWorldOpenFlows"

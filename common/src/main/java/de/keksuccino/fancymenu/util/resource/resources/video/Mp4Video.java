@@ -398,11 +398,11 @@ public class Mp4Video implements IVideo {
         if (!this.shouldPresentFrame(statusName)) return FULLY_TRANSPARENT_TEXTURE;
         this.tryApplyQueuedSeekToPlayer(cachedPlayer);
         this.updateSizeFromPlayer(cachedPlayer);
-        int textureId = WatermediaReflectionBridge.playerTextureId(cachedPlayer);
-        if (textureId <= 0) return FULLY_TRANSPARENT_TEXTURE;
+        long textureHandle = WatermediaReflectionBridge.playerTextureHandle(cachedPlayer);
+        if (textureHandle == 0L) return FULLY_TRANSPARENT_TEXTURE;
         WatermediaFrameTexture frameTexture = this.getOrCreateFrameTexture();
         if (frameTexture == null) return FULLY_TRANSPARENT_TEXTURE;
-        frameTexture.setId(textureId);
+        frameTexture.setHandle(textureHandle);
         this.framePresented = true;
         this.ensureFrameTextureRegistered(frameTexture);
         return this.frameLocation;
@@ -765,7 +765,7 @@ public class Mp4Video implements IVideo {
     protected void clearFrameTextureId() {
         WatermediaFrameTexture cachedFrameTexture = this.frameTexture;
         if (cachedFrameTexture != null) {
-            cachedFrameTexture.setId(-1);
+            cachedFrameTexture.setHandle(0L);
         }
     }
 
@@ -848,7 +848,7 @@ public class Mp4Video implements IVideo {
         this.framePresented = false;
         WatermediaFrameTexture cachedFrameTexture = this.frameTexture;
         if (cachedFrameTexture != null) {
-            cachedFrameTexture.setId(-1);
+            cachedFrameTexture.setHandle(0L);
         }
     }
 

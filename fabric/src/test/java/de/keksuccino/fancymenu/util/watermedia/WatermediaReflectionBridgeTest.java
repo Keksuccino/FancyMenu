@@ -35,4 +35,43 @@ class WatermediaReflectionBridgeTest {
         assertTrue(frames[0].hasRemaining());
     }
 
+    @Test
+    void selectsGraphicsFactoryForMinecraftRenderer() {
+        assertEquals(WatermediaReflectionBridge.GraphicsBackend.OPENGL, WatermediaReflectionBridge.graphicsBackend(false));
+        assertEquals(WatermediaReflectionBridge.GraphicsBackend.VULKAN, WatermediaReflectionBridge.graphicsBackend(true));
+    }
+
+    @Test
+    void preservesOpaqueVulkanTextureHandlesWithoutIntTruncation() {
+        long negativeOpaqueHandle = 0xFEDCBA9876543210L;
+        long largePositiveHandle = (long)Integer.MAX_VALUE + 42L;
+
+        assertEquals(negativeOpaqueHandle, WatermediaReflectionBridge.playerTextureHandle(new TexturePlayer(negativeOpaqueHandle)));
+        assertEquals(largePositiveHandle, WatermediaReflectionBridge.playerTextureHandle(new TexturePlayer(largePositiveHandle)));
+        assertEquals(0L, WatermediaReflectionBridge.playerTextureHandle(new TexturePlayer(0L)));
+    }
+
+    @Test
+    void acceptsOnlyPositiveIntSizedOpenGlTextureNames() {
+        assertEquals(0, WatermediaReflectionBridge.openGlTextureId(0L));
+        assertEquals(0, WatermediaReflectionBridge.openGlTextureId(-1L));
+        assertEquals(1, WatermediaReflectionBridge.openGlTextureId(1L));
+        assertEquals(Integer.MAX_VALUE, WatermediaReflectionBridge.openGlTextureId(Integer.MAX_VALUE));
+        assertEquals(0, WatermediaReflectionBridge.openGlTextureId((long)Integer.MAX_VALUE + 1L));
+    }
+
+    public static final class TexturePlayer {
+
+        private final long texture;
+
+        public TexturePlayer(long texture) {
+            this.texture = texture;
+        }
+
+        public long texture() {
+            return this.texture;
+        }
+
+    }
+
 }

@@ -23,7 +23,7 @@ public class FMMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if (mixinClassName.endsWith("MixinWatermediaNeoBootstrap")) {
+        if (isWatermediaVulkanMixin(mixinClassName)) {
             return isKonkreteLoaded() && isWatermediaLoaded();
         }
         return isKonkreteLoaded();
@@ -57,7 +57,16 @@ public class FMMixinPlugin implements IMixinConfigPlugin {
     }
 
     private static boolean isWatermediaLoaded() {
-        return FMMixinPlugin.class.getClassLoader().getResource("org/watermedia/bootstrap/NeoBootstrap.class") != null;
+        return FMMixinPlugin.class.getClassLoader().getResource("org/watermedia/api/media/MediaAPI.class") != null;
+    }
+
+    private static boolean isWatermediaVulkanMixin(String mixinClassName) {
+        return mixinClassName.endsWith("MixinVulkanCommandEncoder")
+                || mixinClassName.endsWith("MixinVulkanDevice")
+                || mixinClassName.endsWith("MixinVulkanGpuSurface")
+                || mixinClassName.endsWith("MixinVulkanQueue")
+                || mixinClassName.endsWith("MixinVulkanQueueSubmission")
+                || mixinClassName.endsWith("MixinVulkanRenderPass");
     }
 
 }

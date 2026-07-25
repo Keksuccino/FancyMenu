@@ -251,11 +251,11 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
         this.applyFiniteLoopStop(cachedPlayer);
         this.updateSizeFromPlayer(cachedPlayer);
 
-        int textureId = WatermediaReflectionBridge.playerTextureId(cachedPlayer);
-        if (textureId <= 0) return RenderableResource.FULLY_TRANSPARENT_TEXTURE;
+        long textureHandle = WatermediaReflectionBridge.playerTextureHandle(cachedPlayer);
+        if (textureHandle == 0L) return RenderableResource.FULLY_TRANSPARENT_TEXTURE;
         WatermediaFrameTexture frameTexture = this.getOrCreateFrameTexture();
         if (frameTexture == null) return RenderableResource.FULLY_TRANSPARENT_TEXTURE;
-        frameTexture.setId(textureId);
+        frameTexture.setHandle(textureHandle);
         this.ensureFrameTextureRegistered(frameTexture);
         return this.frameLocation;
     }
@@ -419,7 +419,7 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
     protected void clearFrameTextureId() {
         WatermediaFrameTexture cachedFrameTexture = this.frameTexture;
         if (cachedFrameTexture != null) {
-            cachedFrameTexture.setId(-1);
+            cachedFrameTexture.setHandle(0L);
         }
     }
 
