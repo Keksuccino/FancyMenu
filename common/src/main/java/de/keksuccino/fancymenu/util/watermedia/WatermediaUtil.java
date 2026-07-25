@@ -37,7 +37,20 @@ public class WatermediaUtil {
     }
 
     public static boolean isWatermediaVideoPlaybackAvailable() {
-        return isWatermediaLoaded() && isWatermediaBinariesLoaded();
+        boolean watermediaLoaded = isWatermediaLoaded();
+        return isWatermediaVideoPlaybackAvailable(watermediaLoaded, watermediaLoaded && isWatermediaBinariesLoaded());
+    }
+
+    public static boolean isWatermediaRenderingAvailable() {
+        return isWatermediaRenderingAvailable(isWatermediaLoaded());
+    }
+
+    static boolean isWatermediaVideoPlaybackAvailable(boolean watermediaLoaded, boolean watermediaBinariesLoaded) {
+        return isWatermediaRenderingAvailable(watermediaLoaded) && watermediaBinariesLoaded;
+    }
+
+    static boolean isWatermediaRenderingAvailable(boolean watermediaLoaded) {
+        return watermediaLoaded;
     }
 
     /**

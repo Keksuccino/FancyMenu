@@ -746,6 +746,7 @@ public class Mp4Video implements IVideo {
         this.playRequested = false;
         this.lastPlayRequestTimestampMs = -1L;
         this.resetVideoPlaybackListenerState();
+        this.framePresented = false;
         LOGGER.warn("[FANCYMENU] Watermedia V3 and/or Watermedia Binaries are not loaded, MP4 source will render as missing texture: {}", sourceName);
     }
 

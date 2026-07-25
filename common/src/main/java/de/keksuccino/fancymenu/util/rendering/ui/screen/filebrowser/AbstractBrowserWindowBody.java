@@ -1265,7 +1265,6 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
             UIBase.renderText(graphics, line, lineX, currentY, textColor, textSize);
             currentY += lineHeight;
         }
-
         float downloadX = x + contentWidth - downloadTextWidth;
         float downloadY = y + infoHeight + spacing;
         float downloadBinariesX = x + contentWidth - downloadBinariesTextWidth;
@@ -1363,7 +1362,6 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
             UIBase.renderText(graphics, line, lineX, currentY, textColor, infoTextSize);
             currentY += infoLineHeight;
         }
-
         float downloadX = x + (previewWidth / 2.0F) - (downloadTextWidth / 2.0F);
         float downloadY = currentY + spacing;
         float downloadBinariesX = x + (previewWidth / 2.0F) - (downloadBinariesTextWidth / 2.0F);

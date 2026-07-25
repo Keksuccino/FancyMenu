@@ -385,6 +385,13 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
         LOGGER.warn("[FANCYMENU] Watermedia is not loaded, {} source will use fallback decoder: {}", this.logTypeName, sourceName);
     }
 
+    protected void clearFrameTextureId() {
+        WatermediaFrameTexture cachedFrameTexture = this.frameTexture;
+        if (cachedFrameTexture != null) {
+            cachedFrameTexture.setId(-1);
+        }
+    }
+
     protected boolean handlePlayerError(@Nullable Object player) {
         if (player == null) return false;
         if (!WatermediaReflectionBridge.playerStatusName(player).equals("ERROR")) return false;
