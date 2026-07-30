@@ -6,7 +6,11 @@ import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.remote.RemoteServerConnectionManager;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.WebUtils;
+import de.keksuccino.fancymenu.util.rinku.ActionBridge;
+import de.keksuccino.fancymenu.util.rinku.BrowserHandler;
+import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
+import de.keksuccino.fancymenu.util.rendering.video.rinku.RinkuVideoManager;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.resources.texture.TextureManagerReleaseDispatcher;
 import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
@@ -24,6 +28,10 @@ public final class ClientShutdownHandler {
 
     private ClientShutdownHandler() {}
 
+    public static boolean isShuttingDown() {
+        return SHUTDOWN_STARTED.get();
+    }
+
     public static void shutdown() {
         if (!SHUTDOWN_STARTED.compareAndSet(false, true)) return;
 
@@ -34,14 +42,31 @@ public final class ClientShutdownHandler {
             runCleanup("screen audio playback", ScreenCustomizationLayerHandler::shutdown);
             runCleanup("layouts", LayoutHandler::shutdown);
             runCleanup("user variables", VariableHandler::shutdown);
+            boolean rinkuPresent = isRinkuPresentSafely();
+            if (rinkuPresent) {
+                runCleanup("Rinku video players", () -> RinkuVideoManager.getInstance().disposeAll());
+                runCleanup("Rinku browsers", BrowserHandler::closeAll);
+            }
             runCleanup("panorama renderers", PanoramaHandler::shutdown);
             // GLFW cursor destruction must finish on the render thread while the window and GLFW are still alive.
             runCleanup("GLFW cursors", CursorHandler::shutdown);
             runCleanup("resources", ResourceHandlers::shutdownAll);
             runCleanup("pending texture-manager releases", TextureManagerReleaseDispatcher::flushPendingReleases);
             runCleanup("main-thread task queue", MainThreadTaskExecutor::shutdown);
+            if (rinkuPresent) {
+                runCleanup("Rinku action bridge", ActionBridge::dispose);
+            }
         } finally {
             runCleanup("FancyMenu executors", FancyMenuExecutors::shutdownAll);
+        }
+    }
+
+    private static boolean isRinkuPresentSafely() {
+        try {
+            return RinkuUtil.isRinkuPresent();
+        } catch (Throwable throwable) {
+            LOGGER.error("[FANCYMENU] Failed to check Rinku presence during client shutdown!", throwable);
+            return false;
         }
     }
 

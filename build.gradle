@@ -109,7 +109,7 @@ subprojects {
                         'net.minecraftforge',
                         'net.neoforged',
                         'org.spongepowered',
-                        'com.cinemamod',
+                        'de.keksuccino',
                         'org.parchmentmc',
                         'org.parchmentmc.data'
                 ]

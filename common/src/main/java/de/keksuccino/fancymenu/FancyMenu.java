@@ -9,13 +9,13 @@ import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
-import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
-import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
+import de.keksuccino.fancymenu.util.rinku.BrowserHandler;
+import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
 import de.keksuccino.fancymenu.util.rendering.text.color.colors.TextColorFormatters;
 import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothFontManager;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIThemes;
-import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
+import de.keksuccino.fancymenu.util.rendering.video.rinku.RinkuVideoManager;
 import de.keksuccino.fancymenu.util.resource.resources.audio.AudioEngineReloadHandler;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaIoHelper;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
@@ -60,9 +60,9 @@ public class FancyMenu {
 
             FileTypes.registerAll();
 
-            if (MCEFUtil.isMCEFLoaded()) {
+            if (RinkuUtil.isRinkuLoaded()) {
                 BrowserHandler.init();
-                MCEFVideoManager.getInstance().initialize();
+                RinkuVideoManager.getInstance().initialize();
             }
 
             TextColorFormatters.registerAll();
