@@ -4,7 +4,7 @@ import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import de.keksuccino.fancymenu.events.screen.ScreenCharTypedEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.input.Utf16CodeUnitDispatcher;
-import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
+import de.keksuccino.fancymenu.util.rinku.WrappedRinkuBrowser;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -40,7 +40,7 @@ public class MixinFabricKeyboardHandler {
     }
 
     /**
-     * @reason This adds special key press handling for FancyMenu's {@link WrappedMCEFBrowser}.
+     * @reason This adds special key press handling for FancyMenu's {@link WrappedRinkuBrowser}.
      */
     @WrapWithCondition(method = "keyPress", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;wrapScreenError(Ljava/lang/Runnable;Ljava/lang/String;Ljava/lang/String;)V"))
     private boolean wrap_keyPressed_keyReleased_in_keyPress_FancyMenu(Runnable runnable, String message, String className) {
@@ -49,7 +49,7 @@ public class MixinFabricKeyboardHandler {
         int action = this.cached_action_FancyMenu;
         if (screen != null) {
             for (GuiEventListener listener : screen.children()) {
-                if (listener instanceof WrappedMCEFBrowser) {
+                if (listener instanceof WrappedRinkuBrowser) {
                     boolean b = false;
                     if (action == 1 || action == 2) {
                         b = listener.keyPressed(this.cached_key_FancyMenu, this.cached_scanCode_FancyMenu, this.cached_modifiers_FancyMenu);
@@ -71,7 +71,7 @@ public class MixinFabricKeyboardHandler {
     }
 
     /**
-     * @reason This adds special char typed handling for FancyMenu's {@link WrappedMCEFBrowser}.
+     * @reason This adds special char typed handling for FancyMenu's {@link WrappedRinkuBrowser}.
      *         It also handles the CharTypedEvent.
      */
     @WrapWithCondition(method = "charTyped", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;wrapScreenError(Ljava/lang/Runnable;Ljava/lang/String;Ljava/lang/String;)V"))
@@ -84,7 +84,7 @@ public class MixinFabricKeyboardHandler {
 
             // Handle browser typing logic
             for (GuiEventListener listener : screen.children()) {
-                if (listener instanceof WrappedMCEFBrowser) {
+                if (listener instanceof WrappedRinkuBrowser) {
                     if (Utf16CodeUnitDispatcher.dispatch(this.cached_char_codePoint_FancyMenu, this.cached_char_modifiers_FancyMenu, listener::charTyped)) return false;
                 }
             }

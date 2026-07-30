@@ -57,12 +57,12 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
     private static final String WATERMEDIA_V3_DOWNLOAD_URL_FANCYMENU = "https://www.curseforge.com/minecraft/mc-mods/watermedia/files/all?page=1&pageSize=20&showAlphaFiles=show";
     private static final String WATERMEDIA_BINARIES_DOWNLOAD_URL_FANCYMENU = "https://www.curseforge.com/minecraft/mc-mods/watermedia-binaries/files/all?page=1&pageSize=20&showAlphaFiles=show";
 
-    public final Property<ResourceSupplier<IVideo>> videoSupplier = putProperty(Property.resourceSupplierProperty(IVideo.class, "source", null, "fancymenu.elements.video_mcef.set_source", true, true, true, null));
-    public final Property.BooleanProperty loop = putProperty(Property.booleanProperty("loop", false, "fancymenu.elements.video_mcef.loop"));
+    public final Property<ResourceSupplier<IVideo>> videoSupplier = putProperty(Property.resourceSupplierProperty(IVideo.class, "source", null, "fancymenu.elements.video_rinku.set_source", true, true, true, null));
+    public final Property.BooleanProperty loop = putProperty(Property.booleanProperty("loop", false, "fancymenu.elements.video_rinku.loop"));
     /** Value between 0.0 and 1.0 **/
-    public final Property<Float> volume = putProperty(Property.floatProperty("volume", 1.0F, "fancymenu.elements.video_mcef.volume"))
+    public final Property<Float> volume = putProperty(Property.floatProperty("volume", 1.0F, "fancymenu.elements.video_rinku.volume"))
             .setValueSetProcessor(value -> Math.max(0.0F, Math.min(1.0F, value)));
-    public final Property.StringProperty soundSource = putProperty(Property.stringProperty("sound_source", SoundSource.MASTER.getName(), false, false, "fancymenu.elements.video_mcef.sound_channel"));
+    public final Property.StringProperty soundSource = putProperty(Property.stringProperty("sound_source", SoundSource.MASTER.getName(), false, false, "fancymenu.elements.video_rinku.sound_channel"));
     public final Property.BooleanProperty playInEditor = putProperty(Property.booleanProperty("play_in_editor", true, "fancymenu.backgrounds.video.play_in_editor"));
 
     protected volatile boolean initialized = false;

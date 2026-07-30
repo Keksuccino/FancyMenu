@@ -47,16 +47,6 @@
       <option name="url" value="https://jitpack.io" />
     </remote-repository>
     <remote-repository>
-      <option name="id" value="MCEF Releases" />
-      <option name="name" value="MCEF Releases" />
-      <option name="url" value="https://mcef-download.cinemamod.com/repositories/releases" />
-    </remote-repository>
-    <remote-repository>
-      <option name="id" value="MCEF Snapshots" />
-      <option name="name" value="MCEF Snapshots" />
-      <option name="url" value="https://mcef-download.cinemamod.com/repositories/snapshots" />
-    </remote-repository>
-    <remote-repository>
       <option name="id" value="ParchmentMC Maven" />
       <option name="name" value="ParchmentMC Maven" />
       <option name="url" value="https://maven.parchmentmc.org" />

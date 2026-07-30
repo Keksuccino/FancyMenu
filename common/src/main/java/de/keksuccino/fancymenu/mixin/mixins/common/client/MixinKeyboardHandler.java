@@ -29,7 +29,7 @@ public abstract class MixinKeyboardHandler {
      * @reason Fire FancyMenu's screen-key event after 1.19.2's loader-patched screen handling task completes.
      *
      * The actual screen calls live in loader-specific synthetic lambdas in this Minecraft version. Wrapping their
-     * stable {@code Screen.wrapScreenError} owner keeps the injector portable while preserving MCEF cancellation: if
+     * stable {@code Screen.wrapScreenError} owner keeps the injector portable while preserving Rinku cancellation: if
      * an earlier hook cancels {@code keyPress}, Vanilla never reaches this operation and no event is dispatched.
      */
     @WrapOperation(method = "keyPress", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;wrapScreenError(Ljava/lang/Runnable;Ljava/lang/String;Ljava/lang/String;)V"))

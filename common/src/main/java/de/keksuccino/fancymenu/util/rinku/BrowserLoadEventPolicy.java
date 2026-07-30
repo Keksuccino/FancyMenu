@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.mcef;
+package de.keksuccino.fancymenu.util.rinku;
 
 import org.jetbrains.annotations.Nullable;
 

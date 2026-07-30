@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.element.elements.video.mcef;
+package de.keksuccino.fancymenu.customization.element.elements.video.rinku;
 
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -12,9 +12,9 @@ import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 
-public class MCEFVideoEditorElement extends AbstractEditorElement<MCEFVideoEditorElement, MCEFVideoElement> {
+public class RinkuVideoEditorElement extends AbstractEditorElement<RinkuVideoEditorElement, RinkuVideoElement> {
 
-    public MCEFVideoEditorElement(@NotNull MCEFVideoElement element, @NotNull LayoutEditorScreen editor) {
+    public RinkuVideoEditorElement(@NotNull RinkuVideoElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
     }
 
@@ -23,7 +23,7 @@ public class MCEFVideoEditorElement extends AbstractEditorElement<MCEFVideoEdito
 
         super.init();
 
-        this.rightClickMenu.addClickableEntry("set_source", Component.translatable("fancymenu.elements.video_mcef.set_source"), (menu, entry) -> {
+        this.rightClickMenu.addClickableEntry("set_source", Component.translatable("fancymenu.elements.video_rinku.set_source"), (menu, entry) -> {
                     menu.closeMenuChain();
                     ResourceChooserWindowBody.video(null, source -> {
                         if (source != null) {
@@ -35,17 +35,17 @@ public class MCEFVideoEditorElement extends AbstractEditorElement<MCEFVideoEdito
                 }).setIcon(MaterialIcons.VIDEO_FILE)
                 .setStackable(false);
 
-        this.addToggleContextMenuEntryTo(this.rightClickMenu, "toggle_loop", MCEFVideoEditorElement.class,
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "toggle_loop", RinkuVideoEditorElement.class,
                         element -> element.element.loop,
                         (element, aBoolean) -> element.element.loop = aBoolean,
-                        "fancymenu.elements.video_mcef.loop")
+                        "fancymenu.elements.video_rinku.loop")
                 .setStackable(false)
                 .setIcon(MaterialIcons.REPEAT);
 
-        this.addToggleContextMenuEntryTo(this.rightClickMenu, "preserve_aspect_ratio", MCEFVideoEditorElement.class,
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "preserve_aspect_ratio", RinkuVideoEditorElement.class,
                         element -> element.element.preserveAspectRatio,
                         (element, aBoolean) -> element.element.preserveAspectRatio = aBoolean,
-                        "fancymenu.elements.video_mcef.preserve_aspect_ratio")
+                        "fancymenu.elements.video_rinku.preserve_aspect_ratio")
                 .setStackable(false)
                 .setIcon(MaterialIcons.ASPECT_RATIO);
 
@@ -56,10 +56,10 @@ public class MCEFVideoEditorElement extends AbstractEditorElement<MCEFVideoEdito
 
         this.addCycleContextMenuEntryTo(this.rightClickMenu, "sound_channel",
                         Arrays.asList(SoundSource.values()),
-                        MCEFVideoEditorElement.class,
+                        RinkuVideoEditorElement.class,
                         consumes -> consumes.element.soundSource,
                         (audioEditorElement, soundSource) -> audioEditorElement.element.soundSource = soundSource,
-                        (menu, entry, switcherValue) -> Component.translatable("fancymenu.elements.video_mcef.sound_channel", Component.translatable("soundCategory." + switcherValue.getName()).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))))
+                        (menu, entry, switcherValue) -> Component.translatable("fancymenu.elements.video_rinku.sound_channel", Component.translatable("soundCategory." + switcherValue.getName()).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))))
                 .setStackable(false)
                 .setIcon(MaterialIcons.VOLUME_UP);
 

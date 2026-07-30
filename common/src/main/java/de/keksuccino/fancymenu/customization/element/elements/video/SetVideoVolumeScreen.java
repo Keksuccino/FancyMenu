@@ -13,7 +13,7 @@ public class SetVideoVolumeScreen extends CellScreen {
     protected float current;
 
     public SetVideoVolumeScreen(float preset, @NotNull Consumer<Float> callback) {
-        super(Component.translatable("fancymenu.elements.video_mcef.volume"));
+        super(Component.translatable("fancymenu.elements.video_rinku.volume"));
         if (preset > 1.0F) preset = 1.0F;
         if (preset < 0.0F) preset = 0.0F;
         this.current = preset;
