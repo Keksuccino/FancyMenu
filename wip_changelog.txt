@@ -6,6 +6,7 @@ CHANGELOG | FANCYMENU v3.9.9 [ W I P !! Not public yet !! ]
 - All WaterMedia-powered video features now work when Vulkan is enabled
 - GLSL Shader element, menu background, and overlay now support Vulkan on MC 26.2
 - Browsers now can be fully muted, not just their media (#1719)
+
 - Fixed the "Is Layout Enabled" requirement stopping after the first enabled layout instead of checking for later matches
 - Fixed Ceiling and Floor placeholders adding a `.0` suffix to whole-number results
 - Fixed the "Is Element Focused" requirement using a misspelled description localization key
