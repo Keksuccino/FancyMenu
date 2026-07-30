@@ -93,10 +93,10 @@ dependencies {
     }
     implementation "it.crystalnest:fancy-entity-renderer-neoforge:$fer_mc_version-$fer_version"
     // Rinku's NeoForge artifact is a bootstrap jar with its API nested as JarJar. NeoGradle 7 does not expose nested classes to javac, so extract that exact loader-native API for compilation.
-    rinkuNeoForgeCompileApi "de.keksuccino:rinku-neoforge:3.0.0-1.21.1"
+    rinkuNeoForgeCompileApi "de.keksuccino:rinku-neoforge:3.0.1-1.21.1"
     // The same extracted mod is also the NeoGradle 7 development-runtime source. Consumer dependency metadata continues to expose the outer bootstrap artifact, while the old launcher receives exactly one Rinku module.
     implementation rinkuNeoForgeCompileApiFiles
-    implementation "de.keksuccino:rinku-neoforge:3.0.0-1.21.1"
+    implementation "de.keksuccino:rinku-neoforge:3.0.1-1.21.1"
     //implementation "maven.modrinth:watermedia-binaries:${watermedia_binaries_version}"
     //implementation "maven.modrinth:watermedia:${watermedia_version}"
     compileOnly project(":common")
