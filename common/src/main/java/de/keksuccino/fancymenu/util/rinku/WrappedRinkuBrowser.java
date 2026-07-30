@@ -34,6 +34,7 @@ public class WrappedRinkuBrowser extends AbstractWidget implements Closeable, Na
     protected static final ScheduledExecutorService EXECUTOR = RinkuExecutors.newSingleThreadScheduledExecutor("FancyMenu-WrappedRinkuBrowser");
 
     protected final RinkuBrowser browser;
+    private final BrowserAudioMuteController audioMuteController;
     protected final Minecraft minecraft = Minecraft.getInstance();
     protected final AtomicLong mainFrameNavigationGeneration = new AtomicLong();
     protected final BrowserInputState inputState = new BrowserInputState();
@@ -44,7 +45,6 @@ public class WrappedRinkuBrowser extends AbstractWidget implements Closeable, Na
     protected volatile float volume = 1.0F;
     protected volatile boolean fullscreenAllVideos = false;
     protected volatile boolean autoPlayAllVideosOnLoad = true;
-    protected volatile boolean muteAllMediaOnLoad = false;
     protected volatile boolean loopAllVideos = false;
     protected volatile boolean hideVideoControls = false;
     protected final UUID genericIdentifier = UUID.randomUUID();
@@ -55,7 +55,12 @@ public class WrappedRinkuBrowser extends AbstractWidget implements Closeable, Na
 
     @NotNull
     public static WrappedRinkuBrowser build(@NotNull String url, boolean transparent, boolean autoHandle, @Nullable Consumer<Boolean> loadListener) {
-        WrappedRinkuBrowser b = new WrappedRinkuBrowser(url, transparent, loadListener);
+        return build(url, transparent, autoHandle, false, loadListener);
+    }
+
+    @NotNull
+    public static WrappedRinkuBrowser build(@NotNull String url, boolean transparent, boolean autoHandle, boolean muted, @Nullable Consumer<Boolean> loadListener) {
+        WrappedRinkuBrowser b = new WrappedRinkuBrowser(url, transparent, muted, loadListener);
         b.autoHandle = autoHandle;
         return b;
     }
@@ -68,7 +73,7 @@ public class WrappedRinkuBrowser extends AbstractWidget implements Closeable, Na
         return b;
     }
 
-    protected WrappedRinkuBrowser(@NotNull String url, boolean transparent, @Nullable Consumer<Boolean> loadListener) {
+    protected WrappedRinkuBrowser(@NotNull String url, boolean transparent, boolean muted, @Nullable Consumer<Boolean> loadListener) {
 
         super(0, 0, 0, 0, Component.empty());
 
@@ -82,6 +87,7 @@ public class WrappedRinkuBrowser extends AbstractWidget implements Closeable, Na
         BrowserLoadEventListenerManager.getInstance().initialize();
 
         this.browser = Rinku.createBrowser(url, transparent);
+        this.audioMuteController = new BrowserAudioMuteController(this.browser::setAudioMuted, muted);
 
         String browserId = this.getIdentifier();
 
@@ -107,6 +113,10 @@ public class WrappedRinkuBrowser extends AbstractWidget implements Closeable, Na
         this.setPosition(0, 0);
 
     }
+
+    protected WrappedRinkuBrowser(@NotNull String url, boolean transparent, @Nullable Consumer<Boolean> loadListener) {
+        this(url, transparent, false, loadListener);
+    }
     
     /**
      * Apply all initial settings once the page is loaded
@@ -116,7 +126,7 @@ public class WrappedRinkuBrowser extends AbstractWidget implements Closeable, Na
         this.setLoopAllVideos(this.loopAllVideos);
         this.setHideVideoControls(this.hideVideoControls);
         this.setAutoPlayAllVideosOnLoad(this.autoPlayAllVideosOnLoad);
-        this.setMuteAllMediaOnLoad(this.muteAllMediaOnLoad);
+        this.audioMuteController.reapply();
     }
     
     /**
@@ -381,20 +391,28 @@ public class WrappedRinkuBrowser extends AbstractWidget implements Closeable, Na
         return autoPlayAllVideosOnLoad;
     }
 
-    public void setMuteAllMediaOnLoad(boolean muteAllMediaOnLoad) {
-        this.muteAllMediaOnLoad = muteAllMediaOnLoad;
-        if (initialized) {
-            String code = """
-                    document.querySelectorAll('audio, video').forEach(media => {
-                        media.muted = %muted%; // Mute media
-                    });
-                    """.replace("%muted%", "" + this.muteAllMediaOnLoad);
-            this.browser.executeJavaScript(code, this.browser.getURL(), 0);
-        }
+    public void setMuted(boolean muted) {
+        this.audioMuteController.setMuted(muted);
     }
 
+    public boolean isMuted() {
+        return this.audioMuteController.isMuted();
+    }
+
+    /**
+     * @deprecated Use {@link #setMuted(boolean)}. The setting now mutes the complete Chromium browser instead of individual media elements.
+     */
+    @Deprecated(forRemoval = false)
+    public void setMuteAllMediaOnLoad(boolean muted) {
+        this.setMuted(muted);
+    }
+
+    /**
+     * @deprecated Use {@link #isMuted()}.
+     */
+    @Deprecated(forRemoval = false)
     public boolean isMuteAllMediaOnLoad() {
-        return muteAllMediaOnLoad;
+        return this.isMuted();
     }
 
     public void setLoopAllVideos(boolean loopAllVideos) {
@@ -499,6 +517,8 @@ public class WrappedRinkuBrowser extends AbstractWidget implements Closeable, Na
     void onMainFrameLoadStartedForTracking(@Nullable String url) {
         this.expectedMainFrameUrl = url;
         this.mainFrameNavigationGeneration.incrementAndGet();
+        // CEF owns browser audio independently of the page DOM, so reapply here while the native browser is guaranteed to exist.
+        this.audioMuteController.reapply();
     }
 
     @Nullable

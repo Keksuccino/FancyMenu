@@ -125,7 +125,7 @@ public class RinkuVideoPlayer {
                 // CRITICAL: Disable generic autoplay/mute features of WrappedRinkuBrowser
                 // RinkuVideoPlayer uses specific controls via player.html API.
                 this.browser.setAutoPlayAllVideosOnLoad(false);
-                this.browser.setMuteAllMediaOnLoad(false); // Muting is handled by player.html and this class's API
+                this.browser.setMuted(false); // Muting is handled by player.html and this class's API
             } else {
                 LOGGER.error("[FANCYMENU] RinkuVideoPlayer: Browser was not created successfully. Player will not function.");
                 initialized = false; // Ensure initialized is false if browser is null
