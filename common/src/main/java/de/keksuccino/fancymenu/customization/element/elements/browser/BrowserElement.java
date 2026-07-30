@@ -1,14 +1,13 @@
 package de.keksuccino.fancymenu.customization.element.elements.browser;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.properties.Property;
-import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
-import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
-import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
+import de.keksuccino.fancymenu.util.rinku.BrowserHandler;
+import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
+import de.keksuccino.fancymenu.util.rinku.WrappedRinkuBrowser;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
@@ -40,7 +39,7 @@ public class BrowserElement extends AbstractElement {
     public boolean muteMedia = false;
     public final Property.FloatProperty mediaVolume = putProperty(Property.floatProperty("media_volume", 1.0F, "fancymenu.elements.browser.media_volume"));
     @Nullable
-    public WrappedMCEFBrowser browser = null;
+    public WrappedRinkuBrowser browser = null;
     public int lastTickWidth = -1;
     public int lastTickHeight = -1;
     public long lastLeftClickTime = -1;
@@ -52,9 +51,9 @@ public class BrowserElement extends AbstractElement {
 
     @Override
     public void afterConstruction() {
-        if (MCEFUtil.isMCEFLoaded() && MCEFUtil.MCEF_initialized) {
+        if (RinkuUtil.isRinkuLoaded() && RinkuUtil.rinku_initialized) {
             this.browser = BrowserHandler.get(this.getInstanceIdentifier());
-            if (this.browser == null) this.browser = WrappedMCEFBrowser.build(PlaceholderParser.replacePlaceholders(this.url), true, false, null);
+            if (this.browser == null) this.browser = WrappedRinkuBrowser.build(PlaceholderParser.replacePlaceholders(this.url), true, false, null);
             // Widgets are registered before their first render pass, so keep the browser inert until render visibility has been resolved.
             this.browser.setInteractable(false);
             BrowserHandler.notifyHandler(this.getInstanceIdentifier(), this.browser);
@@ -147,8 +146,8 @@ public class BrowserElement extends AbstractElement {
             } else {
 
                 graphics.fill(x, y, x + w, y + h, ERROR_BACKGROUND_COLOR.getColorInt());
-                graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.elements.browser.mcef_not_loaded.line_1").setStyle(Style.EMPTY.withBold(true)), x + (w / 2), y + (h / 2) - Minecraft.getInstance().font.lineHeight - 2, -1);
-                graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.elements.browser.mcef_not_loaded.line_2").setStyle(Style.EMPTY.withBold(true)), x + (w / 2), y + (h / 2) + 2, -1);
+                graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.elements.browser.rinku_not_loaded.line_1").setStyle(Style.EMPTY.withBold(true)), x + (w / 2), y + (h / 2) - Minecraft.getInstance().font.lineHeight - 2, -1);
+                graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.elements.browser.rinku_not_loaded.line_2").setStyle(Style.EMPTY.withBold(true)), x + (w / 2), y + (h / 2) + 2, -1);
 
             }
 

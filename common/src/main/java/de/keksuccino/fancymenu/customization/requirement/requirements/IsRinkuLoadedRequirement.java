@@ -1,17 +1,17 @@
 package de.keksuccino.fancymenu.customization.requirement.requirements;
 
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
-import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
+import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.util.List;
 import net.minecraft.network.chat.Component;
 
-public class IsMcefLoadedRequirement extends Requirement {
+public class IsRinkuLoadedRequirement extends Requirement {
 
-    public IsMcefLoadedRequirement() {
-        super("is_mcef_loaded");
+    public IsRinkuLoadedRequirement() {
+        super("is_rinku_loaded");
     }
 
     @Override
@@ -22,18 +22,18 @@ public class IsMcefLoadedRequirement extends Requirement {
     @Override
     public boolean isRequirementMet(@Nullable String value) {
 
-        return MCEFUtil.isMCEFLoaded() && MCEFUtil.MCEF_initialized;
+        return RinkuUtil.isRinkuLoaded() && RinkuUtil.rinku_initialized;
 
     }
 
     @Override
     public @NotNull Component getDisplayName() {
-        return Component.translatable("fancymenu.requirements.is_mcef_loaded");
+        return Component.translatable("fancymenu.requirements.is_rinku_loaded");
     }
 
     @Override
     public Component getDescription() {
-        return Component.translatable("fancymenu.requirements.is_mcef_loaded.desc");
+        return Component.translatable("fancymenu.requirements.is_rinku_loaded.desc");
     }
 
     @Override

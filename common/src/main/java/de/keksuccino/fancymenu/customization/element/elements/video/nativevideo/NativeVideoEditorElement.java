@@ -57,7 +57,7 @@ public class NativeVideoEditorElement extends AbstractEditorElement<NativeVideoE
                                 editorElement.element.soundSource.set(source.getName());
                             }
                         },
-                        (menu, entry, switcherValue) -> Component.translatable("fancymenu.elements.video_mcef.sound_channel",
+                        (menu, entry, switcherValue) -> Component.translatable("fancymenu.elements.video_rinku.sound_channel",
                                 Component.translatable("soundCategory." + switcherValue.getName()).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))))
                 .setStackable(false)
                 .setIcon(MaterialIcons.SPEAKER);

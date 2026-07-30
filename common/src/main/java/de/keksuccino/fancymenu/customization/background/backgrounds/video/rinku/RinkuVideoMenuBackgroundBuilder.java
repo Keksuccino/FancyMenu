@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.background.backgrounds.video.mcef;
+package de.keksuccino.fancymenu.customization.background.backgrounds.video.rinku;
 
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
@@ -8,10 +8,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
-public class MCEFVideoMenuBackgroundBuilder extends MenuBackgroundBuilder<MCEFVideoMenuBackground> {
+public class RinkuVideoMenuBackgroundBuilder extends MenuBackgroundBuilder<RinkuVideoMenuBackground> {
 
-    public MCEFVideoMenuBackgroundBuilder() {
-        super("video_mcef");
+    public RinkuVideoMenuBackgroundBuilder() {
+        super("video_rinku");
     }
 
     @Override
@@ -20,12 +20,12 @@ public class MCEFVideoMenuBackgroundBuilder extends MenuBackgroundBuilder<MCEFVi
     }
 
     @Override
-    public @NotNull MCEFVideoMenuBackground buildDefaultInstance() {
-        return new MCEFVideoMenuBackground(this);
+    public @NotNull RinkuVideoMenuBackground buildDefaultInstance() {
+        return new RinkuVideoMenuBackground(this);
     }
 
     @Override
-    public void deserializeBackground(@NotNull PropertyContainer serializedBackground, @NotNull MCEFVideoMenuBackground deserializeTo) {
+    public void deserializeBackground(@NotNull PropertyContainer serializedBackground, @NotNull RinkuVideoMenuBackground deserializeTo) {
 
         // Legacy support for old single-value parallax intensity
         String parallaxIntensityX = serializedBackground.getValue("parallax_intensity_x");
@@ -38,24 +38,24 @@ public class MCEFVideoMenuBackgroundBuilder extends MenuBackgroundBuilder<MCEFVi
 
         // Fix for unknown sound channels
         String soundSource = deserializeTo.soundSource.getString();
-        if ((soundSource != null) && (MCEFVideoMenuBackground.getSoundSourceByName(soundSource) == null)) {
+        if ((soundSource != null) && (RinkuVideoMenuBackground.getSoundSourceByName(soundSource) == null)) {
             deserializeTo.soundSource.set(SoundSource.MASTER.getName());
         }
 
     }
 
     @Override
-    public void serializeBackground(@NotNull MCEFVideoMenuBackground background, @NotNull PropertyContainer serializeTo) {
+    public void serializeBackground(@NotNull RinkuVideoMenuBackground background, @NotNull PropertyContainer serializeTo) {
     }
 
     @Override
     public @NotNull Component getDisplayName() {
-        return Component.translatable("fancymenu.backgrounds.video_mcef");
+        return Component.translatable("fancymenu.backgrounds.video_rinku");
     }
 
     @Override
     public @Nullable Component getDescription() {
-        return Component.translatable("fancymenu.backgrounds.video_mcef.desc");
+        return Component.translatable("fancymenu.backgrounds.video_rinku.desc");
     }
 
 }

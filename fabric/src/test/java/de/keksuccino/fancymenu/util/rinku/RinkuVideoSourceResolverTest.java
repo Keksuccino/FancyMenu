@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.mcef;
+package de.keksuccino.fancymenu.util.rinku;
 
 import de.keksuccino.fancymenu.util.file.LocalSourcePathResolver;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-class MCEFVideoSourceResolverTest {
+class RinkuVideoSourceResolverTest {
 
     @TempDir
     Path temporaryDirectory;
@@ -30,9 +30,9 @@ class MCEFVideoSourceResolverTest {
         ResourceSource rawLocal = ResourceSource.of("safe-placeholder.mp4", ResourceSourceType.LOCAL);
 
         assertAll(
-                () -> assertEquals(gameVideo.toUri().toString(), MCEFVideoSourceResolver.resolve(rawLocal, "videos/nested/video.mp4", resolver)),
-                () -> assertEquals(minecraftVideo.toUri().toString(), MCEFVideoSourceResolver.resolve(rawLocal, ".minecraft/videos/video.mp4", resolver)),
-                () -> assertNull(MCEFVideoSourceResolver.resolve(rawLocal, "missing.mp4", resolver)));
+                () -> assertEquals(gameVideo.toUri().toString(), RinkuVideoSourceResolver.resolve(rawLocal, "videos/nested/video.mp4", resolver)),
+                () -> assertEquals(minecraftVideo.toUri().toString(), RinkuVideoSourceResolver.resolve(rawLocal, ".minecraft/videos/video.mp4", resolver)),
+                () -> assertNull(RinkuVideoSourceResolver.resolve(rawLocal, "missing.mp4", resolver)));
     }
 
     @Test
@@ -45,11 +45,11 @@ class MCEFVideoSourceResolverTest {
         ResourceSource rawLocal = ResourceSource.of("safe-placeholder.mp4", ResourceSourceType.LOCAL);
 
         assertAll(
-                () -> assertNull(MCEFVideoSourceResolver.resolve(rawLocal, "../game-backup/secret.mp4", resolver)),
-                () -> assertNull(MCEFVideoSourceResolver.resolve(rawLocal, "nested\\..\\..\\game-backup\\secret.mp4", resolver)),
-                () -> assertNull(MCEFVideoSourceResolver.resolve(rawLocal, outsideVideo.toString(), resolver)),
-                () -> assertNull(MCEFVideoSourceResolver.resolve(rawLocal, "https://example.com/secret.mp4", resolver)),
-                () -> assertNull(MCEFVideoSourceResolver.resolve(rawLocal, "bad\0path", resolver)));
+                () -> assertNull(RinkuVideoSourceResolver.resolve(rawLocal, "../game-backup/secret.mp4", resolver)),
+                () -> assertNull(RinkuVideoSourceResolver.resolve(rawLocal, "nested\\..\\..\\game-backup\\secret.mp4", resolver)),
+                () -> assertNull(RinkuVideoSourceResolver.resolve(rawLocal, outsideVideo.toString(), resolver)),
+                () -> assertNull(RinkuVideoSourceResolver.resolve(rawLocal, "https://example.com/secret.mp4", resolver)),
+                () -> assertNull(RinkuVideoSourceResolver.resolve(rawLocal, "bad\0path", resolver)));
     }
 
     @Test
@@ -67,10 +67,10 @@ class MCEFVideoSourceResolverTest {
         ResourceSource rawLocal = ResourceSource.of("safe-placeholder.mp4", ResourceSourceType.LOCAL);
 
         assertAll(
-                () -> assertNull(MCEFVideoSourceResolver.resolve(rawLocal, "escaping-file.mp4", resolver)),
-                () -> assertNull(MCEFVideoSourceResolver.resolve(rawLocal, "escaping-directory/secret.mp4", resolver)),
-                () -> assertNull(MCEFVideoSourceResolver.resolve(rawLocal, "dangling.mp4", resolver)),
-                () -> assertEquals(gameRoot.resolve("internal-file.mp4").toUri().toString(), MCEFVideoSourceResolver.resolve(rawLocal, "internal-file.mp4", resolver)));
+                () -> assertNull(RinkuVideoSourceResolver.resolve(rawLocal, "escaping-file.mp4", resolver)),
+                () -> assertNull(RinkuVideoSourceResolver.resolve(rawLocal, "escaping-directory/secret.mp4", resolver)),
+                () -> assertNull(RinkuVideoSourceResolver.resolve(rawLocal, "dangling.mp4", resolver)),
+                () -> assertEquals(gameRoot.resolve("internal-file.mp4").toUri().toString(), RinkuVideoSourceResolver.resolve(rawLocal, "internal-file.mp4", resolver)));
     }
 
     @Test
@@ -79,8 +79,8 @@ class MCEFVideoSourceResolverTest {
         ResourceSource location = ResourceSource.of("[source:location]fancymenu:videos/example.mp4");
 
         assertAll(
-                () -> assertEquals("https://example.com/video.mp4?value=../unchanged", MCEFVideoSourceResolver.resolve(web, "https://example.com/video.mp4?value=../unchanged")),
-                () -> assertEquals("fancymenu:videos/example.mp4", MCEFVideoSourceResolver.resolve(location, "fancymenu:videos/example.mp4")));
+                () -> assertEquals("https://example.com/video.mp4?value=../unchanged", RinkuVideoSourceResolver.resolve(web, "https://example.com/video.mp4?value=../unchanged")),
+                () -> assertEquals("fancymenu:videos/example.mp4", RinkuVideoSourceResolver.resolve(location, "fancymenu:videos/example.mp4")));
     }
 
     private static void createSymbolicLinkOrSkip(Path link, Path target) {

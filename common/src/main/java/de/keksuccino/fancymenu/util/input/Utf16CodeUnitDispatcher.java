@@ -9,7 +9,7 @@ import java.util.function.Predicate;
 /**
  * Adapts one Unicode code point to consumers that accept UTF-16 code units.
  *
- * <p>GLFW supplies one code point per character callback, while legacy consumers such as MCEF accept a Java
+ * <p>GLFW supplies one code point per character callback, while legacy consumers such as Rinku accept a Java
  * {@code char}. Every code unit is dispatched even when an earlier unit was handled; otherwise a handled high
  * surrogate could truncate a supplementary character. The return value is the logical OR of every handler result,
  * and the caller-provided modifier value is forwarded unchanged with each unit.</p>

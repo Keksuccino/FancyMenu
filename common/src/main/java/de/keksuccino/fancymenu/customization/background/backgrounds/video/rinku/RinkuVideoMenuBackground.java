@@ -1,6 +1,5 @@
-package de.keksuccino.fancymenu.customization.background.backgrounds.video.mcef;
+package de.keksuccino.fancymenu.customization.background.backgrounds.video.rinku;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.backgrounds.video.IVideoMenuBackground;
@@ -11,19 +10,20 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroups;
-import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
-import de.keksuccino.fancymenu.util.mcef.MCEFVideoSourceResolver;
+import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
+import de.keksuccino.fancymenu.util.rinku.RinkuVideoSourceResolver;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
-import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
-import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoPlayer;
+import de.keksuccino.fancymenu.util.rendering.video.rinku.RinkuVideoManager;
+import de.keksuccino.fancymenu.util.rendering.video.rinku.RinkuVideoPlayer;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.Resource;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
+import de.keksuccino.fancymenu.util.rinku.RinkuExecutors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -38,23 +38,22 @@ import java.awt.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackground> implements IVideoMenuBackground {
+public class RinkuVideoMenuBackground extends MenuBackground<RinkuVideoMenuBackground> implements IVideoMenuBackground {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
-    private static final DrawableColor MISSING_MCEF_COLOR = DrawableColor.of(Color.RED);
+    private static final ScheduledExecutorService EXECUTOR = RinkuExecutors.newSingleThreadScheduledExecutor("FancyMenu-RinkuVideoMenuBackground");
+    private static final DrawableColor MISSING_RINKU_COLOR = DrawableColor.of(Color.RED);
 
     @SuppressWarnings("unchecked")
-    public final Property<ResourceSource> rawVideoUrlSource = putProperty(Property.resourceSourceProperty("source", null, "fancymenu.elements.video_mcef.set_source", true, true, true, null, (FileTypeGroup<FileType<Resource>>)(FileTypeGroup<?>)FileTypeGroups.VIDEO_TYPES, FileMediaType.VIDEO));
-    public final Property<Boolean> loop = putProperty(Property.booleanProperty("loop", false, "fancymenu.elements.video_mcef.loop"));
+    public final Property<ResourceSource> rawVideoUrlSource = putProperty(Property.resourceSourceProperty("source", null, "fancymenu.elements.video_rinku.set_source", true, true, true, null, (FileTypeGroup<FileType<Resource>>)(FileTypeGroup<?>)FileTypeGroups.VIDEO_TYPES, FileMediaType.VIDEO));
+    public final Property<Boolean> loop = putProperty(Property.booleanProperty("loop", false, "fancymenu.elements.video_rinku.loop"));
     /** Value between 0.0 and 1.0 **/
-    public final Property<Float> volume = putProperty(Property.floatProperty("volume", 1.0F, "fancymenu.elements.video_mcef.volume"))
+    public final Property<Float> volume = putProperty(Property.floatProperty("volume", 1.0F, "fancymenu.elements.video_rinku.volume"))
             .setValueSetProcessor(value -> Math.max(0.0F, Math.min(1.0F, value)));
-    public final Property.StringProperty soundSource = putProperty(Property.stringProperty("sound_source", SoundSource.MASTER.getName(), false, false, "fancymenu.elements.video_mcef.sound_channel"));
+    public final Property.StringProperty soundSource = putProperty(Property.stringProperty("sound_source", SoundSource.MASTER.getName(), false, false, "fancymenu.elements.video_rinku.sound_channel"));
     public final Property<Boolean> parallaxEnabled = putProperty(Property.booleanProperty("parallax", false, "fancymenu.backgrounds.image.configure.parallax"));
     /** Value between 0.0 and 1.0, where 0.0 is no movement and 1.0 is maximum movement **/
     public final Property.FloatProperty parallaxIntensityXString = putProperty(Property.floatProperty("parallax_intensity_x", 0.02F, "fancymenu.backgrounds.image.configure.parallax_intensity_x"));
@@ -65,8 +64,8 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
 
     protected volatile boolean initialized = false;
     @Nullable
-    protected MCEFVideoManager videoManager = null;
-    protected MCEFVideoPlayer videoPlayer = null;
+    protected RinkuVideoManager videoManager = null;
+    protected RinkuVideoPlayer videoPlayer = null;
     protected String playerId = null;
     protected String lastFinalUrl = null;
     protected int lastAbsoluteWidth = -10000;
@@ -83,10 +82,10 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
     protected final AtomicReference<Float> cachedPlayTime = new AtomicReference<>(0F);
     protected final VideoBackgroundTaskController taskController;
 
-    public MCEFVideoMenuBackground(MenuBackgroundBuilder<MCEFVideoMenuBackground> builder) {
+    public RinkuVideoMenuBackground(MenuBackgroundBuilder<RinkuVideoMenuBackground> builder) {
         super(builder);
         this.taskController = new VideoBackgroundTaskController(EXECUTOR, this::runGarbageCheck, 100L, this::updateCachedPlaybackState, 900L);
-        if (MCEFUtil.isMCEFLoaded() && MCEFUtil.MCEF_initialized) this.videoManager = MCEFVideoManager.getInstance();
+        if (RinkuUtil.isRinkuLoaded() && RinkuUtil.rinku_initialized) this.videoManager = RinkuVideoManager.getInstance();
     }
 
     @Override
@@ -95,7 +94,7 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
         this.rawVideoUrlSource.buildContextMenuEntryAndAddTo(menu, this)
                 .setTooltipSupplier((m, entry) -> {
                     if (this.rawVideoUrlSource.get() == null) {
-                        return UITooltip.of(Component.translatable("fancymenu.backgrounds.video_mcef.configure.no_video"));
+                        return UITooltip.of(Component.translatable("fancymenu.backgrounds.video_rinku.configure.no_video"));
                     }
                     return null;
                 })
@@ -109,14 +108,14 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
                 .setIcon(MaterialIcons.VOLUME_UP);
 
         List<SoundSource> soundSources = Arrays.asList(SoundSource.values());
-        this.addCycleContextMenuEntryTo(menu, "sound_source", soundSources, MCEFVideoMenuBackground.class, MCEFVideoMenuBackground::getSoundSourceOrDefault, (background, source) -> {
+        this.addCycleContextMenuEntryTo(menu, "sound_source", soundSources, RinkuVideoMenuBackground.class, RinkuVideoMenuBackground::getSoundSourceOrDefault, (background, source) -> {
             if (source != null) {
                 background.soundSource.set(source.getName());
             }
         }, (menu1, entry, switcherValue) -> {
             Component name = Component.translatable("soundCategory." + switcherValue.getName())
                     .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
-            return Component.translatable("fancymenu.elements.video_mcef.sound_channel", name);
+            return Component.translatable("fancymenu.elements.video_rinku.sound_channel", name);
         }).setIcon(MaterialIcons.SPEAKER);
 
         menu.addSeparatorEntry("separator_before_parallax");
@@ -143,9 +142,9 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
         float parallaxIntensityX = this.parallaxIntensityXString.getFloat();
         float parallaxIntensityY = this.parallaxIntensityYString.getFloat();
 
-        if (!MCEFUtil.isMCEFLoaded() || !MCEFUtil.MCEF_initialized) {
-            graphics.fill(0, 0, getScreenWidth(), getScreenHeight(), MISSING_MCEF_COLOR.getColorInt());
-            graphics.drawCenteredString(Minecraft.getInstance().font, "§lMCEF IS NOT INSTALLED! PLEASE DOWNLOAD FROM CURSEFORGE!", getScreenWidth() / 2, getScreenHeight() / 2, -1);
+        if (!RinkuUtil.isRinkuLoaded() || !RinkuUtil.rinku_initialized) {
+            graphics.fill(0, 0, getScreenWidth(), getScreenHeight(), MISSING_RINKU_COLOR.getColorInt());
+            graphics.drawCenteredString(Minecraft.getInstance().font, "§lRinku IS NOT INSTALLED! PLEASE DOWNLOAD FROM CURSEFORGE!", getScreenWidth() / 2, getScreenHeight() / 2, -1);
             return;
         }
 
@@ -218,7 +217,7 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
         ResourceSource rawSource = this.rawVideoUrlSource.get();
         if (rawSource != null) {
             String placeholderExpandedSource = PlaceholderParser.replacePlaceholders(rawSource.getSourceWithoutPrefix());
-            finalVideoUrl = MCEFVideoSourceResolver.resolve(rawSource, placeholderExpandedSource);
+            finalVideoUrl = RinkuVideoSourceResolver.resolve(rawSource, placeholderExpandedSource);
         }
         // Check if the video URL has changed since last time
         boolean videoUrlChanged = !Objects.equals(finalVideoUrl, this.lastFinalUrl);
@@ -370,7 +369,7 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
             this.videoPlayer.setCurrentTimeMillis(Math.max(0L, pendingSeekTimeMs));
             this.cachedPlayTime.set(Math.max(0.0F, pendingSeekTimeMs / 1000.0F));
         } catch (Exception ex) {
-            LOGGER.warn("[FANCYMENU] Failed to apply pending seek time to MCEF video background. backgroundId: {}, seekTimeMs: {}", this.getInstanceIdentifier(), pendingSeekTimeMs, ex);
+            LOGGER.warn("[FANCYMENU] Failed to apply pending seek time to Rinku video background. backgroundId: {}, seekTimeMs: {}", this.getInstanceIdentifier(), pendingSeekTimeMs, ex);
         }
     }
 
@@ -451,9 +450,9 @@ public class MCEFVideoMenuBackground extends MenuBackground<MCEFVideoMenuBackgro
 
     protected boolean ensureVideoManagerReady() {
         if (this.videoManager != null) return true;
-        if (!MCEFUtil.isMCEFLoaded() || !MCEFUtil.MCEF_initialized) return false;
-        if (!MCEFVideoManager.initialized) return false;
-        this.videoManager = MCEFVideoManager.getInstance();
+        if (!RinkuUtil.isRinkuLoaded() || !RinkuUtil.rinku_initialized) return false;
+        if (!RinkuVideoManager.initialized) return false;
+        this.videoManager = RinkuVideoManager.getInstance();
         return (this.videoManager != null);
     }
 

@@ -7,7 +7,12 @@ import de.keksuccino.fancymenu.customization.remote.RemoteServerConnectionManage
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.TaskExecutor;
 import de.keksuccino.fancymenu.util.WebUtils;
+import de.keksuccino.fancymenu.util.rinku.ActionBridge;
+import de.keksuccino.fancymenu.util.rinku.BrowserHandler;
+import de.keksuccino.fancymenu.util.rinku.RinkuExecutors;
+import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
+import de.keksuccino.fancymenu.util.rendering.video.rinku.RinkuVideoManager;
 import de.keksuccino.fancymenu.util.resource.resources.texture.TextureManagerReleaseDispatcher;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.logging.log4j.LogManager;
@@ -38,10 +43,28 @@ public final class ClientShutdownHandler {
         runCleanup("layouts", LayoutHandler::shutdown);
         runCleanup("task executor", TaskExecutor::shutdown);
         runCleanup("user variables", VariableHandler::shutdown);
+        boolean rinkuPresent = isRinkuPresentSafely();
+        if (rinkuPresent) {
+            runCleanup("Rinku video players", () -> RinkuVideoManager.getInstance().disposeAll());
+            runCleanup("Rinku browsers", BrowserHandler::closeAll);
+        }
         runCleanup("panorama renderers", PanoramaHandler::shutdown);
         // GLFW cursor destruction must finish on the render thread while the window and GLFW are still alive.
         runCleanup("GLFW cursors", CursorHandler::shutdown);
         runCleanup("pending texture-manager releases", TextureManagerReleaseDispatcher::flushPendingReleases);
+        if (rinkuPresent) {
+            runCleanup("Rinku action bridge", ActionBridge::dispose);
+        }
+        runCleanup("Rinku executors", RinkuExecutors::shutdownAll);
+    }
+
+    private static boolean isRinkuPresentSafely() {
+        try {
+            return RinkuUtil.isRinkuPresent();
+        } catch (Throwable throwable) {
+            LOGGER.error("[FANCYMENU] Failed to check Rinku presence during client shutdown!", throwable);
+            return false;
+        }
     }
 
     private static void runCleanup(String name, Runnable cleanup) {

@@ -48,6 +48,28 @@ subsystems {
     }
 }
 
+def rinkuNeoForgeCompileApiConfiguration = configurations.create("rinkuNeoForgeCompileApi")
+def rinkuNeoForgeCompileApiFile = layout.buildDirectory.file("rinku-compile-api/rinku-neoforge-api.jar")
+def extractRinkuNeoForgeCompileApi = tasks.register("extractRinkuNeoForgeCompileApi") {
+    inputs.files(rinkuNeoForgeCompileApiConfiguration)
+    outputs.file(rinkuNeoForgeCompileApiFile)
+    doLast {
+        int copiedFiles = 0
+        copy {
+            from(zipTree(rinkuNeoForgeCompileApiConfiguration.singleFile)) {
+                include "META-INF/jarjar/de.keksuccino.rinku-neoforge-*-mod.jar"
+                eachFile { details ->
+                    details.path = rinkuNeoForgeCompileApiFile.get().asFile.name
+                    copiedFiles++
+                }
+                includeEmptyDirs = false
+            }
+            into rinkuNeoForgeCompileApiFile.get().asFile.parentFile
+        }
+        if (copiedFiles != 1) throw new GradleException("Expected exactly one nested Rinku NeoForge API jar, found ${copiedFiles}")
+    }
+}
+
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
@@ -62,9 +84,14 @@ dependencies {
     implementation "maven.modrinth:konkrete:1.9.18-1.21.11-neoforge"
     implementation "maven.modrinth:melody:1.0.15-1.21.11-neoforge"
     compileOnly "it.crystalnest:fancy-entity-renderer-neoforge:$fer_mc_version-$fer_version"
-    compileOnly "de.keksuccino:rinku-neoforge:3.0.0-1.21.11"
+    // Rinku's NeoForge artifact is a bootstrap jar with its API nested as JarJar. NeoGradle 7 does not expose nested classes to javac, so extract that exact loader-native API for compilation.
+    rinkuNeoForgeCompileApi "de.keksuccino:rinku-neoforge:3.0.0-1.21.11"
+    compileOnly files(rinkuNeoForgeCompileApiFile)
+    implementation "de.keksuccino:rinku-neoforge:3.0.0-1.21.11"
     compileOnly project(":common")
 }
+
+compileJava.dependsOn(extractRinkuNeoForgeCompileApi)
 
 // Exclude Fabric Loader from NeoForge
 configurations {

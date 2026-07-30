@@ -5,9 +5,9 @@ import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
-import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
-import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
+import de.keksuccino.fancymenu.util.rinku.BrowserHandler;
+import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
+import de.keksuccino.fancymenu.util.rinku.WrappedRinkuBrowser;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -20,7 +20,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
@@ -54,7 +53,7 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
     public final Property.FloatProperty mediaVolume = putProperty(Property.floatProperty("media_volume", 1.0F, "fancymenu.decoration_overlays.browser.media_volume"));
 
     @Nullable
-    private WrappedMCEFBrowser browser = null;
+    private WrappedRinkuBrowser browser = null;
     @Nullable
     private Screen attachedScreen = null;
     @Nullable
@@ -178,8 +177,8 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
         }
         com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
         graphics.fill(0, 0, width, height, ERROR_BACKGROUND_COLOR.getColorInt());
-        graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.decoration_overlays.browser.mcef_not_loaded.line_1").setStyle(Style.EMPTY.withBold(true)), width / 2, (height / 2) - Minecraft.getInstance().font.lineHeight - 2, -1);
-        graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.decoration_overlays.browser.mcef_not_loaded.line_2").setStyle(Style.EMPTY.withBold(true)), width / 2, (height / 2) + 2, -1);
+        graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.decoration_overlays.browser.rinku_not_loaded.line_1").setStyle(Style.EMPTY.withBold(true)), width / 2, (height / 2) - Minecraft.getInstance().font.lineHeight - 2, -1);
+        graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.decoration_overlays.browser.rinku_not_loaded.line_2").setStyle(Style.EMPTY.withBold(true)), width / 2, (height / 2) + 2, -1);
     }
 
     @Override
@@ -272,7 +271,7 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
 
     private void ensureBrowserCreated() {
         String instanceIdentifier = this.getInstanceIdentifier();
-        WrappedMCEFBrowser wrappedBrowser = this.browser;
+        WrappedRinkuBrowser wrappedBrowser = this.browser;
         if (wrappedBrowser != null && wrappedBrowser.isClosed()) {
             this.browser = null;
             wrappedBrowser = null;
@@ -281,7 +280,7 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
             BrowserHandler.notifyHandler(instanceIdentifier, wrappedBrowser);
             return;
         }
-        if (!MCEFUtil.isMCEFLoaded() || !MCEFUtil.MCEF_initialized) {
+        if (!RinkuUtil.isRinkuLoaded() || !RinkuUtil.rinku_initialized) {
             return;
         }
         wrappedBrowser = BrowserHandler.get(instanceIdentifier);
@@ -293,7 +292,7 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
             if (resolvedUrl == null || resolvedUrl.isBlank()) {
                 resolvedUrl = FALLBACK_URL;
             }
-            wrappedBrowser = WrappedMCEFBrowser.build(resolvedUrl, true, false, null);
+            wrappedBrowser = WrappedRinkuBrowser.build(resolvedUrl, true, false, null);
         }
         this.browser = wrappedBrowser;
         BrowserHandler.notifyHandler(instanceIdentifier, wrappedBrowser);
@@ -315,7 +314,7 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
     }
 
     private void syncBrowserSettings(int width, int height) {
-        WrappedMCEFBrowser wrappedBrowser = this.browser;
+        WrappedRinkuBrowser wrappedBrowser = this.browser;
         if (wrappedBrowser == null) {
             return;
         }
@@ -455,7 +454,7 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
         }
         if (this.processMouseClicks.tryGetNonNullElse(true)) {
             this.focusSelfAndBrowser();
-            WrappedMCEFBrowser wrappedBrowser = this.browser;
+            WrappedRinkuBrowser wrappedBrowser = this.browser;
             if (wrappedBrowser != null) {
                 wrappedBrowser.mouseClicked(mouseX, mouseY, button);
             }
@@ -468,7 +467,7 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
             return false;
         }
         if (this.processMouseClicks.tryGetNonNullElse(true)) {
-            WrappedMCEFBrowser wrappedBrowser = this.browser;
+            WrappedRinkuBrowser wrappedBrowser = this.browser;
             if (wrappedBrowser != null) {
                 wrappedBrowser.mouseReleased(mouseX, mouseY, button);
             }
@@ -481,7 +480,7 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
             return false;
         }
         if (this.processMouseClicks.tryGetNonNullElse(true)) {
-            WrappedMCEFBrowser wrappedBrowser = this.browser;
+            WrappedRinkuBrowser wrappedBrowser = this.browser;
             if (wrappedBrowser != null) {
                 wrappedBrowser.mouseMoved(mouseX, mouseY);
             }
@@ -494,7 +493,7 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
             return false;
         }
         if (this.processMouseScrolls.tryGetNonNullElse(true)) {
-            WrappedMCEFBrowser wrappedBrowser = this.browser;
+            WrappedRinkuBrowser wrappedBrowser = this.browser;
             if (wrappedBrowser != null) {
                 wrappedBrowser.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
             }
@@ -507,7 +506,7 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
             return false;
         }
         if (this.processKeyboardPresses.tryGetNonNullElse(true)) {
-            WrappedMCEFBrowser wrappedBrowser = this.browser;
+            WrappedRinkuBrowser wrappedBrowser = this.browser;
             if (wrappedBrowser != null) {
                 wrappedBrowser.setBrowserFocused(true);
                 wrappedBrowser.keyPressed(keyCode, scanCode, modifiers);
@@ -521,7 +520,7 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
             return false;
         }
         if (this.processKeyboardPresses.tryGetNonNullElse(true)) {
-            WrappedMCEFBrowser wrappedBrowser = this.browser;
+            WrappedRinkuBrowser wrappedBrowser = this.browser;
             if (wrappedBrowser != null) {
                 wrappedBrowser.setBrowserFocused(true);
                 wrappedBrowser.keyReleased(keyCode, scanCode, modifiers);
@@ -535,7 +534,7 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
             return false;
         }
         if (this.processKeyboardPresses.tryGetNonNullElse(true)) {
-            WrappedMCEFBrowser wrappedBrowser = this.browser;
+            WrappedRinkuBrowser wrappedBrowser = this.browser;
             if (wrappedBrowser != null) {
                 wrappedBrowser.setBrowserFocused(true);
                 wrappedBrowser.charTyped(codePoint, modifiers);

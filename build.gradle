@@ -71,20 +71,6 @@ subprojects {
                 includeGroupByRegex 'com\\.github\\..*'
             }
         }
-        maven {
-            name = 'MCEF Releases'
-            url = 'https://mcef-download.cinemamod.com/repositories/releases'
-            content {
-                includeGroup 'com.cinemamod'
-            }
-        }
-        maven {
-            name = 'MCEF Snapshots'
-            url = 'https://mcef-download.cinemamod.com/repositories/snapshots'
-            content {
-                includeGroup 'com.cinemamod'
-            }
-        }
         maven { url = "https://keksuccino.github.io/maven/" }
         maven {
             name = 'ParchmentMC Maven'
@@ -122,7 +108,7 @@ subprojects {
                         'net.minecraftforge',
                         'net.neoforged',
                         'org.spongepowered',
-                        'com.cinemamod',
+                        'de.keksuccino',
                         'org.parchmentmc',
                         'org.parchmentmc.data'
                 ]

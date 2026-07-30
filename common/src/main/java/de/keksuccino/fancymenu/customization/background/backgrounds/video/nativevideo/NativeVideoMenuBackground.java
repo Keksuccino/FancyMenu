@@ -76,12 +76,12 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     private static final String WATERMEDIA_V3_DOWNLOAD_URL_FANCYMENU = "https://www.curseforge.com/minecraft/mc-mods/watermedia/files/all?page=1&pageSize=20&showAlphaFiles=show";
     private static final String WATERMEDIA_BINARIES_DOWNLOAD_URL_FANCYMENU = "https://www.curseforge.com/minecraft/mc-mods/watermedia-binaries/files/all?page=1&pageSize=20&showAlphaFiles=show";
 
-    public final Property<ResourceSupplier<IVideo>> videoSupplier = putProperty(Property.resourceSupplierProperty(IVideo.class, "source", null, "fancymenu.elements.video_mcef.set_source", true, true, true, null));
-    public final Property<Boolean> loop = putProperty(Property.booleanProperty("loop", false, "fancymenu.elements.video_mcef.loop"));
+    public final Property<ResourceSupplier<IVideo>> videoSupplier = putProperty(Property.resourceSupplierProperty(IVideo.class, "source", null, "fancymenu.elements.video_rinku.set_source", true, true, true, null));
+    public final Property<Boolean> loop = putProperty(Property.booleanProperty("loop", false, "fancymenu.elements.video_rinku.loop"));
     /** Value between 0.0 and 1.0 **/
-    public final Property<Float> volume = putProperty(Property.floatProperty("volume", 1.0F, "fancymenu.elements.video_mcef.volume"))
+    public final Property<Float> volume = putProperty(Property.floatProperty("volume", 1.0F, "fancymenu.elements.video_rinku.volume"))
             .setValueSetProcessor(value -> Math.max(0.0F, Math.min(1.0F, value)));
-    public final Property.StringProperty soundSource = putProperty(Property.stringProperty("sound_source", SoundSource.MASTER.getName(), false, false, "fancymenu.elements.video_mcef.sound_channel"));
+    public final Property.StringProperty soundSource = putProperty(Property.stringProperty("sound_source", SoundSource.MASTER.getName(), false, false, "fancymenu.elements.video_rinku.sound_channel"));
     public final Property<Boolean> parallaxEnabled = putProperty(Property.booleanProperty("parallax", false, "fancymenu.backgrounds.image.configure.parallax"));
     /** Value between 0.0 and 1.0, where 0.0 is no movement and 1.0 is maximum movement **/
     public final Property.FloatProperty parallaxIntensityXString = putProperty(Property.floatProperty("parallax_intensity_x", 0.02F, "fancymenu.backgrounds.image.configure.parallax_intensity_x"));
@@ -170,7 +170,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         }, (menu1, entry, switcherValue) -> {
             Component name = Component.translatable("soundCategory." + switcherValue.getName())
                     .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
-            return Component.translatable("fancymenu.elements.video_mcef.sound_channel", name);
+            return Component.translatable("fancymenu.elements.video_rinku.sound_channel", name);
         }).setIcon(MaterialIcons.SPEAKER);
 
         menu.addSeparatorEntry("separator_before_parallax");
