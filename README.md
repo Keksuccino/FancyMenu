@@ -9,7 +9,7 @@ Check the branches to see the **source code** for all versions of FancyMenu.
 ## Copyright
 
 FancyMenu © Copyright 2020-2026 Keksuccino.<br>
-FancyMenu is licensed under DSMSLv3 (DON'T SNATCH MA STUFF LICENSE V3).<br>
+FancyMenu is licensed under DSMSLv3.1 (DON'T SNATCH MA STUFF LICENSE V3.1).<br>
 See `LICENSE.md` for more information.
 
 Japng © Copyright A. Ellerton.<br>
