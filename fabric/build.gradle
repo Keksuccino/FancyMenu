@@ -30,7 +30,7 @@ dependencies {
     modImplementation "maven.modrinth:konkrete:1.9.9-1.21-fabric"
     modImplementation "maven.modrinth:modmenu:11.0.0-beta.1"
     modImplementation "it.crystalnest:fancy-entity-renderer-fabric:$fer_mc_version-$fer_version"
-    modImplementation "de.keksuccino:mcef-fabric:2.2.0-1.21.1"
+    modImplementation "de.keksuccino:rinku-fabric:3.0.0-1.21.1"
 
     modImplementation "maven.modrinth:AANobbMI:u1OEbNKx" // Sodium
     modImplementation "maven.modrinth:gvQqBUqZ:N08Z8wog" // Lithium
