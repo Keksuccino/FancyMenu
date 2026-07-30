@@ -47,6 +47,7 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
     public final Property<Boolean> processKeyboardPresses = putProperty(Property.booleanProperty("process_keyboard_presses", true, "fancymenu.backgrounds.browser.process_keyboard_presses"));
     public final Property<Boolean> hideVideoControls = putProperty(Property.booleanProperty("hide_video_controls", false, "fancymenu.backgrounds.browser.hide_video_controls"));
     public final Property<Boolean> loopVideos = putProperty(Property.booleanProperty("loop_videos", false, "fancymenu.backgrounds.browser.loop_videos"));
+    // Keep this public legacy name and property key for add-on and serialized-layout compatibility; it now controls all browser audio.
     public final Property<Boolean> muteMedia = putProperty(Property.booleanProperty("mute_media", false, "fancymenu.backgrounds.browser.mute_media"));
     public final Property.FloatProperty mediaVolume = putProperty(Property.floatProperty("media_volume", 1.0F, "fancymenu.backgrounds.browser.media_volume"));
 
@@ -330,7 +331,7 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
             if (resolvedUrl == null || resolvedUrl.isBlank()) {
                 resolvedUrl = FALLBACK_URL;
             }
-            wrappedBrowser = WrappedRinkuBrowser.build(resolvedUrl, true, false, null);
+            wrappedBrowser = WrappedRinkuBrowser.build(resolvedUrl, true, false, this.muteMedia.tryGetNonNullElse(false), null);
         }
         this.browser = wrappedBrowser;
         BrowserHandler.notifyHandler(instanceIdentifier, wrappedBrowser);
@@ -391,9 +392,9 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
             wrappedBrowser.setLoopAllVideos(loopAllVideos);
         }
 
-        boolean muteOnLoad = this.muteMedia.tryGetNonNullElse(false);
-        if (wrappedBrowser.isMuteAllMediaOnLoad() != muteOnLoad) {
-            wrappedBrowser.setMuteAllMediaOnLoad(muteOnLoad);
+        boolean muted = this.muteMedia.tryGetNonNullElse(false);
+        if (wrappedBrowser.isMuted() != muted) {
+            wrappedBrowser.setMuted(muted);
         }
 
         float resolvedVolume = this.mediaVolume.getFloat();

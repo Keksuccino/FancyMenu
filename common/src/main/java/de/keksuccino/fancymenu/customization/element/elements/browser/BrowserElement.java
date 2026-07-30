@@ -37,6 +37,7 @@ public class BrowserElement extends AbstractElement {
     public boolean interactable = true;
     public boolean hideVideoControls = false;
     public boolean loopVideos = false;
+    // Keep this public legacy name for add-on and serialized-layout compatibility; it now controls all browser audio.
     public boolean muteMedia = false;
     public final Property.FloatProperty mediaVolume = putProperty(Property.floatProperty("media_volume", 1.0F, "fancymenu.elements.browser.media_volume"));
     @Nullable
@@ -54,7 +55,11 @@ public class BrowserElement extends AbstractElement {
     public void afterConstruction() {
         if (RinkuUtil.isRinkuLoaded() && RinkuUtil.rinku_initialized) {
             this.browser = BrowserHandler.get(this.getInstanceIdentifier());
-            if (this.browser == null) this.browser = WrappedRinkuBrowser.build(PlaceholderParser.replacePlaceholders(this.url), true, false, null);
+            if (this.browser == null) {
+                this.browser = WrappedRinkuBrowser.build(PlaceholderParser.replacePlaceholders(this.url), true, false, this.muteMedia, null);
+            } else if (this.browser.isMuted() != this.muteMedia) {
+                this.browser.setMuted(this.muteMedia);
+            }
             // Widgets are registered before their first render pass, so keep the browser inert until render visibility has been resolved.
             this.browser.setInteractable(false);
             BrowserHandler.notifyHandler(this.getInstanceIdentifier(), this.browser);
@@ -107,8 +112,7 @@ public class BrowserElement extends AbstractElement {
                 if (!this.browser.isLoopAllVideos() && this.loopVideos) this.browser.setLoopAllVideos(true);
                 if (this.browser.isLoopAllVideos() && !this.loopVideos) this.browser.setLoopAllVideos(false);
 
-                if (!this.browser.isMuteAllMediaOnLoad() && this.muteMedia) this.browser.setMuteAllMediaOnLoad(true);
-                if (this.browser.isMuteAllMediaOnLoad() && !this.muteMedia) this.browser.setMuteAllMediaOnLoad(false);
+                if (this.browser.isMuted() != this.muteMedia) this.browser.setMuted(this.muteMedia);
 
                 float resolvedVolume = this.mediaVolume.getFloat();
                 if (resolvedVolume > 1.0F) resolvedVolume = 1.0F;
