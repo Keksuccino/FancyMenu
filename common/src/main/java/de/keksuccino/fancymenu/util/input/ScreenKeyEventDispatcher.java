@@ -13,7 +13,7 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 
-/** Dispatches FancyMenu screen-key events after the exact screen invocation that handled the input. */
+/** Dispatches FancyMenu screen-key events after the screen handling path has completed. */
 public final class ScreenKeyEventDispatcher {
 
     private ScreenKeyEventDispatcher() {
@@ -23,6 +23,19 @@ public final class ScreenKeyEventDispatcher {
         ScreenKeyInput input = new ScreenKeyInput(key, scanCode, modifiers);
         long activeWindowPointer = Minecraft.getInstance().getWindow().getWindow();
         return dispatchAfterScreenCall(activeWindowPointer, activeWindowPointer, action, screen, input, screenCall, ScreenKeyEventDispatcher::postKeyPressed, ScreenKeyEventDispatcher::postKeyReleased);
+    }
+
+    public static void dispatchAfterScreenTask(long windowPointer, int action, @NotNull Screen screen, int key, int scanCode, int modifiers, @NotNull Runnable screenTask) {
+        Objects.requireNonNull(screenTask);
+        ScreenKeyInput input = new ScreenKeyInput(key, scanCode, modifiers);
+        long activeWindowPointer = Minecraft.getInstance().getWindow().getWindow();
+
+        // MC 1.19.2 hides the loader-patched screen call in a void Runnable. The placeholder return is intentionally
+        // discarded; reusing the shared dispatcher keeps validation, failure ordering, and event routing identical.
+        dispatchAfterScreenCall(windowPointer, activeWindowPointer, action, screen, input, () -> {
+            screenTask.run();
+            return false;
+        }, ScreenKeyEventDispatcher::postKeyPressed, ScreenKeyEventDispatcher::postKeyReleased);
     }
 
     static <S, E> boolean dispatchAfterScreenCall(long windowPointer, long activeWindowPointer, int action, @NotNull S screen, @NotNull E event, @NotNull BooleanSupplier screenCall, @NotNull BiConsumer<S, E> keyPressedConsumer, @NotNull BiConsumer<S, E> keyReleasedConsumer) {
