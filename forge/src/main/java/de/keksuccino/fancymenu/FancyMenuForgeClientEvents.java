@@ -5,11 +5,17 @@ import de.keksuccino.fancymenu.events.screen.ScreenKeyPressedEvent;
 import de.keksuccino.fancymenu.events.screen.ScreenKeyReleasedEvent;
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.reload.FancyMenuResourceReload;
 import net.minecraft.client.Minecraft;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
+import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
+import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,8 +23,29 @@ public class FancyMenuForgeClientEvents {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public static void registerAll() {
+    public static void registerAll(IEventBus modEventBus) {
         MinecraftForge.EVENT_BUS.register(new FancyMenuForgeClientEvents());
+        modEventBus.addListener(FancyMenuForgeClientEvents::onRegisterClientReloadListeners);
+    }
+
+    private static void onRegisterClientReloadListeners(RegisterClientReloadListenersEvent event) {
+        if (FancyMenuResourceReload.registerClientReloadListener(FancyMenuResourceReload.ClientLoader.FORGE, reloadAction -> event.registerReloadListener(createReloadListener(reloadAction)))) {
+            LOGGER.info("[FANCYMENU] Registered FancyMenu's resource reload listener via Forge API.");
+        }
+    }
+
+    private static SimplePreparableReloadListener<String> createReloadListener(Runnable reloadAction) {
+        return new SimplePreparableReloadListener<>() {
+            @Override
+            protected String prepare(ResourceManager resourceManager, ProfilerFiller profiler) {
+                return "FANCYMENU RESOURCE RELOAD LISTENER";
+            }
+
+            @Override
+            protected void apply(String prepared, ResourceManager resourceManager, ProfilerFiller profiler) {
+                reloadAction.run();
+            }
+        };
     }
 
     @SubscribeEvent

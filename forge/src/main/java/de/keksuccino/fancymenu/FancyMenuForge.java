@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.platform.Services;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.eventbus.api.IEventBus;
 
 @Mod(FancyMenu.MOD_ID)
 public class FancyMenuForge {
@@ -15,13 +16,12 @@ public class FancyMenuForge {
 
         PacketsForge.init();
 
-        if (Services.PLATFORM.isOnClient()) {
-            FancyMenuForgeClientEvents.registerAll();
-        }
+        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        if (Services.PLATFORM.isOnClient()) FancyMenuForgeClientEvents.registerAll(modEventBus);
 
         FancyMenuForgeServerEvents.registerAll();
 
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onSetup);
+        modEventBus.addListener(this::onSetup);
         
     }
 
