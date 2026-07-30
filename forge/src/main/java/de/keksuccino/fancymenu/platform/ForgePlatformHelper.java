@@ -23,6 +23,8 @@ import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -137,16 +139,24 @@ public class ForgePlatformHelper implements IPlatformHelper {
     @Override
     public boolean tryListPackNamespaceRoot(@NotNull PackResources pack, @NotNull PackType type, @NotNull String namespace, @NotNull PackResources.ResourceOutput output) {
         if (pack instanceof net.minecraftforge.resource.PathPackResources pathPack) {
-            // Forge's pack rejects "" before reaching its public source path. Enumerate the same namespace root directly through vanilla's public path walker.
-            PackResourcesRootEnumeration.listPathNamespaceRoot(pathPack.getSource(), type, namespace, output);
-            return true;
+            Path source = pathPack.getSource();
+            // Forge's mod packs expose their source archive here but resolve actual resources through a custom path implementation. Enumerate archive names only, then obtain safe suppliers from the pack.
+            if (Files.isRegularFile(source)) {
+                PackResourcesRootEnumeration.listArchiveNamespaceRoot(source, pathPack, type, namespace, output);
+                return true;
+            }
+            if (Files.isDirectory(source)) {
+                PackResourcesRootEnumeration.listPathNamespaceRoot(source, type, namespace, output);
+                return true;
+            }
+            return false;
         }
         if (pack instanceof net.minecraftforge.resource.DelegatingPackResources delegatingPack) {
             Collection<PackResources> children = delegatingPack.getChildren();
             if (children == null) return false;
-            for (PackResources child : children) {
-                if (!this.tryListPackNamespaceRoot(child, type, namespace, output)) child.listResources(type, namespace, "", output);
-            }
+            PackResourcesRootEnumeration.listMatchingChildNamespaceRoots(children, type, namespace, output, (child, childType, childNamespace, childOutput) -> {
+                if (!this.tryListPackNamespaceRoot(child, childType, childNamespace, childOutput)) child.listResources(childType, childNamespace, "", childOutput);
+            });
             return true;
         }
         return false;
