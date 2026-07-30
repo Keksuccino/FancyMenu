@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.lifecycle;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.WebUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.resource.resources.texture.TextureManagerReleaseDispatcher;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,6 +28,8 @@ public final class ClientShutdownHandler {
         runCleanup("internet availability monitor", WebUtils::shutdown);
         runCleanup("user variables", VariableHandler::shutdown);
         runCleanup("panorama renderers", PanoramaHandler::shutdown);
+        // GLFW cursor destruction must finish on the render thread while the window and GLFW are still alive.
+        runCleanup("GLFW cursors", CursorHandler::shutdown);
         runCleanup("pending texture-manager releases", TextureManagerReleaseDispatcher::flushPendingReleases);
     }
 

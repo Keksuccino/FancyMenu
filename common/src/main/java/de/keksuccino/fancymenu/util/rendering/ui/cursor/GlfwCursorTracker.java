@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.util.rendering.ui.cursor;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -27,8 +29,13 @@ public final class GlfwCursorTracker {
         }
     }
 
+    public static void onGlfwDestroyWindow(long window) {
+        ACTIVE_CURSOR_BY_WINDOW.remove(window);
+    }
+
     public static void onGlfwDestroyCursor(long cursor) {
         STANDARD_CURSOR_SHAPE_BY_CURSOR.remove(cursor);
+        ACTIVE_CURSOR_BY_WINDOW.replaceAll((window, activeCursor) -> activeCursor == cursor ? 0L : activeCursor);
     }
 
     public static long getActiveCursor(long window) {
@@ -43,6 +50,15 @@ public final class GlfwCursorTracker {
 
     public static int getActiveStandardCursorShape(long window) {
         return getStandardCursorShape(getActiveCursor(window));
+    }
+
+    @NotNull
+    public static List<Long> getWindowsUsingCursor(long cursor) {
+        List<Long> windows = new ArrayList<>();
+        ACTIVE_CURSOR_BY_WINDOW.forEach((window, activeCursor) -> {
+            if (activeCursor == cursor) windows.add(window);
+        });
+        return windows;
     }
 
     @NotNull
