@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
 import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
@@ -16,6 +17,7 @@ import de.keksuccino.fancymenu.util.rendering.MenuBackgroundReplacementState;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.DirectDirtBackgroundReplacementController;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.MenuBackgroundReplacementController;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.MenuBackgroundReplacementPolicy;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
@@ -88,7 +90,7 @@ public abstract class MixinScreen implements CustomizableScreen, MenuBackgroundR
 
     @Inject(method = "renderDirtBackground", at = @At("HEAD"), cancellable = true)
     private void before_renderDirtBackground_FancyMenu(GuiGraphics graphics, CallbackInfo info) {
-        if (!this.menuBackgroundReplacementState_FancyMenu.isDirtCallWrapped() && this.ensureMenuBackgroundReplacementFancyMenu(graphics)) info.cancel();
+        if (DirectDirtBackgroundReplacementController.renderReplacement(this.menuBackgroundReplacementState_FancyMenu.isDirtCallWrapped(), () -> this.renderScreenBackgroundReplacement_FancyMenu(graphics), () -> this.ensureMenuBackgroundReplacementFancyMenu(graphics))) info.cancel();
     }
 
     @WrapOperation(method = "renderBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderDirtBackground(Lnet/minecraft/client/gui/GuiGraphics;)V"))
@@ -105,19 +107,7 @@ public abstract class MixinScreen implements CustomizableScreen, MenuBackgroundR
 
     @Inject(method = "renderBackground", at = @At("HEAD"), cancellable = true)
     private void before_renderBackground_FancyMenu(GuiGraphics graphics, CallbackInfo info) {
-        Screen instance = (Screen)(Object)this;
-        // Don't fire the event in the TitleScreen, because it gets handled differently there.
-        if (instance instanceof TitleScreen) {
-            return;
-        }
-        ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(instance);
-        if ((layer != null) && ScreenCustomization.isCustomizationEnabledForScreen(instance) && layer.shouldReplaceVanillaScreenBackground()) {
-            RenderSystem.enableBlend();
-            graphics.fill(0, 0, instance.width, instance.height, 0);
-            RenderingUtils.resetShaderColor(graphics);
-            EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(instance, graphics, this.cachedMouseX_FancyMenu, this.cachedMouseY_FancyMenu, this.cachedPartial_FancyMenu));
-            info.cancel();
-        }
+        if (this.renderScreenBackgroundReplacement_FancyMenu(graphics)) info.cancel();
     }
 
     @Inject(method = "renderBackground", at = @At("RETURN"))
@@ -163,6 +153,20 @@ public abstract class MixinScreen implements CustomizableScreen, MenuBackgroundR
 	public @NotNull List<GuiEventListener> removeOnInitChildrenFancyMenu() {
 		return this.removeOnInitChildrenFancyMenu;
 	}
+
+    @Unique
+    private boolean renderScreenBackgroundReplacement_FancyMenu(@NotNull GuiGraphics graphics) {
+        Screen instance = (Screen)(Object)this;
+        // These screens dispatch their background event from dedicated rendering paths and must not receive it twice.
+        if ((instance instanceof TitleScreen) || (instance instanceof CustomGuiBaseScreen)) return false;
+        ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(instance);
+        if ((layer == null) || !ScreenCustomization.isCustomizationEnabledForScreen(instance) || !layer.shouldReplaceVanillaScreenBackground()) return false;
+        RenderSystem.enableBlend();
+        graphics.fill(0, 0, instance.width, instance.height, 0);
+        RenderingUtils.resetShaderColor(graphics);
+        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(instance, graphics, this.cachedMouseX_FancyMenu, this.cachedMouseY_FancyMenu, this.cachedPartial_FancyMenu));
+        return true;
+    }
 
     @Unique
     @Override
