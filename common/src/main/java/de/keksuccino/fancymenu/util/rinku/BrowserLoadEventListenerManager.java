@@ -1,6 +1,6 @@
-package de.keksuccino.fancymenu.util.mcef;
+package de.keksuccino.fancymenu.util.rinku;
 
-import com.cinemamod.mcef.MCEF;
+import de.keksuccino.rinku.Rinku;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cef.browser.CefBrowser;
@@ -108,26 +108,26 @@ public class BrowserLoadEventListenerManager {
     }
 
     /**
-     * Registers the single global load handler before MCEF creates any browsers. MCEF fans this handler out itself,
+     * Registers the single global load handler before Rinku creates any browsers. Rinku fans this handler out itself,
      * so adding the same instance once per FancyMenu browser would process every load event multiple times.
      */
     public synchronized void initialize() {
         if (this.initialized) return;
-        MCEF.getClient().addLoadHandler(this.globalHandler);
+        Rinku.getClient().addLoadHandler(this.globalHandler);
         this.initialized = true;
     }
     
     /**
      * Registers a browser load listener for load event tracking.
      */
-    public void registerListenerForBrowser(@NotNull WrappedMCEFBrowser browser, @NotNull Consumer<Boolean> onLoadListener) {
+    public void registerListenerForBrowser(@NotNull WrappedRinkuBrowser browser, @NotNull Consumer<Boolean> onLoadListener) {
         registerListenerForBrowserInternal(browser, onLoadListener, false);
     }
     
     /**
      * Registers a persistent browser load listener that should fire for every load event.
      */
-    public void registerPersistentListenerForBrowser(@NotNull WrappedMCEFBrowser browser, @NotNull Consumer<Boolean> onLoadListener) {
+    public void registerPersistentListenerForBrowser(@NotNull WrappedRinkuBrowser browser, @NotNull Consumer<Boolean> onLoadListener) {
         registerListenerForBrowserInternal(browser, onLoadListener, true);
     }
     
@@ -160,11 +160,11 @@ public class BrowserLoadEventListenerManager {
     private static class BrowserLoadListener {
 
         private final Consumer<Boolean> onLoadCompleted;
-        private final WrappedMCEFBrowser browser;
+        private final WrappedRinkuBrowser browser;
         private final boolean persistent;
         private volatile boolean handled = false;
         
-        public BrowserLoadListener(WrappedMCEFBrowser browser, Consumer<Boolean> onLoadCompleted, boolean persistent) {
+        public BrowserLoadListener(WrappedRinkuBrowser browser, Consumer<Boolean> onLoadCompleted, boolean persistent) {
             this.onLoadCompleted = onLoadCompleted;
             this.browser = browser;
             this.persistent = persistent;
@@ -174,7 +174,7 @@ public class BrowserLoadEventListenerManager {
             return this.onLoadCompleted;
         }
 
-        public WrappedMCEFBrowser getBrowser() {
+        public WrappedRinkuBrowser getBrowser() {
             return this.browser;
         }
         
@@ -192,7 +192,7 @@ public class BrowserLoadEventListenerManager {
 
     }
     
-    private void registerListenerForBrowserInternal(@NotNull WrappedMCEFBrowser browser, @NotNull Consumer<Boolean> onLoadListener, boolean persistent) {
+    private void registerListenerForBrowserInternal(@NotNull WrappedRinkuBrowser browser, @NotNull Consumer<Boolean> onLoadListener, boolean persistent) {
         if (browser.isClosed()) return;
         List<BrowserLoadListener> listeners = browserMap.computeIfAbsent(browser.getIdentifier(), id -> new ArrayList<>());
         synchronized (listeners) {

@@ -30,7 +30,7 @@ public abstract class MixinKeyboardHandler {
     /**
      * @reason Fire FancyMenu's screen-key event after the exact screen call even when the screen consumes the key.
      *
-     * MCEF forwarding can cancel {@code KeyboardHandler.keyPress} before Vanilla calls the screen. In that case this
+     * Rinku forwarding can cancel {@code KeyboardHandler.keyPress} before Vanilla calls the screen. In that case this
      * post-call hook must not run, preserving the established behavior on both loaders.
      */
     @WrapOperation(method = "keyPress", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;keyPressed(Lnet/minecraft/client/input/KeyEvent;)Z"))
@@ -41,7 +41,7 @@ public abstract class MixinKeyboardHandler {
     /**
      * @reason Fire FancyMenu's screen-key event after the exact screen call even when the screen consumes the key.
      *
-     * See {@code wrap_keyPressed_in_keyPress_FancyMenu} for the intentional MCEF cancellation ordering.
+     * See {@code wrap_keyPressed_in_keyPress_FancyMenu} for the intentional Rinku cancellation ordering.
      */
     @WrapOperation(method = "keyPress", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;keyReleased(Lnet/minecraft/client/input/KeyEvent;)Z"))
     private boolean wrap_keyReleased_in_keyPress_FancyMenu(Screen screen, KeyEvent event, Operation<Boolean> operation, long windowPointer, int action) {

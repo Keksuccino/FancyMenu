@@ -1,6 +1,5 @@
-package de.keksuccino.fancymenu.customization.element.elements.video.mcef;
+package de.keksuccino.fancymenu.customization.element.elements.video.rinku;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -8,12 +7,13 @@ import de.keksuccino.fancymenu.customization.element.elements.video.IVideoElemen
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.properties.Property;
-import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
-import de.keksuccino.fancymenu.util.mcef.MCEFVideoSourceResolver;
+import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
+import de.keksuccino.fancymenu.util.rinku.RinkuVideoSourceResolver;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
-import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoPlayer;
+import de.keksuccino.fancymenu.util.rendering.video.rinku.RinkuVideoManager;
+import de.keksuccino.fancymenu.util.rendering.video.rinku.RinkuVideoPlayer;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
+import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
@@ -24,32 +24,31 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.util.Objects;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class MCEFVideoElement extends AbstractElement implements IVideoElement {
+public class RinkuVideoElement extends AbstractElement implements IVideoElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
-    private static final DrawableColor MISSING_MCEF_COLOR = DrawableColor.of(Color.RED);
+    private static final ScheduledExecutorService EXECUTOR = FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-RinkuVideoElement");
+    private static final DrawableColor MISSING_RINKU_COLOR = DrawableColor.of(Color.RED);
 
     @Nullable
     public ResourceSource rawVideoUrlSource = null;
     public boolean loop = false;
     public boolean preserveAspectRatio = true;
     /** Value between 0.0 and 1.0 **/
-    public final Property.FloatProperty volume = putProperty(Property.floatProperty("volume", 1.0F, "fancymenu.elements.video_mcef.volume",
+    public final Property.FloatProperty volume = putProperty(Property.floatProperty("volume", 1.0F, "fancymenu.elements.video_rinku.volume",
             Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 1.0F).build()));
     @NotNull
     public SoundSource soundSource = SoundSource.MASTER;
 
     protected volatile boolean initialized = false;
     @Nullable
-    protected MCEFVideoManager videoManager = null;
-    protected MCEFVideoPlayer videoPlayer = null;
+    protected RinkuVideoManager videoManager = null;
+    protected RinkuVideoPlayer videoPlayer = null;
     protected String playerId = null;
 
     protected String lastFinalUrl = null;
@@ -78,9 +77,9 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
     }, 0, 900, TimeUnit.MILLISECONDS);
     protected boolean triedRestore = false;
 
-    public MCEFVideoElement(@NotNull ElementBuilder<?, ?> builder) {
+    public RinkuVideoElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
-        if (MCEFUtil.isMCEFLoaded() && MCEFUtil.MCEF_initialized) this.videoManager = MCEFVideoManager.getInstance();
+        if (RinkuUtil.isRinkuLoaded() && RinkuUtil.rinku_initialized) this.videoManager = RinkuVideoManager.getInstance();
         this.allowDepthTestManipulation = true;
     }
 
@@ -89,11 +88,11 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
 
         if (this.shouldRender()) {
 
-            if (!MCEFUtil.isMCEFLoaded() || !MCEFUtil.MCEF_initialized) {
-                graphics.fill(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), MISSING_MCEF_COLOR.getColorInt());
+            if (!RinkuUtil.isRinkuLoaded() || !RinkuUtil.rinku_initialized) {
+                graphics.fill(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), MISSING_RINKU_COLOR.getColorInt());
                 int xCenter = this.getAbsoluteX() + (this.getAbsoluteWidth() / 2);
                 int yCenter = this.getAbsoluteY() + (this.getAbsoluteHeight() / 2);
-                graphics.centeredText(Minecraft.getInstance().font, "§lMCEF IS NOT INSTALLED! PLEASE DOWNLOAD FROM CURSEFORGE!", xCenter, yCenter, -1);
+                graphics.centeredText(Minecraft.getInstance().font, "§lRinku IS NOT INSTALLED! PLEASE DOWNLOAD FROM CURSEFORGE!", xCenter, yCenter, -1);
                 return;
             }
 
@@ -160,7 +159,7 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
             String finalVideoUrl = null;
             if (this.rawVideoUrlSource != null) {
                 String placeholderExpandedSource = PlaceholderParser.replacePlaceholders(this.rawVideoUrlSource.getSourceWithoutPrefix());
-                finalVideoUrl = MCEFVideoSourceResolver.resolve(this.rawVideoUrlSource, placeholderExpandedSource);
+                finalVideoUrl = RinkuVideoSourceResolver.resolve(this.rawVideoUrlSource, placeholderExpandedSource);
             }
             // Check if the video URL has changed since last time
             boolean videoUrlChanged = !Objects.equals(finalVideoUrl, this.lastFinalUrl);
@@ -202,7 +201,7 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
         if (this.getMemory().hasProperty("video_player") && this.getMemory().hasProperty("player_id") && this.getMemory().hasProperty("last_final_url") && (this.getMemory().hasProperty("save_timestamp"))) {
             Long saveTimestamp = Objects.requireNonNullElse(this.getMemory().getProperty("save_timestamp", Long.class), -1L);
             if ((saveTimestamp + 10000L) > System.currentTimeMillis()) {
-                this.videoPlayer = this.getMemory().getProperty("video_player", MCEFVideoPlayer.class);
+                this.videoPlayer = this.getMemory().getProperty("video_player", RinkuVideoPlayer.class);
                 this.playerId = this.getMemory().getStringProperty("player_id");
                 this.lastFinalUrl = this.getMemory().getStringProperty("last_final_url");
                 this.initialized = true;
@@ -322,7 +321,7 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
             this.videoPlayer.setCurrentTimeMillis(Math.max(0L, pendingSeekTimeMs));
             this.cachedPlayTime.set(Math.max(0.0F, pendingSeekTimeMs / 1000.0F));
         } catch (Exception ex) {
-            LOGGER.warn("[FANCYMENU] Failed to apply pending seek time to MCEF video element. elementId: {}, seekTimeMs: {}", this.getInstanceIdentifier(), pendingSeekTimeMs, ex);
+            LOGGER.warn("[FANCYMENU] Failed to apply pending seek time to Rinku video element. elementId: {}, seekTimeMs: {}", this.getInstanceIdentifier(), pendingSeekTimeMs, ex);
         }
     }
 
@@ -372,9 +371,9 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
 
     protected boolean ensureVideoManagerReady() {
         if (this.videoManager != null) return true;
-        if (!MCEFUtil.isMCEFLoaded() || !MCEFUtil.MCEF_initialized) return false;
-        if (!MCEFVideoManager.initialized) return false;
-        this.videoManager = MCEFVideoManager.getInstance();
+        if (!RinkuUtil.isRinkuLoaded() || !RinkuUtil.rinku_initialized) return false;
+        if (!RinkuVideoManager.initialized) return false;
+        this.videoManager = RinkuVideoManager.getInstance();
         return (this.videoManager != null);
     }
 

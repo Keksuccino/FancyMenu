@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.element.elements.video.mcef;
+package de.keksuccino.fancymenu.customization.element.elements.video.rinku;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -14,12 +14,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
-public class MCEFVideoElementBuilder extends ElementBuilder<MCEFVideoElement, MCEFVideoEditorElement> {
+public class RinkuVideoElementBuilder extends ElementBuilder<RinkuVideoElement, RinkuVideoEditorElement> {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public MCEFVideoElementBuilder() {
-        super("video_mcef");
+    public RinkuVideoElementBuilder() {
+        super("video_rinku");
     }
 
     @Override
@@ -28,17 +28,17 @@ public class MCEFVideoElementBuilder extends ElementBuilder<MCEFVideoElement, MC
     }
 
     @Override
-    public @NotNull MCEFVideoElement buildDefaultInstance() {
-        MCEFVideoElement i = new MCEFVideoElement(this);
+    public @NotNull RinkuVideoElement buildDefaultInstance() {
+        RinkuVideoElement i = new RinkuVideoElement(this);
         i.baseWidth = 400;
         i.baseHeight = 200;
         return i;
     }
 
     @Override
-    public MCEFVideoElement deserializeElement(@NotNull SerializedElement serialized) {
+    public RinkuVideoElement deserializeElement(@NotNull SerializedElement serialized) {
 
-        MCEFVideoElement element = this.buildDefaultInstance();
+        RinkuVideoElement element = this.buildDefaultInstance();
 
         String source = serialized.getValue("source");
         element.rawVideoUrlSource = (source != null) ? ResourceSource.of(source) : null;
@@ -52,7 +52,7 @@ public class MCEFVideoElementBuilder extends ElementBuilder<MCEFVideoElement, MC
     }
 
     @Override
-    protected SerializedElement serializeElement(@NotNull MCEFVideoElement element, @NotNull SerializedElement serializeTo) {
+    protected SerializedElement serializeElement(@NotNull RinkuVideoElement element, @NotNull SerializedElement serializeTo) {
 
         if (element.rawVideoUrlSource != null) {
             serializeTo.putProperty("source", element.rawVideoUrlSource.getSerializationSource());
@@ -66,18 +66,18 @@ public class MCEFVideoElementBuilder extends ElementBuilder<MCEFVideoElement, MC
     }
 
     @Override
-    public @NotNull MCEFVideoEditorElement wrapIntoEditorElement(@NotNull MCEFVideoElement element, @NotNull LayoutEditorScreen editor) {
-        return new MCEFVideoEditorElement(element, editor);
+    public @NotNull RinkuVideoEditorElement wrapIntoEditorElement(@NotNull RinkuVideoElement element, @NotNull LayoutEditorScreen editor) {
+        return new RinkuVideoEditorElement(element, editor);
     }
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Component.translatable("fancymenu.elements.video_mcef");
+        return Component.translatable("fancymenu.elements.video_rinku");
     }
 
     @Override
     public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.elements.video_mcef.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.elements.video_rinku.desc");
     }
 
     @Nullable

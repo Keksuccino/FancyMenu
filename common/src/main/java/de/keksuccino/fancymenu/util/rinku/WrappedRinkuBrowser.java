@@ -1,7 +1,7 @@
-package de.keksuccino.fancymenu.util.mcef;
+package de.keksuccino.fancymenu.util.rinku;
 
-import com.cinemamod.mcef.MCEF;
-import com.cinemamod.mcef.MCEFBrowser;
+import de.keksuccino.rinku.Rinku;
+import de.keksuccino.rinku.RinkuBrowser;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.MouseButtonCaptureOwner;
@@ -29,12 +29,12 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
-public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, NavigatableWidget, FancyMenuUiComponent, MouseButtonCaptureOwner {
+public class WrappedRinkuBrowser extends AbstractWidget implements Closeable, NavigatableWidget, FancyMenuUiComponent, MouseButtonCaptureOwner {
 
     protected static final Logger LOGGER = LogManager.getLogger();
-    protected static final ScheduledExecutorService EXECUTOR = FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-WrappedMCEFBrowser");
+    protected static final ScheduledExecutorService EXECUTOR = FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-WrappedRinkuBrowser");
 
-    protected final MCEFBrowser browser;
+    protected final RinkuBrowser browser;
     protected final Minecraft minecraft = Minecraft.getInstance();
     protected final AtomicLong mainFrameNavigationGeneration = new AtomicLong();
     protected final BrowserInputState inputState = new BrowserInputState();
@@ -55,21 +55,21 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     private volatile boolean initialized = false;
 
     @NotNull
-    public static WrappedMCEFBrowser build(@NotNull String url, boolean transparent, boolean autoHandle, @Nullable Consumer<Boolean> loadListener) {
-        WrappedMCEFBrowser b = new WrappedMCEFBrowser(url, transparent, loadListener);
+    public static WrappedRinkuBrowser build(@NotNull String url, boolean transparent, boolean autoHandle, @Nullable Consumer<Boolean> loadListener) {
+        WrappedRinkuBrowser b = new WrappedRinkuBrowser(url, transparent, loadListener);
         b.autoHandle = autoHandle;
         return b;
     }
 
     @NotNull
-    public static WrappedMCEFBrowser build(@NotNull String url, boolean transparent, boolean autoHandle, int x, int y, int width, int height, @Nullable Consumer<Boolean> loadListener) {
-        WrappedMCEFBrowser b = build(url, transparent, autoHandle, loadListener);
+    public static WrappedRinkuBrowser build(@NotNull String url, boolean transparent, boolean autoHandle, int x, int y, int width, int height, @Nullable Consumer<Boolean> loadListener) {
+        WrappedRinkuBrowser b = build(url, transparent, autoHandle, loadListener);
         b.setSize(width, height);
         b.setPosition(x, y);
         return b;
     }
 
-    protected WrappedMCEFBrowser(@NotNull String url, boolean transparent, @Nullable Consumer<Boolean> loadListener) {
+    protected WrappedRinkuBrowser(@NotNull String url, boolean transparent, @Nullable Consumer<Boolean> loadListener) {
 
         super(0, 0, 0, 0, Component.empty());
 
@@ -82,7 +82,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         // Calling this method multiple times is fine, because there can only be one default listener active.
         BrowserLoadEventListenerManager.getInstance().initialize();
 
-        this.browser = MCEF.createBrowser(url, transparent);
+        this.browser = Rinku.createBrowser(url, transparent);
 
         String browserId = this.getIdentifier();
 
@@ -94,7 +94,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
                 // Inject the FancyMenu JavaScript API
                 injectJavaScriptAPI();
             } else {
-                LOGGER.error("[FANCYMENU] WrappedMCEFBrowser browser page failed to load (ID: {})", browserId, new Exception());
+                LOGGER.error("[FANCYMENU] WrappedRinkuBrowser browser page failed to load (ID: {})", browserId, new Exception());
                 initialized = false;
             }
         });
@@ -163,7 +163,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
             }
 
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to render MCEFBrowser!", ex);
+            LOGGER.error("[FANCYMENU] Failed to render RinkuBrowser!", ex);
         }
 
     }
@@ -524,7 +524,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     }
 
     @NotNull
-    public MCEFBrowser getBrowser() {
+    public RinkuBrowser getBrowser() {
         return this.browser;
     }
     

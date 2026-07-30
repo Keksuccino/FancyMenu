@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ModValidatorTest {
 
     private static final String DESCRIPTION = "Customize Minecraft's menus with ease!";
-    private static final String LICENSE = "DSMSLv3 (DON'T SNATCH MA STUFF LICENSE v3)";
+    private static final String LICENSE = "DSMSLv3.1 (DON'T SNATCH MA STUFF LICENSE v3.1)";
 
     @Test
     void acceptsUnmodifiedValidatedMetadata() {
