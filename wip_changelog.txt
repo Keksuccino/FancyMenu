@@ -1,6 +1,8 @@
 
 CHANGELOG | FANCYMENU v3.9.9 [ W I P !! Not public yet !! ]
 
+- FancyMenu now needs "Rinku" for everything browser-related, instead of MCEF
+  - My fork of MCEF got rebranded to "Rinku", because loooots of stuff changed since I forked it, and it is no longer compatible with mods that were built for the classic MCEF
 - Added support for latest WaterMedia version (#1732)
   - FancyMenu now wants at least WaterMedia v3.0.0.22 (older versions do not work anymore)
 - All WaterMedia-powered video features now work when Vulkan is enabled
