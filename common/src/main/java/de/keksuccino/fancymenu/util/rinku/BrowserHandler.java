@@ -1,6 +1,6 @@
-package de.keksuccino.fancymenu.util.mcef;
+package de.keksuccino.fancymenu.util.rinku;
 
-import com.cinemamod.mcef.MCEF;
+import de.keksuccino.rinku.Rinku;
 import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.melody.resources.audio.MinecraftSoundSettingsObserver;
 import net.minecraft.sounds.SoundSource;
@@ -16,7 +16,7 @@ import java.util.Map;
 public class BrowserHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final HashMap<String, Pair<WrappedMCEFBrowser, Long>> BROWSERS = new HashMap<>();
+    private static final HashMap<String, Pair<WrappedRinkuBrowser, Long>> BROWSERS = new HashMap<>();
 
     @Nullable private static volatile Long volumeListenerId = null;
     private static volatile boolean shuttingDown = false;
@@ -31,60 +31,60 @@ public class BrowserHandler {
 
         LOGGER.info("[FANCYMENU] Starting initialization of BrowserHandler..");
 
-        if (MCEF.isInitialized()) {
+        if (Rinku.isInitialized()) {
             completeInitialization(true);
             return;
         }
 
-        LOGGER.warn("[FANCYMENU] MCEF not initialized yet! Registering FancyMenu's browser integration for MCEF's initialization phase.");
+        LOGGER.warn("[FANCYMENU] Rinku not initialized yet! Registering FancyMenu's browser integration for Rinku's initialization phase.");
 
-        // MCEF invokes these callbacks after creating its client but before creating its preloaded browsers. The
+        // Rinku invokes these callbacks after creating its client but before creating its preloaded browsers. The
         // message router must exist before those browser contexts or the first pooled browser never receives cefQuery.
-        MCEF.scheduleForInit(BrowserHandler::completeInitialization);
+        Rinku.scheduleForInit(BrowserHandler::completeInitialization);
 
-        // MCEF and both loader startup paths initialize on the client thread. Keep an idempotent recheck as a defensive
-        // fallback for integrations that report MCEF ready immediately after listener registration.
-        if (MCEF.isInitialized()) completeInitialization(true);
+        // Rinku and both loader startup paths initialize on the client thread. Keep an idempotent recheck as a defensive
+        // fallback for integrations that report Rinku ready immediately after listener registration.
+        if (Rinku.isInitialized()) completeInitialization(true);
 
     }
 
     private static synchronized void completeInitialization(boolean successful) {
         if (shuttingDown || initialized || !is_initializing) return;
         if (!successful) {
-            MCEFUtil.MCEF_critical_failure = true;
-            MCEFUtil.MCEF_initialized = false;
+            RinkuUtil.RINKU_critical_failure = true;
+            RinkuUtil.rinku_initialized = false;
             is_initializing = false;
-            LOGGER.error("[FANCYMENU] Cannot initialize BrowserHandler because MCEF initialization failed!");
+            LOGGER.error("[FANCYMENU] Cannot initialize BrowserHandler because Rinku initialization failed!");
             return;
         }
 
         try {
-            // These native client integrations must be installed synchronously in MCEF's init callback. MCEF creates
+            // These native client integrations must be installed synchronously in Rinku's init callback. Rinku creates
             // its browser preload pool immediately after the callback returns.
-            if (!ActionBridge.initializeIfNecessary()) throw new IllegalStateException("Failed to initialize the MCEF action bridge");
+            if (!ActionBridge.initializeIfNecessary()) throw new IllegalStateException("Failed to initialize the Rinku action bridge");
             BrowserLoadEventListenerManager.getInstance().initialize();
 
             long registeredVolumeListenerId = MinecraftSoundSettingsObserver.registerVolumeListener(BrowserHandler::onVolumeUpdated);
             volumeListenerId = registeredVolumeListenerId;
-            MCEFUtil.MCEF_initialized = true;
+            RinkuUtil.rinku_initialized = true;
             initialized = true;
             is_initializing = false;
             LOGGER.info("[FANCYMENU] BrowserHandler successfully initialized!");
         } catch (Exception ex) {
-            MCEFUtil.MCEF_initialized = false;
+            RinkuUtil.rinku_initialized = false;
             is_initializing = false;
             LOGGER.error("[FANCYMENU] Failed to initialize BrowserHandler!", ex);
         }
     }
 
-    public static void notifyHandler(@NotNull String identifier, @NotNull WrappedMCEFBrowser browser) {
+    public static void notifyHandler(@NotNull String identifier, @NotNull WrappedRinkuBrowser browser) {
         long now = System.currentTimeMillis();
-        WrappedMCEFBrowser staleBrowser = null;
+        WrappedRinkuBrowser staleBrowser = null;
         synchronized (BROWSERS) {
             if (shuttingDown) {
                 staleBrowser = browser;
             } else {
-                Pair<WrappedMCEFBrowser, Long> cached = BROWSERS.get(identifier);
+                Pair<WrappedRinkuBrowser, Long> cached = BROWSERS.get(identifier);
                 if ((cached == null) || (cached.getFirst() != browser)) {
                     if ((cached != null) && (cached.getFirst() != null) && (cached.getFirst() != browser) && !cached.getFirst().isClosed()) {
                         staleBrowser = cached.getFirst();
@@ -99,16 +99,16 @@ public class BrowserHandler {
     }
 
     @Nullable
-    public static WrappedMCEFBrowser get(@NotNull String identifier) {
+    public static WrappedRinkuBrowser get(@NotNull String identifier) {
         if (shuttingDown) return null;
         synchronized (BROWSERS) {
-            Pair<WrappedMCEFBrowser, Long> browser = BROWSERS.get(identifier);
+            Pair<WrappedRinkuBrowser, Long> browser = BROWSERS.get(identifier);
             return (browser != null) ? browser.getFirst() : null;
         }
     }
 
     public static void remove(@NotNull String identifier, boolean close) {
-        Pair<WrappedMCEFBrowser, Long> browser;
+        Pair<WrappedRinkuBrowser, Long> browser;
         synchronized (BROWSERS) {
             browser = BROWSERS.remove(identifier);
         }
@@ -118,10 +118,10 @@ public class BrowserHandler {
     public static void tick() {
         if (shuttingDown) return;
         long now = System.currentTimeMillis();
-        List<WrappedMCEFBrowser> garbageCollect = new ArrayList<>();
+        List<WrappedRinkuBrowser> garbageCollect = new ArrayList<>();
         synchronized (BROWSERS) {
             List<String> staleIdentifiers = new ArrayList<>();
-            for (Map.Entry<String, Pair<WrappedMCEFBrowser, Long>> entry : BROWSERS.entrySet()) {
+            for (Map.Entry<String, Pair<WrappedRinkuBrowser, Long>> entry : BROWSERS.entrySet()) {
                 //Close browser after 5 seconds of inactivity
                 if ((entry.getValue().getSecond() + 5000) < now) {
                     staleIdentifiers.add(entry.getKey());
@@ -153,7 +153,7 @@ public class BrowserHandler {
             volumeListenerId = null;
         }
 
-        List<WrappedMCEFBrowser> browsers;
+        List<WrappedRinkuBrowser> browsers;
         synchronized (BROWSERS) {
             browsers = new ArrayList<>(BROWSERS.size());
             BROWSERS.values().forEach(browser -> browsers.add(browser.getFirst()));
@@ -165,26 +165,26 @@ public class BrowserHandler {
             try {
                 MinecraftSoundSettingsObserver.unregisterVolumeListener(registeredVolumeListenerId);
             } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to unregister the MCEF browser volume listener during client shutdown!", ex);
+                LOGGER.error("[FANCYMENU] Failed to unregister the Rinku browser volume listener during client shutdown!", ex);
             }
         }
     }
 
     @NotNull
-    private static List<WrappedMCEFBrowser> getBrowserSnapshot() {
+    private static List<WrappedRinkuBrowser> getBrowserSnapshot() {
         synchronized (BROWSERS) {
-            List<WrappedMCEFBrowser> browsers = new ArrayList<>(BROWSERS.size());
+            List<WrappedRinkuBrowser> browsers = new ArrayList<>(BROWSERS.size());
             BROWSERS.values().forEach(browser -> browsers.add(browser.getFirst()));
             return browsers;
         }
     }
 
-    private static void closeBrowserQuietly(@Nullable WrappedMCEFBrowser browser, @NotNull String reason) {
+    private static void closeBrowserQuietly(@Nullable WrappedRinkuBrowser browser, @NotNull String reason) {
         if ((browser == null) || browser.isClosed()) return;
         try {
             browser.close();
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to close {} MCEFBrowser!", reason, ex);
+            LOGGER.error("[FANCYMENU] Failed to close {} RinkuBrowser!", reason, ex);
         }
     }
 

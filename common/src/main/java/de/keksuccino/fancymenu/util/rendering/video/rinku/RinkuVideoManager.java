@@ -1,8 +1,8 @@
-package de.keksuccino.fancymenu.util.rendering.video.mcef;
+package de.keksuccino.fancymenu.util.rendering.video.rinku;
 
-import com.cinemamod.mcef.MCEFClient;
+import de.keksuccino.rinku.RinkuClient;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
+import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
 import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
 import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
@@ -11,7 +11,7 @@ import org.apache.logging.log4j.Logger;
 import org.cef.CefSettings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import com.cinemamod.mcef.MCEF;
+import de.keksuccino.rinku.Rinku;
 import org.cef.browser.CefBrowser;
 import org.cef.handler.CefDisplayHandlerAdapter;
 import java.io.File;
@@ -31,14 +31,14 @@ import java.util.concurrent.ScheduledExecutorService;
  * Manages video player instances for the mod.
  * This class handles creation, tracking, and cleanup of video players.
  */
-public class MCEFVideoManager {
+public class RinkuVideoManager {
 
     protected static final Logger LOGGER = LogManager.getLogger();
-    protected static final MCEFVideoManager INSTANCE = new MCEFVideoManager();
-    public static final ScheduledExecutorService EXECUTOR = FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-MCEFVideoManager");
+    protected static final RinkuVideoManager INSTANCE = new RinkuVideoManager();
+    public static final ScheduledExecutorService EXECUTOR = FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-RinkuVideoManager");
     
     // Map to track all active video players
-    protected final Map<String, MCEFVideoPlayer> players = new ConcurrentHashMap<>();
+    protected final Map<String, RinkuVideoPlayer> players = new ConcurrentHashMap<>();
     private final Object playerLifecycleLock = new Object();
     // Flag to track if web resources have been registered
     protected boolean webResourcesRegistered = false;
@@ -57,7 +57,7 @@ public class MCEFVideoManager {
      *
      * @return The VideoManager instance
      */
-    public static MCEFVideoManager getInstance() {
+    public static RinkuVideoManager getInstance() {
         return INSTANCE;
     }
     
@@ -66,21 +66,21 @@ public class MCEFVideoManager {
      * This should be called during mod initialization.
      */
     public void initialize() {
-        synchronized (MCEFVideoManager.class) {
+        synchronized (RinkuVideoManager.class) {
             if (shuttingDown || initialized || is_initializing) return;
             is_initializing = true;
         }
 
-        LOGGER.info("[FANCYMENU] Starting initialization of MCEFVideoManager..");
+        LOGGER.info("[FANCYMENU] Starting initialization of RinkuVideoManager..");
 
-        if (!MCEFUtil.MCEF_initialized) {
-            LOGGER.warn("[FANCYMENU] MCEF not initialized yet! Will wait for MCEF to be ready before initializing MCEFVideoManager!");
+        if (!RinkuUtil.rinku_initialized) {
+            LOGGER.warn("[FANCYMENU] Rinku not initialized yet! Will wait for Rinku to be ready before initializing RinkuVideoManager!");
         }
 
         FancyMenuThreads.startDaemonThread(() -> {
             try {
                 while (!shuttingDown) {
-                    if (MCEFUtil.MCEF_initialized) {
+                    if (RinkuUtil.rinku_initialized) {
                         MainThreadTaskExecutor.executeInMainThread(() -> {
                             if (shuttingDown) return;
                             try {
@@ -97,24 +97,24 @@ public class MCEFVideoManager {
                                             // Extract the web resources to FancyMenu's temp directory
                                             extractWebResources();
                                             webResourcesRegistered = true;
-                                            LOGGER.info("[FANCYMENU] MCEFVideoManager: Successfully extracted video player web resources");
+                                            LOGGER.info("[FANCYMENU] RinkuVideoManager: Successfully extracted video player web resources");
                                         } catch (Exception e) {
-                                            LOGGER.error("[FANCYMENU] MCEFVideoManager: Failed to extract video player web resources", e);
+                                            LOGGER.error("[FANCYMENU] RinkuVideoManager: Failed to extract video player web resources", e);
                                         }
                                     }
                                 }
 
-                                synchronized (MCEFVideoManager.class) {
+                                synchronized (RinkuVideoManager.class) {
                                     if (shuttingDown) return;
                                     initialized = true;
                                     is_initializing = false;
                                 }
 
-                                LOGGER.info("[FANCYMENU] MCEFVideoManager successfully initialized!");
+                                LOGGER.info("[FANCYMENU] RinkuVideoManager successfully initialized!");
 
                             } catch (Exception ex) {
                                 is_initializing = false;
-                                LOGGER.error("[FANCYMENU] Failed to initialize MCEFVideoManager!", ex);
+                                LOGGER.error("[FANCYMENU] Failed to initialize RinkuVideoManager!", ex);
                             }
                         }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                         break;
@@ -123,27 +123,27 @@ public class MCEFVideoManager {
                 }
             } catch (Exception ex) {
                 is_initializing = false;
-                if (!shuttingDown) LOGGER.error("[FANCYMENU] Failed to initialize MCEFVideoManager!", ex);
+                if (!shuttingDown) LOGGER.error("[FANCYMENU] Failed to initialize RinkuVideoManager!", ex);
             }
-        }, "MCEFVideoManager-Initialization");
+        }, "RinkuVideoManager-Initialization");
 
     }
     
     /**
-     * Registers the JavaScript result handler with MCEF
+     * Registers the JavaScript result handler with Rinku
      */
     private static synchronized void registerJsResultHandlerInternal() {
         if (shuttingDown || jsResultHandlerRegistered) return;
 
         try {
-            MCEFClient client = MCEF.getClient(); // Get MCEF's CefClient instance
+            RinkuClient client = Rinku.getClient(); // Get Rinku's CefClient instance
             // Add our custom display handler to intercept console messages
             client.addDisplayHandler(new CefDisplayHandlerAdapter() {
                 @Override
                 public boolean onConsoleMessage(CefBrowser browser, CefSettings.LogSeverity level, String message, String source, int line) {
-                    if (message != null && message.startsWith("MCEF_ASYNC_RESULT:")) {
+                    if (message != null && message.startsWith("RINKU_ASYNC_RESULT:")) {
                         try {
-                            String[] parts = message.split(":", 3); // Format: MCEF_ASYNC_RESULT:requestId:jsonData
+                            String[] parts = message.split(":", 3); // Format: RINKU_ASYNC_RESULT:requestId:jsonData
                             if (parts.length == 3) {
                                 String requestId = parts[1];
                                 String jsonData = parts[2];
@@ -159,16 +159,16 @@ public class MCEFVideoManager {
                                 }
                             }
                         } catch (Exception e) {
-                            LOGGER.error("[FANCYMENU] Error processing MCEF_ASYNC_RESULT: " + message, e);
+                            LOGGER.error("[FANCYMENU] Error processing RINKU_ASYNC_RESULT: " + message, e);
                         }
                         return true; // Indicate message is handled
                     }
-                    return false; // Message not handled by us, let MCEF process it further if needed
+                    return false; // Message not handled by us, let Rinku process it further if needed
                 }
             });
             jsResultHandlerRegistered = true;
         } catch (Throwable t) { // Catch Throwable to include LinkageErrors etc. if JCEF classes are missing
-            LOGGER.error("[FANCYMENU] Failed to register JS result display handler with MCEF.", t);
+            LOGGER.error("[FANCYMENU] Failed to register JS result display handler with Rinku.", t);
         }
         
         if (!jsResultHandlerRegistered) {
@@ -227,12 +227,12 @@ public class MCEFVideoManager {
     }
     
     /**
-     * Checks if MCEF is available for video playback.
+     * Checks if Rinku is available for video playback.
      *
-     * @return True if MCEF is loaded and available, false otherwise
+     * @return True if Rinku is loaded and available, false otherwise
      */
     public boolean isVideoPlaybackAvailable() {
-        return MCEFUtil.isMCEFLoaded();
+        return RinkuUtil.isRinkuLoaded();
     }
 
     @Nullable
@@ -277,7 +277,7 @@ public class MCEFVideoManager {
     public String createPlayer(int x, int y, int width, int height) {
         if (shuttingDown) return null;
         if (!isVideoPlaybackAvailable()) {
-            LOGGER.warn("[FANCYMENU] Cannot create video player: MCEF is not loaded");
+            LOGGER.warn("[FANCYMENU] Cannot create video player: Rinku is not loaded");
             return null;
         }
         
@@ -301,7 +301,7 @@ public class MCEFVideoManager {
         
         try {
             String playerId = UUID.randomUUID().toString();
-            MCEFVideoPlayer player = new MCEFVideoPlayer(x, y, width, height);
+            RinkuVideoPlayer player = new RinkuVideoPlayer(x, y, width, height);
             synchronized (this.playerLifecycleLock) {
                 if (shuttingDown) {
                     player.dispose();
@@ -323,7 +323,7 @@ public class MCEFVideoManager {
      * @return The video player instance, or null if not found
      */
     @Nullable
-    public MCEFVideoPlayer getPlayer(@NotNull String playerId) {
+    public RinkuVideoPlayer getPlayer(@NotNull String playerId) {
         if (shuttingDown) return null;
         return players.get(playerId);
     }
@@ -334,7 +334,7 @@ public class MCEFVideoManager {
      * @param playerId The player's unique identifier
      */
     public void removePlayer(@NotNull String playerId) {
-        MCEFVideoPlayer player;
+        RinkuVideoPlayer player;
         synchronized (this.playerLifecycleLock) {
             player = players.remove(playerId);
         }
@@ -351,16 +351,16 @@ public class MCEFVideoManager {
         shuttingDown = true;
         initialized = false;
         is_initializing = false;
-        List<MCEFVideoPlayer> playersToDispose;
+        List<RinkuVideoPlayer> playersToDispose;
         synchronized (this.playerLifecycleLock) {
             playersToDispose = new ArrayList<>(this.players.values());
             this.players.clear();
         }
-        for (MCEFVideoPlayer player : playersToDispose) {
+        for (RinkuVideoPlayer player : playersToDispose) {
             try {
                 player.dispose();
             } catch (Throwable throwable) {
-                LOGGER.error("[FANCYMENU] Error disposing MCEF video player", throwable);
+                LOGGER.error("[FANCYMENU] Error disposing Rinku video player", throwable);
             }
         }
 
@@ -369,12 +369,12 @@ public class MCEFVideoManager {
             jsResultsToCancel = new ArrayList<>(pendingJsResults.values());
             pendingJsResults.clear();
         }
-        CancellationException cancellation = new CancellationException("FancyMenu MCEF video manager was disposed");
+        CancellationException cancellation = new CancellationException("FancyMenu Rinku video manager was disposed");
         for (CompletableFuture<String> pendingJsResult : jsResultsToCancel) {
             try {
                 pendingJsResult.completeExceptionally(cancellation);
             } catch (Throwable throwable) {
-                LOGGER.error("[FANCYMENU] Error cancelling a pending MCEF JavaScript result", throwable);
+                LOGGER.error("[FANCYMENU] Error cancelling a pending Rinku JavaScript result", throwable);
             }
         }
     }

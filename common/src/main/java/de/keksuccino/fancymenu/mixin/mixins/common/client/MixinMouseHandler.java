@@ -12,8 +12,8 @@ import de.keksuccino.fancymenu.util.VanillaEvents;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.input.ClicksPerSecondTracker;
 import de.keksuccino.fancymenu.util.input.InputUtils;
-import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
-import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
+import de.keksuccino.fancymenu.util.rinku.BrowserHandler;
+import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
 import de.keksuccino.fancymenu.util.rendering.glsl.GlslRuntimeEventTracker;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuInputRouter;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
@@ -202,7 +202,7 @@ public class MixinMouseHandler {
 
         EventHandler.INSTANCE.postEvent(new ScreenMouseMoveEvent(ScreenUtils.getScreen(), mouseX, mouseY, deltaX, deltaY));
         GlslRuntimeEventTracker.onMouseMoved(mouseX, mouseY, deltaX, deltaY);
-        if (MCEFUtil.isMCEFLoaded()) BrowserHandler.mouseMoved(mouseX, mouseY);
+        if (RinkuUtil.isRinkuLoaded()) BrowserHandler.mouseMoved(mouseX, mouseY);
         ScreenOverlayHandler.INSTANCE.mouseMoved(mouseX, mouseY);
     }
 

@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.events.screen.ScreenCharTypedEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.input.Utf16CodeUnitDispatcher;
-import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
+import de.keksuccino.fancymenu.util.rinku.WrappedRinkuBrowser;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -27,7 +27,7 @@ public class MixinFabricKeyboardHandler {
     @Unique private static final Logger LOGGER_FANCYMENU = LogManager.getLogger();
 
     /**
-     * @reason This adds special key press handling for FancyMenu's {@link WrappedMCEFBrowser}.
+     * @reason This adds special key press handling for FancyMenu's {@link WrappedRinkuBrowser}.
      */
     @Inject(method = "keyPress", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;keyPressed(Lnet/minecraft/client/input/KeyEvent;)Z"), cancellable = true)
     private void before_keyPressed_in_keyPress_FancyMenu(long window, int action, KeyEvent event, CallbackInfo info) {
@@ -35,7 +35,7 @@ public class MixinFabricKeyboardHandler {
         Screen screen = ScreenUtils.getScreen();
         if (screen != null) {
             for (GuiEventListener listener : screen.children()) {
-                if (listener instanceof WrappedMCEFBrowser) {
+                if (listener instanceof WrappedRinkuBrowser) {
                     boolean b = false;
                     if (action == 1 || action == 2) {
                         b = listener.keyPressed(event);
@@ -52,7 +52,7 @@ public class MixinFabricKeyboardHandler {
     }
 
     /**
-     * @reason This adds special key press handling for FancyMenu's {@link WrappedMCEFBrowser}.
+     * @reason This adds special key press handling for FancyMenu's {@link WrappedRinkuBrowser}.
      */
     @Inject(method = "keyPress", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;keyReleased(Lnet/minecraft/client/input/KeyEvent;)Z"), cancellable = true)
     private void before_keyReleased_in_keyPress_FancyMenu(long window, int action, KeyEvent event, CallbackInfo info) {
@@ -60,7 +60,7 @@ public class MixinFabricKeyboardHandler {
         Screen screen = ScreenUtils.getScreen();
         if (screen != null) {
             for (GuiEventListener listener : screen.children()) {
-                if (listener instanceof WrappedMCEFBrowser) {
+                if (listener instanceof WrappedRinkuBrowser) {
                     boolean b = false;
                     if (action == 1 || action == 2) {
                         b = listener.keyPressed(event);
@@ -77,7 +77,7 @@ public class MixinFabricKeyboardHandler {
     }
 
     /**
-     * @reason This adds special char typed handling for FancyMenu's {@link WrappedMCEFBrowser}.
+     * @reason This adds special char typed handling for FancyMenu's {@link WrappedRinkuBrowser}.
      */
     @Inject(method = "charTyped", at = @At(value = "HEAD"), cancellable = true)
     private void head_charTyped_FancyMenu(long window, CharacterEvent event, CallbackInfo info) {
@@ -86,7 +86,7 @@ public class MixinFabricKeyboardHandler {
         Screen screen = ScreenUtils.getScreen();
         if (screen != null) {
             for (GuiEventListener listener : screen.children()) {
-                if (listener instanceof WrappedMCEFBrowser) {
+                if (listener instanceof WrappedRinkuBrowser) {
                     if (Utf16CodeUnitDispatcher.dispatch(event, listener::charTyped)) {
                         info.cancel();
                         return;

@@ -12,8 +12,8 @@ import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
-import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
-import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
+import de.keksuccino.fancymenu.util.rinku.BrowserHandler;
+import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
 import de.keksuccino.fancymenu.util.lifecycle.ClientShutdownHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
@@ -121,7 +121,7 @@ public class MixinMinecraft {
 			this.fireServerJoined_FancyMenu();
 		}
 
-		if (MCEFUtil.isMCEFLoaded()) BrowserHandler.tick();
+		if (RinkuUtil.isRinkuLoaded()) BrowserHandler.tick();
 
 		for (Runnable r : MainThreadTaskExecutor.getAndClearQueue(MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK)) {
 			try {

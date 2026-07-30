@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.customization.background.backgrounds.glsl.GlslMen
 import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageMenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.backgrounds.panorama.PanoramaMenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.backgrounds.slideshow.SlideshowMenuBackgroundBuilder;
-import de.keksuccino.fancymenu.customization.background.backgrounds.video.mcef.MCEFVideoMenuBackgroundBuilder;
+import de.keksuccino.fancymenu.customization.background.backgrounds.video.rinku.RinkuVideoMenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.backgrounds.video.nativevideo.NativeVideoMenuBackgroundBuilder;
 
 public class MenuBackgrounds {
@@ -19,7 +19,7 @@ public class MenuBackgrounds {
     public static final BrowserMenuBackgroundBuilder BROWSER = new BrowserMenuBackgroundBuilder();
     public static final GlslMenuBackgroundBuilder GLSL = new GlslMenuBackgroundBuilder();
     public static final NativeVideoMenuBackgroundBuilder VIDEO = new NativeVideoMenuBackgroundBuilder();
-    public static final MCEFVideoMenuBackgroundBuilder VIDEO_MCEF = new MCEFVideoMenuBackgroundBuilder();
+    public static final RinkuVideoMenuBackgroundBuilder VIDEO_RINKU = new RinkuVideoMenuBackgroundBuilder();
 
     public static void registerAll() {
 
@@ -29,7 +29,7 @@ public class MenuBackgrounds {
         MenuBackgroundRegistry.register(IMAGE);
         MenuBackgroundRegistry.register(SLIDESHOW);
         MenuBackgroundRegistry.register(VIDEO);
-        MenuBackgroundRegistry.register(VIDEO_MCEF);
+        MenuBackgroundRegistry.register(VIDEO_RINKU);
         MenuBackgroundRegistry.register(BROWSER); // add as late as possible
         MenuBackgroundRegistry.register(GLSL); // add last
 

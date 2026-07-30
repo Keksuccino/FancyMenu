@@ -1,6 +1,6 @@
-package de.keksuccino.fancymenu.util.mcef;
+package de.keksuccino.fancymenu.util.rinku;
 
-import com.cinemamod.mcef.MCEF;
+import de.keksuccino.rinku.Rinku;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * This is the base class for the bridge between the MCEF browser and FancyMenu to make it possible to execute FancyMenu's actions in the browser via JavaScript.
+ * This is the base class for the bridge between the Rinku browser and FancyMenu to make it possible to execute FancyMenu's actions in the browser via JavaScript.
  */
 public class ActionBridge {
 
@@ -65,18 +65,18 @@ public class ActionBridge {
         if (shuttingDown) return false;
         if (initialized) return true;
         
-        // Check if MCEF is loaded
-        if (!MCEFUtil.isMCEFLoaded()) {
-            LOGGER.warn("[FANCYMENU] Cannot initialize ActionBridge - MCEF is not loaded");
+        // Check if Rinku is loaded
+        if (!RinkuUtil.isRinkuLoaded()) {
+            LOGGER.warn("[FANCYMENU] Cannot initialize ActionBridge - Rinku is not loaded");
             return false;
         }
         
         try {
             LOGGER.info("[FANCYMENU] Initializing ActionBridge message router");
             
-            // Ensure MCEF client is initialized
-            if (MCEF.getClient() == null) {
-                LOGGER.warn("[FANCYMENU] MCEF client is not initialized yet, delaying ActionBridge initialization");
+            // Ensure Rinku client is initialized
+            if (Rinku.getClient() == null) {
+                LOGGER.warn("[FANCYMENU] Rinku client is not initialized yet, delaying ActionBridge initialization");
                 return false;
             }
             
@@ -89,8 +89,8 @@ public class ActionBridge {
             messageRouter = CefMessageRouter.create(config);
             messageRouter.addHandler(createMessageHandler(), true);
             
-            // Add to global MCEF client
-            MCEF.getClient().getHandle().addMessageRouter(messageRouter);
+            // Add to global Rinku client
+            Rinku.getClient().getHandle().addMessageRouter(messageRouter);
             
             initialized = true;
             LOGGER.info("[FANCYMENU] ActionBridge message router initialized successfully");
@@ -114,9 +114,9 @@ public class ActionBridge {
         }
         if (router == null) return;
         try {
-            MCEF.getClient().getHandle().removeMessageRouter(router);
+            Rinku.getClient().getHandle().removeMessageRouter(router);
         } catch (Throwable throwable) {
-            LOGGER.error("[FANCYMENU] Failed to remove the ActionBridge message router from MCEF", throwable);
+            LOGGER.error("[FANCYMENU] Failed to remove the ActionBridge message router from Rinku", throwable);
         }
         try {
             router.dispose();

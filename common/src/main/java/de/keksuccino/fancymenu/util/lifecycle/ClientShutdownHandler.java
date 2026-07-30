@@ -7,11 +7,11 @@ import de.keksuccino.fancymenu.customization.remote.RemoteServerConnectionManage
 import de.keksuccino.fancymenu.customization.server.ServerCache;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.WebUtils;
-import de.keksuccino.fancymenu.util.mcef.ActionBridge;
-import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
-import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
+import de.keksuccino.fancymenu.util.rinku.ActionBridge;
+import de.keksuccino.fancymenu.util.rinku.BrowserHandler;
+import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
-import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
+import de.keksuccino.fancymenu.util.rendering.video.rinku.RinkuVideoManager;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.resources.texture.TextureManagerReleaseDispatcher;
 import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
@@ -50,10 +50,10 @@ public final class ClientShutdownHandler {
             runCleanup("FancyMenu executors", FancyMenuExecutors::shutdownAll);
             runCleanup("deferred Watermedia players", WatermediaDeferredPlayerReleaseTracker::shutdown);
             runCleanup("user variables", VariableHandler::shutdown);
-            boolean mcefPresent = isMCEFPresentSafely();
-            if (mcefPresent) {
-                runCleanup("MCEF video players", () -> MCEFVideoManager.getInstance().disposeAll());
-                runCleanup("MCEF browsers", BrowserHandler::closeAll);
+            boolean rinkuPresent = isRinkuPresentSafely();
+            if (rinkuPresent) {
+                runCleanup("Rinku video players", () -> RinkuVideoManager.getInstance().disposeAll());
+                runCleanup("Rinku browsers", BrowserHandler::closeAll);
             }
             runCleanup("panorama renderers", PanoramaHandler::shutdown);
             // GLFW cursor destruction must finish on the render thread while the window and GLFW are still alive.
@@ -61,19 +61,19 @@ public final class ClientShutdownHandler {
             runCleanup("resources", ResourceHandlers::shutdownAll);
             runCleanup("pending texture-manager releases", TextureManagerReleaseDispatcher::flushPendingReleases);
             runCleanup("main-thread task queue", MainThreadTaskExecutor::shutdown);
-            if (mcefPresent) {
-                runCleanup("MCEF action bridge", ActionBridge::dispose);
+            if (rinkuPresent) {
+                runCleanup("Rinku action bridge", ActionBridge::dispose);
             }
         } finally {
             runCleanup("FancyMenu executors", FancyMenuExecutors::shutdownAll);
         }
     }
 
-    private static boolean isMCEFPresentSafely() {
+    private static boolean isRinkuPresentSafely() {
         try {
-            return MCEFUtil.isMCEFPresent();
+            return RinkuUtil.isRinkuPresent();
         } catch (Throwable throwable) {
-            LOGGER.error("[FANCYMENU] Failed to check MCEF presence during client shutdown!", throwable);
+            LOGGER.error("[FANCYMENU] Failed to check Rinku presence during client shutdown!", throwable);
             return false;
         }
     }

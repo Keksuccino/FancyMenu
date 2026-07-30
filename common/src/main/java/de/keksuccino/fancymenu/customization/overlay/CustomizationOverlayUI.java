@@ -75,7 +75,7 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator.AfmaCreatorEntryGate;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
-import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
+import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaUtil;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.fancymenu.util.MathUtils;
@@ -585,11 +585,11 @@ public class CustomizationOverlayUI {
                                 }))
                 .setIcon(MaterialIcons.DEVELOPER_BOARD_OFF);
 
-        developerMenu.addValueCycleEntry("force_mcef_missing",
-                        CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.developer.force_mcef_missing", FancyMenu.getOptions().devForceMcefMissing.getValue())
+        developerMenu.addValueCycleEntry("force_rinku_missing",
+                        CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.developer.force_rinku_missing", FancyMenu.getOptions().devForceRinkuMissing.getValue())
                                 .addCycleListener(cycle -> {
-                                    FancyMenu.getOptions().devForceMcefMissing.setValue(cycle.getAsBoolean());
-                                    MCEFUtil.MCEF_initialized = false;
+                                    FancyMenu.getOptions().devForceRinkuMissing.setValue(cycle.getAsBoolean());
+                                    RinkuUtil.rinku_initialized = false;
                                 }))
                 .setIcon(MaterialIcons.DEVELOPER_BOARD_OFF);
 
