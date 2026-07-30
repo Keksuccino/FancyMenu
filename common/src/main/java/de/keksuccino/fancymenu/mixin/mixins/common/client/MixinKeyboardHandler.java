@@ -13,6 +13,7 @@ import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.gui.screens.Screen;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -26,24 +27,22 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinKeyboardHandler {
 
     /**
-     * @reason Fire FancyMenu's screen-key event after the exact screen call even when the screen consumes the key.
+     * @reason Fire FancyMenu's screen-key event after the exact screen task even when the screen consumes the key.
      *
-     * MCEF forwarding can cancel {@code KeyboardHandler.keyPress} before Vanilla calls the screen. In that case this
-     * post-call hook must not run, preserving the established behavior on both loaders.
+     * Minecraft 1.21.1 hides the actual keyPressed/keyReleased calls inside a compiler-generated Runnable. Wrapping
+     * the stable error boundary keeps this hook inside the loader-specific browser cancellation wrapper because of
+     * the reduced mixin priority, so browser-consumed input still skips both Vanilla and FancyMenu post events.
      */
-    @WrapOperation(method = "keyPress", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;keyPressed(III)Z"))
-    private boolean wrap_keyPressed_in_keyPress_FancyMenu(Screen screen, int key, int scanCode, int modifiers, Operation<Boolean> operation, long windowPointer, int methodKey, int methodScanCode, int action, int methodModifiers) {
-        return ScreenKeyEventDispatcher.dispatchAfterScreenCall(windowPointer, action, screen, key, scanCode, modifiers, () -> operation.call(screen, key, scanCode, modifiers));
-    }
+    @WrapOperation(method = "keyPress", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;wrapScreenError(Ljava/lang/Runnable;Ljava/lang/String;Ljava/lang/String;)V"))
+    private void wrap_wrapScreenError_in_keyPress_FancyMenu(Runnable screenAction, String errorDescription, String screenName, Operation<Void> operation, long windowPointer, int key, int scanCode, int action, int modifiers) {
+        Screen screen = Minecraft.getInstance().screen;
+        if (screen == null) {
+            operation.call(screenAction, errorDescription, screenName);
+            return;
+        }
 
-    /**
-     * @reason Fire FancyMenu's screen-key event after the exact screen call even when the screen consumes the key.
-     *
-     * See {@code wrap_keyPressed_in_keyPress_FancyMenu} for the intentional MCEF cancellation ordering.
-     */
-    @WrapOperation(method = "keyPress", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;keyReleased(III)Z"))
-    private boolean wrap_keyReleased_in_keyPress_FancyMenu(Screen screen, int key, int scanCode, int modifiers, Operation<Boolean> operation, long windowPointer, int methodKey, int methodScanCode, int action, int methodModifiers) {
-        return ScreenKeyEventDispatcher.dispatchAfterScreenCall(windowPointer, action, screen, key, scanCode, modifiers, () -> operation.call(screen, key, scanCode, modifiers));
+        Runnable trackedScreenAction = () -> ScreenKeyEventDispatcher.dispatchAfterScreenCall(windowPointer, action, screen, key, scanCode, modifiers, () -> runScreenAction_FancyMenu(screenAction));
+        operation.call(trackedScreenAction, errorDescription, screenName);
     }
 
     /**
@@ -83,6 +82,12 @@ public abstract class MixinKeyboardHandler {
             GlslRuntimeEventTracker.onCharTyped(codePoint, modifiers);
             if (Utf16CodeUnitDispatcher.dispatch(codePoint, modifiers, ScreenOverlayHandler.INSTANCE::charTyped)) info.cancel();
         }
+    }
+
+    @Unique
+    private static boolean runScreenAction_FancyMenu(Runnable screenAction) {
+        screenAction.run();
+        return false;
     }
 
 }
