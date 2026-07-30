@@ -12,7 +12,7 @@
 - You are operating on macOS 27 Beta.
 
 ## Sub-Workspaces
-- This primary workspace here is the so-called "agent root", but it only exists as an access point to all sub-workspaces/secondary workspaces you have access to.
+- This primary workspace here is the so-called "agent root", but it only exists as an access point to all sub-workspaces/secondary workspaces you also have access to.
 - This workspace gives you access to the actual FancyMenu source workspaces for multiple branches/Minecraft versions.
 - The folder name of these should always be something like `fancymenu-0.0.0`, with the `0.0.0` replaced with the Minecraft version the workspace is targeting.
 - You should avoid writing permanent data to this "root" workspace here. Temporary working data is okay, but clear it up at the end, since your actual work targets will always be the sub-workspaces, where you should actually make changes to/write to.
