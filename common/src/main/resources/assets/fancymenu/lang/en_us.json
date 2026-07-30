@@ -3365,5 +3365,6 @@
   "fancymenu.widgetified_screens.title_screen.forge.top.example.line2": "Used to display Beta build warnings and other things.",
   "fancymenu.widgetified_screens.title_screen.logo": "Minecraft Logo",
   "fancymenu.widgetified_screens.title_screen.realmsnotification": "Realms Notification Icons",
-  "fancymenu.widgetified_screens.title_screen.splash": "Vanilla Splash Text"
+  "fancymenu.widgetified_screens.title_screen.splash": "Vanilla Splash Text",
+  "fancymenu.actions.screens.finish.no_action_selected": "§xYou need to select an action first!"
 }
