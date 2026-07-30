@@ -55,5 +55,6 @@ CHANGELOG | FANCYMENU v3.9.9 [ W I P !! Not public yet !! ]
 - Fixed normal variable assignments synchronously serializing and writing the complete database twice instead of coalescing rapid changes
 - Fixed game crashing when opening the Inventory screen in MC 1.19.2 (#1728)
 - Fixed "Browser" element mouse, keyboard, and scroll input passing through to the underlying menu in some cases (#1726)
+- Fixed custom menu backgrounds not working on some screens in MC 1.20.1, including the "Receiving Level Screen" (#1723)
 
 %changelog:end%
