@@ -3,8 +3,8 @@ package de.keksuccino.fancymenu.util.rendering.glsl;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
-import de.keksuccino.fancymenu.customization.variables.Variable;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
+import de.keksuccino.fancymenu.customization.variables.UserVariableSnapshot;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -1390,16 +1390,16 @@ public class GlslShaderRuntime {
 
     @NotNull
     private VariableUniformSnapshot buildVariableUniformSnapshot() {
-        List<Variable> variables = VariableHandler.getVariables();
-        variables.sort(Comparator.comparing(Variable::getName));
+        List<UserVariableSnapshot> variables = new ArrayList<>(VariableHandler.getVariableSnapshots());
+        variables.sort(Comparator.comparing(UserVariableSnapshot::name));
 
         Map<String, VariableUniformValue> valuesBySuffix = new HashMap<>();
-        for (Variable variable : variables) {
-            String uniformSuffix = toVariableUniformSuffix(variable.getName());
+        for (UserVariableSnapshot variable : variables) {
+            String uniformSuffix = toVariableUniformSuffix(variable.name());
             if (uniformSuffix.isEmpty()) {
                 continue;
             }
-            valuesBySuffix.put(uniformSuffix, parseVariableUniformValue(variable.getValue()));
+            valuesBySuffix.put(uniformSuffix, parseVariableUniformValue(variable.value()));
         }
 
         Set<String> removedSuffixes = new HashSet<>(this.lastVariableUniformSuffixes_FancyMenu);
