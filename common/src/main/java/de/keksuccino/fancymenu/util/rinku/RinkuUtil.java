@@ -7,11 +7,11 @@ import java.util.function.Predicate;
 
 public class RinkuUtil {
 
-    public static volatile boolean RINKU_critical_failure = false;
+    public static volatile boolean rinku_critical_failure = false;
     public static volatile boolean rinku_initialized = false;
 
     public static boolean isRinkuLoaded() {
-        if (RINKU_critical_failure) return false;
+        if (rinku_critical_failure) return false;
         if (FancyMenu.getOptions().devForceRinkuMissing.getValue()) return false;
         return isRinkuPresent();
     }

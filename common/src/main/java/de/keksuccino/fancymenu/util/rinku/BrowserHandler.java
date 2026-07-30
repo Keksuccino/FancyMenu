@@ -51,7 +51,7 @@ public class BrowserHandler {
     private static synchronized void completeInitialization(boolean successful) {
         if (shuttingDown || initialized || !is_initializing) return;
         if (!successful) {
-            RinkuUtil.RINKU_critical_failure = true;
+            RinkuUtil.rinku_critical_failure = true;
             RinkuUtil.rinku_initialized = false;
             is_initializing = false;
             LOGGER.error("[FANCYMENU] Cannot initialize BrowserHandler because Rinku initialization failed!");
