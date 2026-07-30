@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.networking;
 
-import de.keksuccino.fancymenu.networking.bridge.BridgePacketHandlerFabric;
-import de.keksuccino.fancymenu.networking.bridge.BridgePacketMessageFabric;
+import de.keksuccino.fancymenu.networking.bridge.BridgePacketPayload;
 import de.keksuccino.fancymenu.networking.packets.Packets;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -15,17 +14,13 @@ public class PacketsFabric {
         Packets.registerAll();
 
         PacketHandler.setSendToClientLogic((player, s) -> {
-            BridgePacketMessageFabric msg = new BridgePacketMessageFabric();
-            msg.direction = "client";
-            msg.dataWithIdentifier = s;
-            ServerPlayNetworking.send(player, BridgePacketHandlerFabric.PACKET_ID, BridgePacketHandlerFabric.writeToByteBuf(msg));
+            BridgePacketPayload payload = new BridgePacketPayload(BridgePacketPayload.TO_CLIENT_WIRE_DIRECTION, s);
+            ServerPlayNetworking.send(player, BridgePacketPayload.ID, payload.writeToNewBuffer());
         });
 
         PacketHandler.setSendToServerLogic(s -> {
-            BridgePacketMessageFabric msg = new BridgePacketMessageFabric();
-            msg.direction = "server";
-            msg.dataWithIdentifier = s;
-            ClientPlayNetworking.send(BridgePacketHandlerFabric.PACKET_ID, BridgePacketHandlerFabric.writeToByteBuf(msg));
+            BridgePacketPayload payload = new BridgePacketPayload(BridgePacketPayload.TO_SERVER_WIRE_DIRECTION, s);
+            ClientPlayNetworking.send(BridgePacketPayload.ID, payload.writeToNewBuffer());
         });
 
         registerFabricBridgePacket();
@@ -35,16 +30,16 @@ public class PacketsFabric {
     private static void registerFabricBridgePacket() {
 
         //ON SERVER
-        ServerPlayNetworking.registerGlobalReceiver(BridgePacketHandlerFabric.PACKET_ID, (server, player, handler, buf, responseSender) -> {
-            BridgePacketMessageFabric msg = BridgePacketHandlerFabric.readFromByteBuf(buf);
-            BridgePacketHandlerFabric.handle(player, msg, PacketHandler.PacketDirection.TO_SERVER);
+        ServerPlayNetworking.registerGlobalReceiver(BridgePacketPayload.ID, (server, player, handler, buf, responseSender) -> {
+            BridgePacketPayload payload = BridgePacketPayload.read(buf);
+            payload.handle(player, PacketHandler.PacketDirection.TO_SERVER);
         });
 
         //ON CLIENT
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
-            ClientPlayNetworking.registerGlobalReceiver(BridgePacketHandlerFabric.PACKET_ID, (client, handler, buf, responseSender) -> {
-                BridgePacketMessageFabric msg = BridgePacketHandlerFabric.readFromByteBuf(buf);
-                BridgePacketHandlerFabric.handle(null, msg, PacketHandler.PacketDirection.TO_CLIENT);
+            ClientPlayNetworking.registerGlobalReceiver(BridgePacketPayload.ID, (client, handler, buf, responseSender) -> {
+                BridgePacketPayload payload = BridgePacketPayload.read(buf);
+                payload.handle(null, PacketHandler.PacketDirection.TO_CLIENT);
             });
         }
 
