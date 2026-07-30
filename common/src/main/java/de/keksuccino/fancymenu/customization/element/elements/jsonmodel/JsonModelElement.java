@@ -54,6 +54,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class JsonModelElement extends AbstractElement {
 
@@ -91,20 +92,37 @@ public class JsonModelElement extends AbstractElement {
     @Nullable
     private String lastTextureSource = null;
     @Nullable
-    private String lastModelJson = null;
+    private ResourceSupplier<IText> lastModelSupplier;
+    @Nullable
+    private ResourceSupplier<ITexture> lastTextureSupplier;
+    @Nullable
+    private IText lastModelResource;
+    @Nullable
+    private ITexture lastTextureResource;
+    @Nullable
+    private ResourceLocation lastOverrideTextureLocation = null;
+    private int lastOverrideTextureWidth;
+    private int lastOverrideTextureHeight;
+    private boolean lastOverrideTextureReady;
+    private boolean lastModelResourceReadFailed;
+    private boolean lastOverrideTextureReadFailed;
     private boolean lastUseTextureOverride = false;
-    @Nullable
-    private BakedModel cachedModel = null;
-    @Nullable
-    private ResourceLocation cachedRenderTexture = null;
-    @Nullable
-    private ModelTextureSprite cachedOverrideSprite = null;
+    private long modelInputRevision;
     private final Map<ResourceLocation, BlockModel> parentModelCache = new HashMap<>();
+    private final ModelBuildAttemptTracker modelBuildAttempts = new ModelBuildAttemptTracker();
+    private final ModelCacheLifecycle<JsonModelCache> modelCache = new ModelCacheLifecycle<>();
 
     public JsonModelElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
         this.setSupportsRotation(false);
         this.setSupportsTilting(false);
+    }
+
+    @Override
+    public void onDestroyElement() {
+        super.onDestroyElement();
+        this.modelCache.destroy();
+        this.parentModelCache.clear();
     }
 
     @Override
@@ -116,7 +134,8 @@ public class JsonModelElement extends AbstractElement {
 
         this.ensureModelCache();
 
-        if (this.cachedModel == null || this.cachedRenderTexture == null) {
+        JsonModelCache cache = this.modelCache.current();
+        if (cache == null) {
             if (isEditor()) {
                 RenderingUtils.renderMissing(graphics, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
             }
@@ -141,7 +160,7 @@ public class JsonModelElement extends AbstractElement {
         pose.scale(scale, scale, scale);
 
         if (this.useModelDisplayTransform.getBoolean()) {
-            this.cachedModel.getTransforms().getTransform(ItemDisplayContext.GUI).apply(false, pose);
+            cache.model().getTransforms().getTransform(ItemDisplayContext.GUI).apply(false, pose);
         }
 
         pose.mulPose(new Quaternionf().rotationXYZ(
@@ -172,12 +191,12 @@ public class JsonModelElement extends AbstractElement {
         RenderSystem.disableCull();
 
         RenderType renderType = this.renderTranslucent.getBoolean()
-                ? RenderType.entityTranslucent(this.cachedRenderTexture)
-                : RenderType.entityCutoutNoCull(this.cachedRenderTexture);
+                ? RenderType.entityTranslucent(cache.renderTexture())
+                : RenderType.entityCutoutNoCull(cache.renderTexture());
 
         MultiBufferSource.BufferSource buffer = Minecraft.getInstance().renderBuffers().bufferSource();
         VertexConsumer consumer = buffer.getBuffer(renderType);
-        renderModelQuads(this.cachedModel, pose, consumer, r, g, b, a);
+        renderModelQuads(cache.model(), pose, consumer, r, g, b, a);
         buffer.endBatch();
 
         RenderSystem.enableCull();
@@ -226,77 +245,109 @@ public class JsonModelElement extends AbstractElement {
     }
 
     private void ensureModelCache() {
+        if (this.modelCache.isDestroyed()) return;
         ResourceSupplier<IText> modelSupplier = this.modelSource.get();
         String modelKey = (modelSupplier != null) ? modelSupplier.getSourceWithPrefix() : null;
-
-        ResourceSupplier<ITexture> textureSupplier = this.textureSource.get();
+        boolean override = this.useTextureOverride.getBoolean();
+        ResourceSupplier<ITexture> textureSupplier = override ? this.textureSource.get() : null;
         String textureKey = (textureSupplier != null) ? textureSupplier.getSourceWithPrefix() : null;
 
-        boolean override = this.useTextureOverride.getBoolean();
+        IText modelResource = null;
+        List<String> modelLines = null;
+        boolean modelResourceReadFailed = false;
+        try {
+            modelResource = modelSupplier != null ? modelSupplier.get() : null;
+            if (modelResource != null && modelResource.isReady()) modelLines = modelResource.getTextLines();
+        } catch (RuntimeException ex) {
+            modelResourceReadFailed = true;
+            if (!this.lastModelResourceReadFailed) LOGGER.error("[FANCYMENU] Failed to inspect JSON model source '{}'; the element will retry when it becomes readable", modelKey, ex);
+        }
 
+        OverrideTextureInput overrideTexture = null;
+        ITexture textureResource = null;
+        boolean overrideTextureReadFailed = false;
+        if (override && textureSupplier != null) {
+            try {
+                textureResource = textureSupplier.get();
+                if (textureResource != null && textureResource.isReady()) {
+                    ResourceLocation location = textureResource.getResourceLocation();
+                    if (location != null) overrideTexture = new OverrideTextureInput(location, Math.max(1, textureResource.getWidth()), Math.max(1, textureResource.getHeight()));
+                }
+            } catch (RuntimeException ex) {
+                overrideTextureReadFailed = true;
+                if (!this.lastOverrideTextureReadFailed) LOGGER.error("[FANCYMENU] Failed to inspect JSON model override texture '{}'; the element will retry when it becomes readable", textureKey, ex);
+            }
+        }
+
+        boolean modelSupplierChanged = modelSupplier != this.lastModelSupplier;
         boolean sourceChanged = !Objects.equals(modelKey, this.lastModelSource);
+        boolean modelResourceChanged = modelResource != this.lastModelResource;
+        boolean modelReadStateChanged = modelResourceReadFailed != this.lastModelResourceReadFailed;
+        boolean textureSupplierChanged = textureSupplier != this.lastTextureSupplier;
         boolean textureChanged = !Objects.equals(textureKey, this.lastTextureSource);
+        boolean textureResourceChanged = textureResource != this.lastTextureResource;
+        boolean textureReadStateChanged = overrideTextureReadFailed != this.lastOverrideTextureReadFailed;
         boolean overrideChanged = override != this.lastUseTextureOverride;
+        boolean overrideTextureReady = overrideTexture != null;
+        int overrideTextureWidth = overrideTextureReady ? overrideTexture.width() : 0;
+        int overrideTextureHeight = overrideTextureReady ? overrideTexture.height() : 0;
+        ResourceLocation overrideTextureLocation = overrideTextureReady ? overrideTexture.location() : null;
+        boolean overrideGeometryChanged = overrideTextureReady != this.lastOverrideTextureReady || overrideTextureWidth != this.lastOverrideTextureWidth || overrideTextureHeight != this.lastOverrideTextureHeight;
+        boolean inputChanged = modelSupplierChanged || sourceChanged || modelResourceChanged || modelReadStateChanged || textureSupplierChanged || textureChanged || textureResourceChanged || textureReadStateChanged || overrideChanged || overrideGeometryChanged;
 
-        if (sourceChanged || textureChanged || overrideChanged) {
-            invalidateCache(sourceChanged);
+        if (inputChanged) {
+            this.modelInputRevision++;
+            this.modelCache.invalidate();
+            if (modelSupplierChanged || sourceChanged || modelResourceChanged) this.parentModelCache.clear();
+            this.lastModelSupplier = modelSupplier;
+            this.lastTextureSupplier = textureSupplier;
+            this.lastModelResource = modelResource;
+            this.lastTextureResource = textureResource;
             this.lastModelSource = modelKey;
             this.lastTextureSource = textureKey;
             this.lastUseTextureOverride = override;
+            this.lastOverrideTextureWidth = overrideTextureWidth;
+            this.lastOverrideTextureHeight = overrideTextureHeight;
+            this.lastOverrideTextureReady = overrideTextureReady;
+            this.lastModelResourceReadFailed = modelResourceReadFailed;
+            this.lastOverrideTextureReadFailed = overrideTextureReadFailed;
+        }
+        if (!Objects.equals(overrideTextureLocation, this.lastOverrideTextureLocation)) {
+            this.lastOverrideTextureLocation = overrideTextureLocation;
+            JsonModelCache cache = this.modelCache.current();
+            if (cache != null && overrideTextureLocation != null) cache.updateRenderTexture(overrideTextureLocation);
         }
 
-        if (this.cachedModel != null) {
-            return;
-        }
-
-        if (modelSupplier == null) {
-            return;
-        }
-
-        IText text = modelSupplier.get();
-        if (text == null || !text.isReady()) {
-            return;
-        }
-
-        List<String> lines = text.getTextLines();
-        if (lines == null || lines.isEmpty()) {
-            return;
-        }
-
-        String json = String.join("\n", lines);
-        if (!Objects.equals(json, this.lastModelJson)) {
-            this.lastModelJson = json;
-        }
-
-        buildModelCache(json, override, textureSupplier);
-    }
-
-    private void invalidateCache(boolean clearParents) {
-        this.cachedModel = null;
-        this.cachedRenderTexture = null;
-        if (this.cachedOverrideSprite != null) {
-            this.cachedOverrideSprite.close();
-            this.cachedOverrideSprite = null;
-        }
-        if (clearParents) {
-            this.parentModelCache.clear();
-            this.lastModelJson = null;
-        }
-    }
-
-    private void buildModelCache(@NotNull String json, boolean override, @Nullable ResourceSupplier<ITexture> textureSupplier) {
+        ModelBuildAttemptTracker.Observation observation;
         try {
-            BlockModel model = BlockModel.fromString(json);
-            model.name = (this.lastModelSource != null) ? this.lastModelSource : "fancymenu_json_model";
+            observation = this.modelBuildAttempts.observe(this.modelInputRevision, modelLines);
+        } catch (RuntimeException ignored) {
+            // A custom asynchronous text resource may mutate its list while it is copied; retry after it publishes a stable view.
+            return;
+        }
+        if (observation.contentChanged()) {
+            this.parentModelCache.clear();
+            if (!inputChanged) this.modelCache.invalidate();
+        }
+
+        if (this.modelCache.current() != null || !observation.hasContent() || (override && !overrideTextureReady)) return;
+        ModelBuildAttemptTracker.Attempt attempt = this.modelBuildAttempts.beginAttempt();
+        if (attempt != null) this.buildModelCache(attempt, overrideTexture, modelKey);
+    }
+
+    private void buildModelCache(@NotNull ModelBuildAttemptTracker.Attempt attempt, @Nullable OverrideTextureInput overrideTextureInput, @Nullable String modelSource) {
+        ModelCacheLifecycle.BuildToken buildToken = this.modelCache.beginBuild();
+        if (buildToken == null) return;
+        try (ModelBuildResourceScope resources = new ModelBuildResourceScope()) {
+            BlockModel model = BlockModel.fromString(attempt.modelJson());
+            model.name = modelSource != null ? modelSource : "fancymenu_json_model";
             model.resolveParents(this::resolveParentModel);
 
             TextureData overrideTexture = null;
-            if (override) {
-                overrideTexture = buildOverrideTexture(textureSupplier);
-                if (overrideTexture == null) {
-                    return;
-                }
-                this.cachedOverrideSprite = overrideTexture.sprite;
+            ModelTextureSprite overrideSprite = null;
+            if (overrideTextureInput != null) {
+                overrideSprite = resources.own(ModelTextureSprite.create(overrideTextureInput.location(), overrideTextureInput.width(), overrideTextureInput.height()));
+                overrideTexture = new TextureData(overrideTextureInput.location(), overrideSprite);
             }
 
             final TextureData overrideTextureFinal = overrideTexture;
@@ -312,11 +363,13 @@ public class JsonModelElement extends AbstractElement {
                 bakeModel = ITEM_MODEL_GENERATOR.generateBlockModel(spriteGetter, model);
             }
 
-            this.cachedModel = bakeBlockModel(bakeModel, overrideTextureFinal, spriteGetter);
-            this.cachedRenderTexture = (overrideTextureFinal != null) ? overrideTextureFinal.renderLocation : TextureAtlas.LOCATION_BLOCKS;
-
+            BakedModel bakedModel = bakeBlockModel(bakeModel, overrideTextureFinal, spriteGetter);
+            ResourceLocation renderTexture = overrideTextureFinal != null ? overrideTextureFinal.renderLocation : TextureAtlas.LOCATION_BLOCKS;
+            JsonModelCache candidate = new JsonModelCache(bakedModel, renderTexture, overrideSprite);
+            if (overrideSprite != null) resources.replaceOwnership(overrideSprite, candidate); else resources.own(candidate);
+            this.modelCache.publish(buildToken, resources.transfer(candidate));
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to load JSON model element!", ex);
+            LOGGER.error("[FANCYMENU] Failed to load JSON model element '{}'", modelSource != null ? modelSource : "fancymenu_json_model", ex);
         }
     }
 
@@ -349,24 +402,6 @@ public class JsonModelElement extends AbstractElement {
         }
 
         return null;
-    }
-
-    @Nullable
-    private TextureData buildOverrideTexture(@Nullable ResourceSupplier<ITexture> supplier) {
-        if (supplier == null) {
-            return null;
-        }
-        ITexture texture = supplier.get();
-        if (texture == null || !texture.isReady()) {
-            return null;
-        }
-        ResourceLocation location = texture.getResourceLocation();
-        if (location == null) {
-            return null;
-        }
-        int width = Math.max(1, texture.getWidth());
-        int height = Math.max(1, texture.getHeight());
-        return new TextureData(location, new ModelTextureSprite(location, width, height));
     }
 
     private BakedModel bakeBlockModel(@NotNull BlockModel model, @Nullable TextureData overrideTexture, @NotNull java.util.function.Function<Material, TextureAtlasSprite> spriteGetter) {
@@ -405,21 +440,63 @@ public class JsonModelElement extends AbstractElement {
     private record TextureData(@NotNull ResourceLocation renderLocation, @NotNull ModelTextureSprite sprite) {
     }
 
-    private static final class ModelTextureSprite extends TextureAtlasSprite implements AutoCloseable {
+    private record OverrideTextureInput(@NotNull ResourceLocation location, int width, int height) {
+    }
 
-        private ModelTextureSprite(@NotNull ResourceLocation textureLocation, int width, int height) {
-            super(textureLocation,
-                    new SpriteContents(textureLocation, new FrameSize(width, height),
-                            new NativeImage(width, height, true), AnimationMetadataSection.EMPTY),
-                    width,
-                    height,
-                    0,
-                    0);
+    private static final class JsonModelCache implements AutoCloseable {
+
+        private final BakedModel model;
+        private volatile ResourceLocation renderTexture;
+        @Nullable private final ModelTextureSprite overrideSprite;
+        private final AtomicBoolean closed = new AtomicBoolean();
+
+        private JsonModelCache(@NotNull BakedModel model, @NotNull ResourceLocation renderTexture, @Nullable ModelTextureSprite overrideSprite) {
+            this.model = Objects.requireNonNull(model);
+            this.renderTexture = Objects.requireNonNull(renderTexture);
+            this.overrideSprite = overrideSprite;
+        }
+
+        @NotNull private BakedModel model() {
+            return this.model;
+        }
+
+        @NotNull private ResourceLocation renderTexture() {
+            return this.renderTexture;
+        }
+
+        private void updateRenderTexture(@NotNull ResourceLocation renderTexture) {
+            this.renderTexture = Objects.requireNonNull(renderTexture);
         }
 
         @Override
         public void close() {
-            this.contents().close();
+            if (this.closed.compareAndSet(false, true) && this.overrideSprite != null) this.overrideSprite.close();
+        }
+    }
+
+    private static final class ModelTextureSprite extends TextureAtlasSprite implements AutoCloseable {
+
+        private final AtomicBoolean closed = new AtomicBoolean();
+
+        private ModelTextureSprite(@NotNull ResourceLocation textureLocation, @NotNull SpriteContents contents, int width, int height) {
+            super(textureLocation, contents, width, height, 0, 0);
+        }
+
+        @NotNull
+        private static ModelTextureSprite create(@NotNull ResourceLocation textureLocation, int width, int height) {
+            try (ModelBuildResourceScope resources = new ModelBuildResourceScope()) {
+                NativeImage image = resources.own(new NativeImage(width, height, true));
+                SpriteContents contents = new SpriteContents(textureLocation, new FrameSize(width, height), image, AnimationMetadataSection.EMPTY);
+                resources.replaceOwnership(image, contents);
+                ModelTextureSprite sprite = new ModelTextureSprite(textureLocation, contents, width, height);
+                resources.replaceOwnership(contents, sprite);
+                return resources.transfer(sprite);
+            }
+        }
+
+        @Override
+        public void close() {
+            if (this.closed.compareAndSet(false, true)) this.contents().close();
         }
     }
 
