@@ -85,9 +85,9 @@ dependencies {
     implementation "maven.modrinth:melody:1.0.15-1.21.11-neoforge"
     compileOnly "it.crystalnest:fancy-entity-renderer-neoforge:$fer_mc_version-$fer_version"
     // Rinku's NeoForge artifact is a bootstrap jar with its API nested as JarJar. NeoGradle 7 does not expose nested classes to javac, so extract that exact loader-native API for compilation.
-    rinkuNeoForgeCompileApi "de.keksuccino:rinku-neoforge:3.0.0-1.21.11"
+    rinkuNeoForgeCompileApi "de.keksuccino:rinku-neoforge:3.0.1-1.21.11"
     compileOnly files(rinkuNeoForgeCompileApiFile)
-    implementation "de.keksuccino:rinku-neoforge:3.0.0-1.21.11"
+    implementation "de.keksuccino:rinku-neoforge:3.0.1-1.21.11"
     compileOnly project(":common")
 }
 
