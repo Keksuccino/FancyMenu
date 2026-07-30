@@ -34,7 +34,7 @@ dependencies {
     implementation "maven.modrinth:modmenu:18.0.0-alpha.8"
     // implementation "it.crystalnest:fancy-entity-renderer-fabric:$fer_mc_version-$fer_version"
     implementation "flatdir:fer:0.5.4"
-    implementation "de.keksuccino:mcef-fabric:2.2.0-26.1.1"
+    implementation "de.keksuccino:rinku-fabric:3.0.0-26.1.2"
 
     testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.10.2"
