@@ -4,9 +4,12 @@ import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.platform.services.IPlatformHelper;
 import de.keksuccino.fancymenu.util.mod.UniversalModContainer;
 import de.keksuccino.fancymenu.util.resource.ClientResourceIndex;
+import de.keksuccino.fancymenu.util.resource.PackResourcesRootEnumeration;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackResources;
+import net.minecraft.server.packs.PackType;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
@@ -21,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -128,6 +132,24 @@ public class ForgePlatformHelper implements IPlatformHelper {
     public @NotNull Set<ResourceLocation> getLoadedClientResourceLocations() {
         if (!this.isOnClient()) return Set.of();
         return ClientResourceIndex.getLoadedLocations(Minecraft.getInstance().getResourceManager());
+    }
+
+    @Override
+    public boolean tryListPackNamespaceRoot(@NotNull PackResources pack, @NotNull PackType type, @NotNull String namespace, @NotNull PackResources.ResourceOutput output) {
+        if (pack instanceof net.minecraftforge.resource.PathPackResources pathPack) {
+            // Forge's pack rejects "" before reaching its public source path. Enumerate the same namespace root directly through vanilla's public path walker.
+            PackResourcesRootEnumeration.listPathNamespaceRoot(pathPack.getSource(), type, namespace, output);
+            return true;
+        }
+        if (pack instanceof net.minecraftforge.resource.DelegatingPackResources delegatingPack) {
+            Collection<PackResources> children = delegatingPack.getChildren();
+            if (children == null) return false;
+            for (PackResources child : children) {
+                if (!this.tryListPackNamespaceRoot(child, type, namespace, output)) child.listResources(type, namespace, "", output);
+            }
+            return true;
+        }
+        return false;
     }
 
 }

@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.resource;
 
 import com.mojang.logging.LogUtils;
+import de.keksuccino.fancymenu.platform.Services;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackType;
@@ -25,6 +26,11 @@ final class ClientResourceIndexBuilder {
 
     @NotNull
     static Set<ResourceLocation> build(@NotNull ResourceManager resourceManager) {
+        return build(resourceManager, Services.PLATFORM::tryListPackNamespaceRoot);
+    }
+
+    @NotNull
+    static Set<ResourceLocation> build(@NotNull ResourceManager resourceManager, @NotNull PackNamespaceRootEnumerator rootEnumerator) {
         LinkedHashSet<ResourceLocation> locations = new LinkedHashSet<>();
         List<PackResources> packs;
         try (Stream<PackResources> packStream = resourceManager.listPacks()) {
@@ -37,7 +43,7 @@ final class ClientResourceIndexBuilder {
         for (PackResources pack : packs) {
             if (pack == null) continue;
             applyFilter(pack, locations);
-            collectPackLocations(pack, locations);
+            collectPackLocations(pack, locations, rootEnumerator);
         }
         return Collections.unmodifiableSet(new LinkedHashSet<>(locations));
     }
@@ -60,7 +66,7 @@ final class ClientResourceIndexBuilder {
         }
     }
 
-    private static void collectPackLocations(@NotNull PackResources pack, @NotNull Set<ResourceLocation> locations) {
+    private static void collectPackLocations(@NotNull PackResources pack, @NotNull Set<ResourceLocation> locations, @NotNull PackNamespaceRootEnumerator rootEnumerator) {
         Set<String> packNamespaces;
         try {
             packNamespaces = pack.getNamespaces(PackType.CLIENT_RESOURCES);
@@ -84,7 +90,8 @@ final class ClientResourceIndexBuilder {
                 continue;
             }
             try {
-                pack.listResources(PackType.CLIENT_RESOURCES, namespace, "", (location, streamSupplier) -> collectLocation(pack, namespace, location, locations));
+                PackResources.ResourceOutput output = (location, streamSupplier) -> collectLocation(pack, namespace, location, locations);
+                if (!rootEnumerator.tryList(pack, PackType.CLIENT_RESOURCES, namespace, output)) pack.listResources(PackType.CLIENT_RESOURCES, namespace, "", output);
             } catch (RuntimeException ex) {
                 LOGGER.error("[FANCYMENU] Failed to enumerate client resources in namespace '{}' from pack '{}'; keeping the valid entries reported before the failure.", namespace, getPackName(pack), ex);
             }
@@ -110,6 +117,13 @@ final class ClientResourceIndexBuilder {
             if (packId != null) return packId;
         } catch (RuntimeException ignored) {}
         return pack.getClass().getName();
+    }
+
+    @FunctionalInterface
+    interface PackNamespaceRootEnumerator {
+
+        boolean tryList(@NotNull PackResources pack, @NotNull PackType type, @NotNull String namespace, @NotNull PackResources.ResourceOutput output);
+
     }
 
 }

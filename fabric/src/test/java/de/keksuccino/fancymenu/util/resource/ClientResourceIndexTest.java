@@ -55,6 +55,33 @@ class ClientResourceIndexTest {
     }
 
     @Test
+    void usesPlatformRootEnumerationWhilePreservingNamespacesFiltersAndMetadataExclusion() {
+        FakePackResources low = new FakePackResources("low", new AtomicInteger());
+        low.add("alpha:blocked/removed.png");
+        low.add("alpha:kept.png");
+        low.add("beta:kept.png");
+        FakePackResources platformPack = new FakePackResources("platform", new AtomicInteger());
+        platformPack.filter = filter("alpha", "blocked/");
+        platformPack.add("alpha:added.png");
+        platformPack.add("alpha:added.png.mcmeta");
+        platformPack.add("beta:added.png");
+        List<String> fallbackNamespaces = new ArrayList<>();
+
+        Set<ResourceLocation> locations = ClientResourceIndexBuilder.build(new FakeResourceManager(low, platformPack), (pack, type, namespace, output) -> {
+            if (pack != platformPack) return false;
+            fallbackNamespaces.add(namespace);
+            platformPack.resources.forEach((location, supplier) -> {
+                if (type == PackType.CLIENT_RESOURCES && location.getNamespace().equals(namespace)) output.accept(location, supplier);
+            });
+            return true;
+        });
+
+        assertEquals(Set.of(id("alpha:kept.png"), id("alpha:added.png"), id("beta:kept.png"), id("beta:added.png")), locations);
+        assertEquals(List.of("alpha", "beta"), fallbackNamespaces);
+        assertEquals(0, platformPack.listCalls.get());
+    }
+
+    @Test
     void appliesPackFiltersBeforeHigherPriorityResourcesAndCollapsesDuplicates() {
         FakePackResources low = new FakePackResources("low", new AtomicInteger());
         low.add("alpha:blocked/removed.png");

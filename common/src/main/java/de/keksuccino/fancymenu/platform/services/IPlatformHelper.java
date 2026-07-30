@@ -4,6 +4,8 @@ import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.util.mod.UniversalModContainer;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackResources;
+import net.minecraft.server.packs.PackType;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
@@ -69,6 +71,15 @@ public interface IPlatformHelper {
      */
     @NotNull
     Set<ResourceLocation> getLoadedClientResourceLocations();
+
+    /**
+     * Gives loaders a chance to enumerate a pack namespace root when their pack implementation rejects the empty path required by the generic API.
+     *
+     * @return true when the platform handled the pack, false to use {@link PackResources#listResources}.
+     */
+    default boolean tryListPackNamespaceRoot(@NotNull PackResources pack, @NotNull PackType type, @NotNull String namespace, @NotNull PackResources.ResourceOutput output) {
+        return false;
+    }
 
     @Nullable
     default UniversalModContainer getLoadedMod(@NotNull String id) {
