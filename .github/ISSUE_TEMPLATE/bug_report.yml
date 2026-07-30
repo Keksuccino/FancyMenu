@@ -97,11 +97,11 @@ body:
     attributes:
       label: Latest Log File
       description: |
-        Optional. Please upload your `/logs/latest.log` file.
+        Please upload your `/logs/latest.log` file. I can't debug the issue without the log.
 
-        The log should be grabbed and uploaded immediately after experiencing the issue, for example right after seeing something not work as intended.
+        The log should be grabbed and uploaded **immediately after experiencing the issue**, for example right after seeing something not work as intended.
 
-        If the log file is too large to upload here, please upload it to https://gist.github.com instead and add the link to the detailed bug description above.
+        If the log file is too large to upload here, please upload it to https://gist.github.com instead and then upload a simple TXT file containing the link here.
     validations:
-      required: false
+      required: true
       accept: ".log,.txt"
