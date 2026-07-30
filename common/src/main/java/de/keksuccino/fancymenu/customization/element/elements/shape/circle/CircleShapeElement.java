@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.element.elements.shape.circle;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.shape.ShapeBlurRadius;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
@@ -15,7 +16,7 @@ public class CircleShapeElement extends AbstractElement {
 
     public final Property.ColorProperty color = putProperty(Property.hexColorProperty("color", "#FFFFFF", true, "fancymenu.elements.shape.color"));
     public final Property<Boolean> blurEnabled = putProperty(Property.booleanProperty("blur_enabled", false, "fancymenu.elements.shape.blur"));
-    public final Property.FloatProperty blurRadius = putProperty(Property.floatProperty("blur_radius", 3.0F, "fancymenu.elements.shape.blur.radius"));
+    public final Property.FloatProperty blurRadius = putProperty(ShapeBlurRadius.createProperty());
     public final Property.FloatProperty roundness = putProperty(Property.floatProperty("roundness", 2.0F, "fancymenu.elements.shape.circle.roundness"));
 
     public CircleShapeElement(@NotNull ElementBuilder<?, ?> builder) {
@@ -28,7 +29,7 @@ public class CircleShapeElement extends AbstractElement {
 
         if (!this.shouldRender()) return;
 
-        float resolvedBlurRadius = Math.max(0.0F, this.blurRadius.getFloat());
+        float resolvedBlurRadius = ShapeBlurRadius.resolve(this.blurRadius);
         float resolvedRoundness = Math.max(0.1F, this.roundness.getFloat());
 
         DrawableColor colorResolved = this.color.getDrawable();

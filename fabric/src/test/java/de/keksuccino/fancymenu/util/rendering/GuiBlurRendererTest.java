@@ -64,11 +64,11 @@ class GuiBlurRendererTest {
     }
 
     @Test
-    void overflowingBlurRadiusIsDisabled() {
+    void overflowingBlurRadiusSaturatesAtWorkLimit() {
         GuiBlurRenderer.FramebufferBlurArea area = GuiBlurRenderer.calculateFramebufferBlurArea_FancyMenu(0.0F, 0.0F, 10.0F, 10.0F, Float.MAX_VALUE, 2.0D, 100);
 
         assertTrue(area.isValid_FancyMenu());
-        assertEquals(0.0F, area.blurRadius());
+        assertEquals(GuiBlurRadius.MAX_RADIUS, area.blurRadius());
     }
 
 }

@@ -39,7 +39,7 @@ public final class GuiBlurRenderer {
      * @param y The Y position in GUI pixels (top-left origin). Recommended range: 0 to screen height.
      * @param width The width in GUI pixels. Recommended range: 1 to screen width.
      * @param height The height in GUI pixels. Recommended range: 1 to screen height.
-     * @param blurRadius The blur intensity in GUI pixels. Recommended range: 0 to 16 (4 is a good default).
+     * @param blurRadius The blur intensity in GUI pixels. Values are hard-clamped to 0 through {@link GuiBlurRadius#MAX_RADIUS} (4 is a good default).
      * @param cornerRadius The rounded corner radius in GUI pixels. Recommended range: 0 to min(width, height) / 2 (6 is a good default).
      * @param tint The tint color that is mixed into the blurred area. Use alpha to control strength (0.15 is a good default).
      * @param partial Partial tick for the frame; pass the current render partial.
@@ -224,7 +224,7 @@ public final class GuiBlurRenderer {
         if (width <= 0.0F || height <= 0.0F) {
             return;
         }
-        _renderBlurArea(graphics, partial, new BlurArea(x, y, width, height, blurRadius, cornerRadii, shapeType, clampRoundness(roundness), tint));
+        _renderBlurArea(graphics, partial, new BlurArea(x, y, width, height, GuiBlurRadius.sanitize(blurRadius), cornerRadii, shapeType, clampRoundness(roundness), tint));
     }
 
     private static float resolveAdditionalRenderScale() {
@@ -337,7 +337,7 @@ public final class GuiBlurRenderer {
         float[] blurMultipliers = new float[]{1.0F, 1.0F, 0.5F, 0.5F, 0.25F, 0.25F};
         int blurIndex = 0;
         for (PostPass pass : passes) {
-            if ("box_blur".equals(pass.getName()) && blurIndex < blurMultipliers.length) {
+            if ("fancymenu_box_blur".equals(pass.getName()) && blurIndex < blurMultipliers.length) {
                 pass.getEffect().safeGetUniform("Radius").set(blurRadius * blurMultipliers[blurIndex]);
                 blurIndex++;
                 continue;
@@ -487,8 +487,7 @@ public final class GuiBlurRenderer {
         float scaledY = (float)(targetHeight - y * effectiveGuiScale - height * effectiveGuiScale);
         float scaledWidth = (float)(width * effectiveGuiScale);
         float scaledHeight = (float)(height * effectiveGuiScale);
-        double rawBlurRadius = blurRadius * effectiveGuiScale;
-        float scaledBlurRadius = Double.isFinite(rawBlurRadius) && rawBlurRadius > 0.0D && rawBlurRadius <= Float.MAX_VALUE ? (float)rawBlurRadius : 0.0F;
+        float scaledBlurRadius = GuiBlurRadius.resolveShaderRadius(blurRadius, effectiveGuiScale);
         return new FramebufferBlurArea(scaledX, scaledY, scaledWidth, scaledHeight, scaledBlurRadius, effectiveGuiScale);
     }
 
