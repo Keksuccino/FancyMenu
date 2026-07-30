@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.mixin.mixins.neoforge.client;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import de.keksuccino.fancymenu.events.screen.ScreenCharTypedEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.input.Utf16CodeUnitDispatcher;
 import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
@@ -81,15 +82,7 @@ public class MixinNeoForgeKeyboardHandler {
             // Handle browser typing logic
             for (GuiEventListener listener : screen.children()) {
                 if (listener instanceof WrappedMCEFBrowser) {
-                    boolean b = false;
-                    if (Character.charCount(this.cached_char_codePoint_FancyMenu) == 1) {
-                        b = listener.charTyped((char) this.cached_char_codePoint_FancyMenu, this.cached_char_modifiers_FancyMenu);
-                    } else {
-                        for (char c : Character.toChars(this.cached_char_codePoint_FancyMenu)) {
-                            b = !b ? listener.charTyped(c, this.cached_char_modifiers_FancyMenu) : true;
-                        }
-                    }
-                    if (b) return false;
+                    if (Utf16CodeUnitDispatcher.dispatch(this.cached_char_codePoint_FancyMenu, this.cached_char_modifiers_FancyMenu, listener::charTyped)) return false;
                 }
             }
 
