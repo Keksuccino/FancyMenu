@@ -1,7 +1,7 @@
-package de.keksuccino.fancymenu.util.mcef;
+package de.keksuccino.fancymenu.util.rinku;
 
-import com.cinemamod.mcef.MCEF;
-import com.cinemamod.mcef.MCEFBrowser;
+import de.keksuccino.rinku.Rinku;
+import de.keksuccino.rinku.RinkuBrowser;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.MouseButtonCaptureOwner;
@@ -11,7 +11,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
@@ -22,19 +21,18 @@ import org.jetbrains.annotations.Nullable;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.UUID;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
-public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, NavigatableWidget, FancyMenuUiComponent, MouseButtonCaptureOwner {
+public class WrappedRinkuBrowser extends AbstractWidget implements Closeable, NavigatableWidget, FancyMenuUiComponent, MouseButtonCaptureOwner {
 
     protected static final Logger LOGGER = LogManager.getLogger();
-    protected static final ScheduledExecutorService EXECUTOR = Executors. newSingleThreadScheduledExecutor();
+    protected static final ScheduledExecutorService EXECUTOR = RinkuExecutors.newSingleThreadScheduledExecutor("FancyMenu-WrappedRinkuBrowser");
 
-    protected final MCEFBrowser browser;
+    protected final RinkuBrowser browser;
     protected final Minecraft minecraft = Minecraft.getInstance();
     protected final AtomicLong mainFrameNavigationGeneration = new AtomicLong();
     protected final BrowserInputState inputState = new BrowserInputState();
@@ -49,29 +47,27 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     protected volatile boolean loopAllVideos = false;
     protected volatile boolean hideVideoControls = false;
     protected final UUID genericIdentifier = UUID.randomUUID();
-    protected final ResourceLocation frameLocation = ResourceLocation.fromNamespaceAndPath("fancymenu", "mcef_browser_frame_texture_" + this.genericIdentifier.toString().toLowerCase().replace("-", ""));
-    protected final BrowserFrameTexture frameTexture = new BrowserFrameTexture(-1);
     protected volatile boolean closed = false;
     
     // Track if initialization is complete for this browser
     private volatile boolean initialized = false;
 
     @NotNull
-    public static WrappedMCEFBrowser build(@NotNull String url, boolean transparent, boolean autoHandle, @Nullable Consumer<Boolean> loadListener) {
-        WrappedMCEFBrowser b = new WrappedMCEFBrowser(url, transparent, loadListener);
+    public static WrappedRinkuBrowser build(@NotNull String url, boolean transparent, boolean autoHandle, @Nullable Consumer<Boolean> loadListener) {
+        WrappedRinkuBrowser b = new WrappedRinkuBrowser(url, transparent, loadListener);
         b.autoHandle = autoHandle;
         return b;
     }
 
     @NotNull
-    public static WrappedMCEFBrowser build(@NotNull String url, boolean transparent, boolean autoHandle, int x, int y, int width, int height, @Nullable Consumer<Boolean> loadListener) {
-        WrappedMCEFBrowser b = build(url, transparent, autoHandle, loadListener);
+    public static WrappedRinkuBrowser build(@NotNull String url, boolean transparent, boolean autoHandle, int x, int y, int width, int height, @Nullable Consumer<Boolean> loadListener) {
+        WrappedRinkuBrowser b = build(url, transparent, autoHandle, loadListener);
         b.setSize(width, height);
         b.setPosition(x, y);
         return b;
     }
 
-    protected WrappedMCEFBrowser(@NotNull String url, boolean transparent, @Nullable Consumer<Boolean> loadListener) {
+    protected WrappedRinkuBrowser(@NotNull String url, boolean transparent, @Nullable Consumer<Boolean> loadListener) {
 
         super(0, 0, 0, 0, Component.empty());
 
@@ -83,7 +79,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         // Register the custom load listener handler to later register multiple load listeners.
         BrowserLoadEventListenerManager.getInstance().initialize();
 
-        this.browser = MCEF.createBrowser(url, transparent);
+        this.browser = Rinku.createBrowser(url, transparent);
 
         String browserId = this.getIdentifier();
 
@@ -95,7 +91,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
                 // Inject the FancyMenu JavaScript API
                 injectJavaScriptAPI();
             } else {
-                LOGGER.error("[FANCYMENU] WrappedMCEFBrowser browser page failed to load (ID: {})", browserId, new Exception());
+                LOGGER.error("[FANCYMENU] WrappedRinkuBrowser browser page failed to load (ID: {})", browserId, new Exception());
                 initialized = false;
             }
         });
@@ -107,10 +103,6 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         this.setVolume(this.volume);
         this.setSize(200, 200);
         this.setPosition(0, 0);
-
-        this.frameTexture.setId(this.browser.getRenderer().getTextureID());
-
-        Minecraft.getInstance().getTextureManager().register(this.frameLocation, this.frameTexture);
 
     }
     
@@ -155,31 +147,23 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         }
 
         try {
-
-            this.frameTexture.setId(this.browser.getRenderer().getTextureID());
-            this.ensureFrameTextureRegistered();
-
             if (this.autoHandle) BrowserHandler.notifyHandler(this.genericIdentifier.toString(), this);
 
+            ResourceLocation frameLocation = this.browser.getTextureIdentifier();
+            if (frameLocation == null) return;
+
             RenderSystem.enableBlend();
-
             graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
-
-            graphics.blit(this.frameLocation, this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
-
-            graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+            try {
+                graphics.blit(frameLocation, this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+            } finally {
+                graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+            }
 
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to render MCEFBrowser!", ex);
+            LOGGER.error("[FANCYMENU] Failed to render RinkuBrowser!", ex);
         }
 
-    }
-
-    private void ensureFrameTextureRegistered() {
-        var textureManager = this.minecraft.getTextureManager();
-        if (textureManager.getTexture(this.frameLocation, MissingTextureAtlasSprite.getTexture()) != this.frameTexture) {
-            textureManager.register(this.frameLocation, this.frameTexture);
-        }
     }
 
     public void onVolumeUpdated(@NotNull SoundSource soundSource, float newVolume) {
@@ -518,7 +502,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     }
 
     @NotNull
-    public MCEFBrowser getBrowser() {
+    public RinkuBrowser getBrowser() {
         return this.browser;
     }
     
@@ -535,11 +519,10 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         return this.closed;
     }
 
-    @NotNull
+    @Nullable
     public ResourceLocation getFrameLocation() {
-        this.frameTexture.setId(this.browser.getRenderer().getTextureID());
         if (this.autoHandle) BrowserHandler.notifyHandler(this.genericIdentifier.toString(), this);
-        return this.frameLocation;
+        return this.browser.getTextureIdentifier();
     }
 
     @Override
@@ -571,9 +554,8 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         // Unregister from the global handler manager
         if (this.browser != null) {
             BrowserLoadEventListenerManager.getInstance().unregisterAllListenersForBrowser(this.getIdentifier());
-            this.browser.close(true);
+            this.browser.close();
         }
-        Minecraft.getInstance().getTextureManager().release(this.frameLocation);
     }
 
     static boolean isJavaScriptInjectionCurrent(boolean closed, long scheduledNavigationGeneration, long currentNavigationGeneration) {

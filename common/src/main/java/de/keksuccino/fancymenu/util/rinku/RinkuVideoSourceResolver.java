@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.mcef;
+package de.keksuccino.fancymenu.util.rinku;
 
 import de.keksuccino.fancymenu.util.file.LocalSourcePathResolver;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
@@ -10,10 +10,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-/** Resolves placeholder-expanded MCEF sources immediately before handing them to Chromium. */
-public final class MCEFVideoSourceResolver {
+/** Resolves placeholder-expanded Rinku sources immediately before handing them to Chromium. */
+public final class RinkuVideoSourceResolver {
 
-    private MCEFVideoSourceResolver() {
+    private RinkuVideoSourceResolver() {
     }
 
     @Nullable

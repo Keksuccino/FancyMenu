@@ -94,7 +94,7 @@ public class Requirements {
     public static final OncePerSessionRequirement ONLY_ONCE_PER_SESSION = new OncePerSessionRequirement();
     public static final MouseClickedRequirement MOUSE_CLICKED = new MouseClickedRequirement();
     public static final IsInternetConnectionAvailableRequirement IS_INTERNET_CONNECTION_AVAILABLE = new IsInternetConnectionAvailableRequirement();
-    public static final IsMcefLoadedRequirement IS_MCEF_LOADED = new IsMcefLoadedRequirement();
+    public static final IsRinkuLoadedRequirement IS_RINKU_LOADED = new IsRinkuLoadedRequirement();
     public static final IsSchedulerRunningRequirement IS_SCHEDULER_RUNNING = new IsSchedulerRunningRequirement();
     public static final IsAnyScreenOpenRequirement IS_ANY_SCREEN_OPEN = new IsAnyScreenOpenRequirement();
     public static final IsDebugOverlayEnabledRequirement IS_DEBUG_OVERLAY_ENABLED = new IsDebugOverlayEnabledRequirement();
@@ -197,7 +197,7 @@ public class Requirements {
         RequirementRegistry.register(IS_VARIABLE_VALUE);
         RequirementRegistry.register(ONLY_ONCE_PER_SESSION);
         RequirementRegistry.register(MOUSE_CLICKED);
-        RequirementRegistry.register(IS_MCEF_LOADED);
+        RequirementRegistry.register(IS_RINKU_LOADED);
         RequirementRegistry.register(IS_SCHEDULER_RUNNING);
         RequirementRegistry.register(IS_PLAYER_USING_ITEM);
         RequirementRegistry.register(IS_PLAYER_IN_STRUCTURE);

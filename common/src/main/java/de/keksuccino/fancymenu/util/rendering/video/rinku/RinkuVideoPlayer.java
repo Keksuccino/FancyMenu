@@ -1,11 +1,13 @@
-package de.keksuccino.fancymenu.util.rendering.video.mcef;
+package de.keksuccino.fancymenu.util.rendering.video.rinku;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.customization.listener.listeners.OnVideoPlaybackStatusChangedListener;
 import de.keksuccino.fancymenu.util.ObjectHolder;
-import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
-import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
+import de.keksuccino.fancymenu.util.lifecycle.ClientShutdownHandler;
+import de.keksuccino.fancymenu.util.rinku.RinkuExecutors;
+import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
+import de.keksuccino.fancymenu.util.rinku.WrappedRinkuBrowser;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -19,7 +21,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -27,19 +28,19 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
 /**
- * A Minecraft video player using MCEF (Minecraft Chromium Embedded Framework).
+ * A Minecraft video player using Rinku (Minecraft Chromium Embedded Framework).
  * This implementation uses a custom HTML/JS player to render and control videos.
  */
-public class MCEFVideoPlayer {
+public class RinkuVideoPlayer {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final long JS_RESULT_TIMEOUT_MS = 1000; // Timeout for waiting for JS result (e.g., 1 second)
-    private static final ScheduledExecutorService PLAYBACK_LISTENER_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
+    private static final ScheduledExecutorService PLAYBACK_LISTENER_EXECUTOR = RinkuExecutors.newSingleThreadScheduledExecutor("FancyMenu-RinkuVideoPlayer-PlaybackListener");
     private static final long PLAYBACK_LISTENER_TICK_MS = 250L;
     private static final double PLAYBACK_END_EPSILON_SECONDS = 0.12D;
     private static final double LOOP_RESTART_WINDOW_SECONDS = 0.40D;
 
-    protected volatile WrappedMCEFBrowser browser;
+    protected volatile WrappedRinkuBrowser browser;
     protected volatile float volume = 1.0f;
     protected volatile boolean looping = false;
     protected volatile boolean fillScreen = false;
@@ -61,9 +62,9 @@ public class MCEFVideoPlayer {
 
     /**
      * Creates a new video player instance.
-     * Note: This requires MCEF to be loaded to function.
+     * Note: This requires Rinku to be loaded to function.
      */
-    public MCEFVideoPlayer() {
+    public RinkuVideoPlayer() {
         initialize();
     }
     
@@ -75,7 +76,7 @@ public class MCEFVideoPlayer {
      * @param width The width of the player
      * @param height The height of the player
      */
-    public MCEFVideoPlayer(int x, int y, int width, int height) {
+    public RinkuVideoPlayer(int x, int y, int width, int height) {
         this.posX = x;
         this.posY = y;
         this.width = width;
@@ -88,13 +89,13 @@ public class MCEFVideoPlayer {
      * This is called automatically upon construction.
      */
     public void initialize() {
-        if (!MCEFUtil.isMCEFLoaded()) {
-            LOGGER.error("[FANCYMENU] Failed to initialize MCEFVideoPlayer: MCEF is not loaded");
+        if (!RinkuUtil.isRinkuLoaded()) {
+            LOGGER.error("[FANCYMENU] Failed to initialize RinkuVideoPlayer: Rinku is not loaded");
             return;
         }
         
-        // Ensure MCEFVideoManager is initialized (which now also registers the JS result handler)
-        MCEFVideoManager.getInstance().initialize();
+        // Ensure RinkuVideoManager is initialized (which now also registers the JS result handler)
+        RinkuVideoManager.getInstance().initialize();
         
         try {
             String playerUrl = buildPlayerUrl();
@@ -102,7 +103,7 @@ public class MCEFVideoPlayer {
             File playerFile = new File(FancyMenu.TEMP_DATA_DIR, "web/videoplayer/player.html");
             if (!playerFile.exists()) {
                 LOGGER.warn("[FANCYMENU] Player HTML file not found. Attempting to extract resources.");
-                MCEFVideoManager.getInstance().initialize(); // Try to extract if missing
+                RinkuVideoManager.getInstance().initialize(); // Try to extract if missing
                 if (!playerFile.exists()) {
                     LOGGER.error("[FANCYMENU] CRITICAL: Player HTML file does not exist at: " + playerFile.getAbsolutePath() + ". Video player will fail.");
                     return;
@@ -110,28 +111,28 @@ public class MCEFVideoPlayer {
             }
             
             // Important: autoHandle should be false if VideoManager explicitly manages lifecycle
-            this.browser = WrappedMCEFBrowser.build(playerUrl, false, false, posX, posY, width, height, success -> {
+            this.browser = WrappedRinkuBrowser.build(playerUrl, false, false, posX, posY, width, height, success -> {
                 if (success) {
                     initialized = true;
                     this.startPlaybackListenerTicker();
                 } else {
-                    LOGGER.error("[FANCYMENU] Failed to initialize MCEFVideoPlayer for browser with ID: " + (this.browser != null ? this.browser.getIdentifier() : "unknown"));
+                    LOGGER.error("[FANCYMENU] Failed to initialize RinkuVideoPlayer for browser with ID: " + (this.browser != null ? this.browser.getIdentifier() : "unknown"));
                     initialized = false;
                 }
             });
 
             if (this.browser != null) {
-                // CRITICAL: Disable generic autoplay/mute features of WrappedMCEFBrowser
-                // MCEFVideoPlayer uses specific controls via player.html API.
+                // CRITICAL: Disable generic autoplay/mute features of WrappedRinkuBrowser
+                // RinkuVideoPlayer uses specific controls via player.html API.
                 this.browser.setAutoPlayAllVideosOnLoad(false);
                 this.browser.setMuteAllMediaOnLoad(false); // Muting is handled by player.html and this class's API
             } else {
-                LOGGER.error("[FANCYMENU] MCEFVideoPlayer: Browser was not created successfully. Player will not function.");
+                LOGGER.error("[FANCYMENU] RinkuVideoPlayer: Browser was not created successfully. Player will not function.");
                 initialized = false; // Ensure initialized is false if browser is null
             }
             
         } catch (Exception e) {
-            LOGGER.error("[FANCYMENU] Failed to initialize MCEFVideoPlayer [{}]", instanceId, e);
+            LOGGER.error("[FANCYMENU] Failed to initialize RinkuVideoPlayer [{}]", instanceId, e);
             initialized = false;
         }
     }
@@ -735,12 +736,12 @@ public class MCEFVideoPlayer {
     }
     
     /**
-     * Gets the underlying MCEF browser instance.
+     * Gets the underlying Rinku browser instance.
      *
      * @return The wrapped browser instance
      */
     @Nullable
-    public WrappedMCEFBrowser getBrowser() {
+    public WrappedRinkuBrowser getBrowser() {
         return browser;
     }
     
@@ -751,14 +752,14 @@ public class MCEFVideoPlayer {
     protected void executeJavaScript(String code) {
         if ((browser != null) && browser.getBrowser() != null && initialized) {
             try {
-                // If called from a thread other than MCEF's or main rendering thread, ensure proper dispatch.
-                // Assuming VideoManager.EXECUTOR is suitable for MCEF interactions or MCEF handles it.
+                // If called from a thread other than Rinku's or main rendering thread, ensure proper dispatch.
+                // Assuming VideoManager.EXECUTOR is suitable for Rinku interactions or Rinku handles it.
                 browser.getBrowser().executeJavaScript(code, browser.getUrl(), 0);
             } catch (Exception e) {
                 LOGGER.error("[FANCYMENU] Player [{}]: Error executing JavaScript: {}", instanceId, e.getMessage(), e);
             }
         } else {
-            String reason = (browser == null) ? "browser is null" : (!initialized ? "initialized is false" : "underlying MCEF browser is null");
+            String reason = (browser == null) ? "browser is null" : (!initialized ? "initialized is false" : "underlying Rinku browser is null");
             LOGGER.warn("[FANCYMENU] Player [{}]: Attempted to execute JS when not ready. Reason: {}. Code: {}", 
                 instanceId, reason, code.substring(0, Math.min(50, code.length())));
         }
@@ -778,14 +779,13 @@ public class MCEFVideoPlayer {
             return null;
         }
         if (browser.getBrowser() == null) {
-            LOGGER.warn("[FANCYMENU] Player [{}]: executeJavaScriptWithResult called but underlying MCEF browser is null.", instanceId);
+            LOGGER.warn("[FANCYMENU] Player [{}]: executeJavaScriptWithResult called but underlying Rinku browser is null.", instanceId);
             return null;
         }
 
         String requestId = UUID.randomUUID().toString();
-        CompletableFuture<String> resultFuture = new CompletableFuture<>();
-        // Get the static map from MCEFVideoManager
-        MCEFVideoManager.getPendingJsResults().put(requestId, resultFuture);
+        CompletableFuture<String> resultFuture = RinkuVideoManager.registerPendingJsResult(requestId);
+        if (resultFuture == null) return null;
 
         // This JavaScript will execute the provided 'jsCodeToEvaluate',
         // then take its result and send it back via a 'console.log' message
@@ -793,9 +793,9 @@ public class MCEFVideoPlayer {
         String script = String.format(
             "try {" +
             "  var evalResult = (%s);" + // jsCodeToEvaluate is wrapped in parentheses to ensure it's an expression
-            "  console.log('MCEF_ASYNC_RESULT:%s:' + JSON.stringify(evalResult));" +
+            "  console.log('RINKU_ASYNC_RESULT:%s:' + JSON.stringify(evalResult));" +
             "} catch (e) {" +
-            "  console.error('MCEF_ASYNC_RESULT:%s:' + JSON.stringify({error: e.toString(), message: e.message, stack: e.stack}));" +
+            "  console.error('RINKU_ASYNC_RESULT:%s:' + JSON.stringify({error: e.toString(), message: e.message, stack: e.stack}));" +
             "}",
             jsCodeToEvaluate, requestId, requestId // requestId is used for both success and error paths
         );
@@ -813,21 +813,19 @@ public class MCEFVideoPlayer {
         } catch (TimeoutException e) {
             LOGGER.warn("[FANCYMENU] Player [{}]: Timeout ({}ms) waiting for JavaScript result for request {}. Original log: Could not get JavaScript result after multiple attempts", 
                          instanceId, JS_RESULT_TIMEOUT_MS, requestId);
-            MCEFVideoManager.getPendingJsResults().remove(requestId); // Clean up
             return null;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             LOGGER.warn("[FANCYMENU] Player [{}]: executeJavaScriptWithResult interrupted for request {}", instanceId, requestId, e);
-            MCEFVideoManager.getPendingJsResults().remove(requestId); // Clean up
             return null;
         } catch (ExecutionException e) {
             LOGGER.error("[FANCYMENU] Player [{}]: JavaScript execution future completed exceptionally for request {}", instanceId, requestId, e.getCause());
-            MCEFVideoManager.getPendingJsResults().remove(requestId); // Clean up
             return null;
         } catch (Exception e) { // Catch any other unexpected errors
             LOGGER.error("[FANCYMENU] Player [{}]: Unexpected error in executeJavaScriptWithResult for request {}", instanceId, requestId, e);
-            MCEFVideoManager.getPendingJsResults().remove(requestId); // Clean up
             return null;
+        } finally {
+            RinkuVideoManager.removePendingJsResult(requestId);
         }
     }
     
@@ -836,14 +834,15 @@ public class MCEFVideoPlayer {
      * Call this when the player is no longer needed.
      */
     public void dispose() {
-        this.stop();
+        // The managed scheduler is already stopped during client teardown, and closing the browser below terminates playback directly.
+        if (!ClientShutdownHandler.isShuttingDown()) this.stop();
         this.stopPlaybackListenerTicker();
         this.resetVideoPlaybackListenerState();
         if (browser != null) {
             try {
                 browser.close();
             } catch (Exception e) {
-                LOGGER.error("[FANCYMENU] Player [{}]: Error closing MCEFVideoPlayer browser", instanceId, e);
+                LOGGER.error("[FANCYMENU] Player [{}]: Error closing RinkuVideoPlayer browser", instanceId, e);
             }
         }
         browser = null;
@@ -980,7 +979,7 @@ public class MCEFVideoPlayer {
     protected static void executeWithCondition(@NotNull Runnable task, @NotNull Supplier<Boolean> condition) {
         final ScheduledFuture<?>[] futureHolder = new ScheduledFuture<?>[1];
         final ObjectHolder<Boolean> executed = ObjectHolder.of(false);
-        futureHolder[0] = MCEFVideoManager.EXECUTOR.scheduleAtFixedRate(() -> {
+        futureHolder[0] = RinkuVideoManager.EXECUTOR.scheduleAtFixedRate(() -> {
             if (!executed.get() && condition.get()) {
                 task.run();
                 futureHolder[0].cancel(true);

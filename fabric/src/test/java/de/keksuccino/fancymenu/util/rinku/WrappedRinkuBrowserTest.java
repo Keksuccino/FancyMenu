@@ -1,24 +1,24 @@
-package de.keksuccino.fancymenu.util.mcef;
+package de.keksuccino.fancymenu.util.rinku;
 
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class WrappedMCEFBrowserTest {
+class WrappedRinkuBrowserTest {
 
     @Test
     void keepsInjectionForOpenBrowserAtSameNavigation() {
-        assertTrue(WrappedMCEFBrowser.isJavaScriptInjectionCurrent(false, 4L, 4L));
+        assertTrue(WrappedRinkuBrowser.isJavaScriptInjectionCurrent(false, 4L, 4L));
     }
 
     @Test
     void cancelsInjectionAfterNavigationChanges() {
-        assertFalse(WrappedMCEFBrowser.isJavaScriptInjectionCurrent(false, 4L, 5L));
+        assertFalse(WrappedRinkuBrowser.isJavaScriptInjectionCurrent(false, 4L, 5L));
     }
 
     @Test
     void cancelsInjectionAfterBrowserCloses() {
-        assertFalse(WrappedMCEFBrowser.isJavaScriptInjectionCurrent(true, 4L, 4L));
+        assertFalse(WrappedRinkuBrowser.isJavaScriptInjectionCurrent(true, 4L, 4L));
     }
 }
