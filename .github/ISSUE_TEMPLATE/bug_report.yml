@@ -42,6 +42,8 @@ body:
         - label: Essential mod installed?
         - label: Optifine installed?
         - label: Sinytra Connector mod installed?
+        - label: Sodium installed?
+        - label: Iris installed?
 
   - type: input
     id: minecraft-version
