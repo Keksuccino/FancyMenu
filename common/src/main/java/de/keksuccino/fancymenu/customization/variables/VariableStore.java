@@ -17,8 +17,9 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Serializes every variable observer, mutation, and persistence transaction through one reentrant monitor. Keeping
- * disk replacement inside the same boundary prevents an older snapshot from overtaking a newer mutation on disk.
+ * Owns variable state and persistence. Mutations become visible under {@link #stateLock} immediately, while one
+ * revision-aware coordinator serializes debounced atomic database replacements without holding that monitor during
+ * serialization or filesystem I/O.
  */
 final class VariableStore {
 
@@ -29,80 +30,128 @@ final class VariableStore {
     private final AtomicVariableDatabase database;
     private final VariableUpdateListener updateListener;
     private final SnapshotSerializer snapshotSerializer;
+    private final VariablePersistenceCoordinator persistence;
+
+    private long stateRevision;
+    private boolean initialized;
+    private boolean replacementInProgress;
     private boolean shutdown;
-    private int persistenceDeferralDepth;
 
     VariableStore(@NotNull AtomicVariableDatabase database, @NotNull VariableUpdateListener updateListener) {
-        this(database, updateListener, VariableStore::serializeSnapshots);
+        this(database, updateListener, VariableStore::serializeSnapshots, new VariablePersistenceCoordinator.ExecutorScheduler("FancyMenu-VariablePersistence"));
     }
 
     VariableStore(@NotNull AtomicVariableDatabase database, @NotNull VariableUpdateListener updateListener, @NotNull SnapshotSerializer snapshotSerializer) {
+        this(database, updateListener, snapshotSerializer, new VariablePersistenceCoordinator.ExecutorScheduler("FancyMenu-VariablePersistence"));
+    }
+
+    VariableStore(@NotNull AtomicVariableDatabase database, @NotNull VariableUpdateListener updateListener, @NotNull VariablePersistenceCoordinator.Scheduler scheduler) {
+        this(database, updateListener, VariableStore::serializeSnapshots, scheduler);
+    }
+
+    VariableStore(@NotNull AtomicVariableDatabase database, @NotNull VariableUpdateListener updateListener, @NotNull SnapshotSerializer snapshotSerializer, @NotNull VariablePersistenceCoordinator.Scheduler scheduler) {
         this.database = Objects.requireNonNull(database);
         this.updateListener = Objects.requireNonNull(updateListener);
         this.snapshotSerializer = Objects.requireNonNull(snapshotSerializer);
+        this.persistence = new VariablePersistenceCoordinator(this::capturePersistenceSnapshot, this::writePersistenceSnapshot, Objects.requireNonNull(scheduler));
     }
 
     void init() {
-        synchronized (this.stateLock) {
-            if (this.shutdown) return;
-            Map<String, Variable> loadedVariables = this.loadReplacementStateLocked(false);
-            if (loadedVariables == null) return;
-            this.variables.clear();
-            this.variables.putAll(loadedVariables);
-            for (Variable variable : this.variables.values()) {
-                if (variable.isResetOnLaunchLocked()) variable.setRawValueLocked("");
-            }
-            this.persistLocked("initializing variables");
+        ReplacementAdmission admission = this.beginReplacement();
+        if (admission == null) return;
+        try {
+            long revisionToFlushFirst = (admission.initialized() || admission.revision() > 0L) ? admission.revision() : -1L;
+            this.persistence.runExclusive(revisionToFlushFirst, "flushing variables before reinitialization", () -> {
+                Map<String, Variable> loadedVariables = this.loadReplacementState(false);
+                if (loadedVariables == null) return VariablePersistenceCoordinator.ExclusiveCommit.unchanged();
+                long revision;
+                synchronized (this.stateLock) {
+                    this.variables.clear();
+                    this.variables.putAll(loadedVariables);
+                    for (Variable variable : this.variables.values()) {
+                        if (variable.isResetOnLaunchLocked()) variable.setRawValueLocked("");
+                    }
+                    this.initialized = true;
+                    revision = this.nextRevisionLocked();
+                }
+                return VariablePersistenceCoordinator.ExclusiveCommit.dirty(revision, "initializing variables");
+            });
+        } finally {
+            this.endReplacement();
         }
     }
 
     void setVariable(@NotNull String name, @Nullable String value) {
+        long revision;
         synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
             if (this.shutdown) return;
-            Variable variable = this.variables.get(Objects.requireNonNull(name));
+            String checkedName = Objects.requireNonNull(name);
+            Variable variable = this.variables.get(checkedName);
+            boolean created = false;
             if (variable == null) {
-                variable = new Variable(name, this);
-                this.variables.put(name, variable);
+                variable = new Variable(checkedName, this);
+                this.variables.put(checkedName, variable);
+                created = true;
             }
             this.updateListener.onVariableUpdated(variable.getName(), variable.getRawValueLocked(), Objects.requireNonNullElse(value, "0"));
-            variable.setValue(value);
-            // This second write is intentionally retained until the separate write-coalescing QA item is addressed.
-            this.persistLocked("setting variable '" + name + "'");
+            // Variable is deliberately only a state object; this handler mutation is the single persistence owner.
+            String encodedValue = Variable.encodeValue(value);
+            if (!created && variable.getRawValueLocked().equals(encodedValue)) return;
+            variable.setRawValueLocked(encodedValue);
+            revision = this.nextRevisionLocked();
         }
+        this.persistence.markDirty(revision, "setting variable '" + name + "'");
     }
 
     boolean setVariableIfAbsent(@NotNull String name, @Nullable String value) {
+        long revision;
         synchronized (this.stateLock) {
-            if (this.shutdown || this.variables.containsKey(Objects.requireNonNull(name))) return false;
-            this.setVariable(name, value);
-            return true;
+            this.awaitReplacementLocked();
+            String checkedName = Objects.requireNonNull(name);
+            if (this.shutdown || this.variables.containsKey(checkedName)) return false;
+            Variable variable = new Variable(checkedName, this);
+            this.variables.put(checkedName, variable);
+            this.updateListener.onVariableUpdated(variable.getName(), variable.getRawValueLocked(), Objects.requireNonNullElse(value, "0"));
+            variable.setRawValueLocked(Variable.encodeValue(value));
+            revision = this.nextRevisionLocked();
         }
+        this.persistence.markDirty(revision, "creating variable '" + name + "'");
+        return true;
     }
 
     @Nullable
     String createVariableWithUniqueCopyName(@NotNull String sourceName, @NotNull String value, boolean resetOnLaunch) {
+        String candidate;
+        long revision;
         synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
             if (this.shutdown) return null;
             String baseName = Objects.requireNonNull(sourceName) + "_Copy";
-            String candidate = baseName;
+            candidate = baseName;
             int suffix = 2;
             while (this.variables.containsKey(candidate)) {
                 candidate = baseName + suffix;
                 suffix++;
             }
-            this.setVariable(candidate, Objects.requireNonNull(value));
-            Variable variable = this.variables.get(candidate);
-            if (variable != null) variable.setResetOnLaunch(resetOnLaunch);
-            return candidate;
+            Variable variable = new Variable(candidate, this);
+            this.variables.put(candidate, variable);
+            this.updateListener.onVariableUpdated(candidate, variable.getRawValueLocked(), Objects.requireNonNull(value));
+            variable.setRawValueLocked(Variable.encodeValue(value));
+            variable.setResetOnLaunchLocked(resetOnLaunch);
+            revision = this.nextRevisionLocked();
         }
+        this.persistence.markDirty(revision, "creating copied variable '" + candidate + "'");
+        return candidate;
     }
 
     void replaceVariables(@NotNull List<UserVariableSnapshot> snapshots) {
+        long revision;
         synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
             if (this.shutdown) return;
             List<UserVariableSnapshot> stableSnapshots = List.copyOf(Objects.requireNonNull(snapshots));
             Map<String, Variable> previousVariables = new HashMap<>(this.variables);
-            this.persistenceDeferralDepth++;
             try {
                 this.variables.clear();
                 for (UserVariableSnapshot snapshot : stableSnapshots) {
@@ -116,32 +165,37 @@ final class VariableStore {
                 this.variables.clear();
                 this.variables.putAll(previousVariables);
                 throw failure;
-            } finally {
-                this.persistenceDeferralDepth--;
             }
-            this.persistLocked("replacing the complete variable state");
+            revision = this.nextRevisionLocked();
         }
+        this.persistence.markDirty(revision, "replacing the complete variable state");
     }
 
     void removeVariable(@NotNull String name) {
+        long revision;
         synchronized (this.stateLock) {
-            if (this.shutdown) return;
-            this.variables.remove(Objects.requireNonNull(name));
-            this.persistLocked("removing variable '" + name + "'");
+            this.awaitReplacementLocked();
+            if (this.shutdown || this.variables.remove(Objects.requireNonNull(name)) == null) return;
+            revision = this.nextRevisionLocked();
         }
+        this.persistence.markDirty(revision, "removing variable '" + name + "'");
     }
 
     void clearVariables() {
+        long revision;
         synchronized (this.stateLock) {
-            if (this.shutdown) return;
+            this.awaitReplacementLocked();
+            if (this.shutdown || this.variables.isEmpty()) return;
             this.variables.clear();
-            this.persistLocked("clearing variables");
+            revision = this.nextRevisionLocked();
         }
+        this.persistence.markDirty(revision, "clearing variables");
     }
 
     @Nullable
     Variable getVariable(@NotNull String name) {
         synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
             return this.variables.get(Objects.requireNonNull(name));
         }
     }
@@ -149,6 +203,7 @@ final class VariableStore {
     @Nullable
     String getVariableValue(@NotNull String name) {
         synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
             Variable variable = this.variables.get(Objects.requireNonNull(name));
             return (variable != null) ? variable.getValueLocked() : null;
         }
@@ -157,6 +212,7 @@ final class VariableStore {
     @NotNull
     List<Variable> getVariables() {
         synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
             return new ArrayList<>(this.variables.values());
         }
     }
@@ -164,6 +220,7 @@ final class VariableStore {
     @NotNull
     List<String> getVariableNames() {
         synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
             return new ArrayList<>(this.variables.keySet());
         }
     }
@@ -171,16 +228,16 @@ final class VariableStore {
     @NotNull
     List<UserVariableSnapshot> getVariableSnapshots() {
         synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
             List<UserVariableSnapshot> snapshots = new ArrayList<>(this.variables.size());
-            for (Variable variable : this.variables.values()) {
-                snapshots.add(variable.createSnapshotLocked());
-            }
+            for (Variable variable : this.variables.values()) snapshots.add(variable.createSnapshotLocked());
             return List.copyOf(snapshots);
         }
     }
 
     boolean variableExists(@NotNull String name) {
         synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
             return this.variables.containsKey(Objects.requireNonNull(name));
         }
     }
@@ -188,22 +245,29 @@ final class VariableStore {
     @NotNull
     String getValue(@NotNull Variable variable) {
         synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
             this.requireOwner(variable);
             return variable.getValueLocked();
         }
     }
 
     void setValue(@NotNull Variable variable, @Nullable String value) {
+        long revision = -1L;
         synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
             this.requireOwner(variable);
             if (this.shutdown) return;
-            variable.setRawValueLocked(Variable.encodeValue(value));
-            this.persistLocked("updating variable '" + variable.getName() + "'");
+            String encodedValue = Variable.encodeValue(value);
+            if (variable.getRawValueLocked().equals(encodedValue)) return;
+            variable.setRawValueLocked(encodedValue);
+            if (this.variables.get(variable.getName()) == variable) revision = this.nextRevisionLocked();
         }
+        if (revision >= 0L) this.persistence.markDirty(revision, "updating variable '" + variable.getName() + "'");
     }
 
     boolean isResetOnLaunch(@NotNull Variable variable) {
         synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
             this.requireOwner(variable);
             return variable.isResetOnLaunchLocked();
         }
@@ -212,85 +276,148 @@ final class VariableStore {
     @NotNull
     UserVariableSnapshot getSnapshot(@NotNull Variable variable) {
         synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
             this.requireOwner(variable);
             return variable.createSnapshotLocked();
         }
     }
 
     void setResetOnLaunch(@NotNull Variable variable, boolean resetOnLaunch) {
+        long revision = -1L;
         synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
             this.requireOwner(variable);
-            if (this.shutdown) return;
+            if (this.shutdown || variable.isResetOnLaunchLocked() == resetOnLaunch) return;
             variable.setResetOnLaunchLocked(resetOnLaunch);
-            this.persistLocked("updating reset-on-launch for variable '" + variable.getName() + "'");
+            if (this.variables.get(variable.getName()) == variable) revision = this.nextRevisionLocked();
         }
+        if (revision >= 0L) this.persistence.markDirty(revision, "updating reset-on-launch for variable '" + variable.getName() + "'");
     }
 
     void toggleResetOnLaunch(@NotNull Variable variable) {
+        long revision = -1L;
         synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
             this.requireOwner(variable);
             if (this.shutdown) return;
             variable.setResetOnLaunchLocked(!variable.isResetOnLaunchLocked());
-            this.persistLocked("toggling reset-on-launch for variable '" + variable.getName() + "'");
+            if (this.variables.get(variable.getName()) == variable) revision = this.nextRevisionLocked();
         }
+        if (revision >= 0L) this.persistence.markDirty(revision, "toggling reset-on-launch for variable '" + variable.getName() + "'");
     }
 
     @NotNull
     PropertyContainer serialize(@NotNull Variable variable) {
         synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
             this.requireOwner(variable);
             return variable.serializeLocked();
         }
     }
 
-    void writeToFile() {
+    boolean flush() {
+        long revision;
         synchronized (this.stateLock) {
-            if (this.shutdown) return;
-            this.persistLocked("flushing variables");
+            this.awaitReplacementLocked();
+            revision = this.stateRevision;
         }
+        return this.persistence.flush(revision, "flushing variables");
+    }
+
+    void writeToFile() {
+        this.flush();
     }
 
     void readFromFile() {
-        synchronized (this.stateLock) {
-            if (this.shutdown) return;
-            Map<String, Variable> loadedVariables = this.loadReplacementStateLocked(false);
-            if (loadedVariables == null) return;
-            this.variables.clear();
-            this.variables.putAll(loadedVariables);
-        }
+        this.replaceFromDatabase(false);
     }
 
     @Legacy("This reads variables from v2 variable files. Remove this in the future.")
     void readFromLegacyFile() {
+        this.replaceFromDatabase(true);
+    }
+
+    /**
+     * Closes mutation admission before capturing the shutdown revision. The explicit flush therefore includes an
+     * admitted mutation even when its out-of-lock dirty notification has not reached the coordinator yet.
+     */
+    void shutdown() {
+        long revision;
         synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
             if (this.shutdown) return;
-            Map<String, Variable> loadedVariables = this.loadReplacementStateLocked(true);
-            if (loadedVariables == null) return;
-            this.variables.clear();
-            this.variables.putAll(loadedVariables);
+            this.shutdown = true;
+            revision = this.stateRevision;
+        }
+        if (!this.persistence.shutdown(revision, "shutting down variables")) {
+            LOGGER.error("[FANCYMENU] Failed to durably flush the latest variable revision while shutting down.");
+        }
+    }
+
+    private void replaceFromDatabase(boolean requireLegacy) {
+        ReplacementAdmission admission = this.beginReplacement();
+        if (admission == null) return;
+        try {
+            this.persistence.runExclusive(admission.revision(), "flushing variables before database reload", () -> {
+                Map<String, Variable> loadedVariables = this.loadReplacementState(requireLegacy);
+                if (loadedVariables == null) return VariablePersistenceCoordinator.ExclusiveCommit.unchanged();
+                long revision;
+                synchronized (this.stateLock) {
+                    this.variables.clear();
+                    this.variables.putAll(loadedVariables);
+                    revision = this.nextRevisionLocked();
+                }
+                return VariablePersistenceCoordinator.ExclusiveCommit.clean(revision);
+            });
+        } finally {
+            this.endReplacement();
         }
     }
 
     /**
-     * Closes mutation admission before the final flush. Late daemon-ticker mutations deterministically become no-ops,
-     * avoiding both post-flush writes and repeated shutdown log noise.
+     * Establishes reload call ordering under the same monitor as mutations. Calls admitted before this gate are
+     * flushed before the read; calls arriving after it wait and linearize after the replacement has been published.
      */
-    void shutdown() {
+    @Nullable
+    private ReplacementAdmission beginReplacement() {
         synchronized (this.stateLock) {
-            if (this.shutdown) return;
-            this.shutdown = true;
-            this.persistLocked("shutting down variables");
+            this.awaitReplacementLocked();
+            if (this.shutdown) return null;
+            this.replacementInProgress = true;
+            return new ReplacementAdmission(this.stateRevision, this.initialized);
         }
+    }
+
+    private void endReplacement() {
+        synchronized (this.stateLock) {
+            this.replacementInProgress = false;
+            this.stateLock.notifyAll();
+        }
+    }
+
+    private void awaitReplacementLocked() {
+        boolean interrupted = false;
+        while (this.replacementInProgress) {
+            try {
+                this.stateLock.wait();
+            } catch (InterruptedException ex) {
+                interrupted = true;
+            }
+        }
+        if (interrupted) Thread.currentThread().interrupt();
+    }
+
+    private long nextRevisionLocked() {
+        this.stateRevision++;
+        return this.stateRevision;
     }
 
     private void requireOwner(@NotNull Variable variable) {
-        if (variable.getOwner() != this) {
-            throw new IllegalArgumentException("Variable belongs to a different variable store: " + variable.getName());
-        }
+        if (variable.getOwner() != this) throw new IllegalArgumentException("Variable belongs to a different variable store: " + variable.getName());
     }
 
     @Nullable
-    private Map<String, Variable> loadReplacementStateLocked(boolean requireLegacy) {
+    private Map<String, Variable> loadReplacementState(boolean requireLegacy) {
         try {
             String serializedVariables = this.database.read();
             if (!isStructurallyComplete(serializedVariables)) {
@@ -312,7 +439,7 @@ final class VariableStore {
                 LOGGER.error("[FANCYMENU] Variable database '{}' is not a legacy cached_variables database; keeping the current in-memory state unchanged.", this.database.getTarget());
                 return null;
             }
-            return legacy ? this.deserializeLegacyVariablesLocked(set) : this.deserializeVariablesLocked(set);
+            return legacy ? this.deserializeLegacyVariables(set) : this.deserializeVariables(set);
         } catch (NoSuchFileException ex) {
             return requireLegacy ? null : new HashMap<>();
         } catch (Exception ex) {
@@ -339,7 +466,7 @@ final class VariableStore {
     }
 
     @NotNull
-    private Map<String, Variable> deserializeVariablesLocked(@NotNull PropertyContainerSet set) {
+    private Map<String, Variable> deserializeVariables(@NotNull PropertyContainerSet set) {
         Map<String, Variable> loadedVariables = new HashMap<>();
         for (PropertyContainer container : set.getContainersOfType("variable")) {
             Variable variable = Variable.deserialize(container, this);
@@ -349,7 +476,7 @@ final class VariableStore {
     }
 
     @NotNull
-    private Map<String, Variable> deserializeLegacyVariablesLocked(@NotNull PropertyContainerSet set) {
+    private Map<String, Variable> deserializeLegacyVariables(@NotNull PropertyContainerSet set) {
         Map<String, Variable> loadedVariables = new HashMap<>();
         List<PropertyContainer> containers = set.getContainersOfType("variables");
         if (containers.isEmpty()) return loadedVariables;
@@ -361,20 +488,29 @@ final class VariableStore {
         return loadedVariables;
     }
 
-    void persistLocked(@NotNull String operation) {
-        if (this.persistenceDeferralDepth > 0) return;
+    @NotNull
+    private VariablePersistenceCoordinator.PersistenceSnapshot capturePersistenceSnapshot() {
+        long revision;
+        List<StoredVariableSnapshot> snapshots;
+        synchronized (this.stateLock) {
+            revision = this.stateRevision;
+            snapshots = new ArrayList<>(this.variables.size());
+            for (Variable variable : this.variables.values()) snapshots.add(new StoredVariableSnapshot(variable.getName(), variable.getRawValueLocked(), variable.isResetOnLaunchLocked()));
+        }
+        return new VariablePersistenceCoordinator.PersistenceSnapshot(revision, this.snapshotSerializer.serialize(List.copyOf(snapshots)));
+    }
+
+    private boolean writePersistenceSnapshot(@NotNull VariablePersistenceCoordinator.PersistenceSnapshot snapshot, @NotNull String operation) {
         try {
-            List<StoredVariableSnapshot> snapshots = new ArrayList<>(this.variables.size());
-            for (Variable variable : this.variables.values()) {
-                snapshots.add(new StoredVariableSnapshot(variable.getName(), variable.getRawValueLocked(), variable.isResetOnLaunchLocked()));
-            }
-            this.database.write(this.snapshotSerializer.serialize(List.copyOf(snapshots)));
+            this.database.write(snapshot.serializedVariables());
+            return true;
         } catch (Exception ex) {
             if (ex instanceof AtomicVariableDatabase.TemporaryFileCleanupException cleanupException && cleanupException.replacementCompleted()) {
                 LOGGER.error("[FANCYMENU] Replaced variable database '{}' while {}, but failed to clean its exact temporary file.", this.database.getTarget(), operation, ex);
-            } else {
-                LOGGER.error("[FANCYMENU] Failed while {} in variable database '{}'. The previous complete database file was preserved because replacement did not finish.", operation, this.database.getTarget(), ex);
+                return true;
             }
+            LOGGER.error("[FANCYMENU] Failed while {} in variable database '{}'. The previous complete database file was preserved because replacement did not finish.", operation, this.database.getTarget(), ex);
+            return false;
         }
     }
 
@@ -401,12 +537,14 @@ final class VariableStore {
     @FunctionalInterface
     interface SnapshotSerializer {
 
-        @NotNull
-        String serialize(@NotNull List<StoredVariableSnapshot> snapshots);
+        @NotNull String serialize(@NotNull List<StoredVariableSnapshot> snapshots);
 
     }
 
     record StoredVariableSnapshot(@NotNull String name, @NotNull String rawValue, boolean resetOnLaunch) {
+    }
+
+    private record ReplacementAdmission(long revision, boolean initialized) {
     }
 
 }
