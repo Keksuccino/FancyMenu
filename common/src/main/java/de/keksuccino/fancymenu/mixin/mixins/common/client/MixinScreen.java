@@ -17,7 +17,6 @@ import de.keksuccino.fancymenu.util.rendering.MenuBackgroundReplacementState;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.DirectDirtBackgroundReplacementController;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.MenuBackgroundReplacementController;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.MenuBackgroundReplacementPolicy;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
@@ -90,7 +89,8 @@ public abstract class MixinScreen implements CustomizableScreen, MenuBackgroundR
 
     @Inject(method = "renderDirtBackground", at = @At("HEAD"), cancellable = true)
     private void before_renderDirtBackground_FancyMenu(GuiGraphics graphics, CallbackInfo info) {
-        if (DirectDirtBackgroundReplacementController.renderReplacement(this.menuBackgroundReplacementState_FancyMenu.isDirtCallWrapped(), () -> this.renderScreenBackgroundReplacement_FancyMenu(graphics), () -> this.ensureMenuBackgroundReplacementFancyMenu(graphics))) info.cancel();
+        if (this.menuBackgroundReplacementState_FancyMenu.isDirtCallWrapped()) return;
+        if (this.renderScreenBackgroundReplacement_FancyMenu(graphics) || this.ensureMenuBackgroundReplacementFancyMenu(graphics)) info.cancel();
     }
 
     @WrapOperation(method = "renderBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderDirtBackground(Lnet/minecraft/client/gui/GuiGraphics;)V"))
