@@ -3,6 +3,7 @@
 /run_client/
 /common/.gradle/
 /common/build/
+/common/out/
 /fabric/.gradle/
 /fabric/build/
 /fabric/run_client/
