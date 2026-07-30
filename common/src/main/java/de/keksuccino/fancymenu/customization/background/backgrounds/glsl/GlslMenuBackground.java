@@ -78,6 +78,11 @@ public class GlslMenuBackground extends MenuBackground<GlslMenuBackground> {
 
     public GlslMenuBackground(@NotNull MenuBackgroundBuilder<GlslMenuBackground> builder) {
         super(builder);
+        this.showBackground.addValueSetListener((oldValue, newValue) -> {
+            if (Boolean.FALSE.equals(newValue)) {
+                this.shaderRuntime.close();
+            }
+        });
     }
 
     @Override
