@@ -20,7 +20,7 @@ class PackResourcesRootEnumerationTest {
 
     @Test
     void removesOnlyTheLeadingSlashProducedForFolderRootEnumeration() {
-        assertEquals("", PackResourcesRootEnumeration.normalizeFolderPrefix("/", ""));
-        assertEquals("textures/", PackResourcesRootEnumeration.normalizeFolderPrefix("textures/", "textures"));
+        assertEquals("", PackResourcesRootEnumeration.normalizeFolderPrefix("/"));
+        assertEquals("textures/", PackResourcesRootEnumeration.normalizeFolderPrefix("textures/"));
     }
 }

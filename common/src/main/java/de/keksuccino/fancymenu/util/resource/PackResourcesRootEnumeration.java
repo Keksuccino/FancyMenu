@@ -15,8 +15,8 @@ public final class PackResourcesRootEnumeration {
     }
 
     @NotNull
-    public static String normalizeFolderPrefix(@NotNull String prefix, @NotNull String directory) {
-        return directory.isEmpty() && prefix.equals("/") ? "" : prefix;
+    public static String normalizeFolderPrefix(@NotNull String prefix) {
+        return prefix.equals("/") ? "" : prefix;
     }
 
 }
