@@ -29,7 +29,7 @@ dependencies {
     modImplementation "maven.modrinth:melody:1.0.4-1.20.1-1.20.4-fabric"
     modImplementation "maven.modrinth:konkrete:1.8.1-1.20.1-fabric"
     modImplementation "maven.modrinth:modmenu:7.2.2"
-    modImplementation "de.keksuccino:mcef-fabric:2.2.0-1.20.1"
+    modImplementation "de.keksuccino:rinku-fabric:3.0.0-1.20.1"
     modCompileOnly "maven.modrinth:fancy-entity-renderer:YIutsTi7"
 
     testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
