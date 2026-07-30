@@ -10,10 +10,10 @@ import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuInputRouter;
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuPointerTracker;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.interaction.ContainerWidgetInteractionRouter;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.interaction.ContainerWidgetPointerTracker;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
@@ -32,7 +32,7 @@ public class MixinAbstractContainerScreen extends Screen {
 
     @Shadow @Nullable protected Slot hoveredSlot;
 
-    @Unique private final ContainerWidgetPointerTracker<GuiEventListener> clickedWidgetsByButton_FancyMenu = new ContainerWidgetPointerTracker<>();
+    @Unique private final FancyMenuPointerTracker pointerTracker_FancyMenu = new FancyMenuPointerTracker();
     @Unique private int cached_mouseX_FancyMenu;
     @Unique private int cached_mouseY_FancyMenu;
     @Unique private float cached_partial_FancyMenu;
@@ -44,36 +44,42 @@ public class MixinAbstractContainerScreen extends Screen {
     }
 
     /**
-     * @reason Container screens need explicit routing for FancyMenu widgets so their interactions take precedence over slot handling.
+     * @reason Container screens need explicit routing for FancyMenu widgets and browsers so their interactions take precedence over slot handling.
      */
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void before_mouseClicked_FancyMenu(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> info) {
 
-        if (ContainerWidgetInteractionRouter.mouseClicked(this, this.clickedWidgetsByButton_FancyMenu, this.children(), mouseX, mouseY, button)) {
+        if (ContainerWidgetInteractionRouter.mouseClicked(this, this.pointerTracker_FancyMenu, this.children(), mouseX, mouseY, button)) {
             info.setReturnValue(true);
         }
 
     }
 
     /**
-     * @reason Container screens must not process slot releases belonging to a FancyMenu widget interaction.
+     * @reason Container screens must not process slot releases belonging to a FancyMenu component interaction.
      */
     @Inject(method = "mouseReleased", at = @At("HEAD"), cancellable = true)
     private void before_mouseReleased_FancyMenu(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> info) {
 
-        if (ContainerWidgetInteractionRouter.mouseReleased(this, this.clickedWidgetsByButton_FancyMenu, mouseX, mouseY, button)) {
+        if (ContainerWidgetInteractionRouter.mouseReleased(this, this.pointerTracker_FancyMenu, mouseX, mouseY, button)) {
+            info.setReturnValue(true);
+            return;
+        }
+        if (FancyMenuInputRouter.routeMouseReleased(this.children(), null, mouseX, mouseY, button, FancyMenuInputRouter.MouseReleaseRouting.CAPTURED_COMPONENTS_ONLY)) {
+            // Container release logic runs before its super call, so route orphaned pointer captures before slot handling.
+            if ((button == 0) && this.isDragging()) this.setDragging(false);
             info.setReturnValue(true);
         }
 
     }
 
     /**
-     * @reason Container screens must not start slot dragging while a FancyMenu widget owns the active pointer interaction.
+     * @reason Container screens must not start slot dragging while a FancyMenu component owns the active pointer interaction.
      */
     @Inject(method = "mouseDragged", at = @At("HEAD"), cancellable = true)
     private void before_mouseDragged_FancyMenu(double mouseX, double mouseY, int button, double dragX, double dragY, CallbackInfoReturnable<Boolean> info) {
 
-        if (ContainerWidgetInteractionRouter.mouseDragged(this.clickedWidgetsByButton_FancyMenu, mouseX, mouseY, button, dragX, dragY)) {
+        if (ContainerWidgetInteractionRouter.mouseDragged(this.pointerTracker_FancyMenu, mouseX, mouseY, button, dragX, dragY)) {
             info.setReturnValue(true);
         }
 

@@ -1,5 +1,8 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.interaction;
 
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuPointerTracker;
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
+import de.keksuccino.fancymenu.util.rendering.ui.MouseButtonCaptureOwner;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -23,7 +26,7 @@ class ContainerWidgetInteractionRouterTest {
     void consumedLeftClickClaimsFocusAndDragging() {
         TestWidget widget = new TestWidget(true, true, true);
         TestContainer parent = new TestContainer(List.of(widget));
-        ContainerWidgetPointerTracker<GuiEventListener> tracker = new ContainerWidgetPointerTracker<>();
+        FancyMenuPointerTracker tracker = new FancyMenuPointerTracker();
 
         boolean consumed = ContainerWidgetInteractionRouter.mouseClicked(parent, tracker, parent.children(), 5.0D, 5.0D, 0);
 
@@ -31,7 +34,6 @@ class ContainerWidgetInteractionRouterTest {
         assertSame(widget, parent.getFocused());
         assertTrue(widget.isFocused());
         assertTrue(parent.isDragging());
-        assertSame(widget, tracker.owner(0));
         assertEquals(1, widget.clickCount);
     }
 
@@ -41,14 +43,13 @@ class ContainerWidgetInteractionRouterTest {
         hiddenWidget.visible = false;
         TestWidget rejectingWidget = new TestWidget(false, true, true);
         TestContainer parent = new TestContainer(List.of(hiddenWidget, rejectingWidget));
-        ContainerWidgetPointerTracker<GuiEventListener> tracker = new ContainerWidgetPointerTracker<>();
+        FancyMenuPointerTracker tracker = new FancyMenuPointerTracker();
 
         boolean consumed = ContainerWidgetInteractionRouter.mouseClicked(parent, tracker, parent.children(), 5.0D, 5.0D, 0);
 
         assertFalse(consumed);
         assertNull(parent.getFocused());
         assertFalse(parent.isDragging());
-        assertNull(tracker.owner(0));
         assertEquals(0, hiddenWidget.clickCount);
         assertEquals(1, rejectingWidget.clickCount);
     }
@@ -57,14 +58,13 @@ class ContainerWidgetInteractionRouterTest {
     void capturedDragIsConsumedWhenWidgetCallbackReturnsFalse() {
         TestWidget widget = new TestWidget(true, false, true);
         TestContainer parent = new TestContainer(List.of(widget));
-        ContainerWidgetPointerTracker<GuiEventListener> tracker = new ContainerWidgetPointerTracker<>();
+        FancyMenuPointerTracker tracker = new FancyMenuPointerTracker();
         ContainerWidgetInteractionRouter.mouseClicked(parent, tracker, parent.children(), 5.0D, 5.0D, 0);
 
         boolean consumed = ContainerWidgetInteractionRouter.mouseDragged(tracker, 7.0D, 5.0D, 0, 2.0D, 0.0D);
 
         assertTrue(consumed);
         assertEquals(1, widget.dragCount);
-        assertSame(widget, tracker.owner(0));
         assertTrue(parent.isDragging());
     }
 
@@ -72,7 +72,7 @@ class ContainerWidgetInteractionRouterTest {
     void capturedReleaseForwardsOnceClearsOwnershipAndDraggingAndIsConsumedWhenWidgetReturnsFalse() {
         TestWidget widget = new TestWidget(true, true, false);
         TestContainer parent = new TestContainer(List.of(widget));
-        ContainerWidgetPointerTracker<GuiEventListener> tracker = new ContainerWidgetPointerTracker<>();
+        FancyMenuPointerTracker tracker = new FancyMenuPointerTracker();
         ContainerWidgetInteractionRouter.mouseClicked(parent, tracker, parent.children(), 5.0D, 5.0D, 0);
 
         boolean firstConsumed = ContainerWidgetInteractionRouter.mouseReleased(parent, tracker, 7.0D, 5.0D, 0);
@@ -81,9 +81,27 @@ class ContainerWidgetInteractionRouterTest {
         assertTrue(firstConsumed);
         assertFalse(secondConsumed);
         assertEquals(1, widget.releaseCount);
-        assertNull(tracker.owner(0));
         assertFalse(parent.isDragging());
         assertSame(widget, parent.getFocused());
+    }
+
+    @Test
+    void browserLikeComponentKeepsContainerFocusDragAndReleaseOwnershipOutsideItsBounds() {
+        TestBrowserComponent browser = new TestBrowserComponent();
+        TestContainer parent = new TestContainer(List.of(browser));
+        FancyMenuPointerTracker tracker = new FancyMenuPointerTracker();
+
+        assertTrue(ContainerWidgetInteractionRouter.mouseClicked(parent, tracker, parent.children(), 5.0D, 5.0D, 0));
+        assertSame(browser, parent.getFocused());
+        assertTrue(browser.isFocused());
+        assertTrue(parent.isDragging());
+        assertTrue(browser.hasMouseButtonCapture(0));
+        assertTrue(ContainerWidgetInteractionRouter.mouseDragged(tracker, 25.0D, 25.0D, 0, 20.0D, 20.0D));
+        assertTrue(ContainerWidgetInteractionRouter.mouseReleased(parent, tracker, 25.0D, 25.0D, 0));
+        assertEquals(1, browser.dragCount);
+        assertEquals(1, browser.releaseCount);
+        assertFalse(browser.hasMouseButtonCapture(0));
+        assertFalse(parent.isDragging());
     }
 
     private static final class TestContainer extends AbstractContainerEventHandler {
@@ -140,6 +158,50 @@ class ContainerWidgetInteractionRouterTest {
 
         @Override
         protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {}
+
+    }
+
+    private static final class TestBrowserComponent extends AbstractWidget implements FancyMenuUiComponent, MouseButtonCaptureOwner {
+
+        private boolean captured;
+        private int dragCount;
+        private int releaseCount;
+
+        private TestBrowserComponent() {
+            super(0, 0, 10, 10, Component.empty());
+        }
+
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            this.captured = this.isMouseOver(mouseX, mouseY);
+            return this.captured;
+        }
+
+        @Override
+        public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+            this.dragCount++;
+            return false;
+        }
+
+        @Override
+        public boolean mouseReleased(double mouseX, double mouseY, int button) {
+            this.releaseCount++;
+            this.captured = false;
+            return false;
+        }
+
+        @Override
+        public boolean hasMouseButtonCapture(int button) {
+            return this.captured;
+        }
+
+        @Override
+        protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        }
+
+        @Override
+        protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
+        }
 
     }
 

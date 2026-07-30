@@ -1,50 +1,36 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.interaction;
 
-import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
-import net.minecraft.client.gui.components.AbstractWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuPointerTracker;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 
 import javax.annotation.Nonnull;
-import java.util.List;
 
 /**
- * Routes pointer interactions to FancyMenu widgets before container slot handling. A handled press owns its button until release, even when later callbacks return false, so a single gesture can never leak into slot logic halfway through.
+ * Applies the 1.21.1 container focus and dragging contract around the shared FancyMenu pointer tracker. Keeping this
+ * target-specific boundary prevents browser and FancyMenu widget gestures from leaking into inventory slot handling.
  */
 public final class ContainerWidgetInteractionRouter {
 
-    private ContainerWidgetInteractionRouter() {}
-
-    public static boolean mouseClicked(@Nonnull ContainerEventHandler parent, @Nonnull ContainerWidgetPointerTracker<GuiEventListener> tracker, @Nonnull List<? extends GuiEventListener> children, double mouseX, double mouseY, int button) {
-        tracker.begin(button);
-        for (GuiEventListener listener : children) {
-            if ((listener instanceof FancyMenuWidget) && (listener instanceof AbstractWidget widget) && widget.isMouseOver(mouseX, mouseY) && listener.mouseClicked(mouseX, mouseY, button)) {
-                // Manual routing must mirror ContainerEventHandler's focus contract. Edit boxes rely on their parent to focus them.
-                tracker.claim(button, listener);
-                parent.setFocused(listener);
-                if (button == 0) {
-                    parent.setDragging(true);
-                }
-                return true;
-            }
-        }
-        return false;
+    private ContainerWidgetInteractionRouter() {
     }
 
-    public static boolean mouseDragged(@Nonnull ContainerWidgetPointerTracker<GuiEventListener> tracker, double mouseX, double mouseY, int button, double dragX, double dragY) {
-        GuiEventListener owner = tracker.owner(button);
-        if (owner == null) return false;
-        owner.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    public static boolean mouseClicked(@Nonnull ContainerEventHandler parent, @Nonnull FancyMenuPointerTracker tracker, @Nonnull Iterable<? extends GuiEventListener> children, double mouseX, double mouseY, int button) {
+        GuiEventListener listener = tracker.routeMouseClicked(children, mouseX, mouseY, button);
+        if (listener == null) return false;
+        // Manual routing must mirror ContainerEventHandler's focus contract. Edit boxes and browsers rely on their parent to focus them.
+        parent.setFocused(listener);
+        if (button == 0) parent.setDragging(true);
         return true;
     }
 
-    public static boolean mouseReleased(@Nonnull ContainerEventHandler parent, @Nonnull ContainerWidgetPointerTracker<GuiEventListener> tracker, double mouseX, double mouseY, int button) {
-        GuiEventListener owner = tracker.release(button);
-        if (owner == null) return false;
-        if ((button == 0) && parent.isDragging()) {
-            parent.setDragging(false);
-        }
-        owner.mouseReleased(mouseX, mouseY, button);
+    public static boolean mouseDragged(@Nonnull FancyMenuPointerTracker tracker, double mouseX, double mouseY, int button, double dragX, double dragY) {
+        return tracker.dispatchMouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    public static boolean mouseReleased(@Nonnull ContainerEventHandler parent, @Nonnull FancyMenuPointerTracker tracker, double mouseX, double mouseY, int button) {
+        if (!tracker.dispatchMouseReleased(mouseX, mouseY, button)) return false;
+        if ((button == 0) && parent.isDragging()) parent.setDragging(false);
         return true;
     }
 

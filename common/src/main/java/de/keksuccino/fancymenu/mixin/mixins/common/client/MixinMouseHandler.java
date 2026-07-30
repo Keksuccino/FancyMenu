@@ -13,9 +13,11 @@ import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.rendering.glsl.GlslRuntimeEventTracker;
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuInputRouter;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
+import net.minecraft.client.gui.screens.Screen;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -95,6 +97,15 @@ public class MixinMouseHandler {
         ScreenMouseScrollEvent.Pre e = new ScreenMouseScrollEvent.Pre(mc_FancyMenu.screen, mX, mY, scrollDeltaX, scrollDeltaY);
         EventHandler.INSTANCE.postEvent(e);
         if (e.isCanceled()) info.cancel();
+    }
+
+    /**
+     * @reason Route FancyMenu scroll consumers before any Screen override while preserving Vanilla's code after the virtual call.
+     */
+    @WrapOperation(method = "onScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;mouseScrolled(DDDD)Z"))
+    private boolean wrap_mouseScrolled_in_onScroll_FancyMenu(Screen screen, double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY, Operation<Boolean> operation) {
+        if (FancyMenuInputRouter.routeMouseScrolled(screen.children(), mouseX, mouseY, scrollDeltaX, scrollDeltaY)) return true;
+        return operation.call(screen, mouseX, mouseY, scrollDeltaX, scrollDeltaY);
     }
 
     @Inject(method = "onScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;mouseScrolled(DDDD)Z", shift = At.Shift.AFTER))
