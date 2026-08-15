@@ -18,13 +18,12 @@ public class SetVariableAction extends Action {
 
     @Override
     public void execute(String value) {
-        if (value != null) {
-            if (value.contains(":")) {
-                String name = value.split(":", 2)[0];
-                String val = value.split(":", 2)[1];
-                VariableHandler.setVariable(name, val);
-            }
-        }
+        if (value == null) return;
+        int separator = value.indexOf(':');
+        if (separator < 0) return;
+        String name = VariableHandler.normalizeVariableReferenceName(value.substring(0, separator));
+        if (name.isEmpty()) return;
+        VariableHandler.setVariable(name, value.substring(separator + 1));
     }
 
     @Override
