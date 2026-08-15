@@ -32,7 +32,7 @@ public class BrowserElement extends AbstractElement {
     private static final DrawableColor ERROR_BACKGROUND_COLOR = DrawableColor.of(Color.RED);
 
     @NotNull
-    public String url = "https://docs.fancymenu.net";
+    public String url = "https://www.curseforge.com/minecraft";
     public boolean interactable = true;
     public boolean hideVideoControls = false;
     public boolean loopVideos = false;
