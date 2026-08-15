@@ -23,7 +23,7 @@ public class BrowserEditorElement extends AbstractEditorElement<BrowserEditorEle
                         consumes -> consumes.element.url,
                         (element1, s) -> element1.element.url = s,
                         null, false, true, Component.translatable("fancymenu.elements.browser.url"),
-                        true, "https://docs.fancymenu.net", null, null)
+                        true, "https://www.curseforge.com/minecraft", null, null)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.browser.url.desc")))
                 .setIcon(MaterialIcons.OPEN_IN_BROWSER);
 
