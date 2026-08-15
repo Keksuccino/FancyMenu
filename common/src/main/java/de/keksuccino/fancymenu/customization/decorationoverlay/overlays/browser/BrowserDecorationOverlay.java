@@ -40,7 +40,7 @@ public class BrowserDecorationOverlay extends AbstractDecorationOverlay<BrowserD
     private static final DrawableColor EDITOR_PREVIEW_STRIPE_COLOR = DrawableColor.of(new Color(140, 170, 210));
     private static final String FALLBACK_URL = "about:blank";
 
-    public final Property.StringProperty url = putProperty(Property.stringProperty("url", "https://docs.fancymenu.net", false, true, "fancymenu.decoration_overlays.browser.url"));
+    public final Property.StringProperty url = putProperty(Property.stringProperty("url", "https://www.curseforge.com/minecraft", false, true, "fancymenu.decoration_overlays.browser.url"));
     public final Property<Boolean> consumeMouseClicks = putProperty(Property.booleanProperty("consume_mouse_clicks", true, "fancymenu.decoration_overlays.browser.consume_mouse_clicks"));
     public final Property<Boolean> consumeMouseScrolls = putProperty(Property.booleanProperty("consume_mouse_scrolls", true, "fancymenu.decoration_overlays.browser.consume_mouse_scrolls"));
     public final Property<Boolean> consumeKeyboardPresses = putProperty(Property.booleanProperty("consume_keyboard_presses", true, "fancymenu.decoration_overlays.browser.consume_keyboard_presses"));

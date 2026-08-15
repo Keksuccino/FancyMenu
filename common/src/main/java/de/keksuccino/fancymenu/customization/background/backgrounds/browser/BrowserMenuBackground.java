@@ -39,7 +39,7 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
     private static final DrawableColor EDITOR_PREVIEW_STRIPE_COLOR = DrawableColor.of(new Color(140, 170, 210));
     private static final String FALLBACK_URL = "about:blank";
 
-    public final Property.StringProperty url = putProperty(Property.stringProperty("url", "https://docs.fancymenu.net", false, true, "fancymenu.backgrounds.browser.url"));
+    public final Property.StringProperty url = putProperty(Property.stringProperty("url", "https://www.curseforge.com/minecraft", false, true, "fancymenu.backgrounds.browser.url"));
     public final Property<Boolean> consumeMouseClicks = putProperty(Property.booleanProperty("consume_mouse_clicks", true, "fancymenu.backgrounds.browser.consume_mouse_clicks"));
     public final Property<Boolean> consumeMouseScrolls = putProperty(Property.booleanProperty("consume_mouse_scrolls", true, "fancymenu.backgrounds.browser.consume_mouse_scrolls"));
     public final Property<Boolean> consumeKeyboardPresses = putProperty(Property.booleanProperty("consume_keyboard_presses", true, "fancymenu.backgrounds.browser.consume_keyboard_presses"));
