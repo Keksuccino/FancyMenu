@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.List;
+import java.util.Objects;
 
 public final class VariableHandler {
 
@@ -23,6 +24,11 @@ public final class VariableHandler {
 
     public static void setVariable(@NotNull String name, @Nullable String value) {
         STORE.setVariable(name, value);
+    }
+
+    @NotNull
+    public static String normalizeVariableReferenceName(@NotNull String name) {
+        return Objects.requireNonNull(name).strip();
     }
 
     public static boolean setVariableIfAbsent(@NotNull String name, @Nullable String value) {
