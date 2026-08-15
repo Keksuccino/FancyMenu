@@ -27,20 +27,14 @@ public class IsVariableValueRequirement extends Requirement {
 
     @Override
     public boolean isRequirementMet(@Nullable String value) {
-
-        if (value != null) {
-            if (value.contains(":")) {
-                String name = value.split(":", 2)[0];
-                String val = value.split(":", 2)[1];
-                String storedVal = VariableHandler.getVariableValue(name);
-                if (storedVal != null) {
-                    return val.equals(storedVal);
-                }
-            }
-        }
-
+        if (value == null) return false;
+        int separator = value.indexOf(':');
+        if (separator < 0) return false;
+        String name = VariableHandler.normalizeVariableReferenceName(value.substring(0, separator));
+        if (name.isEmpty()) return false;
+        String storedVal = VariableHandler.getVariableValue(name);
+        if (storedVal != null) return value.substring(separator + 1).equals(storedVal);
         return false;
-
     }
 
     @Override
@@ -178,7 +172,7 @@ public class IsVariableValueRequirement extends Requirement {
 
         @Override
         public @NotNull String buildString() {
-            return this.getVarNameString() + ":" + this.getVarValueString();
+            return VariableHandler.normalizeVariableReferenceName(this.getVarNameString()) + ":" + this.getVarValueString();
         }
 
         @NotNull
