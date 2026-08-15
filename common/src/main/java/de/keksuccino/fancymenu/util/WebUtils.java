@@ -19,7 +19,7 @@ import java.util.concurrent.ThreadFactory;
 public class WebUtils {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final URI INTERNET_AVAILABILITY_ENDPOINT = URI.create("https://docs.fancymenu.net");
+    private static final URI INTERNET_AVAILABILITY_ENDPOINT = URI.create("https://google.com");
     private static final int INTERNET_AVAILABILITY_TIMEOUT_MILLIS = 3000;
     private static final Duration INTERNET_AVAILABILITY_REFRESH_DELAY = Duration.ofSeconds(20L);
     private static final Duration RESOURCE_CONNECT_TIMEOUT = Duration.ofSeconds(10L);
