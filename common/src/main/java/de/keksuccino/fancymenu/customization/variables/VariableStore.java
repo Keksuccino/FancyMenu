@@ -82,7 +82,7 @@ final class VariableStore {
     }
 
     void setVariable(@NotNull String name, @Nullable String value) {
-        long revision;
+        long revision = -1L;
         synchronized (this.stateLock) {
             this.awaitReplacementLocked();
             if (this.shutdown) return;
@@ -94,14 +94,17 @@ final class VariableStore {
                 this.variables.put(checkedName, variable);
                 created = true;
             }
-            this.updateListener.onVariableUpdated(variable.getName(), variable.getRawValueLocked(), Objects.requireNonNullElse(value, "0"));
             // Variable is deliberately only a state object; this handler mutation is the single persistence owner.
+            String oldValue = variable.getRawValueLocked();
             String encodedValue = Variable.encodeValue(value);
-            if (!created && variable.getRawValueLocked().equals(encodedValue)) return;
-            variable.setRawValueLocked(encodedValue);
-            revision = this.nextRevisionLocked();
+            if (created || !oldValue.equals(encodedValue)) {
+                // Publish before dispatch because listener action scripts may immediately read or supersede this assignment.
+                variable.setRawValueLocked(encodedValue);
+                revision = this.nextRevisionLocked();
+            }
+            this.updateListener.onVariableUpdated(variable.getName(), oldValue, Objects.requireNonNullElse(value, "0"));
         }
-        this.persistence.markDirty(revision, "setting variable '" + name + "'");
+        if (revision >= 0L) this.persistence.markDirty(revision, "setting variable '" + name + "'");
     }
 
     boolean setVariableIfAbsent(@NotNull String name, @Nullable String value) {
@@ -112,9 +115,9 @@ final class VariableStore {
             if (this.shutdown || this.variables.containsKey(checkedName)) return false;
             Variable variable = new Variable(checkedName, this);
             this.variables.put(checkedName, variable);
-            this.updateListener.onVariableUpdated(variable.getName(), variable.getRawValueLocked(), Objects.requireNonNullElse(value, "0"));
             variable.setRawValueLocked(Variable.encodeValue(value));
             revision = this.nextRevisionLocked();
+            this.updateListener.onVariableUpdated(variable.getName(), "", Objects.requireNonNullElse(value, "0"));
         }
         this.persistence.markDirty(revision, "creating variable '" + name + "'");
         return true;
@@ -136,10 +139,10 @@ final class VariableStore {
             }
             Variable variable = new Variable(candidate, this);
             this.variables.put(candidate, variable);
-            this.updateListener.onVariableUpdated(candidate, variable.getRawValueLocked(), Objects.requireNonNull(value));
             variable.setRawValueLocked(Variable.encodeValue(value));
             variable.setResetOnLaunchLocked(resetOnLaunch);
             revision = this.nextRevisionLocked();
+            this.updateListener.onVariableUpdated(candidate, "", Objects.requireNonNull(value));
         }
         this.persistence.markDirty(revision, "creating copied variable '" + candidate + "'");
         return candidate;
@@ -157,9 +160,9 @@ final class VariableStore {
                 for (UserVariableSnapshot snapshot : stableSnapshots) {
                     Variable variable = new Variable(snapshot.name(), this);
                     this.variables.put(snapshot.name(), variable);
-                    this.updateListener.onVariableUpdated(snapshot.name(), variable.getRawValueLocked(), snapshot.value());
                     variable.setRawValueLocked(Variable.encodeValue(snapshot.value()));
                     variable.setResetOnLaunchLocked(snapshot.resetOnLaunch());
+                    this.updateListener.onVariableUpdated(snapshot.name(), "", snapshot.value());
                 }
             } catch (RuntimeException | Error failure) {
                 this.variables.clear();
