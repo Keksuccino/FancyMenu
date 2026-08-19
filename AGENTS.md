@@ -56,8 +56,7 @@
 - Do not simply implement things without a second thought. Simulate in your reasoning STEP-BY-STEP what each step of the execution chain of the code you implemented does, where it does something, and what could be side effects of it. Chase the whole code execution chain step-by-step, to notice edge cases, incomplete implementations, bugs, etc.
 - Always implement everything in the best way possible. Implement everything in the most optimized, performance-friendly, and professional way, following best practices for everything.
 - Never rush tasks. It doesn't matter how long a task will take, you always take the best possible route instead of the fastest.
-- Everything always needs to be fully compatible with Sodium and Iris. Both mods are set as dependencies for the `fabric` module, for testing. Do not test Iris/Sodium compat on Forge/NeoForge.
-- Everything always needs to work with and without Sodium and Iris.
+- Everything always needs to be compatible with Sodium and Iris. To check compatibility for these, scan the Sodium and Iris sources in the places you touch, to check if Sodium/Iris touch it too, and then see if both works well together.
 - Always clean up after yourself! When finishing a task, remove leftover code from testing, code from earlier unsuccessful implementation attempts, and dead code.
 - When you work with Vanilla Minecraft code, or Iris/Sodium, always deeply analyze the source code for these, so you really understand what you are working with and how the related code works.
 
