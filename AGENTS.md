@@ -92,7 +92,7 @@
 ## Autonomous Testing
 - After making changes, always compile/build the project to identify and fix compile errors.
 - Only use the `fabric` and `neoforge` modules for compile checks. Never use the `common` module.
-- Make sure to use Java 25 for compile/run stuff, like this for example: `JAVA_HOME=$(/usr/libexec/java_home -v <correct_java_version_for_sub_workspace>) sh gradlew :fabric:compileJava :neoforge:compileJava --stacktrace`
+- Make sure to use the correct Java version for the specific sub-workspace for compile/run stuff, like this for example: `JAVA_HOME=$(/usr/libexec/java_home -v <correct_java_version_for_sub_workspace>) sh gradlew :fabric:compileJava :neoforge:compileJava --stacktrace`
 - Add focused JUnit 5 regression tests for every bug fix or behavior change that can be tested automatically. The tests should fail for the broken behavior and cover the main path plus relevant boundary, failure, and lifecycle cases.
 - Place shared and Fabric test classes under `fabric/src/test/java`, mirroring the production package and naming each class `<Subject>Test`. Treat each test class as a focused suite for one coherent subject; split unrelated behavior into separate classes.
 - Do not duplicate shared tests in the `neoforge`/`forge` module. (Neo)Forge's test task is disabled, so run tests through `fabric` and verify production compatibility by compiling both loaders.
