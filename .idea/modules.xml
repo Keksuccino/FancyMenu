@@ -2,12 +2,12 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/common/fancymenu-26.2.0.common.main.iml" filepath="$PROJECT_DIR$/.idea/modules/common/fancymenu-26.2.0.common.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/common/fancymenu-26.2.0.common.test.iml" filepath="$PROJECT_DIR$/.idea/modules/common/fancymenu-26.2.0.common.test.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/fabric/fancymenu-26.2.0.fabric.main.iml" filepath="$PROJECT_DIR$/.idea/modules/fabric/fancymenu-26.2.0.fabric.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/fabric/fancymenu-26.2.0.fabric.test.iml" filepath="$PROJECT_DIR$/.idea/modules/fabric/fancymenu-26.2.0.fabric.test.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/neoforge/fancymenu-26.2.0.neoforge.main.iml" filepath="$PROJECT_DIR$/.idea/modules/neoforge/fancymenu-26.2.0.neoforge.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/neoforge/fancymenu-26.2.0.neoforge.test.iml" filepath="$PROJECT_DIR$/.idea/modules/neoforge/fancymenu-26.2.0.neoforge.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/common/fancymenu-persephone.common.main.iml" filepath="$PROJECT_DIR$/.idea/modules/common/fancymenu-persephone.common.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/common/fancymenu-persephone.common.test.iml" filepath="$PROJECT_DIR$/.idea/modules/common/fancymenu-persephone.common.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/fabric/fancymenu-persephone.fabric.main.iml" filepath="$PROJECT_DIR$/.idea/modules/fabric/fancymenu-persephone.fabric.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/fabric/fancymenu-persephone.fabric.test.iml" filepath="$PROJECT_DIR$/.idea/modules/fabric/fancymenu-persephone.fabric.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/neoforge/fancymenu-persephone.neoforge.main.iml" filepath="$PROJECT_DIR$/.idea/modules/neoforge/fancymenu-persephone.neoforge.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/neoforge/fancymenu-persephone.neoforge.test.iml" filepath="$PROJECT_DIR$/.idea/modules/neoforge/fancymenu-persephone.neoforge.test.iml" />
     </modules>
   </component>
 </project>

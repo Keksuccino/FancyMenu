@@ -85,14 +85,14 @@
           <entry name="$PROJECT_DIR$/../../../../.GRADLE/caches/modules-2/files-2.1/org.ow2.asm/asm-tree/9.7/e446a17b175bfb733b87c5c2560ccb4e57d69f1a/asm-tree-9.7.jar" />
           <entry name="$PROJECT_DIR$/../../../../.GRADLE/caches/modules-2/files-2.1/org.ow2.asm/asm/9.7/73d7b3086e14beb604ced229c302feff6449723/asm-9.7.jar" />
         </processorPath>
-        <module name="fancymenu-26.2.0.common.main" />
+        <module name="fancymenu-persephone.common.main" />
       </profile>
       <profile name="Gradle Imported" enabled="true">
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$PROJECT_DIR$/../../../../.GRADLE/caches/modules-2/files-2.1/io.github.llamalad7/mixinextras-fabric/0.4.1/8d1a9e96afb990367fa1f904d17580d164da72e3/mixinextras-fabric-0.4.1.jar" />
         </processorPath>
-        <module name="fancymenu-26.2.0.fabric.main" />
+        <module name="fancymenu-persephone.fabric.main" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="25" />
@@ -138,6 +138,15 @@
       <module name="fancymenu-26.2.0.neoforge" options="-Xlint:-deprecation -Xlint:-removal -Xlint:-deprecation -Xlint:-removal" />
       <module name="fancymenu-26.2.0.neoforge.main" options="-Xlint:-deprecation -Xlint:-removal -Xlint:-deprecation -Xlint:-removal" />
       <module name="fancymenu-26.2.0.neoforge.test" options="-Xlint:-deprecation -Xlint:-removal -Xlint:-deprecation -Xlint:-removal" />
+      <module name="fancymenu-persephone.common" options="-Xlint:-deprecation -Xlint:-removal" />
+      <module name="fancymenu-persephone.common.main" options="-Xlint:-deprecation -Xlint:-removal" />
+      <module name="fancymenu-persephone.common.test" options="-Xlint:-deprecation -Xlint:-removal" />
+      <module name="fancymenu-persephone.fabric" options="-Xlint:-deprecation -Xlint:-removal" />
+      <module name="fancymenu-persephone.fabric.main" options="-Xlint:-deprecation -Xlint:-removal" />
+      <module name="fancymenu-persephone.fabric.test" options="-Xlint:-deprecation -Xlint:-removal" />
+      <module name="fancymenu-persephone.neoforge" options="-Xlint:-deprecation -Xlint:-removal -Xlint:-deprecation -Xlint:-removal" />
+      <module name="fancymenu-persephone.neoforge.main" options="-Xlint:-deprecation -Xlint:-removal -Xlint:-deprecation -Xlint:-removal" />
+      <module name="fancymenu-persephone.neoforge.test" options="-Xlint:-deprecation -Xlint:-removal -Xlint:-deprecation -Xlint:-removal" />
     </option>
   </component>
 </project>
