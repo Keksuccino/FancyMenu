@@ -31,7 +31,7 @@ public class WebUtils {
 
     private static volatile boolean isConnectionAvailable = false;
     private static final InternetAvailabilityMonitor INTERNET_AVAILABILITY_MONITOR = new InternetAvailabilityMonitor(new HttpInternetAvailabilityProbe(INTERNET_AVAILABILITY_ENDPOINT, INTERNET_AVAILABILITY_TIMEOUT_MILLIS, INTERNET_AVAILABILITY_TIMEOUT_MILLIS, endpoint -> (HttpURLConnection) endpoint.toURL().openConnection()), WebUtils::createConnectivityScheduler, INTERNET_AVAILABILITY_REFRESH_DELAY, available -> isConnectionAvailable = available);
-    private static final BoundedWebResourceClient RESOURCE_CLIENT = new BoundedWebResourceClient(resourceUri -> (HttpURLConnection) resourceUri.toURL().openConnection(), new ExecutorDeadlineScheduler(createScheduledExecutor("FancyMenu-WebUtils-ResourceDeadline")), System::nanoTime);
+    private static final BoundedWebResourceClient RESOURCE_CLIENT = new BoundedWebResourceClient(resourceUri -> (HttpURLConnection) resourceUri.toURL().openConnection(), new DeadlineScheduler.ExecutorDeadlineScheduler(createScheduledExecutor("FancyMenu-WebUtils-ResourceDeadline")), System::nanoTime);
 
     public static void init() {
         INTERNET_AVAILABILITY_MONITOR.init();
@@ -46,7 +46,7 @@ public class WebUtils {
     }
 
     private static FixedDelayScheduler createConnectivityScheduler() {
-        return new ExecutorFixedDelayScheduler(createScheduledExecutor("FancyMenu-WebUtils-ConnectivityCheck"));
+        return new FixedDelayScheduler.ExecutorFixedDelayScheduler(createScheduledExecutor("FancyMenu-WebUtils-ConnectivityCheck"));
     }
 
     private static ScheduledExecutorService createScheduledExecutor(String threadName) {
