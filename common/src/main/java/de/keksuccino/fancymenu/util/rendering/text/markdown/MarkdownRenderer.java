@@ -3,6 +3,8 @@ package de.keksuccino.fancymenu.util.rendering.text.markdown;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderScaleUtil;
+import de.keksuccino.fancymenu.util.rendering.RenderTranslationUtil;
 import de.keksuccino.fancymenu.util.rendering.ui.FocuslessContainerEventHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
@@ -126,7 +128,8 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         float lineOffsetY = this.border;
         for (MarkdownTextLine line : this.lines) {
             float lineAlignmentOffsetX = 0;
-            if (line.isAlignmentAllowed(line.alignment)) {
+            boolean alignmentAllowed = line.isAlignmentAllowed(line.alignment);
+            if (alignmentAllowed) {
                 float realInnerWidth = this.getRealWidth() - this.border - this.border;
                 if (line.alignment == MarkdownLineAlignment.CENTERED) {
                     lineAlignmentOffsetX = Math.max(0, realInnerWidth - line.getLineWidth());
@@ -136,7 +139,14 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
                     lineAlignmentOffsetX = Math.max(0, realInnerWidth - line.getLineWidth());
                 }
             }
-            line.offsetX = this.border + lineAlignmentOffsetX;
+            float lineOffsetX = this.border + lineAlignmentOffsetX;
+            if (alignmentAllowed && (line.alignment == MarkdownLineAlignment.CENTERED) && !this.uiFontRenderingEnabled) {
+                // Odd-width centering can land on half GUI pixels. Vanilla bitmap text needs a physical-pixel-aligned origin, while UI fonts support fractional origins.
+                float renderScale = this.parentRenderScale != null ? this.parentRenderScale : RenderScaleUtil.getCurrentRenderScale();
+                float renderTranslationX = RenderTranslationUtil.getCurrentRenderTranslationX();
+                lineOffsetX = RenderScaleUtil.snapGuiCoordinateToPixel(this.x + lineOffsetX, renderScale, renderTranslationX) - this.x;
+            }
+            line.offsetX = lineOffsetX;
             line.offsetY = lineOffsetY;
             if (shouldRender && this.isLineRenderingAllowedByValidators(line)) {
                 line.render(graphics, mouseX, mouseY, partial);
