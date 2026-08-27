@@ -110,6 +110,7 @@ public class MarkdownParser {
         int charsToSkip = 0;
         boolean preserveStartOfLineWhileSkipping = false;
         boolean skipLine = false;
+        boolean lineHandledByWholeLineConstruct = false;
         MarkdownTextFragment lastBuiltFragment = null;
         boolean lastLineWasHeadline = false;
 
@@ -121,6 +122,7 @@ public class MarkdownParser {
 
             boolean isStartOfLine = queueNewLine;
             queueNewLine = false;
+            if (isStartOfLine) lineHandledByWholeLineConstruct = false;
 
             index++;
 
@@ -183,6 +185,7 @@ public class MarkdownParser {
                 continue;
             }
             if ((c == NEWLINE_CHAR) && skipLine) {
+                lineHandledByWholeLineConstruct = true;
                 builder.headlineType = HeadlineType.NONE;
                 builder.separationLine = false;
                 skipLine = false;
@@ -673,8 +676,9 @@ public class MarkdownParser {
 
         }
 
-        //Manually build the last fragment of the last line, because it doesn't end with "\n"
-        fragments.add(builder.build(true, true));
+        // Whole-line constructs already handle or suppress their fragment before consuming the source line. Building
+        // again at EOF would turn a terminal construct (such as a closing alignment marker) into an empty render line.
+        if (!skipLine && !lineHandledByWholeLineConstruct) fragments.add(builder.build(true, true));
 
         return fragments;
 
