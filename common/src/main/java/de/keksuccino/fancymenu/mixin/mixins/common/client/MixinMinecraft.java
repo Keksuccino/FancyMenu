@@ -100,11 +100,16 @@ public class MixinMinecraft {
 
 	@Inject(method = "stop", at = @At("HEAD"))
 	private void before_stop_FancyMenu(CallbackInfo info) {
-		ClientShutdownHandler.shutdown();
 		if (!this.quitListenerFired_FancyMenu) {
 			this.quitListenerFired_FancyMenu = true;
 			if (Listeners.ON_QUIT_MINECRAFT.hasInstancesListening()) Listeners.ON_QUIT_MINECRAFT.onQuitMinecraft();
 		}
+	}
+
+	/** @reason Keep FancyMenu resources alive for any final shutdown screen, then release them before Minecraft tears down rendering infrastructure. */
+	@Inject(method = "close", at = @At("HEAD"))
+	private void before_close_FancyMenu(CallbackInfo info) {
+		ClientShutdownHandler.shutdown();
 	}
 
 	@Inject(method = "doWorldLoad(Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lnet/minecraft/server/packs/repository/PackRepository;Lnet/minecraft/server/WorldStem;Ljava/util/Optional;Z)V", at = @At("HEAD"))
