@@ -18,45 +18,33 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(KeyboardHandler.class)
 public class MixinNeoForgeKeyboardHandler {
 
-    @Unique int cached_key_FancyMenu;
-    @Unique int cached_scanCode_FancyMenu;
-    @Unique int cached_action_FancyMenu;
-    @Unique int cached_modifiers_FancyMenu;
-
     @Unique long cached_char_windowPointer_FancyMenu;
     @Unique int cached_char_codePoint_FancyMenu;
     @Unique int cached_char_modifiers_FancyMenu;
 
-    @Inject(method = "keyPress", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;wrapScreenError(Ljava/lang/Runnable;Ljava/lang/String;Ljava/lang/String;)V"))
-    private void before_wrapScreenError_FancyMenu(long windowPointer, int key, int scanCode, int action, int modifiers, CallbackInfo info) {
-        this.cached_key_FancyMenu = key;
-        this.cached_scanCode_FancyMenu = scanCode;
-        this.cached_action_FancyMenu = action;
-        this.cached_modifiers_FancyMenu = modifiers;
-    }
-
     /**
-     * @reason This adds special key press handling for FancyMenu's {@link WrappedRinkuBrowser}.
+     * @reason A focused browser owns handled key input. Cancel the whole callback so loader-level raw-key hooks cannot observe and act on the same key afterward.
      */
-    @WrapWithCondition(method = "keyPress", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;wrapScreenError(Ljava/lang/Runnable;Ljava/lang/String;Ljava/lang/String;)V"))
-    private boolean wrap_keyPressed_keyReleased_in_keyPress_FancyMenu(Runnable runnable, String message, String className) {
+    @Inject(method = "keyPress", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;wrapScreenError(Ljava/lang/Runnable;Ljava/lang/String;Ljava/lang/String;)V"), cancellable = true)
+    private void before_wrapScreenError_FancyMenu(long windowPointer, int key, int scanCode, int action, int modifiers, CallbackInfo info) {
         Minecraft minecraft = Minecraft.getInstance();
         Screen screen = minecraft.screen;
-        int action = this.cached_action_FancyMenu;
         if (screen != null) {
             for (GuiEventListener listener : screen.children()) {
                 if (listener instanceof WrappedRinkuBrowser) {
                     boolean b = false;
                     if (action == 1 || action == 2) {
-                        b = listener.keyPressed(this.cached_key_FancyMenu, this.cached_scanCode_FancyMenu, this.cached_modifiers_FancyMenu);
+                        b = listener.keyPressed(key, scanCode, modifiers);
                     } else if (action == 0) {
-                        b = listener.keyReleased(this.cached_key_FancyMenu, this.cached_scanCode_FancyMenu, this.cached_modifiers_FancyMenu);
+                        b = listener.keyReleased(key, scanCode, modifiers);
                     }
-                    if (b) return false;
+                    if (b) {
+                        info.cancel();
+                        return;
+                    }
                 }
             }
         }
-        return true;
     }
 
     @Inject(method = "charTyped", at = @At(value = "INVOKE", target = "Ljava/lang/Character;charCount(I)I"))
