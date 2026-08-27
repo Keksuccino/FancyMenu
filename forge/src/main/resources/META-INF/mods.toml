@@ -40,6 +40,13 @@ versionRange="[1.0.0,)"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
+modId="rinku"
+mandatory=false
+ordering="NONE"
+versionRange="[${rinku_min_version},)"
+side="CLIENT"
+
+[[dependencies.${mod_id}]]
 modId="fmextension_audio"
 mandatory=false
 ordering="BEFORE"
