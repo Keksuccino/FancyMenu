@@ -48,6 +48,13 @@ versionRange="[1.0.0,)"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
+modId="rinku"
+type="optional"
+ordering="NONE"
+versionRange="[${rinku_min_version},)"
+side="CLIENT"
+
+[[dependencies.${mod_id}]]
 modId="drippyloadingscreen"
 type="optional"
 ordering="NONE"
