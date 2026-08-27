@@ -45,7 +45,8 @@
     "fmextension_video": "*",
     "rrls": "<4.0.1",
     "watermedia": "<${watermedia_version}",
-    "wm_binaries": "<${watermedia_binaries_version}"
+    "wm_binaries": "<${watermedia_binaries_version}",
+    "wakes": "*"
   },
   "accessWidener": "fancymenu.accesswidener"
 }
