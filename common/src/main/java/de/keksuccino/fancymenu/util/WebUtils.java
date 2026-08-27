@@ -29,8 +29,8 @@ public class WebUtils {
     private static final BoundedWebResourceClient.RequestLimits METADATA_LIMITS = new BoundedWebResourceClient.RequestLimits(METADATA_CONNECT_TIMEOUT, METADATA_READ_TIMEOUT, METADATA_OVERALL_TIMEOUT, Long.MAX_VALUE);
 
     private static volatile boolean isConnectionAvailable = false;
-    private static final InternetAvailabilityMonitor INTERNET_AVAILABILITY_MONITOR = new InternetAvailabilityMonitor(new HttpInternetAvailabilityProbe(INTERNET_AVAILABILITY_ENDPOINT, INTERNET_AVAILABILITY_TIMEOUT_MILLIS, INTERNET_AVAILABILITY_TIMEOUT_MILLIS, endpoint -> (HttpURLConnection) endpoint.toURL().openConnection()), () -> new ExecutorFixedDelayScheduler(FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-WebUtils-ConnectivityCheck")), INTERNET_AVAILABILITY_REFRESH_DELAY, available -> isConnectionAvailable = available);
-    private static final BoundedWebResourceClient RESOURCE_CLIENT = new BoundedWebResourceClient(resourceUri -> (HttpURLConnection) resourceUri.toURL().openConnection(), new ExecutorDeadlineScheduler(FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-WebUtils-ResourceDeadline")), System::nanoTime);
+    private static final InternetAvailabilityMonitor INTERNET_AVAILABILITY_MONITOR = new InternetAvailabilityMonitor(new HttpInternetAvailabilityProbe(INTERNET_AVAILABILITY_ENDPOINT, INTERNET_AVAILABILITY_TIMEOUT_MILLIS, INTERNET_AVAILABILITY_TIMEOUT_MILLIS, endpoint -> (HttpURLConnection) endpoint.toURL().openConnection()), () -> new FixedDelayScheduler.ExecutorFixedDelayScheduler(FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-WebUtils-ConnectivityCheck")), INTERNET_AVAILABILITY_REFRESH_DELAY, available -> isConnectionAvailable = available);
+    private static final BoundedWebResourceClient RESOURCE_CLIENT = new BoundedWebResourceClient(resourceUri -> (HttpURLConnection) resourceUri.toURL().openConnection(), new DeadlineScheduler.ExecutorDeadlineScheduler(FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-WebUtils-ResourceDeadline")), System::nanoTime);
 
     public static void init() {
         INTERNET_AVAILABILITY_MONITOR.init();

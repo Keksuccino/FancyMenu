@@ -18,26 +18,28 @@ interface DeadlineScheduler {
 
         void cancel(boolean mayInterruptIfRunning);
     }
-}
 
-final class ExecutorDeadlineScheduler implements DeadlineScheduler {
+    final class ExecutorDeadlineScheduler implements DeadlineScheduler {
 
-    private final ScheduledExecutorService executor;
+        private final ScheduledExecutorService executor;
 
-    ExecutorDeadlineScheduler(@NotNull ScheduledExecutorService executor) {
-        this.executor = Objects.requireNonNull(executor, "executor");
+        ExecutorDeadlineScheduler(@NotNull ScheduledExecutorService executor) {
+            this.executor = Objects.requireNonNull(executor, "executor");
+        }
+
+        @Override
+        public @NotNull ScheduledTask schedule(@NotNull Runnable task, @NotNull Duration delay) {
+            Duration checkedDelay = Objects.requireNonNull(delay, "delay");
+            if (checkedDelay.isNegative() || checkedDelay.isZero()) throw new IllegalArgumentException("delay must be positive");
+            ScheduledFuture<?> future = this.executor.schedule(Objects.requireNonNull(task, "task"), checkedDelay.toNanos(), TimeUnit.NANOSECONDS);
+            return future::cancel;
+        }
+
+        @Override
+        public void shutdownNow() {
+            this.executor.shutdownNow();
+        }
+
     }
 
-    @Override
-    public @NotNull ScheduledTask schedule(@NotNull Runnable task, @NotNull Duration delay) {
-        Duration checkedDelay = Objects.requireNonNull(delay, "delay");
-        if (checkedDelay.isNegative() || checkedDelay.isZero()) throw new IllegalArgumentException("delay must be positive");
-        ScheduledFuture<?> future = this.executor.schedule(Objects.requireNonNull(task, "task"), checkedDelay.toNanos(), TimeUnit.NANOSECONDS);
-        return future::cancel;
-    }
-
-    @Override
-    public void shutdownNow() {
-        this.executor.shutdownNow();
-    }
 }
