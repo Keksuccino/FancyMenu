@@ -88,7 +88,7 @@ dependencies {
     compileOnly "maven.modrinth:watermedia:${watermedia_version}"
     implementation fg.deobf("maven.modrinth:konkrete:1.8.0-1.20-1.20.1-forge")
     implementation fg.deobf("maven.modrinth:melody:1.0.3-1.20.1-1.20.4-forge")
-    implementation(fg.deobf("de.keksuccino:rinku-forge:3.0.1-1.20.1"))
+    implementation(fg.deobf("de.keksuccino:rinku-forge:3.0.4-1.20.1"))
     implementation(fg.deobf("maven.modrinth:fancy-entity-renderer:nC3OBHwC"))
     compileOnly project(":common")
 }
