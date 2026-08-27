@@ -92,4 +92,19 @@ public final class RenderScaleUtil {
         return (absX + absY) * 0.5F;
     }
 
+    /**
+     * Floors a GUI-space coordinate to the physical window-pixel grid after applying the active render transform.
+     * The translation must be expressed in window pixels and the scale must convert GUI units to window pixels.
+     */
+    public static float snapGuiCoordinateToPixel(float coordinate, float renderScale, float renderTranslation) {
+        if (!Float.isFinite(coordinate) || !Float.isFinite(renderScale) || renderScale <= 0.0F || !Float.isFinite(renderTranslation)) {
+            return coordinate;
+        }
+        double pixelCoordinate = coordinate * (double)renderScale + renderTranslation;
+        if (!Double.isFinite(pixelCoordinate)) {
+            return coordinate;
+        }
+        return (float)((Math.floor(pixelCoordinate) - renderTranslation) / renderScale);
+    }
+
 }
