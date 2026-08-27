@@ -55,13 +55,13 @@ loom {
             client()
             displayName.set("Fabric Client")
             generateRunConfig.set(true)
-            runDirectory.set(file("run_client"))
+            runDirectory.set(file("../run_client"))
         }
         server {
             server()
             displayName.set("Fabric Server")
             generateRunConfig.set(true)
-            runDirectory.set(file("run_server"))
+            runDirectory.set(file("../run_server"))
         }
     }
 }
