@@ -18,7 +18,7 @@ class ExecutorFixedDelaySchedulerTest {
     @Test
     void delegatesToExecutorFixedDelaySchedulingAndForwardsCancellationAndShutdown() {
         RecordingScheduledExecutor executor = new RecordingScheduledExecutor();
-        ExecutorFixedDelayScheduler scheduler = new ExecutorFixedDelayScheduler(executor);
+        FixedDelayScheduler.ExecutorFixedDelayScheduler scheduler = new FixedDelayScheduler.ExecutorFixedDelayScheduler(executor);
         Runnable command = () -> {};
 
         FixedDelayScheduler.ScheduledTask task = scheduler.scheduleWithFixedDelay(command, Duration.ZERO, Duration.ofSeconds(20L));
