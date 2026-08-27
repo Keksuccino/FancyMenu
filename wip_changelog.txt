@@ -2,5 +2,6 @@
 CHANGELOG | FANCYMENU v3.9.11 [ W I P !! Not public yet !! ]
 
 - Fixed FancyMenu actions triggered from Browser elements not working correctly (#1747)
+- Fixed Markdown formatting sometimes adding an extra empty line at the end of text (#1742)
 
 %changelog:end%
