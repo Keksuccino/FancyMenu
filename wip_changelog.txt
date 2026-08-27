@@ -1,6 +1,7 @@
 
 CHANGELOG | FANCYMENU v3.9.11 [ W I P !! Not public yet !! ]
 
+- FancyMenu now wants at least Rinku v3.0.4 or newer (#1744)
 - Fixed FancyMenu actions triggered from Browser elements not working correctly (#1747)
 - Fixed Markdown formatting sometimes adding an extra empty line at the end of text (#1742)
 - Fixed centered text rendering incorrectly when text elements have an odd width (#1740)
