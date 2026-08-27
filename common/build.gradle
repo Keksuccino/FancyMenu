@@ -32,7 +32,7 @@ dependencies {
     modCompileOnly "maven.modrinth:watermedia:${watermedia_version}"
     modCompileOnly "maven.modrinth:melody:1.0.10-1.21-fabric"
     modCompileOnly "maven.modrinth:konkrete:1.9.9-1.21-fabric"
-    modCompileOnly "de.keksuccino:rinku-fabric:3.0.1-1.21.1"
+    modCompileOnly "de.keksuccino:rinku-fabric:3.0.4-1.21.1"
     implementation "it.crystalnest:fancy-entity-renderer-common:$fer_mc_version-$fer_version"
 }
 
