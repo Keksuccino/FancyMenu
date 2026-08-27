@@ -85,7 +85,7 @@ public class MixinMinecraft {
 		}
 	}
 
-	/** @reason Release FancyMenu-owned resources while Minecraft's render and resource infrastructure is still available. */
+	/** @reason Keep FancyMenu resources alive for any final shutdown screen, then release them before Minecraft tears down rendering infrastructure. */
 	@Inject(method = "close", at = @At("HEAD"))
 	private void before_close_FancyMenu(CallbackInfo info) {
 		ClientShutdownHandler.shutdown();
