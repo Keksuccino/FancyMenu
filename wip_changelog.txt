@@ -1,60 +1,6 @@
 
-CHANGELOG | FANCYMENU v3.9.9 [ W I P !! Not public yet !! ]
+CHANGELOG | FANCYMENU v3.9.11 [ W I P !! Not public yet !! ]
 
-- FancyMenu now needs "Rinku" for everything browser-related, instead of MCEF
-  - My fork of MCEF got rebranded to "Rinku", because loooots of stuff changed since I forked it, and it is no longer compatible with mods that were built for the classic MCEF
-- Added support for latest WaterMedia version (#1732)
-  - FancyMenu now wants at least WaterMedia v3.0.0.22 (older versions do not work anymore)
-- All WaterMedia-powered video features now work when Vulkan is enabled
-- GLSL Shader element, menu background, and overlay now support Vulkan on MC 26.2
-- Browsers now can be fully muted, not just their media (#1719)
-
-- Fixed the "Is Layout Enabled" requirement stopping after the first enabled layout instead of checking for later matches (#1722)
-- Fixed Ceiling and Floor placeholders adding a `.0` suffix to whole-number results
-- Fixed the "Is Element Focused" requirement using a misspelled description localization key
-- Fixed the File Text placeholder treating `\n` separators as literal text
-- Fixed custom localization files in root directories being ignored and language files being merged unpredictably
-- Fixed panorama reloads discarding active renderers without releasing their texture resources
-- Fixed the "Mouse Clicked" requirement name and description incorrectly implying one-shot behavior instead of a held-button state
-- Fixed the "Only Once Per Session" description omitting that each requirement instance is tracked independently
-- Fixed the Position Changed listener documenting its variables with incorrect single-dollar-sign names
-- Fixed Show Toast width help contradicting the actual 120–320 pixel clamping behavior
-- Fixed the Delay block name and description misrepresenting its one-time delay-gate behavior
-- Fixed game-directory file actions allowing path traversal and symlink escapes outside their permitted roots
-- Fixed local-resource placeholders allowing files outside their documented roots to be read
-- Fixed unbounded remote WebSocket message buffers, pending-send queues, and connection state growth
-- Fixed replayed handshakes repeatedly constructing and sending welcome data
-- Fixed Fabric and NeoForge using incompatible bridge payload identifiers
-- Fixed cyclic JSON-model parent chains hanging the render thread
-- Fixed NeoForge registering and executing the FancyMenu resource reload sequence twice
-- Fixed internet availability being checked only once and initially reported as available before verification
-- Fixed stale asynchronous video-loading callbacks overwriting newer video sources
-- Fixed order-insensitive list equality ignoring duplicate item counts
-- Fixed networking capability state surviving disconnects and conflating unrelated local sessions
-- Fixed NeoForge sending optional FancyMenu payloads without checking whether the peer supports them
-- Fixed large bridge payloads failing at the 32,767-character UTF limit by adding a bounded chunk protocol
-- Fixed NeoForge missing keyboard events consumed by the active screen
-- Fixed the resource picker missing resources from generic, virtual, overlay, and multi-root pack implementations
-- Fixed a panorama speed of zero stalling its ticker for roughly 24 days
-- Fixed "Mod Loader Version" placeholder reporting the loader version as `0.0.0` on Fabric (#1729)
-- Fixed NeoForge duplicating supplementary Unicode input sent to MCEF
-- Fixed NeoForge branding lines appearing in reverse order
-- Fixed action-move tooltips referencing a missing localization key
-- Fixed Write File actions using the host system’s default character encoding instead of UTF-8
-- Fixed file-reading failures being silently converted into ambiguous empty or partial results
-- Fixed PNG, JPEG, GIF, and APNG reloads leaving obsolete entries in Minecraft’s texture manager
-- Fixed custom GLFW cursor handles leaking when cursors were replaced, unregistered, or shut down
-- Fixed failed JSON-model builds leaking native images and retrying every rendered frame
-- Fixed remote sockets, reconnect tasks, and networking executors continuing during client shutdown
-- Fixed shared URL helpers allowing resource loaders to stall indefinitely without time or size limits
-- Fixed discarded video menu backgrounds retaining scheduler tasks and player resources
-- Fixed failed open and close audio loads creating permanent polling tasks
-- Fixed PNG resource-pack input streams not being explicitly closed
-- Fixed excessive shape-blur values causing extreme GPU shader loops
-- Fixed entity visibility listeners performing repeated block raycasts for every candidate entity on every rendered frame
-- Fixed normal variable assignments synchronously serializing and writing the complete database twice instead of coalescing rapid changes
-- Fixed game crashing when opening the Inventory screen in MC 1.19.2 (#1728)
-- Fixed "Browser" element mouse, keyboard, and scroll input passing through to the underlying menu in some cases (#1726)
-- Fixed custom menu backgrounds not working on some screens in MC 1.20.1, including the "Receiving Level Screen" (#1723)
+- Fixed FancyMenu actions triggered from Browser elements not working correctly (#1747)
 
 %changelog:end%
