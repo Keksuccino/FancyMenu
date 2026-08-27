@@ -1,4 +1,20 @@
 
+CHANGELOG | FANCYMENU v3.9.11
+
+- FancyMenu now wants at least Rinku v3.0.4 or newer (#1744)
+- The mod "Wakes" is now set as hard incompatibility directly in the mod JARs (#1733)
+- Fixed FancyMenu actions triggered from Browser elements not working correctly (#1747)
+- Fixed Markdown formatting sometimes adding an extra empty line at the end of text (#1742)
+- Fixed centered text rendering incorrectly when text elements have an odd width (#1740)
+- Fixed browser key presses also triggering Minecraft or mod keybinds and unexpectedly closing menus (#1744)
+- Fixed customized panoramas disappearing from the progress screen while the game shuts down (#1741)
+
+%changelog:end%
+
+
+
+
+
 CHANGELOG | FANCYMENU v3.9.9
 
 - FancyMenu now needs "Rinku" for everything browser-related, instead of MCEF
