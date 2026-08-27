@@ -383,6 +383,13 @@ public class ActionBridge {
         }
 
         LOGGER.info("[FANCYMENU] Processing action: {}", actionString);
+        // JCEF invokes message-router handlers on its browser-process UI thread. CefQueryCallback supports
+        // asynchronous completion, so keep it pending until the action has run on Minecraft's client thread.
+        MainThreadTaskExecutor.executeInMainThread(() -> completeActionRequest(actionString, callback), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+        return true;
+    }
+
+    private static void completeActionRequest(@NotNull String actionString, @NotNull CefQueryCallback callback) {
         boolean success = processAction(actionString);
         if (success) {
             JsonObject response = new JsonObject();
@@ -392,7 +399,6 @@ public class ActionBridge {
         } else {
             callback.failure(500, "Failed to execute action");
         }
-        return true;
     }
 
     private static boolean handlePlaceholderRequest(@NotNull JsonObject payload, @NotNull CefQueryCallback callback) {
