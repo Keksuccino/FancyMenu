@@ -34,7 +34,7 @@ dependencies {
     implementation "maven.modrinth:modmenu:20.0.0-beta.4"
     // implementation "it.crystalnest:fancy-entity-renderer-fabric:$fer_mc_version-$fer_version"
     compileOnly "flatdir:fer:0.5.4"
-    implementation "de.keksuccino:rinku-fabric:3.0.1-26.2"
+    implementation "de.keksuccino:rinku-fabric:3.0.4-26.2"
     
     implementation "maven.modrinth:AANobbMI:3QgJXuSK" // Sodium
     implementation "maven.modrinth:PtjYWJkn:9M5lqgDj" // Sodium Extra
