@@ -6,5 +6,6 @@ CHANGELOG | FANCYMENU v3.9.11 [ W I P !! Not public yet !! ]
 - Fixed Markdown formatting sometimes adding an extra empty line at the end of text (#1742)
 - Fixed centered text rendering incorrectly when text elements have an odd width (#1740)
 - Fixed browser key presses also triggering Minecraft or mod keybinds and unexpectedly closing menus (#1744)
+- Fixed customized panoramas disappearing from the progress screen while the game shuts down (#1741)
 
 %changelog:end%
