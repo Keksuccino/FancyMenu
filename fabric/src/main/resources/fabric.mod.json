@@ -33,10 +33,12 @@
     "java": ">=17"
   },
   "suggests": {
+    "rinku": ">=${rinku_min_version}",
     "fancy_entity_renderer": ">=${fer_version}",
     "watermedia": ">=${watermedia_version}"
   },
   "breaks": {
+    "rinku": "<${rinku_min_version}",
     "drippyloadingscreen": "<3.0.0",
     "fmextension_audio": "*",
     "fmextension_video": "*",
