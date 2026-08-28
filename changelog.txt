@@ -1,5 +1,4 @@
 
-
 CHANGELOG | FANCYMENU v3.9.12
 
 - Removed the "Wakes" incompatibility restriction from all Forge and NeoForge builds, and from Fabric on Minecraft 1.19.2, 1.20.1, and 1.21.1
