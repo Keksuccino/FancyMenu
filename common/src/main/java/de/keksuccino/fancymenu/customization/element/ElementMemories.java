@@ -36,6 +36,7 @@ public class ElementMemories {
 
     public static void clearMemories() {
         ELEMENT_MEMORIES.clear();
+        ElementAppearanceStateHandler.clear();
     }
 
 }
