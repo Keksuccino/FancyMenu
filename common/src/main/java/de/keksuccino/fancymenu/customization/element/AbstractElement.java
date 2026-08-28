@@ -71,6 +71,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public boolean shouldDoFadeInIfNeeded = false;
 	public boolean fadeInStarted = false;
 	public boolean fadeInFinished = false;
+	private boolean fadeInAppearanceStateInitialized = false;
 	public boolean shouldDoFadeOutIfNeeded = false;
 	public boolean fadeOutStarted = false;
 	public boolean fadeOutFinished = false;
@@ -130,6 +131,10 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
     protected Layout parentLayout;
     @Nullable
     protected RuntimePropertyContainer cachedMemory;
+    @Nullable
+    private String appearanceStateScreenIdentifier;
+    @Nullable
+    private ElementAppearanceStateHandler.ElementState cachedAppearanceState;
     protected int cachedMouseX = 0;
     protected int cachedMouseY = 0;
     protected float lastParallaxIntensityX = -10000.0F;
@@ -407,6 +412,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		//Make element remember that the appearance delay got applied (for only-first-time appearance delays)
 		if (this.lastTickAppearanceDelayed && !this.isAppearanceDelayed()) {
 			this.getMemory().putProperty("appearance_delay_applied", true);
+			ElementAppearanceStateHandler.ElementState appearanceState = this.getAppearanceState();
+			if (appearanceState != null) appearanceState.finishAppearanceDelay();
 		}
 		this.lastTickAppearanceDelayed = this.isAppearanceDelayed();
 
@@ -426,36 +433,52 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		if (shouldRender) {
 
 			//Handle fade-in
-			boolean fadeInIsResize = !this.isNewMenu && this.fadeInElementJustCreated;
-			boolean fadeInDone = this.getMemory().putPropertyIfAbsentAndGet("fade_in_done", false);
-			if (!fadeInIsResize || !fadeInDone) {
-				if ((this.fadeIn != Fading.NO_FADING) && this.shouldDoFadeInIfNeeded && (this.lastBaseOpacity > 0.0F)) {
-					// Only start fade-in once
-					if ((this.fadeIn != Fading.FIRST_TIME) || !this.getMemory().putPropertyIfAbsentAndGet("fade_in_done", false)) {
-						if (!this.fadeInStarted) {
+			if ((this.fadeIn != Fading.NO_FADING) && this.shouldDoFadeInIfNeeded && (this.lastBaseOpacity > 0.0F)) {
+				ElementAppearanceStateHandler.ElementState appearanceState = this.getAppearanceState();
+				boolean fadeInAllowed = true;
+				if (appearanceState != null) {
+					if (!this.fadeInAppearanceStateInitialized) {
+						this.fadeInAppearanceStateInitialized = true;
+						Float restoredOpacity = appearanceState.beginOrResumeFadeIn(this.fadeIn == Fading.FIRST_TIME, 0.02F);
+						if (restoredOpacity == null) {
+							fadeInAllowed = false;
+						} else {
 							this.fadeInStarted = true;
-							this.opacity = 0.02F;
-							this.lastFadeInTick = System.currentTimeMillis(); // initialize timer
-						}
-						long now = System.currentTimeMillis();
-						float elapsedSeconds = (now - this.lastFadeInTick) / 1000.0F;
-						this.lastFadeInTick = now;
-						// Increase opacity based on elapsed time; 0.4 is the base rate for fadeSpeed = 1.
-						float fadeInSpeed = Math.max(0.0F, this.fadeInSpeed.getFloat());
-						this.opacity += elapsedSeconds * (0.4F * fadeInSpeed);
-						this.opacity = Math.max(0.02F, this.opacity);
-						if (this.opacity >= this.lastBaseOpacity) {
-							this.opacity = this.lastBaseOpacity;
-							this.shouldDoFadeInIfNeeded = false;
-							this.fadeInFinished = true;
-							this.getMemory().putProperty("fade_in_done", true);
+							this.opacity = Math.max(0.02F, Math.min(restoredOpacity, this.lastBaseOpacity));
+							this.lastFadeInTick = System.currentTimeMillis();
 						}
 					}
+				} else {
+					boolean fadeInIsResize = !this.isNewMenu && this.fadeInElementJustCreated;
+					boolean fadeInDone = this.getMemory().putPropertyIfAbsentAndGet("fade_in_done", false);
+					fadeInAllowed = (!fadeInIsResize || !fadeInDone) && ((this.fadeIn != Fading.FIRST_TIME) || !fadeInDone);
 				}
-			} else {
-				this.shouldDoFadeInIfNeeded = false;
-				this.fadeInStarted = false;
-				this.fadeInFinished = false;
+				if (fadeInAllowed) {
+					if (!this.fadeInStarted) {
+						this.fadeInStarted = true;
+						this.opacity = 0.02F;
+						this.lastFadeInTick = System.currentTimeMillis(); // initialize timer
+					}
+					long now = System.currentTimeMillis();
+					float elapsedSeconds = (now - this.lastFadeInTick) / 1000.0F;
+					this.lastFadeInTick = now;
+					// Increase opacity based on elapsed time; 0.4 is the base rate for fadeSpeed = 1.
+					float fadeInSpeed = Math.max(0.0F, this.fadeInSpeed.getFloat());
+					this.opacity += elapsedSeconds * (0.4F * fadeInSpeed);
+					this.opacity = Math.max(0.02F, this.opacity);
+					if (appearanceState != null) appearanceState.updateFadeIn(this.opacity);
+					if (this.opacity >= this.lastBaseOpacity) {
+						this.opacity = this.lastBaseOpacity;
+						this.shouldDoFadeInIfNeeded = false;
+						this.fadeInFinished = true;
+						this.getMemory().putProperty("fade_in_done", true);
+						if (appearanceState != null) appearanceState.finishFadeIn();
+					}
+				} else {
+					this.shouldDoFadeInIfNeeded = false;
+					this.fadeInStarted = false;
+					this.fadeInFinished = false;
+				}
 			}
 
 		}
@@ -493,6 +516,18 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	public void onBecomeVisible() {
 
+		if (!isEditor()) {
+			ElementAppearanceStateHandler.ElementState appearanceState = this.getAppearanceState();
+			if (appearanceState != null) {
+				if (!this.appearanceDelayElementJustCreated && (this.appearanceDelay == AppearanceDelay.EVERY_TIME)) {
+					appearanceState.restartEveryTimeAppearanceDelay();
+				}
+				if (!this.fadeInElementJustCreated && (this.fadeIn == Fading.EVERY_TIME)) {
+					appearanceState.restartEveryTimeFadeIn();
+				}
+			}
+		}
+		this.fadeInAppearanceStateInitialized = false;
 		this.applyAppearanceDelay();
 		this.updateOpacity();
 
@@ -533,11 +568,18 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		}
 		boolean applied = this.getMemory().putPropertyIfAbsentAndGet("appearance_delay_applied", false);
 		float delaySeconds = Math.max(0.0F, this.appearanceDelaySeconds.getFloat());
-		if ((!isResize || !applied) && (this.appearanceDelay != AppearanceDelay.NO_DELAY) && (delaySeconds > 0.0F)) {
-			if ((this.appearanceDelay == AppearanceDelay.FIRST_TIME) && applied) {
+		if ((this.appearanceDelay != AppearanceDelay.NO_DELAY) && (delaySeconds > 0.0F)) {
+			ElementAppearanceStateHandler.ElementState appearanceState = this.getAppearanceState();
+			if (appearanceState != null) {
+				long now = System.currentTimeMillis();
+				long proposedEndTime = now + ((long)(delaySeconds * 1000.0F));
+				this.appearanceDelayEndTime = appearanceState.beginOrResumeAppearanceDelay(this.appearanceDelay == AppearanceDelay.FIRST_TIME, proposedEndTime, now);
+			} else if ((this.appearanceDelay == AppearanceDelay.FIRST_TIME) && applied) {
 				this.appearanceDelayEndTime = -1;
-			} else {
+			} else if (!isResize || !applied) {
 				this.appearanceDelayEndTime = System.currentTimeMillis() + ((long)(delaySeconds * 1000.0F));
+			} else {
+				this.appearanceDelayEndTime = -1;
 			}
 		} else {
 			this.appearanceDelayEndTime = -1;
@@ -669,6 +711,13 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	public void setInstanceIdentifier(@NotNull String id) {
 		this.instanceIdentifier = Objects.requireNonNull(id);
+		this.cachedAppearanceState = null;
+	}
+
+	public void setAppearanceStateScreenIdentifier(@Nullable String screenIdentifier) {
+		if (Objects.equals(this.appearanceStateScreenIdentifier, screenIdentifier)) return;
+		this.appearanceStateScreenIdentifier = screenIdentifier;
+		this.cachedAppearanceState = null;
 	}
 
     public ElementBuilder<?, ?> getBuilder() {
@@ -1078,6 +1127,15 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			this.cachedMemory = ElementMemories.getMemory(this.getInstanceIdentifier());
 		}
 		return this.cachedMemory;
+	}
+
+	@Nullable
+	protected ElementAppearanceStateHandler.ElementState getAppearanceState() {
+		if (this.appearanceStateScreenIdentifier == null) return null;
+		if (this.cachedAppearanceState == null) {
+			this.cachedAppearanceState = ElementAppearanceStateHandler.getState(this.appearanceStateScreenIdentifier, this.getInstanceIdentifier());
+		}
+		return this.cachedAppearanceState;
 	}
 
 	public static String fixBackslashPath(String path) {
