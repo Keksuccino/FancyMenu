@@ -1,12 +1,7 @@
 
-CHANGELOG | FANCYMENU v3.9.11 [ W I P !! Not public yet !! ]
+CHANGELOG | FANCYMENU v3.9.12 [ W I P !! Not public yet !! ]
 
-- FancyMenu now wants at least Rinku v3.0.4 or newer (#1744)
-- The mod "Wakes" is now set as hard incompatibility directly in the mod JARs (#1733)
-- Fixed FancyMenu actions triggered from Browser elements not working correctly (#1747)
-- Fixed Markdown formatting sometimes adding an extra empty line at the end of text (#1742)
-- Fixed centered text rendering incorrectly when text elements have an odd width (#1740)
-- Fixed browser key presses also triggering Minecraft or mod keybinds and unexpectedly closing menus (#1744)
-- Fixed customized panoramas disappearing from the progress screen while the game shuts down (#1741)
+- Improved first-time fade-ins to continue smoothly when resizing the window during the animation
+- Fixed first-time fade-ins and delayed appearances replaying after leaving a screen before they finish (#1752)
 
 %changelog:end%
