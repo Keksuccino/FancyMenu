@@ -1,4 +1,17 @@
 
+
+CHANGELOG | FANCYMENU v3.9.12
+
+- Removed the "Wakes" incompatibility restriction from all Forge and NeoForge builds, and from Fabric on Minecraft 1.19.2, 1.20.1, and 1.21.1
+- Improved first-time fade-ins to continue smoothly when resizing the window during the animation
+- Fixed first-time fade-ins and delayed appearances replaying after leaving a screen before they finish (#1752)
+
+%changelog:end%
+
+
+
+
+
 CHANGELOG | FANCYMENU v3.9.11
 
 - FancyMenu now wants at least Rinku v3.0.4 or newer (#1744)
