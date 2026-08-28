@@ -27,13 +27,6 @@ config = "${mod_id}.neoforge.mixins.json"
 file="META-INF/accesstransformer.cfg"
 
 [[dependencies.${mod_id}]]
-modId="wakes"
-type="incompatible"
-reason="Wakes is incompatible with FancyMenu. Please remove Wakes."
-ordering="NONE"
-side="BOTH"
-
-[[dependencies.${mod_id}]]
 modId="konkrete"
 type="required"
 ordering="NONE"
