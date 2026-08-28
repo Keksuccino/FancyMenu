@@ -81,6 +81,12 @@ public interface ElementFactory {
             }
         }
 
+        normalElements.backgroundElements.forEach(element -> element.setAppearanceStateScreenIdentifier(screenIdentifier));
+        normalElements.foregroundElements.forEach(element -> element.setAppearanceStateScreenIdentifier(screenIdentifier));
+        if (vanillaWidgetElements != null) {
+            vanillaWidgetElements.forEach(element -> element.setAppearanceStateScreenIdentifier(screenIdentifier));
+        }
+
     }
 
     /**

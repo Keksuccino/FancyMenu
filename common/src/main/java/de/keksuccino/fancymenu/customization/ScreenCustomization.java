@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.DecorationOverlays;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.element.ElementAppearanceStateHandler;
 import de.keksuccino.fancymenu.customization.element.ElementMemories;
 import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.AnimationControllerHandler;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
@@ -340,6 +341,12 @@ public class ScreenCustomization {
 
 		AnimationControllerHandler.stopAllAnimations();
 		AnimationControllerHandler.clearMemory();
+
+		if (lastScreen != null) {
+			String lastScreenIdentifier = ScreenIdentifierHandler.getIdentifierOfScreen(lastScreen);
+			String newScreenIdentifier = (newScreen != null) ? ScreenIdentifierHandler.getIdentifierOfScreen(newScreen) : null;
+			ElementAppearanceStateHandler.onScreenChanged(lastScreenIdentifier, newScreenIdentifier);
+		}
 
 		//Handle "Once Per Session" elements
 		if (lastScreen != null) {
