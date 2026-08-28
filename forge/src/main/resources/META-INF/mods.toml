@@ -19,13 +19,6 @@ logoFile="fancymenu_logo_128x128.png"
 description='''${mod_description}'''
 
 [[dependencies.${mod_id}]]
-modId="wakes"
-mandatory=false
-ordering="NONE"
-versionRange="[99999.0 §cWakes is incompatible with FancyMenu. Please remove Wakes.§r]"
-side="BOTH"
-
-[[dependencies.${mod_id}]]
 modId="konkrete"
 mandatory=true
 ordering="NONE"
