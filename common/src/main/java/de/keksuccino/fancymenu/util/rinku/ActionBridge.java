@@ -17,6 +17,7 @@ import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cef.CefClient;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.browser.CefMessageRouter;
@@ -34,6 +35,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 
 /**
  * This is the base class for the bridge between the Rinku browser and FancyMenu to make it possible to execute FancyMenu's actions in the browser via JavaScript.
@@ -75,10 +77,11 @@ public class ActionBridge {
             LOGGER.info("[FANCYMENU] Initializing ActionBridge message router");
             
             // Ensure Rinku client is initialized
-            if (Rinku.getClient() == null) {
+            if (!Rinku.isInitialized()) {
                 LOGGER.warn("[FANCYMENU] Rinku client is not initialized yet, delaying ActionBridge initialization");
                 return false;
             }
+            CefClient client = Rinku.getClient().getHandle();
             
             // Create message router configuration
             CefMessageRouterConfig config = new CefMessageRouterConfig();
@@ -86,11 +89,10 @@ public class ActionBridge {
             config.jsCancelFunction = "cefQueryCancel";
             
             // Create the message router
-            messageRouter = CefMessageRouter.create(config);
-            messageRouter.addHandler(createMessageHandler(), true);
-            
-            // Add to global Rinku client
-            Rinku.getClient().getHandle().addMessageRouter(messageRouter);
+            CefMessageRouter router = CefMessageRouter.create(config);
+            if (router == null) throw new IllegalStateException("Failed to create the ActionBridge message router");
+            registerMessageRouter(router, client::addMessageRouter);
+            messageRouter = router;
             
             initialized = true;
             LOGGER.info("[FANCYMENU] ActionBridge message router initialized successfully");
@@ -100,29 +102,32 @@ public class ActionBridge {
             return false;
         }
     }
+
+    static void registerMessageRouter(@NotNull CefMessageRouter router, @NotNull Consumer<CefMessageRouter> register) {
+        try {
+            if (!router.addHandler(createMessageHandler(), true)) throw new IllegalStateException("Failed to attach the ActionBridge message handler");
+            register.accept(router);
+        } catch (RuntimeException | Error failure) {
+            // Until registration succeeds, FancyMenu is responsible for releasing the router.
+            try {
+                router.dispose();
+            } catch (Throwable cleanupFailure) {
+                if (cleanupFailure != failure) failure.addSuppressed(cleanupFailure);
+            }
+            throw failure;
+        }
+    }
     
     /**
-     * Clean up the message router
+     * Stop the bridge during client shutdown. CEF owns the registered message router.
      */
-    public static void dispose() {
-        CefMessageRouter router;
-        synchronized (ActionBridge.class) {
-            shuttingDown = true;
-            router = messageRouter;
-            messageRouter = null;
-            initialized = false;
-        }
-        if (router == null) return;
-        try {
-            Rinku.getClient().getHandle().removeMessageRouter(router);
-        } catch (Throwable throwable) {
-            LOGGER.error("[FANCYMENU] Failed to remove the ActionBridge message router from Rinku", throwable);
-        }
-        try {
-            router.dispose();
-        } catch (Throwable throwable) {
-            LOGGER.error("[FANCYMENU] Failed to dispose the ActionBridge message router", throwable);
-        }
+    public static synchronized void dispose() {
+        shuttingDown = true;
+        // CefClientHandler disposes all registered routers during its own shutdown. Rinku may
+        // already have cleared its global client, so neither look it up nor dispose its router twice.
+        // Keep the router registered if FancyMenu shuts down first so CEF can still release it.
+        messageRouter = null;
+        initialized = false;
     }
     
     /**
