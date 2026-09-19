@@ -1,7 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.glsl;
 
-import com.mojang.blaze3d.preprocessor.GlslPreprocessor;
-import net.minecraft.client.renderer.ShaderDefines;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.util.shaderc.Shaderc;
@@ -36,9 +34,8 @@ public final class GlslShaderSourceTransformer {
     public static final String RENDER_AREA_UNIFORM = "fmRenderArea_FancyMenu";
     public static final String RENDER_TARGET_SIZE_UNIFORM = "fmRenderTargetSize_FancyMenu";
 
-    private static final String GLSL_VERSION = "#version 330";
+    private static final String GLSL_VERSION = "#version 330\n#extension GL_ARB_separate_shader_objects : require";
     private static final String PREPROCESS_SOURCE_NAME = "fancymenu_runtime_fragment_preprocess.glsl";
-    private static final ShaderDefines VULKAN_GLOBAL_DEFINES = ShaderDefines.builder().define("gl_VertexID", "gl_VertexIndex").define("gl_InstanceID", "gl_InstanceIndex").build();
     private static final Pattern VERSION_DIRECTIVE_PATTERN = Pattern.compile("(?m)^\\s*#version\\s+.+$");
     private static final Pattern PRECISION_DIRECTIVE_PATTERN = Pattern.compile("(?m)^\\s*precision\\s+\\w+\\s+\\w+\\s*;\\s*$");
     private static final Set<String> DECLARATION_QUALIFIERS = Set.of("highp", "mediump", "lowp", "coherent", "volatile", "restrict", "readonly", "writeonly", "precise");
@@ -562,8 +559,8 @@ public final class GlslShaderSourceTransformer {
 
     /**
      * Resolves macros and conditional branches only after the structural scan proves that their concrete result is
-     * required for uniform layout or wrapper selection. The options and Vulkan compatibility defines intentionally
-     * mirror Minecraft 26.2's {@code GlslCompiler}.
+     * required for uniform layout or wrapper selection. Preserve legacy Vulkan aliases during preprocessing so
+     * existing backend-conditional user shaders retain their branch selection under RenderPearl.
      */
     @NotNull
     private static String preprocessSource(@NotNull String source, @NotNull BackendCoordinates backendCoordinates) {
@@ -592,7 +589,8 @@ public final class GlslShaderSourceTransformer {
 
             String compilerSource = GLSL_VERSION + "\n" + source;
             if (backendCoordinates == BackendCoordinates.VULKAN) {
-                compilerSource = GlslPreprocessor.injectDefines(compilerSource, VULKAN_GLOBAL_DEFINES);
+                Shaderc.shaderc_compile_options_add_macro_definition(options, "gl_VertexID", "gl_VertexIndex");
+                Shaderc.shaderc_compile_options_add_macro_definition(options, "gl_InstanceID", "gl_InstanceIndex");
             }
 
             long result = Shaderc.shaderc_compile_into_preprocessed_text(compiler, compilerSource, Shaderc.shaderc_fragment_shader, PREPROCESS_SOURCE_NAME, "main", options);
@@ -754,7 +752,7 @@ public final class GlslShaderSourceTransformer {
             // unit that declares the Shadertoy wrapper's user output, even when the renamed function is never called.
             source = blankTopLevelFunctionDefinition(source, "main");
         }
-        fragment.append(source).append('\n');
+        fragment.append(addFragmentOutputLocation(source)).append('\n');
         fragment.append("\nvoid main() {\n");
         fragment.append("    vec4 fmColor_FancyMenu = vec4(0.0);\n");
         fragment.append("    mainImage(fmColor_FancyMenu, gl_FragCoord.xy - fmAreaOffset);\n");
@@ -820,17 +818,38 @@ public final class GlslShaderSourceTransformer {
         if (withGlFragColorCompat) {
             fragment.append("#define gl_FragColor fmOutputColor_FancyMenu\n");
         }
-        fragment.append(source).append('\n');
+        fragment.append(addFragmentOutputLocation(source)).append('\n');
         return fragment.toString();
+    }
+
+    @NotNull
+    private static String addFragmentOutputLocation(@NotNull String source) {
+        // Legacy direct shaders usually declare one unqualified color output. Preserve explicitly assigned locations.
+        List<Token> tokens = tokenize(source);
+        int braces = 0;
+        int parentheses = 0;
+        for (int i = 0; i + 2 < tokens.size(); i++) {
+            String text = tokens.get(i).text();
+            if (text.equals("{")) braces++;
+            if (text.equals("}")) braces--;
+            if (text.equals("(")) parentheses++;
+            if (text.equals(")")) parentheses--;
+            if (braces == 0 && parentheses == 0 && text.equals("out") && tokens.get(i + 1).text().equals("vec4") && !isPreprocessorToken(source, tokens.get(i).start())) {
+                int offset = tokens.get(i).start();
+                int layoutStart = findLayoutQualifierStart(source, tokens, i);
+                if (layoutStart == offset) return source.substring(0, offset) + "layout(location = 0) " + source.substring(offset);
+            }
+        }
+        return source;
     }
 
     @NotNull
     private static StringBuilder buildFragmentPrefix(@NotNull UniformTransformation uniforms, @NotNull BackendCoordinates backendCoordinates, @NotNull PassKind passKind, boolean declareOutput) {
         StringBuilder fragment = new StringBuilder();
         fragment.append(GLSL_VERSION).append('\n');
-        fragment.append("in vec2 fmUv_FancyMenu;\n");
+        fragment.append("layout(location = 0) in vec2 fmUv_FancyMenu;\n");
         if (declareOutput) {
-            fragment.append("out vec4 fmOutputColor_FancyMenu;\n");
+            fragment.append("layout(location = 0) out vec4 fmOutputColor_FancyMenu;\n");
         }
         fragment.append("#define iGlobalTime iTime\n");
         fragment.append("#define texture2D texture\n");
@@ -855,7 +874,7 @@ public final class GlslShaderSourceTransformer {
         StringBuilder vertex = new StringBuilder();
         vertex.append(GLSL_VERSION).append('\n');
         vertex.append(blockDeclaration);
-        vertex.append("out vec2 fmUv_FancyMenu;\n");
+        vertex.append("layout(location = 0) out vec2 fmUv_FancyMenu;\n");
         vertex.append("void main() {\n");
         if (backendCoordinates == BackendCoordinates.VULKAN && passKind == PassKind.IMAGE) {
             // Minecraft's Vulkan pipeline declares clockwise fronts for its positive-height viewport. The image-space
@@ -864,7 +883,7 @@ public final class GlslShaderSourceTransformer {
         } else {
             vertex.append("    const vec2 fmVertices[6] = vec2[6](vec2(0.0, 0.0), vec2(1.0, 0.0), vec2(1.0, 1.0), vec2(0.0, 0.0), vec2(1.0, 1.0), vec2(0.0, 1.0));\n");
         }
-        vertex.append("    vec2 fmUv = fmVertices[gl_VertexID];\n");
+        vertex.append("    vec2 fmUv = fmVertices[gl_VertexIndex];\n");
         vertex.append("    vec2 fmLogicalPixel = " + RENDER_AREA_UNIFORM + ".xy + fmUv * " + RENDER_AREA_UNIFORM + ".zw;\n");
         if (backendCoordinates == BackendCoordinates.VULKAN && passKind == PassKind.IMAGE) {
             vertex.append("    vec2 fmPixel = vec2(fmLogicalPixel.x, " + RENDER_TARGET_SIZE_UNIFORM + ".y - fmLogicalPixel.y);\n");

@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
@@ -93,11 +92,11 @@ public class TextInputWindowBody extends PiPWindowBody implements InitialWidgetF
 
     @Override
     public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if ((keyCode == InputConstants.KEY_ENTER) && this.isTextValid() && (this.input != null) && this.input.isFocused()) {
+        if ((keyCode == InputConstants.KEY_RETURN) && this.isTextValid() && (this.input != null) && this.input.isFocused()) {
             this.callback.accept(this.input.getValue());
             this.closeWindow();
             return true;

@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.items.Poop;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.leveling.LevelingManager;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
@@ -112,7 +113,7 @@ public class BuddyWidget extends AbstractContainerEventHandler implements Render
     }
     
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (buddy.isDead() && button == 0 && buddy.isMouseOverBuddy(mouseX, mouseY)) {
+        if (buddy.isDead() && button == InputConstants.MOUSE_BUTTON_LEFT && buddy.isMouseOverBuddy(mouseX, mouseY)) {
             resetBuddySave();
             return true;
         }

@@ -1,12 +1,13 @@
 #version 330
+#extension GL_ARB_separate_shader_objects : require
 
-in vec2 localPos;
-in vec4 vertexColor;
-in vec4 circleInfo0;
-in vec4 rotation;
-in vec4 circleInfo2;
+layout(location = 0) in vec2 localPos;
+layout(location = 1) in vec4 vertexColor;
+layout(location = 2) in vec4 circleInfo0;
+layout(location = 3) in vec4 rotation;
+layout(location = 4) in vec4 circleInfo2;
 
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
 
 float getShapeAlpha(vec2 p, vec2 halfSize, float n) {
     vec2 uv = abs(p) / (halfSize + vec2(1.0E-6));

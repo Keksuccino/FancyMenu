@@ -221,7 +221,7 @@ public class WrappedRinkuBrowser extends AbstractWidget implements Closeable, Na
 
     @Override
     public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
@@ -233,7 +233,7 @@ public class WrappedRinkuBrowser extends AbstractWidget implements Closeable, Na
 
     @Override
     public boolean keyReleased(net.minecraft.client.input.KeyEvent event) {
-        return this.keyReleased(event.key(), event.scancode(), event.modifiers());
+        return this.keyReleased(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {

@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.jsonmodel;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -40,6 +41,9 @@ import net.minecraft.client.resources.model.geometry.QuadCollection;
 import net.minecraft.client.resources.model.geometry.UnbakedGeometry;
 import net.minecraft.client.resources.model.sprite.Material;
 import net.minecraft.client.resources.model.sprite.MaterialBaker;
+import net.minecraft.client.renderer.texture.SpriteLoader;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
+import java.util.concurrent.CompletableFuture;
 import net.minecraft.client.resources.model.sprite.SpriteGetter;
 import net.minecraft.client.resources.model.sprite.SpriteId;
 import net.minecraft.client.resources.model.sprite.TextureSlots;
@@ -174,7 +178,7 @@ public class JsonModelElement extends AbstractElement {
             applyDisplayTransform(cache.model().transforms().getTransform(ItemDisplayContext.GUI), pose, false);
         }
 
-        pose.mulPose(new Quaternionf().rotationXYZ(
+        pose.rotate(new Quaternionf().rotationXYZ(
                 (float) Math.toRadians(this.modelRotationX.getFloat()),
                 (float) Math.toRadians(this.modelRotationY.getFloat()),
                 (float) Math.toRadians(this.modelRotationZ.getFloat())
@@ -208,7 +212,11 @@ public class JsonModelElement extends AbstractElement {
         float blue = b;
         float alpha = a;
         submitNodeStorage.submitCustomGeometry(pose, renderType, (modelPose, consumer) -> renderModelQuads(quads, modelPose, consumer, red, green, blue, alpha));
-        Minecraft.getInstance().gameRenderer.featureRenderDispatcher().renderAllFeatures(submitNodeStorage);
+        var target = Minecraft.getInstance().gameRenderer.mainRenderTarget();
+        try (var frame = Minecraft.getInstance().gameRenderer.featureRenderDispatcher().prepareFrame(submitNodeStorage); var pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "FancyMenu JSON model", target.getColorTextureView(), java.util.Optional.empty(), target.getDepthTextureView(), java.util.OptionalDouble.empty())) {
+            RenderSystem.bindDefaultUniforms(pass);
+            net.minecraft.client.renderer.feature.FeatureRenderDispatcher.renderAllFeatures(pass, frame);
+        }
 
         Minecraft.getInstance().gameRenderer.lighting().setupFor(Lighting.Entry.ITEMS_3D);
         RenderingUtils.resetShaderColor(graphics);
@@ -244,7 +252,7 @@ public class JsonModelElement extends AbstractElement {
         }
         int side = leftHand ? -1 : 1;
         poseStack.translate(side * transform.translation().x(), transform.translation().y(), transform.translation().z());
-        poseStack.mulPose(new Quaternionf().rotationXYZ(
+        poseStack.rotate(new Quaternionf().rotationXYZ(
                 rotationX * ((float) Math.PI / 180.0F),
                 rotationY * ((float) Math.PI / 180.0F),
                 rotationZ * ((float) Math.PI / 180.0F)
@@ -540,6 +548,15 @@ public class JsonModelElement extends AbstractElement {
         };
     }
 
+    /**
+     * MaterialBaker now requires atlas preparations, which vanilla discards after upload. Our runtime
+     * baker resolves every material through the live SpriteGetter; these missing-only preparations
+     * satisfy the superclass fallback contract and must never be uploaded as actual atlases.
+     */
+    private static SpriteLoader.Preparations missingSpritePreparations(TextureAtlasSprite missing) {
+        return new SpriteLoader.Preparations(missing.contents().width(), missing.contents().height(), 0, missing, Map.of(MissingTextureAtlasSprite.getLocation(), missing), CompletableFuture.completedFuture(null));
+    }
+
     private ModelBaker createModelBaker(@NotNull SpriteGetter spriteGetter) {
         return new ModelBaker() {
             private final Interner interner = new Interner() {
@@ -554,9 +571,9 @@ public class JsonModelElement extends AbstractElement {
                 }
             };
             private final TextureAtlasSprite missingBlockSprite = Minecraft.getInstance().getAtlasManager().getAtlasOrThrow(AtlasIds.BLOCKS).missingSprite();
-            private final MaterialBaker materialBaker = new MaterialBaker(this.missingBlockSprite) {
+            private final MaterialBaker materialBaker = new MaterialBaker(missingSpritePreparations(this.missingBlockSprite), missingSpritePreparations(this.missingBlockSprite)) {
                 @Override
-                protected Material.Baked bake(Material material) {
+                public Material.Baked get(Material material, ModelDebugName name) {
                     TextureAtlasSprite itemSprite = spriteGetter.get(new SpriteId(TextureAtlas.LOCATION_ITEMS, material.sprite()));
                     TextureAtlasSprite missingItemSprite = Minecraft.getInstance().getAtlasManager().getAtlasOrThrow(AtlasIds.ITEMS).missingSprite();
                     if (itemSprite != missingItemSprite) {

@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.cursor;
 
+import org.lwjgl.sdl.SDLMouse;
 import com.mojang.blaze3d.platform.TextureUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
@@ -12,8 +13,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
-import org.lwjgl.glfw.GLFWImage;
+import org.lwjgl.sdl.SDLSurface;
+import org.lwjgl.sdl.SDLPixels;
+import org.lwjgl.sdl.SDL_Surface;
+import org.lwjgl.sdl.SDLError;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
@@ -27,48 +30,44 @@ import java.util.Objects;
 public class CursorHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final CursorHandleLifecycle CURSOR_HANDLE_LIFECYCLE = new CursorHandleLifecycle(new MinecraftGlfwThreadExecutor(), new GlfwNativeOperations(), throwable -> LOGGER.error("[FANCYMENU] Failed to release a GLFW cursor!", throwable));
+    private static final CursorHandleLifecycle CURSOR_HANDLE_LIFECYCLE = new CursorHandleLifecycle(new MinecraftSdlThreadExecutor(), new SdlNativeOperations(), throwable -> LOGGER.error("[FANCYMENU] Failed to release a SDL cursor!", throwable));
     private static final CursorRegistry<CustomCursor> CUSTOM_CURSORS = new CursorRegistry<>(new CustomCursorRetirement());
     private static final CursorTickSelection<CustomCursor> CLIENT_TICK_CURSOR = new CursorTickSelection<>();
 
-    public static final long CURSOR_RESIZE_HORIZONTAL = createStandardCursor(GLFW.GLFW_RESIZE_EW_CURSOR);
-    public static final long CURSOR_RESIZE_VERTICAL = createStandardCursor(GLFW.GLFW_RESIZE_NS_CURSOR);
-    public static final long CURSOR_RESIZE_NWSE = createStandardCursor(GLFW.GLFW_RESIZE_NWSE_CURSOR);
-    public static final long CURSOR_RESIZE_NESW = createStandardCursor(GLFW.GLFW_RESIZE_NESW_CURSOR);
-    public static final long CURSOR_RESIZE_ALL = createStandardCursor(GLFW.GLFW_RESIZE_ALL_CURSOR);
-    public static final long CURSOR_WRITING = createStandardCursor(GLFW.GLFW_IBEAM_CURSOR);
-    public static final long CURSOR_POINTING_HAND = createStandardCursor(GLFW.GLFW_POINTING_HAND_CURSOR);
-    public static final long CURSOR_NORMAL = createStandardCursor(GLFW.GLFW_ARROW_CURSOR);
+    public static final long CURSOR_RESIZE_HORIZONTAL = createStandardCursor(SDLMouse.SDL_SYSTEM_CURSOR_EW_RESIZE);
+    public static final long CURSOR_RESIZE_VERTICAL = createStandardCursor(SDLMouse.SDL_SYSTEM_CURSOR_NS_RESIZE);
+    public static final long CURSOR_RESIZE_NWSE = createStandardCursor(SDLMouse.SDL_SYSTEM_CURSOR_NWSE_RESIZE);
+    public static final long CURSOR_RESIZE_NESW = createStandardCursor(SDLMouse.SDL_SYSTEM_CURSOR_NESW_RESIZE);
+    public static final long CURSOR_RESIZE_ALL = createStandardCursor(SDLMouse.SDL_SYSTEM_CURSOR_MOVE);
+    public static final long CURSOR_WRITING = createStandardCursor(SDLMouse.SDL_SYSTEM_CURSOR_TEXT);
+    public static final long CURSOR_POINTING_HAND = createStandardCursor(SDLMouse.SDL_SYSTEM_CURSOR_POINTER);
+    public static final long CURSOR_NORMAL = createStandardCursor(SDLMouse.SDL_SYSTEM_CURSOR_DEFAULT);
 
     private static volatile boolean initialized = false;
 
-    /**
-     * Returns the currently active GLFW cursor handle on the Minecraft window, or {@code -1} if unknown/not yet tracked.
-     * <p>
-     * Note: GLFW does not expose a cursor getter, this relies on mixin hooks tracking calls to {@code GLFW.glfwSetCursor(...)}.
-     */
+    /** Returns SDL's process-wide active cursor, or {@code -1} before the client window is available. */
     public static long getActiveCursor() {
         try {
             Minecraft mc = Minecraft.getInstance();
             if (mc == null || mc.getWindow() == null) return -1L;
-            return GlfwCursorTracker.getActiveCursor(de.keksuccino.fancymenu.util.window.WindowHandler.getWindowHandle());
+            return SDLMouse.SDL_GetCursor();
         } catch (Exception ignored) {
             return -1L;
         }
     }
 
     /**
-     * Returns the standard GLFW cursor shape id of the currently active cursor, or {@code -1} if unknown/not a standard cursor.
+     * Returns the standard SDL cursor shape id of the currently active cursor, or {@code -1} if unknown/not a standard cursor.
      */
     public static int getActiveStandardCursorShape() {
         long cursor = getActiveCursor();
-        if (cursor == 0L) {
-            return GLFW.GLFW_ARROW_CURSOR; // GLFW docs: NULL cursor switches back to default arrow cursor
+        if (cursor == 0L || cursor == SDLMouse.SDL_GetDefaultCursor()) {
+            return SDLMouse.SDL_SYSTEM_CURSOR_DEFAULT; // SDL owns the default cursor.
         }
         if (cursor <= 0L) {
             return -1;
         }
-        return GlfwCursorTracker.getStandardCursorShape(cursor);
+        return SdlCursorTracker.getStandardCursorShape(cursor);
     }
 
     public static void init() {
@@ -79,7 +78,7 @@ public class CursorHandler {
 
     public static void registerCustomCursor(@NotNull String uniqueCursorName, @NotNull CustomCursor cursor) {
         if (!initialized) throw new RuntimeException("[FANCYMENU] CursorHandler accessed too early!");
-        LOGGER.info("[FANCYMENU] Registering GLFW custom cursor: NAME: " + uniqueCursorName + " | TEXTURE CONTEXT: " + cursor.textureName);
+        LOGGER.info("[FANCYMENU] Registering SDL custom cursor: NAME: " + uniqueCursorName + " | TEXTURE CONTEXT: " + cursor.textureName);
         CUSTOM_CURSORS.register(Objects.requireNonNull(uniqueCursorName), Objects.requireNonNull(cursor), CustomCursor::isUsable);
     }
 
@@ -119,7 +118,7 @@ public class CursorHandler {
 
     private static void setCursor(long cursor) {
         if (!initialized) throw new RuntimeException("[FANCYMENU] CursorHandler accessed too early!");
-        GLFW.glfwSetCursor(de.keksuccino.fancymenu.util.window.WindowHandler.getWindowHandle(), cursor);
+        if (!SDLMouse.SDL_SetCursor(cursor == 0L ? SDLMouse.SDL_GetDefaultCursor() : cursor)) throw new IllegalStateException(SDLError.SDL_GetError());
     }
 
     @EventListener
@@ -128,32 +127,28 @@ public class CursorHandler {
         if (cursorToSet != CursorTickSelection.NO_CURSOR_CHANGE) setCursor(cursorToSet);
     }
 
-    /** Releases all FancyMenu-owned cursors while Minecraft's GLFW window is still alive. */
+    /** Releases all FancyMenu-owned cursors while Minecraft's SDL window is still alive. */
     public static void shutdown() {
-        LOGGER.info("[FANCYMENU] Releasing FancyMenu-owned GLFW cursors during client shutdown..");
+        LOGGER.info("[FANCYMENU] Releasing FancyMenu-owned SDL cursors during client shutdown..");
         CUSTOM_CURSORS.close();
         CLIENT_TICK_CURSOR.clear();
         CURSOR_HANDLE_LIFECYCLE.shutdown();
     }
 
     private static long createStandardCursor(int shape) {
-        long cursor = GLFW.glfwCreateStandardCursor(shape);
+        long cursor = SDLMouse.SDL_CreateSystemCursor(shape);
+        SdlCursorTracker.onCreateSystemCursor(shape, cursor);
         CURSOR_HANDLE_LIFECYCLE.trackStandard(cursor);
         return cursor;
     }
 
     private static void destroyNativeCursor(long cursor) {
-        boolean failedToSwitchWindow = false;
-        for (long window : GlfwCursorTracker.getWindowsUsingCursor(cursor)) {
-            try {
-                GLFW.glfwSetCursor(window, 0L);
-            } catch (Throwable throwable) {
-                failedToSwitchWindow = true;
-                LOGGER.error("[FANCYMENU] Failed to switch a window away from a GLFW cursor before destroying it!", throwable);
-            }
+        // SDL cursors are process-wide. Detach an active cursor before releasing its native allocation.
+        if (SDLMouse.SDL_GetCursor() == cursor && !SDLMouse.SDL_SetCursor(SDLMouse.SDL_GetDefaultCursor())) {
+            throw new IllegalStateException("Could not detach active SDL cursor: " + SDLError.SDL_GetError());
         }
-        if (failedToSwitchWindow) throw new IllegalStateException("Could not safely detach GLFW cursor " + cursor + " from every tracked window");
-        GLFW.glfwDestroyCursor(cursor);
+        SDLMouse.SDL_DestroyCursor(cursor);
+        SdlCursorTracker.onDestroyCursor(cursor);
     }
 
     public static class CustomCursor {
@@ -188,12 +183,17 @@ public class CursorHandler {
                         IntBuffer width = memStack.mallocInt(1);
                         IntBuffer height = memStack.mallocInt(1);
                         IntBuffer components = memStack.mallocInt(1);
-                        stbBuffer = STBImage.stbi_load_from_memory(texResourceBuffer, width, height, components, 0);
+                        stbBuffer = STBImage.stbi_load_from_memory(texResourceBuffer, width, height, components, 4);
                         if (stbBuffer != null) {
-                            GLFWImage image = GLFWImage.create();
-                            image = image.set(texture.getWidth(), texture.getHeight(), stbBuffer);
                             RenderSystem.assertOnRenderThread();
-                            long lid = GLFW.glfwCreateCursor(image, hotspotX, hotspotY);
+                            SDL_Surface surface = SDLSurface.SDL_CreateSurfaceFrom(width.get(0), height.get(0), SDLPixels.SDL_PIXELFORMAT_RGBA32, stbBuffer, width.get(0) * 4);
+                            if (surface == null) throw new IOException("Could not create cursor surface: " + SDLError.SDL_GetError());
+                            long lid;
+                            try {
+                                lid = SDLMouse.SDL_CreateColorCursor(surface, hotspotX, hotspotY);
+                            } finally {
+                                SDLSurface.SDL_DestroySurface(surface);
+                            }
                             if (lid != 0L) {
                                 customCursor = new CustomCursor(lid, hotspotX, hotspotY, texture, textureName);
                                 if (!customCursor.isUsable()) customCursor = null;
@@ -238,7 +238,7 @@ public class CursorHandler {
             this.nativeHandle = CURSOR_HANDLE_LIFECYCLE.trackCustom(id_long);
         }
 
-        /** Idempotently unregisters and releases this cursor on Minecraft's GLFW thread. */
+        /** Idempotently unregisters and releases this cursor on Minecraft's SDL thread. */
         public void destroy() {
             CUSTOM_CURSORS.retire(this);
         }
@@ -249,7 +249,7 @@ public class CursorHandler {
 
     }
 
-    private static final class MinecraftGlfwThreadExecutor implements CursorHandleLifecycle.ThreadExecutor {
+    private static final class MinecraftSdlThreadExecutor implements CursorHandleLifecycle.ThreadExecutor {
 
         @Override
         public boolean isOnThread() {
@@ -266,7 +266,7 @@ public class CursorHandler {
             if (minecraft != null) {
                 minecraft.execute(task);
             } else {
-                LOGGER.error("[FANCYMENU] Could not schedule GLFW cursor cleanup because the Minecraft client is unavailable!");
+                LOGGER.error("[FANCYMENU] Could not schedule SDL cursor cleanup because the Minecraft client is unavailable!");
             }
         }
 
@@ -287,12 +287,12 @@ public class CursorHandler {
 
     }
 
-    private static final class GlfwNativeOperations implements CursorHandleLifecycle.NativeOperations {
+    private static final class SdlNativeOperations implements CursorHandleLifecycle.NativeOperations {
 
         @Override
         public void prepareForShutdown() {
             Minecraft minecraft = Minecraft.getInstance();
-            if (minecraft != null && minecraft.getWindow() != null) GLFW.glfwSetCursor(minecraft.getWindow().handle(), 0L);
+            if (minecraft != null && minecraft.getWindow() != null) SDLMouse.SDL_SetCursor(SDLMouse.SDL_GetDefaultCursor());
         }
 
         @Override

@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
@@ -13,7 +14,6 @@ import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
-import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -58,14 +58,14 @@ public abstract class MixinKeyboardHandler {
         }
 
         int key = event.key();
-        int scanCode = event.scancode();
+        int scanCode = event.keycode();
         int modifiers = event.modifiers();
-        if (action == GLFW.GLFW_RELEASE) {
+        if (action == InputConstants.RELEASE) {
             if (Listeners.ON_KEY_RELEASED.hasInstancesListening()) Listeners.ON_KEY_RELEASED.handleKeyReleased(key, scanCode, modifiers);
             GlslRuntimeEventTracker.onKeyReleased(key, scanCode, modifiers);
-        } else if (action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT) {
+        } else if (action == InputConstants.PRESS || action == InputConstants.REPEAT) {
             if (Listeners.ON_KEY_PRESSED.hasInstancesListening()) Listeners.ON_KEY_PRESSED.handleKeyPressed(key, scanCode, modifiers);
-            GlslRuntimeEventTracker.onKeyPressed(key, scanCode, modifiers, action == GLFW.GLFW_REPEAT);
+            GlslRuntimeEventTracker.onKeyPressed(key, scanCode, modifiers, action == InputConstants.REPEAT);
         }
     }
 
@@ -74,9 +74,9 @@ public abstract class MixinKeyboardHandler {
         if (windowPointer == WindowHandler.getWindowHandle()) {
             InputUtils.updateActiveModifiers(event.modifiers());
             int key = event.key();
-            int scanCode = event.scancode();
+            int scanCode = event.keycode();
             int modifiers = event.modifiers();
-            if (action == 1 || action == 2) {
+            if (action == InputConstants.PRESS || action == InputConstants.REPEAT) {
                 if (ScreenOverlayHandler.INSTANCE.keyPressed(key, scanCode, modifiers)) info.cancel();
             } else if (action == 0) {
                 if (ScreenOverlayHandler.INSTANCE.keyReleased(key, scanCode, modifiers)) info.cancel();

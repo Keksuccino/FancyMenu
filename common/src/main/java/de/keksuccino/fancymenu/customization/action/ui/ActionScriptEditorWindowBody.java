@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.action.ui;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.action.ActionFavoritesManager;
@@ -70,7 +69,6 @@ import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2fStack;
-import org.lwjgl.glfw.GLFW;
 import java.awt.Color;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -484,7 +482,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             
             public boolean mouseClicked(double mouseX, double mouseY, int button) {
                 boolean b = super.mouseClicked(mouseX, mouseY, button); // Do this first, so the action entries can do their thing (toggle favorites) before the menu gets rebuilt
-                if (this.isUserNavigatingInMenu() && (button == 1)) {
+                if (this.isUserNavigatingInMenu() && (button == InputConstants.MOUSE_BUTTON_RIGHT)) {
                     this.clearEntriesKeepOpen();
                     buildAddActionSubMenu(this);
                     return true;
@@ -1439,12 +1437,12 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
 
         boolean actionsMenuInteracting = this.isUserNavigatingInRightClickContextMenu();
 
-        if ((button == 0) && !actionsMenuInteracting) {
+        if ((button == InputConstants.MOUSE_BUTTON_LEFT) && !actionsMenuInteracting) {
             this.rightClickContextMenu.closeMenu();
             this.contextMenuTargetExecutable = null;
         }
 
-        if (!actionsMenuInteracting && (button == 1)) {
+        if (!actionsMenuInteracting && (button == InputConstants.MOUSE_BUTTON_RIGHT)) {
             if (this.isInsideActionsScrollArea((int)mouseX, (int)mouseY)) {
                 ExecutableEntry hovered = this.getScrollAreaHoveredEntry();
                 ExecutableEntry target = null;
@@ -1462,7 +1460,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             }
         }
 
-        if (!skipSelection && (button == 0) && (this.minimapHeight > 0) && UIBase.isXYInArea((int)mouseX, (int)mouseY, this.minimapX, this.minimapY, MINIMAP_WIDTH, this.minimapHeight)) {
+        if (!skipSelection && (button == InputConstants.MOUSE_BUTTON_LEFT) && (this.minimapHeight > 0) && UIBase.isXYInArea((int)mouseX, (int)mouseY, this.minimapX, this.minimapY, MINIMAP_WIDTH, this.minimapHeight)) {
             ExecutableEntry entry = this.getMinimapEntryAt((int)mouseX, (int)mouseY);
             if (entry != null) {
                 entry.setSelected(true);
@@ -1471,7 +1469,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             }
         }
 
-        if ((button == 0) && !actionsMenuInteracting && !skipSelection) {
+        if ((button == InputConstants.MOUSE_BUTTON_LEFT) && !actionsMenuInteracting && !skipSelection) {
             ExecutableEntry hovered = this.getScrollAreaHoveredEntry();
             if (hovered != null) {
                 if (hovered.canToggleCollapse() && hovered.isMouseOverCollapseToggle((int)mouseX, (int)mouseY)) {
@@ -1502,7 +1500,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         }
 
         boolean handled = super.mouseClicked(new MouseButtonEvent(mouseX, mouseY, new MouseButtonInfo(button, 0)), false);
-        if (!skipSelection && !actionsMenuInteracting && (button == 0) && !this.isInlineValueEditing()) {
+        if (!skipSelection && !actionsMenuInteracting && (button == InputConstants.MOUSE_BUTTON_LEFT) && !this.isInlineValueEditing()) {
             ExecutableEntry hoveredAfter = this.getScrollAreaHoveredEntry();
             if ((hoveredAfter == null) || !hoveredAfter.isMouseOverValue((int)mouseX, (int)mouseY)) {
                 for (ScrollAreaEntry entry : this.scriptEntriesScrollArea.getEntries()) {
@@ -1513,7 +1511,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             }
         }
 
-        if (!skipSelection && !actionsMenuInteracting && (button == 0) && !this.isInlineNameEditing()) {
+        if (!skipSelection && !actionsMenuInteracting && (button == InputConstants.MOUSE_BUTTON_LEFT) && !this.isInlineNameEditing()) {
             ExecutableEntry hoveredAfter = this.getScrollAreaHoveredEntry();
             if ((hoveredAfter == null) || !hoveredAfter.isMouseOverName((int)mouseX, (int)mouseY)) {
                 for (ScrollAreaEntry entry : this.scriptEntriesScrollArea.getEntries()) {
@@ -1533,7 +1531,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
     }
     
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (button == 1) {
+        if (button == InputConstants.MOUSE_BUTTON_RIGHT) {
             this.scheduleActionsMenuRightClickConsumeReset();
         }
         if ((this.inlineNameEditBox != null) && this.inlineNameEditBox.mouseReleased(mouseX, mouseY, button)) {
@@ -1559,12 +1557,12 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         boolean shortcutModifierDown = InputUtils.isGuiShortcutModifierDown(modifiers);
-        String keyName = GLFW.glfwGetKeyName(keyCode, scanCode);
+        String keyName = InputUtils.getKeyName(keyCode, scanCode);
         keyName = (keyName != null) ? keyName.toLowerCase(Locale.ROOT) : "";
 
         if (shortcutModifierDown && "s".equals(keyName)) {
@@ -1573,7 +1571,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         }
 
         if (this.inlineNameEditBox != null) {
-            if ((keyCode == InputConstants.KEY_ENTER) || (keyCode == InputConstants.KEY_NUMPADENTER)) {
+            if ((keyCode == InputConstants.KEY_RETURN) || (keyCode == InputConstants.KEY_NUMPADENTER)) {
                 this.finishInlineNameEditing(true);
                 return true;
             }
@@ -1587,7 +1585,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         }
 
         if (this.inlineValueEditBox != null) {
-            if ((keyCode == InputConstants.KEY_ENTER) || (keyCode == InputConstants.KEY_NUMPADENTER)) {
+            if ((keyCode == InputConstants.KEY_RETURN) || (keyCode == InputConstants.KEY_NUMPADENTER)) {
                 this.finishInlineValueEditing(true);
                 return true;
             }
@@ -1605,7 +1603,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
 
         if (!contextMenuActive && !inlineEditingActive) {
             ExecutableEntry selected = this.getSelectedEntry();
-            boolean shiftDown = (modifiers & GLFW.GLFW_MOD_SHIFT) != 0;
+            boolean shiftDown = (modifiers & InputConstants.MOD_SHIFT) != 0;
 
             if (keyCode == InputConstants.KEY_DELETE) {
                 if (this.deleteSelectedEntryDirectly()) {
@@ -1664,7 +1662,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 }
             }
 
-            if ((keyCode == InputConstants.KEY_ENTER) || (keyCode == InputConstants.KEY_NUMPADENTER)) {
+            if ((keyCode == InputConstants.KEY_RETURN) || (keyCode == InputConstants.KEY_NUMPADENTER)) {
                 if (this.handleEnterShortcut(selected)) {
                     return true;
                 }
@@ -3806,7 +3804,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         }
         
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if ((button == 1) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered && !actionsMenuRightClickConsumedByEntry) {
+            if ((button == InputConstants.MOUSE_BUTTON_RIGHT) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered && !actionsMenuRightClickConsumedByEntry) {
                 ActionScriptEditorWindowBody.this.toggleFavorite(this.action);
                 actionsMenuRightClickConsumedByEntry = true;
                 ActionScriptEditorWindowBody.this.scheduleActionsMenuRightClickConsumeReset();

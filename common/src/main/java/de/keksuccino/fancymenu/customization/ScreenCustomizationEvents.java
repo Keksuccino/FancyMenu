@@ -127,7 +127,7 @@ public class ScreenCustomizationEvents {
 			this.resumeWorldMusic = false;
 		}
 
-		if (Minecraft.getInstance().getWindow().isFullscreen()) {
+		if (de.keksuccino.fancymenu.util.window.WindowHandler.isFullscreen()) {
 			this.iconSetAfterFullscreen = false;
 		} else {
 			if (!this.iconSetAfterFullscreen) {

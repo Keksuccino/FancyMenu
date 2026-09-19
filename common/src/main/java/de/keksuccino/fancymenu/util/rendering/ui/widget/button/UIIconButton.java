@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.math.Axis;
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.IconAnimation;
 import de.keksuccino.fancymenu.util.rendering.IconAnimations;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -254,7 +253,7 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
     }
     
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button != 0) {
+        if (button != InputConstants.MOUSE_BUTTON_LEFT) {
             return false;
         }
         if (!this.isMouseOver(mouseX, mouseY)) {

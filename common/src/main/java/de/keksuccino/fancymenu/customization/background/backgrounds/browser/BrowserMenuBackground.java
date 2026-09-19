@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.background.backgrounds.browser;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
@@ -263,7 +264,7 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
 
     @Override
     public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
@@ -272,7 +273,7 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
 
     @Override
     public boolean keyReleased(net.minecraft.client.input.KeyEvent event) {
-        return this.keyReleased(event.key(), event.scancode(), event.modifiers());
+        return this.keyReleased(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
@@ -490,7 +491,7 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
                 wrappedBrowser.mouseClicked(mouseX, mouseY, button);
             }
             // Keep release routing stable even when click consumption is disabled.
-            if (button == 0 && this.attachedScreen instanceof ContainerEventHandler containerEventHandler) {
+            if (button == InputConstants.MOUSE_BUTTON_LEFT && this.attachedScreen instanceof ContainerEventHandler containerEventHandler) {
                 containerEventHandler.setDragging(true);
             }
         }

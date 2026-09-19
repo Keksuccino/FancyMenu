@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.util.rendering;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.AddressMode;
-import com.mojang.blaze3d.textures.GpuSampler;
+import com.mojang.renderpearl.api.textures.AddressMode;
+import com.mojang.renderpearl.api.textures.GpuSampler;
 
 import javax.annotation.Nonnull;
 import java.util.Objects;

@@ -279,7 +279,7 @@ public class GameIntroOverlay extends Overlay {
     }
 
     public void mouseClicked(int button) {
-        if (MouseUtil.MouseButton.fromGlfwButton(button) == MouseUtil.MouseButton.LEFT || MouseUtil.isLeftMouseDown()) {
+        if (MouseUtil.MouseButton.fromNativeButton(button) == MouseUtil.MouseButton.LEFT || MouseUtil.isLeftMouseDown()) {
             boolean handled = this.handleWatermediaMissingOverlayClick_FancyMenu(MouseUtil.getGuiScaledMouseX(), MouseUtil.getGuiScaledMouseY());
             if (handled) {
                 this.watermediaLeftMouseWasDown_FancyMenu = true;

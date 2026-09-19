@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSliderButton;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
@@ -569,7 +569,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         if (!this.canClick()) return false;
         boolean handled = super.mouseClicked(event, isDoubleClick);
-        if (event.button() == 0) this.leftMouseDown = handled;
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) this.leftMouseDown = handled;
         return handled;
     }
 
@@ -581,7 +581,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     public boolean mouseReleased(MouseButtonEvent event) {
         boolean wasLeftMouseDown = this.leftMouseDown;
         this.leftMouseDown = false;
-        if (!wasLeftMouseDown || (event.button() != 0)) return false;
+        if (!wasLeftMouseDown || (event.button() != InputConstants.MOUSE_BUTTON_LEFT)) return false;
         return super.mouseReleased(event);
     }
 

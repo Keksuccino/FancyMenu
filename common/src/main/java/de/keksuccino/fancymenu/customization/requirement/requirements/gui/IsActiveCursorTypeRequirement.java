@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.requirement.requirements.gui;
 
+import org.lwjgl.sdl.SDLMouse;
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
@@ -11,7 +12,6 @@ import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
@@ -44,9 +44,9 @@ public class IsActiveCursorTypeRequirement extends Requirement {
             CursorType type = CursorType.getByKey(value.trim().toLowerCase());
             if (type == null) return false;
             int activeShape = CursorHandler.getActiveStandardCursorShape();
-            if (type.shape == GLFW.GLFW_ARROW_CURSOR) {
-                // Treat unknown cursor handle (0L) as arrow cursor by GLFW spec; CursorHandler already maps 0L -> ARROW
-                return activeShape == GLFW.GLFW_ARROW_CURSOR;
+            if (type.shape == SDLMouse.SDL_SYSTEM_CURSOR_DEFAULT) {
+                // Treat unknown cursor handle (0L) as arrow cursor as a fallback; CursorHandler already maps 0L -> ARROW
+                return activeShape == SDLMouse.SDL_SYSTEM_CURSOR_DEFAULT;
             }
             return activeShape == type.shape;
         } catch (Exception ex) {
@@ -167,16 +167,16 @@ public class IsActiveCursorTypeRequirement extends Requirement {
 
     public enum CursorType {
 
-        NORMAL("normal", GLFW.GLFW_ARROW_CURSOR),
-        WRITING("writing", GLFW.GLFW_IBEAM_CURSOR),
-        CROSSHAIR("crosshair", GLFW.GLFW_CROSSHAIR_CURSOR),
-        POINTING_HAND("pointing_hand", GLFW.GLFW_POINTING_HAND_CURSOR),
-        RESIZE_HORIZONTAL("resize_horizontal", GLFW.GLFW_RESIZE_EW_CURSOR),
-        RESIZE_VERTICAL("resize_vertical", GLFW.GLFW_RESIZE_NS_CURSOR),
-        RESIZE_NWSE("resize_nwse", GLFW.GLFW_RESIZE_NWSE_CURSOR),
-        RESIZE_NESW("resize_nesw", GLFW.GLFW_RESIZE_NESW_CURSOR),
-        RESIZE_ALL("resize_all", GLFW.GLFW_RESIZE_ALL_CURSOR),
-        NOT_ALLOWED("not_allowed", GLFW.GLFW_NOT_ALLOWED_CURSOR);
+        NORMAL("normal", SDLMouse.SDL_SYSTEM_CURSOR_DEFAULT),
+        WRITING("writing", SDLMouse.SDL_SYSTEM_CURSOR_TEXT),
+        CROSSHAIR("crosshair", SDLMouse.SDL_SYSTEM_CURSOR_CROSSHAIR),
+        POINTING_HAND("pointing_hand", SDLMouse.SDL_SYSTEM_CURSOR_POINTER),
+        RESIZE_HORIZONTAL("resize_horizontal", SDLMouse.SDL_SYSTEM_CURSOR_EW_RESIZE),
+        RESIZE_VERTICAL("resize_vertical", SDLMouse.SDL_SYSTEM_CURSOR_NS_RESIZE),
+        RESIZE_NWSE("resize_nwse", SDLMouse.SDL_SYSTEM_CURSOR_NWSE_RESIZE),
+        RESIZE_NESW("resize_nesw", SDLMouse.SDL_SYSTEM_CURSOR_NESW_RESIZE),
+        RESIZE_ALL("resize_all", SDLMouse.SDL_SYSTEM_CURSOR_MOVE),
+        NOT_ALLOWED("not_allowed", SDLMouse.SDL_SYSTEM_CURSOR_NOT_ALLOWED);
 
         public final String key;
         public final int shape;

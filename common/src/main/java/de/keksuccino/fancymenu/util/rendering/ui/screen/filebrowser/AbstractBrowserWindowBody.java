@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.VanillaEvents;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.InputConstants;
@@ -330,14 +329,14 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
         if (keycode == InputConstants.KEY_TAB) {
             return true;
         }
-        if ((keycode == InputConstants.KEY_ENTER) || (keycode == InputConstants.KEY_NUMPADENTER)) {
+        if ((keycode == InputConstants.KEY_RETURN) || (keycode == InputConstants.KEY_NUMPADENTER)) {
             return this.handleEnterKey();
         }
         if ((keycode == InputConstants.KEY_UP) || (keycode == InputConstants.KEY_DOWN)) {
@@ -583,24 +582,24 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     }
     
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if ((button == 0) && this.handleWatermediaMissingWarningClick_FancyMenu(mouseX, mouseY)) {
+        if ((button == InputConstants.MOUSE_BUTTON_LEFT) && this.handleWatermediaMissingWarningClick_FancyMenu(mouseX, mouseY)) {
             return true;
         }
-        if ((button == 0) && this.handleProgressBarClick(mouseX, mouseY)) {
+        if ((button == InputConstants.MOUSE_BUTTON_LEFT) && this.handleProgressBarClick(mouseX, mouseY)) {
             return true;
         }
-        if ((button == 0) && (this.previewAudioSupplier != null) && (this.audioPreviewToggleButton != null)) {
+        if ((button == InputConstants.MOUSE_BUTTON_LEFT) && (this.previewAudioSupplier != null) && (this.audioPreviewToggleButton != null)) {
             if (this.audioPreviewToggleButton.mouseClicked(mouseX, mouseY, button)) {
                 return true;
             }
         }
-        if ((button == 0) && (this.previewVideoSupplier != null) && !this.shouldRenderWatermediaMissingWarning_FancyMenu() && (this.videoPreviewToggleButton != null)) {
+        if ((button == InputConstants.MOUSE_BUTTON_LEFT) && (this.previewVideoSupplier != null) && !this.shouldRenderWatermediaMissingWarning_FancyMenu() && (this.videoPreviewToggleButton != null)) {
             if (this.videoPreviewToggleButton.mouseClicked(mouseX, mouseY, button)) {
                 return true;
             }
         }
 
-        if ((button == 0) && !this.fileListScrollArea.isMouseOverInnerArea(mouseX, mouseY) && !this.fileListScrollArea.isMouseInteractingWithGrabbers() && !this.previewTextScrollArea.isMouseOverInnerArea(mouseX, mouseY) && !this.previewTextScrollArea.isMouseInteractingWithGrabbers() && !this.isAudioProgressBarHovered(mouseX, mouseY) && !this.isVideoProgressBarHovered(mouseX, mouseY) && !this.isWidgetHovered()) {
+        if ((button == InputConstants.MOUSE_BUTTON_LEFT) && !this.fileListScrollArea.isMouseOverInnerArea(mouseX, mouseY) && !this.fileListScrollArea.isMouseInteractingWithGrabbers() && !this.previewTextScrollArea.isMouseOverInnerArea(mouseX, mouseY) && !this.previewTextScrollArea.isMouseInteractingWithGrabbers() && !this.isAudioProgressBarHovered(mouseX, mouseY) && !this.isVideoProgressBarHovered(mouseX, mouseY) && !this.isWidgetHovered()) {
             for (ScrollAreaEntry e : this.fileListScrollArea.getEntries()) {
                 e.setSelected(false);
             }
@@ -617,7 +616,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     }
     
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             if (this.audioPreviewProgressDragging) {
                 this.seekAudioPreviewByMouseX(mouseX);
                 return true;
@@ -637,7 +636,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         boolean handled = false;
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             if (this.audioPreviewProgressDragging) {
                 this.seekAudioPreviewByMouseX(mouseX);
                 handled = true;
@@ -902,7 +901,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         }
         if (!this.allowEnterForDone()) return true;
         if (this.confirmButton != null && this.confirmButton.active) {
-            this.confirmButton.onPress(VanillaEvents.keyEvent(InputConstants.KEY_ENTER, 0, 0));
+            this.confirmButton.onPress(VanillaEvents.keyEvent(InputConstants.KEY_RETURN, 0, 0));
             return true;
         }
         return true;

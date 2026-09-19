@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.customization.overlay;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.HideableElement;
@@ -495,7 +495,7 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
                 }
             }
         }
-        if (button == 1) {
+        if (button == InputConstants.MOUSE_BUTTON_RIGHT) {
             for (AbstractElement e : this.currentScreenElements) {
                 if (RenderingUtils.isXYInArea(mouseX, mouseY, e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteWidth(), e.getAbsoluteHeight())) {
                     try {
@@ -627,7 +627,7 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
 
         protected boolean onClick(int button, int mouseX, int mouseY) {
             if (!this.clickable) return false;
-            if (this.isMouseOver(mouseX, mouseY) && (button == 0)) {
+            if (this.isMouseOver(mouseX, mouseY) && (button == InputConstants.MOUSE_BUTTON_LEFT)) {
                 this.clickAction.accept(this);
                 this.lastClicked = System.currentTimeMillis();
                 return true;

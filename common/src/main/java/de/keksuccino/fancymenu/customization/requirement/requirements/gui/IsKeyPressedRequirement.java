@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -40,7 +39,7 @@ public class IsKeyPressedRequirement extends Requirement {
         if (value != null) {
             int keycode = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, -1, value);
             com.mojang.blaze3d.platform.InputConstants.Key key = getKey(keycode);
-            return (key.getValue() != -1) && InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), key.getValue());
+            return (key.getValue() != -1) && InputConstants.isKeyDown(key.getValue());
         }
 
         return false;
@@ -151,7 +150,7 @@ public class IsKeyPressedRequirement extends Requirement {
 
         @Override
         public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
-            return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+            return this.keyPressed(event.key(), event.keycode(), event.modifiers());
         }
         
         public boolean keyPressed(int keycode, int scancode, int modifiers) {

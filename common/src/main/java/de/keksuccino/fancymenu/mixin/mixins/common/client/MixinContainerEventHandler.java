@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuInputRouter;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.VanillaMouseClickHandlingScreen;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
@@ -29,7 +30,7 @@ public interface MixinContainerEventHandler {
         if (listener != null) {
             if (listener.shouldTakeFocusAfterInteraction()) {
                 this.setFocused(listener);
-                if (event.button() == 0) {
+                if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
                     this.setDragging(true);
                 }
             }
@@ -46,7 +47,7 @@ public interface MixinContainerEventHandler {
             return;
         }
         if (FancyMenuInputRouter.routeMouseReleased(this.children(), this.getFocused(), event, FancyMenuInputRouter.MouseReleaseRouting.BROADCAST_FANCYMENU_COMPONENTS)) {
-            if ((event.button() == 0) && this.isDragging()) {
+            if ((event.button() == InputConstants.MOUSE_BUTTON_LEFT) && this.isDragging()) {
                 this.setDragging(false);
             }
             info.setReturnValue(true);

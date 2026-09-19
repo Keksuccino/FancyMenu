@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.events.screen;
 
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.event.acara.EventBase;
 import net.minecraft.client.gui.components.Renderable;
@@ -8,7 +9,6 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.glfw.GLFW;
 import java.util.List;
 
 public class ScreenKeyPressedEvent extends EventBase {
@@ -40,7 +40,7 @@ public class ScreenKeyPressedEvent extends EventBase {
     }
 
     public int getScancode() {
-        return this.event.scancode();
+        return this.event.keycode();
     }
 
     public int getModifiers() {
@@ -49,7 +49,7 @@ public class ScreenKeyPressedEvent extends EventBase {
 
     @NotNull
     public String getKeyName() {
-        String key = GLFW.glfwGetKeyName(this.event.key(), this.event.scancode());
+        String key = InputUtils.getKeyName(this.event.key(), this.event.keycode());
         if (key == null) key = "";
         return key;
     }

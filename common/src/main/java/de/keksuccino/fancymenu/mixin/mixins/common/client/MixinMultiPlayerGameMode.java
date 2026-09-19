@@ -13,6 +13,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -40,6 +41,18 @@ public class MixinMultiPlayerGameMode {
     @Unique
     @Nullable
     private String capturedUseItemKey_FancyMenu;
+
+    /** @reason Fire FancyMenu listener when the local player drops an item. */
+    @WrapOperation(method = "dropItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Inventory;removeFromSelected(Z)Lnet/minecraft/world/item/ItemStack;"))
+    private ItemStack wrap_removeFromSelected_FancyMenu(Inventory inventory, boolean fullStack, Operation<ItemStack> operation) {
+        ItemStack removed = operation.call(inventory, fullStack);
+        if (!removed.isEmpty() && Listeners.ON_ITEM_DROPPED.hasInstancesListening()) {
+            Identifier itemLocation = BuiltInRegistries.ITEM.getKey(removed.getItem());
+            String itemKey = itemLocation != null ? itemLocation.toString() : null;
+            Listeners.ON_ITEM_DROPPED.onItemDropped(itemKey);
+        }
+        return removed;
+    }
 
     /** @reason Fire FancyMenu listener after the local player successfully breaks a block. */
     @WrapOperation(method = "destroyBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Block;destroy(Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V"))

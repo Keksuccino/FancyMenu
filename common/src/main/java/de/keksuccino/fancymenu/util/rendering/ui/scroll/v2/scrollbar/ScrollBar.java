@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollbar;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -224,7 +224,7 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             if (!this.active) {
                 return false;
             }

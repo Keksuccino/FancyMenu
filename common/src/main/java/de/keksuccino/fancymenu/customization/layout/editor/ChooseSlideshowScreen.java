@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.util.input.InputConstants;
@@ -188,12 +187,12 @@ public class ChooseSlideshowScreen extends PiPWindowBody {
 
     @Override
     public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int button, int $$1, int $$2) {
 
-        if (button == InputConstants.KEY_ENTER) {
+        if (button == InputConstants.KEY_RETURN) {
             if (this.selectedSlideshowName != null) {
                 this.closeWithResult(this.selectedSlideshowName);
                 return true;

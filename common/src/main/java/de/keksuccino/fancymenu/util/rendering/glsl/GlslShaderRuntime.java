@@ -1,16 +1,16 @@
 package de.keksuccino.fancymenu.util.rendering.glsl;
 
-import com.mojang.blaze3d.GpuFormat;
-import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.GpuFormat;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.systems.CommandEncoder;
-import com.mojang.blaze3d.systems.RenderPass;
+import com.mojang.renderpearl.api.commands.CommandEncoder;
+import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.FilterMode;
-import com.mojang.blaze3d.textures.GpuSampler;
-import com.mojang.blaze3d.textures.GpuTextureView;
+import com.mojang.renderpearl.api.textures.FilterMode;
+import com.mojang.renderpearl.api.textures.GpuSampler;
+import com.mojang.renderpearl.api.textures.GpuTextureView;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphicsExtractor;
 import de.keksuccino.fancymenu.util.rendering.GuiRenderPhaseAction;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -321,7 +321,7 @@ public class GlslShaderRuntime {
                 throw new IllegalStateException(getPassName(prepared.passIndex()) + " was not fully prepared.");
             }
             try (RenderPass renderPass = encoder.createRenderPass(() -> "FancyMenu GLSL " + getPassName(prepared.passIndex()), prepared.outputView(), Optional.empty())) {
-                renderPass.setPipeline(program.pipeline.pipeline());
+                renderPass.setPipeline(program.pipeline.compiledPipeline());
                 renderPass.setUniform(GlslShaderSourceTransformer.UNIFORM_BLOCK_NAME, program.uniformBuffer);
                 this.bindActiveSamplers(renderPass, program.pipeline.variant().activeSamplerNames(), prepared.channels());
                 renderPass.draw(6, 1, 0, 0);
@@ -343,7 +343,7 @@ public class GlslShaderRuntime {
             // Unknown sampler2D uniforms historically defaulted to OpenGL texture unit zero. Explicitly map them to
             // routed channel zero so that compatibility remains deterministic and Vulkan never sees an unbound descriptor.
             ChannelTextureState channel = channels[resolveSamplerChannelIndex(samplerName)];
-            renderPass.bindTexture(samplerName, channel.view(), channel.sampler());
+            renderPass.setUniform(samplerName, channel.view(), channel.sampler());
         }
     }
 
@@ -562,7 +562,7 @@ public class GlslShaderRuntime {
 
         if (this.fallbackTextureTarget_FancyMenu == null || this.fallbackTextureTarget_FancyMenu.getColorTextureView() == null || this.fallbackTextureTarget_FancyMenu.getColorTextureView().isClosed()) {
             this.closeFallbackTarget();
-            this.fallbackTextureTarget_FancyMenu = new TextureTarget("FancyMenu GLSL fallback", 1, 1, false, GpuFormat.RGBA8_UNORM);
+            this.fallbackTextureTarget_FancyMenu = new TextureTarget("FancyMenu GLSL fallback", 1, 1, GpuFormat.RGBA8_UNORM, null);
             RenderSystem.getDevice().createCommandEncoder().clearColorTexture(this.fallbackTextureTarget_FancyMenu.getColorTexture(), new Vector4f(1.0F, 0.0F, 1.0F, 1.0F));
         }
         return new ChannelTextureState(this.fallbackTextureTarget_FancyMenu.getColorTextureView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST), 0.0F, 0.0F);
@@ -579,6 +579,11 @@ public class GlslShaderRuntime {
 
     public long getFrameCounter() {
         return this.passPrograms_FancyMenu[IMAGE_PASS_INDEX].passFrames.committedFrameCount();
+    }
+
+    /** Releases shared compiled pipelines while the rendering device is still alive. */
+    public static void shutdownPipelines() {
+        GlslGpuPipelineCache.clear();
     }
 
     public void close() {

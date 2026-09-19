@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.customization.background.backgrounds.video.nativevideo;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.opengl.GlStateManager;
-import com.mojang.blaze3d.opengl.GlTexture;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import com.mojang.renderpearl.backend.opengl.GlTexture;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
@@ -54,7 +54,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -299,7 +298,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
     }
     
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (MouseUtil.MouseButton.fromGlfwButton(button) != MouseUtil.MouseButton.LEFT && !MouseUtil.isLeftMouseDown()) return false;
+        if (MouseUtil.MouseButton.fromNativeButton(button) != MouseUtil.MouseButton.LEFT && !MouseUtil.isLeftMouseDown()) return false;
         if (!this.showBackground.tryGetNonNull()) return false;
         if (!this.shouldRenderWatermediaMissingOverlay_FancyMenu(this.videoSupplier.get())) return false;
         double resolvedMouseX_FancyMenu = MouseUtil.getGuiScaledMouseX();

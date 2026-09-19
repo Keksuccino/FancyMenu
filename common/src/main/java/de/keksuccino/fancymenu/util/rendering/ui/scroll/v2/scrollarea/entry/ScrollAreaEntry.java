@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
@@ -138,10 +139,10 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (this.isClickable() && this.isHovered() && !this.parent.isMouseInteractingWithGrabbers() && this.parent.isInnerAreaHovered()) {
-            if ((button == 0) && this.selectOnClick) {
+            if ((button == InputConstants.MOUSE_BUTTON_LEFT) && this.selectOnClick) {
                 this.setSelected(true);
             }
-            if ((button == 0) && this.playClickSound) Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
+            if ((button == InputConstants.MOUSE_BUTTON_LEFT) && this.playClickSound) Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
             this.onClick(this, mouseX, mouseY, button);
             return true;
         }

@@ -1,8 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.glsl;
 
-import com.mojang.blaze3d.preprocessor.GlslPreprocessor;
-import com.mojang.blaze3d.shaders.ShaderType;
-import net.minecraft.client.renderer.ShaderDefines;
+import com.mojang.renderpearl.api.pipeline.ShaderType;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.util.shaderc.Shaderc;
@@ -18,7 +16,6 @@ import java.util.List;
  */
 final class GlslShaderValidator {
 
-    private static final ShaderDefines VULKAN_GLOBAL_DEFINES = ShaderDefines.builder().define("gl_VertexID", "gl_VertexIndex").define("gl_InstanceID", "gl_InstanceIndex").build();
 
     private GlslShaderValidator() {
     }
@@ -40,13 +37,15 @@ final class GlslShaderValidator {
         try {
             Shaderc.shaderc_compile_options_set_target_env(options, Shaderc.shaderc_target_env_vulkan, Shaderc.shaderc_env_version_vulkan_1_2);
             Shaderc.shaderc_compile_options_set_auto_bind_uniforms(options, true);
-            Shaderc.shaderc_compile_options_set_auto_map_locations(options, true);
             Shaderc.shaderc_compile_options_set_generate_debug_info(options);
             Shaderc.shaderc_compile_options_set_optimization_level(options, Shaderc.shaderc_optimization_level_zero);
 
+            Shaderc.shaderc_compile_options_add_macro_definition(options, "gl_VertexID", "gl_VertexIndex");
+            Shaderc.shaderc_compile_options_add_macro_definition(options, "gl_InstanceID", "gl_InstanceIndex");
+
             List<String> diagnostics = new ArrayList<>();
-            validateStage(compiler, options, "vertex", GlslPreprocessor.injectDefines(vertexSource, VULKAN_GLOBAL_DEFINES), ShaderType.VERTEX, diagnostics);
-            validateStage(compiler, options, "fragment", GlslPreprocessor.injectDefines(fragmentSource, VULKAN_GLOBAL_DEFINES), ShaderType.FRAGMENT, diagnostics);
+            validateStage(compiler, options, "vertex", vertexSource, ShaderType.VERTEX, diagnostics);
+            validateStage(compiler, options, "fragment", fragmentSource, ShaderType.FRAGMENT, diagnostics);
             return new ValidationResult(List.copyOf(diagnostics));
         } finally {
             Shaderc.shaderc_compile_options_release(options);

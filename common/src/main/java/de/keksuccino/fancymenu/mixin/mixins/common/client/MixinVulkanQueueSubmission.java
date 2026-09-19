@@ -7,7 +7,7 @@ import org.lwjgl.vulkan.VkSubmitInfo2;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-@Mixin(targets = "com.mojang.blaze3d.vulkan.VulkanQueue$Submission")
+@Mixin(targets = "com.mojang.renderpearl.backend.vulkan.VulkanQueue$Submission")
 public class MixinVulkanQueueSubmission {
 
     /** @reason Serialize Minecraft and WaterMedia submissions that share Minecraft's graphics VkQueue. */

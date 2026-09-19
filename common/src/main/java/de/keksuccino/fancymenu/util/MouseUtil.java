@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.util;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -50,12 +50,12 @@ public class MouseUtil {
             }
             if (isLeftMouseDown()) {
                 for (MouseDragListener listener : new ArrayList<>(DRAG_LISTENERS.values())) {
-                    listener.onMouseDragged(GLFW.GLFW_MOUSE_BUTTON_LEFT, mouseX, mouseY, deltaX, deltaY);
+                    listener.onMouseDragged(InputConstants.MOUSE_BUTTON_LEFT, mouseX, mouseY, deltaX, deltaY);
                 }
             }
             if (isRightMouseDown()) {
                 for (MouseDragListener listener : new ArrayList<>(DRAG_LISTENERS.values())) {
-                    listener.onMouseDragged(GLFW.GLFW_MOUSE_BUTTON_RIGHT, mouseX, mouseY, deltaX, deltaY);
+                    listener.onMouseDragged(InputConstants.MOUSE_BUTTON_RIGHT, mouseX, mouseY, deltaX, deltaY);
                 }
             }
         }
@@ -170,8 +170,8 @@ public class MouseUtil {
 
     public static void onMouseButtonPressed(int button, double mouseX, double mouseY) {
         cacheMousePosition(mouseX, mouseY);
-        cacheMouseButtonState(button, GLFW.GLFW_PRESS);
-        MouseButton mouseButton = MouseButton.fromGlfwButton(button);
+        cacheMouseButtonState(button, InputConstants.PRESS);
+        MouseButton mouseButton = MouseButton.fromNativeButton(button);
         for (MouseButtonListener listener : new ArrayList<>(CLICK_LISTENERS.values())) {
             listener.onMouseButton(mouseButton, mouseX, mouseY);
         }
@@ -179,16 +179,16 @@ public class MouseUtil {
 
     public static void onMouseButtonReleased(int button, double mouseX, double mouseY) {
         cacheMousePosition(mouseX, mouseY);
-        cacheMouseButtonState(button, GLFW.GLFW_RELEASE);
-        MouseButton mouseButton = MouseButton.fromGlfwButton(button);
+        cacheMouseButtonState(button, InputConstants.RELEASE);
+        MouseButton mouseButton = MouseButton.fromNativeButton(button);
         for (MouseButtonListener listener : new ArrayList<>(RELEASE_LISTENERS.values())) {
             listener.onMouseButton(mouseButton, mouseX, mouseY);
         }
     }
 
     public static void cacheMouseButtonState(int button, int action) {
-        MouseButton mouseButton = MouseButton.fromGlfwButton(button);
-        boolean down = (action != GLFW.GLFW_RELEASE);
+        MouseButton mouseButton = MouseButton.fromNativeButton(button);
+        boolean down = (action != InputConstants.RELEASE);
         switch (mouseButton) {
             case LEFT -> cachedLeftMouseDown = down;
             case RIGHT -> cachedRightMouseDown = down;
@@ -245,26 +245,26 @@ public class MouseUtil {
     }
 
     public enum MouseButton {
-        LEFT(GLFW.GLFW_MOUSE_BUTTON_LEFT),
-        RIGHT(GLFW.GLFW_MOUSE_BUTTON_RIGHT),
-        MIDDLE(GLFW.GLFW_MOUSE_BUTTON_MIDDLE),
+        LEFT(InputConstants.MOUSE_BUTTON_LEFT),
+        RIGHT(InputConstants.MOUSE_BUTTON_RIGHT),
+        MIDDLE(InputConstants.MOUSE_BUTTON_MIDDLE),
         OTHER(-1);
 
-        private final int glfwButton;
+        private final int nativeButton;
 
-        MouseButton(int glfwButton) {
-            this.glfwButton = glfwButton;
+        MouseButton(int nativeButton) {
+            this.nativeButton = nativeButton;
         }
 
-        public int getGlfwButton() {
-            return this.glfwButton;
+        public int getNativeButton() {
+            return this.nativeButton;
         }
 
-        public static @NotNull MouseButton fromGlfwButton(int button) {
+        public static @NotNull MouseButton fromNativeButton(int button) {
             return switch (button) {
-                case GLFW.GLFW_MOUSE_BUTTON_LEFT -> LEFT;
-                case GLFW.GLFW_MOUSE_BUTTON_RIGHT -> RIGHT;
-                case GLFW.GLFW_MOUSE_BUTTON_MIDDLE -> MIDDLE;
+                case InputConstants.MOUSE_BUTTON_LEFT -> LEFT;
+                case InputConstants.MOUSE_BUTTON_RIGHT -> RIGHT;
+                case InputConstants.MOUSE_BUTTON_MIDDLE -> MIDDLE;
                 default -> OTHER;
             };
         }

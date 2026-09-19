@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /**
- * Owns the lifetime of GLFW cursor allocations without depending on GLFW itself.
+ * Owns the lifetime of SDL cursor allocations without depending on SDL itself.
  *
  * <p>Every allocation has its own state token instead of using the numeric native handle as its identity. Native
  * libraries may reuse a handle value after destruction, so a delayed task must become a no-op based on the old
@@ -63,12 +63,12 @@ final class CursorHandleLifecycle {
     }
 
     void executeDestruction(@NotNull Handle handle) {
-        this.threadExecutor.execute(() -> this.destroyOnGlfwThread(handle));
+        this.threadExecutor.execute(() -> this.destroyOnSdlThread(handle));
     }
 
     /**
-     * Closes all allocations on the GLFW thread. The production shutdown hook invokes this from Minecraft's render
-     * thread before its window and GLFW are torn down. An unexpected off-thread caller is queued without blocking;
+     * Closes all allocations on the SDL thread. The production shutdown hook invokes this from Minecraft's render
+     * thread before its window and SDL are torn down. An unexpected off-thread caller is queued without blocking;
      * blocking here could deadlock against a client thread that has already started stopping.
      */
     void shutdown() {
@@ -80,12 +80,12 @@ final class CursorHandleLifecycle {
             customSnapshot = new ArrayList<>(this.customHandles);
             standardSnapshot = new ArrayList<>(this.standardHandles);
         }
-        this.threadExecutor.execute(() -> this.shutdownOnGlfwThread(customSnapshot, standardSnapshot));
+        this.threadExecutor.execute(() -> this.shutdownOnSdlThread(customSnapshot, standardSnapshot));
     }
 
-    private void shutdownOnGlfwThread(@NotNull List<Handle> customSnapshot, @NotNull List<Handle> standardSnapshot) {
+    private void shutdownOnSdlThread(@NotNull List<Handle> customSnapshot, @NotNull List<Handle> standardSnapshot) {
         if (!this.threadExecutor.isOnThread()) {
-            this.errorHandler.accept(new IllegalStateException("GLFW cursor shutdown executed outside the GLFW thread!"));
+            this.errorHandler.accept(new IllegalStateException("SDL cursor shutdown executed outside the SDL thread!"));
             return;
         }
         try {
@@ -94,13 +94,13 @@ final class CursorHandleLifecycle {
             this.errorHandler.accept(throwable);
         }
         // Custom cursors are detached first; standard cursors remain a valid FancyMenu fallback until this point.
-        customSnapshot.forEach(this::destroyOnGlfwThread);
-        standardSnapshot.forEach(this::destroyOnGlfwThread);
+        customSnapshot.forEach(this::destroyOnSdlThread);
+        standardSnapshot.forEach(this::destroyOnSdlThread);
     }
 
-    private void destroyOnGlfwThread(@NotNull Handle handle) {
+    private void destroyOnSdlThread(@NotNull Handle handle) {
         if (!this.threadExecutor.isOnThread()) {
-            this.errorHandler.accept(new IllegalStateException("GLFW cursor destruction executed outside the GLFW thread!"));
+            this.errorHandler.accept(new IllegalStateException("SDL cursor destruction executed outside the SDL thread!"));
             return;
         }
         if (handle.nativeHandle() == 0L || !handle.claimDestruction()) return;
@@ -112,7 +112,7 @@ final class CursorHandleLifecycle {
                 this.standardHandles.remove(handle);
             }
         } catch (Throwable throwable) {
-            // A failed native call stays retryable for a later explicit request or the final GLFW teardown.
+            // A failed native call stays retryable for a later explicit request or the final SDL teardown.
             handle.failDestruction();
             this.errorHandler.accept(throwable);
         }

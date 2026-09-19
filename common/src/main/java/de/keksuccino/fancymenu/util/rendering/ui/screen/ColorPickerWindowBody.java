@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.VanillaEvents;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -128,11 +127,11 @@ public class ColorPickerWindowBody extends PiPWindowBody {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int button, int scanCode, int modifiers) {
-        if (button == InputConstants.KEY_ENTER) {
+        if (button == InputConstants.KEY_RETURN) {
             this.closeWindow();
             return true;
         }
@@ -145,7 +144,7 @@ public class ColorPickerWindowBody extends PiPWindowBody {
     }
     
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             if (RenderingUtils.isXYInArea(mouseX, mouseY, this.pickerX, this.pickerY, this.pickerSize, this.pickerSize)) {
                 this.draggingSV = true;
                 this.updateSVFromMouse(mouseX, mouseY);

@@ -232,7 +232,7 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
@@ -267,7 +267,7 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         ListenerInstanceCell editingCell = this.getEditingInstanceCell();
-        if ((button == 0) && (editingCell != null) && (editingCell.editBox != null) && !editingCell.editBox.isMouseOver(mouseX, mouseY)) {
+        if ((button == InputConstants.MOUSE_BUTTON_LEFT) && (editingCell != null) && (editingCell.editBox != null) && !editingCell.editBox.isMouseOver(mouseX, mouseY)) {
             editingCell.exitEditMode(true);
         }
         return super.mouseClicked(mouseX, mouseY, button);
@@ -662,7 +662,7 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
         }
         
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if (button == 0 && this.isHovered() && !this.editMode) { // Left click
+            if (button == InputConstants.MOUSE_BUTTON_LEFT && this.isHovered() && !this.editMode) { // Left click
                 long currentTime = System.currentTimeMillis();
                 if (currentTime - this.lastClickTime < DOUBLE_CLICK_TIME) {
                     // Double click detected - enter edit mode
@@ -673,7 +673,7 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
                 }
             }
             boolean b = super.mouseClicked(mouseX, mouseY, button);
-            if ((button == 1) && this.isHovered() && !this.editMode) {
+            if ((button == InputConstants.MOUSE_BUTTON_RIGHT) && this.isHovered() && !this.editMode) {
                 MainThreadTaskExecutor.executeInMainThread(() -> {
                     MainThreadTaskExecutor.executeInMainThread(() -> {
                         this.setSelected(true);
@@ -687,12 +687,12 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
         
         @Override
         public boolean keyPressed(KeyEvent event) {
-            return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+            return this.keyPressed(event.key(), event.keycode(), event.modifiers());
         }
         
         public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
             if (this.editMode && this.editBox != null) {
-                if (keyCode == InputConstants.KEY_ENTER || keyCode == InputConstants.KEY_NUMPADENTER) { // Enter or Numpad Enter
+                if (keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER) { // Enter or Numpad Enter
                     this.exitEditMode(true);
                     return true;
                 } else if (keyCode == InputConstants.KEY_ESCAPE) { // Escape

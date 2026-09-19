@@ -38,7 +38,6 @@ import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.network.chat.*;
-import org.lwjgl.glfw.GLFW;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -592,7 +591,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
@@ -615,7 +614,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
             return this.handleHorizontalNavigation(keycode == InputConstants.KEY_RIGHT, keycode, scancode, modifiers);
         }
 
-        if ((keycode == InputConstants.KEY_ENTER) || (keycode == InputConstants.KEY_NUMPADENTER)) {
+        if ((keycode == InputConstants.KEY_RETURN) || (keycode == InputConstants.KEY_NUMPADENTER)) {
             if (this.handleEnterForSelectedCell(keycode, scancode, modifiers)) {
                 return true;
             }
@@ -655,7 +654,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
     @NotNull
     protected String getLetterKeyName(int keycode, int scancode) {
-        String keyName = GLFW.glfwGetKeyName(keycode, scancode);
+        String keyName = InputUtils.getKeyName(keycode, scancode);
         if (keyName == null) {
             return "";
         }

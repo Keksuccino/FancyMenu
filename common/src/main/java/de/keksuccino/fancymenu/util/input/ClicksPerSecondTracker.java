@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.util.input;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.util.Util;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayDeque;
 
@@ -22,9 +22,9 @@ public final class ClicksPerSecondTracker {
             pruneOldClicks_FancyMenu(LEFT_CLICKS_FANCYMENU, now);
             pruneOldClicks_FancyMenu(RIGHT_CLICKS_FANCYMENU, now);
 
-            if (mouseButton == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            if (mouseButton == InputConstants.MOUSE_BUTTON_LEFT) {
                 LEFT_CLICKS_FANCYMENU.addLast(now);
-            } else if (mouseButton == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+            } else if (mouseButton == InputConstants.MOUSE_BUTTON_RIGHT) {
                 RIGHT_CLICKS_FANCYMENU.addLast(now);
             }
         }

@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.overlay;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.events.screen.AfterScreenRenderingEvent;
 import de.keksuccino.fancymenu.events.screen.ScreenKeyPressedEvent;
@@ -23,7 +24,6 @@ import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -126,7 +126,7 @@ public class CustomizationOverlay {
 
 			String keyName = e.getKeyName();
 			boolean guiShortcutModifierDown = InputUtils.isGuiShortcutModifierDown(e.getModifiers());
-			boolean altDown = (e.getModifiers() & GLFW.GLFW_MOD_ALT) != 0;
+			boolean altDown = (e.getModifiers() & InputConstants.MOD_ALT) != 0;
 
 			if (!FancyMenu.getOptions().modpackMode.getValue()) {
 

@@ -2,8 +2,8 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.vulkan.VulkanGpuTextureView;
-import com.mojang.blaze3d.vulkan.VulkanRenderPass;
+import com.mojang.renderpearl.backend.vulkan.VulkanGpuTextureView;
+import com.mojang.renderpearl.backend.vulkan.VulkanRenderPass;
 import de.keksuccino.fancymenu.util.watermedia.vulkan.WatermediaVulkanTextureView;
 import org.lwjgl.vulkan.VK12;
 import org.lwjgl.vulkan.VkDescriptorImageInfo;
@@ -17,7 +17,7 @@ public class MixinVulkanRenderPass {
     @Unique private int sampledImageLayout_FancyMenu = VK12.VK_IMAGE_LAYOUT_GENERAL;
 
     /** @reason Remember whether the descriptor currently being assembled borrows WaterMedia's shader-read-only image view. */
-    @WrapOperation(method = "pushDescriptors", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vulkan/VulkanGpuTextureView;vkImageView()J"))
+    @WrapOperation(method = "pushDescriptors", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/backend/vulkan/VulkanGpuTextureView;vkImageView()J"))
     private long wrap_imageView_FancyMenu(VulkanGpuTextureView textureView, Operation<Long> original) {
         if (textureView instanceof WatermediaVulkanTextureView watermediaView && watermediaView.hasExternalImageView()) {
             this.sampledImageLayout_FancyMenu = VK12.VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;

@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.properties;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
@@ -1345,7 +1346,7 @@ public class Property<T> {
                 }
                 
                 public boolean mouseClicked(double mouseX, double mouseY, int button) {
-                    if ((button == 0) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered) {
+                    if ((button == InputConstants.MOUSE_BUTTON_LEFT) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered) {
                         if (this.getStackMeta().isPartOfStack() && !this.getStackMeta().isFirstInStack()) {
                             return true;
                         }

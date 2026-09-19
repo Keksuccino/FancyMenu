@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.widget;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
@@ -10,7 +11,6 @@ import de.keksuccino.fancymenu.customization.screen.identifier.UniversalScreenId
 import de.keksuccino.fancymenu.customization.screen.ScreenConstructionContext;
 import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
 import de.keksuccino.fancymenu.customization.widget.identification.WidgetIdentifierHandler;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -107,7 +107,7 @@ public class WidgetLocatorHandler {
             AbstractWidget w = meta.getWidget();
             // Calling onClick directly bypasses Vanilla's mouseClicked active/visible gate. A resolved inactive widget is a successful no-op, not a broken locator.
             if (!w.isActive()) return true;
-            w.onClick(new MouseButtonEvent(w.getX() + 1, w.getY() + 1, new MouseButtonInfo(0, 0)), false);
+            w.onClick(new MouseButtonEvent(w.getX() + 1, w.getY() + 1, new MouseButtonInfo(InputConstants.MOUSE_BUTTON_LEFT, 0)), false);
             return true;
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to invoke widget's onClick() method!", ex);

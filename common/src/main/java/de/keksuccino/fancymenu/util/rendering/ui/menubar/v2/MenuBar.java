@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.menubar.v2;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -985,7 +985,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         }
         
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if ((button == 0) && (this.isActive() && this.isVisible() && this.isHovered())) {
+            if ((button == InputConstants.MOUSE_BUTTON_LEFT) && (this.isActive() && this.isVisible() && this.isHovered())) {
                 if (FancyMenu.getOptions().playUiClickSounds.getValue()) {
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 }

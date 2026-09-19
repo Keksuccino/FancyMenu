@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.requirement.requirements.window;
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,7 +23,7 @@ public class IsFullscreenRequirement extends Requirement {
     @Override
     public boolean isRequirementMet(@Nullable String value) {
 
-        return Minecraft.getInstance().getWindow().isFullscreen();
+        return de.keksuccino.fancymenu.util.window.WindowHandler.isFullscreen();
 
     }
 

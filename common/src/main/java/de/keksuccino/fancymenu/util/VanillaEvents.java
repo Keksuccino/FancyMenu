@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.util.input.MouseUtils;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -15,7 +16,7 @@ public class VanillaEvents {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public static final int GLFW_NO_MODIFIERS = 0;
+    public static final int NO_MODIFIERS = 0;
 
     @Nullable
     private static MouseButtonInfo latestVanillaMouseButtonInfo = null;
@@ -29,7 +30,7 @@ public class VanillaEvents {
         }
         if (latestVanillaMouseButtonInfo != null) return latestVanillaMouseButtonInfo;
         LOGGER.warn("[FANCYMENU] Getting latestVanillaMouseButtonInfo before caching it! This should be avoided.", new Exception("No MouseButtonInfo cached in VanillaEvents!"));
-        return new MouseButtonInfo(0, -1);
+        return new MouseButtonInfo(InputConstants.MOUSE_BUTTON_LEFT, -1);
     }
 
     public static void updateLatestVanillaMouseButtonInfo(@NotNull MouseButtonInfo info) {

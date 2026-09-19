@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.overlay;
 
 import de.keksuccino.fancymenu.util.ScreenUtils;
 
-import com.mojang.blaze3d.platform.GLX;
+import net.minecraft.client.gui.components.debug.DebugEntrySystemSpecs;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
@@ -190,7 +190,7 @@ public class DebugOverlayBuilder {
             return usage * 100.0D;
         }, 0.0D, 100.0D);
         overlay.addLine("cpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes ->
-                Component.translatable("fancymenu.overlay.debug.cpu", safeReadSystemInfo("cpu_info", GLX::_getCpuInfo))
+                Component.translatable("fancymenu.overlay.debug.cpu", safeReadSystemInfo("cpu_info", DebugEntrySystemSpecs::getCpuInfo))
         );
         overlay.addLine("gpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes ->
                 Component.translatable(

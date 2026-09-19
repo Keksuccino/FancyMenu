@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.util.VanillaEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -180,7 +181,7 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
         for(GuiEventListener child : this.children()) {
             if (child.mouseClicked(VanillaEvents.mouseButtonEvent(realMouseX, realMouseY, button), false)) {
                 this.setFocused(child);
-                if (button == 0) {
+                if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                     this.setDragging(true);
                 }
                 return true;
@@ -223,7 +224,7 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
      * Real mouse coordinates don't really support drag offset calculation, so you should use translated coordinates here.
      */
     protected boolean mouseDraggedComponent(double translatedMouseX, double translatedMouseY, int button, double d1, double d2) {
-        if (this.isDragging() && (button == 0)) {
+        if (this.isDragging() && (button == InputConstants.MOUSE_BUTTON_LEFT)) {
             for (GuiEventListener child : this.children()) {
                 if (child.mouseDragged(VanillaEvents.mouseButtonEvent(this.getRealMouseX(), this.getRealMouseY(), button), d1, d2)) return true;
             }

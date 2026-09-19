@@ -11,7 +11,7 @@ public final class RenderRotationUtil {
     }
 
     /**
-     * Returns the current rotation state accumulated via {@code PoseStack#mulPose(...)} calls.
+     * Returns the current rotation state accumulated via {@code PoseStack#rotate(...)} calls.
      * This reflects only additional pose rotations (not the base GUI scale).
      */
     public static RotationState getCurrentAdditionalRenderRotation_FancyMenu() {

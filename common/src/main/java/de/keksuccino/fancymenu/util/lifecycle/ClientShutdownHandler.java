@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.remote.RemoteServerConnectionManage
 import de.keksuccino.fancymenu.customization.server.ServerCache;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.WebUtils;
+import de.keksuccino.fancymenu.util.rendering.glsl.GlslShaderRuntime;
 import de.keksuccino.fancymenu.util.rinku.ActionBridge;
 import de.keksuccino.fancymenu.util.rinku.BrowserHandler;
 import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
@@ -56,9 +57,10 @@ public final class ClientShutdownHandler {
                 runCleanup("Rinku browsers", BrowserHandler::closeAll);
             }
             runCleanup("panorama renderers", PanoramaHandler::shutdown);
-            // GLFW cursor destruction must finish on the render thread while the window and GLFW are still alive.
-            runCleanup("GLFW cursors", CursorHandler::shutdown);
+            // SDL cursor destruction must finish on the render thread while the window and SDL are still alive.
+            runCleanup("SDL cursors", CursorHandler::shutdown);
             runCleanup("resources", ResourceHandlers::shutdownAll);
+            runCleanup("GLSL pipelines", GlslShaderRuntime::shutdownPipelines);
             runCleanup("pending texture-manager releases", TextureManagerReleaseDispatcher::flushPendingReleases);
             runCleanup("main-thread task queue", MainThreadTaskExecutor::shutdown);
             if (rinkuPresent) {

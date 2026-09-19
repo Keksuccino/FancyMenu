@@ -2,8 +2,6 @@ package de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2;
 
 import de.keksuccino.fancymenu.util.ScreenUtils;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.input.InputConstants;
@@ -1326,7 +1324,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     }
 
     private boolean isEnterKey(int keyCode) {
-        return keyCode == InputConstants.KEY_ENTER
+        return keyCode == InputConstants.KEY_RETURN
                 || keyCode == InputConstants.KEY_NUMPADENTER;
     }
 
@@ -1523,7 +1521,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return;
         }
         entry.setHovered(true);
-        entry.mouseClicked(entry.x + 1.0F, entry.y + 1.0F, 0);
+        entry.mouseClicked(entry.x + 1.0F, entry.y + 1.0F, InputConstants.MOUSE_BUTTON_LEFT);
     }
 
     private void scrollEntryIntoView(@NotNull ContextMenuEntry<?> entry) {
@@ -1579,7 +1577,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             boolean filterActive = (searchLower != null) && !searchLower.isBlank();
 
             // Check if click is on scroll arrow areas first
-            if (button == 0 && this.needsScrolling && this.isMouseOverMenu(mouseX, mouseY)) {
+            if (button == InputConstants.MOUSE_BUTTON_LEFT && this.needsScrolling && this.isMouseOverMenu(mouseX, mouseY)) {
                 float scaledX = (float)((float)this.getActualX()/scale) + this.getBorderThickness();
                 float scaledY = (float)((float)this.getActualY()/scale) + this.getBorderThickness();
                 
@@ -1763,7 +1761,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
@@ -1835,7 +1833,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     @Override
     public boolean keyReleased(KeyEvent event) {
-        return this.keyReleased(event.key(), event.scancode(), event.modifiers());
+        return this.keyReleased(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
@@ -2488,7 +2486,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         @Override
         public boolean keyPressed(KeyEvent event) {
-            return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+            return this.keyPressed(event.key(), event.keycode(), event.modifiers());
         }
 
         public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
@@ -2497,7 +2495,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         @Override
         public boolean keyReleased(KeyEvent event) {
-            return this.keyReleased(event.key(), event.scancode(), event.modifiers());
+            return this.keyReleased(event.key(), event.keycode(), event.modifiers());
         }
 
         public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
@@ -2876,7 +2874,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
         
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if ((button == 0) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered) {
+            if ((button == InputConstants.MOUSE_BUTTON_LEFT) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered) {
                 if (FancyMenu.getOptions().playUiClickSounds.getValue() && this.enableClickSound) {
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 }
@@ -3194,7 +3192,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             //Close sub menu when left-clicking outside the menu
-            if ((button == 0) && this.subContextMenu.isOpen() && !this.subContextMenu.isUserNavigatingInMenu()) {
+            if ((button == InputConstants.MOUSE_BUTTON_LEFT) && this.subContextMenu.isOpen() && !this.subContextMenu.isUserNavigatingInMenu()) {
                 this.subContextMenu.closeMenu();
             }
             return super.mouseClicked(mouseX, mouseY, button);
@@ -3429,7 +3427,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         @Override
         public boolean keyPressed(KeyEvent event) {
-            return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+            return this.keyPressed(event.key(), event.keycode(), event.modifiers());
         }
         
         public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
@@ -3439,7 +3437,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         @Override
         public boolean keyReleased(KeyEvent event) {
-            return this.keyReleased(event.key(), event.scancode(), event.modifiers());
+            return this.keyReleased(event.key(), event.keycode(), event.modifiers());
         }
         
         public boolean keyReleased(int keyCode, int scanCode, int modifiers) {

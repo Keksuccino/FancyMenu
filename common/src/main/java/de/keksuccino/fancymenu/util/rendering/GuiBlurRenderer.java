@@ -1,18 +1,18 @@
 package de.keksuccino.fancymenu.util.rendering;
 
-import com.mojang.blaze3d.GpuFormat;
-import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.GpuFormat;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.Std140Builder;
-import com.mojang.blaze3d.pipeline.BindGroupLayout;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.shaders.UniformType;
-import com.mojang.blaze3d.systems.CommandEncoder;
-import com.mojang.blaze3d.systems.RenderPass;
+import com.mojang.renderpearl.api.pipeline.UniformType;
+import com.mojang.renderpearl.api.commands.CommandEncoder;
+import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.FilterMode;
-import com.mojang.blaze3d.textures.GpuSampler;
+import com.mojang.renderpearl.api.textures.FilterMode;
+import com.mojang.renderpearl.api.textures.GpuSampler;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphicsExtractor;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
@@ -46,17 +46,17 @@ public final class GuiBlurRenderer {
     private static final int DOUBLE_INPUT_SAMPLER_INFO_UBO_SIZE_FANCYMENU = 24;
     private static final float[] BLUR_RADIUS_MULTIPLIERS_FANCYMENU = new float[]{1.0F, 1.0F, 0.5F, 0.5F, 0.25F, 0.25F};
     private static final BindGroupLayout BOX_BLUR_BIND_GROUP_LAYOUT_FANCYMENU = BindGroupLayout.builder()
-            .withSampler(IN_SAMPLER_FANCYMENU)
+            .withUniform(IN_SAMPLER_FANCYMENU, UniformType.COMBINED_IMAGE_SAMPLER)
             .withUniform(SAMPLER_INFO_UNIFORM_FANCYMENU, UniformType.UNIFORM_BUFFER)
             .withUniform(BLUR_CONFIG_UNIFORM_FANCYMENU, UniformType.UNIFORM_BUFFER)
             .build();
     private static final BindGroupLayout SCREEN_COPY_BIND_GROUP_LAYOUT_FANCYMENU = BindGroupLayout.builder()
-            .withSampler(IN_SAMPLER_FANCYMENU)
+            .withUniform(IN_SAMPLER_FANCYMENU, UniformType.COMBINED_IMAGE_SAMPLER)
             .withUniform(SAMPLER_INFO_UNIFORM_FANCYMENU, UniformType.UNIFORM_BUFFER)
             .build();
     private static final BindGroupLayout GUI_BLUR_BIND_GROUP_LAYOUT_FANCYMENU = BindGroupLayout.builder()
-            .withSampler(ORIGINAL_SAMPLER_FANCYMENU)
-            .withSampler(BLUR_SAMPLER_FANCYMENU)
+            .withUniform(ORIGINAL_SAMPLER_FANCYMENU, UniformType.COMBINED_IMAGE_SAMPLER)
+            .withUniform(BLUR_SAMPLER_FANCYMENU, UniformType.COMBINED_IMAGE_SAMPLER)
             .withUniform(SAMPLER_INFO_UNIFORM_FANCYMENU, UniformType.UNIFORM_BUFFER)
             .withUniform(GUI_BLUR_CONFIG_UNIFORM_FANCYMENU, UniformType.UNIFORM_BUFFER)
             .build();
@@ -347,9 +347,9 @@ public final class GuiBlurRenderer {
             return;
         }
         closeBlurTargets_FancyMenu();
-        blurOriginalTarget_FancyMenu = new TextureTarget("FancyMenu GUI blur original", width, height, false, GpuFormat.RGBA8_UNORM);
-        blurSwapTarget_FancyMenu = new TextureTarget("FancyMenu GUI blur swap", width, height, false, GpuFormat.RGBA8_UNORM);
-        blurBlurredTarget_FancyMenu = new TextureTarget("FancyMenu GUI blur blurred", width, height, false, GpuFormat.RGBA8_UNORM);
+        blurOriginalTarget_FancyMenu = new TextureTarget("FancyMenu GUI blur original", width, height, GpuFormat.RGBA8_UNORM, null);
+        blurSwapTarget_FancyMenu = new TextureTarget("FancyMenu GUI blur swap", width, height, GpuFormat.RGBA8_UNORM, null);
+        blurBlurredTarget_FancyMenu = new TextureTarget("FancyMenu GUI blur blurred", width, height, GpuFormat.RGBA8_UNORM, null);
         blurTargetWidth_FancyMenu = width;
         blurTargetHeight_FancyMenu = height;
     }
@@ -480,10 +480,10 @@ public final class GuiBlurRenderer {
 
         // OpenGL texture copies go through framebuffer blits, so use a render pass for predictable sub-region semantics.
         try (RenderPass renderPass = commandEncoder.createRenderPass(() -> "FancyMenu GUI blur source copy", outputTarget.getColorTextureView(), Optional.empty())) {
-            renderPass.setPipeline(SCREEN_COPY_PIPELINE_FANCYMENU);
+            renderPass.setPipeline(RenderSystem.getCompiledPipeline(SCREEN_COPY_PIPELINE_FANCYMENU));
             RenderSystem.bindDefaultUniforms(renderPass);
             renderPass.setUniform(SAMPLER_INFO_UNIFORM_FANCYMENU, boxBlurSamplerInfoBuffer_FancyMenu);
-            renderPass.bindTexture(IN_SAMPLER_FANCYMENU, inputTarget.getColorTextureView(), sampler);
+            renderPass.setUniform(IN_SAMPLER_FANCYMENU, inputTarget.getColorTextureView(), sampler);
             enableScissor_FancyMenu(renderPass, scissor);
             renderPass.draw(3, 1, 0, 0);
             renderPass.disableScissor();
@@ -496,11 +496,11 @@ public final class GuiBlurRenderer {
         }
 
         try (RenderPass renderPass = commandEncoder.createRenderPass(() -> label, outputTarget.getColorTextureView(), Optional.empty())) {
-            renderPass.setPipeline(BOX_BLUR_PIPELINE_FANCYMENU);
+            renderPass.setPipeline(RenderSystem.getCompiledPipeline(BOX_BLUR_PIPELINE_FANCYMENU));
             RenderSystem.bindDefaultUniforms(renderPass);
             renderPass.setUniform(SAMPLER_INFO_UNIFORM_FANCYMENU, boxBlurSamplerInfoBuffer_FancyMenu);
             renderPass.setUniform(BLUR_CONFIG_UNIFORM_FANCYMENU, blurConfigBuffer);
-            renderPass.bindTexture(IN_SAMPLER_FANCYMENU, inputTarget.getColorTextureView(), sampler);
+            renderPass.setUniform(IN_SAMPLER_FANCYMENU, inputTarget.getColorTextureView(), sampler);
             enableScissor_FancyMenu(renderPass, scissor);
             renderPass.draw(3, 1, 0, 0);
             renderPass.disableScissor();
@@ -512,13 +512,13 @@ public final class GuiBlurRenderer {
             return;
         }
 
-        try (RenderPass renderPass = commandEncoder.createRenderPass(() -> "FancyMenu GUI blur composite", mainTarget.getColorTextureView(), Optional.empty(), mainTarget.useDepth ? mainTarget.getDepthTextureView() : null, OptionalDouble.empty())) {
-            renderPass.setPipeline(GUI_BLUR_PIPELINE_FANCYMENU);
+        try (RenderPass renderPass = commandEncoder.createRenderPass(() -> "FancyMenu GUI blur composite", mainTarget.getColorTextureView(), Optional.empty(), mainTarget.getDepthTextureView(), OptionalDouble.empty())) {
+            renderPass.setPipeline(RenderSystem.getCompiledPipeline(GUI_BLUR_PIPELINE_FANCYMENU));
             RenderSystem.bindDefaultUniforms(renderPass);
             renderPass.setUniform(SAMPLER_INFO_UNIFORM_FANCYMENU, guiBlurSamplerInfoBuffer_FancyMenu);
             renderPass.setUniform(GUI_BLUR_CONFIG_UNIFORM_FANCYMENU, guiBlurConfigBuffer_FancyMenu);
-            renderPass.bindTexture(ORIGINAL_SAMPLER_FANCYMENU, blurOriginalTarget_FancyMenu.getColorTextureView(), sampler);
-            renderPass.bindTexture(BLUR_SAMPLER_FANCYMENU, blurBlurredTarget_FancyMenu.getColorTextureView(), sampler);
+            renderPass.setUniform(ORIGINAL_SAMPLER_FANCYMENU, blurOriginalTarget_FancyMenu.getColorTextureView(), sampler);
+            renderPass.setUniform(BLUR_SAMPLER_FANCYMENU, blurBlurredTarget_FancyMenu.getColorTextureView(), sampler);
             enableScissor_FancyMenu(renderPass, scissor);
             renderPass.draw(3, 1, 0, 0);
             renderPass.disableScissor();

@@ -10,7 +10,6 @@ import de.keksuccino.konkrete.input.CharacterFilter;
 import net.minecraft.util.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -256,7 +255,7 @@ public class TextEditorLine extends ExtendedEditBox {
 
     @Override
     public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int keycode, int i1, int i2) {
@@ -346,19 +345,19 @@ public class TextEditorLine extends ExtendedEditBox {
             return false;
         }
 
-        if ((mouseButton == 0) && this.isMouseOver(mouseX, mouseY) && !this.isInMouseHighlightingMode && this.isVisible()) {
+        if ((mouseButton == InputConstants.MOUSE_BUTTON_LEFT) && this.isMouseOver(mouseX, mouseY) && !this.isInMouseHighlightingMode && this.isVisible()) {
             this.parent.startMouseHighlighting(this);
             this.parent.setFocusedLine(Math.max(0, this.parent.getLineIndex(this)));
             super.mouseClicked(mouseX, mouseY, mouseButton);
             int cursorPos = this.parent.getCursorPosFromMouseX(this, mouseX);
             this.moveCursorTo(cursorPos, false);
             this.setHighlightPos(this.getCursorPosition());
-        } else if ((mouseButton == 0) && !this.isMouseOver(mouseX, mouseY)) {
+        } else if ((mouseButton == InputConstants.MOUSE_BUTTON_LEFT) && !this.isMouseOver(mouseX, mouseY)) {
             //Clear highlighting when left-clicked in another line, etc.
             this.setHighlightPos(this.getCursorPosition());
         }
 
-        if (!this.isInMouseHighlightingMode && (mouseButton == 0)) {
+        if (!this.isInMouseHighlightingMode && (mouseButton == InputConstants.MOUSE_BUTTON_LEFT)) {
             return super.mouseClicked(mouseX, mouseY, mouseButton);
         }
         return true;

@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.util.rendering.RenderScaleUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderRotationUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderTranslationUtil;
@@ -70,13 +71,19 @@ public class MixinPoseStack {
         updateActiveRenderScale_FancyMenu();
     }
 
-    @Inject(method = "mulPose", at = @At("TAIL"))
-    private void after_mulPose_FancyMenu(Quaternionfc quaternion, CallbackInfo info) {
-        ensureRenderRotationStackInitialized_FancyMenu();
-        RenderRotationUtil.RotationState currentRotation = this.renderRotationStack_FancyMenu.removeLast();
-        currentRotation.mul(quaternion);
-        this.renderRotationStack_FancyMenu.addLast(currentRotation);
-        updateActiveRenderRotation_FancyMenu();
+    @Inject(method = "rotate(Lorg/joml/Quaternionfc;)V", at = @At("TAIL"))
+    private void after_rotate_FancyMenu(Quaternionfc quaternion, CallbackInfo info) {
+        this.trackRotation_FancyMenu(quaternion);
+    }
+
+    @Inject(method = "rotate(Lcom/mojang/math/Axis;F)V", at = @At("TAIL"))
+    private void after_rotateAxis_FancyMenu(Axis axis, float angle, CallbackInfo info) {
+        this.trackRotation_FancyMenu(axis.rotation(angle));
+    }
+
+    @Inject(method = "rotateDegrees", at = @At("TAIL"))
+    private void after_rotateDegrees_FancyMenu(Axis axis, float angle, CallbackInfo info) {
+        this.trackRotation_FancyMenu(axis.rotationDegrees(angle));
     }
 
     @Inject(method = "translate(FFF)V", at = @At("TAIL"))
@@ -89,6 +96,15 @@ public class MixinPoseStack {
         currentTranslation.z += z * scaleFactor;
         this.renderTranslationStack_FancyMenu.addLast(currentTranslation);
         updateActiveRenderTranslation_FancyMenu();
+    }
+
+    @Unique
+    private void trackRotation_FancyMenu(Quaternionfc quaternion) {
+        ensureRenderRotationStackInitialized_FancyMenu();
+        RenderRotationUtil.RotationState currentRotation = this.renderRotationStack_FancyMenu.removeLast();
+        currentRotation.mul(quaternion);
+        this.renderRotationStack_FancyMenu.addLast(currentRotation);
+        updateActiveRenderRotation_FancyMenu();
     }
 
     @Unique

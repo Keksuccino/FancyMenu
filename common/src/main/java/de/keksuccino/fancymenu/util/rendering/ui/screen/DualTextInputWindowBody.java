@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
@@ -177,12 +176,12 @@ public class DualTextInputWindowBody extends PiPWindowBody implements InitialWid
 
     @Override
     public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int button, int p_96553_, int p_96554_) {
 
-        if ((button == InputConstants.KEY_ENTER) && this.isTextValid() && ((this.input_one != null && this.input_one.isFocused()) || (this.input_two != null && this.input_two.isFocused()))) {
+        if ((button == InputConstants.KEY_RETURN) && this.isTextValid() && ((this.input_one != null && this.input_one.isFocused()) || (this.input_two != null && this.input_two.isFocused()))) {
             this.callback.accept(Pair.of(this.getFirstText(), this.getSecondText()));
             this.closeWindow();
             return true;

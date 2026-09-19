@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import de.keksuccino.fancymenu.FancyMenu;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.worldselection.WorldSelectionList;
@@ -15,7 +15,7 @@ public class MixinWorldListEntry {
     /**
      * @reason Allows FancyMenu to suppress vanilla world icon rendering.
      */
-    @WrapWithCondition(method = "extractContent", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V"))
+    @WrapWithCondition(method = "extractContent", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blit(Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V"))
     private boolean wrap_blitInExtractContent_FancyMenu(GuiGraphicsExtractor graphics, RenderPipeline pipeline, Identifier loc, int x, int y, float u, float v, int width, int height, int textureWidth, int textureHeight) {
         if (textureHeight == 32) {
             return FancyMenu.getOptions().showSingleplayerScreenWorldIcons.getValue();

@@ -23,7 +23,7 @@ class ScreenOverlayHandlerTest {
 
     @BeforeEach
     void cacheMouseButtonInfo() {
-        VanillaEvents.updateLatestVanillaMouseButtonInfo(new MouseButtonInfo(0, VanillaEvents.GLFW_NO_MODIFIERS));
+        VanillaEvents.updateLatestVanillaMouseButtonInfo(new MouseButtonInfo(0, VanillaEvents.NO_MODIFIERS));
     }
 
     @Test

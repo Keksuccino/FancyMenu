@@ -4,7 +4,6 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
 import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import org.spongepowered.asm.mixin.Final;
@@ -25,26 +24,19 @@ public class MixinGameRenderer {
     }
 
     @Inject(method = "render", at = @At("HEAD"))
-    private void before_render_FancyMenu(DeltaTracker $$0, boolean $$1, CallbackInfo info) {
+    private void before_render_FancyMenu(CallbackInfo info) {
         ScreenCustomization.onPreGameRenderTick();
     }
 
-    @Inject(
-        method = "renderLevel",
-	        at = @At(
-	            value = "INVOKE",
-	            target = "Lnet/minecraft/client/renderer/GameRenderer;renderItemInHand(Lnet/minecraft/client/renderer/state/level/CameraRenderState;FLorg/joml/Matrix4fc;)V",
-	            shift = At.Shift.BEFORE
-	        )
-    )
-    private void beforeRenderItemInHand_FancyMenu(DeltaTracker $$0, CallbackInfo info) {
+    @Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;render3dHud(Lnet/minecraft/client/renderer/state/level/CameraRenderState;Lnet/minecraft/client/renderer/state/level/PlayerRenderState;Lnet/minecraft/client/renderer/state/OptionsRenderState;Z)V", shift = At.Shift.BEFORE))
+    private void before_render3dHud_FancyMenu(CallbackInfo info) {
         if (this.minecraft != null && this.minecraft.level != null) {
             SeamlessWorldLoadingHandler.captureFrameIfNeeded(this.minecraft.gameRenderer.mainRenderTarget());
         }
     }
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;renderLevel(Lnet/minecraft/client/DeltaTracker;)V", shift = At.Shift.AFTER))
-    private void afterRenderLevel_FancyMenu(DeltaTracker $$0, boolean $$1, CallbackInfo info) {
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;renderLevel()V", shift = At.Shift.AFTER))
+    private void afterRenderLevel_FancyMenu(CallbackInfo info) {
         if (this.minecraft != null && this.minecraft.level != null) {
             SeamlessWorldLoadingHandler.captureFrameIfNeeded(this.minecraft.gameRenderer.mainRenderTarget());
         }

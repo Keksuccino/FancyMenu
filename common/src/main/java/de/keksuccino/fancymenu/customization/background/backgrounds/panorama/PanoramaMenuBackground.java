@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.background.backgrounds.panorama;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.layout.editor.ChoosePanoramaScreen;
@@ -12,7 +11,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
@@ -21,7 +19,7 @@ import java.util.Objects;
 
 public class PanoramaMenuBackground extends MenuBackground<PanoramaMenuBackground> {
 
-    private static final Identifier MISSING = TextureManager.INTENTIONAL_MISSING_TEXTURE;
+    private static final Identifier MISSING = net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.getLocation();
 
     public final Property.StringProperty panoramaName = putProperty(Property.stringProperty("panorama_name", null, false, false, "fancymenu.backgrounds.panorama.name"));
 

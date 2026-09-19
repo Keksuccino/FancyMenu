@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuInputRouter;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuPointerTracker;
@@ -43,7 +44,7 @@ public class MixinAbstractContainerScreen extends Screen {
             // Track the actual consumer instead of inferring release ownership from focus; some FancyMenu controls intentionally never take focus.
             if (listener.shouldTakeFocusAfterInteraction()) {
                 this.setFocused(listener);
-                if (event.button() == 0) {
+                if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
                     this.setDragging(true);
                 }
             }
@@ -61,12 +62,12 @@ public class MixinAbstractContainerScreen extends Screen {
         if (!this.pointerTracker_FancyMenu.dispatchMouseReleased(event)) {
             if (FancyMenuInputRouter.routeMouseReleased(this.children(), null, event, FancyMenuInputRouter.MouseReleaseRouting.CAPTURED_COMPONENTS_ONLY)) {
                 // Container release logic runs before its super call, so route orphaned pointer captures before slot handling.
-                if ((event.button() == 0) && this.isDragging()) this.setDragging(false);
+                if ((event.button() == InputConstants.MOUSE_BUTTON_LEFT) && this.isDragging()) this.setDragging(false);
                 info.setReturnValue(true);
             }
             return;
         }
-        if ((event.button() == 0) && this.isDragging()) {
+        if ((event.button() == InputConstants.MOUSE_BUTTON_LEFT) && this.isDragging()) {
             this.setDragging(false);
         }
         info.setReturnValue(true);

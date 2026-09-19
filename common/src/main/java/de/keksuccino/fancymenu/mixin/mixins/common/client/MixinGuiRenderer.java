@@ -2,11 +2,11 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.systems.RenderPass;
+import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.panorama.FancyMenuPanoramaPictureInPictureRenderer;
 import de.keksuccino.fancymenu.customization.panorama.FancyMenuPanoramaRenderState;
@@ -153,7 +153,7 @@ public abstract class MixinGuiRenderer {
         this.executePlainDrawRange_FancyMenu(label, mainRenderTarget, dynamicTransforms, currentIndex, endIndex);
     }
 
-    @WrapOperation(method = "draw", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ProjectionMatrixBuffer;getBuffer(Lnet/minecraft/client/renderer/Projection;)Lcom/mojang/blaze3d/buffers/GpuBufferSlice;"))
+    @WrapOperation(method = "draw", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ProjectionMatrixBuffer;getBuffer(Lnet/minecraft/client/renderer/Projection;)Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;"))
     private GpuBufferSlice wrap_getBuffer_FancyMenu(ProjectionMatrixBuffer instance, Projection projection, Operation<GpuBufferSlice> original) {
         Window w = Minecraft.getInstance().getWindow();
         FancyWindow fancyWindow = ((FancyWindow)(Object)w);
@@ -226,7 +226,7 @@ public abstract class MixinGuiRenderer {
                         label,
                         mainRenderTarget.getColorTextureView(),
                         Optional.empty(),
-                        mainRenderTarget.useDepth ? mainRenderTarget.getDepthTextureView() : null,
+                        mainRenderTarget.getDepthTextureView(),
                         OptionalDouble.empty()
                 )) {
             RenderSystem.bindDefaultUniforms(renderPass);
@@ -247,7 +247,7 @@ public abstract class MixinGuiRenderer {
         }
 
         TextureSetup textureSetup = draw.get_textureSetup_FancyMenu();
-        renderPass.setPipeline(draw.get_pipeline_FancyMenu());
+        renderPass.setPipeline(RenderSystem.getCompiledPipeline(draw.get_pipeline_FancyMenu()));
         renderPass.setVertexBuffer(0, executeInfo.vertexBuffer().slice());
         ScreenRectangle scissorArea = draw.get_scissorArea_FancyMenu();
         if (scissorArea != null) {
@@ -257,15 +257,15 @@ public abstract class MixinGuiRenderer {
         }
 
         if (textureSetup.texure0() != null) {
-            renderPass.bindTexture("Sampler0", textureSetup.texure0(), textureSetup.sampler0());
+            renderPass.setUniform("Sampler0", textureSetup.texure0(), textureSetup.sampler0());
         }
 
         if (textureSetup.texure1() != null) {
-            renderPass.bindTexture("Sampler1", textureSetup.texure1(), textureSetup.sampler1());
+            renderPass.setUniform("Sampler1", textureSetup.texure1(), textureSetup.sampler1());
         }
 
         if (textureSetup.texure2() != null) {
-            renderPass.bindTexture("Sampler2", textureSetup.texure2(), textureSetup.sampler2());
+            renderPass.setUniform("Sampler2", textureSetup.texure2(), textureSetup.sampler2());
         }
 
         renderPass.setIndexBuffer(executeInfo.indexBuffer(), executeInfo.indexType());

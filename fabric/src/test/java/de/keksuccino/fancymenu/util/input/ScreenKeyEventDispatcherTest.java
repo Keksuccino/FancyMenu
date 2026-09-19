@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.util.input;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import org.junit.jupiter.api.Test;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,17 +22,17 @@ class ScreenKeyEventDispatcherTest {
     void handledAndUnhandledScreenCallsDispatchExactlyOnceOnBothLoaderPaths() {
         for (LoaderPath loaderPath : LoaderPath.values()) {
             for (boolean handled : List.of(false, true)) {
-                verifySingleDispatch(loaderPath, handled, GLFW.GLFW_PRESS, "pressed");
-                verifySingleDispatch(loaderPath, handled, GLFW.GLFW_RELEASE, "released");
+                verifySingleDispatch(loaderPath, handled, InputConstants.PRESS, "pressed");
+                verifySingleDispatch(loaderPath, handled, InputConstants.RELEASE, "released");
             }
         }
     }
 
     @Test
     void pressRepeatAndReleaseUseTheMatchingEventChannel() {
-        assertEquals(List.of("pressed"), dispatchAndCollectChannels(GLFW.GLFW_PRESS));
-        assertEquals(List.of("pressed"), dispatchAndCollectChannels(GLFW.GLFW_REPEAT));
-        assertEquals(List.of("released"), dispatchAndCollectChannels(GLFW.GLFW_RELEASE));
+        assertEquals(List.of("pressed"), dispatchAndCollectChannels(InputConstants.PRESS));
+        assertEquals(List.of("pressed"), dispatchAndCollectChannels(InputConstants.REPEAT));
+        assertEquals(List.of("released"), dispatchAndCollectChannels(InputConstants.RELEASE));
     }
 
     @Test
@@ -40,7 +40,7 @@ class ScreenKeyEventDispatcherTest {
         AtomicInteger screenCalls = new AtomicInteger();
         AtomicInteger eventCalls = new AtomicInteger();
 
-        boolean handled = ScreenKeyEventDispatcher.dispatchAfterScreenCall(ACTIVE_WINDOW + 1L, ACTIVE_WINDOW, GLFW.GLFW_PRESS, new Object(), new Object(), () -> {
+        boolean handled = ScreenKeyEventDispatcher.dispatchAfterScreenCall(ACTIVE_WINDOW + 1L, ACTIVE_WINDOW, InputConstants.PRESS, new Object(), new Object(), () -> {
             screenCalls.incrementAndGet();
             return true;
         }, (screen, event) -> eventCalls.incrementAndGet(), (screen, event) -> eventCalls.incrementAndGet());
@@ -52,7 +52,7 @@ class ScreenKeyEventDispatcherTest {
 
     @Test
     void invalidActionsDoNotDispatchAsKeyEvents() {
-        for (int action : List.of(-1, 3, Integer.MAX_VALUE)) {
+        for (int action : List.of(-2, 2, 3, Integer.MAX_VALUE)) {
             AtomicInteger screenCalls = new AtomicInteger();
             AtomicInteger eventCalls = new AtomicInteger();
 
@@ -71,7 +71,7 @@ class ScreenKeyEventDispatcherTest {
     void screenFailureCannotProduceAnEventThatWasNeverHandled() {
         AtomicInteger eventCalls = new AtomicInteger();
 
-        assertThrows(TestScreenException.class, () -> ScreenKeyEventDispatcher.dispatchAfterScreenCall(ACTIVE_WINDOW, ACTIVE_WINDOW, GLFW.GLFW_PRESS, new Object(), new Object(), () -> {
+        assertThrows(TestScreenException.class, () -> ScreenKeyEventDispatcher.dispatchAfterScreenCall(ACTIVE_WINDOW, ACTIVE_WINDOW, InputConstants.PRESS, new Object(), new Object(), () -> {
             throw new TestScreenException();
         }, (screen, event) -> eventCalls.incrementAndGet(), (screen, event) -> eventCalls.incrementAndGet()));
         assertEquals(0, eventCalls.get());

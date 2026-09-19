@@ -231,12 +231,12 @@ public class SaveFileWindowBody extends AbstractFileBrowserWindowBody {
 
     @Override
     public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
 
-        if ((keycode == InputConstants.KEY_ENTER) || (keycode == InputConstants.KEY_NUMPADENTER)) {
+        if ((keycode == InputConstants.KEY_RETURN) || (keycode == InputConstants.KEY_NUMPADENTER)) {
             ScrollAreaEntry selectedEntry = this.getSelectedScrollEntry();
             if (selectedEntry instanceof ParentDirScrollAreaEntry) {
                 this.goUpDirectory();

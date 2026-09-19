@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.confetti;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -97,7 +98,7 @@ public class ConfettiDecorationOverlay extends AbstractDecorationOverlay<Confett
         if (!this.showOverlay.tryGetNonNullElse(false)) {
             return super.mouseClicked(VanillaEvents.mouseButtonEvent(mouseX, mouseY, button), false);
         }
-        if (this.confettiMouseClickMode.tryGetNonNullElse(false) && button == 0) {
+        if (this.confettiMouseClickMode.tryGetNonNullElse(false) && button == InputConstants.MOUSE_BUTTON_LEFT) {
             this.overlay.triggerBurstAt((float)mouseX, (float)mouseY);
         }
         return super.mouseClicked(VanillaEvents.mouseButtonEvent(mouseX, mouseY, button), false);

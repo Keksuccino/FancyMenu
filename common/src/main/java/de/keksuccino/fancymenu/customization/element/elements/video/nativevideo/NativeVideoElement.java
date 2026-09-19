@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.video.nativevideo;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.video.IVideoElement;
@@ -34,7 +33,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
@@ -322,7 +320,7 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
     }
     
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (MouseUtil.MouseButton.fromGlfwButton(button) != MouseUtil.MouseButton.LEFT && !MouseUtil.isLeftMouseDown()) return false;
+        if (MouseUtil.MouseButton.fromNativeButton(button) != MouseUtil.MouseButton.LEFT && !MouseUtil.isLeftMouseDown()) return false;
         if (!this.shouldRenderWatermediaMissingOverlay_FancyMenu(this.videoSupplier.get())) return false;
         double resolvedMouseX_FancyMenu = MouseUtil.getGuiScaledMouseX();
         double resolvedMouseY_FancyMenu = MouseUtil.getGuiScaledMouseY();

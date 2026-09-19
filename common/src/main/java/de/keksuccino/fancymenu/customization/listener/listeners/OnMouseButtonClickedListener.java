@@ -1,11 +1,11 @@
 package de.keksuccino.fancymenu.customization.listener.listeners;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.customization.listener.AbstractListener;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 import java.util.List;
 
 public class OnMouseButtonClickedListener extends AbstractListener {
@@ -41,9 +41,9 @@ public class OnMouseButtonClickedListener extends AbstractListener {
             return "ERROR";
         }
         return switch (button) {
-            case GLFW.GLFW_MOUSE_BUTTON_LEFT -> "left";
-            case GLFW.GLFW_MOUSE_BUTTON_RIGHT -> "right";
-            case GLFW.GLFW_MOUSE_BUTTON_MIDDLE -> "middle";
+            case InputConstants.MOUSE_BUTTON_LEFT -> "left";
+            case InputConstants.MOUSE_BUTTON_RIGHT -> "right";
+            case InputConstants.MOUSE_BUTTON_MIDDLE -> "middle";
             default -> Integer.toString(button);
         };
     }

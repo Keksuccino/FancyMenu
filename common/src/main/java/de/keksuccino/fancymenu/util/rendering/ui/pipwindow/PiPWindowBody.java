@@ -96,7 +96,7 @@ public abstract class PiPWindowBody extends Screen implements PipableScreen {
 
     @Override
     public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
@@ -114,7 +114,7 @@ public abstract class PiPWindowBody extends Screen implements PipableScreen {
             if (listener.mouseClicked(event, isDoubleClick)) {
                 if (listener.shouldTakeFocusAfterInteraction()) {
                     this.setFocused(listener);
-                    if (event.button() == 0) {
+                    if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
                         this.setDragging(true);
                     }
                 }

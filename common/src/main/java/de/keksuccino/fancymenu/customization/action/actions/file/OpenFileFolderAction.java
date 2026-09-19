@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.action.actions.file;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.util.file.GameDirectoryActionPathResolver;
-import net.minecraft.util.Util;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -48,7 +47,7 @@ public class OpenFileFolderAction extends Action {
         Path normalizedPath = target.path();
         try {
             Path realPath = this.resolveRealPath(target);
-            Util.getPlatform().openPath(realPath);
+            com.mojang.blaze3d.Blaze3D.openPath(realPath);
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] OpenFileFolderAction: Failed to open path: {}", normalizedPath, ex);
         }

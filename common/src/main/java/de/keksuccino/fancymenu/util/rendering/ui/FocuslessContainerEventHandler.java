@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.input.CharacterEvent;
@@ -48,7 +49,7 @@ public interface FocuslessContainerEventHandler extends ContainerEventHandler, F
 
     @Override
     default boolean mouseDragged(MouseButtonEvent event, double $$3, double $$4) {
-        if (this.isDragging() && (event.button() == 0)) {
+        if (this.isDragging() && (event.button() == InputConstants.MOUSE_BUTTON_LEFT)) {
             for (GuiEventListener child : this.children()) {
                 if (child.mouseDragged(event, $$3, $$4)) return true;
             }

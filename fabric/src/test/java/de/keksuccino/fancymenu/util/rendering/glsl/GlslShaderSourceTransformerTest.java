@@ -407,7 +407,7 @@ class GlslShaderSourceTransformerTest {
             for (GlslShaderSourceTransformer.PassKind passKind : GlslShaderSourceTransformer.PassKind.values()) {
                 String vertexSource = coordinateVariant(backend, passKind).vertexSource();
                 String expectedVertices = backend == GlslShaderSourceTransformer.BackendCoordinates.VULKAN && passKind == GlslShaderSourceTransformer.PassKind.IMAGE ? reversedWinding : normalWinding;
-                assertAll(() -> assertTrue(vertexSource.contains(expectedVertices)), () -> assertTrue(vertexSource.contains("vec2 fmUv = fmVertices[gl_VertexID];")), () -> assertTrue(vertexSource.contains("fmUv_FancyMenu = (fmLogicalPixel - fmAreaOffset) / fmAreaSize;")));
+                assertAll(() -> assertTrue(vertexSource.contains(expectedVertices)), () -> assertTrue(vertexSource.contains("vec2 fmUv = fmVertices[gl_VertexIndex];")), () -> assertTrue(vertexSource.contains("fmUv_FancyMenu = (fmLogicalPixel - fmAreaOffset) / fmAreaSize;")));
             }
         }
     }

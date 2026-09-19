@@ -36,8 +36,6 @@ import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.input.InputUtils;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -68,7 +66,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 import java.util.*;
 
 public class LayoutEditorScreen extends Screen implements ElementFactory {
@@ -1282,14 +1279,14 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			}
 		}
 		//Handle mouse selection
-		if ((button == 0) && canStartMouseSelection) {
+		if ((button == InputConstants.MOUSE_BUTTON_LEFT) && canStartMouseSelection) {
 			this.isMouseSelection = true;
 			this.mouseSelectionStartX = (int) mouseX;
 			this.mouseSelectionStartY = (int) mouseY;
 		}
 		//Deselect all elements
 		if (!this.rightClickMenu.isUserNavigatingInMenu() && ((this.activeElementContextMenu == null) || !this.activeElementContextMenu.isUserNavigatingInMenu()) && !InputUtils.isGuiShortcutModifierDown(modifiers)) {
-			if ((button == 0) || ((button == 1) && ((topHoverElement == null) || topHoverGotSelected))) {
+			if ((button == InputConstants.MOUSE_BUTTON_LEFT) || ((button == InputConstants.MOUSE_BUTTON_RIGHT) && ((topHoverElement == null) || topHoverGotSelected))) {
 				for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
 					if (!e.isGettingResized() && ((topHoverElement == null) || (e != topHoverElement))) e.setSelected(false);
 				}
@@ -1298,18 +1295,18 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		//Close active element context menu
 		this.closeActiveElementMenu();
 		//Close background right-click context menu
-		if ((button == 0) && !this.rightClickMenu.isUserNavigatingInMenu()) {
+		if ((button == InputConstants.MOUSE_BUTTON_LEFT) && !this.rightClickMenu.isUserNavigatingInMenu()) {
 			this.closeRightClickMenu();
 		}
 		//Open background right-click context menu
 		if (topHoverElement == null) {
-			if (button == 1) {
+			if (button == InputConstants.MOUSE_BUTTON_RIGHT) {
 				this.openRightClickMenuAtMouse((int) mouseX, (int) mouseY);
 			}
 		} else if (!topHoverElement.element.layerHiddenInEditor) {
 			this.closeRightClickMenu();
 			//Set and open active element context menu
-			if (button == 1) {
+			if (button == InputConstants.MOUSE_BUTTON_RIGHT) {
 				this.openElementContextMenuAtMouseIfPossible();
 			}
 		}
@@ -1342,7 +1339,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		this.mouseDraggingStarted = false;
 
 		boolean cachedMouseSelection = this.isMouseSelection;
-		if (button == 0) {
+		if (button == InputConstants.MOUSE_BUTTON_LEFT) {
 			this.isMouseSelection = false;
 		}
 
@@ -1356,7 +1353,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		AbstractEditorElement<?, ?> topHoverElement = !hoveredElements.isEmpty() ? hoveredElements.get(hoveredElements.size()-1) : null;
 
 		//Deselect hovered element on left-click if the GUI shortcut modifier is pressed
-		if (!mouseWasInDraggingMode && !cachedMouseSelection && (button == 0) && (topHoverElement != null) && topHoverElement.isSelected() && !topHoverElement.recentlyMovedByDragging && !topHoverElement.recentlyLeftClickSelected && InputUtils.isGuiShortcutModifierDown(modifiers)) {
+		if (!mouseWasInDraggingMode && !cachedMouseSelection && (button == InputConstants.MOUSE_BUTTON_LEFT) && (topHoverElement != null) && topHoverElement.isSelected() && !topHoverElement.recentlyMovedByDragging && !topHoverElement.recentlyLeftClickSelected && InputUtils.isGuiShortcutModifierDown(modifiers)) {
 			topHoverElement.setSelected(false);
 		}
 
@@ -1445,7 +1442,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	@Override
 	public boolean keyPressed(KeyEvent event) {
-	    return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+	    return this.keyPressed(event.key(), event.keycode(), event.modifiers());
 	}
 	
 	public boolean keyPressed(int keycode, int scancode, int modifiers) {
@@ -1459,7 +1456,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			if (e.keyPressed(new KeyEvent(keycode, scancode, modifiers))) return true;
 		}
 
-		String key = GLFW.glfwGetKeyName(keycode, scancode);
+		String key = InputUtils.getKeyName(keycode, scancode);
 		if (key == null) key = "";
 
 		//ARROW LEFT
@@ -1549,7 +1546,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	@Override
 	public boolean keyReleased(KeyEvent event) {
-	    return this.keyReleased(event.key(), event.scancode(), event.modifiers());
+	    return this.keyReleased(event.key(), event.keycode(), event.modifiers());
 	}
 	
 	public boolean keyReleased(int keycode, int scancode, int modifiers) {

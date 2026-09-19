@@ -1,7 +1,8 @@
 package de.keksuccino.fancymenu.util.rendering.glsl;
 
+import de.keksuccino.fancymenu.util.input.InputUtils;
+import com.mojang.blaze3d.platform.InputConstants;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.Arrays;
 
@@ -57,6 +58,7 @@ public final class GlslRuntimeEventTracker {
     }
 
     public static synchronized void onMouseButtonPressed(int button, double mouseX, double mouseY) {
+        button = shaderButtonIndex(button);
         if (!isTrackedMouseButton(button)) {
             return;
         }
@@ -70,6 +72,7 @@ public final class GlslRuntimeEventTracker {
     }
 
     public static synchronized void onMouseButtonReleased(int button, double mouseX, double mouseY) {
+        button = shaderButtonIndex(button);
         if (!isTrackedMouseButton(button)) {
             return;
         }
@@ -87,7 +90,7 @@ public final class GlslRuntimeEventTracker {
     }
 
     /**
-     * Reconciles tracked button states with GLFW polling.
+     * Reconciles tracked button states with SDL polling.
      *
      * This prevents "stuck pressed" states if a callback is missed (for example when other
      * handlers cancel flow).
@@ -97,7 +100,7 @@ public final class GlslRuntimeEventTracker {
             return;
         }
         for (int button = 0; button < TRACKED_MOUSE_BUTTONS; button++) {
-            boolean isPressed = GLFW.glfwGetMouseButton(windowPointer, button) == GLFW.GLFW_PRESS;
+            boolean isPressed = InputUtils.isMouseButtonDown(nativeMouseButton(button));
             boolean wasPressed = MOUSE_BUTTON_STATES[button];
             if (isPressed == wasPressed) {
                 continue;
@@ -161,6 +164,25 @@ public final class GlslRuntimeEventTracker {
                 lastCharCodePoint,
                 lastCharModifiers
         );
+    }
+
+    // Shader uniforms retain their established left/right/middle ordering across the SDL migration.
+    static int shaderButtonIndex(int nativeButton) {
+        return switch (nativeButton) {
+            case InputConstants.MOUSE_BUTTON_LEFT -> 0;
+            case InputConstants.MOUSE_BUTTON_RIGHT -> 1;
+            case InputConstants.MOUSE_BUTTON_MIDDLE -> 2;
+            default -> nativeButton > 0 ? nativeButton - 1 : -1;
+        };
+    }
+
+    static int nativeMouseButton(int shaderIndex) {
+        return switch (shaderIndex) {
+            case 0 -> InputConstants.MOUSE_BUTTON_LEFT;
+            case 1 -> InputConstants.MOUSE_BUTTON_RIGHT;
+            case 2 -> InputConstants.MOUSE_BUTTON_MIDDLE;
+            default -> shaderIndex + 1;
+        };
     }
 
     private static boolean isTrackedMouseButton(int button) {

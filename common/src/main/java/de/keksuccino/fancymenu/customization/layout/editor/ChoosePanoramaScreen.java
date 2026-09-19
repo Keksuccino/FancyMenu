@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.util.input.InputConstants;
@@ -179,12 +178,12 @@ public class ChoosePanoramaScreen extends PiPWindowBody {
 
     @Override
     public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int button, int $$1, int $$2) {
 
-        if (button == InputConstants.KEY_ENTER) {
+        if (button == InputConstants.KEY_RETURN) {
             if (this.selectedPanoramaName != null) {
                 this.closeWithResult(this.selectedPanoramaName);
                 return true;

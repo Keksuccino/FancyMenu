@@ -14,7 +14,7 @@ version="${mod_version}" #mandatory
 displayName="${mod_name}" #mandatory
 # A text field displayed in the mod UI
 authors="${mod_authors}" #optional
-logoFile="fancymenu_logo_128x128.png"
+iconFile="fancymenu_logo_128x128.png"
 # The description text for the mod (multi line!) (#mandatory)
 description='''${mod_description}'''
 

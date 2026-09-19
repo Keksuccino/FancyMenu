@@ -62,7 +62,7 @@ public class ScreenInstanceFactory {
 				new ExecuteOnRenderScreen(() -> CreateWorldScreen.openFresh(Minecraft.getInstance(), () -> ScreenUtils.setScreen(new TitleScreen())), true));
 
 		ScreenInstanceFactory.registerContextAwareScreenProvider(AccessibilityOptionsScreen.class.getName(), context -> new AccessibilityOptionsScreen(context.parentScreen(), Minecraft.getInstance().options));
-		ScreenInstanceFactory.registerContextAwareScreenProvider(OptionsScreen.class.getName(), context -> new OptionsScreen(context.parentScreen(), Minecraft.getInstance().options, context.inWorld()));
+		ScreenInstanceFactory.registerContextAwareScreenProvider(OptionsScreen.class.getName(), context -> new OptionsScreen(context.parentScreen(), Minecraft.getInstance().options));
 
 	}
 

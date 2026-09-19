@@ -32,7 +32,6 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
@@ -183,7 +182,7 @@ public class BuildRequirementWindowBody extends PiPWindowBody implements Initial
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
@@ -215,7 +214,7 @@ public class BuildRequirementWindowBody extends PiPWindowBody implements Initial
             return true;
         }
 
-        if ((keyCode == InputConstants.KEY_ENTER) || (keyCode == InputConstants.KEY_NUMPADENTER) || (keyCode == GLFW.GLFW_KEY_KP_ENTER)) {
+        if ((keyCode == InputConstants.KEY_RETURN) || (keyCode == InputConstants.KEY_NUMPADENTER) || (keyCode == InputConstants.KEY_NUMPADENTER)) {
             if (this.activateSelectedRequirementsListEntry()) {
                 return true;
             }

@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
-import com.mojang.blaze3d.pipeline.RenderPipeline;
+import de.keksuccino.fancymenu.util.input.InputUtils;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.HideableElement;
@@ -28,7 +29,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -464,12 +464,12 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
 
-        String key = GLFW.glfwGetKeyName(keycode, scancode);
+        String key = InputUtils.getKeyName(keycode, scancode);
         if (key == null) key = "";
 
         if (key.equals("o")) this.overlayVisibilityKeybindPressed = true;
@@ -480,12 +480,12 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
 
     @Override
     public boolean keyReleased(KeyEvent event) {
-        return this.keyReleased(event.key(), event.scancode(), event.modifiers());
+        return this.keyReleased(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyReleased(int keycode, int scancode, int modifiers) {
 
-        String key = GLFW.glfwGetKeyName(keycode, scancode);
+        String key = InputUtils.getKeyName(keycode, scancode);
         if (key == null) key = "";
 
         if (key.equals("o")) this.overlayVisibilityKeybindPressed = false;

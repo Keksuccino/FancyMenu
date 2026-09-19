@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.util.resource;
 import de.keksuccino.fancymenu.util.MinecraftResourceReloadObserver;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import net.minecraft.server.packs.CompositePackResources;
 import net.minecraft.server.packs.PackLocationInfo;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackType;
@@ -29,7 +28,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -103,9 +101,8 @@ class ClientResourceIndexTest {
         FakePackResources secondOverlay = new FakePackResources("second-overlay", openedStreams);
         secondOverlay.add("base:shared.txt");
         secondOverlay.add("overlay:two.txt");
-        CompositePackResources composite = new CompositePackResources(primary, List.of(firstOverlay, secondOverlay));
 
-        Set<Identifier> locations = ClientResourceIndexBuilder.build(new FakeResourceManager(composite));
+        Set<Identifier> locations = ClientResourceIndexBuilder.build(new FakeResourceManager(primary, firstOverlay, secondOverlay));
 
         assertEquals(Set.of(id("base:shared.txt"), id("base:primary_only.txt"), id("overlay:one.txt"), id("overlay:two.txt")), locations);
         assertEquals(0, openedStreams.get());
@@ -317,12 +314,12 @@ class ClientResourceIndexTest {
         }
 
         @Override
-        public Map<Identifier, Resource> listResources(String directory, Predicate<Identifier> filter) {
+        public Map<Identifier, Resource> listResources(String directory, ResourceManager.Selector filter) {
             return Map.of();
         }
 
         @Override
-        public Map<Identifier, List<Resource>> listResourceStacks(String directory, Predicate<Identifier> filter) {
+        public Map<Identifier, List<Resource>> listResourceStacks(String directory, ResourceManager.Selector filter) {
             return Map.of();
         }
 

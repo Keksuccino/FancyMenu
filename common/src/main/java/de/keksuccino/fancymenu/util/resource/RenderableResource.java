@@ -1,14 +1,13 @@
 package de.keksuccino.fancymenu.util.resource;
 
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
-import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public interface RenderableResource extends Resource {
 
-    public static final Identifier MISSING_TEXTURE_LOCATION = TextureManager.INTENTIONAL_MISSING_TEXTURE;
+    public static final Identifier MISSING_TEXTURE_LOCATION = net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.getLocation();
     public static final Identifier FULLY_TRANSPARENT_TEXTURE = Identifier.fromNamespaceAndPath("fancymenu", "textures/fully_transparent.png");
 
     /**

@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -1411,7 +1411,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             return false;
         }
 
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             this.pressedTitleBar = false;
             PiPWindowResizeHandle handle = getResizeHandleForInput(mouseX, mouseY);
             if (handle != PiPWindowResizeHandle.NONE) {
@@ -1472,7 +1472,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         boolean wasDraggingTitleBar = this.draggingTitleBar;
         boolean wasResizing = this.activeResizeHandle != PiPWindowResizeHandle.NONE;
         boolean wasDragging = wasDraggingTitleBar || wasResizing;
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             this.pressedTitleBar = false;
             boolean shouldDock = wasDraggingTitleBar && this.dockOverlayVisible && isDockingEnabled() && this.maximizable;
             this.draggingTitleBar = false;
@@ -1504,7 +1504,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
             return false;
         }
 
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             if (this.draggingTitleBar) {
                 updateDragPosition(mouseX, mouseY);
                 return true;
@@ -1573,7 +1573,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
@@ -1589,7 +1589,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
 
     @Override
     public boolean keyReleased(KeyEvent event) {
-        return this.keyReleased(event.key(), event.scancode(), event.modifiers());
+        return this.keyReleased(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {

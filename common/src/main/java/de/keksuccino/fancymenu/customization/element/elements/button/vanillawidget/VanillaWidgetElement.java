@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.widget.identification.WidgetIdentifierHandler;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -39,7 +40,7 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
         int automatedClicks = this.automatedButtonClicks.getInteger();
         if (!isEditor() && !this.automatedButtonClicksDone && (automatedClicks > 0)) {
             for (int i = 0; i < automatedClicks; i++) {
-                if (this.getWidget() != null) this.getWidget().onClick(new MouseButtonEvent(this.getWidget().getX() + 1, this.getWidget().getY() + 1, new MouseButtonInfo(0, 0)), false);
+                if (this.getWidget() != null) this.getWidget().onClick(new MouseButtonEvent(this.getWidget().getX() + 1, this.getWidget().getY() + 1, new MouseButtonInfo(InputConstants.MOUSE_BUTTON_LEFT, 0)), false);
             }
             this.automatedButtonClicksDone = true;
         }

@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.editbox;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.VanillaEvents;
@@ -19,7 +20,6 @@ import net.minecraft.util.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -639,7 +639,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
@@ -648,11 +648,11 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             int cursorPos = this.getCursorPosition();
             int highlightPos = this.getHighlightPosition();
             if (cursorPos != highlightPos) {
-                if (keycode == 263) {
+                if (keycode == com.mojang.blaze3d.platform.InputConstants.KEY_LEFT) {
                     this.moveCursorTo(Math.min(cursorPos, highlightPos), false);
                     return true;
                 }
-                if (keycode == 262) {
+                if (keycode == com.mojang.blaze3d.platform.InputConstants.KEY_RIGHT) {
                     this.moveCursorTo(Math.max(cursorPos, highlightPos), false);
                     return true;
                 }
@@ -679,7 +679,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     private boolean handleMouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         if (!this.canConsumeUserInput) return false;
         boolean handled = super.mouseClicked(event, isDoubleClick);
-        if (handled && event.button() == 0) this.leftMouseDown = true;
+        if (handled && event.button() == InputConstants.MOUSE_BUTTON_LEFT) this.leftMouseDown = true;
         return handled;
     }
 
@@ -705,7 +705,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (!this.canConsumeUserInput) return false;
-        if (!this.leftMouseDown || (button != 0)) return false;
+        if (!this.leftMouseDown || (button != InputConstants.MOUSE_BUTTON_LEFT)) return false;
         this.moveCursorTo(this.getCursorPosFromMouseX(mouseX), true);
         return true;
     }

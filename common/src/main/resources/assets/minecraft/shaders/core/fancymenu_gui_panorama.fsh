@@ -1,12 +1,13 @@
 #version 330
+#extension GL_ARB_separate_shader_objects : require
 
 uniform samplerCube Sampler0;
 
-in vec2 localPlane;
-in vec4 vertexColor;
-in vec4 panoramaInfo;
+layout(location = 0) in vec2 localPlane;
+layout(location = 1) in vec4 vertexColor;
+layout(location = 2) in vec4 panoramaInfo;
 
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
 
 vec3 rotateX(vec3 value, float angleSin, float angleCos) {
     return vec3(

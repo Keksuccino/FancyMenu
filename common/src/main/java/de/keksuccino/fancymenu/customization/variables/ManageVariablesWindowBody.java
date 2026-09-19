@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.variables;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.VanillaEvents;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
@@ -26,7 +25,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -35,7 +33,6 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -244,7 +241,7 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
@@ -309,7 +306,7 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
             return true;
         }
 
-        if (!contextMenuActive && ((keyCode == InputConstants.KEY_ENTER) || (keyCode == InputConstants.KEY_NUMPADENTER))) {
+        if (!contextMenuActive && ((keyCode == InputConstants.KEY_RETURN) || (keyCode == InputConstants.KEY_NUMPADENTER))) {
             VariableScrollEntry selectedEntry = this.getSelectedEntry();
             if (selectedEntry != null) {
                 this.requestSetVariableValue(selectedEntry.variable);
@@ -345,7 +342,7 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
 
     @NotNull
     protected String getLetterKeyName(int keyCode, int scanCode) {
-        String keyName = GLFW.glfwGetKeyName(keyCode, scanCode);
+        String keyName = InputUtils.getKeyName(keyCode, scanCode);
         if (keyName == null) {
             return "";
         }
@@ -501,12 +498,12 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         boolean contextMenuInteracting = this.isUserNavigatingInRightClickContextMenu();
 
-        if ((button == 0) && !contextMenuInteracting && (this.rightClickContextMenu != null)) {
+        if ((button == InputConstants.MOUSE_BUTTON_LEFT) && !contextMenuInteracting && (this.rightClickContextMenu != null)) {
             this.rightClickContextMenu.closeMenu();
             this.clearContextMenuTarget();
         }
 
-        if (!contextMenuInteracting && (button == 1) && this.isInsideVariableScrollArea((int)mouseX, (int)mouseY)) {
+        if (!contextMenuInteracting && (button == InputConstants.MOUSE_BUTTON_RIGHT) && this.isInsideVariableScrollArea((int)mouseX, (int)mouseY)) {
             ScrollAreaEntry targetEntry = this.getVariableEntryAt(mouseX, mouseY);
             this.setContextMenuTarget(targetEntry);
             if (targetEntry != null) {

@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.layout.editor.widget.widgets.layer;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -27,7 +27,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -243,7 +242,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             for (ScrollAreaEntry entry : this.scrollArea.getEntries()) {
                 if (entry.mouseClicked(mouseX, mouseY, button)) return true;
             }
-            if (button == 1 && this.scrollArea.isMouseOverInnerArea(mouseX, mouseY)) {
+            if (button == InputConstants.MOUSE_BUTTON_RIGHT && this.scrollArea.isMouseOverInnerArea(mouseX, mouseY)) {
                 this.openContextMenuForBackground();
                 return true;
             }
@@ -257,7 +256,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     protected boolean mouseReleasedBody(double mouseX, double mouseY, int button) {
 
         // Handle drop operation when mouse button is released
-        if (button == 0 && isDragging && dragTargetUiIndex >= 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT && isDragging && dragTargetUiIndex >= 0) {
             finishDragOperation();
         }
 
@@ -294,7 +293,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             return true;
         }
 
-        if (isDragging && button == 0) {
+        if (isDragging && button == InputConstants.MOUSE_BUTTON_LEFT) {
             updateDragTarget(mouseX, mouseY);
         }
 
@@ -1447,7 +1446,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
         
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if (button == 0) {
+            if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                 this.updateEyeButtonLayout();
                 if (this.isMouseOver(mouseX, mouseY) && !this.isEyeButtonMouseOver(mouseX, mouseY)) {
                     // Store initial position for drag threshold checking
@@ -1464,7 +1463,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         public boolean layerMouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-            if (button == 0 && this.dragStarted) {
+            if (button == InputConstants.MOUSE_BUTTON_LEFT && this.dragStarted) {
                 // Check if we've dragged past the threshold to start a real drag operation
                 double deltaX = mouseX - this.dragStartX;
                 double deltaY = mouseY - this.dragStartY;
@@ -1496,7 +1495,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         public boolean layerMouseReleased(double mouseX, double mouseY, int button) {
-            if (button == 0) {
+            if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                 // If we haven't started a real drag, handle as a regular click
                 if (this.dragStarted && !this.layerWidget.isDragging) {
                     this.onClick(this, mouseX, mouseY, button);
@@ -1508,7 +1507,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         @Override
         public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
-            if (button == 0) {
+            if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                 this.updateEyeButtonLayout();
                 if (this.isEyeButtonMouseOver(mouseX, mouseY)) {
                     this.eyeButton.mouseClicked(mouseX, mouseY, button);
@@ -1534,7 +1533,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
                 }
             }
-            if (button == 1) {
+            if (button == InputConstants.MOUSE_BUTTON_RIGHT) {
                 if (!this.element.isSelected()) this.layerWidget.editor.deselectAllElements();
                 this.element.setSelected(true);
                 this.layerWidget.openContextMenuForLayer(this);
@@ -1735,7 +1734,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
         
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if (button == 0) {
+            if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                 this.updateEyeButtonLayout();
                 this.updateCollapseButtonLayout();
                 if (this.isMouseOver(mouseX, mouseY) && !this.isCollapseButtonMouseOver(mouseX, mouseY) && !this.isEyeButtonMouseOver(mouseX, mouseY)) {
@@ -1749,7 +1748,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         public boolean groupMouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-            if (button == 0 && this.dragStarted) {
+            if (button == InputConstants.MOUSE_BUTTON_LEFT && this.dragStarted) {
                 double deltaX = mouseX - this.dragStartX;
                 double deltaY = mouseY - this.dragStartY;
                 double distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
@@ -1766,7 +1765,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         public boolean groupMouseReleased(double mouseX, double mouseY, int button) {
-            if (button == 0) {
+            if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                 if (this.dragStarted && !this.layerWidget.isDragging) {
                     this.onClick(this, mouseX, mouseY, button);
                 }
@@ -1777,11 +1776,11 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         @Override
         public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
-            if (button == 1) {
+            if (button == InputConstants.MOUSE_BUTTON_RIGHT) {
                 this.layerWidget.openContextMenuForGroup(this);
                 return;
             }
-            if (button == 0) {
+            if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                 this.updateEyeButtonLayout();
                 this.updateCollapseButtonLayout();
                 if (this.isEyeButtonMouseOver(mouseX, mouseY)) {
@@ -1885,7 +1884,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         @Override
         public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
-            if (button == 0) {
+            if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                 this.updateMoveTopBottomButtonLayout();
                 if (this.isMoveTopBottomButtonHovered(mouseX, mouseY)) {
                     this.moveTopBottomButton.mouseClicked(mouseX, mouseY, button);

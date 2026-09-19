@@ -1,8 +1,12 @@
 package de.keksuccino.fancymenu.util.rendering.glsl;
 
-import com.mojang.blaze3d.shaders.ShaderType;
-import com.mojang.blaze3d.vulkan.glsl.GlslCompiler;
-import com.mojang.blaze3d.vulkan.glsl.IntermediaryShaderModule;
+import com.mojang.renderpearl.api.pipeline.ShaderType;
+import com.mojang.renderpearl.frontend.shaders.SPIRVModule;
+import com.mojang.renderpearl.backend.api.SpvModule;
+import org.lwjgl.util.shaderc.Shaderc;
+import org.lwjgl.util.spvc.Spvc;
+import org.lwjgl.system.MemoryUtil;
+import java.nio.ByteBuffer;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -13,6 +17,35 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class GlslShaderSourceCompilationTest {
+
+    @Test
+    void compilesBundledShaderStagesWithExplicitRenderPearlInterfaces() throws Exception {
+        try (ShaderCompiler compiler = new ShaderCompiler()) {
+            Shaderc.shaderc_compile_options_add_macro_definition(compiler.options, "FANCYMENU_MAX_BLUR_RADIUS", Float.toString(de.keksuccino.fancymenu.util.rendering.GuiBlurRadius.MAX_RADIUS));
+            for (String path : List.of("assets/minecraft/shaders/post/fancymenu_copy_screen.fsh", "assets/minecraft/shaders/post/fancymenu_gui_blur.fsh", "assets/minecraft/shaders/post/fancymenu_box_blur.fsh", "assets/minecraft/shaders/core/fancymenu_gui_panorama.vsh", "assets/minecraft/shaders/core/fancymenu_gui_smooth_rect.vsh", "assets/minecraft/shaders/core/fancymenu_gui_smooth_image_circle.vsh", "assets/minecraft/shaders/core/fancymenu_gui_smooth_image_rect.vsh", "assets/minecraft/shaders/core/fancymenu_gui_smooth_circle.fsh", "assets/minecraft/shaders/core/fancymenu_gui_smooth_rect.fsh", "assets/minecraft/shaders/core/fancymenu_gui_panorama.fsh", "assets/minecraft/shaders/core/fancymenu_gui_smooth_image_rect.fsh", "assets/minecraft/shaders/core/fancymenu_gui_smooth_circle.vsh", "assets/minecraft/shaders/core/fancymenu_gui_smooth_image_circle.fsh")) {
+                try (SpvModule module = compiler.createIntermediary(path, bundledSource(path), path.endsWith(".vsh") ? ShaderType.VERTEX : ShaderType.FRAGMENT)) {
+                    org.junit.jupiter.api.Assertions.assertNotNull(module.reflect());
+                }
+            }
+        }
+    }
+
+    private static String bundledSource(String path) throws Exception {
+        String source;
+        try (var stream = GlslShaderSourceCompilationTest.class.getClassLoader().getResourceAsStream(path)) {
+            if (stream == null) throw new java.io.FileNotFoundException(path);
+            source = new String(stream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        }
+        var matcher = java.util.regex.Pattern.compile("#include\\s+<([^>]+)>").matcher(source);
+        StringBuilder resolved = new StringBuilder();
+        while (matcher.find()) {
+            String[] id = matcher.group(1).split(":", 2);
+            String namespace = id.length == 2 ? id[0] : "minecraft";
+            String resource = id.length == 2 ? id[1] : id[0];
+            matcher.appendReplacement(resolved, java.util.regex.Matcher.quoteReplacement(bundledSource("assets/" + namespace + "/shaders/include/" + resource)));
+        }
+        return matcher.appendTail(resolved).toString();
+    }
 
     @Test
     void compilesTransformedLegacyDirectVertexAndFragmentForVulkan12() {
@@ -90,8 +123,8 @@ class GlslShaderSourceCompilationTest {
         GlslShaderSourceTransformer.FragmentVariant variant = variant(source, GlslShaderRuntime.CompileMode.DIRECT, GlslShaderSourceTransformer.PassKind.IMAGE, "direct_glfragcolor_compat");
 
         assertEquals(List.of("iChannel2", "detailNoise"), variant.activeSamplerNames());
-        try (GlslCompiler compiler = new GlslCompiler(); IntermediaryShaderModule module = compiler.createIntermediary("fancymenu_sampler_pruning.fsh", variant.source(), ShaderType.FRAGMENT)) {
-            List<?> reflectedSamplers = module.samplers();
+        try (ShaderCompiler compiler = new ShaderCompiler(); SpvModule module = compiler.createIntermediary("fancymenu_sampler_pruning.fsh", variant.source(), ShaderType.FRAGMENT)) {
+            List<?> reflectedSamplers = module.reflect().descriptors(Spvc.SPVC_RESOURCE_TYPE_SAMPLED_IMAGE);
             assertEquals(variant.activeSamplerNames(), reflectedSamplers.stream().map(GlslShaderSourceCompilationTest::readReflectedName).toList());
         } catch (UnsatisfiedLinkError error) {
             assumeTrue(false, () -> "LWJGL shader compiler or SPIR-V reflection native library is unavailable: " + error.getMessage());
@@ -120,7 +153,7 @@ class GlslShaderSourceCompilationTest {
                 }
                 """;
 
-        try (GlslCompiler compiler = new GlslCompiler()) {
+        try (ShaderCompiler compiler = new ShaderCompiler()) {
             for (GlslShaderSourceTransformer.BackendCoordinates backend : GlslShaderSourceTransformer.BackendCoordinates.values()) {
                 GlslShaderSourceTransformer.FragmentVariant variant = variant(source, GlslShaderRuntime.CompileMode.DIRECT, backend, GlslShaderSourceTransformer.PassKind.IMAGE, "direct_glfragcolor_compat");
                 GlslStd140Layout.Member backendValues = variant.uniformLayout().member("backendValues");
@@ -128,8 +161,8 @@ class GlslShaderSourceCompilationTest {
 
                 assertEquals(expectedType, backendValues.type());
                 assertEquals(2, backendValues.arrayLength());
-                try (IntermediaryShaderModule module = compiler.createIntermediary("fancymenu_preprocessed_" + backend.name() + ".fsh", variant.source(), ShaderType.FRAGMENT)) {
-                    List<?> reflectedUniformBuffers = module.uniformBuffers();
+                try (SpvModule module = compiler.createIntermediary("fancymenu_preprocessed_" + backend.name() + ".fsh", variant.source(), ShaderType.FRAGMENT)) {
+                    List<?> reflectedUniformBuffers = module.reflect().descriptors(Spvc.SPVC_RESOURCE_TYPE_UNIFORM_BUFFER);
                     assertEquals(List.of(GlslShaderSourceTransformer.UNIFORM_BLOCK_NAME), reflectedUniformBuffers.stream().map(GlslShaderSourceCompilationTest::readReflectedName).toList());
                 }
             }
@@ -186,6 +219,41 @@ class GlslShaderSourceCompilationTest {
             current = current.getCause();
         }
         return false;
+    }
+
+    /** Uses RenderPearl's Shaderc options without initializing a Minecraft GPU device. */
+    private static final class ShaderCompiler implements AutoCloseable {
+
+        private final long compiler = Shaderc.shaderc_compiler_initialize();
+        private final long options = Shaderc.shaderc_compile_options_initialize();
+
+        private ShaderCompiler() {
+            Shaderc.shaderc_compile_options_set_target_env(this.options, Shaderc.shaderc_target_env_vulkan, Shaderc.shaderc_env_version_vulkan_1_2);
+            Shaderc.shaderc_compile_options_set_auto_bind_uniforms(this.options, true);
+            Shaderc.shaderc_compile_options_set_preserve_bindings(this.options, false);
+            Shaderc.shaderc_compile_options_set_generate_debug_info(this.options);
+            Shaderc.shaderc_compile_options_set_optimization_level(this.options, Shaderc.shaderc_optimization_level_zero);
+        }
+
+        private SpvModule createIntermediary(String name, String source, ShaderType type) {
+            long result = Shaderc.shaderc_compile_into_spv(this.compiler, source, type == ShaderType.FRAGMENT ? Shaderc.shaderc_fragment_shader : Shaderc.shaderc_vertex_shader, name, "main", this.options);
+            try {
+                assertEquals(Shaderc.shaderc_compilation_status_success, Shaderc.shaderc_result_get_compilation_status(result), () -> Shaderc.shaderc_result_get_error_message(result));
+                ByteBuffer bytes = Shaderc.shaderc_result_get_bytes(result);
+                ByteBuffer copy = MemoryUtil.memAlloc(bytes.remaining());
+                MemoryUtil.memCopy(bytes, copy);
+                return new SPIRVModule(copy, type);
+            } finally {
+                Shaderc.shaderc_result_release(result);
+            }
+        }
+
+        @Override
+        public void close() {
+            Shaderc.shaderc_compile_options_release(this.options);
+            Shaderc.shaderc_compiler_release(this.compiler);
+        }
+
     }
 
 }

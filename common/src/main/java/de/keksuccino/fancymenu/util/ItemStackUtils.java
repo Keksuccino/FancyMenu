@@ -106,7 +106,7 @@ public final class ItemStackUtils {
         private static HolderLookup.Provider provider = null;
 
         private static HolderLookup.Provider createProvider() {
-            HolderLookup.Provider provider = VanillaRegistries.createLookup();
+            HolderLookup.Provider provider = VanillaRegistries.createWorldLookup();
             BuiltInRegistries.DATA_COMPONENT_INITIALIZERS.build(provider).forEach(pending -> pending.apply());
             return provider;
         }

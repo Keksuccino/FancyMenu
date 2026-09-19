@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.Buddy;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.BuddyTextures;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.items.FoodItem;
@@ -397,7 +396,7 @@ public class BuddyStatusScreen implements Renderable {
         // Removed attribute points, titles and buttons
 
         if (tooltip != null) {
-            graphics.tooltip(font, List.of(ClientTooltipComponent.create(tooltip.getVisualOrderText())), mouseX, mouseY, DefaultTooltipPositioner.INSTANCE, null);
+            graphics.tooltip(font, List.of(ClientTooltipComponent.create(tooltip.getVisualOrderText())), mouseX, mouseY, DefaultTooltipPositioner.INSTANCE, null, false);
         }
     }
 

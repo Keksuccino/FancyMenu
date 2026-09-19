@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.util.watermedia.vulkan;
 
-import com.mojang.blaze3d.vulkan.VulkanDevice;
+import com.mojang.renderpearl.backend.vulkan.VulkanDevice;
 import org.lwjgl.vulkan.VK12;
 import org.lwjgl.vulkan.VkPhysicalDeviceMemoryProperties;
 import java.lang.reflect.InvocationHandler;

@@ -32,7 +32,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
+import org.lwjgl.sdl.SDLKeyboard;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -96,7 +96,7 @@ public class MimicKeybindAction extends Action {
             return true;
         }
 
-        if (key.getType() == InputConstants.Type.KEYSYM || key.getType() == InputConstants.Type.SCANCODE) {
+        if (key.getType() == InputConstants.Type.KEYBOARD) {
             return pressKeyboardKey(keyMapping, key, keepPressed, holdDuration);
         }
 
@@ -118,17 +118,8 @@ public class MimicKeybindAction extends Action {
         KeyboardHandler handler = minecraft.keyboardHandler;
 
         long window = WindowHandler.getWindowHandle();
-        int keyCode;
-        int scanCode;
-        if (key.getType() == InputConstants.Type.KEYSYM) {
-            keyCode = key.getValue();
-            scanCode = GLFW.glfwGetKeyScancode(keyCode);
-        } else {
-            keyCode = InputConstants.UNKNOWN.getValue();
-            scanCode = key.getValue();
-        }
-
-        KeyMapping.set(key, true);
+        int keyCode = key.getValue();
+        int scanCode = SDLKeyboard.SDL_GetKeyFromScancode(keyCode, (short) 0, false);
         ((IMixinKeyboardHandler)handler).invoke_keyPress_FancyMenu(window, 1, new KeyEvent(keyCode, scanCode, 0));
 
         if (keepPressed) {
@@ -368,7 +359,7 @@ public class MimicKeybindAction extends Action {
 
         @Override
         public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
-            return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+            return this.keyPressed(event.key(), event.keycode(), event.modifiers());
         }
         
         public boolean keyPressed(int keyCode, int scanCode, int modifiers) {

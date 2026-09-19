@@ -1,10 +1,10 @@
 package de.keksuccino.fancymenu.util.rendering.glsl;
 
-import com.mojang.blaze3d.GpuFormat;
+import com.mojang.renderpearl.api.GpuFormat;
 import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.systems.CommandEncoder;
+import com.mojang.renderpearl.api.commands.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.GpuTextureView;
+import com.mojang.renderpearl.api.textures.GpuTextureView;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector4f;
@@ -33,8 +33,8 @@ final class GlslPingPongTarget implements AutoCloseable {
         }
 
         this.close();
-        this.readTarget = new TextureTarget(this.label + " read", width, height, false, GpuFormat.RGBA16_FLOAT);
-        this.writeTarget = new TextureTarget(this.label + " write", width, height, false, GpuFormat.RGBA16_FLOAT);
+        this.readTarget = new TextureTarget(this.label + " read", width, height, GpuFormat.RGBA16_FLOAT, null);
+        this.writeTarget = new TextureTarget(this.label + " write", width, height, GpuFormat.RGBA16_FLOAT, null);
         this.width = width;
         this.height = height;
 

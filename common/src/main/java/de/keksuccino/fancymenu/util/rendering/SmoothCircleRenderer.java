@@ -1,15 +1,15 @@
 package de.keksuccino.fancymenu.util.rendering;
 
-import com.mojang.blaze3d.GpuFormat;
-import com.mojang.blaze3d.PrimitiveTopology;
-import com.mojang.blaze3d.pipeline.BlendFunction;
-import com.mojang.blaze3d.pipeline.ColorTargetState;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.GpuFormat;
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
+import com.mojang.renderpearl.api.pipeline.BlendFunction;
+import com.mojang.renderpearl.api.pipeline.ColorTargetState;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import java.util.Optional;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormatElement;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
+import com.mojang.renderpearl.api.vertex.VertexFormatElement;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinBufferBuilder;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphicsExtractor;
 import net.minecraft.client.Minecraft;
@@ -17,7 +17,6 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.renderer.BindGroupLayouts;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
 import net.minecraft.resources.Identifier;
 import org.joml.Matrix3x2f;
@@ -46,7 +45,7 @@ public final class SmoothCircleRenderer {
     private static final VertexFormatElement CIRCLE_INFO_1_FANCYMENU = getVertexFormatElement_FancyMenu(SMOOTH_CIRCLE_VERTEX_FORMAT_FANCYMENU, CIRCLE_INFO_1_NAME_FANCYMENU);
     private static final VertexFormatElement CIRCLE_INFO_2_FANCYMENU = getVertexFormatElement_FancyMenu(SMOOTH_CIRCLE_VERTEX_FORMAT_FANCYMENU, CIRCLE_INFO_2_NAME_FANCYMENU);
     private static final RenderPipeline SMOOTH_CIRCLE_PIPELINE_FANCYMENU = RenderPipeline.builder().withBindGroupLayout(BindGroupLayouts.GLOBALS)
-            .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
+            .withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS).withBindGroupLayout(BindGroupLayouts.PROJECTION)
             .withLocation(Identifier.withDefaultNamespace("pipeline/fancymenu_gui_smooth_circle"))
             .withVertexShader("core/fancymenu_gui_smooth_circle")
             .withFragmentShader("core/fancymenu_gui_smooth_circle")

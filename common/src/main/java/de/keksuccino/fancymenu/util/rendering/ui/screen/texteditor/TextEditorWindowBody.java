@@ -42,7 +42,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 import java.awt.*;
 import java.lang.reflect.Array;
 import java.util.*;
@@ -1322,7 +1321,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
 
     /**
      * A captured PiP release can be intentionally dropped when the window becomes hidden, locked, or
-     * loses focus to a forced window. The raw GLFW state remains authoritative in all of those paths.
+     * loses focus to a forced window. The raw SDL state remains authoritative in all of those paths.
      */
     protected void validateMouseHighlightingCapture() {
         if (!this.isInMouseHighlightingMode()) {
@@ -1330,7 +1329,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
         }
         PiPWindow window = this.getWindow();
         boolean windowOwnsCapture = window == null || (window.isVisible() && !window.isInputLocked() && PiPWindowHandler.INSTANCE.isWindowFocused(window));
-        boolean leftMouseDown = GLFW.glfwGetMouseButton(Minecraft.getInstance().getWindow().handle(), GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS;
+        boolean leftMouseDown = InputUtils.isMouseButtonDown(InputConstants.MOUSE_BUTTON_LEFT);
         if (!windowOwnsCapture || !leftMouseDown) {
             this.stopMouseHighlighting();
         }
@@ -1578,7 +1577,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
@@ -1593,7 +1592,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
                 this.goToLineField.setFocused(false);
                 return true;
             }
-            if (keycode == InputConstants.KEY_ENTER) {
+            if (keycode == InputConstants.KEY_RETURN) {
                 try {
                     String val = this.goToLineField.getValue();
                     if (!val.isEmpty()) {
@@ -1613,7 +1612,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
         }
 
         //GUI shortcut modifier + G | GO TO LINE
-        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keycode == GLFW.GLFW_KEY_G)) {
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keycode == InputConstants.KEY_G)) {
             this.isGoToLineOpen = !this.isGoToLineOpen;
             if (this.isGoToLineOpen) {
                 this.goToLineField.setValue("");
@@ -1637,7 +1636,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
             l.keyPressed(keycode, scancode, modifiers);
         }
 
-        String key = GLFW.glfwGetKeyName(keycode, scancode);
+        String key = InputUtils.getKeyName(keycode, scancode);
         if (key == null) key = "";
 
         //GUI shortcut modifier + Z | STEP BACK
@@ -1651,13 +1650,13 @@ public class TextEditorWindowBody extends PiPWindowBody {
             return true;
         }
         //GUI shortcut modifier + S | DONE
-        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keycode == GLFW.GLFW_KEY_S)) {
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keycode == InputConstants.KEY_S)) {
             this.triggerDoneAction();
             return true;
         }
         //ALT + UP | MOVE LINE UP
-        boolean altDown = InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), GLFW.GLFW_KEY_LEFT_ALT) || InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), GLFW.GLFW_KEY_RIGHT_ALT);
-        if (altDown && ((keycode == InputConstants.KEY_UP) || (keycode == GLFW.GLFW_KEY_PAGE_UP))) {
+        boolean altDown = InputConstants.isKeyDown(InputConstants.KEY_LALT) || InputConstants.isKeyDown(InputConstants.KEY_RALT);
+        if (altDown && ((keycode == InputConstants.KEY_UP) || (keycode == InputConstants.KEY_PAGEUP))) {
             if (this.isLineFocused()) {
                 int index = this.getFocusedLineIndex();
                 if (index > 0) {
@@ -1679,7 +1678,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
         }
 
         //ALT + DOWN | MOVE LINE DOWN
-        if (altDown && ((keycode == InputConstants.KEY_DOWN) || (keycode == GLFW.GLFW_KEY_PAGE_DOWN))) {
+        if (altDown && ((keycode == InputConstants.KEY_DOWN) || (keycode == InputConstants.KEY_PAGEDOWN))) {
             if (this.isLineFocused()) {
                 int index = this.getFocusedLineIndex();
                 if (index < this.getLineCount() - 1) {
@@ -1701,7 +1700,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
         }
 
         //ENTER
-        if (keycode == InputConstants.KEY_ENTER) {
+        if (keycode == InputConstants.KEY_RETURN) {
             if (!this.isInMouseHighlightingMode()) {
                 if (this.isLineFocused()) {
                     this.history.saveSnapshot();
@@ -1796,7 +1795,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
         }
 
         //GUI shortcut modifier + D | DUPLICATE LINE
-        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keycode == GLFW.GLFW_KEY_D)) {
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keycode == InputConstants.KEY_D)) {
             if (this.isLineFocused()) {
                 this.history.saveSnapshot();
                 int index = this.getFocusedLineIndex();
@@ -1817,7 +1816,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
 
 
         //GUI shortcut modifier + HOME | GO TO START
-        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keycode == GLFW.GLFW_KEY_HOME)) {
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keycode == InputConstants.KEY_HOME)) {
             this.resetHighlighting();
             if (this.getLineCount() > 0) {
                 this.setFocusedLine(0);
@@ -1829,7 +1828,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
         }
 
         //GUI shortcut modifier + END | GO TO END
-        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keycode == GLFW.GLFW_KEY_END)) {
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keycode == InputConstants.KEY_END)) {
             this.resetHighlighting();
             if (this.getLineCount() > 0) {
                 int lastIndex = this.getLineCount() - 1;
@@ -1847,7 +1846,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
 
     @Override
     public boolean keyReleased(KeyEvent event) {
-        return this.keyReleased(event.key(), event.scancode(), event.modifiers());
+        return this.keyReleased(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyReleased(int i1, int i2, int i3) {
@@ -1900,14 +1899,14 @@ public class TextEditorWindowBody extends PiPWindowBody {
             }
 
             if (this.isMouseInsideEditorArea(mouseX, mouseY)) {
-                if (button == 1) {
+                if (button == InputConstants.MOUSE_BUTTON_RIGHT) {
                     this.rightClickContextMenu.closeMenu();
                 }
-                if ((button == 0) || (button == 1)) {
+                if ((button == InputConstants.MOUSE_BUTTON_LEFT) || (button == InputConstants.MOUSE_BUTTON_RIGHT)) {
                     boolean isHighlightedHovered = this.isHighlightedTextHovered();
                     TextEditorLine hoveredLine = this.getHoveredLine(mouseX, mouseY);
                     if (!this.rightClickContextMenu.isOpen()) {
-                        if ((button == 0) || !isHighlightedHovered) {
+                        if ((button == InputConstants.MOUSE_BUTTON_LEFT) || !isHighlightedHovered) {
                             this.resetHighlighting();
                         }
                         if (hoveredLine == null) {
@@ -1921,7 +1920,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
                             this.setFocusedLine(this.getLineIndex(focus));
                             Objects.requireNonNull(this.getFocusedLine()).moveCursorToEnd(false);
                             this.correctYScroll(0);
-                        } else if ((button == 1) && !isHighlightedHovered) {
+                        } else if ((button == InputConstants.MOUSE_BUTTON_RIGHT) && !isHighlightedHovered) {
                             //Focus focusedLineIndex in case it is right-clicked
                             this.setFocusedLine(this.getLineIndex(hoveredLine));
                             //Set cursor in case focusedLineIndex is right-clicked
@@ -1929,7 +1928,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
                             hoveredLine.moveCursorTo(cursorPos, false);
                         }
                     }
-                    if (button == 1) {
+                    if (button == InputConstants.MOUSE_BUTTON_RIGHT) {
                         this.selectedHoveredOnRightClickMenuOpen = this.isHighlightedTextHovered();
                         ContextMenuHandler.INSTANCE.setAndOpenAtMouse(this.rightClickContextMenu);
                     } else if (this.rightClickContextMenu.isOpen() && !this.rightClickContextMenu.isHovered()) {
@@ -1957,7 +1956,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
-        if ((event.button() == 0) && this.isInMouseHighlightingMode()) {
+        if ((event.button() == InputConstants.MOUSE_BUTTON_LEFT) && this.isInMouseHighlightingMode()) {
             this.tickMouseHighlighting(event.x(), event.y(), false);
             return true;
         }
@@ -1967,7 +1966,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
         boolean handled = super.mouseReleased(event);
-        if ((event.button() == 0) && this.isInMouseHighlightingMode()) {
+        if ((event.button() == InputConstants.MOUSE_BUTTON_LEFT) && this.isInMouseHighlightingMode()) {
             this.tickMouseHighlighting(event.x(), event.y(), false);
             this.stopMouseHighlighting();
             return true;

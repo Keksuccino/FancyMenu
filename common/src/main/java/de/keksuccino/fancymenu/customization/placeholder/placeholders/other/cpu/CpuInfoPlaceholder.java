@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders.other.cpu;
 
-import com.mojang.blaze3d.platform.GLX;
+import net.minecraft.client.gui.components.debug.DebugEntrySystemSpecs;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -23,7 +23,7 @@ public class CpuInfoPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        return GLX._getCpuInfo();
+        return DebugEntrySystemSpecs.getCpuInfo();
     }
 
     @Override

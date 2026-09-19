@@ -5,6 +5,7 @@
   "mixins": [
   ],
   "client": [
+    "client.MixinSDLMouse",
     "client.MixinFabricGameRenderer",
     "client.MixinFabricKeyboardHandler",
     "client.MixinFabricTitleScreen"

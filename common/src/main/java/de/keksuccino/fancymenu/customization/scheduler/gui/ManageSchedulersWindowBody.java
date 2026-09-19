@@ -285,7 +285,7 @@ public class ManageSchedulersWindowBody extends PiPCellWindowBody {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
 
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
@@ -320,7 +320,7 @@ public class ManageSchedulersWindowBody extends PiPCellWindowBody {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         SchedulerInstanceCell editingCell = this.getEditingInstanceCell();
-        if ((button == 0) && (editingCell != null) && (editingCell.editBox != null) && !editingCell.editBox.isMouseOver(mouseX, mouseY)) {
+        if ((button == InputConstants.MOUSE_BUTTON_LEFT) && (editingCell != null) && (editingCell.editBox != null) && !editingCell.editBox.isMouseOver(mouseX, mouseY)) {
             editingCell.exitEditMode(true);
         }
         return super.mouseClicked(mouseX, mouseY, button);
@@ -717,7 +717,7 @@ public class ManageSchedulersWindowBody extends PiPCellWindowBody {
         }
         
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if (button == 0 && this.isHovered() && !this.editMode) {
+            if (button == InputConstants.MOUSE_BUTTON_LEFT && this.isHovered() && !this.editMode) {
                 long currentTime = System.currentTimeMillis();
                 if (currentTime - this.lastClickTime < DOUBLE_CLICK_TIME) {
                     this.enterEditMode();
@@ -727,7 +727,7 @@ public class ManageSchedulersWindowBody extends PiPCellWindowBody {
                 }
             }
             boolean b = super.mouseClicked(mouseX, mouseY, button);
-            if ((button == 1) && this.isHovered() && !this.editMode) {
+            if ((button == InputConstants.MOUSE_BUTTON_RIGHT) && this.isHovered() && !this.editMode) {
                 MainThreadTaskExecutor.executeInMainThread(() -> {
                     MainThreadTaskExecutor.executeInMainThread(() -> {
                         this.setSelected(true);
@@ -741,12 +741,12 @@ public class ManageSchedulersWindowBody extends PiPCellWindowBody {
 
         @Override
         public boolean keyPressed(KeyEvent event) {
-            return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+            return this.keyPressed(event.key(), event.keycode(), event.modifiers());
         }
         
         public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
             if (this.editMode && this.editBox != null) {
-                if (keyCode == InputConstants.KEY_ENTER || keyCode == InputConstants.KEY_NUMPADENTER) {
+                if (keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER) {
                     this.exitEditMode(true);
                     return true;
                 } else if (keyCode == InputConstants.KEY_ESCAPE) {

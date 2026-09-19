@@ -8,7 +8,7 @@ import java.util.function.ToLongFunction;
 
 /**
  * Stores FancyMenu's next tick cursor request while retaining allocation identity for custom cursors.
- * Numeric GLFW handles are not identities because GLFW may reuse their values after destruction.
+ * Numeric SDL handles are not identities because SDL may reuse their values after destruction.
  */
 final class CursorTickSelection<T> {
 

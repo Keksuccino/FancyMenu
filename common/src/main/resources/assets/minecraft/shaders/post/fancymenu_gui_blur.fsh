@@ -1,6 +1,7 @@
 #version 330
+#extension GL_ARB_separate_shader_objects : require
 
-#moj_import <fancymenu:fancymenu_rounded_box.glsl>
+#include <fancymenu:fancymenu_rounded_box.glsl>
 
 uniform sampler2D OriginalSampler;
 uniform sampler2D BlurSampler;
@@ -19,9 +20,9 @@ layout(std140) uniform GuiBlurConfig {
     vec4 ShapeInfo;
 };
 
-in vec2 texCoord;
+layout(location = 0) in vec2 texCoord;
 
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
 
 float getSuperellipseAlpha(vec2 pixel, vec2 pos, vec2 size, float n) {
     vec2 halfSize = size * 0.5;

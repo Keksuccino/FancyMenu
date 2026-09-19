@@ -242,7 +242,7 @@ public class ScreenOverlayHandler {
     }
 
     /**
-     * Drops listener references when input focus is lost. Reference-free button sentinels still block a late drag/release, and a new press clears them if GLFW omits the release.
+     * Drops listener references when input focus is lost. Reference-free button sentinels still block a late drag/release, and a new press clears them if SDL omits the release.
      */
     public void cancelMouseCaptures() {
         this.detachMouseCaptures();

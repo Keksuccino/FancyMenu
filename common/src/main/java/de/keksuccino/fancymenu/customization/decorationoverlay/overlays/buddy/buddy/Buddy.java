@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.animation.AnimationState;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.animation.AnimationStates;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.buddy.buddy.gui.BuddyStatusScreen;
@@ -1469,7 +1469,7 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
 
         if (isDead) {
             // Let the widget handle reset triggers; block other interactions
-            return isMouseOverBuddy(mouseX, mouseY) && button == 0;
+            return isMouseOverBuddy(mouseX, mouseY) && button == InputConstants.MOUSE_BUTTON_LEFT;
         }
         
         // First handle the leveling screen if it's visible (highest priority)
@@ -1506,7 +1506,7 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
         }
 
         // Always handle poop clicks regardless of buddy visibility
-        if (button == 0) { // Left click
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) { // Left click
             // Check if clicked on a poop
             for (Poop poop : new ArrayList<>(poops)) {
                 if (poop.isMouseOver(mouseX, mouseY)) {
@@ -1526,13 +1526,13 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
             }
         }
 
-        if (button == 1) { // Right click
+        if (button == InputConstants.MOUSE_BUTTON_RIGHT) { // Right click
             if (isMouseOverBuddy(mouseX, mouseY)) {
                 statusScreen.show(screenWidth, screenHeight);
                 LOGGER.debug("Opening buddy stats screen (on right-click)");
                 return true;
             }
-        } else if (button == 0) { // Left click
+        } else if (button == InputConstants.MOUSE_BUTTON_LEFT) { // Left click
             // Normal petting if menu isn't open
             if (isMouseOverBuddy(mouseX, mouseY)) {
                 // If buddy is peeking, stop peeking and start walking
@@ -1597,7 +1597,7 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
             return true;
         }
 
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             if (droppedFood != null && droppedFood.isBeingDragged()) {
                 // Check if food is near buddy before dropping it
                 if (droppedFood.isNearBuddy(buddyPosX + SPRITE_WIDTH/2, buddyPosY + SPRITE_HEIGHT/2)) {
@@ -1665,7 +1665,7 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
 
         if (!isDisabled) return false;
 
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             if (droppedFood != null && droppedFood.isBeingDragged()) {
                 droppedFood.setPosition((int)mouseX, (int)mouseY);
                 return true;

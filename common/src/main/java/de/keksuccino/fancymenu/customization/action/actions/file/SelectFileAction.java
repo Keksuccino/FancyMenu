@@ -17,9 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.PointerBuffer;
-import org.lwjgl.system.MemoryStack;
-import org.lwjgl.util.tinyfd.TinyFileDialogs;
+import de.keksuccino.fancymenu.util.file.NativeFileDialog;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -87,23 +85,17 @@ public class SelectFileAction extends Action {
             dialogTitle = this.getDisplayName().getString();
         }
 
-        List<String> filterPatterns = config.buildFilterPatterns();
-        String filterDescription = config.getEffectiveFilterDescription();
-        String selectedFilePath;
-
-        if (filterPatterns.isEmpty()) {
-            selectedFilePath = TinyFileDialogs.tinyfd_openFileDialog(dialogTitle, null, null, filterDescription, false);
-        } else {
-            try (MemoryStack stack = MemoryStack.stackPush()) {
-                PointerBuffer filterBuffer = stack.mallocPointer(filterPatterns.size());
-                for (String pattern : filterPatterns) {
-                    filterBuffer.put(stack.UTF8(pattern));
-                }
-                filterBuffer.flip();
-                selectedFilePath = TinyFileDialogs.tinyfd_openFileDialog(dialogTitle, null, filterBuffer, filterDescription, false);
+        NativeFileDialog.open(dialogTitle, config.getEffectiveFilterDescription(), config.buildFilterPatterns(), result -> {
+            if (result.error() != null) {
+                this.notifyFileSelectionResult(null, targetPath.toString(), false, false, result.error());
+            } else {
+                this.handleSelectedFile(result.path(), target, config.overwriteExisting);
             }
-        }
+        });
+    }
 
+    private void handleSelectedFile(@Nullable String selectedFilePath, @NotNull GameDirectoryActionPathResolver.ResolvedPath target, boolean overwriteExisting) {
+        Path targetPath = target.path();
         if (selectedFilePath == null) {
             this.notifyFileSelectionResult(null, targetPath.toString(), false, true, null);
             return;
@@ -125,7 +117,7 @@ public class SelectFileAction extends Action {
         }
 
         try {
-            this.copySelectedFile(sourcePath, target, config.overwriteExisting);
+            this.copySelectedFile(sourcePath, target, overwriteExisting);
             LOGGER.info("[FANCYMENU] SelectFileAction: Copied '{}' to '{}'", sourcePath, targetPath);
             this.notifyFileSelectionResult(sourcePath.toString(), targetPath.toString(), true, false, null);
         } catch (Exception ex) {

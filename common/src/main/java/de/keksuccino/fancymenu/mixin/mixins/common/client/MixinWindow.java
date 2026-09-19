@@ -4,7 +4,6 @@ import com.mojang.blaze3d.platform.Window;
 import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import de.keksuccino.fancymenu.util.window.FancyWindow;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -15,9 +14,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Window.class)
 public abstract class MixinWindow implements FancyWindow {
 
-    @Shadow @Final private long handle;
-
     @Unique private double preciseScale_FancyMenu = -1;
+
+    @Shadow
+    public abstract int getGuiScale();
 
     @Inject(method = "setGuiScale", at = @At("HEAD"))
     private void void_before_setGuiScale_FancyMenu(int scale, CallbackInfo info) {
@@ -25,16 +25,14 @@ public abstract class MixinWindow implements FancyWindow {
         this.preciseScale_FancyMenu = -1;
     }
 
-    /** @reason Clear cached modifier and captured overlay input when focus is lost because GLFW may not deliver matching release events while unfocused. */
+    /** @reason Clear cached modifier and captured overlay input when focus is lost because SDL may not deliver matching release events while unfocused. */
     @Inject(method = "onFocus", at = @At("HEAD"))
-    private void before_onFocus_FancyMenu(long handle, boolean focused, CallbackInfo info) {
-        if ((handle == this.handle) && !focused) {
+    private void before_onFocus_FancyMenu(boolean focused, CallbackInfo info) {
+        if (!focused) {
             InputUtils.resetActiveModifiers();
             ScreenOverlayHandler.INSTANCE.cancelMouseCaptures();
         }
     }
-
-    @Shadow public abstract int getGuiScale();
 
     @Unique
     @Override

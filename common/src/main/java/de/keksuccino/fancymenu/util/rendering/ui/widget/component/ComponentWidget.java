@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.component;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -243,7 +243,7 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
     }
     
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.active && this.visible && this.isHoveredOrFocused() && (button == 0)) {
+        if (this.active && this.visible && this.isHoveredOrFocused() && (button == InputConstants.MOUSE_BUTTON_LEFT)) {
             for (ComponentWidget w : this.children) {
                 if (w.mouseClicked(mouseX, mouseY, button)) return true;
             }

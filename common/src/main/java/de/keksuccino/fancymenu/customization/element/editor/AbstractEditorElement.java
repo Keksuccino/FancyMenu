@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.editor;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
@@ -1229,7 +1229,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         if (!this.isSelected()) {
             return false;
         }
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             if (!this.rightClickMenu.isUserNavigatingInMenu()) {
                 this.activeResizeGrabberType = !this.isMultiSelected() ? this.getResizeGrabberTypeAt((int) mouseX, (int) mouseY) : null;
                 this.rotationGrabberActive = !this.isMultiSelected() && this.getHoveredRotationGrabber() != null;
@@ -1279,7 +1279,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     }
     
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             this.leftMouseDown = false;
             this.activeResizeGrabberType = null;
             if (this.isGettingRotated() && (this.preRotationSnapshot != null)) {
@@ -1331,7 +1331,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         if (!this.isSelected()) {
             return false;
         }
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             if (this.leftMouseDown && this.isGettingRotated()) { // ROTATE ELEMENT
                 // Calculate current mouse angle relative to element center
                 float centerX = this.getX() + (this.getWidth() / 2.0F);

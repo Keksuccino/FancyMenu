@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget.editbox;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.Message;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.StringReader;
@@ -200,14 +199,14 @@ public class EditBoxSuggestions extends CommandSuggestions {
 
     @Override
     public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
         if (!this.input.isFocused()) return false;
         if ((this.getSuggestions() != null) && this.getSuggestions().keyPressed(new net.minecraft.client.input.KeyEvent(keycode, scancode, modifiers))) {
             return true;
-        } else if (keycode == 258) {
+        } else if (keycode == com.mojang.blaze3d.platform.InputConstants.KEY_TAB) {
             this.showSuggestions(true);
             return true;
         } else {

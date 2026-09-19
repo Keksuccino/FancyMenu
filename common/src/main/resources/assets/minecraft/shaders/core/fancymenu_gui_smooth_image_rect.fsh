@@ -1,17 +1,18 @@
 #version 330
+#extension GL_ARB_separate_shader_objects : require
 
-#moj_import <fancymenu:fancymenu_rounded_box.glsl>
+#include <fancymenu:fancymenu_rounded_box.glsl>
 
 uniform sampler2D Sampler0;
 
-in vec2 localPos;
-in vec4 vertexColor;
-in vec4 rectInfo0;
-in vec4 cornerRadii;
-in vec4 rotation;
-in vec4 uvBounds;
+layout(location = 0) in vec2 localPos;
+layout(location = 1) in vec4 vertexColor;
+layout(location = 2) in vec4 rectInfo0;
+layout(location = 3) in vec4 cornerRadii;
+layout(location = 4) in vec4 rotation;
+layout(location = 5) in vec4 uvBounds;
 
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
 
 vec2 resolveImageUv(vec2 p, vec2 halfSize) {
     vec2 uv = vec2(

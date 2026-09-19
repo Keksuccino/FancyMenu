@@ -112,11 +112,11 @@ public class MessageDialogBody extends PiPWindowBody {
 
     @Override
     public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int button, int scanCode, int modifiers) {
-        if (button == InputConstants.KEY_ENTER) {
+        if (button == InputConstants.KEY_RETURN) {
             if (canAccept()) {
                 handleResult(true);
             }

@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroOverlay;
@@ -18,14 +19,12 @@ import de.keksuccino.fancymenu.util.rendering.glsl.GlslRuntimeEventTracker;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuInputRouter;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
-import net.minecraft.client.input.InputQuirks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.MouseButtonInfo;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -43,7 +42,6 @@ public class MixinMouseHandler {
     @Shadow @Nullable private MouseButtonInfo activeButton;
 
     @Unique private final Minecraft mc_FancyMenu = Minecraft.getInstance();
-    @Unique private int fakeRightMouse_FancyMenu = 0;
     @Unique private int mappedButtonOnPress_FancyMenu = -1;
 
     @Inject(method = "onButton", at = @At("HEAD"))
@@ -51,21 +49,10 @@ public class MixinMouseHandler {
         if (window != WindowHandler.getWindowHandle()) return;
 
         InputUtils.updateActiveModifiers(buttonInfo.modifiers());
-        boolean pressed = (action == GLFW.GLFW_PRESS);
+        boolean pressed = (action == InputConstants.PRESS);
         int mappedButton = buttonInfo.button();
         int modifiers = buttonInfo.modifiers();
-        // Mirror vanilla macOS fake right click behavior (Ctrl + Left Click).
-        if (InputQuirks.SIMULATE_RIGHT_CLICK_WITH_LONG_LEFT_CLICK && (mappedButton == GLFW.GLFW_MOUSE_BUTTON_LEFT)) {
-            if (pressed) {
-                if ((modifiers & GLFW.GLFW_MOD_CONTROL) == GLFW.GLFW_MOD_CONTROL) {
-                    mappedButton = GLFW.GLFW_MOUSE_BUTTON_RIGHT;
-                    this.fakeRightMouse_FancyMenu++;
-                }
-        } else if (this.fakeRightMouse_FancyMenu > 0) {
-                mappedButton = GLFW.GLFW_MOUSE_BUTTON_RIGHT;
-                this.fakeRightMouse_FancyMenu--;
-            }
-        }
+        // SDL already applies macOS Control-click emulation before delivering this event.
         VanillaEvents.updateLatestVanillaMouseButtonInfo(new MouseButtonInfo(mappedButton, modifiers));
         // This runs before NeoForge's cancellable mouse-button pre-hook, so even a canceled new press supersedes stale overlay ownership.
         if (pressed) ScreenOverlayHandler.INSTANCE.prepareMousePress(mappedButton);
@@ -133,7 +120,7 @@ public class MixinMouseHandler {
     private void before_getOverlay_in_onButton_FancyMenu(long window, MouseButtonInfo buttonInfo, int action, CallbackInfo info) {
         int button = (this.mappedButtonOnPress_FancyMenu != -1) ? this.mappedButtonOnPress_FancyMenu : buttonInfo.button();
 
-        boolean clicked = (action == GLFW.GLFW_PRESS);
+        boolean clicked = (action == InputConstants.PRESS);
         double mouseX = this.xpos * (double)Minecraft.getInstance().getWindow().getGuiScaledWidth() / (double)Minecraft.getInstance().getWindow().getScreenWidth();
         double mouseY = this.ypos * (double)Minecraft.getInstance().getWindow().getGuiScaledHeight() / (double)Minecraft.getInstance().getWindow().getScreenHeight();
 
@@ -176,12 +163,12 @@ public class MixinMouseHandler {
         double mouseY = this.ypos * guiHeight / screenHeight;
         int mappedButton = (this.mappedButtonOnPress_FancyMenu != -1) ? this.mappedButtonOnPress_FancyMenu : buttonInfo.button();
         this.mappedButtonOnPress_FancyMenu = -1;
-        if (action == GLFW.GLFW_PRESS) {
+        if (action == InputConstants.PRESS) {
             ClicksPerSecondTracker.recordClick(mappedButton);
             if (Listeners.ON_MOUSE_BUTTON_CLICKED.hasInstancesListening()) Listeners.ON_MOUSE_BUTTON_CLICKED.onMouseButtonClicked(mappedButton, mouseX, mouseY);
             MouseUtil.onMouseButtonPressed(mappedButton, mouseX, mouseY);
             GlslRuntimeEventTracker.onMouseButtonPressed(mappedButton, mouseX, mouseY);
-        } else if (action == GLFW.GLFW_RELEASE) {
+        } else if (action == InputConstants.RELEASE) {
             if (Listeners.ON_MOUSE_BUTTON_RELEASED.hasInstancesListening()) Listeners.ON_MOUSE_BUTTON_RELEASED.onMouseButtonReleased(mappedButton, mouseX, mouseY);
             MouseUtil.onMouseButtonReleased(mappedButton, mouseX, mouseY);
             GlslRuntimeEventTracker.onMouseButtonReleased(mappedButton, mouseX, mouseY);

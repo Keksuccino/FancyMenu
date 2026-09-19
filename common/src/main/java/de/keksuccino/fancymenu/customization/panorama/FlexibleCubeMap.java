@@ -1,14 +1,13 @@
 package de.keksuccino.fancymenu.customization.panorama;
 
 import com.mojang.blaze3d.ProjectionType;
-import com.mojang.blaze3d.PrimitiveTopology;
-import com.mojang.blaze3d.buffers.GpuBuffer;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.systems.RenderPass;
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.GpuTextureView;
+import com.mojang.renderpearl.api.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -47,13 +46,11 @@ public class FlexibleCubeMap implements AutoCloseable {
 		}
 	}
 
-	public void render(float rotXInDegrees, float rotYInDegrees, float fov, int width, int height) {
+	public void render(float rotXInDegrees, float rotYInDegrees, float fov, int width, int height, GpuTextureView colorTexture, GpuTextureView depthTexture) {
 		RenderSystem.backupProjectionMatrix();
 		try {
 			this.projection.setupPerspective(0.05F, 10.0F, fov, width, height);
 			RenderSystem.setProjectionMatrix(this.projectionMatrixBuffer.getBuffer(this.projection), ProjectionType.PERSPECTIVE);
-			GpuTextureView colorTexture = getOutputColorTexture();
-			GpuTextureView depthTexture = getOutputDepthTexture();
 			RenderPipeline renderPipeline = RenderPipelines.PANORAMA;
 			RenderSystem.AutoStorageIndexBuffer indices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
 			GpuBuffer indexBuffer = indices.getBuffer(36);
@@ -73,13 +70,13 @@ public class FlexibleCubeMap implements AutoCloseable {
 			try (RenderPass renderPass = RenderSystem.getDevice()
 				.createCommandEncoder()
 				.createRenderPass(() -> "FancyMenu Cubemap", colorTexture, Optional.empty(), depthTexture, OptionalDouble.empty())) {
-				renderPass.setPipeline(renderPipeline);
+				renderPass.setPipeline(RenderSystem.getCompiledPipeline(renderPipeline));
 				RenderSystem.bindDefaultUniforms(renderPass);
 				renderPass.setVertexBuffer(0, this.vertexBuffer.slice());
 				renderPass.setIndexBuffer(indexBuffer, indices.type());
 				renderPass.setUniform("DynamicTransforms", dynamicTransforms);
 				AbstractTexture texture = Minecraft.getInstance().getTextureManager().getTexture(this.location);
-				renderPass.bindTexture("Sampler0", texture.getTextureView(), texture.getSampler());
+				renderPass.setUniform("Sampler0", texture.getTextureView(), texture.getSampler());
 				renderPass.drawIndexed(36, 1, 0, 0, 0);
 			}
 		} finally {
@@ -120,28 +117,6 @@ public class FlexibleCubeMap implements AutoCloseable {
 				return RenderSystem.getDevice().createBuffer(() -> "FancyMenu cube map vertex buffer", 32, meshData.vertexBuffer());
 			}
 		}
-	}
-
-	@NotNull
-	private static GpuTextureView getOutputColorTexture() {
-		GpuTextureView outputColorTexture = RenderSystem.outputColorTextureOverride;
-		if (outputColorTexture != null) {
-			return outputColorTexture;
-		}
-
-		RenderTarget mainRenderTarget = Minecraft.getInstance().gameRenderer.mainRenderTarget();
-		return mainRenderTarget.getColorTextureView();
-	}
-
-	@NotNull
-	private static GpuTextureView getOutputDepthTexture() {
-		GpuTextureView outputDepthTexture = RenderSystem.outputDepthTextureOverride;
-		if (outputDepthTexture != null) {
-			return outputDepthTexture;
-		}
-
-		RenderTarget mainRenderTarget = Minecraft.getInstance().gameRenderer.mainRenderTarget();
-		return mainRenderTarget.getDepthTextureView();
 	}
 
 	@Override

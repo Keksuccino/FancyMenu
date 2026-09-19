@@ -37,7 +37,7 @@ public class MixinFabricKeyboardHandler {
             for (GuiEventListener listener : screen.children()) {
                 if (listener instanceof WrappedRinkuBrowser) {
                     boolean b = false;
-                    if (action == 1 || action == 2) {
+                    if (action == com.mojang.blaze3d.platform.InputConstants.PRESS || action == com.mojang.blaze3d.platform.InputConstants.REPEAT) {
                         b = listener.keyPressed(event);
                     } else if (action == 0) {
                         b = listener.keyReleased(event);
@@ -62,7 +62,7 @@ public class MixinFabricKeyboardHandler {
             for (GuiEventListener listener : screen.children()) {
                 if (listener instanceof WrappedRinkuBrowser) {
                     boolean b = false;
-                    if (action == 1 || action == 2) {
+                    if (action == com.mojang.blaze3d.platform.InputConstants.PRESS || action == com.mojang.blaze3d.platform.InputConstants.REPEAT) {
                         b = listener.keyPressed(event);
                     } else if (action == 0) {
                         b = listener.keyReleased(event);

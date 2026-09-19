@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.afma.creator;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -23,7 +24,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -852,7 +852,7 @@ public class AfmaCreatorScreen extends Screen {
             this.contentScrollBar.mouseReleased(mouseX, mouseY, button);
             return true;
         }
-        if (button == 0 && this.isDragging()) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT && this.isDragging()) {
             this.setDragging(false);
             if (this.getFocused() != null) {
                 return this.getFocused().mouseReleased(VanillaEvents.mouseButtonEvent(mouseX, mouseY, button));
@@ -872,7 +872,7 @@ public class AfmaCreatorScreen extends Screen {
         if (this.contentScrollBar.isGrabberGrabbed()) {
             return this.contentScrollBar.mouseDragged(mouseX, mouseY, button, dragX, dragY);
         }
-        return this.getFocused() != null && this.isDragging() && button == 0 && this.getFocused().mouseDragged(VanillaEvents.mouseButtonEvent(mouseX, mouseY, button), dragX, dragY);
+        return this.getFocused() != null && this.isDragging() && button == InputConstants.MOUSE_BUTTON_LEFT && this.getFocused().mouseDragged(VanillaEvents.mouseButtonEvent(mouseX, mouseY, button), dragX, dragY);
     }
 
     @Override
@@ -1242,7 +1242,7 @@ public class AfmaCreatorScreen extends Screen {
         for (AbstractWidget widget : widgets) {
             if (widget.mouseClicked(VanillaEvents.mouseButtonEvent(mouseX, mouseY, button), false)) {
                 this.setFocused(widget);
-                if (button == 0) {
+                if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                     this.setDragging(true);
                 }
                 return true;

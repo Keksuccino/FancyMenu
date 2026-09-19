@@ -164,7 +164,7 @@ public class IsModLoadedRequirement extends Requirement {
 
         @Override
         public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
-            return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+            return this.keyPressed(event.key(), event.keycode(), event.modifiers());
         }
         
         public boolean keyPressed(int $$0, int $$1, int $$2) {

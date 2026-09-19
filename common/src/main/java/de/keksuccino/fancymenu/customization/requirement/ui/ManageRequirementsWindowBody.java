@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.requirement.ui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGroup;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
@@ -35,7 +34,6 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -415,11 +413,11 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        String keyName = GLFW.glfwGetKeyName(keyCode, scanCode);
+        String keyName = InputUtils.getKeyName(keyCode, scanCode);
         if (keyName == null) {
             keyName = "";
         }
@@ -444,12 +442,12 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
             }
         }
 
-        if (!contextMenuActive && !InputUtils.isGuiShortcutModifierDown(modifiers) && (keyCode == GLFW.GLFW_KEY_A)) {
+        if (!contextMenuActive && !InputUtils.isGuiShortcutModifierDown(modifiers) && (keyCode == InputConstants.KEY_A)) {
             this.onAddRequirement();
             return true;
         }
 
-        if (!contextMenuActive && !InputUtils.isGuiShortcutModifierDown(modifiers) && this.allowGroupManagement && (keyCode == GLFW.GLFW_KEY_G)) {
+        if (!contextMenuActive && !InputUtils.isGuiShortcutModifierDown(modifiers) && this.allowGroupManagement && (keyCode == InputConstants.KEY_G)) {
             this.onAddGroup();
             return true;
         }
@@ -463,7 +461,7 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
             return true;
         }
 
-        if (!contextMenuActive && ((keyCode == InputConstants.KEY_ENTER) || (keyCode == InputConstants.KEY_NUMPADENTER))) {
+        if (!contextMenuActive && ((keyCode == InputConstants.KEY_RETURN) || (keyCode == InputConstants.KEY_NUMPADENTER))) {
             RequirementInstance selectedInstance = this.getSelectedInstance();
             RequirementGroup selectedGroup = this.getSelectedGroup();
             if ((selectedInstance != null) || (selectedGroup != null)) {
@@ -472,7 +470,7 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
             }
         }
 
-        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keyCode == GLFW.GLFW_KEY_S)) {
+        if (InputUtils.isGuiShortcutModifierDown(modifiers) && (keyCode == InputConstants.KEY_S)) {
             this.triggerDoneAction();
             return true;
         }
@@ -494,12 +492,12 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         boolean contextMenuInteracting = this.isUserNavigatingInRightClickContextMenu();
 
-        if ((button == 0) && !contextMenuInteracting && (this.rightClickContextMenu != null)) {
+        if ((button == InputConstants.MOUSE_BUTTON_LEFT) && !contextMenuInteracting && (this.rightClickContextMenu != null)) {
             this.rightClickContextMenu.closeMenu();
             this.clearContextMenuTarget();
         }
 
-        if (!contextMenuInteracting && (button == 0) && this.isInsideRequirementsScrollArea((int)mouseX, (int)mouseY)) {
+        if (!contextMenuInteracting && (button == InputConstants.MOUSE_BUTTON_LEFT) && this.isInsideRequirementsScrollArea((int)mouseX, (int)mouseY)) {
             ScrollAreaEntry targetEntry = this.getRequirementsEntryAt(mouseX, mouseY);
             boolean isEditableEntry = (targetEntry instanceof RequirementInstanceEntry) || (targetEntry instanceof RequirementGroupEntry);
             boolean isDoubleClick = false;
@@ -527,7 +525,7 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
             return handled;
         }
 
-        if (!contextMenuInteracting && (button == 1) && this.isInsideRequirementsScrollArea((int)mouseX, (int)mouseY)) {
+        if (!contextMenuInteracting && (button == InputConstants.MOUSE_BUTTON_RIGHT) && this.isInsideRequirementsScrollArea((int)mouseX, (int)mouseY)) {
             ScrollAreaEntry targetEntry = this.getRequirementsEntryAt(mouseX, mouseY);
             this.setContextMenuTarget(targetEntry);
             if (targetEntry != null) {

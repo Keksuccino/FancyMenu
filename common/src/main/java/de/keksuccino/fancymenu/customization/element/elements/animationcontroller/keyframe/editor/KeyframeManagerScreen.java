@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.animationcontroller.keyframe.editor;
 
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import com.mojang.blaze3d.platform.Window;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
@@ -29,7 +30,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -496,7 +496,7 @@ public class KeyframeManagerScreen extends Screen {
 
         int keyCode = event.key();
 
-        String key = GLFW.glfwGetKeyName(event.key(), event.scancode());
+        String key = InputUtils.getKeyName(event.key(), event.keycode());
         if (key == null) key = "";
         key = key.toLowerCase(Locale.ROOT);
 
@@ -512,7 +512,7 @@ public class KeyframeManagerScreen extends Screen {
 
         if (this.isShowingSmoothingInput && this.smoothingDistanceInput.isFocused()) {
             this.lastSmoothingInputValue = this.smoothingDistanceInput.getValue();
-            if (keyCode == InputConstants.KEY_ENTER) {
+            if (keyCode == InputConstants.KEY_RETURN) {
                 applySmoothingDistance();
                 return true;
             } else if (keyCode == InputConstants.KEY_ESCAPE) {
@@ -522,7 +522,7 @@ public class KeyframeManagerScreen extends Screen {
         }
 
         if (this.isShowingTimestampInput && this.timestampInput.isFocused()) {
-            if (keyCode == InputConstants.KEY_ENTER) {
+            if (keyCode == InputConstants.KEY_RETURN) {
                 if ((this.selectedKeyframes.size() == 1) && MathUtils.isLong(this.timestampInput.getValue())) {
                     AnimationKeyframe selectedKeyframe = this.selectedKeyframes.getFirst();
                     long timestamp = Math.max(0L, Long.parseLong(this.timestampInput.getValue()));

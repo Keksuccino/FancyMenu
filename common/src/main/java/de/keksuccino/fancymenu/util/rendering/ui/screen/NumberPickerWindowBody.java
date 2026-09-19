@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -275,11 +274,11 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == InputConstants.KEY_ENTER) {
+        if (keyCode == InputConstants.KEY_RETURN) {
             this.onDone.accept(this.currentValue);
             this.closeWindow();
             return true;
@@ -300,7 +299,7 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
 
     @Override
     public boolean keyReleased(KeyEvent event) {
-        return this.keyReleased(event.key(), event.scancode(), event.modifiers());
+        return this.keyReleased(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
@@ -318,7 +317,7 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
     
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         boolean active = this.isInputActive();
-        if ((button == 0) && active) {
+        if ((button == InputConstants.MOUSE_BUTTON_LEFT) && active) {
             if ((this.arrowUpButton != null) && this.arrowUpButton.mouseClicked(mouseX, mouseY, button)) {
                 return true;
             }
@@ -335,7 +334,7 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
     }
     
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (button == 0) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
             this.stopArrowHoldFromMouse();
         }
         return super.mouseReleased(new MouseButtonEvent(mouseX, mouseY, new MouseButtonInfo(button, 0)));
@@ -437,7 +436,7 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
                 return;
             }
             int keyCode = this.holdDirection > 0 ? InputConstants.KEY_UP : InputConstants.KEY_DOWN;
-            if (!InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), keyCode)) {
+            if (!InputConstants.isKeyDown(keyCode)) {
                 this.clearArrowHold();
                 return;
             }

@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SmoothRoundedBoxShaderTest {
 
-    private static final String SHARED_COVERAGE_IMPORT = "#moj_import <fancymenu:fancymenu_rounded_box.glsl>";
+    private static final String SHARED_COVERAGE_IMPORT = "#include <fancymenu:fancymenu_rounded_box.glsl>";
 
     @Test
     void sharpCornerCoverageDoesNotDependOnFragmentQuadAlignment() {

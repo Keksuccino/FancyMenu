@@ -1,17 +1,19 @@
 package de.keksuccino.fancymenu.util.rendering.glsl;
 
-import com.mojang.blaze3d.GpuFormat;
-import com.mojang.blaze3d.PrimitiveTopology;
-import com.mojang.blaze3d.pipeline.BindGroupLayout;
-import com.mojang.blaze3d.pipeline.BlendFunction;
-import com.mojang.blaze3d.pipeline.ColorTargetState;
-import com.mojang.blaze3d.pipeline.CompiledRenderPipeline;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.platform.BlendFactor;
-import com.mojang.blaze3d.shaders.ShaderSource;
-import com.mojang.blaze3d.shaders.ShaderType;
-import com.mojang.blaze3d.shaders.UniformType;
-import com.mojang.blaze3d.systems.GpuDevice;
+import com.mojang.renderpearl.api.GpuFormat;
+import com.mojang.blaze3d.pipeline.PipelineCache;
+import org.jetbrains.annotations.Nullable;
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
+import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
+import com.mojang.renderpearl.api.pipeline.BlendFunction;
+import com.mojang.renderpearl.api.pipeline.ColorTargetState;
+import com.mojang.renderpearl.api.pipeline.CompiledRenderPipeline;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.pipeline.BlendFactor;
+import com.mojang.renderpearl.api.pipeline.ShaderSource;
+import com.mojang.renderpearl.api.pipeline.ShaderType;
+import com.mojang.renderpearl.api.pipeline.UniformType;
+import com.mojang.renderpearl.api.device.GpuDevice;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.MinecraftResourceReloadObserver;
 import net.minecraft.resources.Identifier;
@@ -34,15 +36,20 @@ final class GlslGpuPipelineCache {
     static {
         MinecraftResourceReloadObserver.addReloadListener(action -> {
             if (action == MinecraftResourceReloadObserver.ReloadAction.STARTING) {
-                synchronized (PIPELINES) {
-                    PIPELINES.clear();
-                    generation++;
-                }
+                clear();
             }
         });
     }
 
     private GlslGpuPipelineCache() {
+    }
+
+    static void clear() {
+        synchronized (PIPELINES) {
+            PIPELINES.values().forEach(PipelineBundle::close);
+            PIPELINES.clear();
+            generation++;
+        }
     }
 
     static long generation() {
@@ -68,7 +75,7 @@ final class GlslGpuPipelineCache {
 
         BindGroupLayout.Builder bindGroupBuilder = BindGroupLayout.builder().withUniform(GlslShaderSourceTransformer.UNIFORM_BLOCK_NAME, UniformType.UNIFORM_BUFFER);
         for (String samplerName : variant.activeSamplerNames()) {
-            bindGroupBuilder.withSampler(samplerName);
+            bindGroupBuilder.withUniform(samplerName, UniformType.COMBINED_IMAGE_SAMPLER);
         }
 
         ColorTargetState colorTargetState = new ColorTargetState(blend ? Optional.of(LEGACY_IMAGE_BLEND) : Optional.empty(), targetFormat, ColorTargetState.WRITE_ALL);
@@ -81,7 +88,23 @@ final class GlslGpuPipelineCache {
                 .withCull(false)
                 .withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
                 .build();
-        ShaderSource shaderSource = (id, type) -> resolveSource(id, type, vertexId, fragmentId, variant);
+        ShaderSource shaderSource = new ShaderSource() {
+
+            @Override
+            public @Nullable String getShader(Identifier id, ShaderType type) {
+                return resolveSource(id, type, vertexId, fragmentId, variant);
+            }
+
+            @Override
+            public @Nullable CachedIncludeSource getInclude(Identifier id) {
+                return null;
+            }
+
+            @Override
+            public void close() {
+            }
+
+        };
         return new PipelineBundle(pipeline, shaderSource, variant, pipelineIdentity);
     }
 
@@ -95,16 +118,62 @@ final class GlslGpuPipelineCache {
         return null;
     }
 
-    record PipelineBundle(@NotNull RenderPipeline pipeline, @NotNull ShaderSource shaderSource, @NotNull GlslShaderSourceTransformer.FragmentVariant variant, @NotNull String pipelineIdentity) {
+    static final class PipelineBundle implements AutoCloseable {
+
+        private final RenderPipeline pipeline;
+        private final ShaderSource shaderSource;
+        private final GlslShaderSourceTransformer.FragmentVariant variant;
+        private final String pipelineIdentity;
+        @Nullable private PipelineCache cache;
+
+        private PipelineBundle(RenderPipeline pipeline, ShaderSource shaderSource, GlslShaderSourceTransformer.FragmentVariant variant, String pipelineIdentity) {
+            this.pipeline = pipeline;
+            this.shaderSource = shaderSource;
+            this.variant = variant;
+            this.pipelineIdentity = pipelineIdentity;
+        }
+
+        RenderPipeline pipeline() {
+            return this.pipeline;
+        }
+
+        GlslShaderSourceTransformer.FragmentVariant variant() {
+            return this.variant;
+        }
+
+        ShaderSource shaderSource() {
+            return this.shaderSource;
+        }
+
+        String pipelineIdentity() {
+            return this.pipelineIdentity;
+        }
+
+        private PipelineCache cache() {
+            if (this.cache == null) this.cache = new PipelineCache(RenderSystem.getDevice(), this.shaderSource);
+            return this.cache;
+        }
+
+        @Override
+        public void close() {
+            if (this.cache != null) {
+                this.cache.close();
+                this.cache = null;
+            }
+        }
+
+        @NotNull
+        CompiledRenderPipeline compiledPipeline() {
+            return java.util.Objects.requireNonNull(this.cache().get(this.pipeline), "GLSL pipeline failed to compile");
+        }
 
         @NotNull
         CompilationResult precompile() {
             GpuDevice device = RenderSystem.getDevice();
             try {
-                // Resource reload clears Minecraft's backend cache while this content object can remain live. Supplying the
-                // exact source callback on every lookup prevents a post-reload miss from falling back to ShaderManager.
-                CompiledRenderPipeline compiled = device.precompilePipeline(this.pipeline, this.shaderSource);
-                if (compiled.isValid()) {
+                // Dynamic sources have their own cache; resource reload closes it along with the compiled GPU pipelines.
+                CompiledRenderPipeline compiled = this.cache().get(this.pipeline);
+                if (compiled != null && !compiled.isClosed()) {
                     return new CompilationResult(true, List.of());
                 }
             } catch (Exception ex) {

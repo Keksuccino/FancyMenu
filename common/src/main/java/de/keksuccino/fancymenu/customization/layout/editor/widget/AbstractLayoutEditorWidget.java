@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout.editor.widget;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -677,12 +677,12 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
 
         this.layoutTitleBarButtons();
 
-        if ((button == 0) && this.handleTitleBarButtonClick(localMouseX, localMouseY)) {
+        if ((button == InputConstants.MOUSE_BUTTON_LEFT) && this.handleTitleBarButtonClick(localMouseX, localMouseY)) {
             return true;
         }
 
         this.activeResizeEdge = this.updateHoveredResizingEdge(localMouseX, localMouseY);
-        if ((button == 0) && (this.activeResizeEdge == null) && isPointInArea(localMouseX, localMouseY, 0.0F, 0.0F, this.getWidth(), this.getTitleBarHeight() + (this.getBorderThickness() * 2)) && !this.isTitleBarButtonHovered(localMouseX, localMouseY)) {
+        if ((button == InputConstants.MOUSE_BUTTON_LEFT) && (this.activeResizeEdge == null) && isPointInArea(localMouseX, localMouseY, 0.0F, 0.0F, this.getWidth(), this.getTitleBarHeight() + (this.getBorderThickness() * 2)) && !this.isTitleBarButtonHovered(localMouseX, localMouseY)) {
             this.leftMouseDownTitleBar = true;
         }
         if ((this.activeResizeEdge != null) || this.leftMouseDownTitleBar) {
@@ -749,12 +749,12 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
         double bodyMouseX = localMouseX - this.getRealBodyX();
         double bodyMouseY = localMouseY - this.getRealBodyY();
 
-        if ((button == 0) && this.activeResizeEdge != null) {
+        if ((button == InputConstants.MOUSE_BUTTON_LEFT) && this.activeResizeEdge != null) {
             double offsetX = (uiMouseX - this.leftMouseDownMouseX);
             double offsetY = (uiMouseY - this.leftMouseDownMouseY);
             this.handleResize((float) offsetX, (float) offsetY);
             return true;
-        } else if ((button == 0) && this.leftMouseDownTitleBar) {
+        } else if ((button == InputConstants.MOUSE_BUTTON_LEFT) && this.leftMouseDownTitleBar) {
             double offsetX = (uiMouseX - this.leftMouseDownMouseX);
             double offsetY = (uiMouseY - this.leftMouseDownMouseY);
             this.setUnscaledWidgetOffsetX((float) (this.leftMouseDownWidgetOffsetX + offsetX), false);
@@ -810,7 +810,7 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        return this.keyPressed(event.key(), event.scancode(), event.modifiers());
+        return this.keyPressed(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
@@ -823,7 +823,7 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
 
     @Override
     public boolean keyReleased(KeyEvent event) {
-        return this.keyReleased(event.key(), event.scancode(), event.modifiers());
+        return this.keyReleased(event.key(), event.keycode(), event.modifiers());
     }
     
     public boolean keyReleased(int keycode, int scancode, int modifiers) {
@@ -852,7 +852,7 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
         for (GuiEventListener child : this.children()) {
             if (child.mouseClicked(event, false)) {
                 this.setFocused(child);
-                if (button == 0) {
+                if (button == InputConstants.MOUSE_BUTTON_LEFT) {
                     this.setDragging(true);
                 }
                 return true;
@@ -873,7 +873,7 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
     }
 
     protected boolean mouseDraggedBody(double mouseX, double mouseY, int button, double d1, double d2) {
-        if (this.isDragging() && (button == 0)) {
+        if (this.isDragging() && (button == InputConstants.MOUSE_BUTTON_LEFT)) {
             MouseButtonEvent event = new MouseButtonEvent(mouseX, mouseY, new MouseButtonInfo(button, 0));
             for (GuiEventListener child : this.children()) {
                 if (child.mouseDragged(event, d1, d2)) return true;

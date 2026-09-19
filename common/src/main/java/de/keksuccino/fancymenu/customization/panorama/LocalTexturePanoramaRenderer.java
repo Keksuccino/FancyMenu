@@ -7,15 +7,15 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.mojang.blaze3d.GpuFormat;
-import com.mojang.blaze3d.PrimitiveTopology;
-import com.mojang.blaze3d.pipeline.BlendFunction;
-import com.mojang.blaze3d.pipeline.ColorTargetState;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.GpuFormat;
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
+import com.mojang.renderpearl.api.pipeline.BlendFunction;
+import com.mojang.renderpearl.api.pipeline.ColorTargetState;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormatElement;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
+import com.mojang.renderpearl.api.vertex.VertexFormatElement;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinBufferBuilder;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphicsExtractor;
 import de.keksuccino.fancymenu.util.ScreenUtils;
@@ -60,7 +60,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 			.build();
 	private static final VertexFormatElement PANORAMA_INFO_FANCYMENU = getVertexFormatElement_FancyMenu(PANORAMA_VERTEX_FORMAT_FANCYMENU, PANORAMA_INFO_NAME_FANCYMENU);
 	private static final RenderPipeline PANORAMA_PIPELINE_FANCYMENU = RenderPipeline.builder().withBindGroupLayout(BindGroupLayouts.GLOBALS)
-			.withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
+			.withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS).withBindGroupLayout(BindGroupLayouts.PROJECTION)
 			.withBindGroupLayout(BindGroupLayouts.SAMPLER0)
 			.withLocation(Identifier.withDefaultNamespace("pipeline/fancymenu_panorama"))
 			.withVertexShader("core/fancymenu_gui_panorama")
@@ -374,9 +374,9 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 		this.angle = angle;
 	}
 
-	public void renderToCurrentOutput_FancyMenu(float pitch, float yaw, int targetWidth, int targetHeight) {
+	public void renderToOutput_FancyMenu(float pitch, float yaw, int targetWidth, int targetHeight, com.mojang.renderpearl.api.textures.GpuTextureView colorTexture, com.mojang.renderpearl.api.textures.GpuTextureView depthTexture) {
 		if ((this.cubeMap != null) && (targetWidth > 0) && (targetHeight > 0)) {
-			this.cubeMap.render(pitch, yaw, (float)this.fov, targetWidth, targetHeight);
+			this.cubeMap.render(pitch, yaw, (float)this.fov, targetWidth, targetHeight, colorTexture, depthTexture);
 		}
 	}
 

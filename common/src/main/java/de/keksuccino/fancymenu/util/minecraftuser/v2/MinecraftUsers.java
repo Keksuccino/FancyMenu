@@ -5,7 +5,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.SignatureState;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTextures;
-import com.mojang.authlib.minecraft.MinecraftSessionService;
+import com.mojang.authlib.minecraft.SessionService;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.LogManager;
@@ -92,7 +92,7 @@ public class MinecraftUsers {
 
             if (profile != UNKNOWN_USER_PROFILE) {
                 GameProfile gameProfile;
-                MinecraftSessionService minecraftSessionService = Minecraft.getInstance().services().sessionService();
+                SessionService minecraftSessionService = Minecraft.getInstance().services().sessionService();
                 gameProfile = Objects.requireNonNull(minecraftSessionService.fetchProfile(Objects.requireNonNull(profile.getUUID()), false)).profile();
                 MinecraftProfileTextures textures = Objects.requireNonNull(minecraftSessionService.getTextures(gameProfile));
                 CACHED_PROFILE_TEXTURES.put(playerName, textures);

@@ -5,11 +5,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 import javax.imageio.ImageIO;
-import com.mojang.blaze3d.platform.MacosUtil;
-import com.mojang.blaze3d.platform.TextureUtil;
+import ca.weblite.objc.Client;
+import ca.weblite.objc.Proxy;
+import java.util.Base64;
 import com.mojang.blaze3d.platform.Window;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinWindow;
@@ -20,15 +19,32 @@ import net.minecraft.server.packs.resources.IoSupplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
-import org.lwjgl.glfw.GLFWImage;
-import org.lwjgl.stb.STBImage;
-import org.lwjgl.system.MemoryStack;
-import org.lwjgl.system.MemoryUtil;
 
 public class WindowHandler {
 
 	private static final Logger LOGGER = LogManager.getLogger();
+
+    public static boolean isFullscreen() {
+        return ((IMixinWindow) (Object) Minecraft.getInstance().getWindow()).get_fullscreen_FancyMenu();
+    }
+
+    private static void loadMacIcon(IoSupplier<InputStream> icon) throws IOException {
+        // Keep support for existing .icns configurations; SDL's image surfaces only accept decoded raster pixels.
+        try (InputStream input = icon.get()) {
+            Client objc = Client.getInstance();
+            Proxy data = objc.sendProxy("NSData", "alloc").sendProxy("initWithBase64Encoding:", Base64.getEncoder().encodeToString(input.readAllBytes()));
+            try {
+                Proxy image = objc.sendProxy("NSImage", "alloc").sendProxy("initWithData:", data);
+                try {
+                    objc.sendProxy("NSApplication", "sharedApplication").send("setApplicationIconImage:", image);
+                } finally {
+                    image.send("release");
+                }
+            } finally {
+                data.send("release");
+            }
+        }
+    }
 
 	public static long getWindowHandle() {
 		return ((IMixinWindow)(Object)Minecraft.getInstance().getWindow()).get_handle_FancyMenu();
@@ -50,8 +66,8 @@ public class WindowHandler {
 	public static void handleForceFullscreen() {
 		try {
 			if (FancyMenu.getOptions().forceFullscreen.getValue()) {
-				if (!Minecraft.getInstance().getWindow().isFullscreen()) {
-					Minecraft.getInstance().getWindow().toggleFullScreen();
+				if (!isFullscreen()) {
+					Minecraft.getInstance().options.fullscreen().set(true);
 					LOGGER.info("[FANCYMENU] Forced window to fullscreen!");
 				}
 			}
@@ -112,7 +128,7 @@ public class WindowHandler {
 					LOGGER.error("[FANCYMENU] Unable to set custom window icons! 16x16 icon or 32x32 icon not found!");
 					return;
 				}
-				MacosUtil.loadIcon(IoSupplier.create(iMacOS.toPath()));
+				loadMacIcon(IoSupplier.create(iMacOS.toPath()));
 			} catch (Exception ex) {
 				LOGGER.error("[FANCYMENU] Failed to set custom window icon!");
 				ex.printStackTrace();
@@ -148,58 +164,18 @@ public class WindowHandler {
 		}
 	}
 
-	protected static void setIcon(IoSupplier<InputStream> $$0, IoSupplier<InputStream> $$1) {
-		try (MemoryStack $$2 = MemoryStack.stackPush()) {
-			IntBuffer $$3 = $$2.mallocInt(1);
-			IntBuffer $$4 = $$2.mallocInt(1);
-			IntBuffer $$5 = $$2.mallocInt(1);
-			GLFWImage.Buffer $$6 = GLFWImage.malloc(2, $$2);
-			ByteBuffer $$7 = readIconPixels($$0, $$3, $$4, $$5);
-			if ($$7 == null) {
-				throw new IllegalStateException("Could not load icon: " + STBImage.stbi_failure_reason());
-			}
-			$$6.position(0);
-			$$6.width($$3.get(0));
-			$$6.height($$4.get(0));
-			$$6.pixels($$7);
-			ByteBuffer $$8 = readIconPixels($$1, $$3, $$4, $$5);
-			if ($$8 == null) {
-				STBImage.stbi_image_free($$7);
-				throw new IllegalStateException("Could not load icon: " + STBImage.stbi_failure_reason());
-			}
-			$$6.position(1);
-			$$6.width($$3.get(0));
-			$$6.height($$4.get(0));
-			$$6.pixels($$8);
-			$$6.position(0);
-			GLFW.glfwSetWindowIcon(getWindowHandle(), $$6);
-			STBImage.stbi_image_free($$7);
-			STBImage.stbi_image_free($$8);
-		} catch (IOException var12) {
-			LOGGER.error("Couldn't set icon", (Throwable)var12);
-		}
-	}
-
-	@Nullable
-	protected static ByteBuffer readIconPixels(IoSupplier<InputStream> $$0, IntBuffer $$1, IntBuffer $$2, IntBuffer $$3) throws IOException {
-		ByteBuffer $$4 = null;
-		ByteBuffer var7;
-		try (InputStream $$5 = $$0.get()) {
-			$$4 = TextureUtil.readResource($$5);
-			$$4.rewind();
-			var7 = STBImage.stbi_load_from_memory($$4, $$1, $$2, $$3, 0);
-		} finally {
-			if ($$4 != null) {
-				MemoryUtil.memFree($$4);
-			}
-		}
-		return var7;
-	}
+    protected static void setIcon(IoSupplier<InputStream> smallIcon, IoSupplier<InputStream> largeIcon) {
+        try {
+            ((IMixinWindow) (Object) Minecraft.getInstance().getWindow()).invoke_setIcon_FancyMenu(java.util.List.of(smallIcon, largeIcon));
+        } catch (IOException ex) {
+            LOGGER.error("Couldn't set icon", ex);
+        }
+    }
 
 	public static void resetWindowIcon() {
 		try {
 			if (isMacOS()) {
-				MacosUtil.loadIcon(getVanillaWindowIconFile("icons", "minecraft.icns"));
+				loadMacIcon(getVanillaWindowIconFile("icons", "minecraft.icns"));
 			} else {
 				setIcon(getVanillaWindowIconFile("icons", "icon_16x16.png"), getVanillaWindowIconFile("icons", "icon_32x32.png"));
 			}
@@ -209,7 +185,7 @@ public class WindowHandler {
 	}
 
 	private static IoSupplier<InputStream> getVanillaWindowIconFile(String... $$0) throws IOException {
-		IoSupplier<InputStream> $$1 = Minecraft.getInstance().getVanillaPackResources().getRootResource($$0);
+		IoSupplier<InputStream> $$1 = Minecraft.getInstance().getVanillaPackResources().fullResources().getRootResource($$0);
 		if ($$1 == null) {
 			throw new FileNotFoundException(String.join("/", $$0));
 		} else {
