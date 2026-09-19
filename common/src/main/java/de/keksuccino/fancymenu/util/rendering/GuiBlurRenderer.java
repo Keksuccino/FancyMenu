@@ -4,6 +4,7 @@ import com.mojang.renderpearl.api.GpuFormat;
 import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
+import com.mojang.renderpearl.api.pipeline.ColorTargetState;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
@@ -60,20 +61,24 @@ public final class GuiBlurRenderer {
             .withUniform(SAMPLER_INFO_UNIFORM_FANCYMENU, UniformType.UNIFORM_BUFFER)
             .withUniform(GUI_BLUR_CONFIG_UNIFORM_FANCYMENU, UniformType.UNIFORM_BUFFER)
             .build();
-    private static final RenderPipeline BOX_BLUR_PIPELINE_FANCYMENU = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
+    // The vanilla post-processing snippet declares no color targets in 26.3. Every blur pass replaces one RGBA8 attachment; the composite shader handles blending itself.
+    private static final RenderPipeline.Snippet BLUR_PIPELINE_SNIPPET_FANCYMENU = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
+            .withColorTargetState(ColorTargetState.DEFAULT)
+            .buildSnippet();
+    private static final RenderPipeline BOX_BLUR_PIPELINE_FANCYMENU = RenderPipeline.builder(BLUR_PIPELINE_SNIPPET_FANCYMENU)
             .withLocation(Identifier.withDefaultNamespace("pipeline/fancymenu_box_blur"))
             .withVertexShader("core/screenquad")
             .withFragmentShader("post/fancymenu_box_blur")
             .withShaderDefine("FANCYMENU_MAX_BLUR_RADIUS", GuiBlurRadius.MAX_RADIUS)
             .withBindGroupLayout(BOX_BLUR_BIND_GROUP_LAYOUT_FANCYMENU)
             .build();
-    private static final RenderPipeline SCREEN_COPY_PIPELINE_FANCYMENU = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
+    private static final RenderPipeline SCREEN_COPY_PIPELINE_FANCYMENU = RenderPipeline.builder(BLUR_PIPELINE_SNIPPET_FANCYMENU)
             .withLocation(Identifier.withDefaultNamespace("pipeline/fancymenu_copy_screen"))
             .withVertexShader("core/screenquad")
             .withFragmentShader("post/fancymenu_copy_screen")
             .withBindGroupLayout(SCREEN_COPY_BIND_GROUP_LAYOUT_FANCYMENU)
             .build();
-    private static final RenderPipeline GUI_BLUR_PIPELINE_FANCYMENU = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
+    private static final RenderPipeline GUI_BLUR_PIPELINE_FANCYMENU = RenderPipeline.builder(BLUR_PIPELINE_SNIPPET_FANCYMENU)
             .withLocation(Identifier.withDefaultNamespace("pipeline/fancymenu_gui_blur"))
             .withVertexShader("core/screenquad")
             .withFragmentShader("post/fancymenu_gui_blur")
