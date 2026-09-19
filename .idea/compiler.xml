@@ -1,8 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$PROJECT_DIR$/../../../../.GRADLE/caches/modules-2/files-2.1/org.ow2.asm/asm-util/9.10.1/7bb9d450e8d4cbf9f9e04096c44bbfe7fba80b15/asm-util-9.10.1.jar" />
+          <entry name="$PROJECT_DIR$/../../../../.GRADLE/caches/modules-2/files-2.1/io.github.llamalad7/mixinextras-common/0.5.4/626e00b72e3879a07e6653d8015cd3466ff5b75/mixinextras-common-0.5.4.jar" />
+          <entry name="$PROJECT_DIR$/../../../../.GRADLE/caches/modules-2/files-2.1/org.ow2.asm/asm-analysis/9.10.1/8d49f14d51f632cb1d87c88d1ceaf50db0d8af1b/asm-analysis-9.10.1.jar" />
+          <entry name="$PROJECT_DIR$/../../../../.GRADLE/caches/modules-2/files-2.1/org.ow2.asm/asm-tree/9.10.1/e244332a17564c1d1572449399a842de35881be2/asm-tree-9.10.1.jar" />
+          <entry name="$PROJECT_DIR$/../../../../.GRADLE/caches/modules-2/files-2.1/org.ow2.asm/asm/9.10.1/ada2141c0cc52ee8f5c48cd5fa4ce0e794f22236/asm-9.10.1.jar" />
+        </processorPath>
+        <module name="de.keksuccino.fancymenu.fancymenu-26.3.0.common.main" />
+      </profile>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$PROJECT_DIR$/../../../../.GRADLE/caches/modules-2/files-2.1/io.github.llamalad7/mixinextras-fabric/0.5.4/5e167154bcb9942111313a5e186e16cd7265f858/mixinextras-fabric-0.5.4.jar" />
+        </processorPath>
+        <module name="de.keksuccino.fancymenu.fancymenu-26.3.0.fabric.main" />
+      </profile>
+    </annotationProcessing>
     <bytecodeTargetLevel target="25" />
   </component>
   <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="de.keksuccino.fancymenu.fancymenu-26.3.0.common.main" options="-Xlint:-deprecation -Xlint:-removal" />
+      <module name="de.keksuccino.fancymenu.fancymenu-26.3.0.common.test" options="-Xlint:-deprecation -Xlint:-removal" />
+      <module name="de.keksuccino.fancymenu.fancymenu-26.3.0.fabric.main" options="-Xlint:-deprecation -Xlint:-removal" />
+      <module name="de.keksuccino.fancymenu.fancymenu-26.3.0.fabric.test" options="-Xlint:-deprecation -Xlint:-removal" />
+      <module name="de.keksuccino.fancymenu.fancymenu-26.3.0.neoforge.main" options="-Xlint:-deprecation -Xlint:-removal -Xlint:-deprecation -Xlint:-removal" />
+      <module name="de.keksuccino.fancymenu.fancymenu-26.3.0.neoforge.test" options="-Xlint:-deprecation -Xlint:-removal -Xlint:-deprecation -Xlint:-removal" />
+      <module name="fancymenu-26.3.0.common" options="-Xlint:-deprecation -Xlint:-removal" />
+      <module name="fancymenu-26.3.0.fabric" options="-Xlint:-deprecation -Xlint:-removal" />
+      <module name="fancymenu-26.3.0.neoforge" options="-Xlint:-deprecation -Xlint:-removal -Xlint:-deprecation -Xlint:-removal" />
+    </option>
   </component>
 </project>
