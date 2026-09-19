@@ -19,20 +19,19 @@ repositories {
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
     compileOnly "net.fabricmc:fabric-loader:${fabric_loader_version}"
-    implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
-    implementation group: 'org.ow2.asm', name: 'asm-tree', version: '9.7'
-	annotationProcessor group: 'org.ow2.asm', name: 'asm-util', version: '9.7'
+    implementation "com.google.code.findbugs:jsr305:3.0.2"
+    implementation "org.ow2.asm:asm-tree:9.10.1"
+	annotationProcessor "org.ow2.asm:asm-util:9.10.1"
     compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:${mixin_extras_version}"))
-    compileOnly group:'org.spongepowered', name:'mixin', version:'0.8.5'
+    compileOnly "net.fabricmc:sponge-mixin:0.17.3+mixin.0.8.7"
     compileOnly "com.github.Keksuccino:japng:0.5.3"
     compileOnly "com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7"
     implementation "net.objecthunter:exp4j:0.4.8"
     compileOnly "maven.modrinth:watermedia:${watermedia_version}"
-    compileOnly "maven.modrinth:melody:1.0.17-26.2-fabric"
-    compileOnly "maven.modrinth:konkrete:1.11.1-26.2-fabric"
-    compileOnly "de.keksuccino:rinku-fabric:3.0.4-26.2"
-    // compileOnly "it.crystalnest:fancy-entity-renderer-common:$fer_mc_version-$fer_version"
-    compileOnly "flatdir:fer:0.5.4"
+    compileOnly "maven.modrinth:melody:${melody_version}-${minecraft_version}-fabric"
+    compileOnly "maven.modrinth:konkrete:${konkrete_version}-${minecraft_version}-fabric"
+    compileOnly "maven.modrinth:rinku:${rinku_min_version}-${minecraft_version}-fabric"
+    compileOnly "flatdir:fer:${fer_version}"
 }
 
 loom {
@@ -44,13 +43,13 @@ loom {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            artifactId base.archivesName.get()
+            artifactId = base.archivesName.get()
             from components.java
         }
     }
     repositories {
         maven {
-            url "file://" + System.getenv("local_maven")
+            url = "file://" + System.getenv("local_maven")
         }
     }
 }

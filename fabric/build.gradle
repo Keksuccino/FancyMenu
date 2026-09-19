@@ -21,28 +21,27 @@ dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
     implementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     implementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
-    implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
+    implementation "com.google.code.findbugs:jsr305:3.0.2"
     implementation project(":common")
     include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:${mixin_extras_version}")))
     include(implementation 'com.github.Keksuccino:japng:0.5.3')
     include(implementation 'com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7')
     include(implementation 'net.objecthunter:exp4j:0.4.8')
-    runtimeOnly "maven.modrinth:watermedia:${watermedia_version}"
-    runtimeOnly "maven.modrinth:watermedia-binaries:${watermedia_binaries_version}"
-    implementation "maven.modrinth:melody:1.0.17-26.2-fabric"
-    implementation "maven.modrinth:konkrete:1.11.1-26.2-fabric"
-    implementation "maven.modrinth:modmenu:20.0.0-beta.4"
-    // implementation "it.crystalnest:fancy-entity-renderer-fabric:$fer_mc_version-$fer_version"
-    compileOnly "flatdir:fer:0.5.4"
-    implementation "de.keksuccino:rinku-fabric:3.0.4-26.2"
+    compileOnly "maven.modrinth:watermedia:${watermedia_version}"
+    compileOnly "maven.modrinth:watermedia-binaries:${watermedia_binaries_version}"
+    implementation "maven.modrinth:melody:${melody_version}-${minecraft_version}-fabric"
+    implementation "maven.modrinth:konkrete:${konkrete_version}-${minecraft_version}-fabric"
+    runtimeOnly "maven.modrinth:modmenu:21.0.0-beta.1"
+    compileOnly "flatdir:fer:${fer_version}"
+    implementation "maven.modrinth:rinku:${rinku_min_version}-${minecraft_version}-fabric"
     
-    implementation "maven.modrinth:AANobbMI:3QgJXuSK" // Sodium
-    implementation "maven.modrinth:PtjYWJkn:9M5lqgDj" // Sodium Extra
-    implementation "maven.modrinth:gvQqBUqZ:vy3clWg7" // Lithium
-    implementation "maven.modrinth:YL57xq9U:3uIIps8q" // Iris
-    implementation "maven.modrinth:5ZwdcRci:4r0uMdy5" // ImmediatelyFast
-    implementation "maven.modrinth:uXXizFIs:d5ddUdiB" // FerriteCore
-    implementation "maven.modrinth:1eAoo2KR:LlSShNCR" // YACL
+    runtimeOnly "maven.modrinth:sodium:mc26.3-0.9.2-fabric" // Sodium
+    runtimeOnly "maven.modrinth:sodium-extra:mc26.3-0.9.4+fabric" // Sodium Extra
+    runtimeOnly "maven.modrinth:lithium:mc26.3-0.26.1-fabric" // Lithium
+    runtimeOnly "maven.modrinth:iris:1.11.6+26.3-fabric" // Iris
+    runtimeOnly "maven.modrinth:immediatelyfast:1.17.1+26.3-fabric" // ImmediatelyFast
+    runtimeOnly "maven.modrinth:ferrite-core:9.0.0-fabric" // FerriteCore
+    runtimeOnly "maven.modrinth:yacl:3.9.6+26.3-fabric" // YACL
 
     testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.10.2"
@@ -111,13 +110,13 @@ processResources {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            artifactId base.archivesName.get()
+            artifactId = base.archivesName.get()
             from components.java
         }
     }
     repositories {
         maven {
-            url "file://" + System.getenv("local_maven")
+            url = "file://" + System.getenv("local_maven")
         }
     }
 }

@@ -30,14 +30,14 @@ file="META-INF/accesstransformer.cfg"
 modId="konkrete"
 type="required"
 ordering="NONE"
-versionRange="[1.11.1,)"
+versionRange="[${konkrete_version},)"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
 modId="melody"
 type="required"
 ordering="NONE"
-versionRange="[1.0.16,)"
+versionRange="[${melody_version},)"
 side="CLIENT"
 
 [[dependencies.${mod_id}]]
@@ -92,6 +92,6 @@ side="BOTH"
 [[dependencies.${mod_id}]]
 modId="minecraft"
 type="required"
-versionRange="[${minecraft_version},)"
+versionRange="[${minecraft_version},${minecraft_version_upper_bound})"
 ordering="NONE"
 side="BOTH"

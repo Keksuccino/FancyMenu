@@ -1,7 +1,7 @@
 
 plugins {
     // Required for NeoGradle
-    id "org.jetbrains.gradle.plugin.idea-ext" version "1.3"
+    id "org.jetbrains.gradle.plugin.idea-ext" version "1.4.1"
 }
 
 tasks.named("updateDaemonJvm") {
@@ -18,7 +18,7 @@ subprojects {
 //    java.withJavadocJar()
         
     jar {
-        from(rootProject.file("LICENSE")) {
+        from(rootProject.file("LICENSE.md")) {
             rename { "${it}_${mod_name}" }
         }
         manifest {
@@ -36,7 +36,7 @@ subprojects {
     }
 
     sourcesJar {
-        from(rootProject.file("LICENSE")) {
+        from(rootProject.file("LICENSE.md")) {
             rename { "${it}_${mod_name}" }
         }
     }
@@ -52,31 +52,24 @@ subprojects {
             }
         }
         maven {
-            url "https://cursemaven.com"
+            url = "https://cursemaven.com"
             content {
                 includeGroup "curse.maven"
             }
         }
         maven {
-            url "https://api.modrinth.com/maven"
+            url = "https://api.modrinth.com/maven"
             content {
                 includeGroup "maven.modrinth"
             }
         }
         maven {
-            url 'https://jitpack.io'
+            url = 'https://jitpack.io'
             content {
                 includeGroupByRegex 'com\\.github\\..*'
             }
         }
         maven { url = "https://keksuccino.github.io/maven/" }
-        maven {
-            name = 'ParchmentMC Maven'
-            url = 'https://maven.parchmentmc.org'
-            content {
-                includeGroupByRegex 'org\\.parchmentmc(\\..*)?'
-            }
-        }
         // Crystal Nest repository where Fancy Entity Renderer is hosted.
         exclusiveContent {
             forRepository {
@@ -106,9 +99,7 @@ subprojects {
                         'net.minecraftforge',
                         'net.neoforged',
                         'org.spongepowered',
-                        'de.keksuccino',
-                        'org.parchmentmc',
-                        'org.parchmentmc.data'
+                        'de.keksuccino'
                 ]
                 if (id.group in stableGroups) {
                     component.changing = false
@@ -155,6 +146,9 @@ subprojects {
                 "mod_license": mod_license,
                 "mod_authors": mod_authors,
                 "minecraft_version": minecraft_version,
+                "minecraft_version_upper_bound": minecraft_version_upper_bound,
+                "konkrete_version": konkrete_version,
+                "melody_version": melody_version,
                 "java_version": java_version,
                 "fabric_version": fabric_version,
                 "fabric_short_version": fabric_short_version,
@@ -163,11 +157,8 @@ subprojects {
                 "neoforge_loader_version": neoforge_loader_version,
                 "rinku_min_version": rinku_min_version,
                 "fer_version": fer_version,
-                "fer_mc_version": fer_mc_version,
                 "watermedia_version": watermedia_version,
                 "watermedia_binaries_version": watermedia_binaries_version,
-                "parchment_version": parchment_version,
-                "parchment_mc_version": parchment_mc_version,
                 "mixin_extras_version": mixin_extras_version,
                 "fabric_loom_version": fabric_loom_version,
                 "neogradle_version": neogradle_version

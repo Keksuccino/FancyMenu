@@ -27,9 +27,9 @@
   "depends": {
     "fabricloader": ">=${fabric_loader_version}",
     "fabric-api": ">=${fabric_short_version}",
-    "konkrete": ">=1.11.1",
-    "melody": ">=1.0.16",
-    "minecraft": ">=${minecraft_version}",
+    "konkrete": ">=${konkrete_version}",
+    "melody": ">=${melody_version}",
+    "minecraft": ">=${minecraft_version} <${minecraft_version_upper_bound}",
     "java": ">=${java_version}"
   },
   "suggests": {

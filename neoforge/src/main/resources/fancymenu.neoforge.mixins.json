@@ -1,7 +1,7 @@
 {
   "required": true,
   "package": "de.keksuccino.fancymenu.mixin.mixins.neoforge",
-  "compatibilityLevel": "JAVA_25",
+  "compatibilityLevel": "JAVA_${java_version}",
   "mixins": [
   ],
   "client": [
