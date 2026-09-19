@@ -26,8 +26,8 @@ class RinkuDependencyMetadataTest {
         assertNotNull(suggestions);
         assertNotNull(incompatibilities);
         assertFalse(dependencies.has("rinku"));
-        assertEquals(">=3.0.4", suggestions.get("rinku").getAsString());
-        assertEquals("<3.0.4", incompatibilities.get("rinku").getAsString());
+        assertEquals(">=3.0.5", suggestions.get("rinku").getAsString());
+        assertEquals("<3.0.5", incompatibilities.get("rinku").getAsString());
     }
 
     private static JsonObject readMetadata() throws IOException {

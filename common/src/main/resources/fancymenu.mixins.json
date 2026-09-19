@@ -68,7 +68,6 @@
     "client.MixinLivingEntity",
     "client.MixinLoadingOverlay",
     "client.MixinLocalPlayer",
-    "client.MixinMatrix3x2fStack",
     "client.MixinMinecraft",
     "client.MixinMouseHandler",
     "client.MixinMultiPlayerGameMode",
