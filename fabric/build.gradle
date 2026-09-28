@@ -10,6 +10,15 @@ base {
     archivesName = "${mod_id}"
 }
 
+repositories {
+    maven {
+        url = 'https://maven.minecraftforge.net/'
+        content {
+            includeModule 'net.minecraftforge', 'JarJarFileSystems'
+        }
+    }
+}
+
 dependencies {
 
     minecraft "com.mojang:minecraft:${minecraft_version}"
@@ -33,6 +42,8 @@ dependencies {
     modCompileOnly "maven.modrinth:fancy-entity-renderer:YIutsTi7"
 
     testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
+    // Exercise Forge's actual virtual archive paths without starting a Forge client in the shared test suite.
+    testImplementation "net.minecraftforge:JarJarFileSystems:0.3.19"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.10.2"
 
 }

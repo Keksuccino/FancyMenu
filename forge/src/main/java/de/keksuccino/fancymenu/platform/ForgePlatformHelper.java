@@ -140,7 +140,7 @@ public class ForgePlatformHelper implements IPlatformHelper {
     public boolean tryListPackNamespaceRoot(@NotNull PackResources pack, @NotNull PackType type, @NotNull String namespace, @NotNull PackResources.ResourceOutput output) {
         if (pack instanceof net.minecraftforge.resource.PathPackResources pathPack) {
             Path source = pathPack.getSource();
-            // Forge's mod packs expose their source archive here but resolve actual resources through a custom path implementation. Enumerate archive names only, then obtain safe suppliers from the pack.
+            // A regular file can be a virtual jar-in-jar root. The archive enumerator must preserve its filesystem provider and obtain resource suppliers from the pack.
             if (Files.isRegularFile(source)) {
                 PackResourcesRootEnumeration.listArchiveNamespaceRoot(source, pathPack, type, namespace, output);
                 return true;
