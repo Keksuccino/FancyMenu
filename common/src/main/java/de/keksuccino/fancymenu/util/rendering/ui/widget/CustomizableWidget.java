@@ -304,6 +304,9 @@ public interface CustomizableWidget {
 
     void setHitboxRotationFancyMenu(float rotationDegrees, float verticalTiltDegrees, float horizontalTiltDegrees);
 
+    /** Returns the pointer's untransformed GUI X coordinate for rotation-aware slider input. */
+    double getUntransformedMouseX_FancyMenu(double mouseX, double mouseY);
+
     float getHitboxRotationDegreesFancyMenu();
 
     float getHitboxVerticalTiltDegreesFancyMenu();

@@ -1,5 +1,8 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
@@ -66,6 +69,13 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
 
     public MixinAbstractSliderButton(int x, int y, int width, int height, Component message) {
         super(x, y, width, height, message);
+    }
+
+    /** @reason Slider clicks and drags must follow the same inverse rotation and tilt as the widget hitbox. */
+    @WrapOperation(method = {"onClick", "onDrag"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSliderButton;setValueFromMouse(D)V"))
+    private void wrap_setValueFromMouse_FancyMenu(AbstractSliderButton slider, double mouseX, Operation<Void> original, @Local(argsOnly = true, ordinal = 1) double mouseY) {
+        // Both callers still have mouse Y; setValueFromMouse itself only receives X on these versions.
+        original.call(slider, this.getAsCustomizableWidgetFancyMenu().getUntransformedMouseX_FancyMenu(mouseX, mouseY));
     }
 
     @Override

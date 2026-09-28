@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering;
 
-/** Shared hit testing for element requirements and the widgets rendered by those elements. */
+/** Shared hit testing and pointer coordinates for element requirements and their widgets. */
 public final class RotatedRectangleHitbox {
 
     private float rotationDegrees;
@@ -53,9 +53,21 @@ public final class RotatedRectangleHitbox {
         double halfHeight = height / 2.0;
         double dx = mouseX - (x + halfWidth);
         double dy = mouseY - (y + halfHeight);
-        double localX = this.inverse00 * dx + this.inverse01 * dy;
+        double localX = this.inverseTransformX(dx, dy);
         double localY = this.inverse10 * dx + this.inverse11 * dy;
         return (localX >= -halfWidth) && (localX < halfWidth) && (localY >= -halfHeight) && (localY < halfHeight);
+    }
+
+    /**
+     * Maps a screen point to the widget's untransformed GUI X coordinate, using the same center and
+     * inverse as hit testing. Do not clamp to the hitbox: captured slider drags can leave its bounds.
+     * Bounds are supplied on every call so moving or resizing a widget cannot leave a stale center.
+     */
+    public double untransformX(double mouseX, double mouseY, int x, int y, int width, int height) {
+        if (!this.transformed) return mouseX;
+        double centerX = x + width / 2.0;
+        double centerY = y + height / 2.0;
+        return centerX + this.inverseTransformX(mouseX - centerX, mouseY - centerY);
     }
 
     public boolean isTransformed() {
@@ -72,6 +84,10 @@ public final class RotatedRectangleHitbox {
 
     public float getHorizontalTiltDegrees() {
         return this.horizontalTiltDegrees;
+    }
+
+    private double inverseTransformX(double offsetX, double offsetY) {
+        return this.inverse00 * offsetX + this.inverse01 * offsetY;
     }
 
 }
