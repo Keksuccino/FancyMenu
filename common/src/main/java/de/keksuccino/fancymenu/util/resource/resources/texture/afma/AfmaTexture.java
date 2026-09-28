@@ -375,38 +375,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
     protected void streamLoop(int generation) {
         try {
             while (!this.closed.get() && !this.loadingFailed.get() && (generation == this.streamGeneration.get())) {
-                if (!this.playRequested || this.maxLoopsReached) {
-                    sleepQuietly(IDLE_SLEEP_MS);
-                    continue;
-                }
-                if (this.pausedRequested && this.playbackInitialized) {
-                    sleepQuietly(IDLE_SLEEP_MS);
-                    continue;
-                }
-                if (this.shouldIdleOnTerminalSingleMainFrame()) {
-                    synchronized (this.streamStateLock) {
-                        this.clearPrefetchedFramesLocked();
-                    }
-                    sleepQuietly(100L);
-                    continue;
-                }
-
-                long now = System.currentTimeMillis();
-                if ((this.lastResourceLocationCall > 0L) && ((this.lastResourceLocationCall + INACTIVITY_TIMEOUT_MS) < now)) {
-                    synchronized (this.streamStateLock) {
-                        this.clearPrefetchedFramesLocked();
-                    }
-                    sleepQuietly(100L);
-                    continue;
-                }
-
-                try {
-                    this.fillPrefetchQueue(generation);
-                    sleepQuietly(IDLE_SLEEP_MS);
-                } catch (Exception ex) {
-                    LOGGER.error("[FANCYMENU] An error happened in the streaming thread of an AFMA texture!", ex);
-                    sleepQuietly(50L);
-                }
+                sleepQuietly(this.streamIteration(generation, System.currentTimeMillis()));
             }
         } finally {
             synchronized (this.streamStateLock) {
@@ -417,6 +386,32 @@ public class AfmaTexture implements ITexture, PlayableResource {
                 }
             }
             this.releaseDeferredDecoderIfNeeded();
+        }
+    }
+
+    /** Runs one prefetch iteration and returns the delay before the worker should try again. */
+    protected long streamIteration(int generation, long now) {
+        if (!this.playRequested || this.maxLoopsReached) return IDLE_SLEEP_MS;
+        if (this.pausedRequested && this.playbackInitialized) return IDLE_SLEEP_MS;
+        if (this.shouldIdleOnTerminalSingleMainFrame()) {
+            synchronized (this.streamStateLock) {
+                this.clearPrefetchedFramesLocked();
+            }
+            return 100L;
+        }
+
+        if ((this.lastResourceLocationCall > 0L) && ((this.lastResourceLocationCall + INACTIVITY_TIMEOUT_MS) < now)) {
+            // These bounded pending frames bridge the displayed canvas to the already advanced decode cursor.
+            // Dropping them would apply later residual/motion frames to the wrong reference image on resume.
+            return 100L;
+        }
+
+        try {
+            this.fillPrefetchQueue(generation);
+            return IDLE_SLEEP_MS;
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] An error happened in the streaming thread of an AFMA texture!", ex);
+            return 50L;
         }
     }
 
