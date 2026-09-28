@@ -47,11 +47,6 @@ final class RunningElementAnimation {
         return this.controller;
     }
 
-    @NotNull
-    AbstractElement getTargetElement() {
-        return this.targetElement;
-    }
-
     void updateTargetElement(@NotNull AbstractElement targetElement) {
         if (this.targetElement == targetElement) return;
         this.restoreOriginalState();
