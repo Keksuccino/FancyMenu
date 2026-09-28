@@ -5,6 +5,6 @@ CHANGELOG | FANCYMENU v3.9.14 [ W I P !! Not public yet !! ]
 - Fixed disabled animators interrupting other animators targeting the same element (#1754)
 - Fixed missing resource picker entries and repeated log errors with certain mods on Forge 1.20.1 (#1783)
 - Fixed visual glitches when AFMA animations resume after being hidden for a while (#1751)
-- Fixed a crash when FancyMenu’s UI font fails to load by automatically falling back to Minecraft’s font (#1777)
+- Fixed a crash when FancyMenu’s UI font fails to load by automatically falling back to Minecraft’s font (#1777, #1797)
 
 %changelog:end%
