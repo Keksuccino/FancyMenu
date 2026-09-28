@@ -36,17 +36,25 @@ public interface ElementFactory {
             normalElements.backgroundElements.addAll(layoutElements.backgroundElements);
             normalElements.foregroundElements.addAll(layoutElements.foregroundElements);
             if (vanillaWidgetElements != null) {
+                Map<WidgetMeta, List<VanillaWidgetElement>> layoutWidgetElements = new HashMap<>();
+                Map<WidgetMeta, Integer> matchPriorities = new HashMap<>();
                 //Construct vanilla button element instances
                 for (VanillaWidgetElement element : layout.buildVanillaButtonElementInstances()) {
                     WidgetMeta d = (vanillaWidgetMetaList != null) ? findWidgetMeta(element.getInstanceIdentifier(), vanillaWidgetMetaList) : null;
                     if (d != null) {
+                        int priority = WidgetIdentifierHandler.getIdentifierMatchPriority(element.getInstanceIdentifier(), d);
+                        int previousPriority = matchPriorities.getOrDefault(d, 0);
+                        if (priority < previousPriority) continue;
+                        List<VanillaWidgetElement> matches = layoutWidgetElements.computeIfAbsent(d, ignored -> new ArrayList<>());
+                        // An old layout can contain both Options variants. Prefer its current variant over an alias,
+                        // rather than combining unrelated settings. Other layouts retain their normal stacking order.
+                        if (priority > previousPriority) matches.clear();
+                        matchPriorities.put(d, priority);
                         element.setVanillaWidget(d, (element.anchorPoint == ElementAnchorPoints.VANILLA));
-                        if (!unstackedVanillaButtonElements.containsKey(d)) {
-                            unstackedVanillaButtonElements.put(d, new ArrayList<>());
-                        }
-                        unstackedVanillaButtonElements.get(d).add(element);
+                        matches.add(element);
                     }
                 }
+                layoutWidgetElements.forEach((meta, elements) -> unstackedVanillaButtonElements.computeIfAbsent(meta, ignored -> new ArrayList<>()).addAll(elements));
             }
         }
 

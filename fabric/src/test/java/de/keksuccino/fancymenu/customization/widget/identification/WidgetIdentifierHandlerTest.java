@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
@@ -12,10 +13,131 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class WidgetIdentifierHandlerTest {
+
+    private static final String CONTEXT_IDENTIFIER = "fancymenu_options_context_button";
+
+    @Test
+    void contextualOptionsVariantsShareAnIdentifierWithoutChangingTheirMessages() {
+        List<Component> messages = List.of(Component.translatable("options.online"), Component.translatable("options.worldOptions.button"), difficultyMessage(1), difficultyMessage(2));
+        for (Component message : messages) {
+            TestWidget widget = new TestWidget(message);
+            TestWidget fov = new TestWidget(CommonComponents.optionNameValue(Component.translatable("options.fov"), Component.literal("70")));
+
+            WidgetIdentifierHandler.assignStableOptionsWidgetIdentifiers(List.of(fov, widget));
+
+            assertEquals(CONTEXT_IDENTIFIER, widget.getWidgetIdentifierFancyMenu());
+            assertNotEquals(CONTEXT_IDENTIFIER, fov.getWidgetIdentifierFancyMenu());
+            assertSame(message, widget.getMessage());
+        }
+    }
+
+    @Test
+    void contextualOptionsVariantsAcceptLegacySemanticAndNumericIdentifiers() {
+        for (Component message : List.of(Component.translatable("options.online"), Component.translatable("options.worldOptions.button"), difficultyMessage(1))) {
+            TestWidget widget = new TestWidget(message);
+            WidgetIdentifierHandler.assignStableOptionsWidgetIdentifiers(List.of(widget));
+            WidgetMeta meta = createIdentityOnlyMeta(widget, 505166L);
+
+            for (String identifier : List.of(CONTEXT_IDENTIFIER, "fancymenu_options_options.online", "fancymenu_options_options.worldoptions.button", "505166")) {
+                for (String prefix : List.of("", "vanillabtn:", "button_compatibility_id:")) {
+                    assertTrue(WidgetIdentifierHandler.isIdentifierOfWidget(prefix + identifier, meta));
+                }
+            }
+            assertFalse(WidgetIdentifierHandler.isIdentifierOfWidget("fancymenu_options_options.generic_value", meta));
+        }
+    }
+
+    @Test
+    void coexistingOptionsVariantsKeepDistinctIdentifiers() {
+        TestWidget online = new TestWidget(Component.translatable("options.online"));
+        TestWidget world = new TestWidget(Component.translatable("options.worldOptions.button"));
+
+        WidgetIdentifierHandler.assignStableOptionsWidgetIdentifiers(List.of(online, world));
+
+        assertEquals("fancymenu_options_options.online", online.getWidgetIdentifierFancyMenu());
+        assertEquals("fancymenu_options_options.worldoptions.button", world.getWidgetIdentifierFancyMenu());
+        assertFalse(WidgetIdentifierHandler.isIdentifierOfWidget(world.getWidgetIdentifierFancyMenu(), createIdentityOnlyMeta(online, 1L)));
+        assertFalse(WidgetIdentifierHandler.isIdentifierOfWidget(online.getWidgetIdentifierFancyMenu(), createIdentityOnlyMeta(world, 2L)));
+    }
+
+    @Test
+    void explicitIdentifiersCannotBeClaimedByContextualAliases() {
+        for (String occupiedIdentifier : List.of(CONTEXT_IDENTIFIER, "fancymenu_options_options.online", "fancymenu_options_options.worldoptions.button")) {
+            TestWidget world = new TestWidget(Component.translatable("options.worldOptions.button"));
+            TestWidget explicit = new TestWidget(Component.empty());
+            explicit.setWidgetIdentifierFancyMenu(occupiedIdentifier);
+
+            WidgetIdentifierHandler.assignStableOptionsWidgetIdentifiers(List.of(world, explicit));
+
+            assertNotEquals(CONTEXT_IDENTIFIER, world.getWidgetIdentifierFancyMenu());
+            assertEquals(occupiedIdentifier, explicit.getWidgetIdentifierFancyMenu());
+            assertFalse(WidgetIdentifierHandler.isIdentifierOfWidget("fancymenu_options_options.online", createIdentityOnlyMeta(world, 1L)));
+        }
+    }
+
+    @Test
+    void generatedIdentifierCollisionsCannotBeClaimedByContextualAliases() {
+        for (String key : List.of("context_button", "options.worldoptions.button", "OPTIONS.ONLINE")) {
+            TestWidget online = new TestWidget(Component.translatable("options.online"));
+            TestWidget other = new TestWidget(Component.translatable(key));
+
+            WidgetIdentifierHandler.assignStableOptionsWidgetIdentifiers(List.of(online, other));
+
+            assertNotEquals(CONTEXT_IDENTIFIER, online.getWidgetIdentifierFancyMenu());
+            assertFalse(WidgetIdentifierHandler.isIdentifierOfWidget("fancymenu_options_options.worldoptions.button", createIdentityOnlyMeta(online, 1L)));
+        }
+    }
+
+    @Test
+    void contextualIdentifierSurvivesReassignmentAndRetiresWhenWidgetChangesRole() {
+        TestWidget widget = new TestWidget(Component.translatable("options.online"));
+        WidgetIdentifierHandler.assignStableOptionsWidgetIdentifiers(List.of(widget));
+        widget.setMessage(Component.translatable("options.worldOptions.button"));
+        WidgetIdentifierHandler.assignStableOptionsWidgetIdentifiers(List.of(widget));
+        assertEquals(CONTEXT_IDENTIFIER, widget.getWidgetIdentifierFancyMenu());
+
+        widget.setMessage(Component.translatable("options.video"));
+        WidgetIdentifierHandler.assignStableOptionsWidgetIdentifiers(List.of(widget));
+
+        assertEquals("fancymenu_options_options.video", widget.getWidgetIdentifierFancyMenu());
+        assertFalse(WidgetIdentifierHandler.isIdentifierOfWidget("fancymenu_options_options.online", createIdentityOnlyMeta(widget, 1L)));
+    }
+
+    @Test
+    void explicitReplacementAndUnownedContextIdentifiersDoNotAcquireAliases() {
+        TestWidget widget = new TestWidget(Component.translatable("options.worldOptions.button"));
+        WidgetIdentifierHandler.assignStableOptionsWidgetIdentifiers(List.of(widget));
+        widget.setWidgetIdentifierFancyMenu("explicit_world_button");
+        assertFalse(WidgetIdentifierHandler.isIdentifierOfWidget("fancymenu_options_options.online", createIdentityOnlyMeta(widget, 1L)));
+
+        TestWidget unrelated = new TestWidget(Component.empty());
+        unrelated.setWidgetIdentifierFancyMenu(CONTEXT_IDENTIFIER);
+        assertFalse(WidgetIdentifierHandler.isIdentifierOfWidget("fancymenu_options_options.online", createIdentityOnlyMeta(unrelated, 2L)));
+    }
+
+    @Test
+    void introducingAnotherVariantRevokesTheSharedIdentifier() {
+        TestWidget online = new TestWidget(Component.translatable("options.online"));
+        WidgetIdentifierHandler.assignStableOptionsWidgetIdentifiers(List.of(online));
+        assertEquals(CONTEXT_IDENTIFIER, online.getWidgetIdentifierFancyMenu());
+        TestWidget world = new TestWidget(Component.translatable("options.worldOptions.button"));
+
+        WidgetIdentifierHandler.assignStableOptionsWidgetIdentifiers(List.of(world, online));
+
+        assertEquals("fancymenu_options_options.online", online.getWidgetIdentifierFancyMenu());
+        assertEquals("fancymenu_options_options.worldoptions.button", world.getWidgetIdentifierFancyMenu());
+    }
+
+    private static Component difficultyMessage(int value) {
+        return CommonComponents.optionNameValue(Component.translatable("options.difficulty"), Component.literal(Integer.toString(value)));
+    }
 
     @Test
     void assignsUniqueUntranslatedOptionsLocalizationKey() {
