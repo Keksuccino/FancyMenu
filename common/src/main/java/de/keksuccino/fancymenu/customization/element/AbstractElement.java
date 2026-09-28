@@ -18,6 +18,7 @@ import de.keksuccino.fancymenu.util.properties.PropertyHolder;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.RotatedRectangleHitbox;
 import de.keksuccino.fancymenu.util.rendering.text.ComponentParser;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
@@ -50,6 +51,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
     private final Map<String, Property<?>> propertyMap = new LinkedHashMap<>();
 	protected final ElementBuilder<?,?> builder;
     private String instanceIdentifier;
+    private transient RotatedRectangleHitbox elementHitbox;
 
 	public ElementAnchorPoint anchorPoint = ElementAnchorPoints.MID_CENTERED;
     /** X-offset from the element's origin/anchor **/
@@ -1231,6 +1233,13 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public void setNavigatable(boolean navigatable) {
 		throw new RuntimeException("AbstractElements are not navigatable!");
 	}
+
+    /** Geometry only; kept separate from isMouseOver so elements do not intercept vanilla GUI events. */
+    public boolean containsMousePosition(double mouseX, double mouseY) {
+        if (this.elementHitbox == null) this.elementHitbox = new RotatedRectangleHitbox();
+        this.elementHitbox.setRotation(this.getRotationDegrees(), this.getVerticalTiltDegrees(), this.getHorizontalTiltDegrees());
+        return this.elementHitbox.contains(mouseX, mouseY, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+    }
 
 	/**
 	 * This method always needs to return FALSE, otherwise menus will BREAK!
