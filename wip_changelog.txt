@@ -4,5 +4,6 @@ CHANGELOG | FANCYMENU v3.9.14 [ W I P !! Not public yet !! ]
 - Fixed “Is Element Hovered” checks for rotated and tilted elements (#1754)
 - Fixed disabled animators interrupting other animators targeting the same element (#1754)
 - Fixed missing resource picker entries and repeated log errors with certain mods on Forge 1.20.1 (#1783)
+- Fixed visual glitches when AFMA animations resume after being hidden for a while (#1751)
 
 %changelog:end%
