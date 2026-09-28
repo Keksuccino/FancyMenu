@@ -98,13 +98,17 @@ public class UIBase extends RenderingUtils {
         return logicalScale / (float) guiScale;
     }
 
+    /**
+     * Returns the smooth UI font. Call only after ruling out Minecraft-font rendering with
+     * {@link #shouldUseMinecraftFontForUIRendering()}; the text helpers below handle that selection.
+     */
     @NotNull
     public static SmoothFont getUIFont() {
         return Objects.requireNonNull(SmoothFonts.NOTO_SANS.get());
     }
 
     public static boolean shouldUseMinecraftFontForUIRendering() {
-        return FancyMenu.getOptions().useMinecraftFont.getValue();
+        return SmoothFonts.shouldUseMinecraftFont(FancyMenu.getOptions().useMinecraftFont.getValue());
     }
 
     private static float resolveTextRenderScale() {
