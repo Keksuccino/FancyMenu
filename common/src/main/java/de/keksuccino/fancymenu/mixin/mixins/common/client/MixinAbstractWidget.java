@@ -1108,6 +1108,12 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 
     @Unique
     @Override
+    public double getUntransformedMouseX_FancyMenu(double mouseX, double mouseY) {
+        return this.hitbox_FancyMenu.untransformX(mouseX, mouseY, this.getX(), this.getY(), this.getWidth(), this.getHeight());
+    }
+
+    @Unique
+    @Override
     public float getHitboxRotationDegreesFancyMenu() {
         return this.hitbox_FancyMenu.getRotationDegrees();
     }
