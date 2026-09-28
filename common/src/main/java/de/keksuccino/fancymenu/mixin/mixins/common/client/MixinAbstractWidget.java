@@ -3,11 +3,10 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.util.rendering.gui.Axis;
 import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.RenderRotationUtil;
+import de.keksuccino.fancymenu.util.rendering.RotatedRectangleHitbox;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.gui.VanillaTooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.IExtendedWidget;
@@ -112,22 +111,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	private Integer customXFancyMenu;
 	@Unique @Nullable
 	private Integer customYFancyMenu;
-	@Unique
-	private float hitboxRotationDegrees_FancyMenu = 0.0F;
-	@Unique
-	private float hitboxVerticalTiltDegrees_FancyMenu = 0.0F;
-	@Unique
-	private float hitboxHorizontalTiltDegrees_FancyMenu = 0.0F;
-	@Unique
-	private boolean hitboxRotationActive_FancyMenu = false;
-	@Unique
-	private float hitboxInverseRotation00_FancyMenu = 1.0F;
-	@Unique
-	private float hitboxInverseRotation01_FancyMenu = 0.0F;
-	@Unique
-	private float hitboxInverseRotation10_FancyMenu = 0.0F;
-	@Unique
-	private float hitboxInverseRotation11_FancyMenu = 1.0F;
+    @Unique private final RotatedRectangleHitbox hitbox_FancyMenu = new RotatedRectangleHitbox();
 	@Unique @Nullable
 	private Integer cachedOriginalWidthFancyMenu;
 	@Unique @Nullable
@@ -351,8 +335,8 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 			info.setReturnValue(false);
 			return;
 		}
-		if (this.hitboxRotationActive_FancyMenu) {
-			info.setReturnValue(this.isMouseOverRotated_FancyMenu($$0, $$1));
+		if (this.hitbox_FancyMenu.isTransformed()) {
+			info.setReturnValue(this.isMouseOverFancyMenu_FancyMenu($$0, $$1));
 		}
 	}
 
@@ -362,8 +346,8 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 			info.setReturnValue(false);
 			return;
 		}
-		if (this.hitboxRotationActive_FancyMenu) {
-			info.setReturnValue(this.active && this.visible && this.isMouseOverRotated_FancyMenu(mouseX, mouseY));
+		if (this.hitbox_FancyMenu.isTransformed()) {
+			info.setReturnValue(this.active && this.visible && this.isMouseOverFancyMenu_FancyMenu(mouseX, mouseY));
 		}
 	}
 
@@ -443,34 +427,10 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		}
 	}
 
-	@Unique
-	private boolean isMouseOverFancyMenu_FancyMenu(double mouseX, double mouseY) {
-		if (this.hitboxRotationActive_FancyMenu) {
-			return this.isMouseOverRotated_FancyMenu(mouseX, mouseY);
-		}
-		int width = this.getEffectiveWidth_FancyMenu();
-		int height = this.getEffectiveHeight_FancyMenu();
-		if (width <= 0 || height <= 0) return false;
-		int x = this.getEffectiveX_FancyMenu();
-		int y = this.getEffectiveY_FancyMenu();
-		return mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height;
-	}
-
-	@Unique
-	private boolean isMouseOverRotated_FancyMenu(double mouseX, double mouseY) {
-		int width = this.getEffectiveWidth_FancyMenu();
-		int height = this.getEffectiveHeight_FancyMenu();
-		if (width <= 0 || height <= 0) return false;
-		float centerX = this.getEffectiveX_FancyMenu() + (width / 2.0F);
-		float centerY = this.getEffectiveY_FancyMenu() + (height / 2.0F);
-		float dx = (float) mouseX - centerX;
-		float dy = (float) mouseY - centerY;
-		float localX = (this.hitboxInverseRotation00_FancyMenu * dx) + (this.hitboxInverseRotation01_FancyMenu * dy);
-		float localY = (this.hitboxInverseRotation10_FancyMenu * dx) + (this.hitboxInverseRotation11_FancyMenu * dy);
-		float halfWidth = width / 2.0F;
-		float halfHeight = height / 2.0F;
-		return localX >= -halfWidth && localX < halfWidth && localY >= -halfHeight && localY < halfHeight;
-	}
+    @Unique
+    private boolean isMouseOverFancyMenu_FancyMenu(double mouseX, double mouseY) {
+        return this.hitbox_FancyMenu.contains(mouseX, mouseY, this.getEffectiveX_FancyMenu(), this.getEffectiveY_FancyMenu(), this.getEffectiveWidth_FancyMenu(), this.getEffectiveHeight_FancyMenu());
+    }
 
 	@Unique
 	private int getEffectiveX_FancyMenu() {
@@ -1166,77 +1126,29 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		this.customYFancyMenu = customYFancyMenu;
 	}
 
-	@Unique
-	@Override
-	public void setHitboxRotationFancyMenu(float rotationDegrees, float verticalTiltDegrees, float horizontalTiltDegrees) {
-		this.hitboxRotationDegrees_FancyMenu = rotationDegrees;
-		this.hitboxVerticalTiltDegrees_FancyMenu = verticalTiltDegrees;
-		this.hitboxHorizontalTiltDegrees_FancyMenu = horizontalTiltDegrees;
-		this.updateHitboxRotationMatrix_FancyMenu();
-	}
+    @Unique
+    @Override
+    public void setHitboxRotationFancyMenu(float rotationDegrees, float verticalTiltDegrees, float horizontalTiltDegrees) {
+        this.hitbox_FancyMenu.setRotation(rotationDegrees, verticalTiltDegrees, horizontalTiltDegrees);
+    }
 
-	@Unique
-	@Override
-	public float getHitboxRotationDegreesFancyMenu() {
-		return this.hitboxRotationDegrees_FancyMenu;
-	}
+    @Unique
+    @Override
+    public float getHitboxRotationDegreesFancyMenu() {
+        return this.hitbox_FancyMenu.getRotationDegrees();
+    }
 
-	@Unique
-	@Override
-	public float getHitboxVerticalTiltDegreesFancyMenu() {
-		return this.hitboxVerticalTiltDegrees_FancyMenu;
-	}
+    @Unique
+    @Override
+    public float getHitboxVerticalTiltDegreesFancyMenu() {
+        return this.hitbox_FancyMenu.getVerticalTiltDegrees();
+    }
 
-	@Unique
-	@Override
-	public float getHitboxHorizontalTiltDegreesFancyMenu() {
-		return this.hitboxHorizontalTiltDegrees_FancyMenu;
-	}
-
-	@Unique
-	private void updateHitboxRotationMatrix_FancyMenu() {
-		float rotation = this.hitboxRotationDegrees_FancyMenu;
-		float verticalTilt = this.hitboxVerticalTiltDegrees_FancyMenu;
-		float horizontalTilt = this.hitboxHorizontalTiltDegrees_FancyMenu;
-		if ((rotation == 0.0F) && (verticalTilt == 0.0F) && (horizontalTilt == 0.0F)) {
-			this.hitboxRotationActive_FancyMenu = false;
-			this.hitboxInverseRotation00_FancyMenu = 1.0F;
-			this.hitboxInverseRotation01_FancyMenu = 0.0F;
-			this.hitboxInverseRotation10_FancyMenu = 0.0F;
-			this.hitboxInverseRotation11_FancyMenu = 1.0F;
-			return;
-		}
-		RenderRotationUtil.RotationState state = new RenderRotationUtil.RotationState();
-		if (verticalTilt != 0.0F) state.mul(Axis.XP.rotationDegrees(verticalTilt));
-		if (horizontalTilt != 0.0F) state.mul(Axis.YP.rotationDegrees(horizontalTilt));
-		if (rotation != 0.0F) state.mul(Axis.ZP.rotationDegrees(rotation));
-
-		float x = state.x;
-		float y = state.y;
-		float z = state.z;
-		float w = state.w;
-
-		float m00 = 1.0F - 2.0F * y * y - 2.0F * z * z;
-		float m01 = 2.0F * x * y - 2.0F * z * w;
-		float m10 = 2.0F * x * y + 2.0F * z * w;
-		float m11 = 1.0F - 2.0F * x * x - 2.0F * z * z;
-
-		float det = m00 * m11 - m01 * m10;
-		if (!Float.isFinite(det) || Math.abs(det) < 1.0E-6F) {
-			this.hitboxRotationActive_FancyMenu = false;
-			this.hitboxInverseRotation00_FancyMenu = 1.0F;
-			this.hitboxInverseRotation01_FancyMenu = 0.0F;
-			this.hitboxInverseRotation10_FancyMenu = 0.0F;
-			this.hitboxInverseRotation11_FancyMenu = 1.0F;
-			return;
-		}
-		float invDet = 1.0F / det;
-		this.hitboxRotationActive_FancyMenu = true;
-		this.hitboxInverseRotation00_FancyMenu = m11 * invDet;
-		this.hitboxInverseRotation01_FancyMenu = -m01 * invDet;
-		this.hitboxInverseRotation10_FancyMenu = -m10 * invDet;
-		this.hitboxInverseRotation11_FancyMenu = m00 * invDet;
-	}
+    @Unique
+    @Override
+    public float getHitboxHorizontalTiltDegreesFancyMenu() {
+        return this.hitbox_FancyMenu.getHorizontalTiltDegrees();
+    }
 
 	@SuppressWarnings("all")
 	@Unique
