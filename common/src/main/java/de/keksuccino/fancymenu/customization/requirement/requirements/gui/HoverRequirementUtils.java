@@ -24,15 +24,7 @@ final class HoverRequirementUtils {
             return false;
         }
 
-        int elementWidth = element.getAbsoluteWidth();
-        int elementHeight = element.getAbsoluteHeight();
-        if ((elementWidth <= 0) || (elementHeight <= 0)) {
-            return false;
-        }
-
-        int elementX = element.getAbsoluteX();
-        int elementY = element.getAbsoluteY();
-        return (mouseX >= elementX) && (mouseX <= (elementX + elementWidth)) && (mouseY >= elementY) && (mouseY <= (elementY + elementHeight));
+        return element.containsMousePosition(mouseX, mouseY);
     }
 
     private static boolean shouldRenderForHoverCheck(@NotNull AbstractElement element, @Nullable RequirementInstance currentRequirement) {
