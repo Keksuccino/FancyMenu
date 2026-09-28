@@ -11,17 +11,14 @@ import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 
 public class PanoramaMenuBackground extends MenuBackground<PanoramaMenuBackground> {
-
-    private static final ResourceLocation MISSING = TextureManager.INTENTIONAL_MISSING_TEXTURE;
 
     public final Property.StringProperty panoramaName = putProperty(Property.stringProperty("panorama_name", null, false, false, "fancymenu.backgrounds.panorama.name"));
 
@@ -84,7 +81,7 @@ public class PanoramaMenuBackground extends MenuBackground<PanoramaMenuBackgroun
             this.panorama.opacity = 1.0F;
         } else {
             RenderSystem.enableBlend();
-            graphics.blit(MISSING, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
+            graphics.blit(RenderableResource.MISSING_TEXTURE_LOCATION, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
         }
 
         graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
