@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.customgui;
 
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
@@ -121,7 +122,8 @@ public class CustomGuiBaseScreen extends ModernScreen {
         }
         RenderingUtils.resetOverrideBackgroundBlurRadius();
         if (!popup && renderBackgroundOverlay) {
-            this.renderDirtBackground(graphics);
+            // Dirt is only the opaque fallback above; drawing it as an overlay would hide the world after blurring it.
+            ScreenCustomizationLayer.renderBackgroundOverlay(graphics, 0, 0, this.width, this.height);
         }
         EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, graphics, mouseX, mouseY, partial));
     }
