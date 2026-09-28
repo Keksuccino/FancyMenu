@@ -1,14 +1,16 @@
 package de.keksuccino.fancymenu.util.resource;
 
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
-import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public interface RenderableResource extends Resource {
 
-    public static final ResourceLocation MISSING_TEXTURE_LOCATION = TextureManager.INTENTIONAL_MISSING_TEXTURE;
+    // Use Minecraft's generated checkerboard. The empty-path sentinel can resolve to a pack namespace
+    // directory on some loaders and turn a missing asset into a failure during the next resource reload.
+    public static final ResourceLocation MISSING_TEXTURE_LOCATION = MissingTextureAtlasSprite.getLocation();
     public static final ResourceLocation FULLY_TRANSPARENT_TEXTURE = new ResourceLocation("fancymenu", "textures/fully_transparent.png");
 
     /**
