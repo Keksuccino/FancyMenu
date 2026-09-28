@@ -50,6 +50,7 @@ class RotatedRectangleHitboxTest {
                 double xRotationY = zRotationY * Math.cos(Math.toRadians(verticalTilt)) - yRotationZ * Math.sin(Math.toRadians(verticalTilt));
                 boolean expected = (Math.abs(localX) < 50) && (Math.abs(localY) < 10);
                 assertEquals(expected, hitbox.contains(60 + yRotationX, 30 + xRotationY, 10, 20, 100, 20));
+                assertEquals(60 + localX, hitbox.untransformX(60 + yRotationX, 30 + xRotationY, 10, 20, 100, 20), 1.0E-9);
             }
         }
     }
@@ -83,6 +84,62 @@ class RotatedRectangleHitboxTest {
         assertTrue(hitbox.isTransformed());
         assertEquals(45.0F, hitbox.getRotationDegrees());
         assertEquals(20.0F, hitbox.getVerticalTiltDegrees());
+    }
+
+    @Test
+    void pointerCoordinatesPassThroughWithoutRotation() {
+        RotatedRectangleHitbox hitbox = new RotatedRectangleHitbox();
+        for (double mouseX : new double[]{-100.5, 10, 60.25, 110, 250.75}) {
+            assertEquals(mouseX, hitbox.untransformX(mouseX, 70, 10, 20, 100, 20));
+        }
+    }
+
+    @Test
+    void pointerCoordinatesFollowAnyRotationWithoutLosingSubpixelPrecision() {
+        RotatedRectangleHitbox hitbox = new RotatedRectangleHitbox();
+        for (float angle : new float[]{90, -90, 180, 270, 37, -143, 360}) {
+            hitbox.setRotation(angle, 0.0F, 0.0F);
+            double radians = Math.toRadians(angle);
+            for (double localX : new double[]{-46, -23.25, 0, 19.75, 46}) {
+                for (double localY : new double[]{-7.5, 0, 8.25}) {
+                    double mouseX = 60 + localX * Math.cos(radians) - localY * Math.sin(radians);
+                    double mouseY = 30 + localX * Math.sin(radians) + localY * Math.cos(radians);
+                    assertEquals(60 + localX, hitbox.untransformX(mouseX, mouseY, 10, 20, 100, 20), 1.0E-9);
+                }
+            }
+        }
+    }
+
+    @Test
+    void capturedDragsKeepCoordinatesOutsideTheHitboxForVanillaClamping() {
+        RotatedRectangleHitbox hitbox = new RotatedRectangleHitbox();
+        hitbox.setRotation(90.0F, 0.0F, 0.0F);
+        assertFalse(hitbox.contains(60, -100, 10, 20, 100, 20));
+        assertEquals(-70, hitbox.untransformX(60, -100, 10, 20, 100, 20), 1.0E-9);
+        assertFalse(hitbox.contains(60, 160, 10, 20, 100, 20));
+        assertEquals(190, hitbox.untransformX(60, 160, 10, 20, 100, 20), 1.0E-9);
+    }
+
+    @Test
+    void pointerConversionUsesCurrentBoundsWhenTheWidgetMovesOrResizes() {
+        RotatedRectangleHitbox hitbox = new RotatedRectangleHitbox();
+        hitbox.setRotation(90.0F, 0.0F, 0.0F);
+        assertEquals(100, hitbox.untransformX(60, 70, 10, 20, 100, 20), 1.0E-9);
+        assertEquals(200, hitbox.untransformX(160, 70, 110, 20, 100, 20), 1.0E-9);
+        assertEquals(150, hitbox.untransformX(130, 70, 110, 20, 40, 60), 1.0E-9);
+        assertEquals(95.5, hitbox.untransformX(60.5, 70.5, 10, 25, 101, 21), 1.0E-9);
+    }
+
+    @Test
+    void resetAndInvalidTransformsDoNotReusePointerConversionFromAPreviousRotation() {
+        RotatedRectangleHitbox hitbox = new RotatedRectangleHitbox();
+        for (float[] angles : new float[][]{{0, 0, 0}, {45, 90, 0}, {45, 0, 90}, {Float.NaN, 0, 0}, {Float.POSITIVE_INFINITY, 0, 0}}) {
+            hitbox.setRotation(90.0F, 0.0F, 0.0F);
+            assertEquals(100, hitbox.untransformX(60, 70, 10, 20, 100, 20), 1.0E-9);
+            hitbox.setRotation(angles[0], angles[1], angles[2]);
+            assertFalse(hitbox.isTransformed());
+            assertEquals(60, hitbox.untransformX(60, 70, 10, 20, 100, 20));
+        }
     }
 
 }
