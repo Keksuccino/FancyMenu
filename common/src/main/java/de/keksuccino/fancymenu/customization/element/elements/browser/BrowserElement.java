@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rinku.BrowserHandler;
 import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
@@ -11,6 +12,7 @@ import de.keksuccino.fancymenu.util.rinku.WrappedRinkuBrowser;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -44,6 +46,7 @@ public class BrowserElement extends AbstractElement {
     public int lastTickWidth = -1;
     public int lastTickHeight = -1;
     public long lastLeftClickTime = -1;
+    private final BrowserWidgetSlot<WrappedRinkuBrowser> browserWidget = new BrowserWidgetSlot<>(() -> RinkuUtil.isRinkuLoaded() && RinkuUtil.rinku_initialized, this::createBrowser);
 
     public BrowserElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -52,23 +55,50 @@ public class BrowserElement extends AbstractElement {
 
     @Override
     public void afterConstruction() {
-        if (RinkuUtil.isRinkuLoaded() && RinkuUtil.rinku_initialized) {
-            this.browser = BrowserHandler.get(this.getInstanceIdentifier());
-            if (this.browser == null) {
-                this.browser = WrappedRinkuBrowser.build(PlaceholderParser.replacePlaceholders(this.url), true, false, this.muteMedia, null);
-            } else if (this.browser.isMuted() != this.muteMedia) {
-                this.browser.setMuted(this.muteMedia);
-            }
-            // Widgets are registered before their first render pass, so keep the browser inert until render visibility has been resolved.
-            this.browser.setInteractable(false);
-            BrowserHandler.notifyHandler(this.getInstanceIdentifier(), this.browser);
+        this.ensureBrowserCreated();
+    }
+
+    @NotNull
+    private WrappedRinkuBrowser createBrowser() {
+        WrappedRinkuBrowser wrappedBrowser = BrowserHandler.get(this.getInstanceIdentifier());
+        if (wrappedBrowser == null || wrappedBrowser.isClosed()) {
+            wrappedBrowser = WrappedRinkuBrowser.build(PlaceholderParser.replacePlaceholders(this.url), true, false, this.muteMedia, null);
+        } else if (wrappedBrowser.isMuted() != this.muteMedia) {
+            wrappedBrowser.setMuted(this.muteMedia);
+        }
+        // Creation can precede the first visible frame; never accept input until visibility has been resolved.
+        wrappedBrowser.setInteractable(false);
+        BrowserHandler.notifyHandler(this.getInstanceIdentifier(), wrappedBrowser);
+        return wrappedBrowser;
+    }
+
+    private void ensureBrowserCreated() {
+        try {
+            this.browser = this.browserWidget.resolve();
+        } catch (RuntimeException ex) {
+            LOGGER.error("[FANCYMENU] Failed to create browser element {}!", this.getInstanceIdentifier(), ex);
         }
     }
 
     @Override
     public void renderTick_Inner_Stage_2() {
         super.renderTick_Inner_Stage_2();
-        if (this.browser != null) this.browser.setInteractable(isBrowserInputEnabled(this.shouldRender(), this.interactable, isEditor()));
+        // Rinku can finish initializing after the title screen. Retry on the render thread without rebuilding the
+        // screen or registering callbacks that could outlive this element after a resize/close.
+        if (this.shouldRender()) this.ensureBrowserCreated();
+        if (this.browser != null) {
+            if (!this.browserWidget.isAttached() && !isEditor()) {
+                Screen screen = getScreen();
+                if (screen != null) this.browserWidget.attach(((IMixinScreen)screen).getChildrenFancyMenu(), screen instanceof CustomizableScreen customizable ? customizable.removeOnInitChildrenFancyMenu() : null);
+            }
+            this.browser.setInteractable(isBrowserInputEnabled(this.shouldRender(), this.interactable, isEditor()));
+        }
+    }
+
+    @Override
+    public void onDestroyElement() {
+        this.browserWidget.retire();
+        if (this.browser != null) this.browser.setInteractable(false);
     }
 
     @Override
@@ -78,15 +108,16 @@ public class BrowserElement extends AbstractElement {
             if ((closedScreen instanceof CustomGuiBaseScreen c1) && (newScreen instanceof CustomGuiBaseScreen c2) && c1.getIdentifier().equals(c2.getIdentifier())) return;
             if (!bothCustomGuis && (closedScreen.getClass() == newScreen.getClass())) return;
         }
+        this.browserWidget.retire();
         if (this.browser != null) BrowserHandler.remove(this.getInstanceIdentifier(), true);
+        this.browser = null;
         // Reset cursor in case the browser changed it
         CursorHandler.setClientTickCursor(CursorHandler.CURSOR_NORMAL);
     }
 
     @Override
-    public @Nullable List<GuiEventListener> getWidgetsToRegister() {
-        if (this.browser == null) return null;
-        return List.of(this.browser);
+    public @NotNull List<GuiEventListener> getWidgetsToRegister() {
+        return List.of(this.browserWidget.getWidgetToRegister());
     }
 
     @Override
@@ -149,9 +180,14 @@ public class BrowserElement extends AbstractElement {
 
             } else {
 
-                graphics.fill(x, y, x + w, y + h, ERROR_BACKGROUND_COLOR.getColorInt());
-                graphics.centeredText(Minecraft.getInstance().font, Component.translatable("fancymenu.elements.browser.rinku_not_loaded.line_1").setStyle(Style.EMPTY.withBold(true)), x + (w / 2), y + (h / 2) - Minecraft.getInstance().font.lineHeight - 2, -1);
-                graphics.centeredText(Minecraft.getInstance().font, Component.translatable("fancymenu.elements.browser.rinku_not_loaded.line_2").setStyle(Style.EMPTY.withBold(true)), x + (w / 2), y + (h / 2) + 2, -1);
+                boolean rinkuLoaded = RinkuUtil.isRinkuLoaded();
+                boolean failed = RinkuUtil.rinku_critical_failure || this.browserWidget.hasFailed();
+                String statusKey = getBrowserStatusKey(rinkuLoaded, failed);
+                int statusColor = rinkuLoaded && !failed ? DrawableColor.BLACK.getColorInt() : ERROR_BACKGROUND_COLOR.getColorInt();
+
+                graphics.fill(x, y, x + w, y + h, statusColor);
+                graphics.centeredText(Minecraft.getInstance().font, Component.translatable(statusKey + ".line_1").setStyle(Style.EMPTY.withBold(true)), x + (w / 2), y + (h / 2) - Minecraft.getInstance().font.lineHeight - 2, -1);
+                graphics.centeredText(Minecraft.getInstance().font, Component.translatable(statusKey + ".line_2").setStyle(Style.EMPTY.withBold(true)), x + (w / 2), y + (h / 2) + 2, -1);
 
             }
 
@@ -166,6 +202,11 @@ public class BrowserElement extends AbstractElement {
 
     public void setLastTickUrl(@Nullable String url) {
         this.getMemory().putProperty("last_tick_url", url);
+    }
+
+    static String getBrowserStatusKey(boolean rinkuLoaded, boolean failed) {
+        if (failed) return "fancymenu.elements.browser.rinku_failed";
+        return rinkuLoaded ? "fancymenu.elements.browser.rinku_initializing" : "fancymenu.elements.browser.rinku_not_loaded";
     }
 
     static boolean isBrowserInputEnabled(boolean rendered, boolean interactable, boolean editor) {

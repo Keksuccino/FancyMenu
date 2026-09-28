@@ -3366,5 +3366,9 @@
   "fancymenu.widgetified_screens.title_screen.logo": "Minecraft Logo",
   "fancymenu.widgetified_screens.title_screen.realmsnotification": "Realms Notification Icons",
   "fancymenu.widgetified_screens.title_screen.splash": "Vanilla Splash Text",
-  "fancymenu.actions.screens.finish.no_action_selected": "§xYou need to select an action first!"
+  "fancymenu.actions.screens.finish.no_action_selected": "§xYou need to select an action first!",
+  "fancymenu.elements.browser.rinku_initializing.line_1": "Browser is starting...",
+  "fancymenu.elements.browser.rinku_initializing.line_2": "Waiting for Rinku to finish initializing.",
+  "fancymenu.elements.browser.rinku_failed.line_1": "Browser initialization failed!",
+  "fancymenu.elements.browser.rinku_failed.line_2": "Check the game log for details."
 }
