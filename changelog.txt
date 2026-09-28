@@ -1,4 +1,23 @@
 
+CHANGELOG | FANCYMENU v3.9.14
+
+- Fixed “Is Element Hovered” checks for rotated and tilted elements (#1754)
+- Fixed disabled animators interrupting other animators targeting the same element (#1754)
+- Fixed missing resource picker entries and repeated log errors with certain mods on Forge 1.20.1 (#1783)
+- Fixed visual glitches when AFMA animations resume after being hidden for a while (#1751)
+- Fixed a crash when FancyMenu’s UI font fails to load by automatically falling back to Minecraft’s font (#1777, #1797)
+- Fixed custom GUI background transparency when “Render World Background” is enabled on Minecraft 1.19.2 and 1.20.1 (#1805)
+- Fixed resource reload failures on Fabric when menu textures or icons fail to load (#1797)
+- Fixed customizations not carrying over between the Options screen’s Online, World Options, and difficulty controls when entering or leaving a world (#1794)
+- Fixed incorrect slider values when clicking or dragging rotated or tilted sliders (#1782)
+- Fixed rotated or tilted custom widgets not responding to clicks on Minecraft 1.21.11 and newer (#1782)
+
+%changelog:end%
+
+
+
+
+
 CHANGELOG | FANCYMENU v3.9.12
 
 - Removed the "Wakes" incompatibility restriction from all Forge and NeoForge builds, and from Fabric on Minecraft 1.19.2, 1.20.1, and 1.21.1
