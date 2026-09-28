@@ -43,12 +43,20 @@ public final class AnimationControllerHandler {
         return AnimationControllerRuntime.wasAnimatedInThePast(targetElementId);
     }
 
+    public static boolean wasAnimatedInThePast(@NotNull AnimationControllerElement controller, @NotNull String targetElementId) {
+        return AnimationControllerRuntime.wasAnimatedInThePast(controller, targetElementId);
+    }
+
     public static boolean isAnimating(@NotNull String targetElementId) {
         return AnimationControllerRuntime.isAnimating(targetElementId);
     }
 
     public static boolean isFinished(@NotNull String targetElementId) {
         return AnimationControllerRuntime.isFinished(targetElementId);
+    }
+
+    public static boolean isFinished(@NotNull AnimationControllerElement controller, @NotNull String targetElementId) {
+        return AnimationControllerRuntime.isFinished(controller, targetElementId);
     }
 
 }

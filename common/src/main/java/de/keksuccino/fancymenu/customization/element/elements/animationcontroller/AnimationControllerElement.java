@@ -64,7 +64,7 @@ public class AnimationControllerElement extends AbstractElement {
 
             this.targetElements.forEach(targetElement -> {
                 if (this.shouldRender()) {
-                    if (AnimationControllerHandler.wasAnimatedInThePast(targetElement.targetElementId) && AnimationControllerHandler.isFinished(targetElement.targetElementId) && !AnimationControllerHandler.isAnimating(targetElement.targetElementId)) {
+                    if (AnimationControllerHandler.wasAnimatedInThePast(this, targetElement.targetElementId) && AnimationControllerHandler.isFinished(this, targetElement.targetElementId) && !AnimationControllerHandler.isAnimating(targetElement.targetElementId)) {
                         targetElement.animationApplied = true;
                     } else {
                         ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getActiveLayer();
@@ -74,7 +74,7 @@ public class AnimationControllerElement extends AbstractElement {
                         }
                     }
                 } else {
-                    if (AnimationControllerHandler.wasAnimatedInThePast(targetElement.targetElementId) && !AnimationControllerHandler.isFinished(targetElement.targetElementId)) {
+                    if (AnimationControllerHandler.wasAnimatedInThePast(this, targetElement.targetElementId) && !AnimationControllerHandler.isFinished(this, targetElement.targetElementId)) {
                         targetElement.animationApplied = false;
                     }
                 }
