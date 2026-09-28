@@ -1,15 +1,17 @@
 package de.keksuccino.fancymenu.util.rendering.text.smooth;
 
 import net.minecraft.resources.ResourceLocation;
-import javax.annotation.Nullable;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
 public class SmoothFonts {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final float SMOOTH_FONT_BASE_SIZE = 32.0F;
-    private static final Object NOTO_SANS_LOCK = new Object();
     private static final ResourceLocation NOTO_SANS_FOLDER = new ResourceLocation("fancymenu", "fonts/noto_sans");
     private static final ResourceLocation NOTO_SANS_BASE = new ResourceLocation("fancymenu", "fonts/noto_sans/noto_sans.ttf");
     private static final ResourceLocation NOTO_SANS_JP = new ResourceLocation("fancymenu", "fonts/noto_sans/noto_sans_jp.ttf");
@@ -27,35 +29,26 @@ public class SmoothFonts {
 
     public static final float DEFAULT_TEXT_SIZE = 10F;
 
-    public static final Supplier<SmoothFont> NOTO_SANS = SmoothFonts::getNotoSans;
-
-    private static volatile SmoothFont cachedNotoSans;
+    private static final FallbackFontProvider<SmoothFont> NOTO_SANS_PROVIDER = new FallbackFontProvider<>(SmoothFonts::loadNotoSans);
+    public static final Supplier<SmoothFont> NOTO_SANS = NOTO_SANS_PROVIDER;
 
     @Nullable
-    private static SmoothFont getNotoSans() {
-        SmoothFont cached = cachedNotoSans;
-        if (cached != null) {
-            return cached;
+    private static SmoothFont loadNotoSans() {
+        // Register before looking for resources: an entirely missing font folder must also recover after reload.
+        SmoothFontManager.registerReloadListener();
+        SmoothFont font = SmoothFontManager.fontBuilderFromFolder(NOTO_SANS_FOLDER, SMOOTH_FONT_BASE_SIZE).languageOverrides(NOTO_SANS_ORDER_OVERRIDES).yOffset(-10).lineHeightOffset(-20).build();
+        if (font == null) {
+            LOGGER.warn("[FANCYMENU] Failed to load the UI font. Using the Minecraft font until the next resource reload. Check the preceding font errors and your Java/system font configuration.");
         }
-        synchronized (NOTO_SANS_LOCK) {
-            cached = cachedNotoSans;
-            if (cached != null) {
-                return cached;
-            }
-            SmoothFont created = SmoothFontManager.fontBuilderFromFolder(NOTO_SANS_FOLDER, SMOOTH_FONT_BASE_SIZE)
-                    .languageOverrides(NOTO_SANS_ORDER_OVERRIDES)
-                    .yOffset(-10)
-                    .lineHeightOffset(-20)
-                    .build();
-            if (created != null) {
-                cachedNotoSans = created;
-            }
-            return created;
-        }
+        return font;
+    }
+
+    public static boolean shouldUseMinecraftFont(boolean preferMinecraftFont) {
+        return NOTO_SANS_PROVIDER.shouldUseFallback(preferMinecraftFont);
     }
 
     public static void clearCache() {
-        cachedNotoSans = null;
+        NOTO_SANS_PROVIDER.clear();
     }
 
 }
