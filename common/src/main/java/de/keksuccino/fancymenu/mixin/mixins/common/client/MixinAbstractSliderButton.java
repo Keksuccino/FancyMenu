@@ -1,6 +1,8 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import de.keksuccino.fancymenu.customization.global.GlobalCustomizationHandler;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -12,6 +14,7 @@ import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
@@ -66,6 +69,12 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
 
     public MixinAbstractSliderButton(int $$0, int $$1, int $$2, int $$3, Component $$4) {
         super($$0, $$1, $$2, $$3, $$4);
+    }
+
+    /** @reason Slider clicks and drags must follow the same inverse rotation and tilt as the widget hitbox. */
+    @WrapOperation(method = "setValueFromMouse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/input/MouseButtonEvent;x()D"))
+    private double wrap_sliderMouseX_FancyMenu(MouseButtonEvent event, Operation<Double> original) {
+        return this.getAsCustomizableWidgetFancyMenu().getUntransformedMouseX_FancyMenu(original.call(event), event.y());
     }
 
     @Inject(method = "renderWidget", at = @At("HEAD"))

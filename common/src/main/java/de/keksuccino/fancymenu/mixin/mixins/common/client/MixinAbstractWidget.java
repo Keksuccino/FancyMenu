@@ -334,16 +334,11 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		}
 	}
 
-	@Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
-	private void before_clicked_FancyMenu(MouseButtonEvent event, boolean isDoubleClick, CallbackInfoReturnable<Boolean> info) {
-		if (this.hiddenFancyMenu) {
-			info.setReturnValue(false);
-			return;
-		}
-		if (this.hitbox_FancyMenu.isTransformed()) {
-			info.setReturnValue(this.active && this.visible && this.isMouseOverFancyMenu_FancyMenu(event.x(), event.y()));
-		}
-	}
+    /** @reason Hidden widgets reject clicks. Rotation is handled by isMouseOver so vanilla still validates the button and calls onClick. */
+    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
+    private void before_clicked_FancyMenu(MouseButtonEvent event, boolean isDoubleClick, CallbackInfoReturnable<Boolean> info) {
+        if (this.hiddenFancyMenu) info.setReturnValue(false);
+    }
 
 	@Inject(method = "isValidClickButton", at = @At("HEAD"), cancellable = true)
 	private void before_isValidClickButton_FancyMenu(MouseButtonInfo buttonInfo, CallbackInfoReturnable<Boolean> info) {
@@ -1119,6 +1114,12 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
     @Override
     public void setHitboxRotationFancyMenu(float rotationDegrees, float verticalTiltDegrees, float horizontalTiltDegrees) {
         this.hitbox_FancyMenu.setRotation(rotationDegrees, verticalTiltDegrees, horizontalTiltDegrees);
+    }
+
+    @Unique
+    @Override
+    public double getUntransformedMouseX_FancyMenu(double mouseX, double mouseY) {
+        return this.hitbox_FancyMenu.untransformX(mouseX, mouseY, this.getX(), this.getY(), this.getWidth(), this.getHeight());
     }
 
     @Unique
