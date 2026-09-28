@@ -20,34 +20,46 @@ import java.util.Set;
 public final class AnimationControllerRuntime {
 
     private static final Map<String, RunningElementAnimation> RUNNING_ANIMATIONS = new HashMap<>();
-    private static final Set<String> ANIMATED_MEMORY = new HashSet<>();
-    private static final Set<String> FINISHED_ANIMATIONS = new HashSet<>();
+    // One controller can write to a target at a time, but each controller owns its own playback history.
+    // Stable element identifiers preserve that ownership when a layout rebuilds its element instances.
+    private static final Set<AnimationKey> ANIMATED_MEMORY = new HashSet<>();
+    private static final Set<AnimationKey> FINISHED_ANIMATIONS = new HashSet<>();
 
     private AnimationControllerRuntime() {
     }
 
     public static boolean applyAnimation(@NotNull AnimationControllerElement controller, @NotNull AnimationControllerElement.TargetElement targetConfig, @Nullable AbstractElement targetElement) {
+        return applyAnimation(controller, targetConfig, targetElement, System.currentTimeMillis());
+    }
+
+    static boolean applyAnimation(@NotNull AnimationControllerElement controller, @NotNull AnimationControllerElement.TargetElement targetConfig, @Nullable AbstractElement targetElement, long currentTime) {
         if ((targetElement == null) || !controller.shouldRender()) return false;
 
         String targetId = targetElement.getInstanceIdentifier();
         RunningElementAnimation animation = RUNNING_ANIMATIONS.get(targetId);
         if (animation != null) {
+            if (!isOwnedBy(animation, controller)) return false;
             animation.updateTargetElement(targetElement);
             return true;
         }
         List<AnimationKeyframe> keyframes = controller.getKeyframes();
         if (keyframes.isEmpty()) return true;
 
-        ANIMATED_MEMORY.add(targetId);
+        AnimationKey key = new AnimationKey(controller.getInstanceIdentifier(), targetId);
+        ANIMATED_MEMORY.add(key);
+        FINISHED_ANIMATIONS.remove(key);
         int timingOffsetMs = resolveTimingOffsetMs(controller, targetConfig);
-        animation = new RunningElementAnimation(keyframes, System.currentTimeMillis() + timingOffsetMs, targetElement, controller);
+        animation = new RunningElementAnimation(keyframes, currentTime + timingOffsetMs, targetElement, controller);
         RUNNING_ANIMATIONS.put(targetId, animation);
         return true;
     }
 
     public static void tick() {
+        tick(System.currentTimeMillis());
+    }
+
+    static void tick(long currentTime) {
         Iterator<Map.Entry<String, RunningElementAnimation>> iterator = RUNNING_ANIMATIONS.entrySet().iterator();
-        long currentTime = System.currentTimeMillis();
         while (iterator.hasNext()) {
             Map.Entry<String, RunningElementAnimation> entry = iterator.next();
             RunningElementAnimation animation = entry.getValue();
@@ -88,7 +100,7 @@ public final class AnimationControllerRuntime {
             if (!controller.loop && (elapsedTime > lastKeyframe.timestamp)) {
                 animation.restoreOriginalState();
                 iterator.remove();
-                FINISHED_ANIMATIONS.add(animation.getTargetElement().getInstanceIdentifier());
+                FINISHED_ANIMATIONS.add(new AnimationKey(controller.getInstanceIdentifier(), entry.getKey()));
             }
         }
     }
@@ -96,13 +108,22 @@ public final class AnimationControllerRuntime {
     public static void resetAnimationState(@NotNull String targetElementId) {
         RunningElementAnimation animation = RUNNING_ANIMATIONS.remove(targetElementId);
         if (animation != null) animation.restoreOriginalState();
-        ANIMATED_MEMORY.remove(targetElementId);
-        FINISHED_ANIMATIONS.remove(targetElementId);
+        ANIMATED_MEMORY.removeIf(key -> key.targetId().equals(targetElementId));
+        FINISHED_ANIMATIONS.removeIf(key -> key.targetId().equals(targetElementId));
     }
 
     public static void resetController(@NotNull AnimationControllerElement controller) {
         for (AnimationControllerElement.TargetElement target : controller.targetElements) {
-            if ((target.targetElementId != null) && !target.targetElementId.isEmpty()) resetAnimationState(target.targetElementId);
+            if ((target.targetElementId != null) && !target.targetElementId.isEmpty()) {
+                RunningElementAnimation animation = RUNNING_ANIMATIONS.get(target.targetElementId);
+                if ((animation != null) && isOwnedBy(animation, controller)) {
+                    animation.restoreOriginalState();
+                    RUNNING_ANIMATIONS.remove(target.targetElementId);
+                }
+                AnimationKey key = new AnimationKey(controller.getInstanceIdentifier(), target.targetElementId);
+                ANIMATED_MEMORY.remove(key);
+                FINISHED_ANIMATIONS.remove(key);
+            }
             target.animationApplied = false;
         }
     }
@@ -121,7 +142,11 @@ public final class AnimationControllerRuntime {
     }
 
     public static boolean wasAnimatedInThePast(@NotNull String targetElementId) {
-        return ANIMATED_MEMORY.contains(targetElementId);
+        return ANIMATED_MEMORY.stream().anyMatch(key -> key.targetId().equals(targetElementId));
+    }
+
+    public static boolean wasAnimatedInThePast(@NotNull AnimationControllerElement controller, @NotNull String targetElementId) {
+        return ANIMATED_MEMORY.contains(new AnimationKey(controller.getInstanceIdentifier(), targetElementId));
     }
 
     public static boolean isAnimating(@NotNull String targetElementId) {
@@ -129,7 +154,15 @@ public final class AnimationControllerRuntime {
     }
 
     public static boolean isFinished(@NotNull String targetElementId) {
-        return FINISHED_ANIMATIONS.contains(targetElementId);
+        return FINISHED_ANIMATIONS.stream().anyMatch(key -> key.targetId().equals(targetElementId));
+    }
+
+    public static boolean isFinished(@NotNull AnimationControllerElement controller, @NotNull String targetElementId) {
+        return FINISHED_ANIMATIONS.contains(new AnimationKey(controller.getInstanceIdentifier(), targetElementId));
+    }
+
+    private static boolean isOwnedBy(@NotNull RunningElementAnimation animation, @NotNull AnimationControllerElement controller) {
+        return animation.getController().getInstanceIdentifier().equals(controller.getInstanceIdentifier());
     }
 
     private static int resolveTimingOffsetMs(@NotNull AnimationControllerElement controller, @NotNull AnimationControllerElement.TargetElement targetConfig) {
@@ -143,6 +176,10 @@ public final class AnimationControllerRuntime {
             max = temporaryMin;
         }
         return timingOffsetMs + MathUtils.getRandomNumberInRange(min, max);
+    }
+
+    private record AnimationKey(@NotNull String controllerId, @NotNull String targetId) {
+
     }
 
 }
