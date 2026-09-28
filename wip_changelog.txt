@@ -7,5 +7,6 @@ CHANGELOG | FANCYMENU v3.9.14 [ W I P !! Not public yet !! ]
 - Fixed visual glitches when AFMA animations resume after being hidden for a while (#1751)
 - Fixed a crash when FancyMenu’s UI font fails to load by automatically falling back to Minecraft’s font (#1777, #1797)
 - Fixed custom GUI background transparency when “Render World Background” is enabled on Minecraft 1.19.2 and 1.20.1 (#1805)
+- Fixed resource reload failures on Fabric when menu textures or icons fail to load (#1797)
 
 %changelog:end%
