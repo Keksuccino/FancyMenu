@@ -9,5 +9,7 @@ CHANGELOG | FANCYMENU v3.9.14 [ W I P !! Not public yet !! ]
 - Fixed custom GUI background transparency when “Render World Background” is enabled on Minecraft 1.19.2 and 1.20.1 (#1805)
 - Fixed resource reload failures on Fabric when menu textures or icons fail to load (#1797)
 - Fixed customizations not carrying over between the Options screen’s Online, World Options, and difficulty controls when entering or leaving a world (#1794)
+- Fixed incorrect slider values when clicking or dragging rotated or tilted sliders (#1782)
+- Fixed rotated or tilted custom widgets not responding to clicks on Minecraft 1.21.11 and newer (#1782)
 
 %changelog:end%
