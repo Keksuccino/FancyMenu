@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.file;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -108,6 +109,35 @@ class LocalSourcePathResolverTest {
                 () -> assertThrows(IOException.class, () -> resolver.resolve("dangling.txt")),
                 () -> assertEquals(gameRoot.resolve("internal-link/value.txt"), resolver.resolve("internal-link/value.txt").path()),
                 () -> assertEquals(gameRoot.resolve("internal-file.txt"), resolver.resolve("internal-file.txt").path()));
+    }
+
+    @Test
+    void resolvesFilesInRelocatedFancyMenuDirectoriesOfBothRootsButRejectsEscapesInsideThem() throws Exception {
+        Path gameRoot = Files.createDirectory(this.temporaryDirectory.resolve("game"));
+        Path minecraftRoot = Files.createDirectory(this.temporaryDirectory.resolve("minecraft"));
+        Path outside = Files.createDirectory(this.temporaryDirectory.resolve("outside"));
+        Path sharedModDirectory = Files.createDirectories(this.temporaryDirectory.resolve("shared/fancymenu"));
+        Path sharedDataDirectory = Files.createDirectories(this.temporaryDirectory.resolve("shared/fancymenu_data"));
+        Files.writeString(Files.createDirectory(sharedModDirectory.resolve("assets")).resolve("image.png"), "image");
+        Files.writeString(sharedDataDirectory.resolve("value.txt"), "data");
+        Files.createDirectories(gameRoot.resolve(FancyMenu.MOD_DIR_PATH).getParent());
+        Files.createDirectories(minecraftRoot.resolve(FancyMenu.MOD_DIR_PATH).getParent());
+        createSymbolicLinkOrSkip(gameRoot.resolve(FancyMenu.MOD_DIR_PATH), sharedModDirectory);
+        createSymbolicLinkOrSkip(gameRoot.resolve(FancyMenu.INSTANCE_DATA_DIR_PATH), sharedDataDirectory);
+        createSymbolicLinkOrSkip(minecraftRoot.resolve(FancyMenu.MOD_DIR_PATH), sharedModDirectory);
+        createSymbolicLinkOrSkip(sharedModDirectory.resolve("escaping"), outside);
+        LocalSourcePathResolver resolver = LocalSourcePathResolver.createForGameAndMinecraftDirectories(gameRoot, minecraftRoot);
+        String imageSource = FancyMenu.MOD_DIR_PATH + "/assets/image.png";
+        String dataSource = FancyMenu.INSTANCE_DATA_DIR_PATH + "/value.txt";
+
+        assertAll(
+                () -> assertEquals(gameRoot.resolve(imageSource), resolver.resolve(imageSource).revalidate()),
+                () -> assertEquals(gameRoot.resolve(imageSource), resolver.resolve("/" + imageSource).revalidate()),
+                () -> assertEquals(gameRoot.resolve(imageSource), resolver.resolve(gameRoot.resolve(imageSource).toString()).revalidate()),
+                () -> assertEquals(gameRoot.resolve(dataSource), resolver.resolve(dataSource).revalidate()),
+                () -> assertEquals(minecraftRoot.resolve(imageSource), resolver.resolve(".minecraft/" + imageSource).revalidate()),
+                () -> assertThrows(SecurityException.class, () -> resolver.resolve(FancyMenu.MOD_DIR_PATH + "/escaping/secret.txt")),
+                () -> assertThrows(SecurityException.class, () -> resolver.resolve(".minecraft/" + FancyMenu.MOD_DIR_PATH + "/escaping/secret.txt")));
     }
 
     private static void createSymbolicLinkOrSkip(Path link, Path target) {
