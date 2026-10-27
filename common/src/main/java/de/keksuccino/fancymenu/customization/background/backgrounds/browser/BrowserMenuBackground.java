@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.util.rendering.gui.Axis;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.customization.placeholder.RawValuePlaceholderResolver;
 import de.keksuccino.fancymenu.util.rinku.BrowserHandler;
 import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
 import de.keksuccino.fancymenu.util.rinku.WrappedRinkuBrowser;
@@ -58,6 +58,7 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
     private Screen attachedScreen = null;
     @Nullable
     private String lastTickUrl = null;
+    private final RawValuePlaceholderResolver urlResolver = new RawValuePlaceholderResolver();
     private int lastTickWidth = -1;
     private int lastTickHeight = -1;
     private boolean autoFocusPending = true;
@@ -326,7 +327,7 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
             wrappedBrowser = null;
         }
         if (wrappedBrowser == null) {
-            wrappedBrowser = WrappedRinkuBrowser.build(resolveUrl(this.url.get()), true, false, this.muteMedia.tryGetNonNullElse(false), null);
+            wrappedBrowser = WrappedRinkuBrowser.build(this.resolveUrl(), true, false, this.muteMedia.tryGetNonNullElse(false), null);
         }
         this.browser = wrappedBrowser;
         BrowserHandler.notifyHandler(instanceIdentifier, wrappedBrowser);
@@ -337,12 +338,11 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
     }
 
     /**
-     * Replaces placeholders in a browser URL without converting "&" formatting codes, because URLs are not formatted text.
-     * This parse bypasses the placeholder cache, so only call it when the URL actually needs to get loaded.
+     * The URL with its placeholders replaced, or a blank page without a URL. URLs are not formatted text, so "&" formatting codes stay as they are.
      */
     @NotNull
-    static String resolveUrl(@Nullable String url) {
-        String resolvedUrl = PlaceholderParser.replacePlaceholdersPreservingFormattingCodes(url);
+    String resolveUrl() {
+        String resolvedUrl = this.urlResolver.resolve(Objects.requireNonNullElse(this.url.get(), ""));
         return resolvedUrl.isBlank() ? FALLBACK_URL : resolvedUrl;
     }
 
@@ -378,15 +378,10 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
         this.lastTickWidth = width;
         this.lastTickHeight = height;
 
-        // The cached default parse is only a cheap per-frame change check. Its formatting-code conversion would
-        // turn URL parameters like "&embed" into "§embed", so the URL that gets loaded is resolved separately.
-        String parsedUrl = this.url.getString();
-        if (parsedUrl == null || parsedUrl.isBlank()) {
-            parsedUrl = FALLBACK_URL;
-        }
-        if (!Objects.equals(parsedUrl, this.lastTickUrl)) {
-            wrappedBrowser.setUrl(resolveUrl(this.url.get()));
-            this.lastTickUrl = parsedUrl;
+        String finalUrl = this.resolveUrl();
+        if (!Objects.equals(finalUrl, this.lastTickUrl)) {
+            wrappedBrowser.setUrl(finalUrl);
+            this.lastTickUrl = finalUrl;
         }
 
         boolean hideControls = this.hideVideoControls.tryGetNonNullElse(false);

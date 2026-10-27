@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.util.resource;
 
-import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.customization.placeholder.RawValuePlaceholderResolver;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
@@ -33,6 +33,7 @@ public class ResourceSupplier<R extends Resource> {
     @Nullable
     protected Consumer<R> onUpdateCurrent = null;
     protected boolean empty = false;
+    private final RawValuePlaceholderResolver sourceResolver = new RawValuePlaceholderResolver();
 
     /**
      * Returns a dummy-like {@link ResourceSupplier} that will never return a {@link Resource}, it will only return NULL.<br>
@@ -104,7 +105,7 @@ public class ResourceSupplier<R extends Resource> {
         if ((this.current != null) && this.current.isClosed()) {
             this.current = null;
         }
-        String getterSource = PlaceholderParser.replacePlaceholders(this.source);
+        String getterSource = this.resolveSource();
         if (!getterSource.equals(this.lastGetterSource)) {
             if ((this.onUpdateCurrent != null) && (this.current != null)) {
                 this.onUpdateCurrent.accept(this.current);
@@ -128,6 +129,14 @@ public class ResourceSupplier<R extends Resource> {
             }
         }
         return this.current;
+    }
+
+    /**
+     * The source with its placeholders replaced. Sources are URLs, paths or identifiers, so "&" formatting codes stay as they are.
+     */
+    @NotNull
+    protected String resolveSource() {
+        return this.sourceResolver.resolve(this.source);
     }
 
     @Nullable
@@ -169,7 +178,7 @@ public class ResourceSupplier<R extends Resource> {
     @NotNull
     public ResourceSourceType getSourceType() {
         if (this.empty) return ResourceSourceType.LOCAL;
-        return ResourceSourceType.getSourceTypeOf(PlaceholderParser.replacePlaceholders(this.source));
+        return ResourceSourceType.getSourceTypeOf(this.resolveSource());
     }
 
     /**

@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.customization.background.backgrounds.video.IVideo
 import de.keksuccino.fancymenu.customization.background.backgrounds.video.VideoBackgroundTaskController;
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.customization.placeholder.RawValuePlaceholderResolver;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroups;
@@ -69,6 +69,7 @@ public class RinkuVideoMenuBackground extends MenuBackground<RinkuVideoMenuBackg
     protected RinkuVideoPlayer videoPlayer = null;
     protected String playerId = null;
     protected String lastFinalUrl = null;
+    protected final RawValuePlaceholderResolver videoSourceResolver = new RawValuePlaceholderResolver();
     protected int lastAbsoluteWidth = -10000;
     protected int lastAbsoluteHeight = -10000;
     protected int lastAbsoluteX = -10000;
@@ -217,7 +218,7 @@ public class RinkuVideoMenuBackground extends MenuBackground<RinkuVideoMenuBackg
         String finalVideoUrl = null;
         ResourceSource rawSource = this.rawVideoUrlSource.get();
         if (rawSource != null) {
-            String placeholderExpandedSource = PlaceholderParser.replacePlaceholders(rawSource.getSourceWithoutPrefix());
+            String placeholderExpandedSource = this.videoSourceResolver.resolve(rawSource.getSourceWithoutPrefix());
             finalVideoUrl = RinkuVideoSourceResolver.resolve(rawSource, placeholderExpandedSource);
         }
         // Check if the video URL has changed since last time
