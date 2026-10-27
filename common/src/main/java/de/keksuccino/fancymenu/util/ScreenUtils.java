@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,7 +27,10 @@ public class ScreenUtils {
 
     @Nullable
     public static Screen getScreen() {
-        return Minecraft.getInstance().gui.screen();
+        // Minecraft.gui is final but only assigned late in the Minecraft constructor. NeoForge's early loading window
+        // handoff already resizes the GUI before that, which runs FancyMenu's resize hooks while gui is still null.
+        Gui gui = Minecraft.getInstance().gui;
+        return (gui != null) ? gui.screen() : null;
     }
 
     public static void setScreen(@Nullable Screen screen) {
