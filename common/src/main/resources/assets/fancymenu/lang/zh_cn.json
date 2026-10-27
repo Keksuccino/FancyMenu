@@ -2615,7 +2615,7 @@
   "fancymenu.placeholders.nbt_data_get.server": "获取 NBT 数据（服务端）",
   "fancymenu.placeholders.nbt_data_get.server.desc": "§x需要服务器上也安装 FancyMenu 才能用。§r\n\n从服务器获取实时 NBT 数据，覆盖 '/data get' 支持的所有目标。\n在服务器响应到达前返回空值。\n\n这个占位符的工作方式和 '/data get' 命令完全一样，所以命令能做到的，\n占位符也都应该能做到。\n\n支持的 source_type 值：\n- entity：完整选择器语法（分数、进度、谓词、旋转、游戏模式等）\n- block：像原版命令那样使用绝对、相对（~）或局部（^）坐标\n- storage：命令存储标识符（namespace:key）\n\n可选参数：\n- nbt_path：和 '/data get' 相同的路径规则\n- scale：将数值结果乘以该值（默认 1.0）\n- return_type：'value'、'string'、'snbt' 或 'json'\n\n响应会缓存 100ms，避免刷爆服务器。",
   "fancymenu.placeholders.negate_number": "取负数",
-  "fancymenu.placeholders.negate_number.desc": "返回给定数字的相反数。\n如果给定数字本来就是负数，就直接返回它本身。",
+  "fancymenu.placeholders.negate_number.desc": "将给定数字转为负数后返回。\n如果数字本来就是负数或 0，就原样返回。",
   "fancymenu.placeholders.number_base_convert": "进制转换器",
   "fancymenu.placeholders.number_base_convert.desc": "在不同进制之间转换数字（支持小数）。\n值：input、from_base（2-36）、to_base（2-36）。\n目标进制最多会生成 16 位小数。\n示例：input=67，from_base=10，to_base=2 -> 1000011。",
   "fancymenu.placeholders.opengl_version": "OpenGL 版本",
@@ -2698,7 +2698,7 @@
   "fancymenu.placeholders.video_background_duration": "视频背景时长",
   "fancymenu.placeholders.video_background_duration.desc": "按标识符返回 Video 菜单背景的总时长，格式为 MM:SS（例如“03:45”），或者返回毫秒数。\n如果背景还没准备好，或者没有设置视频，就返回“00:00”或“0”。\n\n必填值：\n- background_identifier：Video 背景的 ID\n- output_as_timestamp：设为 'true' 时显示毫秒而不是 MM:SS\n\n要获取背景的标识符，右键编辑器背景，\n然后点“复制背景标识符”。",
   "fancymenu.placeholders.video_background_paused_state": "视频背景暂停状态",
-  "fancymenu.placeholders.video_background_paused_state.desc": "按标识符返回 Video 菜单背景的暂停状态。\n如果元素已暂停，则返回 'true'，否则返回 'false'。\n\n要获取背景的标识符，右键编辑器背景，\n然后点“复制背景标识符”。",
+  "fancymenu.placeholders.video_background_paused_state.desc": "按标识符返回 Video 菜单背景的暂停状态。\n如果背景已暂停，则返回 'true'，否则返回 'false'。\n\n要获取背景的标识符，右键编辑器背景，\n然后点“复制背景标识符”。",
   "fancymenu.placeholders.video_background_playtime": "视频背景播放时间",
   "fancymenu.placeholders.video_background_playtime.desc": "返回 Video 菜单背景当前的播放时间\n（MM:SS 格式）、播放进度百分比（0-100），或者当前播放时间的毫秒数。\n如果元素还没准备好，或者没有设置视频，就返回“00:00”或“0”。\n\n必填值：\n- background_identifier：Video 背景的 ID\n- show_percentage：设为 'true' 时显示百分比而不是时间\n- output_as_timestamp：设为 'true' 时显示毫秒而不是 MM:SS\n\n优先级：\n- show_percentage（最高）\n- output_as_timestamp\n- 默认 MM:SS 输出\n\n要获取背景的标识符，右键编辑器背景，\n然后点“复制背景标识符”。",
   "fancymenu.placeholders.video_background_volume": "视频背景音量",
@@ -3365,5 +3365,10 @@
   "fancymenu.widgetified_screens.title_screen.forge.top.example.line2": "用于显示 Beta 版本警告和其他内容。",
   "fancymenu.widgetified_screens.title_screen.logo": "Minecraft 标志",
   "fancymenu.widgetified_screens.title_screen.realmsnotification": "Realms 通知图标",
-  "fancymenu.widgetified_screens.title_screen.splash": "原版随机宣传语"
+  "fancymenu.widgetified_screens.title_screen.splash": "原版随机宣传语",
+  "fancymenu.actions.screens.finish.no_action_selected": "§x你得先选一个动作！",
+  "fancymenu.elements.browser.rinku_initializing.line_1": "浏览器正在启动...",
+  "fancymenu.elements.browser.rinku_initializing.line_2": "正在等待 Rinku 完成初始化。",
+  "fancymenu.elements.browser.rinku_failed.line_1": "浏览器初始化失败！",
+  "fancymenu.elements.browser.rinku_failed.line_2": "详情请查看游戏日志。"
 }
