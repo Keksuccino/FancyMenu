@@ -1,6 +1,7 @@
 
 CHANGELOG | FANCYMENU v3.9.15 [ W I P !! Not public yet !! ]
 
+- Fixed vanilla buttons and player entities not rendering when a GLSL shader is used as menu background (#1827)
 - Fixed customizations of buttons that other mods add next to the Realms button on the Title screen (like the Flashback button) not getting applied outside the layout editor (#1748)
 - Fixed a crash with OneConfig and other mods that render items into their own offscreen GUI, and fixed those mods' content being cut off or wrongly scaled (#1821)
 - Fixed GLSL shaders being drawn too small and in the wrong place, and getting wrong mouse coordinates, when a custom (non-whole-number) GUI scale is active
