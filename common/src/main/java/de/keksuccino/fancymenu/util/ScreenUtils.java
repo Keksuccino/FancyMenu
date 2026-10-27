@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,7 +27,10 @@ public class ScreenUtils {
 
     @Nullable
     public static Screen getScreen() {
-        return Minecraft.getInstance().gui.screen();
+        // Minecraft.gui is final but only assigned late in the Minecraft constructor, so it is still null for anything
+        // that queries the screen earlier during startup, like resize hooks fired by a loader's window handoff.
+        Gui gui = Minecraft.getInstance().gui;
+        return (gui != null) ? gui.screen() : null;
     }
 
     public static void setScreen(@Nullable Screen screen) {
