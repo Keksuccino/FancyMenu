@@ -2,5 +2,10 @@
 CHANGELOG | FANCYMENU v3.9.15 [ W I P !! Not public yet !! ]
 
 - Fixed customizations of buttons that other mods add next to the Realms button on the Title screen (like the Flashback button) not getting applied outside the layout editor (#1748)
+- Fixed a crash with OneConfig and other mods that render items into their own offscreen GUI, and fixed those mods' content being cut off or wrongly scaled (#1821)
+- Fixed GLSL shaders being drawn too small and in the wrong place, and getting wrong mouse coordinates, when a custom (non-whole-number) GUI scale is active
+- Fixed GLSL shaders not rendering on NeoForge 1.21.11 when NeoForge's Blaze3D validation layer is enabled
+- Fixed GLSL shader channel textures and video background thumbnails not working on NeoForge 1.21.11 when NeoForge's Blaze3D validation layer is enabled
+- Fixed WaterMedia videos crashing the game on NeoForge 1.21.11 when NeoForge's Blaze3D validation layer is enabled
 
 %changelog:end%
