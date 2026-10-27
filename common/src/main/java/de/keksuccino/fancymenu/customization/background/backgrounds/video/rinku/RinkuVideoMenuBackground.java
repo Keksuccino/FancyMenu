@@ -68,7 +68,8 @@ public class RinkuVideoMenuBackground extends MenuBackground<RinkuVideoMenuBackg
     protected RinkuVideoPlayer videoPlayer = null;
     protected String playerId = null;
     protected String lastFinalUrl = null;
-    protected final RawValuePlaceholderResolver videoSourceResolver = new RawValuePlaceholderResolver();
+    protected final RawValuePlaceholderResolver videoSourcePlaceholderResolver = new RawValuePlaceholderResolver();
+    protected final RinkuVideoSourceResolver rinkuVideoSourceResolver = new RinkuVideoSourceResolver();
     protected int lastAbsoluteWidth = -10000;
     protected int lastAbsoluteHeight = -10000;
     protected int lastAbsoluteX = -10000;
@@ -217,8 +218,8 @@ public class RinkuVideoMenuBackground extends MenuBackground<RinkuVideoMenuBackg
         String finalVideoUrl = null;
         ResourceSource rawSource = this.rawVideoUrlSource.get();
         if (rawSource != null) {
-            String placeholderExpandedSource = this.videoSourceResolver.resolve(rawSource.getSourceWithoutPrefix());
-            finalVideoUrl = RinkuVideoSourceResolver.resolve(rawSource, placeholderExpandedSource);
+            String placeholderExpandedSource = this.videoSourcePlaceholderResolver.resolve(rawSource.getSourceWithoutPrefix());
+            finalVideoUrl = this.rinkuVideoSourceResolver.resolveCached(rawSource, placeholderExpandedSource);
         }
         // Check if the video URL has changed since last time
         boolean videoUrlChanged = !Objects.equals(finalVideoUrl, this.lastFinalUrl);
@@ -400,6 +401,7 @@ public class RinkuVideoMenuBackground extends MenuBackground<RinkuVideoMenuBackg
         this.videoPlayer = null;
         this.playerId = null;
         this.lastFinalUrl = null;
+        this.rinkuVideoSourceResolver.reset();
         this.lastAbsoluteWidth = -10000;
         this.lastAbsoluteHeight = -10000;
         this.lastAbsoluteX = -10000;
