@@ -13,9 +13,11 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.options.AccessibilityOptionsScreen;
 import net.minecraft.client.gui.screens.options.OptionsScreen;
+import net.minecraft.client.gui.screens.options.WorldOptionsScreen;
 import net.minecraft.client.gui.screens.packs.PackSelectionScreen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.client.multiplayer.ClientAdvancements;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.resources.language.LanguageManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -61,6 +63,11 @@ public class ScreenInstanceFactory {
 
 		ScreenInstanceFactory.registerContextAwareScreenProvider(AccessibilityOptionsScreen.class.getName(), context -> new AccessibilityOptionsScreen(context.parentScreen(), Minecraft.getInstance().options));
 		ScreenInstanceFactory.registerContextAwareScreenProvider(OptionsScreen.class.getName(), context -> new OptionsScreen(context.parentScreen(), Minecraft.getInstance().options, context.inWorld()));
+		// WorldOptionsScreen reads its difficulty and game rule state from the loaded level, so it only exists for in-world contexts.
+		ScreenInstanceFactory.registerContextAwareScreenProvider(WorldOptionsScreen.class.getName(), context -> {
+			ClientLevel level = Minecraft.getInstance().level;
+			return (context.inWorld() && (level != null)) ? new WorldOptionsScreen(context.parentScreen(), level) : null;
+		});
 
 	}
 
