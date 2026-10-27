@@ -1,7 +1,13 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.mojang.blaze3d.pipeline.PipelineCache;
+import com.mojang.renderpearl.api.device.GpuDevice;
+import com.mojang.renderpearl.api.pipeline.ShaderSource;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
+import de.keksuccino.fancymenu.util.rendering.EarlyShaderSource;
 import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.Minecraft;
@@ -45,6 +51,12 @@ public class MixinGameRenderer {
     @Inject(method = "close", at = @At("TAIL"))
     private void after_close_FancyMenu(CallbackInfo info) {
         GuiBlurRenderer.close_FancyMenu();
+    }
+
+    /** @reason The fallback pipeline cache only reads the vanilla pack, but FancyMenu's GUI pipelines can get compiled through it before the first resource reload applied the shader manager. */
+    @WrapOperation(method = "preloadUiShader", at = @At(value = "NEW", target = "(Lcom/mojang/renderpearl/api/device/GpuDevice;Lcom/mojang/renderpearl/api/pipeline/ShaderSource;)Lcom/mojang/blaze3d/pipeline/PipelineCache;"))
+    private static PipelineCache wrap_newFallbackPipelineCache_FancyMenu(GpuDevice device, ShaderSource shaderSource, Operation<PipelineCache> original) {
+        return original.call(device, EarlyShaderSource.forClientResources(shaderSource));
     }
 
 }
