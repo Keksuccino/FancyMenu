@@ -54,6 +54,11 @@ public class SendHttpRequestAction extends Action {
     }
 
     @Override
+    public boolean hasRawValue() {
+        return true;
+    }
+
+    @Override
     public void execute(@Nullable String value) {
         if (value == null || value.isEmpty()) {
             LOGGER.error("[FANCYMENU] SendHttpRequestAction: No value provided!");

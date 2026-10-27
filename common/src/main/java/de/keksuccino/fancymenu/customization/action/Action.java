@@ -55,6 +55,14 @@ public abstract class Action {
     public abstract boolean hasValue();
 
     /**
+     * If this action's value is raw data like a URL, a file path or file content instead of formatted text.<br>
+     * Placeholders in raw values get replaced without converting "&" formatting codes to "§", so URL parameters like "&embed" stay intact.
+     */
+    public boolean hasRawValue() {
+        return false;
+    }
+
+    /**
      * @param value The value that was set to the action or NULL if this action has no value.
      */
     public abstract void execute(@Nullable String value);
