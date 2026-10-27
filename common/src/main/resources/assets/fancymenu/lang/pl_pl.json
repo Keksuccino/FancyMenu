@@ -2615,7 +2615,7 @@
   "fancymenu.placeholders.nbt_data_get.server": "Pobierz dane NBT (po stronie serwera)",
   "fancymenu.placeholders.nbt_data_get.server.desc": "§xWymaga FancyMenu na serwerze.§r\n\nPobiera na żywo dane NBT z serwera, odwzorowując każdy cel obsługiwany przez „/data get”.\nZwraca pustą wartość, dopóki nie nadejdzie odpowiedź z serwera.\n\nPlaceholder działa dokładnie jak komenda „/data get”, więc wszystko, co powinno być możliwe komendą, powinno też być możliwe placeholderem.\n\nObsługiwane wartości source_type:\n- entity: Pełna składnia selektora (score, advancement, predicate, rotacja, gamemode itd.)\n- block: Bezwzględne, względne (~) albo lokalne (^) współrzędne jak w domyślnej komendzie\n- storage: Identyfikatory storage komend (namespace:key)\n\nOpcjonalne argumenty:\n- nbt_path: Te same zasady ścieżki co w „/data get”\n- scale: Mnoży wyniki liczbowe (domyślnie 1.0)\n- return_type: „value”, „string”, „snbt” albo „json”\n\nOdpowiedzi są buforowane przez 100 ms, żeby nie spamować serwera.",
   "fancymenu.placeholders.negate_number": "Zmień znak liczby",
-  "fancymenu.placeholders.negate_number.desc": "Zwraca przeciwną wartość podanej liczby.\nJeśli podana liczba jest ujemna, zostanie zwrócona bez zmian.",
+  "fancymenu.placeholders.negate_number.desc": "Zwraca podaną liczbę jako liczbę ujemną.\nJeśli liczba jest już ujemna lub równa zero, zostanie zwrócona bez zmian.",
   "fancymenu.placeholders.number_base_convert": "Konwerter systemu liczbowego",
   "fancymenu.placeholders.number_base_convert.desc": "Konwertuje liczbę między systemami liczbowymi (obsługuje liczby dziesiętne).\nWartości: input, from_base (2-36), to_base (2-36).\nW docelowej podstawie generowanych jest maksymalnie 16 miejsc po przecinku.\nPrzykład: input=67, from_base=10, to_base=2 -> 1000011.",
   "fancymenu.placeholders.opengl_version": "Wersja OpenGL",
@@ -2698,7 +2698,7 @@
   "fancymenu.placeholders.video_background_duration": "Czas trwania tła wideo",
   "fancymenu.placeholders.video_background_duration.desc": "Zwraca łączny czas trwania tła wideo menu w formacie MM:SS (np. „03:45”) albo w milisekundach na podstawie jego identyfikatora.\nZwraca „00:00” albo „0”, jeśli tło nie jest jeszcze gotowe albo nie ustawiono żadnego wideo.\n\nWymagane wartości:\n- background_identifier: ID tła wideo\n- output_as_timestamp: Ustaw na „true”, aby pokazać milisekundy zamiast MM:SS\n\nAby pobrać identyfikator tła, kliknij tło w edytorze\nPPM i wybierz „Kopiuj identyfikator tła”.",
   "fancymenu.placeholders.video_background_paused_state": "Stan pauzy tła wideo",
-  "fancymenu.placeholders.video_background_paused_state.desc": "Zwraca stan pauzy tła wideo menu na podstawie jego identyfikatora.\nZwraca „true”, gdy element jest wstrzymany, w przeciwnym razie zwraca „false”.\n\nAby pobrać identyfikator tła, kliknij tło w edytorze\nPPM i wybierz „Kopiuj identyfikator tła”.",
+  "fancymenu.placeholders.video_background_paused_state.desc": "Zwraca stan pauzy tła wideo menu na podstawie jego identyfikatora.\nZwraca „true”, gdy tło jest wstrzymane, w przeciwnym razie zwraca „false”.\n\nAby pobrać identyfikator tła, kliknij tło w edytorze\nPPM i wybierz „Kopiuj identyfikator tła”.",
   "fancymenu.placeholders.video_background_playtime": "Czas odtwarzania tła wideo",
   "fancymenu.placeholders.video_background_playtime.desc": "Zwraca aktualny czas odtwarzania tła wideo menu\n(w formacie MM:SS), procent postępu odtwarzania (0-100) albo aktualny czas odtwarzania w milisekundach.\nZwraca „00:00” albo „0”, jeśli element nie jest jeszcze gotowy albo nie ustawiono żadnego wideo.\n\nWymagane wartości:\n- background_identifier: ID tła wideo\n- show_percentage: Ustaw na „true”, aby pokazać procent zamiast czasu\n- output_as_timestamp: Ustaw na „true”, aby pokazać milisekundy zamiast MM:SS\n\nPriorytet:\n- show_percentage (najwyższy)\n- output_as_timestamp\n- domyślny format MM:SS\n\nAby pobrać identyfikator tła, kliknij tło w edytorze\nPPM i wybierz „Kopiuj identyfikator tła”.",
   "fancymenu.placeholders.video_background_volume": "Głośność tła wideo",
@@ -3365,5 +3365,10 @@
   "fancymenu.widgetified_screens.title_screen.forge.top.example.line2": "Używane do wyświetlania ostrzeżeń o wersjach beta i innych rzeczy.",
   "fancymenu.widgetified_screens.title_screen.logo": "Logo Minecrafta",
   "fancymenu.widgetified_screens.title_screen.realmsnotification": "Ikony powiadomień Realms",
-  "fancymenu.widgetified_screens.title_screen.splash": "Vanilla splash text"
+  "fancymenu.widgetified_screens.title_screen.splash": "Vanilla splash text",
+  "fancymenu.actions.screens.finish.no_action_selected": "§xNajpierw musisz wybrać akcję!",
+  "fancymenu.elements.browser.rinku_initializing.line_1": "Przeglądarka się uruchamia...",
+  "fancymenu.elements.browser.rinku_initializing.line_2": "Czekam, aż Rinku zakończy inicjalizację.",
+  "fancymenu.elements.browser.rinku_failed.line_1": "Nie udało się zainicjalizować przeglądarki!",
+  "fancymenu.elements.browser.rinku_failed.line_2": "Szczegóły znajdziesz w logu gry."
 }
