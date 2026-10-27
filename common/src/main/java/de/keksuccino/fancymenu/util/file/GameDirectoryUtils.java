@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.file;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.platform.Services;
 import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.LogManager;
@@ -9,11 +10,18 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Objects;
 
 public class GameDirectoryUtils {
 
     private static final Logger LOGGER = LogManager.getLogger();
+
+    /**
+     * FancyMenu's own directories, relative to a game directory. Path confinement treats them as relocatable, so users
+     * can move them elsewhere (for example to share them between instances) and leave a symbolic link or junction behind.
+     */
+    public static final List<String> RELOCATABLE_FANCYMENU_DIRECTORIES = List.of(FancyMenu.MOD_DIR_PATH, FancyMenu.INSTANCE_DATA_DIR_PATH);
 
     public static File getGameDirectory() {
         try {
