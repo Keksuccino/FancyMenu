@@ -87,7 +87,8 @@ public enum UIScale {
             }
         }
         //Force a scale of 2 or bigger if Unicode font is enabled
-        if (UIBase.shouldUseMinecraftFontForUIRendering() && Minecraft.getInstance().isEnforceUnicode() && (uiScale < 2F)) {
+        // Only peek at the font state: this getter runs every frame and during loading screens, where selecting the font would load the whole smooth font family on the render thread.
+        if (Minecraft.getInstance().isEnforceUnicode() && (uiScale < 2F) && UIBase.peekShouldUseMinecraftFontForUIRendering()) {
             uiScale = MEDIUM.getScale();
         }
         return uiScale;
