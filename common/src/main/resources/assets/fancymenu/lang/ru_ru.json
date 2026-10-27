@@ -2615,7 +2615,7 @@
   "fancymenu.placeholders.nbt_data_get.server": "Получить NBT-данные (на стороне сервера)",
   "fancymenu.placeholders.nbt_data_get.server.desc": "§xТребуется FancyMenu на сервере.§r\n\nПолучает живые NBT-данные с сервера, поддерживая все цели, которые поддерживает '/data get'.\nВозвращает пустое значение, пока не придёт ответ от сервера.\n\nПлейсхолдер работает точно так же, как команда '/data get', так что всё, что можно сделать командой, должно работать и через плейсхолдер.\n\nПоддерживаемые значения source_type:\n- entity: полный синтаксис селектора (scores, advancements, predicates, rotation, gamemode и т. д.)\n- block: абсолютные, относительные (~) или локальные (^) координаты, как в ванильной команде\n- storage: идентификаторы хранилища команд (namespace:key)\n\nНеобязательные аргументы:\n- nbt_path: те же правила пути, что и у '/data get'\n- scale: умножает числовой результат (по умолчанию 1.0)\n- return_type: 'value', 'string', 'snbt' или 'json'\n\nОтветы кэшируются на 100 мс, чтобы не спамить сервер.",
   "fancymenu.placeholders.negate_number": "Сменить знак числа",
-  "fancymenu.placeholders.negate_number.desc": "Возвращает противоположное значение заданного числа.\nЕсли заданное число отрицательное, возвращается само число.",
+  "fancymenu.placeholders.negate_number.desc": "Возвращает заданное число как отрицательное.\nЕсли число уже отрицательное или равно нулю, оно возвращается без изменений.",
   "fancymenu.placeholders.number_base_convert": "Конвертер систем счисления",
   "fancymenu.placeholders.number_base_convert.desc": "Преобразует число между системами счисления (поддерживаются дроби).\nЗначения: input, from_base (2-36), to_base (2-36).\nВ целевой системе счисления создаётся до 16 дробных знаков.\nПример: input=67, from_base=10, to_base=2 -> 1000011.",
   "fancymenu.placeholders.opengl_version": "Версия OpenGL",
@@ -2698,7 +2698,7 @@
   "fancymenu.placeholders.video_background_duration": "Длительность видеофона",
   "fancymenu.placeholders.video_background_duration.desc": "Возвращает общую длительность видеофона меню в формате MM:SS (например, '03:45') или в миллисекундах по его идентификатору.\nВозвращает '00:00' или '0', если фон ещё не готов или видео не задано.\n\nТребуемые значения:\n- background_identifier: ID видеофона\n- output_as_timestamp: установи 'true', чтобы показывать миллисекунды вместо MM:SS\n\nЧтобы узнать идентификатор фона, кликни по фону в редакторе\nправой кнопкой и выбери 'Copy Background Identifier'.",
   "fancymenu.placeholders.video_background_paused_state": "Состояние паузы видеофона",
-  "fancymenu.placeholders.video_background_paused_state.desc": "Возвращает состояние паузы видеофона меню по его идентификатору.\nВозвращает 'true', когда элемент на паузе, иначе возвращает 'false'.\n\nЧтобы узнать идентификатор фона, кликни по фону в редакторе\nправой кнопкой и выбери 'Copy Background Identifier'.",
+  "fancymenu.placeholders.video_background_paused_state.desc": "Возвращает состояние паузы видеофона меню по его идентификатору.\nВозвращает 'true', когда фон на паузе, иначе возвращает 'false'.\n\nЧтобы узнать идентификатор фона, кликни по фону в редакторе\nправой кнопкой и выбери 'Copy Background Identifier'.",
   "fancymenu.placeholders.video_background_playtime": "Время воспроизведения видеофона",
   "fancymenu.placeholders.video_background_playtime.desc": "Возвращает либо текущее время воспроизведения видеофона меню\n(формат MM:SS), либо процент прогресса воспроизведения (0-100), либо текущее время в миллисекундах.\nВозвращает '00:00' или '0', если элемент ещё не готов или видео не задано.\n\nТребуемые значения:\n- background_identifier: ID видеофона\n- show_percentage: установи 'true', чтобы показывать процент вместо времени\n- output_as_timestamp: установи 'true', чтобы показывать миллисекунды вместо MM:SS\n\nПриоритет:\n- show_percentage (самый высокий)\n- output_as_timestamp\n- вывод по умолчанию MM:SS\n\nЧтобы узнать идентификатор фона, кликни по фону в редакторе\nправой кнопкой и выбери 'Copy Background Identifier'.",
   "fancymenu.placeholders.video_background_volume": "Громкость видеофона",
@@ -3365,5 +3365,10 @@
   "fancymenu.widgetified_screens.title_screen.forge.top.example.line2": "Используется для показа предупреждений о бета-сборках и других вещей.",
   "fancymenu.widgetified_screens.title_screen.logo": "Логотип Minecraft",
   "fancymenu.widgetified_screens.title_screen.realmsnotification": "Иконки уведомления Realms",
-  "fancymenu.widgetified_screens.title_screen.splash": "Ванильный splash-текст"
+  "fancymenu.widgetified_screens.title_screen.splash": "Ванильный splash-текст",
+  "fancymenu.actions.screens.finish.no_action_selected": "§xСначала нужно выбрать действие!",
+  "fancymenu.elements.browser.rinku_initializing.line_1": "Браузер запускается...",
+  "fancymenu.elements.browser.rinku_initializing.line_2": "Ждём, пока Rinku завершит инициализацию.",
+  "fancymenu.elements.browser.rinku_failed.line_1": "Не удалось инициализировать браузер!",
+  "fancymenu.elements.browser.rinku_failed.line_2": "Подробности смотри в логе игры."
 }
